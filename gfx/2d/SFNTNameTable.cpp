@@ -6,9 +6,10 @@
 
 #include "SFNTNameTable.h"
 
+#include <utility>
+
 #include "BigEndianInts.h"
 #include "Logging.h"
-#include <utility>
 
 #if defined(XP_MACOSX)
 #  include <CoreFoundation/CoreFoundation.h>

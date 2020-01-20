@@ -4,30 +4,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/BackgroundHangMonitor.h"
+
+#include <utility>
+
+#include "GeckoProfiler.h"
+#include "HangDetails.h"
+#include "ThreadStackHelper.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/CPUUsageWatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
-#include <utility>
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
-
-#include "prinrval.h"
-#include "prthread.h"
-#include "ThreadStackHelper.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIObserverService.h"
 #include "nsIObserver.h"
-#include "mozilla/Services.h"
+#include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#include "GeckoProfiler.h"
-#include "HangDetails.h"
+#include "prinrval.h"
+#include "prthread.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "ProfilerMarkerPayload.h"

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+
 #include <utility>
 
 #include "js/AllocPolicy.h"

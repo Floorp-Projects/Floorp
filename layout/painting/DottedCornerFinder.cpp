@@ -7,6 +7,7 @@
 #include "DottedCornerFinder.h"
 
 #include <utility>
+
 #include "BorderCache.h"
 #include "BorderConsts.h"
 

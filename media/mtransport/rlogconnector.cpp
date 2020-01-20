@@ -7,18 +7,18 @@
 
 /* Original author: bcampen@mozilla.com */
 
-#include <cstdarg>
-
 #include "rlogconnector.h"
 
+#include <cstdarg>
 #include <deque>
 #include <string>
+#include <utility>  // Pinch hitting for <utility> and std::move
+#include <vector>
+
 #include "logging.h"
 #include "mozilla/Assertions.h"
-#include <utility>  // Pinch hitting for <utility> and std::move
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"
-#include <vector>
 
 extern "C" {
 #include <csi_platform.h>

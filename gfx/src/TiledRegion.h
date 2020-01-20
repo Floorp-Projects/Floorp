@@ -7,9 +7,10 @@
 #ifndef MOZILLA_GFX_TILEDREGION_H_
 #define MOZILLA_GFX_TILEDREGION_H_
 
+#include <utility>
+
 #include "mozilla/ArrayView.h"
 #include "mozilla/gfx/Rect.h"
-#include <utility>
 #include "nsRegion.h"
 #include "pixman.h"
 

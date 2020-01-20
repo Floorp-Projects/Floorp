@@ -7,13 +7,15 @@
 #ifndef MOZILLA_GFX_TOOLS_H_
 #define MOZILLA_GFX_TOOLS_H_
 
+#include <math.h>
+
+#include <utility>
+
+#include "Point.h"
+#include "Types.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MemoryReporting.h"  // for MallocSizeOf
-#include <utility>
 #include "mozilla/TypeTraits.h"
-#include "Types.h"
-#include "Point.h"
-#include <math.h>
 
 namespace mozilla {
 namespace gfx {

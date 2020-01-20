@@ -38,6 +38,7 @@
  */
 
 #include "mozilla/HashFunctions.h"
+
 #include <utility>
 
 #include "js/HashTable.h"

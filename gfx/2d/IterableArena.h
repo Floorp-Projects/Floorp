@@ -7,14 +7,15 @@
 #ifndef MOZILLA_GFX_ITERABLEARENA_H_
 #define MOZILLA_GFX_ITERABLEARENA_H_
 
-#include <utility>
-#include "mozilla/Assertions.h"
-#include "mozilla/gfx/Logging.h"
-
-#include <string.h>
-#include <vector>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+
+#include <utility>
+#include <vector>
+
+#include "mozilla/Assertions.h"
+#include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
 namespace gfx {

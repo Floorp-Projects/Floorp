@@ -12,15 +12,14 @@
 #define mozilla_image_sourcebuffer_h
 
 #include <algorithm>
+#include <utility>
+
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
-#include <utility>
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
 class nsIInputStream;

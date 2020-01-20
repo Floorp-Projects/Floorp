@@ -16,13 +16,15 @@
 
 #include "PsshParser.h"
 
+#include <assert.h>
+#include <memory.h>
+
+#include <algorithm>
+#include <limits>
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include <utility>
-#include <memory.h>
-#include <algorithm>
-#include <assert.h>
-#include <limits>
 
 // Stripped down version of mp4_demuxer::ByteReader, stripped down to make it
 // easier to link into ClearKey DLL and gtest.

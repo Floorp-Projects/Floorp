@@ -7,14 +7,15 @@
 #ifndef mozilla_mscom_MainThreadInvoker_h
 #define mozilla_mscom_MainThreadInvoker_h
 
-#include "mozilla/AlreadyAddRefed.h"
+#include <windows.h>
+
 #include <utility>
+
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
-
-#include <windows.h>
 
 class nsIRunnable;
 

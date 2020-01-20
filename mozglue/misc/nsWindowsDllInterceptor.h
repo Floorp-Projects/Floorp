@@ -7,29 +7,29 @@
 #ifndef NS_WINDOWS_DLL_INTERCEPTOR_H_
 #define NS_WINDOWS_DLL_INTERCEPTOR_H_
 
+#include <wchar.h>
+#include <windows.h>
+#include <winternl.h>
+
+#include <utility>
+
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
-#include <utility>
 #include "mozilla/NativeNt.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
-#include "nsWindowsHelpers.h"
-
-#include <wchar.h>
-#include <windows.h>
-#include <winternl.h>
-
 #include "mozilla/interceptor/MMPolicies.h"
 #include "mozilla/interceptor/PatcherDetour.h"
 #include "mozilla/interceptor/PatcherNopSpace.h"
 #include "mozilla/interceptor/VMSharingPolicies.h"
+#include "nsWindowsHelpers.h"
 
 /*
  * Simple function interception.

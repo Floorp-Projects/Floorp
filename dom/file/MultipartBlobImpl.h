@@ -7,9 +7,10 @@
 #ifndef mozilla_dom_MultipartBlobImpl_h
 #define mozilla_dom_MultipartBlobImpl_h
 
+#include <utility>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include <utility>
 #include "mozilla/dom/BaseBlobImpl.h"
 
 namespace mozilla {

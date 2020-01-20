@@ -7,22 +7,35 @@
 #ifndef nsDocShell_h__
 #define nsDocShell_h__
 
+#include <utility>
+
+#include "GeckoProfiler.h"
+#include "Units.h"
+#include "jsapi.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include <utility>
+#include "mozilla/ObservedDocShell.h"
+#include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TimelineConsumers.h"
+#include "mozilla/TimelineMarker.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
-#include "mozilla/gfx/Matrix.h"
 #include "mozilla/dom/ChildSHistory.h"
+#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
-
+#include "mozilla/gfx/Matrix.h"
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsCRT.h"
+#include "nsCharsetSource.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentUtils.h"
+#include "nsDocLoader.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBaseWindow.h"
 #include "nsIDeprecationWarner.h"
@@ -36,28 +49,11 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
-
-#include "nsAutoPtr.h"
-#include "nsCharsetSource.h"
-#include "nsCOMPtr.h"
-#include "nsContentPolicyUtils.h"
-#include "nsContentUtils.h"
-#include "nsCRT.h"
-#include "nsDocLoader.h"
 #include "nsPoint.h"  // mCurrent/mDefaultScrollbarPreferences
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-
-#include "GeckoProfiler.h"
-#include "jsapi.h"
 #include "prtime.h"
-#include "Units.h"
-
-#include "mozilla/ObservedDocShell.h"
-#include "mozilla/ScrollbarPreferences.h"
-#include "mozilla/TimelineConsumers.h"
-#include "mozilla/TimelineMarker.h"
 
 // Interfaces Needed
 

@@ -7,10 +7,11 @@
 #ifndef IPC_ErrorIPCUtils_h
 #define IPC_ErrorIPCUtils_h
 
-#include "ipc/IPCMessageUtils.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/Assertions.h"
 #include <utility>
+
+#include "ipc/IPCMessageUtils.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/ErrorResult.h"
 
 namespace IPC {
 

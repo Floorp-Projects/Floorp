@@ -7,7 +7,8 @@
 #include "vm/OffThreadPromiseRuntimeState.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
-#include <utility>               // mozilla::Swap
+
+#include <utility>  // mozilla::Swap
 
 #include "jspubtd.h"  // js::CurrentThreadCanAccessRuntime
 

@@ -20,16 +20,16 @@
 #ifndef mozilla_SegmentedVector_h
 #define mozilla_SegmentedVector_h
 
+#include <new>  // for placement new
+#include <utility>
+
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Array.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TypeTraits.h"
-
-#include <new>  // for placement new
 
 namespace mozilla {
 

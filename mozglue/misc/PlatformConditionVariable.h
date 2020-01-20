@@ -7,12 +7,13 @@
 #ifndef mozilla_ConditionVariable_h
 #define mozilla_ConditionVariable_h
 
-#include "mozilla/Attributes.h"
+#include <stdint.h>
+
 #include <utility>
+
+#include "mozilla/Attributes.h"
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/TimeStamp.h"
-
-#include <stdint.h>
 #ifndef XP_WIN
 #  include <pthread.h>
 #endif

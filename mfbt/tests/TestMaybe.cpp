@@ -9,10 +9,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Maybe.h"
-#include <utility>
 #include "mozilla/TemplateLib.h"
-#include "mozilla/Types.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 
 using mozilla::IsSame;

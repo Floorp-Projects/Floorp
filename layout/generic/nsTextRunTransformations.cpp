@@ -6,20 +6,20 @@
 
 #include "nsTextRunTransformations.h"
 
-#include "mozilla/ComputedStyleInlines.h"
-#include "mozilla/MemoryReporting.h"
 #include <utility>
-#include "mozilla/TextEditor.h"
 
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsUnicharUtils.h"
-#include "nsUnicodeProperties.h"
-#include "nsSpecialCasingData.h"
-#include "mozilla/gfx/2D.h"
-#include "nsTextFrameUtils.h"
 #include "GreekCasing.h"
 #include "IrishCasing.h"
+#include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/TextEditor.h"
+#include "mozilla/gfx/2D.h"
+#include "nsGkAtoms.h"
+#include "nsSpecialCasingData.h"
+#include "nsStyleConsts.h"
+#include "nsTextFrameUtils.h"
+#include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

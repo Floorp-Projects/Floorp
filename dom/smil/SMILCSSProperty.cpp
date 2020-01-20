@@ -8,14 +8,15 @@
 
 #include "SMILCSSProperty.h"
 
-#include "mozilla/dom/Element.h"
 #include <utility>
-#include "mozilla/ServoBindings.h"
+
 #include "mozilla/SMILCSSValueType.h"
 #include "mozilla/SMILValue.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "nsDOMCSSAttrDeclaration.h"
+#include "mozilla/dom/Element.h"
 #include "nsCSSProps.h"
+#include "nsDOMCSSAttrDeclaration.h"
 
 namespace mozilla {
 

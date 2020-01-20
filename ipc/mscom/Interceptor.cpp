@@ -6,19 +6,21 @@
 
 #define INITGUID
 
+#include "mozilla/mscom/Interceptor.h"
+
 #include <utility>
+
+#include "MainThreadUtils.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/ThreadLocal.h"
+#include "mozilla/Unused.h"
 #include "mozilla/mscom/DispatchForwarder.h"
 #include "mozilla/mscom/FastMarshaler.h"
-#include "mozilla/mscom/Interceptor.h"
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/MainThreadInvoker.h"
 #include "mozilla/mscom/Objref.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
-#include "mozilla/ThreadLocal.h"
-#include "MainThreadUtils.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/Unused.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsExceptionHandler.h"

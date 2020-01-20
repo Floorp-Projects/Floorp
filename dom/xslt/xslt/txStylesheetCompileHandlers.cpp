@@ -3,21 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/FloatingPoint.h"
+#include "txStylesheetCompileHandlers.h"
+
 #include <utility>
 
-#include "txStylesheetCompiler.h"
-#include "txStylesheetCompileHandlers.h"
-#include "nsWhitespaceTokenizer.h"
-#include "txInstructions.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/FloatingPoint.h"
 #include "nsGkAtoms.h"
+#include "nsWhitespaceTokenizer.h"
 #include "txCore.h"
+#include "txInstructions.h"
+#include "txNamespaceMap.h"
+#include "txPatternParser.h"
 #include "txStringUtils.h"
 #include "txStylesheet.h"
+#include "txStylesheetCompiler.h"
 #include "txToplevelItems.h"
-#include "txPatternParser.h"
-#include "txNamespaceMap.h"
 #include "txURIUtils.h"
 #include "txXSLTFunctions.h"
 

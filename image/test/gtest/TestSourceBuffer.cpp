@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
-
 #include <algorithm>
 #include <cstdint>
+#include <utility>
 
 #include "Common.h"
-#include <utility>
-#include "nsIInputStream.h"
 #include "SourceBuffer.h"
 #include "SurfaceCache.h"
+#include "gtest/gtest.h"
+#include "nsIInputStream.h"
 
 using namespace mozilla;
 using namespace mozilla::image;

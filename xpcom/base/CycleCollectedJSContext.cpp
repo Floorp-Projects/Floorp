@@ -5,12 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/CycleCollectedJSContext.h"
+
 #include <algorithm>
+#include <utility>
+
+#include "js/Debug.h"
+#include "js/GCAPI.h"
+#include "js/Utility.h"
+#include "jsapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
-#include <utility>
+#include "mozilla/DebuggerOnGCRunnable.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/SystemGroup.h"
@@ -18,9 +25,8 @@
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/TimelineMarker.h"
 #include "mozilla/Unused.h"
-#include "mozilla/DebuggerOnGCRunnable.h"
-#include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseDebugging.h"
@@ -28,10 +34,6 @@
 #include "mozilla/dom/PromiseRejectionEventBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/UserActivation.h"
-#include "jsapi.h"
-#include "js/Debug.h"
-#include "js/GCAPI.h"
-#include "js/Utility.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
@@ -40,11 +42,10 @@
 #include "nsDOMMutationObserver.h"
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
-#include "nsWrapperCache.h"
 #include "nsStringBuffer.h"
-
 #include "nsThread.h"
 #include "nsThreadUtils.h"
+#include "nsWrapperCache.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;

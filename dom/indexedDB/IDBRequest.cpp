@@ -6,6 +6,8 @@
 
 #include "IDBRequest.h"
 
+#include <utility>
+
 #include "BackgroundChildImpl.h"
 #include "IDBCursor.h"
 #include "IDBDatabase.h"
@@ -15,11 +17,11 @@
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "IndexedDatabaseManager.h"
+#include "ReportInternalError.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include <utility>
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
@@ -28,11 +30,10 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsIGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsJSUtils.h"
-#include "nsIGlobalObject.h"
 #include "nsString.h"
-#include "ReportInternalError.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"

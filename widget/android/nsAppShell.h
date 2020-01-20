@@ -8,10 +8,11 @@
 
 #include <time.h>
 
+#include <utility>
+
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
-#include <utility>
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"  // for mozilla::TimeDuration
 #include "mozilla/TypeTraits.h"
@@ -20,9 +21,9 @@
 #include "mozilla/jni/Natives.h"
 #include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
-#include "nsTArray.h"
-#include "nsInterfaceHashtable.h"
 #include "nsIAndroidBridge.h"
+#include "nsInterfaceHashtable.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 bool ProcessNextEvent();

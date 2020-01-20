@@ -7,6 +7,7 @@
 #include "DashedCornerFinder.h"
 
 #include <utility>
+
 #include "BorderCache.h"
 #include "BorderConsts.h"
 

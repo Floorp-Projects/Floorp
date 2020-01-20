@@ -8,6 +8,7 @@
 #define ds_InlineTable_h
 
 #include "mozilla/Maybe.h"
+
 #include <utility>
 
 #include "js/AllocPolicy.h"

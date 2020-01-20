@@ -7,10 +7,11 @@
 #include "SVGAnimatedPointList.h"
 
 #include <utility>
-#include "mozilla/SMILValue.h"
-#include "mozilla/dom/SVGElement.h"
+
 #include "DOMSVGPointList.h"
 #include "SVGPointListSMILType.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/dom/SVGElement.h"
 
 using namespace mozilla::dom;
 

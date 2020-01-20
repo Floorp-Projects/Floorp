@@ -5,10 +5,11 @@
 
 #include "PlaceholderTransaction.h"
 
+#include <utility>
+
 #include "CompositionTransaction.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/dom/Selection.h"
-#include <utility>
 #include "nsGkAtoms.h"
 #include "nsQueryObject.h"
 

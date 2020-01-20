@@ -7,15 +7,16 @@
 #ifndef __NSCLIENTAUTHREMEMBER_H__
 #define __NSCLIENTAUTHREMEMBER_H__
 
-#include "mozilla/HashFunctions.h"
 #include <utility>
+
+#include "mozilla/Attributes.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "nsTHashtable.h"
 #include "nsIObserver.h"
 #include "nsNSSCertificate.h"
 #include "nsString.h"
+#include "nsTHashtable.h"
 #include "nsWeakReference.h"
-#include "mozilla/Attributes.h"
 
 namespace mozilla {
 class OriginAttributes;

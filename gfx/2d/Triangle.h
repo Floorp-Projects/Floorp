@@ -8,8 +8,8 @@
 #define MOZILLA_GFX_TRIANGLE_H
 
 #include <algorithm>
-
 #include <utility>
+
 #include "Point.h"
 #include "Rect.h"
 

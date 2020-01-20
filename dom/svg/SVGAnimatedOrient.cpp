@@ -6,18 +6,19 @@
 
 #include "SVGAnimatedOrient.h"
 
+#include <utility>
+
+#include "DOMSVGAngle.h"
+#include "DOMSVGAnimatedAngle.h"
+#include "SVGAttrTearoffTable.h"
+#include "SVGOrientSMILType.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Maybe.h"
-#include <utility>
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGMarkerElement.h"
-#include "DOMSVGAnimatedAngle.h"
-#include "DOMSVGAngle.h"
 #include "mozAutoDocUpdate.h"
 #include "nsContentUtils.h"
 #include "nsTextFormatter.h"
-#include "SVGAttrTearoffTable.h"
-#include "SVGOrientSMILType.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGAngle_Binding;

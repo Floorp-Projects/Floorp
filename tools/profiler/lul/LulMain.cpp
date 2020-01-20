@@ -6,30 +6,27 @@
 
 #include "LulMain.h"
 
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>  // write(), only for testing LUL
 
 #include <algorithm>  // std::sort
 #include <string>
+#include <utility>
 
-#include "mozilla/Assertions.h"
+#include "GeckoProfiler.h"  // for profiler_current_thread_id()
+#include "LulCommonExt.h"
+#include "LulElfExt.h"
+#include "LulMainInt.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
-#include <utility>
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-
-#include "LulCommonExt.h"
-#include "LulElfExt.h"
-
-#include "LulMainInt.h"
-
-#include "GeckoProfiler.h"  // for profiler_current_thread_id()
 
 // Set this to 1 for verbose logging
 #define DEBUG_MAIN 0

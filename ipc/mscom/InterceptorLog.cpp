@@ -6,17 +6,20 @@
 
 #include "mozilla/mscom/InterceptorLog.h"
 
+#include <callobj.h>
+
+#include <utility>
+
 #include "MainThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
-#include <utility>
-#include "mozilla/mscom/Registration.h"
-#include "mozilla/mscom/Utils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozilla/mscom/Registration.h"
+#include "mozilla/mscom/Utils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -30,8 +33,6 @@
 #include "nsXPCOMPrivate.h"
 #include "nsXULAppAPI.h"
 #include "prenv.h"
-
-#include <callobj.h>
 
 using mozilla::DebugOnly;
 using mozilla::Mutex;
