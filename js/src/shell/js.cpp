@@ -4492,6 +4492,32 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
+  // Throw if trying to disable all the Wasm compilers.  The logic here is that
+  // if we're trying to disable a compiler that is currently enabled and that is
+  // the last compiler enabled then we must throw.
+  if ((opt == JSJITCOMPILER_WASM_JIT_BASELINE ||
+       opt == JSJITCOMPILER_WASM_JIT_ION ||
+       opt == JSJITCOMPILER_WASM_JIT_CRANELIFT) &&
+      number == 0) {
+    uint32_t baseline, ion, cranelift;
+    MOZ_ALWAYS_TRUE(JS_GetGlobalJitCompilerOption(
+        cx, JSJITCOMPILER_WASM_JIT_BASELINE, &baseline));
+    MOZ_ALWAYS_TRUE(
+        JS_GetGlobalJitCompilerOption(cx, JSJITCOMPILER_WASM_JIT_ION, &ion));
+    MOZ_ALWAYS_TRUE(JS_GetGlobalJitCompilerOption(
+        cx, JSJITCOMPILER_WASM_JIT_CRANELIFT, &cranelift));
+    if (baseline + ion + cranelift == 1) {
+      if ((opt == JSJITCOMPILER_WASM_JIT_BASELINE && baseline) ||
+          (opt == JSJITCOMPILER_WASM_JIT_ION && ion) ||
+          (opt == JSJITCOMPILER_WASM_JIT_CRANELIFT && cranelift)) {
+        JS_ReportErrorASCII(
+            cx,
+            "Disabling all the Wasm compilers at runtime is not supported.");
+        return false;
+      }
+    }
+  }
+
   // JIT compiler options are process-wide, so we have to stop off-thread
   // compilations for all runtimes to avoid races.
   HelperThreadState().waitForAllThreads();

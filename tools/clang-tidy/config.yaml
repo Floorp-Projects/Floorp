@@ -203,6 +203,8 @@ clang_checkers:
     reliability: high
   - name: performance-noexcept-move-constructor
     reliability: high
+    # Bug 1609864 - we don't use STL containers
+    publish: !!bool no
   - name: performance-type-promotion-in-math-fn
     reliability: high
   - name: performance-unnecessary-copy-initialization

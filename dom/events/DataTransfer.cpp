@@ -340,43 +340,14 @@ void DataTransfer::GetTypes(nsTArray<nsString>& aTypes,
   // Gecko-internal callers too, clear it to be safe.
   aTypes.Clear();
 
-  const nsTArray<RefPtr<DataTransferItem>>* items = mItems->MozItemsAt(0);
-  if (NS_WARN_IF(!items)) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < items->Length(); i++) {
-    DataTransferItem* item = items->ElementAt(i);
-    MOZ_ASSERT(item);
-
-    if (item->ChromeOnly() && aCallerType != CallerType::System) {
-      continue;
-    }
-
-    // NOTE: The reason why we get the internal type here is because we want
-    // kFileMime to appear in the types list for backwards compatibility
-    // reasons.
-    nsAutoString type;
-    item->GetInternalType(type);
-    if (item->Kind() != DataTransferItem::KIND_FILE ||
-        type.EqualsASCII(kFileMime)) {
-      // If the entry has kind KIND_STRING or KIND_OTHER we want to add it to
-      // the list.
-      aTypes.AppendElement(type);
-    }
-  }
-
-  for (uint32_t i = 0; i < mItems->Length(); ++i) {
-    bool found = false;
-    DataTransferItem* item = mItems->IndexedGetter(i, found);
-    MOZ_ASSERT(found);
-    if (item->Kind() != DataTransferItem::KIND_FILE) {
-      continue;
-    }
-    aTypes.AppendElement(NS_LITERAL_STRING("Files"));
-    break;
-  }
+  return mItems->GetTypes(aTypes, aCallerType);
 }
+
+bool DataTransfer::HasType(const nsAString& aType) const {
+  return mItems->HasType(aType);
+}
+
+bool DataTransfer::HasFile() const { return mItems->HasFile(); }
 
 void DataTransfer::GetData(const nsAString& aFormat, nsAString& aData,
                            nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
