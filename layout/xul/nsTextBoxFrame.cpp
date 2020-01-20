@@ -990,7 +990,7 @@ void nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState) {
     if (rendContext) {
       GetTextSize(*rendContext, mTitle, size, mAscent);
       if (GetWritingMode().IsVertical()) {
-        Swap(size.width, size.height);
+        std::swap(size.width, size.height);
       }
       mTextSize = size;
       mNeedsRecalc = false;

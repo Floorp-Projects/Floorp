@@ -4617,8 +4617,8 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
   // to physical coords, and move the decoration rect to the calculated
   // offset from baseline.
   if (aParams.vertical) {
-    Swap(r.x, r.y);
-    Swap(r.width, r.height);
+    std::swap(r.x, r.y);
+    std::swap(r.width, r.height);
     // line-upwards in vertical mode = physical-right, so we /add/ offset
     // to baseline. Except in sideways-lr mode, where line-upwards will be
     // physical leftwards.

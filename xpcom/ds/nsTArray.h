@@ -2222,7 +2222,7 @@ class nsTArray_Impl
     elem_type* elements = Elements();
     const size_type len = Length();
     for (index_type i = 0, iend = len / 2; i < iend; ++i) {
-      mozilla::Swap(elements[i], elements[len - i - 1]);
+      std::swap(elements[i], elements[len - i - 1]);
     }
   }
 

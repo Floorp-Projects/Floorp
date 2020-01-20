@@ -282,7 +282,7 @@ bool TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const {
     // If the first element is bigger than the last element in the
     // stack, that means mNextFiringId wrapped around to zero at
     // some point.
-    Swap(low, high);
+    std::swap(low, high);
   }
   MOZ_DIAGNOSTIC_ASSERT(low < high);
 

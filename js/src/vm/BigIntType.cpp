@@ -3185,7 +3185,7 @@ int8_t BigInt::compare(BigInt* x, BigInt* y) {
   }
 
   if (xSign) {
-    mozilla::Swap(x, y);
+    std::swap(x, y);
   }
 
   return absoluteCompare(x, y);

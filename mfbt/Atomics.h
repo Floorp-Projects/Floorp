@@ -547,10 +547,14 @@ class Atomic<bool, Order, Recording>
   Atomic(Atomic& aOther) = delete;
 };
 
-// If you want to atomically swap two atomic values, use exchange().
-template <typename T, MemoryOrdering Order>
-void Swap(Atomic<T, Order>&, Atomic<T, Order>&) = delete;
-
 }  // namespace mozilla
+
+namespace std {
+
+// If you want to atomically swap two atomic values, use exchange().
+template <typename T, mozilla::MemoryOrdering Order>
+void swap(mozilla::Atomic<T, Order>&, mozilla::Atomic<T, Order>&) = delete;
+
+}  // namespace std
 
 #endif /* mozilla_Atomics_h */

@@ -519,7 +519,7 @@ bool ReadbackSharedSurface(SharedSurface* src, gfx::DrawTarget* dst) {
       uint8_t* rowItr = dstBytes + j * dstStride;
       uint8_t* rowEnd = rowItr + 4 * width;
       while (rowItr != rowEnd) {
-        Swap(rowItr[0], rowItr[2]);
+        std::swap(rowItr[0], rowItr[2]);
         rowItr += 4;
       }
     }

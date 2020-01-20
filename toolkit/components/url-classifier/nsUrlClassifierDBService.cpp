@@ -2376,7 +2376,7 @@ nsresult nsUrlClassifierDBService::Shutdown() {
   //    will cause the pending events on the joining thread to
   //    be processed.
   nsIThread* backgroundThread = nullptr;
-  Swap(backgroundThread, gDbBackgroundThread);
+  std::swap(backgroundThread, gDbBackgroundThread);
 
   // 4. Wait until the worker thread is down.
   if (backgroundThread) {

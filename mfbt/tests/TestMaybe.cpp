@@ -19,7 +19,6 @@ using mozilla::IsSame;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
-using mozilla::Swap;
 using mozilla::ToMaybe;
 using mozilla::UniquePtr;
 

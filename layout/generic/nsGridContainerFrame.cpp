@@ -1503,7 +1503,7 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
       max = map->TranslateToParentMap(max);
       if (min > max) {
         MOZ_ASSERT(!map->mIsSameDirection);
-        mozilla::Swap(min, max);
+        std::swap(min, max);
       }
       map = parent;
     }
@@ -2678,7 +2678,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
         subgridWM.ParallelAxisStartsOnSameSide(oppositeAxis, aContainerWM);
     if (isOrthogonal) {
       // We'll Transpose the area below so these needs to be transposed as well.
-      Swap(isSameDirInAxis, isSameDirInOppositeAxis);
+      std::swap(isSameDirInAxis, isSameDirInOppositeAxis);
     }
     uint32_t offsetInAxis = aRangeInAxis.mStart;
     uint32_t gridEndInAxis = aRangeInAxis.Extent();
@@ -3865,7 +3865,7 @@ nsGridContainerFrame::LineRange nsGridContainerFrame::Grid::ResolveLineRange(
   } else {
     // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
     if (r.first > r.second) {
-      Swap(r.first, r.second);
+      std::swap(r.first, r.second);
     } else if (r.first == r.second) {
       if (MOZ_UNLIKELY(r.first == aNameMap.mClampMaxLine)) {
         r.first = aNameMap.mClampMaxLine - 1;

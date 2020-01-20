@@ -169,7 +169,7 @@ SMILValue SVGAnimatedPointList::SMILAnimatedPointList::GetBaseValue() const {
   nsresult rv = list->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     list->SetInfo(mElement);
-    Swap(val, tmp);
+    std::swap(val, tmp);
   }
   return val;
 }

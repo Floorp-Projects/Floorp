@@ -306,7 +306,7 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   void SwapElements(nsTHashtable<EntryType>& aOther) {
     MOZ_ASSERT_IF(this->mTable.Ops() && aOther.mTable.Ops(),
                   this->mTable.Ops() == aOther.mTable.Ops());
-    mozilla::Swap(this->mTable, aOther.mTable);
+    std::swap(this->mTable, aOther.mTable);
   }
 
   /**

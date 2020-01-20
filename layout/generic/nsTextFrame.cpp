@@ -1922,7 +1922,7 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
     // If the frames have an embedding level that is opposite to the writing
     // mode, we need to swap which sides we're checking.
     if (IS_LEVEL_RTL(aFrame1->GetEmbeddingLevel()) == wm.IsBidiLTR()) {
-      Swap(side1, side2);
+      std::swap(side1, side2);
     }
 
     if (PreventCrossBoundaryShaping(aFrame1, ancestor, side1) ||
@@ -6635,7 +6635,7 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
   gfxTextRun::Metrics shadowMetrics = mTextRun->MeasureText(
       aParams.range, gfxFont::LOOSE_INK_EXTENTS, nullptr, aParams.provider);
   if (GetWritingMode().IsLineInverted()) {
-    Swap(shadowMetrics.mAscent, shadowMetrics.mDescent);
+    std::swap(shadowMetrics.mAscent, shadowMetrics.mDescent);
     shadowMetrics.mBoundingBox.y = -shadowMetrics.mBoundingBox.YMost();
   }
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
@@ -6665,8 +6665,9 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
   }
 
   if (mTextRun->IsVertical()) {
-    Swap(shadowMetrics.mBoundingBox.x, shadowMetrics.mBoundingBox.y);
-    Swap(shadowMetrics.mBoundingBox.width, shadowMetrics.mBoundingBox.height);
+    std::swap(shadowMetrics.mBoundingBox.x, shadowMetrics.mBoundingBox.y);
+    std::swap(shadowMetrics.mBoundingBox.width,
+              shadowMetrics.mBoundingBox.height);
   }
 
   for (const auto& shadow : Reversed(aShadows)) {
@@ -8652,8 +8653,8 @@ nsRect nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
-    Swap(boundingBox.x, boundingBox.y);
-    Swap(boundingBox.width, boundingBox.height);
+    std::swap(boundingBox.x, boundingBox.y);
+    std::swap(boundingBox.width, boundingBox.height);
   }
   return boundingBox;
 }
@@ -9246,7 +9247,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     }
   }
   if (GetWritingMode().IsLineInverted()) {
-    Swap(textMetrics.mAscent, textMetrics.mDescent);
+    std::swap(textMetrics.mAscent, textMetrics.mDescent);
     textMetrics.mBoundingBox.y = -textMetrics.mBoundingBox.YMost();
   }
   // The "end" iterator points to the first character after the string mapped
@@ -9410,8 +9411,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
-    Swap(boundingBox.x, boundingBox.y);
-    Swap(boundingBox.width, boundingBox.height);
+    std::swap(boundingBox.x, boundingBox.y);
+    std::swap(boundingBox.width, boundingBox.height);
     if (GetWritingMode().IsVerticalRL()) {
       boundingBox.x = -boundingBox.XMost();
       boundingBox.x += aMetrics.Width() - mAscent;
@@ -9662,8 +9663,8 @@ nsOverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
-    Swap(boundingBox.x, boundingBox.y);
-    Swap(boundingBox.width, boundingBox.height);
+    std::swap(boundingBox.x, boundingBox.y);
+    std::swap(boundingBox.width, boundingBox.height);
   }
   nsRect& vis = result.VisualOverflow();
   vis.UnionRect(vis, boundingBox);
