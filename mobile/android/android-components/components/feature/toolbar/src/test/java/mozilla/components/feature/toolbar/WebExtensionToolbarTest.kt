@@ -14,7 +14,7 @@ import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
@@ -50,7 +50,7 @@ class WebExtensionToolbarTest {
         whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(textView)
         whenever(view.context).thenReturn(mock())
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = { icon },
             enabled = true,
@@ -84,7 +84,7 @@ class WebExtensionToolbarTest {
         whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(textView)
         whenever(view.context).thenReturn(mock())
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = { throw IllegalArgumentException() },
             enabled = true,
@@ -105,7 +105,7 @@ class WebExtensionToolbarTest {
     fun createView() {
         var listenerWasClicked = false
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = { mock() },
             enabled = false,
@@ -143,7 +143,7 @@ class WebExtensionToolbarTest {
         whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(textView)
         whenever(view.context).thenReturn(mock())
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = @Suppress("UNREACHABLE_CODE") {
                 while (true) { delay(10) }

@@ -22,10 +22,11 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
+import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.Action
 
-typealias WebExtensionBrowserAction = mozilla.components.concept.engine.webextension.BrowserAction
 /**
  * [Action] implementation related to [BrowserState].
  */
@@ -283,9 +284,9 @@ sealed class WebExtensionAction : BrowserAction() {
         WebExtensionAction()
 
     /**
-     * Update the given [updatedExtension] in the [BrowserState.extensions].
+     * Updates the given [updatedExtension] in the [BrowserState.extensions].
      */
-    data class UpdateWebExtension(val updatedExtension: WebExtensionState) : WebExtensionAction()
+    data class UpdateWebExtensionAction(val updatedExtension: WebExtensionState) : WebExtensionAction()
 
     /**
      * Updates a browser action of a given [extensionId].
@@ -296,21 +297,39 @@ sealed class WebExtensionAction : BrowserAction() {
     ) : WebExtensionAction()
 
     /**
-     * Keeps track of the last session used to display the [BrowserAction] popup.
+     * Updates a page action of a given [extensionId].
      */
-    data class UpdateBrowserActionPopupSession(
+    data class UpdatePageAction(
+        val extensionId: String,
+        val pageAction: WebExtensionPageAction
+    ) : WebExtensionAction()
+
+    /**
+     * Keeps track of the last session used to display an extension action popup.
+     */
+    data class UpdatePopupSessionAction(
         val extensionId: String,
         val popupSessionId: String
     ) : WebExtensionAction()
 
     /**
-     * Updates a browser action that belongs to the given [sessionId] and [extensionId] on the
+     * Updates a tab-specific browser action that belongs to the given [sessionId] and [extensionId] on the
      * [TabSessionState.extensionState].
      */
     data class UpdateTabBrowserAction(
         val sessionId: String,
         val extensionId: String,
         val browserAction: WebExtensionBrowserAction
+    ) : WebExtensionAction()
+
+    /**
+     * Updates a page action that belongs to the given [sessionId] and [extensionId] on the
+     * [TabSessionState.extensionState].
+     */
+    data class UpdateTabPageAction(
+        val sessionId: String,
+        val extensionId: String,
+        val pageAction: WebExtensionPageAction
     ) : WebExtensionAction()
 }
 

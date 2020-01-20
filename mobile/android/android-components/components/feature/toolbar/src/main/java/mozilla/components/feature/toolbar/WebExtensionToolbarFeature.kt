@@ -17,13 +17,10 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
-
-typealias WebExtensionBrowserAction = BrowserAction
 
 /**
  * Web extension toolbar implementation that updates the toolbar whenever the state of web

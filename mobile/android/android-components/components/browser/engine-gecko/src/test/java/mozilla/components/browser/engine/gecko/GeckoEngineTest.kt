@@ -18,8 +18,8 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
-import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
@@ -592,14 +592,14 @@ class GeckoEngineTest {
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
         verify(extension).registerActionHandler(actionHandlerCaptor.capture())
 
-        val browserAction: BrowserAction = mock()
+        val browserAction: Action = mock()
         actionHandlerCaptor.value.onBrowserAction(extension, null, browserAction)
         verify(webExtensionsDelegate).onBrowserActionDefined(eq(extension), eq(browserAction))
-        assertNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
-        verify(webExtensionsDelegate).onToggleBrowserActionPopup(eq(extension), any(), eq(browserAction))
+        assertNull(actionHandlerCaptor.value.onToggleActionPopup(extension, browserAction))
+        verify(webExtensionsDelegate).onToggleActionPopup(eq(extension), any(), eq(browserAction))
 
-        whenever(webExtensionsDelegate.onToggleBrowserActionPopup(any(), any(), any())).thenReturn(mock())
-        assertNotNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
+        whenever(webExtensionsDelegate.onToggleActionPopup(any(), any(), any())).thenReturn(mock())
+        assertNotNull(actionHandlerCaptor.value.onToggleActionPopup(extension, browserAction))
     }
 
     @Test

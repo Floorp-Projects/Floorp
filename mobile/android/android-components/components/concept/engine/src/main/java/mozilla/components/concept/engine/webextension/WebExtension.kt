@@ -149,19 +149,29 @@ interface ActionHandler {
      * @param extension the extension that defined the browser action.
      * @param session the [EngineSession] if this action is to be updated for a
      * specific session, or null if this is to set a new default value.
-     * @param action the [BrowserAction]
+     * @param action the browser action as [Action].
      */
-    fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: BrowserAction) = Unit
+    fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) = Unit
 
     /**
-     * Invoked when a browser action wants to toggle a popup view.
+     * Invoked when a page action is defined or updated.
      *
      * @param extension the extension that defined the browser action.
-     * @param action the [BrowserAction]
+     * @param session the [EngineSession] if this action is to be updated for a
+     * specific session, or null if this is to set a new default value.
+     * @param action the [Action]
+     */
+    fun onPageAction(extension: WebExtension, session: EngineSession?, action: Action) = Unit
+
+    /**
+     * Invoked when a browser or page action wants to toggle a popup view.
+     *
+     * @param extension the extension that defined the browser or page action.
+     * @param action the action as [Action].
      * @return the [EngineSession] that was used for displaying the popup,
      * or null if the popup was closed.
      */
-    fun onToggleBrowserActionPopup(extension: WebExtension, action: BrowserAction): EngineSession? = null
+    fun onToggleActionPopup(extension: WebExtension, action: Action): EngineSession? = null
 }
 
 /**

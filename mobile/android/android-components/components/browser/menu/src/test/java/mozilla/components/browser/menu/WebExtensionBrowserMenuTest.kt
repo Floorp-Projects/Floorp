@@ -19,7 +19,8 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.Action
+import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -158,7 +159,7 @@ class WebExtensionBrowserMenuTest {
     fun `browser actions can be overridden per tab`() {
         webExtensionBrowserActions.clear()
         val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = loadIcon,
             enabled = true,
@@ -167,7 +168,7 @@ class WebExtensionBrowserMenuTest {
             badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val browserActionOverride = BrowserAction(
+        val browserActionOverride = Action(
             title = "updatedTitle",
             loadIcon = null,
             enabled = false,

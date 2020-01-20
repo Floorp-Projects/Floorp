@@ -14,14 +14,11 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
-typealias WebExtensionBrowserAction = BrowserAction
-
 /**
- * A popup menu for [WebExtensionBrowserAction] menu items.
+ * A [BrowserMenu] capable of displaying browser and page actions from web extensions.
  */
 class WebExtensionBrowserMenu internal constructor(
     adapter: BrowserMenuAdapter,

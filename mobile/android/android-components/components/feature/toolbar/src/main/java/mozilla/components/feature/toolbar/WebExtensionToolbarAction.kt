@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.base.log.Log

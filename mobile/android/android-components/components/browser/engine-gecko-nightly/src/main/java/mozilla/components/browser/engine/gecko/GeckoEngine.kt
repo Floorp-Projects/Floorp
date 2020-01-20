@@ -27,7 +27,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.ActionHandler
-import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
@@ -65,12 +65,16 @@ class GeckoEngine(
 
     private var webExtensionDelegate: WebExtensionDelegate? = null
     private val webExtensionActionHandler = object : ActionHandler {
-        override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: BrowserAction) {
+        override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) {
             webExtensionDelegate?.onBrowserActionDefined(extension, action)
         }
 
-        override fun onToggleBrowserActionPopup(extension: WebExtension, action: BrowserAction): EngineSession? {
-            return webExtensionDelegate?.onToggleBrowserActionPopup(extension, GeckoEngineSession(runtime), action)
+        override fun onPageAction(extension: WebExtension, session: EngineSession?, action: Action) {
+            webExtensionDelegate?.onPageActionDefined(extension, action)
+        }
+
+        override fun onToggleActionPopup(extension: WebExtension, action: Action): EngineSession? {
+            return webExtensionDelegate?.onToggleActionPopup(extension, GeckoEngineSession(runtime), action)
         }
     }
 

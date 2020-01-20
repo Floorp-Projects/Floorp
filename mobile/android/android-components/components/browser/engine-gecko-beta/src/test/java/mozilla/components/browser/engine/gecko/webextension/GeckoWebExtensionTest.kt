@@ -6,11 +6,12 @@ package mozilla.components.browser.engine.gecko.webextension
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
-import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
+import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -221,8 +222,10 @@ class GeckoWebExtensionTest {
         val nativeGeckoWebExt: WebExtension = mock()
         val actionHandler: ActionHandler = mock()
         val actionDelegateCaptor = argumentCaptor<WebExtension.ActionDelegate>()
-        val actionCaptor = argumentCaptor<BrowserAction>()
+        val browserActionCaptor = argumentCaptor<Action>()
+        val pageActionCaptor = argumentCaptor<Action>()
         val nativeBrowserAction: WebExtension.Action = mock()
+        val nativePageAction: WebExtension.Action = mock()
 
         // Verify actions will not be acted on when not supported
         val extensionWithActions = GeckoWebExtension(
@@ -250,17 +253,23 @@ class GeckoWebExtensionTest {
 
         // Verify that browser actions are forwarded to the handler
         actionDelegateCaptor.value.onBrowserAction(nativeGeckoWebExt, null, nativeBrowserAction)
-        verify(actionHandler).onBrowserAction(eq(extension), eq(null), actionCaptor.capture())
+        verify(actionHandler).onBrowserAction(eq(extension), eq(null), browserActionCaptor.capture())
+
+        // Verify that page actions are forwarded to the handler
+        actionDelegateCaptor.value.onPageAction(nativeGeckoWebExt, null, nativePageAction)
+        verify(actionHandler).onPageAction(eq(extension), eq(null), pageActionCaptor.capture())
 
         // Verify that toggle popup is forwarded to the handler
         actionDelegateCaptor.value.onTogglePopup(nativeGeckoWebExt, nativeBrowserAction)
-        verify(actionHandler).onToggleBrowserActionPopup(eq(extension), actionCaptor.capture())
+        verify(actionHandler).onToggleActionPopup(eq(extension), any())
 
         // We don't have access to the native WebExtension.Action fields and
         // can't mock them either, but we can verify that we've linked
         // the actions by simulating a click.
-        actionCaptor.value.onClick()
+        browserActionCaptor.value.onClick()
         verify(nativeBrowserAction).click()
+        pageActionCaptor.value.onClick()
+        verify(nativePageAction).click()
     }
 
     @Test
@@ -273,8 +282,10 @@ class GeckoWebExtensionTest {
         val nativeGeckoWebExt: WebExtension = mock()
         val actionHandler: ActionHandler = mock()
         val actionDelegateCaptor = argumentCaptor<WebExtension.ActionDelegate>()
-        val actionCaptor = argumentCaptor<BrowserAction>()
+        val browserActionCaptor = argumentCaptor<Action>()
+        val pageActionCaptor = argumentCaptor<Action>()
         val nativeBrowserAction: WebExtension.Action = mock()
+        val nativePageAction: WebExtension.Action = mock()
 
         // Create extension and register action handler for session
         val extension = GeckoWebExtension(
@@ -293,13 +304,19 @@ class GeckoWebExtensionTest {
 
         // Verify that browser actions are forwarded to the handler
         actionDelegateCaptor.value.onBrowserAction(nativeGeckoWebExt, null, nativeBrowserAction)
-        verify(actionHandler).onBrowserAction(eq(extension), eq(session), actionCaptor.capture())
+        verify(actionHandler).onBrowserAction(eq(extension), eq(session), browserActionCaptor.capture())
+
+        // Verify that page actions are forwarded to the handler
+        actionDelegateCaptor.value.onPageAction(nativeGeckoWebExt, null, nativePageAction)
+        verify(actionHandler).onPageAction(eq(extension), eq(session), pageActionCaptor.capture())
 
         // We don't have access to the native WebExtension.Action fields and
         // can't mock them either, but we can verify that we've linked
         // the actions by simulating a click.
-        actionCaptor.value.onClick()
+        browserActionCaptor.value.onClick()
         verify(nativeBrowserAction).click()
+        pageActionCaptor.value.onClick()
+        verify(nativePageAction).click()
     }
 
     @Test

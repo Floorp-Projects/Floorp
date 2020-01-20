@@ -26,8 +26,8 @@ import mozilla.components.concept.engine.content.blocking.TrackingProtectionExce
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
-import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
@@ -168,16 +168,16 @@ class GeckoEngine(
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1599897
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1582185
             ext.registerActionHandler(object : ActionHandler {
-                override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: BrowserAction) {
+                override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) {
                     webExtensionDelegate?.onBrowserActionDefined(extension, action)
                 }
 
-                override fun onToggleBrowserActionPopup(
+                override fun onToggleActionPopup(
                     extension: WebExtension,
-                    action: BrowserAction
+                    action: Action
                 ): EngineSession? {
                     val session = GeckoEngineSession(runtime)
-                    return webExtensionDelegate?.onToggleBrowserActionPopup(extension, session, action)
+                    return webExtensionDelegate?.onToggleActionPopup(extension, session, action)
                 }
             })
         }

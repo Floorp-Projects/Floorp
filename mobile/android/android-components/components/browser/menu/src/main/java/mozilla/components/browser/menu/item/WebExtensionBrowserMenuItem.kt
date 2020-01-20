@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
-import mozilla.components.browser.menu.WebExtensionBrowserAction
+import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.support.base.log.Log
 
 /**
