@@ -181,6 +181,16 @@ pub extern "C" fn neqo_http3conn_process_output(conn: &mut NeqoHttp3Conn) -> u64
 }
 
 #[no_mangle]
+pub extern "C" fn neqo_http3conn_process_timer(conn: &mut NeqoHttp3Conn) {
+    conn.conn.process_timer(Instant::now());
+}
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_has_data_to_send(conn: &mut NeqoHttp3Conn) -> bool {
+    !conn.packets_to_send.is_empty()
+}
+
+#[no_mangle]
 pub extern "C" fn neqo_http3conn_get_data_to_send(
     conn: &mut NeqoHttp3Conn,
     packet: &mut ThinVec<u8>,
