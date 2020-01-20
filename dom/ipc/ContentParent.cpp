@@ -6137,7 +6137,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 
   if (!child) {
     RefPtr<BrowsingContextGroup> group =
-        BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
+        BrowsingContextGroup::Select(aInit.mParentId, aInit.GetOpenerId());
     child = BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
   }
 
@@ -6368,7 +6368,7 @@ void ContentParent::OnBrowsingContextGroupUnsubscribe(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
-    BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction,
+    BrowsingContext* aContext, BrowsingContext::BaseTransaction&& aTransaction,
     uint64_t aEpoch) {
   // Record the new BrowsingContextFieldEpoch associated with this transaction.
   // This should be done unconditionally, so that we're always in-sync.
@@ -6380,23 +6380,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
              "Child process skipped an epoch?");
   mBrowsingContextFieldEpoch = aEpoch;
 
-  if (!aContext || aContext->IsDiscarded()) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
-            ("ParentIPC: Trying to run transaction on missing context."));
-    return IPC_OK();
-  }
-
-  if (!aTransaction.Validate(aContext, this)) {
-    return IPC_FAIL(this, "Invalid BrowsingContext transaction from Child");
-  }
-
-  aContext->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendCommitBrowsingContextTransaction(
-        aContext, aTransaction, aParent->GetBrowsingContextFieldEpoch());
-  });
-
-  aTransaction.Apply(aContext);
-  return IPC_OK();
+  return aTransaction.CommitFromIPC(aContext, this);
 }
 
 PParentToChildStreamParent* ContentParent::SendPParentToChildStreamConstructor(
