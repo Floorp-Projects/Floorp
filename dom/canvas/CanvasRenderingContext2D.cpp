@@ -3721,6 +3721,14 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
 nsresult CanvasRenderingContext2D::DrawOrMeasureText(
     const nsAString& aRawText, float aX, float aY,
     const Optional<double>& aMaxWidth, TextDrawOperation aOp, float* aWidth) {
+  // Approximated baselines. In an ideal world, we'd read the baseline info
+  // directly from the font (where available). Alas we currently lack
+  // that functionality. These numbers are best guesses and should
+  // suffice for now. Both are fractions of the em ascent/descent from the
+  // alphabetic baseline.
+  const double kHangingBaselineDefault = 0.8;      // fraction of ascent
+  const double kIdeographicBaselineDefault = 0.5;  // fraction of descent
+
   nsresult rv;
 
   if (!mCanvasElement && !mDocShell) {
@@ -3873,17 +3881,19 @@ nsresult CanvasRenderingContext2D::DrawOrMeasureText(
 
   switch (state.textBaseline) {
     case TextBaseline::HANGING:
-      // fall through; best we can do with the information available
+      baselineAnchor = fontMetrics.emAscent * kHangingBaselineDefault;
+      break;
     case TextBaseline::TOP:
       baselineAnchor = fontMetrics.emAscent;
       break;
     case TextBaseline::MIDDLE:
       baselineAnchor = (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
       break;
-    case TextBaseline::IDEOGRAPHIC:
-      // fall through; best we can do with the information available
     case TextBaseline::ALPHABETIC:
       baselineAnchor = 0;
+      break;
+    case TextBaseline::IDEOGRAPHIC:
+      baselineAnchor = -fontMetrics.emDescent * kIdeographicBaselineDefault;
       break;
     case TextBaseline::BOTTOM:
       baselineAnchor = -fontMetrics.emDescent;
