@@ -85,15 +85,11 @@ class EmitterScope : public Nestable<EmitterScope> {
                                              uint8_t hops);
   NameLocation searchAndCache(BytecodeEmitter* bce, JSAtom* name);
 
-  template <typename ScopeCreator>
-  MOZ_MUST_USE bool internScope(BytecodeEmitter* bce, ScopeCreator createScope);
+  MOZ_MUST_USE bool internEmptyGlobalScopeAsBody(BytecodeEmitter* bce);
+
   template <typename ScopeCreator>
   MOZ_MUST_USE bool internScopeCreationData(BytecodeEmitter* bce,
                                             ScopeCreator createScope);
-
-  template <typename ScopeCreator>
-  MOZ_MUST_USE bool internBodyScope(BytecodeEmitter* bce,
-                                    ScopeCreator createScope);
 
   template <typename ScopeCreator>
   MOZ_MUST_USE bool internBodyScopeCreationData(BytecodeEmitter* bce,
