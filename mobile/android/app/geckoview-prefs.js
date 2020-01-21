@@ -65,6 +65,9 @@ pref("browser.safebrowsing.features.cryptomining.update", true);
 // Enable fingerprinting protection blocklist updates
 pref("browser.safebrowsing.features.fingerprinting.update", true);
 
+// Start the browser in e10s mode
+pref("browser.tabs.remote.autostart", true);
+
 // Treat mouse as touch only on TV-ish devices
 pref("ui.android.mouse_as_touch", 2);
 

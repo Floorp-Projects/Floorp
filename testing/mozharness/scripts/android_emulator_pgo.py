@@ -196,12 +196,6 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
                 v = v.format(**interpolation)
             prefs[k] = Preferences.cast(v)
 
-        # Enforce 1proc. This isn't in one of the user.js files because those
-        # are shared with desktop, which wants e10s. We can't interpolate
-        # because the formatting code only works for strings, and this is a
-        # bool pref.
-        prefs["browser.tabs.remote.autostart"] = False
-
         outputdir = self.config.get('output_directory', '/sdcard/pgo_profile')
         jarlog = posixpath.join(outputdir, 'en-US.log')
         profdata = posixpath.join(outputdir, 'default_%p_random_%m.profraw')
