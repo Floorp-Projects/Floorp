@@ -654,6 +654,11 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
       .get();
 }
 
+void DocumentOrShadowRoot::GetAdoptedStyleSheets(
+    nsTArray<RefPtr<StyleSheet>>& aAdoptedStyleSheets, ErrorResult& aRv) const {
+  aAdoptedStyleSheets = mAdoptedStyleSheets;
+}
+
 void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
                                     nsCycleCollectionTraversalCallback& cb) {
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
