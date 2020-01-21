@@ -12,6 +12,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/DocumentInlines.h"
 
 namespace mozilla {
 namespace dom {
@@ -131,6 +132,11 @@ void DOMIntersectionObserver::Observe(Element& aTarget) {
   aTarget.RegisterIntersectionObserver(this);
   mObservationTargets.AppendElement(&aTarget);
   Connect();
+  if (mDocument) {
+    if (nsPresContext* pc = mDocument->GetPresContext()) {
+      pc->RefreshDriver()->IntersectionObservationAdded();
+    }
+  }
 }
 
 void DOMIntersectionObserver::Unobserve(Element& aTarget) {

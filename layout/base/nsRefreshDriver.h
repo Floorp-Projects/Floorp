@@ -431,6 +431,21 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     EnsureTimerStarted();
   }
 
+  void IntersectionObservationAdded() {
+    // This is enough to make sure that UpdateIntersectionObservations runs at
+    // least once. This is presumably the intent of step 5 in [1]:
+    //
+    //     Schedule an iteration of the event loop in the root's browsing
+    //     context.
+    //
+    // Though the wording of it is not quite clear to me...
+    //
+    // [1]:
+    // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-observe
+    EnsureTimerStarted();
+    mNeedToUpdateIntersectionObservations = true;
+  }
+
  private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTArray<RefPtr<VVPResizeEvent>> VisualViewportResizeEventArray;
@@ -512,32 +527,36 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // flush since the last time we did it.
   const mozilla::TimeDuration mMinRecomputeVisibilityInterval;
 
-  bool mThrottled;
-  bool mNeedToRecomputeVisibility;
-  bool mTestControllingRefreshes;
-  bool mViewManagerFlushIsPending;
+  bool mThrottled : 1;
+  bool mNeedToRecomputeVisibility : 1;
+  bool mTestControllingRefreshes : 1;
+  bool mViewManagerFlushIsPending : 1;
 
   // True if the view manager needs a flush. Layers-free mode uses this value
   // to know when to notify invalidation.
-  bool mHasScheduleFlush;
+  bool mHasScheduleFlush : 1;
 
-  bool mInRefresh;
+  bool mInRefresh : 1;
 
   // True if the refresh driver is suspended waiting for transaction
   // id's to be returned and shouldn't do any work during Tick().
-  bool mWaitingForTransaction;
+  bool mWaitingForTransaction : 1;
   // True if Tick() was skipped because of mWaitingForTransaction and
   // we should schedule a new Tick immediately when resumed instead
   // of waiting until the next interval.
-  bool mSkippedPaints;
+  bool mSkippedPaints : 1;
 
   // True if view managers should delay any resize request until the
   // next tick by the refresh driver. This flag will be reset at the
   // start of every tick.
-  bool mResizeSuppressed;
+  bool mResizeSuppressed : 1;
 
   // True if the next tick should notify DOMContentFlushed.
-  bool mNotifyDOMContentFlushed;
+  bool mNotifyDOMContentFlushed : 1;
+
+  // True if we need to flush in order to update intersection observations in
+  // all our documents.
+  bool mNeedToUpdateIntersectionObservations : 1;
 
   // Number of seconds that the refresh driver is blocked waiting for a
   // compositor transaction to be completed before we append a note to the gfx
