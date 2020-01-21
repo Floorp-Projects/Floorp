@@ -575,9 +575,8 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetIsPreflight(), aLoadInfo->GetLoadTriggeredFromExternal(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
-      aLoadInfo->GetDocumentHasLoaded(),
-      aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
-      cspNonce, aLoadInfo->GetSkipContentSniffing(),
+      aLoadInfo->GetDocumentHasLoaded(), cspNonce,
+      aLoadInfo->GetSkipContentSniffing(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieSettingsArgs,
       aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo));
 
@@ -765,10 +764,9 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.loadTriggeredFromExternal(),
       loadInfoArgs.serviceWorkerTaintingSynthesized(),
       loadInfoArgs.documentHasUserInteracted(),
-      loadInfoArgs.documentHasLoaded(),
-      loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
-      loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
-      loadInfoArgs.requestBlockingReason(), aLoadingContext);
+      loadInfoArgs.documentHasLoaded(), loadInfoArgs.cspNonce(),
+      loadInfoArgs.skipContentSniffing(), loadInfoArgs.requestBlockingReason(),
+      aLoadingContext);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
@@ -787,7 +785,6 @@ void LoadInfoToParentLoadInfoForwarder(
         false,  // serviceWorkerTaintingSynthesized
         false,  // documentHasUserInteracted
         false,  // documentHasLoaded
-        false,  // allowListFutureDocumentsCreatedFromThisRedirectChain
         Maybe<CookieSettingsArgs>(),
         nsILoadInfo::BLOCKING_REASON_NONE);  // requestBlockingReason
     return;
@@ -819,9 +816,8 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetSkipContentSniffing(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
-      aLoadInfo->GetDocumentHasLoaded(),
-      aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
-      cookieSettingsArgs, aLoadInfo->GetRequestBlockingReason());
+      aLoadInfo->GetDocumentHasLoaded(), cookieSettingsArgs,
+      aLoadInfo->GetRequestBlockingReason());
 }
 
 nsresult MergeParentLoadInfoForwarder(
@@ -859,10 +855,6 @@ nsresult MergeParentLoadInfoForwarder(
       aForwarderArgs.documentHasUserInteracted()));
   MOZ_ALWAYS_SUCCEEDS(
       aLoadInfo->SetDocumentHasLoaded(aForwarderArgs.documentHasLoaded()));
-  MOZ_ALWAYS_SUCCEEDS(
-      aLoadInfo->SetAllowListFutureDocumentsCreatedFromThisRedirectChain(
-          aForwarderArgs
-              .allowListFutureDocumentsCreatedFromThisRedirectChain()));
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetRequestBlockingReason(
       aForwarderArgs.requestBlockingReason()));
 
