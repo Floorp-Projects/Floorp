@@ -184,7 +184,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
         // tree -- so we use moz_malloc_size_of instead of ImagesMallocSizeOf to
         // prevent DMD from seeing it reported twice.
         SizeOfState state(moz_malloc_size_of);
-        ImageMemoryCounter counter(image, state, /* aIsUsed = */ true);
+        ImageMemoryCounter counter(req, image, state, /* aIsUsed = */ true);
 
         n += counter.Values().DecodedHeap();
         n += counter.Values().DecodedNonHeap();
@@ -310,6 +310,9 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     }
 
     pathPrefix.Append(aCounter.IsUsed() ? "used/" : "unused/");
+    if (aCounter.IsValidating()) {
+      pathPrefix.AppendLiteral("validating/");
+    }
     if (aCounter.HasError()) {
       pathPrefix.AppendLiteral("err/");
     }
@@ -524,7 +527,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     SizeOfState state(ImagesMallocSizeOf);
     RefPtr<image::Image> image = aRequest->GetImage();
     if (image) {
-      ImageMemoryCounter counter(image, state, aIsUsed);
+      ImageMemoryCounter counter(aRequest, image, state, aIsUsed);
       aArray->AppendElement(std::move(counter));
     } else {
       // We can at least record some information about the image from the
