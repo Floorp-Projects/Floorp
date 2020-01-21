@@ -95,6 +95,7 @@ enum EndianOption {
 ///
 /// When a byte limit is set, bincode will return `Err` on any deserialization that goes over the limit, or any
 /// serialization that goes over the limit.
+#[derive(Clone)]
 pub struct Config {
     limit: LimitOption,
     endian: EndianOption,

@@ -45,8 +45,11 @@ pub const GLOBAL_APPLICATION_ID: &str = "org.mozilla.glean.test.app";
 
 // Create a new instance of Glean with a temporary directory.
 // We need to keep the `TempDir` alive, so that it's not deleted before we stop using it.
-pub fn new_glean() -> (Glean, tempfile::TempDir) {
-    let dir = tempfile::tempdir().unwrap();
+pub fn new_glean(tempdir: Option<tempfile::TempDir>) -> (Glean, tempfile::TempDir) {
+    let dir = match tempdir {
+        Some(tempdir) => tempdir,
+        None => tempfile::tempdir().unwrap(),
+    };
     let tmpname = dir.path().display().to_string();
 
     let cfg = glean_core::Configuration {
@@ -91,7 +94,7 @@ pub fn get_queued_pings(data_path: &Path) -> Result<Vec<(String, JsonValue)>> {
     get_pings(&data_path.join("pending_pings"))
 }
 
-/// Get a vector of the currently queued `deletion_request` pings.
+/// Get a vector of the currently queued `deletion-request` pings.
 ///
 /// # Arguments
 ///
@@ -99,7 +102,7 @@ pub fn get_queued_pings(data_path: &Path) -> Result<Vec<(String, JsonValue)>> {
 ///
 /// # Returns
 ///
-/// A vector of all queued `deletion_request` pings. Each entry is a pair `(url, json_data)`,
+/// A vector of all queued `deletion-request` pings. Each entry is a pair `(url, json_data)`,
 /// where `url` is the endpoint the ping will go to, and `json_data` is the JSON payload.
 pub fn get_deletion_pings(data_path: &Path) -> Result<Vec<(String, JsonValue)>> {
     get_pings(&data_path.join("deletion_request"))

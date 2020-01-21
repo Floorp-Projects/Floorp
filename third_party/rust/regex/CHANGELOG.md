@@ -1,3 +1,31 @@
+1.3.3 (2020-01-09)
+==================
+This is a small maintenance release that upgrades the dependency on
+`thread_local` from `0.3` to `1.0`. The minimum supported Rust version remains
+at Rust 1.28.
+
+
+1.3.2 (2020-01-09)
+==================
+This is a small maintenance release with some house cleaning and bug fixes.
+
+New features:
+
+* [FEATURE #631](https://github.com/rust-lang/regex/issues/631):
+  Add a `Match::range` method an a `From<Match> for Range` impl.
+
+Bug fixes:
+
+* [BUG #521](https://github.com/rust-lang/regex/issues/521):
+  Corrects `/-/.splitn("a", 2)` to return `["a"]` instead of `["a", ""]`.
+* [BUG #594](https://github.com/rust-lang/regex/pull/594):
+  Improve error reporting when writing `\p\`.
+* [BUG #627](https://github.com/rust-lang/regex/issues/627):
+  Corrects `/-/.split("a-")` to return `["a", ""]` instead of `["a"]`.
+* [BUG #633](https://github.com/rust-lang/regex/pull/633):
+  Squash deprecation warnings for the `std::error::Error::description` method.
+
+
 1.3.1 (2019-09-04)
 ==================
 This is a maintenance release with no changes in order to try to work-around

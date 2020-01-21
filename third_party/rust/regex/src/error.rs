@@ -19,6 +19,8 @@ pub enum Error {
 }
 
 impl ::std::error::Error for Error {
+    // TODO: Remove this method entirely on the next breaking semver release.
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         match *self {
             Error::Syntax(ref err) => err,

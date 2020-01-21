@@ -9,12 +9,11 @@ use serde_json::json;
 
 use glean_core::metrics::*;
 use glean_core::storage::StorageManager;
-use glean_core::Glean;
 use glean_core::{CommonMetricData, Lifetime};
 
 #[test]
 fn can_create_labeled_counter_metric() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
@@ -46,7 +45,7 @@ fn can_create_labeled_counter_metric() {
 
 #[test]
 fn can_create_labeled_string_metric() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         StringMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
@@ -78,7 +77,7 @@ fn can_create_labeled_string_metric() {
 
 #[test]
 fn can_create_labeled_bool_metric() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         BooleanMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
@@ -110,7 +109,7 @@ fn can_create_labeled_bool_metric() {
 
 #[test]
 fn can_use_multiple_labels() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
@@ -148,7 +147,7 @@ fn can_use_multiple_labels() {
 
 #[test]
 fn labels_are_checked_against_static_list() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
@@ -193,7 +192,7 @@ fn labels_are_checked_against_static_list() {
 
 #[test]
 fn dynamic_labels_too_long() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
@@ -228,7 +227,7 @@ fn dynamic_labels_too_long() {
 
 #[test]
 fn dynamic_labels_regex_mimsatch() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
@@ -274,7 +273,7 @@ fn dynamic_labels_regex_mimsatch() {
 
 #[test]
 fn dynamic_labels_regex_allowed() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
             name: "labeled_metric".into(),
@@ -327,16 +326,10 @@ fn dynamic_labels_regex_allowed() {
 
 #[test]
 fn seen_labels_get_reloaded_from_disk() {
-    let (_t, tmpname) = tempdir();
-    let cfg = glean_core::Configuration {
-        data_path: tmpname,
-        application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-    };
+    let (mut tempdir, _) = tempdir();
 
-    let glean = Glean::new(cfg.clone()).unwrap();
+    let (glean, dir) = new_glean(Some(tempdir));
+    tempdir = dir;
 
     let mut labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
@@ -376,7 +369,7 @@ fn seen_labels_get_reloaded_from_disk() {
 
     // Force a reload
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        let (glean, _) = new_glean(Some(tempdir));
 
         // Try to store another label
         labeled.get("new_label").add(&glean, 40);

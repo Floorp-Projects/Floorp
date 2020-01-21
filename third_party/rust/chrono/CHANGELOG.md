@@ -6,7 +6,76 @@ This documents all notable changes to [Chrono](https://github.com/chronotope/chr
 Chrono obeys the principle of [Semantic Versioning](http://semver.org/).
 
 There were/are numerous minor versions before 1.0 due to the language changes.
-Versions with only mechnical changes will be omitted from the following list.
+Versions with only mechanical changes will be omitted from the following list.
+
+## 0.4.10
+
+### Improvements
+
+* `DateTime::parse_from_str` is more than 2x faster in some cases. (@michalsrb
+  #358)
+* Significant improvements to no-std and alloc support (This should also make
+  many format/serialization operations induce zero unnecessary allocations)
+  (@CryZe #341)
+
+### Features
+
+* Functions that were accepting `Iterator` of `Item`s (for example
+  `format_with_items`) now accept `Iterator` of `Borrow<Item>`, so one can
+  use values or references. (@michalsrb #358)
+* Add built-in support for structs with nested `Option<Datetime>` etc fields
+  (@manifest #302)
+
+### Internal/doc improvements
+
+* Use markdown footnotes on the `strftime` docs page (@qudlibetor #359)
+* Migrate from `try!` -> `?` (question mark) because it is now emitting
+  deprecation warnings and has been stable since rustc 1.13.0
+* Deny dead code
+
+## 0.4.9
+
+### Fixes
+
+* Make Datetime arithmatic adjust their offsets after discovering their new
+  timestamps (@quodlibetor #337)
+* Put wasm-bindgen related code and dependencies behind a `wasmbind` feature
+  gate. (@quodlibetor #335)
+
+## 0.4.8
+
+### Fixes
+
+* Add '0' to single-digit days in rfc2822 date format (@wyhaya #323)
+* Correctly pad DelayedFormat (@SamokhinIlya #320)
+
+### Features
+
+* Support `wasm-unknown-unknown` via wasm-bindgen (in addition to
+  emscripten/`wasm-unknown-emscripten`). (finished by @evq in #331, initial
+  work by @jjpe #287)
+
+## 0.4.7
+
+### Fixes
+
+* Disable libc default features so that CI continues to work on rust 1.13
+* Fix panic on negative inputs to timestamp_millis (@cmars #292)
+* Make `LocalResult` `Copy/Eq/Hash`
+
+### Features
+
+* Add `std::convert::From` conversions between the different timezone formats
+  (@mqudsi #271)
+* Add `timestamp_nanos` methods (@jean-airoldie #308)
+* Documentation improvements
+
+## 0.4.6
+
+### Maintenance
+
+* Doc improvements -- improve README CI verification, external links
+* winapi upgrade to 0.3
 
 ## 0.4.5
 

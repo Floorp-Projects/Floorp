@@ -3,14 +3,18 @@
 
 //! ISO 8601 time without timezone.
 
-use std::{str, fmt, hash};
-use std::ops::{Add, Sub, AddAssign, SubAssign};
+#[cfg(any(feature = "alloc", feature = "std", test))]
+use core::borrow::Borrow;
+use core::{str, fmt, hash};
+use core::ops::{Add, Sub, AddAssign, SubAssign};
 use oldtime::Duration as OldDuration;
 
 use Timelike;
 use div::div_mod_floor;
 use format::{Item, Numeric, Pad, Fixed};
-use format::{parse, Parsed, ParseError, ParseResult, DelayedFormat, StrftimeItems};
+use format::{parse, Parsed, ParseError, ParseResult, StrftimeItems};
+#[cfg(any(feature = "alloc", feature = "std", test))]
+use format::DelayedFormat;
 
 /// ISO 8601 time without timezone.
 /// Allows for the nanosecond precision and optional leap second representation.
@@ -492,7 +496,7 @@ impl NaiveTime {
     /// ~~~~
     pub fn parse_from_str(s: &str, fmt: &str) -> ParseResult<NaiveTime> {
         let mut parsed = Parsed::new();
-        try!(parse(&mut parsed, s, StrftimeItems::new(fmt)));
+        parse(&mut parsed, s, StrftimeItems::new(fmt))?;
         parsed.to_naive_time()
     }
 
@@ -681,7 +685,7 @@ impl NaiveTime {
         //      `rhs.frac`|========================================>|
         //          |     |   |        `self - rhs`         |       |
 
-        use std::cmp::Ordering;
+        use core::cmp::Ordering;
 
         let secs = i64::from(self.secs) - i64::from(rhs.secs);
         let frac = i64::from(self.frac) - i64::from(rhs.frac);
@@ -723,9 +727,10 @@ impl NaiveTime {
     /// # let t = NaiveTime::from_hms(23, 56, 4);
     /// assert_eq!(format!("{}", t.format_with_items(fmt)), "23:56:04");
     /// ~~~~
+    #[cfg(any(feature = "alloc", feature = "std", test))]
     #[inline]
-    pub fn format_with_items<'a, I>(&self, items: I) -> DelayedFormat<I>
-            where I: Iterator<Item=Item<'a>> + Clone {
+    pub fn format_with_items<'a, I, B>(&self, items: I) -> DelayedFormat<I>
+            where I: Iterator<Item=B> + Clone, B: Borrow<Item<'a>> {
         DelayedFormat::new(None, Some(*self), items)
     }
 
@@ -763,6 +768,7 @@ impl NaiveTime {
     /// assert_eq!(format!("{}", t.format("%H:%M:%S%.6f")), "23:56:04.012345");
     /// assert_eq!(format!("{}", t.format("%-I:%M %p")), "11:56 PM");
     /// ~~~~
+    #[cfg(any(feature = "alloc", feature = "std", test))]
     #[inline]
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
         self.format_with_items(StrftimeItems::new(fmt))
@@ -1230,7 +1236,7 @@ impl fmt::Debug for NaiveTime {
             (sec, self.frac)
         };
 
-        try!(write!(f, "{:02}:{:02}:{:02}", hour, min, sec));
+        write!(f, "{:02}:{:02}:{:02}", hour, min, sec)?;
         if nano == 0 {
             Ok(())
         } else if nano % 1_000_000 == 0 {
@@ -1299,16 +1305,16 @@ impl str::FromStr for NaiveTime {
 
     fn from_str(s: &str) -> ParseResult<NaiveTime> {
         const ITEMS: &'static [Item<'static>] = &[
-            Item::Space(""), Item::Numeric(Numeric::Hour, Pad::Zero),
+                             Item::Numeric(Numeric::Hour, Pad::Zero),
             Item::Space(""), Item::Literal(":"),
-            Item::Space(""), Item::Numeric(Numeric::Minute, Pad::Zero),
+                             Item::Numeric(Numeric::Minute, Pad::Zero),
             Item::Space(""), Item::Literal(":"),
-            Item::Space(""), Item::Numeric(Numeric::Second, Pad::Zero),
+                             Item::Numeric(Numeric::Second, Pad::Zero),
             Item::Fixed(Fixed::Nanosecond), Item::Space(""),
         ];
 
         let mut parsed = Parsed::new();
-        try!(parse(&mut parsed, s, ITEMS.iter().cloned()));
+        parse(&mut parsed, s, ITEMS.iter())?;
         parsed.to_naive_time()
     }
 }
@@ -1411,7 +1417,7 @@ mod rustc_serialize {
 
 #[cfg(feature = "serde")]
 mod serde {
-    use std::fmt;
+    use core::fmt;
     use super::NaiveTime;
     use serdelib::{ser, de};
 
@@ -1431,7 +1437,7 @@ mod serde {
     impl<'de> de::Visitor<'de> for NaiveTimeVisitor {
         type Value = NaiveTime;
 
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result 
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result
         {
             write!(formatter, "a formatted time string")
         }
@@ -1439,7 +1445,7 @@ mod serde {
         fn visit_str<E>(self, value: &str) -> Result<NaiveTime, E>
             where E: de::Error
         {
-            value.parse().map_err(|err| E::custom(format!("{}", err)))
+            value.parse().map_err(E::custom)
         }
     }
 

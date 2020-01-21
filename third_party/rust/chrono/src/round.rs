@@ -2,7 +2,7 @@
 // See README.md and LICENSE.txt for details.
 
 use Timelike;
-use std::ops::{Add, Sub};
+use core::ops::{Add, Sub};
 use oldtime::Duration;
 
 /// Extension trait for subsecond rounding or truncation to a maximum number

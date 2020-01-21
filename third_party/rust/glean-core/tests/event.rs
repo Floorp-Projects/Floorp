@@ -15,7 +15,7 @@ use glean_core::{CommonMetricData, Lifetime};
 fn record_properly_records_without_optional_arguments() {
     let store_names = vec!["store1".into(), "store2".into()];
 
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = EventMetric::new(
         CommonMetricData {
@@ -42,7 +42,7 @@ fn record_properly_records_without_optional_arguments() {
 
 #[test]
 fn record_properly_records_with_optional_arguments() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let store_names = vec!["store1".into(), "store2".into()];
 
@@ -83,7 +83,7 @@ fn record_properly_records_with_optional_arguments() {
 
 #[test]
 fn snapshot_returns_none_if_nothing_is_recorded_in_the_store() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     assert!(glean
         .event_storage()
@@ -93,7 +93,7 @@ fn snapshot_returns_none_if_nothing_is_recorded_in_the_store() {
 
 #[test]
 fn snapshot_correctly_clears_the_stores() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let store_names = vec!["store1".into(), "store2".into()];
 
@@ -101,7 +101,7 @@ fn snapshot_correctly_clears_the_stores() {
         CommonMetricData {
             name: "test_event_clear".into(),
             category: "telemetry".into(),
-            send_in_pings: store_names.clone(),
+            send_in_pings: store_names,
             disabled: false,
             lifetime: Lifetime::Ping,
             ..Default::default()
@@ -147,7 +147,7 @@ fn snapshot_correctly_clears_the_stores() {
 
 #[test]
 fn test_sending_of_event_ping_when_it_fills_up() {
-    let (mut glean, _t) = new_glean();
+    let (mut glean, _t) = new_glean(None);
 
     let store_names: Vec<String> = vec!["events".into()];
 
@@ -159,7 +159,7 @@ fn test_sending_of_event_ping_when_it_fills_up() {
         CommonMetricData {
             name: "click".into(),
             category: "ui".into(),
-            send_in_pings: store_names.clone(),
+            send_in_pings: store_names,
             disabled: false,
             lifetime: Lifetime::Ping,
             ..Default::default()
@@ -199,7 +199,7 @@ fn test_sending_of_event_ping_when_it_fills_up() {
 
 #[test]
 fn extra_keys_must_be_recorded_and_truncated_if_needed() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let store_names: Vec<String> = vec!["store1".into()];
 
@@ -207,7 +207,7 @@ fn extra_keys_must_be_recorded_and_truncated_if_needed() {
         CommonMetricData {
             name: "testEvent".into(),
             category: "ui".into(),
-            send_in_pings: store_names.clone(),
+            send_in_pings: store_names,
             disabled: false,
             lifetime: Lifetime::Ping,
             ..Default::default()
@@ -240,7 +240,7 @@ fn extra_keys_must_be_recorded_and_truncated_if_needed() {
 
 #[test]
 fn snapshot_sorts_the_timestamps() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = EventMetric::new(
         CommonMetricData {

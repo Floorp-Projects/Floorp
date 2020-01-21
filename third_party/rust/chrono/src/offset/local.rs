@@ -87,8 +87,20 @@ impl Local {
     }
 
     /// Returns a `DateTime` which corresponds to the current date.
+    #[cfg(not(all(target_arch = "wasm32", feature = "wasmbind")))]
     pub fn now() -> DateTime<Local> {
         tm_to_datetime(oldtime::now())
+    }
+
+    /// Returns a `DateTime` which corresponds to the current date.
+    #[cfg(all(target_arch = "wasm32", feature = "wasmbind"))]
+    pub fn now() -> DateTime<Local> {
+        use super::Utc;
+        let now: DateTime<Utc> = super::Utc::now();
+
+        // Workaround missing timezone logic in `time` crate
+        let offset = FixedOffset::west((js_sys::Date::new_0().get_timezone_offset() as i32) * 60);
+        DateTime::from_utc(now.naive_utc(), offset)
     }
 }
 
@@ -179,4 +191,3 @@ mod tests {
                 "unexpected timestr {:?}", timestr);
     }
 }
-

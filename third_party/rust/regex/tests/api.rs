@@ -205,6 +205,18 @@ split!(
     split2,
     r"(?-u)\b",
     "a b c",
-    &[t!(""), t!("a"), t!(" "), t!("b"), t!(" "), t!("c")]
+    &[t!(""), t!("a"), t!(" "), t!("b"), t!(" "), t!("c"), t!("")]
 );
-split!(split3, r"a$", "a", &[t!("")]);
+split!(split3, r"a$", "a", &[t!(""), t!("")]);
+split!(split_none, r"-", r"a", &[t!("a")]);
+split!(split_trailing_blank, r"-", r"a-", &[t!("a"), t!("")]);
+split!(split_trailing_blanks, r"-", r"a--", &[t!("a"), t!(""), t!("")]);
+split!(split_empty, r"-", r"", &[t!("")]);
+
+splitn!(splitn_below_limit, r"-", r"a", 2, &[t!("a")]);
+splitn!(splitn_at_limit, r"-", r"a-b", 2, &[t!("a"), t!("b")]);
+splitn!(splitn_above_limit, r"-", r"a-b-c", 2, &[t!("a"), t!("b-c")]);
+splitn!(splitn_zero_limit, r"-", r"a-b", 0, empty_vec!());
+splitn!(splitn_trailing_blank, r"-", r"a-", 2, &[t!("a"), t!("")]);
+splitn!(splitn_trailing_separator, r"-", r"a--", 2, &[t!("a"), t!("-")]);
+splitn!(splitn_empty, r"-", r"", 1, &[t!("")]);

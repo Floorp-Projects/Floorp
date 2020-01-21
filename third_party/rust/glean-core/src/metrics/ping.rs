@@ -36,7 +36,7 @@ impl PingType {
         }
     }
 
-    /// Send the ping.
+    /// Submit the ping for eventual uploading
     ///
     /// ## Arguments
     ///
@@ -44,8 +44,8 @@ impl PingType {
     ///
     /// ## Return value
     ///
-    /// See [`Glean#send_ping`](../struct.Glean.html#method.send_ping) for details.
-    pub fn send(&self, glean: &Glean) -> Result<bool> {
-        glean.send_ping(self)
+    /// See [`Glean#submit_ping`](../struct.Glean.html#method.submit_ping) for details.
+    pub fn submit(&self, glean: &Glean) -> Result<bool> {
+        glean.submit_ping(self)
     }
 }

@@ -48,14 +48,12 @@
 //!
 //! ### Examples
 //!
-//! ```rust
-//! # #![allow(unstable)]
-//! #[macro_use]
-//! extern crate log;
-//!
+//! ```edition2018
 //! # #[derive(Debug)] pub struct Yak(String);
 //! # impl Yak { fn shave(&mut self, _: u32) {} }
 //! # fn find_a_razor() -> Result<u32, u32> { Ok(1) }
+//! use log::{info, warn};
+//!
 //! pub fn shave_the_yak(yak: &mut Yak) {
 //!     info!(target: "yak_events", "Commencing yak shaving for {:?}", yak);
 //!
@@ -115,9 +113,7 @@
 //! logs all messages at the [`Error`][level_link], [`Warn`][level_link] or
 //! [`Info`][level_link] levels to stdout:
 //!
-//! ```rust
-//! extern crate log;
-//!
+//! ```edition2018
 //! use log::{Record, Level, Metadata};
 //!
 //! struct SimpleLogger;
@@ -150,8 +146,7 @@
 //! provide a function that wraps a call to [`set_logger`] and
 //! [`set_max_level`], handling initialization of the logger:
 //!
-//! ```rust
-//! # extern crate log;
+//! ```edition2018
 //! # use log::{Level, Metadata};
 //! # struct SimpleLogger;
 //! # impl log::Log for SimpleLogger {
@@ -181,8 +176,7 @@
 //! identical to `set_logger` except that it takes a `Box<Log>` rather than a
 //! `&'static Log`:
 //!
-//! ```rust
-//! # extern crate log;
+//! ```edition2018
 //! # use log::{Level, LevelFilter, Log, SetLoggerError, Metadata};
 //! # struct SimpleLogger;
 //! # impl log::Log for SimpleLogger {
@@ -220,6 +214,9 @@
 //!
 //! These features control the value of the `STATIC_MAX_LEVEL` constant. The logging macros check
 //! this value before logging a message. By default, no levels are disabled.
+//!
+//! Libraries should avoid using the max level features because they're global and can't be changed
+//! once they're set.
 //!
 //! For example, a crate can disable trace level logs in debug builds and trace, debug, and info
 //! level logs in release builds with the following configuration:
@@ -270,17 +267,17 @@
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-    html_root_url = "https://docs.rs/log/0.4.6"
+    html_root_url = "https://docs.rs/log/0.4.8"
 )]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
-#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 // When compiled for the rustc compiler itself we want to make sure that this is
 // an unstable crate
 #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
 #![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
 
-#[cfg(not(feature = "std"))]
+#[cfg(all(not(feature = "std"), not(test)))]
 extern crate core as std;
 
 #[macro_use]
@@ -292,15 +289,26 @@ use std::error;
 use std::fmt;
 use std::mem;
 use std::str::FromStr;
-use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+// FIXME: ATOMIC_USIZE_INIT was deprecated in rust 1.34. Silence the
+// deprecation warning until our MSRV >= 1.24, where we can use the
+// replacement const fn `AtomicUsize::new`
+#[allow(deprecated)]
+use std::sync::atomic::ATOMIC_USIZE_INIT;
 
 #[macro_use]
 mod macros;
 mod serde;
 
+#[cfg(feature = "kv_unstable")]
+pub mod kv;
+
 // The LOGGER static holds a pointer to the global logger. It is protected by
 // the STATE static which determines whether LOGGER has been initialized yet.
 static mut LOGGER: &'static Log = &NopLogger;
+
+#[allow(deprecated)]
 static STATE: AtomicUsize = ATOMIC_USIZE_INIT;
 
 // There are three different states that we care about: the logger's
@@ -310,6 +318,7 @@ const UNINITIALIZED: usize = 0;
 const INITIALIZING: usize = 1;
 const INITIALIZED: usize = 2;
 
+#[allow(deprecated)]
 static MAX_LOG_LEVEL_FILTER: AtomicUsize = ATOMIC_USIZE_INIT;
 
 static LOG_LEVEL_NAMES: [&'static str; 6] = ["OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
@@ -629,7 +638,7 @@ impl FromStr for LevelFilter {
 
 impl fmt::Display for LevelFilter {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", LOG_LEVEL_NAMES[*self as usize])
+        fmt.pad(LOG_LEVEL_NAMES[*self as usize])
     }
 }
 
@@ -660,6 +669,22 @@ impl LevelFilter {
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+enum MaybeStaticStr<'a> {
+    Static(&'static str),
+    Borrowed(&'a str),
+}
+
+impl<'a> MaybeStaticStr<'a> {
+    #[inline]
+    fn get(&self) -> &'a str {
+        match *self {
+            MaybeStaticStr::Static(s) => s,
+            MaybeStaticStr::Borrowed(s) => s,
+        }
+    }
+}
+
 /// The "payload" of a log message.
 ///
 /// # Use
@@ -678,8 +703,7 @@ impl LevelFilter {
 /// The following example shows a simple logger that displays the level,
 /// module path, and message of any `Record` that is passed to it.
 ///
-/// ```rust
-/// # extern crate log;
+/// ```edition2018
 /// struct SimpleLogger;
 ///
 /// impl log::Log for SimpleLogger {
@@ -710,9 +734,28 @@ impl LevelFilter {
 pub struct Record<'a> {
     metadata: Metadata<'a>,
     args: fmt::Arguments<'a>,
-    module_path: Option<&'a str>,
-    file: Option<&'a str>,
+    module_path: Option<MaybeStaticStr<'a>>,
+    file: Option<MaybeStaticStr<'a>>,
     line: Option<u32>,
+    #[cfg(feature = "kv_unstable")]
+    key_values: KeyValues<'a>,
+}
+
+// This wrapper type is only needed so we can
+// `#[derive(Debug)]` on `Record`. It also
+// provides a useful `Debug` implementation for
+// the underlying `Source`.
+#[cfg(feature = "kv_unstable")]
+#[derive(Clone)]
+struct KeyValues<'a>(&'a kv::Source);
+
+#[cfg(feature = "kv_unstable")]
+impl<'a> fmt::Debug for KeyValues<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut visitor = f.debug_map();
+        self.0.visit(&mut visitor)?;
+        visitor.finish()
+    }
 }
 
 impl<'a> Record<'a> {
@@ -749,19 +792,63 @@ impl<'a> Record<'a> {
     /// The module path of the message.
     #[inline]
     pub fn module_path(&self) -> Option<&'a str> {
-        self.module_path
+        self.module_path.map(|s| s.get())
+    }
+
+    /// The module path of the message, if it is a `'static` string.
+    #[inline]
+    pub fn module_path_static(&self) -> Option<&'static str> {
+        match self.module_path {
+            Some(MaybeStaticStr::Static(s)) => Some(s),
+            _ => None,
+        }
     }
 
     /// The source file containing the message.
     #[inline]
     pub fn file(&self) -> Option<&'a str> {
-        self.file
+        self.file.map(|s| s.get())
+    }
+
+    /// The module path of the message, if it is a `'static` string.
+    #[inline]
+    pub fn file_static(&self) -> Option<&'static str> {
+        match self.file {
+            Some(MaybeStaticStr::Static(s)) => Some(s),
+            _ => None,
+        }
     }
 
     /// The line containing the message.
     #[inline]
     pub fn line(&self) -> Option<u32> {
         self.line
+    }
+
+    /// The structued key-value pairs associated with the message.
+    #[cfg(feature = "kv_unstable")]
+    #[inline]
+    pub fn key_values(&self) -> &kv::Source {
+        self.key_values.0
+    }
+
+    /// Create a new [`Builder`](struct.Builder.html) based on this record.
+    #[cfg(feature = "kv_unstable")]
+    #[inline]
+    pub fn to_builder(&self) -> RecordBuilder {
+        RecordBuilder {
+            record: Record {
+                metadata: Metadata {
+                    level: self.metadata.level,
+                    target: self.metadata.target,
+                },
+                args: self.args,
+                module_path: self.module_path,
+                file: self.file,
+                line: self.line,
+                key_values: self.key_values.clone(),
+            }
+        }
     }
 }
 
@@ -774,7 +861,7 @@ impl<'a> Record<'a> {
 /// # Examples
 ///
 ///
-/// ```rust
+/// ```edition2018
 /// use log::{Level, Record};
 ///
 /// let record = Record::builder()
@@ -789,7 +876,7 @@ impl<'a> Record<'a> {
 ///
 /// Alternatively, use [`MetadataBuilder`](struct.MetadataBuilder.html):
 ///
-/// ```rust
+/// ```edition2018
 /// use log::{Record, Level, MetadataBuilder};
 ///
 /// let error_metadata = MetadataBuilder::new()
@@ -825,7 +912,20 @@ impl<'a> RecordBuilder<'a> {
     /// [`Metadata::builder().build()`]: struct.MetadataBuilder.html#method.build
     #[inline]
     pub fn new() -> RecordBuilder<'a> {
-        RecordBuilder {
+        #[cfg(feature = "kv_unstable")]
+        return RecordBuilder {
+            record: Record {
+                args: format_args!(""),
+                metadata: Metadata::builder().build(),
+                module_path: None,
+                file: None,
+                line: None,
+                key_values: KeyValues(&Option::None::<(kv::Key, kv::Value)>),
+            },
+        };
+
+        #[cfg(not(feature = "kv_unstable"))]
+        return RecordBuilder {
             record: Record {
                 args: format_args!(""),
                 metadata: Metadata::builder().build(),
@@ -833,7 +933,7 @@ impl<'a> RecordBuilder<'a> {
                 file: None,
                 line: None,
             },
-        }
+        };
     }
 
     /// Set [`args`](struct.Record.html#method.args).
@@ -867,14 +967,28 @@ impl<'a> RecordBuilder<'a> {
     /// Set [`module_path`](struct.Record.html#method.module_path)
     #[inline]
     pub fn module_path(&mut self, path: Option<&'a str>) -> &mut RecordBuilder<'a> {
-        self.record.module_path = path;
+        self.record.module_path = path.map(MaybeStaticStr::Borrowed);
+        self
+    }
+
+    /// Set [`module_path`](struct.Record.html#method.module_path) to a `'static` string
+    #[inline]
+    pub fn module_path_static(&mut self, path: Option<&'static str>) -> &mut RecordBuilder<'a> {
+        self.record.module_path = path.map(MaybeStaticStr::Static);
         self
     }
 
     /// Set [`file`](struct.Record.html#method.file)
     #[inline]
     pub fn file(&mut self, file: Option<&'a str>) -> &mut RecordBuilder<'a> {
-        self.record.file = file;
+        self.record.file = file.map(MaybeStaticStr::Borrowed);
+        self
+    }
+
+    /// Set [`file`](struct.Record.html#method.file) to a `'static` string.
+    #[inline]
+    pub fn file_static(&mut self, file: Option<&'static str>) -> &mut RecordBuilder<'a> {
+        self.record.file = file.map(MaybeStaticStr::Static);
         self
     }
 
@@ -882,6 +996,14 @@ impl<'a> RecordBuilder<'a> {
     #[inline]
     pub fn line(&mut self, line: Option<u32>) -> &mut RecordBuilder<'a> {
         self.record.line = line;
+        self
+    }
+
+    /// Set [`key_values`](struct.Record.html#method.key_values)
+    #[cfg(feature = "kv_unstable")]
+    #[inline]
+    pub fn key_values(&mut self, kvs: &'a kv::Source) -> &mut RecordBuilder<'a> {
+        self.record.key_values = KeyValues(kvs);
         self
     }
 
@@ -910,10 +1032,7 @@ impl<'a> RecordBuilder<'a> {
 ///
 /// # Examples
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate log;
-/// #
+/// ```edition2018
 /// use log::{Record, Level, Metadata};
 ///
 /// struct MyLogger;
@@ -967,7 +1086,7 @@ impl<'a> Metadata<'a> {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```edition2018
 /// let target = "myApp";
 /// use log::{Level, MetadataBuilder};
 /// let metadata = MetadataBuilder::new()
@@ -1090,7 +1209,7 @@ pub fn max_level() -> LevelFilter {
 /// An error is returned if a logger has already been set.
 ///
 /// [`set_logger`]: fn.set_logger.html
-#[cfg(feature = "std")]
+#[cfg(all(feature = "std", atomic_cas))]
 pub fn set_boxed_logger(logger: Box<Log>) -> Result<(), SetLoggerError> {
     set_logger_inner(|| unsafe { &*Box::into_raw(logger) })
 }
@@ -1104,17 +1223,21 @@ pub fn set_boxed_logger(logger: Box<Log>) -> Result<(), SetLoggerError> {
 /// implementations should provide an initialization method that installs the
 /// logger internally.
 ///
+/// # Availability
+///
+/// This method is available even when the `std` feature is disabled. However,
+/// it is currently unavailable on `thumbv6` targets, which lack support for
+/// some atomic operations which are used by this function. Even on those
+/// targets, [`set_logger_racy`] will be available.
+///
 /// # Errors
 ///
 /// An error is returned if a logger has already been set.
 ///
 /// # Examples
 ///
-/// ```rust
-/// # #[macro_use]
-/// # extern crate log;
-/// #
-/// use log::{Record, Level, Metadata, LevelFilter};
+/// ```edition2018
+/// use log::{error, info, warn, Record, Level, Metadata, LevelFilter};
 ///
 /// static MY_LOGGER: MyLogger = MyLogger;
 ///
@@ -1142,10 +1265,14 @@ pub fn set_boxed_logger(logger: Box<Log>) -> Result<(), SetLoggerError> {
 /// error!("oops");
 /// # }
 /// ```
+///
+/// [`set_logger_racy`]: fn.set_logger_racy.html
+#[cfg(atomic_cas)]
 pub fn set_logger(logger: &'static Log) -> Result<(), SetLoggerError> {
     set_logger_inner(|| logger)
 }
 
+#[cfg(atomic_cas)]
 fn set_logger_inner<F>(make_logger: F) -> Result<(), SetLoggerError>
 where
     F: FnOnce() -> &'static Log,
@@ -1163,6 +1290,40 @@ where
             }
             _ => Err(SetLoggerError(())),
         }
+    }
+}
+
+/// A thread-unsafe version of [`set_logger`].
+///
+/// This function is available on all platforms, even those that do not have
+/// support for atomics that is needed by [`set_logger`].
+///
+/// In almost all cases, [`set_logger`] should be preferred.
+///
+/// # Safety
+///
+/// This function is only safe to call when no other logger initialization
+/// function is called while this function still executes.
+///
+/// This can be upheld by (for example) making sure that **there are no other
+/// threads**, and (on embedded) that **interrupts are disabled**.
+///
+/// It is safe to use other logging functions while this function runs
+/// (including all logging macros).
+///
+/// [`set_logger`]: fn.set_logger.html
+pub unsafe fn set_logger_racy(logger: &'static Log) -> Result<(), SetLoggerError> {
+    match STATE.load(Ordering::SeqCst) {
+        UNINITIALIZED => {
+            LOGGER = logger;
+            STATE.store(INITIALIZED, Ordering::SeqCst);
+            Ok(())
+        }
+        INITIALIZING => {
+            // This is just plain UB, since we were racing another initialization function
+            unreachable!("set_logger_racy must not be used with other initialization functions")
+        }
+        _ => Err(SetLoggerError(())),
     }
 }
 
@@ -1227,15 +1388,15 @@ pub fn logger() -> &'static Log {
 pub fn __private_api_log(
     args: fmt::Arguments,
     level: Level,
-    &(target, module_path, file, line): &(&str, &str, &str, u32),
+    &(target, module_path, file, line): &(&str, &'static str, &'static str, u32),
 ) {
     logger().log(
         &Record::builder()
             .args(args)
             .level(level)
             .target(target)
-            .module_path(Some(module_path))
-            .file(Some(file))
+            .module_path_static(Some(module_path))
+            .file_static(Some(file))
             .line(Some(line))
             .build(),
     );
@@ -1465,5 +1626,43 @@ mod tests {
         assert_eq!(record_test.module_path(), Some("foo"));
         assert_eq!(record_test.file(), Some("bar"));
         assert_eq!(record_test.line(), Some(30));
+    }
+
+    #[test]
+    #[cfg(feature = "kv_unstable")]
+    fn test_record_key_values_builder() {
+        use super::Record;
+        use kv::{self, Visitor};
+
+        struct TestVisitor {
+            seen_pairs: usize,
+        }
+
+        impl<'kvs> Visitor<'kvs> for TestVisitor {
+            fn visit_pair(
+                &mut self,
+                _: kv::Key<'kvs>,
+                _: kv::Value<'kvs>
+            ) -> Result<(), kv::Error> {
+                self.seen_pairs += 1;
+                Ok(())
+            }
+        }
+
+        let kvs: &[(&str, i32)] = &[
+            ("a", 1),
+            ("b", 2)
+        ];
+        let record_test = Record::builder()
+            .key_values(&kvs)
+            .build();
+
+        let mut visitor = TestVisitor {
+            seen_pairs: 0,
+        };
+
+        record_test.key_values().visit(&mut visitor).unwrap();
+
+        assert_eq!(2, visitor.seen_pairs);
     }
 }
