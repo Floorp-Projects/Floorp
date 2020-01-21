@@ -779,6 +779,27 @@ SimpleTest.waitForFocus(async function() {
      null,
      "#9-1 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection starts from a text node in <b> element and ends before the following <br> element");
 
+  editor.innerHTML = "<p><b>b1</b><b><br></b><b>b2</b></p>";
+  editor.focus();
+
+  // <p><b>[b1</b><b>}<br></b><b>b2</b></p>
+  // This is usual case of double-clicking in the first <b> element.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild.firstChild.nextSibling, 0);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#10-1 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection starts from a text node in <b> element and ends before the following <br> element in another <b> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     null,
+     "#10-1 nsIHTMLEditor::getSelectedElement(\"href\") should return null when Selection starts from a text node in <b> element and ends before the following <br> element in another <b> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     null,
+     "#10-1 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection starts from a text node in <b> element and ends before the following <br> element in another <b> element");
+
   SimpleTest.finish();
 });
 
