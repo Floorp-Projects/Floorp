@@ -538,23 +538,6 @@ uint32_t LexicalScope::nextFrameSlot(const AbstractScope& scope) {
   MOZ_CRASH("Not an enclosing intra-frame Scope");
 }
 
-/* static */
-LexicalScope* LexicalScope::create(JSContext* cx, ScopeKind kind,
-                                   Handle<Data*> data, uint32_t firstFrameSlot,
-                                   HandleScope enclosing) {
-  MOZ_ASSERT(data,
-             "LexicalScopes should not be created if there are no bindings.");
-
-  // The data that's passed in is from the frontend and is LifoAlloc'd.
-  // Copy it now that we're creating a permanent VM scope.
-  Rooted<UniquePtr<Data>> copy(cx, CopyScopeData<LexicalScope>(cx, data));
-  if (!copy) {
-    return nullptr;
-  }
-
-  return createWithData(cx, kind, &copy, firstFrameSlot, enclosing);
-}
-
 bool LexicalScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                            uint32_t firstFrameSlot,
                                            Handle<AbstractScope> enclosing,
@@ -664,26 +647,6 @@ static inline uint32_t FunctionScopeEnvShapeFlags(bool hasParameterExprs) {
     return BaseShape::DELEGATE;
   }
   return BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
-}
-
-/* static */
-FunctionScope* FunctionScope::create(JSContext* cx, Handle<Data*> dataArg,
-                                     bool hasParameterExprs,
-                                     bool needsEnvironment, HandleFunction fun,
-                                     HandleScope enclosing) {
-  // The data that's passed in is from the frontend and is LifoAlloc'd.
-  // Copy it now that we're creating a permanent VM scope.
-  Rooted<UniquePtr<Data>> data(
-      cx, dataArg ? CopyScopeData<FunctionScope>(cx, dataArg)
-                  : NewEmptyScopeData<FunctionScope>(cx));
-  if (!data) {
-    return nullptr;
-  }
-
-  return createWithData(
-      cx, &data, hasParameterExprs,
-      dataArg ? dataArg->isFieldInitializer : IsFieldInitializer::No,
-      needsEnvironment, fun, enclosing);
 }
 
 bool FunctionScope::prepareForScopeCreation(
@@ -865,23 +828,6 @@ static UniquePtr<VarScope::Data> NewEmptyVarScopeData(JSContext* cx,
   }
 
   return data;
-}
-
-/* static */
-VarScope* VarScope::create(JSContext* cx, ScopeKind kind, Handle<Data*> dataArg,
-                           uint32_t firstFrameSlot, bool needsEnvironment,
-                           HandleScope enclosing) {
-  // The data that's passed in is from the frontend and is LifoAlloc'd.
-  // Copy it now that we're creating a permanent VM scope.
-  Rooted<UniquePtr<Data>> data(
-      cx, dataArg ? CopyScopeData<VarScope>(cx, dataArg)
-                  : NewEmptyVarScopeData(cx, firstFrameSlot));
-  if (!data) {
-    return nullptr;
-  }
-
-  return createWithData(cx, kind, &data, firstFrameSlot, needsEnvironment,
-                        enclosing);
 }
 
 bool VarScope::prepareForScopeCreation(JSContext* cx, ScopeKind kind,
@@ -1119,21 +1065,6 @@ template
 static const uint32_t EvalScopeEnvShapeFlags =
     BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
 
-/* static */
-EvalScope* EvalScope::create(JSContext* cx, ScopeKind scopeKind,
-                             Handle<Data*> dataArg, HandleScope enclosing) {
-  // The data that's passed in is from the frontend and is LifoAlloc'd.
-  // Copy it now that we're creating a permanent VM scope.
-  Rooted<UniquePtr<Data>> data(cx, dataArg
-                                       ? CopyScopeData<EvalScope>(cx, dataArg)
-                                       : NewEmptyScopeData<EvalScope>(cx));
-  if (!data) {
-    return nullptr;
-  }
-
-  return createWithData(cx, scopeKind, &data, enclosing);
-}
-
 bool EvalScope::prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
                                         MutableHandle<UniquePtr<Data>> data,
                                         MutableHandleShape envShape) {
@@ -1242,25 +1173,6 @@ static const uint32_t ModuleScopeEnvShapeFlags = BaseShape::NOT_EXTENSIBLE |
 
 Zone* ModuleScope::Data::zone() const {
   return module ? module->zone() : nullptr;
-}
-
-/* static */
-ModuleScope* ModuleScope::create(JSContext* cx, Handle<Data*> dataArg,
-                                 HandleModuleObject module,
-                                 HandleScope enclosing) {
-  // ModuleScope::Data has GCManagedDeletePolicy because it contains a
-  // GCPtr. Destruction of |data| below may trigger calls into the GC.
-
-  // The data that's passed in is from the frontend and is LifoAlloc'd.
-  // Copy it now that we're creating a permanent VM scope.
-  Rooted<UniquePtr<Data>> data(cx, dataArg
-                                       ? CopyScopeData<ModuleScope>(cx, dataArg)
-                                       : NewEmptyScopeData<ModuleScope>(cx));
-  if (!data) {
-    return nullptr;
-  }
-
-  return createWithData(cx, &data, module, enclosing);
 }
 
 /* static */
