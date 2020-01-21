@@ -137,9 +137,6 @@ dom/workers/test/importScripts_worker_imported3.js
 dom/workers/test/invalid.js
 dom/workers/test/threadErrors_worker1.js
 
-# Third-party
-editor/libeditor/tests/browserscope/
-
 # intl/ exclusions
 intl/locale/
 intl/strres/
