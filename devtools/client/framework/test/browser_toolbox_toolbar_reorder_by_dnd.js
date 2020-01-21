@@ -20,8 +20,6 @@
 //   * memory
 //   * netmonitor
 //   * storage
-//   * accessibility
-//   * application
 
 const { Toolbox } = require("devtools/client/framework/toolbox");
 
@@ -35,7 +33,6 @@ const TEST_STARTING_ORDER = [
   "netmonitor",
   "storage",
   "accessibility",
-  "application",
 ];
 const TEST_DATA = [
   {
@@ -52,7 +49,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
     ],
   },
   {
@@ -69,7 +65,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
     ],
   },
   {
@@ -95,7 +90,6 @@ const TEST_DATA = [
       "memory",
       "storage",
       "accessibility",
-      "application",
     ],
   },
   {
@@ -119,7 +113,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
       "webconsole",
     ],
   },
@@ -129,8 +122,6 @@ add_task(async function() {
   // Temporarily disable the panel added in Bug 1594885.
   // Should be cleaned up when the panel is properly implemented.
   await pushPref("devtools.whatsnew.enabled", false);
-  // Enable the Application panel (atm it's only available on Nightly)
-  await pushPref("devtools.application.enabled", true);
 
   const tab = await addTab("about:blank");
   const toolbox = await openToolboxForTab(
@@ -185,7 +176,6 @@ add_task(async function() {
     "memory",
     "netmonitor",
     "accessibility",
-    "application",
   ];
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabSelected(toolbox, dragTarget);

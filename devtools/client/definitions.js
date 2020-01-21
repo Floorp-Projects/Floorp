@@ -465,8 +465,8 @@ Tools.application = {
   label: l10n("application.label"),
   panelLabel: l10n("application.panellabel"),
   tooltip: l10n("application.tooltip"),
-  inMenu: AppConstants.NIGHTLY_BUILD,
-  hiddenInOptions: !AppConstants.NIGHTLY_BUILD,
+  inMenu: false,
+  hiddenInOptions: true,
 
   isTargetSupported: function(target) {
     return target.hasActor("manifest");
