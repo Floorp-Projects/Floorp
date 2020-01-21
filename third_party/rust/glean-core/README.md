@@ -44,7 +44,7 @@ let call_counter: CounterMetric = CounterMetric::new(CommonMetricData {
 
 call_counter.add(&glean, 1);
 
-glean.send_ping(&ping).unwrap();
+glean.submit_ping(&ping).unwrap();
 ```
 
 ## License

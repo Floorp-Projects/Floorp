@@ -1,3 +1,9 @@
+# v0.0.5 (2020-01-15)
+
+* Upgraded Glean dependency
+    * See [full Glean changelog](https://github.com/mozilla/glean/blob/v24.0.0/CHANGELOG.md)
+* Reset core client metrics when re-enabling upload ([#620](https://github.com/mozilla/glean/pull/620))
+
 # v0.0.4 (2019-12-20)
 
 * Set target architecture in `client_info` ([#603](https://github.com/mozilla/glean/pull/603))

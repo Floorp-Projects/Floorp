@@ -16,7 +16,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-thread_local = "0.3"
+thread_local = "1.0"
 ```
 
 and this to your crate root:

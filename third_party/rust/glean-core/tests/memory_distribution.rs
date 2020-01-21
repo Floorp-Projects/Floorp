@@ -56,7 +56,7 @@ fn serializer_should_correctly_serialize_memory_distribution() {
     // Make a new Glean instance here, which should force reloading of the data from disk
     // so we can ensure it persisted, because it has User lifetime
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        let glean = Glean::new(cfg).unwrap();
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
             .unwrap();
@@ -70,7 +70,7 @@ fn serializer_should_correctly_serialize_memory_distribution() {
 
 #[test]
 fn set_value_properly_sets_the_value_in_all_stores() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let store_names: Vec<String> = vec!["store1".into(), "store2".into()];
 
     let metric = MemoryDistributionMetric::new(
@@ -108,7 +108,7 @@ fn set_value_properly_sets_the_value_in_all_stores() {
 
 #[test]
 fn the_accumulate_samples_api_correctly_stores_memory_values() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = MemoryDistributionMetric::new(
         CommonMetricData {
@@ -155,7 +155,7 @@ fn the_accumulate_samples_api_correctly_stores_memory_values() {
 
 #[test]
 fn the_accumulate_samples_api_correctly_handles_negative_values() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = MemoryDistributionMetric::new(
         CommonMetricData {

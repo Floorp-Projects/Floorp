@@ -171,7 +171,7 @@ impl TimingDistributionMetric {
 
         if duration > MAX_SAMPLE_TIME {
             let msg = "Sample is longer than 10 minutes";
-            record_error(glean, &self.meta, ErrorType::InvalidValue, msg, None);
+            record_error(glean, &self.meta, ErrorType::InvalidOverflow, msg, None);
             duration = MAX_SAMPLE_TIME;
         }
 
@@ -226,10 +226,11 @@ impl TimingDistributionMetric {
     /// ## Notes
     ///
     /// Discards any negative value in `samples` and report an `ErrorType::InvalidValue`
-    /// for each of them.
+    /// for each of them. Reports an `ErrorType::InvalidOverflow` error for samples that
+    /// are longer than `MAX_SAMPLE_TIME`.
     pub fn accumulate_samples_signed(&mut self, glean: &Glean, samples: Vec<i64>) {
         let mut num_negative_samples = 0;
-        let mut num_too_log_samples = 0;
+        let mut num_too_long_samples = 0;
 
         glean.storage().record_with(glean, &self.meta, |old_value| {
             let mut hist = match old_value {
@@ -244,7 +245,7 @@ impl TimingDistributionMetric {
                     let sample = sample as u64;
                     let mut sample = self.time_unit.as_nanos(sample);
                     if sample > MAX_SAMPLE_TIME {
-                        num_too_log_samples += 1;
+                        num_too_long_samples += 1;
                         sample = MAX_SAMPLE_TIME;
                     }
 
@@ -265,17 +266,17 @@ impl TimingDistributionMetric {
             );
         }
 
-        if num_too_log_samples > 0 {
+        if num_too_long_samples > 0 {
             let msg = format!(
                 "Accumulated {} samples longer than 10 minutes",
-                num_too_log_samples
+                num_too_long_samples
             );
             record_error(
                 glean,
                 &self.meta,
-                ErrorType::InvalidValue,
+                ErrorType::InvalidOverflow,
                 msg,
-                num_too_log_samples,
+                num_too_long_samples,
             );
         }
     }

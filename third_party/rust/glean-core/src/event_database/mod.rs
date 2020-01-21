@@ -21,7 +21,7 @@ use crate::Glean;
 use crate::Result;
 
 /// Represents the data for a single event.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct RecordedEventData {
     pub timestamp: u64,
     pub category: String,
@@ -140,7 +140,7 @@ impl EventDatabase {
 
         let mut ping_sent = false;
         for store_name in store_names {
-            if let Err(err) = glean.send_ping_by_name(&store_name) {
+            if let Err(err) = glean.submit_ping_by_name(&store_name) {
                 log::error!(
                     "Error flushing existing events to the '{}' ping: {}",
                     store_name,
@@ -183,7 +183,7 @@ impl EventDatabase {
         let event_json = serde_json::to_string(&event).unwrap(); // safe unwrap, event can always be serialized
 
         // Store the event in memory and on disk to each of the stores.
-        let mut stores_to_send: Vec<&str> = Vec::new();
+        let mut stores_to_submit: Vec<&str> = Vec::new();
         {
             let mut db = self.event_stores.write().unwrap(); // safe unwrap, only error case is poisoning
             for store_name in meta.send_in_pings.iter() {
@@ -191,15 +191,15 @@ impl EventDatabase {
                 store.push(event.clone());
                 self.write_event_to_disk(store_name, &event_json);
                 if store.len() == glean.get_max_events() {
-                    stores_to_send.push(&store_name);
+                    stores_to_submit.push(&store_name);
                 }
             }
         }
 
-        // If any of the event stores reached maximum size, send the pings
+        // If any of the event stores reached maximum size, submit the pings
         // containing those events immediately.
-        for store_name in stores_to_send {
-            if let Err(err) = glean.send_ping_by_name(store_name) {
+        for store_name in stores_to_submit {
+            if let Err(err) = glean.submit_ping_by_name(store_name) {
                 log::error!(
                     "Got more than {} events, but could not send {} ping: {}",
                     glean.get_max_events(),
@@ -363,5 +363,77 @@ mod test {
             let events = &db.event_stores.read().unwrap()["events"];
             assert_eq!(1, events.len());
         }
+    }
+
+    #[test]
+    fn stable_serialization() {
+        let event_empty = RecordedEventData {
+            timestamp: 2,
+            category: "cat".to_string(),
+            name: "name".to_string(),
+            extra: None,
+        };
+
+        let mut data = HashMap::new();
+        data.insert("a key".to_string(), "a value".to_string());
+        let event_data = RecordedEventData {
+            timestamp: 2,
+            category: "cat".to_string(),
+            name: "name".to_string(),
+            extra: Some(data),
+        };
+
+        let event_empty_json = ::serde_json::to_string_pretty(&event_empty).unwrap();
+        let event_data_json = ::serde_json::to_string_pretty(&event_data).unwrap();
+
+        assert_eq!(
+            event_empty,
+            serde_json::from_str(&event_empty_json).unwrap()
+        );
+        assert_eq!(event_data, serde_json::from_str(&event_data_json).unwrap());
+    }
+
+    #[test]
+    fn deserialize_existing_data() {
+        let event_empty_json = r#"
+{
+  "timestamp": 2,
+  "category": "cat",
+  "name": "name"
+}
+            "#;
+
+        let event_data_json = r#"
+{
+  "timestamp": 2,
+  "category": "cat",
+  "name": "name",
+  "extra": {
+    "a key": "a value"
+  }
+}
+        "#;
+
+        let event_empty = RecordedEventData {
+            timestamp: 2,
+            category: "cat".to_string(),
+            name: "name".to_string(),
+            extra: None,
+        };
+
+        let mut data = HashMap::new();
+        data.insert("a key".to_string(), "a value".to_string());
+        let event_data = RecordedEventData {
+            timestamp: 2,
+            category: "cat".to_string(),
+            name: "name".to_string(),
+            extra: Some(data),
+        };
+
+        assert_eq!(
+            event_empty,
+            serde_json::from_str(&event_empty_json).unwrap()
+        );
+        assert_eq!(event_data, serde_json::from_str(&event_data_json).unwrap());
     }
 }

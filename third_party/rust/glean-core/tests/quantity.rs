@@ -10,7 +10,7 @@ use serde_json::json;
 use glean_core::metrics::*;
 use glean_core::storage::StorageManager;
 use glean_core::{test_get_num_recorded_errors, ErrorType};
-use glean_core::{CommonMetricData, Glean, Lifetime};
+use glean_core::{CommonMetricData, Lifetime};
 
 // Tests ported from glean-ac
 
@@ -19,17 +19,13 @@ use glean_core::{CommonMetricData, Glean, Lifetime};
 
 #[test]
 fn quantity_serializer_should_correctly_serialize_quantities() {
-    let (_t, tmpname) = tempdir();
-    let cfg = glean_core::Configuration {
-        data_path: tmpname,
-        application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-    };
+    let (mut tempdir, _) = tempdir();
 
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        // We give tempdir to the `new_glean` function...
+        let (glean, dir) = new_glean(Some(tempdir));
+        // And then we get it back once that function returns.
+        tempdir = dir;
 
         let metric = QuantityMetric::new(CommonMetricData {
             name: "quantity_metric".into(),
@@ -54,7 +50,7 @@ fn quantity_serializer_should_correctly_serialize_quantities() {
     // Make a new Glean instance here, which should force reloading of the data from disk
     // so we can ensure it persisted, because it has User lifetime
     {
-        let glean = Glean::new(cfg).unwrap();
+        let (glean, _) = new_glean(Some(tempdir));
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
             .unwrap();
@@ -67,7 +63,7 @@ fn quantity_serializer_should_correctly_serialize_quantities() {
 
 #[test]
 fn set_value_properly_sets_the_value_in_all_stores() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let store_names: Vec<String> = vec!["store1".into(), "store2".into()];
 
     let metric = QuantityMetric::new(CommonMetricData {
@@ -98,7 +94,7 @@ fn set_value_properly_sets_the_value_in_all_stores() {
 
 #[test]
 fn quantities_must_not_set_when_passed_negative() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = QuantityMetric::new(CommonMetricData {
         name: "quantity_metric".into(),

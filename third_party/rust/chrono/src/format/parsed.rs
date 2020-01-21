@@ -112,6 +112,7 @@ pub struct Parsed {
 
 /// Checks if `old` is either empty or has the same value to `new` (i.e. "consistent"),
 /// and if it is empty, set `old` to `new` as well.
+#[inline]
 fn set_if_consistent<T: PartialEq>(old: &mut Option<T>, new: T) -> ParseResult<()> {
     if let Some(ref old) = *old {
         if *old == new {Ok(())} else {Err(IMPOSSIBLE)}
@@ -141,82 +142,97 @@ impl Parsed {
     }
 
     /// Tries to set the [`year`](#structfield.year) field from given value.
+    #[inline]
     pub fn set_year(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.year, try!(value.to_i32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.year, value.to_i32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`year_div_100`](#structfield.year_div_100) field from given value.
+    #[inline]
     pub fn set_year_div_100(&mut self, value: i64) -> ParseResult<()> {
         if value < 0 { return Err(OUT_OF_RANGE); }
-        set_if_consistent(&mut self.year_div_100, try!(value.to_i32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.year_div_100, value.to_i32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`year_mod_100`](#structfield.year_mod_100) field from given value.
+    #[inline]
     pub fn set_year_mod_100(&mut self, value: i64) -> ParseResult<()> {
         if value < 0 { return Err(OUT_OF_RANGE); }
-        set_if_consistent(&mut self.year_mod_100, try!(value.to_i32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.year_mod_100, value.to_i32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`isoyear`](#structfield.isoyear) field from given value.
+    #[inline]
     pub fn set_isoyear(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.isoyear, try!(value.to_i32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.isoyear, value.to_i32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`isoyear_div_100`](#structfield.isoyear_div_100) field from given value.
+    #[inline]
     pub fn set_isoyear_div_100(&mut self, value: i64) -> ParseResult<()> {
         if value < 0 { return Err(OUT_OF_RANGE); }
-        set_if_consistent(&mut self.isoyear_div_100, try!(value.to_i32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.isoyear_div_100, value.to_i32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`isoyear_mod_100`](#structfield.isoyear_mod_100) field from given value.
+    #[inline]
     pub fn set_isoyear_mod_100(&mut self, value: i64) -> ParseResult<()> {
         if value < 0 { return Err(OUT_OF_RANGE); }
-        set_if_consistent(&mut self.isoyear_mod_100, try!(value.to_i32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.isoyear_mod_100, value.to_i32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`month`](#structfield.month) field from given value.
+    #[inline]
     pub fn set_month(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.month, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.month, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`week_from_sun`](#structfield.week_from_sun) field from given value.
+    #[inline]
     pub fn set_week_from_sun(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.week_from_sun, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.week_from_sun, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`week_from_mon`](#structfield.week_from_mon) field from given value.
+    #[inline]
     pub fn set_week_from_mon(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.week_from_mon, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.week_from_mon, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`isoweek`](#structfield.isoweek) field from given value.
+    #[inline]
     pub fn set_isoweek(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.isoweek, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.isoweek, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`weekday`](#structfield.weekday) field from given value.
+    #[inline]
     pub fn set_weekday(&mut self, value: Weekday) -> ParseResult<()> {
         set_if_consistent(&mut self.weekday, value)
     }
 
     /// Tries to set the [`ordinal`](#structfield.ordinal) field from given value.
+    #[inline]
     pub fn set_ordinal(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.ordinal, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.ordinal, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`day`](#structfield.day) field from given value.
+    #[inline]
     pub fn set_day(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.day, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.day, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`hour_div_12`](#structfield.hour_div_12) field from given value.
     /// (`false` for AM, `true` for PM)
+    #[inline]
     pub fn set_ampm(&mut self, value: bool) -> ParseResult<()> {
         set_if_consistent(&mut self.hour_div_12, if value {1} else {0})
     }
 
     /// Tries to set the [`hour_mod_12`](#structfield.hour_mod_12) field from
     /// given hour number in 12-hour clocks.
+    #[inline]
     pub fn set_hour12(&mut self, value: i64) -> ParseResult<()> {
         if value < 1 || value > 12 { return Err(OUT_OF_RANGE); }
         set_if_consistent(&mut self.hour_mod_12, value as u32 % 12)
@@ -224,36 +240,42 @@ impl Parsed {
 
     /// Tries to set both [`hour_div_12`](#structfield.hour_div_12) and
     /// [`hour_mod_12`](#structfield.hour_mod_12) fields from given value.
+    #[inline]
     pub fn set_hour(&mut self, value: i64) -> ParseResult<()> {
-        let v = try!(value.to_u32().ok_or(OUT_OF_RANGE));
-        try!(set_if_consistent(&mut self.hour_div_12, v / 12));
-        try!(set_if_consistent(&mut self.hour_mod_12, v % 12));
+        let v = value.to_u32().ok_or(OUT_OF_RANGE)?;
+        set_if_consistent(&mut self.hour_div_12, v / 12)?;
+        set_if_consistent(&mut self.hour_mod_12, v % 12)?;
         Ok(())
     }
 
     /// Tries to set the [`minute`](#structfield.minute) field from given value.
+    #[inline]
     pub fn set_minute(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.minute, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.minute, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`second`](#structfield.second) field from given value.
+    #[inline]
     pub fn set_second(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.second, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.second, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`nanosecond`](#structfield.nanosecond) field from given value.
+    #[inline]
     pub fn set_nanosecond(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.nanosecond, try!(value.to_u32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.nanosecond, value.to_u32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Tries to set the [`timestamp`](#structfield.timestamp) field from given value.
+    #[inline]
     pub fn set_timestamp(&mut self, value: i64) -> ParseResult<()> {
         set_if_consistent(&mut self.timestamp, value)
     }
 
     /// Tries to set the [`offset`](#structfield.offset) field from given value.
+    #[inline]
     pub fn set_offset(&mut self, value: i64) -> ParseResult<()> {
-        set_if_consistent(&mut self.offset, try!(value.to_i32().ok_or(OUT_OF_RANGE)))
+        set_if_consistent(&mut self.offset, value.to_i32().ok_or(OUT_OF_RANGE)?)
     }
 
     /// Returns a parsed naive date out of given fields.
@@ -294,7 +316,7 @@ impl Parsed {
                 (None, Some(q), Some(r @ 0...99)) => {
                     if q < 0 { return Err(OUT_OF_RANGE); }
                     let y = q.checked_mul(100).and_then(|v| v.checked_add(r));
-                    Ok(Some(try!(y.ok_or(OUT_OF_RANGE))))
+                    Ok(Some(y.ok_or(OUT_OF_RANGE)?))
                 },
 
                 // we only have modulo. try to interpret a modulo as a conventional two-digit year.
@@ -308,9 +330,9 @@ impl Parsed {
         }
 
         let given_year =
-            try!(resolve_year(self.year, self.year_div_100, self.year_mod_100));
+            resolve_year(self.year, self.year_div_100, self.year_mod_100)?;
         let given_isoyear =
-            try!(resolve_year(self.isoyear, self.isoyear_div_100, self.isoyear_mod_100));
+            resolve_year(self.isoyear, self.isoyear_div_100, self.isoyear_mod_100)?;
 
         // verify the normal year-month-day date.
         let verify_ymd = |date: NaiveDate| {
@@ -366,20 +388,20 @@ impl Parsed {
         let (verified, parsed_date) = match (given_year, given_isoyear, self) {
             (Some(year), _, &Parsed { month: Some(month), day: Some(day), .. }) => {
                 // year, month, day
-                let date = try!(NaiveDate::from_ymd_opt(year, month, day).ok_or(OUT_OF_RANGE));
+                let date = NaiveDate::from_ymd_opt(year, month, day).ok_or(OUT_OF_RANGE)?;
                 (verify_isoweekdate(date) && verify_ordinal(date), date)
             },
 
             (Some(year), _, &Parsed { ordinal: Some(ordinal), .. }) => {
                 // year, day of the year
-                let date = try!(NaiveDate::from_yo_opt(year, ordinal).ok_or(OUT_OF_RANGE));
+                let date = NaiveDate::from_yo_opt(year, ordinal).ok_or(OUT_OF_RANGE)?;
                 (verify_ymd(date) && verify_isoweekdate(date) && verify_ordinal(date), date)
             },
 
             (Some(year), _, &Parsed { week_from_sun: Some(week_from_sun),
                                       weekday: Some(weekday), .. }) => {
                 // year, week (starting at 1st Sunday), day of the week
-                let newyear = try!(NaiveDate::from_yo_opt(year, 1).ok_or(OUT_OF_RANGE));
+                let newyear = NaiveDate::from_yo_opt(year, 1).ok_or(OUT_OF_RANGE)?;
                 let firstweek = match newyear.weekday() {
                     Weekday::Sun => 0,
                     Weekday::Mon => 6,
@@ -394,8 +416,8 @@ impl Parsed {
                 if week_from_sun > 53 { return Err(OUT_OF_RANGE); } // can it overflow?
                 let ndays = firstweek + (week_from_sun as i32 - 1) * 7 +
                             weekday.num_days_from_sunday() as i32;
-                let date = try!(newyear.checked_add_signed(OldDuration::days(i64::from(ndays)))
-                                       .ok_or(OUT_OF_RANGE));
+                let date = newyear.checked_add_signed(OldDuration::days(i64::from(ndays)))
+                                       .ok_or(OUT_OF_RANGE)?;
                 if date.year() != year { return Err(OUT_OF_RANGE); } // early exit for correct error
 
                 (verify_ymd(date) && verify_isoweekdate(date) && verify_ordinal(date), date)
@@ -404,7 +426,7 @@ impl Parsed {
             (Some(year), _, &Parsed { week_from_mon: Some(week_from_mon),
                                       weekday: Some(weekday), .. }) => {
                 // year, week (starting at 1st Monday), day of the week
-                let newyear = try!(NaiveDate::from_yo_opt(year, 1).ok_or(OUT_OF_RANGE));
+                let newyear = NaiveDate::from_yo_opt(year, 1).ok_or(OUT_OF_RANGE)?;
                 let firstweek = match newyear.weekday() {
                     Weekday::Sun => 1,
                     Weekday::Mon => 0,
@@ -419,8 +441,8 @@ impl Parsed {
                 if week_from_mon > 53 { return Err(OUT_OF_RANGE); } // can it overflow?
                 let ndays = firstweek + (week_from_mon as i32 - 1) * 7 +
                             weekday.num_days_from_monday() as i32;
-                let date = try!(newyear.checked_add_signed(OldDuration::days(i64::from(ndays)))
-                                       .ok_or(OUT_OF_RANGE));
+                let date = newyear.checked_add_signed(OldDuration::days(i64::from(ndays)))
+                                       .ok_or(OUT_OF_RANGE)?;
                 if date.year() != year { return Err(OUT_OF_RANGE); } // early exit for correct error
 
                 (verify_ymd(date) && verify_isoweekdate(date) && verify_ordinal(date), date)
@@ -429,7 +451,7 @@ impl Parsed {
             (_, Some(isoyear), &Parsed { isoweek: Some(isoweek), weekday: Some(weekday), .. }) => {
                 // ISO year, week, day of the week
                 let date = NaiveDate::from_isoywd_opt(isoyear, isoweek, weekday);
-                let date = try!(date.ok_or(OUT_OF_RANGE));
+                let date = date.ok_or(OUT_OF_RANGE)?;
                 (verify_ymd(date) && verify_ordinal(date), date)
             },
 
@@ -525,9 +547,9 @@ impl Parsed {
             }
 
             // reconstruct date and time fields from timestamp
-            let ts = try!(timestamp.checked_add(i64::from(offset)).ok_or(OUT_OF_RANGE));
+            let ts = timestamp.checked_add(i64::from(offset)).ok_or(OUT_OF_RANGE)?;
             let datetime = NaiveDateTime::from_timestamp_opt(ts, 0);
-            let mut datetime = try!(datetime.ok_or(OUT_OF_RANGE));
+            let mut datetime = datetime.ok_or(OUT_OF_RANGE)?;
 
             // fill year, ordinal, hour, minute and second fields from timestamp.
             // if existing fields are consistent, this will allow the full date/time reconstruction.
@@ -544,21 +566,21 @@ impl Parsed {
                 }
                 // ...and we have the correct candidates for other fields.
             } else {
-                try!(parsed.set_second(i64::from(datetime.second())));
+                parsed.set_second(i64::from(datetime.second()))?;
             }
-            try!(parsed.set_year   (i64::from(datetime.year())));
-            try!(parsed.set_ordinal(i64::from(datetime.ordinal()))); // more efficient than ymd
-            try!(parsed.set_hour   (i64::from(datetime.hour())));
-            try!(parsed.set_minute (i64::from(datetime.minute())));
+            parsed.set_year   (i64::from(datetime.year()))?;
+            parsed.set_ordinal(i64::from(datetime.ordinal()))?; // more efficient than ymd
+            parsed.set_hour   (i64::from(datetime.hour()))?;
+            parsed.set_minute (i64::from(datetime.minute()))?;
 
             // validate other fields (e.g. week) and return
-            let date = try!(parsed.to_naive_date());
-            let time = try!(parsed.to_naive_time());
+            let date = parsed.to_naive_date()?;
+            let time = parsed.to_naive_time()?;
             Ok(date.and_time(time))
         } else {
             // reproduce the previous error(s)
-            try!(date);
-            try!(time);
+            date?;
+            time?;
             unreachable!()
         }
     }
@@ -575,9 +597,9 @@ impl Parsed {
     /// plus a time zone offset.
     /// Either way those fields have to be consistent to each other.
     pub fn to_datetime(&self) -> ParseResult<DateTime<FixedOffset>> {
-        let offset = try!(self.offset.ok_or(NOT_ENOUGH));
-        let datetime = try!(self.to_naive_datetime_with_offset(offset));
-        let offset = try!(FixedOffset::east_opt(offset).ok_or(OUT_OF_RANGE));
+        let offset = self.offset.ok_or(NOT_ENOUGH)?;
+        let datetime = self.to_naive_datetime_with_offset(offset)?;
+        let offset = FixedOffset::east_opt(offset).ok_or(OUT_OF_RANGE)?;
         match offset.from_local_datetime(&datetime) {
             LocalResult::None => Err(IMPOSSIBLE),
             LocalResult::Single(t) => Ok(t),
@@ -602,7 +624,7 @@ impl Parsed {
             // an empty `nanosecond` is always equal to zero, so missing nanosecond is fine.
             let nanosecond = self.nanosecond.unwrap_or(0);
             let dt = NaiveDateTime::from_timestamp_opt(timestamp, nanosecond);
-            let dt = try!(dt.ok_or(OUT_OF_RANGE));
+            let dt = dt.ok_or(OUT_OF_RANGE)?;
             guessed_offset = tz.offset_from_utc_datetime(&dt).fix().local_minus_utc();
         }
 
@@ -617,7 +639,7 @@ impl Parsed {
 
         // `guessed_offset` should be correct when `self.timestamp` is given.
         // it will be 0 otherwise, but this is fine as the algorithm ignores offset for that case.
-        let datetime = try!(self.to_naive_datetime_with_offset(guessed_offset));
+        let datetime = self.to_naive_datetime_with_offset(guessed_offset)?;
         match tz.from_local_datetime(&datetime) {
             LocalResult::None => Err(IMPOSSIBLE),
             LocalResult::Single(t) => if check_offset(&t) {Ok(t)} else {Err(IMPOSSIBLE)},
