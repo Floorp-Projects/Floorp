@@ -198,7 +198,7 @@ L18:
         mov dword ptr [8+rbx], edi
         je L9
         lea r10d, dword ptr [-2+rdx]
-        cmp dword ptr [r11+r10*8], 0
+        cmp qword ptr [r11+r10*8], 0
         je L18
 L9:
         mov edx, dword ptr [8+rbx]
@@ -689,7 +689,7 @@ L43:
         mov dword ptr [8+rbx], edi
         je L35
         lea eax, dword ptr [-2+rdx]
-        cmp dword ptr [r11+rax*8], 0
+        cmp qword ptr [r11+rax*8], 0
         je L43
 L35:
         mov r11d, dword ptr [8+rbx]
@@ -2268,7 +2268,7 @@ L84:
         mov dword ptr [8+rbx], edi
         je L76
         lea eax, dword ptr [-2+rdx]
-        cmp dword ptr [r11+rax*8], 0
+        cmp qword ptr [r11+rax*8], 0
         je L84
 L76:
         mov edx, dword ptr [8+rbx]
@@ -7830,7 +7830,7 @@ L157:
         mov dword ptr [8+r13], ebx
         je L149
         lea r12d, dword ptr [-2+rdx]
-        cmp dword ptr [r9+r12*8], 0
+        cmp qword ptr [r9+r12*8], 0
         je L157
 L149:
         mov r9d, dword ptr [8+r13]
@@ -7990,7 +7990,7 @@ s_mp_sqr_comba_4 PROC
         lea ecx, dword ptr [-1+rdx]
         mov rsi, qword ptr [16+r11]
         mov r10d, ecx
-        cmp dword ptr [rsi+r10*8], 0
+        cmp qword ptr [rsi+r10*8], 0
         jne L166
         mov edx, ecx
         ALIGN 16
@@ -8000,7 +8000,7 @@ L167:
         je L171
         dec edx
         mov eax, edx
-        cmp dword ptr [rsi+rax*8], 0
+        cmp qword ptr [rsi+rax*8], 0
         je L167
         mov dword ptr [8+r11], ecx
         mov edx, ecx
@@ -8415,7 +8415,7 @@ s_mp_sqr_comba_8 PROC
         lea ecx, dword ptr [-1+rdx]
         mov rsi, qword ptr [16+rbp]
         mov r14d, ecx
-        cmp dword ptr [rsi+r14*8], 0
+        cmp qword ptr [rsi+r14*8], 0
         jne L190
         mov edx, ecx
         ALIGN 16
@@ -8425,7 +8425,7 @@ L191:
         je L195
         dec edx
         mov r9d, edx
-        cmp dword ptr [rsi+r9*8], 0
+        cmp qword ptr [rsi+r9*8], 0
         je L191
         mov dword ptr [8+rbp], ecx
         mov edx, ecx
@@ -9511,7 +9511,7 @@ s_mp_sqr_comba_16 PROC ; A "FRAME" function
         lea ecx, dword ptr [-1+rdx]
         mov rsi, qword ptr [16+r14]
         mov r9d, ecx
-        cmp dword ptr [rsi+r9*8], 0
+        cmp qword ptr [rsi+r9*8], 0
         jne L230
         mov edx, ecx
         ALIGN 16
@@ -9521,7 +9521,7 @@ L231:
         je L235
         dec edx
         mov eax, edx
-        cmp dword ptr [rsi+rax*8], 0
+        cmp qword ptr [rsi+rax*8], 0
         je L231
         mov dword ptr [8+r14], ecx
         mov edx, ecx
@@ -13023,7 +13023,7 @@ s_mp_sqr_comba_32 PROC ; A "FRAME" function
         lea ecx, dword ptr [-1+rdx]
         mov rsi, qword ptr [16+r14]
         mov r10d, ecx
-        cmp dword ptr [rsi+r10*8], 0
+        cmp qword ptr [rsi+r10*8], 0
         jne L302
         mov edx, ecx
         ALIGN 16
@@ -13033,7 +13033,7 @@ L303:
         je L307
         dec edx
         mov eax, edx
-        cmp dword ptr [rsi+rax*8], 0
+        cmp qword ptr [rsi+rax*8], 0
         je L303
         mov dword ptr [8+r14], ecx
         mov edx, ecx

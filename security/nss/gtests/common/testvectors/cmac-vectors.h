@@ -1,0 +1,1217 @@
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* This file is generated from sources in nss/gtests/common/wycheproof
+ * automatically and should not be touched manually.
+ * Generation is trigged by calling python3 genTestVectors.py */
+
+#ifndef cmac_vectors_h__
+#define cmac_vectors_h__
+
+#include "testvectors_base/test-structs.h"
+
+const AesCmacTestVector kCmacWycheproofVectors[] = {
+    {1, "empty message", "e34f15c7bd819930fe9d66e0c166e61c", "",
+     "d47afca1d857a5933405b1eb7a5cb7af", false},
+
+    {2, "short message", "e1e726677f4893890f8c027f9d8ef80d", "3f",
+     "15f856bbed3b321952a584b3c4437a63", false},
+
+    {3, "short message", "b151f491c4c006d1f28214aa3da9a985", "27d9",
+     "bdbbebac982dd62b9f682618a6a604e9", false},
+
+    {4, "short message", "c36ff15f72777ee21deec07b63c1a0cd", "50b428",
+     "be0c3ede157568af394023eb9a7cc983", false},
+
+    {5, "short message", "32b9c5c78c3a0689a86052420fa1e8fc", "0b9262ec",
+     "57e1506856c55dd32cd9ca821adb6c81", false},
+
+    {6, "short message", "43151bbaef367277ebfc97509d0aa49c", "eaa91273e7",
+     "e01adc3be6a7621824232c4285dd35b9", false},
+
+    {7, "short message", "481440298525cc261f8159159aedf62d", "6123c556c5cc",
+     "a281e0d2d5378dfdcc1310fd9782ca56", false},
+
+    {8, "short message", "9ca26eb88731efbf7f810d5d95e196ac", "7e48f06183aa40",
+     "fc81761f2f7b4ce13b53d36e32677332", false},
+
+    {9, "short message", "48f0d03e41cc55c4b58f737b5acdea32", "f4a133aa6d5985a0",
+     "1f1cd0327c02e6d00086915937dd61d9", false},
+
+    {10, "short message", "1c958849f31996b28939ce513087d1be",
+     "b0d2fee11b8e2f86b7", "555f462151f7dd16de698d639fb26760", false},
+
+    {11, "short message", "39de0ebea97c09b2301a90009a423253",
+     "81e5c33b4c620852f044", "9b004f15b7f6f366374954e64bc58f5f", false},
+
+    {12, "short message", "91656d8fc0aced60ddb1c4006d0dde53",
+     "7b3e440fe566790064b2ec", "76672ed16c29be449e0c80785cc38e89", false},
+
+    {13, "short message", "af7d5134720b5386158d51ea126e7cf9",
+     "7cc6fcc925c20f3c83b5567c", "2dc5c88cf3b80ab6c0199f40be904abc", false},
+
+    {14, "short message", "4ed56753de6f75a032ebabca3ce27971",
+     "0c8c0f5619d9f8da5339281285", "eab4366d97e99a0850f077329ad058c0", false},
+
+    {15, "short message", "beba50c936b696c15e25046dffb23a64",
+     "821ea8532fbabffb6e3d212e9b46", "22f33cab09c173f75d3401fe44efeead", false},
+
+    {16, "short message", "501d81ebf912ddb87fbe3b7aac1437bc",
+     "2368e3c3636b5e8e94d2081adbf798", "aeb784a3825168ddd61f72d0202125e6",
+     false},
+
+    {17, "", "e09eaa5a3f5e56d279d5e7a03373f6ea",
+     "ef4eab37181f98423e53e947e7050fd0", "40facf0e2fb51b73a7472681b033d6dc",
+     false},
+
+    {18, "", "831e664c9e3f0c3094c0b27b9d908eb2",
+     "26603bb76dd0a0180791c4ed4d3b058807", "a8144c8b24f2aa47d9c160cff4ab1716",
+     false},
+
+    {19, "", "549bd282ee21b4d7c3b1d02e3ee20ef7",
+     "d84bf73c5eecbd38444f1a73556e2fa3253f4c54d6916545",
+     "7ed458afe02f4a513f59715b664b1bbe", false},
+
+    {20, "", "9bd3902ed0996c869b572272e76f3889",
+     "a7ba19d49ee1ea02f098aa8e30c740d893a4456ccc294040484ed8a00a55f93e",
+     "45082218c2d05eef32247feb1133d0a3", false},
+
+    {21, "Flipped bit 0 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "96dd6e5a882cbd564c39ae7d1c5a31aa", true},
+
+    {22, "Flipped bit 0 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "43802eb1931f0032afe984443738cd31", true},
+
+    {23, "Flipped bit 0 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7acfbbca7a2ea68b966fc5399f74809e",
+     true},
+
+    {24, "Flipped bit 1 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "95dd6e5a882cbd564c39ae7d1c5a31aa", true},
+
+    {25, "Flipped bit 1 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "40802eb1931f0032afe984443738cd31", true},
+
+    {26, "Flipped bit 1 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "79cfbbca7a2ea68b966fc5399f74809e",
+     true},
+
+    {27, "Flipped bit 7 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "17dd6e5a882cbd564c39ae7d1c5a31aa", true},
+
+    {28, "Flipped bit 7 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "c2802eb1931f0032afe984443738cd31", true},
+
+    {29, "Flipped bit 7 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "fbcfbbca7a2ea68b966fc5399f74809e",
+     true},
+
+    {30, "Flipped bit 8 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dc6e5a882cbd564c39ae7d1c5a31aa", true},
+
+    {31, "Flipped bit 8 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42812eb1931f0032afe984443738cd31", true},
+
+    {32, "Flipped bit 8 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcebbca7a2ea68b966fc5399f74809e",
+     true},
+
+    {33, "Flipped bit 31 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6eda882cbd564c39ae7d1c5a31aa", true},
+
+    {34, "Flipped bit 31 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802e31931f0032afe984443738cd31", true},
+
+    {35, "Flipped bit 31 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbb4a7a2ea68b966fc5399f74809e",
+     true},
+
+    {36, "Flipped bit 32 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a892cbd564c39ae7d1c5a31aa", true},
+
+    {37, "Flipped bit 32 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1921f0032afe984443738cd31", true},
+
+    {38, "Flipped bit 32 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7b2ea68b966fc5399f74809e",
+     true},
+
+    {39, "Flipped bit 33 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a8a2cbd564c39ae7d1c5a31aa", true},
+
+    {40, "Flipped bit 33 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1911f0032afe984443738cd31", true},
+
+    {41, "Flipped bit 33 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca782ea68b966fc5399f74809e",
+     true},
+
+    {42, "Flipped bit 63 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbdd64c39ae7d1c5a31aa", true},
+
+    {43, "Flipped bit 63 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f00b2afe984443738cd31", true},
+
+    {44, "Flipped bit 63 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea60b966fc5399f74809e",
+     true},
+
+    {45, "Flipped bit 64 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564d39ae7d1c5a31aa", true},
+
+    {46, "Flipped bit 64 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032aee984443738cd31", true},
+
+    {47, "Flipped bit 64 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b976fc5399f74809e",
+     true},
+
+    {48, "Flipped bit 71 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd56cc39ae7d1c5a31aa", true},
+
+    {49, "Flipped bit 71 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f00322fe984443738cd31", true},
+
+    {50, "Flipped bit 71 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b166fc5399f74809e",
+     true},
+
+    {51, "Flipped bit 77 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c19ae7d1c5a31aa", true},
+
+    {52, "Flipped bit 77 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afc984443738cd31", true},
+
+    {53, "Flipped bit 77 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b964fc5399f74809e",
+     true},
+
+    {54, "Flipped bit 80 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c39af7d1c5a31aa", true},
+
+    {55, "Flipped bit 80 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afe985443738cd31", true},
+
+    {56, "Flipped bit 80 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b966fc4399f74809e",
+     true},
+
+    {57, "Flipped bit 96 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c39ae7d1d5a31aa", true},
+
+    {58, "Flipped bit 96 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afe984443638cd31", true},
+
+    {59, "Flipped bit 96 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b966fc5399e74809e",
+     true},
+
+    {60, "Flipped bit 97 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c39ae7d1e5a31aa", true},
+
+    {61, "Flipped bit 97 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afe984443538cd31", true},
+
+    {62, "Flipped bit 97 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b966fc5399d74809e",
+     true},
+
+    {63, "Flipped bit 103 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c39ae7d9c5a31aa", true},
+
+    {64, "Flipped bit 103 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afe98444b738cd31", true},
+
+    {65, "Flipped bit 103 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b966fc5391f74809e",
+     true},
+
+    {66, "Flipped bit 120 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c39ae7d1c5a31ab", true},
+
+    {67, "Flipped bit 120 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afe984443738cd30", true},
+
+    {68, "Flipped bit 120 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b966fc5399f74809f",
+     true},
+
+    {69, "Flipped bit 121 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c39ae7d1c5a31a8", true},
+
+    {70, "Flipped bit 121 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afe984443738cd33", true},
+
+    {71, "Flipped bit 121 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b966fc5399f74809c",
+     true},
+
+    {72, "Flipped bit 126 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c39ae7d1c5a31ea", true},
+
+    {73, "Flipped bit 126 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afe984443738cd71", true},
+
+    {74, "Flipped bit 126 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b966fc5399f7480de",
+     true},
+
+    {75, "Flipped bit 127 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "97dd6e5a882cbd564c39ae7d1c5a312a", true},
+
+    {76, "Flipped bit 127 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f0032afe984443738cdb1", true},
+
+    {77, "Flipped bit 127 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea68b966fc5399f74801e",
+     true},
+
+    {78, "Flipped bits 0 and 64 in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "96dd6e5a882cbd564d39ae7d1c5a31aa", true},
+
+    {79, "Flipped bits 0 and 64 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "43802eb1931f0032aee984443738cd31", true},
+
+    {80, "Flipped bits 0 and 64 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7acfbbca7a2ea68b976fc5399f74809e",
+     true},
+
+    {81, "Flipped bits 31 and 63 in tag", "000102030405060708090a0b0c0d0e0f",
+     "", "97dd6eda882cbdd64c39ae7d1c5a31aa", true},
+
+    {82, "Flipped bits 31 and 63 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802e31931f00b2afe984443738cd31", true},
+
+    {83, "Flipped bits 31 and 63 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbb4a7a2ea60b966fc5399f74809e",
+     true},
+
+    {84, "Flipped bits 63 and 127 in tag", "000102030405060708090a0b0c0d0e0f",
+     "", "97dd6e5a882cbdd64c39ae7d1c5a312a", true},
+
+    {85, "Flipped bits 63 and 127 in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "42802eb1931f00b2afe984443738cdb1", true},
+
+    {86, "Flipped bits 63 and 127 in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7bcfbbca7a2ea60b966fc5399f74801e",
+     true},
+
+    {87, "all bits of tag flipped", "000102030405060708090a0b0c0d0e0f", "",
+     "682291a577d342a9b3c65182e3a5ce55", true},
+
+    {88, "all bits of tag flipped", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "bd7fd14e6ce0ffcd50167bbbc8c732ce", true},
+
+    {89, "all bits of tag flipped", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "8430443585d1597469903ac6608b7f61",
+     true},
+
+    {90, "Tag changed to all zero", "000102030405060708090a0b0c0d0e0f", "",
+     "00000000000000000000000000000000", true},
+
+    {91, "Tag changed to all zero", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "00000000000000000000000000000000", true},
+
+    {92, "Tag changed to all zero", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "00000000000000000000000000000000",
+     true},
+
+    {93, "tag changed to all 1", "000102030405060708090a0b0c0d0e0f", "",
+     "ffffffffffffffffffffffffffffffff", true},
+
+    {94, "tag changed to all 1", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "ffffffffffffffffffffffffffffffff", true},
+
+    {95, "tag changed to all 1", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "ffffffffffffffffffffffffffffffff",
+     true},
+
+    {96, "msbs changed in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "175deeda08ac3dd6ccb92efd9cdab12a", true},
+
+    {97, "msbs changed in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "c200ae31139f80b22f6904c4b7b84db1", true},
+
+    {98, "msbs changed in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "fb4f3b4afaae260b16ef45b91ff4001e",
+     true},
+
+    {99, "lsbs changed in tag", "000102030405060708090a0b0c0d0e0f", "",
+     "96dc6f5b892dbc574d38af7c1d5b30ab", true},
+
+    {100, "lsbs changed in tag", "000102030405060708090a0b0c0d0e0f",
+     "0001020304050607", "43812fb0921e0133aee885453639cc30", true},
+
+    {101, "lsbs changed in tag", "000102030405060708090a0b0c0d0e0f",
+     "000102030405060708090a0b0c0d0e0f", "7acebacb7b2fa78a976ec4389e75819f",
+     true},
+
+    {102, "empty message", "3d6bf9edae6d881eade0ff8c7076a4835b71320c1f36b631",
+     "", "a8dd15fe2ce3495ec5b666744ec29220", false},
+
+    {103, "short message", "915429743435c28997a33b33b6574a953d81dae0e7032e6a",
+     "58", "e13b3f7f7f510c3a059df7a68c7e2ad5", false},
+
+    {104, "short message", "f0c288ba26b284f9fb321b444a6517b3cdda1a799d55fdff",
+     "0f7e", "06ef847f5f9dbf03a4f283da8c400220", false},
+
+    {105, "short message", "6b55e4d4fd6847a80a6bfb0dcc0aa93f9fd797fc5c50292e",
+     "33f530", "dd135053a47ca8f282c299e83b8c57c4", false},
+
+    {106, "short message", "1eb21a9e995a8e45c9e71ecbd6fe615b3e0318007c64b644",
+     "3aa73c48", "1e93fff846934a6eea0575eecb0f0e1f", false},
+
+    {107, "short message", "710e2d5d4a9f0bc7e50796655e046a18cc5769d7764355da",
+     "7e4c690a88", "016d4df06c68a6a788a9ea052e1b550d", false},
+
+    {108, "short message", "d8c09ea400779b63e774bdacd0cb7b5dd6f736ca23d52acf",
+     "e9520280973b", "8030ae9f98f5d20c6089f6b1bd87c29e", false},
+
+    {109, "short message", "8e67e9a0863b55bed408866f1cbc05357abe3f9d79f406f2",
+     "4880b412287a0b", "bcaf50785f062a8fb8dd3c2c4cead2e1", false},
+
+    {110, "short message", "28d8da67806410e5565bcc5a9d7ab9fb357413fa0158378c",
+     "004e3f4a4e6db955", "c4c2c0876be9eabeb5a956da53846b08", false},
+
+    {111, "short message", "dc968dd89fd602bb7eca6f3a8a13e4f59c08d02a514b1934",
+     "41a25354efeb1bc3b8", "f33a62caf397f9aff71fe42941ba41d8", false},
+
+    {112, "short message", "7658951c0f620d82afd92756cc2d7983b79da3e56fdd1b78",
+     "f0e82fb5c5666f4af49f", "4d724d05f3402967eb65ae1e32d5469e", false},
+
+    {113, "short message", "d9574c3a221b986690931faac5258d9d3c52362b2cb9b054",
+     "178ea8404ba54ee4e4522c", "64a0e0b6757309ab58d74f72c310e473", false},
+
+    {114, "short message", "704409bab28085c44981f28f75dd143a4f747106f63f262e",
+     "cda5709e7f115624e74ab031", "6ab2074334be14a95b6a241f897a43de", false},
+
+    {115, "short message", "d8d06ef6a53bbff5c8f12d791b8f4c67e574bf440736d1cc",
+     "a1171eae1979f48345dd9485a0", "7aa57cf98b24897cc9230e3316758e61", false},
+
+    {116, "short message", "71129e781613f39d9ac39fbde2628b44c250c14deb5ef9e2",
+     "967593cc64bcbf7f3c58d04cb82b", "6cc488b0a40eadbe4bcee2623239d126", false},
+
+    {117, "short message", "850fc859e9f7b89a367611dee6698f33962d8245ca8dc331",
+     "586f4f171af116519061a8e0e77940", "fb11a360c9776991d73d6e41d07710a2",
+     false},
+
+    {118, "", "f4bfa5aa4f0f4d62cf736cd2969c43d580fdb92f2753bedb",
+     "0e239f239705b282ce2200fe20de1165", "ab20a6cf60873665b1d6999b05c7f9c6",
+     false},
+
+    {119, "", "cfd3f68873d81a27d2bfce876c79f6e609074dec39e34614",
+     "b1973cb25aa87ef9d1a8888b0a0f5c04c6", "b95a016b83a0ae4194023333c8a7345a",
+     false},
+
+    {120, "", "648a44468d67bb6744b235ee7a3fcd6ed4bdc29ec5b5fa1a",
+     "c59d0d6981cca1be1d5519fc7881e6d230f39f6c12a9e827",
+     "a1b96272ae7f9aef567271795f21d1d3", false},
+
+    {121, "", "9d11abc1fcb248a436598e695be12c3c2ed90a18ba09d62c",
+     "aa5182cae2a8fb068c0b3fb2be3e57ae523d13dffd1a944587707c2b67447f3f",
+     "8597d9a04d1c271d61d42f007b435175", false},
+
+    {122, "Flipped bit 0 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ed12390ea0a7ed15d9d37a6eca1fc990", true},
+
+    {123, "Flipped bit 0 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c81307df60859acb911c7be61be7ca90", true},
+
+    {124, "Flipped bit 0 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f91bde0069a6e389573bf04e7cde688c",
+     true},
+
+    {125, "Flipped bit 1 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ee12390ea0a7ed15d9d37a6eca1fc990", true},
+
+    {126, "Flipped bit 1 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "cb1307df60859acb911c7be61be7ca90", true},
+
+    {127, "Flipped bit 1 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "fa1bde0069a6e389573bf04e7cde688c",
+     true},
+
+    {128, "Flipped bit 7 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "6c12390ea0a7ed15d9d37a6eca1fc990", true},
+
+    {129, "Flipped bit 7 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "491307df60859acb911c7be61be7ca90", true},
+
+    {130, "Flipped bit 7 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "781bde0069a6e389573bf04e7cde688c",
+     true},
+
+    {131, "Flipped bit 8 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec13390ea0a7ed15d9d37a6eca1fc990", true},
+
+    {132, "Flipped bit 8 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91207df60859acb911c7be61be7ca90", true},
+
+    {133, "Flipped bit 8 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81ade0069a6e389573bf04e7cde688c",
+     true},
+
+    {134, "Flipped bit 31 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12398ea0a7ed15d9d37a6eca1fc990", true},
+
+    {135, "Flipped bit 31 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c913075f60859acb911c7be61be7ca90", true},
+
+    {136, "Flipped bit 31 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde8069a6e389573bf04e7cde688c",
+     true},
+
+    {137, "Flipped bit 32 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea1a7ed15d9d37a6eca1fc990", true},
+
+    {138, "Flipped bit 32 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df61859acb911c7be61be7ca90", true},
+
+    {139, "Flipped bit 32 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0068a6e389573bf04e7cde688c",
+     true},
+
+    {140, "Flipped bit 33 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea2a7ed15d9d37a6eca1fc990", true},
+
+    {141, "Flipped bit 33 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df62859acb911c7be61be7ca90", true},
+
+    {142, "Flipped bit 33 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde006ba6e389573bf04e7cde688c",
+     true},
+
+    {143, "Flipped bit 63 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed95d9d37a6eca1fc990", true},
+
+    {144, "Flipped bit 63 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859a4b911c7be61be7ca90", true},
+
+    {145, "Flipped bit 63 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e309573bf04e7cde688c",
+     true},
+
+    {146, "Flipped bit 64 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d8d37a6eca1fc990", true},
+
+    {147, "Flipped bit 64 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb901c7be61be7ca90", true},
+
+    {148, "Flipped bit 64 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389563bf04e7cde688c",
+     true},
+
+    {149, "Flipped bit 71 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed1559d37a6eca1fc990", true},
+
+    {150, "Flipped bit 71 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb111c7be61be7ca90", true},
+
+    {151, "Flipped bit 71 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389d73bf04e7cde688c",
+     true},
+
+    {152, "Flipped bit 77 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9f37a6eca1fc990", true},
+
+    {153, "Flipped bit 77 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb913c7be61be7ca90", true},
+
+    {154, "Flipped bit 77 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389571bf04e7cde688c",
+     true},
+
+    {155, "Flipped bit 80 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9d37b6eca1fc990", true},
+
+    {156, "Flipped bit 80 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb911c7ae61be7ca90", true},
+
+    {157, "Flipped bit 80 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389573bf14e7cde688c",
+     true},
+
+    {158, "Flipped bit 96 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9d37a6ecb1fc990", true},
+
+    {159, "Flipped bit 96 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb911c7be61ae7ca90", true},
+
+    {160, "Flipped bit 96 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389573bf04e7dde688c",
+     true},
+
+    {161, "Flipped bit 97 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9d37a6ec81fc990", true},
+
+    {162, "Flipped bit 97 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb911c7be619e7ca90", true},
+
+    {163, "Flipped bit 97 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389573bf04e7ede688c",
+     true},
+
+    {164, "Flipped bit 103 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9d37a6e4a1fc990", true},
+
+    {165, "Flipped bit 103 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb911c7be69be7ca90", true},
+
+    {166, "Flipped bit 103 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389573bf04efcde688c",
+     true},
+
+    {167, "Flipped bit 120 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9d37a6eca1fc991", true},
+
+    {168, "Flipped bit 120 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb911c7be61be7ca91", true},
+
+    {169, "Flipped bit 120 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389573bf04e7cde688d",
+     true},
+
+    {170, "Flipped bit 121 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9d37a6eca1fc992", true},
+
+    {171, "Flipped bit 121 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb911c7be61be7ca92", true},
+
+    {172, "Flipped bit 121 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389573bf04e7cde688e",
+     true},
+
+    {173, "Flipped bit 126 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9d37a6eca1fc9d0", true},
+
+    {174, "Flipped bit 126 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb911c7be61be7cad0", true},
+
+    {175, "Flipped bit 126 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389573bf04e7cde68cc",
+     true},
+
+    {176, "Flipped bit 127 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed15d9d37a6eca1fc910", true},
+
+    {177, "Flipped bit 127 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859acb911c7be61be7ca10", true},
+
+    {178, "Flipped bit 127 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e389573bf04e7cde680c",
+     true},
+
+    {179, "Flipped bits 0 and 64 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ed12390ea0a7ed15d8d37a6eca1fc990", true},
+
+    {180, "Flipped bits 0 and 64 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c81307df60859acb901c7be61be7ca90", true},
+
+    {181, "Flipped bits 0 and 64 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f91bde0069a6e389563bf04e7cde688c",
+     true},
+
+    {182, "Flipped bits 31 and 63 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12398ea0a7ed95d9d37a6eca1fc990", true},
+
+    {183, "Flipped bits 31 and 63 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c913075f60859a4b911c7be61be7ca90", true},
+
+    {184, "Flipped bits 31 and 63 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde8069a6e309573bf04e7cde688c",
+     true},
+
+    {185, "Flipped bits 63 and 127 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ec12390ea0a7ed95d9d37a6eca1fc910", true},
+
+    {186, "Flipped bits 63 and 127 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c91307df60859a4b911c7be61be7ca10", true},
+
+    {187, "Flipped bits 63 and 127 in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f81bde0069a6e309573bf04e7cde680c",
+     true},
+
+    {188, "all bits of tag flipped",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "13edc6f15f5812ea262c859135e0366f", true},
+
+    {189, "all bits of tag flipped",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "36ecf8209f7a65346ee38419e418356f", true},
+
+    {190, "all bits of tag flipped",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "07e421ff96591c76a8c40fb183219773",
+     true},
+
+    {191, "Tag changed to all zero",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "00000000000000000000000000000000", true},
+
+    {192, "Tag changed to all zero",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "00000000000000000000000000000000", true},
+
+    {193, "Tag changed to all zero",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "00000000000000000000000000000000",
+     true},
+
+    {194, "tag changed to all 1",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ffffffffffffffffffffffffffffffff", true},
+
+    {195, "tag changed to all 1",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "ffffffffffffffffffffffffffffffff", true},
+
+    {196, "tag changed to all 1",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "ffffffffffffffffffffffffffffffff",
+     true},
+
+    {197, "msbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "6c92b98e20276d955953faee4a9f4910", true},
+
+    {198, "msbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "4993875fe0051a4b119cfb669b674a10", true},
+
+    {199, "msbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "789b5e80e9266309d7bb70cefc5ee80c",
+     true},
+
+    {200, "lsbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "",
+     "ed13380fa1a6ec14d8d27b6fcb1ec891", true},
+
+    {201, "lsbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617", "0001020304050607",
+     "c81206de61849bca901d7ae71ae6cb91", true},
+
+    {202, "lsbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f1011121314151617",
+     "000102030405060708090a0b0c0d0e0f", "f91adf0168a7e288563af14f7ddf698d",
+     true},
+
+    {203, "empty message",
+     "7bf9e536b66a215c22233fe2daaa743a898b9acb9f7802de70b40e3d6e43ef97", "",
+     "736c7b56957db774c5ddf7c7a70ba8a8", false},
+
+    {204, "short message",
+     "e754076ceab3fdaf4f9bcab7d4f0df0cbbafbc87731b8f9b7cd2166472e8eebc", "40",
+     "9d47482c2d9252bace43a75a8335b8b8", false},
+
+    {205, "short message",
+     "ea3b016bdd387dd64d837c71683808f335dbdc53598a4ea8c5f952473fafaf5f", "6601",
+     "c7c44e31c466334992d6f9de3c771634", false},
+
+    {206, "short message",
+     "73d4709637857dafab6ad8b2b0a51b06524717fedf100296644f7cfdaae1805b",
+     "f1d300", "b7086603a85e11fceb8cadea9bd30939", false},
+
+    {207, "short message",
+     "d5c81b399d4c0d1583a13da56de6d2dc45a66e7b47c24ab1192e246dc961dd77",
+     "2ae63cbf", "ba383a3a15c9df64bba50d611113a024", false},
+
+    {208, "short message",
+     "2521203fa0dddf59d837b2830f87b1aa61f958155df3ca4d1df2457cb4284dc8",
+     "af3a015ea1", "b457137c548908c629f714fe83b1ed90", false},
+
+    {209, "short message",
+     "665a02bc265a66d01775091da56726b6668bfd903cb7af66fb1b78a8a062e43c",
+     "3f56935def3f", "b6d6fde93fc85de289b36b446d77b423", false},
+
+    {210, "short message",
+     "facd75b22221380047305bc981f570e2a1af38928ea7e2059e3af5fc6b82b493",
+     "57bb86beed156f", "8b1ef72d0a612735b08efef981f213c2", false},
+
+    {211, "short message",
+     "505aa98819809ef63b9a368a1e8bc2e922da45b03ce02d9a7966b15006dba2d5",
+     "2e4e7ef728fe11af", "f79606b83a7706a2a19e068bce818898", false},
+
+    {212, "short message",
+     "f942093842808ba47f64e427f7351dde6b9546e66de4e7d60aa6f328182712cf",
+     "852a21d92848e627c7", "a5a877f22ac743b7fb9e050d2e3ddb02", false},
+
+    {213, "short message",
+     "64be162b39c6e5f1fed9c32d9f674d9a8cde6eaa2443214d86bd4a1fb53b81b4",
+     "195a3b292f93baff0a2c", "6ea172e5c4d2fac075ca602de5757a62", false},
+
+    {214, "short message",
+     "b259a555d44b8a20c5489e2f38392ddaa6be9e35b9833b67e1b5fdf6cb3e4c6c",
+     "afd73117330c6e8528a6e4", "68020bfc9bd73fd80d3ce581ba3b1208", false},
+
+    {215, "short message",
+     "2c6fc62daa77ba8c6881b3dd6989898fef646663cc7b0a3db8228a707b85f2dc",
+     "0ff54d6b6759120c2e8a51e3", "110edd727a9bf7fa11a6358afe617d9d", false},
+
+    {216, "short message",
+     "abab815d51df29f740e4e2079fb798e0152836e6ab57d1536ae8929e52c06eb8",
+     "f0058d412a104e53d820b95a7f", "1fa24c6625a0f8e1fc37827ac84d3cc4", false},
+
+    {217, "short message",
+     "3d5da1af83f7287458bff7a7651ea5d8db72259401333f6b82096996dd7eaf19",
+     "aacc36972f183057919ff57b49e1", "868765a8fa6aa898ddec0f4123e996be", false},
+
+    {218, "short message",
+     "c19bdf314c6cf64381425467f42aefa17c1cc9358be16ce31b1d214859ce86aa",
+     "5d066a92c300e9b6ddd63a7c13ae33", "b96818b7acaf879c7a7f8271375a6914",
+     false},
+
+    {219, "",
+     "612e837843ceae7f61d49625faa7e7494f9253e20cb3adcea686512b043936cd",
+     "cc37fae15f745a2f40e2c8b192f2b38d", "4b88e193000c5a4b23e95c7f2b26530b",
+     false},
+
+    {220, "",
+     "73216fafd0022d0d6ee27198b2272578fa8f04dd9f44467fbb6437aa45641bf7",
+     "d5247b8f6c3edcbfb1d591d13ece23d2f5", "86911c7da51dc0823d6e93d4290d1ad4",
+     false},
+
+    {221, "",
+     "0427a70e257528f3ab70640bba1a5de12cf3885dd4c8e284fbbb55feb35294a5",
+     "13937f8544f44270d01175a011f7670e93fa6ba7ef02336e",
+     "ccb2c51bfbe2598f9109fc70ed07f0eb", false},
+
+    {222, "",
+     "96e1e4896fb2cd05f133a6a100bc5609a7ac3ca6d81721e922dadd69ad07a892",
+     "91a17e4dfcc3166a1add26ff0e7c12056e8a654f28a6de24f4ba739ceb5b5b18",
+     "925f177d85ea297ef14b203fe409f9ab", false},
+
+    {223, "Flipped bit 0 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6af0a293d8cba0101f0089727691b7fb", true},
+
+    {224, "Flipped bit 0 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d709717c3a4ef8a2ea200b297d2accec", true},
+
+    {225, "Flipped bit 0 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "58ee3f3b5f83e290cae26dad29bba32d",
+     true},
+
+    {226, "Flipped bit 1 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "69f0a293d8cba0101f0089727691b7fb", true},
+
+    {227, "Flipped bit 1 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d409717c3a4ef8a2ea200b297d2accec", true},
+
+    {228, "Flipped bit 1 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "5bee3f3b5f83e290cae26dad29bba32d",
+     true},
+
+    {229, "Flipped bit 7 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "ebf0a293d8cba0101f0089727691b7fb", true},
+
+    {230, "Flipped bit 7 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "5609717c3a4ef8a2ea200b297d2accec", true},
+
+    {231, "Flipped bit 7 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "d9ee3f3b5f83e290cae26dad29bba32d",
+     true},
+
+    {232, "Flipped bit 8 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf1a293d8cba0101f0089727691b7fb", true},
+
+    {233, "Flipped bit 8 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d608717c3a4ef8a2ea200b297d2accec", true},
+
+    {234, "Flipped bit 8 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ef3f3b5f83e290cae26dad29bba32d",
+     true},
+
+    {235, "Flipped bit 31 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a213d8cba0101f0089727691b7fb", true},
+
+    {236, "Flipped bit 31 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d60971fc3a4ef8a2ea200b297d2accec", true},
+
+    {237, "Flipped bit 31 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3fbb5f83e290cae26dad29bba32d",
+     true},
+
+    {238, "Flipped bit 32 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d9cba0101f0089727691b7fb", true},
+
+    {239, "Flipped bit 32 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3b4ef8a2ea200b297d2accec", true},
+
+    {240, "Flipped bit 32 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5e83e290cae26dad29bba32d",
+     true},
+
+    {241, "Flipped bit 33 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293dacba0101f0089727691b7fb", true},
+
+    {242, "Flipped bit 33 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c384ef8a2ea200b297d2accec", true},
+
+    {243, "Flipped bit 33 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5d83e290cae26dad29bba32d",
+     true},
+
+    {244, "Flipped bit 63 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0901f0089727691b7fb", true},
+
+    {245, "Flipped bit 63 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef822ea200b297d2accec", true},
+
+    {246, "Flipped bit 63 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e210cae26dad29bba32d",
+     true},
+
+    {247, "Flipped bit 64 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101e0089727691b7fb", true},
+
+    {248, "Flipped bit 64 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2eb200b297d2accec", true},
+
+    {249, "Flipped bit 64 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cbe26dad29bba32d",
+     true},
+
+    {250, "Flipped bit 71 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0109f0089727691b7fb", true},
+
+    {251, "Flipped bit 71 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a26a200b297d2accec", true},
+
+    {252, "Flipped bit 71 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e2904ae26dad29bba32d",
+     true},
+
+    {253, "Flipped bit 77 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f2089727691b7fb", true},
+
+    {254, "Flipped bit 77 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea000b297d2accec", true},
+
+    {255, "Flipped bit 77 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cac26dad29bba32d",
+     true},
+
+    {256, "Flipped bit 80 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f0088727691b7fb", true},
+
+    {257, "Flipped bit 80 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea200a297d2accec", true},
+
+    {258, "Flipped bit 80 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cae26cad29bba32d",
+     true},
+
+    {259, "Flipped bit 96 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f0089727791b7fb", true},
+
+    {260, "Flipped bit 96 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea200b297c2accec", true},
+
+    {261, "Flipped bit 96 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cae26dad28bba32d",
+     true},
+
+    {262, "Flipped bit 97 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f0089727491b7fb", true},
+
+    {263, "Flipped bit 97 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea200b297f2accec", true},
+
+    {264, "Flipped bit 97 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cae26dad2bbba32d",
+     true},
+
+    {265, "Flipped bit 103 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f008972f691b7fb", true},
+
+    {266, "Flipped bit 103 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea200b29fd2accec", true},
+
+    {267, "Flipped bit 103 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cae26dada9bba32d",
+     true},
+
+    {268, "Flipped bit 120 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f0089727691b7fa", true},
+
+    {269, "Flipped bit 120 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea200b297d2acced", true},
+
+    {270, "Flipped bit 120 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cae26dad29bba32c",
+     true},
+
+    {271, "Flipped bit 121 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f0089727691b7f9", true},
+
+    {272, "Flipped bit 121 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea200b297d2accee", true},
+
+    {273, "Flipped bit 121 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cae26dad29bba32f",
+     true},
+
+    {274, "Flipped bit 126 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f0089727691b7bb", true},
+
+    {275, "Flipped bit 126 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea200b297d2accac", true},
+
+    {276, "Flipped bit 126 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cae26dad29bba36d",
+     true},
+
+    {277, "Flipped bit 127 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0101f0089727691b77b", true},
+
+    {278, "Flipped bit 127 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef8a2ea200b297d2acc6c", true},
+
+    {279, "Flipped bit 127 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e290cae26dad29bba3ad",
+     true},
+
+    {280, "Flipped bits 0 and 64 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6af0a293d8cba0101e0089727691b7fb", true},
+
+    {281, "Flipped bits 0 and 64 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d709717c3a4ef8a2eb200b297d2accec", true},
+
+    {282, "Flipped bits 0 and 64 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "58ee3f3b5f83e290cbe26dad29bba32d",
+     true},
+
+    {283, "Flipped bits 31 and 63 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a213d8cba0901f0089727691b7fb", true},
+
+    {284, "Flipped bits 31 and 63 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d60971fc3a4ef822ea200b297d2accec", true},
+
+    {285, "Flipped bits 31 and 63 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3fbb5f83e210cae26dad29bba32d",
+     true},
+
+    {286, "Flipped bits 63 and 127 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6bf0a293d8cba0901f0089727691b77b", true},
+
+    {287, "Flipped bits 63 and 127 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d609717c3a4ef822ea200b297d2acc6c", true},
+
+    {288, "Flipped bits 63 and 127 in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "59ee3f3b5f83e210cae26dad29bba3ad",
+     true},
+
+    {289, "all bits of tag flipped",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "940f5d6c27345fefe0ff768d896e4804", true},
+
+    {290, "all bits of tag flipped",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "29f68e83c5b1075d15dff4d682d53313", true},
+
+    {291, "all bits of tag flipped",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "a611c0c4a07c1d6f351d9252d6445cd2",
+     true},
+
+    {292, "Tag changed to all zero",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "00000000000000000000000000000000", true},
+
+    {293, "Tag changed to all zero",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "00000000000000000000000000000000", true},
+
+    {294, "Tag changed to all zero",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "00000000000000000000000000000000",
+     true},
+
+    {295, "tag changed to all 1",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "ffffffffffffffffffffffffffffffff", true},
+
+    {296, "tag changed to all 1",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "ffffffffffffffffffffffffffffffff", true},
+
+    {297, "tag changed to all 1",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "ffffffffffffffffffffffffffffffff",
+     true},
+
+    {298, "msbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "eb702213584b20909f8009f2f611377b", true},
+
+    {299, "msbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "5689f1fcbace78226aa08ba9fdaa4c6c", true},
+
+    {300, "msbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "d96ebfbbdf0362104a62ed2da93b23ad",
+     true},
+
+    {301, "lsbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "",
+     "6af1a392d9caa1111e0188737790b6fa", true},
+
+    {302, "lsbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0001020304050607", "d708707d3b4ff9a3eb210a287c2bcded", true},
+
+    {303, "lsbs changed in tag",
+     "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "000102030405060708090a0b0c0d0e0f", "58ef3e3a5e82e391cbe36cac28baa22c",
+     true},
+
+    {304, "invalid key size", "", "00b9449326d39416", "", true},
+
+    {305, "invalid key size", "0f", "4538b79a1397e2aa", "", true},
+
+    {306, "invalid key size", "a88e385af7185148", "dc63b7ef08096e4f", "", true},
+
+    {307, "invalid key size", "003a228008d390b645929df73a2b2bdd8298918d",
+     "ad1d3c3122ab7ac6", "", true},
+
+    {308, "invalid key size",
+     "94baaac150e2645ae1ec1939c7bcefb73f6edb146fae02289b6c6326ff39bc265d612bef2"
+     "727fa72",
+     "e3f75a886c4a5591", "", true}};
+
+#endif  // cmac_vectors_h__

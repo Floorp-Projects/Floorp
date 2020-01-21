@@ -14,11 +14,12 @@
 
 #include "gtest/gtest.h"
 #include "nss_scoped_ptrs.h"
+#include "testvectors/cmac-vectors.h"
 #include "util.h"
 
 namespace nss_test {
 
-class Pkcs11AesCmacTest : public ::testing::Test {
+class Pkcs11AesCmacTest : public ::testing::TestWithParam<AesCmacTestVector> {
  protected:
   ScopedPK11SymKey ImportKey(CK_MECHANISM_TYPE mech, SECItem *key_item) {
     ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
@@ -54,7 +55,45 @@ class Pkcs11AesCmacTest : public ::testing::Test {
     ASSERT_EQ(SECSuccess, ret);
     ASSERT_EQ(0, SECITEM_CompareItem(&output_item, &expected_item));
   }
+
+  void RunTestVector(const AesCmacTestVector vec) {
+    bool valid = !vec.invalid;
+    std::string err = "Test #" + std::to_string(vec.id) + " failed";
+    std::vector<uint8_t> key = hex_string_to_bytes(vec.key);
+    std::vector<uint8_t> tag = hex_string_to_bytes(vec.tag);
+    std::vector<uint8_t> msg = hex_string_to_bytes(vec.msg);
+
+    std::vector<uint8_t> output(AES_BLOCK_SIZE);
+    // Don't provide a null pointer, even if the input is empty.
+    uint8_t tmp;
+    SECItem key_item = {siBuffer, key.data() ? key.data() : &tmp,
+                        static_cast<unsigned int>(key.size())};
+    SECItem tag_item = {siBuffer, tag.data() ? tag.data() : &tmp,
+                        static_cast<unsigned int>(tag.size())};
+    SECItem msg_item = {siBuffer, msg.data() ? msg.data() : &tmp,
+                        static_cast<unsigned int>(msg.size())};
+    SECItem out_item = {siBuffer, output.data() ? output.data() : &tmp,
+                        static_cast<unsigned int>(output.size())};
+
+    ScopedPK11SymKey p11_key = ImportKey(CKM_AES_CMAC_GENERAL, &key_item);
+    if (vec.comment == "invalid key size") {
+      ASSERT_EQ(nullptr, p11_key.get()) << err;
+      return;
+    }
+
+    ASSERT_NE(nullptr, p11_key.get()) << err;
+    SECStatus rv = PK11_SignWithSymKey(p11_key.get(), CKM_AES_CMAC, NULL,
+                                       &out_item, &msg_item);
+
+    EXPECT_EQ(SECSuccess, rv) << err;
+    EXPECT_EQ(valid, 0 == SECITEM_CompareItem(&out_item, &tag_item)) << err;
+  }
 };
+
+TEST_P(Pkcs11AesCmacTest, TestVectors) { RunTestVector(GetParam()); }
+
+INSTANTIATE_TEST_CASE_P(WycheproofTestVector, Pkcs11AesCmacTest,
+                        ::testing::ValuesIn(kCmacWycheproofVectors));
 
 // Sanity check of the PKCS #11 API only. Extensive tests for correctness of
 // underling CMAC implementation conducted in the following file:
@@ -88,4 +127,4 @@ TEST_F(Pkcs11AesCmacTest, InvalidKeySize) {
   ScopedPK11SymKey result = ImportKey(CKM_AES_CMAC, &key_item);
   ASSERT_EQ(nullptr, result.get());
 }
-}
+}  // namespace nss_test
