@@ -374,7 +374,8 @@ static void PreventDiscardingFunctions() {
   if (reinterpret_cast<uintptr_t>(&PreventDiscardingFunctions) == 1) {
     // Never executed.
     memset((void*)&js::debug::GetMarkInfo, 0, 1);
-    memset((void*)&js::debug::GetMarkByteAddress, 0, 1);
+    memset((void*)&js::debug::GetMarkWordAddress, 0, 1);
+    memset((void*)&js::debug::GetMarkMask, 0, 1);
   }
 }
 

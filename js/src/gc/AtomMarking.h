@@ -7,8 +7,6 @@
 #ifndef gc_AtomMarking_h
 #define gc_AtomMarking_h
 
-#include "mozilla/Array.h"
-
 #include "NamespaceImports.h"
 #include "ds/Bitmap.h"
 #include "threading/ProtectedData.h"
@@ -23,9 +21,7 @@ class Arena;
 // See AtomMarking.cpp for details.
 class AtomMarkingRuntime {
   // Unused arena atom bitmap indexes. Protected by the GC lock.
-  js::GCLockData<
-      mozilla::Array<Vector<size_t, 0, SystemAllocPolicy>, AllocKindCount>>
-      freeArenaIndexes;
+  js::GCLockData<Vector<size_t, 0, SystemAllocPolicy>> freeArenaIndexes;
 
   void markChildren(JSContext* cx, JSAtom*) {}
 

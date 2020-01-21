@@ -312,45 +312,34 @@ FOR_EACH_ALLOCKIND(CHECK_THING_SIZE);
 
 template <typename T>
 struct ArenaLayout {
-  static constexpr size_t MarkBytesPerCell = 1;
   static constexpr size_t thingSize() { return sizeof(T); }
   static constexpr size_t thingsPerArena() {
-    return (ArenaSize - ArenaHeaderSize) / (thingSize() + MarkBytesPerCell);
+    return (ArenaSize - ArenaHeaderSize) / thingSize();
   }
   static constexpr size_t firstThingOffset() {
     return ArenaSize - thingSize() * thingsPerArena();
   }
-  static constexpr size_t reciprocalOfThingSize() {
-    return (1 << ReciprocalThingSizeShift) / thingSize();
-  }
 };
 
-const uint8_t js::gc::ThingSizes[] = {
+const uint8_t Arena::ThingSizes[] = {
 #define EXPAND_THING_SIZE(_1, _2, _3, sizedType, _4, _5, _6) \
   ArenaLayout<sizedType>::thingSize(),
     FOR_EACH_ALLOCKIND(EXPAND_THING_SIZE)
 #undef EXPAND_THING_SIZE
 };
 
-const uint16_t js::gc::FirstThingOffsets[] = {
+const uint8_t Arena::FirstThingOffsets[] = {
 #define EXPAND_FIRST_THING_OFFSET(_1, _2, _3, sizedType, _4, _5, _6) \
   ArenaLayout<sizedType>::firstThingOffset(),
     FOR_EACH_ALLOCKIND(EXPAND_FIRST_THING_OFFSET)
 #undef EXPAND_FIRST_THING_OFFSET
 };
 
-const uint8_t js::gc::ThingsPerArena[] = {
+const uint8_t Arena::ThingsPerArena[] = {
 #define EXPAND_THINGS_PER_ARENA(_1, _2, _3, sizedType, _4, _5, _6) \
   ArenaLayout<sizedType>::thingsPerArena(),
     FOR_EACH_ALLOCKIND(EXPAND_THINGS_PER_ARENA)
-#undef EXPAND_THING_INDEXf_FACTOR
-};
-
-JS_PUBLIC_DATA const uint16_t js::gc::ReciprocalOfThingSize[] = {
-#define EXPAND_RECIPROCAL_OF_THING_SIZE(_1, _2, _3, sizedType, _4, _5, _6) \
-  ArenaLayout<sizedType>::reciprocalOfThingSize(),
-    FOR_EACH_ALLOCKIND(EXPAND_RECIPROCAL_OF_THING_SIZE)
-#undef EXPAND_RECIPROCAL_OF_THING_SIZE
+#undef EXPAND_THINGS_PER_ARENA
 };
 
 FreeSpan FreeLists::emptySentinel;
@@ -402,7 +391,10 @@ static constexpr FinalizePhase BackgroundFinalizePhases[] = {
      {AllocKind::SHAPE, AllocKind::ACCESSOR_SHAPE, AllocKind::BASE_SHAPE,
       AllocKind::OBJECT_GROUP}}};
 
-void Arena::unmarkAll() { memset(data, 0, getThingsPerArena()); }
+void Arena::unmarkAll() {
+  uintptr_t* word = chunk()->bitmap.arenaBits(this);
+  memset(word, 0, ArenaBitmapWords * sizeof(uintptr_t));
+}
 
 void Arena::unmarkPreMarkedFreeCells() {
   for (ArenaFreeCellIter iter(this); !iter.done(); iter.next()) {
