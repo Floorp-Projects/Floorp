@@ -26,9 +26,8 @@ namespace webrtc
     #define NULL    0
 #endif
 
-enum {kVideoCaptureUniqueNameLength =1024}; //Max unique capture device name lenght
-enum {kVideoCaptureDeviceNameLength =256}; //Max capture device name lenght
-enum {kVideoCaptureProductIdLength =128}; //Max product id length
+enum {kVideoCaptureUniqueNameSize =1024}; //Max unique capture device name length
+enum {kVideoCaptureProductIdSize =128}; //Max product id length
 
 struct VideoCaptureCapability
 {

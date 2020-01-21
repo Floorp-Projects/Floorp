@@ -146,7 +146,7 @@ VideoCaptureAndroid::VideoCaptureAndroid()
 
 int32_t VideoCaptureAndroid::Init(const char* deviceUniqueIdUTF8) {
   const int nameLength = strlen(deviceUniqueIdUTF8);
-  if (nameLength >= kVideoCaptureUniqueNameLength)
+  if (nameLength >= kVideoCaptureUniqueNameSize)
     return -1;
 
   // Store the device name

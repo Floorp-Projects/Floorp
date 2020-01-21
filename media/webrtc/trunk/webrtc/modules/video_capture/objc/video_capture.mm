@@ -51,7 +51,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureIos::Create(
       new rtc::RefCountedObject<VideoCaptureIos>());
 
   const int32_t name_length = strlen(deviceUniqueIdUTF8);
-  if (name_length > kVideoCaptureUniqueNameLength)
+  if (name_length >= kVideoCaptureUniqueNameSize)
     return nullptr;
 
   capture_module->_deviceUniqueId = new char[name_length + 1];
