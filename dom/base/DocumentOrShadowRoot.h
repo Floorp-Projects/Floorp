@@ -29,11 +29,14 @@ namespace dom {
 
 class Animation;
 class Element;
+class Document;
 class DocumentOrShadowRoot;
 class HTMLInputElement;
 struct nsRadioGroupStruct;
 class StyleSheetList;
 class ShadowRoot;
+template <typename T>
+class Sequence;
 
 /**
  * A class meant to be shared by ShadowRoot and Document, that holds a list of
@@ -77,9 +80,7 @@ class DocumentOrShadowRoot {
   StyleSheetList* StyleSheets();
 
   void GetAdoptedStyleSheets(nsTArray<RefPtr<StyleSheet>>& aAdoptedStyleSheets,
-                             ErrorResult& aRv) const {
-    aAdoptedStyleSheets = mAdoptedStyleSheets;
-  }
+                             ErrorResult& aRv) const;
 
   void SetAdoptedStyleSheets(
       const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
