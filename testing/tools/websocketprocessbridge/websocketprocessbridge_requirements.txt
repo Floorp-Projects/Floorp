@@ -1,5 +1,5 @@
 # needed by txws, and we'd like pip to get it from the local server before setuptools tries pypi
-six==1.10.0
+six
 
 twisted==10.2.0
 
