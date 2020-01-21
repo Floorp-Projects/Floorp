@@ -30,8 +30,6 @@ browser/branding/**/firefox-branding.js
 # Gzipped test file.
 browser/base/content/test/general/gZipOfflineChild.html
 browser/base/content/test/urlbar/file_blank_but_not_blank.html
-# Third-party code.
-browser/components/payments/res/vendor/
 # Test files that are really json not js, and don't need to be linted.
 browser/components/sessionstore/test/unit/data/sessionstore_valid.js
 browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
@@ -142,18 +140,12 @@ dom/workers/test/threadErrors_worker1.js
 # Third-party
 editor/libeditor/tests/browserscope/
 
-# Third-party
-gfx/wgpu
-
 # intl/ exclusions
 intl/locale/
 intl/strres/
 intl/uconv/
 # Bug 1527075: This directory is linted in github repository
 intl/l10n/
-
-# Third-party
-layout/mathml/imptests/
 
 # Exclude everything but self-hosted JS
 js/ductwork/
@@ -166,9 +158,6 @@ js/src/jit-test/
 js/src/jsapi-tests/binast/
 js/src/tests/
 js/src/Y.js
-
-# mobile/android/ exclusions
-mobile/android/tests/browser/chrome/tp5/
 
 # Uses `#filter substitution`
 mobile/android/app/mobile.js
@@ -188,10 +177,6 @@ python/
 
 # Remote agent
 remote/Protocol.jsm
-remote/server/HTTPD.jsm
-remote/server/Packet.jsm
-remote/server/Socket.jsm
-remote/server/Stream.jsm
 remote/test/browser/chrome-remote-interface.js
 remote/test/demo.js
 remote/test/puppeteer/
@@ -211,8 +196,6 @@ servo/
 # Remote protocol exclusions
 testing/marionette/atom.js
 testing/marionette/legacyaction.js
-testing/marionette/client
-testing/marionette/doc
 testing/marionette/harness
 
 # other testing/ exclusions
@@ -263,6 +246,7 @@ toolkit/modules/AppConstants.jsm
 # Tests old non-star function generators
 toolkit/modules/tests/xpcshell/test_task.js
 
+# Uses special template formatting.
 tools/tryselect/selectors/chooser/templates/chooser.html
 
 # Ignore preprocessed *(P)refs.js files in update-packaging.
