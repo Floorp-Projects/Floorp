@@ -311,6 +311,9 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   }
   // XXXdholbert [END DEPRECATED]
 
+  LogicalAxis MainAxis() const { return mMainAxis; }
+  LogicalAxis CrossAxis() const { return GetOrthogonalAxis(mMainAxis); }
+
   // Returns the flex container's writing mode.
   WritingMode GetWritingMode() const { return mWM; }
 
@@ -422,6 +425,8 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   AxisOrientationType mPhysicalMainAxis = eAxis_LR;
   AxisOrientationType mPhysicalCrossAxis = eAxis_TB;
   // XXXdholbert [END DEPRECATED]
+
+  LogicalAxis mMainAxis = eLogicalAxisInline;
 
   const WritingMode mWM;  // The flex container's writing mode.
 
@@ -3669,6 +3674,7 @@ void FlexboxAxisTracker::InitAxesFromLegacyProps(
   // direction).  Otherwise, we're column-oriented (i.e. the flexbox's main
   // axis is perpendicular to the writing-mode's inline direction).
   mIsRowOriented = (boxOrientIsVertical == wmIsVertical);
+  mMainAxis = mIsRowOriented ? eLogicalAxisInline : eLogicalAxisBlock;
 
   // XXXdholbert BEGIN CODE TO SET DEPRECATED MEMBER-VARS
   if (boxOrientIsVertical) {
@@ -3721,21 +3727,25 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
   switch (flexDirection) {
     case StyleFlexDirection::Row:
       mPhysicalMainAxis = inlineDimension;
+      mMainAxis = eLogicalAxisInline;
       mIsRowOriented = true;
       mIsMainAxisReversed = false;
       break;
     case StyleFlexDirection::RowReverse:
       mPhysicalMainAxis = GetReverseAxis(inlineDimension);
+      mMainAxis = eLogicalAxisInline;
       mIsRowOriented = true;
       mIsMainAxisReversed = true;
       break;
     case StyleFlexDirection::Column:
       mPhysicalMainAxis = blockDimension;
+      mMainAxis = eLogicalAxisBlock;
       mIsRowOriented = false;
       mIsMainAxisReversed = false;
       break;
     case StyleFlexDirection::ColumnReverse:
       mPhysicalMainAxis = GetReverseAxis(blockDimension);
+      mMainAxis = eLogicalAxisBlock;
       mIsRowOriented = false;
       mIsMainAxisReversed = true;
       break;
@@ -3743,6 +3753,7 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
       MOZ_ASSERT_UNREACHABLE("Unexpected flex-direction value");
   }
 
+  // FIXME(TYLin) [BEGIN DEPRECATED]
   // Determine cross axis:
   // (This is set up so that a bogus |flexDirection| value will
   // give us blockDimension.
@@ -3752,6 +3763,7 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
   } else {
     mPhysicalCrossAxis = blockDimension;
   }
+  // FIXME(TYLin) [END DEPRECATED]
 
   // "flex-wrap: wrap-reverse" reverses our cross axis.
   if (stylePos->mFlexWrap == StyleFlexWrap::WrapReverse) {
