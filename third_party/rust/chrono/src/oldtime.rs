@@ -10,10 +10,11 @@
 
 //! Temporal quantification
 
-use std::{fmt, i64};
+use core::{fmt, i64};
+#[cfg(any(feature = "std", test))]
 use std::error::Error;
-use std::ops::{Add, Sub, Mul, Div, Neg};
-use std::time::Duration as StdDuration;
+use core::ops::{Add, Sub, Mul, Div, Neg};
+use core::time::Duration as StdDuration;
 
 /// The number of nanoseconds in a microsecond.
 const NANOS_PER_MICRO: i32 = 1000;
@@ -363,20 +364,20 @@ impl fmt::Display for Duration {
         let hasdate = days != 0;
         let hastime = (secs != 0 || abs.nanos != 0) || !hasdate;
 
-        try!(write!(f, "{}P", sign));
+        write!(f, "{}P", sign)?;
 
         if hasdate {
-            try!(write!(f, "{}D", days));
+            write!(f, "{}D", days)?;
         }
         if hastime {
             if abs.nanos == 0 {
-                try!(write!(f, "T{}S", secs));
+                write!(f, "T{}S", secs)?;
             } else if abs.nanos % NANOS_PER_MILLI == 0 {
-                try!(write!(f, "T{}.{:03}S", secs, abs.nanos / NANOS_PER_MILLI));
+                write!(f, "T{}.{:03}S", secs, abs.nanos / NANOS_PER_MILLI)?;
             } else if abs.nanos % NANOS_PER_MICRO == 0 {
-                try!(write!(f, "T{}.{:06}S", secs, abs.nanos / NANOS_PER_MICRO));
+                write!(f, "T{}.{:06}S", secs, abs.nanos / NANOS_PER_MICRO)?;
             } else {
-                try!(write!(f, "T{}.{:09}S", secs, abs.nanos));
+                write!(f, "T{}.{:09}S", secs, abs.nanos)?;
             }
         }
         Ok(())
@@ -392,15 +393,22 @@ impl fmt::Display for Duration {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OutOfRangeError(());
 
+impl OutOfRangeError {
+    fn description(&self) -> &str {
+        "Source duration value is out of range for the target type"
+    }
+}
+
 impl fmt::Display for OutOfRangeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.description())
     }
 }
 
+#[cfg(any(feature = "std", test))]
 impl Error for OutOfRangeError {
     fn description(&self) -> &str {
-        "Source duration value is out of range for the target type"
+        self.description()
     }
 }
 

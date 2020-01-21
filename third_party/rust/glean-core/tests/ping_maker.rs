@@ -156,7 +156,7 @@ fn seq_number_must_be_sequential() {
 
 #[test]
 fn test_clear_pending_pings() {
-    let (mut glean, _) = new_glean();
+    let (mut glean, _) = new_glean(None);
     let ping_maker = PingMaker::new();
     let ping_type = PingType::new("store1", true, false);
     glean.register_ping_type(&ping_type);
@@ -172,11 +172,33 @@ fn test_clear_pending_pings() {
     });
     metric.set(&glean, true);
 
-    assert!(glean.send_ping(&ping_type).is_ok());
+    assert!(glean.submit_ping(&ping_type).is_ok());
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 
     assert!(ping_maker
         .clear_pending_pings(glean.get_data_path())
         .is_ok());
+    assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
+}
+
+#[test]
+fn test_no_pings_submitted_if_upload_disabled() {
+    // Regression test, bug 1603571
+
+    let (mut glean, _) = new_glean(None);
+    let ping_type = PingType::new("store1", true, true);
+    glean.register_ping_type(&ping_type);
+
+    assert!(glean.submit_ping(&ping_type).is_ok());
+    assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
+
+    // Disable upload, then try to sumbit
+    glean.set_upload_enabled(false);
+
+    assert!(glean.submit_ping(&ping_type).is_ok());
+    assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
+
+    // Test again through the direct call
+    assert!(ping_type.submit(&glean).is_ok());
     assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
 }

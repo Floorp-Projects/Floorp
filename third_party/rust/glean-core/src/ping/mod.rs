@@ -48,29 +48,6 @@ impl PingMaker {
         Self
     }
 
-    /// Set the next ping sequence number to the provided one.
-    ///
-    /// This function stores the next sequence number (the one that
-    /// will be returned next time `get_ping_seq` is called) in the
-    /// glean-core store. The main purpose of this function is to allow
-    /// overriding sequence numbers with migration data coming from
-    /// glean-ac.
-    pub(super) fn set_ping_seq(&self, glean: &Glean, storage_name: &str, next_seq: i32) {
-        // Sequence numbers are stored as a counter under a name that includes the storage name
-        let seq = CounterMetric::new(CommonMetricData {
-            name: format!("{}#sequence", storage_name),
-            // We don't need a category, the name is already unique
-            category: "".into(),
-            send_in_pings: vec![INTERNAL_STORAGE.into()],
-            lifetime: Lifetime::User,
-            ..Default::default()
-        });
-
-        // It's safe to add `next_seq` because the glean-ac migration code
-        // clears the glean-core database before the migration starts.
-        seq.add(glean, next_seq);
-    }
-
     /// Get, and then increment, the sequence number for a given ping.
     ///
     /// This is crate-internal exclusively for enabling the migration tests.
@@ -244,9 +221,9 @@ impl PingMaker {
     /// The directory will be created inside the `data_path`.
     /// The `pings` directory (and its parents) is created if it does not exist.
     fn get_pings_dir(&self, data_path: &Path, ping_type: Option<&str>) -> std::io::Result<PathBuf> {
-        // Use a special directory for deletion_request pings
+        // Use a special directory for deletion-request pings
         let pings_dir = match ping_type {
-            Some(ping_type) if ping_type == "deletion_request" => {
+            Some(ping_type) if ping_type == "deletion-request" => {
                 data_path.join("deletion_request")
             }
             _ => data_path.join("pending_pings"),
@@ -337,18 +314,5 @@ mod test {
         glean.set_upload_enabled(true);
         assert_eq!(0, ping_maker.get_ping_seq(&glean, "custom"));
         assert_eq!(1, ping_maker.get_ping_seq(&glean, "custom"));
-    }
-
-    #[test]
-    fn set_ping_seq_must_correctly_set_sequence_numbers() {
-        let (glean, _) = new_glean();
-        let ping_maker = PingMaker::new();
-
-        ping_maker.set_ping_seq(&glean, "custom", 3);
-        assert_eq!(3, ping_maker.get_ping_seq(&glean, "custom"));
-
-        ping_maker.set_ping_seq(&glean, "other", 7);
-        assert_eq!(7, ping_maker.get_ping_seq(&glean, "other"));
-        assert_eq!(8, ping_maker.get_ping_seq(&glean, "other"));
     }
 }

@@ -3,8 +3,8 @@
 
 //! The time zone which has a fixed offset from UTC.
 
-use std::ops::{Add, Sub};
-use std::fmt;
+use core::ops::{Add, Sub};
+use core::fmt;
 use oldtime::Duration as OldDuration;
 
 use Timelike;
@@ -86,11 +86,13 @@ impl FixedOffset {
     }
 
     /// Returns the number of seconds to add to convert from UTC to the local time.
+    #[inline]
     pub fn local_minus_utc(&self) -> i32 {
         self.local_minus_utc
     }
 
     /// Returns the number of seconds to add to convert from the local time to UTC.
+    #[inline]
     pub fn utc_minus_local(&self) -> i32 {
         -self.local_minus_utc
     }

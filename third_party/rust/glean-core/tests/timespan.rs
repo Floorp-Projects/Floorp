@@ -12,25 +12,21 @@ use serde_json::json;
 use glean_core::metrics::*;
 use glean_core::storage::StorageManager;
 use glean_core::{test_get_num_recorded_errors, ErrorType};
-use glean_core::{CommonMetricData, Glean, Lifetime};
+use glean_core::{CommonMetricData, Lifetime};
 
 // Tests ported from glean-ac
 
 #[test]
 fn serializer_should_correctly_serialize_timespans() {
-    let (_t, tmpname) = tempdir();
-    let cfg = glean_core::Configuration {
-        data_path: tmpname,
-        application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-    };
+    let (mut tempdir, _) = tempdir();
 
     let duration = 60;
 
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        // We give tempdir to the `new_glean` function...
+        let (glean, dir) = new_glean(Some(tempdir));
+        // And then we get it back once that function returns.
+        tempdir = dir;
 
         let mut metric = TimespanMetric::new(
             CommonMetricData {
@@ -56,7 +52,7 @@ fn serializer_should_correctly_serialize_timespans() {
     // Make a new Glean instance here, which should force reloading of the data from disk
     // so we can ensure it persisted, because it has User lifetime
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        let (glean, _) = new_glean(Some(tempdir));
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
             .unwrap();
@@ -70,7 +66,7 @@ fn serializer_should_correctly_serialize_timespans() {
 
 #[test]
 fn single_elapsed_time_must_be_recorded() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let mut metric = TimespanMetric::new(
         CommonMetricData {
@@ -100,7 +96,7 @@ fn single_elapsed_time_must_be_recorded() {
 
 #[test]
 fn second_timer_run_is_skipped() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let mut metric = TimespanMetric::new(
         CommonMetricData {
@@ -142,7 +138,7 @@ fn second_timer_run_is_skipped() {
 
 #[test]
 fn recorded_time_conforms_to_resolution() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let mut ns_metric = TimespanMetric::new(
         CommonMetricData {
@@ -188,7 +184,7 @@ fn recorded_time_conforms_to_resolution() {
 
 #[test]
 fn cancel_does_not_store() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let mut metric = TimespanMetric::new(
         CommonMetricData {
@@ -210,7 +206,7 @@ fn cancel_does_not_store() {
 
 #[test]
 fn nothing_stored_before_stop() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let mut metric = TimespanMetric::new(
         CommonMetricData {
@@ -236,7 +232,7 @@ fn nothing_stored_before_stop() {
 
 #[test]
 fn set_raw_time() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = TimespanMetric::new(
         CommonMetricData {
@@ -259,7 +255,7 @@ fn set_raw_time() {
 
 #[test]
 fn set_raw_time_does_nothing_when_timer_running() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let mut metric = TimespanMetric::new(
         CommonMetricData {
@@ -291,7 +287,7 @@ fn set_raw_time_does_nothing_when_timer_running() {
 
 #[test]
 fn timespan_is_not_tracked_across_upload_toggle() {
-    let (mut glean, _t) = new_glean();
+    let (mut glean, _t) = new_glean(None);
 
     let mut metric = TimespanMetric::new(
         CommonMetricData {

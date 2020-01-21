@@ -23,6 +23,9 @@ use crate::Glean;
 use crate::Lifetime;
 
 /// The possible error types for metric recording.
+/// Note: the cases in this enum must be kept in sync with the ones
+/// in the platform-specific code (e.g. ErrorType.kt) and with the
+/// metrics in the registry files.
 #[derive(Debug)]
 pub enum ErrorType {
     /// For when the value to be recorded does not match the metric-specific restrictions
@@ -31,6 +34,8 @@ pub enum ErrorType {
     InvalidLabel,
     /// For when the metric caught an invalid state while recording
     InvalidState,
+    /// For when the value to be recorded overflows the metric-specific upper range
+    InvalidOverflow,
 }
 
 impl ErrorType {
@@ -40,6 +45,7 @@ impl ErrorType {
             ErrorType::InvalidValue => "invalid_value",
             ErrorType::InvalidLabel => "invalid_label",
             ErrorType::InvalidState => "invalid_state",
+            ErrorType::InvalidOverflow => "invalid_overflow",
         }
     }
 }
@@ -52,6 +58,7 @@ impl TryFrom<i32> for ErrorType {
             0 => Ok(ErrorType::InvalidValue),
             1 => Ok(ErrorType::InvalidLabel),
             2 => Ok(ErrorType::InvalidState),
+            4 => Ok(ErrorType::InvalidOverflow),
             e => Err(ErrorKind::Lifetime(e).into()),
         }
     }

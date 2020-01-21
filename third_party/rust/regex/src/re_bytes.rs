@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt;
-use std::ops::Index;
+use std::ops::{Index, Range};
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -36,16 +36,29 @@ impl<'t> Match<'t> {
         self.end
     }
 
+    /// Returns the range over the starting and ending byte offsets of the
+    /// match in the haystack.
+    #[inline]
+    pub fn range(&self) -> Range<usize> {
+        self.start..self.end
+    }
+
     /// Returns the matched text.
     #[inline]
     pub fn as_bytes(&self) -> &'t [u8] {
-        &self.text[self.start..self.end]
+        &self.text[self.range()]
     }
 
     /// Creates a new match from the given haystack and byte offsets.
     #[inline]
     fn new(haystack: &'t [u8], start: usize, end: usize) -> Match<'t> {
         Match { text: haystack, start: start, end: end }
+    }
+}
+
+impl<'t> From<Match<'t>> for Range<usize> {
+    fn from(m: Match<'t>) -> Range<usize> {
+        m.range()
     }
 }
 
@@ -726,11 +739,11 @@ impl<'r, 't> Iterator for Split<'r, 't> {
         let text = self.finder.0.text();
         match self.finder.next() {
             None => {
-                if self.last >= text.len() {
+                if self.last > text.len() {
                     None
                 } else {
                     let s = &text[self.last..];
-                    self.last = text.len();
+                    self.last = text.len() + 1; // Next call will return None
                     Some(s)
                 }
             }
@@ -761,12 +774,19 @@ impl<'r, 't> Iterator for SplitN<'r, 't> {
         if self.n == 0 {
             return None;
         }
+
         self.n -= 1;
-        if self.n == 0 {
-            let text = self.splits.finder.0.text();
-            Some(&text[self.splits.last..])
+        if self.n > 0 {
+            return self.splits.next();
+        }
+
+        let text = self.splits.finder.0.text();
+        if self.splits.last > text.len() {
+            // We've already returned all substrings.
+            None
         } else {
-            self.splits.next()
+            // self.n == 0, so future calls will return None immediately
+            Some(&text[self.splits.last..])
         }
     }
 }

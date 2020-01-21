@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate log;
 
+use log::{Level, LevelFilter, Log, Metadata, Record};
 use std::sync::{Arc, Mutex};
-use log::{Level, LevelFilter, Log, Record, Metadata};
 
 #[cfg(feature = "std")]
 use log::set_boxed_logger;
@@ -30,7 +30,9 @@ impl Log for Logger {
 }
 
 fn main() {
-    let me = Arc::new(State { last_log: Mutex::new(None) });
+    let me = Arc::new(State {
+        last_log: Mutex::new(None),
+    });
     let a = me.clone();
     set_boxed_logger(Box::new(Logger(me))).unwrap();
 
@@ -56,7 +58,11 @@ fn test(a: &State, filter: LevelFilter) {
     last(&a, t(Level::Trace, filter));
 
     fn t(lvl: Level, filter: LevelFilter) -> Option<Level> {
-        if lvl <= filter { Some(lvl) } else { None }
+        if lvl <= filter {
+            Some(lvl)
+        } else {
+            None
+        }
     }
 }
 
