@@ -134,7 +134,7 @@ add_task(async function test_dedupe_subdomain() {
                                    "form-basic-password", "pass1");
 
   let filledGUID = await SpecialPowers.spawn(bc, [], function getFilledGUID() {
-    let LMC = this.content.getWindowGlobalChild().getActor("LoginManager");
+    let LMC = this.content.windowGlobalChild.getActor("LoginManager");
     let doc = this.content.document;
     let form = doc.getElementById("form-basic");
     return LMC.stateForDocument(doc).fillsByRootElement.get(form).guid;
