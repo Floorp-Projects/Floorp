@@ -922,6 +922,8 @@ void imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   MonitorAutoLock lock(mMonitor);
 
   AddSizeOfCbData metadata;
+
+  metadata.finished = mFinished;
   if (mLockedSurface) {
     metadata.heap += aMallocSizeOf(mLockedSurface);
   }
