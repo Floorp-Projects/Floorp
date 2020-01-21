@@ -1929,7 +1929,7 @@ var gPrivacyPane = {
    */
   showPasswords() {
     if (LoginHelper.managementURI) {
-      let loginManager = window.windowGlobalChild.getActor("LoginManager");
+      let loginManager = window.getWindowGlobalChild().getActor("LoginManager");
       loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
         entryPoint: "preferences",
       });
