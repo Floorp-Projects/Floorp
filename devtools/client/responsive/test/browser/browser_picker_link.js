@@ -9,49 +9,48 @@
  */
 const TEST_URI = `${URL_ROOT}doc_picker_link.html`;
 
-// Run the test with the new RDM UI.
-addRDMTask(TEST_URI, runPickerLinkTest, true);
-// Run the test again with the old RDM UI.
-addRDMTask(TEST_URI, runPickerLinkTest, false);
+addRDMTask(
+  TEST_URI,
+  async function({ ui, manager }) {
+    info("Open the rule-view and select the test node before opening RDM");
+    const { inspector, toolbox } = await openRuleView();
+    await selectNode("body", inspector);
 
-async function runPickerLinkTest({ ui, manager }) {
-  info("Open the rule-view and select the test node before opening RDM");
-  const { inspector, toolbox } = await openRuleView();
-  await selectNode("body", inspector);
+    info("Open RDM");
 
-  info("Open RDM");
+    // XXX: Using toggleTouchSimulation waits for browser loaded, which is not
+    // fired here?
+    info("Toggle Touch simulation");
+    const { document } = ui.getBrowserWindow();
+    const touchButton = document.getElementById("touch-simulation-button");
+    const changed = once(ui, "touch-simulation-changed");
+    touchButton.click();
+    await changed;
 
-  // XXX: Using toggleTouchSimulation waits for browser loaded, which is not
-  // fired here?
-  info("Toggle Touch simulation");
-  const { document } = ui.getBrowserWindow();
-  const touchButton = document.getElementById("touch-simulation-button");
-  const changed = once(ui, "touch-simulation-changed");
-  touchButton.click();
-  await changed;
+    info("Waiting for element picker to become active.");
+    await startPicker(toolbox, ui);
 
-  info("Waiting for element picker to become active.");
-  await startPicker(toolbox, ui);
+    info("Move mouse over the pick-target");
+    await hoverElement(inspector, ui, ".picker-link", 15, 15);
 
-  info("Move mouse over the pick-target");
-  await hoverElement(inspector, ui, ".picker-link", 15, 15);
+    // Add a listener on the "navigate" event.
+    let hasNavigated = false;
+    toolbox.target.once("navigate").then(() => {
+      hasNavigated = true;
+    });
 
-  // Add a listener on the "navigate" event.
-  let hasNavigated = false;
-  toolbox.target.once("navigate").then(() => {
-    hasNavigated = true;
-  });
+    info("Click and pick the link");
+    await pickElement(inspector, ui, ".picker-link");
 
-  info("Click and pick the link");
-  await pickElement(inspector, ui, ".picker-link");
-
-  // Wait for 2 seconds to allow the page to start navigation.
-  await wait(2000);
-  ok(
-    !hasNavigated,
-    "The page should not have navigated when picking the <a> element"
-  );
-}
+    // Wait for 2 seconds to allow the page to start navigation.
+    await wait(2000);
+    ok(
+      !hasNavigated,
+      "The page should not have navigated when picking the <a> element"
+    );
+  },
+  true
+);
 
 /**
  * startPicker, hoverElement and pickElement are slightly modified copies of
