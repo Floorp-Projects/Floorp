@@ -264,12 +264,6 @@ class JS_PUBLIC_API RealmBehaviors {
     return *this;
   }
 
-  bool deferredParserAlloc() const { return deferredParserAlloc_; }
-  RealmBehaviors& setDeferredParserAlloc(bool flag) {
-    deferredParserAlloc_ = flag;
-    return *this;
-  }
-
   bool clampAndJitterTime() const { return clampAndJitterTime_; }
   RealmBehaviors& setClampAndJitterTime(bool flag) {
     clampAndJitterTime_ = flag;
@@ -328,7 +322,6 @@ class JS_PUBLIC_API RealmBehaviors {
   // singleton, instead of returning the value which is baked in the JSScript.
   bool singletonsAsTemplates_ = true;
   bool isNonLive_ = false;
-  bool deferredParserAlloc_ = true;
 };
 
 /**
