@@ -12,7 +12,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.ACTION
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.NONE
@@ -21,7 +20,6 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -82,15 +80,19 @@ class DefaultSearchController(
 
     override fun handleTextChanged(text: String) {
         store.dispatch(SearchFragmentAction.UpdateQuery(text))
-        store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(
-            text.isEmpty() && context.settings().shouldShowSearchShortcuts
-        ))
-        store.dispatch(SearchFragmentAction.ShowSearchSuggestionsHint(
-            text.isNotEmpty() &&
-                    (context as HomeActivity).browsingModeManager.mode.isPrivate &&
-                    !context.settings().shouldShowSearchSuggestionsInPrivate &&
-                    !context.settings().showSearchSuggestionsInPrivateOnboardingFinished
-        ))
+        store.dispatch(
+            SearchFragmentAction.ShowSearchShortcutEnginePicker(
+                text.isEmpty() && context.settings().shouldShowSearchShortcuts
+            )
+        )
+        store.dispatch(
+            SearchFragmentAction.ShowSearchSuggestionsHint(
+                text.isNotEmpty() &&
+                        (context as HomeActivity).browsingModeManager.mode.isPrivate &&
+                        !context.settings().shouldShowSearchSuggestionsInPrivate &&
+                        !context.settings().showSearchSuggestionsInPrivateOnboardingFinished
+            )
+        )
     }
 
     override fun handleUrlTapped(url: String) {
@@ -129,7 +131,8 @@ class DefaultSearchController(
 
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {
         store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine))
-        val isCustom = CustomSearchEngineStore.isCustomSearchEngine(context, searchEngine.identifier)
+        val isCustom =
+            CustomSearchEngineStore.isCustomSearchEngine(context, searchEngine.identifier)
         context.metrics.track(Event.SearchShortcutSelected(searchEngine, isCustom))
     }
 
@@ -144,8 +147,9 @@ class DefaultSearchController(
     }
 
     override fun handleExistingSessionSelected(session: Session) {
-        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(null)
-        navController.nav(R.id.searchFragment, directions)
         context.components.core.sessionManager.select(session)
+        (context as HomeActivity).openToBrowser(
+            from = BrowserDirection.FromSearch
+        )
     }
 }

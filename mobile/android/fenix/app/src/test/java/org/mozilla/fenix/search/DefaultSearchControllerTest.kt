@@ -26,7 +26,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
@@ -72,12 +71,14 @@ class DefaultSearchControllerTest {
 
         controller.handleUrlCommitted(url)
 
-        verify { context.openToBrowserAndLoad(
-            searchTermOrURL = url,
-            newTab = session == null,
-            from = BrowserDirection.FromSearch,
-            engine = searchEngine
-        ) }
+        verify {
+            context.openToBrowserAndLoad(
+                searchTermOrURL = url,
+                newTab = session == null,
+                from = BrowserDirection.FromSearch,
+                engine = searchEngine
+            )
+        }
         verify { metrics.track(Event.EnteredUrl(false)) }
     }
 
@@ -162,11 +163,13 @@ class DefaultSearchControllerTest {
 
         controller.handleUrlTapped(url)
 
-        verify { context.openToBrowserAndLoad(
-            searchTermOrURL = url,
-            newTab = session == null,
-            from = BrowserDirection.FromSearch
-        ) }
+        verify {
+            context.openToBrowserAndLoad(
+                searchTermOrURL = url,
+                newTab = session == null,
+                from = BrowserDirection.FromSearch
+            )
+        }
         verify { metrics.track(Event.EnteredUrl(false)) }
     }
 
@@ -176,13 +179,15 @@ class DefaultSearchControllerTest {
 
         controller.handleSearchTermsTapped(searchTerms)
 
-        verify { context.openToBrowserAndLoad(
-            searchTermOrURL = searchTerms,
-            newTab = session == null,
-            from = BrowserDirection.FromSearch,
-            engine = searchEngine,
-            forceSearch = true
-        ) }
+        verify {
+            context.openToBrowserAndLoad(
+                searchTermOrURL = searchTerms,
+                newTab = session == null,
+                from = BrowserDirection.FromSearch,
+                engine = searchEngine,
+                forceSearch = true
+            )
+        }
     }
 
     @Test
@@ -197,7 +202,8 @@ class DefaultSearchControllerTest {
 
     @Test
     fun handleClickSearchEngineSettings() {
-        val directions: NavDirections = SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
+        val directions: NavDirections =
+            SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
 
         controller.handleClickSearchEngineSettings()
 
@@ -225,11 +231,10 @@ class DefaultSearchControllerTest {
     @Test
     fun handleExistingSessionSelected() {
         val session: Session = mockk(relaxed = true)
-        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(null)
 
         controller.handleExistingSessionSelected(session)
 
-        verify { navController.nav(R.id.searchFragment, directions) }
         verify { sessionManager.select(session) }
+        verify { context.openToBrowser(from = BrowserDirection.FromSearch) }
     }
 }
