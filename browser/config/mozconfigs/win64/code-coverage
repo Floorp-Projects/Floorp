@@ -4,6 +4,7 @@ MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 
 ac_add_options --enable-optimize
+ac_add_options --enable-debug-symbols=-g1
 ac_add_options --disable-sandbox
 ac_add_options --disable-warnings-as-errors
 ac_add_options --enable-coverage
