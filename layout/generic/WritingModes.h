@@ -1227,31 +1227,6 @@ class LogicalMargin {
     return aAxis == eLogicalAxisInline ? IStartEnd(aWM) : BStartEnd(aWM);
   }
 
-  nscoord Side(LogicalSide aSide, WritingMode aWM) const {
-    switch (aSide) {
-      case eLogicalSideBStart:
-        return BStart(aWM);
-      case eLogicalSideBEnd:
-        return BEnd(aWM);
-      case eLogicalSideIStart:
-        return IStart(aWM);
-      case eLogicalSideIEnd:
-        return IEnd(aWM);
-    }
-  }
-  nscoord& Side(LogicalSide aSide, WritingMode aWM) {
-    switch (aSide) {
-      case eLogicalSideBStart:
-        return BStart(aWM);
-      case eLogicalSideBEnd:
-        return BEnd(aWM);
-      case eLogicalSideIStart:
-        return IStart(aWM);
-      case eLogicalSideIEnd:
-        return IEnd(aWM);
-    }
-  }
-
   /*
    * Return margin values for line-relative sides, as defined in
    * http://www.w3.org/TR/css-writing-modes-3/#line-directions:
