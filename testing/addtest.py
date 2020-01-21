@@ -19,7 +19,7 @@ class Creator(object):
         return True
 
     def __iter__(self):
-        """Iterate over a list of (path, data) tuples coresponding to the files
+        """Iterate over a list of (path, data) tuples corresponding to the files
         to be created"""
         yield (self.test, self._get_template_contents())
 

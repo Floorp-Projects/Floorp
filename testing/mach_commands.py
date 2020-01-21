@@ -205,7 +205,7 @@ class AddTest(MachCommandBase):
                 except OSError:
                     pass
 
-                with open(path, "w") as f:
+                with open(path, "w", newline='\n') as f:
                     f.write(template)
             else:
                 # write to stdout if you passed only suite and doc and not a file path
