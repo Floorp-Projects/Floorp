@@ -254,20 +254,23 @@ function terminalInputChanged(expression) {
       eager: true,
     });
 
-    const result = response.exception || response.result;
-
-    // Don't show syntax errors or undefined results to the user.
-    if (result.isSyntaxError || result.type == "undefined") {
-      return;
-    }
-
     // eslint-disable-next-line consistent-return
     return dispatch({
       type: SET_TERMINAL_EAGER_RESULT,
       expression: originalExpression,
-      result,
+      result: getEagerEvaluationResult(response),
     });
   };
+}
+
+function getEagerEvaluationResult(response) {
+  const result = response.exception || response.result;
+  // Don't show syntax errors or undefined results to the user.
+  if (!result || result.isSyntaxError || result.type == "undefined") {
+    return null;
+  }
+
+  return result;
 }
 
 module.exports = {

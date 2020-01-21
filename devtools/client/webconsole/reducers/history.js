@@ -230,7 +230,7 @@ function setTerminalInput(state, expression) {
   return {
     ...state,
     terminalInput: expression,
-    terminalEagerResult: null,
+    terminalEagerResult: !expression ? null : state.terminalEagerResult,
   };
 }
 
