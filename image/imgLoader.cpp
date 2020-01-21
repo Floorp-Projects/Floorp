@@ -334,6 +334,10 @@ class imgMemoryReporter final : public nsIMemoryReporter {
       surfacePathPrefix.AppendLiteral("x");
       surfacePathPrefix.AppendInt(counter.Key().Size().height);
 
+      if (!counter.IsFinished()) {
+        surfacePathPrefix.AppendLiteral(", incomplete");
+      }
+
       if (counter.Values().ExternalHandles() > 0) {
         surfacePathPrefix.AppendLiteral(", handles:");
         surfacePathPrefix.AppendInt(
