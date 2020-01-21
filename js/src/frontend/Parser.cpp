@@ -9771,38 +9771,27 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   mozilla::Range<const char16_t> range(chars.begin(), chars.length());
   RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
-  if (this->getParseInfo().isDeferred()) {
-    if (!handler_.canSkipRegexpSyntaxParse()) {
-      // Verify that the Regexp will syntax parse when the time comes to
-      // instantiate it. If we have already done a syntax parse, we can
-      // skip this.
-      LifoAllocScope allocScope(&cx_->tempLifoAlloc());
-      if (!irregexp::ParsePatternSyntax(anyChars, allocScope.alloc(), range,
-                                        flags.unicode())) {
-        return nullptr;
-      }
-    }
-
-    RegExpIndex index(this->getParseInfo().regExpData.length());
-    if (!this->getParseInfo().regExpData.emplaceBack()) {
+  if (!handler_.canSkipRegexpSyntaxParse()) {
+    // Verify that the Regexp will syntax parse when the time comes to
+    // instantiate it. If we have already done a syntax parse, we can
+    // skip this.
+    LifoAllocScope allocScope(&cx_->tempLifoAlloc());
+    if (!irregexp::ParsePatternSyntax(anyChars, allocScope.alloc(), range,
+                                      flags.unicode())) {
       return nullptr;
     }
-
-    if (!this->getParseInfo().regExpData[index].init(cx_, range, flags)) {
-      return nullptr;
-    }
-
-    return handler_.newRegExp(index, pos());
   }
 
-  Rooted<RegExpObject*> reobj(cx_);
-  reobj = RegExpObject::create(cx_, chars.begin(), chars.length(), flags,
-                               anyChars, TenuredObject);
-  if (!reobj) {
-    return null();
+  RegExpIndex index(this->getParseInfo().regExpData.length());
+  if (!this->getParseInfo().regExpData.emplaceBack()) {
+    return nullptr;
   }
 
-  return handler_.newRegExp(reobj, pos(), *this);
+  if (!this->getParseInfo().regExpData[index].init(cx_, range, flags)) {
+    return nullptr;
+  }
+
+  return handler_.newRegExp(index, pos());
 }
 
 template <typename Unit>

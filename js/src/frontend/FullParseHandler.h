@@ -217,6 +217,8 @@ class FullParseHandler {
   // The Boxer object here is any object that can allocate ObjectBoxes.
   // Specifically, a Boxer has a .newObjectBox(T) method that accepts a
   // Rooted<RegExpObject*> argument and returns an ObjectBox*.
+  //
+  // Used only by BinAST now.
   template <class Boxer>
   RegExpLiteralType newRegExp(RegExpObject* reobj, const TokenPos& pos,
                               Boxer& boxer) {
