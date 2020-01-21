@@ -46,6 +46,8 @@ using namespace gfx;
 
 namespace image {
 
+MOZ_DEFINE_MALLOC_SIZE_OF(SurfaceCacheMallocSizeOf)
+
 class CachedSurface;
 class SurfaceCacheImpl;
 
@@ -170,6 +172,10 @@ class CachedSurface {
     return image::CostEntry(WrapNotNull(this), mProvider->LogicalSizeInBytes());
   }
 
+  size_t ShallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + aMallocSizeOf(mProvider.get());
+  }
+
   // A helper type used by SurfaceCacheImpl::CollectSizeOfSurfaces.
   struct MOZ_STACK_CLASS SurfaceMemoryReport {
     SurfaceMemoryReport(nsTArray<SurfaceMemoryCounter>& aCounters,
@@ -187,9 +193,10 @@ class CachedSurface {
       // for surfaces with PlaybackType::eAnimated.)
       aCachedSurface->mProvider->AddSizeOfExcludingThis(
           mMallocSizeOf, [&](ISurfaceProvider::AddSizeOfCbData& aMetadata) {
-            SurfaceMemoryCounter counter(
-                aCachedSurface->GetSurfaceKey(), aCachedSurface->IsLocked(),
-                aCachedSurface->CannotSubstitute(), aIsFactor2);
+            SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
+                                         aCachedSurface->IsLocked(),
+                                         aCachedSurface->CannotSubstitute(),
+                                         aIsFactor2, aMetadata.finished);
 
             counter.Values().SetDecodedHeap(aMetadata.heap);
             counter.Values().SetDecodedNonHeap(aMetadata.nonHeap);
@@ -252,6 +259,15 @@ class ImageSurfaceCache {
       SurfaceTable;
 
   bool IsEmpty() const { return mSurfaces.Count() == 0; }
+
+  size_t ShallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    size_t bytes = aMallocSizeOf(this) +
+                   mSurfaces.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
+      bytes += iter.UserData()->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    }
+    return bytes;
+  }
 
   MOZ_MUST_USE bool Insert(NotNull<CachedSurface*> aSurface) {
     MOZ_ASSERT(!mLocked || aSurface->IsPlaceholder() || aSurface->IsLocked(),
@@ -664,6 +680,7 @@ class ImageSurfaceCache {
   }
 
   SurfaceTable::Iterator ConstIter() const { return mSurfaces.ConstIter(); }
+  uint32_t Count() const { return mSurfaces.Count(); }
 
   void SetLocked(bool aLocked) { mLocked = aLocked; }
   bool IsLocked() const { return mLocked; }
@@ -718,7 +735,10 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
         mMaxCost(aSurfaceCacheSize),
         mAvailableCost(aSurfaceCacheSize),
         mLockedCost(0),
-        mOverflowCount(0) {
+        mOverflowCount(0),
+        mAlreadyPresentCount(0),
+        mTableFailureCount(0),
+        mTrackingFailureCount(0) {
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       os->AddObserver(mMemoryPressureObserver, "memory-pressure", false);
@@ -747,6 +767,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
         Lookup(aProvider->GetImageKey(), aProvider->GetSurfaceKey(), aAutoLock,
                /* aMarkUsed = */ false);
     if (MOZ_UNLIKELY(result)) {
+      mAlreadyPresentCount++;
       return InsertOutcome::FAILURE_ALREADY_PRESENT;
     }
 
@@ -782,7 +803,10 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(imageKey);
     if (!cache) {
       cache = new ImageSurfaceCache(imageKey);
-      mImageCaches.Put(aProvider->GetImageKey(), cache);
+      if (!mImageCaches.Put(aProvider->GetImageKey(), cache, fallible)) {
+        mTableFailureCount++;
+        return InsertOutcome::FAILURE;
+      }
     }
 
     // If we were asked to mark the cache entry available, do so.
@@ -806,6 +830,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     // Insert.
     MOZ_ASSERT(cost <= mAvailableCost, "Inserting despite too large a cost");
     if (!cache->Insert(surface)) {
+      mTableFailureCount++;
       if (mustLock) {
         surface->SetLocked(false);
       }
@@ -857,6 +882,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
       MOZ_ASSERT(mLockedCost <= mMaxCost, "Locked more than we can hold?");
     } else {
       if (NS_WARN_IF(!mCosts.InsertElementSorted(costEntry, fallible))) {
+        mTrackingFailureCount++;
         return false;
       }
 
@@ -866,6 +892,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
       if (NS_WARN_IF(NS_FAILED(rv))) {
         DebugOnly<bool> foundInCosts = mCosts.RemoveElementSorted(costEntry);
         MOZ_ASSERT(foundInCosts, "Lost track of costs for this surface");
+        mTrackingFailureCount++;
         return false;
       }
     }
@@ -1154,8 +1181,21 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
 
     // Lock the surface. This can fail.
     aSurface->SetLocked(true);
-    DebugOnly<bool> tracking = StartTracking(aSurface, aAutoLock);
-    MOZ_ASSERT(tracking);
+    DebugOnly<bool> tracked = StartTracking(aSurface, aAutoLock);
+    MOZ_ASSERT(tracked);
+  }
+
+  size_t ShallowSizeOfIncludingThis(
+      MallocSizeOf aMallocSizeOf, const StaticMutexAutoLock& aAutoLock) const {
+    size_t bytes =
+        aMallocSizeOf(this) + mCosts.ShallowSizeOfExcludingThis(aMallocSizeOf) +
+        mImageCaches.ShallowSizeOfExcludingThis(aMallocSizeOf) +
+        mCachedSurfacesDiscard.ShallowSizeOfExcludingThis(aMallocSizeOf) +
+        mExpirationTracker.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto iter = mImageCaches.ConstIter(); !iter.Done(); iter.Next()) {
+      bytes += iter.UserData()->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    }
+    return bytes;
   }
 
   NS_IMETHOD
@@ -1163,10 +1203,31 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
                  bool aAnonymize) override {
     StaticMutexAutoLock lock(sInstanceMutex);
 
+    uint32_t lockedImageCount = 0;
+    uint32_t totalSurfaceCount = 0;
+    uint32_t lockedSurfaceCount = 0;
+    for (auto iter = mImageCaches.ConstIter(); !iter.Done(); iter.Next()) {
+      totalSurfaceCount += iter.UserData()->Count();
+      if (iter.UserData()->IsLocked()) {
+        ++lockedImageCount;
+      }
+      for (auto surfIter = iter.UserData()->ConstIter(); !surfIter.Done();
+           surfIter.Next()) {
+        if (surfIter.UserData()->IsLocked()) {
+          ++lockedSurfaceCount;
+        }
+      }
+    }
+
     // clang-format off
     // We have explicit memory reporting for the surface cache which is more
     // accurate than the cost metrics we report here, but these metrics are
     // still useful to report, since they control the cache's behavior.
+    MOZ_COLLECT_REPORT(
+      "explicit/images/cache/overhead", KIND_HEAP, UNITS_BYTES,
+      ShallowSizeOfIncludingThis(SurfaceCacheMallocSizeOf, lock),
+"Memory used by the surface cache data structures, excluding surface data.");
+
     MOZ_COLLECT_REPORT(
       "imagelib-surface-cache-estimated-total",
       KIND_OTHER, UNITS_BYTES, (mMaxCost - mAvailableCost),
@@ -1178,10 +1239,58 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
 "Estimated memory used by locked surfaces in the imagelib surface cache.");
 
     MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-tracked-cost-count",
+      KIND_OTHER, UNITS_COUNT, mCosts.Length(),
+"Total number of surfaces tracked for cost (and expiry) in the imagelib surface cache.");
+
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-tracked-expiry-count",
+      KIND_OTHER, UNITS_COUNT, mExpirationTracker.Length(lock),
+"Total number of surfaces tracked for expiry (and cost) in the imagelib surface cache.");
+
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-image-count",
+      KIND_OTHER, UNITS_COUNT, mImageCaches.Count(),
+"Total number of images in the imagelib surface cache.");
+
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-locked-image-count",
+      KIND_OTHER, UNITS_COUNT, lockedImageCount,
+"Total number of locked images in the imagelib surface cache.");
+
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-image-surface-count",
+      KIND_OTHER, UNITS_COUNT, totalSurfaceCount,
+"Total number of surfaces in the imagelib surface cache.");
+
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-locked-surfaces-count",
+      KIND_OTHER, UNITS_COUNT, lockedSurfaceCount,
+"Total number of locked surfaces in the imagelib surface cache.");
+
+    MOZ_COLLECT_REPORT(
       "imagelib-surface-cache-overflow-count",
       KIND_OTHER, UNITS_COUNT, mOverflowCount,
 "Count of how many times the surface cache has hit its capacity and been "
 "unable to insert a new surface.");
+
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-tracking-failure-count",
+      KIND_OTHER, UNITS_COUNT, mTrackingFailureCount,
+"Count of how many times the surface cache has failed to begin tracking a "
+"given surface.");
+
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-already-present-count",
+      KIND_OTHER, UNITS_COUNT, mAlreadyPresentCount,
+"Count of how many times the surface cache has failed to insert a surface "
+"because it is already present.");
+
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-table-failure-count",
+      KIND_OTHER, UNITS_COUNT, mTableFailureCount,
+"Count of how many times the surface cache has failed to insert a surface "
+"because a hash table could not accept an entry.");
     // clang-format on
 
     return NS_OK;
@@ -1358,6 +1467,9 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
   Cost mAvailableCost;
   Cost mLockedCost;
   size_t mOverflowCount;
+  size_t mAlreadyPresentCount;
+  size_t mTableFailureCount;
+  size_t mTrackingFailureCount;
 };
 
 NS_IMPL_ISUPPORTS(SurfaceCacheImpl, nsIMemoryReporter)
