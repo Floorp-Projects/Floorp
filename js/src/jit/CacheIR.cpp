@@ -5107,6 +5107,11 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
                                                    bool* skipAttach) {
   MOZ_ASSERT(!*skipAttach);
 
+  // Some constructors allocate their own |this| object.
+  if (calleeFunc->constructorNeedsUninitializedThis()) {
+    return true;
+  }
+
   // Saving the template object is unsound for super(), as a single
   // callsite can have multiple possible prototype objects created
   // (via different newTargets)

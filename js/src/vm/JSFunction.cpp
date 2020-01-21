@@ -1225,7 +1225,7 @@ const JSClass JSFunction::class_ = {js_Function_str,
 
 const JSClass* const js::FunctionClassPtr = &JSFunction::class_;
 
-bool JSFunction::isDerivedClassConstructor() {
+bool JSFunction::isDerivedClassConstructor() const {
   bool derived = hasBaseScript() && baseScript()->isDerivedClassConstructor();
   MOZ_ASSERT_IF(derived, isClassConstructor());
   return derived;

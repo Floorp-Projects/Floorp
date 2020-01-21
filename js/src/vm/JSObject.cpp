@@ -1108,6 +1108,8 @@ static inline JSObject* CreateThisForFunctionWithGroup(JSContext* cx,
 JSObject* js::CreateThisForFunctionWithProto(
     JSContext* cx, HandleFunction callee, HandleObject newTarget,
     HandleObject proto, NewObjectKind newKind /* = GenericObject */) {
+  MOZ_ASSERT(!callee->constructorNeedsUninitializedThis());
+
   RootedObject res(cx);
 
   // Ion may call this with a cross-realm callee.
@@ -1208,6 +1210,8 @@ bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,
 JSObject* js::CreateThisForFunction(JSContext* cx, HandleFunction callee,
                                     HandleObject newTarget,
                                     NewObjectKind newKind) {
+  MOZ_ASSERT(!callee->constructorNeedsUninitializedThis());
+
   RootedObject proto(cx);
   if (!GetPrototypeFromConstructor(cx, newTarget, JSProto_Object, &proto)) {
     return nullptr;
