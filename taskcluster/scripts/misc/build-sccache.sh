@@ -36,6 +36,7 @@ Linux)
         export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
         export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
         export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk"
         cargo build --features "all" --verbose --release --target $TARGET
     else
         # We can't use the system openssl; see the sad story in
