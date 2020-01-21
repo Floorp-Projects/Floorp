@@ -46,3 +46,4 @@ non262/reflect-parse/destructuring-variable-declarations.js
 test262/built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-flags-u.js
 test262/built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-flags-u.js
 test262/built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-flags-u.js
+
