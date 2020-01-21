@@ -36,6 +36,19 @@
 		</ul>
 	]]></string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Erweitert…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Jemand könnte versuchen, sich als diese Website auszugeben, daher sollten Sie nicht fortfahren.</label>
+        <br><br>
+        <label>Websites weisen ihre Identität mittels Zertifikaten nach. %1$s vertraut <b>%2$s</b> nicht, weil der Aussteller des Zertifikats unbekannt ist, das Zertifikat selbstsigniert ist oer der Server nicht die korrekten Zwischenzertifikate sendet.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Zurück (empfohlen)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Risiko akzeptieren und fortfahren</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Fehler: Datenübertragung unterbrochen</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
