@@ -893,14 +893,14 @@ NS_IMETHODIMP_(void)
 SHEntryChild::SyncPresentationState() { mShared->SyncPresentationState(); }
 
 nsDocShellEditorData* SHEntryChild::ForgetEditorData() {
-  return mShared->mEditorData.forget();
+  return mShared->mEditorData.release();
 }
 
 void SHEntryChild::SetEditorData(nsDocShellEditorData* aData) {
   NS_ASSERTION(!(aData && mShared->mEditorData),
                "We're going to overwrite an owning ref!");
   if (mShared->mEditorData != aData) {
-    mShared->mEditorData = aData;
+    mShared->mEditorData = WrapUnique(aData);
   }
 }
 
