@@ -189,9 +189,13 @@ const previewers = {
             let value = Cu.unwaiveXrays(desc.value);
             value = ObjectUtils.makeDebuggeeValueIfNeeded(obj, value);
             items.push(hooks.createValueGrip(value));
+          } else if (!desc) {
+            items.push(null);
           } else {
             items.push(hooks.createValueGrip(undefined));
           }
+        } else if (raw && !Object.getOwnPropertyDescriptor(raw, i)) {
+          items.push(null);
         } else {
           // Workers do not have access to Cu, and when recording/replaying we
           // don't have a raw object. In either case we do not need to deal with
