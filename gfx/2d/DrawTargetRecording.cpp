@@ -58,12 +58,8 @@ class SourceSurfaceRecording : public SourceSurface {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceRecording, override)
 
   SourceSurfaceRecording(IntSize aSize, SurfaceFormat aFormat,
-                         DrawEventRecorderPrivate* aRecorder,
-                         SourceSurface* aOriginalSurface = nullptr)
-      : mSize(aSize),
-        mFormat(aFormat),
-        mRecorder(aRecorder),
-        mOriginalSurface(aOriginalSurface) {
+                         DrawEventRecorderPrivate* aRecorder)
+      : mSize(aSize), mFormat(aFormat), mRecorder(aRecorder) {
     mRecorder->AddStoredObject(this);
   }
 
@@ -77,20 +73,12 @@ class SourceSurfaceRecording : public SourceSurface {
   IntSize GetSize() const override { return mSize; }
   SurfaceFormat GetFormat() const override { return mFormat; }
   already_AddRefed<DataSourceSurface> GetDataSurface() override {
-    if (mOriginalSurface) {
-      return mOriginalSurface->GetDataSurface();
-    }
-
     return nullptr;
   }
 
   IntSize mSize;
   SurfaceFormat mFormat;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
-  // If a SourceSurfaceRecording is returned from an OptimizeSourceSurface call
-  // we need GetDataSurface to work, so we hold the original surface we
-  // optimized to return its GetDataSurface.
-  RefPtr<SourceSurface> mOriginalSurface;
 };
 
 class DataSourceSurfaceRecording : public DataSourceSurface {
@@ -515,25 +503,13 @@ DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char* aData,
                                                  SurfaceFormat aFormat) const {
   RefPtr<SourceSurface> surf = DataSourceSurfaceRecording::Init(
       aData, aSize, aStride, aFormat, mRecorder);
-  mRecorder->RecordEvent(RecordedOptimizeSourceSurface(surf, this, surf));
   return surf.forget();
 }
 
 already_AddRefed<SourceSurface> DrawTargetRecording::OptimizeSourceSurface(
     SourceSurface* aSurface) const {
-  if (aSurface->GetType() == SurfaceType::RECORDING) {
-    return do_AddRef(aSurface);
-  }
-
-  EnsureSurfaceStoredRecording(mRecorder, aSurface, "OptimizeSourceSurface");
-
-  RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(
-      aSurface->GetSize(), aSurface->GetFormat(), mRecorder, aSurface);
-
-  mRecorder->RecordEvent(
-      RecordedOptimizeSourceSurface(aSurface, this, retSurf));
-
-  return retSurf.forget();
+  RefPtr<SourceSurface> surf(aSurface);
+  return surf.forget();
 }
 
 already_AddRefed<SourceSurface>
