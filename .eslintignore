@@ -54,7 +54,6 @@ browser/components/pocket/content/panels/js/vendor/
 # Kept in sync with browser/components/newtab/.eslintignore
 browser/components/newtab/data/
 browser/components/newtab/logs/
-browser/components/newtab/vendor/
 
 # The only file in browser/locales/ is pre-processed.
 browser/locales/
@@ -121,11 +120,11 @@ devtools/client/webconsole/test/browser/test-syntaxerror-worklet.js
 # devtools specific format test file
 devtools/server/tests/xpcshell/xpcshell_debugging_script.js
 
-# Third-party
-dom/canvas/test/webgl-conf/
-dom/imptests/
-dom/media/webaudio/test/blink/
-dom/media/webvtt/
+# Generated
+dom/canvas/test/webgl-conf/generated/
+
+# Intentionally invalid/not parsable
+dom/html/test/test_bug677658.html
 dom/svg/test/test_nonAnimStrings.xhtml
 dom/svg/test/test_SVG_namespace_ids.html
 
@@ -134,10 +133,6 @@ dom/base/test/file_bug687859-16.js
 dom/encoding/test/test_utf16_files.html
 dom/encoding/test/file_utf16_be_bom.js
 dom/encoding/test/file_utf16_le_bom.js
-
-# Not parsable
-dom/tests/mochitest/general/test_focusrings.xul
-dom/html/test/test_bug677658.html
 
 # Service workers fixtures which require specific resource caching.
 dom/base/test/file_js_cache.js

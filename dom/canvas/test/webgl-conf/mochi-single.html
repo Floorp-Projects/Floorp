@@ -17,7 +17,7 @@ var frameElem = document.getElementById('test-frame');
 ////////////////////////////////////////////////////////////////////////
 
 window.webglTestHarness = {
-  reportResults: function(pathname, success, message) {
+  reportResults(pathname, success, message) {
     if (parent) {
       parent.ok(success, message);
     } else {
@@ -25,7 +25,7 @@ window.webglTestHarness = {
     }
   },
 
-  notifyFinished: function(testPath) {
+  notifyFinished(testPath) {
     if (parent) {
       parent.SimpleTest.finish();
     } else {
