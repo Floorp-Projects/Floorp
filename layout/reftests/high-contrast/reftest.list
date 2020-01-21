@@ -6,16 +6,15 @@ default-preferences test-pref(browser.display.document_color_use,2) test-pref(br
 # mocking. You can read more about the annotations and their specifics here:
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1539212#c25
 
-== backplate-select-001.html backplate-select-001-ref.html
 fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-001.html backplate-bg-image-001-ref.html # bug 1577028
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-002.html backplate-bg-image-002-ref.html
 fuzzy-if(cocoaWidget,255-255,4-4) == backplate-bg-image-003.html backplate-bg-image-003-ref.html
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-004.html backplate-bg-image-004-ref.html
 fuzzy-if(cocoaWidget,255-255,80-80) == backplate-bg-image-005.html backplate-bg-image-005-ref.html
-fuzzy-if(cocoaWidget,255-255,2912-2912) fuzzy-if(gtkWidget,13-13,3200-3200) fuzzy-if(winWidget,15-26,3000-3000) == backplate-bg-image-006.html backplate-bg-image-006-ref.html
-fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-007.html backplate-bg-image-007-ref.html
+fuzzy-if(cocoaWidget,255-255,120-120) == backplate-bg-image-006.html backplate-bg-image-006-ref.html
+fuzzy-if(cocoaWidget,255-255,120-120) == backplate-bg-image-007.html backplate-bg-image-007-ref.html
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
-fuzzy-if(cocoaWidget,255-255,20-20) fuzzy-if(gtkWidget,15-24,2408-2408) == backplate-bg-image-009.html backplate-bg-image-009-ref.html
+fuzzy-if(cocoaWidget,255-255,20-20) fuzzy-if(gtkWidget,15-24,808-808) == backplate-bg-image-009.html backplate-bg-image-009-ref.html
 fuzzy-if(cocoaWidget,255-255,1578-1578) fuzzy-if(winWidget,255-255,353-353) fuzzy-if(Android,255-255,700-700) == backplate-bg-image-010.html backplate-bg-image-010-ref.html
 fuzzy-if(cocoaWidget,255-255,316-320) == backplate-bg-image-011.html backplate-bg-image-011-ref.html
 fuzzy-if(cocoaWidget,255-255,32-32) == backplate-bg-image-012.html backplate-bg-image-012-ref.html

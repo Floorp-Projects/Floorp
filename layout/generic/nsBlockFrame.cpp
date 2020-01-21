@@ -214,27 +214,6 @@ static nsRect GetLineTextArea(nsLineBox* aLine,
   return textArea;
 }
 
-/**
- * Starting with aFrame, iterates upward through parent frames and checks for
- * non-transparent background colors. If one is found, we use that as our
- * backplate color. Otheriwse, we use the default background color from
- * our high contrast theme.
- */
-static nscolor GetBackplateColor(nsIFrame* aFrame) {
-  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
-    auto* bg = frame->StyleBackground();
-    if (bg->IsTransparent(frame)) {
-      continue;
-    }
-    nscolor backgroundColor = bg->BackgroundColor(frame);
-    if (NS_GET_A(backgroundColor) != 0) {
-      return backgroundColor;
-    }
-    break;
-  }
-  return aFrame->PresContext()->DefaultBackgroundColor();
-}
-
 #ifdef DEBUG
 #  include "nsBlockDebugFlags.h"
 
@@ -7007,10 +6986,6 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nscoord lastY = INT32_MIN;
     nscoord lastYMost = INT32_MIN;
     nsRect curBackplateArea;
-    Maybe<nscolor> backplateColor;
-    if (shouldDrawBackplate) {
-      backplateColor = Some(GetBackplateColor(this));
-    }
     // A frame's display list cannot contain more than one copy of a
     // given display item unless the items are uniquely identifiable.
     // Because backplate occasionally requires multiple
@@ -7035,8 +7010,8 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                    "if this master switch is off, curBackplateArea "
                    "must be empty and we shouldn't get here");
         aLists.BorderBackground()->AppendNewToTop<nsDisplaySolidColor>(
-            aBuilder, this, curBackplateArea, backplateColor.value(),
-            backplateIndex);
+            aBuilder, this, curBackplateArea,
+            PresContext()->DefaultBackgroundColor(), backplateIndex);
         backplateIndex++;
 
         curBackplateArea = nsRect();
@@ -7067,8 +7042,8 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
     if (!curBackplateArea.IsEmpty()) {
       aLists.BorderBackground()->AppendNewToTop<nsDisplaySolidColor>(
-          aBuilder, this, curBackplateArea, backplateColor.value(),
-          backplateIndex);
+          aBuilder, this, curBackplateArea,
+          PresContext()->DefaultBackgroundColor(), backplateIndex);
     }
   }
 
