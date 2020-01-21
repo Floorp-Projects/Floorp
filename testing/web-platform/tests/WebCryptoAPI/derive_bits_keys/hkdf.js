@@ -143,9 +143,9 @@ function define_tests() {
                         subsetTest(promise_test, function(test) {
                             return subtle.deriveBits(algorithm, baseKeys[derivedKeySize], null)
                             .then(function(derivation) {
-                                assert_unreached("null length should have thrown an TypeError");
+                                assert_unreached("null length should have thrown an OperationError");
                             }, function(err) {
-                                assert_equals(err.name, "TypeError", "deriveBits with null length correctly threw OperationError: " + err.message);
+                                assert_equals(err.name, "OperationError", "deriveBits with null length correctly threw OperationError: " + err.message);
                             });
                         }, testName + " with null length");
 
