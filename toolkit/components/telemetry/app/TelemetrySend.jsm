@@ -222,6 +222,15 @@ var TelemetrySend = {
   },
 
   /**
+   * Flushes all pings to pingsender that were both
+   *   1. submitted after profile-change-net-teardown, and
+   *   2. wanting to be sent using pingsender.
+   */
+  flushPingSenderBatch() {
+    TelemetrySendImpl.flushPingSenderBatch();
+  },
+
+  /**
    * Submit a ping for sending. This will:
    * - send the ping right away if possible or
    * - save the ping to disk and send it at the next opportunity
@@ -675,6 +684,8 @@ var TelemetrySendImpl = {
   _isOSShutdown: false,
   // Has the network shut down, making it too late to send pings?
   _tooLateToSend: false,
+  // Array of {url, path} awaiting flushPingSenderBatch().
+  _pingSenderBatch: [],
 
   OBSERVER_TOPICS: [
     TOPIC_IDLE_DAILY,
@@ -863,6 +874,13 @@ var TelemetrySendImpl = {
     await this._persistCurrentPings();
   },
 
+  flushPingSenderBatch() {
+    this._log.trace(
+      `flushPingSenderBatch - Sending ${this._pingSenderBatch.length} pings.`
+    );
+    this.runPingSender(this._pingSenderBatch);
+  },
+
   reset() {
     this._log.trace("reset");
 
@@ -953,6 +971,12 @@ var TelemetrySendImpl = {
     );
     try {
       const pingPath = OS.Path.join(TelemetryStorage.pingDirectoryPath, pingId);
+      if (this._tooLateToSend) {
+        // We're in shutdown. Batch pings destined for pingsender.
+        this._log.trace("_sendWithPingSender - too late to send. Batching.");
+        this._pingSenderBatch.push({ url: submissionURL, path: pingPath });
+        return;
+      }
       this.runPingSender([{ url: submissionURL, path: pingPath }]);
     } catch (e) {
       this._log.error("_sendWithPingSender - failed to submit ping", e);
