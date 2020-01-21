@@ -129,6 +129,7 @@
       this._timer = null;
 
       // Ensure the button state is up to date:
+      // eslint-disable-next-line no-self-assign
       this.searchButton = this.searchButton;
 
       this.initializeAttributeInheritance();

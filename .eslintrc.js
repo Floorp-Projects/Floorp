@@ -4,6 +4,7 @@ const xpcshellTestConfig = require("eslint-plugin-mozilla/lib/configs/xpcshell-t
 const browserTestConfig = require("eslint-plugin-mozilla/lib/configs/browser-test.js");
 const mochitestTestConfig = require("eslint-plugin-mozilla/lib/configs/mochitest-test.js");
 const chromeTestConfig = require("eslint-plugin-mozilla/lib/configs/chrome-test.js");
+const fs = require("fs");
 
 /**
  * Some configurations have overrides, which can't be specified within overrides,
@@ -32,7 +33,12 @@ const chromeTestPaths = [
   "**/test*/chrome/",
 ];
 
+const ignorePatterns =
+  fs.readFileSync("tools/rewriting/ThirdPartyPaths.txt")
+    .toString("utf-8").split("\n");
+
 module.exports = {
+  ignorePatterns,
   // New rules and configurations should generally be added in
   // tools/lint/eslint/eslint-plugin-mozilla/lib/configs/recommended.js to
   // allow external repositories that use the plugin to pick them up as well.
