@@ -477,14 +477,8 @@ class js::gc::MarkingValidator {
   bool initialized;
 
   using MarkBits = UniquePtr<uint8_t>;
-
-  struct ArenaInfo {
-    Zone* zone;
-    MarkBits markBits;
-  };
-
   using MarkBitsMap =
-      HashMap<Arena*, ArenaInfo, DefaultHasher<Arena*>, SystemAllocPolicy>;
+      HashMap<Arena*, MarkBits, DefaultHasher<Arena*>, SystemAllocPolicy>;
   MarkBitsMap map;
 };
 
@@ -522,9 +516,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
         }
 
         mozilla::PodCopy(markBits.get(), arena->markBits(), thingCount);
-
-        ArenaInfo info = {zone, std::move(markBits)};
-        if (!map.putNew(arena, std::move(info))) {
+        if (!map.putNew(arena, std::move(markBits))) {
           return;
         }
       }
@@ -643,7 +635,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
       for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {
         Arena* arena = aiter.get();
         size_t thingCount = arena->getThingsPerArena();
-        uint8_t* savedMarkBits = map.lookup(arena)->value().markBits.get();
+        uint8_t* savedMarkBits = map.lookup(arena)->value().get();
         mozilla::PodCopy(temp, arena->markBits(), thingCount);
         mozilla::PodCopy(arena->markBits(), savedMarkBits, thingCount);
         mozilla::PodCopy(savedMarkBits, temp, thingCount);
@@ -693,17 +685,12 @@ void js::gc::MarkingValidator::validate() {
       for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {
         Arena* arena = aiter.get();
 
-        /*
-         * It's possible for the arena to have been freshly allocated since we
-         * did the non-incremental mark, or to have been freed and reallocated
-         * in a new zone.
-         */
         MarkBitsMap::Ptr ptr = map.lookup(arena);
-        if (!ptr || ptr->value().zone != zone) {
-          continue;
+        if (!ptr) {
+          continue; /* Allocated after we did the non-incremental mark. */
         }
 
-        uint8_t* markBits = ptr->value().markBits.get();
+        uint8_t* markBits = ptr->value().get();
         uint8_t* incMarkBits = arena->markBits();
 
         size_t thingCount = arena->getThingsPerArena();
