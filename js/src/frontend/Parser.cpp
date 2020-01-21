@@ -352,22 +352,9 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
 
-  FunctionBox* funbox;
-
-  if (getParseInfo().isDeferred()) {
-    funbox = alloc_.new_<FunctionBox>(
-        cx_, traceListHead_, fcd, toStringStart, inheritedDirectives,
-        options().extraWarningsOption, generatorKind, asyncKind);
-  } else {
-    RootedFunction fun(cx_, AllocNewFunction(cx_, fcd));
-    if (!fun) {
-      ReportOutOfMemory(cx_);
-      return nullptr;
-    }
-    funbox = alloc_.new_<FunctionBox>(
-        cx_, traceListHead_, fun, toStringStart, inheritedDirectives,
-        options().extraWarningsOption, generatorKind, asyncKind);
-  }
+  FunctionBox* funbox = alloc_.new_<FunctionBox>(
+      cx_, traceListHead_, fcd, toStringStart, inheritedDirectives,
+      options().extraWarningsOption, generatorKind, asyncKind);
 
   if (!funbox) {
     ReportOutOfMemory(cx_);
