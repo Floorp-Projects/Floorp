@@ -28,6 +28,9 @@ function comp(name) {
 function spread(val) {
     return Pattern({ type: "SpreadExpression", expression: val});
 }
+function optExpr(val) {
+    return Pattern({ type: "OptionalExpression", expression: val});
+}
 var thisExpr = Pattern({ type: "ThisExpression" });
 function funDecl(id, params, body, defaults=[], rest=null) {
     return Pattern({ type: "FunctionDeclaration",
@@ -73,6 +76,12 @@ function dotExpr(obj, id) {
 }
 function memExpr(obj, id) {
     return Pattern({ type: "MemberExpression", computed: true, object: obj, property: id });
+}
+function optDotExpr(obj, id) {
+    return Pattern({ type: "OptionalMemberExpression", computed: false, object: obj, property: id });
+}
+function optMemExpr(obj, id) {
+    return Pattern({ type: "OptionalMemberExpression", computed: true, object: obj, property: id });
 }
 function forStmt(init, test, update, body) {
     return Pattern({ type: "ForStatement", init: init, test: test, update: update, body: body });
@@ -232,6 +241,9 @@ function newExpr(callee, args) {
 }
 function callExpr(callee, args) {
     return Pattern({ type: "CallExpression", callee: callee, arguments: args });
+}
+function optCallExpr(callee, args) {
+    return Pattern({ type: "OptionalCallExpression", callee: callee, arguments: args });
 }
 function superCallExpr(args) {
     return callExpr({ type: "Super" }, args);
