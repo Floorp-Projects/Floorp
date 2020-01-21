@@ -12,6 +12,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+
 const ADDON_ID = "doh-rollout@mozilla.org";
 
 const prefs = {
@@ -27,6 +31,7 @@ const prefs = {
   DOH_BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
   DOH_DEBUG_PREF: "doh-rollout.debug",
   MOCK_HEURISTICS_PREF: "doh-rollout.heuristics.mockValues",
+  PROFILE_CREATION_THRESHOLD_PREF: "doh-rollout.profileCreationThreshold",
 };
 
 const fakePassingHeuristics = JSON.stringify({
@@ -58,6 +63,11 @@ async function setup() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
   Services.telemetry.clearEvents();
+
+  // Set the profile creation threshold to very far in the future by defualt,
+  // so that we can test the doorhanger. browser_doorhanger_newProfile.js
+  // overrides this.
+  Preferences.set(prefs.PROFILE_CREATION_THRESHOLD_PREF, "99999999999999");
 
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
