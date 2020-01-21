@@ -66,6 +66,8 @@ line, in long member expression.
 
 In JavaScript, ``==`` is preferred to ``===``.
 
+Unary keyword operators, such as ``typeof``, should have their operand
+parenthesized; e.g. ``typeof("foo") == "string"``.
 
 Literals
 ~~~~~~~~
