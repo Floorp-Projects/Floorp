@@ -132,12 +132,6 @@ export class BaseContent extends React.PureComponent {
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections;
 
-    // Filter out highlights for DS
-    if (isDiscoveryStream) {
-      filteredSections = filteredSections.filter(
-        section => section.id !== "highlights"
-      );
-    }
     const noSectionsEnabled =
       !prefs["feeds.topsites"] &&
       filteredSections.filter(section => section.enabled).length === 0;
