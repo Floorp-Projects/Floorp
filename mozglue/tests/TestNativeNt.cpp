@@ -181,9 +181,10 @@ int main(int argc, char* argv[]) {
   auto tableOfNames = ntdllHeaders.RVAToPtr<PDWORD>(exportDir->AddressOfNames);
   for (DWORD i = 0; i < exportDir->NumberOfNames; ++i) {
     const auto name = ntdllHeaders.RVAToPtr<const char*>(tableOfNames[i]);
-    const DWORD* funcEntry = ntdllHeaders.FindExportAddressTableEntry(name);
-    if (ntdllHeaders.RVAToPtr<const void*>(*funcEntry) !=
-        ::GetProcAddress(ntdllImageBase, name)) {
+    auto funcEntry = ntdllHeaders.FindExportAddressTableEntry(name);
+    if (funcEntry.isErr() || !funcEntry.inspect() ||
+        ntdllHeaders.RVAToPtr<const void*>(*funcEntry.inspect()) !=
+            ::GetProcAddress(ntdllImageBase, name)) {
       printf(
           "TEST-FAILED | NativeNt | FindExportAddressTableEntry returned "
           "a wrong value.\n");
@@ -192,7 +193,8 @@ int main(int argc, char* argv[]) {
   }
 
   // Test a known forwarder RVA.
-  if (k32headers.FindExportAddressTableEntry("HeapAlloc")) {
+  auto funcEntry = k32headers.FindExportAddressTableEntry("HeapAlloc");
+  if (funcEntry.isErr() || funcEntry.inspect()) {
     printf(
         "TEST-FAILED | NativeNt | kernel32!HeapAlloc should be forwarded to "
         "ntdll!RtlAllocateHeap.\n");
@@ -200,10 +202,11 @@ int main(int argc, char* argv[]) {
   }
 
   // Test an invalid name.
-  if (k32headers.FindExportAddressTableEntry("Invalid name")) {
+  funcEntry = k32headers.FindExportAddressTableEntry("Invalid name");
+  if (funcEntry.isOk()) {
     printf(
         "TEST-FAILED | NativeNt | FindExportAddressTableEntry should return "
-        "null for an non-existent name.\n");
+        "an error for a non-existent name.\n");
     return 1;
   }
 
