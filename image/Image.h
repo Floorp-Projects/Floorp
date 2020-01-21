@@ -18,6 +18,7 @@
 #include "ProgressTracker.h"
 #include "SurfaceCache.h"
 
+class imgRequest;
 class nsIRequest;
 class nsIInputStream;
 
@@ -103,6 +104,7 @@ struct SurfaceMemoryCounter {
 };
 
 struct ImageMemoryCounter {
+  ImageMemoryCounter(imgRequest* aRequest, SizeOfState& aState, bool aIsUsed);
   ImageMemoryCounter(Image* aImage, SizeOfState& aState, bool aIsUsed);
 
   nsCString& URI() { return mURI; }
@@ -110,14 +112,35 @@ struct ImageMemoryCounter {
   const nsTArray<SurfaceMemoryCounter>& Surfaces() const { return mSurfaces; }
   const gfx::IntSize IntrinsicSize() const { return mIntrinsicSize; }
   const MemoryCounter& Values() const { return mValues; }
+  uint32_t Progress() const { return mProgress; }
   uint16_t Type() const { return mType; }
   bool IsUsed() const { return mIsUsed; }
+  bool HasError() const { return mHasError; }
 
   bool IsNotable() const {
+    // Errors or requests without images are always notable.
+    if (mHasError || mProgress == UINT32_MAX || mProgress & FLAG_HAS_ERROR ||
+        mType == imgIContainer::TYPE_REQUEST) {
+      return true;
+    }
+
+    // Sufficiently large images are notable.
     const size_t NotableThreshold = 16 * 1024;
     size_t total =
         mValues.Source() + mValues.DecodedHeap() + mValues.DecodedNonHeap();
-    return total >= NotableThreshold;
+    if (total >= NotableThreshold) {
+      return true;
+    }
+
+    // Incomplete images are always notable as well; the odds of capturing
+    // mid-decode should be fairly low.
+    for (const auto& surface : mSurfaces) {
+      if (!surface.IsFinished()) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
  private:
@@ -125,8 +148,10 @@ struct ImageMemoryCounter {
   nsTArray<SurfaceMemoryCounter> mSurfaces;
   gfx::IntSize mIntrinsicSize;
   MemoryCounter mValues;
+  uint32_t mProgress;
   uint16_t mType;
   const bool mIsUsed;
+  bool mHasError;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

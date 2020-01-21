@@ -131,6 +131,7 @@ interface imgIContainer : nsISupports
     */
   const unsigned short TYPE_RASTER = 0;
   const unsigned short TYPE_VECTOR = 1;
+  const unsigned short TYPE_REQUEST = 2;
 
   /**
    * The type of this image (one of the TYPE_* values above).
