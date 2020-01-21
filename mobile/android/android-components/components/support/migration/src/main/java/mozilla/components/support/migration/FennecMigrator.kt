@@ -569,7 +569,7 @@ class FennecMigrator private constructor(
         results
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber")
+    @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber", "ReturnCount")
     private fun migrateHistory(): Result<Unit> {
         checkNotNull(historyStorage) { "History storage must be configured to migrate history" }
 
@@ -579,13 +579,21 @@ class FennecMigrator private constructor(
         }
 
         if (dbPath == null) {
+            MigrationHistory.failureReason.add(FailureReasonTelemetryCodes.HISTORY_MISSING_DB_PATH.code)
             return Result.Failure(IllegalStateException("Missing DB path during history migration"))
         }
+
+        if (!File(dbPath).exists()) {
+            MigrationHistory.successReason.add(SuccessReasonTelemetryCodes.HISTORY_NO_DB.code)
+            return Result.Success(Unit)
+        }
+
         val migrationMetrics = try {
             logger.debug("Migrating history...")
             historyStorage.importFromFennec(dbPath)
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateHistoryException(e))
+            MigrationHistory.failureReason.add(FailureReasonTelemetryCodes.HISTORY_RUST_EXCEPTION.code)
             return Result.Failure(e)
         }
 
@@ -599,16 +607,19 @@ class FennecMigrator private constructor(
             MigrationHistory.duration.setRawNanos(migrationMetrics.getLong("total_duration") * 1000000)
         } catch (e: Exception) {
             MigrationHistory.anyFailures.set(true)
+            MigrationHistory.failureReason.add(FailureReasonTelemetryCodes.HISTORY_TELEMETRY_EXCEPTION.code)
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateHistoryException(e)
             )
         }
 
+        MigrationHistory.successReason.add(SuccessReasonTelemetryCodes.HISTORY_MIGRATED.code)
+
         logger.debug("Migrated history.")
         return Result.Success(Unit)
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber")
+    @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber", "ReturnCount")
     private fun migrateBookmarks(): Result<Unit> {
         checkNotNull(bookmarksStorage) { "Bookmarks storage must be configured to migrate bookmarks" }
 
@@ -618,8 +629,15 @@ class FennecMigrator private constructor(
         }
 
         if (dbPath == null) {
+            MigrationBookmarks.failureReason.add(FailureReasonTelemetryCodes.BOOKMARKS_MISSING_DB_PATH.code)
             return Result.Failure(IllegalStateException("Missing DB path during bookmark migration"))
         }
+
+        if (!File(dbPath).exists()) {
+            MigrationBookmarks.successReason.add(SuccessReasonTelemetryCodes.BOOKMARKS_NO_DB.code)
+            return Result.Success(Unit)
+        }
+
         val migrationMetrics = try {
             logger.debug("Migrating bookmarks...")
             bookmarksStorage.importFromFennec(dbPath)
@@ -627,6 +645,7 @@ class FennecMigrator private constructor(
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateBookmarksException(e)
             )
+            MigrationBookmarks.failureReason.add(FailureReasonTelemetryCodes.BOOKMARKS_RUST_EXCEPTION.code)
             return Result.Failure(e)
         }
 
@@ -639,6 +658,7 @@ class FennecMigrator private constructor(
             // Assuming that 'total_duration' is in milliseconds.
             MigrationBookmarks.duration.setRawNanos(migrationMetrics.getLong("total_duration") * 1000000)
         } catch (e: Exception) {
+            MigrationBookmarks.failureReason.add(FailureReasonTelemetryCodes.BOOKMARKS_TELEMETRY_EXCEPTION.code)
             MigrationBookmarks.anyFailures.set(true)
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateBookmarksException(e)
@@ -646,6 +666,7 @@ class FennecMigrator private constructor(
         }
 
         logger.debug("Migrated history.")
+        MigrationBookmarks.successReason.add(SuccessReasonTelemetryCodes.BOOKMARKS_MIGRATED.code)
         return Result.Success(Unit)
     }
 
@@ -653,6 +674,7 @@ class FennecMigrator private constructor(
     private suspend fun migrateLogins(): Result<LoginsMigrationResult> {
         if (profile == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
+            MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_MISSING_PROFILE.code)
             return Result.Failure(IllegalStateException("Missing Profile path"))
         }
 
@@ -667,6 +689,7 @@ class FennecMigrator private constructor(
             )
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateLoginsException(e))
+            MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_UNEXPECTED_EXCEPTION.code)
             return Result.Failure(e)
         }
 
@@ -738,12 +761,22 @@ class FennecMigrator private constructor(
     private suspend fun migrateOpenTabs(): Result<SessionManager.Snapshot> {
         if (profile == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
+            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_MISSING_PROFILE.code)
             return Result.Failure(IllegalStateException("Missing Profile path"))
         }
 
+        logger.debug("Migrating session...")
+        val result = try {
+            FennecSessionMigration.migrate(File(profile.path))
+        } catch (e: Exception) {
+            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_MIGRATE_EXCEPTION.code)
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateOpenTabsException(e)
+            )
+            return Result.Failure(e)
+        }
+
         return try {
-            logger.debug("Migrating session...")
-            val result = FennecSessionMigration.migrate(File(profile.path))
             if (result is Result.Success<SessionManager.Snapshot>) {
                 logger.debug("Loading migrated session snapshot...")
                 MigrationOpenTabs.detected.add(result.value.sessions.size)
@@ -752,12 +785,15 @@ class FennecMigrator private constructor(
                     // Note that this is assuming that sessionManager starts off empty before the
                     // migration.
                     MigrationOpenTabs.migrated.add(sessionManager.all.size)
+                    MigrationOpenTabs.successReason.add(SuccessReasonTelemetryCodes.OPEN_TABS_MIGRATED.code)
                 }
             } else if (result is Result.Failure<*>) {
                 MigrationOpenTabs.anyFailures.set(result.throwables.isNotEmpty())
+                MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_NO_SNAPSHOT.code)
             }
             result
         } catch (e: Exception) {
+            MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_RESTORE_EXCEPTION.code)
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateOpenTabsException(e)
             )
@@ -829,6 +865,7 @@ class FennecMigrator private constructor(
     @SuppressWarnings("TooGenericExceptionCaught")
     private fun migrateGecko(): Result<Unit> {
         if (profile == null) {
+            MigrationGecko.failureReason.add(FailureReasonTelemetryCodes.GECKO_MISSING_PROFILE.code)
             return Result.Failure(IllegalStateException("Missing Profile path"))
         }
 
@@ -836,8 +873,10 @@ class FennecMigrator private constructor(
             logger.debug("Migrating gecko files...")
             val result = GeckoMigration.migrate(profile.path)
             logger.debug("Migrated gecko files.")
+            MigrationGecko.successReason.add(SuccessReasonTelemetryCodes.GECKO_MIGRATED.code)
             result
         } catch (e: Exception) {
+            MigrationGecko.failureReason.add(FailureReasonTelemetryCodes.GECKO_UNEXPECTED_EXCEPTION.code)
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateGeckoException(e)
             )
@@ -853,6 +892,7 @@ class FennecMigrator private constructor(
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateSettingsException(e)
             )
+            MigrationSettings.failureReason.add(FailureReasonTelemetryCodes.SETTINGS_MIGRATE_EXCEPTION.code)
             return Result.Failure(e)
         }
 
@@ -954,6 +994,7 @@ class FennecMigrator private constructor(
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateAddonsException(e)
             )
+            MigrationAddons.failureReason.add(FailureReasonTelemetryCodes.ADDON_UNEXPECTED_EXCEPTION.code)
             Result.Failure(e)
         }
     }
@@ -962,6 +1003,9 @@ class FennecMigrator private constructor(
     private fun migrateTelemetryIdentifiers(): Result<TelemetryIdentifiersResult> {
         if (profile == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
+            MigrationTelemetryIdentifiers.failureReason.add(
+                FailureReasonTelemetryCodes.TELEMETRY_IDENTIFIERS_MISSING_PROFILE.code
+            )
             return Result.Failure(IllegalStateException("Missing Profile path"))
         }
 
@@ -971,6 +1015,9 @@ class FennecMigrator private constructor(
         } catch (e: Exception) {
             crashReporter.submitCaughtException(
                 FennecMigratorException.TelemetryIdentifierException(e)
+            )
+            MigrationTelemetryIdentifiers.failureReason.add(
+                FailureReasonTelemetryCodes.TELEMETRY_IDENTIFIERS_MIGRATE_EXCEPTION.code
             )
             return Result.Failure(e)
         }
@@ -985,6 +1032,9 @@ class FennecMigrator private constructor(
                     success.profileCreationDate?.let {
                         MigrationTelemetryIdentifiers.fennecProfileCreationDate.set(Date(it))
                     }
+                    MigrationTelemetryIdentifiers.successReason.add(
+                        SuccessReasonTelemetryCodes.TELEMETRY_IDENTIFIERS_MIGRATED.code
+                    )
                 }
             }
         }
