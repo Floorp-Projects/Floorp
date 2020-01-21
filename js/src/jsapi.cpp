@@ -901,7 +901,7 @@ static const JSStdName builtin_property_names[] = {
 
 static bool SkipUneval(JSContext* cx, jsid id) {
   return !cx->realm()->creationOptions().getToSourceEnabled() &&
-          id == NameToId(cx->names().uneval);
+         id == NameToId(cx->names().uneval);
 }
 
 JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
@@ -1156,7 +1156,8 @@ JS_PUBLIC_API JSProtoKey JS_IdToProtoKey(JSContext* cx, HandleId id) {
     return JSProto_Null;
   }
 
-  static_assert(mozilla::ArrayLength(standard_class_names) == JSProto_LIMIT + 1);
+  static_assert(mozilla::ArrayLength(standard_class_names) ==
+                JSProto_LIMIT + 1);
   return static_cast<JSProtoKey>(stdnm - standard_class_names);
 }
 

@@ -191,8 +191,8 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
 
   bool IsTopLevelContentDocumentInContentProcess() const;
 
-// Should those be amended, the IPC serializer should be updated
-// accordingly.
+  // Should those be amended, the IPC serializer should be updated
+  // accordingly.
   mozilla::WeakPtr<nsDocShell> mDocShell;
 
   nsCOMPtr<nsIURI> mUnloadedURI;

@@ -62,14 +62,14 @@ bool DebuggerRunsInMiddleman();
 void ManifestFinished(const js::CharBuffer& aResponse);
 
 // Send messages operating on external calls.
-void SendExternalCallRequest(ExternalCallId aId,
-                             const char* aInputData, size_t aInputSize,
+void SendExternalCallRequest(ExternalCallId aId, const char* aInputData,
+                             size_t aInputSize,
                              InfallibleVector<char>* aOutputData);
 
 // Send the output from an external call to the root replaying process,
 // to fill in its external call cache.
-void SendExternalCallOutput(ExternalCallId aId,
-                            const char* aOutputData, size_t aOutputSize);
+void SendExternalCallOutput(ExternalCallId aId, const char* aOutputData,
+                            size_t aOutputSize);
 
 // Return whether a repaint is in progress and is not allowed to trigger an
 // unhandled recording divergence per preferences.

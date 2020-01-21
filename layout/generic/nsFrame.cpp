@@ -9298,8 +9298,9 @@ static nsRect UnionBorderBoxes(
   // Iterate over all children except pop-up, absolutely-positioned,
   // float, and overflow ones.
   const nsIFrame::ChildListIDs skip = {
-      nsIFrame::kPopupList, nsIFrame::kSelectPopupList, nsIFrame::kAbsoluteList,
-      nsIFrame::kFixedList, nsIFrame::kFloatList, nsIFrame::kOverflowList};
+      nsIFrame::kPopupList,    nsIFrame::kSelectPopupList,
+      nsIFrame::kAbsoluteList, nsIFrame::kFixedList,
+      nsIFrame::kFloatList,    nsIFrame::kOverflowList};
   for (nsIFrame::ChildListIterator childLists(aFrame); !childLists.IsDone();
        childLists.Next()) {
     if (skip.contains(childLists.CurrentID())) {

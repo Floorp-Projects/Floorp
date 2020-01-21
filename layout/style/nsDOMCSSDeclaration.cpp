@@ -328,8 +328,9 @@ nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
       aSubjectPrincipal, &closureData,
       [&](DeclarationBlock* decl, ParsingEnvironment& env) {
         return Servo_DeclarationBlock_SetProperty(
-            decl->Raw(), &aPropertyName, &aPropValue, aIsImportant, env.mUrlExtraData,
-            ParsingMode::Default, env.mCompatMode, env.mLoader, closure);
+            decl->Raw(), &aPropertyName, &aPropValue, aIsImportant,
+            env.mUrlExtraData, ParsingMode::Default, env.mCompatMode,
+            env.mLoader, closure);
       });
 }
 

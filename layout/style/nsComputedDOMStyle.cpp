@@ -626,7 +626,8 @@ static void AddImageURL(const nsStyleImageRequest& aRequest,
   AddImageURL(aRequest.GetImageValue(), aURLs);
 }
 
-static void AddImageURL(const nsStyleImage& aImage, nsTArray<nsCString>& aURLs) {
+static void AddImageURL(const nsStyleImage& aImage,
+                        nsTArray<nsCString>& aURLs) {
   if (auto* urlValue = aImage.GetURLValue()) {
     AddImageURL(*urlValue, aURLs);
   }
@@ -1562,7 +1563,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
   }
 
   const bool serializeImplicit =
-    StaticPrefs::layout_css_serialize_grid_implicit_tracks();
+      StaticPrefs::layout_css_serialize_grid_implicit_tracks();
 
   const nsTArray<nscoord>& trackSizes = aTrackInfo.mSizes;
   const uint32_t numExplicitTracks = aTrackInfo.mNumExplicitTracks;
@@ -1571,7 +1572,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
   uint32_t numSizes = trackSizes.Length();
   MOZ_ASSERT(numSizes >= numLeadingImplicitTracks + numExplicitTracks);
 
-  const bool hasTracksToSerialize = serializeImplicit ? !!numSizes : !!numExplicitTracks;
+  const bool hasTracksToSerialize =
+      serializeImplicit ? !!numSizes : !!numExplicitTracks;
   const bool hasRepeatAuto = aTrackList.HasRepeatAuto();
   if (!hasTracksToSerialize && !hasRepeatAuto) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -1693,8 +1695,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
 
   // Add any trailing implicit tracks.
   if (serializeImplicit) {
-    for (uint32_t i = numLeadingImplicitTracks + numExplicitTracks; i < numSizes;
-         ++i) {
+    for (uint32_t i = numLeadingImplicitTracks + numExplicitTracks;
+         i < numSizes; ++i) {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
       val->SetAppUnits(trackSizes[i]);
       valueList->AppendCSSValue(val.forget());

@@ -74,7 +74,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
                             const nsACString& aValue,
                             nsIPrincipal* aSubjectPrincipal) override;
 
-  void IndexedGetter(uint32_t aIndex, bool& aFound, nsACString& aPropName) final;
+  void IndexedGetter(uint32_t aIndex, bool& aFound,
+                     nsACString& aPropName) final;
 
   enum StyleType {
     eDefaultOnly,  // Only includes UA and user sheets

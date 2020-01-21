@@ -16,7 +16,22 @@ namespace recordreplay {
 
 // x86-64 general purpose registers.
 enum class Register {
-  RAX, RCX, RDX, RBX, RSP, RBP, RSI, RDI, R8, R9, R10, R11, R12, R13, R14, R15,
+  RAX,
+  RCX,
+  RDX,
+  RBX,
+  RSP,
+  RBP,
+  RSI,
+  RDI,
+  R8,
+  R9,
+  R10,
+  R11,
+  R12,
+  R13,
+  R14,
+  R15,
 };
 
 // Assembler for x64 instructions. This is a simple assembler that is primarily

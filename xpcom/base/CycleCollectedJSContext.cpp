@@ -79,8 +79,7 @@ CycleCollectedJSContext::~CycleCollectedJSContext() {
     return;
   }
 
-  JS::SetHostCleanupFinalizationGroupCallback(
-      mJSContext, nullptr, nullptr);
+  JS::SetHostCleanupFinalizationGroupCallback(mJSContext, nullptr, nullptr);
   mFinalizationGroupsToCleanUp.reset();
 
   JS_SetContextPrivate(mJSContext, nullptr);
@@ -745,7 +744,8 @@ nsresult CycleCollectedJSContext::NotifyUnhandledRejections::Cancel() {
 class CleanupFinalizationGroupsRunnable : public CancelableRunnable {
  public:
   explicit CleanupFinalizationGroupsRunnable(CycleCollectedJSContext* aContext)
-      : CancelableRunnable("CleanupFinalizationGroupsRunnable"), mContext(aContext) {}
+      : CancelableRunnable("CleanupFinalizationGroupsRunnable"),
+        mContext(aContext) {}
   NS_DECL_NSIRUNNABLE
  private:
   CycleCollectedJSContext* mContext;
