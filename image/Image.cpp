@@ -26,7 +26,8 @@ ImageMemoryCounter::ImageMemoryCounter(imgRequest* aRequest,
     : mProgress(UINT32_MAX),
       mType(UINT16_MAX),
       mIsUsed(aIsUsed),
-      mHasError(false) {
+      mHasError(false),
+      mValidating(false) {
   MOZ_ASSERT(aRequest);
 
   // We don't have the image object yet, but we can get some information.
@@ -38,6 +39,7 @@ ImageMemoryCounter::ImageMemoryCounter(imgRequest* aRequest,
 
   mType = imgIContainer::TYPE_REQUEST;
   mHasError = NS_FAILED(aRequest->GetImageErrorCode());
+  mValidating = !!aRequest->GetValidator();
 
   RefPtr<ProgressTracker> tracker = aRequest->GetProgressTracker();
   if (tracker) {
@@ -45,12 +47,14 @@ ImageMemoryCounter::ImageMemoryCounter(imgRequest* aRequest,
   }
 }
 
-ImageMemoryCounter::ImageMemoryCounter(Image* aImage, SizeOfState& aState,
-                                       bool aIsUsed)
+ImageMemoryCounter::ImageMemoryCounter(imgRequest* aRequest, Image* aImage,
+                                       SizeOfState& aState, bool aIsUsed)
     : mProgress(UINT32_MAX),
       mType(UINT16_MAX),
       mIsUsed(aIsUsed),
-      mHasError(false) {
+      mHasError(false),
+      mValidating(false) {
+  MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aImage);
 
   // Extract metadata about the image.
@@ -67,6 +71,7 @@ ImageMemoryCounter::ImageMemoryCounter(Image* aImage, SizeOfState& aState,
 
   mType = aImage->GetType();
   mHasError = aImage->HasError();
+  mValidating = !!aRequest->GetValidator();
 
   RefPtr<ProgressTracker> tracker = aImage->GetProgressTracker();
   if (tracker) {
