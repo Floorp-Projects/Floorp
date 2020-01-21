@@ -7392,9 +7392,9 @@ bool nsTextFrame::IsFrameSelected() const {
                                  GetContentEnd());
 }
 
-void nsTextFrame::SetSelectedRange(uint32_t aStart, uint32_t aEnd,
-                                   bool aSelected,
-                                   SelectionType aSelectionType) {
+void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,
+                                        bool aSelected,
+                                        SelectionType aSelectionType) {
   NS_ASSERTION(!GetPrevContinuation(),
                "Should only be called for primary frame");
   DEBUG_VERIFY_NOT_DIRTY(mState);
