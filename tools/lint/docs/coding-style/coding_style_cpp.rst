@@ -242,8 +242,8 @@ is doing, without needing to further examine base classes.
 Operators
 ~~~~~~~~~
 
-Unary keyword operators, such as ``typeof`` and ``sizeof``, should have
-their operand parenthesized; e.g. ``typeof("foo") == "string"``.
+The unary keyword operator ``sizeof``, should have its operand parenthesized
+even if it is an expression; e.g. ``int8_t arr[64]; memset(arr, 42, sizeof(arr));``.
 
 
 Literals
