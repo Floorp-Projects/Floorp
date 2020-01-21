@@ -20,11 +20,11 @@ class BrowserDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
   virtual int32_t Refresh() { return 0; }
 
   virtual int32_t GetDeviceName(uint32_t deviceNumber, char* deviceNameUTF8,
-                                uint32_t deviceNameLength,
+                                uint32_t deviceNameSize,
                                 char* deviceUniqueIdUTF8,
-                                uint32_t deviceUniqueIdUTF8Length,
+                                uint32_t deviceUniqueIdUTF8Size,
                                 char* productUniqueIdUTF8 = NULL,
-                                uint32_t productUniqueIdUTF8Length = 0,
+                                uint32_t productUniqueIdUTF8Size = 0,
                                 pid_t* pid = 0) {
     deviceNameUTF8 = const_cast<char*>(kDeviceName);
     deviceUniqueIdUTF8 = const_cast<char*>(kUniqueDeviceName);
