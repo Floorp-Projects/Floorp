@@ -2372,10 +2372,10 @@ void AntiTrackingCommon::RedirectHeuristic(nsIChannel* aOldChannel,
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
   nsCOMPtr<nsIURI> trackingURI;
 
-  if (allowedByPreviousRedirect) {
-    const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>& chain =
-        oldLoadInfo->RedirectChain();
-    MOZ_ASSERT(chain.Length() > 0);
+  const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>& chain =
+      oldLoadInfo->RedirectChain();
+
+  if (allowedByPreviousRedirect && !chain.IsEmpty()) {
     rv = chain[0]->GetPrincipal(getter_AddRefs(trackingPrincipal));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       LOG(("Can't obtain the principal from the redirect chain"));
