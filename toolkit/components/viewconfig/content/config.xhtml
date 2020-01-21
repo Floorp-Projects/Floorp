@@ -75,6 +75,15 @@
     <tree id="configTree" flex="1" seltype="single"
           enableColumnDrag="true" context="configContext">
       <treecols>
+        <!--
+          The below code may suggest that 'ordinal' is still a supported XUL
+          attribute. It is not. This is a crutch so that we can continue
+          persisting the CSS -moz-box-ordinal-group attribute, which is the
+          appropriate replacement for the ordinal attribute but cannot yet
+          be easily persisted. The code that synchronizes the attribute with
+          the CSS lives in toolkit/content/widget/tree.js and is specific to
+          tree elements.
+        -->
         <treecol id="prefCol" data-l10n-id="config-pref-column" flex="7"
             ignoreincolumnpicker="true"
             persist="hidden width ordinal sortDirection"/>
