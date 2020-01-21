@@ -58,7 +58,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  readAsyncStream: "resource://gre/modules/AsyncStreamReader.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
 });
@@ -171,16 +170,14 @@ TrackingDBService.prototype = {
     await db.close();
   },
 
-  async recordContentBlockingLog(inputStream) {
+  async recordContentBlockingLog(data) {
     if (this.finishedShutdown) {
       // The database has already been closed.
       return;
     }
-    /* import-globals-from AsyncStreamReader.jsm */
-    let json = await readAsyncStream(inputStream);
     let task = new DeferredTask(async () => {
       try {
-        await this.saveEvents(json);
+        await this.saveEvents(data);
       } finally {
         this.waitingTasks.delete(task);
       }
