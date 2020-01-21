@@ -403,12 +403,12 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
     return mIsRowOriented != mWM.IsVertical();
   }
 
- private:
   // Delete copy-constructor & reassignment operator, to prevent accidental
   // (unnecessary) copying.
   FlexboxAxisTracker(const FlexboxAxisTracker&) = delete;
   FlexboxAxisTracker& operator=(const FlexboxAxisTracker&) = delete;
 
+ private:
   // Helpers for constructor which determine the orientation of our axes, based
   // on legacy box properties (-webkit-box-orient, -webkit-box-direction) or
   // modern flexbox properties (flex-direction, flex-wrap) depending on whether
@@ -2227,15 +2227,15 @@ class MOZ_STACK_CLASS PositionTracker {
     }
   }
 
- protected:
-  // Protected constructor, to be sure we're only instantiated via a subclass.
-  PositionTracker(AxisOrientationType aAxis, bool aIsAxisReversed)
-      : mAxis(aAxis), mIsAxisReversed(aIsAxisReversed) {}
-
   // Delete copy-constructor & reassignment operator, to prevent accidental
   // (unnecessary) copying.
   PositionTracker(const PositionTracker&) = delete;
   PositionTracker& operator=(const PositionTracker&) = delete;
+
+ protected:
+  // Protected constructor, to be sure we're only instantiated via a subclass.
+  PositionTracker(AxisOrientationType aAxis, bool aIsAxisReversed)
+      : mAxis(aAxis), mIsAxisReversed(aIsAxisReversed) {}
 
   // Member data:
   // The position we're tracking.
@@ -2308,8 +2308,7 @@ class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
 
   inline void SetCrossGapSize(nscoord aNewSize) { mCrossGapSize = aNewSize; }
 
- private:
-  // Redeclare the frame-related methods from PositionTracker as private with
+  // Redeclare the frame-related methods from PositionTracker with
   // = delete, to be sure (at compile time) that no client code can invoke
   // them. (Unlike the other PositionTracker derived classes, this class here
   // deals with FlexLines, not with individual FlexItems or frames.)
@@ -2318,6 +2317,7 @@ class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
   void EnterChildFrame(nscoord aChildFrameSize) = delete;
   void ExitChildFrame(nscoord aChildFrameSize) = delete;
 
+ private:
   nscoord mPackingSpaceRemaining = 0;
   uint32_t mNumPackingSpacesRemaining = 0;
   // XXX this should be uint16_t when we add explicit fallback handling
