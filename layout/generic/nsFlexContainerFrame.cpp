@@ -581,6 +581,9 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   // visibility:collapse.
   bool IsStrut() const { return mIsStrut; }
 
+  LogicalAxis MainAxis() const { return mMainAxis; }
+  LogicalAxis CrossAxis() const { return GetOrthogonalAxis(mMainAxis); }
+
   // IsInlineAxisMainAxis() returns true if this item's inline axis is parallel
   // (or antiparallel) to the container's main axis. Otherwise (i.e. if this
   // item's inline axis is orthogonal to the container's main axis), this
@@ -864,6 +867,16 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   const float mFlexGrow = 0.0f;
   const float mFlexShrink = 0.0f;
   const AspectRatio mIntrinsicRatio;
+
+  // The flex item's writing mode.
+  const WritingMode mWM;
+
+  // The flex container's writing mode.
+  const WritingMode mCBWM;
+
+  // The flex container's main axis in flex container's writing mode.
+  const LogicalAxis mMainAxis = eLogicalAxisInline;
+
   const nsMargin mBorderPadding;
   // Non-const because we need to resolve auto margins.
   nsMargin mMargin;
@@ -895,8 +908,6 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   // memory with mMainPosn through mAscent, and mIsStretched.
   float mShareOfWeightSoFar = 0.0f;
 
-  // The flex item's writing mode.
-  const WritingMode mWM;
   bool mIsFrozen = false;
   bool mHadMinViolation = false;
   bool mHadMaxViolation = false;
@@ -1906,6 +1917,9 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       mFlexGrow(aFlexGrow),
       mFlexShrink(aFlexShrink),
       mIntrinsicRatio(mFrame->GetIntrinsicRatio()),
+      mWM(aFlexItemReflowInput.GetWritingMode()),
+      mCBWM(aAxisTracker.GetWritingMode()),
+      mMainAxis(aAxisTracker.MainAxis()),
       mBorderPadding(aFlexItemReflowInput.ComputedPhysicalBorderPadding()),
       mMargin(aFlexItemReflowInput.ComputedPhysicalMargin()),
       mMainMinSize(aMainMinSize),
@@ -1913,7 +1927,6 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       mCrossMinSize(aCrossMinSize),
       mCrossMaxSize(aCrossMaxSize),
       mCrossSize(aTentativeCrossSize),
-      mWM(aFlexItemReflowInput.GetWritingMode()),
       mIsInlineAxisMainAxis(aAxisTracker.IsRowOriented() !=
                             aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM))
 // mNeedsMinSizeAutoResolution is initialized in CheckForMinSizeAuto()
@@ -2046,13 +2059,13 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
 FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
                    WritingMode aContainerWM)
     : mFrame(aChildFrame),
+      mWM(aContainerWM),
+      mCBWM(aContainerWM),
       mCrossSize(aCrossSize),
       // Struts don't do layout, so its WM doesn't matter at this point. So, we
       // just share container's WM for simplicity:
-      mWM(aContainerWM),
       mIsFrozen(true),
       mIsStrut(true),  // (this is the constructor for making struts, after all)
-      mIsInlineAxisMainAxis(true),  // (doesn't matter, we're not doing layout)
       mAlignSelf(NS_STYLE_ALIGN_FLEX_START) {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
   MOZ_ASSERT(StyleVisibility::Collapse == mFrame->StyleVisibility()->mVisible,
