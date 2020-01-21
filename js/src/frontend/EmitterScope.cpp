@@ -517,27 +517,14 @@ bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
 
   updateFrameFixedSlots(bce, bi);
 
-  if (bce->parseInfo.isDeferred()) {
-    auto createScope = [kind, bindings, firstFrameSlot, bce](
-                           JSContext* cx, Handle<AbstractScope> enclosing,
-                           ScopeIndex* index) {
-      return ScopeCreationData::create(cx, bce->parseInfo, kind, bindings,
-                                       firstFrameSlot, enclosing, index);
-    };
-    if (!internScopeCreationData(bce, createScope)) {
-      return false;
-    }
-
-  } else {
-    // Create and intern the VM scope.
-    auto createScope = [kind, bindings, firstFrameSlot](JSContext* cx,
-                                                        HandleScope enclosing) {
-      return LexicalScope::create(cx, kind, bindings, firstFrameSlot,
-                                  enclosing);
-    };
-    if (!internScope(bce, createScope)) {
-      return false;
-    }
+  auto createScope = [kind, bindings, firstFrameSlot, bce](
+                         JSContext* cx, Handle<AbstractScope> enclosing,
+                         ScopeIndex* index) {
+    return ScopeCreationData::create(cx, bce->parseInfo, kind, bindings,
+                                     firstFrameSlot, enclosing, index);
+  };
+  if (!internScopeCreationData(bce, createScope)) {
+    return false;
   }
 
   if (ScopeKindIsInBody(kind) && hasEnvironment()) {
@@ -593,26 +580,16 @@ bool EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox) {
 
   ScopeKind scopeKind =
       funbox->strict() ? ScopeKind::StrictNamedLambda : ScopeKind::NamedLambda;
-  if (bce->parseInfo.isDeferred()) {
-    auto createScope = [funbox, scopeKind, bce](JSContext* cx,
-                                                Handle<AbstractScope> enclosing,
-                                                ScopeIndex* index) {
-      return ScopeCreationData::create(cx, bce->parseInfo, scopeKind,
-                                       funbox->namedLambdaBindings(),
-                                       LOCALNO_LIMIT, enclosing, index);
-    };
-    if (!internScopeCreationData(bce, createScope)) {
-      return false;
-    }
-  } else {
-    auto createScope = [funbox, scopeKind](JSContext* cx,
-                                           HandleScope enclosing) {
-      return LexicalScope::create(cx, scopeKind, funbox->namedLambdaBindings(),
-                                  LOCALNO_LIMIT, enclosing);
-    };
-    if (!internScope(bce, createScope)) {
-      return false;
-    }
+
+  auto createScope = [funbox, scopeKind, bce](JSContext* cx,
+                                              Handle<AbstractScope> enclosing,
+                                              ScopeIndex* index) {
+    return ScopeCreationData::create(cx, bce->parseInfo, scopeKind,
+                                     funbox->namedLambdaBindings(),
+                                     LOCALNO_LIMIT, enclosing, index);
+  };
+  if (!internScopeCreationData(bce, createScope)) {
+    return false;
   }
 
   return checkEnvironmentChainLength(bce);
@@ -696,30 +673,17 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
     }
   }
 
-  if (bce->parseInfo.isDeferred()) {
-    auto createScope = [funbox, bce](JSContext* cx,
-                                     Handle<AbstractScope> enclosing,
-                                     ScopeIndex* index) {
-      return ScopeCreationData::create(
-          cx, bce->parseInfo, funbox->functionScopeBindings(),
-          funbox->hasParameterExprs,
-          funbox->needsCallObjectRegardlessOfBindings(), funbox, enclosing,
-          index);
-    };
-    if (!internBodyScopeCreationData(bce, createScope)) {
-      return false;
-    }
-  } else {
-    // Create and intern the VM scope.
-    auto createScope = [funbox](JSContext* cx, HandleScope enclosing) {
-      RootedFunction fun(cx, funbox->function());
-      return FunctionScope::create(
-          cx, funbox->functionScopeBindings(), funbox->hasParameterExprs,
-          funbox->needsCallObjectRegardlessOfBindings(), fun, enclosing);
-    };
-    if (!internBodyScope(bce, createScope)) {
-      return false;
-    }
+  auto createScope = [funbox, bce](JSContext* cx,
+                                   Handle<AbstractScope> enclosing,
+                                   ScopeIndex* index) {
+    return ScopeCreationData::create(
+        cx, bce->parseInfo, funbox->functionScopeBindings(),
+        funbox->hasParameterExprs,
+        funbox->needsCallObjectRegardlessOfBindings(), funbox, enclosing,
+        index);
+  };
+  if (!internBodyScopeCreationData(bce, createScope)) {
+    return false;
   }
 
   return checkEnvironmentChainLength(bce);
@@ -768,33 +732,18 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
   }
 
-  if (bce->parseInfo.isDeferred()) {
-    // Create and intern the VM scope.
-    auto createScope = [funbox, firstFrameSlot, bce](
-                           JSContext* cx, Handle<AbstractScope> enclosing,
-                           ScopeIndex* index) {
-      return ScopeCreationData::create(
-          cx, bce->parseInfo, ScopeKind::FunctionBodyVar,
-          funbox->extraVarScopeBindings(), firstFrameSlot,
-          funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings(), enclosing,
-          index);
-    };
-    if (!internScopeCreationData(bce, createScope)) {
-      return false;
-    }
-  } else {
-    // Create and intern the VM scope.
-    auto createScope = [funbox, firstFrameSlot](JSContext* cx,
-                                                HandleScope enclosing) {
-      return VarScope::create(
-          cx, ScopeKind::FunctionBodyVar, funbox->extraVarScopeBindings(),
-          firstFrameSlot,
-          funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings(),
-          enclosing);
-    };
-    if (!internScope(bce, createScope)) {
-      return false;
-    }
+  // Create and intern the VM scope.
+  auto createScope = [funbox, firstFrameSlot, bce](
+                         JSContext* cx, Handle<AbstractScope> enclosing,
+                         ScopeIndex* index) {
+    return ScopeCreationData::create(
+        cx, bce->parseInfo, ScopeKind::FunctionBodyVar,
+        funbox->extraVarScopeBindings(), firstFrameSlot,
+        funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings(), enclosing,
+        index);
+  };
+  if (!internScopeCreationData(bce, createScope)) {
+    return false;
   }
 
   if (hasEnvironment()) {
@@ -822,29 +771,18 @@ bool EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce) {
   // always extensible, as they are needed for eval.
   fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
 
-  // Create and intern the VM scope.
+  // Create and intern the scope.
   uint32_t firstFrameSlot = frameSlotStart();
-  if (bce->parseInfo.isDeferred()) {
-    auto createScope = [firstFrameSlot, bce](JSContext* cx,
-                                             Handle<AbstractScope> enclosing,
-                                             ScopeIndex* index) {
-      return ScopeCreationData::create(
-          cx, bce->parseInfo, ScopeKind::ParameterExpressionVar,
-          /* dataArg = */ nullptr, firstFrameSlot,
-          /* needsEnvironment = */ true, enclosing, index);
-    };
-    if (!internScopeCreationData(bce, createScope)) {
-      return false;
-    }
-  } else {
-    auto createScope = [firstFrameSlot](JSContext* cx, HandleScope enclosing) {
-      return VarScope::create(cx, ScopeKind::ParameterExpressionVar,
-                              /* data = */ nullptr, firstFrameSlot,
-                              /* needsEnvironment = */ true, enclosing);
-    };
-    if (!internScope(bce, createScope)) {
-      return false;
-    }
+  auto createScope = [firstFrameSlot, bce](JSContext* cx,
+                                           Handle<AbstractScope> enclosing,
+                                           ScopeIndex* index) {
+    return ScopeCreationData::create(
+        cx, bce->parseInfo, ScopeKind::ParameterExpressionVar,
+        /* dataArg = */ nullptr, firstFrameSlot,
+        /* needsEnvironment = */ true, enclosing, index);
+  };
+  if (!internScopeCreationData(bce, createScope)) {
+    return false;
   }
 
   MOZ_ASSERT(hasEnvironment());
@@ -941,22 +879,14 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
   }
 
-  if (bce->parseInfo.isDeferred()) {
-    auto createScope = [globalsc, bce](JSContext* cx,
-                                       Handle<AbstractScope> enclosing,
-                                       ScopeIndex* index) {
-      MOZ_ASSERT(!enclosing.get());
-      return ScopeCreationData::create(
-          cx, bce->parseInfo, globalsc->scopeKind(), globalsc->bindings, index);
-    };
-    return internBodyScopeCreationData(bce, createScope);
-  }
-
-  auto createScope = [globalsc](JSContext* cx, HandleScope enclosing) {
+  auto createScope = [globalsc, bce](JSContext* cx,
+                                     Handle<AbstractScope> enclosing,
+                                     ScopeIndex* index) {
     MOZ_ASSERT(!enclosing.get());
-    return GlobalScope::create(cx, globalsc->scopeKind(), globalsc->bindings);
+    return ScopeCreationData::create(cx, bce->parseInfo, globalsc->scopeKind(),
+                                     globalsc->bindings, index);
   };
-  return internBodyScope(bce, createScope);
+  return internBodyScopeCreationData(bce, createScope);
 }
 
 bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
@@ -973,28 +903,18 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
 
   // Create the `var` scope. Note that there is also a lexical scope, created
   // separately in emitScript().
-  if (bce->parseInfo.isDeferred()) {
-    auto createScope = [evalsc, bce](JSContext* cx,
-                                     Handle<AbstractScope> enclosing,
-                                     ScopeIndex* index) {
-      ScopeKind scopeKind =
-          evalsc->strict() ? ScopeKind::StrictEval : ScopeKind::Eval;
-      return ScopeCreationData::create(cx, bce->parseInfo, scopeKind,
-                                       evalsc->bindings, enclosing, index);
-    };
-    if (!internBodyScopeCreationData(bce, createScope)) {
-      return false;
-    }
-  } else {
-    auto createScope = [evalsc](JSContext* cx, HandleScope enclosing) {
-      ScopeKind scopeKind =
-          evalsc->strict() ? ScopeKind::StrictEval : ScopeKind::Eval;
-      return EvalScope::create(cx, scopeKind, evalsc->bindings, enclosing);
-    };
-    if (!internBodyScope(bce, createScope)) {
-      return false;
-    }
+  auto createScope = [evalsc, bce](JSContext* cx,
+                                   Handle<AbstractScope> enclosing,
+                                   ScopeIndex* index) {
+    ScopeKind scopeKind =
+        evalsc->strict() ? ScopeKind::StrictEval : ScopeKind::Eval;
+    return ScopeCreationData::create(cx, bce->parseInfo, scopeKind,
+                                     evalsc->bindings, enclosing, index);
+  };
+  if (!internBodyScopeCreationData(bce, createScope)) {
+    return false;
   }
+
   if (hasEnvironment()) {
     if (!bce->emitInternedScopeOp(index(), JSOp::PushVarEnv)) {
       return false;
@@ -1085,27 +1005,14 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
     }
   }
 
-  if (bce->parseInfo.isDeferred()) {
-    // Create and intern the VM scope creation data.
-    auto createScope = [modulesc, bce](JSContext* cx,
-                                       Handle<AbstractScope> enclosing,
-                                       ScopeIndex* index) {
-      return ScopeCreationData::create(cx, bce->parseInfo, modulesc->bindings,
-                                       modulesc->module(), enclosing, index);
-    };
-    if (!internBodyScopeCreationData(bce, createScope)) {
-      return false;
-    }
-
-    return checkEnvironmentChainLength(bce);
-  }
-
-  // Create and intern the VM scope.
-  auto createScope = [modulesc](JSContext* cx, HandleScope enclosing) {
-    return ModuleScope::create(cx, modulesc->bindings, modulesc->module(),
-                               enclosing);
+  // Create and intern the VM scope creation data.
+  auto createScope = [modulesc, bce](JSContext* cx,
+                                     Handle<AbstractScope> enclosing,
+                                     ScopeIndex* index) {
+    return ScopeCreationData::create(cx, bce->parseInfo, modulesc->bindings,
+                                     modulesc->module(), enclosing, index);
   };
-  if (!internBodyScope(bce, createScope)) {
+  if (!internBodyScopeCreationData(bce, createScope)) {
     return false;
   }
 
@@ -1122,21 +1029,12 @@ bool EmitterScope::enterWith(BytecodeEmitter* bce) {
   // 'with' make all accesses dynamic and unanalyzable.
   fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
 
-  if (bce->parseInfo.isDeferred()) {
-    auto createScope = [bce](JSContext* cx, Handle<AbstractScope> enclosing,
-                             ScopeIndex* index) {
-      return ScopeCreationData::create(cx, bce->parseInfo, enclosing, index);
-    };
-    if (!internScopeCreationData(bce, createScope)) {
-      return false;
-    }
-  } else {
-    auto createScope = [](JSContext* cx, HandleScope enclosing) {
-      return WithScope::create(cx, enclosing);
-    };
-    if (!internScope(bce, createScope)) {
-      return false;
-    }
+  auto createScope = [bce](JSContext* cx, Handle<AbstractScope> enclosing,
+                           ScopeIndex* index) {
+    return ScopeCreationData::create(cx, bce->parseInfo, enclosing, index);
+  };
+  if (!internScopeCreationData(bce, createScope)) {
+    return false;
   }
 
   if (!bce->emitInternedScopeOp(index(), JSOp::EnterWith)) {
