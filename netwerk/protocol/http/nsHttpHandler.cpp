@@ -63,7 +63,6 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LazyIdleThread.h"
 
@@ -824,18 +823,6 @@ void nsHttpHandler::NotifyObservers(nsIChannel* chan, const char* event) {
 nsresult nsHttpHandler::AsyncOnChannelRedirect(
     nsIChannel* oldChan, nsIChannel* newChan, uint32_t flags,
     nsIEventTarget* mainThreadEventTarget) {
-  MOZ_ASSERT(NS_IsMainThread() && (oldChan && newChan));
-
-  nsCOMPtr<nsIURI> oldURI;
-  oldChan->GetURI(getter_AddRefs(oldURI));
-  MOZ_ASSERT(oldURI);
-
-  nsCOMPtr<nsIURI> newURI;
-  newChan->GetURI(getter_AddRefs(newURI));
-  MOZ_ASSERT(newURI);
-
-  AntiTrackingCommon::RedirectHeuristic(oldChan, oldURI, newChan, newURI);
-
   // TODO E10S This helper has to be initialized on the other process
   RefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
       new nsAsyncRedirectVerifyHelper();
