@@ -688,11 +688,7 @@ bool CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget,
   if (callee->is<JSFunction>()) {
     RootedFunction fun(cx, &callee->as<JSFunction>());
     if (fun->isInterpreted() && fun->isConstructor()) {
-      JSScript* script = JSFunction::getOrCreateScript(cx, fun);
-      if (!script) {
-        return false;
-      }
-      if (!js::CreateThis(cx, fun, script, newTarget, GenericObject, rval)) {
+      if (!js::CreateThis(cx, fun, newTarget, GenericObject, rval)) {
         return false;
       }
       MOZ_ASSERT_IF(rval.isObject(),
