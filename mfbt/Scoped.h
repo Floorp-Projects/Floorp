@@ -42,10 +42,11 @@
  *   and the resource is not deallocated by the class.
  */
 
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/Move.h"
 
 namespace mozilla {
 

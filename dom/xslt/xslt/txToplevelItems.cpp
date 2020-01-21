@@ -5,9 +5,10 @@
 
 #include "txToplevelItems.h"
 
-#include "mozilla/Move.h"
-#include "txStylesheet.h"
+#include <utility>
+
 #include "txInstructions.h"
+#include "txStylesheet.h"
 #include "txXSLTPatterns.h"
 
 TX_IMPL_GETTYPE(txAttributeSetItem, txToplevelItem::attributeSet)

@@ -7,12 +7,12 @@
 #ifndef mozilla_dom_Nullable_h
 #define mozilla_dom_Nullable_h
 
-#include "mozilla/Assertions.h"
-#include "nsTArrayForwardDeclare.h"
-#include "mozilla/Move.h"
-#include "mozilla/Maybe.h"
-
 #include <ostream>
+#include <utility>
+
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
+#include "nsTArrayForwardDeclare.h"
 
 class nsCycleCollectionTraversalCallback;
 

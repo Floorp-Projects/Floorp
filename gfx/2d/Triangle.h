@@ -8,8 +8,8 @@
 #define MOZILLA_GFX_TRIANGLE_H
 
 #include <algorithm>
+#include <utility>
 
-#include "mozilla/Move.h"
 #include "Point.h"
 #include "Rect.h"
 

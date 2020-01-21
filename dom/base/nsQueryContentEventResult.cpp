@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsQueryContentEventResult.h"
+
+#include <utility>
+
+#include "mozilla/TextEvents.h"
 #include "nsIWidget.h"
 #include "nsPoint.h"
-#include "nsQueryContentEventResult.h"
-#include "mozilla/Move.h"
-#include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 

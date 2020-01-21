@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "txRtfHandler.h"
-#include "mozilla/Move.h"
+
+#include <utility>
 
 txResultTreeFragment::txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer)
     : txAExprResult(nullptr), mBuffer(std::move(aBuffer)) {}

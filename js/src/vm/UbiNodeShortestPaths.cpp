@@ -7,7 +7,8 @@
 #include "js/UbiNodeShortestPaths.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+
+#include <utility>
 
 #include "util/Text.h"
 

@@ -3,18 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/FloatingPoint.h"
-#include "mozilla/Move.h"
-
 #include "txStylesheet.h"
+
+#include <utility>
+
+#include "mozilla/FloatingPoint.h"
 #include "txExpr.h"
-#include "txXSLTPatterns.h"
-#include "txToplevelItems.h"
 #include "txInstructions.h"
-#include "txXSLTFunctions.h"
-#include "txLog.h"
 #include "txKey.h"
+#include "txLog.h"
+#include "txToplevelItems.h"
 #include "txXPathTreeWalker.h"
+#include "txXSLTFunctions.h"
+#include "txXSLTPatterns.h"
 
 using mozilla::LogLevel;
 

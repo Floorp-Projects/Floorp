@@ -277,6 +277,9 @@ let Player = {
   set isPlaying(isPlaying) {
     this._isPlaying = isPlaying;
     this.controls.classList.toggle("playing", isPlaying);
+    const playButton = document.getElementById("playpause");
+    let strId = "pictureinpicture-" + (isPlaying ? "pause" : "play");
+    document.l10n.setAttributes(playButton, strId);
   },
 
   _isMuted: false,
@@ -296,6 +299,9 @@ let Player = {
   set isMuted(isMuted) {
     this._isMuted = isMuted;
     this.controls.classList.toggle("muted", isMuted);
+    const audioButton = document.getElementById("audio");
+    let strId = "pictureinpicture-" + (isMuted ? "unmute" : "mute");
+    document.l10n.setAttributes(audioButton, strId);
   },
 
   recordEvent(type, args) {

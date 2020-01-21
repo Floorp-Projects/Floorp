@@ -455,8 +455,8 @@ nsresult Selection::GetTableCellLocationFromRange(
   return cellLayout->GetCellIndexes(*aRow, *aCol);
 }
 
-nsresult Selection::AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
-                                      int32_t* aOutIndex) {
+nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
+                                           int32_t* aOutIndex) {
   if (!aDidAddRange || !aOutIndex) return NS_ERROR_NULL_POINTER;
 
   *aDidAddRange = false;
@@ -710,21 +710,12 @@ static nsresult CompareToRangeEnd(const nsINode* aCompareNode,
   return NS_OK;
 }
 
-// Selection::FindInsertionPoint
-//
-//    Binary searches the given sorted array of ranges for the insertion point
-//    for the given node/offset. The given comparator is used, and the index
-//    where the point should appear in the array is placed in *aInsertionPoint.
-//
-//    If there is an item in the array equal to the input point, we will return
-//    the index of this item.
-
 nsresult Selection::FindInsertionPoint(
     const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
     int32_t aPointOffset,
     nsresult (*aComparator)(const nsINode*, int32_t, const nsRange*, int32_t*),
-    int32_t* aPoint) {
-  *aPoint = 0;
+    int32_t* aInsertionPoint) {
+  *aInsertionPoint = 0;
   int32_t beginSearch = 0;
   int32_t endSearch = aElementArray->Length();  // one beyond what to check
 
@@ -749,7 +740,7 @@ nsresult Selection::FindInsertionPoint(
     } while (endSearch - beginSearch > 0);
   }
 
-  *aPoint = beginSearch;
+  *aInsertionPoint = beginSearch;
   return NS_OK;
 }
 
@@ -833,11 +824,16 @@ void Selection::UserSelectRangesToAdd(nsRange* aItem,
   }
 }
 
-nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
+nsresult Selection::AddRangesForSelectableNodes(nsRange* aRange,
                                                 int32_t* aOutIndex,
                                                 bool aNoStartSelect) {
-  if (!aItem) return NS_ERROR_NULL_POINTER;
-  if (!aItem->IsPositioned()) return NS_ERROR_UNEXPECTED;
+  if (!aRange) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (!aRange->IsPositioned()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   NS_ASSERTION(aOutIndex, "aOutIndex can't be null");
 
@@ -857,7 +853,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
       // clone of the original range passed in. We do this seperately, because
       // the selectstart event could have caused the world to change, and
       // required ranges to be re-generated
-      RefPtr<nsRange> scratchRange = aItem->CloneRange();
+      RefPtr<nsRange> scratchRange = aRange->CloneRange();
       UserSelectRangesToAdd(scratchRange, rangesToAdd);
       bool newRangesNonEmpty =
           rangesToAdd.Length() > 1 ||
@@ -875,7 +871,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
         // pref, disabled by default.
         // See https://github.com/w3c/selection-api/issues/53.
         bool dispatchEvent = true;
-        nsCOMPtr<nsINode> target = aItem->GetStartContainer();
+        nsCOMPtr<nsINode> target = aRange->GetStartContainer();
         if (nsFrameSelection::sSelectionEventsOnTextControlsEnabled) {
           // Get the first element which isn't in a native anonymous subtree
           while (target && target->IsInNativeAnonymousSubtree()) {
@@ -901,7 +897,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
           // As we just dispatched an event to the DOM, something could have
           // changed under our feet. Re-generate the rangesToAdd array, and
           // ensure that the range we are about to add is still valid.
-          if (!aItem->IsPositioned()) {
+          if (!aRange->IsPositioned()) {
             return NS_ERROR_UNEXPECTED;
           }
         }
@@ -912,7 +908,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
     }
 
     // Generate the ranges to add
-    UserSelectRangesToAdd(aItem, rangesToAdd);
+    UserSelectRangesToAdd(aRange, rangesToAdd);
     size_t newAnchorFocusIndex =
         GetDirection() == eDirPrevious ? 0 : rangesToAdd.Length() - 1;
     for (size_t i = 0; i < rangesToAdd.Length(); ++i) {
@@ -928,7 +924,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
     }
     return NS_OK;
   }
-  return MaybeAddRangeAndTruncateOverlaps(aItem, aOutIndex);
+  return MaybeAddRangeAndTruncateOverlaps(aRange, aOutIndex);
 }
 
 nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
@@ -1921,14 +1917,14 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   // won't use it.
   mCachedRange = nullptr;
 
-  // AddTableCellRange might flush frame.
+  // MaybeAddTableCellRange might flush frame.
   RefPtr<Selection> kungFuDeathGrip(this);
 
   // This inserts a table cell range in proper document order
   // and returns NS_OK if range doesn't contain just one table cell
   bool didAddRange;
   int32_t rangeIndex;
-  nsresult result = AddTableCellRange(range, &didAddRange, &rangeIndex);
+  nsresult result = MaybeAddTableCellRange(range, &didAddRange, &rangeIndex);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;

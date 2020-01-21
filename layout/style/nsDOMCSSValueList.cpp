@@ -7,9 +7,11 @@
 /* DOM object representing lists of values in DOM computed style */
 
 #include "nsDOMCSSValueList.h"
-#include "nsString.h"
+
+#include <utility>
+
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Move.h"
+#include "nsString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

@@ -7,13 +7,13 @@
 #ifndef __SECURITY_SANDBOX_SANDBOXTARGET_H__
 #define __SECURITY_SANDBOX_SANDBOXTARGET_H__
 
-#include <functional>
-#include <list>
-
 #include <windows.h>
 
+#include <functional>
+#include <list>
+#include <utility>
+
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
 
 namespace sandbox {
 class TargetServices;

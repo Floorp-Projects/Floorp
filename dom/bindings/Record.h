@@ -11,12 +11,13 @@
 #ifndef mozilla_dom_Record_h
 #define mozilla_dom_Record_h
 
-#include "nsTHashtable.h"
+#include <utility>
+
+#include "mozilla/Attributes.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 namespace dom {

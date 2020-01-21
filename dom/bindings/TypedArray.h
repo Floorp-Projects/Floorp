@@ -7,13 +7,14 @@
 #ifndef mozilla_dom_TypedArray_h
 #define mozilla_dom_TypedArray_h
 
-#include "jsfriendapi.h"  // js::Scalar
+#include <utility>
+
 #include "js/ArrayBuffer.h"
-#include "js/SharedArrayBuffer.h"
 #include "js/GCAPI.h"       // JS::AutoCheckCannotGC
 #include "js/RootingAPI.h"  // JS::Rooted
+#include "js/SharedArrayBuffer.h"
+#include "jsfriendapi.h"  // js::Scalar
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/SpiderMonkeyInterface.h"
 #include "nsWrapperCache.h"

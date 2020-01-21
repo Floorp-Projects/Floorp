@@ -6,20 +6,20 @@
 
 #include "nsProfiler.h"
 
-#include "GeckoProfiler.h"
-#include "nsProfilerStartParams.h"
-#include "platform.h"
-#include "ProfilerParent.h"
+#include <sstream>
+#include <string>
+#include <utility>
 
+#include "GeckoProfiler.h"
+#include "ProfilerParent.h"
 #include "js/Array.h"  // JS::NewArrayObject
 #include "js/JSON.h"
 #include "js/Value.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/TypedArray.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Move.h"
 #include "mozilla/Services.h"
 #include "mozilla/SystemGroup.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/TypedArray.h"
 #include "nsIFileStreams.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -28,14 +28,13 @@
 #include "nsIWebNavigation.h"
 #include "nsLocalFile.h"
 #include "nsMemory.h"
+#include "nsProfilerStartParams.h"
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "platform.h"
 #include "shared-libraries.h"
 #include "zlib.h"
-
-#include <string>
-#include <sstream>
 
 using namespace mozilla;
 

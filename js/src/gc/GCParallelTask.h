@@ -8,7 +8,8 @@
 #define gc_GCParallelTask_h
 
 #include "mozilla/LinkedList.h"
-#include "mozilla/Move.h"
+
+#include <utility>
 
 #include "js/TypeDecls.h"
 #include "js/Utility.h"

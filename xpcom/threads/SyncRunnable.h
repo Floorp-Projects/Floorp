@@ -7,10 +7,11 @@
 #ifndef mozilla_SyncRunnable_h
 #define mozilla_SyncRunnable_h
 
-#include "nsThreadUtils.h"
+#include <utility>
+
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/Move.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 

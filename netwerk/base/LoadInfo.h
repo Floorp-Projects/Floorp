@@ -157,6 +157,7 @@ class LoadInfo final : public nsILoadInfo {
            bool aIsPreflight, bool aLoadTriggeredFromExternal,
            bool aServiceWorkerTaintingSynthesized,
            bool aDocumentHasUserInteracted, bool aDocumentHasLoaded,
+           bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
            const nsAString& aCspNonce, bool aSkipContentSniffing,
            uint32_t aRequestBlockingReason, nsINode* aLoadingContext);
   LoadInfo(const LoadInfo& rhs);
@@ -252,6 +253,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mServiceWorkerTaintingSynthesized;
   bool mDocumentHasUserInteracted;
   bool mDocumentHasLoaded;
+  bool mAllowListFutureDocumentsCreatedFromThisRedirectChain;
   nsString mCspNonce;
   bool mSkipContentSniffing;
 

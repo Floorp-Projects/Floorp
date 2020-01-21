@@ -323,10 +323,6 @@ mod tests {
             Err(ParseError::UnrecognizedArchitecture("foo".to_owned()))
         );
         assert_eq!(
-            Triple::from_str("unknown-foo"),
-            Err(ParseError::UnrecognizedVendor("foo".to_owned()))
-        );
-        assert_eq!(
             Triple::from_str("unknown-unknown-foo"),
             Err(ParseError::UnrecognizedOperatingSystem("foo".to_owned()))
         );

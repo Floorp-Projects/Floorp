@@ -9,9 +9,10 @@
 #ifndef AlreadyAddRefed_h
 #define AlreadyAddRefed_h
 
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
 
 namespace mozilla {
 

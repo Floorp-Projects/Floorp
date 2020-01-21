@@ -7,9 +7,8 @@
 #ifndef js_Fifo_h
 #define js_Fifo_h
 
-#include "mozilla/Move.h"
-
 #include <algorithm>
+#include <utility>
 
 #include "js/Vector.h"
 

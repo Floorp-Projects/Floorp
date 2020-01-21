@@ -7,14 +7,15 @@
 #ifndef mozilla_SMILCompositor_h
 #define mozilla_SMILCompositor_h
 
-#include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
+#include <utility>
+
+#include "PLDHashTable.h"
+#include "SMILTargetIdentifier.h"
 #include "mozilla/SMILAnimationFunction.h"
 #include "mozilla/SMILCompositorTable.h"
-#include "nsTHashtable.h"
+#include "mozilla/UniquePtr.h"
 #include "nsString.h"
-#include "SMILTargetIdentifier.h"
-#include "PLDHashTable.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 

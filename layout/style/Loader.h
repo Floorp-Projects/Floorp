@@ -9,24 +9,25 @@
 #ifndef mozilla_css_Loader_h
 #define mozilla_css_Loader_h
 
-#include "nsIPrincipal.h"
+#include <utility>
+
+#include "mozilla/Attributes.h"
+#include "mozilla/CORSMode.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCompatibility.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
+#include "nsIPrincipal.h"
+#include "nsIStyleSheetLinkingElement.h"
 #include "nsRefPtrHashtable.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"
-#include "nsIStyleSheetLinkingElement.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/CORSMode.h"
-#include "mozilla/StyleSheetInlines.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
-#include "mozilla/StyleSheet.h"
-#include "mozilla/UniquePtr.h"
 
 class nsICSSLoaderObserver;
 class nsIConsoleReportCollector;

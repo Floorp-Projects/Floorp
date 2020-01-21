@@ -82,9 +82,6 @@ parent:
   /// listeners.
   async SetHasBeforeUnload(bool aHasBeforeUnload);
 
-  /// Notify the parent that this PWindowGlobal is now the current global.
-  async BecomeCurrentWindowGlobal();
-
   // Attempts to perform a "Web Share".
   async Share(IPCWebShareData aData) returns (nsresult rv);
 

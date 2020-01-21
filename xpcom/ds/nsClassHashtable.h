@@ -7,7 +7,8 @@
 #ifndef nsClassHashtable_h__
 #define nsClassHashtable_h__
 
-#include "mozilla/Move.h"
+#include <utility>
+
 #include "mozilla/UniquePtr.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"

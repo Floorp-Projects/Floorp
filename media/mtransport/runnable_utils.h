@@ -9,12 +9,11 @@
 #ifndef runnable_utils_h__
 #define runnable_utils_h__
 
-#include "nsThreadUtils.h"
-#include "mozilla/Move.h"
+#include <utility>
+
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
-
-#include <utility>
+#include "nsThreadUtils.h"
 
 // Abstract base class for all of our templates
 namespace mozilla {

@@ -11,15 +11,14 @@
 #ifndef mozilla_IdentifierMapEntry_h
 #define mozilla_IdentifierMapEntry_h
 
+#include <utility>
+
 #include "PLDHashTable.h"
-
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
 #include "mozilla/dom/TreeOrderedArray.h"
-
+#include "nsAtom.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsAtom.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"

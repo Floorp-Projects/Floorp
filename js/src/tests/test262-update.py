@@ -39,6 +39,7 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DisplayNames",
     "Intl.Segmenter",
     "optional-chaining",
+    "WeakRef",
     "top-level-await",
 ])
 FEATURE_CHECK_NEEDED = {

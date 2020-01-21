@@ -7,9 +7,8 @@
 #ifndef gc_FindSCCs_h
 #define gc_FindSCCs_h
 
-#include "mozilla/Move.h"
-
 #include <algorithm>
+#include <utility>
 
 #include "jsfriendapi.h"
 

@@ -7,14 +7,14 @@
 #ifndef DMD_h___
 #define DMD_h___
 
-#include <string.h>
 #include <stdarg.h>
+#include <string.h>
+
+#include <utility>
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
-
 #include "replace_malloc_bridge.h"
 
 namespace mozilla {

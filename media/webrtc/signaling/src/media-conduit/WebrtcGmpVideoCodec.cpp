@@ -4,20 +4,20 @@
 
 #include "WebrtcGmpVideoCodec.h"
 
+#include <utility>
 #include <vector>
 
-#include "gmp-video-frame-i420.h"
-#include "gmp-video-frame-encoded.h"
 #include "GMPLog.h"
 #include "MainThreadUtils.h"
+#include "VideoConduit.h"
+#include "gmp-video-frame-encoded.h"
+#include "gmp-video-frame-i420.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Move.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsServiceManagerUtils.h"
 #include "runnable_utils.h"
-#include "VideoConduit.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/rtc_base/bind.h"
 

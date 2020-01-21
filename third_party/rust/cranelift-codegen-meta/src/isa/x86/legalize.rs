@@ -40,7 +40,6 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     let fmax = insts.by_name("fmax");
     let fmin = insts.by_name("fmin");
     let fneg = insts.by_name("fneg");
-    let fsub = insts.by_name("fsub");
     let iadd = insts.by_name("iadd");
     let icmp = insts.by_name("icmp");
     let iconst = insts.by_name("iconst");
@@ -48,6 +47,7 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     let ineg = insts.by_name("ineg");
     let insertlane = insts.by_name("insertlane");
     let ishl = insts.by_name("ishl");
+    let ishl_imm = insts.by_name("ishl_imm");
     let isub = insts.by_name("isub");
     let popcnt = insts.by_name("popcnt");
     let raw_bitcast = insts.by_name("raw_bitcast");
@@ -335,6 +335,7 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     let uimm8_zero = Literal::constant(&imm.uimm8, 0x00);
     let uimm8_one = Literal::constant(&imm.uimm8, 0x01);
     let u128_zeroes = constant(vec![0x00; 16]);
+    let u128_ones = constant(vec![0xff; 16]);
     let b = var("b");
     let c = var("c");
     let d = var("d");
@@ -405,12 +406,11 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     }
 
     // SIMD bnot
-    let ones = constant(vec![0xff; 16]);
     for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
         let bnot = bnot.bind(vector(ty, sse_vector_size));
         narrow.legalize(
             def!(y = bnot(x)),
-            vec![def!(a = vconst(ones)), def!(y = bxor(a, x))],
+            vec![def!(a = vconst(u128_ones)), def!(y = bxor(a, x))],
         );
     }
 
@@ -524,7 +524,11 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
         narrow.legalize(
             def!(c = icmp_(ugt, a, b)),
-            vec![def!(x = x86_pmaxu(a, b)), def!(c = icmp(eq, a, x))],
+            vec![
+                def!(x = x86_pmaxu(a, b)),
+                def!(y = icmp(eq, x, b)),
+                def!(c = bnot(y)),
+            ],
         );
         let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
         narrow.legalize(
@@ -548,11 +552,40 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         narrow.legalize(def!(c = icmp_(ule, a, b)), vec![def!(c = icmp(uge, b, a))]);
     }
 
+    // SIMD fcmp greater-/less-than
+    let gt = Literal::enumerator_for(&imm.floatcc, "gt");
+    let lt = Literal::enumerator_for(&imm.floatcc, "lt");
+    let ge = Literal::enumerator_for(&imm.floatcc, "ge");
+    let le = Literal::enumerator_for(&imm.floatcc, "le");
+    let ugt = Literal::enumerator_for(&imm.floatcc, "ugt");
+    let ult = Literal::enumerator_for(&imm.floatcc, "ult");
+    let uge = Literal::enumerator_for(&imm.floatcc, "uge");
+    let ule = Literal::enumerator_for(&imm.floatcc, "ule");
+    for ty in &[F32, F64] {
+        let fcmp_ = fcmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(def!(c = fcmp_(gt, a, b)), vec![def!(c = fcmp(lt, b, a))]);
+        let fcmp_ = fcmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(def!(c = fcmp_(ge, a, b)), vec![def!(c = fcmp(le, b, a))]);
+        let fcmp_ = fcmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(def!(c = fcmp_(ult, a, b)), vec![def!(c = fcmp(ugt, b, a))]);
+        let fcmp_ = fcmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(def!(c = fcmp_(ule, a, b)), vec![def!(c = fcmp(uge, b, a))]);
+    }
+
     for ty in &[F32, F64] {
         let fneg = fneg.bind(vector(*ty, sse_vector_size));
+        let lane_type_as_int = LaneType::int_from_bits(LaneType::from(*ty).lane_bits() as u16);
+        let uimm8_shift = Literal::constant(&imm.uimm8, lane_type_as_int.lane_bits() as i64 - 1);
+        let vconst = vconst.bind(vector(lane_type_as_int, sse_vector_size));
+        let bitcast_to_float = raw_bitcast.bind(vector(*ty, sse_vector_size));
         narrow.legalize(
             def!(b = fneg(a)),
-            vec![def!(c = vconst(u128_zeroes)), def!(b = fsub(c, a))],
+            vec![
+                def!(c = vconst(u128_ones)),
+                def!(d = ishl_imm(c, uimm8_shift)), // Create a mask of all 0s except the MSB.
+                def!(e = bitcast_to_float(d)),      // Cast mask to the floating-point type.
+                def!(b = bxor(a, e)),               // Flip the MSB.
+            ],
         );
     }
 
@@ -565,7 +598,7 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         narrow.legalize(
             def!(b = fabs(a)),
             vec![
-                def!(c = vconst(ones)),
+                def!(c = vconst(u128_ones)),
                 def!(d = ushr_imm(c, uimm8_one)), // Create a mask of all 1s except the MSB.
                 def!(e = bitcast_to_float(d)),    // Cast mask to the floating-point type.
                 def!(b = band(a, e)),             // Unset the MSB.

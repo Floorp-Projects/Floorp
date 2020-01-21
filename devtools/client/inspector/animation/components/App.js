@@ -127,6 +127,7 @@ class App extends Component {
               endPanelControl: true,
               initialHeight: "50%",
               splitterSize: 1,
+              minSize: "30px",
               startPanel: AnimationListContainer({
                 addAnimationsCurrentTimeListener,
                 animations,

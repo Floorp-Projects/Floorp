@@ -6,7 +6,8 @@
 
 #include "DashedCornerFinder.h"
 
-#include "mozilla/Move.h"
+#include <utility>
+
 #include "BorderCache.h"
 #include "BorderConsts.h"
 
@@ -58,10 +59,10 @@ void DashedCornerFinder::DetermineType(Float aBorderWidthH,
                                        Float aBorderWidthV) {
   if (aBorderWidthH < aBorderWidthV) {
     // Always draw from wider side to thinner side.
-    Swap(mInnerBezier.mPoints[0], mInnerBezier.mPoints[3]);
-    Swap(mInnerBezier.mPoints[1], mInnerBezier.mPoints[2]);
-    Swap(mOuterBezier.mPoints[0], mOuterBezier.mPoints[3]);
-    Swap(mOuterBezier.mPoints[1], mOuterBezier.mPoints[2]);
+    std::swap(mInnerBezier.mPoints[0], mInnerBezier.mPoints[3]);
+    std::swap(mInnerBezier.mPoints[1], mInnerBezier.mPoints[2]);
+    std::swap(mOuterBezier.mPoints[0], mOuterBezier.mPoints[3]);
+    std::swap(mOuterBezier.mPoints[1], mOuterBezier.mPoints[2]);
     mLastOuterP = mOuterBezier.mPoints[0];
     mLastInnerP = mInnerBezier.mPoints[0];
   }

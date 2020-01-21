@@ -7,11 +7,12 @@
 #include <functional>
 #include <queue>
 #include <string>
+#include <utility>
 
 #include "MainThreadUtils.h"
+#include "gtest/gtest.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -20,8 +21,6 @@
 #include "nsIRunnable.h"
 #include "nsISerialEventTarget.h"
 #include "prinrval.h"
-
-#include "gtest/gtest.h"
 
 using mozilla::CondVar;
 using mozilla::MakeRefPtr;

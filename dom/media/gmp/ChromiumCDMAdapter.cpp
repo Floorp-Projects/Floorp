@@ -4,15 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChromiumCDMAdapter.h"
+
+#include <utility>
+
+#include "GMPLog.h"
+#include "VideoUtils.h"
+#include "WidevineUtils.h"
 #include "content_decryption_module.h"
 #include "content_decryption_module_ext.h"
-#include "VideoUtils.h"
 #include "gmp-api/gmp-entrypoints.h"
 #include "gmp-api/gmp-video-codec.h"
-#include "WidevineUtils.h"
-#include "GMPLog.h"
 #include "mozilla/HelperMacros.h"
-#include "mozilla/Move.h"
 
 #ifdef XP_WIN
 #  include "WinUtils.h"

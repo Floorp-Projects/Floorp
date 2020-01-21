@@ -1922,7 +1922,7 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
     // If the frames have an embedding level that is opposite to the writing
     // mode, we need to swap which sides we're checking.
     if (IS_LEVEL_RTL(aFrame1->GetEmbeddingLevel()) == wm.IsBidiLTR()) {
-      Swap(side1, side2);
+      std::swap(side1, side2);
     }
 
     if (PreventCrossBoundaryShaping(aFrame1, ancestor, side1) ||
@@ -5081,7 +5081,8 @@ void nsTextFrame::GetTextDecorations(
             nsLayoutUtils::GetColor(f, &nsStyleTextReset::mTextDecorationColor);
       }
 
-      bool swapUnderlineAndOverline = vertical && IsUnderlineRight(f);
+      bool swapUnderlineAndOverline =
+          vertical && !wm.IsSideways() && IsUnderlineRight(f);
       const auto kUnderline = swapUnderlineAndOverline
                                   ? StyleTextDecorationLine::OVERLINE
                                   : StyleTextDecorationLine::UNDERLINE;
@@ -5484,7 +5485,8 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
             params.offset = metrics.*lineOffset;
             params.defaultLineThickness = params.lineSize.height;
 
-            bool swapUnderline = verticalDec && IsUnderlineRight(this);
+            bool swapUnderline =
+                verticalDec && !wm.IsSideways() && IsUnderlineRight(this);
             if (swapUnderline
                     ? lineType == StyleTextDecorationLine::OVERLINE
                     : lineType == StyleTextDecorationLine::UNDERLINE) {
@@ -5690,6 +5692,7 @@ void nsTextFrame::DrawSelectionDecorations(
   const gfxFloat appUnitsPerDevPixel =
       aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
 
+  const WritingMode wm = GetWritingMode();
   switch (aSelectionType) {
     case SelectionType::eIMERawClause:
     case SelectionType::eIMESelectedRawClause:
@@ -5704,10 +5707,10 @@ void nsTextFrame::DrawSelectionDecorations(
       params.defaultLineThickness = ComputeSelectionUnderlineHeight(
           aTextPaintStyle.PresContext(), aFontMetrics, aSelectionType);
 
-      bool swapUnderline = aVertical && IsUnderlineRight(this);
+      bool swapUnderline =
+          aVertical && !wm.IsSideways() && IsUnderlineRight(this);
       if (swapUnderline ? aDecoration == StyleTextDecorationLine::OVERLINE
                         : aDecoration == StyleTextDecorationLine::UNDERLINE) {
-        WritingMode wm = GetWritingMode();
         const auto* styleText = StyleText();
         if (styleText->mTextUnderlinePosition.IsUnder()) {
           params.offset = -aFontMetrics.emDescent;
@@ -6315,10 +6318,10 @@ void nsTextFrame::PaintTextSelectionDecorations(
 
   gfxFont* firstFont = aParams.provider->GetFontGroup()->GetFirstValidFont();
   bool verticalRun = mTextRun->IsVertical();
-  bool rightUnderline = verticalRun && IsUnderlineRight(this);
+  bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
+  bool rightUnderline = useVerticalMetrics && IsUnderlineRight(this);
   const auto kDecoration = rightUnderline ? StyleTextDecorationLine::OVERLINE
                                           : StyleTextDecorationLine::UNDERLINE;
-  bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
   gfxFont::Metrics decorationMetrics(
       firstFont->GetMetrics(useVerticalMetrics ? nsFontMetrics::eVertical
                                                : nsFontMetrics::eHorizontal));
@@ -6632,7 +6635,7 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
   gfxTextRun::Metrics shadowMetrics = mTextRun->MeasureText(
       aParams.range, gfxFont::LOOSE_INK_EXTENTS, nullptr, aParams.provider);
   if (GetWritingMode().IsLineInverted()) {
-    Swap(shadowMetrics.mAscent, shadowMetrics.mDescent);
+    std::swap(shadowMetrics.mAscent, shadowMetrics.mDescent);
     shadowMetrics.mBoundingBox.y = -shadowMetrics.mBoundingBox.YMost();
   }
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
@@ -6662,8 +6665,9 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
   }
 
   if (mTextRun->IsVertical()) {
-    Swap(shadowMetrics.mBoundingBox.x, shadowMetrics.mBoundingBox.y);
-    Swap(shadowMetrics.mBoundingBox.width, shadowMetrics.mBoundingBox.height);
+    std::swap(shadowMetrics.mBoundingBox.x, shadowMetrics.mBoundingBox.y);
+    std::swap(shadowMetrics.mBoundingBox.width,
+              shadowMetrics.mBoundingBox.height);
   }
 
   for (const auto& shadow : Reversed(aShadows)) {
@@ -7003,7 +7007,8 @@ void nsTextFrame::DrawTextRunAndDecorations(
       params.offset = metrics.*lineOffset;
     }
 
-    bool swapUnderline = verticalDec && IsUnderlineRight(this);
+    bool swapUnderline =
+        verticalDec && !wm.IsSideways() && IsUnderlineRight(this);
     if (swapUnderline ? lineType == StyleTextDecorationLine::OVERLINE
                       : lineType == StyleTextDecorationLine::UNDERLINE) {
       SetOffsetIfLength(dec.mTextUnderlineOffset, params, metrics,
@@ -7362,7 +7367,8 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     SetWidthIfLength(decThickness, &params.lineSize.height,
                      aPresContext->AppUnitsPerDevPixel());
 
-    bool swapUnderline = verticalRun && IsUnderlineRight(this);
+    bool swapUnderline =
+        verticalRun && !wm.IsSideways() && IsUnderlineRight(this);
     if (swapUnderline ? textDecs.HasOverline() : textDecs.HasUnderline()) {
       SetOffsetIfLength(StyleText()->mTextUnderlineOffset, params, metrics,
                         aPresContext->AppUnitsPerDevPixel(), wm.IsSideways(),
@@ -8647,8 +8653,8 @@ nsRect nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
-    Swap(boundingBox.x, boundingBox.y);
-    Swap(boundingBox.width, boundingBox.height);
+    std::swap(boundingBox.x, boundingBox.y);
+    std::swap(boundingBox.width, boundingBox.height);
   }
   return boundingBox;
 }
@@ -9241,7 +9247,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     }
   }
   if (GetWritingMode().IsLineInverted()) {
-    Swap(textMetrics.mAscent, textMetrics.mDescent);
+    std::swap(textMetrics.mAscent, textMetrics.mDescent);
     textMetrics.mBoundingBox.y = -textMetrics.mBoundingBox.YMost();
   }
   // The "end" iterator points to the first character after the string mapped
@@ -9405,8 +9411,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
-    Swap(boundingBox.x, boundingBox.y);
-    Swap(boundingBox.width, boundingBox.height);
+    std::swap(boundingBox.x, boundingBox.y);
+    std::swap(boundingBox.width, boundingBox.height);
     if (GetWritingMode().IsVerticalRL()) {
       boundingBox.x = -boundingBox.XMost();
       boundingBox.x += aMetrics.Width() - mAscent;
@@ -9657,8 +9663,8 @@ nsOverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
-    Swap(boundingBox.x, boundingBox.y);
-    Swap(boundingBox.width, boundingBox.height);
+    std::swap(boundingBox.x, boundingBox.y);
+    std::swap(boundingBox.width, boundingBox.height);
   }
   nsRect& vis = result.VisualOverflow();
   vis.UnionRect(vis, boundingBox);

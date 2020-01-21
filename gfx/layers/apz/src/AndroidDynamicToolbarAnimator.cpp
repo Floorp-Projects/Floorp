@@ -7,11 +7,15 @@
 #include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
 
 #include <cmath>
+#include <utility>
 
 #include "APZCTreeManager.h"
 #include "FrameMetrics.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/Unused.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/APZThreadUtils.h"
@@ -21,10 +25,6 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/UiCompositorControllerMessageTypes.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
-#include "mozilla/MathAlgorithms.h"
-#include "mozilla/Move.h"
-#include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/Unused.h"
 
 namespace {
 

@@ -7,13 +7,14 @@
 #ifndef mozilla_MultiWriterQueue_h_
 #define mozilla_MultiWriterQueue_h_
 
+#include <cstdint>
+#include <utility>
+
+#include "RollingNumber.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "prthread.h"
-#include "RollingNumber.h"
-#include <cstdint>
 
 namespace mozilla {
 

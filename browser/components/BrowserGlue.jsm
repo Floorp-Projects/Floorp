@@ -1717,41 +1717,6 @@ BrowserGlue.prototype = {
     Services.telemetry.scalarSet("contentblocking.category", categoryPref);
   },
 
-  _recordContentBlockerTelemetry() {
-    [
-      "other",
-      "script",
-      "image",
-      "stylesheet",
-      "object",
-      "document",
-      "subdocument",
-      "refresh",
-      "xbl",
-      "ping",
-      "xmlhttprequest",
-      "objectsubrequest",
-      "dtd",
-      "font",
-      "media",
-      "websocket",
-      "csp_report",
-      "xslt",
-      "beacon",
-      "fetch",
-      "image",
-      "manifest",
-      "saveas_download",
-      "speculative",
-    ].forEach(type => {
-      Services.telemetry.keyedScalarSet(
-        "security.contentblocker_permissions",
-        type,
-        Services.perms.getAllWithTypePrefix(type).length
-      );
-    });
-  },
-
   _recordDataSanitizationPrefs() {
     Services.telemetry.scalarSet(
       "datasanitization.network_cookie_lifetimePolicy",
@@ -2030,10 +1995,6 @@ BrowserGlue.prototype = {
 
     Services.tm.idleDispatchToMainThread(() => {
       this._recordContentBlockingTelemetry();
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
-      this._recordContentBlockerTelemetry();
     });
 
     Services.tm.idleDispatchToMainThread(() => {

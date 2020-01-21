@@ -168,6 +168,10 @@ class Selection final : public nsSupportsWeakReference,
    * then aRange is first scanned for -moz-user-select:none nodes and split up
    * into multiple ranges to exclude those before adding the resulting ranges
    * to this Selection.
+   *
+   * @param aOutIndex points to the range last added, if at least one was added.
+   *                  If aRange is already contained, it points to the range
+   *                  containing it.
    */
   nsresult AddRangesForSelectableNodes(nsRange* aRange, int32_t* aOutIndex,
                                        bool aNoStartSelect = false);
@@ -191,6 +195,9 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult Extend(nsINode* aContainer, int32_t aOffset);
 
+  /**
+   * See mRanges.
+   */
   nsRange* GetRangeAt(int32_t aIndex) const;
 
   // Get the anchor-to-focus range if we don't care which end is
@@ -723,15 +730,31 @@ class Selection final : public nsSupportsWeakReference,
   nsresult GetTableCellLocationFromRange(nsRange* aRange,
                                          TableSelection* aSelectionType,
                                          int32_t* aRow, int32_t* aCol);
-  nsresult AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
-                             int32_t* aOutIndex);
 
+  /**
+   * @param aOutIndex points to the index of the range in mRanges. If
+   *                  aDidAddRange is true, it is in [0, mRanges.Length()).
+   */
+  nsresult MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
+                                  int32_t* aOutIndex);
+
+  /**
+   * Binary searches the given sorted array of ranges for the insertion point
+   * for the given node/offset. The given comparator is used, and the index
+   * where the point should appear in the array is placed in *aInsertionPoint.
+
+   * If there is an item in the array equal to the input point (aPointNode,
+   * aPointOffset), we will return the index of this item.
+   *
+   * @param aInsertionPoint can be in [0, `aElementArray->Length()`].
+   */
   static nsresult FindInsertionPoint(
       const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
       int32_t aPointOffset,
       nsresult (*aComparator)(const nsINode*, int32_t, const nsRange*,
                               int32_t*),
-      int32_t* aPoint);
+      int32_t* aInsertionPoint);
+
   bool EqualsRangeAtPoint(const nsINode* aBeginNode, int32_t aBeginOffset,
                           const nsINode* aEndNode, int32_t aEndOffset,
                           int32_t aRangeIndex) const;
@@ -739,6 +762,9 @@ class Selection final : public nsSupportsWeakReference,
    * Works on the same principle as GetRangesForIntervalArray, however
    * instead this returns the indices into mRanges between which the
    * overlapping ranges lie.
+   *
+   * @param aStartIndex will be less or equal than aEndIndex.
+   * @param aEndIndex can be in [-1, mRanges.Length()].
    */
   nsresult GetIndicesForInterval(const nsINode* aBeginNode,
                                  int32_t aBeginOffset, const nsINode* aEndNode,
@@ -751,7 +777,11 @@ class Selection final : public nsSupportsWeakReference,
                                     nsTArray<RefPtr<nsRange>>& rangesToAdd);
 
   /**
-   * Preserves the sorting of mRanges.
+   * Preserves the sorting and disjunctiveness of mRanges.
+   *
+   * @param aOutIndex will point to the index of the added range, or if aRange
+   *                  is already contained, to the one containing it. Hence
+   *                  it'll always be in [0, mRanges.Length()).
    */
   nsresult MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
                                             int32_t* aOutIndex);

@@ -10,21 +10,22 @@
 #include <stddef.h>     // for size_t
 #include <stdint.h>     // for uint32_t, uint64_t
 #include <sys/types.h>  // for int32_t
-#include <ostream>      // for std::ostream
-#include "nsCoord.h"    // for nscoord
-#include "nsError.h"    // for nsresult
-#include "nsPoint.h"    // for nsIntPoint, nsPoint
-#include "nsRect.h"     // for mozilla::gfx::IntRect, nsRect
-#include "nsRectAbsolute.h"
-#include "nsMargin.h"               // for nsIntMargin
-#include "nsRegionFwd.h"            // for nsIntRegion
-#include "nsString.h"               // for nsCString
-#include "mozilla/ArrayView.h"      // for ArrayView
-#include "mozilla/Move.h"           // for mozilla::Move
-#include "mozilla/gfx/MatrixFwd.h"  // for mozilla::gfx::Matrix4x4
-#include "mozilla/gfx/Logging.h"
-#include "nsTArray.h"
 
+#include <ostream>  // for std::ostream
+#include <utility>  // for mozilla::Move
+
+#include "mozilla/ArrayView.h"  // for ArrayView
+#include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/MatrixFwd.h"  // for mozilla::gfx::Matrix4x4
+#include "nsCoord.h"                // for nscoord
+#include "nsError.h"                // for nsresult
+#include "nsMargin.h"               // for nsIntMargin
+#include "nsPoint.h"                // for nsIntPoint, nsPoint
+#include "nsRect.h"                 // for mozilla::gfx::IntRect, nsRect
+#include "nsRectAbsolute.h"
+#include "nsRegionFwd.h"  // for nsIntRegion
+#include "nsString.h"     // for nsCString
+#include "nsTArray.h"
 #include "pixman.h"
 
 // Uncomment this line to get additional integrity checking.

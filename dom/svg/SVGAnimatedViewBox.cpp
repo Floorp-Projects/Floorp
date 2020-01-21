@@ -8,12 +8,13 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
+
+#include "SVGViewBoxSMILType.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/SVGRect.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "SVGViewBoxSMILType.h"
 #include "nsTextFormatter.h"
 
 using namespace mozilla::dom;

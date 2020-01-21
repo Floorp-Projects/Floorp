@@ -6,12 +6,13 @@
 
 #include "SandboxOpenedFiles.h"
 
-#include "mozilla/Move.h"
-#include "SandboxLogging.h"
-
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#include <utility>
+
+#include "SandboxLogging.h"
 
 namespace mozilla {
 

@@ -9,13 +9,14 @@
 #ifndef mozilla_Array_h
 #define mozilla_Array_h
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
-#include "mozilla/ReverseIterator.h"
+#include <stddef.h>
 
 #include <ostream>
-#include <stddef.h>
+#include <utility>
+
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ReverseIterator.h"
 
 namespace mozilla {
 

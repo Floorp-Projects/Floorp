@@ -6,29 +6,30 @@
 
 #include "PresentationRequest.h"
 
+#include <utility>
+
 #include "AvailabilityCollection.h"
 #include "ControllerConnectionCollection.h"
+#include "Presentation.h"
+#include "PresentationAvailability.h"
+#include "PresentationCallbacks.h"
+#include "PresentationLog.h"
+#include "PresentationTransportBuilderConstructor.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Navigator.h"
-#include "mozilla/dom/PresentationRequestBinding.h"
 #include "mozilla/dom/PresentationConnectionAvailableEvent.h"
+#include "mozilla/dom/PresentationRequestBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/Move.h"
 #include "nsContentSecurityManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGlobalWindow.h"
-#include "mozilla/dom/Document.h"
 #include "nsIPresentationService.h"
 #include "nsIURI.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
-#include "Presentation.h"
-#include "PresentationAvailability.h"
-#include "PresentationCallbacks.h"
-#include "PresentationLog.h"
-#include "PresentationTransportBuilderConstructor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

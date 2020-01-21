@@ -9,13 +9,13 @@
 #ifndef mozilla_Tuple_h
 #define mozilla_Tuple_h
 
-#include "mozilla/Move.h"
+#include <stddef.h>
+
+#include <utility>
+
 #include "mozilla/Pair.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
-
-#include <stddef.h>
-#include <utility>
 
 namespace mozilla {
 

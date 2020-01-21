@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -16,6 +17,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/ipc/InProcessChild.h"
 #include "mozilla/ipc/InProcessParent.h"
 #include "nsContentUtils.h"
@@ -133,6 +135,13 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
 void WindowGlobalChild::Init() {
   if (!mDocumentURI) {
     NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
+  }
+
+  // Ensure we have a corresponding WindowContext object.
+  if (XRE_IsParentProcess()) {
+    mWindowContext = GetParentActor();
+  } else {
+    mWindowContext = WindowContext::Create(this);
   }
 
   // Register this WindowGlobal in the gWindowGlobalParentsById map.
@@ -464,19 +473,16 @@ nsISupports* WindowGlobalChild::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalChild, WindowGlobalActor,
-                                   mWindowGlobal, mBrowsingContext,
-                                   mWindowActors)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WindowGlobalChild,
-                                               WindowGlobalActor)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal,
+                                      mBrowsingContext, mWindowActors)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalChild)
-NS_INTERFACE_MAP_END_INHERITING(WindowGlobalActor)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(WindowGlobalChild, WindowGlobalActor)
-NS_IMPL_RELEASE_INHERITED(WindowGlobalChild, WindowGlobalActor)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WindowGlobalChild)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WindowGlobalChild)
 
 }  // namespace dom
 }  // namespace mozilla

@@ -14,6 +14,8 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+#include <utility>
+
 #include "LinuxCapabilities.h"
 #include "LinuxSched.h"
 #include "SandboxChrootProto.h"
@@ -25,11 +27,11 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SandboxReporter.h"
 #include "mozilla/SandboxSettings.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -38,8 +40,6 @@
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
-
-#include "mozilla/StaticPrefs_media.h"
 
 #ifdef MOZ_X11
 #  ifndef MOZ_WIDGET_GTK

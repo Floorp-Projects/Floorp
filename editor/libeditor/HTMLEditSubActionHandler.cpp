@@ -4,20 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "HTMLEditor.h"
+#include <algorithm>
+#include <utility>
 
 #include "HTMLEditUtils.h"
+#include "HTMLEditor.h"
 #include "WSRunObject.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CSSEditUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
-#include "mozilla/CSSEditUtils.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Move.h"
-#include "mozilla/mozalloc.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RangeUtils.h"
@@ -29,8 +29,10 @@
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
+#include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
+#include "nsAtom.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
 #include "nsComponentManagerUtils.h"
@@ -38,7 +40,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsAtom.h"
 #include "nsHTMLDocument.h"
 #include "nsIContent.h"
 #include "nsID.h"
@@ -53,8 +54,6 @@
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
-
-#include <algorithm>
 
 // Workaround for windows headers
 #ifdef SetProp

@@ -10,12 +10,11 @@
 
 #include <stdlib.h>
 
-#include "mozilla/EndianUtils.h"
-#include "mozilla/Move.h"
-
-#include "mozilla/gfx/Swizzle.h"
+#include <utility>
 
 #include "RasterImage.h"
+#include "mozilla/EndianUtils.h"
+#include "mozilla/gfx/Swizzle.h"
 
 using namespace mozilla::gfx;
 

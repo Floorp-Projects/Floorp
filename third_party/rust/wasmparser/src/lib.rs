@@ -23,24 +23,11 @@
 //! this is not the right library for you. You could however, build such
 //! a data-structure using this library.
 
-#![cfg_attr(not(feature = "std"), no_std)]
-
-#[cfg(not(feature = "std"))]
-#[macro_use]
-extern crate alloc as std;
-#[cfg(feature = "std")]
-#[macro_use]
-extern crate std;
-
-#[cfg(not(feature = "std"))]
-use hashbrown::HashSet;
-#[cfg(feature = "std")]
-use std::collections::HashSet;
-
 pub use crate::binary_reader::BinaryReader;
 pub use crate::binary_reader::Range;
 use crate::binary_reader::SectionHeader;
 
+pub use crate::parser::ElemSectionEntryTable;
 pub use crate::parser::LocalName;
 pub use crate::parser::NameEntry;
 pub use crate::parser::Parser;
@@ -88,6 +75,7 @@ pub use crate::readers::Data;
 pub use crate::readers::DataKind;
 pub use crate::readers::DataSectionReader;
 pub use crate::readers::Element;
+pub use crate::readers::ElementItem;
 pub use crate::readers::ElementItems;
 pub use crate::readers::ElementItemsReader;
 pub use crate::readers::ElementKind;

@@ -7,8 +7,9 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/Move.h"
 #include "mozilla/Vector.h"
+
+#include <utility>
 
 #include "js/AllocPolicy.h"
 #include "jsapi-tests/tests.h"

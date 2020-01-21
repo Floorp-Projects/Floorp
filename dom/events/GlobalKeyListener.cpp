@@ -4,29 +4,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsCOMPtr.h"
 #include "GlobalKeyListener.h"
-#include "nsIContent.h"
-#include "nsAtom.h"
-#include "nsGkAtoms.h"
-#include "nsFocusManager.h"
-#include "nsNetUtil.h"
-#include "nsContentUtils.h"
-#include "nsPIDOMWindow.h"
-#include "nsIDocShell.h"
+
+#include <utility>
+
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/KeyEventHandler.h"
-#include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ShortcutKeys.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/KeyboardEvent.h"
-#include "mozilla/ShortcutKeys.h"
+#include "nsAtom.h"
+#include "nsCOMPtr.h"
+#include "nsContentUtils.h"
+#include "nsFocusManager.h"
+#include "nsGkAtoms.h"
+#include "nsIContent.h"
+#include "nsIDocShell.h"
+#include "nsNetUtil.h"
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 
