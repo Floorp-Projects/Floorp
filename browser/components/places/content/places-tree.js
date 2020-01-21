@@ -135,6 +135,7 @@
 
       // Force an initial build.
       if (this.place) {
+        // eslint-disable-next-line no-self-assign
         this.place = this.place;
       }
     }
@@ -183,6 +184,7 @@
         this.setAttribute("flatList", val);
         // reload with the last place set
         if (this.place) {
+          // eslint-disable-next-line no-self-assign
           this.place = this.place;
         }
       }
