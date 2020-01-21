@@ -1,34 +1,7 @@
-/* vim: set ts=2 et sw=2 tw=80: */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/* This file is generated from sources in nss/gtests/common/wycheproof
- * automatically and should not be touched manually.
- * Generation is trigged by calling ./mach wycheproof */
-
-#ifndef gcm_vectors_h__
-#define gcm_vectors_h__
-
-#include <string>
-
-typedef struct gcm_kat_str {
-  uint32_t test_id;
-  std::string key;
-  std::string plaintext;
-  std::string additional_data;
-  std::string iv;
-  std::string hash_key;
-  std::string ghash;
-  std::string result;
-  bool invalid_ct;
-  bool invalid_iv;
-} gcm_kat_value;
-
 /*
  * http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf
  */
-const gcm_kat_value kGcmKatValues[] = {
+const AesGcmKatValue kGcmKatValues[] = {
     {1, "00000000000000000000000000000000", "", "", "000000000000000000000000",
      "66e94bd4ef8a2c3b884cfa59ca342b2e", "00000000000000000000000000000000",
      "58e2fccefa7e3061367f1d57a4e7455a", false, false},
@@ -193,5 +166,3 @@ const gcm_kat_value kGcmKatValues[] = {
      "3561e34e52d8b598f9937982512fff27",
      "0000000000000000ffcef9ebbffdbd8b00000000000000000000000000000000", false,
      false}};
-
-#endif  // gcm_vectors_h__

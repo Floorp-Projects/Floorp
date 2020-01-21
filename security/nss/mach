@@ -20,7 +20,6 @@ import tarfile
 import tempfile
 
 from hashlib import sha256
-from gtests.common.wycheproof.genTestVectors import generate_test_vectors
 
 DEVNULL = open(os.devnull, 'wb')
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -507,14 +506,6 @@ class commandsAction(argparse.Action):
         for c in commandsAction.commands:
             print(c)
 
-class wycheproofAction(argparse.Action):
-
-    def __call__(self, parser, args, values, option_string=None):
-        generate_test_vectors()
-        clangFormat = cfAction(None, None, None)
-        clangFormat(None, args, None)
-
-
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description='NSS helper script. ' +
@@ -596,18 +587,6 @@ def parse_arguments():
         'mach-completion',
         nargs='*',
         action=commandsAction)
-
-    parser_wycheproof = subparsers.add_parser(
-        'wycheproof',
-        help="generate wycheproof test headers")
-    parser_wycheproof.add_argument(
-        '--noroot',
-        help='On linux, suppress the use of \'sudo\' for running docker.',
-        action='store_true')
-    parser_wycheproof.add_argument(
-        'wycheproof',
-        nargs='*',
-        action=wycheproofAction)
 
     commandsAction.commands = [c for c in subparsers.choices]
     return parser.parse_args()
