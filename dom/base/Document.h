@@ -41,6 +41,7 @@
 #include "nsStubMutationObserver.h"
 #include "nsTHashtable.h"  // for member
 #include "nsURIHashKey.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/WeakPtr.h"
 #include "Units.h"
@@ -59,7 +60,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/SegmentedVector.h"
-#include "mozilla/StyleSheet.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FailedCertSecurityInfoBinding.h"
@@ -133,10 +133,11 @@ class nsXULPrototypeElement;
 class PermissionDelegateHandler;
 class nsIPermissionDelegateHandler;
 struct nsFont;
+struct StyleUseCounters;
 
 namespace mozilla {
 class AbstractThread;
-class CSSStyleSheet;
+class StyleSheet;
 class EditorCommand;
 class Encoding;
 class ErrorResult;
@@ -144,9 +145,11 @@ class EventStates;
 class EventListenerManager;
 class FullscreenExit;
 class FullscreenRequest;
+struct LangGroupFontPrefs;
 class PendingAnimationTracker;
 class PresShell;
 class ServoStyleSet;
+enum class StyleOrigin : uint8_t;
 class SMILAnimationController;
 enum class StyleCursorKind : uint8_t;
 template <typename>
