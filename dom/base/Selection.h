@@ -707,10 +707,15 @@ class Selection final : public nsSupportsWeakReference,
    * nothing.
    */
   void SetAnchorFocusRange(int32_t aIndex);
-  void SelectFramesForContent(nsIContent* aContent, bool aSelected) const;
-  nsresult SelectAllFramesForContent(PostContentIterator& aPostOrderIter,
-                                     nsIContent* aContent,
-                                     bool aSelected) const;
+  void SelectFramesOf(nsIContent* aContent, bool aSelected) const;
+
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-descendant.
+   */
+  nsresult SelectFramesOfInclusiveDescendantsOfContent(
+      PostContentIterator& aPostOrderIter, nsIContent* aContent,
+      bool aSelected) const;
+
   nsresult SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
                         bool aSelect);
 
