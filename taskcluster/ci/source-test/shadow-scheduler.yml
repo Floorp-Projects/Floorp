@@ -32,14 +32,3 @@ relevant_tests:
     worker:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:relevant_tests
-
-seta_15_180:
-    description: Runs the seta_15_180 experimental optimization strategy
-    treeherder:
-        symbol: SS(seta_15_180)
-    index:
-        product: source
-        job-name: shadow-scheduler-seta_15_180
-    worker:
-        env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:seta_15_180

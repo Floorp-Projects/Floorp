@@ -264,7 +264,6 @@ is_low_value_task = SETA().is_low_value_task
 
 
 @register_strategy('seta', args=(10, 60))
-@register_strategy('seta_15_180', args=(15, 180))
 class SkipLowValue(OptimizationStrategy):
 
     def __init__(self, push_interval, time_interval):
