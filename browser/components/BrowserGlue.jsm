@@ -1673,14 +1673,6 @@ BrowserGlue.prototype = {
     );
     Services.telemetry.getHistogramById("COOKIE_BEHAVIOR").add(cookieBehavior);
 
-    let exceptions = 0;
-    for (let permission of Services.perms.all) {
-      if (permission.type == "trackingprotection") {
-        exceptions++;
-      }
-    }
-    Services.telemetry.scalarSet("contentblocking.exceptions", exceptions);
-
     let fpEnabled = Services.prefs.getBoolPref(
       "privacy.trackingprotection.fingerprinting.enabled"
     );
