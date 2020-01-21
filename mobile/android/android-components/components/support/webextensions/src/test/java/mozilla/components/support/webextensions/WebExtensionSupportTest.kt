@@ -383,7 +383,7 @@ class WebExtensionSupportTest {
             (values[2] as WebExtensionAction.UpdatePopupSessionAction).popupSessionId)
         ).joinBlocking()
 
-        val popupSessionId = store.state.extensions["test"]?.browserActionPopupSession
+        val popupSessionId = store.state.extensions["test"]?.popupSessionId
         assertNotNull(popupSessionId)
 
         // Select different tab
@@ -402,6 +402,48 @@ class WebExtensionSupportTest {
         actionCaptor = argumentCaptor()
         verify(store, times(7)).dispatch(actionCaptor.capture())
         assertEquals(popupSessionId, (actionCaptor.value as TabListAction.RemoveTabAction).tabId)
+    }
+
+    @Test
+    fun `allows overriding action popup behaviour`() {
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        val engineSession: EngineSession = mock()
+        val browserAction: Action = mock()
+        whenever(ext.id).thenReturn("test")
+        val store = spy(BrowserStore(BrowserState(
+            extensions = mapOf(ext.id to WebExtensionState(ext.id))
+        )))
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+
+        var webExtensionId = ""
+        WebExtensionSupport.initialize(
+            engine,
+            store,
+            onActionPopupToggleOverride = {
+                webExtensionId = it.id
+            }
+        )
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        // Toggling should allow state to have popup EngineSession instance
+        delegateCaptor.value.onToggleActionPopup(ext, engineSession, browserAction)
+        val actionCaptor = argumentCaptor<mozilla.components.browser.state.action.BrowserAction>()
+        verify(store, times(1)).dispatch(actionCaptor.capture())
+
+        store.waitUntilIdle()
+        val value = actionCaptor.value
+        assertNotNull((value as WebExtensionAction.UpdatePopupSessionAction).popupSession)
+        assertNotNull(store.state.extensions[webExtensionId]?.popupSession)
+
+        // Update store to clear popupSession reference
+        store.dispatch(
+            WebExtensionAction.UpdatePopupSessionAction(webExtensionId, popupSession = null)
+        ).joinBlocking()
+
+        store.waitUntilIdle()
+        assertNull(store.state.extensions[webExtensionId]?.popupSession)
     }
 
     @Test

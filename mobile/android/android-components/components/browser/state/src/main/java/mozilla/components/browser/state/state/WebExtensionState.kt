@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.state
 
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 
@@ -16,8 +17,9 @@ import mozilla.components.concept.engine.webextension.WebExtensionPageAction
  * @property enabled Whether or not this web extension is enabled, defaults to true.
  * @property browserAction The browser action state of this extension.
  * @property pageAction The page action state of this extension.
- * @property browserActionPopupSession The ID of the session displaying
+ * @property popupSessionId The ID of the session displaying
  * the browser action popup.
+ * @property popupSession The [EngineSession] displaying the browser or page action popup.
  */
 data class WebExtensionState(
     val id: String,
@@ -25,5 +27,6 @@ data class WebExtensionState(
     val enabled: Boolean = true,
     val browserAction: WebExtensionBrowserAction? = null,
     val pageAction: WebExtensionPageAction? = null,
-    val browserActionPopupSession: String? = null
+    val popupSessionId: String? = null,
+    val popupSession: EngineSession? = null
 )

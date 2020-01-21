@@ -8,6 +8,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 import mozilla.components.support.test.ext.joinBlocking
@@ -242,17 +243,28 @@ class WebExtensionActionTest {
     }
 
     @Test
-    fun `UpdateActionPopupSession - Adds popup session ID to the web extension state`() {
+    fun `UpdatePopupSessionAction - Adds popup session to the web extension state`() {
         val store = BrowserStore()
 
         val extension = WebExtensionState("id", "url")
         store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
 
         assertEquals(extension, store.state.extensions[extension.id])
-        assertNull(store.state.extensions[extension.id]?.browserActionPopupSession)
+        assertNull(store.state.extensions[extension.id]?.popupSessionId)
+        assertNull(store.state.extensions[extension.id]?.popupSession)
+
+        val engineSession: EngineSession = mock()
+        store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extension.id, popupSession = engineSession)).joinBlocking()
+        assertEquals(engineSession, store.state.extensions[extension.id]?.popupSession)
+
+        store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extension.id, popupSession = null)).joinBlocking()
+        assertNull(store.state.extensions[extension.id]?.popupSession)
 
         store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extension.id, "popupId")).joinBlocking()
-        assertEquals("popupId", store.state.extensions[extension.id]?.browserActionPopupSession)
+        assertEquals("popupId", store.state.extensions[extension.id]?.popupSessionId)
+
+        store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extension.id, null)).joinBlocking()
+        assertNull(store.state.extensions[extension.id]?.popupSessionId)
     }
 
     @Test
