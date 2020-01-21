@@ -48,44 +48,6 @@ static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
 // "main/cross-axis utils" header, shared by grid & flexbox?
 // (Particularly when grid gets support for align-*/justify-* properties.)
 
-// Helper enums
-// ============
-
-// Represents a physical orientation for an axis.
-// The directional suffix indicates the direction in which the axis *grows*.
-// So e.g. eAxis_LR means a horizontal left-to-right axis, whereas eAxis_BT
-// means a vertical bottom-to-top axis.
-// NOTE: The order here is important -- these values are used as indices into
-// the static array 'kAxisOrientationToSidesMap', defined below.
-enum AxisOrientationType {
-  eAxis_LR,
-  eAxis_RL,
-  eAxis_TB,
-  eAxis_BT,
-  eNumAxisOrientationTypes  // For sizing arrays that use these values as
-                            // indices
-};
-
-// Represents one or the other extreme of an axis (e.g. for the main axis, the
-// main-start vs. main-end edge.
-// NOTE: The order here is important -- these values are used as indices into
-// the sub-arrays in 'kAxisOrientationToSidesMap', defined below.
-enum AxisEdgeType {
-  eAxisEdge_Start,
-  eAxisEdge_End,
-  eNumAxisEdges  // For sizing arrays that use these values as indices
-};
-
-// This array maps each axis orientation to a pair of corresponding
-// [start, end] physical mozilla::Side values.
-static const mozilla::Side
-    kAxisOrientationToSidesMap[eNumAxisOrientationTypes][eNumAxisEdges] = {
-        {eSideLeft, eSideRight},  // eAxis_LR
-        {eSideRight, eSideLeft},  // eAxis_RL
-        {eSideTop, eSideBottom},  // eAxis_TB
-        {eSideBottom, eSideTop}   // eAxis_BT
-};
-
 // Helper structs / classes / methods
 // ==================================
 // Returns true iff the given nsStyleDisplay has display:-webkit-{inline-}box
@@ -197,25 +159,6 @@ static nsIFrame* GetFirstNonAnonBoxDescendant(nsIFrame* aFrame) {
   return aFrame;
 }
 
-// Given an AxisOrientationType, returns the "reverse" AxisOrientationType
-// (in the same dimension, but the opposite direction)
-static inline AxisOrientationType GetReverseAxis(AxisOrientationType aAxis) {
-  AxisOrientationType reversedAxis;
-
-  if (aAxis % 2 == 0) {
-    // even enum value. Add 1 to reverse.
-    reversedAxis = AxisOrientationType(aAxis + 1);
-  } else {
-    // odd enum value. Subtract 1 to reverse.
-    reversedAxis = AxisOrientationType(aAxis - 1);
-  }
-
-  // Check that we're still in the enum's valid range
-  MOZ_ASSERT(reversedAxis >= eAxis_LR && reversedAxis <= eAxis_BT);
-
-  return reversedAxis;
-}
-
 /**
  * Converts a "flex-relative" coordinate in a single axis (a main- or cross-axis
  * coordinate) into a coordinate in the corresponding physical (x or y) axis. If
@@ -296,15 +239,6 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
                      AxisTrackerFlags aFlags = eNoFlags);
 
   // Accessors:
-  // XXXdholbert [BEGIN DEPRECATED]
-  // These should not be used in layout, but they are useful for devtools API
-  // which reports physical axis direction.
-  AxisOrientationType GetPhysicalMainAxis() const { return mPhysicalMainAxis; }
-  AxisOrientationType GetPhysicalCrossAxis() const {
-    return mPhysicalCrossAxis;
-  }
-  // XXXdholbert [END DEPRECATED]
-
   LogicalAxis MainAxis() const { return mMainAxis; }
   LogicalAxis CrossAxis() const { return GetOrthogonalAxis(mMainAxis); }
 
@@ -438,11 +372,6 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   // the flex container is a "legacy box" (as determined by IsLegacyBox).
   void InitAxesFromLegacyProps(const nsFlexContainerFrame* aFlexContainer);
   void InitAxesFromModernProps(const nsFlexContainerFrame* aFlexContainer);
-
-  // XXXdholbert [BEGIN DEPRECATED]
-  AxisOrientationType mPhysicalMainAxis = eAxis_LR;
-  AxisOrientationType mPhysicalCrossAxis = eAxis_TB;
-  // XXXdholbert [END DEPRECATED]
 
   LogicalAxis mMainAxis = eLogicalAxisInline;
 
@@ -3640,41 +3569,6 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
   }
 }
 
-// Utility function to convert an InlineDir to an AxisOrientationType
-static inline AxisOrientationType InlineDirToAxisOrientation(
-    WritingMode::InlineDir aInlineDir) {
-  switch (aInlineDir) {
-    case WritingMode::eInlineLTR:
-      return eAxis_LR;
-    case WritingMode::eInlineRTL:
-      return eAxis_RL;
-    case WritingMode::eInlineTTB:
-      return eAxis_TB;
-    case WritingMode::eInlineBTT:
-      return eAxis_BT;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unhandled InlineDir");
-  return eAxis_LR;  // in case of unforseen error, assume English LTR text flow.
-}
-
-// Utility function to convert a BlockDir to an AxisOrientationType
-static inline AxisOrientationType BlockDirToAxisOrientation(
-    WritingMode::BlockDir aBlockDir) {
-  switch (aBlockDir) {
-    case WritingMode::eBlockLR:
-      return eAxis_LR;
-    case WritingMode::eBlockRL:
-      return eAxis_RL;
-    case WritingMode::eBlockTB:
-      return eAxis_TB;
-      // NOTE: WritingMode::eBlockBT (bottom-to-top) does not exist.
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unhandled BlockDir");
-  return eAxis_TB;  // in case of unforseen error, assume English TTB block-flow
-}
-
 FlexboxAxisTracker::FlexboxAxisTracker(
     const nsFlexContainerFrame* aFlexContainer, const WritingMode& aWM,
     AxisTrackerFlags aFlags)
@@ -3699,8 +3593,6 @@ FlexboxAxisTracker::FlexboxAxisTracker(
     // so that we can flip some logic to make the reversal transparent).
     if (MainAxisPhysicalStartSide() == eSideBottom ||
         CrossAxisPhysicalStartSide() == eSideBottom) {
-      mPhysicalMainAxis = GetReverseAxis(mPhysicalMainAxis);
-      mPhysicalCrossAxis = GetReverseAxis(mPhysicalCrossAxis);
       mAreAxesInternallyReversed = true;
       mIsMainAxisReversed = !mIsMainAxisReversed;
       mIsCrossAxisReversed = !mIsCrossAxisReversed;
@@ -3723,29 +3615,9 @@ void FlexboxAxisTracker::InitAxesFromLegacyProps(
   mIsRowOriented = (boxOrientIsVertical == wmIsVertical);
   mMainAxis = mIsRowOriented ? eLogicalAxisInline : eLogicalAxisBlock;
 
-  // XXXdholbert BEGIN CODE TO SET DEPRECATED MEMBER-VARS
-  if (boxOrientIsVertical) {
-    mPhysicalMainAxis = eAxis_TB;
-    mPhysicalCrossAxis = eAxis_LR;
-  } else {
-    mPhysicalMainAxis = eAxis_LR;
-    mPhysicalCrossAxis = eAxis_TB;
-  }
-  // "direction: rtl" reverses the writing-mode's inline axis.
-  // So, we need to reverse the corresponding flex axis to match.
-  // (Note this we don't toggle "mIsMainAxisReversed" for this condition,
-  // because the main axis will still match mWM's inline direction.)
-  if (mWM.IsBidiRTL()) {
-    AxisOrientationType& axisToFlip =
-        mIsRowOriented ? mPhysicalMainAxis : mPhysicalCrossAxis;
-    axisToFlip = GetReverseAxis(axisToFlip);
-  }
-  // XXXdholbert END CODE TO SET DEPRECATED MEMBER-VARS
-
   // Legacy flexbox can use "-webkit-box-direction: reverse" to reverse the
   // main axis (so it runs in the reverse direction of the inline axis):
   if (styleXUL->mBoxDirection == StyleBoxDirection::Reverse) {
-    mPhysicalMainAxis = GetReverseAxis(mPhysicalMainAxis);
     mIsMainAxisReversed = true;
   } else {
     mIsMainAxisReversed = false;
@@ -3761,37 +3633,24 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
   const nsStylePosition* stylePos = aFlexContainer->StylePosition();
   StyleFlexDirection flexDirection = stylePos->mFlexDirection;
 
-  // Inline dimension ("start-to-end"):
-  // (NOTE: I'm intentionally not calling these "inlineAxis"/"blockAxis", since
-  // those terms have explicit definition in the writing-modes spec, which are
-  // the opposite of how I'd be using them here.)
-  AxisOrientationType inlineDimension =
-      InlineDirToAxisOrientation(mWM.GetInlineDir());
-  AxisOrientationType blockDimension =
-      BlockDirToAxisOrientation(mWM.GetBlockDir());
-
   // Determine main axis:
   switch (flexDirection) {
     case StyleFlexDirection::Row:
-      mPhysicalMainAxis = inlineDimension;
       mMainAxis = eLogicalAxisInline;
       mIsRowOriented = true;
       mIsMainAxisReversed = false;
       break;
     case StyleFlexDirection::RowReverse:
-      mPhysicalMainAxis = GetReverseAxis(inlineDimension);
       mMainAxis = eLogicalAxisInline;
       mIsRowOriented = true;
       mIsMainAxisReversed = true;
       break;
     case StyleFlexDirection::Column:
-      mPhysicalMainAxis = blockDimension;
       mMainAxis = eLogicalAxisBlock;
       mIsRowOriented = false;
       mIsMainAxisReversed = false;
       break;
     case StyleFlexDirection::ColumnReverse:
-      mPhysicalMainAxis = GetReverseAxis(blockDimension);
       mMainAxis = eLogicalAxisBlock;
       mIsRowOriented = false;
       mIsMainAxisReversed = true;
@@ -3800,21 +3659,8 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
       MOZ_ASSERT_UNREACHABLE("Unexpected flex-direction value");
   }
 
-  // FIXME(TYLin) [BEGIN DEPRECATED]
-  // Determine cross axis:
-  // (This is set up so that a bogus |flexDirection| value will
-  // give us blockDimension.
-  if (flexDirection == StyleFlexDirection::Column ||
-      flexDirection == StyleFlexDirection::ColumnReverse) {
-    mPhysicalCrossAxis = inlineDimension;
-  } else {
-    mPhysicalCrossAxis = blockDimension;
-  }
-  // FIXME(TYLin) [END DEPRECATED]
-
   // "flex-wrap: wrap-reverse" reverses our cross axis.
   if (stylePos->mFlexWrap == StyleFlexWrap::WrapReverse) {
-    mPhysicalCrossAxis = GetReverseAxis(mPhysicalCrossAxis);
     mIsCrossAxisReversed = true;
   } else {
     mIsCrossAxisReversed = false;
