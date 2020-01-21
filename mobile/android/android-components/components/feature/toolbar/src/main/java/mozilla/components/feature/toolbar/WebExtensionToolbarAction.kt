@@ -25,11 +25,11 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 /**
  * An action button that represents an web extension item to be added to the toolbar.
  *
- * @param browserAction Associated [WebExtensionBrowserAction]
+ * @param action Associated [WebExtensionBrowserAction]
  * @param listener Callback that will be invoked whenever the button is pressed
  */
 open class WebExtensionToolbarAction(
-    internal var browserAction: WebExtensionBrowserAction,
+    internal var action: WebExtensionBrowserAction,
     internal val padding: Padding? = null,
     internal val iconJobDispatcher: CoroutineDispatcher,
     internal val listener: () -> Unit
@@ -40,7 +40,7 @@ open class WebExtensionToolbarAction(
         val rootView = LayoutInflater.from(parent.context)
             .inflate(R.layout.mozac_feature_toolbar_web_extension_action_layout, parent, false)
 
-        rootView.isEnabled = browserAction.enabled ?: true
+        rootView.isEnabled = action.enabled ?: true
         rootView.setOnClickListener { listener.invoke() }
 
         val backgroundResource =
@@ -66,7 +66,7 @@ open class WebExtensionToolbarAction(
 
         iconJob = CoroutineScope(iconJobDispatcher).launch {
             try {
-                val icon = browserAction.loadIcon?.invoke(imageView.measuredHeight)
+                val icon = action.loadIcon?.invoke(imageView.measuredHeight)
                 icon?.let {
                     MainScope().launch {
                         imageView.setImageDrawable(BitmapDrawable(view.context.resources, it))
@@ -85,9 +85,9 @@ open class WebExtensionToolbarAction(
             }
         }
 
-        browserAction.title?.let { imageView.contentDescription = it }
-        browserAction.badgeText?.let { textView.text = it }
-        browserAction.badgeTextColor?.let { textView.setTextColor(it) }
-        browserAction.badgeBackgroundColor?.let { textView.setBackgroundColor(it) }
+        action.title?.let { imageView.contentDescription = it }
+        action.badgeText?.let { textView.text = it }
+        action.badgeTextColor?.let { textView.setTextColor(it) }
+        action.badgeBackgroundColor?.let { textView.setBackgroundColor(it) }
     }
 }

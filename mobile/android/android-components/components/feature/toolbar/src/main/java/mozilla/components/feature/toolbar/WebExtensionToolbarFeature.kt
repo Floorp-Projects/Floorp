@@ -16,7 +16,9 @@ import kotlinx.coroutines.flow.collect
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -35,6 +37,7 @@ class WebExtensionToolbarFeature(
     // lifecycle.
     @VisibleForTesting
     internal val webExtensionBrowserActions = HashMap<String, WebExtensionToolbarAction>()
+    internal val webExtensionPageActions = HashMap<String, WebExtensionToolbarAction>()
 
     private var scope: CoroutineScope? = null
 
@@ -55,7 +58,7 @@ class WebExtensionToolbarFeature(
      */
     override fun start() {
         // The feature could start with an existing view and toolbar so
-        // we have to check if any stale browser actions (from  uninstalled
+        // we have to check if any stale actions (from uninstalled
         // extensions) are being displayed and remove them.
         webExtensionBrowserActions
             .filterKeys { !store.state.extensions.containsKey(it) }
@@ -63,6 +66,14 @@ class WebExtensionToolbarFeature(
                 toolbar.removeBrowserAction(action)
                 toolbar.invalidateActions()
                 webExtensionBrowserActions.remove(extensionId)
+            }
+
+        webExtensionPageActions
+            .filterKeys { !store.state.extensions.containsKey(it) }
+            .forEach { (extensionId, action) ->
+                toolbar.removePageAction(action)
+                toolbar.invalidateActions()
+                webExtensionPageActions.remove(extensionId)
             }
 
         iconJobDispatcher = iconHandler.asCoroutineDispatcher("WebExtensionIconDispatcher")
@@ -84,24 +95,51 @@ class WebExtensionToolbarFeature(
         val extensions = state.extensions.values.toList()
         extensions.filter { it.enabled }.forEach { extension ->
             extension.browserAction?.let { browserAction ->
-                // Add the global browser action if it doesn't exist
-                val toolbarAction = webExtensionBrowserActions.getOrPut(extension.id) {
-                    val toolbarAction = WebExtensionToolbarAction(
-                        browserAction = browserAction,
-                        listener = browserAction.onClick,
-                        iconJobDispatcher = iconJobDispatcher
-                    )
-                    toolbar.addBrowserAction(toolbarAction)
-                    toolbar.invalidateActions()
-                    toolbarAction
-                }
-
-                // Apply tab-specific override of browser action
-                tab?.extensionState?.get(extension.id)?.browserAction?.let {
-                    toolbarAction.browserAction = browserAction.copyWithOverride(it)
-                    toolbar.invalidateActions()
-                }
+                addOrUpdateAction(
+                    extension = extension,
+                    globalAction = browserAction,
+                    tabAction = tab?.extensionState?.get(extension.id)?.browserAction
+                )
             }
+
+            extension.pageAction?.let { pageAction ->
+                addOrUpdateAction(
+                    extension = extension,
+                    globalAction = pageAction,
+                    tabAction = tab?.extensionState?.get(extension.id)?.pageAction,
+                    isPageAction = true
+                )
+            }
+        }
+    }
+
+    private fun addOrUpdateAction(
+        extension: WebExtensionState,
+        globalAction: Action,
+        tabAction: Action?,
+        isPageAction: Boolean = false
+    ) {
+        val actionMap = if (isPageAction) webExtensionPageActions else webExtensionBrowserActions
+        // Add the global page/browser action if it doesn't exist
+        val toolbarAction = actionMap.getOrPut(extension.id) {
+            val toolbarAction = WebExtensionToolbarAction(
+                action = globalAction,
+                listener = globalAction.onClick,
+                iconJobDispatcher = iconJobDispatcher
+            )
+            if (isPageAction) {
+                toolbar.addPageAction(toolbarAction)
+            } else {
+                toolbar.addBrowserAction(toolbarAction)
+            }
+            toolbar.invalidateActions()
+            toolbarAction
+        }
+
+        // Apply tab-specific override of page/browser action
+        tabAction?.let {
+            toolbarAction.action = globalAction.copyWithOverride(it)
+            toolbar.invalidateActions()
         }
     }
 }

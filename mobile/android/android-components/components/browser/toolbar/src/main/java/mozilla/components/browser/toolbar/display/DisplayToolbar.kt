@@ -543,13 +543,23 @@ class DisplayToolbar internal constructor(
     }
 
     /**
-     * Removes a previously added action (see [addBrowserAction]). If the provided
+     * Removes a previously added browser action (see [addBrowserAction]). If the provided
      * action was never added, this method has no effect.
      *
      * @param action the action to remove.
      */
     internal fun removeBrowserAction(action: Toolbar.Action) {
         views.browserActions.removeAction(action)
+    }
+
+    /**
+     * Removes a previously added page action (see [addBrowserAction]). If the provided
+     * action was never added, this method has no effect.
+     *
+     * @param action the action to remove.
+     */
+    internal fun removePageAction(action: Toolbar.Action) {
+        views.pageActions.removeAction(action)
     }
 
     /**

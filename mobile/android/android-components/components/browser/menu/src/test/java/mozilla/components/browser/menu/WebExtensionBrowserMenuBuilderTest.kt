@@ -27,9 +27,16 @@ class WebExtensionBrowserMenuBuilderTest {
     @Test
     fun `web extension is added at the start when appendExtensionActionAtStart is true`() {
         val browserAction = WebExtensionBrowserAction("browser_action", false, mock(), "", 0, 0) {}
+        val pageAction = WebExtensionBrowserAction("page_action", false, mock(), "", 0, 0) {}
 
         val extensions = mapOf(
-            "browser_action" to WebExtensionState("browser_action", "url", true, browserAction)
+            "id" to WebExtensionState(
+                "id",
+                "url",
+                true,
+                browserAction = browserAction,
+                pageAction = pageAction
+            )
         )
 
         val store = Mockito.spy(
@@ -56,18 +63,28 @@ class WebExtensionBrowserMenuBuilderTest {
 
         val recyclerAdapter = recyclerView.adapter!!
         assertNotNull(recyclerAdapter)
-        assertEquals(3, recyclerAdapter.itemCount)
+        assertEquals(4, recyclerAdapter.itemCount)
 
-        val extension = menu.adapter.visibleItems[0]
-        assertEquals("browser_action", (extension as WebExtensionBrowserMenuItem).browserAction.title)
+        var menuItem = menu.adapter.visibleItems[0]
+        assertEquals("browser_action", (menuItem as WebExtensionBrowserMenuItem).action.title)
+
+        menuItem = menu.adapter.visibleItems[1]
+        assertEquals("page_action", (menuItem as WebExtensionBrowserMenuItem).action.title)
     }
 
     @Test
     fun `web extension is added at the end when appendExtensionActionAtStart is false`() {
         val browserAction = WebExtensionBrowserAction("browser_action", false, mock(), "", 0, 0) {}
+        val pageAction = WebExtensionBrowserAction("page_action", false, mock(), "", 0, 0) {}
 
         val extensions = mapOf(
-            "browser_action" to WebExtensionState("browser_action", "url", true, browserAction)
+            "id" to WebExtensionState(
+                "id",
+                "url",
+                true,
+                browserAction = browserAction,
+                pageAction = pageAction
+            )
         )
 
         val store = Mockito.spy(
@@ -95,10 +112,12 @@ class WebExtensionBrowserMenuBuilderTest {
 
         val recyclerAdapter = recyclerView.adapter!!
         assertNotNull(recyclerAdapter)
-        assertEquals(3, recyclerAdapter.itemCount)
+        assertEquals(4, recyclerAdapter.itemCount)
 
-        val extension = menu.adapter.visibleItems[menu.adapter.itemCount - 1]
-        assertEquals("browser_action", (extension as WebExtensionBrowserMenuItem).browserAction.title)
+        var menuItem = menu.adapter.visibleItems[menu.adapter.itemCount - 1]
+        assertEquals("page_action", (menuItem as WebExtensionBrowserMenuItem).action.title)
+        menuItem = menu.adapter.visibleItems[menu.adapter.itemCount - 2]
+        assertEquals("browser_action", (menuItem as WebExtensionBrowserMenuItem).action.title)
     }
 
     private fun mockMenuItem() = object : BrowserMenuItem {

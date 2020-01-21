@@ -13,7 +13,9 @@ import mozilla.components.browser.menu.item.WebExtensionBrowserMenuItem
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
@@ -52,6 +54,7 @@ class WebExtensionBrowserMenu internal constructor(
                 currentPopup = null
                 scope?.cancel()
                 webExtensionBrowserActions.clear()
+                webExtensionPageActions.clear()
                 onDismiss()
             }
         }
@@ -59,6 +62,7 @@ class WebExtensionBrowserMenu internal constructor(
 
     companion object {
         internal val webExtensionBrowserActions = HashMap<String, WebExtensionBrowserMenuItem>()
+        internal val webExtensionPageActions = HashMap<String, WebExtensionBrowserMenuItem>()
 
         internal fun getOrUpdateWebExtensionMenuItems(
             state: BrowserState,
@@ -66,27 +70,55 @@ class WebExtensionBrowserMenu internal constructor(
         ): List<BrowserMenuItem> {
             val menuItems = ArrayList<BrowserMenuItem>()
             val extensions = state.extensions.values.toList()
-            extensions.filter { it.enabled }.forEach { extension ->
-                extension.browserAction?.let { browserAction ->
-                    // Add the global browser action if it doesn't exist
-                    val browserMenuItem = webExtensionBrowserActions.getOrPut(extension.id) {
-                        val browserMenuItem = WebExtensionBrowserMenuItem(
-                            browserAction = browserAction,
-                            listener = browserAction.onClick
+            extensions.filter { it.enabled }
+                .forEach { extension ->
+                    extension.browserAction?.let { browserAction ->
+                        addOrUpdateAction(
+                            extension = extension,
+                            globalAction = browserAction,
+                            tabAction = tab?.extensionState?.get(extension.id)?.browserAction,
+                            menuItems = menuItems
                         )
-                        browserMenuItem
                     }
 
-                    // Apply tab-specific override of browser action
-                    tab?.extensionState?.get(extension.id)?.browserAction?.let {
-                        browserMenuItem.browserAction = browserAction.copyWithOverride(it)
+                    extension.pageAction?.let { pageAction ->
+                        addOrUpdateAction(
+                            extension = extension,
+                            globalAction = pageAction,
+                            tabAction = tab?.extensionState?.get(extension.id)?.pageAction,
+                            menuItems = menuItems,
+                            isPageAction = true
+                        )
                     }
-
-                    menuItems.add(browserMenuItem)
                 }
-            }
 
             return menuItems
+        }
+
+        private fun addOrUpdateAction(
+            extension: WebExtensionState,
+            globalAction: Action,
+            tabAction: Action?,
+            menuItems: ArrayList<BrowserMenuItem>,
+            isPageAction: Boolean = false
+        ): Boolean {
+            val actionMap = if (isPageAction) webExtensionPageActions else webExtensionBrowserActions
+
+            // Add the global browser/page action if it doesn't exist
+            val browserMenuItem = actionMap.getOrPut(extension.id) {
+                val browserMenuItem = WebExtensionBrowserMenuItem(
+                    action = globalAction,
+                    listener = globalAction.onClick
+                )
+                browserMenuItem
+            }
+
+            // Apply tab-specific override of browser/page action
+            tabAction?.let {
+                browserMenuItem.action = globalAction.copyWithOverride(it)
+            }
+
+            return menuItems.add(browserMenuItem)
         }
     }
 }

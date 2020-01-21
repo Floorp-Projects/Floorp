@@ -18,6 +18,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
+import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -41,17 +42,21 @@ class WebExtensionToolbarFeatureTest {
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Test
-    fun `render web extension action from browser state`() {
+    fun `render web extension actions from browser state`() {
+        val defaultPageAction =
+            WebExtensionPageAction("default_page_action_title", false, mock(), "", 0, 0) {}
+        val overriddenPageAction =
+            WebExtensionPageAction("overridden_page_action_title", false, mock(), "", 0, 0) {}
         val defaultBrowserAction =
-            WebExtensionBrowserAction("default_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("default_browser_action_title", false, mock(), "", 0, 0) {}
         val overriddenBrowserAction =
-            WebExtensionBrowserAction("overridden_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("overridden_browser_action_title", false, mock(), "", 0, 0) {}
         val toolbar: Toolbar = mock()
         val extensions: Map<String, WebExtensionState> = mapOf(
-            "id" to WebExtensionState("id", "url", true, defaultBrowserAction)
+            "id" to WebExtensionState("id", "url", true, browserAction = defaultBrowserAction, pageAction = defaultPageAction)
         )
         val overriddenExtensions: Map<String, WebExtensionState> = mapOf(
-            "id" to WebExtensionState("id", "url", true, overriddenBrowserAction)
+            "id" to WebExtensionState("id", "url", true, browserAction = overriddenBrowserAction, pageAction = overriddenPageAction)
         )
         val store = spy(
             BrowserStore(
@@ -72,19 +77,39 @@ class WebExtensionToolbarFeatureTest {
         verify(store).observeManually(any())
         verify(webExtToolbarFeature).renderWebExtensionActions(any(), any())
 
-        val actionCaptor = argumentCaptor<WebExtensionToolbarAction>()
-        verify(toolbar).addBrowserAction(actionCaptor.capture())
-        assertEquals("overridden_title", actionCaptor.value.browserAction.title)
+        val browserActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar).addBrowserAction(browserActionCaptor.capture())
+        assertEquals("overridden_browser_action_title", browserActionCaptor.value.action.title)
+
+        val pageActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar).addPageAction(pageActionCaptor.capture())
+        assertEquals("overridden_page_action_title", pageActionCaptor.value.action.title)
     }
 
     @Test
     fun `does not render actions from disabled extensions `() {
-        val enabledAction = WebExtensionBrowserAction("enabled", false, mock(), "", 0, 0) {}
-        val disabledAction = WebExtensionBrowserAction("disabled", false, mock(), "", 0, 0) {}
+        val enablePageAction =
+            WebExtensionPageAction("enable_page_action", false, mock(), "", 0, 0) {}
+        val disablePageAction =
+            WebExtensionPageAction("disable_page_action", false, mock(), "", 0, 0) {}
+        val enabledAction = WebExtensionBrowserAction("enable_browser_action", false, mock(), "", 0, 0) {}
+        val disabledAction = WebExtensionBrowserAction("disable_browser_action", false, mock(), "", 0, 0) {}
         val toolbar: Toolbar = mock()
         val extensions = mapOf(
-            "enabled" to WebExtensionState("enabled", "url", true, enabledAction),
-            "disabled" to WebExtensionState("disabled", "url", false, disabledAction)
+            "enabled" to WebExtensionState(
+                "enabled",
+                "url",
+                true,
+                browserAction = enabledAction,
+                pageAction = enablePageAction
+            ),
+            "disabled" to WebExtensionState(
+                "disabled",
+                "url",
+                false,
+                browserAction = disabledAction,
+                pageAction = disablePageAction
+            )
         )
 
         val store = spy(
@@ -99,16 +124,39 @@ class WebExtensionToolbarFeatureTest {
 
         verify(store).observeManually(any())
         verify(webExtToolbarFeature, times(1)).renderWebExtensionActions(any(), any())
-        val actionCaptor = argumentCaptor<WebExtensionToolbarAction>()
-        verify(toolbar, times(1)).addBrowserAction(actionCaptor.capture())
-        assertEquals("enabled", actionCaptor.value.browserAction.title)
+        val browserActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        val pageActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar, times(1)).addBrowserAction(browserActionCaptor.capture())
+
+        verify(toolbar, times(1)).addPageAction(pageActionCaptor.capture())
+        assertEquals("enable_browser_action", browserActionCaptor.value.action.title)
+        assertEquals("enable_page_action", pageActionCaptor.value.action.title)
     }
 
     @Test
-    fun `browser actions can be overridden per tab`() {
+    fun `actions can be overridden per tab`() {
         val webExtToolbarFeature = getWebExtensionToolbarFeature()
 
         val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
+
+        val pageAction = Action(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val pageActionOverride = Action(
+            title = "updatedTitle",
+            loadIcon = null,
+            enabled = false,
+            badgeText = "updatedText",
+            badgeTextColor = Color.RED,
+            badgeBackgroundColor = Color.GREEN
+        ) {}
+
         val browserAction = Action(
             title = "title",
             loadIcon = loadIcon,
@@ -129,23 +177,34 @@ class WebExtensionToolbarFeatureTest {
 
         // Verify rendering global default browser action
         val browserExtensions = HashMap<String, WebExtensionState>()
-        browserExtensions["1"] = WebExtensionState(id = "1", browserAction = browserAction)
+        browserExtensions["1"] = WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction)
 
         val browserState = BrowserState(extensions = browserExtensions)
         webExtToolbarFeature.renderWebExtensionActions(browserState, mock())
 
+        // verifying global browser action
         assertEquals(1, webExtToolbarFeature.webExtensionBrowserActions.size)
-        val ext1 = webExtToolbarFeature.webExtensionBrowserActions["1"]
-        assertTrue(ext1?.browserAction?.enabled!!)
-        assertEquals("badgeText", ext1.browserAction.badgeText!!)
-        assertEquals("title", ext1.browserAction.title!!)
-        assertEquals(loadIcon, ext1.browserAction.loadIcon!!)
-        assertEquals(Color.WHITE, ext1.browserAction.badgeTextColor!!)
-        assertEquals(Color.BLUE, ext1.browserAction.badgeBackgroundColor!!)
+        var ext1 = webExtToolbarFeature.webExtensionBrowserActions["1"]
+        assertTrue(ext1?.action?.enabled!!)
+        assertEquals("badgeText", ext1.action.badgeText!!)
+        assertEquals("title", ext1.action.title!!)
+        assertEquals(loadIcon, ext1.action.loadIcon!!)
+        assertEquals(Color.WHITE, ext1.action.badgeTextColor!!)
+        assertEquals(Color.BLUE, ext1.action.badgeBackgroundColor!!)
 
-        // Verify rendering session-specific browser action override
+        // verifying global page action
+        assertEquals(1, webExtToolbarFeature.webExtensionPageActions.size)
+        ext1 = webExtToolbarFeature.webExtensionPageActions["1"]!!
+        assertTrue(ext1.action.enabled!!)
+        assertEquals("badgeText", ext1.action.badgeText!!)
+        assertEquals("title", ext1.action.title!!)
+        assertEquals(loadIcon, ext1.action.loadIcon!!)
+        assertEquals(Color.WHITE, ext1.action.badgeTextColor!!)
+        assertEquals(Color.BLUE, ext1.action.badgeBackgroundColor!!)
+
+        // Verify rendering session-specific actions override
         val tabExtensions = HashMap<String, WebExtensionState>()
-        tabExtensions["1"] = WebExtensionState(id = "1", browserAction = browserActionOverride)
+        tabExtensions["1"] = WebExtensionState(id = "1", browserAction = browserActionOverride, pageAction = pageActionOverride)
 
         val tabSessionState = TabSessionState(
             content = mock(),
@@ -153,18 +212,29 @@ class WebExtensionToolbarFeatureTest {
         )
         webExtToolbarFeature.renderWebExtensionActions(browserState, tabSessionState)
 
+        // verifying session-specific browser action
         assertEquals(1, webExtToolbarFeature.webExtensionBrowserActions.size)
-        val updatedExt1 = webExtToolbarFeature.webExtensionBrowserActions["1"]
-        assertFalse(updatedExt1?.browserAction?.enabled!!)
-        assertEquals("updatedText", updatedExt1.browserAction.badgeText!!)
-        assertEquals("updatedTitle", updatedExt1.browserAction.title!!)
-        assertEquals(loadIcon, updatedExt1.browserAction.loadIcon!!)
-        assertEquals(Color.RED, updatedExt1.browserAction.badgeTextColor!!)
-        assertEquals(Color.GREEN, updatedExt1.browserAction.badgeBackgroundColor!!)
+        var updatedExt1 = webExtToolbarFeature.webExtensionBrowserActions["1"]
+        assertFalse(updatedExt1?.action?.enabled!!)
+        assertEquals("updatedText", updatedExt1.action.badgeText!!)
+        assertEquals("updatedTitle", updatedExt1.action.title!!)
+        assertEquals(loadIcon, updatedExt1.action.loadIcon!!)
+        assertEquals(Color.RED, updatedExt1.action.badgeTextColor!!)
+        assertEquals(Color.GREEN, updatedExt1.action.badgeBackgroundColor!!)
+
+        // verifying session-specific page action
+        assertEquals(1, webExtToolbarFeature.webExtensionPageActions.size)
+        updatedExt1 = webExtToolbarFeature.webExtensionPageActions["1"]!!
+        assertFalse(updatedExt1.action.enabled!!)
+        assertEquals("updatedText", updatedExt1.action.badgeText!!)
+        assertEquals("updatedTitle", updatedExt1.action.title!!)
+        assertEquals(loadIcon, updatedExt1.action.loadIcon!!)
+        assertEquals(Color.RED, updatedExt1.action.badgeTextColor!!)
+        assertEquals(Color.GREEN, updatedExt1.action.badgeBackgroundColor!!)
     }
 
     @Test
-    fun `stale browser actions are remove when feature is restarted`() {
+    fun `stale actions are removed when feature is restarted`() {
         val browserExtensions = HashMap<String, WebExtensionState>()
         val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
         val browserAction = Action(
@@ -175,7 +245,18 @@ class WebExtensionToolbarFeatureTest {
             badgeTextColor = Color.WHITE,
             badgeBackgroundColor = Color.BLUE
         ) {}
-        browserExtensions["1"] = WebExtensionState(id = "1", browserAction = browserAction)
+
+        val pageAction = Action(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        browserExtensions["1"] =
+            WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction)
 
         val browserState = BrowserState(extensions = browserExtensions)
         val store = BrowserStore(browserState)
@@ -184,15 +265,20 @@ class WebExtensionToolbarFeatureTest {
 
         webExtToolbarFeature.renderWebExtensionActions(browserState, mock())
         assertEquals(1, webExtToolbarFeature.webExtensionBrowserActions.size)
+        assertEquals(1, webExtToolbarFeature.webExtensionPageActions.size)
 
         store.dispatch(WebExtensionAction.UninstallWebExtensionAction("1")).joinBlocking()
 
         webExtToolbarFeature.start()
         assertEquals(0, webExtToolbarFeature.webExtensionBrowserActions.size)
+        assertEquals(0, webExtToolbarFeature.webExtensionPageActions.size)
 
-        val actionCaptor = argumentCaptor<WebExtensionToolbarAction>()
-        verify(toolbar).removeBrowserAction(actionCaptor.capture())
-        assertEquals(browserAction, actionCaptor.value.browserAction)
+        val browserActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        val pageActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar).removeBrowserAction(browserActionCaptor.capture())
+        verify(toolbar).removeBrowserAction(pageActionCaptor.capture())
+        assertEquals(browserAction, browserActionCaptor.value.action)
+        assertEquals(browserAction, pageActionCaptor.value.action)
     }
 
     private fun getWebExtensionToolbarFeature(

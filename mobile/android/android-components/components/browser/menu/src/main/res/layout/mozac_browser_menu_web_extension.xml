@@ -8,6 +8,7 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="@dimen/mozac_browser_menu_item_toolbar_height"
+    android:id="@+id/container"
     style="@style/Mozac.Browser.Menu.Item.Container"
     android:gravity="center_vertical">
 

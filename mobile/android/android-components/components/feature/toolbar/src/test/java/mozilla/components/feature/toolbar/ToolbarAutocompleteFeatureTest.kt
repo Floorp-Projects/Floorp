@@ -74,6 +74,10 @@ class ToolbarAutocompleteFeatureTest {
             fail()
         }
 
+        override fun removePageAction(action: Toolbar.Action) {
+            fail()
+        }
+
         override fun addPageAction(action: Toolbar.Action) {
             fail()
         }

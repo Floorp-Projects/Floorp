@@ -232,13 +232,23 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
-     * Removes a previously added action (see [addBrowserAction]). If the provided
+     * Removes a previously added browser action (see [addBrowserAction]). If the provided
      * action was never added, this method has no effect.
      *
      * @param action the action to remove.
      */
     override fun removeBrowserAction(action: Toolbar.Action) {
         display.removeBrowserAction(action)
+    }
+
+    /**
+     * Removes a previously added page action (see [addPageAction]). If the provided
+     * action was never added, this method has no effect.
+     *
+     * @param action the action to remove.
+     */
+    override fun removePageAction(action: Toolbar.Action) {
+        display.removePageAction(action)
     }
 
     /**
