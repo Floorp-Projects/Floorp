@@ -20,7 +20,7 @@ add_task(async function() {
   addPerm("https://example.com", "perm4");
   // NOTE: This permission is a preload permission, so it should be available in
   // the content process from startup.
-  addPerm("https://somerandomwebsite.com", "document");
+  addPerm("https://somerandomwebsite.com", "cookie");
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank", forceNewProcess: true },
@@ -72,10 +72,10 @@ add_task(async function() {
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               "https://somerandomwebsite.com"
             ),
-            "document"
+            "cookie"
           ),
           Services.perms.ALLOW_ACTION,
-          "document-1"
+          "cookie-1"
         );
 
         // Perform a load of example.com
@@ -132,10 +132,10 @@ add_task(async function() {
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               "https://somerandomwebsite.com"
             ),
-            "document"
+            "cookie"
           ),
           Services.perms.ALLOW_ACTION,
-          "document-2"
+          "cookie-2"
         );
       });
 
@@ -143,7 +143,7 @@ add_task(async function() {
       addPerm("http://foo.bar.example.com", "newperm2");
       addPerm("about:home", "newperm3");
       addPerm("https://example.com", "newperm4");
-      addPerm("https://someotherrandomwebsite.com", "document");
+      addPerm("https://someotherrandomwebsite.com", "cookie");
 
       await SpecialPowers.spawn(aBrowser, [], async function() {
         // The new permissions should be available, but only for
@@ -233,20 +233,20 @@ add_task(async function() {
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               "https://somerandomwebsite.com"
             ),
-            "document"
+            "cookie"
           ),
           Services.perms.ALLOW_ACTION,
-          "document-3"
+          "cookie-3"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               "https://someotherrandomwebsite.com"
             ),
-            "document"
+            "cookie"
           ),
           Services.perms.ALLOW_ACTION,
-          "otherdocument-3"
+          "othercookie-3"
         );
 
         // Loading a subdomain now, on https
@@ -344,20 +344,20 @@ add_task(async function() {
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               "https://somerandomwebsite.com"
             ),
-            "document"
+            "cookie"
           ),
           Services.perms.ALLOW_ACTION,
-          "document-4"
+          "cookie-4"
         );
         is(
           Services.perms.testPermissionFromPrincipal(
             Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               "https://someotherrandomwebsite.com"
             ),
-            "document"
+            "cookie"
           ),
           Services.perms.ALLOW_ACTION,
-          "otherdocument-4"
+          "othercookie-4"
         );
       });
     }

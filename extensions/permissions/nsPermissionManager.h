@@ -357,12 +357,6 @@ class nsPermissionManager final : public nsIPermissionManager,
   void WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
                                 nsIRunnable* aRunnable);
 
-  /**
-   * True if any "preload" permissions are present. This is used to avoid making
-   * potentially expensive permissions checks in nsContentBlocker.
-   */
-  bool HasPreloadPermissions();
-
  private:
   virtual ~nsPermissionManager();
 
