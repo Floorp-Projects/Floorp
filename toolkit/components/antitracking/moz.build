@@ -19,7 +19,6 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    'AsyncStreamReader.jsm',
     'ContentBlockingAllowList.jsm',
     'TrackingDBService.jsm',
     'URLDecorationAnnotationsService.jsm',

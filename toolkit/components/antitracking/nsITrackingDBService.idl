@@ -16,9 +16,9 @@ interface nsITrackingDBService : nsISupports
    * This function is typically called at the end of the document lifecycle,
    * since calling it multiple times results in multiple new entries.
    *
-   * @param aInputStream the content blocking log as an input stream that outputs a JSON string
+   * @param data    a json string containing the content blocking log.
    */
-  void recordContentBlockingLog(in nsIAsyncInputStream aInputStream);
+  void recordContentBlockingLog(in ACString data);
 
   /**
    * Save new events in the content blocking database
