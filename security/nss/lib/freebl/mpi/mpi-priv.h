@@ -157,7 +157,7 @@ mp_err s_mp_invmod_2d(const mp_int *a, mp_size k, mp_int *c);
 mp_err s_mp_invmod_even_m(const mp_int *a, const mp_int *m, mp_int *c);
 
 #ifdef NSS_USE_COMBA
-
+PR_STATIC_ASSERT(sizeof(mp_digit) == 8);
 #define IS_POWER_OF_2(a) ((a) && !((a) & ((a)-1)))
 
 void s_mp_mul_comba_4(const mp_int *A, const mp_int *B, mp_int *C);

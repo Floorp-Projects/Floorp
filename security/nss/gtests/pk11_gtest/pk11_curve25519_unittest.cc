@@ -15,7 +15,7 @@
 namespace nss_test {
 
 class Pkcs11Curve25519Test
-    : public ::testing::TestWithParam<curve25519_testvector> {
+    : public ::testing::TestWithParam<EcdhTestVectorStr> {
  protected:
   void Derive(const uint8_t* pkcs8, size_t pkcs8_len, const uint8_t* spki,
               size_t spki_len, const uint8_t* secret, size_t secret_len,
@@ -107,7 +107,7 @@ class Pkcs11Curve25519Test
     }
   };
 
-  void Derive(const curve25519_testvector testvector) {
+  void Derive(const EcdhTestVectorStr testvector) {
     Derive(testvector.private_key.data(), testvector.private_key.size(),
            testvector.public_key.data(), testvector.public_key.size(),
            testvector.secret.data(), testvector.secret.size(),

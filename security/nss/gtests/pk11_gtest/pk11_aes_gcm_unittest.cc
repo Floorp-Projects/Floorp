@@ -18,19 +18,17 @@
 
 namespace nss_test {
 
-class Pkcs11AesGcmTest : public ::testing::TestWithParam<gcm_kat_value> {
+class Pkcs11AesGcmTest : public ::testing::TestWithParam<AesGcmKatValue> {
  protected:
-  void RunTest(const gcm_kat_value val) {
-    std::vector<uint8_t> key = hex_string_to_bytes(val.key);
-    std::vector<uint8_t> iv = hex_string_to_bytes(val.iv);
-    std::vector<uint8_t> plaintext = hex_string_to_bytes(val.plaintext);
-    std::vector<uint8_t> aad = hex_string_to_bytes(val.additional_data);
-    std::vector<uint8_t> result = hex_string_to_bytes(val.result);
-    bool invalid_ct = val.invalid_ct;
-    bool invalid_iv = val.invalid_iv;
-    std::stringstream s;
-    s << "Test #" << val.test_id << " failed.";
-    std::string msg = s.str();
+  void RunTest(const AesGcmKatValue vec) {
+    std::vector<uint8_t> key = hex_string_to_bytes(vec.key);
+    std::vector<uint8_t> iv = hex_string_to_bytes(vec.iv);
+    std::vector<uint8_t> plaintext = hex_string_to_bytes(vec.plaintext);
+    std::vector<uint8_t> aad = hex_string_to_bytes(vec.additional_data);
+    std::vector<uint8_t> result = hex_string_to_bytes(vec.result);
+    bool invalid_ct = vec.invalid_ct;
+    bool invalid_iv = vec.invalid_iv;
+    std::string msg = "Test #" + std::to_string(vec.id) + " failed";
     // Ignore GHASH-only vectors.
     if (key.empty()) {
       return;
