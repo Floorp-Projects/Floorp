@@ -84,6 +84,14 @@
  *
  */
 
+#if defined(_M_IX86) && defined(__clang__) && __has_declspec_attribute(guard)
+// On x86, nop-space patches return to the second instruction of their target.
+// This is a deliberate violation of Control Flow Guard, so disable the check.
+#  define INTERCEPTOR_DISABLE_CFGUARD __declspec(guard(nocf))
+#else
+#  define INTERCEPTOR_DISABLE_CFGUARD /* nothing */
+#endif
+
 namespace mozilla {
 namespace interceptor {
 
@@ -139,7 +147,7 @@ class FuncHook final {
   explicit operator bool() const { return !!mOrigFunc; }
 
   template <typename... ArgsType>
-  ReturnType operator()(ArgsType&&... aArgs) const {
+  INTERCEPTOR_DISABLE_CFGUARD ReturnType operator()(ArgsType&&... aArgs) const {
     return mOrigFunc(std::forward<ArgsType>(aArgs)...);
   }
 
