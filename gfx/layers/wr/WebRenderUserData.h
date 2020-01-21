@@ -14,6 +14,7 @@
 #include "mozilla/layers/AnimationInfo.h"
 #include "mozilla/layers/RenderRootBoundary.h"
 #include "mozilla/dom/RemoteBrowser.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIFrame.h"
 #include "ImageTypes.h"
 
@@ -203,7 +204,7 @@ class WebRenderFallbackData : public WebRenderUserData {
 
   std::vector<RefPtr<gfx::SourceSurface>> mExternalSurfaces;
   RefPtr<BasicLayerManager> mBasicLayerManager;
-  nsAutoPtr<nsDisplayItemGeometry> mGeometry;
+  UniquePtr<nsDisplayItemGeometry> mGeometry;
   nsRect mBounds;
   nsRect mBuildingRect;
   gfx::Size mScale;

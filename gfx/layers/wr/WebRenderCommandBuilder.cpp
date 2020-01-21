@@ -10,6 +10,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Types.h"
@@ -1416,7 +1417,6 @@ static mozilla::gfx::IntRect ScaleToNearestPixelsOffset(
   return rect;
 }
 
-
 RenderRootStateManager* WebRenderCommandBuilder::GetRenderRootStateManager(
     wr::RenderRoot aRenderRoot) {
   return mManager->GetRenderRootStateManager(aRenderRoot);
@@ -2171,11 +2171,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
   auto snappedTrans = LayerIntPoint::Floor(trans);
   LayerPoint residualOffset = trans - snappedTrans;
 
-  nsRegion opaqueRegion =
-    aItem->GetOpaqueRegion(aDisplayListBuilder, &snap);
+  nsRegion opaqueRegion = aItem->GetOpaqueRegion(aDisplayListBuilder, &snap);
   wr::OpacityType opacity = opaqueRegion.Contains(paintBounds)
-    ? wr::OpacityType::Opaque
-    : wr::OpacityType::HasAlphaChannel;
+                                ? wr::OpacityType::Opaque
+                                : wr::OpacityType::HasAlphaChannel;
 
   LayerIntRect dtRect, visibleRect;
   // If we think the item is opaque we round the bounds
@@ -2187,24 +2186,24 @@ WebRenderCommandBuilder::GenerateFallbackData(
   // just hope that we get it right.
   if (opacity == wr::OpacityType::Opaque && snap) {
     dtRect = LayerIntRect::FromUnknownRect(
-      ScaleToNearestPixelsOffset(paintBounds, scale.width, scale.height,
-                                 appUnitsPerDevPixel, residualOffset));
+        ScaleToNearestPixelsOffset(paintBounds, scale.width, scale.height,
+                                   appUnitsPerDevPixel, residualOffset));
 
     visibleRect = LayerIntRect::FromUnknownRect(
-                         ScaleToNearestPixelsOffset(
-                             aItem->GetBuildingRect(), scale.width,
-                             scale.height, appUnitsPerDevPixel, residualOffset))
-                         .Intersect(dtRect);
+                      ScaleToNearestPixelsOffset(
+                          aItem->GetBuildingRect(), scale.width, scale.height,
+                          appUnitsPerDevPixel, residualOffset))
+                      .Intersect(dtRect);
   } else {
     dtRect = LayerIntRect::FromUnknownRect(
-      ScaleToOutsidePixelsOffset(paintBounds, scale.width, scale.height,
-                                 appUnitsPerDevPixel, residualOffset));
+        ScaleToOutsidePixelsOffset(paintBounds, scale.width, scale.height,
+                                   appUnitsPerDevPixel, residualOffset));
 
     visibleRect = LayerIntRect::FromUnknownRect(
-                         ScaleToOutsidePixelsOffset(
-                             aItem->GetBuildingRect(), scale.width,
-                             scale.height, appUnitsPerDevPixel, residualOffset))
-                         .Intersect(dtRect);
+                      ScaleToOutsidePixelsOffset(
+                          aItem->GetBuildingRect(), scale.width, scale.height,
+                          appUnitsPerDevPixel, residualOffset))
+                      .Intersect(dtRect);
   }
 
   auto visibleSize = visibleRect.Size();
@@ -2224,7 +2223,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
   // is needs to be adjusted by the display item bounds top left.
   visibleRect -= dtRect.TopLeft();
 
-  nsDisplayItemGeometry* geometry = fallbackData->mGeometry;
+  nsDisplayItemGeometry* geometry = fallbackData->mGeometry.get();
 
   bool needPaint = true;
 
@@ -2257,15 +2256,14 @@ WebRenderCommandBuilder::GenerateFallbackData(
   }
 
   if (needPaint || !fallbackData->GetImageKey()) {
-    nsAutoPtr<nsDisplayItemGeometry> newGeometry;
-    newGeometry = aItem->AllocateGeometry(aDisplayListBuilder);
-    fallbackData->mGeometry = std::move(newGeometry);
+    fallbackData->mGeometry =
+        WrapUnique(aItem->AllocateGeometry(aDisplayListBuilder));
 
     gfx::SurfaceFormat format = aItem->GetType() == DisplayItemType::TYPE_MASK
                                     ? gfx::SurfaceFormat::A8
-                                    : (opacity == wr::OpacityType::Opaque ?
-                                       gfx::SurfaceFormat::B8G8R8X8 :
-                                       gfx::SurfaceFormat::B8G8R8A8);
+                                    : (opacity == wr::OpacityType::Opaque
+                                           ? gfx::SurfaceFormat::B8G8R8X8
+                                           : gfx::SurfaceFormat::B8G8R8A8);
     if (useBlobImage) {
       MOZ_ASSERT(!opaqueRegion.IsComplex());
 
