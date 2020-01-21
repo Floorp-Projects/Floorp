@@ -173,7 +173,6 @@ class Thread {
   uint8_t* AllocateStorage(size_t aSize);
 
  public:
-
   // These are used by certain redirections to convey information from the
   // SaveOutput hook to the MiddlemanCall hook.
   uintptr_t mRedirectionValue;
@@ -236,9 +235,7 @@ class Thread {
   }
 
   // Get the macOS mach identifier for this thread.
-  uintptr_t GetMachId() const {
-    return mMachId;
-  }
+  uintptr_t GetMachId() const { return mMachId; }
 
   // The actual start routine at the root of all recorded threads, and of all
   // threads when replaying.

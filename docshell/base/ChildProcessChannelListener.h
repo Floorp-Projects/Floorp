@@ -20,9 +20,9 @@ namespace dom {
 class ChildProcessChannelListener final {
   NS_INLINE_DECL_REFCOUNTING(ChildProcessChannelListener)
 
-  using Callback = std::function<void(nsIChannel*,
-                                      nsTArray<net::DocumentChannelRedirect>&&,
-                                      uint32_t, nsDOMNavigationTiming*)>;
+  using Callback =
+      std::function<void(nsIChannel*, nsTArray<net::DocumentChannelRedirect>&&,
+                         uint32_t, nsDOMNavigationTiming*)>;
 
   void RegisterCallback(uint64_t aIdentifier, Callback&& aCallback);
 

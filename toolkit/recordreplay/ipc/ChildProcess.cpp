@@ -27,11 +27,11 @@ ChildProcessInfo::ChildProcessInfo(
     : mRecording(aRecordingProcessData.isSome()) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  Channel::Kind kind =
-    IsRecording() ? Channel::Kind::MiddlemanRecord : Channel::Kind::MiddlemanReplay;
+  Channel::Kind kind = IsRecording() ? Channel::Kind::MiddlemanRecord
+                                     : Channel::Kind::MiddlemanReplay;
   mChannel = new Channel(aId, kind, [=](Message::UniquePtr aMsg) {
-        ReceiveChildMessageOnMainThread(aId, std::move(aMsg));
-      });
+    ReceiveChildMessageOnMainThread(aId, std::move(aMsg));
+  });
 
   LaunchSubprocess(aId, aRecordingProcessData);
 }
@@ -297,7 +297,7 @@ void ChildProcessInfo::MaybeProcessPendingMessageRunnable() {
 // Execute a task that processes a message received from the child. This is
 // called on a channel thread, and the function executes asynchronously on
 // the main thread.
-  /* static */ void ChildProcessInfo::ReceiveChildMessageOnMainThread(
+/* static */ void ChildProcessInfo::ReceiveChildMessageOnMainThread(
     size_t aChildId, Message::UniquePtr aMsg) {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
 

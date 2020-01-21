@@ -2194,7 +2194,6 @@ WorkerPrivate::WorkerPrivate(
     mJSSettings.content.realmOptions.creationOptions().setToSourceEnabled(
         UsesSystemPrincipal());
 
-
     if (mIsSecureContext) {
       mJSSettings.chrome.realmOptions.creationOptions().setSecureContext(true);
       mJSSettings.content.realmOptions.creationOptions().setSecureContext(true);

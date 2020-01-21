@@ -2932,7 +2932,7 @@ void HTMLInputElement::Blur(ErrorResult& aError) {
 }
 
 void HTMLInputElement::Focus(const FocusOptions& aOptions,
-                            CallerType aCallerType, ErrorResult& aError) {
+                             CallerType aCallerType, ErrorResult& aError) {
   if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
       !IsExperimentalMobileType(mType)) {
     if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {

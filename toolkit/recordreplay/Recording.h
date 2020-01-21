@@ -177,7 +177,8 @@ class Stream {
 
   // Note a new thread event for this stream, and make sure it is the same
   // while replaying as it was while recording.
-  void RecordOrReplayThreadEvent(ThreadEvent aEvent, const char* aExtra = nullptr);
+  void RecordOrReplayThreadEvent(ThreadEvent aEvent,
+                                 const char* aExtra = nullptr);
 
   // Replay a thread event without requiring it to be a specific event.
   ThreadEvent ReplayThreadEvent();

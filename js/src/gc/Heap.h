@@ -162,7 +162,6 @@ class FreeSpan {
  * index calculation easier; see TenuredCell::indexInArena() for details.
  */
 class Arena {
-
   /*
    * The first span of free things in the arena. Most of these spans are
    * stored as offsets in free regions of the data array, and most operations

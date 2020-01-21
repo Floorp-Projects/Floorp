@@ -1033,13 +1033,12 @@ class UpdateIndexEntryEvent : public Runnable {
       return NS_OK;
     }
 
-    CacheIndex::UpdateEntry(
-        mHandle->Hash(), mHasFrecency ? &mFrecency : nullptr,
-        mHasHasAltData ? &mHasAltData : nullptr,
-        mHasOnStartTime ? &mOnStartTime : nullptr,
-        mHasOnStopTime ? &mOnStopTime : nullptr,
-        mHasContentType ? &mContentType : nullptr,
-        nullptr);
+    CacheIndex::UpdateEntry(mHandle->Hash(),
+                            mHasFrecency ? &mFrecency : nullptr,
+                            mHasHasAltData ? &mHasAltData : nullptr,
+                            mHasOnStartTime ? &mOnStartTime : nullptr,
+                            mHasOnStopTime ? &mOnStopTime : nullptr,
+                            mHasContentType ? &mContentType : nullptr, nullptr);
     return NS_OK;
   }
 
@@ -3517,10 +3516,12 @@ nsresult CacheFileIOManager::InitIndexEntry(CacheFileHandle* aHandle,
 }
 
 // static
-nsresult CacheFileIOManager::UpdateIndexEntry(
-    CacheFileHandle* aHandle, const uint32_t* aFrecency,
-    const bool* aHasAltData, const uint16_t* aOnStartTime,
-    const uint16_t* aOnStopTime, const uint8_t* aContentType) {
+nsresult CacheFileIOManager::UpdateIndexEntry(CacheFileHandle* aHandle,
+                                              const uint32_t* aFrecency,
+                                              const bool* aHasAltData,
+                                              const uint16_t* aOnStartTime,
+                                              const uint16_t* aOnStopTime,
+                                              const uint8_t* aContentType) {
   LOG(
       ("CacheFileIOManager::UpdateIndexEntry() [handle=%p, frecency=%s, "
        "hasAltData=%s, onStartTime=%s, onStopTime=%s, contentType=%s]",

@@ -3538,7 +3538,8 @@ void AsyncPanZoomController::RecordScrollPayload(const TimeStamp& aTimeStamp) {
   }
 }
 
-void AsyncPanZoomController::StartTouch(const ParentLayerPoint& aPoint, uint32_t aTime) {
+void AsyncPanZoomController::StartTouch(const ParentLayerPoint& aPoint,
+                                        uint32_t aTime) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   mX.StartTouch(aPoint.x, aTime);
   mY.StartTouch(aPoint.y, aTime);
