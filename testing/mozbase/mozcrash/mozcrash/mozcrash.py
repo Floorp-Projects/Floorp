@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function
 
 import glob
+import json
 import os
 import re
 import shutil
@@ -348,6 +349,14 @@ class CrashInfo(object):
                          retcode,
                          errors,
                          extra)
+
+    def _parse_extra_file(self, path):
+        with open(path) as file:
+            try:
+                return json.load(file)
+            except ValueError:
+                self.logger.warning(".extra file does not contain proper json")
+                return {}
 
     def _save_dump_file(self, path, extra):
         if os.path.isfile(self.dump_save_path):
