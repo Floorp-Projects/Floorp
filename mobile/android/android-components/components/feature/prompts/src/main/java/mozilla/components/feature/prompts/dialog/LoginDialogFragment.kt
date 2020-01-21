@@ -116,6 +116,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
                 password = password
             )
         )
+        dismiss()
     }
 
     private fun inflateRootView(container: ViewGroup? = null): View {
