@@ -2,9 +2,9 @@
 
 # WebExtensionBrowserMenu
 
-`class WebExtensionBrowserMenu : `[`BrowserMenu`](../-browser-menu/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenu.kt#L26)
+`class WebExtensionBrowserMenu : `[`BrowserMenu`](../-browser-menu/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/WebExtensionBrowserMenu.kt#L23)
 
-A popup menu for [WebExtensionBrowserAction](../-web-extension-browser-action.md) menu items.
+A [BrowserMenu](../-browser-menu/index.md) capable of displaying browser and page actions from web extensions.
 
 ### Inherited Properties
 

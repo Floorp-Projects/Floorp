@@ -2,7 +2,7 @@
 
 # Completed
 
-`object Completed : `[`MigrationAction`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/state/MigrationAction.kt#L22)
+`object Completed : `[`MigrationAction`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/state/MigrationAction.kt#L23)
 
 A migration was completed.
 

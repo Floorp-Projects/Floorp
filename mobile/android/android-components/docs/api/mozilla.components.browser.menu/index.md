@@ -12,11 +12,5 @@
 | [BrowserMenuItem](-browser-menu-item/index.md) | `interface BrowserMenuItem`<br>Interface to be implemented by menu items to be shown in the browser menu. |
 | [BrowserMenuItemViewHolder](-browser-menu-item-view-holder/index.md) | `class BrowserMenuItemViewHolder : ViewHolder` |
 | [HighlightableMenuItem](-highlightable-menu-item/index.md) | `interface HighlightableMenuItem`<br>Indicates that a menu item shows a highlight. |
-| [WebExtensionBrowserMenu](-web-extension-browser-menu/index.md) | `class WebExtensionBrowserMenu : `[`BrowserMenu`](-browser-menu/index.md)<br>A popup menu for [WebExtensionBrowserAction](-web-extension-browser-action.md) menu items. |
+| [WebExtensionBrowserMenu](-web-extension-browser-menu/index.md) | `class WebExtensionBrowserMenu : `[`BrowserMenu`](-browser-menu/index.md)<br>A [BrowserMenu](-browser-menu/index.md) capable of displaying browser and page actions from web extensions. |
 | [WebExtensionBrowserMenuBuilder](-web-extension-browser-menu-builder/index.md) | `class WebExtensionBrowserMenuBuilder : `[`BrowserMenuBuilder`](-browser-menu-builder/index.md)<br>Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu](-web-extension-browser-menu/index.md) to add web extension browser actions. |
-
-### Type Aliases
-
-| Name | Summary |
-|---|---|
-| [WebExtensionBrowserAction](-web-extension-browser-action.md) | `typealias WebExtensionBrowserAction = `[`BrowserAction`](../mozilla.components.concept.engine.webextension/-browser-action/index.md) |

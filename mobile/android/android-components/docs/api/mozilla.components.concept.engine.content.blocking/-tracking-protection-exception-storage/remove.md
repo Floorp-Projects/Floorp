@@ -8,4 +8,10 @@ Removes a [session](remove.md#mozilla.components.concept.engine.content.blocking
 
 ### Parameters
 
-`session` - The [session](remove.md#mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage$remove(mozilla.components.concept.engine.EngineSession)/session) that will be removed from the exception list.
+`session` - The [session](remove.md#mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage$remove(mozilla.components.concept.engine.EngineSession)/session) that will be removed from the exception list.`abstract fun remove(exception: `[`TrackingProtectionException`](../-tracking-protection-exception/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/content/blocking/TrackingProtectionExceptionStorage.kt#L38)
+
+Removes a [exception](remove.md#mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage$remove(mozilla.components.concept.engine.content.blocking.TrackingProtectionException)/exception) from the exception list.
+
+### Parameters
+
+`exception` - The [TrackingProtectionException](../-tracking-protection-exception/index.md) that will be removed from the exception list.

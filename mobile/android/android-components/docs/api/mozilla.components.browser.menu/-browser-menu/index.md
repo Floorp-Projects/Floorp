@@ -42,4 +42,4 @@ A popup menu composed of BrowserMenuItem objects.
 
 | Name | Summary |
 |---|---|
-| [WebExtensionBrowserMenu](../-web-extension-browser-menu/index.md) | `class WebExtensionBrowserMenu : `[`BrowserMenu`](./index.md)<br>A popup menu for [WebExtensionBrowserAction](../-web-extension-browser-action.md) menu items. |
+| [WebExtensionBrowserMenu](../-web-extension-browser-menu/index.md) | `class WebExtensionBrowserMenu : `[`BrowserMenu`](./index.md)<br>A [BrowserMenu](./index.md) capable of displaying browser and page actions from web extensions. |

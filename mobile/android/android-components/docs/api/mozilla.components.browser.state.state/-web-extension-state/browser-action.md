@@ -2,10 +2,10 @@
 
 # browserAction
 
-`val browserAction: `[`WebExtensionBrowserAction`](../-web-extension-browser-action.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/WebExtensionState.kt#L24)
+`val browserAction: `[`WebExtensionBrowserAction`](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/WebExtensionState.kt#L26)
 
-A list browser action that this web extension has.
+The browser action state of this extension.
 
 ### Property
 
-`browserAction` - A list browser action that this web extension has.
+`browserAction` - The browser action state of this extension.

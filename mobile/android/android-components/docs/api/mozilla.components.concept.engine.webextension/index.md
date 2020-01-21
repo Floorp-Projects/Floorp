@@ -6,8 +6,8 @@
 
 | Name | Summary |
 |---|---|
+| [Action](-action/index.md) | `data class Action`<br>Value type that represents the state of a browser or page action within a [WebExtension](-web-extension/index.md). |
 | [ActionHandler](-action-handler/index.md) | `interface ActionHandler`<br>A handler for web extension (browser and page) actions. |
-| [BrowserAction](-browser-action/index.md) | `data class BrowserAction`<br>Value type that represents the state of a browser action within a [WebExtension](-web-extension/index.md). |
 | [DisabledFlags](-disabled-flags/index.md) | `class DisabledFlags`<br>Flags to check for different reasons why an extension is disabled. |
 | [EnableSource](-enable-source/index.md) | `enum class EnableSource`<br>Provides additional information about why an extension is being enabled or disabled. |
 | [MessageHandler](-message-handler/index.md) | `interface MessageHandler`<br>A handler for all messaging related events, usable for both content and background scripts. |
@@ -15,3 +15,10 @@
 | [Port](-port/index.md) | `abstract class Port`<br>Represents a port for exchanging messages: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/Port |
 | [WebExtension](-web-extension/index.md) | `abstract class WebExtension`<br>Represents a browser extension based on the WebExtension API: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions |
 | [WebExtensionDelegate](-web-extension-delegate/index.md) | `interface WebExtensionDelegate`<br>Notifies applications or other components of engine events related to web extensions e.g. an extension was installed, or an extension wants to open a new tab. |
+
+### Type Aliases
+
+| Name | Summary |
+|---|---|
+| [WebExtensionBrowserAction](-web-extension-browser-action.md) | `typealias WebExtensionBrowserAction = `[`Action`](-action/index.md) |
+| [WebExtensionPageAction](-web-extension-page-action.md) | `typealias WebExtensionPageAction = `[`Action`](-action/index.md) |

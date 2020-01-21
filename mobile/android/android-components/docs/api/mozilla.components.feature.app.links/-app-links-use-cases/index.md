@@ -45,6 +45,7 @@ of security concerns.
 | Name | Summary |
 |---|---|
 | [appLinkRedirect](app-link-redirect.md) | `val appLinkRedirect: `[`GetAppLinkRedirect`](-get-app-link-redirect/index.md) |
+| [appLinkRedirectIncludeInstall](app-link-redirect-include-install.md) | `val appLinkRedirectIncludeInstall: `[`GetAppLinkRedirect`](-get-app-link-redirect/index.md) |
 | [interceptedAppLinkRedirect](intercepted-app-link-redirect.md) | `val interceptedAppLinkRedirect: `[`GetAppLinkRedirect`](-get-app-link-redirect/index.md) |
 | [openAppLink](open-app-link.md) | `val openAppLink: `[`OpenAppLinkRedirect`](-open-app-link-redirect/index.md) |
 

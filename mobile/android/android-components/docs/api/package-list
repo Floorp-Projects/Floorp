@@ -81,6 +81,7 @@ mozilla.components.browser.domains
 mozilla.components.browser.domains.autocomplete
 mozilla.components.browser.engine.gecko
 mozilla.components.browser.engine.gecko.autofill
+mozilla.components.browser.engine.gecko.content.blocking
 mozilla.components.browser.engine.gecko.fetch
 mozilla.components.browser.engine.gecko.glean
 mozilla.components.browser.engine.gecko.integration
@@ -106,6 +107,7 @@ mozilla.components.browser.menu
 mozilla.components.browser.menu.ext
 mozilla.components.browser.menu.item
 mozilla.components.browser.menu.view
+mozilla.components.browser.menu2
 mozilla.components.browser.search
 mozilla.components.browser.search.provider
 mozilla.components.browser.search.provider.filter

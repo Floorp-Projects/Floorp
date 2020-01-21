@@ -2,7 +2,7 @@
 
 # AddExceptionUseCase
 
-`class AddExceptionUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L28)
+`class AddExceptionUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L29)
 
 Use case for adding a new [Session](../../../mozilla.components.browser.session/-session/index.md) to the exception list.
 

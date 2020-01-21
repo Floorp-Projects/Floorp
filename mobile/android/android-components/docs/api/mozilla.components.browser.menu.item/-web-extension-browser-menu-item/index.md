@@ -8,7 +8,7 @@ A browser menu item displaying web extension.
 
 ### Parameters
 
-`browserAction` - Associated [WebExtensionBrowserAction](../../mozilla.components.browser.menu/-web-extension-browser-action.md)
+`browserAction` - Associated [WebExtensionBrowserAction](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)
 
 `listener` - Callback to be invoked when this menu item is clicked.
 
@@ -16,7 +16,7 @@ A browser menu item displaying web extension.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebExtensionBrowserMenuItem(browserAction: `[`WebExtensionBrowserAction`](../../mozilla.components.browser.menu/-web-extension-browser-action.md)`, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>A browser menu item displaying web extension. |
+| [&lt;init&gt;](-init-.md) | `WebExtensionBrowserMenuItem(browserAction: `[`WebExtensionBrowserAction`](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>A browser menu item displaying web extension. |
 
 ### Properties
 

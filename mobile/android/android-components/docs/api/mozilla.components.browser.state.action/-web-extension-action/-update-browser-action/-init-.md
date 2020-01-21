@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`UpdateBrowserAction(extensionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, browserAction: `[`WebExtensionBrowserAction`](../../-web-extension-browser-action.md)`)`
+`UpdateBrowserAction(extensionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, browserAction: `[`WebExtensionBrowserAction`](../../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`)`
 
 Updates a browser action of a given [extensionId](extension-id.md).
 

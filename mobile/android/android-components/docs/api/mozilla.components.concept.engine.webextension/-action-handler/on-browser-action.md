@@ -2,7 +2,7 @@
 
 # onBrowserAction
 
-`open fun onBrowserAction(extension: `[`WebExtension`](../-web-extension/index.md)`, session: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?, action: `[`BrowserAction`](../-browser-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L154)
+`open fun onBrowserAction(extension: `[`WebExtension`](../-web-extension/index.md)`, session: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?, action: `[`Action`](../-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L154)
 
 Invoked when a browser action is defined or updated.
 
@@ -13,4 +13,4 @@ Invoked when a browser action is defined or updated.
 `session` - the [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) if this action is to be updated for a
 specific session, or null if this is to set a new default value.
 
-`action` - the [BrowserAction](../-browser-action/index.md)
+`action` - the browser action as [Action](../-action/index.md).

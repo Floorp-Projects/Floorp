@@ -2,7 +2,7 @@
 
 # ERROR_SAFEBROWSING_MALWARE_URI
 
-`ERROR_SAFEBROWSING_MALWARE_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L167)
+`ERROR_SAFEBROWSING_MALWARE_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L168)
 
 ### Inherited Properties
 

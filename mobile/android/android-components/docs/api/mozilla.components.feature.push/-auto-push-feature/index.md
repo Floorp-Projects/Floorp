@@ -2,7 +2,7 @@
 
 # AutoPushFeature
 
-`class AutoPushFeature : `[`PushProcessor`](../../mozilla.components.concept.push/-push-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L69)
+`class AutoPushFeature : `[`PushProcessor`](../../mozilla.components.concept.push/-push-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L70)
 
 A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed
 in the Application's onCreate. It receives messages from a service and forwards them
