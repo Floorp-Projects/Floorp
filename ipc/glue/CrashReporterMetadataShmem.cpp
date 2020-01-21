@@ -207,6 +207,10 @@ void CrashReporterMetadataShmem::ReadAppNotes(const Shmem& aShmem,
           return;
         }
 
+        if (key >= Annotation::Count) {
+          return;
+        }
+
         aNotes[key] = value;
         break;
       }
