@@ -18,6 +18,8 @@ const { CommonUtils } = ChromeUtils.import(
 
 const ADDON_ID = "doh-rollout@mozilla.org";
 
+const EXAMPLE_URL = "https://example.com/";
+
 const prefs = {
   DOH_ENABLED_PREF: "doh-rollout.enabled",
   TRR_MODE_PREF: "network.trr.mode",
