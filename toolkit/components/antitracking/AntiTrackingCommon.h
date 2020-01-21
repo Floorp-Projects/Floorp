@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticPrefs_privacy.h"
 
 #define USER_INTERACTION_PERM NS_LITERAL_CSTRING("storageAccessAPI")
 
@@ -131,7 +132,9 @@ class AntiTrackingCommon final {
   static RefPtr<FirstPartyStorageAccessGrantPromise>
   SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
       nsIPrincipal* aPrincipal, nsIPrincipal* aTrackingPrinciapl,
-      const nsCString& aTrackingOrigin, int aAllowMode);
+      const nsCString& aTrackingOrigin, int aAllowMode,
+      uint64_t aExpirationTime =
+          StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
   // Check whether a top window principal is on the content blocking allow list.
   static nsresult IsOnContentBlockingAllowList(nsIPrincipal* aTopWinPrincipal,
@@ -183,6 +186,9 @@ class AntiTrackingCommon final {
       nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
       nsIURI* aURI,
       const Maybe<StorageAccessGrantedReason>& aReason = Nothing());
+
+  static void RedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
+                                nsIChannel* aNewChannel, nsIURI* aNewURI);
 };
 
 }  // namespace mozilla
