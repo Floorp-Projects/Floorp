@@ -758,7 +758,7 @@ bool xpc::ExtraWarningsForSystemJS() { return false; }
 static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 static mozilla::Atomic<bool> sStreamsEnabled(false);
 static mozilla::Atomic<bool> sFieldsEnabled(false);
-static mozilla::Atomic<bool> sParserDeferAllocationEnabled(false);
+
 static mozilla::Atomic<bool> sAwaitFixEnabled(false);
 static mozilla::Atomic<bool> sPropertyErrorMessageFixEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsEnabled(false);
@@ -776,7 +776,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setAwaitFixEnabled(sAwaitFixEnabled)
       .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
       .setWeakRefsEnabled(sWeakRefsEnabled);
-  options.behaviors().setDeferredParserAlloc(sParserDeferAllocationEnabled);
 }
 
 static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
@@ -937,8 +936,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sSharedMemoryEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
-  sParserDeferAllocationEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "parser_defer_allocation");
   sFieldsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.fields");
   sAwaitFixEnabled =

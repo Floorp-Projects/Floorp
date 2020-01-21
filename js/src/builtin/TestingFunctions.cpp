@@ -4518,16 +4518,6 @@ static bool SetLazyParsingDisabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool SetDeferredParserAlloc(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  bool enable = !args.hasDefined(0) || ToBoolean(args[0]);
-  cx->realm()->behaviors().setDeferredParserAlloc(enable);
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool SetDiscardSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6897,10 +6887,6 @@ gc::ZealModeHelpText),
 "setLazyParsingDisabled(bool)",
 "  Explicitly disable lazy parsing in the current compartment.  The default is that lazy "
 "  parsing is not explicitly disabled."),
-
-    JS_FN_HELP("setDeferredParserAlloc", SetDeferredParserAlloc, 1, 0,
-"setDeferredParserAlloc(bool)",
-"  Enable or disable the parser's deferred alloc support"),
 
     JS_FN_HELP("setDiscardSource", SetDiscardSource, 1, 0,
 "setDiscardSource(bool)",

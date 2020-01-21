@@ -26,17 +26,9 @@ namespace frontend {
 // as well as controls the lifetime of parse nodes and other data
 // by controling the mark and reset of the LifoAlloc.
 struct MOZ_RAII ParseInfo {
-  // ParseInfo's mode can be eager or deferred:
-  //
-  // - In Eager mode, allocation happens right away and the Function Tree is
-  //   not constructed.
-  // - In Deferred mode, allocation is deferred as late as possible.
-  enum Mode { Eager, Deferred };
-
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
-  Mode mode;
   // Hold onto the RegExpCreationData and BigIntCreationDatas that are
   // allocated during parse to ensure correct destruction.
   Vector<RegExpCreationData> regExpData;
@@ -60,9 +52,6 @@ struct MOZ_RAII ParseInfo {
       : usedNames(cx),
         allocScope(alloc),
         treeHolder(cx),
-        mode(cx->realm()->behaviors().deferredParserAlloc()
-                 ? ParseInfo::Mode::Deferred
-                 : ParseInfo::Mode::Eager),
         regExpData(cx),
         bigIntData(cx),
         scopeCreationData(cx),
@@ -79,9 +68,6 @@ struct MOZ_RAII ParseInfo {
   ParseInfo(ParseInfo&&) = delete;
   ParseInfo& operator=(const ParseInfo&) = delete;
   ParseInfo& operator=(ParseInfo&&) = delete;
-
-  bool isEager() { return mode == Mode::Eager; }
-  bool isDeferred() { return mode == Mode::Deferred; }
 };
 
 }  // namespace frontend

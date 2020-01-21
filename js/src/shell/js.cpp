@@ -3716,7 +3716,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setWeakRefsEnabled(enableWeakRefs)
       .setToSourceEnabled(enableToSource)
       .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix);
-  options.behaviors().setDeferredParserAlloc(enableDeferredMode);
 }
 
 static MOZ_MUST_USE bool CheckRealmOptions(JSContext* cx,
@@ -6329,13 +6328,6 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (v.isBoolean()) {
       principals.reset(&ShellPrincipals::fullyTrusted);
-    }
-
-    if (!JS_GetProperty(cx, opts, "deferredParserAlloc", &v)) {
-      return false;
-    }
-    if (v.isBoolean()) {
-      behaviors.setDeferredParserAlloc(v.toBoolean());
     }
 
     if (!JS_GetProperty(cx, opts, "principal", &v)) {
