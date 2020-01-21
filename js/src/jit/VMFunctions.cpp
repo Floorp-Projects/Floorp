@@ -681,21 +681,42 @@ bool GetIntrinsicValue(JSContext* cx, HandlePropertyName name,
   return true;
 }
 
-bool CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget,
-                MutableHandleValue rval) {
+bool CreateThisFromIC(JSContext* cx, HandleObject callee,
+                      HandleObject newTarget, MutableHandleValue rval) {
+  HandleFunction fun = callee.as<JSFunction>();
+  MOZ_ASSERT(fun->isInterpreted());
+  MOZ_ASSERT(fun->isConstructor());
+
+  // CreateThis expects rval to be this magic value.
   rval.set(MagicValue(JS_IS_CONSTRUCTING));
 
-  if (callee->is<JSFunction>()) {
-    RootedFunction fun(cx, &callee->as<JSFunction>());
-    if (fun->isInterpreted() && fun->isConstructor()) {
-      if (!js::CreateThis(cx, fun, newTarget, GenericObject, rval)) {
-        return false;
-      }
-      MOZ_ASSERT_IF(rval.isObject(),
-                    fun->realm() == rval.toObject().nonCCWRealm());
-    }
+  if (!js::CreateThis(cx, fun, newTarget, GenericObject, rval)) {
+    return false;
   }
 
+  MOZ_ASSERT_IF(rval.isObject(), fun->realm() == rval.toObject().nonCCWRealm());
+  return true;
+}
+
+bool CreateThisFromIon(JSContext* cx, HandleObject callee,
+                       HandleObject newTarget, MutableHandleValue rval) {
+  // Return JS_IS_CONSTRUCTING for cases not supported by the inline call path.
+  rval.set(MagicValue(JS_IS_CONSTRUCTING));
+
+  if (!callee->is<JSFunction>()) {
+    return true;
+  }
+
+  HandleFunction fun = callee.as<JSFunction>();
+  if (!fun->isInterpreted() || !fun->isConstructor()) {
+    return true;
+  }
+
+  if (!js::CreateThis(cx, fun, newTarget, GenericObject, rval)) {
+    return false;
+  }
+
+  MOZ_ASSERT_IF(rval.isObject(), fun->realm() == rval.toObject().nonCCWRealm());
   return true;
 }
 

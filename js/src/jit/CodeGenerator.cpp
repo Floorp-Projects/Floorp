@@ -6968,7 +6968,7 @@ void CodeGenerator::visitCreateThis(LCreateThis* lir) {
 
   using Fn = bool (*)(JSContext * cx, HandleObject callee,
                       HandleObject newTarget, MutableHandleValue rval);
-  callVM<Fn, jit::CreateThis>(lir);
+  callVM<Fn, jit::CreateThisFromIon>(lir);
 }
 
 void CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir) {
