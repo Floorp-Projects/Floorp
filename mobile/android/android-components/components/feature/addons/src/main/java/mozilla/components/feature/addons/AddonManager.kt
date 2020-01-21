@@ -100,7 +100,7 @@ class AddonManager(
      *
      * @param addon the addon to uninstall.
      * @param onSuccess (optional) callback invoked if the addon was uninstalled successfully.
-     * @param onError (optional) callback invoked if there was an error installing the addon.
+     * @param onError (optional) callback invoked if there was an error uninstalling the addon.
      */
     fun uninstallAddon(
         addon: Addon,
