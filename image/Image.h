@@ -105,7 +105,8 @@ struct SurfaceMemoryCounter {
 
 struct ImageMemoryCounter {
   ImageMemoryCounter(imgRequest* aRequest, SizeOfState& aState, bool aIsUsed);
-  ImageMemoryCounter(Image* aImage, SizeOfState& aState, bool aIsUsed);
+  ImageMemoryCounter(imgRequest* aRequest, Image* aImage, SizeOfState& aState,
+                     bool aIsUsed);
 
   nsCString& URI() { return mURI; }
   const nsCString& URI() const { return mURI; }
@@ -116,6 +117,7 @@ struct ImageMemoryCounter {
   uint16_t Type() const { return mType; }
   bool IsUsed() const { return mIsUsed; }
   bool HasError() const { return mHasError; }
+  bool IsValidating() const { return mValidating; }
 
   bool IsNotable() const {
     // Errors or requests without images are always notable.
@@ -152,6 +154,7 @@ struct ImageMemoryCounter {
   uint16_t mType;
   const bool mIsUsed;
   bool mHasError;
+  bool mValidating;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
