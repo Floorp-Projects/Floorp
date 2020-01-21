@@ -33,9 +33,16 @@ const chromeTestPaths = [
   "**/test*/chrome/",
 ];
 
-const ignorePatterns =
-  fs.readFileSync("tools/rewriting/ThirdPartyPaths.txt")
-    .toString("utf-8").split("\n");
+const ignorePatterns = [
+  ...fs.readFileSync("tools/rewriting/ThirdPartyPaths.txt")
+    .toString("utf-8")
+    .split("\n"),
+  ...fs.readFileSync("devtools/client/debugger/.eslintignore")
+    .toString("utf-8")
+    .split("\n")
+    .filter(p => p && !p.startsWith("#"))
+    .map(p => `devtools/client/debugger/${p}`),
+]
 
 module.exports = {
   ignorePatterns,
