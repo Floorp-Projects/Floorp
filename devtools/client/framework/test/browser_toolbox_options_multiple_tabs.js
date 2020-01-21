@@ -85,7 +85,7 @@ async function toggleTool({ doc, panelWin, checkbox, tab }, toolId) {
 
 async function checkUnregistered(toolId) {
   ok(
-    !getToolboxTab(toolId),
+    !tab1.doc.getElementById("toolbox-tab-" + toolId),
     `Tab for unregistered tool ${toolId} is not present in first toolbox`
   );
   ok(
@@ -93,7 +93,7 @@ async function checkUnregistered(toolId) {
     `Checkbox for unregistered tool ${toolId} is not checked in first toolbox`
   );
   ok(
-    !getToolboxTab(toolId),
+    !tab2.doc.getElementById("toolbox-tab-" + toolId),
     `Tab for unregistered tool ${toolId} is not present in second toolbox`
   );
   ok(
@@ -104,7 +104,7 @@ async function checkUnregistered(toolId) {
 
 function checkRegistered(toolId) {
   ok(
-    getToolboxTab(toolId),
+    tab1.doc.getElementById("toolbox-tab-" + toolId),
     `Tab for registered tool ${toolId} is present in first toolbox`
   );
   ok(
@@ -112,20 +112,12 @@ function checkRegistered(toolId) {
     `Checkbox for registered tool ${toolId} is checked in first toolbox`
   );
   ok(
-    getToolboxTab(toolId),
+    tab2.doc.getElementById("toolbox-tab-" + toolId),
     `Tab for registered tool ${toolId} is present in second toolbox`
   );
   ok(
     tab2.checkbox.checked,
     `Checkbox for registered tool ${toolId} is checked in second toolbox`
-  );
-}
-
-function getToolboxTab(toolId) {
-  // get toolbox either from the tabs, or from the overflow menu
-  return (
-    tab1.doc.getElementById(`toolbox-tab-${toolId}`) ||
-    tab1.doc.getElementById(`tools-chevron-menupopup-${toolId}`)
   );
 }
 

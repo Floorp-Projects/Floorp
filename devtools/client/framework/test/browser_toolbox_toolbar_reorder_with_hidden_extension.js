@@ -23,7 +23,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
     ],
     dragTarget: "webconsole",
     dropTarget: "inspector",
@@ -38,7 +37,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
     ],
   },
   {
@@ -54,7 +52,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
     ],
     dragTarget: "inspector",
     dropTarget: "webconsole",
@@ -69,7 +66,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
     ],
   },
   {
@@ -86,7 +82,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
     ],
     dragTarget: "webconsole",
     dropTarget: "inspector",
@@ -101,7 +96,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
     ],
   },
   {
@@ -117,11 +111,10 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
       EXTENSION,
     ],
     dragTarget: "webconsole",
-    dropTarget: "application",
+    dropTarget: "accessibility",
     expectedOrder: [
       "inspector",
       "jsdebugger",
@@ -131,7 +124,6 @@ const TEST_DATA = [
       "netmonitor",
       "storage",
       "accessibility",
-      "application",
       EXTENSION,
       "webconsole",
     ],
@@ -142,8 +134,6 @@ add_task(async function() {
   // Temporarily disable the panel added in Bug 1594885.
   // Should be cleaned up when the panel is properly implemented.
   await pushPref("devtools.whatsnew.enabled", false);
-  // Enable the Application panel (atm it's only available on Nightly)
-  await pushPref("devtools.application.enabled", true);
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("devtools.toolbox.tabsOrder");
@@ -210,7 +200,6 @@ add_task(async function() {
     "netmonitor",
     "storage",
     "accessibility",
-    "application",
   ];
   const dragTarget = "webconsole";
   const dropTarget = "inspector";
@@ -224,7 +213,6 @@ add_task(async function() {
     "netmonitor",
     "storage",
     "accessibility",
-    "application",
   ];
   prepareTestWithHiddenExtension(toolbox, startingOrder);
   await extension.unload();
