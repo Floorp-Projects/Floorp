@@ -106,29 +106,7 @@ devtools/shared/css/generated/properties-db.js
 devtools/client/webconsole/test/node/fixtures/stubs/*.js
 !devtools/client/webconsole/test/node/fixtures/stubs/index.js
 
-# Ignore devtools third-party libs
-devtools/shared/jsbeautify/
-devtools/shared/acorn/
-devtools/shared/node-properties/
-devtools/shared/pretty-fast/
-devtools/shared/sourcemap/
-devtools/shared/sprintfjs/
-devtools/shared/storage/vendor/*
-devtools/shared/qrcode/decoder/
-devtools/shared/qrcode/encoder/
-devtools/client/inspector/markup/test/lib_*
-devtools/client/jsonview/lib/require.js
-devtools/client/shared/demangle.js
-devtools/client/shared/source-map/
-devtools/client/shared/vendor/
-devtools/client/shared/sourceeditor/codemirror/*.js
-devtools/client/shared/sourceeditor/codemirror/**/*.js
-devtools/client/shared/sourceeditor/test/cm_mode_ruby.js
-devtools/client/shared/sourceeditor/test/codemirror/
-devtools/server/actors/utils/automation-timeline.js
-
 # Ignore devtools files testing sourcemaps / code style
-devtools/client/debugger/test/mochitest/code_*.js
 devtools/client/framework/test/code_*
 devtools/client/inspector/markup/test/events_bundle.js
 devtools/client/netmonitor/test/xhr_bundle.js
