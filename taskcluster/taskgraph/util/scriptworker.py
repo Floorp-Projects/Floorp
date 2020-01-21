@@ -357,10 +357,10 @@ def get_release_config(config):
         if release_config['partial_versions'] == "{}":
             del release_config['partial_versions']
 
-    release_config['version'] = str(config.params['version'])
-    release_config['appVersion'] = str(config.params['app_version'])
+    release_config['version'] = config.params['version']
+    release_config['appVersion'] = config.params['app_version']
 
-    release_config['next_version'] = str(config.params['next_version'])
+    release_config['next_version'] = config.params['next_version']
     release_config['build_number'] = config.params['build_number']
     return release_config
 

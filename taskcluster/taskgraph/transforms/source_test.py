@@ -10,6 +10,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import os
+import six
+from six import text_type
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.job import job_description_schema
@@ -36,7 +38,7 @@ source_test_description_schema = Schema({
     # The platform on which this task runs.  This will be used to set up attributes
     # (for try selection) and treeherder metadata (for display).  If given as a list,
     # the job will be "split" into multiple tasks, one with each platform.
-    Required('platform'): Any(basestring, [basestring]),
+    Required('platform'): Any(text_type, [text_type]),
 
     # Whether the job requires a build artifact or not. If True, the task will
     # depend on a build task and the installer url will be saved to the
@@ -58,8 +60,8 @@ source_test_description_schema = Schema({
 
     # A list of artifacts to install from 'fetch' tasks.
     Optional('fetches'): {
-        basestring: optionally_keyed_by(
-            'platform', job_description_schema['fetches'][basestring]),
+        text_type: optionally_keyed_by(
+            'platform', job_description_schema['fetches'][text_type]),
     },
 })
 
@@ -88,7 +90,7 @@ def set_job_name(config, jobs):
 @transforms.add
 def expand_platforms(config, jobs):
     for job in jobs:
-        if isinstance(job['platform'], basestring):
+        if isinstance(job['platform'], text_type):
             yield job
             continue
 
@@ -235,7 +237,7 @@ def add_decision_task_id_to_env(config, jobs):
             continue
 
         env = job['worker'].setdefault('env', {})
-        env['DECISION_TASK_ID'] = os.environ.get('TASK_ID', '')
+        env['DECISION_TASK_ID'] = six.ensure_text(os.environ.get('TASK_ID', ''))
         yield job
 
 

@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import shutil
+import six
 
 from collections import OrderedDict
 
@@ -283,7 +284,7 @@ class PackageFrontend(MachCommandBase):
             from taskgraph.parameters import Parameters
             from taskgraph.generator import load_tasks_for_kind
             params = Parameters(
-                level=os.environ.get('MOZ_SCM_LEVEL', '3'),
+                level=six.ensure_text(os.environ.get('MOZ_SCM_LEVEL', '3')),
                 strict=False,
             )
 

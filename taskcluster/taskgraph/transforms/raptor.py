@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from copy import deepcopy
+from six import text_type
 
 from voluptuous import (
     Any,
@@ -25,17 +26,17 @@ raptor_description_schema = Schema({
     # Raptor specific configs.
     Optional('apps'): optionally_keyed_by(
         'test-platform',
-        [basestring]
+        [text_type]
     ),
-    Optional('raptor-test'): basestring,
-    Optional('raptor-subtests'): [basestring],
+    Optional('raptor-test'): text_type,
+    Optional('raptor-subtests'): [text_type],
     Optional('activity'): optionally_keyed_by(
         'app',
-        basestring
+        text_type
     ),
     Optional('binary-path'): optionally_keyed_by(
         'app',
-        basestring
+        text_type
     ),
     Optional('pageload'): optionally_keyed_by(
         'test-platform', 'app',

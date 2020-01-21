@@ -25,9 +25,8 @@ def add_command(config, tasks):
     for task in tasks:
         config_task = config_tasks[task['name']]
         total_chunks = task["extra"]["chunks"]
-        task['worker'].setdefault('env', {}).update(
-            CHANNEL=config_task.task['extra']['channel'],
-        )
+        task['worker'].setdefault('env', {})['CHANNEL'] = (
+            config_task.task['extra']['channel'])
         task.setdefault('fetches', {})[config_task.label] = [
             "update-verify.cfg",
         ]
