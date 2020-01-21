@@ -4261,9 +4261,6 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   if (callInfo.constructing()) {
     MDefinition* thisDefn =
         createThis(target, callInfo.fun(), callInfo.getNewTarget());
-    if (!thisDefn) {
-      return abort(AbortReason::Alloc);
-    }
     callInfo.setThis(thisDefn);
   }
 
@@ -5681,6 +5678,13 @@ MDefinition* IonBuilder::createThisScriptedBaseline(MDefinition* callee) {
 
 MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
                                     MDefinition* newTarget) {
+  // getPolyCallTargets ensures |target| is a constructor.
+  MOZ_ASSERT_IF(target, target->isConstructor());
+
+  // Only asm.js natives can be constructors and asm.js natives don't have a
+  // JIT entry.
+  MOZ_ASSERT_IF(target, !target->isNativeWithJitEntry());
+
   // Create |this| for unknown target.
   if (!target) {
     if (MDefinition* createThis = createThisScriptedBaseline(callee)) {
@@ -5694,14 +5698,6 @@ MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
 
   // Native constructors build the new Object themselves.
   if (target->isNative()) {
-    if (!target->isConstructor()) {
-      return nullptr;
-    }
-
-    // Only asm.js natives can be constructors and asm.js natives don't have
-    // jit entries.
-    MOZ_ASSERT(!target->isNativeWithJitEntry());
-
     MConstant* magic = MConstant::New(alloc(), MagicValue(JS_IS_CONSTRUCTING));
     current->add(magic);
     return magic;
@@ -6443,11 +6439,6 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
   if (callInfo.constructing()) {
     MDefinition* create =
         createThis(target, callInfo.fun(), callInfo.getNewTarget());
-    if (!create) {
-      return abort(AbortReason::Disable,
-                   "Failure inlining constructor for call.");
-    }
-
     callInfo.thisArg()->setImplicitlyUsedUnchecked();
     callInfo.setThis(create);
   }
