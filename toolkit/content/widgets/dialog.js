@@ -450,7 +450,6 @@
       }
 
       // ensure that hitting enter triggers the default button command
-      // eslint-disable-next-line no-self-assign
       this.defaultButton = this.defaultButton;
 
       // if there is a special button configuration, use it
