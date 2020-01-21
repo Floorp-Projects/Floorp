@@ -134,7 +134,7 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
   // Hide urlbar zoom button if zoom is at the default zoom level,
   // or the customizable control is in the toolbar
 
-  let defaultZoom = (await ZoomUI.getGlobalValue()) * 100;
+  let defaultZoom = Math.round((await ZoomUI.getGlobalValue()) * 100);
 
   if (!win.gBrowser || win.gBrowser.selectedBrowser != aBrowser) {
     // Because the CPS call is async, at this point the selected browser
