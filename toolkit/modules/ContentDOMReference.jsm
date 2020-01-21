@@ -85,8 +85,7 @@ var ContentDOMReference = {
       );
     }
 
-    let browsingContext = element.ownerGlobal.getWindowGlobalChild()
-      .browsingContext;
+    let browsingContext = BrowsingContext.getFromWindow(element.ownerGlobal);
     let mappings = gRegistry.get(browsingContext);
     if (!mappings) {
       mappings = {
