@@ -3,6 +3,8 @@ import os
 import mozunit
 import pytest
 
+# need this so raptor imports work both from /raptor and via mach
+here = os.path.abspath(os.path.dirname(__file__))
 from raptor import cmdline
 
 
@@ -12,9 +14,11 @@ def test_pageload_subtests(capsys, monkeypatch, tmpdir):
     # respect the --test path that would be much better.
     def mock(path):
         return str(tmpdir)
+
     monkeypatch.setattr(os.path, "dirname", mock)
     manifest = tmpdir.join("raptor.ini")
-    manifest.write("""
+    manifest.write(
+        """
 [DEFAULT]
 type = pageload
 apps = firefox
@@ -23,11 +27,14 @@ apps = firefox
 measure = foo, bar
 
 [raptor-subtest-2]
-""")
+"""
+    )
     with pytest.raises(SystemExit):
         cmdline.parse_args(["--print-tests"])
     captured = capsys.readouterr()
-    assert captured.out == """
+    assert (
+        captured.out
+        == """
 Raptor Tests Available for Firefox Desktop
 ==========================================
 
@@ -39,7 +46,8 @@ raptor
 
 Done.
 """
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()
