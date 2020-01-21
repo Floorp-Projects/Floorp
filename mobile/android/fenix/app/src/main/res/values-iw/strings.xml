@@ -805,6 +805,8 @@
     <string name="preferences_passwords_logins_and_passwords">כניסות וססמאות</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">שמירת כניסות וססמאות</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">מילוי אוטומטי</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">סנכרון כניסות</string>
     <!-- Syncing saved logins in Fenix is on -->
