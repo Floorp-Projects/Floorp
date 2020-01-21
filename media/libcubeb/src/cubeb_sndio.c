@@ -128,7 +128,7 @@ s16_to_float(void *ptr, long nsamp)
 static const char *
 sndio_get_device()
 {
-#ifdef __linux__
+#ifndef __OpenBSD__
   /*
    * On other platforms default to sndio devices,
    * so cubebs other backends can be used instead.
