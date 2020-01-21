@@ -671,16 +671,21 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
   }
 
   /**
-   * This searches the target process's export address table for a given name
-   * instead of simply calling ::GetProcAddress because the local export table
-   * might be modified and the value of a table entry might be different from
-   * the target process.  If we fail to get an entry for some reason, we fall
-   * back to using ::GetProcAddress.
+   * This searches the current process's export address table for a given name,
+   * but retrieves an RVA from a corresponding table entry in the target process
+   * because the table entry in the current process might have been replaced.
    */
   FARPROC GetProcAddress(HMODULE aModule, const char* aName) const {
     nt::PEHeaders moduleHeaders(aModule);
-    const DWORD* funcEntry = moduleHeaders.FindExportAddressTableEntry(aName);
-    if (!funcEntry) {
+    auto funcEntry = moduleHeaders.FindExportAddressTableEntry(aName);
+    if (funcEntry.isErr()) {
+      // FindExportAddressTableEntry fails if |aName| is invalid or the entire
+      // export table has been modified.  In the former case, ::GetProcAddress
+      // will return nullptr.  In the latter case, funcEntry may point to an
+      // invalid address in the target process.  We bail out in both cases.
+      return nullptr;
+    }
+    if (!funcEntry.inspect()) {
       // FindExportAddressTableEntry returns nullptr if a matched entry is
       // forwarded to another module.  Because a forwarder entry needs to point
       // a null-terminated string within the export section, it's less likely to
@@ -690,8 +695,9 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
 
     SIZE_T numBytes = 0;
     DWORD rvaTargetFunction = 0;
-    BOOL ok = ::ReadProcessMemory(mProcess, funcEntry, &rvaTargetFunction,
-                                  sizeof(rvaTargetFunction), &numBytes);
+    BOOL ok =
+        ::ReadProcessMemory(mProcess, funcEntry.inspect(), &rvaTargetFunction,
+                            sizeof(rvaTargetFunction), &numBytes);
     if (!ok || numBytes != sizeof(rvaTargetFunction)) {
       // If we fail to read the table entry in the target process for unexpected
       // reason, we fall back to ::GetProcAddress.

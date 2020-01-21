@@ -531,13 +531,16 @@ class MOZ_RAII PEHeaders final {
    * entry of the Export Address Table i.e. a pointer to an RVA of a matched
    * function.  If the entry is forwarded, this function returns nullptr.
    */
-  const DWORD* FindExportAddressTableEntry(const char* aFunctionNameASCII) {
+  LauncherResult<const DWORD*> FindExportAddressTableEntry(
+      const char* aFunctionNameASCII) {
     struct NameTableComparator {
       NameTableComparator(PEHeaders& aPEHeader, const char* aTarget)
           : mPEHeader(aPEHeader), mTarget(aTarget) {}
 
       int operator()(DWORD aOther) const {
-        return StrcmpASCII(mTarget, mPEHeader.RVAToPtr<const char*>(aOther));
+        // Use RVAToPtrUnchecked because StrcmpASCII does not accept nullptr.
+        return StrcmpASCII(mTarget,
+                           mPEHeader.RVAToPtrUnchecked<const char*>(aOther));
       }
 
       PEHeaders& mPEHeader;
@@ -548,7 +551,7 @@ class MOZ_RAII PEHeaders final {
     const auto exportDir = GetImageDirectoryEntry<PIMAGE_EXPORT_DIRECTORY>(
         IMAGE_DIRECTORY_ENTRY_EXPORT, &rvaDirStart, &rvaDirEnd);
     if (!exportDir) {
-      return nullptr;
+      return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
     }
 
     const auto exportAddressTable =
@@ -558,18 +561,24 @@ class MOZ_RAII PEHeaders final {
     const auto exportOrdinalTable =
         RVAToPtr<const WORD*>(exportDir->AddressOfNameOrdinals);
 
+    // If any of these tables are modified and located outside the mapped image,
+    // we don't search and bail out.
+    if (!exportAddressTable || !exportNameTable || !exportOrdinalTable) {
+      return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+    }
+
     const NameTableComparator comp(*this, aFunctionNameASCII);
 
     size_t match;
     if (!BinarySearchIf(exportNameTable, 0, exportDir->NumberOfNames, comp,
                         &match)) {
-      return nullptr;
+      return LAUNCHER_ERROR_FROM_WIN32(ERROR_PROC_NOT_FOUND);
     }
 
     WORD index = exportOrdinalTable[match];
 
     if (index >= exportDir->NumberOfFunctions) {
-      return nullptr;
+      return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
     }
 
     DWORD rvaFunction = exportAddressTable[index];
