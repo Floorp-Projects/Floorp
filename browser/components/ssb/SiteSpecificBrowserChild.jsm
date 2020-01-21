@@ -59,9 +59,7 @@ class SiteSpecificBrowserChild extends JSWindowActorChild {
 }
 
 function getActor(docShell) {
-  return docShell.domWindow
-    .getWindowGlobalChild()
-    .getActor("SiteSpecificBrowser");
+  return docShell.domWindow.windowGlobalChild.getActor("SiteSpecificBrowser");
 }
 
 // JS actors can't generally be XPCOM objects so we must use a separate class.
