@@ -117,9 +117,6 @@ nsresult UnregisterAppMemory(void* ptr);
 // Include heap regions of the crash context.
 void SetIncludeContextHeap(bool aValue);
 
-void GetAnnotation(uint32_t childPid, Annotation annotation,
-                   nsACString& outStr);
-
 // Functions for working with minidumps and .extras
 typedef mozilla::EnumeratedArray<Annotation, Annotation::Count, nsCString>
     AnnotationTable;
