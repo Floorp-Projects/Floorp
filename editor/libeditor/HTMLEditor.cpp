@@ -2605,9 +2605,20 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
     // - <p><b>[def</b>}<br></p>
     // Note that we don't need special handling for <a href> because double
     // clicking it selects the element and we use the first path to handle it.
-    if (lastElementInRange->GetNextSibling() &&
-        lastElementInRange->GetNextSibling()->IsHTMLElement(nsGkAtoms::br)) {
-      return nullptr;
+    // Additionally, we have this case too:
+    // - <p><b>[def</b><b>}<br></b></p>
+    // In these cases, the <br> element is not listed up by PostContentIterator.
+    // So, we should return nullptr if next sibling is a `<br>` element or
+    // next sibling starts with `<br>` element.
+    if (nsIContent* nextSibling = lastElementInRange->GetNextSibling()) {
+      if (nextSibling->IsHTMLElement(nsGkAtoms::br)) {
+        return nullptr;
+      }
+      nsIContent* firstEditableLeaf = GetLeftmostChild(nextSibling);
+      if (firstEditableLeaf &&
+          firstEditableLeaf->IsHTMLElement(nsGkAtoms::br)) {
+        return nullptr;
+      }
     }
 
     if (!aTagName) {

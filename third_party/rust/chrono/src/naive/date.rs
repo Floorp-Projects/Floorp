@@ -3,8 +3,10 @@
 
 //! ISO 8601 calendar date without timezone.
 
-use std::{str, fmt};
-use std::ops::{Add, Sub, AddAssign, SubAssign};
+#[cfg(any(feature = "alloc", feature = "std", test))]
+use core::borrow::Borrow;
+use core::{str, fmt};
+use core::ops::{Add, Sub, AddAssign, SubAssign};
 use num_traits::ToPrimitive;
 use oldtime::Duration as OldDuration;
 
@@ -12,7 +14,9 @@ use {Weekday, Datelike};
 use div::div_mod_floor;
 use naive::{NaiveTime, NaiveDateTime, IsoWeek};
 use format::{Item, Numeric, Pad};
-use format::{parse, Parsed, ParseError, ParseResult, DelayedFormat, StrftimeItems};
+use format::{parse, Parsed, ParseError, ParseResult, StrftimeItems};
+#[cfg(any(feature = "alloc", feature = "std", test))]
+use format::DelayedFormat;
 
 use super::isoweek;
 use super::internals::{self, DateImpl, Of, Mdf, YearFlags};
@@ -330,10 +334,10 @@ impl NaiveDate {
         }
     }
 
-    /// Makes a new `NaiveDate` from the number of days since January 1, 1 (Day 1)
-    /// in the proleptic Gregorian calendar.
+    /// Makes a new `NaiveDate` from a day's number in the proleptic Gregorian calendar, with
+    /// January 1, 1 being day 1.
     ///
-    /// Panics on the out-of-range date.
+    /// Panics if the date is out of range.
     ///
     /// # Example
     ///
@@ -378,10 +382,10 @@ impl NaiveDate {
         NaiveDate::from_num_days_from_ce_opt(days).expect("out-of-range date")
     }
 
-    /// Makes a new `NaiveDate` from the number of days since January 1, 1 (Day 1)
-    /// in the proleptic Gregorian calendar.
+    /// Makes a new `NaiveDate` from a day's number in the proleptic Gregorian calendar, with
+    /// January 1, 1 being day 1.
     ///
-    /// Returns `None` on the out-of-range date.
+    /// Returns `None` if the date is out of range.
     ///
     /// # Example
     ///
@@ -451,7 +455,7 @@ impl NaiveDate {
     /// ~~~~
     pub fn parse_from_str(s: &str, fmt: &str) -> ParseResult<NaiveDate> {
         let mut parsed = Parsed::new();
-        try!(parse(&mut parsed, s, StrftimeItems::new(fmt)));
+        parse(&mut parsed, s, StrftimeItems::new(fmt))?;
         parsed.to_naive_date()
     }
 
@@ -916,9 +920,10 @@ impl NaiveDate {
     /// # let d = NaiveDate::from_ymd(2015, 9, 5);
     /// assert_eq!(format!("{}", d.format_with_items(fmt)), "2015-09-05");
     /// ~~~~
+    #[cfg(any(feature = "alloc", feature = "std", test))]
     #[inline]
-    pub fn format_with_items<'a, I>(&self, items: I) -> DelayedFormat<I>
-            where I: Iterator<Item=Item<'a>> + Clone {
+    pub fn format_with_items<'a, I, B>(&self, items: I) -> DelayedFormat<I>
+            where I: Iterator<Item=B> + Clone, B: Borrow<Item<'a>> {
         DelayedFormat::new(Some(*self), None, items)
     }
 
@@ -954,6 +959,7 @@ impl NaiveDate {
     /// assert_eq!(format!("{}", d.format("%Y-%m-%d")), "2015-09-05");
     /// assert_eq!(format!("{}", d.format("%A, %-d %B, %C%y")), "Saturday, 5 September, 2015");
     /// ~~~~
+    #[cfg(any(feature = "alloc", feature = "std", test))]
     #[inline]
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
         self.format_with_items(StrftimeItems::new(fmt))
@@ -1387,7 +1393,7 @@ impl SubAssign<OldDuration> for NaiveDate {
 
 /// Subtracts another `NaiveDate` from the current date.
 /// Returns a `Duration` of integral numbers.
-/// 
+///
 /// This does not overflow or underflow at all,
 /// as all possible output fits in the range of `Duration`.
 ///
@@ -1503,16 +1509,16 @@ impl str::FromStr for NaiveDate {
 
     fn from_str(s: &str) -> ParseResult<NaiveDate> {
         const ITEMS: &'static [Item<'static>] = &[
-            Item::Space(""), Item::Numeric(Numeric::Year, Pad::Zero),
+                             Item::Numeric(Numeric::Year, Pad::Zero),
             Item::Space(""), Item::Literal("-"),
-            Item::Space(""), Item::Numeric(Numeric::Month, Pad::Zero),
+                             Item::Numeric(Numeric::Month, Pad::Zero),
             Item::Space(""), Item::Literal("-"),
-            Item::Space(""), Item::Numeric(Numeric::Day, Pad::Zero),
+                             Item::Numeric(Numeric::Day, Pad::Zero),
             Item::Space(""),
         ];
 
         let mut parsed = Parsed::new();
-        try!(parse(&mut parsed, s, ITEMS.iter().cloned()));
+        parse(&mut parsed, s, ITEMS.iter())?;
         parsed.to_naive_date()
     }
 }
@@ -1600,7 +1606,7 @@ mod rustc_serialize {
 
 #[cfg(feature = "serde")]
 mod serde {
-    use std::fmt;
+    use core::fmt;
     use super::NaiveDate;
     use serdelib::{ser, de};
 
@@ -1629,15 +1635,23 @@ mod serde {
     impl<'de> de::Visitor<'de> for NaiveDateVisitor {
         type Value = NaiveDate;
 
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result 
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result
         {
             write!(formatter, "a formatted date string")
         }
 
+        #[cfg(any(feature = "std", test))]
         fn visit_str<E>(self, value: &str) -> Result<NaiveDate, E>
             where E: de::Error
         {
-            value.parse().map_err(|err| E::custom(format!("{}", err)))
+            value.parse().map_err(E::custom)
+        }
+
+        #[cfg(not(any(feature = "std", test)))]
+        fn visit_str<E>(self, value: &str) -> Result<NaiveDate, E>
+            where E: de::Error
+        {
+            value.parse().map_err(E::custom)
         }
     }
 

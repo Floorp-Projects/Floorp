@@ -85,9 +85,7 @@ class MicroTaskRunnable {
   virtual ~MicroTaskRunnable() = default;
 };
 
-class CycleCollectedJSContext
-    : dom::PerThreadAtomCache,
-      private JS::JobQueue {
+class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
   friend class CycleCollectedJSRuntime;
 
  protected:

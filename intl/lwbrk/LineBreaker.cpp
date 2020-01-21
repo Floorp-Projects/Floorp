@@ -948,6 +948,34 @@ int32_t LineBreaker::Prev(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
   return prevPos > 0 ? prevPos : NS_LINEBREAKER_NEED_MORE_TEXT;
 }
 
+static bool SuppressBreakForKeepAll(uint32_t aPrev, uint32_t aCh) {
+  auto affectedByKeepAll = [](uint8_t aLBClass) {
+    switch (aLBClass) {
+      // Per https://drafts.csswg.org/css-text-3/#valdef-word-break-keep-all:
+      // "implicit soft wrap opportunities between typographic letter units
+      // (or other typographic character units belonging to the NU, AL, AI,
+      // or ID Unicode line breaking classes [UAX14]) are suppressed..."
+      case U_LB_ALPHABETIC:
+      case U_LB_AMBIGUOUS:
+      case U_LB_NUMERIC:
+      case U_LB_IDEOGRAPHIC:
+      // Additional classes that should be treated similarly, but have been
+      // broken out as separate classes in newer Unicode versions:
+      case U_LB_H2:
+      case U_LB_H3:
+      case U_LB_JL:
+      case U_LB_JV:
+      case U_LB_JT:
+      case U_LB_CONDITIONAL_JAPANESE_STARTER:
+        return true;
+      default:
+        return false;
+    }
+  };
+  return affectedByKeepAll(GetLineBreakClass(aPrev)) &&
+         affectedByKeepAll(GetLineBreakClass(aCh));
+}
+
 void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
                                     WordBreak aWordBreak, Strictness aLevel,
                                     bool aIsChineseOrJapanese,
@@ -1011,12 +1039,18 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
     if (cur > 0) {
       NS_ASSERTION(CLASS_COMPLEX != lastClass || CLASS_COMPLEX != cl,
                    "Loop should have prevented adjacent complex chars here");
-      if (aWordBreak == WordBreak::Normal ||
-          aWordBreak == WordBreak::BreakAll) {
-        allowBreak = (state.UseConservativeBreaking())
-                         ? GetPairConservative(lastClass, cl)
-                         : GetPair(lastClass, cl);
-      }
+      auto prev = [=]() {
+        char32_t c = aChars[cur - 1];
+        if (cur > 1 && NS_IS_SURROGATE_PAIR(aChars[cur - 2], c)) {
+          c = SURROGATE_TO_UCS4(aChars[cur - 2], c);
+        }
+        return c;
+      };
+      allowBreak =
+          (state.UseConservativeBreaking() ? GetPairConservative(lastClass, cl)
+                                           : GetPair(lastClass, cl)) &&
+          (aWordBreak != WordBreak::KeepAll ||
+           !SuppressBreakForKeepAll(prev(), ch));
     }
     aBreakBefore[cur] = allowBreak;
     if (allowBreak) state.NotifyBreakBefore();
@@ -1097,12 +1131,11 @@ void LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
 
     bool allowBreak = false;
     if (cur > 0) {
-      if (aWordBreak == WordBreak::Normal ||
-          aWordBreak == WordBreak::BreakAll) {
-        allowBreak = (state.UseConservativeBreaking())
-                         ? GetPairConservative(lastClass, cl)
-                         : GetPair(lastClass, cl);
-      }
+      allowBreak =
+          (state.UseConservativeBreaking() ? GetPairConservative(lastClass, cl)
+                                           : GetPair(lastClass, cl)) &&
+          (aWordBreak != WordBreak::KeepAll ||
+           !SuppressBreakForKeepAll(aChars[cur - 1], ch));
     }
     aBreakBefore[cur] = allowBreak;
     if (allowBreak) state.NotifyBreakBefore();

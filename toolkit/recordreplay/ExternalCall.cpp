@@ -95,7 +95,8 @@ bool OnExternalCall(size_t aCallId, CallArguments* aArguments, bool aDiverged) {
   }
 
   if (aDiverged) {
-    PrintSpew("OnExternalCall Diverged %s %s\n", redirection.mName, messageName);
+    PrintSpew("OnExternalCall Diverged %s %s\n", redirection.mName,
+              messageName);
   }
 
   MonitorAutoLock lock(*gMonitor);
@@ -106,8 +107,7 @@ bool OnExternalCall(size_t aCallId, CallArguments* aArguments, bool aDiverged) {
 
   // Save all the call's inputs.
   {
-    ExternalCallContext cx(call, aArguments,
-                           ExternalCallPhase::SaveInput);
+    ExternalCallContext cx(call, aArguments, ExternalCallPhase::SaveInput);
     redirection.mExternalCall(cx);
     if (cx.mFailed) {
       delete call;
@@ -145,8 +145,7 @@ bool OnExternalCall(size_t aCallId, CallArguments* aArguments, bool aDiverged) {
   // we need. Run the SaveOutput phase to capture these so that we can reuse
   // them later and associate any system outputs with the call.
   if (!aDiverged) {
-    ExternalCallContext cx(call, aArguments,
-                           ExternalCallPhase::SaveOutput);
+    ExternalCallContext cx(call, aArguments, ExternalCallPhase::SaveOutput);
     redirection.mExternalCall(cx);
     if (isNewCall) {
       gUnflushedCalls.append(call);
@@ -169,9 +168,8 @@ bool OnExternalCall(size_t aCallId, CallArguments* aArguments, bool aDiverged) {
 
   // Synchronously wait for the call result.
   InfallibleVector<char> outputData;
-  child::SendExternalCallRequest(call->mId,
-                                 inputData.begin(), inputData.length(),
-                                 &outputData);
+  child::SendExternalCallRequest(call->mId, inputData.begin(),
+                                 inputData.length(), &outputData);
 
   // Decode the external call's output.
   BufferStream outputStream(outputData.begin(), outputData.length());
@@ -416,9 +414,9 @@ void EX_SystemOutput(ExternalCallContext& aCx, const void** aOutput,
           break;
         }
         // If we haven't encountered the aliased call, fall through and generate
-        // a new value for it. Aliases might be spurious if they were derived from
-        // the recording and reflect a value that was released and had its memory
-        // reused.
+        // a new value for it. Aliases might be spurious if they were derived
+        // from the recording and reflect a value that was released and had its
+        // memory reused.
       }
       *aOutput = MangledSystemValue(aCx.mCall->mId);
     } while (false);

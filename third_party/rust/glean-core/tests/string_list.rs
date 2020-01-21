@@ -9,11 +9,11 @@ use serde_json::json;
 
 use glean_core::metrics::*;
 use glean_core::storage::StorageManager;
-use glean_core::{test_get_num_recorded_errors, CommonMetricData, ErrorType, Glean, Lifetime};
+use glean_core::{test_get_num_recorded_errors, CommonMetricData, ErrorType, Lifetime};
 
 #[test]
 fn list_can_store_multiple_items() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let list: StringListMetric = StringListMetric::new(CommonMetricData {
         name: "list".into(),
@@ -43,17 +43,13 @@ fn list_can_store_multiple_items() {
 
 #[test]
 fn stringlist_serializer_should_correctly_serialize_stringlists() {
-    let (_t, tmpname) = tempdir();
-    let cfg = glean_core::Configuration {
-        data_path: tmpname,
-        application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-    };
+    let (mut tempdir, _) = tempdir();
 
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        // We give tempdir to the `new_glean` function...
+        let (glean, dir) = new_glean(Some(tempdir));
+        // And then we get it back once that function returns.
+        tempdir = dir;
 
         let metric = StringListMetric::new(CommonMetricData {
             name: "string_list_metric".into(),
@@ -67,7 +63,7 @@ fn stringlist_serializer_should_correctly_serialize_stringlists() {
     }
 
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        let (glean, _) = new_glean(Some(tempdir));
 
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
@@ -81,7 +77,7 @@ fn stringlist_serializer_should_correctly_serialize_stringlists() {
 
 #[test]
 fn set_properly_sets_the_value_in_all_stores() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let store_names: Vec<String> = vec!["store1".into(), "store2".into()];
 
     let metric = StringListMetric::new(CommonMetricData {
@@ -109,7 +105,7 @@ fn set_properly_sets_the_value_in_all_stores() {
 
 #[test]
 fn long_string_values_are_truncated() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = StringListMetric::new(CommonMetricData {
         name: "string_list_metric".into(),
@@ -152,7 +148,7 @@ fn long_string_values_are_truncated() {
 
 #[test]
 fn disabled_string_lists_dont_record() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = StringListMetric::new(CommonMetricData {
         name: "string_list_metric".into(),
@@ -181,7 +177,7 @@ fn disabled_string_lists_dont_record() {
 
 #[test]
 fn string_lists_dont_exceed_max_items() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = StringListMetric::new(CommonMetricData {
         name: "string_list_metric".into(),
@@ -230,7 +226,7 @@ fn string_lists_dont_exceed_max_items() {
 
 #[test]
 fn set_does_not_record_error_when_receiving_empty_list() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let metric = StringListMetric::new(CommonMetricData {
         name: "string_list_metric".into(),

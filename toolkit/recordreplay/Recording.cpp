@@ -180,10 +180,9 @@ void Stream::RecordOrReplayThreadEvent(ThreadEvent aEvent, const char* aExtra) {
         }
         extra = ReadInputString();
       }
-      child::ReportFatalError(
-          "Event Mismatch: Recorded %s %s Replayed %s %s",
-          ThreadEventName(oldEvent), extra,
-          ThreadEventName(aEvent), aExtra ? aExtra : "");
+      child::ReportFatalError("Event Mismatch: Recorded %s %s Replayed %s %s",
+                              ThreadEventName(oldEvent), extra,
+                              ThreadEventName(aEvent), aExtra ? aExtra : "");
     }
     mLastEvent = aEvent;
     PushEvent(ThreadEventName(aEvent));
@@ -297,9 +296,8 @@ void Stream::Flush(bool aTakeLock) {
   MOZ_RELEASE_ASSERT((size_t)compressedSize <= bound);
 
   StreamChunkLocation chunk =
-      mRecording->WriteChunk(mName, mNameIndex,
-                             mBallast.get(), compressedSize, mBufferPos,
-                             mStreamPos - mBufferPos, aTakeLock);
+      mRecording->WriteChunk(mName, mNameIndex, mBallast.get(), compressedSize,
+                             mBufferPos, mStreamPos - mBufferPos, aTakeLock);
   mChunks.append(chunk);
   MOZ_ALWAYS_TRUE(++mChunkIndex == mChunks.length());
 
@@ -396,7 +394,7 @@ void Recording::NewContents(const uint8_t* aContents, size_t aSize,
     MOZ_RELEASE_ASSERT(aSize >= sizeof(Header));
     offset += sizeof(Header);
 
-    Header* header = (Header*) aContents;
+    Header* header = (Header*)aContents;
     MOZ_RELEASE_ASSERT(header->mMagic == MagicValue);
 
     BuildId currentBuildId;
@@ -452,7 +450,7 @@ StreamChunkLocation Recording::WriteChunk(StreamName aName, size_t aNameIndex,
   chunk.mStreamPos = aStreamPos;
 
   ChunkDescriptor desc;
-  desc.mName = (uint32_t) aName;
+  desc.mName = (uint32_t)aName;
   desc.mNameIndex = aNameIndex;
   desc.mChunk = chunk;
 
@@ -464,7 +462,8 @@ StreamChunkLocation Recording::WriteChunk(StreamName aName, size_t aNameIndex,
 
 void Recording::ReadChunk(char* aDest, const StreamChunkLocation& aChunk) {
   AutoSpinLock lock(mLock);
-  MOZ_RELEASE_ASSERT(aChunk.mOffset + aChunk.mCompressedSize <= mContents.length());
+  MOZ_RELEASE_ASSERT(aChunk.mOffset + aChunk.mCompressedSize <=
+                     mContents.length());
   memcpy(aDest, mContents.begin() + aChunk.mOffset, aChunk.mCompressedSize);
   MOZ_RELEASE_ASSERT(HashBytes(aDest, aChunk.mCompressedSize) == aChunk.mHash);
 }

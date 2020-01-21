@@ -225,10 +225,12 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
    * If a future use case arises where we want to use the touch simulator from the Toolbox
    * too, then we could add code in here to detect the picker mode as described in
    * https://bugzilla.mozilla.org/show_bug.cgi?id=1409085#c3
+
    * @param {Boolean} state
+   * @param {String} pickerType
    */
-  setElementPickerState(state) {
-    this.touchSimulator.setElementPickerState(state);
+  setElementPickerState(state, pickerType) {
+    this.touchSimulator.setElementPickerState(state, pickerType);
   },
 
   setTouchEventsOverride(flag) {

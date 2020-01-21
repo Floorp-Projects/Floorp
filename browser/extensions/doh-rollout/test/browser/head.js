@@ -12,11 +12,13 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
-SpecialPowers.pushPrefEnv({
-  set: [["security.notification_enable_delay", 0]],
-});
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
 
 const ADDON_ID = "doh-rollout@mozilla.org";
+
+const EXAMPLE_URL = "https://example.com/";
 
 const prefs = {
   DOH_ENABLED_PREF: "doh-rollout.enabled",
@@ -31,6 +33,7 @@ const prefs = {
   DOH_BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
   DOH_DEBUG_PREF: "doh-rollout.debug",
   MOCK_HEURISTICS_PREF: "doh-rollout.heuristics.mockValues",
+  PROFILE_CREATION_THRESHOLD_PREF: "doh-rollout.profileCreationThreshold",
 };
 
 const fakePassingHeuristics = JSON.stringify({
@@ -54,6 +57,65 @@ const fakeFailingHeuristics = JSON.stringify({
   thirdPartyRoots: "disable_doh",
   policy: "disable_doh",
 });
+
+async function setup() {
+  SpecialPowers.pushPrefEnv({
+    set: [["security.notification_enable_delay", 0]],
+  });
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+  Services.telemetry.clearEvents();
+
+  // Set the profile creation threshold to very far in the future by defualt,
+  // so that we can test the doorhanger. browser_doorhanger_newProfile.js
+  // overrides this.
+  Preferences.set(prefs.PROFILE_CREATION_THRESHOLD_PREF, "99999999999999");
+
+  registerCleanupFunction(async () => {
+    Services.telemetry.canRecordExtended = oldCanRecord;
+    Services.telemetry.clearEvents();
+    await resetPrefsAndRestartAddon();
+  });
+}
+
+async function checkHeuristicsTelemetry(decision, evaluateReason) {
+  let events;
+  await BrowserTestUtils.waitForCondition(() => {
+    events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+    ).dynamic;
+    return events;
+  });
+  events = events.filter(
+    e => e[1] == "doh" && e[2] == "evaluate" && e[3] == "heuristics"
+  );
+  is(events.length, 1, "Found the expected heuristics event.");
+  is(events[0][4], decision, "The event records the expected decision");
+  if (evaluateReason) {
+    is(events[0][5].evaluateReason, evaluateReason, "Got the expected reason.");
+  }
+
+  // After checking the event, clear all telemetry. Since we check for a single
+  // event above, this ensures all heuristics events are intentional and tested.
+  // TODO: Test events other than heuristics. Those tests would also work the
+  // same way, so as to test one event at a time, and this clearEvents() call
+  // will continue to exist as-is.
+  Services.telemetry.clearEvents();
+}
+
+function ensureNoHeuristicsTelemetry() {
+  let events = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+  ).dynamic;
+  if (!events) {
+    ok(true, "Found no heuristics events.");
+    return;
+  }
+  events = events.filter(
+    e => e[1] == "doh" && e[2] == "evaluate" && e[3] == "heuristics"
+  );
+  is(events.length, 0, "Found no heuristics events.");
+}
 
 function setPassingHeuristics() {
   Preferences.set(prefs.MOCK_HEURISTICS_PREF, fakePassingHeuristics);
@@ -91,7 +153,12 @@ async function waitForDoorhanger() {
 }
 
 function simulateNetworkChange() {
-  Services.obs.notifyObservers(null, "network:link-status-changed", "down");
+  // The networkStatus API does not actually propagate the link status we supply
+  // here, but rather sends the link status from the NetworkLinkService.
+  // This means there's no point sending a down and then an up - the extension
+  // will just receive "up" twice.
+  // TODO: Implement a mock NetworkLinkService and use it to also simulate
+  // network down events.
   Services.obs.notifyObservers(null, "network:link-status-changed", "up");
 }
 

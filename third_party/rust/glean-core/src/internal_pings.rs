@@ -24,7 +24,7 @@ impl InternalPings {
             baseline: PingType::new("baseline", true, false),
             metrics: PingType::new("metrics", true, false),
             events: PingType::new("events", true, false),
-            deletion_request: PingType::new("deletion_request", true, true),
+            deletion_request: PingType::new("deletion-request", true, true),
         }
     }
 }

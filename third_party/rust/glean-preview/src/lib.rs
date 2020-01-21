@@ -50,17 +50,24 @@ mod core_metrics;
 pub mod metrics;
 mod system;
 
-static GLEAN: OnceCell<Mutex<Glean>> = OnceCell::new();
+#[derive(Debug)]
+struct GleanWrapper {
+    instance: Glean,
+    channel: Option<String>,
+    client_info: ClientInfoMetrics,
+}
+
+static GLEAN: OnceCell<Mutex<GleanWrapper>> = OnceCell::new();
 
 /// Get a reference to the global Glean object.
 ///
 /// Panics if no global Glean object was set.
-fn global_glean() -> &'static Mutex<Glean> {
+fn global_glean() -> &'static Mutex<GleanWrapper> {
     GLEAN.get().unwrap()
 }
 
 /// Set or replace the global Glean object.
-fn setup_glean(glean: Glean) -> Result<()> {
+fn setup_glean(glean: GleanWrapper) -> Result<()> {
     if GLEAN.get().is_none() {
         GLEAN.set(Mutex::new(glean)).unwrap();
     } else {
@@ -75,7 +82,15 @@ where
     F: Fn(&Glean) -> R,
 {
     let lock = global_glean().lock().unwrap();
-    f(&lock)
+    f(&lock.instance)
+}
+
+fn with_glean_wrapper_mut<F, R>(f: F) -> R
+where
+    F: Fn(&mut GleanWrapper) -> R,
+{
+    let mut lock = global_glean().lock().unwrap();
+    f(&mut lock)
 }
 
 fn with_glean_mut<F, R>(f: F) -> R
@@ -83,38 +98,49 @@ where
     F: Fn(&mut Glean) -> R,
 {
     let mut lock = global_glean().lock().unwrap();
-    f(&mut lock)
+    f(&mut lock.instance)
 }
 
 /// Create and initialize a new Glean object.
 ///
 /// See `glean_core::Glean::new`.
 pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) -> Result<()> {
-    let channel = cfg.channel;
-    let cfg = glean_core::Configuration {
+    let core_cfg = glean_core::Configuration {
         upload_enabled: cfg.upload_enabled,
-        data_path: cfg.data_path,
-        application_id: cfg.application_id,
+        data_path: cfg.data_path.clone(),
+        application_id: cfg.application_id.clone(),
         max_events: cfg.max_events,
         delay_ping_lifetime_io: cfg.delay_ping_lifetime_io,
     };
-    let glean = Glean::new(cfg)?;
+    let glean = Glean::new(core_cfg)?;
 
     // First initialize core metrics
-    initialize_core_metrics(&glean, client_info, channel);
+    initialize_core_metrics(&glean, &client_info, cfg.channel.clone());
+
     // Now make this the global object available to others.
-    setup_glean(glean)?;
+    let wrapper = GleanWrapper {
+        instance: glean,
+        channel: cfg.channel,
+        client_info,
+    };
+    setup_glean(wrapper)?;
 
     Ok(())
 }
 
-fn initialize_core_metrics(glean: &Glean, client_info: ClientInfoMetrics, channel: Option<String>) {
+fn initialize_core_metrics(
+    glean: &Glean,
+    client_info: &ClientInfoMetrics,
+    channel: Option<String>,
+) {
     let core_metrics = core_metrics::InternalMetrics::new();
 
-    core_metrics.app_build.set(glean, client_info.app_build);
+    core_metrics
+        .app_build
+        .set(glean, &client_info.app_build[..]);
     core_metrics
         .app_display_version
-        .set(glean, client_info.app_display_version);
+        .set(glean, &client_info.app_display_version[..]);
     if let Some(app_channel) = channel {
         core_metrics.app_channel.set(glean, app_channel);
     }
@@ -132,10 +158,18 @@ fn initialize_core_metrics(glean: &Glean, client_info: ClientInfoMetrics, channe
 /// Set whether upload is enabled or not.
 ///
 /// See `glean_core::Glean.set_upload_enabled`.
-pub fn set_upload_enabled(flag: bool) -> bool {
-    with_glean_mut(|glean| {
-        glean.set_upload_enabled(flag);
-        glean.is_upload_enabled()
+pub fn set_upload_enabled(enabled: bool) -> bool {
+    with_glean_wrapper_mut(|glean| {
+        let old_enabled = glean.instance.is_upload_enabled();
+        glean.instance.set_upload_enabled(enabled);
+
+        if !old_enabled && enabled {
+            // If uploading is being re-enabled, we have to restore the
+            // application-lifetime metrics.
+            initialize_core_metrics(&glean.instance, &glean.client_info, glean.channel.clone());
+        }
+
+        enabled
     })
 }
 
@@ -181,5 +215,8 @@ pub fn submit_ping_by_name(ping: &str) -> bool {
 ///
 /// Returns true if at least one ping was assembled and queued, false otherwise.
 pub fn submit_pings_by_name(pings: &[String]) -> bool {
-    with_glean(|glean| glean.send_pings_by_name(pings))
+    with_glean(|glean| glean.submit_pings_by_name(pings))
 }
+
+#[cfg(test)]
+mod test;

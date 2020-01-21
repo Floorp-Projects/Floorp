@@ -640,8 +640,8 @@ void LogModule::Printv(LogLevel aLevel, const char* aFmt, va_list aArgs) const {
   sLogModuleManager->Print(Name(), aLevel, aFmt, aArgs);
 }
 
-void LogModule::Printv(LogLevel aLevel, const TimeStamp* aStart, const char* aFmt,
-                       va_list aArgs) const {
+void LogModule::Printv(LogLevel aLevel, const TimeStamp* aStart,
+                       const char* aFmt, va_list aArgs) const {
   MOZ_ASSERT(sLogModuleManager != nullptr);
 
   // Forward to LogModule manager w/ level and name

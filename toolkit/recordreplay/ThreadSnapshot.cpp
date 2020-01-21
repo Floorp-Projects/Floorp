@@ -175,8 +175,7 @@ bool SaveThreadState(size_t aId, int* aStackSeparator) {
 
   MOZ_RELEASE_ASSERT(aId <= MaxThreadId);
   ThreadState* info = &gThreadState[aId];
-  bool res =
-      SaveThreadStateOrReturnFromRestore(info, aStackSeparator) == 0;
+  bool res = SaveThreadStateOrReturnFromRestore(info, aStackSeparator) == 0;
   if (!res) {
     ClearThreadState(info);
   }
@@ -199,13 +198,12 @@ void SaveThreadStack(size_t aId) {
   // Release any existing stack contents from a previous fork.
   free(info.mStackContents);
 
-  info.mStackContents = (uint8_t*) malloc(stackBytes);
+  info.mStackContents = (uint8_t*)malloc(stackBytes);
   info.mStackBytes = stackBytes;
 
   memcpy(info.mStackContents, info.mStackTop, info.mStackTopBytes);
   memcpy(info.mStackContents + info.mStackTopBytes,
-         stackPointer + info.mStackTopBytes,
-         stackBytes - info.mStackTopBytes);
+         stackPointer + info.mStackTopBytes, stackBytes - info.mStackTopBytes);
 }
 
 void RestoreThreadStack(size_t aId) {

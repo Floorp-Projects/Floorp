@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "thread_local"
-version = "0.3.6"
+version = "1.0.1"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "Per-object thread-local storage"
 documentation = "https://amanieu.github.io/thread_local-rs/thread_local/index.html"

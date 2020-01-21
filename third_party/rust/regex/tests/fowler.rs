@@ -215,7 +215,13 @@ mat!(
     Some((1, 2)),
     Some((1, 2))
 );
-mat!(match_basic_76, r"a?(ab|ba)*", r"ababababababababababababababababababababababababababababababababababababababababa", Some((0, 81)), Some((79, 81)));
+mat!(
+    match_basic_76,
+    r"a?(ab|ba)*",
+    r"ababababababababababababababababababababababababababababababababababababababababa",
+    Some((0, 81)),
+    Some((79, 81))
+);
 mat!(
     match_basic_77,
     r"abaa|abbaa|abbbaa|abbbbaa",

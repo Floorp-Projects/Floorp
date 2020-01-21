@@ -1656,25 +1656,25 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
  * indirect goto (aka a threaded interpreter), which is technically
  * non-standard but is supported by all of our supported compilers.
  */
-#  define INTERPRETER_LOOP()
-#  define CASE(OP) label_##OP:
-#  define DEFAULT() \
+#define INTERPRETER_LOOP()
+#define CASE(OP) label_##OP:
+#define DEFAULT() \
   label_default:
-#  define DISPATCH_TO(OP) goto* addresses[(OP)]
+#define DISPATCH_TO(OP) goto* addresses[(OP)]
 
-#  define LABEL(X) (&&label_##X)
+#define LABEL(X) (&&label_##X)
 
   // Use addresses instead of offsets to optimize for runtime speed over
   // load-time relocation overhead.
   static const void* const addresses[EnableInterruptsPseudoOpcode + 1] = {
-#  define OPCODE_LABEL(op, ...) LABEL(op),
+#define OPCODE_LABEL(op, ...) LABEL(op),
       FOR_EACH_OPCODE(OPCODE_LABEL)
-#  undef OPCODE_LABEL
-#  define TRAILING_LABEL(v)                                                    \
-    ((v) == EnableInterruptsPseudoOpcode ? LABEL(EnableInterruptsPseudoOpcode) \
-                                         : LABEL(default)),
+#undef OPCODE_LABEL
+#define TRAILING_LABEL(v)                                                    \
+  ((v) == EnableInterruptsPseudoOpcode ? LABEL(EnableInterruptsPseudoOpcode) \
+                                       : LABEL(default)),
           FOR_EACH_TRAILING_UNUSED_OPCODE(TRAILING_LABEL)
-#  undef TRAILING_LABEL
+#undef TRAILING_LABEL
   };
 
   /*
