@@ -83,7 +83,7 @@ interface CollectionInteractor {
  */
 interface OnboardingInteractor {
     /**
-     * Hides the onboarding. Called when a user clicks on the "Start Browsing" button.
+     * Hides the onboarding and navigates to Search. Called when a user clicks on the "Start Browsing" button.
      */
     fun onStartBrowsingClicked()
 }
