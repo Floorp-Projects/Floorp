@@ -11,6 +11,11 @@
       font: 20px Ahem;
       border: 0px;
       /* This forces non-native styling */
+      background: linear-gradient(white, white);
+      /* To avoid having too high of a fuzzy annotation, we force the
+         non-native select to have a white (backplate-coloured)
+         background. `background-color` attributes are overwritten
+         in HCM, so we use a linear gradient here instead. */
     }
     .std {
       background-image: linear-gradient(blue, blue);
