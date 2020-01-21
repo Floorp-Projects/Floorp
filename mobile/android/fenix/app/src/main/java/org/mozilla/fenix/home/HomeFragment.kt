@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import android.animation.Animator
+import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -25,6 +26,7 @@ import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.START
 import androidx.constraintlayout.widget.ConstraintSet.TOP
 import androidx.core.view.updateLayoutParams
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -49,7 +51,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.menu.BrowserMenu
+import mozilla.components.browser.menu.ext.getHighlight
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.sync.AccountObserver
@@ -84,6 +86,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
@@ -117,8 +120,6 @@ class HomeFragment : Fragment() {
             showRenamedSnackbar()
         }
     }
-
-    private var homeMenu: HomeMenu? = null
 
     private val sessionManager: SessionManager
         get() = requireComponents.core.sessionManager
@@ -234,8 +235,6 @@ class HomeFragment : Fragment() {
             homeViewModel.layoutManagerState = null
         }
 
-        setupHomeMenu()
-
         viewLifecycleOwner.lifecycleScope.launch(IO) {
             // This is necessary due to a bug in viewLifecycleOwner. See:
             // https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/ext/Fragment.kt#L32-L56
@@ -254,18 +253,18 @@ class HomeFragment : Fragment() {
         }
 
         with(view.menuButton) {
-            var menu: PopupWindow? = null
-            setOnClickListener {
-                if (menu == null) {
-                    menu = homeMenu?.menuBuilder?.build(requireContext())?.show(
-                        anchor = it,
-                        orientation = BrowserMenu.Orientation.UP,
-                        onDismiss = { menu = null }
-                    )
-                } else {
-                    menu?.dismiss()
-                }
-            }
+            menuBuilder = createHomeMenu(context!!).menuBuilder
+
+            val primaryTextColor = ContextCompat.getColor(
+                context,
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            )
+
+            setColorFilter(primaryTextColor)
+
+            // Immediately check for `What's new` highlight. If home items that change over time
+            // are added, this will need to be called repeatedly.
+            setHighlight(menuBuilder?.items?.getHighlight())
         }
         view.toolbar.compoundDrawablePadding =
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
@@ -310,11 +309,6 @@ class HomeFragment : Fragment() {
 
         // We need the shadow to be above the components.
         bottomBarShadow.bringToFront()
-    }
-
-    override fun onDestroyView() {
-        homeMenu = null
-        super.onDestroyView()
     }
 
     override fun onStart() {
@@ -499,9 +493,8 @@ class HomeFragment : Fragment() {
                 tabs = getListOfSessions().toTabs()))
     }
 
-    private fun setupHomeMenu() {
-        val context = requireContext()
-        homeMenu = HomeMenu(context) {
+    private fun createHomeMenu(context: Context): HomeMenu {
+        return HomeMenu(context) {
             when (it) {
                 HomeMenu.Item.Settings -> {
                     invokePendingDeleteJobs()
