@@ -22,6 +22,10 @@ extern crate devd_rs;
 #[path = "freebsd/mod.rs"]
 pub mod platform;
 
+#[cfg(any(target_os = "openbsd"))]
+#[path = "openbsd/mod.rs"]
+pub mod platform;
+
 #[cfg(any(target_os = "macos"))]
 extern crate core_foundation;
 
@@ -36,6 +40,7 @@ pub mod platform;
 #[cfg(not(any(
     target_os = "linux",
     target_os = "freebsd",
+    target_os = "openbsd",
     target_os = "macos",
     target_os = "windows"
 )))]

@@ -25,7 +25,7 @@ cubeb-sys = { version = "0.6", optional = true, features=["gecko-in-tree"] }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 audioipc-client = { path = "../../../../media/audioipc/client", optional = true }
 audioipc-server = { path = "../../../../media/audioipc/server", optional = true }
-authenticator = "0.2.6"
+authenticator = "0.2.8"
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
 rsdparsa_capi = { path = "../../../../media/webrtc/signaling/src/sdp/rsdparsa_capi" }
 xulstore = { path = "../../../components/xulstore", optional = true }

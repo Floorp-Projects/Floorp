@@ -28,7 +28,7 @@ impl Transaction {
         new_device_cb: F,
     ) -> Result<Self, ::Error>
     where
-        F: Fn((IOHIDDeviceRef, Receiver<Vec<u8>>), &Fn() -> bool) + Sync + Send + 'static,
+        F: Fn((IOHIDDeviceRef, Receiver<Vec<u8>>), &dyn Fn() -> bool) + Sync + Send + 'static,
         T: 'static,
     {
         let (tx, rx) = channel();

@@ -32,6 +32,9 @@ unsafe fn from_raw(ptr: *const u8, len: usize) -> Vec<u8> {
     slice::from_raw_parts(ptr, len).to_vec()
 }
 
+/// # Safety
+///
+/// The handle returned by this method must be freed by the caller.
 #[no_mangle]
 pub extern "C" fn rust_u2f_mgr_new() -> *mut U2FManager {
     if let Ok(mgr) = U2FManager::new() {
@@ -41,6 +44,10 @@ pub extern "C" fn rust_u2f_mgr_new() -> *mut U2FManager {
     }
 }
 
+/// # Safety
+///
+/// This method must not be called on a handle twice, and the handle is unusable
+/// after.
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_mgr_free(mgr: *mut U2FManager) {
     if !mgr.is_null() {
@@ -48,11 +55,17 @@ pub unsafe extern "C" fn rust_u2f_mgr_free(mgr: *mut U2FManager) {
     }
 }
 
+/// # Safety
+///
+/// The handle returned by this method must be freed by the caller.
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_app_ids_new() -> *mut U2FAppIds {
     Box::into_raw(Box::new(vec![]))
 }
 
+/// # Safety
+///
+/// This method must be used on an actual U2FAppIds handle
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_app_ids_add(
     ids: *mut U2FAppIds,
@@ -62,6 +75,10 @@ pub unsafe extern "C" fn rust_u2f_app_ids_add(
     (*ids).push(from_raw(id_ptr, id_len));
 }
 
+/// # Safety
+///
+/// This method must not be called on a handle twice, and the handle is unusable
+/// after.
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_app_ids_free(ids: *mut U2FAppIds) {
     if !ids.is_null() {
@@ -69,11 +86,17 @@ pub unsafe extern "C" fn rust_u2f_app_ids_free(ids: *mut U2FAppIds) {
     }
 }
 
+/// # Safety
+///
+/// The handle returned by this method must be freed by the caller.
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_khs_new() -> *mut U2FKeyHandles {
     Box::into_raw(Box::new(vec![]))
 }
 
+/// # Safety
+///
+/// This method must be used on an actual U2FKeyHandles handle
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_khs_add(
     khs: *mut U2FKeyHandles,
@@ -87,6 +110,10 @@ pub unsafe extern "C" fn rust_u2f_khs_add(
     });
 }
 
+/// # Safety
+///
+/// This method must not be called on a handle twice, and the handle is unusable
+/// after.
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_khs_free(khs: *mut U2FKeyHandles) {
     if !khs.is_null() {
@@ -94,6 +121,9 @@ pub unsafe extern "C" fn rust_u2f_khs_free(khs: *mut U2FKeyHandles) {
     }
 }
 
+/// # Safety
+///
+/// This method must be used on an actual U2FResult handle
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_result_error(res: *const U2FResult) -> u8 {
     if res.is_null() {
@@ -107,6 +137,9 @@ pub unsafe extern "C" fn rust_u2f_result_error(res: *const U2FResult) -> u8 {
     0 /* No error, the request succeeded. */
 }
 
+/// # Safety
+///
+/// This method must be used before rust_u2f_resbuf_copy
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_resbuf_length(
     res: *const U2FResult,
@@ -127,6 +160,10 @@ pub unsafe extern "C" fn rust_u2f_resbuf_length(
     false
 }
 
+/// # Safety
+///
+/// This method does not ensure anything about dst before copying, so
+/// ensure it is long enough (using rust_u2f_resbuf_length)
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_resbuf_copy(
     res: *const U2FResult,
@@ -147,6 +184,10 @@ pub unsafe extern "C" fn rust_u2f_resbuf_copy(
     false
 }
 
+/// # Safety
+///
+/// This method should not be called U2FManager handles after they've been freed
+/// or a double-free will occur
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_res_free(res: *mut U2FResult) {
     if !res.is_null() {
@@ -154,6 +195,9 @@ pub unsafe extern "C" fn rust_u2f_res_free(res: *mut U2FResult) {
     }
 }
 
+/// # Safety
+///
+/// This method should not be called U2FManager handles after they've been freed
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_mgr_register(
     mgr: *mut U2FManager,
@@ -208,6 +252,9 @@ pub unsafe extern "C" fn rust_u2f_mgr_register(
     }
 }
 
+/// # Safety
+///
+/// This method should not be called U2FManager handles after they've been freed
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_mgr_sign(
     mgr: *mut U2FManager,
@@ -261,6 +308,9 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
     }
 }
 
+/// # Safety
+///
+/// This method should not be called U2FManager handles after they've been freed
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_mgr_cancel(mgr: *mut U2FManager) {
     if !mgr.is_null() {
