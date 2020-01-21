@@ -7,6 +7,7 @@ Transform release-beetmover-source-checksums into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -20,10 +21,10 @@ from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
 beetmover_checksums_description_schema = schema.extend({
-    Required('depname', default='build'): basestring,
-    Optional('label'): basestring,
+    Required('depname', default='build'): text_type,
+    Optional('label'): text_type,
     Optional('treeherder'): task_description_schema['treeherder'],
-    Optional('locale'): basestring,
+    Optional('locale'): text_type,
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('attributes'): task_description_schema['attributes'],

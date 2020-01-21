@@ -14,6 +14,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import logging
 import json
+import six
+from six import text_type
 
 import mozpack.path as mozpath
 
@@ -41,8 +43,8 @@ job_description_schema = Schema({
     # The name of the job and the job's label.  At least one must be specified,
     # and the label will be generated from the name if necessary, by prepending
     # the kind.
-    Optional('name'): basestring,
-    Optional('label'): basestring,
+    Optional('name'): text_type,
+    Optional('label'): text_type,
 
     # the following fields are passed directly through to the task description,
     # possibly modified by the run implementation.  See
@@ -78,14 +80,14 @@ job_description_schema = Schema({
         # This task only needs to be run if a file matching one of the given
         # patterns has changed in the push.  The patterns use the mozpack
         # match function (python/mozbuild/mozpack/path.py).
-        Optional('files-changed'): [basestring],
+        Optional('files-changed'): [text_type],
     },
 
     # A list of artifacts to install from 'fetch' tasks.
     Optional('fetches'): {
-        basestring: [basestring, {
-            Required('artifact'): basestring,
-            Optional('dest'): basestring,
+        text_type: [text_type, {
+            Required('artifact'): text_type,
+            Optional('dest'): text_type,
             Optional('extract'): bool,
         }],
     },
@@ -93,10 +95,10 @@ job_description_schema = Schema({
     # A description of how to run this job.
     'run': {
         # The key to a job implementation in a peer module to this one
-        'using': basestring,
+        'using': text_type,
 
         # Base work directory used to set up the task.
-        Optional('workdir'): basestring,
+        Optional('workdir'): text_type,
 
         # Any remaining content is verified against that job implementation's
         # own schema.
@@ -259,7 +261,7 @@ def use_fetches(config, jobs):
                     prefix = get_artifact_prefix(dep_tasks[0])
 
                 for artifact in artifacts:
-                    if isinstance(artifact, basestring):
+                    if isinstance(artifact, text_type):
                         path = artifact
                         dest = None
                         extract = True
@@ -293,7 +295,10 @@ def use_fetches(config, jobs):
                     job["scopes"].append(scope)
 
         env = worker.setdefault('env', {})
-        env['MOZ_FETCHES'] = {'task-reference': json.dumps(job_fetches, sort_keys=True)}
+        env['MOZ_FETCHES'] = {
+            'task-reference': six.ensure_text(json.dumps(job_fetches,
+                                                         sort_keys=True))
+        }
         # The path is normalized to an absolute path in run-task
         env.setdefault('MOZ_FETCHES_DIR', 'fetches')
 

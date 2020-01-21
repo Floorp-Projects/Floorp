@@ -10,6 +10,7 @@ import os
 import re
 import requests
 import requests_unixsocket
+import six
 import sys
 import urllib
 import urlparse
@@ -169,7 +170,8 @@ class VoidWriter(object):
 def generate_context_hash(topsrcdir, image_path, image_name, args=None):
     """Generates a sha256 hash for context directory used to build an image."""
 
-    return stream_context_tar(topsrcdir, image_path, VoidWriter(), image_name, args)
+    return stream_context_tar(
+        topsrcdir, image_path, VoidWriter(), image_name, args)
 
 
 class HashingWriter(object):
@@ -184,7 +186,7 @@ class HashingWriter(object):
         self._writer.write(buf)
 
     def hexdigest(self):
-        return self._hash.hexdigest()
+        return six.ensure_text(self._hash.hexdigest())
 
 
 def create_context_tar(topsrcdir, context_dir, out_path, prefix, args=None):

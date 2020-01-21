@@ -7,6 +7,7 @@ Transform the push-apk kind into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import resolve_keyed_by, Schema
@@ -14,7 +15,7 @@ from taskgraph.util.schema import resolve_keyed_by, Schema
 from voluptuous import Required
 
 google_play_description_schema = Schema({
-    Required('name'): basestring,
+    Required('name'): text_type,
     Required('description'): task_description_schema['description'],
     Required('job-from'): task_description_schema['job-from'],
     Required('attributes'): task_description_schema['attributes'],

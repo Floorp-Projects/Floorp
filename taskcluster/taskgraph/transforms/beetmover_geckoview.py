@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from copy import deepcopy
 
+from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import \
@@ -27,14 +28,14 @@ from voluptuous import Required, Optional
 
 
 beetmover_description_schema = schema.extend({
-    Required('depname', default='build'): basestring,
-    Optional('label'): basestring,
+    Required('depname', default='build'): text_type,
+    Optional('label'): text_type,
     Optional('treeherder'): task_description_schema['treeherder'],
 
     Required('run-on-projects'): task_description_schema['run-on-projects'],
     Required('run-on-hg-branches'): task_description_schema['run-on-hg-branches'],
 
-    Optional('bucket-scope'): optionally_keyed_by('release-level', basestring),
+    Optional('bucket-scope'): optionally_keyed_by('release-level', text_type),
     Optional('shipping-phase'): optionally_keyed_by(
         'project', task_description_schema['shipping-phase']
     ),
