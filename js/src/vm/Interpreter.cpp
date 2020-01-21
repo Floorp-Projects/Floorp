@@ -345,8 +345,7 @@ JSObject* js::ValueToCallable(JSContext* cx, HandleValue v, int numToSkip,
   return nullptr;
 }
 
-static bool MaybeCreateThisForConstructor(JSContext* cx, JSScript* calleeScript,
-                                          const CallArgs& args,
+static bool MaybeCreateThisForConstructor(JSContext* cx, const CallArgs& args,
                                           bool createSingleton) {
   if (args.thisv().isObject()) {
     return true;
@@ -356,8 +355,7 @@ static bool MaybeCreateThisForConstructor(JSContext* cx, JSScript* calleeScript,
   RootedObject newTarget(cx, &args.newTarget().toObject());
   NewObjectKind newKind = createSingleton ? SingletonObject : GenericObject;
 
-  return CreateThis(cx, callee, calleeScript, newTarget, newKind,
-                    args.mutableThisv());
+  return CreateThis(cx, callee, newTarget, newKind, args.mutableThisv());
 }
 
 static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
@@ -571,8 +569,7 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
       }
     }
 
-    if (!MaybeCreateThisForConstructor(cx, state.script(), args,
-                                       createSingleton)) {
+    if (!MaybeCreateThisForConstructor(cx, args, createSingleton)) {
       return false;
     }
   }
@@ -3054,8 +3051,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         if (construct) {
           bool createSingleton =
               ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
-          if (!MaybeCreateThisForConstructor(cx, funScript, args,
-                                             createSingleton)) {
+          if (!MaybeCreateThisForConstructor(cx, args, createSingleton)) {
             goto error;
           }
         }
