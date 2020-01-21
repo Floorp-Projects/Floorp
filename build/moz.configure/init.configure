@@ -21,6 +21,7 @@ option(env='DIST', nargs=1, help='DIST directory')
 @depends('--help', 'DIST')
 @imports(_from='__builtin__', _import='open')
 @imports(_from='os.path', _import='exists')
+@imports(_from='six', _import='ensure_text')
 def check_build_environment(help, dist):
     topobjdir = os.path.realpath(os.path.abspath('.'))
     topsrcdir = os.path.realpath(os.path.abspath(
@@ -68,8 +69,8 @@ def check_build_environment(help, dist):
             )
 
     # Check for CRLF line endings.
-    with open(os.path.join(topsrcdir, 'configure.py'), 'rb') as fh:
-        data = fh.read()
+    with open(os.path.join(topsrcdir, 'configure.py'), 'r') as fh:
+        data = ensure_text(fh.read())
         if '\r' in data:
             die('\n ***\n'
                 ' * The source tree appears to have Windows-style line endings.\n'
@@ -196,13 +197,50 @@ def mozconfig(mozconfig, old_configure, build_env,
 set_config('MOZCONFIG', depends(mozconfig)(lambda m: m['path']))
 
 
+# Mozilla-Build
+# ==============================================================
+option(env='MOZILLABUILD', nargs=1,
+       help='Path to Mozilla Build (Windows-only)')
+
+option(env='CONFIG_SHELL', nargs=1, help='Path to a POSIX shell')
+
+# It feels dirty replicating this from python/mozbuild/mozbuild/mozconfig.py,
+# but the end goal being that the configure script would go away...
+
+
+@depends('CONFIG_SHELL', 'MOZILLABUILD')
+@checking('for a shell')
+@imports('sys')
+def shell(value, mozillabuild):
+    if value:
+        return find_program(value[0])
+    shell = 'sh'
+    if mozillabuild:
+        shell = mozillabuild[0] + '/msys/bin/sh'
+    if sys.platform == 'win32':
+        shell = shell + '.exe'
+    return find_program(shell)
+
+
+# This defines a reasonable shell for when running with --help.
+# If one was passed in the environment, though, fall back to that.
+@depends('--help', 'CONFIG_SHELL')
+def help_shell(help, shell):
+    if help and not shell:
+        return 'sh'
+
+
+shell = help_shell | shell
+
+
 # Python 2
 # ========
 
 option(env='PYTHON', nargs=1, help='Python 2.7 interpreter')
 
 
-@depends('PYTHON', check_build_environment, mozconfig, '--help')
+@depends('PYTHON', check_build_environment, 'MOZILLABUILD', mozconfig, '--help')
+@imports(_from='__builtin__', _import='Exception')
 @imports('os')
 @imports('sys')
 @imports('subprocess')
@@ -211,7 +249,10 @@ option(env='PYTHON', nargs=1, help='Python 2.7 interpreter')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
 @imports(_from='mozbuild.virtualenv', _import='verify_python_version')
 @imports(_from='mozbuild.virtualenv', _import='PY2')
-def virtualenv_python2(env_python, build_env, mozconfig, help):
+@imports(_from='mozbuild.pythonutil', _import='find_python2_executable')
+@imports(_from='mozbuild.pythonutil', _import='python_executable_version')
+@imports(_from='six', _import='ensure_text')
+def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
     if help:
         return
 
@@ -258,19 +299,42 @@ def virtualenv_python2(env_python, build_env, mozconfig, help):
             os.path.join(virtualenvs_root, 'init'), out,
             os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 
+    # If we're not in the virtualenv, we need the mozfile module for
+    # find_program.
+    if normsep(sys.executable) != normsep(manager.python_path):
+        sys.path.append(os.path.join(
+            topsrcdir, 'testing', 'mozbase', 'mozfile'))
+
     if python:
-        # If we're not in the virtualenv, we need the which module for
-        # find_program.
-        if normsep(sys.executable) != normsep(manager.python_path):
-            sys.path.append(os.path.join(
-                topsrcdir, 'third_party', 'python', 'which'))
         found_python = find_program(python)
         if not found_python:
             die('The PYTHON environment variable does not contain '
                 'a valid path. Cannot find %s', python)
         python = found_python
+    elif mozillabuild:
+        # MozillaBuild provides a Python 2.
+        python = normsep('%s/python/python2.exe' % mozillabuild)
+
+        try:
+            version = python_executable_version(python).version
+        except Exception as e:
+            raise FatalCheckError('could not determine version of '
+                                  'MozillaBuild python: %s' % e)
     else:
-        python = sys.executable
+        python, version = find_python2_executable()
+        if python:
+            python = ensure_text(python)
+
+    if not python:
+        raise FatalCheckError(
+            'Python 2.7 is required to build. Ensure a `python2.7` executable '
+            'is in your PATH or define PYTHON to point to a Python 2.7 '
+            'executable.')
+
+    if version < (2, 7, 0):
+        raise FatalCheckError(
+            'Python 2.7 is required to build; '
+            '%s is Python %d.%d' % (python, version[0], version[1]))
 
     log.debug("python2: found executable: %r" % python)
 
@@ -308,6 +372,7 @@ def virtualenv_python2(env_python, build_env, mozconfig, help):
 
 set_config('PYTHON', virtualenv_python2)
 add_old_configure_assignment('PYTHON', virtualenv_python2)
+
 
 # Inject mozconfig options
 # ==============================================================
@@ -373,42 +438,6 @@ def mozconfig_options(mozconfig, automation, help):
             add(key, value)
 
 
-# Mozilla-Build
-# ==============================================================
-option(env='MOZILLABUILD', nargs=1,
-       help='Path to Mozilla Build (Windows-only)')
-
-option(env='CONFIG_SHELL', nargs=1, help='Path to a POSIX shell')
-
-# It feels dirty replicating this from python/mozbuild/mozbuild/mozconfig.py,
-# but the end goal being that the configure script would go away...
-
-
-@depends('CONFIG_SHELL', 'MOZILLABUILD')
-@checking('for a shell')
-@imports('sys')
-def shell(value, mozillabuild):
-    if value:
-        return find_program(value[0])
-    shell = 'sh'
-    if mozillabuild:
-        shell = mozillabuild[0] + '/msys/bin/sh'
-    if sys.platform == 'win32':
-        shell = shell + '.exe'
-    return find_program(shell)
-
-
-# This defines a reasonable shell for when running with --help.
-# If one was passed in the environment, though, fall back to that.
-@depends('--help', 'CONFIG_SHELL')
-def help_shell(help, shell):
-    if help and not shell:
-        return 'sh'
-
-
-shell = help_shell | shell
-
-
 # Python 3
 # ========
 
@@ -430,6 +459,7 @@ option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 @imports(_from='mozbuild.virtualenv', _import='PY3')
 @imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
+@imports(_from='six', _import='ensure_text')
 def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
     if help:
         return
@@ -501,7 +531,7 @@ def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
 
         # The API returns a bytes whereas everything in configure is unicode.
         if python:
-            python = python.decode('utf-8')
+            python = ensure_text(python)
 
     if not python:
         raise FatalCheckError('Python 3.5 or newer is required to build. '

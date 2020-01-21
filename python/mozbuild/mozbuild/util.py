@@ -1263,6 +1263,9 @@ class EnumString(six.text_type):
     def __ne__(self, other):
         return not (self == other)
 
+    def __hash__(self):
+        return super(EnumString, self).__hash__()
+
     @staticmethod
     def subclass(*possible_values):
         class EnumStringSubclass(EnumString):
