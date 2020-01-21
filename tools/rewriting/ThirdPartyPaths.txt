@@ -24,6 +24,7 @@ devtools/shared/qrcode/encoder/
 devtools/shared/sprintfjs/
 devtools/shared/storage/vendor/
 dom/canvas/test/webgl-conf/checkout/
+dom/imptests/
 dom/media/gmp/rlz/
 dom/media/gmp/widevine-adapter/content_decryption_module_export.h
 dom/media/gmp/widevine-adapter/content_decryption_module_ext.h
@@ -34,12 +35,14 @@ dom/media/platforms/ffmpeg/ffmpeg58/
 dom/media/platforms/ffmpeg/libav53/
 dom/media/platforms/ffmpeg/libav54/
 dom/media/platforms/ffmpeg/libav55/
+dom/media/webaudio/test/blink/
 dom/media/webspeech/recognition/endpointer.cc
 dom/media/webspeech/recognition/endpointer.h
 dom/media/webspeech/recognition/energy_endpointer.cc
 dom/media/webspeech/recognition/energy_endpointer.h
 dom/media/webspeech/recognition/energy_endpointer_params.cc
 dom/media/webspeech/recognition/energy_endpointer_params.h
+dom/media/webvtt/vtt.jsm
 dom/tests/mochitest/ajax/
 dom/tests/mochitest/dom-level1-core/
 dom/tests/mochitest/dom-level2-core/
