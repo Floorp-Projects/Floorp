@@ -423,9 +423,6 @@ class LexicalScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  static LexicalScope* create(JSContext* cx, ScopeKind kind, Handle<Data*> data,
-                              uint32_t firstFrameSlot, HandleScope enclosing);
-
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
                        HandleScope enclosing, MutableHandleScope scope);
@@ -552,10 +549,6 @@ class FunctionScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  static FunctionScope* create(JSContext* cx, Handle<Data*> data,
-                               bool hasParameterExprs, bool needsEnvironment,
-                               HandleFunction fun, HandleScope enclosing);
-
   static bool prepareForScopeCreation(JSContext* cx,
                                       MutableHandle<UniquePtr<Data>> data,
                                       bool hasParameterExprs,
@@ -648,10 +641,6 @@ class VarScope : public Scope {
 
     void trace(JSTracer* trc);
   };
-
-  static VarScope* create(JSContext* cx, ScopeKind kind, Handle<Data*> data,
-                          uint32_t firstFrameSlot, bool needsEnvironment,
-                          HandleScope enclosing);
 
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
@@ -828,9 +817,6 @@ class EvalScope : public Scope {
     void trace(JSTracer* trc);
   };
 
-  static EvalScope* create(JSContext* cx, ScopeKind kind, Handle<Data*> data,
-                           HandleScope enclosing);
-
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
                        HandleScope enclosing, MutableHandleScope scope);
@@ -921,10 +907,6 @@ class ModuleScope : public Scope {
     void trace(JSTracer* trc);
     Zone* zone() const;
   };
-
-  static ModuleScope* create(JSContext* cx, Handle<Data*> data,
-                             Handle<ModuleObject*> module,
-                             HandleScope enclosing);
 
   template <XDRMode mode>
   static XDRResult XDR(XDRState<mode>* xdr, HandleModuleObject module,
