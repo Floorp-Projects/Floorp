@@ -629,7 +629,7 @@ inline bool IsConstructor(const Value& v) {
 MOZ_ALWAYS_INLINE bool CreateThis(JSContext* cx, HandleFunction callee,
                                   HandleObject newTarget, NewObjectKind newKind,
                                   MutableHandleValue thisv) {
-  if (callee->isBoundFunction() || callee->isDerivedClassConstructor()) {
+  if (callee->constructorNeedsUninitializedThis()) {
     thisv.setMagic(JS_UNINITIALIZED_LEXICAL);
     return true;
   }

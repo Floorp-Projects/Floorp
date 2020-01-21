@@ -5599,7 +5599,7 @@ MDefinition* IonBuilder::createThisScriptedBaseline(MDefinition* callee) {
     return nullptr;
   }
 
-  if (target->isBoundFunction() || target->isDerivedClassConstructor()) {
+  if (target->constructorNeedsUninitializedThis()) {
     return nullptr;
   }
 
@@ -5703,12 +5703,7 @@ MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
     return magic;
   }
 
-  if (target->isBoundFunction()) {
-    return constant(MagicValue(JS_UNINITIALIZED_LEXICAL));
-  }
-
-  if (target->isDerivedClassConstructor()) {
-    MOZ_ASSERT(target->isClassConstructor());
+  if (target->constructorNeedsUninitializedThis()) {
     return constant(MagicValue(JS_UNINITIALIZED_LEXICAL));
   }
 
