@@ -142,6 +142,7 @@ struct LoadInfoArgs
   bool                        serviceWorkerTaintingSynthesized;
   bool                        documentHasUserInteracted;
   bool                        documentHasLoaded;
+  bool allowListFutureDocumentsCreatedFromThisRedirectChain;
   nsString                    cspNonce;
   bool                        skipContentSniffing;
   bool                        isFromProcessingFrameAttributes;
@@ -189,6 +190,7 @@ struct ParentLoadInfoForwarderArgs
 
   bool documentHasUserInteracted;
   bool documentHasLoaded;
+  bool allowListFutureDocumentsCreatedFromThisRedirectChain;
 
   CookieSettingsArgs? cookieSettings;
 
