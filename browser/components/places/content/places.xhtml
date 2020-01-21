@@ -377,6 +377,15 @@
               onselect="PlacesOrganizer.updateDetailsPane(event)"
               onkeypress="ContentTree.onKeyPress(event);">
           <treecols id="placeContentColumns" context="placesColumnsContext">
+            <!--
+              The below code may suggest that 'ordinal' is still a supported XUL
+              attribute. It is not. This is a crutch so that we can continue
+              persisting the CSS -moz-box-ordinal-group attribute, which is the
+              appropriate replacement for the ordinal attribute but cannot yet
+              be easily persisted. The code that synchronizes the attribute with
+              the CSS lives in toolkit/content/widget/tree.js and is specific to
+              tree elements.
+            -->
             <treecol label="&col.name.label;" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
