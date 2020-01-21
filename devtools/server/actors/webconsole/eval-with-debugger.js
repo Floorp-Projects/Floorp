@@ -272,7 +272,8 @@ function preventSideEffects(dbg) {
     },
   };
 
-  dbg.addAllGlobalsAsDebuggees();
+  // TODO: re-enable addAllGlobalsAsDebuggees(bug #1610532)
+  // dbg.addAllGlobalsAsDebuggees();
 
   dbg.onEnterFrame = frame => {
     const script = frame.script;
