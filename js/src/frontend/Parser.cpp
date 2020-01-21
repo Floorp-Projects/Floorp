@@ -1754,17 +1754,10 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     return false;
   }
 
-  // If we can defer the LazyScript creation, we are now done.
-  if (getParseInfo().isDeferred()) {
-    // Move data into funbox
-    MOZ_ASSERT(funbox->functionCreationData());
-    funbox->functionCreationData()->lazyScriptData =
-        mozilla::Some(std::move(data));
-    return true;
-  }
-
-  // Eager Function tree mode, emit the lazy script now.
-  return data.create(cx_, funbox, sourceObject_);
+  MOZ_ASSERT(funbox->functionCreationData());
+  funbox->functionCreationData()->lazyScriptData =
+      mozilla::Some(std::move(data));
+  return true;
 }
 
 bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
