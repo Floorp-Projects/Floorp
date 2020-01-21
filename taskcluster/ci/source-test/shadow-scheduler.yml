@@ -22,6 +22,17 @@ job-defaults:
         mach: taskgraph optimized -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized_tasks.list
         sparse-profile: taskgraph
 
+relevant_tests:
+    description: Runs the relevant_tests optimization strategy instead of SETA.
+    treeherder:
+        symbol: SS(relevant_tests)
+    index:
+        product: source
+        job-name: shadow-scheduler-relevant_tests
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:relevant_tests
+
 seta_15_180:
     description: Runs the seta_15_180 experimental optimization strategy
     treeherder:
