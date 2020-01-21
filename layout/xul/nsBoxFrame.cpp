@@ -887,20 +887,6 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                   NS_FRAME_IS_DIRTY);
-  } else if (aAttribute == nsGkAtoms::ordinal) {
-    nsIFrame* parent = GetParentXULBox(this);
-    // If our parent is not a box, there's not much we can do... but in that
-    // case our ordinal doesn't matter anyway, so that's ok.
-    // Also don't bother with popup frames since they are kept on the
-    // kPopupList and XULRelayoutChildAtOrdinal() only handles
-    // principal children.
-    if (parent && !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-        StyleDisplay()->mDisplay != mozilla::StyleDisplay::MozPopup) {
-      parent->XULRelayoutChildAtOrdinal(this);
-      // XXXldb Should this instead be a tree change on the child or parent?
-      PresShell()->FrameNeedsReflow(parent, IntrinsicDirty::StyleChange,
-                                    NS_FRAME_IS_DIRTY);
-    }
   }
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr
@@ -1050,7 +1036,8 @@ static bool IsBoxOrdinalLEQ(nsIFrame* aFrame1, nsIFrame* aFrame2) {
   // If we've got a placeholder frame, use its out-of-flow frame's ordinal val.
   nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
   nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
-  return aRealFrame1->GetXULOrdinal() <= aRealFrame2->GetXULOrdinal();
+  return aRealFrame1->StyleXUL()->mBoxOrdinal <=
+         aRealFrame2->StyleXUL()->mBoxOrdinal;
 }
 
 void nsBoxFrame::CheckBoxOrder() {
@@ -1076,13 +1063,13 @@ nsresult nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox,
 }
 
 nsresult nsBoxFrame::XULRelayoutChildAtOrdinal(nsIFrame* aChild) {
-  int32_t ord = aChild->GetXULOrdinal();
+  int32_t ord = aChild->StyleXUL()->mBoxOrdinal;
 
   nsIFrame* child = mFrames.FirstChild();
   nsIFrame* newPrevSib = nullptr;
 
   while (child) {
-    if (ord < child->GetXULOrdinal()) {
+    if (ord < child->StyleXUL()->mBoxOrdinal) {
       break;
     }
 

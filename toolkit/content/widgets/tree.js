@@ -211,7 +211,6 @@
           tree.stopEditing(true);
           var menuitem = this.querySelector('[anonid="menuitem"]');
           if (event.originalTarget == menuitem) {
-            tree.columns.restoreNaturalOrder();
             this.style.MozBoxOrdinalGroup = "";
             tree._ensureColumnOrder();
           } else {
