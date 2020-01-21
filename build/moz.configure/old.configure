@@ -326,6 +326,7 @@ def prepare_configure_options(extra_old_configure_args, all_options, *options):
 @imports('types')
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
+@imports(_from='six', _import='exec_')
 def old_configure(prepare_configure, prepare_configure_options, altered_path):
     cmd = prepare_configure + prepare_configure_options.options
     extra_env = prepare_configure_options.extra_env
@@ -387,10 +388,7 @@ def old_configure(prepare_configure, prepare_configure_options, altered_path):
     }
     with open('config.data', 'r') as fh:
         code = compile(fh.read(), 'config.data', 'exec')
-        # Every variation of the exec() function I tried led to:
-        # SyntaxError: unqualified exec is not allowed in function 'main' it
-        # contains a nested function with free variables
-        exec code in raw_config # noqa
+        exec_(code, raw_config)
 
     # Ensure all the flags known to old-configure appear in the
     # @old_configure_options above.
