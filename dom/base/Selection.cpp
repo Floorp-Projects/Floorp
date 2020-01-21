@@ -1361,7 +1361,8 @@ nsresult Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
   return NS_OK;
 }
 
-void Selection::SelectFramesForContent(nsIContent* aContent, bool aSelected) {
+void Selection::SelectFramesForContent(nsIContent* aContent,
+                                       bool aSelected) const {
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame) {
     return;
@@ -1379,7 +1380,8 @@ void Selection::SelectFramesForContent(nsIContent* aContent, bool aSelected) {
 
 // select all content children of aContent
 nsresult Selection::SelectAllFramesForContent(
-    PostContentIterator& aPostOrderIter, nsIContent* aContent, bool aSelected) {
+    PostContentIterator& aPostOrderIter, nsIContent* aContent,
+    bool aSelected) const {
   // If aContent doesn't have children, we should avoid to use the content
   // iterator for performance reason.
   if (!aContent->HasChildren()) {
