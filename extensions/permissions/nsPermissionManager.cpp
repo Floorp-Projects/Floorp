@@ -87,36 +87,13 @@ static void LogToConsole(const nsAString& aMsg) {
 
 namespace {
 
-// The number of permissions from the kPreloadPermissions list which are present
-// in the permission manager. Used to determine if the permission manager should
-// be checked for one of these preload permissions in nsContentBlocker.
-static int32_t sPreloadPermissionCount = 0;
-
 // These permissions are special permissions which must be transmitted to the
 // content process before documents with their principals have loaded within
-// that process. This is because these permissions are used for content
-// blocking in nsContentBlocker.
+// that process.
 //
 // Permissions which are in this list are considered to have a "" permission
 // key, even if their principal would not normally have that key.
 static const nsLiteralCString kPreloadPermissions[] = {
-    // NOTE: These permissions are the different nsContentBlocker permissions
-    // for allowing or denying certain content types from being loaded. Every
-    // permission listed in the `kTypeString` array in nsContentBlocker.cpp
-    // should appear in this list.
-    NS_LITERAL_CSTRING("other"), NS_LITERAL_CSTRING("script"),
-    NS_LITERAL_CSTRING("image"), NS_LITERAL_CSTRING("stylesheet"),
-    NS_LITERAL_CSTRING("object"), NS_LITERAL_CSTRING("document"),
-    NS_LITERAL_CSTRING("subdocument"), NS_LITERAL_CSTRING("refresh"),
-    NS_LITERAL_CSTRING("xbl"), NS_LITERAL_CSTRING("ping"),
-    NS_LITERAL_CSTRING("xmlhttprequest"),
-    NS_LITERAL_CSTRING("objectsubrequest"), NS_LITERAL_CSTRING("dtd"),
-    NS_LITERAL_CSTRING("font"), NS_LITERAL_CSTRING("media"),
-    NS_LITERAL_CSTRING("websocket"), NS_LITERAL_CSTRING("csp_report"),
-    NS_LITERAL_CSTRING("xslt"), NS_LITERAL_CSTRING("beacon"),
-    NS_LITERAL_CSTRING("fetch"), NS_LITERAL_CSTRING("image"),
-    NS_LITERAL_CSTRING("manifest"), NS_LITERAL_CSTRING("speculative"),
-
     // This permission is preloaded to support properly blocking service worker
     // interception when a user has disabled storage for a specific site.  Once
     // service worker interception moves to the parent process this should be
@@ -1866,12 +1843,6 @@ nsresult nsPermissionManager::AddInternal(
           PermissionEntry(id, typeIndex, aPermission, aExpireType, aExpireTime,
                           aModificationTime));
 
-      // Record a count of the number of preload permissions present in the
-      // content process.
-      if (IsPreloadPermission(mTypeArray[typeIndex])) {
-        sPreloadPermissionCount++;
-      }
-
       if (aDBOperation == eWriteToDB &&
           IsPersistentExpire(aExpireType, aType)) {
         UpdateDB(op, mStmtInsert, id, origin, aType, aPermission, aExpireType,
@@ -1899,12 +1870,6 @@ nsresult nsPermissionManager::AddInternal(
       }
 
       entry->GetPermissions().RemoveElementAt(index);
-
-      // Record a count of the number of preload permissions present in the
-      // content process.
-      if (IsPreloadPermission(mTypeArray[typeIndex])) {
-        sPreloadPermissionCount--;
-      }
 
       if (aDBOperation == eWriteToDB)
         // We care only about the id here so we pass dummy values for all other
@@ -3338,8 +3303,4 @@ void nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
                 "nsPermissionManager permission promise rejected. We're "
                 "probably shutting down.");
           });
-}
-
-bool nsPermissionManager::HasPreloadPermissions() {
-  return sPreloadPermissionCount > 0;
 }
