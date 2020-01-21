@@ -8640,8 +8640,8 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
   data.writer().beginObject(flags);
 
   uint32_t index = 0;
-  data.writer().beginDenseArrayElements();
   for (ParseNode* elem = arrayHead; elem; elem = elem->pn_next, index++) {
+    data.writer().setPropIndex(index);
     if (!emitObjLiteralValue(&data, elem)) {
       return false;
     }
