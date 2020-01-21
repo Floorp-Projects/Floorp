@@ -1,5 +1,3 @@
-# Keep in sync with top-level .eslintignore
-
 assets/*
 src/test/examples/**
 src/test/integration/**
