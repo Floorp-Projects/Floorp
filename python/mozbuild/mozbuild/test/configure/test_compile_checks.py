@@ -9,7 +9,7 @@ import textwrap
 import unittest
 import mozpack.path as mozpath
 
-from StringIO import StringIO
+from six import StringIO
 
 from buildconfig import topsrcdir
 from common import ConfigureTestSandbox
