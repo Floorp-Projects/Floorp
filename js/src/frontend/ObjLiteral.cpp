@@ -120,12 +120,18 @@ static JSObject* InterpretObjLiteralArray(
   Rooted<ValueVector> elements(cx, ValueVector(cx));
   Rooted<Value> propVal(cx);
 
+  mozilla::DebugOnly<uint32_t> index = 0;
   while (true) {
     if (!reader.readInsn(&insn)) {
       break;
     }
     MOZ_ASSERT(insn.isValid());
 
+    MOZ_ASSERT(insn.getKey().isArrayIndex());
+    MOZ_ASSERT(insn.getKey().getArrayIndex() == index);
+#ifdef DEBUG
+    index++;
+#endif
     propVal.setUndefined();
     InterpretObjLiteralValue(atoms, insn, &propVal);
     if (!elements.append(propVal)) {

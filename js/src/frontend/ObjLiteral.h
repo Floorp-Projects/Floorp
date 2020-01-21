@@ -194,30 +194,16 @@ inline bool ObjLiteralOpcodeHasAtomArg(ObjLiteralOpcode op) {
 }
 
 struct ObjLiteralReaderBase;
-
-// Property name (as an atom index) or an integer index.  Only used for
-// object-type literals; array literals do not require the index (the sequence
-// is always dense, with no holes, so the index is implicit). For the latter
-// case, we have a `None` placeholder.
+// or an integer index.
 struct ObjLiteralKey {
  private:
   uint32_t value_;
-
-  enum ObjLiteralKeyType {
-    None,
-    AtomIndex,
-    ArrayIndex,
-  };
-
-  ObjLiteralKeyType type_;
-
-  ObjLiteralKey(uint32_t value, ObjLiteralKeyType ty)
-      : value_(value), type_(ty) {}
+  bool isArrayIndex_;
 
  public:
-  ObjLiteralKey() : ObjLiteralKey(0, None) {}
+  ObjLiteralKey() : value_(0), isArrayIndex_(true) {}
   ObjLiteralKey(uint32_t value, bool isArrayIndex)
-      : ObjLiteralKey(value, isArrayIndex ? ArrayIndex : AtomIndex) {}
+      : value_(value), isArrayIndex_(isArrayIndex) {}
   ObjLiteralKey(const ObjLiteralKey& other) = default;
 
   static ObjLiteralKey fromPropName(uint32_t atomIndex) {
@@ -226,11 +212,9 @@ struct ObjLiteralKey {
   static ObjLiteralKey fromArrayIndex(uint32_t index) {
     return ObjLiteralKey(index, true);
   }
-  static ObjLiteralKey none() { return ObjLiteralKey(); }
 
-  bool isNone() const { return type_ == None; }
-  bool isAtomIndex() const { return type_ == AtomIndex; }
-  bool isArrayIndex() const { return type_ == ArrayIndex; }
+  bool isAtomIndex() const { return !isArrayIndex_; }
+  bool isArrayIndex() const { return isArrayIndex_; }
 
   uint32_t getAtomIndex() const {
     MOZ_ASSERT(isAtomIndex());
@@ -316,23 +300,12 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
   void beginObject(ObjLiteralFlags flags) { flags_ = flags; }
   void setPropName(uint32_t propName) {
-    // Only valid in object-mode.
-    MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
     MOZ_ASSERT(propName <= ATOM_INDEX_MASK);
     nextKey_ = ObjLiteralKey::fromPropName(propName);
   }
   void setPropIndex(uint32_t propIndex) {
-    // Only valid in object-mode.
-    MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
     MOZ_ASSERT(propIndex <= ATOM_INDEX_MASK);
     nextKey_ = ObjLiteralKey::fromArrayIndex(propIndex);
-  }
-  void beginDenseArrayElements() {
-    // Only valid in array-mode.
-    MOZ_ASSERT(flags_.contains(ObjLiteralFlag::Array));
-    // Dense array element sequences do not use the keys; the indices are
-    // implicit.
-    nextKey_ = ObjLiteralKey::none();
   }
 
   MOZ_MUST_USE bool propWithConstNumericValue(const JS::Value& value) {
