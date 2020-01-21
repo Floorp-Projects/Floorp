@@ -18,6 +18,18 @@ assertExpr("foo[bar]", memExpr(ident("foo"), ident("bar")));
 assertExpr("foo['bar']", memExpr(ident("foo"), lit("bar")));
 assertExpr("foo[42]", memExpr(ident("foo"), lit(42)));
 
+// optional member expressions
+assertExpr("foo?.bar", optExpr(optDotExpr(ident("foo"), ident("bar"))));
+assertExpr("foo?.bar.baz", optExpr(dotExpr(optDotExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("foo.bar?.baz", optExpr(optDotExpr(dotExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("foo?.bar?.baz", optExpr(optDotExpr(optDotExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("foo?.[bar].baz", optExpr(dotExpr(optMemExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("foo.bar?.[baz]", optExpr(optMemExpr(dotExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("foo[bar]?.[baz]", optExpr(optMemExpr(memExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("foo?.[bar][baz]", optExpr(memExpr(optMemExpr(ident("foo"), ident("bar")), ident("baz"))));
+assertExpr("foo?.['bar']?.['baz']", optExpr(optMemExpr(optMemExpr(ident("foo"), lit("bar")), lit("baz"))));
+assertExpr("foo?.[bar]?.baz", optExpr(optDotExpr(optMemExpr(ident("foo"), ident("bar")), ident("baz"))));
+
 // function expressions
 assertExpr("(function(){})", funExpr(null, [], blockStmt([])));
 assertExpr("(function f() {})", funExpr(ident("f"), [], blockStmt([])));
@@ -106,6 +118,15 @@ assertExpr("(new Object(1,2,3))", newExpr(ident("Object"), [lit(1),lit(2),lit(3)
 assertExpr("(String())", callExpr(ident("String"), []));
 assertExpr("(String(42))", callExpr(ident("String"), [lit(42)]));
 assertExpr("(String(1,2,3))", callExpr(ident("String"), [lit(1),lit(2),lit(3)]));
+
+// Optional Call expressions
+assertExpr("(String?.())", optExpr(optCallExpr(ident("String"), [])));
+assertExpr("(String?.(42))", optExpr(optCallExpr(ident("String"), [lit(42)])));
+assertExpr("(String?.(1,2,3))", optExpr(optCallExpr(ident("String"), [lit(1),lit(2),lit(3)])));
+assertExpr("(String?.foo?.())", optExpr(optCallExpr(optDotExpr(ident("String"), ident("foo")), [])));
+assertExpr("(String.foo?.())", optExpr(optCallExpr(dotExpr(ident("String"), ident("foo")), [])));
+assertExpr("(String?.foo)()", callExpr(optExpr(optDotExpr(ident("String"), ident("foo"))), []));
+assertExpr("(String?.foo)?.()", optExpr(optCallExpr(optExpr(optDotExpr(ident("String"), ident("foo"))), [])));
 
 // Array expressions
 assertExpr("[]", arrExpr([]));
