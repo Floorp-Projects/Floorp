@@ -8,6 +8,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.support.base.log.logger.Logger
 import java.lang.Exception
 
@@ -45,7 +46,7 @@ class TrackingProtectionUseCases(
     }
 
     /**
-     * Use case for removing a [Session] from the exception list.
+     * Use case for removing a [Session] or a [TrackingProtectionException] from the exception list.
      */
     class RemoveExceptionUseCase internal constructor(
         private val sessionManager: SessionManager,
@@ -62,6 +63,14 @@ class TrackingProtectionUseCases(
                 ?: return logger.error("The engine session should not be null")
 
             engine.trackingProtectionExceptionStore.remove(engineSession)
+        }
+
+        /**
+         * Removes a [exception] from the exception list.
+         * @param exception The [TrackingProtectionException] that will be removed from the exception list.
+         */
+        operator fun invoke(exception: TrackingProtectionException) {
+            engine.trackingProtectionExceptionStore.remove(exception)
         }
     }
 
@@ -112,10 +121,10 @@ class TrackingProtectionUseCases(
         /**
          * Fetch all domains that will be ignored for tracking protection.
          * @param onResult A callback to inform that the domains on the exception list has been fetched,
-         * it provides a list of domains that are on the exception list, if there are none domains
+         * it provides a list of [TrackingProtectionException] that are on the exception list, if there are none domains
          * on the exception list, an empty list will be provided.
          */
-        operator fun invoke(onResult: (List<String>) -> Unit) {
+        operator fun invoke(onResult: (List<TrackingProtectionException>) -> Unit) {
             engine.trackingProtectionExceptionStore.fetchAll(onResult)
         }
     }

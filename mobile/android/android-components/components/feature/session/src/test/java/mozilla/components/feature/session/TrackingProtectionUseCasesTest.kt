@@ -4,10 +4,12 @@
 
 package mozilla.components.feature.session
 
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -108,18 +110,24 @@ class TrackingProtectionUseCasesTest {
     }
 
     @Test
-    fun `remove exception`() {
-        useCases.removeException(mock())
+    fun `remove a session exception`() {
+        useCases.removeException(mock<Session>())
         verify(mockSessionManager).getEngineSession(any())
-        verify(mockStore).remove(any())
+        verify(mockStore).remove(any<EngineSession>())
+    }
+
+    @Test
+    fun `remove a tracking protection exception`() {
+        useCases.removeException(mock<TrackingProtectionException>())
+        verify(mockStore).remove(any<TrackingProtectionException>())
     }
 
     @Test
     fun `remove exception with a null engine session will not call the store`() {
         whenever(mockSessionManager.getEngineSession(any())).thenReturn(null)
 
-        useCases.removeException(mock())
-        verify(mockStore, times(0)).remove(any())
+        useCases.removeException(mock<Session>())
+        verify(mockStore, times(0)).remove(any<EngineSession>())
     }
 
     @Test

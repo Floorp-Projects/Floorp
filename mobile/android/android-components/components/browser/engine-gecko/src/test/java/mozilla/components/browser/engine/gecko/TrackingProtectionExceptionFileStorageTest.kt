@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -175,6 +176,12 @@ class TrackingProtectionExceptionFileStorageTest {
         assertFalse(excludedOnTrackingProtection)
     }
 
+    @Test(expected = UnsupportedOperationException::class)
+    fun `remove a TrackingProtectionException`() {
+        val storage = TrackingProtectionExceptionFileStorage(testContext, mock())
+        storage.remove(mock<TrackingProtectionException>())
+    }
+
     @Test
     fun `contains exception`() {
         val mockContentBlocking = mock<ContentBlockingController>()
@@ -215,7 +222,7 @@ class TrackingProtectionExceptionFileStorageTest {
         var geckoResult = GeckoResult<ContentBlockingController.ExceptionList>()
         val mockGeckoSession = mock<GeckoSession>()
         val mockExceptionList = mock<ContentBlockingController.ExceptionList>()
-        var exceptionList: List<String>? = null
+        var exceptionList: List<TrackingProtectionException>? = null
         whenever(session.geckoSession).thenReturn(mockGeckoSession)
         whenever(runtime.contentBlockingController).thenReturn(mockContentBlocking)
         whenever(runtime.contentBlockingController.saveExceptionList()).thenReturn(geckoResult)

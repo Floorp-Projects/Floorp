@@ -10,7 +10,9 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.browser.engine.gecko.content.blocking.GeckoTrackingProtectionException
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
@@ -58,11 +60,11 @@ internal class TrackingProtectionExceptionFileStorage(
         }
     }
 
-    override fun fetchAll(onResult: (List<String>) -> Unit) {
+    override fun fetchAll(onResult: (List<TrackingProtectionException>) -> Unit) {
         runtime.contentBlockingController.saveExceptionList().accept { exceptionList ->
             val exceptions = if (exceptionList != null) {
                 val uris = exceptionList.uris.map { uri ->
-                    uri
+                    GeckoTrackingProtectionException(uri)
                 }
                 uris
             } else {
@@ -88,6 +90,11 @@ internal class TrackingProtectionExceptionFileStorage(
             onExcludedOnTrackingProtectionChange(false)
         }
         persist()
+    }
+
+    // Support for this behavior hasn't been implemented on this channel yet.
+    override fun remove(exception: TrackingProtectionException) {
+        throw UnsupportedOperationException("Support for this operation hasn't been implemented on this channel yet")
     }
 
     override fun removeAll() {
