@@ -1361,8 +1361,7 @@ nsresult Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
   return NS_OK;
 }
 
-void Selection::SelectFramesForContent(nsIContent* aContent,
-                                       bool aSelected) const {
+void Selection::SelectFramesOf(nsIContent* aContent, bool aSelected) const {
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame) {
     return;
@@ -1378,14 +1377,13 @@ void Selection::SelectFramesForContent(nsIContent* aContent,
   }
 }
 
-// select all content children of aContent
-nsresult Selection::SelectAllFramesForContent(
+nsresult Selection::SelectFramesOfInclusiveDescendantsOfContent(
     PostContentIterator& aPostOrderIter, nsIContent* aContent,
     bool aSelected) const {
   // If aContent doesn't have children, we should avoid to use the content
   // iterator for performance reason.
   if (!aContent->HasChildren()) {
-    SelectFramesForContent(aContent, aSelected);
+    SelectFramesOf(aContent, aSelected);
     return NS_OK;
   }
 
@@ -1397,7 +1395,7 @@ nsresult Selection::SelectAllFramesForContent(
     nsINode* node = aPostOrderIter.GetCurrentNode();
     MOZ_ASSERT(node);
     nsIContent* innercontent = node->IsContent() ? node->AsContent() : nullptr;
-    SelectFramesForContent(innercontent, aSelected);
+    SelectFramesOf(innercontent, aSelected);
   }
 
   return NS_OK;
@@ -1488,7 +1486,7 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
   if (aRange->Collapsed() ||
       (startNode == endNode && !startNode->HasChildren())) {
     if (!isFirstContentTextNode) {
-      SelectFramesForContent(startContent, aSelect);
+      SelectFramesOf(startContent, aSelect);
     }
     return NS_OK;
   }
@@ -1504,7 +1502,8 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
     nsINode* node = subtreeIter.GetCurrentNode();
     MOZ_ASSERT(node);
     nsIContent* content = node->IsContent() ? node->AsContent() : nullptr;
-    SelectAllFramesForContent(postOrderIter, content, aSelect);
+    SelectFramesOfInclusiveDescendantsOfContent(postOrderIter, content,
+                                                aSelect);
   }
 
   // We must now do the last one if it is not the same as the first
