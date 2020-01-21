@@ -303,7 +303,7 @@ class MediaPipelineTransmit : public MediaPipeline {
   // Replace a track with a different one.
   nsresult SetTrack(RefPtr<dom::MediaStreamTrack> aDomTrack);
 
-  // Set the track whose data we will transmit. For internal and test use. */
+  // Set the track whose data we will transmit. For internal and test use.
   void SetSendTrack(RefPtr<ProcessedMediaTrack> aSendTrack);
 
   // Separate classes to allow ref counting
@@ -317,6 +317,8 @@ class MediaPipelineTransmit : public MediaPipeline {
   void SetDescription();
 
  private:
+  void AsyncStart(const RefPtr<GenericPromise>& aPromise);
+
   const bool mIsVideo;
   const RefPtr<PipelineListener> mListener;
   // Listens for changes in enabled state on the attached MediaStreamTrack, and
@@ -332,6 +334,11 @@ class MediaPipelineTransmit : public MediaPipeline {
   RefPtr<ProcessedMediaTrack> mSendTrack;
   // True if we're actively transmitting data to the network. Main thread only.
   bool mTransmitting;
+  // When AsyncStart() is used this flag helps to avoid unexpected starts. One
+  // case is that a start has already been scheduled. A second case is that a
+  // start has already taken place (from JS for example). A third case is that
+  // a stop has taken place so we want to cancel the start. Main thread only.
+  bool mAsyncStartRequested;
 };
 
 // A specialization of pipeline for reading from the network and
