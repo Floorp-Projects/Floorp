@@ -626,7 +626,7 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync) {
             }
             return;
           } else {
-            mFontSet->LogMessage(this, "download failed",
+            mFontSet->LogMessage(this, "failed to start download",
                                  nsIScriptError::errorFlag, rv);
           }
         }
