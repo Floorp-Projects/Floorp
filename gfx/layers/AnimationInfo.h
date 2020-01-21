@@ -7,17 +7,17 @@
 #ifndef GFX_ANIMATIONINFO_H
 #define GFX_ANIMATIONINFO_H
 
-#include "nsAutoPtr.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsDisplayItemTypes.h"
 #include "mozilla/Array.h"
+#include "mozilla/UniquePtr.h"
 
 struct RawServoAnimationValue;
 class nsIContent;
 class nsIFrame;
 
 namespace mozilla {
-namespace gfx{
+namespace gfx {
 class Path;
 }  // namespace gfx
 
@@ -110,7 +110,7 @@ class AnimationInfo final {
   // readily use for sampling and then store it in mPropertyAnimationGroups
   // (below) or CompositorAnimationStorage.mAnimations for WebRender.
   AnimationArray mAnimations;
-  nsAutoPtr<AnimationArray> mPendingAnimations;
+  UniquePtr<AnimationArray> mPendingAnimations;
 
   uint64_t mCompositorAnimationsId;
   // The extracted data produced by AnimationHelper::ExtractAnimations().

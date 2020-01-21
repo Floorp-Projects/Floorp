@@ -10,8 +10,8 @@
 #include <windows.h>
 #include <d3d10_1.h>
 
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace layers {
@@ -56,7 +56,7 @@ class ReadbackManagerD3D11 final {
   // FiFo list of readback tasks that are to be executed. Access is synchronized
   // by mTaskMutex.
   CRITICAL_SECTION mTaskMutex;
-  nsTArray<nsAutoPtr<ReadbackTask>> mPendingReadbackTasks;
+  nsTArray<UniquePtr<ReadbackTask>> mPendingReadbackTasks;
 };
 
 }  // namespace layers

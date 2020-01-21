@@ -41,7 +41,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/mozalloc.h"        // for operator delete, etc
-#include "nsAutoPtr.h"               // for nsAutoPtr, nsRefPtr, etc
 #include "nsCOMPtr.h"                // for already_AddRefed
 #include "nsCSSPropertyID.h"         // for nsCSSPropertyID
 #include "nsDebug.h"                 // for NS_ASSERTION
@@ -1201,7 +1200,7 @@ class Layer {
    * the next transaction is opened.
    */
   void SetBaseTransformForNextTransaction(const gfx::Matrix4x4& aMatrix) {
-    mPendingTransform = new gfx::Matrix4x4(aMatrix);
+    mPendingTransform = mozilla::MakeUnique<gfx::Matrix4x4>(aMatrix);
   }
 
   void SetPostScale(float aXScale, float aYScale) {
@@ -1407,7 +1406,7 @@ class Layer {
   }
   bool IsScrollbarContainer() const;
   Layer* GetMaskLayer() const { return mMaskLayer; }
-  bool HasPendingTransform() const { return mPendingTransform; }
+  bool HasPendingTransform() const { return !!mPendingTransform; }
 
   void CheckCanary() const { mCanary.Check(); }
 
@@ -1976,7 +1975,7 @@ class Layer {
   // A mutation of |mTransform| that we've queued to be applied at the
   // end of the next transaction (if nothing else overrides it in the
   // meantime).
-  nsAutoPtr<gfx::Matrix4x4> mPendingTransform;
+  UniquePtr<gfx::Matrix4x4> mPendingTransform;
   gfx::Matrix4x4 mEffectiveTransform;
   AnimationInfo mAnimationInfo;
   Maybe<ParentLayerIntRect> mClipRect;
