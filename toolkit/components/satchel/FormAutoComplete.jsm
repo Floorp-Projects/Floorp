@@ -39,7 +39,7 @@ function isAutocompleteDisabled(aField) {
 function FormHistoryClient({ formField, inputName }) {
   if (formField && inputName != this.SEARCHBAR_ID) {
     let window = formField.ownerGlobal;
-    this.windowGlobal = window.windowGlobalChild;
+    this.windowGlobal = window.getWindowGlobalChild();
   } else if (inputName == this.SEARCHBAR_ID && formField) {
     throw new Error(
       "FormHistoryClient constructed with both a " +

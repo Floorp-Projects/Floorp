@@ -679,7 +679,7 @@ class SpecialPowersChild extends JSWindowActorChild {
 
   async toggleMuteState(aMuted, aWindow) {
     let actor = aWindow
-      ? aWindow.windowGlobalChild.getActor("SpecialPowers")
+      ? aWindow.getWindowGlobalChild().getActor("SpecialPowers")
       : this;
     return actor.sendQuery("SPToggleMuteAudio", { mute: aMuted });
   }
@@ -1773,7 +1773,7 @@ class SpecialPowersChild extends JSWindowActorChild {
 
     try {
       let actor = aWindow
-        ? aWindow.windowGlobalChild.getActor("SpecialPowers")
+        ? aWindow.getWindowGlobalChild().getActor("SpecialPowers")
         : this;
       actor.sendAsyncMessage("SpecialPowers.Focus", {});
     } catch (e) {
