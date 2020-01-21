@@ -2,7 +2,7 @@
 
 # WebPush
 
-`WebPush` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L379)
+`WebPush` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L380)
 
 ### Inherited Functions
 

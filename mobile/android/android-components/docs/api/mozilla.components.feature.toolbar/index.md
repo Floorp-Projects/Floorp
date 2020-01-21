@@ -18,4 +18,3 @@
 | Name | Summary |
 |---|---|
 | [SearchUseCase](-search-use-case.md) | `typealias SearchUseCase = (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A function representing the search use case, accepting the search terms as string. |
-| [WebExtensionBrowserAction](-web-extension-browser-action.md) | `typealias WebExtensionBrowserAction = `[`BrowserAction`](../mozilla.components.concept.engine.webextension/-browser-action/index.md) |

@@ -2,13 +2,13 @@
 
 # WebExtensionToolbarAction
 
-`open class WebExtensionToolbarAction : `[`Action`](../../mozilla.components.concept.toolbar/-toolbar/-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/WebExtensionToolbarAction.kt#L30)
+`open class WebExtensionToolbarAction : `[`Action`](../../mozilla.components.concept.toolbar/-toolbar/-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/WebExtensionToolbarAction.kt#L31)
 
 An action button that represents an web extension item to be added to the toolbar.
 
 ### Parameters
 
-`browserAction` - Associated [WebExtensionBrowserAction](../-web-extension-browser-action.md)
+`browserAction` - Associated [WebExtensionBrowserAction](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)
 
 `listener` - Callback that will be invoked whenever the button is pressed
 
@@ -16,7 +16,7 @@ An action button that represents an web extension item to be added to the toolba
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebExtensionToolbarAction(browserAction: `[`WebExtensionBrowserAction`](../-web-extension-browser-action.md)`, padding: `[`Padding`](../../mozilla.components.support.base.android/-padding/index.md)`? = null, iconJobDispatcher: CoroutineDispatcher, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>An action button that represents an web extension item to be added to the toolbar. |
+| [&lt;init&gt;](-init-.md) | `WebExtensionToolbarAction(browserAction: `[`WebExtensionBrowserAction`](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`, padding: `[`Padding`](../../mozilla.components.support.base.android/-padding/index.md)`? = null, iconJobDispatcher: CoroutineDispatcher, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>An action button that represents an web extension item to be added to the toolbar. |
 
 ### Inherited Properties
 

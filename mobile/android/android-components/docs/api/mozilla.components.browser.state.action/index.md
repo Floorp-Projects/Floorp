@@ -15,9 +15,3 @@
 | [TabListAction](-tab-list-action/index.md) | `sealed class TabListAction : `[`BrowserAction`](-browser-action.md)<br>[BrowserAction](-browser-action.md) implementations related to updating the list of [TabSessionState](../mozilla.components.browser.state.state/-tab-session-state/index.md) inside [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |
 | [TrackingProtectionAction](-tracking-protection-action/index.md) | `sealed class TrackingProtectionAction : `[`BrowserAction`](-browser-action.md)<br>[BrowserAction](-browser-action.md) implementations related to updating the [TrackingProtectionState](../mozilla.components.browser.state.state/-tracking-protection-state/index.md) of a single [SessionState](../mozilla.components.browser.state.state/-session-state/index.md) inside [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |
 | [WebExtensionAction](-web-extension-action/index.md) | `sealed class WebExtensionAction : `[`BrowserAction`](-browser-action.md)<br>[BrowserAction](-browser-action.md) implementations related to updating [BrowserState.extensions](../mozilla.components.browser.state.state/-browser-state/extensions.md) and [TabSessionState.extensionState](../mozilla.components.browser.state.state/-tab-session-state/extension-state.md). |
-
-### Type Aliases
-
-| Name | Summary |
-|---|---|
-| [WebExtensionBrowserAction](-web-extension-browser-action.md) | `typealias WebExtensionBrowserAction = `[`BrowserAction`](../mozilla.components.concept.engine.webextension/-browser-action/index.md) |

@@ -2,7 +2,7 @@
 
 # ERROR_NET_RESET
 
-`ERROR_NET_RESET` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L114)
+`ERROR_NET_RESET` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L115)
 
 ### Inherited Properties
 

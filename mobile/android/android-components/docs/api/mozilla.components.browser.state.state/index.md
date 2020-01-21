@@ -21,12 +21,6 @@
 | [TrackingProtectionState](-tracking-protection-state/index.md) | `data class TrackingProtectionState`<br>Value type that represents the state of tracking protection within a [SessionState](-session-state/index.md). |
 | [WebExtensionState](-web-extension-state/index.md) | `data class WebExtensionState`<br>Value type that represents the state of a web extension. |
 
-### Type Aliases
-
-| Name | Summary |
-|---|---|
-| [WebExtensionBrowserAction](-web-extension-browser-action.md) | `typealias WebExtensionBrowserAction = `[`BrowserAction`](../mozilla.components.concept.engine.webextension/-browser-action/index.md) |
-
 ### Functions
 
 | Name | Summary |

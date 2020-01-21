@@ -6,3 +6,6 @@
 
 An activity that notifies on migration progress. Should be used in tandem with [MigrationIntentProcessor](../-migration-intent-processor/index.md).
 
+Implementation notes: this abstraction exists to ensure that migration apps do not allow the user to
+invoke [AppCompatActivity.onBackPressed](#).
+

@@ -2,9 +2,12 @@
 
 # AbstractMigrationProgressActivity
 
-`abstract class AbstractMigrationProgressActivity : AppCompatActivity, `[`MigrationStateListener`](../-migration-state-listener/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AbstractMigrationProgressActivity.kt#L18)
+`abstract class AbstractMigrationProgressActivity : AppCompatActivity, `[`MigrationStateListener`](../-migration-state-listener/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AbstractMigrationProgressActivity.kt#L21)
 
 An activity that notifies on migration progress. Should be used in tandem with [MigrationIntentProcessor](../-migration-intent-processor/index.md).
+
+Implementation notes: this abstraction exists to ensure that migration apps do not allow the user to
+invoke [AppCompatActivity.onBackPressed](#).
 
 ### Constructors
 
@@ -30,7 +33,7 @@ An activity that notifies on migration progress. Should be used in tandem with [
 
 | Name | Summary |
 |---|---|
-| [onMigrationCompleted](../-migration-state-listener/on-migration-completed.md) | `abstract fun onMigrationCompleted(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when the migration is complete. |
+| [onMigrationCompleted](../-migration-state-listener/on-migration-completed.md) | `abstract fun onMigrationCompleted(results: `[`MigrationResults`](../-migration-results.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when the migration is complete. |
 | [onMigrationStateChanged](../-migration-state-listener/on-migration-state-changed.md) | `abstract fun onMigrationStateChanged(progress: `[`MigrationProgress`](../../mozilla.components.support.migration.state/-migration-progress/index.md)`, results: `[`MigrationResults`](../-migration-results.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked on a migration state change. |
 
 ### Extension Functions

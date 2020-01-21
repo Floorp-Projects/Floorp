@@ -2,7 +2,7 @@
 
 # TrackingProtectionUseCases
 
-`class TrackingProtectionUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L20)
+`class TrackingProtectionUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/TrackingProtectionUseCases.kt#L21)
 
 Contains use cases related to the tracking protection.
 
@@ -21,7 +21,7 @@ Contains use cases related to the tracking protection.
 | [FetchExceptionsUseCase](-fetch-exceptions-use-case/index.md) | `class FetchExceptionsUseCase`<br>Use case for fetching all exceptions in the exception list. |
 | [FetchTrackingLogUserCase](-fetch-tracking-log-user-case/index.md) | `class FetchTrackingLogUserCase`<br>Use case for fetching all the tracking protection logged information. |
 | [RemoveAllExceptionsUseCase](-remove-all-exceptions-use-case/index.md) | `class RemoveAllExceptionsUseCase`<br>Use case for removing all [Session](../../mozilla.components.browser.session/-session/index.md)s from the exception list. |
-| [RemoveExceptionUseCase](-remove-exception-use-case/index.md) | `class RemoveExceptionUseCase`<br>Use case for removing a [Session](../../mozilla.components.browser.session/-session/index.md) from the exception list. |
+| [RemoveExceptionUseCase](-remove-exception-use-case/index.md) | `class RemoveExceptionUseCase`<br>Use case for removing a [Session](../../mozilla.components.browser.session/-session/index.md) or a [TrackingProtectionException](../../mozilla.components.concept.engine.content.blocking/-tracking-protection-exception/index.md) from the exception list. |
 
 ### Constructors
 

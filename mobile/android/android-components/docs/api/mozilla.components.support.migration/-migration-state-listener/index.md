@@ -2,7 +2,7 @@
 
 # MigrationStateListener
 
-`interface MigrationStateListener` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AbstractMigrationProgressActivity.kt#L43)
+`interface MigrationStateListener` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AbstractMigrationProgressActivity.kt#L46)
 
 Interface to be implemented by classes that want to observe the migration state changes.
 
@@ -10,7 +10,7 @@ Interface to be implemented by classes that want to observe the migration state 
 
 | Name | Summary |
 |---|---|
-| [onMigrationCompleted](on-migration-completed.md) | `abstract fun onMigrationCompleted(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when the migration is complete. |
+| [onMigrationCompleted](on-migration-completed.md) | `abstract fun onMigrationCompleted(results: `[`MigrationResults`](../-migration-results.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when the migration is complete. |
 | [onMigrationStateChanged](on-migration-state-changed.md) | `abstract fun onMigrationStateChanged(progress: `[`MigrationProgress`](../../mozilla.components.support.migration.state/-migration-progress/index.md)`, results: `[`MigrationResults`](../-migration-results.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked on a migration state change. |
 
 ### Extension Functions
