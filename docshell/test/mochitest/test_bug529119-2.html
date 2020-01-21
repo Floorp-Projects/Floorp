@@ -16,31 +16,57 @@ var faultyURL = "http://some-nonexistent-domain-27489274c892748217cn2384.com/";
 var w = null;
 var phase = 0;
 var isWindowLoaded = false;
+// Token that represents which page we currently have loaded.
+var token = 0;
 
 function delay(msec) {
   return new Promise(resolve => setTimeout(resolve, msec));
 }
 
-async function pollForPage(expectErrorPage, win) {
-  // Start with polling after a delay, we might mistakenly take the current page
-  // as an expected one.
-  await delay(1000);
+async function assignToken(tokenToAssign) {
+  await SpecialPowers.spawn(w, [tokenToAssign],
+                            newToken => { this.content.token = newToken });
+}
 
-  for (let i = 0; i < 200; i++) {
-    await delay(100);
-
-    let haveErrorPage = false;
+// Returns when a new page is loaded and returns whether that page is an
+// error page.
+async function pollForPage(win) {
+  while (true) {
     try {
-      win.document.title;
-    } catch (ex) {
-      haveErrorPage = true;
+      // When we do our navigation, there may be an interstitial about:blank
+      // page if the navigation involves a process switch.  That about:blank
+      // will exist between the new process's docshell being created and the
+      // actual page that's being loaded loading (which can happen async from
+      // the docshell creation).  We want to avoid treating the initial
+      // about:blank as a new page.
+      //
+      // We could conceivably expose Document::IsInitialDocument() as a
+      // ChromeOnly thing and use it here, but let's just filter out all
+      // about:blank, since we don't expect any in this test.
+      var haveNewPage = await SpecialPowers.spawn(w, [token],
+        currentToken => this.content.token != currentToken &&
+                        this.content.location.href != "about:blank");
+
+      if (haveNewPage) {
+        ++token;
+        assignToken(token);
+
+        // In this test, error pages are non-same-origin with us, and non-error
+        // pages are same-origin.
+        let haveErrorPage = false;
+        try {
+          win.document.title;
+        } catch (ex) {
+          haveErrorPage = true;
+        }
+        return haveErrorPage;
+      }
+    } catch (e) {
+      // Something went wrong; just keep waiting.
     }
 
-    if (haveErrorPage == expectErrorPage) {
-      return true;
-    }
+    await delay(100);
   }
-  return false;
 }
 
 async function windowLoaded() {
@@ -50,13 +76,15 @@ async function windowLoaded() {
     return;
   isWindowLoaded = true;
 
+  assignToken(token);
+
   /* 2. We have successfully loaded a page, now go to a faulty URL */
   // XXX The test fails when we change the location synchronously
   window.setTimeout(function() {
     w.location.href = faultyURL;
   }, 0);
 
-  ok(await pollForPage(true, w), "Waiting for error page succeeded");
+  ok(await pollForPage(w), "Waiting for error page succeeded");
   /* 3. now, while we are on the error page, navigate back */
   try {
     // We need the SpecialPowers bit, because this is a cross-origin window
@@ -66,7 +94,7 @@ async function windowLoaded() {
     ok(false, "w.history.back() threw " + ex);
   }
 
-  ok(await pollForPage(false, w), "Waiting for original page succeeded");
+  ok(!await pollForPage(w), "Waiting for original page succeeded");
   /* 4-finish, check we are back at the original page */
   is(await SpecialPowers.spawn(w, [], () => this.content.location.href),
      workingURL,
