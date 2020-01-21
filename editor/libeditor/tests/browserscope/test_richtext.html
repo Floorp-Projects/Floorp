@@ -7,7 +7,7 @@ BrowserScope richtext category tests
   <title>BrowserScope Richtext Tests</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script src="/tests/SimpleTest/EventUtils.js"></script>  
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="lib/richtext/currentStatus.js"></script>
 </head>
 <body>
@@ -27,7 +27,7 @@ function sendScore(results, continueParams) {
   ok(results.length > 1, "At least one test should have been run");
   for (var i = 1; i < results.length; ++i) {
     var result = results[i];
-    [type, command, param, success] = result.split(/[\-=]/);
+    let [type, command, param, success] = result.split(/[\-=]/);
     var comp = is;
     if (isKnownFailure(type, command, param)) {
       comp = todo_is;
