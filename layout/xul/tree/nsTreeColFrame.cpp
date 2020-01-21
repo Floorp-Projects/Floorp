@@ -127,7 +127,7 @@ nsresult nsTreeColFrame::AttributeChanged(int32_t aNameSpaceID,
   nsresult rv =
       nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 
-  if (aAttribute == nsGkAtoms::ordinal || aAttribute == nsGkAtoms::primary) {
+  if (aAttribute == nsGkAtoms::primary) {
     InvalidateColumns();
   }
 

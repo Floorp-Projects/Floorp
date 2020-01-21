@@ -259,24 +259,6 @@ nscoord nsBox::GetXULFlex() {
   return flex;
 }
 
-int32_t nsIFrame::GetXULOrdinal() {
-  int32_t ordinal = StyleXUL()->mBoxOrdinal;
-
-  // When present, attribute value overrides CSS.
-  nsIContent* content = GetContent();
-  if (content && content->IsXULElement()) {
-    nsresult error;
-    nsAutoString value;
-
-    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, value);
-    if (!value.IsEmpty()) {
-      ordinal = value.ToInteger(&error);
-    }
-  }
-
-  return ordinal;
-}
-
 nscoord nsBox::GetXULBoxAscent(nsBoxLayoutState& aState) {
   if (IsXULCollapsed()) return 0;
 

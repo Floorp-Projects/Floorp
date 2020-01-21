@@ -928,7 +928,6 @@ STATIC_ATOMS = [
     Atom("option", "option"),
     Atom("_or", "or"),
     Atom("order", "order"),
-    Atom("ordinal", "ordinal"),
     Atom("orient", "orient"),
     Atom("orientation", "orientation"),
     Atom("otherwise", "otherwise"),

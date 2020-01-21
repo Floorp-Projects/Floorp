@@ -413,38 +413,6 @@ void nsTreeColumns::InvalidateColumns() {
   mFirstColumn = nullptr;
 }
 
-void nsTreeColumns::RestoreNaturalOrder() {
-  if (!mTree) {
-    return;
-  }
-
-  nsIContent* content = mTree->GetBaseElement();
-
-  // Strong ref, since we'll be setting attributes
-  nsCOMPtr<nsIContent> colsContent =
-      nsTreeUtils::GetImmediateChild(content, nsGkAtoms::treecols);
-  if (!colsContent) {
-    return;
-  }
-
-  int32_t i = 0;
-  for (nsINode* child = colsContent->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    nsAutoString ordinal;
-    ordinal.AppendInt(i++);
-    if (child->IsElement()) {
-      child->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::ordinal,
-                                  ordinal, true);
-    }
-  }
-
-  nsTreeColumns::InvalidateColumns();
-
-  if (mTree) {
-    mTree->Invalidate();
-  }
-}
-
 nsTreeColumn* nsTreeColumns::GetPrimaryColumn() {
   EnsureColumns();
   for (nsTreeColumn* currCol = mFirstColumn; currCol;

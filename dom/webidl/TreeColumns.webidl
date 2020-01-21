@@ -50,6 +50,4 @@ interface TreeColumns {
    * the column cache needs to be rebuilt.
    */
   void invalidateColumns();
-
-  void restoreNaturalOrder();
 };
