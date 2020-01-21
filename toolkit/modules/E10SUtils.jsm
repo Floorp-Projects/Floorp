@@ -858,7 +858,7 @@ var E10SUtils = {
   ) {
     let actor;
     try {
-      actor = aDocShell.domWindow.getWindowGlobalChild().getActor("BrowserTab");
+      actor = aDocShell.domWindow.windowGlobalChild.getActor("BrowserTab");
     } catch (ex) {}
     if (!actor) {
       // Fall back to using the message manager.
