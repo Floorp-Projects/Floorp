@@ -538,6 +538,15 @@ class JSFunction : public js::NativeObject {
   bool isBuiltinFunctionConstructor();
   bool needsPrototypeProperty();
 
+  // Returns true if |new Fun()| should not allocate a new object caller-side
+  // but pass the uninitialized-lexical MagicValue and rely on the callee to
+  // construct its own |this| object.
+  bool constructorNeedsUninitializedThis() const {
+    MOZ_ASSERT(isConstructor());
+    MOZ_ASSERT(isInterpreted());
+    return isBoundFunction() || isDerivedClassConstructor();
+  }
+
   /* Returns the strictness of this function, which must be interpreted. */
   bool strict() const { return baseScript()->strict(); }
 
@@ -908,7 +917,7 @@ class JSFunction : public js::NativeObject {
     return u.native.extra.wasmJitEntry_;
   }
 
-  bool isDerivedClassConstructor();
+  bool isDerivedClassConstructor() const;
 
   static unsigned offsetOfNative() {
     return offsetof(JSFunction, u.native.func_);
