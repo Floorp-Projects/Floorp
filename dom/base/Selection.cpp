@@ -1949,9 +1949,8 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
     }
   }
 
-  if (rangeIndex < 0) {
-    return;
-  }
+  MOZ_ASSERT(rangeIndex >= 0);
+  MOZ_ASSERT(rangeIndex < static_cast<int32_t>(mRanges.Length()));
 
   SetAnchorFocusRange(rangeIndex);
 
