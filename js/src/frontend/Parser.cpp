@@ -9853,32 +9853,18 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
 
-  if (this->getParseInfo().isDeferred()) {
-    BigIntIndex index(this->getParseInfo().bigIntData.length());
-    if (!this->getParseInfo().bigIntData.emplaceBack()) {
-      return null();
-    }
-
-    if (!this->getParseInfo().bigIntData[index].init(this->cx_, chars)) {
-      return null();
-    }
-
-    // Should the operations below fail, the buffer held by data will
-    // be cleaned up by the ParseInfo destructor.
-    return handler_.newBigInt(index, this->getParseInfo(), pos());
-  }
-
-  mozilla::Range<const char16_t> source(chars.begin(), chars.length());
-
-  BigInt* b = js::ParseBigIntLiteral(cx_, source);
-  if (!b) {
+  BigIntIndex index(this->getParseInfo().bigIntData.length());
+  if (!this->getParseInfo().bigIntData.emplaceBack()) {
     return null();
   }
 
-  // newBigInt immediately puts "b" in a BigIntBox, which is allocated using
-  // tempLifoAlloc, avoiding any potential GC.  Therefore it's OK to pass a
-  // raw pointer.
-  return handler_.newBigInt(b, pos(), *this);
+  if (!this->getParseInfo().bigIntData[index].init(this->cx_, chars)) {
+    return null();
+  }
+
+  // Should the operations below fail, the buffer held by data will
+  // be cleaned up by the ParseInfo destructor.
+  return handler_.newBigInt(index, this->getParseInfo(), pos());
 }
 
 template <typename Unit>
