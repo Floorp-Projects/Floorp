@@ -14,7 +14,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
   <title>BrowserScope Richtext2 Tests</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>  
 
   <!-- utility scripts -->
   <script type="text/javascript" src="lib/richtext2/richtext2/static/js/variables.js"></script>
@@ -68,13 +68,10 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
       );
     }
 
-    /* eslint-disable-next-line complexity */
     function runTest() {
       initVariables();
       initEditorDocs();
 
-      // These are all globals in the js and py files above */
-      /* eslint-disable no-undef */
       const tests = [
         SELECTION_TESTS,
         APPLY_TESTS,
@@ -92,9 +89,8 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
         QUERYSTATE_TESTS,
         QUERYVALUE_TESTS,
       ];
-      /* eslint-enable no-undef */
 
-      for (let i = 0; i < tests.length; ++i) {
+      for (var i = 0; i < tests.length; ++i) {
         runTestSuite(tests[i]);
       }
 
@@ -136,10 +132,10 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
       //                               'body' (test within a <body contenteditable="true">)
 
       if (UPDATE_TEST_RESULTS) {
-        let newKnownFailures = {value: {}, select: {}};
-        for (let i = 0; i < tests.length; ++i) {
-          let category = tests[i];
-          for (let group in results[category.id]) {
+        var newKnownFailures = {value: {}, select: {}};
+        for (var i = 0; i < tests.length; ++i) {
+          var category = tests[i];
+          for (var group in results[category.id]) {
             switch (group) {
             // Skip the known properties
             case "count":
@@ -148,7 +144,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
             case "time":
               break;
             default:
-              for (let test_id in results[category.id][group]) {
+              for (var test_id in results[category.id][group]) {
                 switch (test_id) {
                 // Skip the known properties
                 case "count":
@@ -156,7 +152,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
                 case "selscore":
                   break;
                 default:
-                  for (let structure in results[category.id][group][test_id]) {
+                  for (var structure in results[category.id][group][test_id]) {
                     switch (structure) {
                     // Only look at each test structure
                     case "dM":
@@ -179,9 +175,9 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
         resultContainer.style.display = "";
         resultContainer.textContent = JSON.stringify(newKnownFailures);
       } else {
-        for (let i = 0; i < tests.length; ++i) {
-          let category = tests[i];
-          for (let group in results[category.id]) {
+        for (var i = 0; i < tests.length; ++i) {
+          var category = tests[i];
+          for (var group in results[category.id]) {
             switch (group) {
             // Skip the known properties
             case "count":
@@ -190,7 +186,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
             case "time":
               break;
             default:
-              for (let test_id in results[category.id][group]) {
+              for (var test_id in results[category.id][group]) {
                 switch (test_id) {
                 // Skip the known properties
                 case "count":
@@ -198,7 +194,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
                 case "selscore":
                   break;
                 default:
-                  for (let structure in results[category.id][group][test_id]) {
+                  for (var structure in results[category.id][group][test_id]) {
                     switch (structure) {
                     // Only look at each test structure
                     case "dM":
