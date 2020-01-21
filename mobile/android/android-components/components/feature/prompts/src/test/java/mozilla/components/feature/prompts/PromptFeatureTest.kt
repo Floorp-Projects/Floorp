@@ -40,6 +40,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
 import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
+import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
@@ -58,7 +59,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import java.lang.ref.WeakReference
 import java.security.InvalidParameterException
 import java.util.Date
 
@@ -379,13 +382,14 @@ class PromptFeatureTest {
             val now = Date()
             feature.onConfirm(tabId, now)
             store.waitUntilIdle()
-
             assertNull(tab()?.content?.promptRequest)
+
             assertEquals(now, selectedDate)
             store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
             feature.onClear(tabId)
             assertTrue(onClearWasCalled)
+            feature.stop()
         }
     }
 
@@ -576,11 +580,9 @@ class PromptFeatureTest {
     @Test
     fun `Calling onConfirm on a popup request will consume promptRequest`() {
         val fragment: Fragment = mock()
-        val context: Context = mock()
-        whenever(context.getString(R.string.mozac_feature_prompts_popup_dialog_title)).thenReturn("")
-        whenever(context.getString(R.string.mozac_feature_prompts_allow)).thenReturn("")
-        whenever(context.getString(R.string.mozac_feature_prompts_deny)).thenReturn("")
-        whenever(fragment.requireContext()).thenReturn(context)
+        whenever(fragment.getString(R.string.mozac_feature_prompts_popup_dialog_title)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompts_allow)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompts_deny)).thenReturn("")
 
         val feature = PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
         var onConfirmWasCalled = false
@@ -603,11 +605,9 @@ class PromptFeatureTest {
     @Test
     fun `Calling onCancel on a popup request will consume promptRequest`() {
         val fragment: Fragment = mock()
-        val context: Context = mock()
-        whenever(context.getString(R.string.mozac_feature_prompts_popup_dialog_title)).thenReturn("")
-        whenever(context.getString(R.string.mozac_feature_prompts_allow)).thenReturn("")
-        whenever(context.getString(R.string.mozac_feature_prompts_deny)).thenReturn("")
-        whenever(fragment.requireContext()).thenReturn(context)
+        whenever(fragment.getString(R.string.mozac_feature_prompts_popup_dialog_title)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompts_allow)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompts_deny)).thenReturn("")
 
         val feature = PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
         var onCancelWasCalled = false
@@ -834,6 +834,74 @@ class PromptFeatureTest {
         store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onDismissCalled)
+    }
+
+    @Test
+    fun `dialog will never be dismissed if page load does not occur`() {
+        val feature = spy(PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager, shareDelegate = mock()) { })
+        feature.start()
+
+        val shareRequest = PromptRequest.Share(
+            ShareData("Title", "Text", null),
+            onSuccess = {},
+            onFailure = {},
+            onDismiss = {}
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, shareRequest)).joinBlocking()
+
+        verify(feature, times(0)).activePrompt
+    }
+
+    @Test
+    fun `dialog will be dismissed if progress reaches 90%`() {
+        val feature = spy(PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager, shareDelegate = mock()) { })
+        feature.start()
+
+        val shareRequest = PromptRequest.Share(
+            ShareData("Title", "Text", null),
+            onSuccess = {},
+            onFailure = {},
+            onDismiss = {}
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, shareRequest)).joinBlocking()
+
+        val fragment = mock<PromptDialogFragment>()
+        feature.activePrompt = WeakReference(fragment)
+
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 0)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 10)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 11)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 28)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 32)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 49)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 60)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 89)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 90)).joinBlocking()
+
+        verify(fragment, times(1)).dismiss()
+    }
+
+    @Test
+    fun `dialog will be dismissed if new page load progress skips past 90%`() {
+        val feature = spy(PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager, shareDelegate = mock()) { })
+        feature.start()
+
+        val shareRequest = PromptRequest.Share(
+            ShareData("Title", "Text", null),
+            onSuccess = {},
+            onFailure = {},
+            onDismiss = {}
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, shareRequest)).joinBlocking()
+
+        val fragment = mock<PromptDialogFragment>()
+        feature.activePrompt = WeakReference(fragment)
+
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 0)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 10)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 100)).joinBlocking()
+
+        verify(fragment, times(1)).dismiss()
     }
 
     private fun mockFragmentManager(): FragmentManager {
