@@ -3,8 +3,10 @@
 const { WebVTT } = ChromeUtils.import("resource://gre/modules/vtt.jsm");
 
 let fakeWindow = {
-  VTTCue() {},
-  VTTRegion() {},
+  /* eslint-disable object-shorthand */
+  VTTCue: function() {},
+  VTTRegion: function() {},
+  /* eslint-enable object-shorthand */
 };
 
 // We have a better parser check in WPT. Here I want to check that incomplete
