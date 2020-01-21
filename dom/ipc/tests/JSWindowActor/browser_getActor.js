@@ -11,7 +11,7 @@ declTest("getActor on both sides", {
     is(actorParent.manager, parent, "manager should match WindowGlobalParent.");
 
     await SpecialPowers.spawn(browser, [], async function() {
-      let child = content.windowGlobalChild;
+      let child = content.window.getWindowGlobalChild();
       ok(child, "WindowGlobalChild should have value.");
       is(
         child.isInProcess,

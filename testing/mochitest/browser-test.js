@@ -181,7 +181,7 @@ function Tester(aTests, structuredLogger, aCallback) {
   // Make sure our SpecialPowers actor is instantiated, in case it was
   // registered after our DOMWindowCreated event was fired (which it
   // most likely was).
-  void window.windowGlobalChild.getActor("SpecialPowers");
+  window.getWindowGlobalChild().getActor("SpecialPowers");
 
   var simpleTestScope = {};
   this._scriptLoader.loadSubScript(

@@ -262,7 +262,7 @@ add_task(async function test_sub_subframe_conduit_verified_env() {
       async function faker(extensionId, envType) {
         try {
           let id = envType + "-xyz1234";
-          let wgc = this.content.windowGlobalChild;
+          let wgc = this.content.getWindowGlobalChild();
 
           let conduit = wgc.getActor("Conduits").openConduit({}, {
             id,

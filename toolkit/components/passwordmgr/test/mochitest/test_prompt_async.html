@@ -296,8 +296,8 @@
           Assert.equal(proxyok, "PASS", "Proxy Authorization OK, " + frameid);
         }
 
-        let parentIFrameBC = SpecialPowers.wrap(window).windowGlobalChild
-                                          .browsingContext.getChildren()[0];
+        let parentIFrameBC = SpecialPowers.wrap(window).getWindowGlobalChild().
+                                           browsingContext.getChildren()[0];
 
         let childIFrame = SpecialPowers.unwrap(parentIFrameBC.getChildren()[0]);
         await SpecialPowers.spawn(childIFrame, ["iframe1"], checkIframe);
