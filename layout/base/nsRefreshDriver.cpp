@@ -1168,6 +1168,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mSkippedPaints(false),
       mResizeSuppressed(false),
       mNotifyDOMContentFlushed(false),
+      mNeedToUpdateIntersectionObservations(false),
       mWarningThreshold(REFRESH_WAIT_WARNING) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext,
@@ -1644,6 +1645,8 @@ void nsRefreshDriver::UpdateIntersectionObservations() {
     doc->UpdateIntersectionObservations();
     doc->ScheduleIntersectionObserverNotification();
   }
+
+  mNeedToUpdateIntersectionObservations = false;
 }
 
 void nsRefreshDriver::DispatchAnimationEvents() {
@@ -1876,6 +1879,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   if (!presShell ||
       (!HasObservers() && !HasImageRequests() &&
+       !mNeedToUpdateIntersectionObservations &&
        mVisualViewportResizeEvents.IsEmpty() && mScrollEvents.IsEmpty() &&
        mVisualViewportScrollEvents.IsEmpty())) {
     // Things are being destroyed, or we no longer have any observers.
@@ -1909,7 +1913,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 
   mResizeSuppressed = false;
 
-  AutoRestore<bool> restoreInRefresh(mInRefresh);
+  auto restoreInRefresh = MakeScopeExit([&] { mInRefresh = false; });
   mInRefresh = true;
 
   AutoRestore<TimeStamp> restoreTickStart(mTickStart);
