@@ -97,6 +97,7 @@ class MediaController final {
   bool mIsRegisteredToService = false;
   int64_t mControlledMediaNum = 0;
   int64_t mPlayingControlledMediaNum = 0;
+  bool mShutdown = false;
 
   PlaybackState mState = PlaybackState::eStopped;
   MediaEventProducer<PlaybackState> mPlaybackStateChangedEvent;
