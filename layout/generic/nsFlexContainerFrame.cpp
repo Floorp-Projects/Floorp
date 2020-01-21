@@ -2198,19 +2198,21 @@ class MOZ_STACK_CLASS PositionTracker {
  public:
   // Accessor for the current value of the position that we're tracking.
   inline nscoord GetPosition() const { return mPosition; }
-  inline AxisOrientationType GetAxis() const { return mAxis; }
+  inline AxisOrientationType GetPhysicalAxis() const { return mPhysicalAxis; }
 
   // Advances our position across the start edge of the given margin, in the
   // axis we're tracking.
   void EnterMargin(const nsMargin& aMargin) {
-    mozilla::Side side = kAxisOrientationToSidesMap[mAxis][eAxisEdge_Start];
+    mozilla::Side side =
+        kAxisOrientationToSidesMap[mPhysicalAxis][eAxisEdge_Start];
     mPosition += aMargin.Side(side);
   }
 
   // Advances our position across the end edge of the given margin, in the axis
   // we're tracking.
   void ExitMargin(const nsMargin& aMargin) {
-    mozilla::Side side = kAxisOrientationToSidesMap[mAxis][eAxisEdge_End];
+    mozilla::Side side =
+        kAxisOrientationToSidesMap[mPhysicalAxis][eAxisEdge_End];
     mPosition += aMargin.Side(side);
   }
 
@@ -2241,15 +2243,15 @@ class MOZ_STACK_CLASS PositionTracker {
 
  protected:
   // Protected constructor, to be sure we're only instantiated via a subclass.
-  PositionTracker(AxisOrientationType aAxis, bool aIsAxisReversed)
-      : mAxis(aAxis), mIsAxisReversed(aIsAxisReversed) {}
+  PositionTracker(AxisOrientationType aPhysicalAxis, bool aIsAxisReversed)
+      : mPhysicalAxis(aPhysicalAxis), mIsAxisReversed(aIsAxisReversed) {}
 
   // Member data:
   // The position we're tracking.
   nscoord mPosition = 0;
   // XXXdholbert [BEGIN DEPRECATED]
   // The axis along which we're moving.
-  const AxisOrientationType mAxis = eAxis_LR;
+  const AxisOrientationType mPhysicalAxis = eAxis_LR;
   // XXXdholbert [END DEPRECATED]
 
   // Is the axis along which we're moving reversed (e.g. LTR vs RTL) with
@@ -2955,8 +2957,8 @@ MainAxisPositionTracker::MainAxisPositionTracker(
   // with the *actual* amount of packing space.
   for (const FlexItem* item = aLine->GetFirstItem(); item;
        item = item->getNext()) {
-    mPackingSpaceRemaining -= item->GetOuterMainSize(mAxis);
-    mNumAutoMarginsInMainAxis += item->GetNumAutoMarginsInAxis(mAxis);
+    mPackingSpaceRemaining -= item->GetOuterMainSize(mPhysicalAxis);
+    mNumAutoMarginsInMainAxis += item->GetNumAutoMarginsInAxis(mPhysicalAxis);
   }
 
   // Subtract space required for row/col gap from the remaining packing space
@@ -3068,7 +3070,7 @@ void MainAxisPositionTracker::ResolveAutoMarginsInMainAxis(FlexItem& aItem) {
   if (mNumAutoMarginsInMainAxis) {
     const auto& styleMargin = aItem.Frame()->StyleMargin()->mMargin;
     for (uint32_t i = 0; i < eNumAxisEdges; i++) {
-      mozilla::Side side = kAxisOrientationToSidesMap[mAxis][i];
+      mozilla::Side side = kAxisOrientationToSidesMap[mPhysicalAxis][i];
       if (styleMargin.Get(side).IsAuto()) {
         // NOTE: This integer math will skew the distribution of remainder
         // app-units towards the end, which is fine.
@@ -3451,13 +3453,13 @@ void SingleLineCrossAxisPositionTracker::ResolveAutoMarginsInCrossAxis(
   // Subtract the space that our item is already occupying, to see how much
   // space (if any) is available for its auto margins.
   nscoord spaceForAutoMargins =
-      aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis);
+      aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mPhysicalAxis);
 
   if (spaceForAutoMargins <= 0) {
     return;  // No available space  --> nothing to do
   }
 
-  uint32_t numAutoMargins = aItem.GetNumAutoMarginsInAxis(mAxis);
+  uint32_t numAutoMargins = aItem.GetNumAutoMarginsInAxis(mPhysicalAxis);
   if (numAutoMargins == 0) {
     return;  // No auto margins --> nothing to do.
   }
@@ -3466,7 +3468,7 @@ void SingleLineCrossAxisPositionTracker::ResolveAutoMarginsInCrossAxis(
   // Give each auto margin a share of the space.
   const auto& styleMargin = aItem.Frame()->StyleMargin()->mMargin;
   for (uint32_t i = 0; i < eNumAxisEdges; i++) {
-    mozilla::Side side = kAxisOrientationToSidesMap[mAxis][i];
+    mozilla::Side side = kAxisOrientationToSidesMap[mPhysicalAxis][i];
     if (styleMargin.Get(side).IsAuto()) {
       MOZ_ASSERT(aItem.GetMarginComponentForSide(side) == 0,
                  "Expecting auto margins to have value '0' before we "
@@ -3487,7 +3489,7 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
     const FlexboxAxisTracker& aAxisTracker) {
   // We don't do align-self alignment on items that have auto margins
   // in the cross axis.
-  if (aItem.GetNumAutoMarginsInAxis(mAxis)) {
+  if (aItem.GetNumAutoMarginsInAxis(mPhysicalAxis)) {
     return;
   }
 
@@ -3533,7 +3535,7 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
   // 'align-self' falls back to 'flex-start' if it is 'center'/'flex-end' and we
   // have cross axis overflow
   // XXX we should really be falling back to 'start' as of bug 1472843
-  if (aLine.GetLineCrossSize() < aItem.GetOuterCrossSize(mAxis) &&
+  if (aLine.GetLineCrossSize() < aItem.GetOuterCrossSize(mPhysicalAxis) &&
       (aItem.GetAlignSelfFlags() & NS_STYLE_ALIGN_SAFE)) {
     alignSelf = NS_STYLE_ALIGN_FLEX_START;
   }
@@ -3543,12 +3545,14 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
       // No space to skip over -- we're done.
       break;
     case NS_STYLE_ALIGN_FLEX_END:
-      mPosition += aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis);
+      mPosition +=
+          aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mPhysicalAxis);
       break;
     case NS_STYLE_ALIGN_CENTER:
       // Note: If cross-size is odd, the "after" space will get the extra unit.
       mPosition +=
-          (aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis)) / 2;
+          (aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mPhysicalAxis)) /
+          2;
       break;
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE: {
@@ -3578,7 +3582,8 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
 
       if (aAxisTracker.AreAxesInternallyReversed() == useFirst) {
         // Advance to align item w/ line's flex-end edge (as in FLEX_END case):
-        mPosition += aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis);
+        mPosition +=
+            aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mPhysicalAxis);
         // ...and step *back* by the baseline adjustment:
         mPosition -= baselineDiff;
       } else {
@@ -4156,7 +4161,7 @@ void FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
   for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
     nscoord itemMainBorderBoxSize =
         item->GetMainSize() +
-        item->GetBorderPaddingSizeInAxis(mainAxisPosnTracker.GetAxis());
+        item->GetBorderPaddingSizeInAxis(mainAxisPosnTracker.GetPhysicalAxis());
 
     // Resolve any main-axis 'auto' margins on aChild to an actual value.
     mainAxisPosnTracker.ResolveAutoMarginsInMainAxis(*item);
