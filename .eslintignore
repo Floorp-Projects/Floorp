@@ -48,7 +48,6 @@ browser/extensions/pdfjs/content/build
 browser/extensions/pdfjs/content/web
 # generated or library files in pocket
 browser/components/pocket/content/panels/js/tmpl.js
-browser/components/pocket/content/panels/js/vendor/
 
 # Ignore newtab files
 # Kept in sync with browser/components/newtab/.eslintignore
@@ -57,8 +56,6 @@ browser/components/newtab/logs/
 
 # The only file in browser/locales/ is pre-processed.
 browser/locales/
-# imported from chromium
-browser/extensions/mortar/
 # Generated data files
 browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 
@@ -159,13 +156,9 @@ dom/workers/test/threadErrors_worker1.js
 editor/libeditor/tests/browserscope/
 
 # Third-party
-gfx/ots/
-gfx/skia/
 gfx/wgpu
-gfx/wr/
 
 # intl/ exclusions
-intl/icu/
 intl/locale/
 intl/strres/
 intl/uconv/
@@ -182,14 +175,10 @@ js/ipc/
 js/public/
 js/xpconnect/
 js/src/devtools/
-js/src/octane/
 js/src/jit-test/
 js/src/jsapi-tests/binast/
 js/src/tests/
 js/src/Y.js
-
-# Third-party
-media/webrtc/trunk/
 
 # mobile/android/ exclusions
 mobile/android/tests/browser/chrome/tp5/
@@ -219,9 +208,6 @@ remote/server/Stream.jsm
 remote/test/browser/chrome-remote-interface.js
 remote/test/demo.js
 remote/test/puppeteer/
-
-# NSS / taskcluster only.
-security/nss/
 
 # services/ exclusions
 
@@ -260,9 +246,6 @@ testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
 testing/talos/talos/tests/devtools/addon/content/pages/
-testing/talos/talos/tests/dromaeo/
-testing/talos/talos/tests/v8_7/
-testing/talos/talos/tests/kraken/
 # Runing Talos may extract data here, see bug 1435677.
 testing/talos/talos/tests/tp5n/
 testing/talos/talos/fis/tp5n/
@@ -270,12 +253,6 @@ testing/talos/talos/fis/tp5n/
 testing/web-platform/
 testing/xpcshell/moz-http2/
 testing/xpcshell/node-http2/
-testing/xpcshell/dns-packet/
-testing/xpcshell/node-ip/
-
-
-# Third party.
-third_party/
 
 # toolkit/ exclusions
 
@@ -298,9 +275,6 @@ toolkit/modules/AppConstants.jsm
 
 # Tests old non-star function generators
 toolkit/modules/tests/xpcshell/test_task.js
-
-# Third party
-toolkit/modules/third_party/
 
 tools/tryselect/selectors/chooser/templates/chooser.html
 
