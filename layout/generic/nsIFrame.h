@@ -3346,6 +3346,15 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
+   * Shouldn't be called if this is a `nsTextFrame`. Call the
+   * `nsTextFrame::SelectionStateChanged` overload instead.
+   */
+  void SelectionStateChanged() {
+    MOZ_ASSERT(!IsTextFrame());
+    InvalidateFrameSubtree();  // TODO: should this deal with continuations?
+  }
+
+  /**
    * Called to discover where this frame, or a parent frame has user-select
    * style applied, which affects that way that it is selected.
    *

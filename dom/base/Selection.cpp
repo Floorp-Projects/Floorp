@@ -1370,10 +1370,10 @@ void Selection::SelectFramesForContent(nsIContent* aContent, bool aSelected) {
   // as a text frame.
   if (frame->IsTextFrame()) {
     nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-    textFrame->SetSelectedRange(0, textFrame->TextFragment()->GetLength(),
-                                aSelected, mSelectionType);
+    textFrame->SelectionStateChanged(0, textFrame->TextFragment()->GetLength(),
+                                     aSelected, mSelectionType);
   } else {
-    frame->InvalidateFrameSubtree();  // frame continuations?
+    frame->SelectionStateChanged();
   }
 }
 
@@ -1427,8 +1427,19 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
                           ? node->AsContent()->GetPrimaryFrame()
                           : aPresContext->PresShell()->GetRootFrame();
     if (frame) {
-      frame->InvalidateFrameSubtree();
+      if (frame->IsTextFrame()) {
+        nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
+
+        MOZ_ASSERT(node == aRange->GetStartContainer());
+        MOZ_ASSERT(node == aRange->GetEndContainer());
+        textFrame->SelectionStateChanged(aRange->StartOffset(),
+                                         aRange->EndOffset(), aSelect,
+                                         mSelectionType);
+      } else {
+        frame->SelectionStateChanged();
+      }
     }
+
     return NS_OK;
   }
 
@@ -1462,10 +1473,10 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
         } else {
           endOffset = startContent->Length();
         }
-        textFrame->SetSelectedRange(startOffset, endOffset, aSelect,
-                                    mSelectionType);
+        textFrame->SelectionStateChanged(startOffset, endOffset, aSelect,
+                                         mSelectionType);
       } else {
-        frame->InvalidateFrameSubtree();
+        frame->SelectionStateChanged();
       }
     }
   }
@@ -1509,8 +1520,8 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
       // The frame could be an SVG text frame, in which case we'll ignore it.
       if (frame && frame->IsTextFrame()) {
         nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-        textFrame->SetSelectedRange(0, aRange->EndOffset(), aSelect,
-                                    mSelectionType);
+        textFrame->SelectionStateChanged(0, aRange->EndOffset(), aSelect,
+                                         mSelectionType);
       }
     }
   }
