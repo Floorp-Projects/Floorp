@@ -7564,6 +7564,18 @@
   value: true
   mirror: always
 
+# Enable the heuristic to allow storage access for windows opened using window.open()
+- name: privacy.restrict3rdpartystorage.heuristic.redirect
+  type: bool
+  value: true
+  mirror: always
+
+# Anti-tracking permission expiration.
+- name: privacy.restrict3rdpartystorage.expiration_redirect
+  type: uint32_t
+  value: 900    # 15 minutes
+  mirror: always
+
 # Anti-tracking user-interaction expiration.
 - name: privacy.userInteraction.expiration
   type: uint32_t
