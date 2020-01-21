@@ -670,6 +670,21 @@ raptor-youtube-playback-firefox:
         extra-options:
             - --test=raptor-youtube-playback
 
+raptor-youtube-playback-firefox-profiling:
+    description: "Raptor YouTube Playback on Firefox with Gecko Profiling"
+    try-name: raptor-youtube-playback-firefox-profiling
+    treeherder-symbol: Rap-Prof(ytp)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 6000
+            default: 4000
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback
+            - --gecko-profile
+
 raptor-youtube-playback-v9-power-firefox:
     description: "Raptor V9 YouTube Playback on Firefox with Power Testing"
     try-name: raptor-youtube-playback-v9-power-firefox
