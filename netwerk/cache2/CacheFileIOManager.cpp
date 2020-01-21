@@ -178,7 +178,7 @@ void CacheFileHandle::Log() {
          "pinning=%" PRIu32 ", fileExists=%d, fileSize=%" PRId64
          ", leafName=%s, key=%s]",
          this, bool(mIsDoomed), bool(mPriority), bool(mClosed), bool(mInvalid),
-         static_cast<uint32_t>(mPinning), bool(mFileExists), mFileSize,
+         static_cast<uint32_t>(mPinning), bool(mFileExists), int64_t(mFileSize),
          leafName.get(), mKey.get()));
   } else {
     LOG(
@@ -189,7 +189,7 @@ void CacheFileHandle::Log() {
          ", leafName=%s, key=%s]",
          this, LOGSHA1(mHash), bool(mIsDoomed), bool(mPriority), bool(mClosed),
          bool(mInvalid), static_cast<uint32_t>(mPinning), bool(mFileExists),
-         mFileSize, leafName.get(), mKey.get()));
+         int64_t(mFileSize), leafName.get(), mKey.get()));
   }
 }
 
@@ -1637,9 +1637,11 @@ nsresult CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash* aHash,
       MOZ_ASSERT(!handle->IsDoomed() && NS_SUCCEEDED(rv));
     }
 
-    rv = file->GetFileSize(&handle->mFileSize);
+    int64_t fileSize = -1;
+    rv = file->GetFileSize(&fileSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    handle->mFileSize = fileSize;
     handle->mFileExists = true;
 
     CacheIndex::EnsureEntryExists(aHash);
@@ -1735,9 +1737,11 @@ nsresult CacheFileIOManager::OpenSpecialFileInternal(
   mSpecialHandles.AppendElement(handle);
 
   if (exists) {
-    rv = file->GetFileSize(&handle->mFileSize);
+    int64_t fileSize = -1;
+    rv = file->GetFileSize(&fileSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    handle->mFileSize = fileSize;
     handle->mFileExists = true;
   } else {
     handle->mFileSize = 0;
