@@ -305,16 +305,19 @@ uint8_t* GenerateRedirectStub(Assembler& aAssembler, size_t aCallId,
   uint8_t* newFunction = aAssembler.Current();
   if (aPreserveCallerSaveRegisters) {
     static Register registers[] = {
-      Register::RDI, Register::RDI /* for alignment */,
-      Register::RSI, Register::RDX, Register::RCX,
-      Register::R8, Register::R9, Register::R10, Register::R11,
+        Register::RDI, Register::RDI /* for alignment */,
+        Register::RSI, Register::RDX,
+        Register::RCX, Register::R8,
+        Register::R9,  Register::R10,
+        Register::R11,
     };
     for (size_t i = 0; i < ArrayLength(registers); i++) {
       aAssembler.MoveRegisterToRax(registers[i]);
       aAssembler.PushRax();
     }
     aAssembler.MoveImmediateToRax((void*)aCallId);
-    uint8_t* after = aAssembler.Current() + Assembler::PushImmediateBytes + Assembler::JumpBytes;
+    uint8_t* after = aAssembler.Current() + Assembler::PushImmediateBytes +
+                     Assembler::JumpBytes;
     aAssembler.PushImmediate(after);
     aAssembler.Jump(BitwiseCast<void*>(RecordReplayRedirectCall));
     for (int i = ArrayLength(registers) - 1; i >= 0; i--) {

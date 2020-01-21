@@ -681,8 +681,7 @@ class RawBuffer {
    * If aTakeData is true, RawBuffer will delete[] the memory when destroyed.
    */
   RawBuffer(size_t len, T* data, bool aTakeData = false)
-      : mData(data), mLength(len), mOwnsData(aTakeData) {
-  }
+      : mData(data), mLength(len), mOwnsData(aTakeData) {}
 
   RawBuffer(size_t len, RefPtr<mozilla::ipc::SharedMemoryBasic>& aSmem)
       : mSmem(aSmem), mData(aSmem->memory()), mLength(len), mOwnsData(false) {

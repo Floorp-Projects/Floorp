@@ -3,8 +3,8 @@
 
 //! The UTC (Coordinated Universal Time) time zone.
 
-use std::fmt;
-#[cfg(feature="clock")]
+use core::fmt;
+#[cfg(all(feature="clock", not(all(target_arch = "wasm32", feature = "wasmbind"))))]
 use oldtime;
 
 use naive::{NaiveDate, NaiveDateTime};
@@ -38,9 +38,21 @@ impl Utc {
     pub fn today() -> Date<Utc> { Utc::now().date() }
 
     /// Returns a `DateTime` which corresponds to the current date.
+    #[cfg(not(all(target_arch = "wasm32", feature = "wasmbind")))]
     pub fn now() -> DateTime<Utc> {
         let spec = oldtime::get_time();
         let naive = NaiveDateTime::from_timestamp(spec.sec, spec.nsec as u32);
+        DateTime::from_utc(naive, Utc)
+    }
+
+    /// Returns a `DateTime` which corresponds to the current date.
+    #[cfg(all(target_arch = "wasm32", feature = "wasmbind"))]
+    pub fn now() -> DateTime<Utc> {
+        let now = js_sys::Date::new_0();
+        let millisecs_since_unix_epoch: u64 = now.get_time() as u64;
+        let secs  = millisecs_since_unix_epoch / 1000;
+        let nanos = 1_000_000 * (millisecs_since_unix_epoch - 1000 * secs);
+        let naive = NaiveDateTime::from_timestamp(secs as i64, nanos as u32);
         DateTime::from_utc(naive, Utc)
     }
 }
@@ -72,4 +84,3 @@ impl fmt::Debug for Utc {
 impl fmt::Display for Utc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "UTC") }
 }
-

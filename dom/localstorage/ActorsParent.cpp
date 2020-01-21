@@ -3666,9 +3666,9 @@ void DatastoreWriteOptimizer::ApplyAndReset(
             // about the UpdateWithMove flag.
 
             aOrderedItems.RemoveElementAt(index);
-            entry.Data() = MakeUnique<InsertItemInfo>(updateItemInfo->SerialNumber(),
-                                              updateItemInfo->GetKey(),
-                                              updateItemInfo->GetValue());
+            entry.Data() = MakeUnique<InsertItemInfo>(
+                updateItemInfo->SerialNumber(), updateItemInfo->GetKey(),
+                updateItemInfo->GetValue());
           } else {
             item.value() = updateItemInfo->GetValue();
             entry.Remove();

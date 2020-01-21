@@ -12,7 +12,7 @@
 
 [package]
 name = "serde"
-version = "1.0.102"
+version = "1.0.104"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>", "David Tolnay <dtolnay@gmail.com>"]
 build = "build.rs"
 include = ["Cargo.toml", "build.rs", "src/**/*.rs", "crates-io.md", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
@@ -27,7 +27,7 @@ repository = "https://github.com/serde-rs/serde"
 [package.metadata.playground]
 features = ["derive", "rc"]
 [dependencies.serde_derive]
-version = "1.0"
+version = "=1.0.104"
 optional = true
 [dev-dependencies.serde_derive]
 version = "1.0"

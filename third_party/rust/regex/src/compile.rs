@@ -110,7 +110,7 @@ impl Compiler {
     /// specified size limit. If the size limit is exceeded, then compilation
     /// stops and returns an error.
     pub fn compile(mut self, exprs: &[Hir]) -> result::Result<Program, Error> {
-        debug_assert!(exprs.len() >= 1);
+        debug_assert!(!exprs.is_empty());
         self.num_exprs = exprs.len();
         if exprs.len() == 1 {
             self.compile_one(&exprs[0])

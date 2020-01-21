@@ -68,7 +68,8 @@ Channel::Channel(size_t aId, Kind aKind, const MessageHandler& aHandler,
       mConnectionFd(0),
       mFd(0),
       mMessageBytes(0) {
-  MOZ_RELEASE_ASSERT(!IsRecordingOrReplaying() || AreThreadEventsPassedThrough());
+  MOZ_RELEASE_ASSERT(!IsRecordingOrReplaying() ||
+                     AreThreadEventsPassedThrough());
 
   if (IsParent()) {
     ipc::FileDescriptor connection;
@@ -223,8 +224,7 @@ Message::UniquePtr Channel::WaitForMessage() {
   // Remove the message we just received from the incoming buffer.
   size_t remaining = mMessageBytes - messageSize;
   if (remaining) {
-    memmove(mMessageBuffer.begin(), &mMessageBuffer[messageSize],
-            remaining);
+    memmove(mMessageBuffer.begin(), &mMessageBuffer[messageSize], remaining);
   }
   mMessageBytes = remaining;
 

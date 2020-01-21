@@ -113,7 +113,7 @@ void Thread::InitializeThreads() {
   gThreads = new Thread[MaxThreadId + 1];
 
   size_t nbytes = (MaxThreadId - MainThreadId) * ThreadStackSize;
-  gThreadStackMemory = (uint8_t*) DirectAllocateMemory(nbytes);
+  gThreadStackMemory = (uint8_t*)DirectAllocateMemory(nbytes);
 
   for (size_t i = MainThreadId; i <= MaxThreadId; i++) {
     Thread* thread = &gThreads[i];
@@ -127,7 +127,8 @@ void Thread::InitializeThreads() {
       thread->BindToCurrent();
       thread->mNativeId = DirectCurrentThread();
     } else {
-      thread->mStackBase = gThreadStackMemory + (i - MainThreadId - 1) * ThreadStackSize;
+      thread->mStackBase =
+          gThreadStackMemory + (i - MainThreadId - 1) * ThreadStackSize;
       thread->mStackSize = ThreadStackSize - PageSize * 2;
 
       // Make some memory between thread stacks inaccessible so that breakpad
@@ -321,7 +322,8 @@ void Thread::ReleaseOrAcquireOwnedLocks(OwnedLockState aState) {
 }
 
 void** Thread::GetOrCreateStorage(uintptr_t aKey) {
-  for (StorageEntry** pentry = &mStorageEntries; *pentry; pentry = &(*pentry)->mNext) {
+  for (StorageEntry** pentry = &mStorageEntries; *pentry;
+       pentry = &(*pentry)->mNext) {
     StorageEntry* entry = *pentry;
     if (entry->mKey == aKey) {
       // Put this at the front of the list.
@@ -331,7 +333,7 @@ void** Thread::GetOrCreateStorage(uintptr_t aKey) {
       return &entry->mData;
     }
   }
-  StorageEntry* entry = (StorageEntry*) AllocateStorage(sizeof(StorageEntry));
+  StorageEntry* entry = (StorageEntry*)AllocateStorage(sizeof(StorageEntry));
   entry->mKey = aKey;
   entry->mData = 0;
   entry->mNext = mStorageEntries;
@@ -343,7 +345,7 @@ uint8_t* Thread::AllocateStorage(size_t aSize) {
   // malloc uses TLS, so go directly to the system to allocate TLS storage.
   if (mStorageCursor + aSize >= mStorageLimit) {
     size_t nbytes = std::max(aSize, PageSize);
-    mStorageCursor = (uint8_t*) DirectAllocateMemory(nbytes);
+    mStorageCursor = (uint8_t*)DirectAllocateMemory(nbytes);
     mStorageLimit = mStorageCursor + nbytes;
   }
   uint8_t* res = mStorageCursor;
@@ -510,8 +512,7 @@ void Thread::NotifyUnrecordedWait(
   }
 }
 
-bool Thread::MaybeWaitForFork(
-    const std::function<void()>& aReleaseCallback) {
+bool Thread::MaybeWaitForFork(const std::function<void()>& aReleaseCallback) {
   MOZ_RELEASE_ASSERT(!PassThroughEvents());
   if (IsMainThread()) {
     return false;

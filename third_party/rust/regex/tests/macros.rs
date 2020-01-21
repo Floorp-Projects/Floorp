@@ -147,3 +147,14 @@ macro_rules! split {
         }
     }
 }
+
+macro_rules! splitn {
+    ($name:ident, $re:expr, $text:expr, $limit:expr, $expected:expr) => {
+        #[test]
+        fn $name() {
+            let re = regex!($re);
+            let splitted: Vec<_> = re.splitn(t!($text), $limit).collect();
+            assert_eq!($expected, &*splitted);
+        }
+    }
+}

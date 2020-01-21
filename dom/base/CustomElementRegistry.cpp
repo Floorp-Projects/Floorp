@@ -601,7 +601,8 @@ void CustomElementRegistry::UpgradeCandidates(
     return;
   }
 
-  mozilla::UniquePtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>> candidates;
+  mozilla::UniquePtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>>
+      candidates;
   if (mCandidatesMap.Remove(aKey, &candidates)) {
     MOZ_ASSERT(candidates);
     CustomElementReactionsStack* reactionsStack =

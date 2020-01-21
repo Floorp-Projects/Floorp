@@ -11,9 +11,7 @@
 
 #include <shlwapi.h>
 
-static int NormalImport() {
-  return ::GetSystemMetrics(SM_CYCAPTION);
-}
+static int NormalImport() { return ::GetSystemMetrics(SM_CYCAPTION); }
 
 static bool DelayLoadImport() {
   return !!::UrlIsW(L"http://example.com/", URLIS_FILEURL);

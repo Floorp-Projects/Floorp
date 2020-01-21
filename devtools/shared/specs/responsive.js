@@ -127,6 +127,7 @@ const responsiveSpec = generateActorSpec({
     setElementPickerState: {
       request: {
         state: Arg(0, "boolean"),
+        pickerType: Arg(1, "string"),
       },
       response: {},
     },

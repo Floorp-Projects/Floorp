@@ -11,9 +11,9 @@ The following specifiers are available both to formatting and parsing.
 | Spec. | Example  | Description                                                                |
 |-------|----------|----------------------------------------------------------------------------|
 |       |          | **DATE SPECIFIERS:**                                                       |
-| `%Y`  | `2001`   | The full proleptic Gregorian year, zero-padded to 4 digits. [1]            |
-| `%C`  | `20`     | The proleptic Gregorian year divided by 100, zero-padded to 2 digits. [2]  |
-| `%y`  | `01`     | The proleptic Gregorian year modulo 100, zero-padded to 2 digits. [2]      |
+| `%Y`  | `2001`   | The full proleptic Gregorian year, zero-padded to 4 digits. [^1]           |
+| `%C`  | `20`     | The proleptic Gregorian year divided by 100, zero-padded to 2 digits. [^2] |
+| `%y`  | `01`     | The proleptic Gregorian year modulo 100, zero-padded to 2 digits. [^2]     |
 |       |          |                                                                            |
 | `%m`  | `07`     | Month number (01--12), zero-padded to 2 digits.                            |
 | `%b`  | `Jul`    | Abbreviated month name. Always 3 letters.                                  |
@@ -28,12 +28,12 @@ The following specifiers are available both to formatting and parsing.
 | `%w`  | `0`      | Sunday = 0, Monday = 1, ..., Saturday = 6.                                 |
 | `%u`  | `7`      | Monday = 1, Tuesday = 2, ..., Sunday = 7. (ISO 8601)                       |
 |       |          |                                                                            |
-| `%U`  | `28`     | Week number starting with Sunday (00--53), zero-padded to 2 digits. [3]    |
+| `%U`  | `28`     | Week number starting with Sunday (00--53), zero-padded to 2 digits. [^3]   |
 | `%W`  | `27`     | Same to `%U`, but week 1 starts with the first Monday in that year instead.|
 |       |          |                                                                            |
-| `%G`  | `2001`   | Same to `%Y` but uses the year number in ISO 8601 week date. [4]           |
-| `%g`  | `01`     | Same to `%y` but uses the year number in ISO 8601 week date. [4]           |
-| `%V`  | `27`     | Same to `%U` but uses the week number in ISO 8601 week date (01--53). [4]  |
+| `%G`  | `2001`   | Same to `%Y` but uses the year number in ISO 8601 week date. [^4]          |
+| `%g`  | `01`     | Same to `%y` but uses the year number in ISO 8601 week date. [^4]          |
+| `%V`  | `27`     | Same to `%U` but uses the week number in ISO 8601 week date (01--53). [^4] |
 |       |          |                                                                            |
 | `%j`  | `189`    | Day of the year (001--366), zero-padded to 3 digits.                       |
 |       |          |                                                                            |
@@ -52,15 +52,15 @@ The following specifiers are available both to formatting and parsing.
 | `%p`  | `AM`     | `AM` or `PM` in 12-hour clocks.                                            |
 |       |          |                                                                            |
 | `%M`  | `34`     | Minute number (00--59), zero-padded to 2 digits.                           |
-| `%S`  | `60`     | Second number (00--60), zero-padded to 2 digits. [5]                       |
-| `%f`  | `026490000`   | The fractional seconds (in nanoseconds) since last whole second. [8]  |
-| `%.f` | `.026490`| Similar to `.%f` but left-aligned. These all consume the leading dot. [8]  |
-| `%.3f`| `.026`        | Similar to `.%f` but left-aligned but fixed to a length of 3. [8]     |
-| `%.6f`| `.026490`     | Similar to `.%f` but left-aligned but fixed to a length of 6. [8]     |
-| `%.9f`| `.026490000`  | Similar to `.%f` but left-aligned but fixed to a length of 9. [8]     |
-| `%3f` | `026`         | Similar to `%.3f` but without the leading dot. [8]                    |
-| `%6f` | `026490`      | Similar to `%.6f` but without the leading dot. [8]                    |
-| `%9f` | `026490000`   | Similar to `%.9f` but without the leading dot. [8]                    |
+| `%S`  | `60`     | Second number (00--60), zero-padded to 2 digits. [^5]                      |
+| `%f`  | `026490000`   | The fractional seconds (in nanoseconds) since last whole second. [^8] |
+| `%.f` | `.026490`| Similar to `.%f` but left-aligned. These all consume the leading dot. [^8] |
+| `%.3f`| `.026`        | Similar to `.%f` but left-aligned but fixed to a length of 3. [^8]    |
+| `%.6f`| `.026490`     | Similar to `.%f` but left-aligned but fixed to a length of 6. [^8]    |
+| `%.9f`| `.026490000`  | Similar to `.%f` but left-aligned but fixed to a length of 9. [^8]    |
+| `%3f` | `026`         | Similar to `%.3f` but without the leading dot. [^8]                   |
+| `%6f` | `026490`      | Similar to `%.6f` but without the leading dot. [^8]                   |
+| `%9f` | `026490000`   | Similar to `%.9f` but without the leading dot. [^8]                   |
 |       |               |                                                                       |
 | `%R`  | `00:34`       | Hour-minute format. Same to `%H:%M`.                                  |
 | `%T`  | `00:34:60`    | Hour-minute-second format. Same to `%H:%M:%S`.                        |
@@ -75,9 +75,9 @@ The following specifiers are available both to formatting and parsing.
 |       |          |                                                                            |
 |       |          | **DATE & TIME SPECIFIERS:**                                                |
 |`%c`|`Sun Jul  8 00:34:60 2001`|`ctime` date & time format. Same to `%a %b %e %T %Y` sans `\n`.|
-| `%+`  | `2001-07-08T00:34:60.026490+09:30` | ISO 8601 / RFC 3339 date & time format. [6]      |
+| `%+`  | `2001-07-08T00:34:60.026490+09:30` | ISO 8601 / RFC 3339 date & time format. [^6]     |
 |       |               |                                                                       |
-| `%s`  | `994518299`   | UNIX timestamp, the number of seconds since 1970-01-01 00:00 UTC. [7] |
+| `%s`  | `994518299`   | UNIX timestamp, the number of seconds since 1970-01-01 00:00 UTC. [^7]|
 |       |          |                                                                            |
 |       |          | **SPECIAL SPECIFIERS:**                                                    |
 | `%t`  |          | Literal tab (`\t`).                                                        |
@@ -95,59 +95,62 @@ Modifier | Description
 
 Notes:
 
-1. `%Y`:
+[^1]: `%Y`:
    Negative years are allowed in formatting but not in parsing.
 
-2. `%C`, `%y`:
+[^2]: `%C`, `%y`:
    This is floor division, so 100 BCE (year number -99) will print `-1` and `99` respectively.
 
-3. `%U`:
+[^3]: `%U`:
    Week 1 starts with the first Sunday in that year.
    It is possible to have week 0 for days before the first Sunday.
 
-4. `%G`, `%g`, `%V`:
+[^4]: `%G`, `%g`, `%V`:
    Week 1 is the first week with at least 4 days in that year.
    Week 0 does not exist, so this should be used with `%G` or `%g`.
 
-5. `%S`:
+[^5]: `%S`:
    It accounts for leap seconds, so `60` is possible.
 
-6. `%+`:
-   Same to `%Y-%m-%dT%H:%M:%S%.f%:z`,
-   i.e. 0, 3, 6 or 9 fractional digits for seconds and colons in the time zone offset.
+[^6]: `%+`: Same as `%Y-%m-%dT%H:%M:%S%.f%:z`, i.e. 0, 3, 6 or 9 fractional
+   digits for seconds and colons in the time zone offset.
+   <br>
+   <br>
+   The typical `strftime` implementations have different (and locale-dependent)
+   formats for this specifier. While Chrono's format for `%+` is far more
+   stable, it is best to avoid this specifier if you want to control the exact
+   output.
 
-   The typical `strftime` implementations have
-   different (and locale-dependent) formats for this specifier.
-   While Chrono's format for `%+` is far more stable,
-   it is best to avoid this specifier if you want to control the exact output.
-
-7. `%s`:
+[^7]: `%s`:
    This is not padded and can be negative.
    For the purpose of Chrono, it only accounts for non-leap seconds
    so it slightly differs from ISO C `strftime` behavior.
 
-8. `%f`, `%.f`, `%.3f`, `%.6f`, `%.9f`, `%3f`, `%6f`, `%9f`:
-
+[^8]: `%f`, `%.f`, `%.3f`, `%.6f`, `%.9f`, `%3f`, `%6f`, `%9f`:
+   <br>
    The default `%f` is right-aligned and always zero-padded to 9 digits
    for the compatibility with glibc and others,
    so it always counts the number of nanoseconds since the last whole second.
    E.g. 7ms after the last second will print `007000000`,
    and parsing `7000000` will yield the same.
-
+   <br>
+   <br>
    The variant `%.f` is left-aligned and print 0, 3, 6 or 9 fractional digits
    according to the precision.
    E.g. 70ms after the last second under `%.f` will print `.070` (note: not `.07`),
    and parsing `.07`, `.070000` etc. will yield the same.
    Note that they can print or read nothing if the fractional part is zero or
    the next character is not `.`.
-
+   <br>
+   <br>
    The variant `%.3f`, `%.6f` and `%.9f` are left-aligned and print 3, 6 or 9 fractional digits
    according to the number preceding `f`.
    E.g. 70ms after the last second under `%.3f` will print `.070` (note: not `.07`),
    and parsing `.07`, `.070000` etc. will yield the same.
    Note that they can read nothing if the fractional part is zero or
    the next character is not `.` however will print with the specified length.
-
+   <br>
+   <br>
    The variant `%3f`, `%6f` and `%9f` are left-aligned and print 3, 6 or 9 fractional digits
    according to the number preceding `f`, but without the leading dot.
    E.g. 70ms after the last second under `%3f` will print `070` (note: not `07`),

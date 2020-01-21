@@ -27,9 +27,7 @@ static Monitor* gMainThreadCallbackMonitor;
 // gMainThreadCallbackMonitor.
 static StaticInfallibleVector<std::function<void()>> gMainThreadCallbacks;
 
-void InitializeRewindState() {
-  gMainThreadCallbackMonitor = new Monitor();
-}
+void InitializeRewindState() { gMainThreadCallbackMonitor = new Monitor(); }
 
 void NewCheckpoint() {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());

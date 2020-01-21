@@ -37,8 +37,8 @@
 #include "mozilla/Unused.h"
 
 #ifdef MOZ_WAYLAND
-#include "nsAppRunner.h"  // for IsWaylandDisabled
-#include "mozilla/widget/mozwayland.h"
+#  include "nsAppRunner.h"  // for IsWaylandDisabled
+#  include "mozilla/widget/mozwayland.h"
 #endif
 
 // stuff from glx.h
@@ -552,7 +552,8 @@ bool fire_glxtest_process() {
     write_end_of_the_pipe = pfd[1];
     close_logging();
     // TODO: --display command line argument is not properly handled
-    // NOTE: prefers X for now because eglQueryRendererIntegerMESA does not exist yet
+    // NOTE: prefers X for now because eglQueryRendererIntegerMESA does not
+    // exist yet
 #ifdef MOZ_WAYLAND
     if (IsWaylandDisabled() || getenv("DISPLAY") || !wayland_egltest())
 #endif

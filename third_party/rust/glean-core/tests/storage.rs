@@ -13,7 +13,7 @@ use glean_core::{CommonMetricData, Lifetime};
 
 #[test]
 fn snapshot_returns_none_if_nothing_is_recorded_in_the_store() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     assert!(StorageManager
         .snapshot(glean.storage(), "unknown_store", true)
         .is_none())
@@ -21,7 +21,7 @@ fn snapshot_returns_none_if_nothing_is_recorded_in_the_store() {
 
 #[test]
 fn can_snapshot() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
 
     let local_metric = StringMetric::new(CommonMetricData {
         name: "can_snapshot_local_metric".into(),
@@ -39,13 +39,13 @@ fn can_snapshot() {
 
 #[test]
 fn snapshot_correctly_clears_the_stores() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let store_names: Vec<String> = vec!["store1".into(), "store2".into()];
 
     let metric = CounterMetric::new(CommonMetricData {
         name: "metric".into(),
         category: "telemetry".into(),
-        send_in_pings: store_names.clone(),
+        send_in_pings: store_names,
         disabled: false,
         lifetime: Lifetime::Ping,
         ..Default::default()
@@ -71,7 +71,7 @@ fn storage_is_thread_safe() {
     use std::sync::{Arc, Barrier, Mutex};
     use std::thread;
 
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let glean = Arc::new(Mutex::new(glean));
 
     let threadsafe_metric = CounterMetric::new(CommonMetricData {

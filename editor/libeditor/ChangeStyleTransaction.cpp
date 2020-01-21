@@ -193,8 +193,8 @@ ChangeStyleTransaction::DoTransaction() {
     } else {
       values.Assign(mValue);
     }
-    rv = cssDecl->SetProperty(propertyNameString,
-                              NS_ConvertUTF16toUTF8(values), priority);
+    rv = cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(values),
+                              priority);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

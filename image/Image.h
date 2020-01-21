@@ -74,13 +74,14 @@ enum class SurfaceMemoryCounterType { NORMAL, COMPOSITING, COMPOSITING_PREV };
 struct SurfaceMemoryCounter {
   SurfaceMemoryCounter(
       const SurfaceKey& aKey, bool aIsLocked, bool aCannotSubstitute,
-      bool aIsFactor2,
+      bool aIsFactor2, bool aFinished,
       SurfaceMemoryCounterType aType = SurfaceMemoryCounterType::NORMAL)
       : mKey(aKey),
         mType(aType),
         mIsLocked(aIsLocked),
         mCannotSubstitute(aCannotSubstitute),
-        mIsFactor2(aIsFactor2) {}
+        mIsFactor2(aIsFactor2),
+        mFinished(aFinished) {}
 
   const SurfaceKey& Key() const { return mKey; }
   MemoryCounter& Values() { return mValues; }
@@ -89,6 +90,7 @@ struct SurfaceMemoryCounter {
   bool IsLocked() const { return mIsLocked; }
   bool CannotSubstitute() const { return mCannotSubstitute; }
   bool IsFactor2() const { return mIsFactor2; }
+  bool IsFinished() const { return mFinished; }
 
  private:
   const SurfaceKey mKey;
@@ -97,6 +99,7 @@ struct SurfaceMemoryCounter {
   const bool mIsLocked;
   const bool mCannotSubstitute;
   const bool mIsFactor2;
+  const bool mFinished;
 };
 
 struct ImageMemoryCounter {

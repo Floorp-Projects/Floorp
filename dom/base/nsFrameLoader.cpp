@@ -885,7 +885,7 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* frame) {
 
   ds->SetScrollbarPreference(GetScrollbarPreference(mOwnerContent));
   const bool marginsChanged =
-    ds->UpdateFrameMargins(GetMarginAttributes(mOwnerContent));
+      ds->UpdateFrameMargins(GetMarginAttributes(mOwnerContent));
   if (PresShell* presShell = ds->GetPresShell()) {
     // Ensure root scroll frame is reflowed in case margins have changed
     if (marginsChanged) {

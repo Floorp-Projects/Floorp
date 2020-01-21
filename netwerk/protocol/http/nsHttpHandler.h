@@ -772,6 +772,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   TimeStamp mLastActiveTabLoadOptimizationHit;
 
   Mutex mSpdyBlacklistLock;
+
  public:
   MOZ_MUST_USE nsresult NewChannelId(uint64_t& channelId);
 

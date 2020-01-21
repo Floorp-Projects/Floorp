@@ -453,8 +453,7 @@ nsresult Http3Session::ProcessOutputAndEvents() {
 void Http3Session::SetupTimer(uint64_t aTimeout) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  LOG(("Http3Session::SetupTimer to %" PRIu64 "ms [this=%p].", aTimeout,
-       this));
+  LOG(("Http3Session::SetupTimer to %" PRIu64 "ms [this=%p].", aTimeout, this));
   if (!mTimer) {
     mTimer = NS_NewTimer();
   }

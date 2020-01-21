@@ -303,13 +303,33 @@ class ExpirationTrackerImpl {
 
   friend class Iterator;
 
-  bool IsEmptyLocked(const AutoLock& aAutoLock) {
+  bool IsEmptyLocked(const AutoLock& aAutoLock) const {
     for (uint32_t i = 0; i < K; ++i) {
       if (!mGenerations[i].IsEmpty()) {
         return false;
       }
     }
     return true;
+  }
+
+  size_t Length(const AutoLock& aAutoLock) const {
+    size_t len = 0;
+    for (uint32_t i = 0; i < K; ++i) {
+      len += mGenerations[i].Length();
+    }
+    return len;
+  }
+
+  // @return The amount of memory used by this ExpirationTrackerImpl, excluding
+  // sizeof(*this). If you want to measure anything hanging off the mGenerations
+  // array, you must iterate over the elements and measure them individually;
+  // hence the "Shallow" prefix.
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    size_t bytes = 0;
+    for (uint32_t i = 0; i < K; ++i) {
+      bytes += mGenerations[i].ShallowSizeOfExcludingThis(aMallocSizeOf);
+    }
+    return bytes;
   }
 
  protected:

@@ -9,24 +9,20 @@ use serde_json::json;
 
 use glean_core::metrics::*;
 use glean_core::storage::StorageManager;
-use glean_core::{CommonMetricData, Glean, Lifetime};
+use glean_core::{CommonMetricData, Lifetime};
 
 // SKIPPED from glean-ac: string deserializer should correctly parse integers
 // This test doesn't really apply to rkv
 
 #[test]
 fn boolean_serializer_should_correctly_serialize_boolean() {
-    let (_t, tmpname) = tempdir();
-    let cfg = glean_core::Configuration {
-        data_path: tmpname,
-        application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-    };
+    let (mut tempdir, _) = tempdir();
 
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        // We give tempdir to the `new_glean` function...
+        let (glean, dir) = new_glean(Some(tempdir));
+        // And then we get it back once that function returns.
+        tempdir = dir;
 
         let metric = BooleanMetric::new(CommonMetricData {
             name: "boolean_metric".into(),
@@ -51,7 +47,7 @@ fn boolean_serializer_should_correctly_serialize_boolean() {
     // Make a new Glean instance here, which should force reloading of the data from disk
     // so we can ensure it persisted, because it has User lifetime
     {
-        let glean = Glean::new(cfg.clone()).unwrap();
+        let (glean, _t) = new_glean(Some(tempdir));
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
             .unwrap();
@@ -64,7 +60,7 @@ fn boolean_serializer_should_correctly_serialize_boolean() {
 
 #[test]
 fn set_properly_sets_the_value_in_all_stores() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let store_names: Vec<String> = vec!["store1".into(), "store2".into()];
 
     let metric = BooleanMetric::new(CommonMetricData {

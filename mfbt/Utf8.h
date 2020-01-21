@@ -12,10 +12,10 @@
 #ifndef mozilla_Utf8_h
 #define mozilla_Utf8_h
 
-#include "mozilla/Casting.h"            // for mozilla::AssertedCast
-#include "mozilla/Likely.h"             // for MOZ_UNLIKELY
-#include "mozilla/Maybe.h"              // for mozilla::Maybe
-#include "mozilla/Span.h"               // for mozilla::Span
+#include "mozilla/Casting.h"    // for mozilla::AssertedCast
+#include "mozilla/Likely.h"     // for MOZ_UNLIKELY
+#include "mozilla/Maybe.h"      // for mozilla::Maybe
+#include "mozilla/Span.h"       // for mozilla::Span
 #include "mozilla/TextUtils.h"  // for mozilla::IsAscii and via Latin1.h for
                                 // encoding_rs_mem.h and MOZ_HAS_JSRUST.
 #include "mozilla/Tuple.h"      // for mozilla::Tuple

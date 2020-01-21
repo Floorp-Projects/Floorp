@@ -551,7 +551,7 @@ enum class VRTelemetryId : uint8_t {
   TOTAL = 4,
 };
 
-enum class VRTelemetryInstallFrom: uint8_t {
+enum class VRTelemetryInstallFrom : uint8_t {
   User = 0,
   FxR = 1,
   HTC = 2,
@@ -559,7 +559,7 @@ enum class VRTelemetryInstallFrom: uint8_t {
   TOTAL = 4,
 };
 
-enum class VRTelemetryEntryMethod: uint8_t {
+enum class VRTelemetryEntryMethod : uint8_t {
   SystemBtn = 0,
   Library = 1,
   Gaze = 2,

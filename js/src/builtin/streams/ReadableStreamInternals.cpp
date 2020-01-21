@@ -25,13 +25,13 @@
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/Stream.h"  // JS::ReadableStreamUnderlyingSource, JS::ReadableStreamMode
 #include "js/Value.h"  // JS::Value, JS::{Boolean,Object}Value, JS::UndefinedHandleValue
-#include "vm/JSContext.h"     // JSContext
-#include "vm/JSFunction.h"    // JSFunction, js::NewNativeFunction
-#include "vm/NativeObject.h"  // js::NativeObject
-#include "vm/ObjectGroup.h"   // js::GenericObject
+#include "vm/JSContext.h"      // JSContext
+#include "vm/JSFunction.h"     // JSFunction, js::NewNativeFunction
+#include "vm/NativeObject.h"   // js::NativeObject
+#include "vm/ObjectGroup.h"    // js::GenericObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
-#include "vm/Realm.h"         // JS::Realm
-#include "vm/StringType.h"    // js::PropertyName
+#include "vm/Realm.h"          // JS::Realm
+#include "vm/StringType.h"     // js::PropertyName
 
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::{Reject,Resolve}UnwrappedPromiseWithUndefined, js::SetSettledPromiseIsHandled
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::js::UnwrapReaderFromStream{,NoThrow}

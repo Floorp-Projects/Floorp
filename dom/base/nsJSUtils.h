@@ -251,7 +251,8 @@ inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
   buffer->ToString(len, dest);
 }
 
-template <typename T, typename std::enable_if_t<std::is_same<typename T::char_type, char16_t>::value>* = nullptr>
+template <typename T, typename std::enable_if_t<std::is_same<
+                          typename T::char_type, char16_t>::value>* = nullptr>
 inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   size_t len = JS::GetStringLength(s);
   static_assert(js::MaxStringLength < (1 << 30),
@@ -285,7 +286,8 @@ inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
 }
 
 // Specialization for UTF8String.
-template <typename T, typename std::enable_if_t<std::is_same<typename T::char_type, char>::value>* = nullptr>
+template <typename T, typename std::enable_if_t<std::is_same<
+                          typename T::char_type, char>::value>* = nullptr>
 inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   using namespace mozilla;
   CheckedInt<size_t> bufLen(JS::GetStringLength(s));
