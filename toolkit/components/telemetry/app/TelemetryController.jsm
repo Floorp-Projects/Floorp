@@ -942,11 +942,6 @@ var Impl = {
       // ... and wait for any outstanding async ping activity.
       await this._connectionsBarrier.wait();
 
-      if (AppConstants.platform !== "android") {
-        // No PingSender on Android.
-        TelemetrySend.flushPingSenderBatch();
-      }
-
       // Perform final shutdown operations.
       await TelemetryStorage.shutdown();
     } finally {
