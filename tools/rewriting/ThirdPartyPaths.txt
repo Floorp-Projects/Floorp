@@ -121,12 +121,18 @@ netwerk/srtp/src/
 nsprpub/
 other-licenses/
 parser/expat/
+remote/test/puppeteer/
 security/nss/
 security/sandbox/chromium/
 security/sandbox/chromium-shim/
 testing/gtest/gmock/
 testing/gtest/gtest/
+testing/mochitest/MochiKit/
 testing/mochitest/pywebsocket
+testing/mochitest/tests/MochiKit-1.4.2/
+testing/modules/ajv-4.1.1.js
+testing/modules/sinon-7.2.7.js
+testing/mozbase/mozproxy/mozproxy/backends/mitm/scripts/catapult/
 testing/talos/talos/tests/dromaeo/
 testing/talos/talos/tests/kraken/
 testing/talos/talos/tests/v8_7/
@@ -134,6 +140,7 @@ testing/web-platform/tests/resources/webidl2/
 testing/web-platform/tests/tools/third_party/
 testing/xpcshell/dns-packet/
 testing/xpcshell/node-ip/
+testing/xpcshell/node-http2/
 third_party/
 toolkit/components/certviewer/content/vendor/
 toolkit/components/jsoncpp/
