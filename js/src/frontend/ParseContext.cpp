@@ -245,8 +245,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
     // FunctionBoxes that get added to the tree in an AsmJS compilation
     // don't have a long enough lifespan, as AsmJS marks the lifo allocator
     // inside the ModuleValidator, and frees it again when that dies.
-    if (parseInfo.isDeferred() &&
-        !this->functionBox()->useAsmOrInsideUseAsm()) {
+    if (!this->functionBox()->useAsmOrInsideUseAsm()) {
       tree.emplace(parseInfo.treeHolder);
     }
 
