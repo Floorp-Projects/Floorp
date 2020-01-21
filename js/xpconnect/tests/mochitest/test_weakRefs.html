@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test WeakRef works in the browser</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      function go() {
+        SimpleTest.waitForExplicitFinish();
+
+        let wr;
+        {
+          let obj = {};
+          wr = new WeakRef(obj);
+          obj = null;
+        }
+
+        // WeakRef should keep the target in the current task.
+        isnot(wr.deref(), undefined, "deref() should return its target.");
+
+        // Weakref should keep the target until the end of current Job, that
+        // includes microtask(Promise).
+        Promise.resolve().then(() => {
+          isnot(wr.deref(), undefined,
+                "deref() should return its target in promise");
+
+        });
+
+        // setTimeout will launch a new job and call ClearKeptObjects().
+        setTimeout(() => {
+          // Call gc() forcibly to clear the target of wr.
+          SpecialPowers.DOMWindowUtils.garbageCollect();
+
+          is(wr.deref(), undefined, "deref() should return undefined in the new job.");
+
+          SimpleTest.finish();
+        }, 0);
+      }
+    </script>
+  </head>
+  <body onload="go()"></body>
+</html>

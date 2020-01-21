@@ -824,7 +824,7 @@ void MacroAssemblerMIPS::ma_lid(FloatRegister dest, double value) {
   };
   DoubleStruct intStruct = mozilla::BitwiseCast<DoubleStruct>(value);
 #if MOZ_BIG_ENDIAN()
-  mozilla::Swap(intStruct.hi, intStruct.lo);
+  std::swap(intStruct.hi, intStruct.lo);
 #endif
 
   // put hi part of 64 bit value into the odd register
@@ -2139,8 +2139,8 @@ void MacroAssembler::moveValue(const ValueOperand& src,
       return;
     }
     // If only one is, copy that source first.
-    mozilla::Swap(s0, s1);
-    mozilla::Swap(d0, d1);
+    std::swap(s0, s1);
+    std::swap(d0, d1);
   }
 
   if (s0 != d0) {

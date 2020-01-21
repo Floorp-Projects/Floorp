@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- optional-chaining is not supported
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/dstr-assignment/array-elem-nested-memberexpr-optchain-prop-ref-init.case
 // - src/dstr-assignment/syntax/for-of.template

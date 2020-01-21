@@ -235,7 +235,7 @@
                 <menuseparator hidden="true" id="documentDirection-separator"/>
                 <menuitem id="documentDirection-swap"
                           hidden="true"
-                          oncommand="gBrowser.selectedBrowser.sendMessageToActor('SwitchDocumentDirection', {}, 'SwitchDocumentDirection', true);" data-l10n-id="menu-view-bidi-switch-page-direction"/>
+                          oncommand="gBrowser.selectedBrowser.sendMessageToActor('SwitchDocumentDirection', {}, 'SwitchDocumentDirection', 'roots');" data-l10n-id="menu-view-bidi-switch-page-direction"/>
               </menupopup>
             </menu>
 

@@ -9,10 +9,10 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Move.h"
 #include "mozilla/Unused.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "builtin/MapObject.h"
 #include "debugger/DebugAPI.h"

@@ -1100,6 +1100,12 @@ extern JS_PUBLIC_API void RunIdleTimeGCTask(JSRuntime* rt);
 extern JS_PUBLIC_API void SetHostCleanupFinalizationGroupCallback(
     JSContext* cx, JSHostCleanupFinalizationGroupCallback cb, void* data);
 
+/**
+ * Clear kept alive objects in JS WeakRef.
+ * https://tc39.es/proposal-weakrefs/#sec-clear-kept-objects
+ */
+extern JS_PUBLIC_API void ClearKeptObjects(JSContext* cx);
+
 }  // namespace JS
 
 namespace js {

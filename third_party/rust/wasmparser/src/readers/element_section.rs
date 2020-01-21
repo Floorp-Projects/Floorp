@@ -17,26 +17,36 @@ use super::{
     BinaryReader, BinaryReaderError, InitExpr, Result, SectionIteratorLimited, SectionReader,
     SectionWithLimitedItems, Type,
 };
+use crate::{ExternalKind, Operator};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Clone)]
 pub struct Element<'a> {
     pub kind: ElementKind<'a>,
     pub items: ElementItems<'a>,
+    pub ty: Type,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Clone)]
 pub enum ElementKind<'a> {
-    Passive(Type),
+    Passive,
     Active {
         table_index: u32,
         init_expr: InitExpr<'a>,
     },
+    Declared,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct ElementItems<'a> {
+    exprs: bool,
     offset: usize,
     data: &'a [u8],
+}
+
+#[derive(Debug)]
+pub enum ElementItem {
+    Null,
+    Func(u32),
 }
 
 impl<'a> ElementItems<'a> {
@@ -44,20 +54,25 @@ impl<'a> ElementItems<'a> {
     where
         'a: 'b,
     {
-        ElementItemsReader::new(self.data, self.offset)
+        ElementItemsReader::new(self.data, self.offset, self.exprs)
     }
 }
 
 pub struct ElementItemsReader<'a> {
     reader: BinaryReader<'a>,
     count: u32,
+    exprs: bool,
 }
 
 impl<'a> ElementItemsReader<'a> {
-    pub fn new(data: &[u8], offset: usize) -> Result<ElementItemsReader> {
+    pub fn new(data: &[u8], offset: usize, exprs: bool) -> Result<ElementItemsReader> {
         let mut reader = BinaryReader::new_with_offset(data, offset);
         let count = reader.read_var_u32()?;
-        Ok(ElementItemsReader { reader, count })
+        Ok(ElementItemsReader {
+            reader,
+            count,
+            exprs,
+        })
     }
 
     pub fn original_position(&self) -> usize {
@@ -68,13 +83,41 @@ impl<'a> ElementItemsReader<'a> {
         self.count
     }
 
-    pub fn read(&mut self) -> Result<u32> {
-        self.reader.read_var_u32()
+    pub fn uses_exprs(&self) -> bool {
+        self.exprs
+    }
+
+    pub fn read(&mut self) -> Result<ElementItem> {
+        if self.exprs {
+            let offset = self.reader.original_position();
+            let ret = match self.reader.read_operator()? {
+                Operator::RefNull => ElementItem::Null,
+                Operator::RefFunc { function_index } => ElementItem::Func(function_index),
+                _ => {
+                    return Err(BinaryReaderError {
+                        message: "invalid passive segment",
+                        offset,
+                    })
+                }
+            };
+            match self.reader.read_operator()? {
+                Operator::End => {}
+                _ => {
+                    return Err(BinaryReaderError {
+                        message: "invalid passive segment",
+                        offset,
+                    })
+                }
+            }
+            Ok(ret)
+        } else {
+            self.reader.read_var_u32().map(ElementItem::Func)
+        }
     }
 }
 
 impl<'a> IntoIterator for ElementItemsReader<'a> {
-    type Item = Result<u32>;
+    type Item = Result<ElementItem>;
     type IntoIter = ElementItemsIterator<'a>;
     fn into_iter(self) -> Self::IntoIter {
         let count = self.count;
@@ -93,7 +136,7 @@ pub struct ElementItemsIterator<'a> {
 }
 
 impl<'a> Iterator for ElementItemsIterator<'a> {
-    type Item = Result<u32>;
+    type Item = Result<ElementItem>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.err || self.left == 0 {
             return None;
@@ -132,12 +175,8 @@ impl<'a> ElementSectionReader<'a> {
     /// Reads content of the element section.
     ///
     /// # Examples
-    /// ```
-    /// # let data: &[u8] = &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    /// #     0x01, 0x4, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
-    /// #     0x05, 0x03, 0x01, 0x00, 0x02,
-    /// #     0x09, 0x07, 0x01, 0x00, 0x41, 0x00, 0x0B, 0x01, 0x00,
-    /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
+    /// ```no-run
+    /// # let data: &[u8] = &[];
     /// use wasmparser::{ModuleReader, ElementKind};
     ///use wasmparser::Result;
     /// let mut reader = ModuleReader::new(data).expect("module reader");
@@ -148,7 +187,6 @@ impl<'a> ElementSectionReader<'a> {
     /// let mut element_reader = section.get_element_section_reader().expect("element section reader");
     /// for _ in 0..element_reader.get_count() {
     ///     let element = element_reader.read().expect("element");
-    ///     println!("Element: {:?}", element);
     ///     if let ElementKind::Active { init_expr, .. } = element.kind {
     ///         let mut init_expr_reader = init_expr.get_binary_reader();
     ///         let op = init_expr_reader.read_operator().expect("op");
@@ -157,7 +195,7 @@ impl<'a> ElementSectionReader<'a> {
     ///     let mut items_reader = element.items.get_items_reader().expect("items reader");
     ///     for _ in 0..items_reader.get_count() {
     ///         let item = items_reader.read().expect("item");
-    ///         println!("  Item: {}", item);
+    ///         println!("  Item: {:?}", item);
     ///     }
     /// }
     /// ```
@@ -166,19 +204,23 @@ impl<'a> ElementSectionReader<'a> {
         'a: 'b,
     {
         let flags = self.reader.read_var_u32()?;
-        let kind = if flags == 1 {
-            let ty = self.reader.read_type()?;
-            ElementKind::Passive(ty)
+        if (flags & !0b111) != 0 {
+            return Err(BinaryReaderError {
+                message: "invalid flags byte in element segment",
+                offset: self.reader.original_position() - 1,
+            });
+        }
+        let kind = if flags & 0b001 != 0 {
+            if flags & 0b010 != 0 {
+                ElementKind::Declared
+            } else {
+                ElementKind::Passive
+            }
         } else {
-            let table_index = match flags {
-                0 => 0,
-                2 => self.reader.read_var_u32()?,
-                _ => {
-                    return Err(BinaryReaderError {
-                        message: "invalid flags byte in element segment",
-                        offset: self.reader.original_position() - 1,
-                    });
-                }
+            let table_index = if flags & 0b010 == 0 {
+                0
+            } else {
+                self.reader.read_var_u32()?
             };
             let init_expr = {
                 let expr_offset = self.reader.position;
@@ -191,17 +233,42 @@ impl<'a> ElementSectionReader<'a> {
                 init_expr,
             }
         };
+        let exprs = flags & 0b100 != 0;
+        let ty = if flags & 0b011 != 0 {
+            if exprs {
+                self.reader.read_type()?
+            } else {
+                match self.reader.read_external_kind()? {
+                    ExternalKind::Function => Type::AnyFunc,
+                    _ => {
+                        return Err(BinaryReaderError {
+                            message: "only the function external type is supported in elem segment",
+                            offset: self.reader.original_position() - 1,
+                        });
+                    }
+                }
+            }
+        } else {
+            Type::AnyFunc
+        };
         let data_start = self.reader.position;
         let items_count = self.reader.read_var_u32()?;
-        for _ in 0..items_count {
-            self.reader.skip_var_32()?;
+        if exprs {
+            for _ in 0..items_count {
+                self.reader.skip_init_expr()?;
+            }
+        } else {
+            for _ in 0..items_count {
+                self.reader.skip_var_32()?;
+            }
         }
         let data_end = self.reader.position;
         let items = ElementItems {
             offset: self.reader.original_offset + data_start,
             data: &self.reader.buffer[data_start..data_end],
+            exprs,
         };
-        Ok(Element { kind, items })
+        Ok(Element { kind, items, ty })
     }
 }
 

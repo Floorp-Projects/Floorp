@@ -8,11 +8,11 @@
 #define threading_ConditionVariable_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
 #include "mozilla/PlatformConditionVariable.h"
 #include "mozilla/TimeStamp.h"
 
 #include <stdint.h>
+#include <utility>
 #ifndef XP_WIN
 #  include <pthread.h>
 #endif

@@ -8895,6 +8895,108 @@ GeneralParser<ParseHandler, Unit>::unaryOpExpr(YieldHandling yieldHandling,
 }
 
 template <class ParseHandler, typename Unit>
+typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
+    YieldHandling yieldHandling, TripledotHandling tripledotHandling,
+    TokenKind tt, bool allowCallSyntax /* = true */,
+    PossibleError* possibleError /* = nullptr */,
+    InvokedPrediction invoked /* = PredictUninvoked */) {
+  if (!CheckRecursionLimit(cx_)) {
+    return null();
+  }
+
+  uint32_t begin = pos().begin;
+
+  Node lhs = memberExpr(yieldHandling, tripledotHandling, tt,
+                        /* allowCallSyntax = */ true, possibleError, invoked);
+  if (!lhs) {
+    return null();
+  }
+
+  if (!tokenStream.peekToken(&tt, TokenStream::SlashIsDiv)) {
+    return null();
+  }
+
+  if (tt == TokenKind::Eof || tt != TokenKind::OptionalChain) {
+    return lhs;
+  }
+
+  while (true) {
+    if (!tokenStream.getToken(&tt)) {
+      return null();
+    }
+
+    if (tt == TokenKind::Eof) {
+      break;
+    }
+
+    Node nextMember;
+    if (tt == TokenKind::OptionalChain) {
+      if (!tokenStream.getToken(&tt)) {
+        return null();
+      }
+      if (TokenKindIsPossibleIdentifierName(tt)) {
+        nextMember = memberPropertyAccess(lhs, OptionalKind::Optional);
+        if (!nextMember) {
+          return null();
+        }
+      } else if (tt == TokenKind::LeftBracket) {
+        nextMember =
+            memberElemAccess(lhs, yieldHandling, OptionalKind::Optional);
+        if (!nextMember) {
+          return null();
+        }
+      } else if (tt == TokenKind::LeftParen) {
+        nextMember = memberCall(tt, lhs, yieldHandling, possibleError,
+                                OptionalKind::Optional);
+        if (!nextMember) {
+          return null();
+        }
+      } else {
+        error(JSMSG_NAME_AFTER_DOT);
+        return null();
+      }
+    } else if (tt == TokenKind::Dot) {
+      if (!tokenStream.getToken(&tt)) {
+        return null();
+      }
+      if (TokenKindIsPossibleIdentifierName(tt)) {
+        nextMember = memberPropertyAccess(lhs);
+        if (!nextMember) {
+          return null();
+        }
+      } else {
+        error(JSMSG_NAME_AFTER_DOT);
+        return null();
+      }
+    } else if (tt == TokenKind::LeftBracket) {
+      nextMember = memberElemAccess(lhs, yieldHandling);
+      if (!nextMember) {
+        return null();
+      }
+    } else if (allowCallSyntax && tt == TokenKind::LeftParen) {
+      nextMember = memberCall(tt, lhs, yieldHandling, possibleError);
+      if (!nextMember) {
+        return null();
+      }
+    } else if (tt == TokenKind::TemplateHead ||
+               tt == TokenKind::NoSubsTemplate) {
+      error(JSMSG_BAD_OPTIONAL_TEMPLATE);
+      return null();
+    } else {
+      anyChars.ungetToken();
+      break;
+    }
+
+    if (nextMember) {
+      lhs = nextMember;
+    }
+  }
+
+  UnaryNodeType optionalChain = handler_.newOptionalChain(begin, lhs);
+  return optionalChain;
+}
+
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */,
@@ -9002,8 +9104,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
 
     default: {
       Node expr =
-          memberExpr(yieldHandling, tripledotHandling, tt,
-                     /* allowCallSyntax = */ true, possibleError, invoked);
+          optionalExpr(yieldHandling, tripledotHandling, tt,
+                       /* allowCallSyntax = */ true, possibleError, invoked);
       if (!expr) {
         return null();
       }
@@ -9175,6 +9277,18 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         return null();
       }
 
+      // If we have encountered an optional chain, in the form of `new
+      // ClassName?.()` then we need to throw, as this is disallowed by the
+      // spec.
+      bool optionalToken;
+      if (!tokenStream.matchToken(&optionalToken, TokenKind::OptionalChain)) {
+        return null();
+      }
+      if (optionalToken) {
+        errorAt(newBegin, JSMSG_BAD_NEW_OPTIONAL);
+        return null();
+      }
+
       bool matched;
       if (!tokenStream.matchToken(&matched, TokenKind::LeftParen)) {
         return null();
@@ -9237,18 +9351,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
       }
 
       if (TokenKindIsPossibleIdentifierName(tt)) {
-        PropertyName* field = anyChars.currentName();
-        if (handler_.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
-          error(JSMSG_BAD_SUPERPROP, "property");
-          return null();
-        }
-
-        NameNodeType name = handler_.newPropertyName(field, pos());
-        if (!name) {
-          return null();
-        }
-
-        nextMember = handler_.newPropertyAccess(lhs, name);
+        nextMember = memberPropertyAccess(lhs);
         if (!nextMember) {
           return null();
         }
@@ -9257,20 +9360,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         return null();
       }
     } else if (tt == TokenKind::LeftBracket) {
-      Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
-      if (!propExpr) {
-        return null();
-      }
-
-      if (!mustMatchToken(TokenKind::RightBracket, JSMSG_BRACKET_IN_INDEX)) {
-        return null();
-      }
-
-      if (handler_.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
-        error(JSMSG_BAD_SUPERPROP, "member");
-        return null();
-      }
-      nextMember = handler_.newPropertyByValue(lhs, propExpr, pos().end);
+      nextMember = memberElemAccess(lhs, yieldHandling);
       if (!nextMember) {
         return null();
       }
@@ -9288,28 +9378,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
 
-        // Despite the fact that it's impossible to have |super()| in a
-        // generator, we still inherit the yieldHandling of the
-        // memberExpression, per spec. Curious.
-        bool isSpread = false;
-        Node args = argumentList(yieldHandling, &isSpread);
-        if (!args) {
-          return null();
-        }
-
-        CallNodeType superCall = handler_.newSuperCall(lhs, args, isSpread);
-        if (!superCall) {
-          return null();
-        }
-
-        nextMember = superCall;
-
-        NameNodeType thisName = newThisName();
-        if (!thisName) {
-          return null();
-        }
-
-        nextMember = handler_.newSetThis(thisName, nextMember);
+        nextMember = memberSuperCall(lhs, yieldHandling);
         if (!nextMember) {
           return null();
         }
@@ -9318,91 +9387,9 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
       } else {
-        if (options().selfHostingMode && handler_.isPropertyAccess(lhs)) {
-          error(JSMSG_SELFHOSTED_METHOD_CALL);
+        nextMember = memberCall(tt, lhs, yieldHandling, possibleError);
+        if (!nextMember) {
           return null();
-        }
-
-        JSOp op = JSOp::Call;
-        bool maybeAsyncArrow = false;
-        if (PropertyName* prop = handler_.maybeDottedProperty(lhs)) {
-          // Use the JSOp::Fun{Apply,Call} optimizations given the right
-          // syntax.
-          if (prop == cx_->names().apply) {
-            op = JSOp::FunApply;
-            if (pc_->isFunctionBox()) {
-              pc_->functionBox()->usesApply = true;
-            }
-          } else if (prop == cx_->names().call) {
-            op = JSOp::FunCall;
-          }
-        } else if (tt == TokenKind::LeftParen) {
-          if (handler_.isAsyncKeyword(lhs, cx_)) {
-            // |async (| can be the start of an async arrow
-            // function, so we need to defer reporting possible
-            // errors from destructuring syntax. To give better
-            // error messages, we only allow the AsyncArrowHead
-            // part of the CoverCallExpressionAndAsyncArrowHead
-            // syntax when the initial name is "async".
-            maybeAsyncArrow = true;
-          } else if (handler_.isEvalName(lhs, cx_)) {
-            // Select the right Eval op and flag pc_ as having a
-            // direct eval.
-            op = pc_->sc()->strict() ? JSOp::StrictEval : JSOp::Eval;
-            pc_->sc()->setBindingsAccessedDynamically();
-            pc_->sc()->setHasDirectEval();
-
-            // In non-strict mode code, direct calls to eval can
-            // add variables to the call object.
-            if (pc_->isFunctionBox() && !pc_->sc()->strict()) {
-              pc_->functionBox()->setHasExtensibleScope();
-            }
-
-            // If we're in a method, mark the method as requiring
-            // support for 'super', since direct eval code can use
-            // it. (If we're not in a method, that's fine, so
-            // ignore the return value.)
-            checkAndMarkSuperScope();
-          }
-        }
-
-        if (tt == TokenKind::LeftParen) {
-          bool isSpread = false;
-          PossibleError* asyncPossibleError =
-              maybeAsyncArrow ? possibleError : nullptr;
-          Node args =
-              argumentList(yieldHandling, &isSpread, asyncPossibleError);
-          if (!args) {
-            return null();
-          }
-          if (isSpread) {
-            if (op == JSOp::Eval) {
-              op = JSOp::SpreadEval;
-            } else if (op == JSOp::StrictEval) {
-              op = JSOp::StrictSpreadEval;
-            } else {
-              op = JSOp::SpreadCall;
-            }
-          }
-
-          nextMember = handler_.newCall(lhs, args, op);
-          if (!nextMember) {
-            return null();
-          }
-        } else {
-          ListNodeType args = handler_.newArguments(pos());
-          if (!args) {
-            return null();
-          }
-
-          if (!taggedTemplate(yieldHandling, args, tt)) {
-            return null();
-          }
-
-          nextMember = handler_.newTaggedTemplate(lhs, args, op);
-          if (!nextMember) {
-            return null();
-          }
         }
       }
     } else {
@@ -9434,6 +9421,176 @@ template <class ParseHandler>
 inline typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newName(PropertyName* name, TokenPos pos) {
   return handler_.newName(name, pos, cx_);
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::Node
+GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
+    Node lhs, OptionalKind optionalKind /* = OptionalKind::NonOptional */) {
+  MOZ_ASSERT(TokenKindIsPossibleIdentifierName(anyChars.currentToken().type));
+  PropertyName* field = anyChars.currentName();
+  if (handler_.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
+    error(JSMSG_BAD_SUPERPROP, "property");
+    return null();
+  }
+
+  NameNodeType name = handler_.newPropertyName(field, pos());
+  if (!name) {
+    return null();
+  }
+
+  if (optionalKind == OptionalKind::Optional) {
+    return handler_.newOptionalPropertyAccess(lhs, name);
+  }
+  return handler_.newPropertyAccess(lhs, name);
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberElemAccess(
+    Node lhs, YieldHandling yieldHandling,
+    OptionalKind optionalKind /* = OptionalKind::NonOptional */) {
+  MOZ_ASSERT(anyChars.currentToken().type == TokenKind::LeftBracket);
+  Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
+  if (!propExpr) {
+    return null();
+  }
+
+  if (!mustMatchToken(TokenKind::RightBracket, JSMSG_BRACKET_IN_INDEX)) {
+    return null();
+  }
+
+  if (handler_.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
+    error(JSMSG_BAD_SUPERPROP, "member");
+    return null();
+  }
+  if (optionalKind == OptionalKind::Optional) {
+    return handler_.newOptionalPropertyByValue(lhs, propExpr, pos().end);
+  }
+  return handler_.newPropertyByValue(lhs, propExpr, pos().end);
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberSuperCall(
+    Node lhs, YieldHandling yieldHandling) {
+  MOZ_ASSERT(anyChars.currentToken().type == TokenKind::LeftParen);
+  // Despite the fact that it's impossible to have |super()| in a
+  // generator, we still inherit the yieldHandling of the
+  // memberExpression, per spec. Curious.
+  bool isSpread = false;
+  Node args = argumentList(yieldHandling, &isSpread);
+  if (!args) {
+    return null();
+  }
+
+  CallNodeType superCall = handler_.newSuperCall(lhs, args, isSpread);
+  if (!superCall) {
+    return null();
+  }
+
+  NameNodeType thisName = newThisName();
+  if (!thisName) {
+    return null();
+  }
+
+  return handler_.newSetThis(thisName, superCall);
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberCall(
+    TokenKind tt, Node lhs, YieldHandling yieldHandling,
+    PossibleError* possibleError /* = nullptr */,
+    OptionalKind optionalKind /* = OptionalKind::NonOptional */) {
+  if (options().selfHostingMode && handler_.isPropertyAccess(lhs)) {
+    error(JSMSG_SELFHOSTED_METHOD_CALL);
+    return null();
+  }
+
+  MOZ_ASSERT(tt == TokenKind::LeftParen || tt == TokenKind::TemplateHead ||
+                 tt == TokenKind::NoSubsTemplate,
+             "Unexpected token kind for member call");
+
+  JSOp op = JSOp::Call;
+  bool maybeAsyncArrow = false;
+  if (PropertyName* prop = handler_.maybeDottedProperty(lhs)) {
+    // Use the JSOp::Fun{Apply,Call} optimizations given the right
+    // syntax.
+    if (prop == cx_->names().apply) {
+      op = JSOp::FunApply;
+      if (pc_->isFunctionBox()) {
+        pc_->functionBox()->usesApply = true;
+      }
+    } else if (prop == cx_->names().call) {
+      op = JSOp::FunCall;
+    }
+  } else if (tt == TokenKind::LeftParen) {
+    if (handler_.isAsyncKeyword(lhs, cx_)) {
+      // |async (| can be the start of an async arrow
+      // function, so we need to defer reporting possible
+      // errors from destructuring syntax. To give better
+      // error messages, we only allow the AsyncArrowHead
+      // part of the CoverCallExpressionAndAsyncArrowHead
+      // syntax when the initial name is "async".
+      maybeAsyncArrow = true;
+    } else if (handler_.isEvalName(lhs, cx_)) {
+      // Select the right Eval op and flag pc_ as having a
+      // direct eval.
+      op = pc_->sc()->strict() ? JSOp::StrictEval : JSOp::Eval;
+      pc_->sc()->setBindingsAccessedDynamically();
+      pc_->sc()->setHasDirectEval();
+
+      // In non-strict mode code, direct calls to eval can
+      // add variables to the call object.
+      if (pc_->isFunctionBox() && !pc_->sc()->strict()) {
+        pc_->functionBox()->setHasExtensibleScope();
+      }
+
+      // If we're in a method, mark the method as requiring
+      // support for 'super', since direct eval code can use
+      // it. (If we're not in a method, that's fine, so
+      // ignore the return value.)
+      checkAndMarkSuperScope();
+    }
+  }
+
+  if (tt == TokenKind::LeftParen) {
+    bool isSpread = false;
+    PossibleError* asyncPossibleError =
+        maybeAsyncArrow ? possibleError : nullptr;
+    Node args = argumentList(yieldHandling, &isSpread, asyncPossibleError);
+    if (!args) {
+      return null();
+    }
+    if (isSpread) {
+      if (op == JSOp::Eval) {
+        op = JSOp::SpreadEval;
+      } else if (op == JSOp::StrictEval) {
+        op = JSOp::StrictSpreadEval;
+      } else {
+        op = JSOp::SpreadCall;
+      }
+    }
+
+    if (optionalKind == OptionalKind::Optional) {
+      return handler_.newOptionalCall(lhs, args, op);
+    }
+    return handler_.newCall(lhs, args, op);
+  }
+
+  ListNodeType args = handler_.newArguments(pos());
+  if (!args) {
+    return null();
+  }
+
+  if (!taggedTemplate(yieldHandling, args, tt)) {
+    return null();
+  }
+
+  if (optionalKind == OptionalKind::Optional) {
+    error(JSMSG_BAD_OPTIONAL_TEMPLATE);
+    return null();
+  }
+
+  return handler_.newTaggedTemplate(lhs, args, op);
 }
 
 template <class ParseHandler, typename Unit>

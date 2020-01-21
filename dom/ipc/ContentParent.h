@@ -1069,7 +1069,11 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvPrivateDocShellsExist(const bool& aExist);
 
   mozilla::ipc::IPCResult RecvCommitBrowsingContextTransaction(
-      BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction,
+      BrowsingContext* aContext,
+      BrowsingContext::BaseTransaction&& aTransaction, uint64_t aEpoch);
+
+  mozilla::ipc::IPCResult RecvCommitWindowContextTransaction(
+      WindowContext* aContext, WindowContext::BaseTransaction&& aTransaction,
       uint64_t aEpoch);
 
   mozilla::ipc::IPCResult RecvFirstIdle();

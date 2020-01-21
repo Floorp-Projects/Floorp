@@ -9,6 +9,7 @@
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/ClassifierDummyChannelChild.h"
+#include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -74,6 +75,7 @@ NS_INTERFACE_MAP_BEGIN(ClassifierDummyChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
+  NS_INTERFACE_MAP_ENTRY(nsIClassifiedChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(ClassifierDummyChannel)
 NS_INTERFACE_MAP_END
 
@@ -84,7 +86,8 @@ ClassifierDummyChannel::ClassifierDummyChannel(
     : mTopWindowURI(aTopWindowURI),
       mContentBlockingAllowListPrincipal(aContentBlockingAllowListPrincipal),
       mTopWindowURIResult(aTopWindowURIResult),
-      mClassificationFlags(0) {
+      mFirstPartyClassificationFlags(0),
+      mThirdPartyClassificationFlags(0) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   SetOriginalURI(aURI);
@@ -103,13 +106,13 @@ ClassifierDummyChannel::~ClassifierDummyChannel() {
       mContentBlockingAllowListPrincipal.forget());
 }
 
-uint32_t ClassifierDummyChannel::ClassificationFlags() const {
-  return mClassificationFlags;
-}
-
 void ClassifierDummyChannel::AddClassificationFlags(
-    uint32_t aClassificationFlags) {
-  mClassificationFlags |= aClassificationFlags;
+    uint32_t aClassificationFlags, bool aThirdParty) {
+  if (aThirdParty) {
+    mThirdPartyClassificationFlags |= aClassificationFlags;
+  } else {
+    mFirstPartyClassificationFlags |= aClassificationFlags;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -665,6 +668,95 @@ NS_IMETHODIMP
 ClassifierDummyChannel::GetCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::SetMatchedInfo(
+    const nsACString& aList, const nsACString& aProvider,
+    const nsACString& aFullHash) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetMatchedList(nsACString& aMatchedList) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetMatchedProvider(
+    nsACString& aMatchedProvider) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetMatchedFullHash(
+    nsACString& aMatchedFullHash) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::SetMatchedTrackingInfo(
+    const nsTArray<nsCString>& aLists, const nsTArray<nsCString>& aFullHashes) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetMatchedTrackingLists(
+    nsTArray<nsCString>& aMatchedTrackingLists) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetMatchedTrackingFullHashes(
+    nsTArray<nsCString>& aMatchedTrackingFullHashes) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetFirstPartyClassificationFlags(
+    uint32_t* aFirstPartyClassificationFlags) {
+  *aFirstPartyClassificationFlags = mFirstPartyClassificationFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetThirdPartyClassificationFlags(
+    uint32_t* aThirdPartyClassificationFlags) {
+  *aThirdPartyClassificationFlags = mThirdPartyClassificationFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetClassificationFlags(
+    uint32_t* aClassificationFlags) {
+  if (mThirdPartyClassificationFlags) {
+    *aClassificationFlags = mThirdPartyClassificationFlags;
+  } else {
+    *aClassificationFlags = mFirstPartyClassificationFlags;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::IsTrackingResource(
+    bool* aIsTrackingResource) {
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
+  *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
+                             mThirdPartyClassificationFlags) ||
+                         UrlClassifierCommon::IsTrackingClassificationFlag(
+                             mFirstPartyClassificationFlags);
+  return NS_OK;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::IsThirdPartyTrackingResource(
+    bool* aIsTrackingResource) {
+  MOZ_ASSERT(
+      !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
+  *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
+      mThirdPartyClassificationFlags);
+  return NS_OK;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::IsSocialTrackingResource(
+    bool* aIsSocialTrackingResource) {
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
+  *aIsSocialTrackingResource =
+      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
+          mThirdPartyClassificationFlags) ||
+      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
+          mFirstPartyClassificationFlags);
+  return NS_OK;
 }
 
 }  // namespace net

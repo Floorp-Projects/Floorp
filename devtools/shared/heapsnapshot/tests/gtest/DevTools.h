@@ -6,20 +6,20 @@
 #ifndef mozilla_devtools_gtest_DevTools__
 #define mozilla_devtools_gtest_DevTools__
 
-#include "CoreDump.pb.h"
-#include "jsapi.h"
-#include "jspubtd.h"
-#include "nsCRTGlue.h"
+#include <utility>
 
-#include "gtest/gtest.h"
+#include "CoreDump.pb.h"
 #include "gmock/gmock.h"
-#include "mozilla/devtools/HeapSnapshot.h"
-#include "mozilla/dom/ChromeUtils.h"
-#include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/Move.h"
+#include "gtest/gtest.h"
 #include "js/Principals.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
+#include "jsapi.h"
+#include "jspubtd.h"
+#include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/devtools/HeapSnapshot.h"
+#include "mozilla/dom/ChromeUtils.h"
+#include "nsCRTGlue.h"
 
 using namespace mozilla;
 using namespace mozilla::devtools;

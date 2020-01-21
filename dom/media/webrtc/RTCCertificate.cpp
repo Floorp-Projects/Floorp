@@ -7,18 +7,18 @@
 #include "mozilla/dom/RTCCertificate.h"
 
 #include <cmath>
+#include <cstdio>
+#include <utility>
+
 #include "cert.h"
 #include "jsapi.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/RTCCertificateBinding.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
-#include "mozilla/Move.h"
-#include "mozilla/Sprintf.h"
 #include "mtransport/dtlsidentity.h"
-
-#include <cstdio>
 
 namespace mozilla {
 namespace dom {

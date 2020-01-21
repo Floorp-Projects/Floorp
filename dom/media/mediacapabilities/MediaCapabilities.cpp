@@ -5,6 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaCapabilities.h"
+
+#include <inttypes.h>
+
+#include <utility>
+
 #include "AllocationPolicy.h"
 #include "Benchmark.h"
 #include "DecoderBenchmark.h"
@@ -15,7 +20,6 @@
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Move.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
@@ -26,8 +30,6 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "nsContentUtils.h"
-
-#include <inttypes.h>
 
 static mozilla::LazyLogModule sMediaCapabilitiesLog("MediaCapabilities");
 

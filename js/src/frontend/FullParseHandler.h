@@ -263,6 +263,18 @@ class FullParseHandler {
       return newUnary(ParseNodeKind::DeleteElemExpr, begin, expr);
     }
 
+    if (expr->isKind(ParseNodeKind::OptionalChain)) {
+      Node kid = expr->as<UnaryNode>().kid();
+      // Handle property deletion explictly. OptionalCall is handled
+      // via DeleteExpr.
+      if (kid->isKind(ParseNodeKind::DotExpr) ||
+          kid->isKind(ParseNodeKind::OptionalDotExpr) ||
+          kid->isKind(ParseNodeKind::ElemExpr) ||
+          kid->isKind(ParseNodeKind::OptionalElemExpr)) {
+        return newUnary(ParseNodeKind::DeleteOptionalChainExpr, begin, kid);
+      }
+    }
+
     return newUnary(ParseNodeKind::DeleteExpr, begin, expr);
   }
 
@@ -342,6 +354,11 @@ class FullParseHandler {
 
   CallNodeType newCall(Node callee, Node args, JSOp callOp) {
     return new_<CallNode>(ParseNodeKind::CallExpr, callOp, callee, args);
+  }
+
+  OptionalCallNodeType newOptionalCall(Node callee, Node args, JSOp callOp) {
+    return new_<CallNode>(ParseNodeKind::OptionalCallExpr, callOp, callee,
+                          args);
   }
 
   ListNodeType newArguments(const TokenPos& pos) {
@@ -548,6 +565,11 @@ class FullParseHandler {
   UnaryNodeType newAwaitExpression(uint32_t begin, Node value) {
     TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
     return new_<UnaryNode>(ParseNodeKind::AwaitExpr, pos, value);
+  }
+
+  UnaryNodeType newOptionalChain(uint32_t begin, Node value) {
+    TokenPos pos(begin, value->pn_pos.end);
+    return new_<UnaryNode>(ParseNodeKind::OptionalChain, pos, value);
   }
 
   // Statements
@@ -796,6 +818,17 @@ class FullParseHandler {
 
   PropertyByValueType newPropertyByValue(Node lhs, Node index, uint32_t end) {
     return new_<PropertyByValue>(lhs, index, lhs->pn_pos.begin, end);
+  }
+
+  OptionalPropertyAccessType newOptionalPropertyAccess(Node expr,
+                                                       NameNodeType key) {
+    return new_<OptionalPropertyAccess>(expr, key, expr->pn_pos.begin,
+                                        key->pn_pos.end);
+  }
+
+  OptionalPropertyByValueType newOptionalPropertyByValue(Node lhs, Node index,
+                                                         uint32_t end) {
+    return new_<OptionalPropertyByValue>(lhs, index, lhs->pn_pos.begin, end);
   }
 
   bool setupCatchScope(LexicalScopeNodeType lexicalScope, Node catchName,

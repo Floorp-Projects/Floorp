@@ -20,6 +20,7 @@
 namespace mozilla {
 namespace dom {
 
+class WindowGlobalParent;
 class BrowserParent;
 class MediaController;
 class WindowGlobalParent;
@@ -29,6 +30,10 @@ class WindowGlobalParent;
 // parent needs.
 class CanonicalBrowsingContext final : public BrowsingContext {
  public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CanonicalBrowsingContext,
+                                           BrowsingContext)
+
   static already_AddRefed<CanonicalBrowsingContext> Get(uint64_t aId);
   static CanonicalBrowsingContext* Cast(BrowsingContext* aContext);
   static const CanonicalBrowsingContext* Cast(const BrowsingContext* aContext);
@@ -48,15 +53,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
 
-  // Called by WindowGlobalParent to register and unregister window globals.
-  void RegisterWindowGlobal(WindowGlobalParent* aGlobal);
-  void UnregisterWindowGlobal(WindowGlobalParent* aGlobal);
-
   // The current active WindowGlobal.
-  WindowGlobalParent* GetCurrentWindowGlobal() const {
-    return mCurrentWindowGlobal;
-  }
-  void SetCurrentWindowGlobal(WindowGlobalParent* aGlobal);
+  WindowGlobalParent* GetCurrentWindowGlobal() const;
 
   already_AddRefed<WindowGlobalParent> GetEmbedderWindowGlobal() const;
 
@@ -109,9 +107,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   MediaController* GetMediaController();
 
  protected:
-  void Traverse(nsCycleCollectionTraversalCallback& cb);
-  void Unlink();
-
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
 
@@ -119,10 +114,12 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   CanonicalBrowsingContext(BrowsingContext* aParent,
                            BrowsingContextGroup* aGroup,
                            uint64_t aBrowsingContextId, uint64_t aProcessId,
-                           Type aType);
+                           Type aType, FieldTuple&& aFields);
 
  private:
   friend class BrowsingContext;
+
+  ~CanonicalBrowsingContext() = default;
 
   class PendingRemotenessChange {
    public:
@@ -155,10 +152,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // The ID of the former owner process during an ownership change, which may
   // have in-flight messages that assume it is still the owner.
   uint64_t mInFlightProcessId = 0;
-
-  // All live window globals within this browsing context.
-  nsTHashtable<nsRefPtrHashKey<WindowGlobalParent>> mWindowGlobals;
-  RefPtr<WindowGlobalParent> mCurrentWindowGlobal;
 
   // The current remoteness change which is in a pending state.
   RefPtr<PendingRemotenessChange> mPendingRemotenessChange;

@@ -122,7 +122,7 @@ fn make_shared_flags(
 
     // Assembler::PatchDataWithValueCheck expects -1 stored where a function address should be
     // patched in.
-    sb.enable("allones_funcaddrs")?;
+    sb.enable("emit_all_ones_funcaddrs")?;
 
     // Enable the verifier if assertions are enabled. Otherwise leave it disabled,
     // as it's quite slow.
@@ -131,7 +131,7 @@ fn make_shared_flags(
     }
 
     // Baldrdash does its own stack overflow checks, so we don't need Cranelift doing any for us.
-    sb.set("probestack_enabled", "false")?;
+    sb.set("enable_probestack", "false")?;
 
     // Let's optimize for speed by default.
     let opt_level = match env_flags {
@@ -142,14 +142,14 @@ fn make_shared_flags(
     sb.set("opt_level", opt_level)?;
 
     // Enable jump tables by default.
-    let jump_tables_enabled = match env_flags {
+    let enable_jump_tables = match env_flags {
         Some(env_flags) => env_flags.jump_tables,
         None => None,
     }
     .unwrap_or(true);
     sb.set(
-        "jump_tables_enabled",
-        if jump_tables_enabled { "true" } else { "false" },
+        "enable_jump_tables",
+        if enable_jump_tables { "true" } else { "false" },
     )?;
 
     if cfg!(feature = "cranelift_x86") && cfg!(target_pointer_width = "64") {

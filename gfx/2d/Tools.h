@@ -7,13 +7,15 @@
 #ifndef MOZILLA_GFX_TOOLS_H_
 #define MOZILLA_GFX_TOOLS_H_
 
+#include <math.h>
+
+#include <utility>
+
+#include "Point.h"
+#include "Types.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MemoryReporting.h"  // for MallocSizeOf
-#include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
-#include "Types.h"
-#include "Point.h"
-#include <math.h>
 
 namespace mozilla {
 namespace gfx {
@@ -152,9 +154,9 @@ struct AlignedArray final {
   }
 
   void Swap(AlignedArray<T, alignment>& aOther) {
-    mozilla::Swap(mPtr, aOther.mPtr);
-    mozilla::Swap(mStorage, aOther.mStorage);
-    mozilla::Swap(mCount, aOther.mCount);
+    std::swap(mPtr, aOther.mPtr);
+    std::swap(mStorage, aOther.mStorage);
+    std::swap(mCount, aOther.mCount);
   }
 
   size_t HeapSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {

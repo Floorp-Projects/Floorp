@@ -6,7 +6,7 @@
 
 if CONFIG['OS_TARGET'] != 'Android':
     MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
-    XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+    XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
     BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 # Compute where to put transpiled files into omni.ja package

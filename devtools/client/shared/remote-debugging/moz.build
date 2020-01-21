@@ -11,7 +11,7 @@ DevToolsModules(
 )
 
 XPCSHELL_TESTS_MANIFESTS += [
-    'test/unit/xpcshell.ini'
+    'test/xpcshell/xpcshell.ini'
 ]
 
 with Files('**'):

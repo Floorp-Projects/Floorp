@@ -432,7 +432,7 @@ void SetClassificationFlagsHelper(nsIChannel* aChannel,
 
   RefPtr<ClassifierDummyChannel> dummyChannel = do_QueryObject(aChannel);
   if (dummyChannel) {
-    dummyChannel->AddClassificationFlags(aClassificationFlags);
+    dummyChannel->AddClassificationFlags(aClassificationFlags, aIsThirdParty);
   }
 }
 

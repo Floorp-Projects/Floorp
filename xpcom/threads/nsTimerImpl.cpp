@@ -5,17 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsTimerImpl.h"
-#include "TimerThread.h"
-#include "nsThreadManager.h"
-#include "nsThreadUtils.h"
-#include "pratom.h"
+
+#include <utility>
+
 #include "GeckoProfiler.h"
+#include "TimerThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ResultExtensions.h"
+#include "nsThreadManager.h"
+#include "nsThreadUtils.h"
+#include "pratom.h"
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracerImpl.h"
 using namespace mozilla::tasktracer;

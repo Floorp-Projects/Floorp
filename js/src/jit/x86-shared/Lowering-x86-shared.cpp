@@ -18,7 +18,6 @@ using namespace js::jit;
 
 using mozilla::Abs;
 using mozilla::FloorLog2;
-using mozilla::Swap;
 
 LTableSwitch* LIRGeneratorX86Shared::newLTableSwitch(
     const LAllocation& in, const LDefinition& inputCopy,

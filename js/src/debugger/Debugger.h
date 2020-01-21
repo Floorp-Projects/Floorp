@@ -13,7 +13,6 @@
 #include "mozilla/HashTable.h"         // for HashSet, DefaultHasher (ptr only)
 #include "mozilla/LinkedList.h"        // for LinkedList (ptr only)
 #include "mozilla/Maybe.h"             // for Maybe, Nothing
-#include "mozilla/Move.h"              // for std::move
 #include "mozilla/Range.h"             // for Range
 #include "mozilla/Result.h"            // for Result
 #include "mozilla/TimeStamp.h"         // for TimeStamp
@@ -21,11 +20,12 @@
 
 #include <stddef.h>  // for size_t
 #include <stdint.h>  // for uint32_t, uint64_t, uintptr_t
+#include <utility>   // for std::move
 
-#include "jsapi.h"    // for Handle, UnsafeTraceRoot
-#include "jstypes.h"  // for JS_GC_ZEAL
+#include "jsapi.h"             // for Handle, UnsafeTraceRoot
+#include "jstypes.h"           // for JS_GC_ZEAL
+#include "NamespaceImports.h"  // for Value, HandleObject
 
-#include "NamespaceImports.h"       // for Value, HandleObject
 #include "debugger/DebugAPI.h"      // for DebugAPI
 #include "debugger/Object.h"        // for DebuggerObject
 #include "ds/TraceableFifo.h"       // for TraceableFifo

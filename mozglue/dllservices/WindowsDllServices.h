@@ -7,15 +7,16 @@
 #ifndef mozilla_glue_WindowsDllServices_h
 #define mozilla_glue_WindowsDllServices_h
 
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Authenticode.h"
 #include "mozilla/LoaderAPIInterfaces.h"
-#include "mozilla/Move.h"
-#include "mozilla/mozalloc.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
-#include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "mozilla/WindowsDllBlocklist.h"
+#include "mozilla/mozalloc.h"
 
 #if defined(MOZILLA_INTERNAL_API)
 

@@ -7,10 +7,11 @@
 #ifndef mozilla_mscom_COMPtrHolder_h
 #define mozilla_mscom_COMPtrHolder_h
 
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
 #include "mozilla/mscom/ProxyStream.h"
 #include "mozilla/mscom/Ptr.h"
 #if defined(MOZ_SANDBOX)

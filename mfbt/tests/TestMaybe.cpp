@@ -9,17 +9,15 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/Types.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 
 using mozilla::IsSame;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
-using mozilla::Swap;
 using mozilla::ToMaybe;
 using mozilla::UniquePtr;
 

@@ -5,9 +5,11 @@
 // found in the LICENSE file.
 
 #include "base/logging.h"
+
+#include <utility>
+
 #include "base/string_util.h"
 #include "nsXPCOM.h"
-#include "mozilla/Move.h"
 
 namespace mozilla {
 

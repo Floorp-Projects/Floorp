@@ -3167,7 +3167,7 @@ AbortReasonOr<Ok> IonBuilder::visitTest(JSOp op, bool* restarted) {
   current->end(mir);
 
   if (TestTrueTargetIsJoinPoint(op)) {
-    mozilla::Swap(target1, target2);
+    std::swap(target1, target2);
   }
 
   MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, op), target1));

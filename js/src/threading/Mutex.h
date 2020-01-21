@@ -8,10 +8,11 @@
 #define threading_Mutex_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Vector.h"
+
+#include <utility>
 
 #include "threading/ThreadId.h"
 

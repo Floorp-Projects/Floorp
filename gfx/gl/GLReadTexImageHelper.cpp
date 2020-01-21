@@ -6,15 +6,15 @@
 
 #include "GLReadTexImageHelper.h"
 
-#include "gfx2DGlue.h"
-#include "gfxColor.h"
-#include "gfxTypes.h"
+#include <utility>
+
 #include "GLContext.h"
 #include "OGLShaderProgram.h"
 #include "ScopedGLHelpers.h"
-
+#include "gfx2DGlue.h"
+#include "gfxColor.h"
+#include "gfxTypes.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/Move.h"
 
 namespace mozilla {
 namespace gl {
@@ -220,7 +220,7 @@ void SwapRAndBComponents(DataSourceSurface* surf) {
     const uint8_t* rowEnd = row + rowBytes;
 
     while (row != rowEnd) {
-      Swap(row[0], row[2]);
+      std::swap(row[0], row[2]);
       row += 4;
     }
 

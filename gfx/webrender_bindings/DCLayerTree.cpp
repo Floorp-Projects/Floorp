@@ -99,12 +99,12 @@ bool DCLayerTree::Initialize(HWND aHwnd) {
   }
 
   mCompositionTarget->SetRoot(mRootVisual);
-  // Set interporation mode to Linear.
+  // Set interporation mode to nearest, to ensure 1:1 sampling.
   // By default, a visual inherits the interpolation mode of the parent visual.
   // If no visuals set the interpolation mode, the default for the entire visual
   // tree is nearest neighbor interpolation.
   mRootVisual->SetBitmapInterpolationMode(
-      DCOMPOSITION_BITMAP_INTERPOLATION_MODE_LINEAR);
+      DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
   return true;
 }
 

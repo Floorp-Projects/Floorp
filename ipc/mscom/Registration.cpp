@@ -9,17 +9,18 @@
 // anything else that could possibly pull in Windows header files.
 #define CINTERFACE
 
-#include "mozilla/mscom/ActivationContext.h"
 #include "mozilla/mscom/Registration.h"
-#include "mozilla/mscom/Utils.h"
+
+#include <utility>
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
 #include "mozilla/Pair.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Vector.h"
+#include "mozilla/mscom/ActivationContext.h"
+#include "mozilla/mscom/Utils.h"
 #include "nsWindowsHelpers.h"
 
 #if defined(MOZILLA_INTERNAL_API)

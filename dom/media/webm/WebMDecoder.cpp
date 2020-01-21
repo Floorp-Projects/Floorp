@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebMDecoder.h"
-#include "mozilla/Move.h"
+
+#include <utility>
+
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #ifdef MOZ_AV1

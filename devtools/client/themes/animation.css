@@ -176,7 +176,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   align-items: center;
   display: flex;
   grid-column: 1 / 2;
-  height: 100%;
+  height: inherit;
   padding-inline-start: 4px;
   /* animation-target is tech term, so it should be displayed as ltr. */
   direction: ltr;
@@ -216,7 +216,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 .animation-summary-graph {
   cursor: pointer;
   grid-column: 2 / 3;
-  height: 100%;
+  height: inherit;
   padding-bottom: 3px;
   padding-top: 3px;
   position: relative;
@@ -454,7 +454,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 .animated-property-name {
   align-items: center;
   display: flex;
-  height: 100%;
+  height: inherit;
   justify-content: flex-end;
   padding-inline-end: 10px;
 }
@@ -499,7 +499,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 /* Keyframes Graph */
 .keyframes-graph {
   grid-column: 2 / 3;
-  height: 100%;
+  height: inherit;
   padding-top: 5px;
   position: relative;
 }
@@ -667,7 +667,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
   display: grid;
   grid-template-columns: subgrid;
-  grid-template-rows: max-content;
+  grid-auto-rows: min-content;
 }
 
 .progress-inspection-panel > ul > li {
