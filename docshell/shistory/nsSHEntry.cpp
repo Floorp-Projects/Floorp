@@ -1144,14 +1144,14 @@ nsLegacySHEntry::SyncPresentationState() {
 
 nsDocShellEditorData* nsLegacySHEntry::ForgetEditorData() {
   // XXX jlebar Check how this is used.
-  return GetState()->mEditorData.forget();
+  return GetState()->mEditorData.release();
 }
 
 void nsLegacySHEntry::SetEditorData(nsDocShellEditorData* aData) {
   NS_ASSERTION(!(aData && GetState()->mEditorData),
                "We're going to overwrite an owning ref!");
   if (GetState()->mEditorData != aData) {
-    GetState()->mEditorData = aData;
+    GetState()->mEditorData = mozilla::WrapUnique(aData);
   }
 }
 
