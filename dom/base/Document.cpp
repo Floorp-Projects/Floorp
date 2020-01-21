@@ -10481,24 +10481,10 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
   return ret;
 }
 
-static bool HasHttpScheme(nsIURI* aURI) {
-  return aURI && (aURI->SchemeIs("http") || aURI->SchemeIs("https"));
-}
-
 void Document::Destroy() {
   // The ContentViewer wants to release the document now.  So, tell our content
   // to drop any references to the document so that it can be destroyed.
   if (mIsGoingAway) return;
-
-  // Make sure to report before IPC closed.
-  if (!nsContentUtils::IsInPrivateBrowsing(this) &&
-      IsTopLevelContentDocument()) {
-    mContentBlockingLog.ReportLog(NodePrincipal());
-
-    if (HasHttpScheme(GetDocumentURI())) {
-      mContentBlockingLog.ReportOrigins();
-    }
-  }
 
   ReportUseCounters();
 

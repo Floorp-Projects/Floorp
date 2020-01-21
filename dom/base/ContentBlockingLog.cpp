@@ -6,6 +6,7 @@
 
 #include "ContentBlockingLog.h"
 
+#include "nsITrackingDBService.h"
 #include "nsStringStream.h"
 #include "nsTArray.h"
 #include "mozilla/dom/ContentChild.h"
@@ -97,24 +98,14 @@ static bool IsReportingEnabled() {
 
 static void ReportOriginSingleHash(OriginMetricID aId,
                                    const nsACString& aOrigin) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
   LOG("ReportOriginSingleHash metric=%s",
       Telemetry::MetricIDToString[static_cast<uint32_t>(aId)]);
   LOG("ReportOriginSingleHash origin=%s", PromiseFlatCString(aOrigin).get());
 
-  if (XRE_IsParentProcess()) {
-    Telemetry::RecordOrigin(aId, aOrigin);
-    return;
-  }
-
-  dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-  if (NS_WARN_IF(!contentChild)) {
-    return;
-  }
-
-  Unused << contentChild->SendRecordOrigin(static_cast<uint32_t>(aId),
-                                           nsCString(aOrigin));
+  Telemetry::RecordOrigin(aId, aOrigin);
 }
 
 Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
@@ -207,6 +198,7 @@ Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
 }
 
 void ContentBlockingLog::ReportLog(nsIPrincipal* aFirstPartyPrincipal) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aFirstPartyPrincipal);
 
@@ -218,23 +210,13 @@ void ContentBlockingLog::ReportLog(nsIPrincipal* aFirstPartyPrincipal) {
     return;
   }
 
-  dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-  if (NS_WARN_IF(!contentChild)) {
+  nsCOMPtr<nsITrackingDBService> trackingDBService =
+      do_GetService("@mozilla.org/tracking-db-service;1");
+  if (NS_WARN_IF(!trackingDBService)) {
     return;
   }
 
-  nsAutoCString json = Stringify();
-
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), json);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  AutoIPCStream ipcStream;
-  ipcStream.Serialize(stream, contentChild);
-
-  Unused << contentChild->SendReportContentBlockingLog(ipcStream.TakeValue());
+  trackingDBService->RecordContentBlockingLog(Stringify());
 }
 
 void ContentBlockingLog::ReportOrigins() {

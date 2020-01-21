@@ -315,9 +315,11 @@ already_AddRefed<nsILoadContext> BrowserParent::GetLoadContext() {
     bool isPrivate = mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
     SetPrivateBrowsingAttributes(isPrivate);
     bool useTrackingProtection = false;
-    nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
-    if (docShell) {
-      docShell->GetUseTrackingProtection(&useTrackingProtection);
+    if (mFrameElement) {
+      nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
+      if (docShell) {
+        docShell->GetUseTrackingProtection(&useTrackingProtection);
+      }
     }
     loadContext = new LoadContext(
         GetOwnerElement(), true /* aIsContent */, isPrivate,
