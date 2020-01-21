@@ -7,7 +7,6 @@
 #ifndef nsSHEntryShared_h__
 #define nsSHEntryShared_h__
 
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsExpirationTracker.h"
@@ -18,6 +17,7 @@
 #include "nsStubMutationObserver.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 class nsSHEntry;
 class nsISHEntry;
@@ -122,7 +122,7 @@ class SHEntrySharedChildState {
   // FIXME Move to parent?
   nsCOMPtr<nsIMutableArray> mRefreshURIList;
   nsExpirationState mExpirationState;
-  nsAutoPtr<nsDocShellEditorData> mEditorData;
+  UniquePtr<nsDocShellEditorData> mEditorData;
 
   // FIXME Move to parent?
   bool mSaveLayoutState;

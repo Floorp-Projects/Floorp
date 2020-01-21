@@ -1159,7 +1159,7 @@ class nsDocShell final : public nsDocLoader,
   nsRevocableEventPtr<RestorePresentationEvent> mRestorePresentationEvent;
 
   // Editor data, if this document is designMode or contentEditable.
-  nsAutoPtr<nsDocShellEditorData> mEditorData;
+  mozilla::UniquePtr<nsDocShellEditorData> mEditorData;
 
   // Secure browser UI object
   nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
