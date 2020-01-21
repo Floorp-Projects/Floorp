@@ -61,30 +61,68 @@ long passthrough_resampler<T>::fill(void * input_buffer, long * input_frames_cou
   if (input_buffer) {
     assert(input_frames_count);
   }
-  assert((input_buffer && output_buffer &&
-         *input_frames_count + static_cast<int>(samples_to_frames(internal_input_buffer.length())) >= output_frames) ||
+  assert((input_buffer && output_buffer) ||
          (output_buffer && !input_buffer && (!input_frames_count || *input_frames_count == 0)) ||
          (input_buffer && !output_buffer && output_frames == 0));
 
-  if (input_buffer) {
-    if (!output_buffer) {
+  // When we have no pending input data and exactly as much input
+  // as output data, we don't need to copy it into the internal buffer
+  // and can directly forward it to the callback.
+  void * in_buf = input_buffer;
+  unsigned long pop_input_count = 0u;
+  if (input_buffer && !output_buffer) {
       output_frames = *input_frames_count;
+  } else if(input_buffer) {
+    if (internal_input_buffer.length() != 0 ||
+        *input_frames_count < output_frames) {
+      // If we have pending input data left and have to first append the input
+      // so we can pass it as one pointer to the callback. Or this is a glitch.
+      // It can happen when system's performance is poor. Audible silence is
+      // being pushed at the end of the short input buffer. An improvement for
+      // the future is to resample to the output number of frames, when that happens.
+      internal_input_buffer.push(static_cast<T*>(input_buffer),
+                                 frames_to_samples(*input_frames_count));
+      if (internal_input_buffer.length() < frames_to_samples(output_frames)) {
+        // This is unxpected but it can happen when a glitch occurs. Fill the
+        // buffer with silence. First keep the actual number of input samples
+        // used without the silence.
+        pop_input_count = internal_input_buffer.length();
+        internal_input_buffer.push_silence(
+            frames_to_samples(output_frames) - internal_input_buffer.length());
+      } else {
+        pop_input_count = frames_to_samples(output_frames);
+      }
+      in_buf = internal_input_buffer.data();
+    } else if(*input_frames_count > output_frames) {
+      // In this case we have more input that we need output and
+      // fill the overflowing input into internal_input_buffer
+      // Since we have no other pending data, we can nonetheless
+      // pass the current input data directly to the callback
+      assert(pop_input_count == 0);
+      unsigned long samples_off = frames_to_samples(output_frames);
+      internal_input_buffer.push(static_cast<T*>(input_buffer) + samples_off,
+                                 frames_to_samples(*input_frames_count - output_frames));
     }
-    internal_input_buffer.push(static_cast<T*>(input_buffer),
-                               frames_to_samples(*input_frames_count));
   }
 
-  long rv = data_callback(stream, user_ptr, internal_input_buffer.data(),
-                          output_buffer, output_frames);
+  long rv = data_callback(stream, user_ptr, in_buf, output_buffer, output_frames);
 
   if (input_buffer) {
-    internal_input_buffer.pop(nullptr, frames_to_samples(output_frames));
-    *input_frames_count = output_frames;
+    if (pop_input_count) {
+      internal_input_buffer.pop(nullptr, pop_input_count);
+      *input_frames_count = samples_to_frames(pop_input_count);
+    } else {
+      *input_frames_count = output_frames;
+    }
     drop_audio_if_needed();
   }
 
   return rv;
 }
+
+// Explicit instantiation of template class.
+template class passthrough_resampler<float>;
+template class passthrough_resampler<short>;
 
 template<typename T, typename InputProcessor, typename OutputProcessor>
 cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
