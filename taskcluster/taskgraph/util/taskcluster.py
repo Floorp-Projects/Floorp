@@ -10,6 +10,7 @@ import os
 import datetime
 import functools
 import requests
+import six
 import logging
 import taskcluster_urls as liburls
 from mozbuild.util import memoize
@@ -39,7 +40,7 @@ def get_root_url(use_proxy):
     is not set."""
     if use_proxy:
         try:
-            return os.environ['TASKCLUSTER_PROXY_URL']
+            return six.ensure_text(os.environ['TASKCLUSTER_PROXY_URL'])
         except KeyError:
             if 'TASK_ID' not in os.environ:
                 raise RuntimeError(
@@ -57,7 +58,7 @@ def get_root_url(use_proxy):
     logger.debug('Running in Taskcluster instance {}{}'.format(
         os.environ['TASKCLUSTER_ROOT_URL'],
         ' with taskcluster-proxy' if 'TASKCLUSTER_PROXY_URL' in os.environ else ''))
-    return os.environ['TASKCLUSTER_ROOT_URL']
+    return six.ensure_text(os.environ['TASKCLUSTER_ROOT_URL'])
 
 
 @memoize
@@ -107,7 +108,7 @@ def _handle_artifact(path, response):
 def get_artifact_url(task_id, path, use_proxy=False):
     artifact_tmpl = liburls.api(get_root_url(False), 'queue', 'v1',
                                 'task/{}/artifacts/{}')
-    data = artifact_tmpl.format(task_id, path)
+    data = six.ensure_text(artifact_tmpl.format(task_id, path))
     if use_proxy:
         # Until Bug 1405889 is deployed, we can't download directly
         # from the taskcluster-proxy.  Work around by using the /bewit
@@ -118,7 +119,7 @@ def get_artifact_url(task_id, path, use_proxy=False):
             os.environ['TASKCLUSTER_PROXY_URL'] + '/bewit',
             data=data,
             allow_redirects=False)
-        return response.text
+        return six.ensure_text(response.text)
     return data
 
 
