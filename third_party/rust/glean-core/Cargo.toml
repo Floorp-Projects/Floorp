@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "22.0.0"
+version = "24.0.0"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
 include = ["README.md", "LICENSE", "src/**/*", "examples/**/*", "tests/**/*", "Cargo.toml"]
 description = "A modern Telemetry library"
@@ -22,14 +22,11 @@ keywords = ["telemetry"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
 [dependencies.bincode]
-version = "1.1.3"
+version = "1.2.1"
 
 [dependencies.chrono]
-version = "0.4.6"
+version = "0.4.10"
 features = ["serde"]
-
-[dependencies.failure]
-version = "0.1.5"
 
 [dependencies.ffi-support]
 version = "0.3.5"
@@ -38,13 +35,13 @@ version = "0.3.5"
 version = "1.4.0"
 
 [dependencies.log]
-version = "0.4.6"
+version = "0.4.8"
 
 [dependencies.once_cell]
 version = "1.2.0"
 
 [dependencies.regex]
-version = "1.3.0"
+version = "1.3.3"
 features = ["std"]
 default-features = false
 
@@ -52,20 +49,17 @@ default-features = false
 version = "0.10.2"
 
 [dependencies.serde]
-version = "1.0.102"
+version = "1.0.104"
 features = ["derive"]
 
 [dependencies.serde_json]
-version = "1.0.41"
+version = "1.0.44"
 
 [dependencies.uuid]
 version = "0.8.1"
 features = ["v4"]
-[dev-dependencies.color-backtrace]
-version = "0.2.3"
-
 [dev-dependencies.ctor]
-version = "0.1.9"
+version = "0.1.12"
 
 [dev-dependencies.env_logger]
 version = "0.7.1"
@@ -76,7 +70,7 @@ default-features = false
 version = "0.3"
 
 [dev-dependencies.tempfile]
-version = "3.0.7"
+version = "3.1.0"
 [badges.circle-ci]
 branch = "master"
 repository = "mozilla/glean"

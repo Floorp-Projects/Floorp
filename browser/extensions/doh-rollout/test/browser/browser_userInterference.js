@@ -1,5 +1,7 @@
 "use strict";
 
+add_task(setup);
+
 add_task(async function testUserInterference() {
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
@@ -11,6 +13,7 @@ add_task(async function testUserInterference() {
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
 
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
   is(
     Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
@@ -39,7 +42,10 @@ add_task(async function testUserInterference() {
     "Doorhanger decision saved."
   );
 
+  BrowserTestUtils.removeTab(tab);
+
   await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
 
   // Set the TRR mode pref manually and ensure we respect this.
   Preferences.set(prefs.TRR_MODE_PREF, 0);
@@ -47,6 +53,7 @@ add_task(async function testUserInterference() {
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
+  await checkHeuristicsTelemetry("disable_doh", "userModified");
 
   is(
     Preferences.get(prefs.DOH_DISABLED_PREF, false),
@@ -62,15 +69,15 @@ add_task(async function testUserInterference() {
   // Simulate another network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
+  ensureNoHeuristicsTelemetry();
 
   // Restart the add-on for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(0);
+  ensureNoHeuristicsTelemetry();
 
   // Simulate another network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
-
-  // Clean up.
-  await resetPrefsAndRestartAddon();
+  ensureNoHeuristicsTelemetry();
 });

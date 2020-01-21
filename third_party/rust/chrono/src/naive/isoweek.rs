@@ -3,7 +3,7 @@
 
 //! ISO 8601 week.
 
-use std::fmt;
+use core::fmt;
 
 use super::internals::{DateImpl, Of, YearFlags};
 

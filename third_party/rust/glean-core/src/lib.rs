@@ -19,8 +19,10 @@ use chrono::{DateTime, FixedOffset};
 use lazy_static::lazy_static;
 use uuid::Uuid;
 
+// This needs to be included first, and the space below prevents rustfmt from
+// alphabetizing it.
 mod macros;
-pub mod ac_migration;
+
 mod common_metric_data;
 mod database;
 mod error;
@@ -34,7 +36,6 @@ pub mod ping;
 pub mod storage;
 mod util;
 
-use crate::ac_migration::migrate_sequence_numbers;
 pub use crate::common_metric_data::{CommonMetricData, Lifetime};
 use crate::database::Database;
 pub use crate::error::{Error, Result};
@@ -100,7 +101,7 @@ pub struct Configuration {
 ///
 /// call_counter.add(&glean, 1);
 ///
-/// glean.send_ping(&ping).unwrap();
+/// glean.submit_ping(&ping).unwrap();
 /// ```
 ///
 /// ## Note
@@ -119,6 +120,7 @@ pub struct Glean {
     ping_registry: HashMap<String, PingType>,
     start_time: DateTime<FixedOffset>,
     max_events: usize,
+    is_first_run: bool,
 }
 
 impl Glean {
@@ -147,41 +149,9 @@ impl Glean {
             ping_registry: HashMap::new(),
             start_time: local_now_with_offset(),
             max_events: cfg.max_events.unwrap_or(DEFAULT_MAX_EVENTS),
+            is_first_run: false,
         };
         glean.on_change_upload_enabled(cfg.upload_enabled);
-        Ok(glean)
-    }
-
-    /// Create and initialize a new Glean object.
-    ///
-    /// This will attempt to delete any previously existing database and
-    /// then create the necessary directories and files in `data_path`.
-    /// This will also initialize the core metrics.
-    ///
-    /// # Arguments
-    ///
-    /// * `cfg` - an instance of the Glean `Configuration`.
-    /// * `new_sequence_nums` - a map of ("<pingName>_seq", sequence number)
-    ///   used to initialize Glean with sequence numbers imported from glean-ac.
-    pub fn with_sequence_numbers(
-        cfg: Configuration,
-        new_sequence_nums: HashMap<String, i32>,
-    ) -> Result<Self> {
-        log::info!("Creating new Glean (migrating data)");
-
-        // Delete the database directory, if it exists. Bail out if there's
-        // errors, as I'm not sure what else could be done if we can't even
-        // delete a directory we own.
-        let db_path = Path::new(&cfg.data_path).join("db");
-        if db_path.exists() {
-            std::fs::remove_dir_all(db_path)?;
-        }
-
-        let glean = Self::new(cfg)?;
-
-        // Set sequence numbers coming through the FFI.
-        migrate_sequence_numbers(&glean, new_sequence_nums);
-
         Ok(glean)
     }
 
@@ -224,6 +194,10 @@ impl Glean {
             .is_none()
         {
             self.core_metrics.first_run_date.set(self, None);
+            // The `first_run_date` field is generated on the very first run
+            // and persisted across upload toggling. We can assume that, the only
+            // time it is set, that's indeed our "first run".
+            self.is_first_run = true;
         }
     }
 
@@ -235,7 +209,7 @@ impl Glean {
     /// # Return value
     ///
     /// `true` if at least one ping was generated, `false` otherwise.
-    pub fn on_ready_to_send_pings(&self) -> bool {
+    pub fn on_ready_to_submit_pings(&self) -> bool {
         self.event_data_store.flush_pending_events_on_startup(&self)
     }
 
@@ -261,9 +235,9 @@ impl Glean {
     pub fn set_upload_enabled(&mut self, flag: bool) -> bool {
         log::info!("Upload enabled: {:?}", flag);
 
-        // When upload is disabled, send a deletion-request ping
+        // When upload is disabled, submit a deletion-request ping
         if !flag {
-            if let Err(err) = self.internal_pings.deletion_request.send(self) {
+            if let Err(err) = self.internal_pings.deletion_request.submit(self) {
                 log::error!("Failed to send deletion-request ping on optout: {}", err);
             }
         }
@@ -408,7 +382,7 @@ impl Glean {
         )
     }
 
-    /// Send a ping.
+    /// Collect and submit a ping for eventual uploading.
     ///
     /// The ping content is assembled as soon as possible, but upload is not
     /// guaranteed to happen immediately, as that depends on the upload
@@ -418,7 +392,12 @@ impl Glean {
     ///
     /// Returns true if a ping was assembled and queued, false otherwise.
     /// Returns an error if collecting or writing the ping to disk failed.
-    pub fn send_ping(&self, ping: &PingType) -> Result<bool> {
+    pub fn submit_ping(&self, ping: &PingType) -> Result<bool> {
+        if !self.is_upload_enabled() {
+            log::error!("Glean must be enabled before sending pings.");
+            return Ok(false);
+        }
+
         let ping_maker = PingMaker::new();
         let doc_id = Uuid::new_v4().to_string();
         let url_path = self.make_path(&ping.name, &doc_id);
@@ -451,26 +430,26 @@ impl Glean {
         }
     }
 
-    /// Send a list of pings by name.
+    /// Collect and submit a ping for eventual uploading by name.
     ///
-    /// See `send_ping` for detailed information.
+    /// See `submit_ping` for detailed information.
     ///
     /// Returns true if at least one ping was assembled and queued, false otherwise.
-    pub fn send_pings_by_name(&self, ping_names: &[String]) -> bool {
+    pub fn submit_pings_by_name(&self, ping_names: &[String]) -> bool {
         // TODO: 1553813: glean-ac collects and stores pings in parallel and then joins them all before queueing the worker.
         // This here is writing them out sequentially.
 
         let mut result = false;
 
         for ping_name in ping_names {
-            if let Ok(true) = self.send_ping_by_name(ping_name) {
+            if let Ok(true) = self.submit_ping_by_name(ping_name) {
                 result = true;
             }
         }
         result
     }
 
-    /// Send a ping by name.
+    /// Collect and submit a ping by name for eventual uploading.
     ///
     /// The ping content is assembled as soon as possible, but upload is not
     /// guaranteed to happen immediately, as that depends on the upload
@@ -480,13 +459,13 @@ impl Glean {
     ///
     /// Returns true if a ping was assembled and queued, false otherwise.
     /// Returns an error if collecting or writing the ping to disk failed.
-    pub fn send_ping_by_name(&self, ping_name: &str) -> Result<bool> {
+    pub fn submit_ping_by_name(&self, ping_name: &str) -> Result<bool> {
         match self.get_ping_by_name(ping_name) {
             None => {
-                log::error!("Attempted to send unknown ping '{}'", ping_name);
+                log::error!("Attempted to submit unknown ping '{}'", ping_name);
                 Ok(false)
             }
-            Some(ping) => self.send_ping(ping),
+            Some(ping) => self.submit_ping(ping),
         }
     }
 
@@ -541,6 +520,28 @@ impl Glean {
     pub fn set_experiment_inactive(&self, experiment_id: String) {
         let metric = metrics::ExperimentMetric::new(&self, experiment_id);
         metric.set_inactive(&self);
+    }
+
+    /// Persist Lifetime::Ping data that might be in memory
+    /// in case `delay_ping_lifetime_io` is set or was set
+    /// at a previous time.
+    ///
+    /// If there is no data to persist, this function does nothing.
+    pub fn persist_ping_lifetime_data(&self) -> Result<()> {
+        self.data_store.persist_ping_lifetime_data()
+    }
+
+    /// ** This is not meant to be used directly.**
+    ///
+    /// Clear all the metrics that have `Lifetime::Application`.
+    pub fn clear_application_lifetime_metrics(&self) {
+        log::debug!("Clearing Lifetime::Application metrics");
+        self.data_store.clear_lifetime(Lifetime::Application);
+    }
+
+    /// Return whether or not this is the first run on this profile.
+    pub fn is_first_run(&self) -> bool {
+        self.is_first_run
     }
 
     /// **Test-only API (exported for FFI purposes).**

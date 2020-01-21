@@ -198,7 +198,8 @@ class SendMessageToCloudRunnable : public Runnable {
 
   SendMessageToCloudRunnable(int32_t aConnectionId, Message::UniquePtr aMsg)
       : Runnable("SendMessageToCloudRunnable"),
-        mConnectionId(aConnectionId), mMsg(std::move(aMsg)) {}
+        mConnectionId(aConnectionId),
+        mMsg(std::move(aMsg)) {}
 
   NS_IMETHODIMP Run() {
     AutoSafeJSContext cx;
@@ -256,7 +257,7 @@ static bool ConnectionCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
 
     if (ptr) {
       Channel* channel = gConnectionChannels[id];
-      channel->SendMessageData((const char*) ptr, length);
+      channel->SendMessageData((const char*)ptr, length);
       sentData = true;
     }
   }
@@ -274,16 +275,16 @@ void CreateReplayingCloudProcess(base::ProcessId aProcessId,
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
 
   if (!gConnection) {
-    nsCOMPtr<rrIConnection> connection =
-        do_ImportModule("resource://devtools/server/actors/replay/connection.js");
+    nsCOMPtr<rrIConnection> connection = do_ImportModule(
+        "resource://devtools/server/actors/replay/connection.js");
     gConnection = connection.forget();
     ClearOnShutdown(&gConnection);
 
     AutoSafeJSContext cx;
     JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
-    JSFunction* fun = JS_NewFunction(cx, ConnectionCallback, 2, 0,
-                                     "ConnectionCallback");
+    JSFunction* fun =
+        JS_NewFunction(cx, ConnectionCallback, 2, 0, "ConnectionCallback");
     MOZ_RELEASE_ASSERT(fun);
     JS::RootedValue callback(cx, JS::ObjectValue(*(JSObject*)fun));
     if (NS_FAILED(gConnection->Initialize(callback))) {
@@ -307,9 +308,10 @@ void CreateReplayingCloudProcess(base::ProcessId aProcessId,
       aChannelId, Channel::Kind::ParentCloud,
       [=](Message::UniquePtr aMsg) {
         RefPtr<SendMessageToCloudRunnable> runnable =
-          new SendMessageToCloudRunnable(connectionId, std::move(aMsg));
+            new SendMessageToCloudRunnable(connectionId, std::move(aMsg));
         NS_DispatchToMainThread(runnable);
-      }, aProcessId);
+      },
+      aProcessId);
   while ((size_t)connectionId >= gConnectionChannels.length()) {
     gConnectionChannels.append(nullptr);
   }

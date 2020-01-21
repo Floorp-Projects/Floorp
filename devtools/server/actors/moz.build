@@ -30,7 +30,6 @@ DevToolsModules(
     'common.js',
     'css-properties.js',
     'device.js',
-    'emulation.js',
     'environment.js',
     'errordocs.js',
     'frame.js',

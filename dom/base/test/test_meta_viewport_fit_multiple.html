@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>multiple meta viewport viewport-fit test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="viewport-fit=cover">
+  <meta name="viewport" content="width=device-width">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>viewport-fit=cover</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function test1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let viewportFit = SpecialPowers.getDOMWindowUtils(window).getViewportFitInfo();
+      is(viewportFit, "auto", "No viewport-fit in last meta viewport. So auto is applied");
+    });
+  </script>
+</body>
+</html>

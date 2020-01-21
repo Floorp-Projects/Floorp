@@ -10,7 +10,7 @@ use glean_core::CommonMetricData;
 
 #[test]
 fn stores_strings() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let metric = StringMetric::new(CommonMetricData::new("local", "string", "baseline"));
 
     assert_eq!(None, metric.test_get_value(&glean, "baseline"));
@@ -24,7 +24,7 @@ fn stores_strings() {
 
 #[test]
 fn stores_counters() {
-    let (glean, _t) = new_glean();
+    let (glean, _t) = new_glean(None);
     let metric = CounterMetric::new(CommonMetricData::new("local", "counter", "baseline"));
 
     assert_eq!(None, metric.test_get_value(&glean, "baseline"));

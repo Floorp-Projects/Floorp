@@ -870,6 +870,9 @@ void MediaPipelineTransmit::SetDescription() {
 RefPtr<GenericPromise> MediaPipelineTransmit::Stop() {
   ASSERT_ON_THREAD(mMainThread);
 
+  // Since we are stopping Start is not needed.
+  mAsyncStartRequested = false;
+
   if (!mTransmitting) {
     return GenericPromise::CreateAndResolve(true, __func__);
   }
@@ -896,6 +899,9 @@ bool MediaPipelineTransmit::Transmitting() const {
 
 void MediaPipelineTransmit::Start() {
   ASSERT_ON_THREAD(mMainThread);
+
+  // Since start arrived reset the flag.
+  mAsyncStartRequested = false;
 
   if (mTransmitting) {
     return;
@@ -981,6 +987,28 @@ void MediaPipelineTransmit::TransportReady_s() {
   mListener->SetActive(true);
 }
 
+void MediaPipelineTransmit::AsyncStart(const RefPtr<GenericPromise>& aPromise) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Start has already been scheduled.
+  if (mAsyncStartRequested) {
+    return;
+  }
+
+  mAsyncStartRequested = true;
+  RefPtr<MediaPipelineTransmit> self = this;
+  aPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self](bool) {
+        // In the meantime start or stop took place, do nothing.
+        if (!self->mAsyncStartRequested) {
+          return;
+        }
+        self->Start();
+      },
+      [](nsresult aRv) { MOZ_CRASH("Never get here!"); });
+}
+
 nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1003,27 +1031,21 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
     mSendPort = nullptr;
   }
 
-  bool wasTransmitting = false;
   if (aDomTrack && mDomTrack && !aDomTrack->Ended() && !mDomTrack->Ended() &&
       aDomTrack->Graph() != mDomTrack->Graph() && mSendTrack) {
     // Recreate the send track if the new stream resides in different MTG.
     // Stopping and re-starting will result in removing and re-adding the
     // listener BUT in different threads, since tracks belong to different MTGs.
-    // This can create tread races so we wait here for the stop to happen
+    // This can create thread races so we wait here for the stop to happen
     // before re-starting. Please note that start should happen at the end of
-    // the method after the mSendTrack replace bellow. Since we dispatch the
-    // result of the promise to the next event of the same thread, it is
-    // guarantee the start will be executed after this method has finished.
-    wasTransmitting = mTransmitting;
-    RefPtr<MediaPipelineTransmit> self = this;
-    Stop()->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [wasTransmitting, self](bool) {
-          if (wasTransmitting) {
-            self->Start();
-          }
-        },
-        [](nsresult aRv) { MOZ_CRASH("Never get here!"); });
+    // the method after the mSendTrack replace bellow. However, since the
+    // result of the promise is dispatched in another event in the same thread,
+    // it is guaranteed that the start will be executed after the end of that
+    // method.
+    if (mTransmitting) {
+      RefPtr<GenericPromise> p = Stop();
+      AsyncStart(p);
+    }
     mSendTrack->Destroy();
     mSendTrack = nullptr;
   }

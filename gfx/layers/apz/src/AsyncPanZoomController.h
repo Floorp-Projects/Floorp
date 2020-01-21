@@ -843,7 +843,8 @@ class AsyncPanZoomController {
   void TrackTouch(const MultiTouchInput& aEvent);
 
   /**
-   * Register the start of a touch or pan gesture at the given position and time.
+   * Register the start of a touch or pan gesture at the given position and
+   * time.
    */
   void StartTouch(const ParentLayerPoint& aPoint, uint32_t aTime);
 

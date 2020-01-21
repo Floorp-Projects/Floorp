@@ -145,7 +145,7 @@ class nsTextControlFrame : public nsContainerFrame,
   //==== NSITEXTCONTROLFRAME
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<mozilla::TextEditor>
-      GetTextEditor() override;
+  GetTextEditor() override;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD
   SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
                     SelectionDirection aDirection = eNone) override;

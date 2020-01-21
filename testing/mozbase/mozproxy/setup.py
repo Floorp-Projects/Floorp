@@ -10,7 +10,7 @@ PACKAGE_NAME = "mozproxy"
 PACKAGE_VERSION = "1.0"
 
 # dependencies
-deps = []
+deps = ["redo"]
 
 setup(
     name=PACKAGE_NAME,

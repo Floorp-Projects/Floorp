@@ -14,8 +14,7 @@ namespace mozilla {
 namespace recordreplay {
 
 Assembler::Assembler(uint8_t* aStorage, size_t aSize)
-    : mCursor(aStorage),
-      mCursorEnd(aStorage + aSize) {}
+    : mCursor(aStorage), mCursorEnd(aStorage + aSize) {}
 
 // The maximum byte length of an x86/x64 instruction.
 static const size_t MaximumInstructionLength = 15;
@@ -25,9 +24,7 @@ void Assembler::Advance(size_t aSize) {
   MOZ_RELEASE_ASSERT(mCursor + MaximumInstructionLength <= mCursorEnd);
 }
 
-uint8_t* Assembler::Current() {
-  return mCursor;
-}
+uint8_t* Assembler::Current() { return mCursor; }
 
 void Assembler::Jump(void* aTarget) {
   PushImmediate(aTarget);
@@ -53,13 +50,9 @@ void Assembler::Push16(uint16_t aValue) {
   Advance(4);
 }
 
-void Assembler::Return() {
-  NewInstruction(0xC3);
-}
+void Assembler::Return() { NewInstruction(0xC3); }
 
-void Assembler::Breakpoint() {
-  NewInstruction(0xCC);
-}
+void Assembler::Breakpoint() { NewInstruction(0xCC); }
 
 void Assembler::PushRax() { NewInstruction(0x50); }
 
@@ -91,7 +84,8 @@ void Assembler::MoveRaxToRegister(Register aRegister) {
 
 void Assembler::MoveRegisterToRax(Register aRegister) {
   if (aRegister <= Register::RDI) {
-    NewInstruction(0x48, 0x89, 0xC0 + ((int)aRegister - (int)Register::RAX) * 8);
+    NewInstruction(0x48, 0x89,
+                   0xC0 + ((int)aRegister - (int)Register::RAX) * 8);
   } else {
     NewInstruction(0x4C, 0x89, 0xC0 + ((int)aRegister - (int)Register::R8) * 8);
   }

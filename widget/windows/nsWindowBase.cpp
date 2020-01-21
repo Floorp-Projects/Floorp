@@ -221,8 +221,7 @@ nsresult nsWindowBase::ClearNativeTouchSequence(nsIObserver* aObserver) {
   // cancel all input points
   for (auto iter = mActivePointers.Iter(); !iter.Done(); iter.Next()) {
     auto info = iter.UserData();
-    InjectTouchPoint(info->mPointerId, info->mPosition,
-                     POINTER_FLAG_CANCELED);
+    InjectTouchPoint(info->mPointerId, info->mPosition, POINTER_FLAG_CANCELED);
     iter.Remove();
   }
 

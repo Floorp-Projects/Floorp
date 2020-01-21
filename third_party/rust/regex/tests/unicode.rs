@@ -60,12 +60,7 @@ mat!(
     "〰",
     Some((0, 3))
 );
-mat!(
-    uni_class_gencat_decimal_numer,
-    r"\p{Decimal_Number}",
-    "𑓙",
-    Some((0, 4))
-);
+mat!(uni_class_gencat_decimal_numer, r"\p{Decimal_Number}", "𑓙", Some((0, 4)));
 mat!(
     uni_class_gencat_enclosing_mark,
     r"\p{Enclosing_Mark}",
@@ -86,12 +81,7 @@ mat!(
     Some((0, 3))
 );
 mat!(uni_class_gencat_letter, r"\p{Letter}", "Έ", Some((0, 2)));
-mat!(
-    uni_class_gencat_letter_number,
-    r"\p{Letter_Number}",
-    "ↂ",
-    Some((0, 3))
-);
+mat!(uni_class_gencat_letter_number, r"\p{Letter_Number}", "ↂ", Some((0, 3)));
 mat!(
     uni_class_gencat_line_separator,
     r"\p{Line_Separator}",

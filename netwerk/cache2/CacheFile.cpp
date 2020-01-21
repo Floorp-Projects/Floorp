@@ -1216,8 +1216,8 @@ nsresult CacheFile::SetNetworkTimes(uint64_t aOnStartTime,
       aOnStopTime <= kIndexTimeOutOfBound ? aOnStopTime : kIndexTimeOutOfBound;
 
   if (mHandle && !mHandle->IsDoomed()) {
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr,
-                                         &onStartTime16, &onStopTime16, nullptr);
+    CacheFileIOManager::UpdateIndexEntry(
+        mHandle, nullptr, nullptr, &onStartTime16, &onStopTime16, nullptr);
   }
   return NS_OK;
 }
@@ -2539,9 +2539,8 @@ nsresult CacheFile::InitIndexEntry() {
     contentType = n64;
   }
 
-  rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &hasAltData,
-                                            &onStartTime, &onStopTime,
-                                            &contentType);
+  rv = CacheFileIOManager::UpdateIndexEntry(
+      mHandle, &frecency, &hasAltData, &onStartTime, &onStopTime, &contentType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

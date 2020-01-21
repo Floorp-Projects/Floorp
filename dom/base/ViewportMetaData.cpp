@@ -55,6 +55,8 @@ static void ProcessViewportToken(ViewportMetaData& aData,
     aData.mMaximumScale.Assign(value);
   } else if (key_atom == nsGkAtoms::user_scalable) {
     aData.mUserScalable.Assign(value);
+  } else if (key_atom == nsGkAtoms::viewport_fit) {
+    aData.mViewportFit.Assign(value);
   }
 }
 

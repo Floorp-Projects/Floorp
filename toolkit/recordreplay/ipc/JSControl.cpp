@@ -265,8 +265,8 @@ static bool Middleman_SendManifest(JSContext* aCx, unsigned aArgc, Value* aVp) {
   }
 
   size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
+  parent::ChildProcessInfo* child =
+      ToChildProcess(aCx, args.get(0), args.get(1), &forkId);
   if (!child) {
     return false;
   }
@@ -284,8 +284,8 @@ static bool Middleman_Ping(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
+  parent::ChildProcessInfo* child =
+      ToChildProcess(aCx, args.get(0), args.get(1), &forkId);
   if (!child) {
     return false;
   }
@@ -428,8 +428,8 @@ static bool Middleman_Terminate(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
+  parent::ChildProcessInfo* child =
+      ToChildProcess(aCx, args.get(0), args.get(1), &forkId);
   if (!child) {
     return false;
   }
@@ -445,8 +445,8 @@ static bool Middleman_CrashHangedChild(JSContext* aCx, unsigned aArgc,
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
+  parent::ChildProcessInfo* child =
+      ToChildProcess(aCx, args.get(0), args.get(1), &forkId);
   if (!child) {
     return false;
   }
@@ -472,8 +472,8 @@ static bool Middleman_UpdateRecording(JSContext* aCx, unsigned aArgc,
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
+  parent::ChildProcessInfo* child =
+      ToChildProcess(aCx, args.get(0), args.get(1), &forkId);
   if (!child) {
     return false;
   }
@@ -1087,8 +1087,7 @@ struct ScriptHitInfo {
     }
   };
 
-  typedef HashMap<ScriptHitKey, ScriptHitVector*, ScriptHitKey>
-      ScriptHitMap;
+  typedef HashMap<ScriptHitKey, ScriptHitVector*, ScriptHitKey> ScriptHitMap;
 
   struct AnyScriptHit {
     uint32_t mScript;
@@ -1120,7 +1119,7 @@ struct ScriptHitInfo {
   }
 
   ScriptHitVector* FindHits(uint32_t aCheckpoint, uint32_t aScript,
-                           uint32_t aOffset) {
+                            uint32_t aOffset) {
     CheckpointInfo* info = GetInfo(aCheckpoint);
 
     ScriptHitKey key(aScript, aOffset);
@@ -1349,8 +1348,8 @@ static bool RecordReplay_FindScriptHits(JSContext* aCx, unsigned aArgc,
     for (const auto& hit : *hits) {
       RootedObject hitObject(aCx, JS_NewObject(aCx, nullptr));
       if (!hitObject ||
-          !JS_DefineProperty(aCx, hitObject, "progress",
-                             (double)hit.mProgress, JSPROP_ENUMERATE) ||
+          !JS_DefineProperty(aCx, hitObject, "progress", (double)hit.mProgress,
+                             JSPROP_ENUMERATE) ||
           !JS_DefineProperty(aCx, hitObject, "frameIndex", hit.mFrameIndex,
                              JSPROP_ENUMERATE) ||
           !values.append(ObjectValue(*hitObject))) {

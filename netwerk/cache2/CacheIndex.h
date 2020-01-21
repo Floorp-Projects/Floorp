@@ -682,11 +682,13 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // MUST be initialized. Call to AddEntry() or EnsureEntryExists() and to
   // InitEntry() must precede the call to this method.
   // Pass nullptr if the value didn't change.
-  static nsresult UpdateEntry(
-      const SHA1Sum::Hash* aHash, const uint32_t* aFrecency,
-      const bool* aHasAltData, const uint16_t* aOnStartTime,
-      const uint16_t* aOnStopTime, const uint8_t* aContentType,
-      const uint32_t* aSize);
+  static nsresult UpdateEntry(const SHA1Sum::Hash* aHash,
+                              const uint32_t* aFrecency,
+                              const bool* aHasAltData,
+                              const uint16_t* aOnStartTime,
+                              const uint16_t* aOnStopTime,
+                              const uint8_t* aContentType,
+                              const uint32_t* aSize);
 
   // Remove all entries from the index. Called when clearing the whole cache.
   static nsresult RemoveAll();
@@ -789,11 +791,13 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
                           OriginAttrsHash aOriginAttrsHash, bool aAnonymous);
 
   // Checks whether any of the information about the entry has changed.
-  static bool HasEntryChanged(
-      CacheIndexEntry* aEntry, const uint32_t* aFrecency,
-      const bool* aHasAltData, const uint16_t* aOnStartTime,
-      const uint16_t* aOnStopTime, const uint8_t* aContentType,
-      const uint32_t* aSize);
+  static bool HasEntryChanged(CacheIndexEntry* aEntry,
+                              const uint32_t* aFrecency,
+                              const bool* aHasAltData,
+                              const uint16_t* aOnStartTime,
+                              const uint16_t* aOnStopTime,
+                              const uint8_t* aContentType,
+                              const uint32_t* aSize);
 
   // Merge all pending operations from mPendingUpdates into mIndex.
   void ProcessPendingOperations();

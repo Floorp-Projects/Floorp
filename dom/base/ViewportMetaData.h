@@ -20,13 +20,15 @@ struct ViewportMetaData {
   nsString mMinimumScale;
   nsString mMaximumScale;
   nsString mUserScalable;
+  nsString mViewportFit;
 
   bool operator==(const ViewportMetaData& aOther) const {
     return mWidth == aOther.mWidth && mHeight == aOther.mHeight &&
            mInitialScale == aOther.mInitialScale &&
            mMinimumScale == aOther.mMinimumScale &&
            mMaximumScale == aOther.mMaximumScale &&
-           mUserScalable == aOther.mUserScalable;
+           mUserScalable == aOther.mUserScalable &&
+           mViewportFit == aOther.mViewportFit;
   }
   bool operator!=(const ViewportMetaData& aOther) const {
     return !(*this == aOther);

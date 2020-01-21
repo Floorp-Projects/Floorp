@@ -37,11 +37,9 @@ using mozilla::dom::Document;
 
 already_AddRefed<nsIContentViewer> NS_NewContentViewer();
 
-static const char* const gHTMLTypes[] = {TEXT_HTML,
-                                         VIEWSOURCE_CONTENT_TYPE,
+static const char* const gHTMLTypes[] = {TEXT_HTML, VIEWSOURCE_CONTENT_TYPE,
                                          APPLICATION_XHTML_XML,
-                                         APPLICATION_WAPXHTML_XML,
-                                         0};
+                                         APPLICATION_WAPXHTML_XML, 0};
 
 static const char* const gXMLTypes[] = {TEXT_XML,
                                         APPLICATION_XML,

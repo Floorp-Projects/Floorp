@@ -5,6 +5,7 @@
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::fs;
+use std::str;
 use std::sync::RwLock;
 
 use rkv::{Rkv, SingleStore, StoreOptions};
@@ -18,15 +19,9 @@ use crate::Result;
 #[derive(Debug)]
 pub struct Database {
     rkv: Rkv,
-    // Metrics with 'application' lifetime only live as long
-    // as the application lives: they don't need to be persisted
-    // to disk using rkv. Store them in a map.
-    app_lifetime_data: RwLock<BTreeMap<String, Metric>>,
     // If the `delay_ping_lifetime_io` Glean config option is `true`,
     // we will save metrics with 'ping' lifetime data in a map temporarily
-    // so as to persist them to disk using rkv in bulk on shutdown,
-    // or after a given interval, instead of everytime a new metric
-    // is created / updated.
+    // so as to persist them to disk using rkv in bulk on demand.
     ping_lifetime_data: Option<RwLock<BTreeMap<String, Metric>>>,
 }
 
@@ -35,16 +30,22 @@ impl Database {
     ///
     /// This opens the underlying rkv store and creates
     /// the underlying directory structure.
+    ///
+    /// It also loads any Lifetime::Ping data that might be
+    /// persisted, in case `delay_ping_lifetime_io` is set.
     pub fn new(data_path: &str, delay_ping_lifetime_io: bool) -> Result<Self> {
-        Ok(Self {
+        let db = Self {
             rkv: Self::open_rkv(data_path)?,
-            app_lifetime_data: RwLock::new(BTreeMap::new()),
             ping_lifetime_data: if delay_ping_lifetime_io {
                 Some(RwLock::new(BTreeMap::new()))
             } else {
                 None
             },
-        })
+        };
+
+        db.load_ping_lifetime_data();
+
+        Ok(db)
     }
 
     /// Creates the storage directories and inits rkv.
@@ -75,6 +76,40 @@ impl Database {
         match metric_key {
             Some(k) => format!("{}#{}", storage_name, k),
             None => format!("{}#", storage_name),
+        }
+    }
+
+    /// Loads Lifetime::Ping data from rkv to memory,
+    /// if `delay_ping_lifetime_io` is set to true.
+    ///
+    /// Does nothing if it isn't or if there is not data to load.
+    fn load_ping_lifetime_data(&self) {
+        if let Some(ping_lifetime_data) = &self.ping_lifetime_data {
+            let mut data = ping_lifetime_data
+                .write()
+                .expect("Can't read ping lifetime data");
+
+            let store: SingleStore = unwrap_or!(
+                self.rkv
+                    .open_single(Lifetime::Ping.as_str(), StoreOptions::create()),
+                return
+            );
+
+            let reader = unwrap_or!(self.rkv.read(), return);
+            let mut iter = unwrap_or!(store.iter_start(&reader), return);
+
+            while let Some(Ok((metric_name, value))) = iter.next() {
+                let metric_name = match str::from_utf8(metric_name) {
+                    Ok(metric_name) => metric_name.to_string(),
+                    _ => continue,
+                };
+                let metric: Metric = match value.expect("Value missing in iteration") {
+                    rkv::Value::Blob(blob) => unwrap_or!(bincode::deserialize(blob), continue),
+                    _ => continue,
+                };
+
+                data.insert(metric_name, metric);
+            }
         }
     }
 
@@ -112,23 +147,7 @@ impl Database {
         let iter_start = Self::get_storage_key(storage_name, metric_key);
         let len = iter_start.len();
 
-        // Lifetime::Application data is not persisted to disk
-        if lifetime == Lifetime::Application {
-            let data = self
-                .app_lifetime_data
-                .read()
-                .expect("Can't read app lifetime data");
-            for (key, value) in data.iter() {
-                if key.starts_with(&iter_start) {
-                    let key = &key[len..];
-                    transaction_fn(key.as_bytes(), value);
-                }
-            }
-
-            return;
-        }
-
-        // Lifetime::Ping data is not persisted to disk if
+        // Lifetime::Ping data is not immediately persisted to disk if
         // Glean has `delay_ping_lifetime_io` set to true
         if lifetime == Lifetime::Ping {
             if let Some(ping_lifetime_data) = &self.ping_lifetime_data {
@@ -189,15 +208,6 @@ impl Database {
     ) -> bool {
         let key = Self::get_storage_key(storage_name, Some(metric_identifier));
 
-        // Lifetime::Application data is not persisted to disk
-        if lifetime == Lifetime::Application {
-            return self
-                .app_lifetime_data
-                .read()
-                .map(|data| data.contains_key(&key))
-                .unwrap_or(false);
-        }
-
         // Lifetime::Ping data is not persisted to disk if
         // Glean has `delay_ping_lifetime_io` set to true
         if lifetime == Lifetime::Ping {
@@ -224,16 +234,11 @@ impl Database {
     ///
     /// ## Panics
     ///
-    /// * This function will panic for `Lifetime::Application`.
     /// * This function will **not** panic on database errors.
     pub fn write_with_store<F>(&self, store_name: Lifetime, mut transaction_fn: F) -> Result<()>
     where
         F: FnMut(rkv::Writer, SingleStore) -> Result<()>,
     {
-        if store_name == Lifetime::Application {
-            panic!("Can't write with store for application-lifetime data");
-        }
-
         let store: SingleStore = self
             .rkv
             .open_single(store_name.as_str(), StoreOptions::create())?;
@@ -273,16 +278,7 @@ impl Database {
     ) -> Result<()> {
         let final_key = Self::get_storage_key(storage_name, Some(key));
 
-        if lifetime == Lifetime::Application {
-            let mut data = self
-                .app_lifetime_data
-                .write()
-                .expect("Can't read app lifetime data");
-            data.insert(final_key, metric.clone());
-            return Ok(());
-        }
-
-        // Lifetime::Ping data is not persisted to disk if
+        // Lifetime::Ping data is not immediately persisted to disk if
         // Glean has `delay_ping_lifetime_io` set to true
         if lifetime == Lifetime::Ping {
             if let Some(ping_lifetime_data) = &self.ping_lifetime_data {
@@ -346,24 +342,6 @@ impl Database {
     {
         let final_key = Self::get_storage_key(storage_name, Some(key));
 
-        if lifetime == Lifetime::Application {
-            let mut data = self
-                .app_lifetime_data
-                .write()
-                .expect("Can't access app lifetime data as writable");
-            let entry = data.entry(final_key);
-            match entry {
-                Entry::Vacant(entry) => {
-                    entry.insert(transform(None));
-                }
-                Entry::Occupied(mut entry) => {
-                    let old_value = entry.get().clone();
-                    entry.insert(transform(Some(old_value)));
-                }
-            }
-            return Ok(());
-        }
-
         // Lifetime::Ping data is not persisted to disk if
         // Glean has `delay_ping_lifetime_io` set to true
         if lifetime == Lifetime::Ping {
@@ -423,14 +401,13 @@ impl Database {
     ///
     /// * This function will **not** panic on database errors.
     pub fn clear_ping_lifetime_storage(&self, storage_name: &str) -> Result<()> {
-        // Lifetime::Ping might have data saved to `ping_lifetime_data`
+        // Lifetime::Ping data will be saved to `ping_lifetime_data`
         // in case `delay_ping_lifetime_io` is set to true
         if let Some(ping_lifetime_data) = &self.ping_lifetime_data {
             ping_lifetime_data
                 .write()
                 .expect("Can't access ping lifetime data as writable")
                 .clear();
-            return Ok(());
         }
 
         self.write_with_store(Lifetime::Ping, |mut writer, store| {
@@ -486,15 +463,6 @@ impl Database {
     ) -> Result<()> {
         let final_key = Self::get_storage_key(storage_name, Some(metric_name));
 
-        if lifetime == Lifetime::Application {
-            let mut data = self
-                .app_lifetime_data
-                .write()
-                .expect("Can't access app lifetime data as writable");
-            data.remove(&final_key);
-            return Ok(());
-        }
-
         // Lifetime::Ping data is not persisted to disk if
         // Glean has `delay_ping_lifetime_io` set to true
         if lifetime == Lifetime::Ping {
@@ -503,15 +471,39 @@ impl Database {
                     .write()
                     .expect("Can't access app lifetime data as writable");
                 data.remove(&final_key);
-                return Ok(());
             }
         }
 
         self.write_with_store(lifetime, |mut writer, store| {
-            store.delete(&mut writer, final_key.clone())?;
+            if let Err(e) = store.delete(&mut writer, final_key.clone()) {
+                if self.ping_lifetime_data.is_some() {
+                    // If ping_lifetime_data exists, it might be
+                    // that data is in memory, but not yet in rkv.
+                    return Ok(());
+                }
+                return Err(e.into());
+            }
             writer.commit()?;
             Ok(())
         })
+    }
+
+    /// Clears all the metrics in the database, for the provided lifetime.
+    ///
+    /// Errors are logged.
+    ///
+    /// ## Panics
+    ///
+    /// * This function will **not** panic on database errors.
+    pub fn clear_lifetime(&self, lifetime: Lifetime) {
+        let res = self.write_with_store(lifetime, |mut writer, store| {
+            store.clear(&mut writer)?;
+            writer.commit()?;
+            Ok(())
+        });
+        if let Err(e) = res {
+            log::error!("Could not clear store for lifetime {:?}: {:?}", lifetime, e);
+        }
     }
 
     /// Clears all metrics in the database.
@@ -522,28 +514,45 @@ impl Database {
     ///
     /// * This function will **not** panic on database errors.
     pub fn clear_all(&self) {
-        for lifetime in [Lifetime::User, Lifetime::Ping].iter() {
-            let res = self.write_with_store(*lifetime, |mut writer, store| {
-                store.clear(&mut writer)?;
-                writer.commit()?;
-                Ok(())
-            });
-            if let Err(e) = res {
-                log::error!("Could not clear store for lifetime {:?}: {:?}", lifetime, e);
-            }
-        }
-
-        self.app_lifetime_data
-            .write()
-            .expect("Can't access app lifetime data as writable")
-            .clear();
-
         if let Some(ping_lifetime_data) = &self.ping_lifetime_data {
             ping_lifetime_data
                 .write()
                 .expect("Can't access ping lifetime data as writable")
                 .clear();
         }
+
+        for lifetime in [Lifetime::User, Lifetime::Ping, Lifetime::Application].iter() {
+            self.clear_lifetime(*lifetime);
+        }
+    }
+
+    /// Persist ping_lifetime_data to disk.
+    ///
+    /// Does nothing in case there is nothing to persist.
+    ///
+    /// ## Panics
+    ///
+    /// * This function will **not** panic on database errors.
+    pub fn persist_ping_lifetime_data(&self) -> Result<()> {
+        if let Some(ping_lifetime_data) = &self.ping_lifetime_data {
+            let data = ping_lifetime_data
+                .read()
+                .expect("Can't read ping lifetime data");
+
+            self.write_with_store(Lifetime::Ping, |mut writer, store| {
+                for (key, value) in data.iter() {
+                    let encoded =
+                        bincode::serialize(&value).expect("IMPOSSIBLE: Serializing metric failed");
+                    // There is no need for `get_storage_key` here because
+                    // the key is already formatted from when it was saved
+                    // to ping_lifetime_data.
+                    store.put(&mut writer, &key, &rkv::Value::Blob(&encoded))?;
+                }
+                writer.commit()?;
+                Ok(())
+            })?;
+        }
+        Ok(())
     }
 }
 
@@ -773,7 +782,7 @@ mod test {
                     *lifetime,
                     test_storage,
                     &format!("{}_{}", metric_id_pattern, value),
-                    &Metric::String(value.to_string()),
+                    &Metric::String((*value).to_string()),
                 )
                 .unwrap();
             }
@@ -812,51 +821,188 @@ mod test {
     }
 
     #[test]
-    fn test_deferred_ping_lifetime_collection() {
+    fn test_delayed_ping_lifetime_persistence() {
         // Init the database in a temporary directory.
         let dir = tempdir().unwrap();
         let str_dir = dir.path().display().to_string();
         let db = Database::new(&str_dir, true).unwrap();
+        let test_storage = "test-storage";
 
         assert!(db.ping_lifetime_data.is_some());
 
         // Attempt to record a known value.
-        let test_value = "test-value";
-        let test_storage = "test-storage1";
-        let test_metric_id = "telemetry_test.test_name";
+        let test_value1 = "test-value1";
+        let test_metric_id1 = "telemetry_test.test_name1";
         db.record_per_lifetime(
             Lifetime::Ping,
             test_storage,
-            test_metric_id,
-            &Metric::String(test_value.to_string()),
+            test_metric_id1,
+            &Metric::String(test_value1.to_string()),
         )
         .unwrap();
 
-        // Verify that the data is correctly recorded.
-        let mut found_metrics = 0;
-        let mut snapshotter = |metric_name: &[u8], metric: &Metric| {
-            found_metrics += 1;
-            let metric_id = String::from_utf8_lossy(metric_name).into_owned();
-            assert_eq!(test_metric_id, metric_id);
-            match metric {
-                Metric::String(s) => assert_eq!(test_value, s),
-                _ => panic!("Unexpected data found"),
-            }
-        };
+        // Attempt to persist data.
+        db.persist_ping_lifetime_data().unwrap();
 
-        db.iter_store_from(Lifetime::Ping, test_storage, None, &mut snapshotter);
-        assert_eq!(1, found_metrics, "We only expect 1 Lifetime.Ping metric.");
+        // Attempt to record another known value.
+        let test_value2 = "test-value2";
+        let test_metric_id2 = "telemetry_test.test_name2";
+        db.record_per_lifetime(
+            Lifetime::Ping,
+            test_storage,
+            test_metric_id2,
+            &Metric::String(test_value2.to_string()),
+        )
+        .unwrap();
 
-        // Make sure data was **not** persisted with rkv.
-        let store: SingleStore = unwrap_or!(
-            db.rkv
-                .open_single(Lifetime::Ping.as_str(), StoreOptions::create()),
-            panic!()
-        );
-        let reader = unwrap_or!(db.rkv.read(), panic!());
-        assert!(store
-            .get(&reader, &test_metric_id)
-            .unwrap_or(None)
-            .is_none());
+        {
+            // At this stage we expect `test_value1` to be persisted and in memory,
+            // since it was recorded before calling `persist_ping_lifetime_data`,
+            // and `test_value2` to be only in memory, since it was recorded after.
+            let store: SingleStore = db
+                .rkv
+                .open_single(Lifetime::Ping.as_str(), StoreOptions::create())
+                .unwrap();
+            let reader = db.rkv.read().unwrap();
+
+            // Verify that test_value1 is in rkv.
+            assert!(store
+                .get(&reader, format!("{}#{}", test_storage, test_metric_id1))
+                .unwrap_or(None)
+                .is_some());
+            // Verifiy that test_value2 is **not** in rkv.
+            assert!(store
+                .get(&reader, format!("{}#{}", test_storage, test_metric_id2))
+                .unwrap_or(None)
+                .is_none());
+
+            let data = match &db.ping_lifetime_data {
+                Some(ping_lifetime_data) => ping_lifetime_data,
+                None => panic!("Expected `ping_lifetime_data` to exist here!"),
+            };
+            let data = data.read().unwrap();
+            // Verify that test_value1 is also in memory.
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id1))
+                .is_some());
+            // Verify that test_value2 is in memory.
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id2))
+                .is_some());
+        }
+
+        // Attempt to persist data again.
+        db.persist_ping_lifetime_data().unwrap();
+
+        {
+            // At this stage we expect `test_value1` and `test_value2` to
+            // be persisted, since both were created before a call to
+            // `persist_ping_lifetime_data`.
+            let store: SingleStore = db
+                .rkv
+                .open_single(Lifetime::Ping.as_str(), StoreOptions::create())
+                .unwrap();
+            let reader = db.rkv.read().unwrap();
+
+            // Verify that test_value1 is in rkv.
+            assert!(store
+                .get(&reader, format!("{}#{}", test_storage, test_metric_id1))
+                .unwrap_or(None)
+                .is_some());
+            // Verifiy that test_value2 is also in rkv.
+            assert!(store
+                .get(&reader, format!("{}#{}", test_storage, test_metric_id2))
+                .unwrap_or(None)
+                .is_some());
+
+            let data = match &db.ping_lifetime_data {
+                Some(ping_lifetime_data) => ping_lifetime_data,
+                None => panic!("Expected `ping_lifetime_data` to exist here!"),
+            };
+            let data = data.read().unwrap();
+            // Verify that test_value1 is also in memory.
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id1))
+                .is_some());
+            // Verify that test_value2 is also in memory.
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id2))
+                .is_some());
+        }
+    }
+
+    #[test]
+    fn test_load_ping_lifetime_data_from_memory() {
+        // Init the database in a temporary directory.
+        let dir = tempdir().unwrap();
+        let str_dir = dir.path().display().to_string();
+
+        let test_storage = "test-storage";
+        let test_value = "test-value";
+        let test_metric_id = "telemetry_test.test_name";
+
+        {
+            let db = Database::new(&str_dir, true).unwrap();
+
+            // Attempt to record a known value.
+            db.record_per_lifetime(
+                Lifetime::Ping,
+                test_storage,
+                test_metric_id,
+                &Metric::String(test_value.to_string()),
+            )
+            .unwrap();
+
+            // Verify that test_value is in memory.
+            let data = match &db.ping_lifetime_data {
+                Some(ping_lifetime_data) => ping_lifetime_data,
+                None => panic!("Expected `ping_lifetime_data` to exist here!"),
+            };
+            let data = data.read().unwrap();
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id))
+                .is_some());
+
+            // Attempt to persist data.
+            db.persist_ping_lifetime_data().unwrap();
+
+            // Verify that test_value is now in rkv.
+            let store: SingleStore = db
+                .rkv
+                .open_single(Lifetime::Ping.as_str(), StoreOptions::create())
+                .unwrap();
+            let reader = db.rkv.read().unwrap();
+            assert!(store
+                .get(&reader, format!("{}#{}", test_storage, test_metric_id))
+                .unwrap_or(None)
+                .is_some());
+        }
+
+        // Now create a new instace of the db and check if data was
+        // correctly loaded from rkv to memory.
+        {
+            let db = Database::new(&str_dir, true).unwrap();
+
+            // Verify that test_value is in memory.
+            let data = match &db.ping_lifetime_data {
+                Some(ping_lifetime_data) => ping_lifetime_data,
+                None => panic!("Expected `ping_lifetime_data` to exist here!"),
+            };
+            let data = data.read().unwrap();
+            assert!(data
+                .get(&format!("{}#{}", test_storage, test_metric_id))
+                .is_some());
+
+            // Verify that test_value is also in rkv.
+            let store: SingleStore = db
+                .rkv
+                .open_single(Lifetime::Ping.as_str(), StoreOptions::create())
+                .unwrap();
+            let reader = db.rkv.read().unwrap();
+            assert!(store
+                .get(&reader, format!("{}#{}", test_storage, test_metric_id))
+                .unwrap_or(None)
+                .is_some());
+        }
     }
 }

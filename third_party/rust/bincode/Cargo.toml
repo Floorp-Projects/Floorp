@@ -12,9 +12,8 @@
 
 [package]
 name = "bincode"
-version = "1.2.0"
+version = "1.2.1"
 authors = ["Ty Overby <ty@pre-alpha.com>", "Francesco Mazzoli <f@mazzo.li>", "David Tolnay <dtolnay@gmail.com>", "Daniel Griffen"]
-build = "build.rs"
 exclude = ["logo.png", "tests/*", "examples/*", ".gitignore", ".travis.yml"]
 publish = true
 description = "A binary serialization / deserialization strategy that uses Serde for transforming structs into bytes and vice versa!"
@@ -34,8 +33,6 @@ version = "0.11"
 
 [dev-dependencies.serde_derive]
 version = "1.0.27"
-[build-dependencies.autocfg]
-version = "0.1.2"
 
 [features]
 i128 = []

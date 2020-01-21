@@ -2733,8 +2733,8 @@ nsPrefBranch::RemoveObserverImpl(const nsACString& aDomain,
   mozilla::UniquePtr<PrefCallback> pCallback;
   mObservers.Remove(&key, &pCallback);
   if (pCallback) {
-    rv = Preferences::UnregisterCallback(NotifyObserver, prefName, pCallback.get(),
-                                         Preferences::PrefixMatch);
+    rv = Preferences::UnregisterCallback(
+        NotifyObserver, prefName, pCallback.get(), Preferences::PrefixMatch);
   }
 
   return rv;

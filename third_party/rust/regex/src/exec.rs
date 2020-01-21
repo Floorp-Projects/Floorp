@@ -691,9 +691,7 @@ impl<'c> ExecNoSync<'c> {
             }
             AnchoredStart => {
                 let lits = &self.ro.nfa.prefixes;
-                if !self.ro.nfa.is_anchored_start
-                    || (self.ro.nfa.is_anchored_start && start == 0)
-                {
+                if start == 0 || !self.ro.nfa.is_anchored_start {
                     lits.find_start(&text[start..])
                         .map(|(s, e)| (start + s, start + e))
                 } else {

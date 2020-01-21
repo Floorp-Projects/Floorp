@@ -7,7 +7,6 @@ use tempfile::Builder;
 
 fn main() {
     env_logger::init();
-    color_backtrace::install();
 
     let mut args = env::args().skip(1);
 

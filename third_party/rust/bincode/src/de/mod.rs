@@ -108,30 +108,9 @@ where
     impl_nums!(f32, deserialize_f32, visit_f32, read_f32);
     impl_nums!(f64, deserialize_f64, visit_f64, read_f64);
 
-    #[cfg(has_i128)]
-    impl_nums!(u128, deserialize_u128, visit_u128, read_u128);
-
-    #[cfg(has_i128)]
-    impl_nums!(i128, deserialize_i128, visit_i128, read_i128);
-
     serde_if_integer128! {
-        #[cfg(not(has_i128))]
-        fn deserialize_u128<V>(self, visitor: V) -> Result<V::Value>
-        where
-            V: serde::de::Visitor<'de>
-        {
-            let _ = visitor;
-            Err(DeError::custom("u128 is not supported. Use Rustc ≥ 1.26."))
-        }
-
-        #[cfg(not(has_i128))]
-        fn deserialize_i128<V>(self, visitor: V) -> Result<V::Value>
-        where
-            V: serde::de::Visitor<'de>
-        {
-            let _ = visitor;
-            Err(DeError::custom("i128 is not supported. Use Rustc ≥ 1.26."))
-        }
+        impl_nums!(u128, deserialize_u128, visit_u128, read_u128);
+        impl_nums!(i128, deserialize_i128, visit_i128, read_i128);
     }
 
     #[inline]

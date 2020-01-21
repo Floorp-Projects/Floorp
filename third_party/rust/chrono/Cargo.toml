@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,8 +12,9 @@
 
 [package]
 name = "chrono"
-version = "0.4.6"
+version = "0.4.10"
 authors = ["Kang Seonghoon <public+rust@mearie.org>", "Brandon W Maister <quodlibetor@gmail.com>"]
+exclude = ["/ci/*", "/.travis.yml", "/appveyor.yml", "/Makefile"]
 description = "Date and time library for Rust"
 homepage = "https://github.com/chronotope/chrono"
 documentation = "https://docs.rs/chrono/"
@@ -43,8 +44,9 @@ version = "0.3.20"
 optional = true
 
 [dependencies.serde]
-version = "1"
+version = "1.0.99"
 optional = true
+default-features = false
 
 [dependencies.time]
 version = "0.1.39"
@@ -52,19 +54,37 @@ optional = true
 [dev-dependencies.bincode]
 version = "0.8.0"
 
+[dev-dependencies.doc-comment]
+version = "0.3"
+
 [dev-dependencies.num-iter]
 version = "0.1.35"
 default-features = false
 
 [dev-dependencies.serde_derive]
 version = "1"
+default-features = false
 
 [dev-dependencies.serde_json]
 version = "1"
+default-features = false
 
 [features]
-clock = ["time"]
-default = ["clock"]
+alloc = []
+bench = ["std"]
+clock = ["time", "std"]
+default = ["clock", "std"]
+std = []
+wasmbind = ["wasm-bindgen", "js-sys"]
+[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.js-sys]
+version = "0.3"
+optional = true
+
+[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
+[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dev-dependencies.wasm-bindgen-test]
+version = "0.2"
 [badges.appveyor]
 repository = "chronotope/chrono"
 

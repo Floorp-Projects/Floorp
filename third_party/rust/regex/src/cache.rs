@@ -26,7 +26,7 @@ mod imp {
         }
 
         pub fn get_or(&self, create: impl FnOnce() -> T) -> CachedGuard<T> {
-            CachedGuard(self.0.get_or(|| Box::new(create())))
+            CachedGuard(self.0.get_or(|| create()))
         }
     }
 
