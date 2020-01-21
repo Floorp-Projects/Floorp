@@ -644,7 +644,7 @@ class SystemEngineViewTest {
 
         val webView = mock<WebView>()
         engineSession.webView = webView
-        val errorResponse = RequestInterceptor.ErrorResponse("foo", url = "about:fail")
+        val errorResponse = RequestInterceptor.ErrorResponse.Content("foo", url = "about:fail")
         webViewClient.onReceivedError(
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
@@ -663,7 +663,7 @@ class SystemEngineViewTest {
         )
         verify(webView).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
 
-        val errorResponse2 = RequestInterceptor.ErrorResponse("foo")
+        val errorResponse2 = RequestInterceptor.ErrorResponse.Content("foo")
         webViewClient.onReceivedError(
             engineSession.webView,
             WebViewClient.ERROR_UNKNOWN,
@@ -715,7 +715,7 @@ class SystemEngineViewTest {
 
         val webView = mock<WebView>()
         engineSession.webView = webView
-        val errorResponse = RequestInterceptor.ErrorResponse("foo", url = "about:fail")
+        val errorResponse = RequestInterceptor.ErrorResponse.Content("foo", url = "about:fail")
         webViewClient.onReceivedError(engineSession.webView, webRequest, webError)
         verify(webView, never()).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
 
@@ -724,7 +724,7 @@ class SystemEngineViewTest {
         webViewClient.onReceivedError(engineSession.webView, webRequest, webError)
         verify(webView).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
 
-        val errorResponse2 = RequestInterceptor.ErrorResponse("foo")
+        val errorResponse2 = RequestInterceptor.ErrorResponse.Content("foo")
         webViewClient.onReceivedError(engineSession.webView, webRequest, webError)
         verify(webView, never()).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
 
@@ -761,7 +761,7 @@ class SystemEngineViewTest {
 
         val webView = mock<WebView>()
         engineSession.webView = webView
-        val errorResponse = RequestInterceptor.ErrorResponse("foo", url = "about:fail")
+        val errorResponse = RequestInterceptor.ErrorResponse.Content("foo", url = "about:fail")
         webViewClient.onReceivedSslError(engineSession.webView, handler, error)
         verify(webView, never()).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
 
@@ -775,7 +775,7 @@ class SystemEngineViewTest {
         webViewClient.onReceivedSslError(engineSession.webView, handler, error)
         verify(webView).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
 
-        val errorResponse2 = RequestInterceptor.ErrorResponse("foo")
+        val errorResponse2 = RequestInterceptor.ErrorResponse.Content("foo")
         webViewClient.onReceivedSslError(engineSession.webView, handler, error)
         verify(webView, never()).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
 
@@ -785,7 +785,7 @@ class SystemEngineViewTest {
         verify(webView).loadDataWithBaseURL(null, "foo", "text/html", "UTF-8", null)
 
         whenever(requestInterceptor.onErrorRequest(engineSession, ErrorType.ERROR_SECURITY_SSL, "http://failed.random"))
-            .thenReturn(RequestInterceptor.ErrorResponse("foo", "http://failed.random"))
+            .thenReturn(RequestInterceptor.ErrorResponse.Content("foo", "http://failed.random"))
         webViewClient.onReceivedSslError(engineSession.webView, handler, error)
         verify(webView).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
     }
@@ -1028,17 +1028,17 @@ class SystemEngineViewTest {
         val strictPolicy = TrackingProtectionPolicy.strict()
         val resources = testContext.resources
         val recommendedCategories = setOf(
-                UrlMatcher.ADVERTISING,
-                UrlMatcher.ANALYTICS,
-                UrlMatcher.SOCIAL,
-                UrlMatcher.CRYPTOMINING
+            UrlMatcher.ADVERTISING,
+            UrlMatcher.ANALYTICS,
+            UrlMatcher.SOCIAL,
+            UrlMatcher.CRYPTOMINING
         )
         val strictCategories = setOf(
             UrlMatcher.ADVERTISING,
-                UrlMatcher.ANALYTICS,
-                UrlMatcher.SOCIAL,
-                UrlMatcher.FINGERPRINTING,
-                UrlMatcher.CRYPTOMINING
+            UrlMatcher.ANALYTICS,
+            UrlMatcher.SOCIAL,
+            UrlMatcher.FINGERPRINTING,
+            UrlMatcher.CRYPTOMINING
         )
 
         var urlMatcher = SystemEngineView.getOrCreateUrlMatcher(resources, recommendedPolicy)

@@ -54,6 +54,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.PageVisit
@@ -280,7 +281,14 @@ class SystemEngineView @JvmOverloads constructor(
                     ErrorType.ERROR_SECURITY_SSL,
                     error.url
                 )?.apply {
-                    view.loadDataWithBaseURL(url, data, mimeType, encoding, null)
+                    when (this) {
+                        is RequestInterceptor.ErrorResponse.Content -> {
+                            view.loadDataWithBaseURL(url, data, mimeType, encoding, null)
+                        }
+                        is RequestInterceptor.ErrorResponse.Uri -> {
+                            view.loadUrl(uri)
+                        }
+                    }
                 }
             }
         }
@@ -293,7 +301,14 @@ class SystemEngineView @JvmOverloads constructor(
                     errorType,
                     failingUrl
                 )?.apply {
-                    view.loadDataWithBaseURL(url ?: failingUrl, data, mimeType, encoding, null)
+                    when (this) {
+                        is RequestInterceptor.ErrorResponse.Content -> {
+                            view.loadDataWithBaseURL(url ?: failingUrl, data, mimeType, encoding, null)
+                        }
+                        is RequestInterceptor.ErrorResponse.Uri -> {
+                            view.loadUrl(uri)
+                        }
+                    }
                 }
             }
         }
@@ -310,7 +325,14 @@ class SystemEngineView @JvmOverloads constructor(
                     errorType,
                     request.url.toString()
                 )?.apply {
-                    view.loadDataWithBaseURL(url ?: request.url.toString(), data, mimeType, encoding, null)
+                    when (this) {
+                        is RequestInterceptor.ErrorResponse.Content -> {
+                            view.loadDataWithBaseURL(url ?: request.url.toString(), data, mimeType, encoding, null)
+                        }
+                        is RequestInterceptor.ErrorResponse.Uri -> {
+                            view.loadUrl(this.uri)
+                        }
+                    }
                 }
             }
         }

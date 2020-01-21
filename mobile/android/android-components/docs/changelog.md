@@ -13,6 +13,13 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-error-pages**
+  * ⚠️ **This is a breaking change**: ErrorResponse now has two data classes: Content (for data URI's) and Uri (for encoded URL's)
+    * This will require a change in RequestInterceptors that override `onErrorRequest`.
+    * Return the corresponding ErrorResponse (ErrorResponse.Content or ErrorResponse.Uri) as ErrorResponse can no longer be directly instantiated.
+  * Added support for loading images into error pages with `createUrlEncodedErrorPage`. These error pages load dynamically with javascript by parsing params in the URL
+  * ⚠️ To use custom HTML & CSS with image error pages, resources **must** be located in the assets folder
+
 # 28.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v27.0.0...v28.0.0)

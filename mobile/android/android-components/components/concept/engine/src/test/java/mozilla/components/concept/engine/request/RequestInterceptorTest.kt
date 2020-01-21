@@ -30,7 +30,7 @@ class RequestInterceptorTest {
 
     @Test
     fun `error response has default values`() {
-        val errorResponse = ErrorResponse("data")
+        val errorResponse = ErrorResponse.Content("data")
         assertEquals("data", errorResponse.data)
         assertEquals("text/html", errorResponse.mimeType)
         assertEquals("UTF-8", errorResponse.encoding)

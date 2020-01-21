@@ -6,12 +6,14 @@ package mozilla.components.browser.errorpages
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.errorpages.ErrorPages.createErrorPage
+import mozilla.components.browser.errorpages.ErrorPages.createUrlEncodedErrorPage
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.nullable
-import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -49,9 +51,38 @@ class ErrorPagesTest {
         assertTemplateIsValid(ErrorType.ERROR_SAFEBROWSING_PHISHING_URI)
     }
 
+    @Test
+    fun `createUrlEncodedErrorPage should encoded error information into the URL`() {
+        assertUrlEncodingIsValid(ErrorType.UNKNOWN)
+        assertUrlEncodingIsValid(ErrorType.ERROR_SECURITY_SSL)
+        assertUrlEncodingIsValid(ErrorType.ERROR_SECURITY_BAD_CERT)
+        assertUrlEncodingIsValid(ErrorType.ERROR_NET_INTERRUPT)
+        assertUrlEncodingIsValid(ErrorType.ERROR_NET_TIMEOUT)
+        assertUrlEncodingIsValid(ErrorType.ERROR_CONNECTION_REFUSED)
+        assertUrlEncodingIsValid(ErrorType.ERROR_UNKNOWN_SOCKET_TYPE)
+        assertUrlEncodingIsValid(ErrorType.ERROR_REDIRECT_LOOP)
+        assertUrlEncodingIsValid(ErrorType.ERROR_OFFLINE)
+        assertUrlEncodingIsValid(ErrorType.ERROR_PORT_BLOCKED)
+        assertUrlEncodingIsValid(ErrorType.ERROR_NET_RESET)
+        assertUrlEncodingIsValid(ErrorType.ERROR_UNSAFE_CONTENT_TYPE)
+        assertUrlEncodingIsValid(ErrorType.ERROR_CORRUPTED_CONTENT)
+        assertUrlEncodingIsValid(ErrorType.ERROR_CONTENT_CRASHED)
+        assertUrlEncodingIsValid(ErrorType.ERROR_INVALID_CONTENT_ENCODING)
+        assertUrlEncodingIsValid(ErrorType.ERROR_UNKNOWN_HOST)
+        assertUrlEncodingIsValid(ErrorType.ERROR_MALFORMED_URI)
+        assertUrlEncodingIsValid(ErrorType.ERROR_UNKNOWN_PROTOCOL)
+        assertUrlEncodingIsValid(ErrorType.ERROR_FILE_NOT_FOUND)
+        assertUrlEncodingIsValid(ErrorType.ERROR_FILE_ACCESS_DENIED)
+        assertUrlEncodingIsValid(ErrorType.ERROR_PROXY_CONNECTION_REFUSED)
+        assertUrlEncodingIsValid(ErrorType.ERROR_UNKNOWN_PROXY_HOST)
+        assertUrlEncodingIsValid(ErrorType.ERROR_SAFEBROWSING_MALWARE_URI)
+        assertUrlEncodingIsValid(ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI)
+        assertUrlEncodingIsValid(ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI)
+        assertUrlEncodingIsValid(ErrorType.ERROR_SAFEBROWSING_PHISHING_URI)
+    }
+
     private fun assertTemplateIsValid(errorType: ErrorType) {
         val context = spy(testContext)
-
         val errorPage = createErrorPage(context, errorType)
 
         assertFalse(errorPage.contains("%pageTitle%"))
@@ -74,5 +105,32 @@ class ErrorPagesTest {
             verify(context, times(4)).getString(anyInt())
             verify(context, times(1)).getString(anyInt(), nullable(String::class.java))
         }
+    }
+
+    private fun assertUrlEncodingIsValid(errorType: ErrorType) {
+        val context = spy(testContext)
+
+        val htmlFilename = "htmlResource.html"
+        val cssFilename = "cssResource.css"
+
+        val errorPage = createUrlEncodedErrorPage(
+            context,
+            errorType,
+            null,
+            htmlFilename,
+            cssFilename
+        )
+
+        val expectedImageName = if (errorType.imageNameRes != null) {
+            context.resources.getString(errorType.imageNameRes!!) + ".svg"
+        } else {
+            ""
+        }
+
+        assertTrue(errorPage.startsWith("resource://android/assets/$htmlFilename"))
+        assertTrue(errorPage.contains("&button=${context.resources.getString(errorType.refreshButtonRes)}"))
+        assertTrue(errorPage.contains("&description=${context.resources.getString(errorType.messageRes)}"))
+        assertTrue(errorPage.contains("&image=$expectedImageName"))
+        assertTrue(errorPage.contains("&css=$cssFilename"))
     }
 }

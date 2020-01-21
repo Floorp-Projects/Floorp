@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <string translatable="false" name="mozac_error_shred_file">mozac_error_shred_file</string>
+    <string translatable="false" name="mozac_error_question_file">mozac_error_question_file</string>
+    <string translatable="false" name="mozac_error_surprised">mozac_error_surprised</string>
+    <string translatable="false" name="mozac_error_hourglass">mozac_error_hourglass</string>
+    <string translatable="false" name="mozac_error_eye_roll">mozac_error_eye_roll</string>
+    <string translatable="false" name="mozac_error_unplugged">mozac_error_unplugged</string>
+    <string translatable="false" name="mozac_error_lock">mozac_error_lock</string>
+    <string translatable="false" name="mozac_error_confused">mozac_error_confused</string>
+    <string translatable="false" name="mozac_error_no_internet">mozac_error_no_internet</string>
+    <string translatable="false" name="mozac_error_asleep">mozac_error_asleep</string>
+    <string translatable="false" name="mozac_error_inspect">mozac_error_inspect</string>
+</resources>

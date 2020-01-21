@@ -13,7 +13,10 @@ import mozilla.components.concept.engine.request.RequestInterceptor.Interception
 import mozilla.components.concept.engine.request.RequestInterceptor.ErrorResponse
 import org.mozilla.samples.browser.ext.components
 
-class SampleRequestInterceptor(val context: Context) : RequestInterceptor {
+/**
+ * Example of a request interceptor that loads error pages with URL encoding (images)
+ */
+class SampleUrlEncodedRequestInterceptor(val context: Context) : RequestInterceptor {
 
     override fun onLoadRequest(
         engineSession: EngineSession,
@@ -33,7 +36,7 @@ class SampleRequestInterceptor(val context: Context) : RequestInterceptor {
         errorType: ErrorType,
         uri: String?
     ): ErrorResponse {
-        val errorPage = ErrorPages.createErrorPage(context, errorType, uri)
-        return ErrorResponse.Content(errorPage)
+        val errorPage = ErrorPages.createUrlEncodedErrorPage(context, errorType, uri)
+        return ErrorResponse.Uri(errorPage)
     }
 }

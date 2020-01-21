@@ -1309,7 +1309,7 @@ class GeckoEngineSessionTest {
                 errorType: ErrorType,
                 uri: String?
             ): RequestInterceptor.ErrorResponse? =
-                RequestInterceptor.ErrorResponse("nonNullData")
+                RequestInterceptor.ErrorResponse.Content("nonNullData")
         }
 
         val defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
@@ -1325,9 +1325,9 @@ class GeckoEngineSessionTest {
                 ERROR_CATEGORY_UNKNOWN,
                 ERROR_UNKNOWN)
         )
+
         onLoadError!!.then { value: String? ->
-            assertTrue(value!!.contains("data:text/html;base64,"))
-            GeckoResult.fromValue(null)
+            GeckoResult.fromValue(value)
         }
     }
 

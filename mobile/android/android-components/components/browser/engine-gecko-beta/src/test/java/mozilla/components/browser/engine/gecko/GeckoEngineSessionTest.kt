@@ -1309,7 +1309,7 @@ class GeckoEngineSessionTest {
                 errorType: ErrorType,
                 uri: String?
             ): RequestInterceptor.ErrorResponse? =
-                RequestInterceptor.ErrorResponse("nonNullData")
+                RequestInterceptor.ErrorResponse.Content("nonNullData")
         }
 
         val defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
