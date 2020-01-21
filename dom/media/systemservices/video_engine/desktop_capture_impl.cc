@@ -57,21 +57,21 @@ uint32_t ScreenDeviceInfoImpl::NumberOfDevices() {
 }
 
 int32_t ScreenDeviceInfoImpl::GetDeviceName(
-    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameUTF8Length,
-    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Length,
-    char* productUniqueIdUTF8, uint32_t productUniqueIdUTF8Length, pid_t* pid) {
+    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameUTF8Size,
+    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Size,
+    char* productUniqueIdUTF8, uint32_t productUniqueIdUTF8Size, pid_t* pid) {
   DesktopDisplayDevice desktopDisplayDevice;
 
   // always initialize output
-  if (deviceNameUTF8 && deviceNameUTF8Length > 0) {
-    memset(deviceNameUTF8, 0, deviceNameUTF8Length);
+  if (deviceNameUTF8 && deviceNameUTF8Size > 0) {
+    memset(deviceNameUTF8, 0, deviceNameUTF8Size);
   }
 
-  if (deviceUniqueIdUTF8 && deviceUniqueIdUTF8Length > 0) {
-    memset(deviceUniqueIdUTF8, 0, deviceUniqueIdUTF8Length);
+  if (deviceUniqueIdUTF8 && deviceUniqueIdUTF8Size > 0) {
+    memset(deviceUniqueIdUTF8, 0, deviceUniqueIdUTF8Size);
   }
-  if (productUniqueIdUTF8 && productUniqueIdUTF8Length > 0) {
-    memset(productUniqueIdUTF8, 0, productUniqueIdUTF8Length);
+  if (productUniqueIdUTF8 && productUniqueIdUTF8Size > 0) {
+    memset(productUniqueIdUTF8, 0, productUniqueIdUTF8Size);
   }
 
   if (desktop_device_info_->getDesktopDisplayDeviceInfo(
@@ -80,13 +80,13 @@ int32_t ScreenDeviceInfoImpl::GetDeviceName(
 
     const char* deviceName = desktopDisplayDevice.getDeviceName();
     len = deviceName ? strlen(deviceName) : 0;
-    if (len && deviceNameUTF8 && len <= deviceNameUTF8Length) {
+    if (len && deviceNameUTF8 && len < deviceNameUTF8Size) {
       memcpy(deviceNameUTF8, deviceName, len);
     }
 
     const char* deviceUniqueId = desktopDisplayDevice.getUniqueIdName();
     len = deviceUniqueId ? strlen(deviceUniqueId) : 0;
-    if (len && deviceUniqueIdUTF8 && len <= deviceUniqueIdUTF8Length) {
+    if (len && deviceUniqueIdUTF8 && len < deviceUniqueIdUTF8Size) {
       memcpy(deviceUniqueIdUTF8, deviceUniqueId, len);
     }
   }
@@ -143,20 +143,20 @@ uint32_t AppDeviceInfoImpl::NumberOfDevices() {
 }
 
 int32_t AppDeviceInfoImpl::GetDeviceName(
-    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameUTF8Length,
-    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Length,
-    char* productUniqueIdUTF8, uint32_t productUniqueIdUTF8Length, pid_t* pid) {
+    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameUTF8Size,
+    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Size,
+    char* productUniqueIdUTF8, uint32_t productUniqueIdUTF8Size, pid_t* pid) {
   DesktopApplication desktopApplication;
 
   // always initialize output
-  if (deviceNameUTF8Length && deviceNameUTF8Length > 0) {
-    memset(deviceNameUTF8, 0, deviceNameUTF8Length);
+  if (deviceNameUTF8Size && deviceNameUTF8Size > 0) {
+    memset(deviceNameUTF8, 0, deviceNameUTF8Size);
   }
-  if (deviceUniqueIdUTF8 && deviceUniqueIdUTF8Length > 0) {
-    memset(deviceUniqueIdUTF8, 0, deviceUniqueIdUTF8Length);
+  if (deviceUniqueIdUTF8 && deviceUniqueIdUTF8Size > 0) {
+    memset(deviceUniqueIdUTF8, 0, deviceUniqueIdUTF8Size);
   }
-  if (productUniqueIdUTF8 && productUniqueIdUTF8Length > 0) {
-    memset(productUniqueIdUTF8, 0, productUniqueIdUTF8Length);
+  if (productUniqueIdUTF8 && productUniqueIdUTF8Size > 0) {
+    memset(productUniqueIdUTF8, 0, productUniqueIdUTF8Size);
   }
 
   if (desktop_device_info_->getApplicationInfo(deviceNumber,
@@ -165,13 +165,13 @@ int32_t AppDeviceInfoImpl::GetDeviceName(
 
     const char* deviceName = desktopApplication.getProcessAppName();
     len = deviceName ? strlen(deviceName) : 0;
-    if (len && len <= deviceNameUTF8Length) {
+    if (len && len < deviceNameUTF8Size) {
       memcpy(deviceNameUTF8, deviceName, len);
     }
 
     const char* deviceUniqueId = desktopApplication.getUniqueIdName();
     len = deviceUniqueId ? strlen(deviceUniqueId) : 0;
-    if (len && deviceUniqueIdUTF8 && len <= deviceUniqueIdUTF8Length) {
+    if (len && deviceUniqueIdUTF8 && len < deviceUniqueIdUTF8Size) {
       memcpy(deviceUniqueIdUTF8, deviceUniqueId, len);
     }
     if (pid) {
@@ -231,20 +231,20 @@ uint32_t WindowDeviceInfoImpl::NumberOfDevices() {
 }
 
 int32_t WindowDeviceInfoImpl::GetDeviceName(
-    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameUTF8Length,
-    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Length,
-    char* productUniqueIdUTF8, uint32_t productUniqueIdUTF8Length, pid_t* pid) {
+    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameUTF8Size,
+    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Size,
+    char* productUniqueIdUTF8, uint32_t productUniqueIdUTF8Size, pid_t* pid) {
   DesktopDisplayDevice desktopDisplayDevice;
 
   // always initialize output
-  if (deviceNameUTF8 && deviceNameUTF8Length > 0) {
-    memset(deviceNameUTF8, 0, deviceNameUTF8Length);
+  if (deviceNameUTF8 && deviceNameUTF8Size > 0) {
+    memset(deviceNameUTF8, 0, deviceNameUTF8Size);
   }
-  if (deviceUniqueIdUTF8 && deviceUniqueIdUTF8Length > 0) {
-    memset(deviceUniqueIdUTF8, 0, deviceUniqueIdUTF8Length);
+  if (deviceUniqueIdUTF8 && deviceUniqueIdUTF8Size > 0) {
+    memset(deviceUniqueIdUTF8, 0, deviceUniqueIdUTF8Size);
   }
-  if (productUniqueIdUTF8 && productUniqueIdUTF8Length > 0) {
-    memset(productUniqueIdUTF8, 0, productUniqueIdUTF8Length);
+  if (productUniqueIdUTF8 && productUniqueIdUTF8Size > 0) {
+    memset(productUniqueIdUTF8, 0, productUniqueIdUTF8Size);
   }
 
   if (desktop_device_info_->getWindowInfo(deviceNumber, desktopDisplayDevice) ==
@@ -253,13 +253,13 @@ int32_t WindowDeviceInfoImpl::GetDeviceName(
 
     const char* deviceName = desktopDisplayDevice.getDeviceName();
     len = deviceName ? strlen(deviceName) : 0;
-    if (len && deviceNameUTF8 && len <= deviceNameUTF8Length) {
+    if (len && deviceNameUTF8 && len < deviceNameUTF8Size) {
       memcpy(deviceNameUTF8, deviceName, len);
     }
 
     const char* deviceUniqueId = desktopDisplayDevice.getUniqueIdName();
     len = deviceUniqueId ? strlen(deviceUniqueId) : 0;
-    if (len && deviceUniqueIdUTF8 && len <= deviceUniqueIdUTF8Length) {
+    if (len && deviceUniqueIdUTF8 && len < deviceUniqueIdUTF8Size) {
       memcpy(deviceUniqueIdUTF8, deviceUniqueId, len);
     }
     if (pid) {
