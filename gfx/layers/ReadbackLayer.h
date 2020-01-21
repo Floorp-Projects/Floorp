@@ -12,7 +12,6 @@
 #include "mozilla/gfx/Rect.h"   // for gfxRect
 #include "mozilla/gfx/Point.h"  // for IntPoint
 #include "mozilla/mozalloc.h"   // for operator delete
-#include "nsAutoPtr.h"          // for nsAutoPtr
 #include "nsCOMPtr.h"           // for already_AddRefed
 #include "nsDebug.h"            // for NS_ASSERTION
 #include "nsPoint.h"            // for nsIntPoint
@@ -110,9 +109,9 @@ class ReadbackLayer : public Layer {
    */
   void SetSink(ReadbackSink* aSink) {
     SetUnknown();
-    mSink = aSink;
+    mSink = mozilla::WrapUnique(aSink);
   }
-  ReadbackSink* GetSink() { return mSink; }
+  ReadbackSink* GetSink() { return mSink.get(); }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -176,7 +175,7 @@ class ReadbackLayer : public Layer {
                           const void* aParent) override;
 
   uint64_t mSequenceCounter;
-  nsAutoPtr<ReadbackSink> mSink;
+  UniquePtr<ReadbackSink> mSink;
   gfx::IntSize mSize;
 
   // This can refer to any (earlier) sibling PaintedLayer. That PaintedLayer

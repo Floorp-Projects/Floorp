@@ -11,8 +11,8 @@
 #include "mozilla/layers/ContentCompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "nsAutoPtr.h"
 #include "VsyncSource.h"
 
 namespace mozilla {
@@ -179,13 +179,13 @@ void CompositorManagerParent::DeferredDestroy() {
 #ifdef COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
 /* static */
 void CompositorManagerParent::ShutdownInternal() {
-  nsAutoPtr<nsTArray<CompositorManagerParent*>> actors;
+  UniquePtr<nsTArray<CompositorManagerParent*>> actors;
 
   // We move here because we may attempt to acquire the same lock during the
   // destroy to remove the reference in sActiveActors.
   {
     StaticMutexAutoLock lock(sMutex);
-    actors = sActiveActors.forget();
+    actors = WrapUnique(sActiveActors.forget());
   }
 
   if (actors) {

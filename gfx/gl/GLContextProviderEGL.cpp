@@ -77,7 +77,6 @@
 #endif
 
 #if defined(MOZ_WAYLAND)
-#  include "nsAutoPtr.h"
 #  include "nsDataHashtable.h"
 
 #  include <gtk/gtk.h>
