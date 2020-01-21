@@ -1324,6 +1324,7 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
     // Fallback to the parent given in nsWindow::Create (most likely the
     // toplevel window).
     parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
+    LOG(("  Setting parent from transient: %p [GtkWindow]\n", parentGtkWindow));
   }
   // Add current window to the visible popup list
   gVisibleWaylandPopupWindows =
@@ -1355,7 +1356,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
        mBounds.width, mBounds.height));
 
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
-  if (!parentGtkWindow) {
+  if (!parentGtkWindow || !GTK_IS_WIDGET(parentGtkWindow)) {
     NS_WARNING("Popup has no parent!");
     return;
   }
@@ -1431,8 +1432,13 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
        parentWindow));
 
   int x_parent, y_parent;
-  gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentWindow)),
-                        &x_parent, &y_parent);
+  if (parentWindow) {
+    gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentWindow)),
+                          &x_parent, &y_parent);
+  } else {
+    NS_WARNING(("no parent window, this should not happen for popup!"));
+    x_parent = y_parent = 0;
+  }
 
   GdkRectangle rect = {aPosition->x - x_parent, aPosition->y - y_parent, 1, 1};
   if (aSize) {
@@ -1470,7 +1476,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   bool isWidgetVisible =
       (sGtkWidgetIsVisible != nullptr) && sGtkWidgetIsVisible(mShell);
   if (isWidgetVisible) {
-    HideWaylandWindow();
+    gtk_widget_hide(mShell);
   }
 
   LOG(("  requested rect: x: %d y: %d width: %d height: %d\n", rect.x, rect.y,

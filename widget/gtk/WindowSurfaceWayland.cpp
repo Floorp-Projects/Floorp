@@ -805,6 +805,10 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   mBufferCommitAllowed = false;
 
   LayoutDeviceIntRect lockedScreenRect = mWindow->GetBounds();
+  // The window bounds of popup windows contains relative position to
+  // the transient window. We need to remove that effect because by changing
+  // position of the popup window the buffer has not changed its size.
+  lockedScreenRect.x = lockedScreenRect.y = 0;
   gfx::IntRect lockSize = aRegion.GetBounds().ToUnknownRect();
 
   bool isTransparentPopup =
