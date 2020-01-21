@@ -840,6 +840,12 @@ void Chunk::init(GCRuntime* gc) {
          MemCheckKind::MakeUndefined);
 
   /*
+   * We clear the bitmap to guard against JS::GCThingIsMarkedGray being called
+   * on uninitialized data, which would happen before the first GC cycle.
+   */
+  bitmap.clear();
+
+  /*
    * Decommit the arenas. We do this after poisoning so that if the OS does
    * not have to recycle the pages, we still get the benefit of poisoning.
    */

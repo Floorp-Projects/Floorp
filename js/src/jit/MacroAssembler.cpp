@@ -3291,13 +3291,6 @@ void MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
   append(desc, offset);
 }
 
-#ifdef DEBUG
-static void CheckArenaIndexCalcuation(gc::TenuredCell* cell, size_t index) {
-  AutoUnsafeCallWithABI unsafe;
-  MOZ_ASSERT(cell->indexInArena() == index);
-}
-#endif
-
 void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
                                             Register temp1, Register temp2,
                                             Register temp3, Label* noBarrier) {
@@ -3356,57 +3349,60 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
 #endif
   }
 
-  // Determine index of the GC marking data in the arena.
+  // Determine the bit index and store in temp1.
   //
-  // This calculation must be kept in sync with TenuredCell::indexInArena() and
-  // related methods.
+  // bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
+  //        static_cast<uint32_t>(colorBit);
+  static_assert(gc::CellBytesPerMarkBit == 8,
+                "Calculation below relies on this");
+  static_assert(size_t(gc::ColorBit::BlackBit) == 0,
+                "Calculation below relies on this");
+  andPtr(Imm32(gc::ChunkMask), temp1);
+  rshiftPtr(Imm32(3), temp1);
+
+  static const size_t nbits = sizeof(uintptr_t) * CHAR_BIT;
+  static_assert(nbits == JS_BITS_PER_WORD, "Calculation below relies on this");
+
+  // Load the bitmap word in temp2.
   //
-  // In some cases we know the thing kind and could hardcode a faster version of
-  // this calculation but it's probably not worth it.
-
-  // (temp2) arena = cellPtr & ~ArenaMask
-  movePtr(ImmWord(~gc::ArenaMask), temp2);
-  andPtr(temp1, temp2);
-
-  // (temp2) kind = arena->allocKind
-  load8ZeroExtend(Address(temp2, gc::Arena::offsetOfAllocKind()), temp2);
-
-  // (temp3) reciprocal = arena()->getReciprocalOfThingSize();
-  static_assert(sizeof(gc::ReciprocalOfThingSize[0]) == 2,
-                "The lookup table entries are expected to be 16 bits wide");
-  movePtr(ImmPtr(&gc::ReciprocalOfThingSize[0]), temp3);
-  load16ZeroExtend(BaseIndex(temp3, temp2, TimesTwo), temp3);
-
-  // (temp2) offsetFromLastByte = (cellPtr & ArenaMask) ^ ArenaMask
-  // Equivalent to: temp2 = ~cellPtr & ArenaMask
-  movePtr(temp1, temp2);
-  not32(temp2);
-  andPtr(Imm32(gc::ArenaMask), temp2);
-
-  // (temp2) index = (temp2 * reciprocal) >> ReciprocalThingSizeShift
-  mul32(temp3, temp2);
-  rshift32(Imm32(gc::ReciprocalThingSizeShift), temp2);
-
-#ifdef DEBUG
-  AllocatableRegisterSet regs(RegisterSet::Volatile());
-  LiveRegisterSet save(regs.asLiveSet());
-  PushRegsInMask(save);
-  setupUnalignedABICall(temp3);
-  passABIArg(temp1);
-  passABIArg(temp2);
-  callWithABI(JS_FUNC_TO_DATA_PTR(void*, CheckArenaIndexCalcuation));
-  PopRegsInMask(save);
+  // word = chunk.bitmap[bit / nbits];
+  movePtr(temp1, temp3);
+#if JS_BITS_PER_WORD == 64
+  rshiftPtr(Imm32(6), temp1);
+  loadPtr(BaseIndex(temp2, temp1, TimesEight, gc::ChunkMarkBitmapOffset),
+          temp2);
+#else
+  rshiftPtr(Imm32(5), temp1);
+  loadPtr(BaseIndex(temp2, temp1, TimesFour, gc::ChunkMarkBitmapOffset), temp2);
 #endif
 
-  movePtr(ImmWord(~gc::ArenaMask), temp3);
-  andPtr(temp3, temp1);
-  addPtr(temp2, temp1);
+  // Load the mask in temp1.
+  //
+  // mask = uintptr_t(1) << (bit % nbits);
+  andPtr(Imm32(nbits - 1), temp3);
+  move32(Imm32(1), temp1);
+#ifdef JS_CODEGEN_X64
+  MOZ_ASSERT(temp3 == rcx);
+  shlq_cl(temp1);
+#elif JS_CODEGEN_X86
+  MOZ_ASSERT(temp3 == ecx);
+  shll_cl(temp1);
+#elif JS_CODEGEN_ARM
+  ma_lsl(temp3, temp1, temp1);
+#elif JS_CODEGEN_ARM64
+  Lsl(ARMRegister(temp1, 64), ARMRegister(temp1, 64), ARMRegister(temp3, 64));
+#elif JS_CODEGEN_MIPS32
+  ma_sll(temp1, temp1, temp3);
+#elif JS_CODEGEN_MIPS64
+  ma_dsll(temp1, temp1, temp3);
+#elif JS_CODEGEN_NONE
+  MOZ_CRASH();
+#else
+#  error "Unknown architecture"
+#endif
 
-  load8ZeroExtend(Address(temp1, gc::Arena::offsetOfGCData()), temp2);
-
-  // No barrier is needed if the black mark bit is set.
-  branchTest32(Assembler::NonZero, temp2, Imm32(gc::MarkBitMaskBlack),
-               noBarrier);
+  // No barrier is needed if the bit is set, |word & mask != 0|.
+  branchTestPtr(Assembler::NonZero, temp2, temp1, noBarrier);
 }
 
 // ========================================================================
