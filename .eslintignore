@@ -1,3 +1,13 @@
+# Please DO NOT add more third party files to this file.
+# They should be added to tools/rewriting/ThirdPartyPaths.txt instead.
+# The remaining third-party paths will be removed in bug 1608799.
+
+# This file should only be used for exclusions where we have:
+# - preprocessed files
+# - generated files that are for some reason checked into source
+# - intentionally invalid files
+# - build directories and other items that we need to ignore
+
 # Always ignore node_modules.
 **/node_modules/
 
