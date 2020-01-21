@@ -927,8 +927,12 @@ bool OperatorInI(JSContext* cx, uint32_t index, HandleObject obj, bool* out);
 MOZ_MUST_USE bool GetIntrinsicValue(JSContext* cx, HandlePropertyName name,
                                     MutableHandleValue rval);
 
-MOZ_MUST_USE bool CreateThis(JSContext* cx, HandleObject callee,
-                             HandleObject newTarget, MutableHandleValue rval);
+MOZ_MUST_USE bool CreateThisFromIC(JSContext* cx, HandleObject callee,
+                                   HandleObject newTarget,
+                                   MutableHandleValue rval);
+MOZ_MUST_USE bool CreateThisFromIon(JSContext* cx, HandleObject callee,
+                                    HandleObject newTarget,
+                                    MutableHandleValue rval);
 
 bool GetDynamicNamePure(JSContext* cx, JSObject* scopeChain, JSString* str,
                         Value* vp);
