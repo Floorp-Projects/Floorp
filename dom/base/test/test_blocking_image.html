@@ -76,11 +76,6 @@ function onLoad() {
          "color of img2 should be red");
       ok(img2.matches(":-moz-broken"), "should match ':-moz-broken' selector");
 
-      // If nsContentBlocker is disabled, skip remaining checks
-      if(!SpecialPowers.Services.prefs.getBoolPref("extensions.contentblocker.enabled")) {
-        return Promise.reject(true);
-      }
-
       // Now prepare for the next test, deny image.
       return new Promise(resolve => {
           SpecialPowers.pushPrefEnv({"set": [["permissions.default.image", 2]]}, resolve)

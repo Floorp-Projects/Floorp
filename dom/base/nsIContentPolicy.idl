@@ -376,7 +376,7 @@ interface nsIContentPolicy : nsISupports
    */
   const nsContentPolicyType TYPE_INTERNAL_FORCE_ALLOWED_DTD = 48;
 
-  /* When adding new content types, please update nsContentBlocker,
+  /* When adding new content types, please update
    * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
    * DoContentSecurityChecks, all nsIContentPolicy implementations, the
    * static_assert in dom/cache/DBSchema.cpp, ChannelWrapper.webidl,

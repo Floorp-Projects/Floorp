@@ -1966,9 +1966,6 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
       LOG(("OBJLC [%p]: Load denied by policy", this));
       mType = eType_Null;
       if (contentPolicy == nsIContentPolicy::REJECT_TYPE) {
-        // XXX(johns) This is assuming that we were rejected by
-        //            nsContentBlocker, which rejects by type if permissions
-        //            reject plugins
         fallbackType = eFallbackUserDisabled;
       } else {
         fallbackType = eFallbackSuppressed;

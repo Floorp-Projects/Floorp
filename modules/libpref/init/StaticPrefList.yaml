@@ -2988,12 +2988,6 @@
   value: false
   mirror: always
 
-# This pref enables/disables nsContentBlocker
-- name: extensions.contentblocker.enabled
-  type: bool
-  value: false
-  mirror: once
-
 #---------------------------------------------------------------------------
 # Prefs starting with "findbar."
 #---------------------------------------------------------------------------
