@@ -690,23 +690,6 @@ pwmgr:
       - main
 
 contentblocking:
-  exceptions:
-    bug_numbers:
-      - 1484251
-      - 1564248
-    description: >
-      How many tracking protection/content blocking exceptions a user has at startup.
-    expires: "75"
-    kind: uint
-    notification_emails:
-      - jhofmann@mozilla.com
-      - chsiang@mozilla.com
-      - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
-    products:
-      - 'firefox'
   cryptomining_blocking_enabled:
     bug_numbers:
       - 1522919
