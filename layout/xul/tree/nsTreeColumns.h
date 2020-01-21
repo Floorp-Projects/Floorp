@@ -186,7 +186,6 @@ class nsTreeColumns final : public nsISupports, public nsWrapperCache {
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
   void InvalidateColumns();
-  void RestoreNaturalOrder();
 
   friend class nsTreeBodyFrame;
 
