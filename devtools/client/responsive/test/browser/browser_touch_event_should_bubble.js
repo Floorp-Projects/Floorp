@@ -7,43 +7,37 @@
 
 const TEST_URL = `${URL_ROOT}touch_event_bubbles.html`;
 
-addRDMTask(
-  TEST_URL,
-  async function({ ui }) {
-    info("Toggling on touch simulation.");
-    reloadOnTouchChange(true);
-    await toggleTouchSimulation(ui);
+addRDMTask(TEST_URL, async function({ ui }) {
+  info("Toggling on touch simulation.");
+  reloadOnTouchChange(true);
+  await toggleTouchSimulation(ui);
 
-    info("Test that touch event bubbles.");
-    await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
-      const outerDiv = content.document.getElementById("outer");
-      const span = content.document.querySelector("span");
+  info("Test that touch event bubbles.");
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+    const outerDiv = content.document.getElementById("outer");
+    const span = content.document.querySelector("span");
 
-      outerDiv.addEventListener("touchstart", () => {
-        span.style["background-color"] = "green"; // rgb(0, 128, 0)
-      });
-
-      await EventUtils.synthesizeMouseAtCenter(
-        span,
-        { type: "mousedown", isSynthesized: false },
-        content
-      );
-
-      const win = content.document.defaultView;
-      const bg = win
-        .getComputedStyle(span)
-        .getPropertyValue("background-color");
-
-      is(
-        bg,
-        "rgb(0, 128, 0)",
-        `span's background color should be rgb(0, 128, 0): got ${bg}`
-      );
+    outerDiv.addEventListener("touchstart", () => {
+      span.style["background-color"] = "green"; // rgb(0, 128, 0)
     });
 
-    info("Toggling off touch simulation.");
-    await toggleTouchSimulation(ui);
-    reloadOnTouchChange(false);
-  },
-  true
-);
+    await EventUtils.synthesizeMouseAtCenter(
+      span,
+      { type: "mousedown", isSynthesized: false },
+      content
+    );
+
+    const win = content.document.defaultView;
+    const bg = win.getComputedStyle(span).getPropertyValue("background-color");
+
+    is(
+      bg,
+      "rgb(0, 128, 0)",
+      `span's background color should be rgb(0, 128, 0): got ${bg}`
+    );
+  });
+
+  info("Toggling off touch simulation.");
+  await toggleTouchSimulation(ui);
+  reloadOnTouchChange(false);
+});
