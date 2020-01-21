@@ -334,19 +334,11 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce, JSAtom* name) {
   return *loc;
 }
 
-template <typename ScopeCreator>
-bool EmitterScope::internScope(BytecodeEmitter* bce, ScopeCreator createScope) {
-  RootedScope enclosing(bce->cx);
-  if (!enclosingScope(bce).getOrCreateScope(bce->cx, &enclosing)) {
-    return false;
-  }
-
-  Scope* scope = createScope(bce->cx, enclosing);
-  if (!scope) {
-    return false;
-  }
+bool EmitterScope::internEmptyGlobalScopeAsBody(BytecodeEmitter* bce) {
+  Scope* scope = &bce->cx->global()->emptyGlobalScope();
   hasEnvironment_ = scope->hasEnvironment();
 
+  bce->bodyScopeIndex = bce->perScriptData().gcThingList().length();
   return bce->perScriptData().gcThingList().append(scope, &scopeIndex_);
 }
 
@@ -361,15 +353,6 @@ bool EmitterScope::internScopeCreationData(BytecodeEmitter* bce,
   auto scope = bce->parseInfo.scopeCreationData[index.index];
   hasEnvironment_ = scope.get().hasEnvironment();
   return bce->perScriptData().gcThingList().append(index, &scopeIndex_);
-}
-
-template <typename ScopeCreator>
-bool EmitterScope::internBodyScope(BytecodeEmitter* bce,
-                                   ScopeCreator createScope) {
-  MOZ_ASSERT(bce->bodyScopeIndex == UINT32_MAX,
-             "There can be only one body scope");
-  bce->bodyScopeIndex = bce->perScriptData().gcThingList().length();
-  return internScope(bce, createScope);
 }
 
 template <typename ScopeCreator>
@@ -842,11 +825,7 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
     // lazily upon first access.
     fallbackFreeNameLocation_ = Some(NameLocation::Intrinsic());
 
-    auto createScope = [](JSContext* cx, HandleScope enclosing) {
-      MOZ_ASSERT(!enclosing);
-      return &cx->global()->emptyGlobalScope();
-    };
-    return internBodyScope(bce, createScope);
+    return internEmptyGlobalScopeAsBody(bce);
   }
 
   // Resolve binding names and emit DEF{VAR,LET,CONST} prologue ops.
