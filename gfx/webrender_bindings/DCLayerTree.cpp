@@ -433,8 +433,8 @@ void DCSurface::UpdateAllocatedRect() {
     for (auto it = mDCLayers.begin(); it != mDCLayers.end(); ++it) {
       RECT rect;
 
-      rect.left = (LONG) (VIRTUAL_OFFSET + it->first.mX * mTileSize.width);
-      rect.top = (LONG) (VIRTUAL_OFFSET + it->first.mY * mTileSize.height);
+      rect.left = (LONG)(VIRTUAL_OFFSET + it->first.mX * mTileSize.width);
+      rect.top = (LONG)(VIRTUAL_OFFSET + it->first.mY * mTileSize.height);
       rect.right = rect.left + mTileSize.width;
       rect.bottom = rect.top + mTileSize.height;
 

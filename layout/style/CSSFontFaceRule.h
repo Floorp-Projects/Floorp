@@ -22,7 +22,8 @@ class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
 
   nsINode* GetParentObject() final;
-  void IndexedGetter(uint32_t aIndex, bool& aFound, nsACString& aPropName) final;
+  void IndexedGetter(uint32_t aIndex, bool& aFound,
+                     nsACString& aPropName) final;
 
   void GetPropertyValue(nsCSSFontDesc aFontDescID, nsAString& aResult) const;
 

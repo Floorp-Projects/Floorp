@@ -739,7 +739,8 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvPreferredDXGIAdapter(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+  RefPtr<ID3D11Device> device =
+      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
   if (!device) {
     return IPC_FAIL_NO_REASON(this);
   }

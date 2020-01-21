@@ -109,10 +109,8 @@ class nsIStyleSheetLinkingElement : public nsISupports {
               already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
               already_AddRefed<nsIReferrerInfo> aReferrerInfo,
               mozilla::CORSMode, const nsAString& aTitle,
-              const nsAString& aMedia,
-              const nsAString& aIntegrity,
-              const nsAString& aNonce,
-              HasAlternateRel, IsInline,
+              const nsAString& aMedia, const nsAString& aIntegrity,
+              const nsAString& aNonce, HasAlternateRel, IsInline,
               IsExplicitlyEnabled);
 
     ~SheetInfo();

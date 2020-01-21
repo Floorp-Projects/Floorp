@@ -925,11 +925,13 @@ nsresult CacheIndex::RemoveEntry(const SHA1Sum::Hash* aHash) {
 }
 
 // static
-nsresult CacheIndex::UpdateEntry(
-    const SHA1Sum::Hash* aHash, const uint32_t* aFrecency,
-    const bool* aHasAltData, const uint16_t* aOnStartTime,
-    const uint16_t* aOnStopTime, const uint8_t* aContentType,
-    const uint32_t* aSize) {
+nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash* aHash,
+                                 const uint32_t* aFrecency,
+                                 const bool* aHasAltData,
+                                 const uint16_t* aOnStartTime,
+                                 const uint16_t* aOnStopTime,
+                                 const uint8_t* aContentType,
+                                 const uint32_t* aSize) {
   LOG(
       ("CacheIndex::UpdateEntry() [hash=%08x%08x%08x%08x%08x, "
        "frecency=%s, hasAltData=%s, onStartTime=%s, onStopTime=%s, "
@@ -976,9 +978,8 @@ nsresult CacheIndex::UpdateEntry(
         return NS_ERROR_UNEXPECTED;
       }
 
-      if (!HasEntryChanged(
-              entry, aFrecency, aHasAltData, aOnStartTime, aOnStopTime,
-              aContentType, aSize)) {
+      if (!HasEntryChanged(entry, aFrecency, aHasAltData, aOnStartTime,
+                           aOnStopTime, aContentType, aSize)) {
         return NS_OK;
       }
 

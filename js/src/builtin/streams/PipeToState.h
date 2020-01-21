@@ -28,10 +28,7 @@ class PipeToState : public NativeObject {
   /**
    * Memory layout for PipeToState instances.
    */
-  enum Slots {
-    Slot_Flags,
-    SlotCount
-  };
+  enum Slots { Slot_Flags, SlotCount };
 
  private:
   enum Flags {

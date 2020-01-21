@@ -22,10 +22,10 @@
 #include "js/CallArgs.h"  // JS::CallArgs{,FromVp}
 #include "js/Class.h"     // js::ClassSpec, JS_NULL_CLASS_OPS
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JS_{FN,PSG}
-#include "js/RootingAPI.h"   // JS::Handle
-#include "js/Value.h"        // JS::Value
-#include "vm/Compartment.h"  // JS::Compartment
-#include "vm/JSContext.h"    // JSContext
+#include "js/RootingAPI.h"     // JS::Handle
+#include "js/Value.h"          // JS::Value
+#include "vm/Compartment.h"    // JS::Compartment
+#include "vm/JSContext.h"      // JSContext
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::SetSettledPromiseIsHandled

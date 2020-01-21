@@ -53,11 +53,11 @@ class gfxWindowsNativeDrawing {
    *   } while (nativeDraw.ShouldRenderAgain());
    *   nativeDraw.PaintToContext();
    */
-  gfxWindowsNativeDrawing(gfxContext* ctx, const gfxRect& nativeRect,
-                          uint32_t nativeDrawFlags =
-                              CANNOT_DRAW_TO_COLOR_ALPHA |
-                              CANNOT_AXIS_ALIGNED_SCALE |
-                              CANNOT_COMPLEX_TRANSFORM);
+  gfxWindowsNativeDrawing(
+      gfxContext* ctx, const gfxRect& nativeRect,
+      uint32_t nativeDrawFlags = CANNOT_DRAW_TO_COLOR_ALPHA |
+                                 CANNOT_AXIS_ALIGNED_SCALE |
+                                 CANNOT_COMPLEX_TRANSFORM);
 
   /* Returns a HDC which may be used for native drawing.  This HDC is valid
    * until EndNativeDrawing is called; if it is used for drawing after that

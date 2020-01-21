@@ -118,7 +118,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
   void GetPropertyPriority(const nsACString& propertyName,                    \
                            nsAString& aPriority) override;                    \
   NS_IMETHOD SetProperty(const nsACString& propertyName,                      \
-                         const nsACString& value, const nsAString& priority, \
+                         const nsACString& value, const nsAString& priority,  \
                          nsIPrincipal* aSubjectPrincipal = nullptr) override; \
   uint32_t Length() override;                                                 \
   mozilla::css::Rule* GetParentRule() override;

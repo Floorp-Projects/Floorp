@@ -89,19 +89,19 @@ struct CallArguments {
   static const size_t NumStackArguments = 64;
 
  protected:
-  size_t arg0;        // 0
-  size_t arg1;        // 8
-  size_t arg2;        // 16
-  size_t arg3;        // 24
-  size_t arg4;        // 32
-  size_t arg5;        // 40
-  double floatarg0;   // 48
-  double floatarg1;   // 56
-  double floatarg2;   // 64
-  size_t rval0;       // 72
-  size_t rval1;       // 80
-  double floatrval0;  // 88
-  double floatrval1;  // 96
+  size_t arg0;                      // 0
+  size_t arg1;                      // 8
+  size_t arg2;                      // 16
+  size_t arg3;                      // 24
+  size_t arg4;                      // 32
+  size_t arg5;                      // 40
+  double floatarg0;                 // 48
+  double floatarg1;                 // 56
+  double floatarg2;                 // 64
+  size_t rval0;                     // 72
+  size_t rval1;                     // 80
+  double floatrval0;                // 88
+  double floatrval1;                // 96
   size_t stack[NumStackArguments];  // 104
                                     // Size: 616
 

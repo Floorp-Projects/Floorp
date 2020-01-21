@@ -41,11 +41,11 @@ namespace recordreplay {
 // replaying process rewinds itself. A few exceptions to this rule are noted
 // below.
 
-#define ForEachMessageType(_Macro)                             \
+#define ForEachMessageType(_Macro)                                            \
   /* Messages which can be interpreted or constructed by the cloud server. */ \
-  /* Avoid changing the message IDs for these. */              \
-                                                               \
-  /* Sent by the middleman at startup. */                      \
+  /* Avoid changing the message IDs for these. */                             \
+                                                                              \
+  /* Sent by the middleman at startup. */                                     \
   _Macro(Introduction)                                         \
                                                                \
   /* An error occurred in the cloud server. */                 \
@@ -162,10 +162,8 @@ struct Message {
     return mType == MessageType::CreateCheckpoint ||
            mType == MessageType::SetDebuggerRunsInMiddleman ||
            mType == MessageType::ExternalCallResponse ||
-           mType == MessageType::Ping ||
-           mType == MessageType::Terminate ||
-           mType == MessageType::Crash ||
-           mType == MessageType::Introduction ||
+           mType == MessageType::Ping || mType == MessageType::Terminate ||
+           mType == MessageType::Crash || mType == MessageType::Introduction ||
            mType == MessageType::RecordingData;
   }
 
@@ -286,7 +284,8 @@ struct ErrorMessage : public Message {
 typedef ErrorMessage<MessageType::FatalError> FatalErrorMessage;
 typedef ErrorMessage<MessageType::CloudError> CloudErrorMessage;
 
-typedef EmptyMessage<MessageType::UnhandledDivergence> UnhandledDivergenceMessage;
+typedef EmptyMessage<MessageType::UnhandledDivergence>
+    UnhandledDivergenceMessage;
 
 // The format for graphics data which will be sent to the middleman process.
 // This needs to match the format expected for canvas image data, to avoid
@@ -426,7 +425,7 @@ class Channel {
 
   // Return whether this is the parent side of a connection. This side is opened
   // first and the child will connect to it afterwards.
-  bool IsParent()  {
+  bool IsParent() {
     switch (mKind) {
       case Kind::MiddlemanRecord:
       case Kind::MiddlemanReplay:
