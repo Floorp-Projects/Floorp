@@ -411,6 +411,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
             env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
             env['RUST_BACKTRACE'] = 'full'
+            if self.config['nodejs_path']:
+                env['MOZ_NODE_PATH'] = self.config['nodejs_path']
 
             summary = {}
             for per_test_args in self.query_args(per_test_suite):

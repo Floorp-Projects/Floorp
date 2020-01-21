@@ -15,8 +15,9 @@
 
 use super::{BinaryReader, BinaryReaderError, Operator, Result};
 
+#[derive(Clone)]
 pub struct OperatorsReader<'a> {
-    reader: BinaryReader<'a>,
+    pub(crate) reader: BinaryReader<'a>,
 }
 
 impl<'a> OperatorsReader<'a> {

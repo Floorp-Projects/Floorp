@@ -6,12 +6,13 @@
 
 #include "ImageHost.h"
 
+#include <utility>
+
 #include "LayersLogging.h"               // for AppendToString
 #include "composite/CompositableHost.h"  // for CompositableHost, etc
 #include "ipc/IPCMessageUtils.h"         // for null_t
-#include "mozilla/Move.h"
-#include "mozilla/layers/Compositor.h"  // for Compositor
-#include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
+#include "mozilla/layers/Compositor.h"   // for Compositor
+#include "mozilla/layers/Effects.h"      // for TexturedEffect, Effect, etc
 #include "mozilla/layers/LayerManagerComposite.h"  // for TexturedEffect, Effect, etc
 #include "nsAString.h"
 #include "nsDebug.h"          // for NS_WARNING, NS_ASSERTION

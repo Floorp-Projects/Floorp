@@ -4,26 +4,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozPersonalDictionary.h"
-#include "nsIUnicharInputStream.h"
-#include "nsReadableUtils.h"
-#include "nsIFile.h"
+
+#include <utility>
+
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIObserverService.h"
-#include "nsIWeakReference.h"
 #include "nsCRT.h"
-#include "nsNetUtil.h"
-#include "nsNetCID.h"
+#include "nsIFile.h"
 #include "nsIInputStream.h"
+#include "nsIObserverService.h"
 #include "nsIOutputStream.h"
-#include "nsISafeOutputStream.h"
-#include "nsTArray.h"
-#include "nsStringEnumerator.h"
-#include "nsUnicharInputStream.h"
 #include "nsIRunnable.h"
-#include "nsThreadUtils.h"
+#include "nsISafeOutputStream.h"
+#include "nsIUnicharInputStream.h"
+#include "nsIWeakReference.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsProxyRelease.h"
+#include "nsReadableUtils.h"
+#include "nsStringEnumerator.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
+#include "nsUnicharInputStream.h"
 #include "prio.h"
-#include "mozilla/Move.h"
 
 #define MOZ_PERSONAL_DICT_NAME "persdict.dat"
 

@@ -6,10 +6,11 @@
 
 #include "SVGAnimatedString.h"
 
-#include "mozilla/Move.h"
-#include "mozilla/SMILValue.h"
+#include <utility>
+
 #include "SMILStringType.h"
 #include "SVGAttrTearoffTable.h"
+#include "mozilla/SMILValue.h"
 
 using namespace mozilla::dom;
 

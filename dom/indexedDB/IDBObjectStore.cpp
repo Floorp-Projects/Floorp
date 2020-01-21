@@ -6,6 +6,9 @@
 
 #include "IDBObjectStore.h"
 
+#include <numeric>
+#include <utility>
+
 #include "FileInfo.h"
 #include "IDBCursorType.h"
 #include "IDBDatabase.h"
@@ -19,42 +22,39 @@
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
+#include "KeyPath.h"
+#include "ProfilerHelpers.h"
+#include "ReportInternalError.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/Class.h"
 #include "js/Date.h"
 #include "js/StructuredClone.h"
-#include "KeyPath.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/JSObjectHolder.h"
-#include "mozilla/Move.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/IDBMutableFileBinding.h"
-#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/MemoryBlobImpl.h"
 #include "mozilla/dom/StreamBlobImpl.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/StructuredCloneTags.h"
-#include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "mozilla/SystemGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIXPConnect.h"
 #include "nsQueryObject.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
-#include "ProfilerHelpers.h"
-#include "ReportInternalError.h"
-
-#include <numeric>
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"

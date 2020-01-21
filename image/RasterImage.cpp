@@ -5,52 +5,50 @@
 
 // Must #include ImageLogging.h before any IPDL-generated files or other files
 // that #include prlog.h
-#include "ImageLogging.h"
-
 #include "RasterImage.h"
 
-#include "gfxPlatform.h"
-#include "nsComponentManagerUtils.h"
-#include "nsError.h"
+#include <stdint.h>
+
+#include <algorithm>
+#include <utility>
+
 #include "DecodePool.h"
 #include "Decoder.h"
-#include "prenv.h"
-#include "prsystem.h"
+#include "FrameAnimator.h"
+#include "GeckoProfiler.h"
 #include "IDecodingTask.h"
+#include "ImageLogging.h"
 #include "ImageRegion.h"
 #include "Layers.h"
 #include "LookupResult.h"
+#include "SourceBuffer.h"
+#include "SurfaceCache.h"
+#include "gfx2DGlue.h"
+#include "gfxContext.h"
+#include "gfxPlatform.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/SizeOfState.h"
+#include "mozilla/StaticPrefs_image.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/Tuple.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Scale.h"
+#include "nsComponentManagerUtils.h"
+#include "nsError.h"
 #include "nsIConsoleService.h"
 #include "nsIInputStream.h"
 #include "nsIScriptError.h"
 #include "nsISupportsPrimitives.h"
 #include "nsMemory.h"
 #include "nsPresContext.h"
-#include "SourceBuffer.h"
-#include "SurfaceCache.h"
-#include "FrameAnimator.h"
-
-#include "gfxContext.h"
-
-#include "mozilla/gfx/2D.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/Likely.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/Move.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/SizeOfState.h"
-#include "mozilla/StaticPrefs_image.h"
-#include <stdint.h>
-#include "mozilla/Telemetry.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/Tuple.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/gfx/Scale.h"
-
-#include "GeckoProfiler.h"
-#include "gfx2DGlue.h"
 #include "nsProperties.h"
-#include <algorithm>
+#include "prenv.h"
+#include "prsystem.h"
 
 namespace mozilla {
 

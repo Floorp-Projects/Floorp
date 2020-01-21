@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stddef.h>
+
+#include <utility>
+
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
 #include "mozilla/Pair.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-
-#include <stddef.h>
-#include <utility>
 
 using mozilla::Get;
 using mozilla::IsSame;

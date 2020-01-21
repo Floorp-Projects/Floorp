@@ -7,26 +7,27 @@
 #ifndef nsDOMMutationObserver_h
 #define nsDOMMutationObserver_h
 
+#include <utility>
+
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsPIDOMWindow.h"
-#include "nsIScriptContext.h"
-#include "nsStubAnimationObserver.h"
-#include "nsCOMArray.h"
-#include "nsTArray.h"
-#include "nsIVariant.h"
-#include "nsContentList.h"
+#include "mozilla/dom/Animation.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "nsClassHashtable.h"
-#include "nsWrapperCache.h"
-#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/MutationObserverBinding.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/Animation.h"
-#include "nsIAnimationObserver.h"
+#include "mozilla/dom/Nullable.h"
+#include "nsCOMArray.h"
+#include "nsClassHashtable.h"
+#include "nsContentList.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsGlobalWindow.h"
+#include "nsIAnimationObserver.h"
+#include "nsIScriptContext.h"
+#include "nsIVariant.h"
+#include "nsPIDOMWindow.h"
+#include "nsStubAnimationObserver.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 class nsDOMMutationObserver;
 using mozilla::dom::MutationObservingInfo;

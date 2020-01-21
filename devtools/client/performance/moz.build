@@ -19,7 +19,7 @@ DevToolsModules(
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')

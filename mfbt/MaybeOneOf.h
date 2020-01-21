@@ -12,13 +12,14 @@
 #ifndef mozilla_MaybeOneOf_h
 #define mozilla_MaybeOneOf_h
 
+#include <stddef.h>  // for size_t
+
+#include <new>  // for placement new
+#include <utility>
+
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TemplateLib.h"
-
-#include <new>       // for placement new
-#include <stddef.h>  // for size_t
 
 namespace mozilla {
 

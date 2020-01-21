@@ -1133,6 +1133,16 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean documentHasLoaded;
 
   /**
+    * During a top-level document channel redirect from tracking to
+    * non-tracking resources, our anti-tracking heuristic, grants the storage
+    * access permission for a short amount of seconds (See
+    * privacy.restrict3rdpartystorage.expiration_redirect pref).
+    * We use this flag to remember this decision even if this channel is part
+    * of a chain of redirects.
+    */
+  [infallible] attribute boolean allowListFutureDocumentsCreatedFromThisRedirectChain;
+
+  /**
    * A snapshot of the nonce at load start time which is used for CSP
    * checks and only set for:
    *  * TYPE_SCRIPT and

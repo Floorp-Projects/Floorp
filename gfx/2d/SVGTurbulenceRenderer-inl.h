@@ -136,7 +136,7 @@ void SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t,
   }
   for (int32_t i1 = sBSize - 1; i1 > 0; i1--) {
     int32_t i2 = rand.Next() % sBSize;
-    Swap(mLatticeSelector[i1], mLatticeSelector[i2]);
+    std::swap(mLatticeSelector[i1], mLatticeSelector[i2]);
   }
 
   for (int32_t i = 0; i < sBSize; i++) {

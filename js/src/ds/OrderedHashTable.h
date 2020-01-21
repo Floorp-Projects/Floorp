@@ -38,7 +38,8 @@
  */
 
 #include "mozilla/HashFunctions.h"
-#include "mozilla/Move.h"
+
+#include <utility>
 
 #include "js/HashTable.h"
 

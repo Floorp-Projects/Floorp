@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1579039687654">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1579250265716">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3501,6 +3501,22 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="2e3a3e97-c35a-4ec8-abce-a95c17d96f27" id="/^((\{15ebdf9b-c3d7-4aee-9568-b42a11a7b071\})|(\{a3d09db2-d3ac-4403-9bfa-878de450fbb4\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="21b59bc5-57db-4f31-9e18-614c03858e5c" id="{f6766565-1c5d-4eff-bda7-20f00aaedd11}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="7e5aad13-e8ee-43bc-91fc-4805c8195f3e" id="/^((\{61e9b862-ef9b-4cc1-9dc2-ec00e437118c\})|(\{29828604-0f21-4ce2-8df7-b840aa53d713\})|(\{9430316a-f94c-40b6-9cea-8ac0df5c6638\})|(\{87ad96b4-86e8-4d94-aee1-7b607d02effb\})|(\{26f61847-2e07-4b10-a030-267eea1bf3b7\})|(\{450eb888-9bba-4de7-8821-4bb806ff82bc\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ebca1ceb-555d-4ce0-8c06-5b1475f08d45" id="/^((_65Members_1202@download\.fromdoctopdf\.com)|(_65Members_1202test@download\.fromdoctopdf\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d845bc55-9b05-4dc7-ba4a-57462a51be39" id="/^((\{5335fd1c-3baf-4578-b339-516dbdcec832\})|(\{1bf381aa-a819-4067-a537-eadb0d6538ba\})|(\{0e3703a0-46ae-4d18-bd04-8f8f570fdb77\})|(\{b350dc7e-cfcc-4ffe-9225-9feefe922bdb\})|(\{eeb3bf29-f1db-4f75-a6cb-8675ace58390\})|(\{9a216bb4-d664-4535-baef-ee1f4db012d2\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

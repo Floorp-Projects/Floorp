@@ -22,19 +22,19 @@
 #ifndef mozilla_Span_h
 #define mozilla_Span_h
 
+#include <algorithm>
+#include <array>
+#include <cstring>
+#include <iterator>
+#include <limits>
+#include <utility>
+
 #include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/IntegerTypeTraits.h"
-#include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
-
-#include <algorithm>
-#include <array>
-#include <limits>
-#include <cstring>
-#include <iterator>
 
 namespace mozilla {
 

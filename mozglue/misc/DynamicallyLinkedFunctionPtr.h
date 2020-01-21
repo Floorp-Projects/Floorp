@@ -7,10 +7,11 @@
 #ifndef mozilla_DynamicallyLinkedFunctionPtr_h
 #define mozilla_DynamicallyLinkedFunctionPtr_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
-
 #include <windows.h>
+
+#include <utility>
+
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace detail {

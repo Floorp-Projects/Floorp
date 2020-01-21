@@ -4,20 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stddef.h>
+
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Compiler.h"
-#include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Vector.h"
 
-#include <stddef.h>
-
 using mozilla::DefaultDelete;
 using mozilla::IsSame;
 using mozilla::MakeUnique;
-using mozilla::Swap;
 using mozilla::UniqueFreePtr;
 using mozilla::UniquePtr;
 using mozilla::Vector;
@@ -103,7 +103,7 @@ static bool TestDefaultFreeGuts() {
   CHECK(n1.get() == nullptr);
   CHECK(n2.get() == p1);
 
-  Swap(n1, n2);
+  std::swap(n1, n2);
   CHECK(n1.get() == p1);
   CHECK(n2.get() == nullptr);
 
@@ -438,7 +438,7 @@ static bool TestArray() {
   CHECK(n1.get() == nullptr);
   CHECK(n2.get() == p1);
 
-  Swap(n1, n2);
+  std::swap(n1, n2);
   CHECK(n1.get() == p1);
   CHECK(n2.get() == nullptr);
 

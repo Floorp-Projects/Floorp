@@ -7,16 +7,17 @@
 #ifndef mozilla_mscom_Interceptor_h
 #define mozilla_mscom_Interceptor_h
 
-#include "mozilla/Move.h"
+#include <callobj.h>
+#include <objidl.h>
+
+#include <utility>
+
 #include "mozilla/Mutex.h"
-#include "nsTArray.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/mscom/IHandlerProvider.h"
 #include "mozilla/mscom/Ptr.h"
 #include "mozilla/mscom/WeakRef.h"
-#include "mozilla/RefPtr.h"
-
-#include <objidl.h>
-#include <callobj.h>
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace mscom {

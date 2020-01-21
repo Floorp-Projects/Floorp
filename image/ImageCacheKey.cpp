@@ -5,21 +5,21 @@
 
 #include "ImageCacheKey.h"
 
-#include "mozilla/HashFunctions.h"
-#include "mozilla/Move.h"
-#include "mozilla/Unused.h"
-#include "nsContentUtils.h"
-#include "nsLayoutUtils.h"
-#include "nsString.h"
+#include <utility>
+
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
-#include "mozilla/dom/Document.h"
+#include "nsContentUtils.h"
 #include "nsHashKeys.h"
+#include "nsLayoutUtils.h"
 #include "nsPrintfCString.h"
+#include "nsString.h"
 
 namespace mozilla {
 

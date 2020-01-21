@@ -9,8 +9,9 @@
 #ifndef mozilla_EnumeratedArray_h
 #define mozilla_EnumeratedArray_h
 
+#include <utility>
+
 #include "mozilla/Array.h"
-#include "mozilla/Move.h"
 
 namespace mozilla {
 

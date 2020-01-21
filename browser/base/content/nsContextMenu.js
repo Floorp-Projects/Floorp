@@ -1855,7 +1855,7 @@ class nsContextMenu {
       "SwitchDocumentDirection",
       {},
       "SwitchDocumentDirection",
-      true
+      "roots"
     );
   }
 

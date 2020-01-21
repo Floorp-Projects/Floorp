@@ -9,11 +9,11 @@
 #ifndef mozilla_Saturate_h
 #define mozilla_Saturate_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
-#include "mozilla/TypeTraits.h"
-
 #include <limits>
+#include <utility>
+
+#include "mozilla/Attributes.h"
+#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 namespace detail {

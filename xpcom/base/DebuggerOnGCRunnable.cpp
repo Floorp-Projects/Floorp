@@ -6,11 +6,12 @@
 
 #include "mozilla/DebuggerOnGCRunnable.h"
 
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/Move.h"
-#include "mozilla/SystemGroup.h"
+#include <utility>
+
 #include "js/Debug.h"
+#include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/SystemGroup.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 namespace mozilla {
 

@@ -8,22 +8,23 @@
  * automatic creation of the content-length header.
  */
 
-#include "ipc/IPCMessageUtils.h"
+#include "nsMIMEInputStream.h"
 
+#include <utility>
+
+#include "ipc/IPCMessageUtils.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIAsyncInputStream.h"
-#include "nsIInputStreamLength.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsIIPCSerializableInputStream.h"
+#include "nsIInputStreamLength.h"
 #include "nsIMIMEInputStream.h"
 #include "nsISeekableStream.h"
 #include "nsString.h"
-#include "nsMIMEInputStream.h"
-#include "nsIClassInfoImpl.h"
-#include "nsIIPCSerializableInputStream.h"
-#include "mozilla/Move.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/ipc/InputStreamUtils.h"
 
 using namespace mozilla::ipc;
 using mozilla::Maybe;

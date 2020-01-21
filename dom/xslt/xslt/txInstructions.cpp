@@ -3,21 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Move.h"
 #include "txInstructions.h"
+
+#include <utility>
+
 #include "nsError.h"
-#include "txExpr.h"
-#include "txStylesheet.h"
-#include "txNodeSetContext.h"
-#include "txTextHandler.h"
+#include "nsGkAtoms.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
-#include "txStringUtils.h"
-#include "nsGkAtoms.h"
-#include "txRtfHandler.h"
-#include "txNodeSorter.h"
-#include "txXSLTNumber.h"
 #include "txExecutionState.h"
+#include "txExpr.h"
+#include "txNodeSetContext.h"
+#include "txNodeSorter.h"
+#include "txRtfHandler.h"
+#include "txStringUtils.h"
+#include "txStylesheet.h"
+#include "txTextHandler.h"
+#include "txXSLTNumber.h"
 
 nsresult txApplyDefaultElementTemplate::execute(txExecutionState& aEs) {
   txExecutionState::TemplateRule* rule = aEs.getCurrentTemplateRule();

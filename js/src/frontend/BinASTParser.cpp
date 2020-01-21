@@ -14,9 +14,10 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Vector.h"
+
+#include <utility>
 
 #include "frontend/BinAST-macros.h"
 #include "frontend/BinASTTokenReaderContext.h"

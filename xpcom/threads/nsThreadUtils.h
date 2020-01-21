@@ -7,30 +7,29 @@
 #ifndef nsThreadUtils_h__
 #define nsThreadUtils_h__
 
-#include "prthread.h"
-#include "prinrval.h"
+#include <utility>
+
 #include "MainThreadUtils.h"
+#include "mozilla/AbstractEventQueue.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/Tuple.h"
+#include "mozilla/TypeTraits.h"
+#include "nsCOMPtr.h"
 #include "nsICancelableRunnable.h"
 #include "nsIIdlePeriod.h"
 #include "nsIIdleRunnable.h"
 #include "nsINamed.h"
 #include "nsIRunnable.h"
+#include "nsIThread.h"
 #include "nsIThreadManager.h"
 #include "nsITimer.h"
-#include "nsIThread.h"
 #include "nsString.h"
-#include "nsCOMPtr.h"
+#include "prinrval.h"
+#include "prthread.h"
 #include "xpcpublic.h"
-#include "mozilla/AbstractEventQueue.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/Likely.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/Tuple.h"
-#include "mozilla/TypeTraits.h"
-
-#include <utility>
 
 //-----------------------------------------------------------------------------
 // These methods are alternatives to the methods on nsIThreadManager, provided

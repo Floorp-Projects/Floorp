@@ -6,18 +6,19 @@
 
 #include "ErrorHandler.h"
 
+#include <utility>
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/glue/WindowsDllServices.h"
 #include "mozilla/JSONWriter.h"
-#include "mozilla/Move.h"
-#include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mozilla/WindowsVersion.h"
 #include "mozilla/WinTokenUtils.h"
+#include "mozilla/WindowsVersion.h"
 #include "mozilla/XREAppData.h"
+#include "mozilla/glue/WindowsDllServices.h"
+#include "mozilla/mscom/ProcessRuntime.h"
 #include "nsWindowsHelpers.h"
 
 #if defined(MOZ_LAUNCHER_PROCESS)

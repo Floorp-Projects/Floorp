@@ -9,18 +9,18 @@
 #ifndef mozilla_Maybe_h
 #define mozilla_Maybe_h
 
+#include <new>  // for placement new
+#include <ostream>
+#include <type_traits>
+#include <utility>
+
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryChecking.h"
-#include "mozilla/Move.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/Poison.h"
 #include "mozilla/TypeTraits.h"
-
-#include <new>  // for placement new
-#include <ostream>
-#include <type_traits>
 
 class nsCycleCollectionTraversalCallback;
 

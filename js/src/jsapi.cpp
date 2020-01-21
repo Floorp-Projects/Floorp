@@ -1358,6 +1358,14 @@ JS_PUBLIC_API bool JS::CleanupQueuedFinalizationGroup(JSContext* cx,
       cx, group.as<FinalizationGroupObject>());
 }
 
+JS_PUBLIC_API void JS::ClearKeptObjects(JSContext* cx) {
+  gc::GCRuntime* gc = &cx->runtime()->gc;
+
+  for (ZonesIter zone(gc, ZoneSelector::WithAtoms); !zone.done(); zone.next()) {
+    zone->clearKeptObjects();
+  }
+}
+
 JS_PUBLIC_API bool JS_AddWeakPointerZonesCallback(JSContext* cx,
                                                   JSWeakPointerZonesCallback cb,
                                                   void* data) {

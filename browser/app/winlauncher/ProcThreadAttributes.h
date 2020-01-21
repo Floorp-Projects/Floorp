@@ -7,13 +7,14 @@
 #ifndef mozilla_ProcThreadAttributes_h
 #define mozilla_ProcThreadAttributes_h
 
+#include <windows.h>
+
+#include <utility>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
-
-#include <windows.h>
 
 namespace mozilla {
 

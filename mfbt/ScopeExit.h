@@ -80,9 +80,10 @@
  *   scope.
  */
 
+#include <utility>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/Move.h"
 
 namespace mozilla {
 

@@ -7,20 +7,21 @@
 #ifndef mozilla_SMILTimedElement_h
 #define mozilla_SMILTimedElement_h
 
+#include <utility>
+
 #include "mozilla/EventForwards.h"
-#include "mozilla/Move.h"
-#include "mozilla/SMILMilestone.h"
 #include "mozilla/SMILInstanceTime.h"
 #include "mozilla/SMILInterval.h"
+#include "mozilla/SMILMilestone.h"
 #include "mozilla/SMILRepeatCount.h"
 #include "mozilla/SMILTimeValueSpec.h"
 #include "mozilla/SMILTypes.h"
 #include "mozilla/UniquePtr.h"
+#include "nsAttrValue.h"
+#include "nsAutoPtr.h"
+#include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
-#include "nsHashKeys.h"
-#include "nsAutoPtr.h"
-#include "nsAttrValue.h"
 
 class nsAtom;
 

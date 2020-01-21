@@ -856,12 +856,20 @@ var E10SUtils = {
     aFlags,
     aCsp
   ) {
+    let actor;
+    try {
+      actor = aDocShell.domWindow.getWindowGlobalChild().getActor("BrowserTab");
+    } catch (ex) {}
+    if (!actor) {
+      // Fall back to using the message manager.
+      actor = aDocShell.messageManager;
+    }
+
     // Retarget the load to the correct process
-    let messageManager = aDocShell.messageManager;
     let sessionHistory = aDocShell.QueryInterface(Ci.nsIWebNavigation)
       .sessionHistory;
 
-    messageManager.sendAsyncMessage("Browser:LoadURI", {
+    actor.sendAsyncMessage("Browser:LoadURI", {
       loadOptions: {
         uri: aURI.spec,
         flags: aFlags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE,

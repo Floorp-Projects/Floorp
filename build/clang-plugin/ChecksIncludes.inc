@@ -34,6 +34,6 @@
 #include "RefCountedInsideLambdaChecker.h"
 #include "ScopeChecker.h"
 #include "SprintfLiteralChecker.h"
+#include "TempRefPtrChecker.h"
 #include "TrivialCtorDtorChecker.h"
 #include "TrivialDtorChecker.h"
-

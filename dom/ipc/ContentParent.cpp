@@ -26,15 +26,52 @@
 #  include "mozilla/a11y/AccessibleWrap.h"
 #  include "mozilla/a11y/Compatibility.h"
 #endif
+#include <utility>
+
+#include "BrowserParent.h"
+#include "ContentProcessManager.h"
+#include "Geolocation.h"
+#include "GfxInfoBase.h"
+#include "MMPrinter.h"
+#include "PreallocatedProcessManager.h"
+#include "ProcessPriorityManager.h"
+#include "SandboxHal.h"
+#include "SourceSurfaceRawData.h"
+#include "URIUtils.h"
+#include "gfxPlatform.h"
+#include "gfxPlatformFontList.h"
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BenchmarkStorageParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/DataStorage.h"
+#include "mozilla/GlobalStyleSheetCache.h"
+#include "mozilla/HangDetails.h"
+#include "mozilla/LoginReputationIPC.h"
+#include "mozilla/LookAndFeel.h"
+#include "mozilla/PerformanceMetricsCollector.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/ProcessHangMonitorIPC.h"
+#include "mozilla/RDDProcessManager.h"
+#include "mozilla/ScopeExit.h"
+#include "mozilla/ScriptPreloader.h"
+#include "mozilla/Services.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_media.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryIPC.h"
+#include "mozilla/Unused.h"
+#include "mozilla/WebBrowserPersistDocumentParent.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
@@ -42,17 +79,19 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
-#include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemSecurity.h"
+#include "mozilla/dom/GeolocationBinding.h"
+#include "mozilla/dom/GeolocationPositionError.h"
+#include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
-#include "mozilla/dom/ExternalHelperAppParent.h"
-#include "mozilla/dom/GetFilesHelper.h"
-#include "mozilla/dom/GeolocationBinding.h"
 #include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/MediaController.h"
@@ -60,70 +99,58 @@
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
-#include "mozilla/dom/GeolocationPositionError.h"
-#include "mozilla/dom/ServiceWorkerRegistrar.h"
-#include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/PPresentationParent.h"
+#include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/PresentationParent.h"
-#include "mozilla/dom/PPresentationParent.h"
+#include "mozilla/dom/ProcessMessageManager.h"
 #include "mozilla/dom/PushNotifier.h"
-#include "mozilla/dom/quota/QuotaManagerService.h"
-#include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/SHEntryParent.h"
 #include "mozilla/dom/SHistoryParent.h"
+#include "mozilla/dom/ServiceWorkerRegistrar.h"
+#include "mozilla/dom/ServiceWorkerUtils.h"
+#include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/URLClassifierParent.h"
+#include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ipc/SharedMap.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/extensions/StreamFilterParent.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
-#include "mozilla/ipc/PChildToParentStreamParent.h"
-#include "mozilla/ipc/TestShellParent.h"
-#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/IPCStreamDestination.h"
 #include "mozilla/ipc/IPCStreamSource.h"
-#include "mozilla/intl/LocaleService.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/ipc/PChildToParentStreamParent.h"
+#include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "mozilla/layers/PAPZParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
+#include "mozilla/layers/PAPZParent.h"
 #include "mozilla/loader/ScriptCacheActors.h"
-#include "mozilla/LoginReputationIPC.h"
-#include "mozilla/dom/StorageIPC.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/media/MediaParent.h"
-#include "mozilla/Move.h"
-#include "mozilla/net/NeckoParent.h"
+#include "mozilla/mozSpellChecker.h"
 #include "mozilla/net/CookieServiceParent.h"
+#include "mozilla/net/NeckoMessageUtils.h"
+#include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PCookieServiceParent.h"
 #include "mozilla/plugins/PluginBridge.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/PresShell.h"
-#include "mozilla/ProcessHangMonitor.h"
-#include "mozilla/ProcessHangMonitorIPC.h"
-#include "mozilla/RDDProcessManager.h"
+#include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/recordreplay/ParentIPC.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/ScriptPreloader.h"
-#include "mozilla/Services.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_media.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/TelemetryIPC.h"
-#include "mozilla/WebBrowserPersistDocumentParent.h"
 #include "mozilla/widget/ScreenManager.h"
-#include "mozilla/Unused.h"
-#include "mozilla/HangDetails.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppRunner.h"
 #include "nsCExternalHandlerService.h"
@@ -131,27 +158,33 @@
 #include "nsChromeRegistryChrome.h"
 #include "nsConsoleMessage.h"
 #include "nsConsoleService.h"
+#include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
 #include "nsDebugImpl.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDocShell.h"
 #include "nsEmbedCID.h"
 #include "nsFrameLoader.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
+#include "nsHyphenationManager.h"
 #include "nsIAlertsService.h"
 #include "nsIAppStartup.h"
+#include "nsIAppWindow.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIBidiKeyboard.h"
+#include "nsICaptivePortalService.h"
+#include "nsICertOverrideService.h"
 #include "nsIClipboard.h"
-#include "nsICookie.h"
-#include "nsContentPermissionHelper.h"
-#include "nsIContentSecurityPolicy.h"
 #include "nsIContentProcess.h"
-#include "nsICycleCollectorListener.h"
-#include "nsIDocShellTreeOwner.h"
-#include "mozilla/dom/Document.h"
-#include "Geolocation.h"
-#include "nsIDragService.h"
-#include "mozilla/dom/WakeLock.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsICookie.h"
 #include "nsICrashService.h"
+#include "nsICycleCollectorListener.h"
+#include "nsIDOMChromeWindow.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDragService.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIGfxInfo.h"
 #include "nsIIdleService.h"
@@ -169,69 +202,34 @@
 #include "nsIServiceWorkerManager.h"
 #include "nsISiteSecurityService.h"
 #include "nsISound.h"
-#include "mozilla/mozSpellChecker.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
+#include "nsITrackingDBService.h"
 #include "nsIURIFixup.h"
 #include "nsIURL.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIAppWindow.h"
-#include "nsIDOMChromeWindow.h"
-#include "nsPIWindowWatcher.h"
-#include "nsThread.h"
-#include "nsWindowWatcher.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsIX509Cert.h"
 #include "nsIXULRuntime.h"
-#include "mozilla/dom/ParentProcessMessageManager.h"
-#include "mozilla/dom/ProcessMessageManager.h"
-#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
+#include "nsOpenURIInFrameParams.h"
+#include "nsPIWindowWatcher.h"
+#include "nsPluginHost.h"
+#include "nsPluginTags.h"
 #include "nsQueryObject.h"
 #include "nsReadableUtils.h"
 #include "nsScriptError.h"
+#include "nsSerializationHelper.h"
 #include "nsServiceManagerUtils.h"
+#include "nsStreamUtils.h"
 #include "nsStyleSheetService.h"
+#include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "nsWidgetsCID.h"
-#include "PreallocatedProcessManager.h"
-#include "ProcessPriorityManager.h"
-#include "SandboxHal.h"
-#include "SourceSurfaceRawData.h"
-#include "BrowserParent.h"
-#include "URIUtils.h"
-#include "nsIWebBrowserChrome.h"
-#include "nsIDocShell.h"
-#include "nsDocShell.h"
-#include "nsOpenURIInFrameParams.h"
-#include "mozilla/net/NeckoMessageUtils.h"
-#include "GfxInfoBase.h"
-#include "gfxPlatform.h"
-#include "gfxPlatformFontList.h"
+#include "nsWindowWatcher.h"
 #include "prio.h"
 #include "private/pprio.h"
-#include "ContentProcessManager.h"
-#include "mozilla/dom/BlobURLProtocolHandler.h"
-#include "mozilla/dom/ipc/StructuredCloneData.h"
-#include "mozilla/PerformanceMetricsCollector.h"
-#include "mozilla/psm/PSMContentListener.h"
-#include "nsPluginHost.h"
-#include "nsPluginTags.h"
-#include "nsITrackingDBService.h"
-#include "mozilla/GlobalStyleSheetCache.h"
-#include "mozilla/StyleSheet.h"
-#include "mozilla/StyleSheetInlines.h"
-#include "nsICaptivePortalService.h"
-#include "nsIBidiKeyboard.h"
-#include "MMPrinter.h"
-#include "nsStreamUtils.h"
-#include "nsIAsyncInputStream.h"
 #include "xpcpublic.h"
-#include "nsHyphenationManager.h"
-#include "nsICertOverrideService.h"
-#include "nsIX509Cert.h"
-#include "nsSerializationHelper.h"
-
-#include "mozilla/Sprintf.h"
 
 #ifdef MOZ_WEBRTC
 #  include "signaling/src/peerconnection/WebrtcGlobalParent.h"
@@ -6137,7 +6135,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 
   if (!child) {
     RefPtr<BrowsingContextGroup> group =
-        BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
+        BrowsingContextGroup::Select(aInit.mParentId, aInit.GetOpenerId());
     child = BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
   }
 
@@ -6368,7 +6366,7 @@ void ContentParent::OnBrowsingContextGroupUnsubscribe(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
-    BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction,
+    BrowsingContext* aContext, BrowsingContext::BaseTransaction&& aTransaction,
     uint64_t aEpoch) {
   // Record the new BrowsingContextFieldEpoch associated with this transaction.
   // This should be done unconditionally, so that we're always in-sync.
@@ -6380,23 +6378,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
              "Child process skipped an epoch?");
   mBrowsingContextFieldEpoch = aEpoch;
 
-  if (!aContext || aContext->IsDiscarded()) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
-            ("ParentIPC: Trying to run transaction on missing context."));
-    return IPC_OK();
-  }
-
-  if (!aTransaction.Validate(aContext, this)) {
-    return IPC_FAIL(this, "Invalid BrowsingContext transaction from Child");
-  }
-
-  aContext->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
-    Unused << aParent->SendCommitBrowsingContextTransaction(
-        aContext, aTransaction, aParent->GetBrowsingContextFieldEpoch());
-  });
-
-  aTransaction.Apply(aContext);
-  return IPC_OK();
+  return aTransaction.CommitFromIPC(aContext, this);
 }
 
 PParentToChildStreamParent* ContentParent::SendPParentToChildStreamConstructor(
@@ -6409,6 +6391,22 @@ PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
     const FileDescriptor& aFD) {
   MOZ_ASSERT(NS_IsMainThread());
   return PContentParent::SendPFileDescriptorSetConstructor(aFD);
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
+    WindowContext* aContext, WindowContext::BaseTransaction&& aTransaction,
+    uint64_t aEpoch) {
+  // Record the new BrowsingContextFieldEpoch associated with this transaction.
+  // This should be done unconditionally, so that we're always in-sync.
+  //
+  // The order the parent process receives transactions is considered the
+  // "canonical" ordering, so we don't need to worry about doing any
+  // epoch-related validation.
+  MOZ_ASSERT(aEpoch == mBrowsingContextFieldEpoch + 1,
+             "Child process skipped an epoch?");
+  mBrowsingContextFieldEpoch = aEpoch;
+
+  return aTransaction.CommitFromIPC(aContext, this);
 }
 
 }  // namespace dom

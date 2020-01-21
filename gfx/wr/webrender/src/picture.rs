@@ -3277,6 +3277,10 @@ pub struct PicturePrimitive {
 
     /// The config options for this picture.
     pub options: PictureOptions,
+
+    /// Keep track of the number of render tasks dependencies to pre-allocate
+    /// the dependency array next frame.
+    num_render_tasks: usize,
 }
 
 impl PicturePrimitive {
@@ -3419,6 +3423,7 @@ impl PicturePrimitive {
             tile_cache,
             options,
             segments_are_valid: false,
+            num_render_tasks: 0,
         }
     }
 
@@ -3460,6 +3465,9 @@ impl PicturePrimitive {
         if !self.is_visible() {
             return None;
         }
+
+        let task_id = frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port;
+        frame_state.render_tasks[task_id].children.reserve(self.num_render_tasks);
 
         // Extract the raster and surface spatial nodes from the raster
         // config, if this picture establishes a surface. Otherwise just
@@ -4225,6 +4233,7 @@ impl PicturePrimitive {
 
     pub fn restore_context(
         &mut self,
+        parent_surface_index: SurfaceIndex,
         prim_list: PrimitiveList,
         context: PictureContext,
         state: PictureState,
@@ -4234,6 +4243,9 @@ impl PicturePrimitive {
         for _ in 0 .. context.dirty_region_count {
             frame_state.pop_dirty_region();
         }
+
+        let task_id = frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port;
+        self.num_render_tasks = frame_state.render_tasks[task_id].children.len();
 
         self.prim_list = prim_list;
         self.state = Some(state);

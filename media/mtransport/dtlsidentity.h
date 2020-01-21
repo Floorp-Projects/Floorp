@@ -7,15 +7,15 @@
 #define dtls_identity_h__
 
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "ScopedNSSTypes.h"
 #include "m_cpp_utils.h"
-#include "mozilla/Move.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
-#include "ScopedNSSTypes.h"
-#include "sslt.h"
 #include "nsTArray.h"
+#include "sslt.h"
 
 // All code in this module requires NSS to be live.
 // Callers must initialize NSS and implement the nsNSSShutdownObject

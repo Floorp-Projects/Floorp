@@ -11,15 +11,16 @@
 #  error This code is NOT for internal Gecko use!
 #endif  // defined(MOZILLA_INTERNAL_API)
 
-#include "mozilla/Attributes.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/StaticPtr.h"
-#include "Module.h"
-
 #include <objbase.h>
 #include <unknwn.h>
+
+#include <utility>
+
+#include "Module.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/StaticPtr.h"
 
 /* WARNING! The code in this file may be loaded into the address spaces of other
    processes! It MUST NOT link against xul.dll or other Gecko binaries! Only

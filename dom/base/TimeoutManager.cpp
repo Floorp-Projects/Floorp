@@ -156,7 +156,8 @@ void TimeoutManager::MoveIdleToActive() {
       // don't have end before start...
       PROFILER_ADD_MARKER_WITH_PAYLOAD(
           "setTimeout deferred release", DOM, TextMarkerPayload,
-          (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now, now));
+          (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now, now,
+           Some(mWindow.WindowID())));
     }
 #endif
     num++;
@@ -282,7 +283,7 @@ bool TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const {
     // If the first element is bigger than the last element in the
     // stack, that means mNextFiringId wrapped around to zero at
     // some point.
-    Swap(low, high);
+    std::swap(low, high);
   }
   MOZ_DIAGNOSTIC_ASSERT(low < high);
 
@@ -905,8 +906,8 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
           // don't have end before start...
           PROFILER_ADD_MARKER_WITH_PAYLOAD(
               "setTimeout", DOM, TextMarkerPayload,
-              (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now,
-               now));
+              (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now, now,
+               Some(mWindow.WindowID())));
         }
 #endif
 

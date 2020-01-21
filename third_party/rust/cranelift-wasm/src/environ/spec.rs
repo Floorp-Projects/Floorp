@@ -138,6 +138,12 @@ pub trait TargetEnvironment {
 /// IR. The function environment provides information about the WebAssembly module as well as the
 /// runtime environment.
 pub trait FuncEnvironment: TargetEnvironment {
+    /// Is the given parameter of the given function a wasm-level parameter, as opposed to a hidden
+    /// parameter added for use by the implementation?
+    fn is_wasm_parameter(&self, signature: &ir::Signature, index: usize) -> bool {
+        signature.params[index].purpose == ir::ArgumentPurpose::Normal
+    }
+
     /// Should the code be structured to use a single `fallthrough_return` instruction at the end
     /// of the function body, rather than `return` instructions as needed? This is used by VMs
     /// to append custom epilogues.
@@ -302,6 +308,7 @@ pub trait FuncEnvironment: TargetEnvironment {
     /// The `index` provided identifies the linear memory to query, and `heap` is the heap reference
     /// returned by `make_heap` for the same index. `seg_index` is the index of the segment to copy
     /// from.
+    #[allow(clippy::too_many_arguments)]
     fn translate_memory_init(
         &mut self,
         pos: FuncCursor,
@@ -325,6 +332,7 @@ pub trait FuncEnvironment: TargetEnvironment {
     ) -> WasmResult<ir::Value>;
 
     /// Translate a `table.copy` WebAssembly instruction.
+    #[allow(clippy::too_many_arguments)]
     fn translate_table_copy(
         &mut self,
         pos: FuncCursor,
@@ -338,6 +346,7 @@ pub trait FuncEnvironment: TargetEnvironment {
     ) -> WasmResult<()>;
 
     /// Translate a `table.init` WebAssembly instruction.
+    #[allow(clippy::too_many_arguments)]
     fn translate_table_init(
         &mut self,
         pos: FuncCursor,

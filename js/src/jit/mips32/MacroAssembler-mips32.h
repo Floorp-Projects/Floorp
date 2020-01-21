@@ -484,8 +484,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
         return;
       }
       // If only one is, copy that source first.
-      mozilla::Swap(s0, s1);
-      mozilla::Swap(d0, d1);
+      std::swap(s0, s1);
+      std::swap(d0, d1);
     }
 
     if (s0 != d0) {

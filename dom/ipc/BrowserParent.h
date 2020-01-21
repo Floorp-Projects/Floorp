@@ -7,32 +7,33 @@
 #ifndef mozilla_dom_BrowserParent_h
 #define mozilla_dom_BrowserParent_h
 
-#include "js/TypeDecls.h"
+#include <utility>
+
 #include "LiveResizeListener.h"
+#include "Units.h"
+#include "js/TypeDecls.h"
 #include "mozilla/ContentCache.h"
-#include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/EventForwards.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/PFilePickerParent.h"
 #include "mozilla/dom/TabContext.h"
-#include "mozilla/EventForwards.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layout/RemoteLayerTreeOwner.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/Move.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDOMEventListener.h"
 #include "nsIKeyEventInPluginCallback.h"
+#include "nsIWidget.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsRefreshDriver.h"
 #include "nsWeakReference.h"
-#include "Units.h"
-#include "nsIWidget.h"
 
 class nsFrameLoader;
 class nsIContent;

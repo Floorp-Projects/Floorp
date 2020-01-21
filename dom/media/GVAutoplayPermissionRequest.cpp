@@ -161,7 +161,7 @@ GVAutoplayPermissionRequest::Cancel() {
   const RStatus status = GetRequestStatus(mContext, mType);
   REQUEST_LOG("Cancel, current status=%s", ToGVRequestStatusStr(status));
   MOZ_ASSERT(status == RStatus::ePENDING || status == RStatus::eUNKNOWN);
-  if (status == RStatus::ePENDING) {
+  if ((status == RStatus::ePENDING) && !mContext->IsDiscarded()) {
     SetRequestStatus(RStatus::eDENIED);
   }
   mContext = nullptr;

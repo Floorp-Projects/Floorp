@@ -20,17 +20,16 @@
  *                      -- scc
  */
 
+#include <utility>
+
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TypeTraits.h"
-
+#include "nsCycleCollectionNoteChild.h"
 #include "nsDebug.h"  // for |NS_ASSERTION|
 #include "nsISupportsUtils.h"  // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
-#include "mozilla/RefPtr.h"
-
-#include "nsCycleCollectionNoteChild.h"
 
 /*
  * WARNING: This file defines several macros for internal use only. These

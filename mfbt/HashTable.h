@@ -74,6 +74,8 @@
 #ifndef mozilla_HashTable_h
 #define mozilla_HashTable_h
 
+#include <utility>
+
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -83,7 +85,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
 #include "mozilla/Opaque.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"
@@ -1055,11 +1056,15 @@ class HashTableEntry {
   void destroy() { destroyStoredT(); }
 
   void swap(HashTableEntry* aOther, bool aIsLive) {
+    // This allows types to use Argument-Dependent-Lookup, and thus use a custom
+    // std::swap, which is needed by types like JS::Heap and such.
+    using std::swap;
+
     if (this == aOther) {
       return;
     }
     if (aIsLive) {
-      Swap(*valuePtr(), *aOther->valuePtr());
+      swap(*valuePtr(), *aOther->valuePtr());
     } else {
       *aOther->valuePtr() = std::move(*valuePtr());
       destroy();
@@ -1111,7 +1116,7 @@ class EntrySlot {
 
   void swap(EntrySlot& aOther) {
     mEntry->swap(aOther.mEntry, aOther.isLive());
-    Swap(*mKeyHash, *aOther.mKeyHash);
+    std::swap(*mKeyHash, *aOther.mKeyHash);
   }
 
   T& get() const { return mEntry->get(); }

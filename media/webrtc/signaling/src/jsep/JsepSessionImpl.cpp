@@ -4,32 +4,30 @@
 
 #include "signaling/src/jsep/JsepSessionImpl.h"
 
-#include <iterator>
-#include <string>
-#include <set>
-#include <bitset>
 #include <stdlib.h>
 
+#include <bitset>
+#include <iterator>
+#include <set>
+#include <string>
+#include <utility>
+
+#include "logging.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/net/DataChannelProtocol.h"
+#include "nsDebug.h"
 #include "nspr.h"
 #include "nss.h"
 #include "pk11pub.h"
-#include "nsDebug.h"
-#include "logging.h"
-
-#include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Telemetry.h"
 
 #include "webrtc/api/rtpparameters.h"
 
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepTransport.h"
-
 #include "signaling/src/sdp/HybridSdpParser.h"
 #include "signaling/src/sdp/SipccSdp.h"
-
-#include "mozilla/net/DataChannelProtocol.h"
 
 namespace mozilla {
 

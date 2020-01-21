@@ -10,14 +10,15 @@
 #ifndef PLDHashTable_h
 #define PLDHashTable_h
 
+#include <utility>
+
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"  // for MOZ_ALWAYS_INLINE
-#include "mozilla/fallible.h"
 #include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
 #include "mozilla/Types.h"
+#include "mozilla/fallible.h"
 #include "nscore.h"
 
 using PLDHashNumber = mozilla::HashNumber;

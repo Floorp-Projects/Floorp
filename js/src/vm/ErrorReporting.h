@@ -7,9 +7,8 @@
 #ifndef vm_ErrorReporting_h
 #define vm_ErrorReporting_h
 
-#include "mozilla/Move.h"
-
 #include <stdarg.h>
+#include <utility>
 
 #include "jsapi.h"        // for JSErrorNotes, JSErrorReport
 #include "jsfriendapi.h"  // for ScriptEnvironmentPreparer

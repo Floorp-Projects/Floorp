@@ -9,10 +9,10 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
 
 #include <algorithm>
 #include <math.h>
+#include <utility>
 
 #include "jsapi.h"
 #include "jsfriendapi.h"

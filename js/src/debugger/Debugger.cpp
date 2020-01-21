@@ -12,7 +12,6 @@
 #include "mozilla/GuardObjects.h"      // for MOZ_GUARD_OBJECT_NOTIFIER_PARAM
 #include "mozilla/HashTable.h"         // for HashSet<>::Range, HashMapEntry
 #include "mozilla/Maybe.h"             // for Maybe, Nothing, Some
-#include "mozilla/Move.h"              // for std::move
 #include "mozilla/RecordReplay.h"      // for IsMiddleman
 #include "mozilla/ScopeExit.h"         // for MakeScopeExit, ScopeExit
 #include "mozilla/ThreadLocal.h"       // for ThreadLocal
@@ -27,6 +26,7 @@
 #include <stddef.h>    // for size_t
 #include <stdint.h>    // for uint32_t, uint64_t, int32_t
 #include <string.h>    // for strlen, strcmp
+#include <utility>     // for std::move
 
 #include "jsapi.h"        // for CallArgs, CallArgsFromVp
 #include "jsfriendapi.h"  // for GetErrorMessage
@@ -62,37 +62,37 @@
 #include "jit/BaselineJIT.h"           // for FinishDiscardBaselineScript
 #include "jit/Ion.h"                   // for JitContext
 #include "jit/JitScript.h"             // for JitScript
-#include "jit/JSJitFrameIter.h"       // for InlineFrameIterator
-#include "jit/RematerializedFrame.h"  // for RematerializedFrame
-#include "js/Conversions.h"           // for ToBoolean, ToUint32
-#include "js/Debug.h"                 // for Builder::Object, Builder
-#include "js/GCAPI.h"                 // for GarbageCollectionEvent
-#include "js/HeapAPI.h"               // for ExposeObjectToActiveJS
-#include "js/Promise.h"               // for AutoDebuggerJobQueueInterruption
-#include "js/Proxy.h"                 // for PropertyDescriptor
-#include "js/SourceText.h"            // for SourceOwnership, SourceText
-#include "js/StableStringChars.h"     // for AutoStableStringChars
-#include "js/UbiNode.h"               // for Node, RootList, Edge
-#include "js/UbiNodeBreadthFirst.h"   // for BreadthFirst
-#include "js/Warnings.h"              // for AutoSuppressWarningReporter
-#include "js/Wrapper.h"               // for CheckedUnwrapStatic
-#include "util/Text.h"                // for DuplicateString, js_strlen
-#include "vm/ArrayObject.h"           // for ArrayObject
-#include "vm/AsyncFunction.h"         // for AsyncFunctionGeneratorObject
-#include "vm/AsyncIteration.h"        // for AsyncGeneratorObject
-#include "vm/BytecodeUtil.h"          // for JSDVG_IGNORE_STACK
-#include "vm/Compartment.h"           // for CrossCompartmentKey
-#include "vm/EnvironmentObject.h"     // for IsSyntacticEnvironment
-#include "vm/ErrorReporting.h"        // for ReportErrorToGlobal
-#include "vm/GeneratorObject.h"       // for AbstractGeneratorObject
-#include "vm/GlobalObject.h"          // for GlobalObject
-#include "vm/Interpreter.h"           // for Call, ReportIsNotFunction
-#include "vm/Iteration.h"             // for CreateIterResultObject
-#include "vm/JSAtom.h"                // for Atomize, ClassName
-#include "vm/JSContext.h"             // for JSContext
-#include "vm/JSFunction.h"            // for JSFunction
-#include "vm/JSObject.h"              // for JSObject, RequireObject
-#include "vm/ObjectGroup.h"           // for TenuredObject
+#include "jit/JSJitFrameIter.h"        // for InlineFrameIterator
+#include "jit/RematerializedFrame.h"   // for RematerializedFrame
+#include "js/Conversions.h"            // for ToBoolean, ToUint32
+#include "js/Debug.h"                  // for Builder::Object, Builder
+#include "js/GCAPI.h"                  // for GarbageCollectionEvent
+#include "js/HeapAPI.h"                // for ExposeObjectToActiveJS
+#include "js/Promise.h"                // for AutoDebuggerJobQueueInterruption
+#include "js/Proxy.h"                  // for PropertyDescriptor
+#include "js/SourceText.h"             // for SourceOwnership, SourceText
+#include "js/StableStringChars.h"      // for AutoStableStringChars
+#include "js/UbiNode.h"                // for Node, RootList, Edge
+#include "js/UbiNodeBreadthFirst.h"    // for BreadthFirst
+#include "js/Warnings.h"               // for AutoSuppressWarningReporter
+#include "js/Wrapper.h"                // for CheckedUnwrapStatic
+#include "util/Text.h"                 // for DuplicateString, js_strlen
+#include "vm/ArrayObject.h"            // for ArrayObject
+#include "vm/AsyncFunction.h"          // for AsyncFunctionGeneratorObject
+#include "vm/AsyncIteration.h"         // for AsyncGeneratorObject
+#include "vm/BytecodeUtil.h"           // for JSDVG_IGNORE_STACK
+#include "vm/Compartment.h"            // for CrossCompartmentKey
+#include "vm/EnvironmentObject.h"      // for IsSyntacticEnvironment
+#include "vm/ErrorReporting.h"         // for ReportErrorToGlobal
+#include "vm/GeneratorObject.h"        // for AbstractGeneratorObject
+#include "vm/GlobalObject.h"           // for GlobalObject
+#include "vm/Interpreter.h"            // for Call, ReportIsNotFunction
+#include "vm/Iteration.h"              // for CreateIterResultObject
+#include "vm/JSAtom.h"                 // for Atomize, ClassName
+#include "vm/JSContext.h"              // for JSContext
+#include "vm/JSFunction.h"             // for JSFunction
+#include "vm/JSObject.h"               // for JSObject, RequireObject
+#include "vm/ObjectGroup.h"            // for TenuredObject
 #include "vm/ObjectOperations.h"      // for DefineDataProperty
 #include "vm/PromiseObject.h"         // for js::PromiseObject
 #include "vm/ProxyObject.h"           // for ProxyObject, JSObject::is

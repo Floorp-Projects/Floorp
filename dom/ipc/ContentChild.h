@@ -747,7 +747,8 @@ class ContentChild final
       BrowsingContext* aContext, BrowsingContext::Children&& aChildren);
 
   mozilla::ipc::IPCResult RecvRegisterBrowsingContextGroup(
-      nsTArray<BrowsingContext::IPCInitializer>&& aInits);
+      nsTArray<BrowsingContext::IPCInitializer>&& aInits,
+      nsTArray<WindowContext::IPCInitializer>&& aWindowInits);
 
   mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
                                           bool aTrustedCaller);
@@ -759,8 +760,17 @@ class ContentChild final
       const PostMessageData& aData);
 
   mozilla::ipc::IPCResult RecvCommitBrowsingContextTransaction(
-      BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction,
+      BrowsingContext* aContext,
+      BrowsingContext::BaseTransaction&& aTransaction, uint64_t aEpoch);
+
+  mozilla::ipc::IPCResult RecvCommitWindowContextTransaction(
+      WindowContext* aContext, WindowContext::BaseTransaction&& aTransaction,
       uint64_t aEpoch);
+
+  mozilla::ipc::IPCResult RecvCreateWindowContext(
+      WindowContext::IPCInitializer&& aInit);
+  mozilla::ipc::IPCResult RecvDiscardWindowContext(
+      uint64_t aContextId, DiscardWindowContextResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvScriptError(
       const nsString& aMessage, const nsString& aSourceName,

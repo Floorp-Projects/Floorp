@@ -25,18 +25,19 @@
 #ifndef mozilla_ErrorResult_h
 #define mozilla_ErrorResult_h
 
-#include <new>
 #include <stdarg.h>
+
+#include <new>
+#include <utility>
 
 #include "js/GCAnnotations.h"
 #include "js/Value.h"
-#include "nscore.h"
-#include "nsString.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
-#include "nsTArray.h"
 #include "nsISupportsImpl.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nscore.h"
 
 namespace IPC {
 class Message;

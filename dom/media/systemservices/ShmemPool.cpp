@@ -5,9 +5,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ShmemPool.h"
+
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Move.h"
 
 mozilla::LazyLogModule sShmemPoolLog("ShmemPool");
 

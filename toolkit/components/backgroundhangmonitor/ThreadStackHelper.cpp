@@ -13,17 +13,18 @@
 #  include "js/ProfilingStack.h"
 #endif
 
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Move.h"
-#include "mozilla/Scoped.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/MemoryChecking.h"
-#include "mozilla/Sprintf.h"
-#include "nsThread.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/HangTypes.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/MemoryChecking.h"
+#include "mozilla/Scoped.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/UniquePtr.h"
+#include "nsThread.h"
 
 #ifdef __GNUC__
 #  pragma GCC diagnostic push

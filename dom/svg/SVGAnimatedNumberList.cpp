@@ -6,11 +6,12 @@
 
 #include "SVGAnimatedNumberList.h"
 
-#include "mozilla/dom/SVGElement.h"
-#include "mozilla/Move.h"
-#include "mozilla/SMILValue.h"
+#include <utility>
+
 #include "DOMSVGAnimatedNumberList.h"
 #include "SVGNumberListSMILType.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/dom/SVGElement.h"
 
 using namespace mozilla::dom;
 
@@ -144,7 +145,7 @@ SMILValue SVGAnimatedNumberList::SMILAnimatedNumberList::GetBaseValue() const {
   nsresult rv = nlai->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     nlai->SetInfo(mElement);
-    Swap(val, tmp);
+    std::swap(val, tmp);
   }
   return val;
 }

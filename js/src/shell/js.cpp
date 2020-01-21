@@ -2762,10 +2762,7 @@ static bool CpuNow(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool ClearKeptObjects(JSContext* cx, unsigned argc, Value* vp) {
-  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
-    zone->clearKeptObjects();
-  }
-
+  JS::ClearKeptObjects(cx);
   return true;
 }
 
@@ -4171,7 +4168,7 @@ static void KillWatchdog(JSContext* cx) {
 
   {
     LockGuard<Mutex> guard(sc->watchdogLock);
-    Swap(sc->watchdogThread, thread);
+    std::swap(sc->watchdogThread, thread);
     if (thread) {
       // The watchdog thread becoming Nothing is its signal to exit.
       sc->watchdogWakeup.notify_one();

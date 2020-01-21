@@ -11,10 +11,11 @@
 #ifndef mozilla_image_LookupResult_h
 #define mozilla_image_LookupResult_h
 
+#include <utility>
+
+#include "ISurfaceProvider.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"  // for IntSize
-#include "mozilla/Move.h"
-#include "ISurfaceProvider.h"
 
 namespace mozilla {
 namespace image {

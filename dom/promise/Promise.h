@@ -7,20 +7,21 @@
 #ifndef mozilla_dom_Promise_h
 #define mozilla_dom_Promise_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/Move.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/TypeTraits.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "nsCycleCollectionParticipant.h"
-#include "mozilla/dom/PromiseBinding.h"
-#include "mozilla/dom/ToJSValue.h"
-#include "mozilla/WeakPtr.h"
-#include "nsWrapperCache.h"
-#include "nsAutoPtr.h"
+#include <utility>
+
 #include "js/TypeDecls.h"
 #include "jspubtd.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/TypeTraits.h"
+#include "mozilla/WeakPtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/PromiseBinding.h"
+#include "mozilla/dom/ToJSValue.h"
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsWrapperCache.h"
 
 class nsIGlobalObject;
 

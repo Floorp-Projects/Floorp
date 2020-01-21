@@ -53,7 +53,7 @@ already_AddRefed<PrintTargetPS> PrintTargetPS::CreateOrNull(
   // print area.  Our consumers are responsible for checking
   // RotateForLandscape() and applying a rotation transform if true.
   if (aOrientation == LANDSCAPE) {
-    Swap(aSizeInPoints.width, aSizeInPoints.height);
+    std::swap(aSizeInPoints.width, aSizeInPoints.height);
   }
 
   cairo_surface_t* surface = cairo_ps_surface_create_for_stream(

@@ -8,14 +8,15 @@
 
 #include "SMILCSSProperty.h"
 
-#include "mozilla/dom/Element.h"
-#include "mozilla/Move.h"
-#include "mozilla/ServoBindings.h"
+#include <utility>
+
 #include "mozilla/SMILCSSValueType.h"
 #include "mozilla/SMILValue.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "nsDOMCSSAttrDeclaration.h"
+#include "mozilla/dom/Element.h"
 #include "nsCSSProps.h"
+#include "nsDOMCSSAttrDeclaration.h"
 
 namespace mozilla {
 
@@ -55,7 +56,7 @@ SMILValue SMILCSSProperty::GetBaseValue() const {
     // In any case, just return a dummy value (initialized with the right
     // type, so as not to indicate failure).
     SMILValue tmpVal(&SMILCSSValueType::sSingleton);
-    Swap(baseValue, tmpVal);
+    std::swap(baseValue, tmpVal);
     return baseValue;
   }
 

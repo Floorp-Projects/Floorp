@@ -30,12 +30,12 @@ const tests = [
   /*
    * Engagement tests.
    */
-  async function() {
+  async function(win) {
     info("Type something, press Enter.");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("x", window, true);
-    EventUtils.synthesizeKey("VK_RETURN");
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("x", win, true);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -51,17 +51,17 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Paste something, press Enter.");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await SimpleTest.promiseClipboardChange("test", () => {
       clipboardHelper.copyString("test");
     });
-    document.commandDispatcher
+    win.document.commandDispatcher
       .getControllerForCommand("cmd_paste")
       .doCommand("cmd_paste");
-    EventUtils.synthesizeKey("VK_RETURN");
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -77,13 +77,13 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type something, click one-off.");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("moz", window, true);
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton.click();
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("moz", win, true);
+    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
+    UrlbarTestUtils.getOneOffSearchButtons(win).selectedButton.click();
     await promise;
     return {
       category: "urlbar",
@@ -99,14 +99,14 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type something, select one-off, Enter.");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("moz", window, true);
-    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    Assert.ok(UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton);
-    EventUtils.synthesizeKey("VK_RETURN");
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("moz", win, true);
+    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
+    Assert.ok(UrlbarTestUtils.getOneOffSearchButtons(win).selectedButton);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -122,14 +122,14 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type something, ESC, type something else, press Enter.");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    EventUtils.synthesizeKey("x");
-    EventUtils.synthesizeKey("VK_ESCAPE");
-    EventUtils.synthesizeKey("y");
-    EventUtils.synthesizeKey("VK_RETURN");
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    EventUtils.synthesizeKey("x", {}, win);
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
+    EventUtils.synthesizeKey("y", {}, win);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -145,12 +145,12 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type a keyword, Enter.");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("kw test", window, true);
-    EventUtils.synthesizeKey("VK_RETURN");
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("kw test", win, true);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -166,14 +166,14 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     let tipProvider = registerTipProvider();
     info("Selecting a tip's main button, enter.");
-    gURLBar.search("x");
-    await promiseSearchComplete();
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("VK_RETURN");
+    win.gURLBar.search("x");
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     unregisterTipProvider(tipProvider);
     return {
       category: "urlbar",
@@ -189,16 +189,16 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     let tipProvider = registerTipProvider();
     info("Selecting a tip's help button, enter.");
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gURLBar.search("x");
-    await promiseSearchComplete();
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("VK_RETURN");
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    win.gURLBar.search("x");
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     unregisterTipProvider(tipProvider);
     return {
@@ -215,12 +215,12 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type something and canonize");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("example", window, true);
-    EventUtils.synthesizeKey("VK_RETURN", { ctrlKey: true });
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("example", win, true);
+    EventUtils.synthesizeKey("VK_RETURN", { ctrlKey: true }, win);
     await promise;
     return {
       category: "urlbar",
@@ -236,21 +236,21 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type something, click on bookmark entry.");
-    gURLBar.select();
+    win.gURLBar.select();
     let url = "http://example.com/?q=%s";
     let promise = BrowserTestUtils.browserLoaded(
-      gBrowser.selectedBrowser,
+      win.gBrowser.selectedBrowser,
       false,
       url
     );
-    await promiseAutocompleteResultPopup("exa", window, true);
-    while (gURLBar.untrimmedValue != url) {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
+    await promiseAutocompleteResultPopup("exa", win, true);
+    while (win.gURLBar.untrimmedValue != url) {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
-    let element = UrlbarTestUtils.getSelectedRow(window);
-    EventUtils.synthesizeMouseAtCenter(element, {});
+    let element = UrlbarTestUtils.getSelectedRow(win);
+    EventUtils.synthesizeMouseAtCenter(element, {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -266,15 +266,15 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type an autofilled string, Enter.");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("exa", window, true);
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("exa", win, true);
     // Check it's autofilled.
-    Assert.equal(gURLBar.selectionStart, 3);
-    Assert.equal(gURLBar.selectionEnd, 12);
-    EventUtils.synthesizeKey("VK_RETURN");
+    Assert.equal(win.gURLBar.selectionStart, 3);
+    Assert.equal(win.gURLBar.selectionEnd, 12);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -290,15 +290,15 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type something, select bookmark entry, Enter.");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("exa", window, true);
-    while (gURLBar.untrimmedValue != "http://example.com/?q=%s") {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("exa", win, true);
+    while (win.gURLBar.untrimmedValue != "http://example.com/?q=%s") {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
-    EventUtils.synthesizeKey("VK_RETURN");
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -314,15 +314,15 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Type @, Enter on a keywordoffer");
-    gURLBar.select();
-    await promiseAutocompleteResultPopup("@", window, true);
-    while (gURLBar.untrimmedValue != "@test ") {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
+    win.gURLBar.select();
+    await promiseAutocompleteResultPopup("@", win, true);
+    while (win.gURLBar.untrimmedValue != "@test ") {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
-    EventUtils.synthesizeKey("VK_RETURN");
-    await UrlbarTestUtils.promiseSearchComplete(window);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+    await UrlbarTestUtils.promiseSearchComplete(win);
     return {
       category: "urlbar",
       method: "engagement",
@@ -337,15 +337,15 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Drop something.");
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     EventUtils.synthesizeDrop(
-      document.getElementById("home-button"),
-      gURLBar.inputField,
+      win.document.getElementById("home-button"),
+      win.gURLBar.inputField,
       [[{ type: "text/plain", data: "www.example.com" }]],
       "copy",
-      window
+      win
     );
     await promise;
     return {
@@ -362,22 +362,26 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Paste & Go something.");
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await SimpleTest.promiseClipboardChange("www.example.com", () => {
       clipboardHelper.copyString("www.example.com");
     });
-    let inputBox = gURLBar.querySelector("moz-input-box");
+    let inputBox = win.gURLBar.querySelector("moz-input-box");
     let cxmenu = inputBox.menupopup;
     let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
-      type: "contextmenu",
-      button: 2,
-    });
+    EventUtils.synthesizeMouseAtCenter(
+      win.gURLBar.inputField,
+      {
+        type: "contextmenu",
+        button: 2,
+      },
+      win
+    );
     await cxmenuPromise;
     let menuitem = inputBox.getMenuItem("paste-and-go");
-    EventUtils.synthesizeMouseAtCenter(menuitem, {});
+    EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -396,20 +400,20 @@ const tests = [
   // The URLs in the down arrow/openViewOnFocus tests must vary from test to test,
   // else  the first Top Site results will be a switch-to-tab result and a page
   // load will not occur.
-  async function() {
+  async function(win) {
     info("Open the panel with DOWN, select with DOWN, Enter.");
     await addTopSite("http://example.org/");
-    gURLBar.value = "";
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    win.gURLBar.value = "";
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     });
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    while (gURLBar.untrimmedValue != "http://example.org/") {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    while (win.gURLBar.untrimmedValue != "http://example.org/") {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
-    EventUtils.synthesizeKey("VK_RETURN");
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -425,20 +429,20 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Open the panel with DOWN, click on entry.");
     await addTopSite("http://example.com/");
-    gURLBar.value = "";
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    win.gURLBar.value = "";
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     });
-    while (gURLBar.untrimmedValue != "http://example.com/") {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
+    while (win.gURLBar.untrimmedValue != "http://example.com/") {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
-    let element = UrlbarTestUtils.getSelectedRow(window);
-    EventUtils.synthesizeMouseAtCenter(element, {});
+    let element = UrlbarTestUtils.getSelectedRow(win);
+    EventUtils.synthesizeMouseAtCenter(element, {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -454,22 +458,17 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Open the panel with dropmarker, type something, Enter.");
     Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", false);
-    await BrowserTestUtils.withNewTab(
-      { gBrowser, url: "about:blank" },
-      async browser => {
-        gURLBar.select();
-        let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-        await UrlbarTestUtils.promisePopupOpen(window, () => {
-          EventUtils.synthesizeMouseAtCenter(gURLBar.dropmarker, {}, window);
-        });
-        await promiseAutocompleteResultPopup("x", window, true);
-        EventUtils.synthesizeKey("VK_RETURN");
-        await promise;
-      }
-    );
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      EventUtils.synthesizeMouseAtCenter(win.gURLBar.dropmarker, {}, win);
+    });
+    await promiseAutocompleteResultPopup("x", win, true);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+    await promise;
     Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
     return {
       category: "urlbar",
@@ -488,7 +487,7 @@ const tests = [
   // The URLs in the openViewOnFocus tests must vary from test to test, else
   // the first Top Site results will be a switch-to-tab result and a page load
   // will not occur.
-  async function() {
+  async function(win) {
     info(
       "With pageproxystate=valid, open the panel with openViewOnFocus, select with DOWN, Enter."
     );
@@ -499,17 +498,17 @@ const tests = [
       ],
     });
     await addTopSite("http://example.org/");
-    gURLBar.value = "";
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      window.document.getElementById("Browser:OpenLocation").doCommand();
+    win.gURLBar.value = "";
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
     await SpecialPowers.popPrefEnv();
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    while (gURLBar.untrimmedValue != "http://example.org/") {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    while (win.gURLBar.untrimmedValue != "http://example.org/") {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
-    EventUtils.synthesizeKey("VK_RETURN");
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -525,7 +524,7 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info(
       "With pageproxystate=valid, open the panel with openViewOnFocus, click on entry."
     );
@@ -537,18 +536,18 @@ const tests = [
       ],
     });
     await addTopSite("http://example.com/");
-    gURLBar.value = "";
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      window.document.getElementById("Browser:OpenLocation").doCommand();
+    win.gURLBar.value = "";
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
     await SpecialPowers.popPrefEnv();
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    while (gURLBar.untrimmedValue != "http://example.com/") {
-      EventUtils.synthesizeKey("KEY_ArrowDown");
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    while (win.gURLBar.untrimmedValue != "http://example.com/") {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
-    let element = UrlbarTestUtils.getSelectedRow(window);
-    EventUtils.synthesizeMouseAtCenter(element, {});
+    let element = UrlbarTestUtils.getSelectedRow(win);
+    EventUtils.synthesizeMouseAtCenter(element, {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -564,7 +563,7 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info(
       "With pageproxystate=invalid, open the panel with openViewOnFocus, Enter."
     );
@@ -575,15 +574,15 @@ const tests = [
       ],
     });
     await addTopSite("http://example.org/");
-    gURLBar.value = "example.org";
-    gURLBar.setAttribute("pageproxystate", "invalid");
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      window.document.getElementById("Browser:OpenLocation").doCommand();
+    win.gURLBar.value = "example.org";
+    win.gURLBar.setAttribute("pageproxystate", "invalid");
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
     await SpecialPowers.popPrefEnv();
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    EventUtils.synthesizeKey("VK_RETURN");
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -599,7 +598,7 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info(
       "With pageproxystate=invalid, open the panel with openViewOnFocus, click on entry."
     );
@@ -612,16 +611,16 @@ const tests = [
     // This value must be different from the previous test, or else the
     // Megabar's "retained results" feature will interfere with openViewOnFocus.
     // This issue will be addressed in bug 1601052.
-    gURLBar.value = "example.com";
-    gURLBar.setAttribute("pageproxystate", "invalid");
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      window.document.getElementById("Browser:OpenLocation").doCommand();
+    win.gURLBar.value = "example.com";
+    win.gURLBar.setAttribute("pageproxystate", "invalid");
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
     await SpecialPowers.popPrefEnv();
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    let element = UrlbarTestUtils.getSelectedRow(window);
-    EventUtils.synthesizeMouseAtCenter(element, {});
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    let element = UrlbarTestUtils.getSelectedRow(win);
+    EventUtils.synthesizeMouseAtCenter(element, {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -637,21 +636,21 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Retained result: type, blur, focus, confirm.");
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.update1", true]],
     });
-    await promiseAutocompleteResultPopup("search", window, true);
-    await UrlbarTestUtils.promisePopupClose(window, () => {
-      gURLBar.blur();
+    await promiseAutocompleteResultPopup("search", win, true);
+    await UrlbarTestUtils.promisePopupClose(win, () => {
+      win.gURLBar.blur();
     });
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      document.getElementById("Browser:OpenLocation").doCommand();
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    EventUtils.synthesizeKey("VK_RETURN");
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     await SpecialPowers.popPrefEnv();
     return [
@@ -680,12 +679,12 @@ const tests = [
     ];
   },
 
-  async function() {
+  async function(win) {
     info("Sanity check we are not stuck on 'returned'");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("x", window, true);
-    EventUtils.synthesizeKey("VK_RETURN");
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("x", win, true);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -701,24 +700,24 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Retained result: type, blur, focus, backspace, type, confirm.");
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.update1", true]],
     });
-    await promiseAutocompleteResultPopup("search", window, true);
-    await UrlbarTestUtils.promisePopupClose(window, () => {
-      gURLBar.blur();
+    await promiseAutocompleteResultPopup("search", win, true);
+    await UrlbarTestUtils.promisePopupClose(win, () => {
+      win.gURLBar.blur();
     });
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      document.getElementById("Browser:OpenLocation").doCommand();
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    EventUtils.synthesizeKey("VK_RIGHT");
-    EventUtils.synthesizeKey("VK_BACK_SPACE");
-    EventUtils.synthesizeKey("x");
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    EventUtils.synthesizeKey("VK_RETURN");
+    EventUtils.synthesizeKey("VK_RIGHT", {}, win);
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {}, win);
+    EventUtils.synthesizeKey("x", {}, win);
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     await SpecialPowers.popPrefEnv();
     return [
@@ -747,22 +746,22 @@ const tests = [
     ];
   },
 
-  async function() {
+  async function(win) {
     info("Retained result: type, blur, focus, type (overwrite), confirm.");
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.update1", true]],
     });
-    await promiseAutocompleteResultPopup("search", window, true);
-    await UrlbarTestUtils.promisePopupClose(window, () => {
-      gURLBar.blur();
+    await promiseAutocompleteResultPopup("search", win, true);
+    await UrlbarTestUtils.promisePopupClose(win, () => {
+      win.gURLBar.blur();
     });
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      document.getElementById("Browser:OpenLocation").doCommand();
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    EventUtils.synthesizeKey("x");
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    EventUtils.synthesizeKey("VK_RETURN");
+    EventUtils.synthesizeKey("x", {}, win);
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     await SpecialPowers.popPrefEnv();
     return [
@@ -791,12 +790,12 @@ const tests = [
     ];
   },
 
-  async function() {
+  async function(win) {
     info("Sanity check we are not stuck on 'restarted'");
-    gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    await promiseAutocompleteResultPopup("x", window, true);
-    EventUtils.synthesizeKey("VK_RETURN");
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("x", win, true);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     return {
       category: "urlbar",
@@ -816,11 +815,11 @@ const tests = [
    * Abandonment tests.
    */
 
-  async function() {
+  async function(win) {
     info("Type something, blur.");
-    gURLBar.select();
-    EventUtils.synthesizeKey("x");
-    gURLBar.blur();
+    win.gURLBar.select();
+    EventUtils.synthesizeKey("x", {}, win);
+    win.gURLBar.blur();
     return {
       category: "urlbar",
       method: "abandonment",
@@ -833,14 +832,14 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Open the panel with DOWN, don't type, blur it.");
-    gURLBar.value = "";
-    gURLBar.select();
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    win.gURLBar.value = "";
+    win.gURLBar.select();
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     });
-    gURLBar.blur();
+    win.gURLBar.blur();
     return {
       category: "urlbar",
       method: "abandonment",
@@ -853,18 +852,18 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info("Open the panel with dropmarker, type something, blur it.");
     Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", false);
     await BrowserTestUtils.withNewTab(
-      { gBrowser, url: "about:blank" },
+      { gBrowser: win.gBrowser, url: "about:blank" },
       async browser => {
-        gURLBar.select();
-        await UrlbarTestUtils.promisePopupOpen(window, () => {
-          EventUtils.synthesizeMouseAtCenter(gURLBar.dropmarker, {}, window);
+        win.gURLBar.select();
+        await UrlbarTestUtils.promisePopupOpen(win, () => {
+          EventUtils.synthesizeMouseAtCenter(gURLBar.dropmarker, {}, win);
         });
-        EventUtils.synthesizeKey("x");
-        gURLBar.blur();
+        EventUtils.synthesizeKey("x", {}, win);
+        win.gURLBar.blur();
       }
     );
     Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
@@ -880,17 +879,17 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info(
       "With pageproxystate=valid, open the panel with openViewOnFocus, don't type, blur it."
     );
-    gURLBar.value = "";
+    win.gURLBar.value = "";
     Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      window.document.getElementById("Browser:OpenLocation").doCommand();
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
     Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
-    gURLBar.blur();
+    win.gURLBar.blur();
     return {
       category: "urlbar",
       method: "abandonment",
@@ -903,18 +902,18 @@ const tests = [
     };
   },
 
-  async function() {
+  async function(win) {
     info(
       "With pageproxystate=invalid, open the panel with openViewOnFocus, don't type, blur it."
     );
-    gURLBar.value = "mochi.test";
-    gURLBar.setAttribute("pageproxystate", "invalid");
+    win.gURLBar.value = "mochi.test";
+    win.gURLBar.setAttribute("pageproxystate", "invalid");
     Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      window.document.getElementById("Browser:OpenLocation").doCommand();
+    await UrlbarTestUtils.promisePopupOpen(win, () => {
+      win.document.getElementById("Browser:OpenLocation").doCommand();
     });
     Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
-    gURLBar.blur();
+    win.gURLBar.blur();
     return {
       category: "urlbar",
       method: "abandonment",
@@ -926,42 +925,40 @@ const tests = [
       },
     };
   },
+];
 
-  /*
-   * No event tests.
-   */
-
-  async function() {
+const noEventTests = [
+  async function(win) {
     info("Type something, click on search settings.");
     await BrowserTestUtils.withNewTab(
-      { gBrowser, url: "about:blank" },
+      { gBrowser: win.gBrowser, url: "about:blank" },
       async browser => {
-        gURLBar.select();
+        win.gURLBar.select();
         let promise = BrowserTestUtils.browserLoaded(browser);
-        await promiseAutocompleteResultPopup("x", window, true);
-        UrlbarTestUtils.getOneOffSearchButtons(window).settingsButton.click();
+        await promiseAutocompleteResultPopup("x", win, true);
+        UrlbarTestUtils.getOneOffSearchButtons(win).settingsButton.click();
         await promise;
       }
     );
     return null;
   },
 
-  async function() {
+  async function(win) {
     info("Type something, Up, Enter on search settings.");
     await BrowserTestUtils.withNewTab(
-      { gBrowser, url: "about:blank" },
+      { gBrowser: win.gBrowser, url: "about:blank" },
       async browser => {
-        gURLBar.select();
+        win.gURLBar.select();
         let promise = BrowserTestUtils.browserLoaded(browser);
-        await promiseAutocompleteResultPopup("x", window, true);
-        EventUtils.synthesizeKey("KEY_ArrowUp");
+        await promiseAutocompleteResultPopup("x", win, true);
+        EventUtils.synthesizeKey("KEY_ArrowUp", {}, win);
         Assert.ok(
           UrlbarTestUtils.getOneOffSearchButtons(
-            window
+            win
           ).selectedButton.classList.contains("search-setting-button-compact"),
           "Should have selected the settings button"
         );
-        EventUtils.synthesizeKey("VK_RETURN");
+        EventUtils.synthesizeKey("VK_RETURN", {}, win);
         await promise;
       }
     );
@@ -1019,14 +1016,24 @@ add_task(async function test() {
 
   for (let i = 0; i < tests.length; i++) {
     info(`Running test at index ${i}`);
-    let testFn = tests[i];
-    let events = await testFn();
+    // Some prefs only apply to new windows.
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    let events = await tests[i](win);
     if (!Array.isArray(events)) {
-      events = [events].filter(e => !!e);
+      events = [events];
     }
     // Always blur to ensure it's not accounted as an additional abandonment.
-    gURLBar.blur();
+    win.gURLBar.blur();
+    await BrowserTestUtils.closeWindow(win);
     TelemetryTestUtils.assertEvents(events, { category: "urlbar" });
+  }
+
+  for (let i = 0; i < noEventTests.length; i++) {
+    info(`Running no event test at index ${i}`);
+    await noEventTests[i](window);
+    // Always blur to ensure it's not accounted as an additional abandonment.
+    gURLBar.blur();
+    TelemetryTestUtils.assertEvents([], { category: "urlbar" });
   }
 });
 

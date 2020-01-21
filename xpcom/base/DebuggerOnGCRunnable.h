@@ -7,10 +7,11 @@
 #ifndef mozilla_DebuggerOnGCRunnable_h
 #define mozilla_DebuggerOnGCRunnable_h
 
-#include "nsThreadUtils.h"
+#include <utility>
+
 #include "js/GCAPI.h"
-#include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 

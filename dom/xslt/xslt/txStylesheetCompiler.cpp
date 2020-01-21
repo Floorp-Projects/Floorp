@@ -3,25 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
-
 #include "txStylesheetCompiler.h"
-#include "txStylesheetCompileHandlers.h"
+
+#include <utility>
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/UniquePtr.h"
 #include "nsGkAtoms.h"
-#include "txURIUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsTArray.h"
 #include "nsWhitespaceTokenizer.h"
-#include "txStylesheet.h"
-#include "txInstructions.h"
-#include "txToplevelItems.h"
 #include "txExprParser.h"
+#include "txInstructions.h"
 #include "txLog.h"
 #include "txPatternParser.h"
 #include "txStringUtils.h"
+#include "txStylesheet.h"
+#include "txStylesheetCompileHandlers.h"
+#include "txToplevelItems.h"
+#include "txURIUtils.h"
 #include "txXSLTFunctions.h"
-#include "nsServiceManagerUtils.h"
-#include "nsTArray.h"
 
 using namespace mozilla;
 using mozilla::dom::ReferrerPolicy;

@@ -10,17 +10,17 @@
 #if defined(_M_ARM64)
 #  include "mozilla/interceptor/Arm64.h"
 #endif  // defined(_M_ARM64)
-#include "mozilla/interceptor/PatcherBase.h"
-#include "mozilla/interceptor/Trampoline.h"
-#include "mozilla/interceptor/VMSharingPolicies.h"
+#include <utility>
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/Types.h"
 #include "mozilla/Unused.h"
+#include "mozilla/interceptor/PatcherBase.h"
+#include "mozilla/interceptor/Trampoline.h"
+#include "mozilla/interceptor/VMSharingPolicies.h"
 
 #define COPY_CODES(NBYTES)                          \
   do {                                              \
