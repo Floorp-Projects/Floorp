@@ -189,7 +189,7 @@ test(t => {
   });
   assert_equals(dc2.label, 'test2');
   assert_equals(dc2.maxPacketLifeTime, 42);
-  assert_equals(dc.maxRetransmits, null);
+  assert_equals(dc2.maxRetransmits, null);
 }, 'createDataChannel with provided parameters should initialize attributes to provided values');
 
 /*
