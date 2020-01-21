@@ -33,7 +33,7 @@ const invalid_type_messages =
 
       // NDEFRecord.encoding for 'text' record must be either "utf-8",
       // "utf-16", "utf-16le" or "utf-16be".
-      createMessage([createTextRecord(test_text_data, "chinese")]),
+      createMessage([createTextRecord(test_buffer_data, "chinese")]),
 
       // https://w3c.github.io/web-nfc/#dfn-map-a-url-to-ndef
       // NDEFRecord must have data.
