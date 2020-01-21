@@ -3572,11 +3572,7 @@ void nsCookieService::AddInternal(const nsCookieKey& aKey, nsCookie* aCookie,
        reject control chars or non-ASCII chars. This is erring on the loose
        side, since there's probably no good reason to enforce this strictness.
 
-    5. cookie <NAME> is optional, where spec requires it. This is a fairly
-       trivial case, but allows the flexibility of setting only a cookie <VALUE>
-       with a blank <NAME> and is required by some sites (see bug 169091).
-
-    6. Attribute "HttpOnly", not covered in the RFCs, is supported
+    5. Attribute "HttpOnly", not covered in the RFCs, is supported
        (see bug 178993).
 
  ** Begin BNF:
