@@ -197,12 +197,6 @@ static nsIFrame* GetFirstNonAnonBoxDescendant(nsIFrame* aFrame) {
   return aFrame;
 }
 
-// Indicates whether advancing along the given axis is equivalent to
-// increasing our X or Y position (as opposed to decreasing it).
-static inline bool AxisGrowsInPositiveDirection(AxisOrientationType aAxis) {
-  return eAxis_LR == aAxis || eAxis_TB == aAxis;
-}
-
 // Given an AxisOrientationType, returns the "reverse" AxisOrientationType
 // (in the same dimension, but the opposite direction)
 static inline AxisOrientationType GetReverseAxis(AxisOrientationType aAxis) {
@@ -235,8 +229,8 @@ static inline AxisOrientationType GetReverseAxis(AxisOrientationType aAxis) {
  */
 static nscoord PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
                                                   nscoord aContainerSize,
-                                                  AxisOrientationType aAxis) {
-  if (AxisGrowsInPositiveDirection(aAxis)) {
+                                                  mozilla::Side aStartSide) {
+  if (aStartSide == eSideLeft || aStartSide == eSideTop) {
     return aFlexRelativeCoord;
   }
   return aContainerSize - aFlexRelativeCoord;
@@ -313,6 +307,30 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 
   LogicalAxis MainAxis() const { return mMainAxis; }
   LogicalAxis CrossAxis() const { return GetOrthogonalAxis(mMainAxis); }
+
+  LogicalSide MainAxisStartSide() const;
+  LogicalSide MainAxisEndSide() const {
+    return GetOppositeSide(MainAxisStartSide());
+  }
+
+  LogicalSide CrossAxisStartSide() const;
+  LogicalSide CrossAxisEndSide() const {
+    return GetOppositeSide(CrossAxisStartSide());
+  }
+
+  mozilla::Side MainAxisPhysicalStartSide() const {
+    return mWM.PhysicalSide(MainAxisStartSide());
+  }
+  mozilla::Side MainAxisPhysicalEndSide() const {
+    return mWM.PhysicalSide(MainAxisEndSide());
+  }
+
+  mozilla::Side CrossAxisPhysicalStartSide() const {
+    return mWM.PhysicalSide(CrossAxisStartSide());
+  }
+  mozilla::Side CrossAxisPhysicalEndSide() const {
+    return mWM.PhysicalSide(CrossAxisEndSide());
+  }
 
   // Returns the flex container's writing mode.
   WritingMode GetWritingMode() const { return mWM; }
@@ -3690,7 +3708,8 @@ FlexboxAxisTracker::FlexboxAxisTracker(
       sPreventBottomToTopChildOrdering) {
     // If either axis is bottom-to-top, we flip both axes (and set a flag
     // so that we can flip some logic to make the reversal transparent).
-    if (eAxis_BT == mPhysicalMainAxis || eAxis_BT == mPhysicalCrossAxis) {
+    if (MainAxisPhysicalStartSide() == eSideBottom ||
+        CrossAxisPhysicalStartSide() == eSideBottom) {
       mPhysicalMainAxis = GetReverseAxis(mPhysicalMainAxis);
       mPhysicalCrossAxis = GetReverseAxis(mPhysicalCrossAxis);
       mAreAxesInternallyReversed = true;
@@ -3811,6 +3830,16 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
   } else {
     mIsCrossAxisReversed = false;
   }
+}
+
+LogicalSide FlexboxAxisTracker::MainAxisStartSide() const {
+  return MakeLogicalSide(
+      MainAxis(), mIsMainAxisReversed ? eLogicalEdgeEnd : eLogicalEdgeStart);
+}
+
+LogicalSide FlexboxAxisTracker::CrossAxisStartSide() const {
+  return MakeLogicalSide(
+      CrossAxis(), mIsCrossAxisReversed ? eLogicalEdgeEnd : eLogicalEdgeStart);
 }
 
 // Allocates a new FlexLine, adds it to the given LinkedList (at the front or
@@ -4226,7 +4255,7 @@ static nscoord ComputePhysicalAscentFromFlexRelativeAscent(
   return aReflowInput.ComputedPhysicalBorderPadding().top +
          PhysicalCoordFromFlexRelativeCoord(
              aFlexRelativeAscent, aContentBoxCrossSize,
-             aAxisTracker.GetPhysicalCrossAxis());
+             aAxisTracker.CrossAxisPhysicalStartSide());
 }
 
 void nsFlexContainerFrame::SizeItemInCrossAxis(nsPresContext* aPresContext,
@@ -4561,31 +4590,33 @@ void nsFlexContainerFrame::CreateFlexLineAndFlexItemInfo(
 void nsFlexContainerFrame::ComputeFlexDirections(
     ComputedFlexContainerInfo& aContainerInfo,
     const FlexboxAxisTracker& aAxisTracker) {
-  AxisOrientationType mainAxis = aAxisTracker.GetPhysicalMainAxis();
-  AxisOrientationType crossAxis = aAxisTracker.GetPhysicalCrossAxis();
-  if (aAxisTracker.AreAxesInternallyReversed()) {
-    mainAxis = GetReverseAxis(mainAxis);
-    crossAxis = GetReverseAxis(crossAxis);
-  }
-
-  auto ConvertAxisOrientationTypeToAPIEnum =
-      [](AxisOrientationType aAxisOrientation) {
-        switch (aAxisOrientation) {
-          case eAxis_LR:
-            return mozilla::dom::FlexPhysicalDirection::Horizontal_lr;
-          case eAxis_RL:
-            return mozilla::dom::FlexPhysicalDirection::Horizontal_rl;
-          case eAxis_TB:
-            return mozilla::dom::FlexPhysicalDirection::Vertical_tb;
-          default:
-            return mozilla::dom::FlexPhysicalDirection::Vertical_bt;
+  auto ConvertPhysicalStartSideToFlexPhysicalDirection =
+      [](mozilla::Side aStartSide) {
+        switch (aStartSide) {
+          case eSideLeft:
+            return dom::FlexPhysicalDirection::Horizontal_lr;
+          case eSideRight:
+            return dom::FlexPhysicalDirection::Horizontal_rl;
+          case eSideTop:
+            return dom::FlexPhysicalDirection::Vertical_tb;
+          case eSideBottom:
+            return dom::FlexPhysicalDirection::Vertical_bt;
         }
+
+        MOZ_ASSERT_UNREACHABLE("We should handle all sides!");
+        return dom::FlexPhysicalDirection::Horizontal_lr;
       };
 
   aContainerInfo.mMainAxisDirection =
-      ConvertAxisOrientationTypeToAPIEnum(mainAxis);
+      ConvertPhysicalStartSideToFlexPhysicalDirection(
+          aAxisTracker.AreAxesInternallyReversed()
+              ? aAxisTracker.MainAxisPhysicalEndSide()
+              : aAxisTracker.MainAxisPhysicalStartSide());
   aContainerInfo.mCrossAxisDirection =
-      ConvertAxisOrientationTypeToAPIEnum(crossAxis);
+      ConvertPhysicalStartSideToFlexPhysicalDirection(
+          aAxisTracker.AreAxesInternallyReversed()
+              ? aAxisTracker.CrossAxisPhysicalEndSide()
+              : aAxisTracker.CrossAxisPhysicalStartSide());
 }
 
 void nsFlexContainerFrame::UpdateFlexLineAndItemInfo(
