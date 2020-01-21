@@ -170,26 +170,26 @@ uint32_t DeviceInfoDS::NumberOfDevices() {
 
 int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
                                     char* deviceNameUTF8,
-                                    uint32_t deviceNameLength,
+                                    uint32_t deviceNameSize,
                                     char* deviceUniqueIdUTF8,
-                                    uint32_t deviceUniqueIdUTF8Length,
+                                    uint32_t deviceUniqueIdUTF8Size,
                                     char* productUniqueIdUTF8,
-                                    uint32_t productUniqueIdUTF8Length,
+                                    uint32_t productUniqueIdUTF8Size,
                                     pid_t *pid) {
   ReadLockScoped cs(_apiLock);
   const int32_t result = GetDeviceInfo(
-      deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
-      deviceUniqueIdUTF8Length, productUniqueIdUTF8, productUniqueIdUTF8Length);
+      deviceNumber, deviceNameUTF8, deviceNameSize, deviceUniqueIdUTF8,
+      deviceUniqueIdUTF8Size, productUniqueIdUTF8, productUniqueIdUTF8Size);
   return result > (int32_t)deviceNumber ? 0 : -1;
 }
 
 int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
                                     char* deviceNameUTF8,
-                                    uint32_t deviceNameLength,
+                                    uint32_t deviceNameSize,
                                     char* deviceUniqueIdUTF8,
-                                    uint32_t deviceUniqueIdUTF8Length,
+                                    uint32_t deviceUniqueIdUTF8Size,
                                     char* productUniqueIdUTF8,
-                                    uint32_t productUniqueIdUTF8Length)
+                                    uint32_t productUniqueIdUTF8Size)
 
 {
   // enumerate all video capture devices
@@ -224,20 +224,20 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
           // Found a valid device.
           if (index == static_cast<int>(deviceNumber)) {
             int convResult = 0;
-            if (deviceNameLength > 0) {
+            if (deviceNameSize > 0) {
               convResult = WideCharToMultiByte(CP_UTF8, 0, varName.bstrVal, -1,
                                                (char*)deviceNameUTF8,
-                                               deviceNameLength, NULL, NULL);
+                                               deviceNameSize, NULL, NULL);
               if (convResult == 0) {
                 RTC_LOG(LS_INFO) << "Failed to convert device name to UTF8, "
                                  << "error = " << GetLastError();
                 return -1;
               }
             }
-            if (deviceUniqueIdUTF8Length > 0) {
+            if (deviceUniqueIdUTF8Size > 0) {
               hr = pBag->Read(L"DevicePath", &varName, 0);
               if (FAILED(hr)) {
-                strncpy_s((char*)deviceUniqueIdUTF8, deviceUniqueIdUTF8Length,
+                strncpy_s((char*)deviceUniqueIdUTF8, deviceUniqueIdUTF8Size,
                           (char*)deviceNameUTF8, convResult);
                 RTC_LOG(LS_INFO) << "Failed to get "
                                  << "deviceUniqueIdUTF8 using "
@@ -245,16 +245,16 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
               } else {
                 convResult = WideCharToMultiByte(
                     CP_UTF8, 0, varName.bstrVal, -1, (char*)deviceUniqueIdUTF8,
-                    deviceUniqueIdUTF8Length, NULL, NULL);
+                    deviceUniqueIdUTF8Size, NULL, NULL);
                 if (convResult == 0) {
                   RTC_LOG(LS_INFO)
                       << "Failed to convert device "
                       << "name to UTF8, error = " << GetLastError();
                   return -1;
                 }
-                if (productUniqueIdUTF8 && productUniqueIdUTF8Length > 0) {
+                if (productUniqueIdUTF8 && productUniqueIdUTF8Size > 0) {
                   GetProductId(deviceUniqueIdUTF8, productUniqueIdUTF8,
-                               productUniqueIdUTF8Length);
+                               productUniqueIdUTF8Size);
                 }
               }
             }
@@ -267,7 +267,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
       pM->Release();
     }
   }
-  if (deviceNameLength) {
+  if (deviceNameSize) {
     RTC_LOG(LS_INFO) << __FUNCTION__ << " " << deviceNameUTF8;
   }
   return index;
@@ -275,10 +275,10 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
 
 IBaseFilter* DeviceInfoDS::GetDeviceFilter(const char* deviceUniqueIdUTF8,
                                            char* productUniqueIdUTF8,
-                                           uint32_t productUniqueIdUTF8Length) {
+                                           uint32_t productUniqueIdUTF8Size) {
   const int32_t deviceUniqueIdUTF8Length = (int32_t)strlen(
       (char*)deviceUniqueIdUTF8);  // UTF8 is also NULL terminated
-  if (deviceUniqueIdUTF8Length > kVideoCaptureUniqueNameLength) {
+  if (deviceUniqueIdUTF8Length >= kVideoCaptureUniqueNameSize) {
     RTC_LOG(LS_INFO) << "Device name too long";
     return NULL;
   }
@@ -332,10 +332,10 @@ IBaseFilter* DeviceInfoDS::GetDeviceFilter(const char* deviceUniqueIdUTF8,
               }
 
             if (productUniqueIdUTF8 &&
-                productUniqueIdUTF8Length > 0)  // Get the device name
+                productUniqueIdUTF8Size > 0)  // Get the device name
             {
               GetProductId(deviceUniqueIdUTF8, productUniqueIdUTF8,
-                           productUniqueIdUTF8Length);
+                           productUniqueIdUTF8Size);
             }
           }
         }
@@ -370,16 +370,16 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
 
   const int32_t deviceUniqueIdUTF8Length =
       (int32_t)strlen((char*)deviceUniqueIdUTF8);
-  if (deviceUniqueIdUTF8Length > kVideoCaptureUniqueNameLength) {
+  if (deviceUniqueIdUTF8Length >= kVideoCaptureUniqueNameSize) {
     RTC_LOG(LS_INFO) << "Device name too long";
     return -1;
   }
   RTC_LOG(LS_INFO) << "CreateCapabilityMap called for device "
                    << deviceUniqueIdUTF8;
 
-  char productId[kVideoCaptureProductIdLength];
+  char productId[kVideoCaptureProductIdSize];
   IBaseFilter* captureDevice = DeviceInfoDS::GetDeviceFilter(
-      deviceUniqueIdUTF8, productId, kVideoCaptureProductIdLength);
+      deviceUniqueIdUTF8, productId, sizeof(productId));
   if (!captureDevice)
     return -1;
   IPin* outputCapturePin = GetOutputPin(captureDevice, GUID_NULL);
@@ -613,11 +613,11 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
 // "\\?\avc#sony&dv-vcr&camcorder&dv#65b2d50301460008#{65e8773d-8f56-11d0-a3b9-00a0c9223196}\global"
 void DeviceInfoDS::GetProductId(const char* devicePath,
                                 char* productUniqueIdUTF8,
-                                uint32_t productUniqueIdUTF8Length) {
+                                uint32_t productUniqueIdUTF8Size) {
   *productUniqueIdUTF8 = '\0';
   char* startPos = strstr((char*)devicePath, "\\\\?\\");
   if (!startPos) {
-    strncpy_s((char*)productUniqueIdUTF8, productUniqueIdUTF8Length, "", 1);
+    strncpy_s((char*)productUniqueIdUTF8, productUniqueIdUTF8Size, "", 1);
     RTC_LOG(LS_INFO) << "Failed to get the product Id";
     return;
   }
@@ -625,19 +625,19 @@ void DeviceInfoDS::GetProductId(const char* devicePath,
 
   char* pos = strchr(startPos, '&');
   if (!pos || pos >= (char*)devicePath + strlen((char*)devicePath)) {
-    strncpy_s((char*)productUniqueIdUTF8, productUniqueIdUTF8Length, "", 1);
+    strncpy_s((char*)productUniqueIdUTF8, productUniqueIdUTF8Size, "", 1);
     RTC_LOG(LS_INFO) << "Failed to get the product Id";
     return;
   }
   // Find the second occurrence.
   pos = strchr(pos + 1, '&');
   uint32_t bytesToCopy = (uint32_t)(pos - startPos);
-  if (pos && (bytesToCopy <= productUniqueIdUTF8Length) &&
-      bytesToCopy <= kVideoCaptureProductIdLength) {
-    strncpy_s((char*)productUniqueIdUTF8, productUniqueIdUTF8Length,
+  if (pos && (bytesToCopy < productUniqueIdUTF8Size) &&
+      bytesToCopy < kVideoCaptureProductIdSize) {
+    strncpy_s((char*)productUniqueIdUTF8, productUniqueIdUTF8Size,
               (char*)startPos, bytesToCopy);
   } else {
-    strncpy_s((char*)productUniqueIdUTF8, productUniqueIdUTF8Length, "", 1);
+    strncpy_s((char*)productUniqueIdUTF8, productUniqueIdUTF8Size, "", 1);
     RTC_LOG(LS_INFO) << "Failed to get the product Id";
   }
 }
