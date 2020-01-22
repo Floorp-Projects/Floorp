@@ -258,7 +258,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   CryptoBuffer userId;
   userId.Assign(aOptions.mUser.mId);
   if (userId.Length() > 64) {
-    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+    promise->MaybeRejectWithTypeError(u"user.id is too long");
     return promise.forget();
   }
 
