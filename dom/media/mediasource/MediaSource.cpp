@@ -207,7 +207,8 @@ void MediaSource::SetDuration(double aDuration, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetDuration(aDuration=%f, ErrorResult)", aDuration);
   if (aDuration < 0 || IsNaN(aDuration)) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    nsPrintfCString error("Invalid duration value %f", aDuration);
+    aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(error));
     return;
   }
   if (mReadyState != MediaSourceReadyState::Open ||
