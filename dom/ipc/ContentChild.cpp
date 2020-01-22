@@ -2110,61 +2110,6 @@ void ContentChild::UpdateCookieStatus(nsIChannel* aChannel) {
   csChild->TrackCookieLoad(aChannel);
 }
 
-already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
-    nsFrameLoader* aFrameLoader, const TabContext& aContext,
-    const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-
-  // Determine our embedder's BrowserChild actor.
-  RefPtr<Element> owner = aFrameLoader->GetOwnerContent();
-  MOZ_DIAGNOSTIC_ASSERT(owner);
-
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(owner->GetOwnerGlobal());
-  MOZ_DIAGNOSTIC_ASSERT(docShell);
-
-  RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(docShell);
-  MOZ_DIAGNOSTIC_ASSERT(browserChild);
-
-  uint32_t chromeFlags = 0;
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  if (docShell) {
-    docShell->GetTreeOwner(getter_AddRefs(treeOwner));
-  }
-  if (treeOwner) {
-    nsCOMPtr<nsIWebBrowserChrome> wbc = do_GetInterface(treeOwner);
-    if (wbc) {
-      wbc->GetChromeFlags(&chromeFlags);
-    }
-  }
-
-  // Checking that this actually does something useful is
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1542710
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
-  if (loadContext && loadContext->UsePrivateBrowsing()) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
-  }
-  if (loadContext && loadContext->UseRemoteTabs()) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
-  }
-  if (loadContext && loadContext->UseRemoteSubframes()) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
-  }
-  if (docShell->GetAffectPrivateSessionLifetime()) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
-  }
-
-  TabId tabId(nsContentUtils::GenerateTabId());
-  RefPtr<BrowserBridgeChild> browserBridge =
-      new BrowserBridgeChild(aBrowsingContext, tabId);
-
-  browserChild->SendPBrowserBridgeConstructor(
-      browserBridge, PromiseFlatString(aContext.PresentationURL()), aRemoteType,
-      aBrowsingContext, chromeFlags, tabId);
-
-  return browserBridge->FinishInit(aFrameLoader);
-}
-
 PScriptCacheChild* ContentChild::AllocPScriptCacheChild(
     const FileDescOrError& cacheFile, const bool& wantCacheData) {
   return new loader::ScriptCacheChild();
