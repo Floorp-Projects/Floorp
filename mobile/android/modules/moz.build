@@ -6,10 +6,40 @@
 
 # Most files are General, a few exceptions
 with Files('**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('DownloadNotifications.jsm'):
+    BUG_COMPONENT = ('Firefox for Android', 'Download Manager')
+
+with Files('HomeProvider.jsm'):
+    BUG_COMPONENT = ('Firefox for Android', 'Data Providers')
+
+with Files('geckoview/**'):
     BUG_COMPONENT = ('GeckoView', 'General')
 
 DIRS += ['geckoview']
 
 EXTRA_JS_MODULES += [
+    'Accounts.jsm',
+    'ActionBarHandler.jsm',
     'dbg-browser-actors.js',
+    'DownloadNotifications.jsm',
+    'FormAssistant.jsm',
+    'FxAccountsWebChannel.jsm',
+    'HelperApps.jsm',
+    'Home.jsm',
+    'HomeProvider.jsm',
+    'InputWidgetHelper.jsm',
+    'LightweightThemeConsumer.jsm',
+    'MediaPlayerApp.jsm',
+    'NetErrorHelper.jsm',
+    'Notifications.jsm',
+    'Prompt.jsm',
+    'RuntimePermissions.jsm',
+    'Sanitizer.jsm',
+    'SelectHelper.jsm',
+    'SharedPreferences.jsm',
+    'Snackbars.jsm',
+    'WebrtcUI.jsm',
+    'WebsiteMetadata.jsm'
 ]

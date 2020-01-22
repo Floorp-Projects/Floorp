@@ -14,6 +14,7 @@ chrome.jar:
   skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
   skin/aboutReader.css                      (aboutReader.css)
   skin/defines.css                          (defines.css)
+  skin/netError.css                         (netError.css)
   skin/spinner.css                          (spinner.css)
 % override chrome://global/skin/aboutReader.css chrome://browser/skin/aboutReader.css
 

@@ -1,0 +1,531 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+/**
+ * Firefox Accounts Web Channel.
+ *
+ * Use the WebChannel component to receive messages about account
+ * state changes.
+ */
+var EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
+
+const { Accounts } = ChromeUtils.import("resource://gre/modules/Accounts.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { WebChannel } = ChromeUtils.import(
+  "resource://gre/modules/WebChannel.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+const log = ChromeUtils.import(
+  "resource://gre/modules/AndroidLog.jsm",
+  {}
+).AndroidLog.bind("FxAccounts");
+
+const WEBCHANNEL_ID = "account_updates";
+
+const COMMAND_LOADED = "fxaccounts:loaded";
+const COMMAND_CAN_LINK_ACCOUNT = "fxaccounts:can_link_account";
+const COMMAND_LOGIN = "fxaccounts:login";
+const COMMAND_CHANGE_PASSWORD = "fxaccounts:change_password";
+const COMMAND_DELETE_ACCOUNT = "fxaccounts:delete_account";
+const COMMAND_PROFILE_CHANGE = "profile:change";
+const COMMAND_SYNC_PREFERENCES = "fxaccounts:sync_preferences";
+
+const PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUserHash";
+
+XPCOMUtils.defineLazyGetter(this, "strings", () =>
+  Services.strings.createBundle(
+    "chrome://browser/locale/aboutAccounts.properties"
+  )
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "Snackbars",
+  "resource://gre/modules/Snackbars.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Prompt",
+  "resource://gre/modules/Prompt.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UITelemetry",
+  "resource://gre/modules/UITelemetry.jsm"
+);
+
+this.FxAccountsWebChannelHelpers = function() {};
+
+this.FxAccountsWebChannelHelpers.prototype = {
+  /**
+   * Get the hash of account name of the previously signed in account.
+   */
+  getPreviousAccountNameHashPref() {
+    try {
+      return Services.prefs.getStringPref(PREF_LAST_FXA_USER);
+    } catch (_) {
+      return "";
+    }
+  },
+
+  /**
+   * Given an account name, set the hash of the previously signed in account.
+   *
+   * @param acctName the account name of the user's account.
+   */
+  setPreviousAccountNameHashPref(acctName) {
+    Services.prefs.setStringPref(PREF_LAST_FXA_USER, this.sha256(acctName));
+  },
+
+  /**
+   * Given a string, returns the SHA265 hash in base64.
+   */
+  sha256(str) {
+    let converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    // Data is an array of bytes.
+    let data = converter.convertToByteArray(str, {});
+    let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
+    hasher.init(hasher.SHA256);
+    hasher.update(data, data.length);
+
+    return hasher.finish(true);
+  },
+};
+
+/**
+ * Create a new FxAccountsWebChannel to listen for account updates.
+ *
+ * @param {Object} options Options
+ *   @param {Object} options
+ *     @param {String} options.content_uri
+ *     The FxA Content server uri
+ *     @param {String} options.channel_id
+ *     The ID of the WebChannel
+ *     @param {String} options.helpers
+ *     Helpers functions. Should only be passed in for testing.
+ * @constructor
+ */
+this.FxAccountsWebChannel = function(options) {
+  if (!options) {
+    throw new Error("Missing configuration options");
+  }
+  if (!options.content_uri) {
+    throw new Error("Missing 'content_uri' option");
+  }
+  this._contentUri = options.content_uri;
+
+  if (!options.channel_id) {
+    throw new Error("Missing 'channel_id' option");
+  }
+  this._webChannelId = options.channel_id;
+
+  // options.helpers is only specified by tests.
+  this._helpers = options.helpers || new FxAccountsWebChannelHelpers(options);
+
+  this._setupChannel();
+};
+
+this.FxAccountsWebChannel.prototype = {
+  /**
+   * WebChannel that is used to communicate with content page
+   */
+  _channel: null,
+
+  /**
+   * WebChannel ID.
+   */
+  _webChannelId: null,
+  /**
+   * WebChannel origin, used to validate origin of messages
+   */
+  _webChannelOrigin: null,
+
+  /**
+   * Release all resources that are in use.
+   */
+  tearDown() {
+    this._channel.stopListening();
+    this._channel = null;
+    this._channelCallback = null;
+  },
+
+  /**
+   * Configures and registers a new WebChannel
+   *
+   * @private
+   */
+  _setupChannel() {
+    // if this.contentUri is present but not a valid URI, then this will throw an error.
+    try {
+      this._webChannelOrigin = Services.io.newURI(this._contentUri);
+      this._registerChannel();
+    } catch (e) {
+      log.e(e.toString());
+      throw e;
+    }
+  },
+
+  /**
+   * Create a new channel with the WebChannelBroker, setup a callback listener
+   * @private
+   */
+  _registerChannel() {
+    /**
+     * Processes messages that are called back from the FxAccountsChannel
+     *
+     * @param webChannelId {String}
+     *        Command webChannelId
+     * @param message {Object}
+     *        Command message
+     * @param sendingContext {Object}
+     *        Message sending context.
+     *        @param sendingContext.browsingContext {BrowsingContext}
+     *               The browsing context from which the
+     *               WebChannelMessageToChrome was sent.
+     *        @param sendingContext.eventTarget {EventTarget}
+     *               The <EventTarget> where the message was sent.
+     *        @param sendingContext.principal {Principal}
+     *               The <Principal> of the EventTarget where the message was sent.
+     * @private
+     *
+     */
+    let listener = (webChannelId, message, sendingContext) => {
+      if (message) {
+        let command = message.command;
+        let data = message.data;
+        log.d("FxAccountsWebChannel message received, command: " + command);
+
+        // Respond to the message with true or false.
+        let respond = data => {
+          let response = {
+            command: command,
+            messageId: message.messageId,
+            data: data,
+          };
+          log.d("Sending response to command: " + command);
+          this._channel.send(response, sendingContext);
+        };
+
+        switch (command) {
+          case COMMAND_LOADED:
+            // Note: we want a message manager here that about:accounts can
+            // add a listener to, so use the docshell's message manager,
+            // not the sending context itself.
+            let { docShell } = sendingContext.browsingContext;
+            let mm = docShell.messageManager;
+            mm.sendAsyncMessage(COMMAND_LOADED);
+            break;
+
+          case COMMAND_CAN_LINK_ACCOUNT:
+            Accounts.getFirefoxAccount()
+              .then(account => {
+                if (account) {
+                  // If we /have/ an Android Account, we never allow the user to
+                  // login to a different account.  They need to manually delete
+                  // the first Android Account and then create a new one.
+                  if (account.email == data.email) {
+                    // In future, we should use a UID for this comparison.
+                    log.d(
+                      "Relinking existing Android Account: email addresses agree."
+                    );
+                    respond({ ok: true });
+                  } else {
+                    log.w(
+                      "Not relinking existing Android Account: email addresses disagree!"
+                    );
+                    let message = strings.GetStringFromName(
+                      "relinkDenied.message"
+                    );
+                    let buttonLabel = strings.GetStringFromName(
+                      "relinkDenied.openPrefs"
+                    );
+                    Snackbars.show(message, Snackbars.LENGTH_LONG, {
+                      action: {
+                        label: buttonLabel,
+                        callback: () => {
+                          // We have an account, so this opens Sync native preferences.
+                          Accounts.launchSetup();
+                        },
+                      },
+                    });
+                    respond({ ok: false });
+                  }
+                } else {
+                  // If we /don't have/ an Android Account, we warn if we're
+                  // connecting to a new Account.  This is to minimize surprise;
+                  // we never did this when changing accounts via the native UI.
+                  let prevAcctHash = this._helpers.getPreviousAccountNameHashPref();
+                  let shouldShowWarning =
+                    prevAcctHash &&
+                    prevAcctHash != this._helpers.sha256(data.email);
+
+                  if (shouldShowWarning) {
+                    log.w(
+                      "Warning about creating a new Android Account: previously linked to different email address!"
+                    );
+                    let message = strings.formatStringFromName(
+                      "relinkVerify.message",
+                      [data.email]
+                    );
+                    let browser =
+                      sendingContext.browsingContext &&
+                      sendingContext.browsingContext.top.embedderElement;
+                    new Prompt({
+                      window: browser && browser.ownerGlobal,
+                      title: strings.GetStringFromName("relinkVerify.title"),
+                      message: message,
+                      buttons: [
+                        // This puts Cancel on the right.
+                        strings.GetStringFromName("relinkVerify.cancel"),
+                        strings.GetStringFromName("relinkVerify.continue"),
+                      ],
+                    }).show(result =>
+                      respond({ ok: result && result.button == 1 })
+                    );
+                  } else {
+                    log.d(
+                      "Not warning about creating a new Android Account: no previously linked email address."
+                    );
+                    respond({ ok: true });
+                  }
+                }
+              })
+              .catch(e => {
+                log.e(e.toString());
+                respond({ ok: false });
+              });
+            break;
+
+          case COMMAND_LOGIN:
+            // Either create a new Android Account or re-connect an existing
+            // Android Account here.  There's not much to be done if we don't
+            // succeed or get an error.
+            Accounts.getFirefoxAccount()
+              .then(account => {
+                // "action" will be introduced in https://github.com/mozilla/fxa/issues/1998.
+                // We're both backwards and forwards compatible here, falling back on heuristics
+                // if its missing, and passing it along otherwise.
+                // WebChannel "login data" payload docs at the time this comment was written:
+                // https://github.com/mozilla/fxa/blob/8701348cdd79dbdc9879b2b4a55a23a135a32bc1/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md#loginData
+                if (!data.hasOwnProperty("action")) {
+                  // This is how way we can determine if we're logging-in or signing-up.
+                  // Currently, a choice of what to sync (CWTS) is only presented to the user during signup.
+                  // This is likely to change in the future - we will offer CWTS to first-time Sync users as well.
+                  // Once those changes occur, "action" is expected to be present in the webchannel message data,
+                  // letting us avoid this codepath.
+                  if ("offeredSyncEngines" in data) {
+                    data.action = "signup";
+                  } else {
+                    data.action = "signin";
+                  }
+                }
+
+                if (!account) {
+                  return Accounts.createFirefoxAccountFromJSON(data).then(
+                    success => {
+                      if (!success) {
+                        throw new Error("Could not create Firefox Account!");
+                      }
+                      UITelemetry.addEvent(
+                        "action.1",
+                        "content",
+                        null,
+                        "fxaccount-create"
+                      );
+                      return success;
+                    }
+                  );
+                }
+
+                // At this point, we're reconnectig to an existing account (due to a password change, or a device disconnect).
+                // As far as `action` parameter is concerned that we pass along in `data`, this is considered a `signin`.
+                // Receiving native code is expected to differentiate between a "signin" and a "reconnect" by looking
+                // at account presence.
+                // We also send `updateFirefoxAccountFromJSON` in case of a password change, and in that case "action"
+                // is explicitely set to "passwordChange".
+                return Accounts.updateFirefoxAccountFromJSON(data).then(
+                  success => {
+                    if (!success) {
+                      throw new Error("Could not update Firefox Account!");
+                    }
+                    UITelemetry.addEvent(
+                      "action.1",
+                      "content",
+                      null,
+                      "fxaccount-login"
+                    );
+                    return success;
+                  }
+                );
+              })
+              .then(success => {
+                if (!success) {
+                  throw new Error(
+                    "Could not create or update Firefox Account!"
+                  );
+                }
+
+                // Remember who it is so we can show a relink warning when appropriate.
+                this._helpers.setPreviousAccountNameHashPref(data.email);
+
+                log.i("Created or updated Firefox Account.");
+              })
+              .catch(e => {
+                log.e(e.toString());
+              });
+            break;
+
+          case COMMAND_CHANGE_PASSWORD:
+            // Only update an existing Android Account.
+            Accounts.getFirefoxAccount()
+              .then(account => {
+                if (!account) {
+                  throw new Error(
+                    "Can't change password of non-existent Firefox Account!"
+                  );
+                }
+
+                // "action" will be introduced in https://github.com/mozilla/fxa/issues/1998.
+                // In case it's missing, hard-code it below. Once "action" parameter is added
+                // for COMMAND_CHANGE_PASSWORD payload, it's expected to be the same.
+                if (!data.hasOwnProperty("action")) {
+                  data.action = "passwordChange";
+                } else if (data.action != "passwordChange") {
+                  throw new Error(
+                    "Expected 'action' to be 'passwordChange', but saw " +
+                      data.action
+                  );
+                }
+
+                return Accounts.updateFirefoxAccountFromJSON(data);
+              })
+              .then(success => {
+                if (!success) {
+                  throw new Error("Could not change Firefox Account password!");
+                }
+                UITelemetry.addEvent(
+                  "action.1",
+                  "content",
+                  null,
+                  "fxaccount-changepassword"
+                );
+                log.i("Changed Firefox Account password.");
+              })
+              .catch(e => {
+                log.e(e.toString());
+              });
+            break;
+
+          case COMMAND_DELETE_ACCOUNT:
+            // The fxa-content-server has already confirmed the user's intent.
+            // Bombs away.  There's no recovery from failure, and not even a
+            // real need to check an account exists (although we do, for error
+            // messaging only).
+            Accounts.getFirefoxAccount()
+              .then(account => {
+                if (!account) {
+                  throw new Error("Can't delete non-existent Firefox Account!");
+                }
+                return Accounts.deleteFirefoxAccount().then(success => {
+                  if (!success) {
+                    throw new Error("Could not delete Firefox Account!");
+                  }
+                  UITelemetry.addEvent(
+                    "action.1",
+                    "content",
+                    null,
+                    "fxaccount-delete"
+                  );
+                  log.i("Firefox Account deleted.");
+                });
+              })
+              .catch(e => {
+                log.e(e.toString());
+              });
+            break;
+
+          case COMMAND_PROFILE_CHANGE:
+            // Only update an existing Android Account.
+            Accounts.getFirefoxAccount()
+              .then(account => {
+                if (!account) {
+                  throw new Error(
+                    "Can't change profile of non-existent Firefox Account!"
+                  );
+                }
+                UITelemetry.addEvent(
+                  "action.1",
+                  "content",
+                  null,
+                  "fxaccount-changeprofile"
+                );
+                return Accounts.notifyFirefoxAccountProfileChanged();
+              })
+              .catch(e => {
+                log.e(e.toString());
+              });
+            break;
+
+          case COMMAND_SYNC_PREFERENCES:
+            UITelemetry.addEvent(
+              "action.1",
+              "content",
+              null,
+              "fxaccount-syncprefs"
+            );
+            Accounts.showSyncPreferences().catch(e => {
+              log.e(e.toString());
+            });
+            break;
+
+          default:
+            log.w(
+              "Ignoring unrecognized FxAccountsWebChannel command: " +
+                JSON.stringify(command)
+            );
+            break;
+        }
+      }
+    };
+
+    this._channelCallback = listener;
+    this._channel = new WebChannel(this._webChannelId, this._webChannelOrigin);
+    this._channel.listen(listener);
+
+    log.d(
+      "FxAccountsWebChannel registered: " +
+        this._webChannelId +
+        " with origin " +
+        this._webChannelOrigin.prePath
+    );
+  },
+};
+
+var singleton;
+// The entry-point for this module, which ensures only one of our channels is
+// ever created - we require this because the WebChannel is global in scope and
+// allowing multiple channels would cause such notifications to be sent multiple
+// times.
+var EnsureFxAccountsWebChannel = () => {
+  if (!singleton) {
+    let contentUri = Services.urlFormatter.formatURLPref(
+      "identity.fxaccounts.remote.webchannel.uri"
+    );
+    // The FxAccountsWebChannel listens for events and updates the Java layer.
+    singleton = new this.FxAccountsWebChannel({
+      content_uri: contentUri,
+      channel_id: WEBCHANNEL_ID,
+    });
+  }
+};
