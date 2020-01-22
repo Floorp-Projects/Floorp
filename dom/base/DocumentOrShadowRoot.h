@@ -79,8 +79,7 @@ class DocumentOrShadowRoot {
 
   StyleSheetList* StyleSheets();
 
-  void GetAdoptedStyleSheets(nsTArray<RefPtr<StyleSheet>>& aAdoptedStyleSheets,
-                             ErrorResult& aRv) const;
+  void GetAdoptedStyleSheets(nsTArray<RefPtr<StyleSheet>>&) const;
 
   void SetAdoptedStyleSheets(
       const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
