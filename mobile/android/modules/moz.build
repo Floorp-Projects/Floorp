@@ -8,9 +8,6 @@
 with Files('**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
-with Files('DownloadNotifications.jsm'):
-    BUG_COMPONENT = ('Firefox for Android', 'Download Manager')
-
 with Files('HomeProvider.jsm'):
     BUG_COMPONENT = ('Firefox for Android', 'Data Providers')
 
@@ -21,8 +18,6 @@ DIRS += ['geckoview']
 
 EXTRA_JS_MODULES += [
     'dbg-browser-actors.js',
-    'DownloadNotifications.jsm',
-    'FormAssistant.jsm',
     'Home.jsm',
     'HomeProvider.jsm',
     'LightweightThemeConsumer.jsm',
