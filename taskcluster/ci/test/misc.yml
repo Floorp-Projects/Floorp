@@ -87,7 +87,8 @@ test-verify:
                     - win64-node
                 win.*32.*:
                     - win32-node
-                android-em-7.*: []
+                android-em-7.*:
+                    - linux64-node
 
 test-verify-gpu:
     description: "Extra verification of tests modified on this push on gpu instances"
@@ -176,7 +177,8 @@ test-coverage:
                     - win64-node
                 win.*32.*:
                     - win32-node
-                android-em-7.*: []
+                android-em-7.*:
+                    - linux64-node
 
 test-coverage-gpu:
     description: "Per-test coverage for tests that require gpu instances"
