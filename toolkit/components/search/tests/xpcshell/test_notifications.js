@@ -125,7 +125,7 @@ add_task(
       false
     );
 
-    await defaultNotificationTest(true, false);
+    await defaultNotificationTest(true, true);
   }
 );
 
