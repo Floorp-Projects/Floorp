@@ -1066,7 +1066,7 @@ nsresult ServiceWorkerManager::SendPushEvent(
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetRegistration(serviceWorker->Principal(), aScope);
-  MOZ_DIAGNOSTIC_ASSERT(registration);
+  MOZ_RELEASE_ASSERT(registration);
 
   return serviceWorker->WorkerPrivate()->SendPushEvent(aMessageId, aData,
                                                        registration);
