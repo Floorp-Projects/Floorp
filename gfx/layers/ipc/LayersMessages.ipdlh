@@ -61,6 +61,9 @@ using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 using mozilla::LengthPercentage from "mozilla/ServoStyleConsts.h";
 using mozilla::RayFunction from "mozilla/MotionPathUtils.h";
 using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
+using mozilla::StyleRotate from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleScale from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleTranslate from "mozilla/ServoStyleConsts.h";
 
 namespace mozilla {
 namespace layers {
@@ -147,13 +150,6 @@ struct Translation {
   float z;
 };
 
-union Rotate {
-  // null_t represents |rotate: none|.
-  null_t;
-  Rotation;
-  Rotation3D;
-};
-
 union TransformFunction {
   Perspective;
   RotationX;
@@ -233,9 +229,9 @@ union Animatable {
   null_t;
   float;
   nscolor;
-  Rotate;
-  Scale;
-  Translation;
+  StyleRotate;
+  StyleScale;
+  StyleTranslate;
   TransformFunction[];
   OffsetPath;
   LengthPercentage;
