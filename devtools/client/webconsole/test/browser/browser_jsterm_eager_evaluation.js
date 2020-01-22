@@ -39,6 +39,18 @@ add_task(async function() {
   setInputValue(hud, "x + y + undefined");
   await waitForEagerEvaluationResult(hud, "NaN");
 
+  setInputValue(hud, "1 - 1");
+  await waitForEagerEvaluationResult(hud, "0");
+
+  setInputValue(hud, "!true");
+  await waitForEagerEvaluationResult(hud, "false");
+
+  setInputValue(hud, `"ab".slice(0, 0)`);
+  await waitForEagerEvaluationResult(hud, `""`);
+
+  setInputValue(hud, `JSON.parse("null")`);
+  await waitForEagerEvaluationResult(hud, "null");
+
   setInputValue(hud, "-x / 0");
   await waitForEagerEvaluationResult(hud, "-Infinity");
 
