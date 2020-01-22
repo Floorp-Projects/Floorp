@@ -59,17 +59,21 @@ open class FenixApplication : LocaleAwareApplication() {
             return
         }
 
-        // We need to always initialize Glean and do it early here. Note that we are disabling it
-        // here too (uploadEnabled = false). If needed Glean will be enabled later by the migration
-        // code (if this user used to be a fennec user with the right flags enabled) or by
-        // GleanMetricsService if telemetry is enabled for this user.
+        // We need to always initialize Glean and do it early here.
         // It is important that this initialization happens *here* before calling into
         // setupInMainProcessOnly() which behaves differently for fenix and fennec builds.
-        // Glean needs to be disabled initially because otherwise we may already collect telemetry
-        // before we know whether we want that (which is *after* the migration).
-        // As a side effect this means pings submitted between the initialization here and until we
-        // potentially enable Glean would be lost. However such pings do not exist at this moment.
-        logger.debug("Initializing Glean (uploadEnabled=false)")
+        val enableGlean = if (Config.channel.isFennec) {
+            // We are disabling Glean here because for Fennec builds we may not know yet whether
+            // we can enable telemetry yet. We first need to migrate the setting from Fennec to
+            // know the user's choice. The blocking migration in `MigratingFenixApplication` will
+            // notify glean once the value has been migrated.
+            false
+        } else {
+            // We initialize Glean with telemetry enabled (or disabled) early here so that we do not
+            // end up loosing data for components that collect telemetry very early.
+            settings().isTelemetryEnabled
+        }
+        logger.debug("Initializing Glean (uploadEnabled=$enableGlean, isFennec=${Config.channel.isFennec})")
         Glean.initialize(
             applicationContext = this,
             configuration = Configuration(
@@ -77,7 +81,7 @@ open class FenixApplication : LocaleAwareApplication() {
                 httpClient = ConceptFetchHttpUploader(
                     lazy(LazyThreadSafetyMode.NONE) { components.core.client }
                 )),
-            uploadEnabled = false
+            uploadEnabled = enableGlean
         )
 
         setupInMainProcessOnly()
