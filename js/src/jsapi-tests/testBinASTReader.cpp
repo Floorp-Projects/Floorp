@@ -330,8 +330,8 @@ void runTestFromPath(JSContext* cx, const char* path) {
     }
 
     frontend::Directives directives(false);
-    frontend::GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
-                                           false);
+    frontend::GlobalSharedContext globalsc(cx, ScopeKind::Global, binParseInfo,
+                                           directives, false);
 
     frontend::BinASTParser<Tok> binParser(cx, binParseInfo, binOptions,
                                           binParseInfo.sourceObject);

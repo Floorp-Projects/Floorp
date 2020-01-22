@@ -74,9 +74,10 @@ void SharedContext::computeInWith(Scope* scope) {
 }
 
 EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
+                                     ParseInfo& parseInfo,
                                      Scope* enclosingScope,
                                      Directives directives, bool extraWarnings)
-    : SharedContext(cx, Kind::Eval, directives, extraWarnings),
+    : SharedContext(cx, Kind::Eval, parseInfo, directives, extraWarnings),
       enclosingScope_(cx, enclosingScope),
       bindings(cx) {
   computeAllowSyntax(enclosingScope);
@@ -116,12 +117,14 @@ bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 #endif
 
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-                         uint32_t toStringStart, Directives directives,
-                         bool extraWarnings, GeneratorKind generatorKind,
+                         uint32_t toStringStart, ParseInfo& parseInfo,
+                         Directives directives, bool extraWarnings,
+                         GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, JSAtom* explicitName,
                          FunctionFlags flags)
     : ObjectBox(nullptr, traceListHead, TraceListNode::NodeType::Function),
-      SharedContext(cx, Kind::FunctionBox, directives, extraWarnings),
+      SharedContext(cx, Kind::FunctionBox, parseInfo, directives,
+                    extraWarnings),
       enclosingScope_(),
       namedLambdaBindings_(nullptr),
       functionScopeBindings_(nullptr),
@@ -163,11 +166,12 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
 
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          JSFunction* fun, uint32_t toStringStart,
-                         Directives directives, bool extraWarnings,
-                         GeneratorKind generatorKind,
+                         ParseInfo& parseInfo, Directives directives,
+                         bool extraWarnings, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind)
-    : FunctionBox(cx, traceListHead, toStringStart, directives, extraWarnings,
-                  generatorKind, asyncKind, fun->explicitName(), fun->flags()) {
+    : FunctionBox(cx, traceListHead, toStringStart, parseInfo, directives,
+                  extraWarnings, generatorKind, asyncKind, fun->explicitName(),
+                  fun->flags()) {
   gcThing = fun;
   // Functions created at parse time may be set singleton after parsing and
   // baked into JIT code, so they must be allocated tenured. They are held by
@@ -177,11 +181,13 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
 
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          Handle<FunctionCreationData> data,
-                         uint32_t toStringStart, Directives directives,
-                         bool extraWarnings, GeneratorKind generatorKind,
+                         uint32_t toStringStart, ParseInfo& parseInfo,
+                         Directives directives, bool extraWarnings,
+                         GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind)
-    : FunctionBox(cx, traceListHead, toStringStart, directives, extraWarnings,
-                  generatorKind, asyncKind, data.get().atom, data.get().flags) {
+    : FunctionBox(cx, traceListHead, toStringStart, parseInfo, directives,
+                  extraWarnings, generatorKind, asyncKind, data.get().atom,
+                  data.get().flags) {
   functionCreationData_.emplace(data);
 }
 
@@ -327,9 +333,10 @@ void FunctionBox::finish() {
 }
 
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
+                                         ParseInfo& parseInfo,
                                          Scope* enclosingScope,
                                          ModuleBuilder& builder)
-    : SharedContext(cx, Kind::Module, Directives(true), false),
+    : SharedContext(cx, Kind::Module, parseInfo, Directives(true), false),
       module_(cx, module),
       enclosingScope_(cx, enclosingScope),
       bindings(cx),

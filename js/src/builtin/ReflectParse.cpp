@@ -3725,8 +3725,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
     ModuleBuilder builder(cx, module, &parser);
 
-    ModuleSharedContext modulesc(cx, module, &cx->global()->emptyGlobalScope(),
-                                 builder);
+    ModuleSharedContext modulesc(cx, module, parseInfo,
+                                 &cx->global()->emptyGlobalScope(), builder);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {
       return false;

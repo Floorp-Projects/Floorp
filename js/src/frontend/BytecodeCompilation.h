@@ -117,7 +117,8 @@ class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {
                    const JS::ReadOnlyCompileOptions& options,
                    ScopeKind scopeKind)
       : BytecodeCompiler(cx, parseInfo, options),
-        globalsc_(cx, scopeKind, directives, options.extraWarningsOption) {
+        globalsc_(cx, scopeKind, parseInfo, directives,
+                  options.extraWarningsOption) {
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
                scopeKind == ScopeKind::NonSyntactic);
   }
@@ -142,7 +143,7 @@ class MOZ_STACK_CLASS EvalScriptInfo final : public BytecodeCompiler {
                  JS::Handle<Scope*> enclosingScope)
       : BytecodeCompiler(cx, parseInfo, options),
         environment_(environment),
-        evalsc_(cx, environment_, enclosingScope, directives,
+        evalsc_(cx, environment_, parseInfo, enclosingScope, directives,
                 options.extraWarningsOption) {}
 
   HandleObject environment() { return environment_; }

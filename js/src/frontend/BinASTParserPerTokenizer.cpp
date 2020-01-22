@@ -278,7 +278,8 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   }
 
   auto* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, fun, /* toStringStart = */ 0, *directives,
+      cx_, traceListHead_, fun, /* toStringStart = */ 0, getParseInfo(),
+      *directives,
       /* extraWarning = */ false, generatorKind, functionAsyncKind);
   if (MOZ_UNLIKELY(!funbox)) {
     return raiseOOM();
