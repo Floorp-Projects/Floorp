@@ -12,7 +12,7 @@
 
 [package]
 name = "authenticator"
-version = "0.2.6"
+version = "0.2.9"
 authors = ["J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>", "Kyle Machulis <kyle@nonpolynomial.com>"]
 description = "Library for interacting with CTAP1/2 security keys for Web Authentication. Used by Firefox."
 license = "MPL-2.0"
@@ -30,7 +30,7 @@ version = "0.2"
 version = "0.4"
 
 [dependencies.rand]
-version = "0.6"
+version = "0.7"
 
 [dependencies.runloop]
 version = "0.1.0"
@@ -42,6 +42,12 @@ version = "0.6"
 
 [dev-dependencies.sha2]
 version = "^0.8"
+[build-dependencies.bindgen]
+version = "0.51"
+optional = true
+
+[features]
+binding-recompile = ["bindgen"]
 [target."cfg(target_os = \"freebsd\")".dependencies.devd-rs]
 version = "0.3"
 [target."cfg(target_os = \"linux\")".dependencies.libudev]

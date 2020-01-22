@@ -5,7 +5,7 @@
 
 This is a cross-platform library for interacting with Security Key-type devices via Rust.
 
-* **Supported Platforms**: Windows, Linux, FreeBSD, and macOS.
+* **Supported Platforms**: Windows, Linux, FreeBSD, OpenBSD, and macOS.
 * **Supported Transports**: USB HID.
 * **Supported Protocols**: [FIDO U2F over USB](https://fidoalliance.org/specs/fido-u2f-v1.1-id-20160915/fido-u2f-raw-message-formats-v1.1-id-20160915.html). [CTAP2 support](https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html) is forthcoming, with work being done in the **unstable** [`ctap2` branch](https://github.com/mozilla/authenticator-rs/tree/ctap2).
 
