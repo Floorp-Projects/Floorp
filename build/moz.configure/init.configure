@@ -302,8 +302,8 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
     # If we're not in the virtualenv, we need the mozfile module for
     # find_program.
     if normsep(sys.executable) != normsep(manager.python_path):
-        sys.path.append(os.path.join(
-            topsrcdir, 'testing', 'mozbase', 'mozfile'))
+        sys.path.insert(
+            0, os.path.join(topsrcdir, 'testing', 'mozbase', 'mozfile'))
 
     if python:
         found_python = find_program(python)
