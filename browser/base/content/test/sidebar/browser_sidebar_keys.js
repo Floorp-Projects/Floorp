@@ -18,9 +18,6 @@ add_task(async function test_sidebar_keys() {
   registerCleanupFunction(() => SidebarUI.hide());
 
   await testSidebarKeyToggle("b", { accelKey: true }, "viewBookmarksSidebar");
-  if (AppConstants.platform == "win") {
-    await testSidebarKeyToggle("i", { accelKey: true }, "viewBookmarksSidebar");
-  }
 
   let options = { accelKey: true, shiftKey: AppConstants.platform == "macosx" };
   await testSidebarKeyToggle("h", options, "viewHistorySidebar");

@@ -402,9 +402,7 @@
                 </menupopup>
               </menu>
               <menuitem id="menu_pageInfo"
-#ifndef XP_WIN
                         key="key_viewInfo"
-#endif
                         command="View:PageInfo" data-l10n-id="menu-tools-page-info"/>
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>

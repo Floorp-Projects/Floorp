@@ -236,9 +236,7 @@
 #ifdef XP_MACOSX
     <key id="key_viewSourceSafari" key="&pageSourceCmd.SafariCommandKey;" command="View:PageSource" modifiers="accel,alt"/>
 #endif
-#ifndef XP_WIN
     <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
-#endif
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
     <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
     <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
@@ -257,11 +255,6 @@
     <key id="manBookmarkKb" key="&bookmarksGtkCmd.commandkey;" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
 #endif
     <key id="viewBookmarksSidebarKb" key="&bookmarksCmd.commandkey;" oncommand="SidebarUI.toggle('viewBookmarksSidebar');" modifiers="accel"/>
-#ifdef XP_WIN
-# Cmd+I is conventially mapped to Info on MacOS X, thus it should not be
-# overridden for other purposes there.
-    <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" oncommand="SidebarUI.toggle('viewBookmarksSidebar');" modifiers="accel"/>
-#endif
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 
