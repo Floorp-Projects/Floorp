@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
 "use strict";
+const { presets } = require("devtools/shared/performance-new/recording-utils");
 
 /**
  * @typedef {import("../@types/perf").RecordingState} RecordingState
@@ -49,6 +50,9 @@ const getThreadsString = state => getThreads(state).join(",");
 /** @type {Selector<string[]>} */
 const getObjdirs = state => state.objdirs;
 
+/** @type {Selector<string>} */
+const getPresetName = state => state.presetName;
+
 /**
  * Warning! This function returns a new object on every run, and so should not
  * be used directly as a React prop.
@@ -56,7 +60,25 @@ const getObjdirs = state => state.objdirs;
  * @type {Selector<RecordingStateFromPreferences>}
  */
 const getRecordingSettings = state => {
+  const presetName = getPresetName(state);
+  const preset = presets[presetName];
+  if (preset) {
+    // Use the the settings from the preset.
+    return {
+      presetName: presetName,
+      entries: preset.entries,
+      interval: preset.interval,
+      features: preset.features,
+      threads: preset.threads,
+      objdirs: getObjdirs(state),
+      // The client doesn't implement durations yet. See Bug 1587165.
+      duration: preset.duration,
+    };
+  }
+
+  // Use the the custom settings from the panel.
   return {
+    presetName: "custom",
     entries: getEntries(state),
     interval: getInterval(state),
     features: getFeatures(state),
@@ -110,6 +132,7 @@ module.exports = {
   getThreads,
   getThreadsString,
   getObjdirs,
+  getPresetName,
   getRecordingSettings,
   getInitializedValues,
   getPerfFront,
