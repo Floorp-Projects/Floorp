@@ -7,8 +7,7 @@
 }
 
 .extension-controlled-notification > .popup-notification-body-container > .popup-notification-body > hbox > vbox > .popup-notification-description {
-  font-size: 1.3em;
-  font-weight: lighter;
+  font-weight: 600;
 }
 
 .extension-controlled-notification {
