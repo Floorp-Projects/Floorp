@@ -19,7 +19,8 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nowy priwatny rajtark je so wočinił</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_link_copied">Wptkaz je so do mjezyskłada kopěrował</string>
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Wotkaz je so do mjezyskłada kopěrował</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Přepinać</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Wotkaz w eksternym nałoženju wočinić</string>
 </resources>

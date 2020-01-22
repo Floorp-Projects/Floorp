@@ -37,6 +37,19 @@
        </ul>
 ]]></string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Uwch…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Gallai rhywun fod yn ceisio dynwared y wefan hon a dylech chi ddim mynd ymhellach.</label>
+        <br><br>
+        <label>Mae gwefannau yn profi eu hunaniaeth trwy dystysgrifau. Nid yw %1$s yn ymddiried yn <b>%2$s</b> oherwydd nad yw cyhoeddwr ei dystysgrif yn hysbys, mae’r dystysgrif wedi’i hunan-lofnodi, neu nid yw’r gweinydd yn anfon y tystysgrifau canolradd cywir.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Ewch Nôl (Argymell)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Derbyn y Perygl a Pharhau</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Cafodd y cysylltiad ei darfu</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
