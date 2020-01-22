@@ -4372,6 +4372,14 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
     return nullptr;
   }
 
+  // Propagate flags.
+  if (lazy->isLikelyConstructorWrapper()) {
+    script->setIsLikelyConstructorWrapper();
+  }
+  if (lazy->hasBeenCloned()) {
+    script->setHasBeenCloned();
+  }
+
   script->setFlag(MutableFlags::TrackRecordReplayProgress,
                   ShouldTrackRecordReplayProgress(script));
 
