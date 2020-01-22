@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">نجی Firefox Preview</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (نجی)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">مزید اختیارات</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">نجی براؤزنگ فعال کریں</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">نجی براؤزنگ غیر فعال کریں</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_open_tabs_header_2">کوئی کھلے ٹیب نہیں</string>
 
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">سیشن کو حذف کریں</string>
 
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">شارٹ کٹ شامل کریں</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نہیں شکریہ</string>
 
@@ -37,8 +47,16 @@
     <string name="browser_menu_help">مدد</string>
     <!-- Browser menu button that sends a to a the what's new article -->
     <string name="browser_menu_whats_new">نیا کیا ہے</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">سیٹنگز</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">آپ کی لائبریری</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">ڈیسک ٹاپ سائٹ</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">تنصیب کریں</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">صفحہ میں ڈھونڈیں</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">نجی ٹیب</string>
     <!-- Browser menu button that creates a new tab -->
@@ -46,6 +64,11 @@
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection">مجموعہ میں محفوظ کریں</string>
 
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">تلاش</string>
+
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">انجن سیٹنگز تلاش کریں</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">اجازت دیں</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -59,6 +82,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">ويب پر تلاش کريں</string>
 
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">سیٹنگز</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">بنیادی</string>
     <!-- Preference category for all links about Fenix -->
@@ -83,6 +109,8 @@
     <string name="preferences_sign_in">سائن ان</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">ٹول بار</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox اکاؤنٹ</string>
     <!-- Preference for language -->
     <string name="preferences_language">زبان</string>
     <!-- Preference for open links in third party apps -->
@@ -114,11 +142,23 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">اکائونٹ ہٹائیں</string>
 
+    <!-- Settings Page Title -->
+    <string name="settings_title">سیٹنگز</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">بند کریں</string>
+
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">بلاک شدہ</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">‏‏اجازت شدہ</string>
+
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">منسوخ کریں</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">شامل کریں</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">لاگ ان اور پاس ورڈ</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">آن</string>
     <!-- Syncing saved logins in Fenix is off -->
