@@ -309,6 +309,7 @@ struct SCOutput {
 
   JSContext* context() const { return cx; }
   JS::StructuredCloneScope scope() const { return buf.scope(); }
+  void sameProcessScopeRequired() { buf.sameProcessScopeRequired(); }
 
   MOZ_MUST_USE bool write(uint64_t u);
   MOZ_MUST_USE bool writePair(uint32_t tag, uint32_t data);
@@ -1101,9 +1102,14 @@ bool JSStructuredCloneWriter::parseTransferable() {
       }
 
       JSAutoRealm ar(cx, unwrappedObj);
-      if (!out.buf.callbacks_->canTransfer(cx, unwrappedObj,
-                                           out.buf.closure_)) {
+      bool sameProcessScopeRequired = false;
+      if (!out.buf.callbacks_->canTransfer(
+              cx, unwrappedObj, &sameProcessScopeRequired, out.buf.closure_)) {
         return false;
+      }
+
+      if (sameProcessScopeRequired) {
+        output().sameProcessScopeRequired();
       }
     }
 
@@ -1262,6 +1268,8 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
                               "SharedArrayBuffer");
     return false;
   }
+
+  output().sameProcessScopeRequired();
 
   // We must not transmit SAB pointers (including for WebAssembly.Memory)
   // cross-process.  The cloneDataPolicy should have guarded against this;
@@ -1742,7 +1750,18 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
     }
 
     if (out.buf.callbacks_ && out.buf.callbacks_->write) {
-      return out.buf.callbacks_->write(context(), this, obj, out.buf.closure_);
+      bool sameProcessScopeRequired = false;
+      if (!out.buf.callbacks_->write(context(), this, obj,
+                                     &sameProcessScopeRequired,
+                                     out.buf.closure_)) {
+        return false;
+      }
+
+      if (sameProcessScopeRequired) {
+        output().sameProcessScopeRequired();
+      }
+
+      return true;
     }
     // else fall through
   }
