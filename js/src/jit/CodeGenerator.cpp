@@ -5020,6 +5020,23 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
                             calleereg, objreg, &invoke);
   }
 
+  // Use the slow path if CreateThis was unable to create the |this| object.
+  if (call->mir()->needsThisCheck()) {
+    MOZ_ASSERT(call->mir()->isConstructing());
+    Address thisAddr(masm.getStackPointer(), unusedStack);
+    masm.branchTestNull(Assembler::Equal, thisAddr, &invoke);
+  } else {
+#ifdef DEBUG
+    if (call->mir()->isConstructing()) {
+      Address thisAddr(masm.getStackPointer(), unusedStack);
+      Label ok;
+      masm.branchTestNull(Assembler::NotEqual, thisAddr, &ok);
+      masm.assumeUnreachable("Unexpected null this-value");
+      masm.bind(&ok);
+    }
+#endif
+  }
+
   // Load jitCodeRaw for callee if exists. See visitCallKnown.
   if (call->mir()->needsArgCheck()) {
     masm.branchIfFunctionHasNoJitEntry(calleereg, call->mir()->isConstructing(),
@@ -5129,6 +5146,8 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
   }
 
   MOZ_ASSERT_IF(target->isClassConstructor(), call->isConstructing());
+
+  MOZ_ASSERT(!call->mir()->needsThisCheck());
 
   if (call->mir()->maybeCrossRealm()) {
     masm.switchToObjectRealm(calleereg, objreg);

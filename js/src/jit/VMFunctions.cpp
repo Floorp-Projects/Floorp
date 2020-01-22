@@ -224,6 +224,11 @@ bool InvokeFunction(JSContext* cx, HandleObject obj, bool constructing,
 
     RootedValue newTarget(cx, argvWithoutThis[argc]);
 
+    // See CreateThisFromIon for why this can be NullValue.
+    if (thisv.isNull()) {
+      thisv.setMagic(JS_IS_CONSTRUCTING);
+    }
+
     // If |this| hasn't been created, or is JS_UNINITIALIZED_LEXICAL,
     // we can use normal construction code without creating an extraneous
     // object.
@@ -710,6 +715,24 @@ bool CreateThisFromIon(JSContext* cx, HandleObject callee,
   HandleFunction fun = callee.as<JSFunction>();
   if (!fun->isInterpreted() || !fun->isConstructor()) {
     return true;
+  }
+
+  // If newTarget is not a function or is a function with a possibly-getter
+  // .prototype property, return NullValue to signal to LCallGeneric that it has
+  // to take the slow path. Note that we return NullValue instead of a
+  // MagicValue only because it's easier and faster to check for in JIT code
+  // (if we returned a MagicValue, JIT code would have to check both the type
+  // tag and the JSWhyMagic payload).
+  if (!fun->constructorNeedsUninitializedThis()) {
+    if (!newTarget->is<JSFunction>()) {
+      rval.setNull();
+      return true;
+    }
+    JSFunction* newTargetFun = &newTarget->as<JSFunction>();
+    if (!newTargetFun->hasNonConfigurablePrototypeDataProperty()) {
+      rval.setNull();
+      return true;
+    }
   }
 
   if (!js::CreateThis(cx, fun, newTarget, GenericObject, rval)) {
