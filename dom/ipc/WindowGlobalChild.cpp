@@ -224,21 +224,22 @@ void WindowGlobalChild::BeforeUnloadRemoved() {
 }
 
 void WindowGlobalChild::Destroy() {
+  // Make a copy so that we can avoid potential iterator invalidation when
+  // calling the user-provided Destroy() methods.
+  nsTArray<RefPtr<JSWindowActorChild>> windowActors(mWindowActors.Count());
+  for (auto iter = mWindowActors.Iter(); !iter.Done(); iter.Next()) {
+    windowActors.AppendElement(iter.UserData());
+  }
+
+  for (auto& windowActor : windowActors) {
+    windowActor->StartDestroy();
+  }
+
   // Perform async IPC shutdown unless we're not in-process, and our
   // BrowserChild is in the process of being destroyed, which will destroy us as
   // well.
   RefPtr<BrowserChild> browserChild = GetBrowserChild();
   if (!browserChild || !browserChild->IsDestroyed()) {
-    // Make a copy so that we can avoid potential iterator invalidation when
-    // calling the user-provided Destroy() methods.
-    nsTArray<RefPtr<JSWindowActorChild>> windowActors(mWindowActors.Count());
-    for (auto iter = mWindowActors.Iter(); !iter.Done(); iter.Next()) {
-      windowActors.AppendElement(iter.UserData());
-    }
-
-    for (auto& windowActor : windowActors) {
-      windowActor->StartDestroy();
-    }
     SendDestroy();
   }
 }
