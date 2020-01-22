@@ -168,7 +168,7 @@ def run_info_extras(**kwargs):
           "wasm": kwargs.get("wasm", True),
           "verify": kwargs["verify"],
           "headless": kwargs.get("headless", False) or "MOZ_HEADLESS" in os.environ,
-          "sw-e10s": True,
+          "sw-e10s": False,
           "fission": get_bool_pref("fission.autostart")}
 
     # The value of `sw-e10s` defaults to whether the "parent_intercept"

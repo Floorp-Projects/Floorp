@@ -2577,7 +2577,7 @@ toolbar#nav-bar {
             # Currently for automation, the pref defaults to true (but can be
             # overridden with --setpref).
             "serviceworker_e10s": self.extraPrefs.get(
-                'dom.serviceWorkers.parent_intercept', True),
+                'dom.serviceWorkers.parent_intercept', False),
 
             "socketprocess_e10s": self.extraPrefs.get(
                 'network.process.enabled', False),
