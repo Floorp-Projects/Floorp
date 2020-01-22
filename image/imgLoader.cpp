@@ -82,7 +82,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     MOZ_ASSERT(NS_IsMainThread());
 
     layers::CompositorManagerChild* manager =
-        CompositorManagerChild::GetInstance();
+        mozilla::layers::CompositorManagerChild::GetInstance();
     if (!manager || !StaticPrefs::image_mem_debug_reporting()) {
       layers::SharedSurfacesMemoryReport sharedSurfaces;
       FinishCollectReports(aHandleReport, aData, aAnonymize, sharedSurfaces);

@@ -7260,6 +7260,13 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "permissions."
 #---------------------------------------------------------------------------
+
+# 1-Accept, 2-Deny, Any other value: Accept
+- name: permissions.default.image
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+
 - name: permissions.delegation.enabled
   type: bool
   value: true
