@@ -2360,8 +2360,6 @@ already_AddRefed<DataChannel> DataChannelConnection::Open(
 
   if (aStream != INVALID_STREAM && mChannels.Get(aStream)) {
     DC_ERROR(("external negotiation of already-open channel %u", aStream));
-    // XXX How do we indicate this up to the application?  Probably the
-    // caller's job, but we may need to return an error code.
     return nullptr;
   }
 

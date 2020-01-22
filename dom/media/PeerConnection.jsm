@@ -1905,16 +1905,27 @@ class RTCPeerConnection {
       type = Ci.IPeerConnection.kDataChannelReliable;
     }
     // Synchronous since it doesn't block.
-    let dataChannel = this._impl.createDataChannel(
-      label,
-      protocol,
-      type,
-      ordered,
-      maxPacketLifeTime,
-      maxRetransmits,
-      negotiated,
-      id
-    );
+    let dataChannel;
+    try {
+      dataChannel = this._impl.createDataChannel(
+        label,
+        protocol,
+        type,
+        ordered,
+        maxPacketLifeTime,
+        maxRetransmits,
+        negotiated,
+        id
+      );
+    } catch (e) {
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+
+      const msg =
+        id === null ? "No available id could be generated" : "Id is in use";
+      throw new this._win.DOMException(msg, "OperationError");
+    }
 
     // Spec says to only do this if this is the first DataChannel created,
     // but the c++ code that does the "is negotiation needed" checking will
