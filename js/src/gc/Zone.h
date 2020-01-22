@@ -276,7 +276,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void changeGCState(GCState prev, GCState next) {
     MOZ_ASSERT(RuntimeHeapIsBusy());
     MOZ_ASSERT(gcState() == prev);
-    MOZ_ASSERT_IF(next != NoGC, canCollect());
+    MOZ_ASSERT(canCollect());
     gcState_ = next;
   }
 

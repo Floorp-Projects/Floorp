@@ -2769,6 +2769,10 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
     return false;
   }
 
+  // Garbage collect the self hosting zone once when it is created. It should
+  // not be modified after this point.
+  cx->runtime()->gc.freezeSelfHostingZone();
+
   return true;
 }
 

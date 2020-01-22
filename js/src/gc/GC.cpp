@@ -1258,6 +1258,21 @@ bool GCRuntime::init(uint32_t maxbytes) {
   return true;
 }
 
+void GCRuntime::freezeSelfHostingZone() {
+  MOZ_ASSERT(!selfHostingZoneFrozen);
+  MOZ_ASSERT(!isIncrementalGCInProgress());
+
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
+    MOZ_ASSERT(!zone->isGCScheduled());
+    if (zone->isSelfHostingZone()) {
+      zone->scheduleGC();
+    }
+  }
+
+  gc(GC_SHRINK, JS::GCReason::INIT_SELF_HOSTING);
+  selfHostingZoneFrozen = true;
+}
+
 void GCRuntime::finish() {
   // Wait for nursery background free to end and disable it to release memory.
   if (nursery().isEnabled()) {
@@ -1704,8 +1719,16 @@ AutoDisableCompactingGC::~AutoDisableCompactingGC() {
   --cx->compactingDisabledCount;
 }
 
-static bool CanRelocateZone(Zone* zone) {
-  return !zone->isAtomsZone() && !zone->isSelfHostingZone();
+bool GCRuntime::canRelocateZone(Zone* zone) const {
+  if (zone->isAtomsZone()) {
+    return false;
+  }
+
+  if (zone->isSelfHostingZone() && selfHostingZoneFrozen) {
+    return false;
+  }
+
+  return true;
 }
 
 Arena* ArenaList::removeRemainingArenas(Arena** arenap) {
@@ -2018,7 +2041,7 @@ bool GCRuntime::relocateArenas(Zone* zone, JS::GCReason reason,
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::COMPACT_MOVE);
 
   MOZ_ASSERT(!zone->isPreservingCode());
-  MOZ_ASSERT(CanRelocateZone(zone));
+  MOZ_ASSERT(canRelocateZone(zone));
 
   js::CancelOffThreadIonCompile(rt, JS::Zone::Compact);
 
@@ -3841,7 +3864,7 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
       MOZ_ASSERT(zone->canCollect());
       any = true;
       zone->changeGCState(Zone::NoGC, Zone::MarkBlackOnly);
-    } else {
+    } else if (zone->canCollect()) {
       *isFullOut = false;
     }
 
@@ -3911,7 +3934,7 @@ void GCRuntime::relazifyFunctionsForShrinkingGC() {
 void GCRuntime::purgeShapeCachesForShrinkingGC() {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE_SHAPE_CACHES);
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    if (!CanRelocateZone(zone) || zone->keepShapeCaches()) {
+    if (!canRelocateZone(zone) || zone->keepShapeCaches()) {
       continue;
     }
     for (auto baseShape = zone->cellIterUnsafe<BaseShape>(); !baseShape.done();
@@ -3927,7 +3950,7 @@ void GCRuntime::purgeSourceURLsForShrinkingGC() {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE_SOURCE_URLS);
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     // URLs are not tracked for realms in the system zone.
-    if (!CanRelocateZone(zone) || zone->isSystem) {
+    if (!canRelocateZone(zone) || zone->isSystem) {
       continue;
     }
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
@@ -6127,7 +6150,7 @@ void GCRuntime::beginCompactPhase() {
 
   MOZ_ASSERT(zonesToMaybeCompact.ref().isEmpty());
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    if (CanRelocateZone(zone)) {
+    if (canRelocateZone(zone)) {
       zonesToMaybeCompact.ref().append(zone);
     }
   }
