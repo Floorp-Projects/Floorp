@@ -104,7 +104,7 @@ def rustup_latest_version():
     # version = '0.6.5'
     #
     for line in f:
-        key, value = map(str.strip, line.split('=', 2))
+        key, value = map(str.strip, line.split(b'=', 2))
         if key == 'schema-version':
             schema = int(unquote(value))
             if schema != 1:
