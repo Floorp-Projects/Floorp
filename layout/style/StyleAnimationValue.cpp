@@ -51,63 +51,6 @@ static inline StyleAngle GetCSSAngle(const layers::CSSAngle& aAngle) {
   return StyleAngle{aAngle.value()};
 }
 
-static StylePathCommand CommandFromLayers(const layers::PathCommand& aCommand) {
-  switch (aCommand.type()) {
-    case layers::PathCommand::TMoveTo:
-      return StylePathCommand::MoveTo(
-          StyleCoordPair(aCommand.get_MoveTo().point()), StyleIsAbsolute::Yes);
-    case layers::PathCommand::TLineTo:
-      return StylePathCommand::LineTo(
-          StyleCoordPair(aCommand.get_LineTo().point()), StyleIsAbsolute::Yes);
-    case layers::PathCommand::THorizontalLineTo:
-      return StylePathCommand::HorizontalLineTo(
-          aCommand.get_HorizontalLineTo().x(), StyleIsAbsolute::Yes);
-    case layers::PathCommand::TVerticalLineTo:
-      return StylePathCommand::VerticalLineTo(aCommand.get_VerticalLineTo().y(),
-                                              StyleIsAbsolute::Yes);
-    case layers::PathCommand::TCurveTo:
-      return StylePathCommand::CurveTo(
-          StyleCoordPair(aCommand.get_CurveTo().control1()),
-          StyleCoordPair(aCommand.get_CurveTo().control2()),
-          StyleCoordPair(aCommand.get_CurveTo().point()), StyleIsAbsolute::Yes);
-    case layers::PathCommand::TSmoothCurveTo:
-      return StylePathCommand::SmoothCurveTo(
-          StyleCoordPair(aCommand.get_SmoothCurveTo().control2()),
-          StyleCoordPair(aCommand.get_SmoothCurveTo().point()),
-          StyleIsAbsolute::Yes);
-    case layers::PathCommand::TQuadBezierCurveTo:
-      return StylePathCommand::QuadBezierCurveTo(
-          StyleCoordPair(aCommand.get_QuadBezierCurveTo().control1()),
-          StyleCoordPair(aCommand.get_QuadBezierCurveTo().point()),
-          StyleIsAbsolute::Yes);
-    case layers::PathCommand::TSmoothQuadBezierCurveTo:
-      return StylePathCommand::SmoothQuadBezierCurveTo(
-          StyleCoordPair(aCommand.get_SmoothQuadBezierCurveTo().point()),
-          StyleIsAbsolute::Yes);
-    case layers::PathCommand::TEllipticalArc: {
-      const layers::EllipticalArc& arc = aCommand.get_EllipticalArc();
-      return StylePathCommand::EllipticalArc(
-          arc.rx(), arc.ry(), arc.angle(), StyleArcFlag{arc.largeArcFlag()},
-          StyleArcFlag{arc.sweepFlag()}, StyleCoordPair(arc.point()),
-          StyleIsAbsolute::Yes);
-    }
-    case layers::PathCommand::Tnull_t:
-      return StylePathCommand::ClosePath();
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported path command");
-  }
-  return StylePathCommand::Unknown();
-}
-
-static nsTArray<StylePathCommand> CreatePathCommandList(
-    const nsTArray<layers::PathCommand>& aCommands) {
-  nsTArray<StylePathCommand> result(aCommands.Length());
-  for (const layers::PathCommand& command : aCommands) {
-    result.AppendElement(CommandFromLayers(command));
-  }
-  return result;
-}
-
 // AnimationValue Implementation
 
 bool AnimationValue::operator==(const AnimationValue& aOther) const {
@@ -321,26 +264,9 @@ already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
           "Should have been resolved already");
       return Servo_AnimationValue_Translate(&aAnimatable.get_StyleTranslate())
           .Consume();
-    case layers::Animatable::TOffsetPath: {
-      const layers::OffsetPath& p = aAnimatable.get_OffsetPath();
-      switch (p.type()) {
-        case layers::OffsetPath::TArrayOfPathCommand: {
-          nsTArray<StylePathCommand> commands =
-              CreatePathCommandList(p.get_ArrayOfPathCommand());
-          return Servo_AnimationValue_SVGPath(commands.Elements(),
-                                              commands.Length())
-              .Consume();
-        }
-        case layers::OffsetPath::TRayFunction:
-          return Servo_AnimationValue_RayFunction(&p.get_RayFunction())
-              .Consume();
-        case layers::OffsetPath::Tnull_t:
-          return Servo_AnimationValue_NoneOffsetPath().Consume();
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unsupported path");
-      }
-      return nullptr;
-    }
+    case layers::Animatable::TStyleOffsetPath:
+      return Servo_AnimationValue_OffsetPath(&aAnimatable.get_StyleOffsetPath())
+          .Consume();
     case layers::Animatable::TLengthPercentage:
       return Servo_AnimationValue_OffsetDistance(
                  &aAnimatable.get_LengthPercentage())

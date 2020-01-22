@@ -133,7 +133,6 @@ use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
-use style::values::generics;
 use style::values::specified;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -915,32 +914,10 @@ pub unsafe extern "C" fn Servo_AnimationValue_Transform(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_SVGPath(
-    list: *const specified::svg_path::PathCommand,
-    len: usize,
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetPath(
+    p: &computed::motion::OffsetPath,
 ) -> Strong<RawServoAnimationValue> {
-    use style::values::generics::motion::OffsetPath;
-    use style::values::specified::SVGPathData;
-
-    let slice = std::slice::from_raw_parts(list, len);
-    Arc::new(AnimationValue::OffsetPath(OffsetPath::Path(SVGPathData(
-        style_traits::arc_slice::ArcSlice::from_iter(slice.iter().cloned()),
-    ))))
-    .into_strong()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_RayFunction(
-    r: &generics::motion::RayFunction<computed::Angle>,
-) -> Strong<RawServoAnimationValue> {
-    use style::values::generics::motion::OffsetPath;
-    Arc::new(AnimationValue::OffsetPath(OffsetPath::Ray(r.clone()))).into_strong()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_NoneOffsetPath() -> Strong<RawServoAnimationValue> {
-    use style::values::generics::motion::OffsetPath;
-    Arc::new(AnimationValue::OffsetPath(OffsetPath::None)).into_strong()
+    Arc::new(AnimationValue::OffsetPath(p.clone())).into_strong()
 }
 
 #[no_mangle]
@@ -1067,12 +1044,6 @@ impl_basic_serde_funcs!(
 );
 
 impl_basic_serde_funcs!(
-    Servo_RayFunction_Serialize,
-    Servo_RayFunction_Deserialize,
-    generics::motion::RayFunction<computed::Angle>
-);
-
-impl_basic_serde_funcs!(
     Servo_StyleRotate_Serialize,
     Servo_StyleRotate_Deserialize,
     computed::transform::Rotate
@@ -1094,6 +1065,12 @@ impl_basic_serde_funcs!(
     Servo_StyleTransform_Serialize,
     Servo_StyleTransform_Deserialize,
     computed::transform::Transform
+);
+
+impl_basic_serde_funcs!(
+    Servo_StyleOffsetPath_Serialize,
+    Servo_StyleOffsetPath_Deserialize,
+    computed::motion::OffsetPath
 );
 
 #[no_mangle]
