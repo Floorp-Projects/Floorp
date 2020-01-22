@@ -3484,6 +3484,44 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
 }
 
 #[no_mangle]
+pub extern "C" fn wr_dp_start_cached_item(state: &mut WrState,
+                                          key: ItemKey) {
+    debug_assert!(state.current_item_key.is_none(), "Nested item keys");
+    state.current_item_key = Some(key);
+
+    state.frame_builder.dl_builder.start_extra_data_chunk();
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_end_cached_item(state: &mut WrState,
+                                        key: ItemKey) {
+    // Avoid pushing reuse item marker when no extra data was written.
+    if state.frame_builder.dl_builder.end_extra_data_chunk() > 0 {
+        state.frame_builder.dl_builder.push_reuse_item(key);
+    }
+
+    debug_assert!(state.current_item_key.is_some(), "Nested item keys");
+    state.current_item_key = None;
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_reuse_item(state: &mut WrState,
+                                        key: ItemKey) {
+    state.frame_builder
+        .dl_builder
+        .push_reuse_item(key);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_set_cache_size(state: &mut WrState,
+                                       cache_size: usize) {
+    state.frame_builder
+        .dl_builder
+        .set_cache_size(cache_size);
+}
+
+
+#[no_mangle]
 pub extern "C" fn wr_dump_display_list(state: &mut WrState,
                                        indent: usize,
                                        start: *const usize,
