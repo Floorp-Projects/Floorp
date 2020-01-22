@@ -164,6 +164,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         // NB: There are ways for the user to install new products without leaving the browser.
         BrowsersCache.resetAll()
     }
+
     /**
      * Handles intents received when the activity is open.
      */

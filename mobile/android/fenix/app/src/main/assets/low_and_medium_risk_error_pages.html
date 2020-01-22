@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width; user-scalable=false;" />
+    <link rel="stylesheet" type="text/css" href="low_and_medium_risk_error_style.css">
+</head>
+
+<body id="errorPage" dir="auto">
+<!-- PAGE CONTAINER (for styling purposes only) -->
+<div id="errorPageContainer">
+
+    <!-- Error Image -->
+    <iframe id="errorImage" src="" frameborder="0"></iframe>
+
+    <!-- Error Title -->
+    <div id="errorTitle">
+        <h1 id="errorTitleText"></h1>
+    </div>
+
+    <!-- LONG CONTENT (the section most likely to require scrolling) -->
+    <div id="errorLongContent">
+        <div id="errorShortDesc"></div>
+    </div>
+
+    <!-- Retry Button -->
+    <button id="errorTryAgain" onclick="window.location.reload()"></button>
+
+    <!-- Advanced Button -->
+    <button id="advancedButton" class="buttonSecondary" onclick="toggleAdvancedAndScroll()" style="display: none;"></button>
+
+    <hr id="horizontalLine" style="display: none;">
+    <div id="advancedPanelContainer">
+        <div id="badCertAdvancedPanel" class="advanced-panel" style="display: none;">
+            <p id="badCertTechnicalInfo"></p>
+            <div id="advancedPanelBackButtonContainer" class="advancedPanelButtonContainer">
+                <button id="advancedPanelBackButton" onClick="window.history.back()"></button>
+            </div>
+            <div id="advancedPanelAcceptButtonContainer" class="advancedPanelButtonContainer">
+                <button id="advancedPanelAcceptButton" class="buttonSecondary" onClick="acceptAndContinue(true)"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<script type="text/javascript">
+function toggleAdvancedAndScroll() {
+    toggleAdvanced();
+
+    const horizontalLine = document.getElementById("horizontalLine");
+    const advancedPanelAcceptButton = document.getElementById("advancedPanelAcceptButton");
+    const badCertAdvancedPanel = document.getElementById("badCertAdvancedPanel");
+/*
+    horizontalLine.style.display = "block";
+    advancedPanelAcceptButton.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+
+*/
+
+    // We know that the button is being displayed
+
+    if (badCertAdvancedPanel.style.display === "block") {
+        horizontalLine.style.display = "block";
+        advancedPanelAcceptButton.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+    } else if (badCertAdvancedPanel.style.display === "none") {
+        horizontalLine.style.display = "none";
+    }
+}
+
+function overrideAdvancedButtonStyling() {
+    const advancedButton = document.getElementById("advancedButton");
+    advancedButton.style.display = "inline-flex";
+}
+</script>
+
+<script src="./errorPageScripts.js"></script>
+</html>

@@ -5,7 +5,6 @@
 package org.mozilla.fenix
 
 import android.net.ConnectivityManager
-import androidx.annotation.RawRes
 import androidx.core.content.getSystemService
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -20,6 +19,8 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.AppRequestInterceptor.Companion.HIGH_RISK_ERROR_PAGES
+import org.mozilla.fenix.AppRequestInterceptor.Companion.LOW_AND_MEDIUM_RISK_ERROR_PAGES
 import org.mozilla.fenix.ext.isOnline
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -67,8 +68,7 @@ class AppRequestInterceptorTest {
             val actualPage = createActualErrorPage(error)
             val expectedPage = createExpectedErrorPage(
                 error = error,
-                html = R.raw.low_risk_error_pages,
-                css = R.raw.low_and_medium_risk_error_style
+                html = LOW_AND_MEDIUM_RISK_ERROR_PAGES
             )
 
             assertThat(actualPage).isEqualTo(expectedPage)
@@ -85,8 +85,7 @@ class AppRequestInterceptorTest {
             val actualPage = createActualErrorPage(error)
             val expectedPage = createExpectedErrorPage(
                 error = error,
-                html = R.raw.medium_and_high_risk_error_pages,
-                css = R.raw.low_and_medium_risk_error_style
+                html = LOW_AND_MEDIUM_RISK_ERROR_PAGES
             )
 
             assertThat(actualPage).isEqualTo(expectedPage)
@@ -104,8 +103,7 @@ class AppRequestInterceptorTest {
             val actualPage = createActualErrorPage(error)
             val expectedPage = createExpectedErrorPage(
                 error = error,
-                html = R.raw.medium_and_high_risk_error_pages,
-                css = R.raw.high_risk_error_style
+                html = HIGH_RISK_ERROR_PAGES
             )
 
             assertThat(actualPage).isEqualTo(expectedPage)
@@ -114,11 +112,15 @@ class AppRequestInterceptorTest {
 
     private fun createActualErrorPage(error: ErrorType): String {
         val errorPage = interceptor.onErrorRequest(session = mockk(), errorType = error, uri = null)
-                as RequestInterceptor.ErrorResponse.Content
-        return errorPage.data
+                as RequestInterceptor.ErrorResponse.Uri
+        return errorPage.uri
     }
 
-    private fun createExpectedErrorPage(error: ErrorType, @RawRes html: Int, @RawRes css: Int): String {
-        return ErrorPages.createErrorPage(testContext, error, null, html, css)
+    private fun createExpectedErrorPage(error: ErrorType, html: String): String {
+        return ErrorPages.createUrlEncodedErrorPage(
+            context = testContext,
+            errorType = error,
+            htmlResource = html
+        )
     }
 }
