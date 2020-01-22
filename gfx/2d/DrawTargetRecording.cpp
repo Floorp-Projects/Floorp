@@ -11,6 +11,7 @@
 #include "Logging.h"
 #include "Tools.h"
 #include "Filters.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/UniquePtr.h"
 #include "RecordingTypes.h"
 #include "RecordedEventImpl.h"
@@ -91,59 +92,6 @@ class SourceSurfaceRecording : public SourceSurface {
   // we need GetDataSurface to work, so we hold the original surface we
   // optimized to return its GetDataSurface.
   RefPtr<SourceSurface> mOriginalSurface;
-};
-
-class DataSourceSurfaceRecording : public DataSourceSurface {
- public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceRecording, override)
-  DataSourceSurfaceRecording(UniquePtr<uint8_t[]> aData, IntSize aSize,
-                             int32_t aStride, SurfaceFormat aFormat,
-                             DrawEventRecorderPrivate* aRecorder)
-      : mData(std::move(aData)),
-        mSize(aSize),
-        mStride(aStride),
-        mFormat(aFormat),
-        mRecorder(aRecorder) {
-    mRecorder->RecordEvent(RecordedSourceSurfaceCreation(
-        ReferencePtr(this), mData.get(), mStride, mSize, mFormat));
-    mRecorder->AddStoredObject(this);
-  }
-
-  ~DataSourceSurfaceRecording() {
-    mRecorder->RemoveStoredObject(this);
-    mRecorder->RecordEvent(
-        RecordedSourceSurfaceDestruction(ReferencePtr(this)));
-  }
-
-  static already_AddRefed<DataSourceSurface> Init(
-      uint8_t* aData, IntSize aSize, int32_t aStride, SurfaceFormat aFormat,
-      DrawEventRecorderPrivate* aRecorder) {
-    if (!Factory::AllowedSurfaceSize(aSize)) {
-      return nullptr;
-    }
-
-    // XXX: do we need to ensure any alignment here?
-    auto data = MakeUnique<uint8_t[]>(aStride * aSize.height);
-    if (data) {
-      memcpy(data.get(), aData, aStride * aSize.height);
-      RefPtr<DataSourceSurfaceRecording> surf = new DataSourceSurfaceRecording(
-          std::move(data), aSize, aStride, aFormat, aRecorder);
-      return surf.forget();
-    }
-    return nullptr;
-  }
-
-  SurfaceType GetType() const override { return SurfaceType::RECORDING; }
-  IntSize GetSize() const override { return mSize; }
-  int32_t Stride() override { return mStride; }
-  SurfaceFormat GetFormat() const override { return mFormat; }
-  uint8_t* GetData() override { return mData.get(); }
-
-  UniquePtr<uint8_t[]> mData;
-  IntSize mSize;
-  int32_t mStride;
-  SurfaceFormat mFormat;
-  RefPtr<DrawEventRecorderPrivate> mRecorder;
 };
 
 class GradientStopsRecording : public GradientStops {
@@ -513,15 +461,20 @@ DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char* aData,
                                                  const IntSize& aSize,
                                                  int32_t aStride,
                                                  SurfaceFormat aFormat) const {
-  RefPtr<SourceSurface> surf = DataSourceSurfaceRecording::Init(
-      aData, aSize, aStride, aFormat, mRecorder);
-  mRecorder->RecordEvent(RecordedOptimizeSourceSurface(surf, this, surf));
-  return surf.forget();
+  RefPtr<SourceSurface> surface = CreateDataSourceSurfaceWithStrideFromData(
+      aSize, aFormat, aStride, aData, aStride);
+  if (!surface) {
+    return nullptr;
+  }
+
+  return OptimizeSourceSurface(surface);
 }
 
 already_AddRefed<SourceSurface> DrawTargetRecording::OptimizeSourceSurface(
     SourceSurface* aSurface) const {
-  if (aSurface->GetType() == SurfaceType::RECORDING) {
+  if (aSurface->GetType() == SurfaceType::RECORDING &&
+      static_cast<SourceSurfaceRecording*>(aSurface)->mRecorder == mRecorder) {
+    // aSurface is already optimized for our recorder.
     return do_AddRef(aSurface);
   }
 
