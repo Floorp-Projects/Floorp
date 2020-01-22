@@ -1037,13 +1037,6 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
     return false;
   }
 
-  if (lazy->isLikelyConstructorWrapper()) {
-    script->setIsLikelyConstructorWrapper();
-  }
-  if (lazy->hasBeenCloned()) {
-    script->setHasBeenCloned();
-  }
-
   FieldInitializers fieldInitializers = FieldInitializers::Invalid();
   if (fun->isClassConstructor()) {
     fieldInitializers = lazy->getFieldInitializers();
@@ -1108,13 +1101,8 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   parseInfo.initFromSourceObject(lazy->sourceObject());
 
   RootedScript script(cx, JSScript::CreateFromLazy(cx, lazy));
-
   if (!script) {
     return false;
-  }
-
-  if (lazy->hasBeenCloned()) {
-    script->setHasBeenCloned();
   }
 
   frontend::BinASTParser<ParserT> parser(cx, parseInfo, options,
