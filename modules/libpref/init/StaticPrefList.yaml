@@ -2261,6 +2261,37 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# For testing purposes only: Flipping this pref to true allows
+# to skip the allowlist for about: pages and do not ship with a
+# CSP and NS_ASSERT right away.
+- name: dom.security.skip_about_page_csp_allowlist_and_assert
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# For testing purposes only: Flipping this pref to true allows
+# to skip the assertion that every about page ships with a CSP.
+- name: dom.security.skip_about_page_has_csp_assert
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# For testing purposes only: Flipping this pref to true allows
+# to skip the assertion that HTML fragments (e.g. innerHTML) can
+# not be used within chrome code or about: pages.
+- name: dom.security.skip_html_fragment_assertion
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# For testing purposes only; Flipping this pref to true allows
+# to skip the assertion that remote scripts can not be loaded
+# in system privileged contexts.
+- name: dom.security.skip_remote_script_assertion_in_system_priv_context
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Is support for selection event APIs enabled?
 - name: dom.select_events.enabled
   type: bool
