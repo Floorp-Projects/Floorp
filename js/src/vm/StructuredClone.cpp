@@ -309,7 +309,6 @@ struct SCOutput {
 
   JSContext* context() const { return cx; }
   JS::StructuredCloneScope scope() const { return buf.scope(); }
-  void sameProcessScopeRequired() { buf.sameProcessScopeRequired(); }
 
   MOZ_MUST_USE bool write(uint64_t u);
   MOZ_MUST_USE bool writePair(uint32_t tag, uint32_t data);
@@ -916,7 +915,7 @@ void JSStructuredCloneData::discardTransferables() {
 
   // DifferentProcess clones cannot contain pointers, so nothing needs to be
   // released.
-  if (scope() == JS::StructuredCloneScope::DifferentProcess) {
+  if (scope_ == JS::StructuredCloneScope::DifferentProcess) {
     return;
   }
 
@@ -1102,14 +1101,9 @@ bool JSStructuredCloneWriter::parseTransferable() {
       }
 
       JSAutoRealm ar(cx, unwrappedObj);
-      bool sameProcessScopeRequired = false;
-      if (!out.buf.callbacks_->canTransfer(
-              cx, unwrappedObj, &sameProcessScopeRequired, out.buf.closure_)) {
+      if (!out.buf.callbacks_->canTransfer(cx, unwrappedObj,
+                                           out.buf.closure_)) {
         return false;
-      }
-
-      if (sameProcessScopeRequired) {
-        output().sameProcessScopeRequired();
       }
     }
 
@@ -1268,8 +1262,6 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
                               "SharedArrayBuffer");
     return false;
   }
-
-  output().sameProcessScopeRequired();
 
   // We must not transmit SAB pointers (including for WebAssembly.Memory)
   // cross-process.  The cloneDataPolicy should have guarded against this;
@@ -1750,18 +1742,7 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
     }
 
     if (out.buf.callbacks_ && out.buf.callbacks_->write) {
-      bool sameProcessScopeRequired = false;
-      if (!out.buf.callbacks_->write(context(), this, obj,
-                                     &sameProcessScopeRequired,
-                                     out.buf.closure_)) {
-        return false;
-      }
-
-      if (sameProcessScopeRequired) {
-        output().sameProcessScopeRequired();
-      }
-
-      return true;
+      return out.buf.callbacks_->write(context(), this, obj, out.buf.closure_);
     }
     // else fall through
   }
@@ -3136,7 +3117,7 @@ JS_PUBLIC_API bool JS_StructuredClone(
 
 JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(
     JSAutoStructuredCloneBuffer&& other)
-    : data_(other.scope()) {
+    : scope_(other.scope()), data_(other.scope()) {
   data_.ownTransferables_ = other.data_.ownTransferables_;
   other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
 }
@@ -3144,7 +3125,7 @@ JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(
 JSAutoStructuredCloneBuffer& JSAutoStructuredCloneBuffer::operator=(
     JSAutoStructuredCloneBuffer&& other) {
   MOZ_ASSERT(&other != this);
-  MOZ_ASSERT(scope() == other.scope());
+  MOZ_ASSERT(scope_ == other.scope_);
   clear();
   data_.ownTransferables_ = other.data_.ownTransferables_;
   other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
@@ -3191,7 +3172,7 @@ bool JSAutoStructuredCloneBuffer::read(
     JSContext* cx, MutableHandleValue vp, JS::CloneDataPolicy cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   MOZ_ASSERT(cx);
-  return !!JS_ReadStructuredClone(cx, data_, version_, data_.scope(), vp,
+  return !!JS_ReadStructuredClone(cx, data_, version_, scope_, vp,
                                   cloneDataPolicy, optionalCallbacks, closure);
 }
 
@@ -3208,9 +3189,8 @@ bool JSAutoStructuredCloneBuffer::write(
     JS::CloneDataPolicy cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   clear();
-  bool ok =
-      JS_WriteStructuredClone(cx, value, &data_, data_.scope(), cloneDataPolicy,
-                              optionalCallbacks, closure, transferable);
+  bool ok = JS_WriteStructuredClone(cx, value, &data_, scope_, cloneDataPolicy,
+                                    optionalCallbacks, closure, transferable);
 
   if (ok) {
     data_.ownTransferables_ = OwnTransferablePolicy::OwnsTransferablesIfAny;
