@@ -682,7 +682,7 @@
 # shared with other top level windows in macWindow.inc.xhtml.
 #include browser-menubar.inc
         </toolbaritem>
-        <spacer flex="1" skipintoolbarset="true" ordinal="1000"/>
+        <spacer flex="1" skipintoolbarset="true" style="-moz-box-ordinal-group: 1000;"/>
 #include titlebar-items.inc.xhtml
       </toolbar>
 
@@ -1133,7 +1133,7 @@
       </toolbaritem>
 
       <hbox id="window-controls" hidden="true" pack="end" skipintoolbarset="true"
-            ordinal="1000">
+            style="-moz-box-ordinal-group: 1000;">
         <toolbarbutton id="minimize-button"
                        tooltiptext="&fullScreenMinimize.tooltip;"
                        oncommand="window.minimize();"/>
