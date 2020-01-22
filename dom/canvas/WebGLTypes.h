@@ -885,7 +885,7 @@ template <typename T>
 inline auto MakeRangeAbv(const T& abv)
     -> Range<const typename T::element_type> {
   abv.ComputeLengthAndData();
-  return {abv.DataAllowShared(), abv.LengthAllowShared()};
+  return {abv.Data(), abv.Length()};
 }
 
 Maybe<Range<const uint8_t>> GetRangeFromView(const dom::ArrayBufferView& view,

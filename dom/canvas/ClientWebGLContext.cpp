@@ -2616,8 +2616,7 @@ void ClientWebGLContext::BufferData(
   const auto& src = maybeSrc.Value();
 
   src.ComputeLengthAndData();
-  const auto view =
-      RawBuffer<const uint8_t>(src.LengthAllowShared(), src.DataAllowShared());
+  const auto view = RawBuffer<const uint8_t>(src.Length(), src.Data());
 
   Run<RPROC(BufferData)>(target, view, usage);
 }
@@ -2645,9 +2644,8 @@ void ClientWebGLContext::BufferSubData(GLenum target,
                                        const dom::ArrayBuffer& src) {
   const FuncScope funcScope(*this, "bufferSubData");
   src.ComputeLengthAndData();
-  Run<RPROC(BufferSubData)>(
-      target, dstByteOffset,
-      RawBuffer<const uint8_t>(src.LengthAllowShared(), src.DataAllowShared()));
+  Run<RPROC(BufferSubData)>(target, dstByteOffset,
+                            RawBuffer<const uint8_t>(src.Length(), src.Data()));
 }
 
 void ClientWebGLContext::BufferSubData(GLenum target,
@@ -5078,8 +5076,8 @@ bool ClientWebGLContext::ValidateArrayBufferView(
     GLuint elemCountOverride, const GLenum errorEnum, uint8_t** const out_bytes,
     size_t* const out_byteLen) const {
   view.ComputeLengthAndData();
-  uint8_t* const bytes = view.DataAllowShared();
-  const size_t byteLen = view.LengthAllowShared();
+  uint8_t* const bytes = view.Data();
+  const size_t byteLen = view.Length();
 
   const auto& elemSize = SizeOfViewElem(view);
 
