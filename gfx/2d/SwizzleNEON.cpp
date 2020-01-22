@@ -412,7 +412,7 @@ void UnpackRowRGB24_NEON(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
   src -= 4 * 3;
   dst -= 4 * 4;
   while (src >= aSrc) {
-    uint8x16_t px = vld1q_u16(reinterpret_cast<const uint16_t*>(src));
+    uint8x16_t px = vld1q_u8(src);
     // G2R2B1G1 R1B0G0R0 -> X1R1G1B1 X0R0G0B0
     uint8x8_t pxlo = vtbl1_u8(vget_low_u8(px), masklo);
     // B3G3R3B2 G2R2B1G1 -> X3R3G3B3 X2R2G2B2
@@ -420,7 +420,7 @@ void UnpackRowRGB24_NEON(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
         vtbl1_u8(vext_u8(vget_low_u8(px), vget_high_u8(px), 4), maskhi);
     px = vcombine_u8(pxlo, pxhi);
     px = vorrq_u8(px, alpha);
-    vst1q_u16(reinterpret_cast<uint16_t*>(dst), px);
+    vst1q_u8(dst, px);
     src -= 4 * 3;
     dst -= 4 * 4;
   }
