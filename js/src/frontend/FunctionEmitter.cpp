@@ -740,12 +740,15 @@ bool FunctionScriptEmitter::emitEndBody() {
   return true;
 }
 
-bool FunctionScriptEmitter::initScript() {
+bool FunctionScriptEmitter::initScript(
+    const FieldInitializers& fieldInitializers) {
   MOZ_ASSERT(state_ == State::EndBody);
 
   if (!JSScript::fullyInitFromEmitter(bce_->cx, bce_->script, bce_)) {
     return false;
   }
+
+  bce_->script->setFieldInitializers(fieldInitializers);
 
 #ifdef DEBUG
   state_ = State::End;
