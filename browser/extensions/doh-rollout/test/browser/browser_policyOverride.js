@@ -1,7 +1,5 @@
 "use strict";
 
-add_task(setup);
-
 const { EnterprisePolicyTesting } = ChromeUtils.import(
   "resource://testing-common/EnterprisePolicyTesting.jsm",
   null
@@ -38,28 +36,25 @@ add_task(async function testPolicyOverride() {
     "Breadcrumb not saved."
   );
   await ensureNoTRRModeChange(0);
-  await checkHeuristicsTelemetry("policy_without_doh", "first_run");
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
-  ensureNoHeuristicsTelemetry();
 
   // Restart for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(0);
-  await checkHeuristicsTelemetry("policy_without_doh", "startup");
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
-  ensureNoHeuristicsTelemetry();
 
   // Clean up.
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
     policies: {},
   });
   EnterprisePolicyTesting.resetRunOnceState();
+  await resetPrefsAndRestartAddon();
 
   is(
     Services.policies.status,

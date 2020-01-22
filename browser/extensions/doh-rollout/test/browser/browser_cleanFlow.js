@@ -1,7 +1,5 @@
 "use strict";
 
-add_task(setup);
-
 add_task(async function testCleanFlow() {
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
@@ -13,7 +11,6 @@ add_task(async function testCleanFlow() {
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
   is(
     Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
@@ -28,7 +25,6 @@ add_task(async function testCleanFlow() {
   await promise;
 
   await ensureTRRMode(2);
-  await checkHeuristicsTelemetry("enable_doh", "startup");
 
   await BrowserTestUtils.waitForCondition(() => {
     return Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF);
@@ -49,32 +45,28 @@ add_task(async function testCleanFlow() {
     "Breadcrumb not cleared."
   );
 
-  BrowserTestUtils.removeTab(tab);
-
   // Change the environment to failing and simulate a network change.
   setFailingHeuristics();
   simulateNetworkChange();
   await ensureTRRMode(0);
-  await checkHeuristicsTelemetry("disable_doh", "netchange");
 
   // Trigger another network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
-  await checkHeuristicsTelemetry("disable_doh", "netchange");
 
   // Restart the add-on for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(0);
-  await checkHeuristicsTelemetry("disable_doh", "startup");
 
   // Set a passing environment and simulate a network change.
   setPassingHeuristics();
   simulateNetworkChange();
   await ensureTRRMode(2);
-  await checkHeuristicsTelemetry("enable_doh", "netchange");
 
   // Again, repeat and check nothing changed.
   simulateNetworkChange();
   await ensureNoTRRModeChange(2);
-  await checkHeuristicsTelemetry("enable_doh", "netchange");
+
+  // Clean up.
+  await resetPrefsAndRestartAddon();
 });
