@@ -49,7 +49,6 @@ use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
-use style::gecko_bindings::structs::ipc::ByteBuf;
 use style::gecko_bindings::structs::nsAtom;
 use style::gecko_bindings::structs::nsCSSCounterDesc;
 use style::gecko_bindings::structs::nsCSSFontDesc;
@@ -134,6 +133,7 @@ use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
+use style::values::generics;
 use style::values::specified;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -909,16 +909,45 @@ pub unsafe extern "C" fn Servo_AnimationValue_Scale(
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_AnimationValue_Transform(
-    transform: &computed::Transform,
+    list: *const computed::TransformOperation,
+    len: usize,
 ) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::Transform(transform.clone())).into_strong()
+    use style::values::generics::transform::Transform;
+
+    let slice = std::slice::from_raw_parts(list, len);
+    Arc::new(AnimationValue::Transform(Transform(
+        slice.iter().cloned().collect(),
+    )))
+    .into_strong()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_OffsetPath(
-    p: &computed::motion::OffsetPath,
+pub unsafe extern "C" fn Servo_AnimationValue_SVGPath(
+    list: *const specified::svg_path::PathCommand,
+    len: usize,
 ) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::OffsetPath(p.clone())).into_strong()
+    use style::values::generics::motion::OffsetPath;
+    use style::values::specified::SVGPathData;
+
+    let slice = std::slice::from_raw_parts(list, len);
+    Arc::new(AnimationValue::OffsetPath(OffsetPath::Path(SVGPathData(
+        style_traits::arc_slice::ArcSlice::from_iter(slice.iter().cloned()),
+    ))))
+    .into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_RayFunction(
+    r: &generics::motion::RayFunction<computed::Angle>,
+) -> Strong<RawServoAnimationValue> {
+    use style::values::generics::motion::OffsetPath;
+    Arc::new(AnimationValue::OffsetPath(OffsetPath::Ray(r.clone()))).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_NoneOffsetPath() -> Strong<RawServoAnimationValue> {
+    use style::values::generics::motion::OffsetPath;
+    Arc::new(AnimationValue::OffsetPath(OffsetPath::None)).into_strong()
 }
 
 #[no_mangle]
@@ -969,42 +998,65 @@ pub extern "C" fn Servo_AnimationValue_Uncompute(
     .into_strong()
 }
 
-#[inline]
-fn create_byte_buf_from_vec(mut v: Vec<u8>) -> ByteBuf {
-    let w = ByteBuf {
-        mData: v.as_mut_ptr(),
-        mLen: v.len(),
-        mCapacity: v.capacity(),
-    };
-    std::mem::forget(v);
-    w
+// This is an intermediate type for passing Vec<u8> through FFI.
+// We convert this type into ByteBuf when passing it through IPC.
+#[repr(C)]
+pub struct VecU8 {
+    data: *mut u8,
+    length: usize,
+    capacity: usize,
 }
 
-#[inline]
-fn view_byte_buf(b: &ByteBuf) -> &[u8] {
-    if b.mData.is_null() {
-        debug_assert_eq!(b.mCapacity, 0);
-        return &[];
+impl VecU8 {
+    #[inline]
+    fn from_vec(mut v: Vec<u8>) -> Self {
+        let w = VecU8 {
+            data: v.as_mut_ptr(),
+            length: v.len(),
+            capacity: v.capacity(),
+        };
+        std::mem::forget(v);
+        w
     }
-    unsafe { std::slice::from_raw_parts(b.mData, b.mLen) }
+
+    #[inline]
+    fn flush_into_vec(&mut self) -> Vec<u8> {
+        if self.data.is_null() {
+            debug_assert_eq!(self.capacity, 0);
+            return Vec::new();
+        }
+
+        let vec = unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) };
+        self.data = ptr::null_mut();
+        self.length = 0;
+        self.capacity = 0;
+        vec
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_VecU8_Free(v: &mut VecU8) {
+    if !v.data.is_null() {
+        v.flush_into_vec();
+    }
 }
 
 macro_rules! impl_basic_serde_funcs {
     ($ser_name:ident, $de_name:ident, $computed_type:ty) => {
         #[no_mangle]
-        pub extern "C" fn $ser_name(v: &$computed_type, output: &mut ByteBuf) -> bool {
+        pub extern "C" fn $ser_name(v: &$computed_type, output: &mut VecU8) -> bool {
             let buf = match serialize(v) {
                 Ok(buf) => buf,
                 Err(..) => return false,
             };
 
-            *output = create_byte_buf_from_vec(buf);
+            *output = VecU8::from_vec(buf);
             true
         }
 
         #[no_mangle]
-        pub extern "C" fn $de_name(input: &ByteBuf, v: &mut $computed_type) -> bool {
-            let buf = match deserialize(view_byte_buf(input)) {
+        pub extern "C" fn $de_name(input: &mut VecU8, v: &mut $computed_type) -> bool {
+            let buf = match deserialize(&input.flush_into_vec()) {
                 Ok(buf) => buf,
                 Err(..) => return false,
             };
@@ -1022,45 +1074,9 @@ impl_basic_serde_funcs!(
 );
 
 impl_basic_serde_funcs!(
-    Servo_StyleRotate_Serialize,
-    Servo_StyleRotate_Deserialize,
-    computed::transform::Rotate
-);
-
-impl_basic_serde_funcs!(
-    Servo_StyleScale_Serialize,
-    Servo_StyleScale_Deserialize,
-    computed::transform::Scale
-);
-
-impl_basic_serde_funcs!(
-    Servo_StyleTranslate_Serialize,
-    Servo_StyleTranslate_Deserialize,
-    computed::transform::Translate
-);
-
-impl_basic_serde_funcs!(
-    Servo_StyleTransform_Serialize,
-    Servo_StyleTransform_Deserialize,
-    computed::transform::Transform
-);
-
-impl_basic_serde_funcs!(
-    Servo_StyleOffsetPath_Serialize,
-    Servo_StyleOffsetPath_Deserialize,
-    computed::motion::OffsetPath
-);
-
-impl_basic_serde_funcs!(
-    Servo_StyleOffsetRotate_Serialize,
-    Servo_StyleOffsetRotate_Deserialize,
-    computed::motion::OffsetRotate
-);
-
-impl_basic_serde_funcs!(
-    Servo_StylePositionOrAuto_Serialize,
-    Servo_StylePositionOrAuto_Deserialize,
-    computed::position::PositionOrAuto
+    Servo_RayFunction_Serialize,
+    Servo_RayFunction_Deserialize,
+    generics::motion::RayFunction<computed::Angle>
 );
 
 #[no_mangle]

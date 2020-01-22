@@ -23,10 +23,8 @@ use style_traits::{CssWriter, ToCss};
     Clone,
     Copy,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
@@ -53,10 +51,8 @@ pub use self::GenericMatrix as Matrix;
     Clone,
     Copy,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
@@ -145,10 +141,8 @@ fn is_same<N: PartialEq>(x: &N, y: &N) -> bool {
 #[derive(
     Clone,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
@@ -273,10 +267,8 @@ pub use self::GenericTransformOperation as TransformOperation;
 #[derive(
     Clone,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
@@ -619,10 +611,8 @@ pub fn get_normalized_vector_and_angle<T: Zero>(
     Clone,
     Copy,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToAnimatedZero,
     ToComputedValue,
@@ -633,7 +623,6 @@ pub fn get_normalized_vector_and_angle<T: Zero>(
 /// A value of the `Rotate` property
 ///
 /// <https://drafts.csswg.org/css-transforms-2/#individual-transforms>
-/// cbindgen:private-default-tagged-enum-constructor=false
 pub enum GenericRotate<Number, Angle> {
     /// 'none'
     None,
@@ -696,10 +685,8 @@ where
     Clone,
     Copy,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToAnimatedZero,
     ToComputedValue,
@@ -710,7 +697,6 @@ where
 /// A value of the `Scale` property
 ///
 /// <https://drafts.csswg.org/css-transforms-2/#individual-transforms>
-/// cbindgen:private-default-tagged-enum-constructor=false
 pub enum GenericScale<Number> {
     /// 'none'
     None,
@@ -763,10 +749,8 @@ fn y_axis_and_z_axis_are_zero<LengthPercentage: Zero, Length: Zero>(
 #[derive(
     Clone,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToAnimatedZero,
     ToComputedValue,
@@ -788,7 +772,6 @@ fn y_axis_and_z_axis_are_zero<LengthPercentage: Zero, Length: Zero>(
 /// https://github.com/w3c/csswg-drafts/issues/3305
 ///
 /// <https://drafts.csswg.org/css-transforms-2/#individual-transforms>
-/// cbindgen:private-default-tagged-enum-constructor=false
 pub enum GenericTranslate<LengthPercentage, Length>
 where
     LengthPercentage: Zero,

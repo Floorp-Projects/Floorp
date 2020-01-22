@@ -21,10 +21,8 @@ use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 #[derive(
     Clone,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToAnimatedZero,
     ToComputedValue,
@@ -158,10 +156,8 @@ impl ComputeSquaredDistance for SVGPathData {
     ComputeSquaredDistance,
     Copy,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToAnimatedZero,
     ToShmem,
@@ -487,10 +483,8 @@ impl ToCss for PathCommand {
     ComputeSquaredDistance,
     Copy,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToAnimatedZero,
     ToShmem,
@@ -517,10 +511,8 @@ impl IsAbsolute {
     ComputeSquaredDistance,
     Copy,
     Debug,
-    Deserialize,
     MallocSizeOf,
     PartialEq,
-    Serialize,
     SpecifiedValueInfo,
     ToAnimatedZero,
     ToCss,
@@ -538,9 +530,7 @@ impl CoordPair {
 }
 
 /// The EllipticalArc flag type.
-#[derive(
-    Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, SpecifiedValueInfo, ToShmem,
-)]
+#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToShmem)]
 #[repr(C)]
 pub struct ArcFlag(bool);
 
