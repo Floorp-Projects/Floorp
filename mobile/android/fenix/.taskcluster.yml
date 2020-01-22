@@ -63,11 +63,8 @@ tasks:
                           $if: 'tasks_for == "github-release"'
                           then: '${event.release.target_commitish}'
                           else:
-                              $if: 'tasks_for == "cron"'
+                              $if: 'tasks_for in ["action", "cron"]'
                               then: '${push.branch}'
-                              else:
-                                $if: 'tasks_for == "action"'
-                                then: ${parameters.head_ref}
               head_sha:
                   $if: 'tasks_for == "github-push"'
                   then: '${event.after}'
@@ -78,11 +75,9 @@ tasks:
                           $if: 'tasks_for == "github-release"'
                           then: '${event.release.tag_name}'
                           else:
-                              $if: 'tasks_for == "cron"'
+                              $if: 'tasks_for in ["action", "cron"]'
                               then: '${push.revision}'
-                              else:
-                                $if: 'tasks_for == "action"'
-                                then: ${parameters.head_rev}
+
 
               head_tag:
                   $if: 'tasks_for == "github-release"'
