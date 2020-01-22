@@ -2,7 +2,7 @@
 
 # ErrorType
 
-`enum class ErrorType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L70)
+`enum class ErrorType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L115)
 
 Enum containing all supported error types that we can display an error page for.
 
@@ -42,6 +42,7 @@ Enum containing all supported error types that we can display an error page for.
 
 | Name | Summary |
 |---|---|
+| [imageNameRes](image-name-res.md) | `val imageNameRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?` |
 | [messageRes](message-res.md) | `val messageRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [refreshButtonRes](refresh-button-res.md) | `val refreshButtonRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [titleRes](title-res.md) | `val titleRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
