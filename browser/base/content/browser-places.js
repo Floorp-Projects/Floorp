@@ -1687,14 +1687,8 @@ var BookmarkingUI = {
       }
       if (starred) {
         element.setAttribute("starred", "true");
-        Services.obs.notifyObservers(null, "bookmark-icon-updated", "starred");
       } else {
         element.removeAttribute("starred");
-        Services.obs.notifyObservers(
-          null,
-          "bookmark-icon-updated",
-          "unstarred"
-        );
       }
     }
 
@@ -1708,6 +1702,12 @@ var BookmarkingUI = {
         starred ? this._starredTooltip : this._unstarredTooltip
       );
     }
+
+    Services.obs.notifyObservers(
+      null,
+      "bookmark-icon-updated",
+      starred ? "starred" : "unstarred"
+    );
   },
 
   /**
