@@ -24,9 +24,6 @@ class WindowGlobalActor : public nsISupports {
   static WindowGlobalInit AboutBlankInitializer(
       dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal);
 
-  virtual bool IsInProcess() = 0;
-  virtual JSWindowActor::Type GetSide() = 0;
-
  protected:
   virtual ~WindowGlobalActor() = default;
 
@@ -37,6 +34,7 @@ class WindowGlobalActor : public nsISupports {
                       ErrorResult& aRv);
   virtual nsIURI* GetDocumentURI() = 0;
   virtual const nsAString& GetRemoteType() = 0;
+  virtual JSWindowActor::Type GetSide() = 0;
   virtual dom::BrowsingContext* BrowsingContext() = 0;
 };
 
