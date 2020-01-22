@@ -909,16 +909,9 @@ pub unsafe extern "C" fn Servo_AnimationValue_Scale(
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_AnimationValue_Transform(
-    list: *const computed::TransformOperation,
-    len: usize,
+    transform: &computed::Transform,
 ) -> Strong<RawServoAnimationValue> {
-    use style::values::generics::transform::Transform;
-
-    let slice = std::slice::from_raw_parts(list, len);
-    Arc::new(AnimationValue::Transform(Transform(
-        slice.iter().cloned().collect(),
-    )))
-    .into_strong()
+    Arc::new(AnimationValue::Transform(transform.clone())).into_strong()
 }
 
 #[no_mangle]
@@ -1095,6 +1088,12 @@ impl_basic_serde_funcs!(
     Servo_StyleTranslate_Serialize,
     Servo_StyleTranslate_Deserialize,
     computed::transform::Translate
+);
+
+impl_basic_serde_funcs!(
+    Servo_StyleTransform_Serialize,
+    Servo_StyleTransform_Deserialize,
+    computed::transform::Transform
 );
 
 #[no_mangle]

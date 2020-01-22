@@ -69,6 +69,7 @@ BASIC_SERDE_FUNCS(RayFunction)
 BASIC_SERDE_FUNCS(StyleRotate)
 BASIC_SERDE_FUNCS(StyleScale)
 BASIC_SERDE_FUNCS(StyleTranslate)
+BASIC_SERDE_FUNCS(StyleTransform)
 
 #undef BASIC_SERDE_FUNCS
 
