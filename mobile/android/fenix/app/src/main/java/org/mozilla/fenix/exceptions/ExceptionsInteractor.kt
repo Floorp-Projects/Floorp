@@ -4,13 +4,15 @@
 
 package org.mozilla.fenix.exceptions
 
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
+
 /**
  * Interactor for the exceptions screen
  * Provides implementations for the ExceptionsViewInteractor
  */
 class ExceptionsInteractor(
     private val learnMore: () -> Unit,
-    private val deleteOne: (ExceptionsItem) -> Unit,
+    private val deleteOne: (TrackingProtectionException) -> Unit,
     private val deleteAll: () -> Unit
 ) : ExceptionsViewInteractor {
     override fun onLearnMore() {
@@ -21,7 +23,7 @@ class ExceptionsInteractor(
         deleteAll.invoke()
     }
 
-    override fun onDeleteOne(item: ExceptionsItem) {
+    override fun onDeleteOne(item: TrackingProtectionException) {
         deleteOne.invoke(item)
     }
 }

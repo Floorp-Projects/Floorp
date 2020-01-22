@@ -7,9 +7,9 @@ package org.mozilla.fenix.exceptions.viewholders
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.exception_item.view.*
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import org.mozilla.fenix.R
 import org.mozilla.fenix.exceptions.ExceptionsInteractor
-import org.mozilla.fenix.exceptions.ExceptionsItem
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 
@@ -25,7 +25,7 @@ class ExceptionsListItemViewHolder(
     private val url = view.domainView
     private val deleteButton = view.delete_exception
 
-    private var item: ExceptionsItem? = null
+    private var item: TrackingProtectionException? = null
 
     init {
         deleteButton.setOnClickListener {
@@ -35,7 +35,7 @@ class ExceptionsListItemViewHolder(
         }
     }
 
-    fun bind(item: ExceptionsItem) {
+    fun bind(item: TrackingProtectionException) {
         this.item = item
         url.text = item.url
         updateFavIcon(item.url)

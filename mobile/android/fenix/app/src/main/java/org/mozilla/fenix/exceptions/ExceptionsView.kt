@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_exceptions.view.*
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import org.mozilla.fenix.R
 
 /**
@@ -34,7 +35,7 @@ interface ExceptionsViewInteractor {
     /**
      * Called whenever one exception item is deleted
      */
-    fun onDeleteOne(item: ExceptionsItem)
+    fun onDeleteOne(item: TrackingProtectionException)
 }
 
 /**

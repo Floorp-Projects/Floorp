@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsDeleteButtonViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsHeaderViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
@@ -16,7 +17,7 @@ import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
 sealed class AdapterItem {
     object DeleteButton : AdapterItem()
     object Header : AdapterItem()
-    data class Item(val item: ExceptionsItem) : AdapterItem()
+    data class Item(val item: TrackingProtectionException) : AdapterItem()
 }
 
 /**
@@ -31,7 +32,7 @@ class ExceptionsAdapter(
      * Change the list of items that are displayed.
      * Header and footer items are added to the list as well.
      */
-    fun updateData(exceptions: List<ExceptionsItem>) {
+    fun updateData(exceptions: List<TrackingProtectionException>) {
         val adapterItems = mutableListOf<AdapterItem>()
         adapterItems.add(AdapterItem.Header)
         exceptions.mapTo(adapterItems) { AdapterItem.Item(it) }

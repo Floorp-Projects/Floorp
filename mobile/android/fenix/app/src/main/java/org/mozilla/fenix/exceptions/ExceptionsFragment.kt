@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_exceptions.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BrowserDirection
@@ -74,7 +75,7 @@ class ExceptionsFragment : Fragment() {
         reloadExceptions()
     }
 
-    private fun deleteOneItem(item: ExceptionsItem) {
+    private fun deleteOneItem(item: TrackingProtectionException) {
         // We can't currently delete one item in this Exceptions list with a URL with the GV API
         // See https://github.com/mozilla-mobile/android-components/issues/4699
         Log.e("Remove one exception", "$item")
@@ -92,8 +93,7 @@ class ExceptionsFragment : Fragment() {
 
     private fun reloadExceptions() {
         trackingProtectionUseCases.fetchExceptions { resultList ->
-            val exceptionsList = resultList.map { ExceptionsItem(it) }
-            exceptionsStore.dispatch(ExceptionsFragmentAction.Change(exceptionsList))
+            exceptionsStore.dispatch(ExceptionsFragmentAction.Change(resultList))
         }
     }
 }

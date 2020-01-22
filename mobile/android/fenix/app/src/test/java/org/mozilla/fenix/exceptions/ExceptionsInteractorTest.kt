@@ -5,6 +5,7 @@
 package org.mozilla.fenix.exceptions
 
 import io.mockk.mockk
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -36,8 +37,8 @@ class ExceptionsInteractorTest {
 
     @Test
     fun onDeleteOne() {
-        var exceptionsItemReceived: ExceptionsItem? = null
-        val exceptionsItem = ExceptionsItem("url")
+        var exceptionsItemReceived: TrackingProtectionException? = null
+        val exceptionsItem = ExceptionItem("url")
         val interactor = ExceptionsInteractor(
             mockk(),
             { exceptionsItemReceived = exceptionsItem },
