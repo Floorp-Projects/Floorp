@@ -33,6 +33,10 @@ pub const MAX_BLUR_RADIUS: f32 = 300.;
 /// events.
 pub type ItemTag = (u64, u16);
 
+/// An identifier used to refer to previously sent display items. Currently it
+/// refers to individual display items, but this may change later.
+pub type ItemKey = u16;
+
 bitflags! {
     #[repr(C)]
     #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
@@ -74,6 +78,8 @@ pub struct CommonItemProperties {
     pub hit_info: Option<ItemTag>,
     /// Various flags describing properties of this primitive.
     pub flags: PrimitiveFlags,
+    /// The unique id of this display item.
+    pub item_key: Option<ItemKey>
 }
 
 impl CommonItemProperties {
@@ -88,6 +94,7 @@ impl CommonItemProperties {
             clip_id: space_and_clip.clip_id,
             hit_info: None,
             flags: PrimitiveFlags::default(),
+            item_key: None,
         }
     }
 }
