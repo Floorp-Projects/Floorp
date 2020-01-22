@@ -26,6 +26,7 @@
 #  include "mozilla/MemoryReporting.h"
 #  include "mozilla/ServoTypes.h"
 #  include "mozilla/ServoBindingTypes.h"
+#  include "mozilla/Vector.h"
 #  include "nsCSSPropertyID.h"
 #  include "nsCompatibility.h"
 #  include "nsIURI.h"
