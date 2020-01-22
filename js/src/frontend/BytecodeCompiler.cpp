@@ -493,7 +493,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
   // We are about to start parsing the source. Record this information for
   // telemetry purposes.
-  info.script->scriptSource()->recordParseStarted();
+  info.parseInfo.sourceObject->source()->recordParseStarted();
 
   TokenStreamPosition startPosition(info.keepAtoms, parser->tokenStream);
 
@@ -517,7 +517,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     if (pn) {
       // We are about to start emitting bytecode. Record this information for
       // telemetry purposes.
-      info.script->scriptSource()->recordEmitStarted();
+      info.parseInfo.sourceObject->source()->recordEmitStarted();
 
       // Publish deferred items
       if (!parser->publishDeferredFunctions()) {
@@ -549,7 +549,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
   // We have just finished parsing the source. Inform the source so that we
   // can compute statistics (e.g. how much time our functions remain lazy).
-  info.script->scriptSource()->recordParseEnded();
+  info.parseInfo.sourceObject->source()->recordParseEnded();
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!info.scriptSource()->tryCompressOffThread(cx)) {
@@ -1199,7 +1199,7 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
   // interpreted script.
   if (info.getScript()) {
     if (parameterListEnd) {
-      info.getScript()->scriptSource()->setParameterListEnd(*parameterListEnd);
+      parseInfo.sourceObject->source()->setParameterListEnd(*parameterListEnd);
     }
     tellDebuggerAboutCompiledScript(cx, info.getScript());
   }
