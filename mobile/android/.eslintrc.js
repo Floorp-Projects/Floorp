@@ -25,6 +25,8 @@ module.exports = {
       "chrome/**",
       // Bug 1425048.
       "components/extensions/**",
+      // Bug 1425034.
+      "modules/WebsiteMetadata.jsm",
     ],
     rules: {
       "no-unused-vars": "off",
