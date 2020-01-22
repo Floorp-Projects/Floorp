@@ -47,19 +47,6 @@ StructuredCloneData::StructuredCloneData(
       mExternalData(JS::StructuredCloneScope::DifferentProcess),
       mInitialized(false) {}
 
-StructuredCloneData::StructuredCloneData(
-    StructuredCloneHolder::StructuredCloneScope aScope)
-    : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
-                            StructuredCloneHolder::TransferringSupported,
-                            aScope),
-      mExternalData(JS::StructuredCloneScope::DifferentProcess),
-      mInitialized(false) {
-  MOZ_ASSERT(
-      aScope == StructuredCloneHolder::StructuredCloneScope::DifferentProcess ||
-      aScope ==
-          StructuredCloneHolder::StructuredCloneScope::UnknownDestination);
-}
-
 StructuredCloneData::~StructuredCloneData() {}
 
 StructuredCloneData& StructuredCloneData::operator=(

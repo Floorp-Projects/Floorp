@@ -549,7 +549,7 @@ function test_messagePort() {
 
   runTests({
     clonableObjectsEveryWhere: true,
-    clonableObjectsSameProcess: true,
+    clonableObjectsSameProcess: false,
     transferableObjects: true,
     send(what, ports) {
       return new Promise(function(r, rr) {
