@@ -1,4 +1,4 @@
-fuzzy-if(webrender&&cocoaWidget,1-1,13-13) == calc-background-linear-gradient-1.html calc-background-linear-gradient-1-ref.html
+== calc-background-linear-gradient-1.html calc-background-linear-gradient-1-ref.html
 == calc-background-image-gradient-1.html calc-background-image-gradient-1-ref.html
 == calc-background-position-1.html calc-background-position-1-ref.html
 == calc-background-size-1.html calc-background-size-1-ref.html
