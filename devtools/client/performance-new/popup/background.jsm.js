@@ -358,6 +358,26 @@ function revertRecordingPreferences() {
 }
 
 /**
+ * Change the prefs based on a preset. This mechanism is used by the popup to
+ * easily switch between different settings.
+ * @param {string} presetName
+ */
+function changePreset(presetName) {
+  const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF);
+  let recordingPrefs = getRecordingPrefsFromPreset(presetName, objdirs);
+
+  if (!recordingPrefs) {
+    // No recordingPrefs were found for that preset. Most likely this means this
+    // is a custom preset, or it's one that we dont recognize for some reason.
+    // Get the preferences from the individual preference values.
+    Services.prefs.setCharPref(PRESET_PREF, presetName);
+    recordingPrefs = getRecordingPreferencesFromBrowser();
+  }
+
+  setRecordingPreferencesOnBrowser(recordingPrefs);
+}
+
+/**
  * A simple cache for the default recording preferences.
  * @type {RecordingStateFromPreferences}
  */
@@ -408,6 +428,7 @@ module.exports = {
   getRecordingPreferencesFromBrowser,
   setRecordingPreferencesOnBrowser,
   revertRecordingPreferences,
+  changePreset,
   getDefaultRecordingPreferencesForOlderFirefox,
 };
 
