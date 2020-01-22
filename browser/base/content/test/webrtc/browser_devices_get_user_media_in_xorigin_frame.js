@@ -13,16 +13,20 @@ const PromptResult = {
 
 const Perms = Services.perms;
 
-async function promptNoDelegate(aThirdPartyOrgin) {
+async function promptNoDelegate(aThirdPartyOrgin, audio = true, video = true) {
   // Persistent allowed first party origin
   const uri = gBrowser.selectedBrowser.documentURI;
-  PermissionTestUtils.add(uri, "microphone", Services.perms.ALLOW_ACTION);
-  PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
+  if (audio) {
+    PermissionTestUtils.add(uri, "microphone", Services.perms.ALLOW_ACTION);
+  }
+  if (video) {
+    PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
+  }
 
   // Check that we get a prompt.
   const observerPromise = expectObserverCalled("getUserMedia:request");
   const promise = promisePopupNotificationShown("webRTC-shareDevices");
-  await promiseRequestDevice(true, true, "frame4");
+  await promiseRequestDevice(audio, video, "frame4");
   await promise;
   await observerPromise;
 
@@ -56,13 +60,19 @@ async function promptNoDelegate(aThirdPartyOrgin) {
   );
   await observerPromise1;
   await observerPromise2;
-  Assert.deepEqual(
-    await getMediaCaptureState(),
-    { audio: true, video: true },
-    "expected camera and microphone to be shared"
+  let state = await getMediaCaptureState();
+  is(
+    !!state.audio,
+    audio,
+    `expected microphone to be ${audio ? "" : "not"} shared`
+  );
+  is(
+    !!state.video,
+    video,
+    `expected camera to be ${video ? "" : "not"} shared`
   );
   await indicator;
-  await checkSharingUI({ audio: true, video: true });
+  await checkSharingUI({ audio, video });
 
   // Cleanup.
   await closeStream(false, "frame4");
@@ -537,6 +547,8 @@ var gTests = [
       "Prompt and display both first party and third party origin in maybe unsafe permission delegation",
     run: async function checkPromptNoDelegate() {
       await promptNoDelegate("test1.example.com");
+      await promptNoDelegate("test1.example.com", true, false);
+      await promptNoDelegate("test1.example.com", false, true);
     },
   },
   {

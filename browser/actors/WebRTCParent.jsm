@@ -486,7 +486,7 @@ function prompt(aActor, aBrowser, aRequest) {
     requestMessages = [
       // Individual request types first.
       "getUserMedia.shareCameraUnsafeDelegation.message",
-      "getUserMedia.shareMicrophoneUnsafeDelegation.message",
+      "getUserMedia.shareMicrophoneUnsafeDelegations.message",
       "getUserMedia.shareScreenUnsafeDelegation.message",
       "getUserMedia.shareAudioCaptureUnsafeDelegation.message",
       // Combinations of the above request types last.
