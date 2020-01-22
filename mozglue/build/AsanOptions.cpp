@@ -174,6 +174,9 @@ extern "C" const char* __lsan_default_suppressions() {
          "leak:mozilla::xpcom::ConstructJSMComponent\n"
          "leak:XPCWrappedNativeJSOps\n"
 
+         "leak:CreateBrowsingContext\n"
+         "leak:mozilla::dom::CanonicalBrowsingContext::RegisterWindowGlobal\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
