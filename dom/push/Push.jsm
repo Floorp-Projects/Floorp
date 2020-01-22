@@ -87,6 +87,7 @@ Push.prototype = {
         Services.prefs.getBoolPref("dom.push.testing.ignorePermission", false)
       ) {
         resolve();
+        return;
       }
 
       this._requestPermission(isHandlingUserInput, resolve, permissionDenied);
