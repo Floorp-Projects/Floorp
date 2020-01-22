@@ -11,6 +11,13 @@ const {
 } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const InlineTooltip = require("devtools/client/shared/widgets/tooltip/InlineTooltip");
 
+loader.lazyRequireGetter(
+  this,
+  "KeyCodes",
+  "devtools/client/shared/keycodes",
+  true
+);
+
 const INLINE_TOOLTIP_CLASS = "inline-tooltip-container";
 
 /**
@@ -78,6 +85,7 @@ class SwatchBasedEditorTooltip {
     this.activeSwatch = null;
 
     this._onSwatchClick = this._onSwatchClick.bind(this);
+    this._onSwatchKeyDown = this._onSwatchKeyDown.bind(this);
   }
 
   /**
@@ -177,6 +185,7 @@ class SwatchBasedEditorTooltip {
       callbacks: callbacks,
     });
     swatchEl.addEventListener("click", this._onSwatchClick);
+    swatchEl.addEventListener("keydown", this._onSwatchKeyDown);
   }
 
   removeSwatch(swatchEl) {
@@ -186,7 +195,19 @@ class SwatchBasedEditorTooltip {
         this.activeSwatch = null;
       }
       swatchEl.removeEventListener("click", this._onSwatchClick);
+      swatchEl.removeEventListener("keydown", this._onSwatchKeyDown);
       this.swatches.delete(swatchEl);
+    }
+  }
+
+  _onSwatchKeyDown(event) {
+    if (
+      event.keyCode === KeyCodes.DOM_VK_RETURN ||
+      event.keyCode === KeyCodes.DOM_VK_SPACE
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      this._onSwatchClick(event);
     }
   }
 
