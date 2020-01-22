@@ -216,6 +216,10 @@ class nsZipArchive final {
   // file URI, for logging
   nsCString mURI;
 
+  // Is true if we use zipLog to log accesses in jar/zip archives. This helper
+  // variable avoids grabbing zipLog's lock when not necessary.
+  bool mUseZipLog;
+
  private:
   //--- private methods ---
   nsZipItem* CreateZipItem();

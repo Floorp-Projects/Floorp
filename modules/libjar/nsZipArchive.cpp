@@ -23,6 +23,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MemUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/StaticMutex.h"
 #include "stdlib.h"
 #include "nsDirectoryService.h"
 #include "nsWildCard.h"
@@ -82,7 +83,13 @@ static uint32_t HashName(const char* aName, uint16_t nameLen);
 class ZipArchiveLogger {
  public:
   void Init(const char* env) {
-    if (!fd) {
+    StaticMutexAutoLock lock(sLock);
+
+    // AddRef
+    MOZ_ASSERT(mRefCnt >= 0);
+    ++mRefCnt;
+
+    if (!mFd) {
       nsCOMPtr<nsIFile> logFile;
       nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), false,
                                     getter_AddRefs(logFile));
@@ -111,38 +118,39 @@ class ZipArchiveLogger {
                                      0644, &file);
       if (NS_FAILED(rv)) return;
 #endif
-      fd = file;
+      mFd = file;
     }
   }
 
-  void Write(const nsACString& zip, const char* entry) const {
-    if (fd) {
+  void Write(const nsACString& zip, const char* entry) {
+    StaticMutexAutoLock lock(sLock);
+
+    if (mFd) {
       nsCString buf(zip);
       buf.Append(' ');
       buf.Append(entry);
       buf.Append('\n');
-      PR_Write(fd, buf.get(), buf.Length());
+      PR_Write(mFd, buf.get(), buf.Length());
     }
   }
 
-  void AddRef() {
-    MOZ_ASSERT(refCnt >= 0);
-    ++refCnt;
-  }
-
   void Release() {
-    MOZ_ASSERT(refCnt > 0);
-    if ((0 == --refCnt) && fd) {
-      PR_Close(fd);
-      fd = nullptr;
+    StaticMutexAutoLock lock(sLock);
+
+    MOZ_ASSERT(mRefCnt > 0);
+    if ((0 == --mRefCnt) && mFd) {
+      PR_Close(mFd);
+      mFd = nullptr;
     }
   }
 
  private:
-  int refCnt;
-  PRFileDesc* fd;
+  static StaticMutex sLock;
+  int mRefCnt;
+  PRFileDesc* mFd;
 };
 
+StaticMutex ZipArchiveLogger::sLock;
 static ZipArchiveLogger zipLog;
 
 //***********************************************************
@@ -341,6 +349,8 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd) {
     if (aZipHandle->mFile && XRE_IsParentProcess()) {
       static char* env = PR_GetEnv("MOZ_JAR_LOG_FILE");
       if (env) {
+        mUseZipLog = true;
+
         zipLog.Init(env);
         // We only log accesses in jar/zip archives within the NS_GRE_DIR
         // and/or the APK on Android. For the former, we log the archive path
@@ -474,7 +484,7 @@ nsZipItem* nsZipArchive::GetItem(const char* aEntryName) {
           (!memcmp(aEntryName, item->Name(), len))) {
         // Successful GetItem() is a good indicator that the file is about to be
         // read
-        if (mURI.Length()) {
+        if (mUseZipLog && mURI.Length()) {
           zipLog.Write(mURI, aEntryName);
         }
         return item;  //-- found it
@@ -879,9 +889,8 @@ nsZipArchive::nsZipArchive()
     : mRefCnt(0),
       mCommentPtr(nullptr),
       mCommentLen(0),
-      mBuiltSynthetics(false) {
-  zipLog.AddRef();
-
+      mBuiltSynthetics(false),
+      mUseZipLog(false) {
   // initialize the table to nullptr
   memset(mFiles, 0, sizeof(mFiles));
 }
@@ -892,7 +901,9 @@ NS_IMPL_RELEASE(nsZipArchive)
 nsZipArchive::~nsZipArchive() {
   CloseArchive();
 
-  zipLog.Release();
+  if (mUseZipLog) {
+    zipLog.Release();
+  }
 }
 
 //------------------------------------------
