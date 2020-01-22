@@ -20,6 +20,8 @@ class GeckoViewContentBlocking extends GeckoViewModule {
     this.browser.addProgressListener(this.progressFilter, flags);
 
     this.registerListener(["ContentBlocking:RequestLog"]);
+
+    this.messageManager.addMessageListener("ContentBlocking:ExportLog", this);
   }
 
   onDisable() {
@@ -30,6 +32,11 @@ class GeckoViewContentBlocking extends GeckoViewModule {
     }
 
     this.unregisterListener(["ContentBlocking:RequestLog"]);
+
+    this.messageManager.removeMessageListener(
+      "ContentBlocking:ExportLog",
+      this
+    );
   }
 
   // Bundle event handler.
@@ -38,26 +45,60 @@ class GeckoViewContentBlocking extends GeckoViewModule {
 
     switch (aEvent) {
       case "ContentBlocking:RequestLog": {
-        let bc = this.browser.browsingContext;
+        if (!this._requestLogCallbacks) {
+          this._requestLogCallbacks = new Map();
+          this._requestLogId = 0;
+        }
+        this._requestLogCallbacks.set(this._requestLogId, aCallback);
+        this.messageManager.sendAsyncMessage("ContentBlocking:RequestLog", {
+          id: this._requestLogId,
+        });
+        this._requestLogId++;
+        break;
+      }
+    }
+  }
 
-        if (!bc) {
+  // Message manager event handler.
+  receiveMessage(aMsg) {
+    debug`receiveMessage: ${aMsg.name}`;
+
+    switch (aMsg.name) {
+      case "ContentBlocking:ExportLog": {
+        if (
+          !this._requestLogCallbacks ||
+          !this._requestLogCallbacks.has(aMsg.data.id)
+        ) {
           warn`Failed to export content blocking log.`;
-          break;
+          return;
         }
 
-        // Get the top-level browsingContext. The ContentBlockingLog is located
-        // in its current window global.
-        bc = bc.top();
+        const callback = this._requestLogCallbacks.get(aMsg.data.id);
 
-        const topWindowGlobal = bc.currentWindowGlobal;
-
-        if (!topWindowGlobal) {
+        if (!aMsg.data.log) {
           warn`Failed to export content blocking log.`;
-          break;
+          callback.onError(aMsg.data.error);
+          // Clean up the callback even on a failed response.
+          this._requestLogCallbacks.delete(aMsg.data.id);
+          return;
         }
-        const log = topWindowGlobal.contentBlockingLog;
 
-        aCallback.onSuccess({ log });
+        const res = Object.keys(aMsg.data.log).map(key => {
+          const blockData = aMsg.data.log[key].map(data => {
+            return {
+              category: data[0],
+              blocked: data[1],
+              count: data[2],
+            };
+          });
+          return {
+            origin: key,
+            blockData: blockData,
+          };
+        });
+        callback.onSuccess({ log: res });
+
+        this._requestLogCallbacks.delete(aMsg.data.id);
         break;
       }
     }
