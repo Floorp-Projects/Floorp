@@ -348,7 +348,14 @@ let ACTORS = {
         PreFullZoomChange: {},
         FullZoomChange: {},
         TextZoomChange: {},
-        ZoomChangeUsingMouseWheel: {},
+        DoZoomEnlargeBy10: {
+          capture: true,
+          mozSystemGroup: true,
+        },
+        DoZoomReduceBy10: {
+          capture: true,
+          mozSystemGroup: true,
+        },
         mozupdatedremoteframedimensions: {
           capture: true,
           mozSystemGroup: true,

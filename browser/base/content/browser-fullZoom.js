@@ -48,7 +48,8 @@ var FullZoom = {
   // Initialization & Destruction
 
   init: function FullZoom_init() {
-    gBrowser.addEventListener("ZoomChangeUsingMouseWheel", this);
+    gBrowser.addEventListener("DoZoomEnlargeBy10", this);
+    gBrowser.addEventListener("DoZoomReduceBy10", this);
 
     // Register ourselves with the service so we know when our pref changes.
     this._cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
@@ -83,7 +84,8 @@ var FullZoom = {
   destroy: function FullZoom_destroy() {
     Services.prefs.removeObserver("browser.zoom.", this);
     this._cps2.removeObserverForName(this.name, this);
-    gBrowser.removeEventListener("ZoomChangeUsingMouseWheel", this);
+    gBrowser.removeEventListener("DoZoomEnlargeBy10", this);
+    gBrowser.removeEventListener("DoZoomReduceBy10", this);
   },
 
   // Event Handlers
@@ -92,10 +94,11 @@ var FullZoom = {
 
   handleEvent: function FullZoom_handleEvent(event) {
     switch (event.type) {
-      case "ZoomChangeUsingMouseWheel":
-        let browser = this._getTargetedBrowser(event);
-        this._ignorePendingZoomAccesses(browser);
-        this._applyZoomToPref(browser);
+      case "DoZoomEnlargeBy10":
+        this.changeZoomBy(this._getTargetedBrowser(event), 0.1);
+        break;
+      case "DoZoomReduceBy10":
+        this.changeZoomBy(this._getTargetedBrowser(event), -0.1);
         break;
     }
   },
@@ -358,6 +361,35 @@ var FullZoom = {
   },
 
   /**
+   * If browser in reader mode sends message to reader in order to increase font size,
+   * Otherwise enlarges the zoom level of the page in the current browser.
+   * This function is not async like reduce/enlarge, because it is invoked by our
+   * event handler. This means that the call to _applyZoomToPref is not awaited and
+   * will happen asynchronously.
+   */
+  changeZoomBy(aBrowser, aValue) {
+    if (aBrowser.currentURI.spec.startsWith("about:reader")) {
+      const message = aValue > 0 ? "Reader::ZoomIn" : "Reader:ZoomOut";
+      aBrowser.messageManager.sendAsyncMessage(message);
+      return;
+    } else if (this._isPDFViewer(aBrowser)) {
+      const message = aValue > 0 ? "PDFJS::ZoomIn" : "PDFJS:ZoomOut";
+      aBrowser.messageManager.sendAsyncMessage(message);
+      return;
+    }
+    let zoom = ZoomManager.getZoomForBrowser(aBrowser);
+    zoom += aValue;
+    if (zoom < ZoomManager.MIN) {
+      zoom = ZoomManager.MIN;
+    } else if (zoom > ZoomManager.MAX) {
+      zoom = ZoomManager.MAX;
+    }
+    ZoomManager.setZoomForBrowser(aBrowser, zoom);
+    this._ignorePendingZoomAccesses(aBrowser);
+    this._applyZoomToPref(aBrowser);
+  },
+
+  /**
    * Sets the zoom level for the given browser to the given floating
    * point value, where 1 is the default zoom level.
    */
@@ -536,7 +568,7 @@ var FullZoom = {
 
   /**
    * Returns the browser that the supplied zoom event is associated with.
-   * @param event  The ZoomChangeUsingMouseWheel event.
+   * @param event  The zoom event.
    * @return  The associated browser element, if one exists, otherwise null.
    */
   _getTargetedBrowser: function FullZoom__getTargetedBrowser(event) {
@@ -560,7 +592,7 @@ var FullZoom = {
       return target.ownerGlobal.docShell.chromeEventHandler;
     }
 
-    throw new Error("Unexpected ZoomChangeUsingMouseWheel event source");
+    throw new Error("Unexpected zoom event source");
   },
 
   /**
