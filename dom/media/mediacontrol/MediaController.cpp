@@ -30,7 +30,9 @@ MediaController::MediaController(uint64_t aContextId)
 
 MediaController::~MediaController() {
   LOG("Destroy controller %" PRId64, Id());
-  MOZ_DIAGNOSTIC_ASSERT(!mIsRegisteredToService);
+  if (!mShutdown) {
+    Shutdown();
+  }
 };
 
 void MediaController::Play() {
@@ -56,9 +58,9 @@ void MediaController::Stop() {
 
 void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
     MediaControlKeysEvent aEvent) {
-  // There is no controlled media existing, we have no need to update media
-  // action to the content process.
-  if (!ControlledMediaNum()) {
+  // There is no controlled media existing or controller has been shutdown, we
+  // have no need to update media action to the content process.
+  if (!ControlledMediaNum() || mShutdown) {
     return;
   }
   RefPtr<BrowsingContext> context = BrowsingContext::Get(mBrowsingContextId);
@@ -68,6 +70,7 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
 }
 
 void MediaController::Shutdown() {
+  MOZ_ASSERT(!mShutdown, "Do not call shutdown twice!");
   SetPlayState(PlaybackState::eStopped);
   // The media controller would be removed from the service when we receive a
   // notification from the content process about all controlled media has been
@@ -79,9 +82,13 @@ void MediaController::Shutdown() {
   Deactivate();
   mControlledMediaNum = 0;
   mPlayingControlledMediaNum = 0;
+  mShutdown = true;
 }
 
 void MediaController::NotifyMediaStateChanged(ControlledMediaState aState) {
+  if (mShutdown) {
+    return;
+  }
   if (aState == ControlledMediaState::eStarted) {
     IncreaseControlledMediaNum();
   } else if (aState == ControlledMediaState::eStopped) {
@@ -94,6 +101,9 @@ void MediaController::NotifyMediaStateChanged(ControlledMediaState aState) {
 }
 
 void MediaController::NotifyMediaAudibleChanged(bool aAudible) {
+  if (mShutdown) {
+    return;
+  }
   mAudible = aAudible;
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
@@ -105,6 +115,7 @@ void MediaController::NotifyMediaAudibleChanged(bool aAudible) {
 }
 
 void MediaController::IncreaseControlledMediaNum() {
+  MOZ_ASSERT(!mShutdown);
   MOZ_DIAGNOSTIC_ASSERT(mControlledMediaNum >= 0);
   mControlledMediaNum++;
   LOG("Increase controlled media num to %" PRId64, mControlledMediaNum);
@@ -114,6 +125,7 @@ void MediaController::IncreaseControlledMediaNum() {
 }
 
 void MediaController::DecreaseControlledMediaNum() {
+  MOZ_ASSERT(!mShutdown);
   MOZ_DIAGNOSTIC_ASSERT(mControlledMediaNum >= 1);
   mControlledMediaNum--;
   LOG("Decrease controlled media num to %" PRId64, mControlledMediaNum);
@@ -123,6 +135,7 @@ void MediaController::DecreaseControlledMediaNum() {
 }
 
 void MediaController::IncreasePlayingControlledMediaNum() {
+  MOZ_ASSERT(!mShutdown);
   MOZ_ASSERT(mPlayingControlledMediaNum >= 0);
   mPlayingControlledMediaNum++;
   LOG("Increase playing controlled media num to %" PRId64,
@@ -136,6 +149,7 @@ void MediaController::IncreasePlayingControlledMediaNum() {
 }
 
 void MediaController::DecreasePlayingControlledMediaNum() {
+  MOZ_ASSERT(!mShutdown);
   mPlayingControlledMediaNum--;
   LOG("Decrease playing controlled media num to %" PRId64,
       mPlayingControlledMediaNum);
@@ -147,6 +161,7 @@ void MediaController::DecreasePlayingControlledMediaNum() {
 
 // TODO : Use watchable to moniter mControlledMediaNum
 void MediaController::Activate() {
+  MOZ_ASSERT(!mShutdown);
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   if (service && !mIsRegisteredToService) {
     mIsRegisteredToService = service->RegisterActiveMediaController(this);
@@ -155,6 +170,7 @@ void MediaController::Activate() {
 }
 
 void MediaController::Deactivate() {
+  MOZ_ASSERT(!mShutdown);
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   if (service) {
     service->GetAudioFocusManager().RevokeAudioFocus(this);
@@ -166,7 +182,7 @@ void MediaController::Deactivate() {
 }
 
 void MediaController::SetPlayState(PlaybackState aState) {
-  if (mState == aState) {
+  if (mShutdown || mState == aState) {
     return;
   }
   LOG("SetPlayState : '%s'", ToPlaybackStateEventStr(aState));
