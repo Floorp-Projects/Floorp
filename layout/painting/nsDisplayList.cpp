@@ -203,113 +203,241 @@ nsCString ActiveScrolledRoot::ToString(
   return std::move(str);
 }
 
-static StyleTransformOperation ResolveTranslate(
+static inline CSSAngle MakeCSSAngle(const StyleAngle& aValue) {
+  return CSSAngle(aValue.ToDegrees(), eCSSUnit_Degree);
+}
+
+static Rotate GetRotate(const StyleRotate& aValue) {
+  Rotate result = null_t();
+  switch (aValue.tag) {
+    case StyleRotate::Tag::None:
+      break;
+    case StyleRotate::Tag::Rotate:
+      result = Rotate(Rotation(MakeCSSAngle(aValue.AsRotate())));
+      break;
+    case StyleRotate::Tag::Rotate3D: {
+      const auto& rotate = aValue.AsRotate3D();
+      result = Rotate(
+          Rotation3D(rotate._0, rotate._1, rotate._2, MakeCSSAngle(rotate._3)));
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported rotate");
+  }
+  return result;
+}
+
+static Scale GetScale(const StyleScale& aValue) {
+  Scale result(1., 1., 1.);
+  switch (aValue.tag) {
+    case StyleScale::Tag::None:
+      break;
+    case StyleScale::Tag::Scale: {
+      auto& scale = aValue.AsScale();
+      result.x() = scale._0;
+      result.y() = scale._1;
+      result.z() = scale._2;
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported scale");
+  }
+  return result;
+}
+
+static Translation GetTranslate(
     TransformReferenceBox& aRefBox, const LengthPercentage& aX,
     const LengthPercentage& aY = LengthPercentage::Zero(),
     const Length& aZ = Length{0}) {
-  float x = nsStyleTransformMatrix::ProcessTranslatePart(
+  Translation result(0, 0, 0);
+  result.x() = nsStyleTransformMatrix::ProcessTranslatePart(
       aX, &aRefBox, &TransformReferenceBox::Width);
-  float y = nsStyleTransformMatrix::ProcessTranslatePart(
+  result.y() = nsStyleTransformMatrix::ProcessTranslatePart(
       aY, &aRefBox, &TransformReferenceBox::Height);
-  return StyleTransformOperation::Translate3D(
-      LengthPercentage::FromPixels(x), LengthPercentage::FromPixels(y), aZ);
+  result.z() = aZ.ToCSSPixels();
+  return result;
 }
 
-static StyleTranslate ResolveTranslate(const StyleTranslate& aValue,
-                                       TransformReferenceBox& aRefBox) {
-  if (aValue.IsTranslate()) {
-    const auto& t = aValue.AsTranslate();
-    float x = nsStyleTransformMatrix::ProcessTranslatePart(
-        t._0, &aRefBox, &TransformReferenceBox::Width);
-    float y = nsStyleTransformMatrix::ProcessTranslatePart(
-        t._1, &aRefBox, &TransformReferenceBox::Height);
-    return StyleTranslate::Translate(LengthPercentage::FromPixels(x),
-                                     LengthPercentage::FromPixels(y), t._2);
+static Translation GetTranslate(const StyleTranslate& aValue,
+                                TransformReferenceBox& aRefBox) {
+  Translation result(0, 0, 0);
+  switch (aValue.tag) {
+    case StyleTranslate::Tag::None:
+      break;
+    case StyleTranslate::Tag::Translate: {
+      auto& translate = aValue.AsTranslate();
+      result = GetTranslate(aRefBox, translate._0, translate._1, translate._2);
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported translate");
   }
-
-  MOZ_ASSERT(aValue.IsNone());
-  return StyleTranslate::None();
+  return result;
 }
 
-static StyleTransform ResolveTransformOperations(
-    const StyleTransform& aTransform, TransformReferenceBox& aRefBox) {
-  auto convertMatrix = [](const Matrix4x4& aM) {
-    return StyleTransformOperation::Matrix3D(StyleGenericMatrix3D<StyleNumber>{
-        aM._11, aM._12, aM._13, aM._14, aM._21, aM._22, aM._23, aM._24, aM._31,
-        aM._32, aM._33, aM._34, aM._41, aM._42, aM._43, aM._44});
-  };
-
-  Vector<StyleTransformOperation> result;
-  MOZ_RELEASE_ASSERT(
-      result.initCapacity(aTransform.Operations().Length()),
-      "Allocating vector of transform operations should be successful.");
-
+static void AddTransformFunctions(const StyleTransform& aTransform,
+                                  TransformReferenceBox& aRefBox,
+                                  nsTArray<TransformFunction>& aFunctions) {
   for (const StyleTransformOperation& op : aTransform.Operations()) {
     switch (op.tag) {
-      case StyleTransformOperation::Tag::TranslateX:
-        result.infallibleAppend(ResolveTranslate(aRefBox, op.AsTranslateX()));
+      case StyleTransformOperation::Tag::RotateX: {
+        CSSAngle theta = MakeCSSAngle(op.AsRotateX());
+        aFunctions.AppendElement(RotationX(theta));
         break;
-      case StyleTransformOperation::Tag::TranslateY:
-        result.infallibleAppend(ResolveTranslate(
-            aRefBox, LengthPercentage::Zero(), op.AsTranslateY()));
+      }
+      case StyleTransformOperation::Tag::RotateY: {
+        CSSAngle theta = MakeCSSAngle(op.AsRotateY());
+        aFunctions.AppendElement(RotationY(theta));
         break;
-      case StyleTransformOperation::Tag::TranslateZ:
-        result.infallibleAppend(
-            ResolveTranslate(aRefBox, LengthPercentage::Zero(),
-                             LengthPercentage::Zero(), op.AsTranslateZ()));
+      }
+      case StyleTransformOperation::Tag::RotateZ: {
+        CSSAngle theta = MakeCSSAngle(op.AsRotateZ());
+        aFunctions.AppendElement(RotationZ(theta));
         break;
+      }
+      case StyleTransformOperation::Tag::Rotate: {
+        CSSAngle theta = MakeCSSAngle(op.AsRotate());
+        aFunctions.AppendElement(Rotation(theta));
+        break;
+      }
+      case StyleTransformOperation::Tag::Rotate3D: {
+        const auto& rotate = op.AsRotate3D();
+        CSSAngle theta = MakeCSSAngle(rotate._3);
+        aFunctions.AppendElement(
+            Rotation3D(rotate._0, rotate._1, rotate._2, theta));
+        break;
+      }
+      case StyleTransformOperation::Tag::ScaleX: {
+        aFunctions.AppendElement(Scale(op.AsScaleX(), 1., 1.));
+        break;
+      }
+      case StyleTransformOperation::Tag::ScaleY: {
+        aFunctions.AppendElement(Scale(1., op.AsScaleY(), 1.));
+        break;
+      }
+      case StyleTransformOperation::Tag::ScaleZ: {
+        aFunctions.AppendElement(Scale(1., 1., op.AsScaleZ()));
+        break;
+      }
+      case StyleTransformOperation::Tag::Scale: {
+        const auto& scale = op.AsScale();
+        aFunctions.AppendElement(Scale(scale._0, scale._1, 1.));
+        break;
+      }
+      case StyleTransformOperation::Tag::Scale3D: {
+        const auto& scale = op.AsScale3D();
+        aFunctions.AppendElement(Scale(scale._0, scale._1, scale._2));
+        break;
+      }
+      case StyleTransformOperation::Tag::TranslateX: {
+        aFunctions.AppendElement(GetTranslate(aRefBox, op.AsTranslateX()));
+        break;
+      }
+      case StyleTransformOperation::Tag::TranslateY: {
+        aFunctions.AppendElement(
+            GetTranslate(aRefBox, LengthPercentage::Zero(), op.AsTranslateY()));
+        break;
+      }
+      case StyleTransformOperation::Tag::TranslateZ: {
+        aFunctions.AppendElement(GetTranslate(aRefBox, LengthPercentage::Zero(),
+                                              LengthPercentage::Zero(),
+                                              op.AsTranslateZ()));
+        break;
+      }
       case StyleTransformOperation::Tag::Translate: {
         const auto& translate = op.AsTranslate();
-        result.infallibleAppend(
-            ResolveTranslate(aRefBox, translate._0, translate._1));
+        aFunctions.AppendElement(
+            GetTranslate(aRefBox, translate._0, translate._1));
         break;
       }
       case StyleTransformOperation::Tag::Translate3D: {
         const auto& translate = op.AsTranslate3D();
-        result.infallibleAppend(ResolveTranslate(aRefBox, translate._0,
-                                                 translate._1, translate._2));
+        aFunctions.AppendElement(
+            GetTranslate(aRefBox, translate._0, translate._1, translate._2));
+        break;
+      }
+      case StyleTransformOperation::Tag::SkewX: {
+        CSSAngle x = MakeCSSAngle(op.AsSkewX());
+        aFunctions.AppendElement(SkewX(x));
+        break;
+      }
+      case StyleTransformOperation::Tag::SkewY: {
+        CSSAngle y = MakeCSSAngle(op.AsSkewY());
+        aFunctions.AppendElement(SkewY(y));
+        break;
+      }
+      case StyleTransformOperation::Tag::Skew: {
+        const auto& skew = op.AsSkew();
+        aFunctions.AppendElement(
+            Skew(MakeCSSAngle(skew._0), MakeCSSAngle(skew._1)));
+        break;
+      }
+      case StyleTransformOperation::Tag::Matrix: {
+        gfx::Matrix4x4 matrix;
+        const auto& m = op.AsMatrix();
+        matrix._11 = m.a;
+        matrix._12 = m.b;
+        matrix._13 = 0;
+        matrix._14 = 0;
+        matrix._21 = m.c;
+        matrix._22 = m.d;
+        matrix._23 = 0;
+        matrix._24 = 0;
+        matrix._31 = 0;
+        matrix._32 = 0;
+        matrix._33 = 1;
+        matrix._34 = 0;
+        matrix._41 = m.e;
+        matrix._42 = m.f;
+        matrix._43 = 0;
+        matrix._44 = 1;
+        aFunctions.AppendElement(TransformMatrix(matrix));
+        break;
+      }
+      case StyleTransformOperation::Tag::Matrix3D: {
+        const auto& m = op.AsMatrix3D();
+        gfx::Matrix4x4 matrix;
+
+        matrix._11 = m.m11;
+        matrix._12 = m.m12;
+        matrix._13 = m.m13;
+        matrix._14 = m.m14;
+        matrix._21 = m.m21;
+        matrix._22 = m.m22;
+        matrix._23 = m.m23;
+        matrix._24 = m.m24;
+        matrix._31 = m.m31;
+        matrix._32 = m.m32;
+        matrix._33 = m.m33;
+        matrix._34 = m.m34;
+
+        matrix._41 = m.m41;
+        matrix._42 = m.m42;
+        matrix._43 = m.m43;
+        matrix._44 = m.m44;
+        aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
       case StyleTransformOperation::Tag::InterpolateMatrix: {
         Matrix4x4 matrix;
         nsStyleTransformMatrix::ProcessInterpolateMatrix(matrix, op, aRefBox);
-        result.infallibleAppend(convertMatrix(matrix));
+        aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
       case StyleTransformOperation::Tag::AccumulateMatrix: {
         Matrix4x4 matrix;
         nsStyleTransformMatrix::ProcessAccumulateMatrix(matrix, op, aRefBox);
-        result.infallibleAppend(convertMatrix(matrix));
+        aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
-      case StyleTransformOperation::Tag::RotateX:
-      case StyleTransformOperation::Tag::RotateY:
-      case StyleTransformOperation::Tag::RotateZ:
-      case StyleTransformOperation::Tag::Rotate:
-      case StyleTransformOperation::Tag::Rotate3D:
-      case StyleTransformOperation::Tag::ScaleX:
-      case StyleTransformOperation::Tag::ScaleY:
-      case StyleTransformOperation::Tag::ScaleZ:
-      case StyleTransformOperation::Tag::Scale:
-      case StyleTransformOperation::Tag::Scale3D:
-      case StyleTransformOperation::Tag::SkewX:
-      case StyleTransformOperation::Tag::SkewY:
-      case StyleTransformOperation::Tag::Skew:
-      case StyleTransformOperation::Tag::Matrix:
-      case StyleTransformOperation::Tag::Matrix3D:
-      case StyleTransformOperation::Tag::Perspective:
-        result.infallibleAppend(op);
+      case StyleTransformOperation::Tag::Perspective: {
+        aFunctions.AppendElement(Perspective(op.AsPerspective().ToCSSPixels()));
         break;
+      }
       default:
         MOZ_ASSERT_UNREACHABLE("Function not handled yet!");
     }
   }
-
-  auto transform = StyleTransform{StyleOwnedSlice(std::move(result))};
-  MOZ_ASSERT(!transform.HasPercent());
-  MOZ_ASSERT(transform.Operations().Length() ==
-             aTransform.Operations().Length());
-  return transform;
 }
 
 static TimingFunction ToTimingFunction(
@@ -328,14 +456,21 @@ static TimingFunction ToTimingFunction(
       aCTF->GetSteps().mSteps, static_cast<uint8_t>(aCTF->GetSteps().mPos)));
 }
 
-// FIXME: Bug 1489392: We don't have to normalize the path here if we accept
-// the spec issue which would like to normalize svg paths at computed time.
-static StyleOffsetPath NormalizeOffsetPath(const StyleOffsetPath& aOffsetPath) {
-  if (aOffsetPath.IsPath()) {
-    return StyleOffsetPath::Path(
-        MotionPathUtils::NormalizeSVGPathData(aOffsetPath.AsPath()));
+static Animatable GetOffsetPath(const StyleOffsetPath& aOffsetPath) {
+  Animatable result;
+  switch (aOffsetPath.tag) {
+    case StyleOffsetPath::Tag::Path:
+      result = OffsetPath(MotionPathUtils::NormalizeAndConvertToPathCommands(
+          aOffsetPath.AsPath()));
+      break;
+    case StyleOffsetPath::Tag::Ray:
+      result = OffsetPath(aOffsetPath.AsRay());
+      break;
+    case StyleOffsetPath::Tag::None:
+    default:
+      result = OffsetPath(null_t());
   }
-  return StyleOffsetPath(aOffsetPath);
+  return result;
 }
 
 static void SetAnimatable(nsCSSPropertyID aProperty,
@@ -361,33 +496,46 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
     case eCSSProperty_opacity:
       aAnimatable = aAnimationValue.GetOpacity();
       break;
-    case eCSSProperty_rotate:
-      aAnimatable = aAnimationValue.GetRotateProperty();
+    case eCSSProperty_rotate: {
+      aAnimatable = GetRotate(aAnimationValue.GetRotateProperty());
       break;
-    case eCSSProperty_scale:
-      aAnimatable = aAnimationValue.GetScaleProperty();
+    }
+    case eCSSProperty_scale: {
+      aAnimatable = GetScale(aAnimationValue.GetScaleProperty());
       break;
-    case eCSSProperty_translate:
+    }
+    case eCSSProperty_translate: {
       aAnimatable =
-          ResolveTranslate(aAnimationValue.GetTranslateProperty(), aRefBox);
+          GetTranslate(aAnimationValue.GetTranslateProperty(), aRefBox);
       break;
-    case eCSSProperty_transform:
-      aAnimatable = ResolveTransformOperations(
-          aAnimationValue.GetTransformProperty(), aRefBox);
+    }
+    case eCSSProperty_transform: {
+      aAnimatable = nsTArray<TransformFunction>();
+      AddTransformFunctions(aAnimationValue.GetTransformProperty(), aRefBox,
+                            aAnimatable.get_ArrayOfTransformFunction());
       break;
+    }
     case eCSSProperty_offset_path:
-      aAnimatable =
-          NormalizeOffsetPath(aAnimationValue.GetOffsetPathProperty());
+      aAnimatable = GetOffsetPath(aAnimationValue.GetOffsetPathProperty());
       break;
     case eCSSProperty_offset_distance:
       aAnimatable = aAnimationValue.GetOffsetDistanceProperty();
       break;
-    case eCSSProperty_offset_rotate:
-      aAnimatable = aAnimationValue.GetOffsetRotateProperty();
+    case eCSSProperty_offset_rotate: {
+      const StyleOffsetRotate& r = aAnimationValue.GetOffsetRotateProperty();
+      aAnimatable = OffsetRotate(MakeCSSAngle(r.angle), r.auto_);
       break;
-    case eCSSProperty_offset_anchor:
-      aAnimatable = aAnimationValue.GetOffsetAnchorProperty();
+    }
+    case eCSSProperty_offset_anchor: {
+      const StylePositionOrAuto& p = aAnimationValue.GetOffsetAnchorProperty();
+      if (p.IsAuto()) {
+        aAnimatable = OffsetAnchor(null_t());
+        break;
+      }
+      aAnimatable = OffsetAnchor(
+          AnchorPosition(p.AsPosition().horizontal, p.AsPosition().vertical));
       break;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported property");
   }
@@ -732,30 +880,31 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
       case eCSSProperty_transform:
         if (!display->mTransform.IsNone()) {
           TransformReferenceBox refBox(aFrame);
-          appendFakeAnimation(
-              id, ResolveTransformOperations(display->mTransform, refBox));
+          nsTArray<TransformFunction> transformFunctions;
+          AddTransformFunctions(display->mTransform, refBox,
+                                transformFunctions);
+          appendFakeAnimation(id, Animatable(std::move(transformFunctions)));
         }
         break;
       case eCSSProperty_translate:
         if (!display->mTranslate.IsNone()) {
           TransformReferenceBox refBox(aFrame);
-          appendFakeAnimation(id,
-                              ResolveTranslate(display->mTranslate, refBox));
+          appendFakeAnimation(id, GetTranslate(display->mTranslate, refBox));
         }
         break;
       case eCSSProperty_rotate:
         if (!display->mRotate.IsNone()) {
-          appendFakeAnimation(id, display->mRotate);
+          appendFakeAnimation(id, GetRotate(display->mRotate));
         }
         break;
       case eCSSProperty_scale:
         if (!display->mScale.IsNone()) {
-          appendFakeAnimation(id, display->mScale);
+          appendFakeAnimation(id, GetScale(display->mScale));
         }
         break;
       case eCSSProperty_offset_path:
         if (!display->mOffsetPath.IsNone()) {
-          appendFakeAnimation(id, NormalizeOffsetPath(display->mOffsetPath));
+          appendFakeAnimation(id, GetOffsetPath(display->mOffsetPath));
         }
         break;
       case eCSSProperty_offset_distance:
@@ -766,12 +915,16 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
       case eCSSProperty_offset_rotate:
         if (hasMotion && (!display->mOffsetRotate.auto_ ||
                           display->mOffsetRotate.angle.ToDegrees() != 0.0)) {
-          appendFakeAnimation(id, display->mOffsetRotate);
+          const StyleOffsetRotate& rotate = display->mOffsetRotate;
+          appendFakeAnimation(
+              id, OffsetRotate(MakeCSSAngle(rotate.angle), rotate.auto_));
         }
         break;
       case eCSSProperty_offset_anchor:
         if (hasMotion && !display->mOffsetAnchor.IsAuto()) {
-          appendFakeAnimation(id, display->mOffsetAnchor);
+          const StylePosition& position = display->mOffsetAnchor.AsPosition();
+          appendFakeAnimation(id, OffsetAnchor(AnchorPosition(
+                                      position.horizontal, position.vertical)));
         }
         break;
       default:

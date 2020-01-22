@@ -69,23 +69,6 @@ inline StyleOwnedSlice<T>::StyleOwnedSlice(StyleOwnedSlice&& aOther)
 }
 
 template <typename T>
-inline StyleOwnedSlice<T>::StyleOwnedSlice(Vector<T>&& aVector)
-    : StyleOwnedSlice() {
-  if (!aVector.length()) {
-    return;
-  }
-
-  // We could handle this if Vector provided the relevant APIs, see bug 1610702.
-  MOZ_DIAGNOSTIC_ASSERT(aVector.length() == aVector.capacity(),
-                        "Shouldn't over-allocate");
-  len = aVector.length();
-  ptr = aVector.extractRawBuffer();
-  MOZ_ASSERT(ptr,
-             "How did extractRawBuffer return null if we're not using inline "
-             "capacity?");
-}
-
-template <typename T>
 inline StyleOwnedSlice<T>& StyleOwnedSlice<T>::operator=(
     const StyleOwnedSlice& aOther) {
   CopyFrom(aOther);
@@ -847,6 +830,12 @@ inline nsRect StyleGenericClipRect<LengthOrAuto>::ToLayoutRect(
   nscoord width = right.IsLength() ? right.ToLength() - x : aAutoSize;
   nscoord height = bottom.IsLength() ? bottom.ToLength() - y : aAutoSize;
   return nsRect(x, y, width, height);
+}
+
+inline StyleVecU8::~StyleVecU8() {
+  if (data) {
+    Servo_VecU8_Free(this);
+  }
 }
 
 }  // namespace mozilla

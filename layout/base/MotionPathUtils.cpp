@@ -543,11 +543,82 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
 }
 
 /* static */
-StyleSVGPathData MotionPathUtils::NormalizeSVGPathData(
+nsTArray<layers::PathCommand>
+MotionPathUtils::NormalizeAndConvertToPathCommands(
     const StyleSVGPathData& aPath) {
+  // Normalization
   StyleSVGPathData n;
   Servo_SVGPathData_Normalize(&aPath, &n);
-  return n;
+
+  auto asPoint = [](const StyleCoordPair& aPair) {
+    return gfx::Point(aPair._0, aPair._1);
+  };
+
+  // Converstion
+  nsTArray<layers::PathCommand> commands;
+  for (const StylePathCommand& command : n._0.AsSpan()) {
+    switch (command.tag) {
+      case StylePathCommand::Tag::ClosePath:
+        commands.AppendElement(mozilla::null_t());
+        break;
+      case StylePathCommand::Tag::MoveTo: {
+        const auto& p = command.AsMoveTo().point;
+        commands.AppendElement(layers::MoveTo(asPoint(p)));
+        break;
+      }
+      case StylePathCommand::Tag::LineTo: {
+        const auto& p = command.AsLineTo().point;
+        commands.AppendElement(layers::LineTo(asPoint(p)));
+        break;
+      }
+      case StylePathCommand::Tag::HorizontalLineTo: {
+        const auto& h = command.AsHorizontalLineTo();
+        commands.AppendElement(layers::HorizontalLineTo(h.x));
+        break;
+      }
+      case StylePathCommand::Tag::VerticalLineTo: {
+        const auto& v = command.AsVerticalLineTo();
+        commands.AppendElement(layers::VerticalLineTo(v.y));
+        break;
+      }
+      case StylePathCommand::Tag::CurveTo: {
+        const auto& curve = command.AsCurveTo();
+        commands.AppendElement(layers::CurveTo(asPoint(curve.control1),
+                                               asPoint(curve.control2),
+                                               asPoint(curve.point)));
+        break;
+      }
+      case StylePathCommand::Tag::SmoothCurveTo: {
+        const auto& curve = command.AsSmoothCurveTo();
+        commands.AppendElement(layers::SmoothCurveTo(asPoint(curve.control2),
+                                                     asPoint(curve.point)));
+        break;
+      }
+      case StylePathCommand::Tag::QuadBezierCurveTo: {
+        const auto& curve = command.AsQuadBezierCurveTo();
+        commands.AppendElement(layers::QuadBezierCurveTo(
+            asPoint(curve.control1), asPoint(curve.point)));
+        break;
+      }
+      case StylePathCommand::Tag::SmoothQuadBezierCurveTo: {
+        const auto& curve = command.AsSmoothCurveTo();
+        commands.AppendElement(
+            layers::SmoothQuadBezierCurveTo(asPoint(curve.point)));
+        break;
+      }
+      case StylePathCommand::Tag::EllipticalArc: {
+        const auto& arc = command.AsEllipticalArc();
+        gfx::Point point = asPoint(arc.point);
+        commands.AppendElement(layers::EllipticalArc(arc.rx, arc.ry, arc.angle,
+                                                     arc.large_arc_flag._0,
+                                                     arc.sweep_flag._0, point));
+        break;
+      }
+      case StylePathCommand::Tag::Unknown:
+        MOZ_ASSERT_UNREACHABLE("Unsupported path command");
+    }
+  }
+  return commands;
 }
 
 /* static */
