@@ -218,14 +218,17 @@ extern "C" {
         UINT window_height = static_cast<UINT>(ceil(float(window_rect.bottom - window_rect.top) * dpiY / 96.f));
 
         LPCWSTR name;
+        DWORD style;
         if (enable_compositor) {
             name = L"example-compositor (DirectComposition)";
+            style = WS_EX_NOREDIRECTIONBITMAP;
         } else {
             name = L"example-compositor (Simple)";
+            style = 0;
         }
 
         window->hWnd = CreateWindowEx(
-            WS_EX_NOREDIRECTIONBITMAP,
+            style,
             CLASS_NAME,
             name,
             WS_OVERLAPPEDWINDOW,
