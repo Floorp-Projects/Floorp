@@ -6,21 +6,10 @@
 
 # Most files are General, a few exceptions
 with Files('**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
-with Files('HomeProvider.jsm'):
-    BUG_COMPONENT = ('Firefox for Android', 'Data Providers')
-
-with Files('geckoview/**'):
     BUG_COMPONENT = ('GeckoView', 'General')
 
 DIRS += ['geckoview']
 
 EXTRA_JS_MODULES += [
     'dbg-browser-actors.js',
-    'Home.jsm',
-    'HomeProvider.jsm',
-    'LightweightThemeConsumer.jsm',
-    'Snackbars.jsm',
-    'WebsiteMetadata.jsm'
 ]
