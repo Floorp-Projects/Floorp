@@ -965,6 +965,10 @@ bool StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   if (mStructuredCloneScope == StructuredCloneScope::SameProcess) {
     ImageBitmap* imageBitmap = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageBitmap, &obj, imageBitmap))) {
+      if (imageBitmap->IsWriteOnly()) {
+        return false;
+      }
+
       return ImageBitmap::WriteStructuredClone(aWriter, GetSurfaces(),
                                                imageBitmap);
     }
@@ -1146,6 +1150,7 @@ bool StructuredCloneHolder::CustomWriteTransferHandler(
       rv = UNWRAP_OBJECT(ImageBitmap, &obj, bitmap);
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(bitmap);
+        MOZ_ASSERT(!bitmap->IsWriteOnly());
 
         *aExtraData = 0;
         *aTag = SCTAG_DOM_IMAGEBITMAP;
@@ -1228,7 +1233,7 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
       ImageBitmap* bitmap = nullptr;
       rv = UNWRAP_OBJECT(ImageBitmap, &obj, bitmap);
       if (NS_SUCCEEDED(rv)) {
-        return true;
+        return !bitmap->IsWriteOnly();
       }
     }
   }
