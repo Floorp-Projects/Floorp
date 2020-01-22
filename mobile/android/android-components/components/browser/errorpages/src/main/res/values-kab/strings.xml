@@ -34,6 +34,18 @@
         <li>Ma yella teqqneḍ yakan ɣer uqeddac-agi, tuccḍa tezmer ahat ad tili d taskudant, u tzemreḍ ad tɛerḍeḍ i tikelt nniḍen ticki.</li>
       </ul>]]></string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Talqayt…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Illa ahat amdan i yebɣan ad yakker tamagit n usmel, ur ilaq ara ad tkemleḍ.</label>
+<br><br>
+<label>Ismal ttaken-d ttbut ɣef tmagit-nsen s lmendad n tisirag. %1$s ur yumin ara <b>%2$s</b> acku tasiragt d tarussint, tasiragt tesêa azmul-is, neɣ aqeddac ur d-yuzin ara tisragt timeɣta.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Uɣal ɣer deffir (Yelha)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Qbel ugur u kemmel</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Tuqqna teḥbes</string>
 

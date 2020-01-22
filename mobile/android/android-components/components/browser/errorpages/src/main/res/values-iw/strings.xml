@@ -109,6 +109,9 @@
       <p>הכתובת המבוקשת ציינה שער (לדוגמה: <q>mozilla.org:80</q> עבור שער 80 ב־mozilla.org) המיועד בדרך כלל לשימוש <em>אחר</em> מאשר גלישה באינטרנט. הדפדפן ביטל את הבקשה עבור ההגנה והאבטחה שלך.</p>
     ]]></string>
 
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">החיבור הופסק</string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">סוג קובץ מסוכן</string>
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->

@@ -20,4 +20,5 @@
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">לשונית פרטית חדשה נפתחה</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_link_copied">הקישור הועתק ללוח</string>
-    </resources>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">פתיחת קישור ביישומון חיצוני</string>
+</resources>

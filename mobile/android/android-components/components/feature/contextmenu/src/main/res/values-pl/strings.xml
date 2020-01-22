@@ -22,4 +22,5 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Skopiowano odnośnik do schowka</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Przejdź</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Otwórz odnośnik w zewnętrznej aplikacji</string>
 </resources>

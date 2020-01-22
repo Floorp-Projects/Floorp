@@ -3,7 +3,7 @@
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Перегляд і редагування налаштувань приватності</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">Доступ до ваших даних для всіх веб-сайтів</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">Доступ до ваших даних для всіх вебсайтів</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Доступ до вкладок браузера</string>
     <!-- Description for unlimited_storage permission. -->
@@ -46,24 +46,24 @@
     <string name="mozac_feature_addons_permissions_tab_hide_description">Приховування і показ вкладок браузера</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Доступ до історії перегляду</string>
-    <!-- The version on an addon. -->
+    <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Версія</string>
-    <!-- The authors of an addon. -->
+    <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">Автори</string>
-    <!-- The last date that the addon was updated. -->
+    <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Востаннє оновлено</string>
-    <!-- The developer website (Homepage) of the addon. -->
+    <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Домівка</string>
-    <!-- A link where users can find more information about addons permissions. -->
+    <!-- A link where users can find more information about add-ons permissions. -->
     <string name="mozac_feature_addons_learn_more">Докладніше про дозволи</string>
-    <!-- The rating of the addon. -->
+    <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Рейтинг</string>
-    <!-- The settings of the addon. -->
+    <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Налаштування</string>
-    <!-- Indicates the addon is enable. -->
+    <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Увімк.</string>
-    <!-- Indicates the addon is disable. -->
+    <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Вимк.</string>
-    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the installed section. -->
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Встановлено</string>
     </resources>

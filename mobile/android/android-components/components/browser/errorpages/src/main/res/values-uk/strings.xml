@@ -22,7 +22,7 @@
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
         <li>Неможливо відобразити сторінку, яку ви намагаєтесь переглянути, тому що не вдається перевірити справжність отриманих даних.</li>
-        <li>Будь ласка, зв’яжіться з власниками веб-сайту, щоб повідомити їх про цю проблему.</li>
+        <li>Будь ласка, зв’яжіться з власниками вебсайту, щоб повідомити їх про цю проблему.</li>
       </ul>
     ]]></string>
 
@@ -104,7 +104,7 @@
     <string name="mozac_browser_errorpages_port_blocked_title">Порт заборонений з міркувань безпеки</string>
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
-      <p>Для запитаної адреси вказано порт (наприклад, <q>mozilla.org:80</q> означає порт 80 на mozilla.org), який зазвичай <em>не використовується</em> для роботи з веб-сайтами. Браузер скасував запит для вашої безпеки.</p>
+      <p>Для запитаної адреси вказано порт (наприклад, <q>mozilla.org:80</q> означає порт 80 на mozilla.org), який зазвичай <em>не використовується</em> для роботи з вебсайтами. Браузер скасував запит для вашої безпеки.</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
@@ -124,7 +124,7 @@
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
       <ul>
-        <li>Будь ласка, зв’яжіться з власниками веб-сайту і повідомте їх про цю проблему.</li>
+        <li>Будь ласка, зв’яжіться з власниками вебсайту і повідомте їх про цю проблему.</li>
       </ul>
     ]]></string>
 
@@ -134,7 +134,7 @@
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
       <p>Не вдається відобразити сторінку, яку ви намагаєтесь переглянути, тому що було виявлено помилку в передачі даних.</p>
       <ul>
-        <li>Будь ласка, зв’яжіться з власниками веб-сайту та повідомте їх про цю проблему.</li>
+        <li>Будь ласка, зв’яжіться з власниками вебсайту та повідомте їх про цю проблему.</li>
       </ul>
     ]]></string>
 
@@ -143,7 +143,7 @@
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
       <p>Не вдається відобразити сторінку, яку ви намагаєтесь переглянути, тому що було виявлено помилку в передачі даних.</p>
       <ul>
-        <li>Будь ласка, зв’яжіться з власниками веб-сайту та повідомте їх про цю проблему.</li>
+        <li>Будь ласка, зв’яжіться з власниками вебсайту та повідомте їх про цю проблему.</li>
       </ul>
     ]]></string>
 
@@ -152,7 +152,7 @@
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
       <p>Не вдається відобразити сторінку, яку ви намагаєтесь переглянути, тому що вона використовує неправильну чи непідтримувану форму стискання даних.</p>
       <ul>
-        <li>Будь ласка, зв’яжіться з власниками веб-сайту та повідомте їх про цю проблему.</li>
+        <li>Будь ласка, зв’яжіться з власниками вебсайту та повідомте їх про цю проблему.</li>
       </ul>
     ]]></string>
 
