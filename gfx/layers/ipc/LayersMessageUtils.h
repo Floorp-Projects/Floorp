@@ -21,7 +21,7 @@
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ipc/ByteBuf.h"
+#include "mozilla/ipc/ByteBufUtils.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
@@ -831,34 +831,15 @@ struct ParamTraits<mozilla::RayReferenceData> {
   }
 };
 
-inline mozilla::ipc::ByteBuf ConvertToByteBuf(mozilla::StyleVecU8&& aVec) {
-  mozilla::ipc::ByteBuf out(aVec.data, aVec.length, aVec.capacity);
-  aVec.data = nullptr;
-  aVec.length = 0;
-  aVec.capacity = 0;
-  return out;
-}
-
-inline mozilla::StyleVecU8 ConvertToStyleVecU8(mozilla::ipc::ByteBuf&& aOther) {
-  mozilla::StyleVecU8 v;
-  v.data = aOther.mData;
-  v.length = aOther.mLen;
-  v.capacity = aOther.mCapacity;
-  aOther.mData = nullptr;
-  aOther.mLen = 0;
-  aOther.mCapacity = 0;
-  return v;
-}
-
 #define IMPL_PARAMTRAITS_BY_SERDE(type_)                                    \
   template <>                                                               \
   struct ParamTraits<mozilla::type_> {                                      \
     typedef mozilla::type_ paramType;                                       \
     static void Write(Message* aMsg, const paramType& aParam) {             \
-      mozilla::StyleVecU8 v;                                                \
+      mozilla::ipc::ByteBuf v;                                              \
       mozilla::DebugOnly<bool> rv = Servo_##type_##_Serialize(&aParam, &v); \
       MOZ_ASSERT(rv, "Serialize ##type_## failed");                         \
-      WriteParam(aMsg, ConvertToByteBuf(std::move(v)));                     \
+      WriteParam(aMsg, std::move(v));                                       \
     }                                                                       \
     static bool Read(const Message* aMsg, PickleIterator* aIter,            \
                      paramType* aResult) {                                  \
@@ -867,8 +848,7 @@ inline mozilla::StyleVecU8 ConvertToStyleVecU8(mozilla::ipc::ByteBuf&& aOther) {
       if (!rv) {                                                            \
         return false;                                                       \
       }                                                                     \
-      mozilla::StyleVecU8 v = ConvertToStyleVecU8(std::move(in));           \
-      return v.data && Servo_##type_##_Deserialize(&v, aResult);            \
+      return in.mData && Servo_##type_##_Deserialize(&in, aResult);         \
     }                                                                       \
   };
 
