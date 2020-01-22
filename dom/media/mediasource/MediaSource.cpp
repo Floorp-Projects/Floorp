@@ -361,7 +361,10 @@ void MediaSource::EndOfStream(
       mDecoder->DecodeError(NS_ERROR_DOM_MEDIA_FATAL_ERR);
       break;
     default:
-      aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+      MOZ_ASSERT_UNREACHABLE(
+          "Someone added a MediaSourceReadyState value and didn't handle it "
+          "here");
+      break;
   }
 }
 
