@@ -162,7 +162,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
   -  key should not contain the letters A-F, since these are reserved
   -  shortcut keys on Linux. -->
 <!ENTITY bookmarksGtkCmd.commandkey "o">
-<!ENTITY bookmarksWinCmd.commandkey "i">
 
 <!ENTITY historyButton.label            "History">
 <!ENTITY historySidebarCmd.commandKey   "h">
