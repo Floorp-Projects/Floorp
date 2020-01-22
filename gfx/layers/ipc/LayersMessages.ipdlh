@@ -61,6 +61,8 @@ using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 using mozilla::LengthPercentage from "mozilla/ServoStyleConsts.h";
 using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
 using mozilla::StyleOffsetPath from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleOffsetRotate from "mozilla/ServoStyleConsts.h";
+using mozilla::StylePositionOrAuto from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleRotate from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleScale from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleTranslate from "mozilla/ServoStyleConsts.h";
@@ -117,30 +119,7 @@ union TimingFunction {
   StepFunction;
 };
 
-// Send the angle with units rather than sending all angles in radians
-// to avoid having floating point error introduced by unit switching.
-struct CSSAngle {
-  float value;
-  int unit; // an nsCSSUnit that is valid for angles
-};
-
 struct LayerColor { Color value; };
-
-struct OffsetRotate {
-  CSSAngle angle;
-  bool isAuto;
-};
-
-struct AnchorPosition {
-  LengthPercentage horizontal;
-  LengthPercentage vertical;
-};
-
-union OffsetAnchor {
-  // null_t represents auto
-  null_t;
-  AnchorPosition;
-};
 
 union Animatable {
   null_t;
@@ -152,8 +131,8 @@ union Animatable {
   StyleTransform;
   StyleOffsetPath;
   LengthPercentage;
-  OffsetRotate;
-  OffsetAnchor;
+  StyleOffsetRotate;
+  StylePositionOrAuto;
 };
 
 struct AnimationSegment {

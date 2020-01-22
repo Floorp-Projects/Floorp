@@ -70,6 +70,8 @@ BASIC_SERDE_FUNCS(StyleScale)
 BASIC_SERDE_FUNCS(StyleTranslate)
 BASIC_SERDE_FUNCS(StyleTransform)
 BASIC_SERDE_FUNCS(StyleOffsetPath)
+BASIC_SERDE_FUNCS(StyleOffsetRotate)
+BASIC_SERDE_FUNCS(StylePositionOrAuto)
 
 #undef BASIC_SERDE_FUNCS
 
