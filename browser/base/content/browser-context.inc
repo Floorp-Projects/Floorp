@@ -233,6 +233,11 @@
                 data-l10n-id="main-context-menu-view-background-image"
                 oncommand="gContextMenu.viewBGImage(event);"
                 onclick="checkForMiddleClick(this, event);"/>
+     <menuitem id="fill-login-generated-password"
+               data-l10n-id="main-context-menu-generate-new-password"
+               hidden="true"
+               oncommand="gContextMenu.useGeneratedPassword();"/>
+      <menuseparator id="generated-password-separator"/>
       <menuitem id="context-undo"
                 data-l10n-id="text-action-undo"
                 command="cmd_undo"/>
@@ -365,12 +370,6 @@
                     label="&noLoginSuggestions.label;"
                     disabled="true"
                     hidden="true"/>
-          <menuseparator id="generated-password-separator"/>
-          <menuitem id="fill-login-generated-password"
-                    label="&useGeneratedPassword.label;"
-                    accesskey="&useGeneratedPassword.accesskey;"
-                    hidden="true"
-                    oncommand="gContextMenu.useGeneratedPassword();"/>
           <menuseparator id="saved-logins-separator"/>
           <menuitem id="fill-login-saved-passwords"
                     label="&viewSavedLogins.label;"
