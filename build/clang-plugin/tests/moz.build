@@ -37,6 +37,7 @@ SOURCES += [
     'TestNonParameterChecker.cpp',
     'TestNonTemporaryClass.cpp',
     'TestNoRefcountedInsideLambdas.cpp',
+    'TestNoUsingNamespaceMozillaJava.cpp',
     'TestOverrideBaseCall.cpp',
     'TestOverrideBaseCallAnnotation.cpp',
     'TestParamTraitsEnum.cpp',
