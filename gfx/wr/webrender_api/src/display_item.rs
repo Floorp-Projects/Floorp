@@ -43,6 +43,10 @@ bitflags! {
         const IS_SCROLLBAR_CONTAINER = 1 << 1;
         /// If set, this primitive represents a scroll bar thumb
         const IS_SCROLLBAR_THUMB = 1 << 2;
+        /// This is used as a performance hint - this primitive may be promoted to a native
+        /// compositor surface under certain (implementation specific) conditions. This
+        /// is typically used for large videos, and canvas elements.
+        const PREFER_COMPOSITOR_SURFACE = 1 << 3;
     }
 }
 
