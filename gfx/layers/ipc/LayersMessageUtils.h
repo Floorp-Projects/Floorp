@@ -874,6 +874,9 @@ inline mozilla::StyleVecU8 ConvertToStyleVecU8(mozilla::ipc::ByteBuf&& aOther) {
 
 IMPL_PARAMTRAITS_BY_SERDE(LengthPercentage)
 IMPL_PARAMTRAITS_BY_SERDE(RayFunction)
+IMPL_PARAMTRAITS_BY_SERDE(StyleRotate)
+IMPL_PARAMTRAITS_BY_SERDE(StyleScale)
+IMPL_PARAMTRAITS_BY_SERDE(StyleTranslate)
 
 } /* namespace IPC */
 

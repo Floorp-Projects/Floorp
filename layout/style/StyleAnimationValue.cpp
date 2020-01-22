@@ -382,27 +382,6 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
   return result;
 }
 
-StyleRotate RotateFromLayers(const layers::Rotate& aRotate) {
-  switch (aRotate.type()) {
-    case layers::Rotate::Tnull_t:
-      return StyleRotate::None();
-    case layers::Rotate::TRotation: {
-      const layers::CSSAngle& angle = aRotate.get_Rotation().angle();
-      return StyleRotate::Rotate(GetCSSAngle(angle));
-    }
-    case layers::Rotate::TRotation3D: {
-      float x = aRotate.get_Rotation3D().x();
-      float y = aRotate.get_Rotation3D().y();
-      float z = aRotate.get_Rotation3D().z();
-      const layers::CSSAngle& angle = aRotate.get_Rotation3D().angle();
-      return StyleRotate::Rotate3D(x, y, z, GetCSSAngle(angle));
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown rotate value?");
-      return StyleRotate::None();
-  }
-}
-
 /* static */
 already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
     nsCSSPropertyID aProperty, const layers::Animatable& aAnimatable) {
@@ -420,22 +399,22 @@ already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
     case layers::Animatable::Tnscolor:
       return Servo_AnimationValue_Color(aProperty, aAnimatable.get_nscolor())
           .Consume();
-    case layers::Animatable::TRotate: {
-      auto rotate = RotateFromLayers(aAnimatable.get_Rotate());
-      return Servo_AnimationValue_Rotate(&rotate).Consume();
-    }
-    case layers::Animatable::TScale: {
-      const layers::Scale& s = aAnimatable.get_Scale();
-      auto scale = StyleScale::Scale(s.x(), s.y(), s.z());
-      return Servo_AnimationValue_Scale(&scale).Consume();
-    }
-    case layers::Animatable::TTranslation: {
-      const layers::Translation& t = aAnimatable.get_Translation();
-      auto translate = StyleTranslate::Translate(
-          LengthPercentage::FromPixels(t.x()),
-          LengthPercentage::FromPixels(t.y()), Length{t.z()});
-      return Servo_AnimationValue_Translate(&translate).Consume();
-    }
+    case layers::Animatable::TStyleRotate:
+      return Servo_AnimationValue_Rotate(&aAnimatable.get_StyleRotate())
+          .Consume();
+    case layers::Animatable::TStyleScale:
+      return Servo_AnimationValue_Scale(&aAnimatable.get_StyleScale())
+          .Consume();
+    case layers::Animatable::TStyleTranslate:
+      MOZ_ASSERT(
+          aAnimatable.get_StyleTranslate().IsNone() ||
+              (!aAnimatable.get_StyleTranslate()
+                    .AsTranslate()
+                    ._0.HasPercent() &&
+               !aAnimatable.get_StyleTranslate().AsTranslate()._1.HasPercent()),
+          "Should have been resolved already");
+      return Servo_AnimationValue_Translate(&aAnimatable.get_StyleTranslate())
+          .Consume();
     case layers::Animatable::TOffsetPath: {
       const layers::OffsetPath& p = aAnimatable.get_OffsetPath();
       switch (p.type()) {

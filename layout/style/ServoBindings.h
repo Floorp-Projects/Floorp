@@ -66,6 +66,9 @@ BASIC_RULE_FUNCS(CounterStyle)
 using RayFunction = StyleRayFunction<StyleAngle>;
 BASIC_SERDE_FUNCS(LengthPercentage)
 BASIC_SERDE_FUNCS(RayFunction)
+BASIC_SERDE_FUNCS(StyleRotate)
+BASIC_SERDE_FUNCS(StyleScale)
+BASIC_SERDE_FUNCS(StyleTranslate)
 
 #undef BASIC_SERDE_FUNCS
 
