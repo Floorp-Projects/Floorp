@@ -3941,21 +3941,6 @@ void MediaManager::IterateWindowListeners(nsPIDOMWindowInner* aWindow,
   }
 }
 
-void MediaManager::StopMediaStreams() {
-  nsCOMPtr<nsIArray> array;
-  GetActiveMediaCaptureWindows(getter_AddRefs(array));
-  uint32_t len;
-  array->GetLength(&len);
-  for (uint32_t i = 0; i < len; i++) {
-    nsCOMPtr<nsPIDOMWindowInner> win;
-    array->QueryElementAt(i, NS_GET_IID(nsPIDOMWindowInner),
-                          getter_AddRefs(win));
-    if (win) {
-      OnNavigation(win->WindowID());
-    }
-  }
-}
-
 bool MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId) {
   // Does page currently have a gUM stream active?
 
