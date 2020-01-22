@@ -579,7 +579,7 @@ bool ExceptionHandler::GenerateDump(
   if (child != 0) {
     static const char clonedMsg[] =
       "ExceptionHandler::GenerateDump cloned child ";
-    char pidMsg[32];
+    char pidMsg[32] = {};
 
     unsigned int pidLen = my_uint_len(child);
     my_uitos(pidMsg, child, pidLen);
