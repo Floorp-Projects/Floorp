@@ -193,7 +193,8 @@ RefPtr<IDBRequest> GenerateRequest(JSContext* aCx,
 
 bool StructuredCloneWriteCallback(JSContext* aCx,
                                   JSStructuredCloneWriter* aWriter,
-                                  JS::Handle<JSObject*> aObj, void* aClosure) {
+                                  JS::Handle<JSObject*> aObj,
+                                  bool* aSameProcessRequired, void* aClosure) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aWriter);
   MOZ_ASSERT(aClosure);
@@ -352,6 +353,7 @@ bool StructuredCloneWriteCallback(JSContext* aCx,
 bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
                                          JSStructuredCloneWriter* aWriter,
                                          JS::Handle<JSObject*> aObj,
+                                         bool* aSameProcessRequired,
                                          void* aClosure) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aWriter);
