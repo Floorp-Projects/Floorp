@@ -20,7 +20,6 @@ with Files('geckoview/**'):
 DIRS += ['geckoview']
 
 EXTRA_JS_MODULES += [
-    'ActionBarHandler.jsm',
     'dbg-browser-actors.js',
     'DownloadNotifications.jsm',
     'FormAssistant.jsm',
