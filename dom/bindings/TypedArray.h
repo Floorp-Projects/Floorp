@@ -111,22 +111,10 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
 
   inline T* Data() const {
     MOZ_ASSERT(mComputed);
-    if (mShared) return nullptr;
-    return mData;
-  }
-
-  inline T* DataAllowShared() const {
-    MOZ_ASSERT(mComputed);
     return mData;
   }
 
   inline uint32_t Length() const {
-    MOZ_ASSERT(mComputed);
-    if (mShared) return 0;
-    return mLength;
-  }
-
-  inline uint32_t LengthAllowShared() const {
     MOZ_ASSERT(mComputed);
     return mLength;
   }
