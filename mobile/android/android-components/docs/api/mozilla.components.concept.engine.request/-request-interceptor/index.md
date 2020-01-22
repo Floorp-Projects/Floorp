@@ -10,7 +10,7 @@ Interface for classes that want to intercept load requests to allow custom behav
 
 | Name | Summary |
 |---|---|
-| [ErrorResponse](-error-response/index.md) | `data class ErrorResponse`<br>An alternative response for an error request. |
+| [ErrorResponse](-error-response/index.md) | `sealed class ErrorResponse`<br>An alternative response for an error request. |
 | [InterceptionResponse](-interception-response/index.md) | `sealed class InterceptionResponse`<br>An alternative response for an intercepted request. |
 
 ### Functions
