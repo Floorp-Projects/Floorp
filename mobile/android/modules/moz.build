@@ -21,9 +21,6 @@ EXTRA_JS_MODULES += [
     'Home.jsm',
     'HomeProvider.jsm',
     'LightweightThemeConsumer.jsm',
-    'MediaPlayerApp.jsm',
-    'Notifications.jsm',
-    'RuntimePermissions.jsm',
     'SharedPreferences.jsm',
     'Snackbars.jsm',
     'WebsiteMetadata.jsm'
