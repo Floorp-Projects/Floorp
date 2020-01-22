@@ -42,17 +42,6 @@ using nsStyleTransformMatrix::Decompose2DMatrix;
 using nsStyleTransformMatrix::Decompose3DMatrix;
 using nsStyleTransformMatrix::ShearType;
 
-// TODO(emilio): Remove angle unit in a followup, should always be degrees.
-static inline StyleAngle GetCSSAngle(const layers::CSSAngle& aAngle) {
-  if (aAngle.unit() != eCSSUnit_Degree) {
-    NS_ERROR("Bogus animation from IPC");
-    return StyleAngle{0.0};
-  }
-  return StyleAngle{aAngle.value()};
-}
-
-// AnimationValue Implementation
-
 bool AnimationValue::operator==(const AnimationValue& aOther) const {
   if (mServo && aOther.mServo) {
     return Servo_AnimationValue_DeepEqual(mServo, aOther.mServo);
@@ -271,20 +260,14 @@ already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
       return Servo_AnimationValue_OffsetDistance(
                  &aAnimatable.get_LengthPercentage())
           .Consume();
-    case layers::Animatable::TOffsetRotate: {
-      const layers::OffsetRotate& r = aAnimatable.get_OffsetRotate();
-      auto rotate = StyleOffsetRotate{r.isAuto(), GetCSSAngle(r.angle())};
-      return Servo_AnimationValue_OffsetRotate(&rotate).Consume();
-    }
-    case layers::Animatable::TOffsetAnchor: {
-      const layers::OffsetAnchor& a = aAnimatable.get_OffsetAnchor();
-      auto anchor = a.type() == layers::OffsetAnchor::Type::Tnull_t
-                        ? StylePositionOrAuto::Auto()
-                        : StylePositionOrAuto::Position(
-                              StylePosition{a.get_AnchorPosition().horizontal(),
-                                            a.get_AnchorPosition().vertical()});
-      return Servo_AnimationValue_OffsetAnchor(&anchor).Consume();
-    }
+    case layers::Animatable::TStyleOffsetRotate:
+      return Servo_AnimationValue_OffsetRotate(
+                 &aAnimatable.get_StyleOffsetRotate())
+          .Consume();
+    case layers::Animatable::TStylePositionOrAuto:
+      return Servo_AnimationValue_OffsetAnchor(
+                 &aAnimatable.get_StylePositionOrAuto())
+          .Consume();
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");
   }
