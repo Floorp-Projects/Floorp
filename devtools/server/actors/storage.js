@@ -578,6 +578,8 @@ StorageActors.createActor(
         // because creationTime is in micro seconds
         creationTime: cookie.creationTime / 1000,
 
+        size: cookie.name.length + (cookie.value || "").length,
+
         // - do -
         lastAccessed: cookie.lastAccessed / 1000,
         value: new LongStringActor(this.conn, cookie.value || ""),
@@ -712,6 +714,7 @@ StorageActors.createActor(
         { name: "host", editable: true, hidden: false },
         { name: "path", editable: true, hidden: false },
         { name: "expires", editable: true, hidden: false },
+        { name: "size", editable: false, hidden: false },
         { name: "isHttpOnly", editable: true, hidden: false },
         { name: "isSecure", editable: true, hidden: false },
         { name: "sameSite", editable: false, hidden: false },
