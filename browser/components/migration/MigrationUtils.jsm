@@ -79,6 +79,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "edge",
       "ie",
       "chrome",
+      "chromium-edge",
       "chromium-edge-beta",
       "chrome-beta",
       "chromium",
@@ -91,6 +92,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "firefox",
       "safari",
       "chrome",
+      "chromium-edge",
       "chromium-edge-beta",
       "chromium",
       "canary",
@@ -611,7 +613,7 @@ var MigrationUtils = Object.freeze({
       /_(canary|chromium|chrome-beta|chrome-dev)$/,
       "_chrome"
     );
-    aKey = aKey.replace(/_(chromium-edge-beta)$/, "_edge");
+    aKey = aKey.replace(/_(chromium-edge-beta|chromium-edge)$/, "_edge");
 
     const OVERRIDES = {
       "4_firefox": "4_firefox_history_and_bookmarks",
@@ -627,6 +629,7 @@ var MigrationUtils = Object.freeze({
 
   _getLocalePropertyForBrowser(browserId) {
     switch (browserId) {
+      case "chromium-edge":
       case "edge":
         return "sourceNameEdge";
       case "ie":
@@ -1317,6 +1320,7 @@ var MigrationUtils = Object.freeze({
     canary: 7,
     safari: 8,
     "360se": 9,
+    "chromium-edge": 10,
     "chromium-edge-beta": 10,
   },
   getSourceIdForTelemetry(sourceName) {
