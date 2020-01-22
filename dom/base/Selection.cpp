@@ -686,8 +686,9 @@ static nsresult CompareToRangeStart(const nsINode* aCompareNode,
       aCompareNode->SubtreeRoot() != start->SubtreeRoot()) {
     *aCmp = 1;
   } else {
-    *aCmp = nsContentUtils::ComparePoints_Deprecated(
-        aCompareNode, aCompareOffset, start, aRange->StartOffset());
+    // The points are in the same subtree, hence there has to be an order.
+    *aCmp = *nsContentUtils::ComparePoints(aCompareNode, aCompareOffset, start,
+                                           aRange->StartOffset());
   }
   return NS_OK;
 }
@@ -704,8 +705,9 @@ static nsresult CompareToRangeEnd(const nsINode* aCompareNode,
       aCompareNode->SubtreeRoot() != end->SubtreeRoot()) {
     *aCmp = 1;
   } else {
-    *aCmp = nsContentUtils::ComparePoints_Deprecated(
-        aCompareNode, aCompareOffset, end, aRange->EndOffset());
+    // The points are in the same subtree, hence there has to be an order.
+    *aCmp = *nsContentUtils::ComparePoints(aCompareNode, aCompareOffset, end,
+                                           aRange->EndOffset());
   }
   return NS_OK;
 }
