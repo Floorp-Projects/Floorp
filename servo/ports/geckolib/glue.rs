@@ -1079,6 +1079,24 @@ impl_basic_serde_funcs!(
     generics::motion::RayFunction<computed::Angle>
 );
 
+impl_basic_serde_funcs!(
+    Servo_StyleRotate_Serialize,
+    Servo_StyleRotate_Deserialize,
+    computed::transform::Rotate
+);
+
+impl_basic_serde_funcs!(
+    Servo_StyleScale_Serialize,
+    Servo_StyleScale_Deserialize,
+    computed::transform::Scale
+);
+
+impl_basic_serde_funcs!(
+    Servo_StyleTranslate_Serialize,
+    Servo_StyleTranslate_Deserialize,
+    computed::transform::Translate
+);
+
 #[no_mangle]
 pub extern "C" fn Servo_SVGPathData_Normalize(
     input: &specified::SVGPathData,

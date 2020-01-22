@@ -696,3 +696,21 @@ renaming_overrides_prefixing = true
   // This type is not safe to return by value. Should be careful.
   inline ~StyleVecU8();
 """
+
+"GenericRotate" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericRotate(): tag(Tag::None) {}
+"""
+
+"GenericScale" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericScale(): tag(Tag::None) {}
+"""
+
+"GenericTranslate" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericTranslate(): tag(Tag::None) {}
+"""

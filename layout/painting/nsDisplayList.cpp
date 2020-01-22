@@ -207,44 +207,6 @@ static inline CSSAngle MakeCSSAngle(const StyleAngle& aValue) {
   return CSSAngle(aValue.ToDegrees(), eCSSUnit_Degree);
 }
 
-static Rotate GetRotate(const StyleRotate& aValue) {
-  Rotate result = null_t();
-  switch (aValue.tag) {
-    case StyleRotate::Tag::None:
-      break;
-    case StyleRotate::Tag::Rotate:
-      result = Rotate(Rotation(MakeCSSAngle(aValue.AsRotate())));
-      break;
-    case StyleRotate::Tag::Rotate3D: {
-      const auto& rotate = aValue.AsRotate3D();
-      result = Rotate(
-          Rotation3D(rotate._0, rotate._1, rotate._2, MakeCSSAngle(rotate._3)));
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported rotate");
-  }
-  return result;
-}
-
-static Scale GetScale(const StyleScale& aValue) {
-  Scale result(1., 1., 1.);
-  switch (aValue.tag) {
-    case StyleScale::Tag::None:
-      break;
-    case StyleScale::Tag::Scale: {
-      auto& scale = aValue.AsScale();
-      result.x() = scale._0;
-      result.y() = scale._1;
-      result.z() = scale._2;
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported scale");
-  }
-  return result;
-}
-
 static Translation GetTranslate(
     TransformReferenceBox& aRefBox, const LengthPercentage& aX,
     const LengthPercentage& aY = LengthPercentage::Zero(),
@@ -258,21 +220,20 @@ static Translation GetTranslate(
   return result;
 }
 
-static Translation GetTranslate(const StyleTranslate& aValue,
-                                TransformReferenceBox& aRefBox) {
-  Translation result(0, 0, 0);
-  switch (aValue.tag) {
-    case StyleTranslate::Tag::None:
-      break;
-    case StyleTranslate::Tag::Translate: {
-      auto& translate = aValue.AsTranslate();
-      result = GetTranslate(aRefBox, translate._0, translate._1, translate._2);
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported translate");
+static StyleTranslate ResolveTranslate(const StyleTranslate& aValue,
+                                       TransformReferenceBox& aRefBox) {
+  if (aValue.IsTranslate()) {
+    const auto& t = aValue.AsTranslate();
+    float x = nsStyleTransformMatrix::ProcessTranslatePart(
+        t._0, &aRefBox, &TransformReferenceBox::Width);
+    float y = nsStyleTransformMatrix::ProcessTranslatePart(
+        t._1, &aRefBox, &TransformReferenceBox::Height);
+    return StyleTranslate::Translate(LengthPercentage::FromPixels(x),
+                                     LengthPercentage::FromPixels(y), t._2);
   }
-  return result;
+
+  MOZ_ASSERT(aValue.IsNone());
+  return StyleTranslate::None();
 }
 
 static void AddTransformFunctions(const StyleTransform& aTransform,
@@ -496,19 +457,16 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
     case eCSSProperty_opacity:
       aAnimatable = aAnimationValue.GetOpacity();
       break;
-    case eCSSProperty_rotate: {
-      aAnimatable = GetRotate(aAnimationValue.GetRotateProperty());
+    case eCSSProperty_rotate:
+      aAnimatable = aAnimationValue.GetRotateProperty();
       break;
-    }
-    case eCSSProperty_scale: {
-      aAnimatable = GetScale(aAnimationValue.GetScaleProperty());
+    case eCSSProperty_scale:
+      aAnimatable = aAnimationValue.GetScaleProperty();
       break;
-    }
-    case eCSSProperty_translate: {
+    case eCSSProperty_translate:
       aAnimatable =
-          GetTranslate(aAnimationValue.GetTranslateProperty(), aRefBox);
+          ResolveTranslate(aAnimationValue.GetTranslateProperty(), aRefBox);
       break;
-    }
     case eCSSProperty_transform: {
       aAnimatable = nsTArray<TransformFunction>();
       AddTransformFunctions(aAnimationValue.GetTransformProperty(), aRefBox,
@@ -889,17 +847,18 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
       case eCSSProperty_translate:
         if (!display->mTranslate.IsNone()) {
           TransformReferenceBox refBox(aFrame);
-          appendFakeAnimation(id, GetTranslate(display->mTranslate, refBox));
+          appendFakeAnimation(id,
+                              ResolveTranslate(display->mTranslate, refBox));
         }
         break;
       case eCSSProperty_rotate:
         if (!display->mRotate.IsNone()) {
-          appendFakeAnimation(id, GetRotate(display->mRotate));
+          appendFakeAnimation(id, display->mRotate);
         }
         break;
       case eCSSProperty_scale:
         if (!display->mScale.IsNone()) {
-          appendFakeAnimation(id, GetScale(display->mScale));
+          appendFakeAnimation(id, display->mScale);
         }
         break;
       case eCSSProperty_offset_path:
