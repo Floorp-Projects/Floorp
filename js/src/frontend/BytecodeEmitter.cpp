@@ -2540,11 +2540,9 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
     }
   }
 
-  if (!fse.initScript()) {
+  if (!fse.initScript(getFieldInitializers())) {
     return false;
   }
-
-  script->setFieldInitializers(fieldInitializers_);
 
   return true;
 }
