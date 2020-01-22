@@ -2482,6 +2482,10 @@ bool nsFrameLoader::EnsureRemoteBrowser() {
 bool nsFrameLoader::TryRemoteBrowserInternal() {
   NS_ASSERTION(!mRemoteBrowser,
                "TryRemoteBrowser called with a remote browser already?");
+  MOZ_DIAGNOSTIC_ASSERT(
+      XRE_IsParentProcess(),
+      "Remote subframes should only be created using the "
+      "`CanonicalBrowsingContext::ChangeFrameRemoteness` API");
 
   if (!mOwnerContent) {
     return false;
@@ -2621,15 +2625,6 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   }
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
-
-  // If we're in a content process, create a BrowserBridgeChild actor.
-  if (XRE_IsContentProcess()) {
-    mBrowsingContext->SetEmbedderElement(mOwnerContent);
-
-    mRemoteBrowser = ContentChild::CreateBrowser(this, context, mRemoteType,
-                                                 mBrowsingContext);
-    return !!mRemoteBrowser;
-  }
 
   mRemoteBrowser = ContentParent::CreateBrowser(
       context, ownerElement, mRemoteType, mBrowsingContext, openerContentParent,
