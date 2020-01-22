@@ -137,6 +137,8 @@ void FinishGC(JSContext* cx, JS::GCReason = JS::GCReason::FINISH_GC);
  */
 void MergeRealms(JS::Realm* source, JS::Realm* target);
 
+void CollectSelfHostingZone(JSContext* cx);
+
 enum VerifierType { PreBarrierVerifier };
 
 #ifdef JS_GC_ZEAL

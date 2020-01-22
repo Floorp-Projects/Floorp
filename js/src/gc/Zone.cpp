@@ -202,7 +202,6 @@ bool Zone::init(bool isSystemArg) {
 }
 
 void Zone::setNeedsIncrementalBarrier(bool needs) {
-  MOZ_ASSERT_IF(needs, canCollect());
   needsIncrementalBarrier_ = needs;
 }
 
@@ -496,6 +495,11 @@ bool Zone::canCollect() {
   // place.
   if (isAtomsZone()) {
     return !runtimeFromAnyThread()->hasHelperThreadZones();
+  }
+
+  // We don't collect the self hosting zone after it has been initialized.
+  if (isSelfHostingZone()) {
+    return !runtimeFromAnyThread()->gc.isSelfHostingZoneFrozen();
   }
 
   // Zones that will be or are currently used by other threads cannot be

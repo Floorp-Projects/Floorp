@@ -464,9 +464,9 @@ namespace JS {
   D(FULL_CELL_PTR_STR_BUFFER, 28)          \
   D(TOO_MUCH_JIT_CODE, 29)                 \
   D(FULL_CELL_PTR_BIGINT_BUFFER, 30)       \
+  D(INIT_SELF_HOSTING, 31)                 \
                                            \
   /* These are reserved for future use. */ \
-  D(RESERVED7, 31)                         \
   D(RESERVED8, 32)                         \
                                            \
   /* Reasons from Firefox */               \
