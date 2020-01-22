@@ -37,14 +37,14 @@ impl U2FHIDInit {
         T: U2FDevice + io::Read,
     {
         let mut frame = [0u8; HID_RPT_SIZE];
-        let mut count = dev.read(&mut frame)?;
-
-        while dev.get_cid() != &frame[..4] {
-            count = dev.read(&mut frame)?;
-        }
+        let count = dev.read(&mut frame)?;
 
         if count != HID_RPT_SIZE {
             return Err(io_err("invalid init packet"));
+        }
+
+        if dev.get_cid() != &frame[..4] {
+            return Err(io_err("invalid channel id"));
         }
 
         let cap = (frame[5] as usize) << 8 | (frame[6] as usize);
@@ -97,14 +97,14 @@ impl U2FHIDCont {
         T: U2FDevice + io::Read,
     {
         let mut frame = [0u8; HID_RPT_SIZE];
-        let mut count = dev.read(&mut frame)?;
-
-        while dev.get_cid() != &frame[..4] {
-            count = dev.read(&mut frame)?;
-        }
+        let count = dev.read(&mut frame)?;
 
         if count != HID_RPT_SIZE {
             return Err(io_err("invalid cont packet"));
+        }
+
+        if dev.get_cid() != &frame[..4] {
+            return Err(io_err("invalid channel id"));
         }
 
         if seq != frame[4] {
