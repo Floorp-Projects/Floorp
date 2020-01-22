@@ -22,15 +22,13 @@
         android:contentDescription="@string/content_description_private_browsing_button"
         app:srcCompat="@drawable/private_browsing_button"
         app:layout_constraintBottom_toTopOf="@+id/wordmark"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <ImageView
         android:id="@+id/wordmark"
         android:layout_width="wrap_content"
         android:layout_height="80dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="60dp"
         android:layout_marginBottom="32dp"
         android:adjustViewBounds="true"
         android:clickable="false"
@@ -55,7 +53,6 @@
         android:layout_width="0dp"
         android:layout_height="56dp"
         android:background="?bottomBarBackground"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

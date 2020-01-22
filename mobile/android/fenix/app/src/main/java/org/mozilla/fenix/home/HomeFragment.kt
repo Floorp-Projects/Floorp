@@ -202,23 +202,59 @@ class HomeFragment : Fragment() {
 
         sessionControlView = SessionControlView(homeFragmentStore, view.homeLayout, sessionControlInteractor)
 
-        ConstraintSet().apply {
-            clone(view.homeLayout)
-            connect(sessionControlView.view.id, TOP, view.wordmark.id, BOTTOM)
-            connect(sessionControlView.view.id, START, PARENT_ID, START)
-            connect(sessionControlView.view.id, END, PARENT_ID, END)
-            connect(sessionControlView.view.id, BOTTOM, view.bottom_bar.id, TOP)
-            applyTo(view.homeLayout)
-        }
-
-        @Suppress("MagicNumber") // we need constants if we define layouts in code.
-        sessionControlView.view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            topMargin = 32.dpToPx(resources.displayMetrics)
-        }
+        updateLayout(view)
 
         activity.themeManager.applyStatusBarTheme(activity)
 
         return view
+    }
+
+    private fun updateLayout(view: View) {
+        var shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
+
+        ConstraintSet().apply {
+            clone(view.homeLayout)
+
+            if (shouldUseBottomToolbar) {
+                connect(sessionControlView.view.id, TOP, view.wordmark.id, BOTTOM)
+                connect(sessionControlView.view.id, BOTTOM, view.bottom_bar.id, TOP)
+
+                connect(view.bottom_bar.id, BOTTOM, PARENT_ID, BOTTOM)
+                connect(view.bottomBarShadow.id, BOTTOM, view.bottom_bar.id, TOP)
+                connect(view.privateBrowsingButton.id, TOP, PARENT_ID, TOP)
+            } else {
+                connect(sessionControlView.view.id, TOP, view.wordmark.id, TOP)
+                connect(sessionControlView.view.id, BOTTOM, PARENT_ID, BOTTOM)
+
+                connect(view.bottomBarShadow.id, BOTTOM, view.bottom_bar.id, BOTTOM)
+                connect(view.privateBrowsingButton.id, TOP, view.bottomBarShadow.id, TOP)
+            }
+            connect(sessionControlView.view.id, START, PARENT_ID, START)
+            connect(sessionControlView.view.id, END, PARENT_ID, END)
+
+            applyTo(view.homeLayout)
+        }
+
+        var headingsTopMargins = if (shouldUseBottomToolbar) { HEADER_MARGIN } else { TOP_TOOLBAR_HEADER_MARGIN }
+        var sessionControlViewTopMargin = if (shouldUseBottomToolbar) {
+            SESSION_CONTROL_VIEW_TOP_MARGIN
+        } else {
+            SESSION_CONTROL_VIEW_TOP_TOOLBAR_MARGIN
+        }
+
+        view.wordmark.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            topMargin = headingsTopMargins.dpToPx(resources.displayMetrics)
+        }
+
+        sessionControlView.view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            topMargin = sessionControlViewTopMargin.dpToPx(resources.displayMetrics)
+        }
+
+        if (!shouldUseBottomToolbar) {
+            view.privateBrowsingButton.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = PRIVATE_BROWSING_BUTTON_TOP_MARGIN.dpToPx(resources.displayMetrics)
+            }
+        }
     }
 
     @ExperimentalCoroutinesApi
@@ -799,6 +835,13 @@ class HomeFragment : Fragment() {
         private const val SHARED_TRANSITION_MS = 200L
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20
+
+        // Layout
+        private const val HEADER_MARGIN = 60
+        private const val TOP_TOOLBAR_HEADER_MARGIN = 120
+        private const val SESSION_CONTROL_VIEW_TOP_MARGIN = 32
+        private const val SESSION_CONTROL_VIEW_TOP_TOOLBAR_MARGIN = 64
+        private const val PRIVATE_BROWSING_BUTTON_TOP_MARGIN = 40
     }
 }
 
