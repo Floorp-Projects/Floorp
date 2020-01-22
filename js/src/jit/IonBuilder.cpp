@@ -466,9 +466,25 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
   }
 
   JSScript* inlineScript = target->nonLazyScript();
-  if (callInfo.constructing() && !target->isConstructor()) {
-    trackOptimizationOutcome(TrackedOutcome::CantInlineNotConstructor);
-    return DontInline(inlineScript, "Callee is not a constructor");
+  if (callInfo.constructing()) {
+    if (!target->isConstructor()) {
+      trackOptimizationOutcome(TrackedOutcome::CantInlineNotConstructor);
+      return DontInline(inlineScript, "Callee is not a constructor");
+    }
+
+    // Don't inline if creating |this| for this target is complicated, for
+    // example when the newTarget.prototype lookup may be effectful.
+    if (callInfo.getNewTarget() != callInfo.fun()) {
+      trackOptimizationOutcome(TrackedOutcome::CantInlineUnexpectedNewTarget);
+      return DontInline(inlineScript, "Constructing with different newTarget");
+    }
+
+    // At this point, the target is either a function that requires an
+    // uninitialized-this (bound function or derived class constructor) or a
+    // scripted constructor with a non-configurable .prototype data property
+    // (self-hosted built-in constructor, non-self-hosted scripted function).
+    MOZ_ASSERT(target->constructorNeedsUninitializedThis() ||
+               target->hasNonConfigurablePrototypeDataProperty());
   }
 
   if (!callInfo.constructing() && target->isClassConstructor()) {
@@ -4260,7 +4276,8 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   // Create new |this| on the caller-side for inlined constructors.
   if (callInfo.constructing()) {
     MDefinition* thisDefn =
-        createThis(target, callInfo.fun(), callInfo.getNewTarget());
+        createThis(target, callInfo.fun(), callInfo.getNewTarget(),
+                   /* inlining = */ true);
     callInfo.setThis(thisDefn);
   }
 
@@ -5676,8 +5693,18 @@ MDefinition* IonBuilder::createThisScriptedBaseline(MDefinition* callee) {
   return createThis;
 }
 
+MDefinition* IonBuilder::createThisSlow(MDefinition* callee,
+                                        MDefinition* newTarget, bool inlining) {
+  // Call jit::CreateThisFromIon. This may return a NullValue for |this| that
+  // LCallGeneric has to check for if we can't create |this| inline.
+  MOZ_ASSERT(!inlining);
+  MCreateThis* createThis = MCreateThis::New(alloc(), callee, newTarget);
+  current->add(createThis);
+  return createThis;
+}
+
 MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
-                                    MDefinition* newTarget) {
+                                    MDefinition* newTarget, bool inlining) {
   // getPolyCallTargets ensures |target| is a constructor.
   MOZ_ASSERT_IF(target, target->isConstructor());
 
@@ -5685,38 +5712,55 @@ MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
   // JIT entry.
   MOZ_ASSERT_IF(target, !target->isNativeWithJitEntry());
 
+  if (inlining) {
+    // We must not have an effectful .prototype lookup.
+    MOZ_ASSERT(callee == newTarget);
+    MOZ_ASSERT(target);
+    MOZ_ASSERT(target->constructorNeedsUninitializedThis() ||
+               target->hasNonConfigurablePrototypeDataProperty());
+  }
+
   // Create |this| for unknown target.
   if (!target) {
-    if (MDefinition* createThis = createThisScriptedBaseline(callee)) {
-      return createThis;
+    if (callee == newTarget) {
+      if (MDefinition* createThis = createThisScriptedBaseline(callee)) {
+        return createThis;
+      }
     }
-
-    MCreateThis* createThis = MCreateThis::New(alloc(), callee, newTarget);
-    current->add(createThis);
-    return createThis;
+    return createThisSlow(callee, newTarget, inlining);
   }
 
-  // Native constructors build the new Object themselves.
+  // Handle known native functions, bound functions and derived class
+  // constructors. Note: proxies are already excluded since target has type
+  // JSFunction.
   if (target->isNative()) {
-    MConstant* magic = MConstant::New(alloc(), MagicValue(JS_IS_CONSTRUCTING));
-    current->add(magic);
-    return magic;
+    return constant(MagicValue(JS_IS_CONSTRUCTING));
   }
-
   if (target->constructorNeedsUninitializedThis()) {
     return constant(MagicValue(JS_UNINITIALIZED_LEXICAL));
   }
 
-  // Try baking in the prototype.
-  if (MDefinition* createThis = createThisScriptedSingleton(target)) {
-    return createThis;
+  if (callee == newTarget) {
+    // Try baking in the prototype.
+    if (MDefinition* createThis = createThisScriptedSingleton(target)) {
+      return createThis;
+    }
+    if (MDefinition* createThis = createThisScriptedBaseline(callee)) {
+      return createThis;
+    }
   }
 
-  if (MDefinition* createThis = createThisScriptedBaseline(callee)) {
-    return createThis;
+  // We can use createThisScripted if newTarget is known to be a function with a
+  // (builtin, getter-free) .prototype property and the callee is not one of the
+  // isNative/constructorNeedsUninitializedThis cases handled above.
+  JSFunction* newTargetFun =
+      callee == newTarget ? target
+                          : getSingleCallTarget(newTarget->resultTypeSet());
+  if (newTargetFun && newTargetFun->hasNonConfigurablePrototypeDataProperty()) {
+    return createThisScripted(callee, newTarget);
   }
 
-  return createThisScripted(callee, newTarget);
+  return createThisSlow(callee, newTarget, inlining);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_funcall(uint32_t argc) {
@@ -6375,14 +6419,6 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
     target = targets.ref()[0];
   }
 
-  uint32_t targetArgs = callInfo.argc();
-
-  // Collect number of missing arguments provided that the target is
-  // scripted. Native functions are passed an explicit 'argc' parameter.
-  if (target && !target->isBuiltinNative()) {
-    targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
-  }
-
   bool isDOMCall = false;
   DOMObjectKind objKind = DOMObjectKind::Unknown;
   if (target && !callInfo.constructing()) {
@@ -6397,6 +6433,29 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
     }
   }
 
+  bool needsThisCheck = false;
+  if (callInfo.constructing()) {
+    // Inline the this-object allocation on the caller-side.
+    MDefinition* create =
+        createThis(target, callInfo.fun(), callInfo.getNewTarget(),
+                   /* inlining = */ false);
+    callInfo.thisArg()->setImplicitlyUsedUnchecked();
+    callInfo.setThis(create);
+    needsThisCheck = create->isCreateThis();
+    if (needsThisCheck) {
+      // We have to use the LCallGeneric path.
+      target = nullptr;
+    }
+  }
+
+  uint32_t targetArgs = callInfo.argc();
+
+  // Collect number of missing arguments provided that the target is
+  // scripted. Native functions are passed an explicit 'argc' parameter.
+  if (target && !target->isBuiltinNative()) {
+    targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
+  }
+
   MCall* call =
       MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
                  callInfo.argc(), callInfo.constructing(),
@@ -6406,6 +6465,9 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
   }
 
   if (callInfo.constructing()) {
+    if (needsThisCheck) {
+      call->setNeedsThisCheck();
+    }
     call->addArg(targetArgs + 1, callInfo.getNewTarget());
   }
 
@@ -6429,14 +6491,6 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
 
   // Now that we've told it about all the args, compute whether it's movable
   call->computeMovable();
-
-  // Inline the constructor on the caller-side.
-  if (callInfo.constructing()) {
-    MDefinition* create =
-        createThis(target, callInfo.fun(), callInfo.getNewTarget());
-    callInfo.thisArg()->setImplicitlyUsedUnchecked();
-    callInfo.setThis(create);
-  }
 
   // Pass |this| and function.
   MDefinition* thisArg = callInfo.thisArg();

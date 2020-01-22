@@ -538,6 +538,11 @@ class JSFunction : public js::NativeObject {
   bool isBuiltinFunctionConstructor();
   bool needsPrototypeProperty();
 
+  // Returns true if this function must have a non-configurable .prototype data
+  // property. This is used to ensure looking up .prototype elsewhere will have
+  // no side-effects.
+  bool hasNonConfigurablePrototypeDataProperty();
+
   // Returns true if |new Fun()| should not allocate a new object caller-side
   // but pass the uninitialized-lexical MagicValue and rely on the callee to
   // construct its own |this| object.
