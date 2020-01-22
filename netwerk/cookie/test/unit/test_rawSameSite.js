@@ -102,7 +102,7 @@ add_task(async _ => {
     await promise;
 
     conn = storage.openDatabase(dbFile);
-    Assert.equal(conn.schemaVersion, 11);
+    Assert.equal(conn.schemaVersion, 10);
 
     let stmt = conn.createStatement(
       "SELECT sameSite, rawSameSite FROM moz_cookies"
