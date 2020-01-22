@@ -1979,3 +1979,9 @@ nsresult ApplicationReputationService::QueryReputationInternal(
   observerService->AddObserver(lookup, "quit-application", true);
   return lookup->StartLookup();
 }
+
+nsresult ApplicationReputationService::IsBinary(const nsACString& aFileName,
+                                                bool* aBinary) {
+  *aBinary = ::IsBinary(aFileName);
+  return NS_OK;
+}
