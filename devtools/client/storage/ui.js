@@ -58,23 +58,52 @@ const REASON = {
   UPDATE: "update",
 };
 
-const COOKIE_KEY_MAP = {
-  path: "Path",
-  host: "Domain",
-  expires: "Expires",
-  hostOnly: "HostOnly",
-  isSecure: "Secure",
-  isHttpOnly: "HttpOnly",
-  creationTime: "CreationTime",
-  lastAccessed: "LastAccessed",
-  sameSite: "SameSite",
-};
-
 const SAFE_HOSTS_PREFIXES_REGEX = /^(about:|https?:|file:|moz-extension:)/;
 
 // Maximum length of item name to show in context menu label - will be
 // trimmed with ellipsis if it's longer.
 const ITEM_NAME_MAX_LENGTH = 32;
+
+// We only localize certain table headers. The headers that we do not localize
+// along with their English translation are stored in this Map for easy
+// reference.
+const NON_L10N_STRINGS = new Map([
+  ["Cache.url", "URL"],
+  ["cookies.host", "Domain"],
+  ["cookies.hostOnly", "HostOnly"],
+  ["cookies.isHttpOnly", "HttpOnly"],
+  ["cookies.isSecure", "Secure"],
+  ["cookies.path", "Path"],
+  ["cookies.sameSite", "SameSite"],
+  ["cookies.uniqueKey", "Unique key"],
+  ["extensionStorage.name", "Key"],
+  ["extensionStorage.value", "Value"],
+  ["indexedDB.autoIncrement", "Auto Increment"],
+  ["indexedDB.db", "Database Name"],
+  ["indexedDB.indexes", "Indexes"],
+  ["indexedDB.keyPath", "Key Path"],
+  ["indexedDB.name", "Key"],
+  ["indexedDB.objectStore", "Object Store Name"],
+  ["indexedDB.objectStores", "Object Stores"],
+  ["indexedDB.origin", "Origin"],
+  ["indexedDB.storage", "Storage"],
+  ["indexedDB.uniqueKey", "Unique key"],
+  ["indexedDB.value", "Value"],
+  ["indexedDB.version", "Version"],
+  ["localStorage.name", "Key"],
+  ["localStorage.value", "Value"],
+  ["sessionStorage.name", "Key"],
+  ["sessionStorage.value", "Value"],
+]);
+
+// If a l10n ID has been changed since it was created we store it in this map
+// along with it's new value for easy reference.
+const NON_ORIGINAL_L10N_IDS = new Map([
+  ["cookies.expires", "cookies.expires2"],
+  ["cookies.lastAccessed", "cookies.lastAccessed2"],
+  ["cookies.creationTime", "cookies.creationTime2"],
+  ["indexedDB.keyPath", "indexedDB.keyPath2"],
+]);
 
 /**
  * StorageUI is controls and builds the UI of the Storage Inspector.
@@ -918,8 +947,8 @@ class StorageUI {
             continue;
           }
 
-          const cookieProp = COOKIE_KEY_MAP[prop] || prop;
-          rawObject[cookieProp] = item[prop];
+          const fieldName = getColumnName(this.table.datatype, prop);
+          rawObject[fieldName] = item[prop];
         }
         itemVar.populate(rawObject, { sorted: true });
         itemVar.twisty = true;
@@ -1078,34 +1107,16 @@ class StorageUI {
         privateFields.push(f.name);
       }
 
-      columns[f.name] = f.name;
-      let columnName;
-      try {
-        let name = f.name;
-
-        // Path key names for l10n in the case of a string change.
-        switch (f.name) {
-          case "creationTime":
-          case "keyPath":
-            name = `${f.name}2`;
-            break;
-        }
-
-        columnName = L10N.getStr("table.headers." + type + "." + name);
-      } catch (e) {
-        columnName = COOKIE_KEY_MAP[f.name];
-      }
-
-      if (!columnName) {
+      const columnName = getColumnName(type, f.name);
+      if (columnName) {
+        columns[f.name] = columnName;
+      } else if (!f.private) {
         // Private fields are only displayed when running tests so there is no
         // need to log an error if they are not localized.
-        if (!f.private) {
-          console.error(
-            "Unable to localize table header type:" + type + " key:" + f.name
-          );
-        }
-      } else {
-        columns[f.name] = columnName;
+        columns[f.name] = f.name;
+        console.error(
+          `No string defined in NON_L10N_STRINGS for '${type}.${f.name}'`
+        );
       }
     });
 
@@ -1518,4 +1529,34 @@ function addEllipsis(name) {
   }
 
   return name;
+}
+
+/**
+ * Get a string for a column name automatically choosing whether or not the
+ * string should be localized.
+ *
+ * @param {String} type
+ *        The storage type.
+ * @param {String} name
+ *        The field name that may need to be localized.
+ */
+function getColumnName(type, name) {
+  // Check if a l10n ID has been changed since it was created and map it to
+  // its new value if it has.
+  let id = `${type}.${name}`;
+  id = NON_ORIGINAL_L10N_IDS.get(id) || id;
+
+  // If the ID exists in NON_L10N_STRINGS then we do not translate it
+  // otherwise we get it from the L10N database. If it doesn't exist in the
+  // database we will just use the field name.
+  let columnName = NON_L10N_STRINGS.get(id);
+  if (!columnName) {
+    try {
+      columnName = L10N.getStr(`table.headers.${id}`);
+    } catch (e) {
+      columnName = name;
+    }
+  }
+
+  return columnName;
 }
