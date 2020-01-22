@@ -7,6 +7,7 @@
 /* global BrowserWindowTracker, ExtensionCommon, ExtensionAPI */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 
 var { EventManager, EventEmitter } = ExtensionCommon;
 const {
@@ -97,7 +98,31 @@ this.doorhanger = class doorhanger extends ExtensionAPI {
       experiments: {
         doorhanger: {
           async show(properties) {
+            let profileAge = await ChromeUtils.import(
+              "resource://gre/modules/ProfileAge.jsm",
+              {}
+            ).ProfileAge();
+
+            let creationDate = await profileAge.created;
+            let firstUse = await profileAge.firstUse;
+            let resetDate = await profileAge.reset;
+            let profileDate = resetDate || firstUse || creationDate;
+
+            // We only need to show the doorhanger to users who have not been
+            // shown a version of the privacy statement that includes DoH at
+            // first-run.
+            let profileCreationThreshold = parseInt(
+              Preferences.get("doh-rollout.profileCreationThreshold")
+            );
+            if (
+              !isNaN(profileCreationThreshold) &&
+              profileDate > profileCreationThreshold
+            ) {
+              return false;
+            }
+
             await doorhangerEventEmitter.emitShow(properties);
+            return true;
           },
           onDoorhangerAccept: new EventManager({
             context,

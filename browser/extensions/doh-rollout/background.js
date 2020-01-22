@@ -190,15 +190,9 @@ const stateManager = {
   },
 
   async showDoorhanger() {
-    browser.experiments.doorhanger.onDoorhangerAccept.addListener(
-      rollout.doorhangerAcceptListener
-    );
+    rollout.addDoorhangerListeners();
 
-    browser.experiments.doorhanger.onDoorhangerDecline.addListener(
-      rollout.doorhangerDeclineListener
-    );
-
-    await browser.experiments.doorhanger.show({
+    let doorhangerShown = await browser.experiments.doorhanger.show({
       name: browser.i18n.getMessage("doorhangerName"),
       text: "<> " + browser.i18n.getMessage("doorhangerBody"),
       okLabel: browser.i18n.getMessage("doorhangerButtonOk"),
@@ -208,6 +202,16 @@ const stateManager = {
         "doorhangerButtonCancelAccessKey"
       ),
     });
+
+    if (!doorhangerShown) {
+      // The profile was created after the go-live date of the privacy statement
+      // that included DoH. Treat it as accepted.
+      log("Profile is new, doorhanger not shown.");
+      await stateManager.setState("UIOk");
+      await stateManager.rememberDoorhangerDecision("NewProfile");
+      await stateManager.rememberDoorhangerShown();
+      rollout.removeDoorhangerListeners();
+    }
   },
 };
 
@@ -223,11 +227,32 @@ const rollout = {
     return this._isTesting;
   },
 
+  addDoorhangerListeners() {
+    browser.experiments.doorhanger.onDoorhangerAccept.addListener(
+      rollout.doorhangerAcceptListener
+    );
+
+    browser.experiments.doorhanger.onDoorhangerDecline.addListener(
+      rollout.doorhangerDeclineListener
+    );
+  },
+
+  removeDoorhangerListeners() {
+    browser.experiments.doorhanger.onDoorhangerAccept.removeListener(
+      rollout.doorhangerAcceptListener
+    );
+
+    browser.experiments.doorhanger.onDoorhangerDecline.removeListener(
+      rollout.doorhangerDeclineListener
+    );
+  },
+
   async doorhangerAcceptListener(tabId) {
     log("Doorhanger accepted on tab", tabId);
     await stateManager.setState("UIOk");
     await stateManager.rememberDoorhangerDecision("UIOk");
     await stateManager.rememberDoorhangerShown();
+    rollout.removeDoorhangerListeners();
   },
 
   async doorhangerDeclineListener(tabId) {
@@ -239,6 +264,7 @@ const rollout = {
     browser.experiments.heuristics.sendHeuristicsPing("disable_doh", results);
     await stateManager.rememberDisableHeuristics();
     await stateManager.rememberDoorhangerShown();
+    rollout.removeDoorhangerListeners();
   },
 
   async heuristics(evaluateReason) {
