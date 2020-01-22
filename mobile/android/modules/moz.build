@@ -25,7 +25,6 @@ EXTRA_JS_MODULES += [
     'dbg-browser-actors.js',
     'DownloadNotifications.jsm',
     'FormAssistant.jsm',
-    'HelperApps.jsm',
     'Home.jsm',
     'HomeProvider.jsm',
     'LightweightThemeConsumer.jsm',
