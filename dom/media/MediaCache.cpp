@@ -158,7 +158,10 @@ class MediaCache {
   // If the length is known and considered small enough, a discrete MediaCache
   // with memory backing will be given. Otherwise the one MediaCache with
   // file backing will be provided.
-  static RefPtr<MediaCache> GetMediaCache(int64_t aContentLength);
+  // If aIsPrivateBrowsing is true, only initialization of a memory backed
+  // MediaCache will be attempted, returning nullptr if that fails.
+  static RefPtr<MediaCache> GetMediaCache(int64_t aContentLength,
+                                          bool aIsPrivateBrowsing);
 
   nsISerialEventTarget* OwnerThread() const { return sThread; }
 
@@ -763,7 +766,8 @@ void MediaCache::CloseStreamsForPrivateBrowsing() {
 }
 
 /* static */
-RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength) {
+RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength,
+                                             bool aIsPrivateBrowsing) {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   if (!sThreadInit) {
@@ -791,11 +795,41 @@ RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength) {
     return nullptr;
   }
 
-  if (aContentLength > 0 &&
-      aContentLength <=
-          int64_t(StaticPrefs::media_memory_cache_max_size()) * 1024) {
-    // Small-enough resource, use a new memory-backed MediaCache.
-    RefPtr<MediaBlockCacheBase> bc = new MemoryBlockCache(aContentLength);
+  const int64_t mediaMemoryCacheMaxSize =
+      static_cast<int64_t>(StaticPrefs::media_memory_cache_max_size()) * 1024;
+
+  // Force usage of in-memory cache if we are in private browsing mode
+  // and the forceMediaMemoryCache pref is set
+  // We will not attempt to create an on-disk cache if this is the case
+  const bool forceMediaMemoryCache =
+      aIsPrivateBrowsing &&
+      StaticPrefs::browser_privatebrowsing_forceMediaMemoryCache();
+
+  // Alternatively, use an in-memory cache if the media will fit entirely
+  // in memory
+  // aContentLength < 0 indicates we do not know content's actual size
+  const bool contentFitsInMediaMemoryCache =
+      (aContentLength > 0) && (aContentLength <= mediaMemoryCacheMaxSize);
+
+  // Try to allocate a memory cache for our content
+  if (contentFitsInMediaMemoryCache || forceMediaMemoryCache) {
+    // Figure out how large our cache should be
+    int64_t cacheSize = 0;
+    if (contentFitsInMediaMemoryCache) {
+      cacheSize = aContentLength;
+    } else if (forceMediaMemoryCache) {
+      // Unknown content length, we'll give the maximum allowed cache size
+      // just to be sure.
+      if (aContentLength < 0) {
+        cacheSize = mediaMemoryCacheMaxSize;
+      } else {
+        // If the content length is less than the maximum allowed cache size,
+        // use that, otherwise we cap it to max size.
+        cacheSize = std::min(aContentLength, mediaMemoryCacheMaxSize);
+      }
+    }
+
+    RefPtr<MediaBlockCacheBase> bc = new MemoryBlockCache(cacheSize);
     nsresult rv = bc->Init();
     if (NS_SUCCEEDED(rv)) {
       RefPtr<MediaCache> mc = new MediaCache(bc);
@@ -803,8 +837,13 @@ RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength) {
           mc.get());
       return mc;
     }
-    // MemoryBlockCache initialization failed, clean up and try for a
-    // file-backed MediaCache below.
+
+    // MemoryBlockCache initialization failed.
+    // If we require use of a memory media cache, we will bail here.
+    // Otherwise use a file-backed MediaCache below.
+    if (forceMediaMemoryCache) {
+      return nullptr;
+    }
   }
 
   if (gMediaCache) {
@@ -2658,7 +2697,7 @@ nsresult MediaCacheStream::Init(int64_t aContentLength) {
     mStreamLength = aContentLength;
   }
 
-  mMediaCache = MediaCache::GetMediaCache(aContentLength);
+  mMediaCache = MediaCache::GetMediaCache(aContentLength, mIsPrivateBrowsing);
   if (!mMediaCache) {
     return NS_ERROR_FAILURE;
   }
