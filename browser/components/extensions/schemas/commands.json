@@ -134,7 +134,8 @@
                 "description": "The new description for the command."
               },
               "shortcut": {
-                "$ref": "manifest.KeyName",
+                "type": "string",
+                "format": "manifestShortcutKeyOrEmpty",
                 "optional": true
               }
             }

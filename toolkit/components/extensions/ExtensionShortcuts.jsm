@@ -56,7 +56,7 @@ const EXECUTE_BROWSER_ACTION = "_execute_browser_action";
 const EXECUTE_SIDEBAR_ACTION = "_execute_sidebar_action";
 
 function normalizeShortcut(shortcut) {
-  return shortcut ? shortcut.replace(/\s+/g, "") : null;
+  return shortcut ? shortcut.replace(/\s+/g, "") : "";
 }
 
 /**
@@ -124,7 +124,7 @@ class ExtensionShortcuts {
       command.description = description;
     }
 
-    if (shortcut && shortcut != command.shortcut) {
+    if (shortcut != null && shortcut != command.shortcut) {
       shortcut = normalizeShortcut(shortcut);
       commandUpdates.shortcut = shortcut;
       command.shortcut = shortcut;

@@ -146,6 +146,22 @@ add_task(async function test_update_defined_command() {
           "The shortcut is unchanged"
         );
 
+        // Clear the shortcut.
+        await browser.commands.update({
+          name: "foo",
+          shortcut: "",
+        });
+        commands = await browser.commands.getAll();
+        browser.test.assertEq(1, commands.length, "There is still 1 command");
+        command = commands[0];
+        browser.test.assertEq("foo", command.name, "The name is unchanged");
+        browser.test.assertEq(
+          "The only command",
+          command.description,
+          "The description is unchanged"
+        );
+        browser.test.assertEq("", command.shortcut, "The shortcut is empty");
+
         // Update the description and shortcut.
         await browser.commands.update({
           name: "foo",
@@ -173,7 +189,7 @@ add_task(async function test_update_defined_command() {
         browser.test.assertThrows(
           () =>
             browser.commands.update({ name: "foo", shortcut: "Ctl+Shift+L" }),
-          /Type error for parameter detail/,
+          /Type error for parameter detail .+ primary modifier and a key/,
           "It rejects for a bad shortcut"
         );
 
