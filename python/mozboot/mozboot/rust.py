@@ -13,7 +13,7 @@ import sys
 RUSTUP_URL_BASE = 'https://static-rust-lang-org.s3.amazonaws.com/rustup'
 
 # Pull this to get the lastest stable version number.
-RUSTUP_MANIFEST = os.path.join(RUSTUP_URL_BASE, 'release-stable.toml')
+RUSTUP_MANIFEST = RUSTUP_URL_BASE + '/release-stable.toml'
 
 # We bake in a known version number so we can verify a checksum.
 RUSTUP_VERSION = '1.9.0'
