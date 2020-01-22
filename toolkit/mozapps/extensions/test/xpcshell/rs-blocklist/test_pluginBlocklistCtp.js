@@ -133,6 +133,13 @@ add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
+  // plugin.load_flash_only is only respected if xpc::IsInAutomation is true.
+  // This is not the case by default in xpcshell tests, unless the following
+  // pref is also set. Fixing this generically is bug 1598804
+  Services.prefs.setBoolPref(
+    "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+    true
+  );
   gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   await promiseStartupManager();
 });
