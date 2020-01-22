@@ -149,21 +149,10 @@ impl Reftest {
         }
     }
 
-    /// Check the negative case (expecting inequality) and report details if same
-    fn check_and_report_inequality_failure(
-        &self,
-        comparison: ReftestImageComparison,
-    ) -> bool {
-        match comparison {
-            ReftestImageComparison::Equal => {
-                println!("REFTEST TEST-UNEXPECTED-FAIL | {} | image comparison", self);
-                println!("REFTEST TEST-END | {}", self);
-                false
-            }
-            ReftestImageComparison::NotEqual { .. } => {
-                true
-            }
-        }
+    /// Report details of the negative case
+    fn report_unexpected_equality(&self) {
+        println!("REFTEST TEST-UNEXPECTED-FAIL | {} | image comparison", self);
+        println!("REFTEST TEST-END | {}", self);
     }
 }
 
@@ -704,7 +693,15 @@ impl<'a> ReftestHarness<'a> {
                 // Ensure that the final image *doesn't* match the reference
                 let test = images.pop().unwrap();
                 let comparison = test.compare(&reference);
-                t.check_and_report_inequality_failure(comparison)
+                match comparison {
+                    ReftestImageComparison::Equal => {
+                        t.report_unexpected_equality();
+                        false
+                    }
+                    ReftestImageComparison::NotEqual { .. } => {
+                        true
+                    }
+                }
             }
             ReftestOp::Accurate => {
                 // Ensure that *all* images match the reference
@@ -724,14 +721,18 @@ impl<'a> ReftestHarness<'a> {
             }
             ReftestOp::Inaccurate => {
                 // Ensure that at least one of the images doesn't match the reference
-                let mut found_mismatch = false;
+                let all_same = images.iter().all(|image| {
+                    match image.compare(&reference) {
+                        ReftestImageComparison::Equal => true,
+                        ReftestImageComparison::NotEqual { .. } => false,
+                    }
+                });
 
-                for test in images.drain(..) {
-                    let comparison = test.compare(&reference);
-                    found_mismatch |= t.check_and_report_inequality_failure(comparison);
+                if all_same {
+                    t.report_unexpected_equality();
                 }
 
-                found_mismatch
+                !all_same
             }
         }
     }
