@@ -22,6 +22,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 /*
  * Performs a Regular Expression match, optionally returning the results.
@@ -574,7 +575,7 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // object-src 'none'"/>
 
   // Check if we should skip the assertion
-  if (Preferences::GetBool("csp.skip_about_page_has_csp_assert")) {
+  if (StaticPrefs::dom_security_skip_about_page_has_csp_assert()) {
     return;
   }
 
@@ -612,7 +613,7 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
 
   // Check if we should skip the allowlist and assert right away. Please note
   // that this pref can and should only be set for automated testing.
-  if (Preferences::GetBool("csp.skip_about_page_csp_allowlist_and_assert")) {
+  if (StaticPrefs::dom_security_skip_about_page_csp_allowlist_and_assert()) {
     NS_ASSERTION(foundDefaultSrc, "about: page must have a CSP");
     return;
   }
