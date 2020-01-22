@@ -793,6 +793,14 @@ nsresult nsMixedContentBlocker::ShouldLoad(
 
   nsCOMPtr<nsIDocShell> docShell =
       NS_CP_GetDocShellFromContext(aRequestingContext);
+  // Carve-out: if we're in the parent and we're loading media, e.g. through
+  // webbrowserpersist, don't reject it if we can't find a docshell.
+  if (XRE_IsParentProcess() && !docShell &&
+      (aContentType == TYPE_IMAGE || aContentType == TYPE_MEDIA)) {
+    *aDecision = ACCEPT;
+    return NS_OK;
+  }
+  // Otherwise, we must have a docshell
   NS_ENSURE_TRUE(docShell, NS_OK);
 
   // Disallow mixed content loads for workers, shared workers and service
