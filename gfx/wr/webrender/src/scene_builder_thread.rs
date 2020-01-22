@@ -255,6 +255,7 @@ pub struct SceneBuilderThread {
     size_of_ops: Option<MallocSizeOfOps>,
     hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
     simulate_slow_ms: u32,
+    removed_pipelines: FastHashSet<PipelineId>
 }
 
 pub struct SceneBuilderThreadChannels {
@@ -299,6 +300,7 @@ impl SceneBuilderThread {
             size_of_ops,
             hooks,
             simulate_slow_ms: 0,
+            removed_pipelines: FastHashSet::default(),
         }
     }
 
@@ -529,7 +531,24 @@ impl SceneBuilderThread {
                       .or_insert_with(|| Document::new(Scene::new()));
         let scene = &mut doc.scene;
 
+        for &(pipeline_id, epoch) in &txn.epoch_updates {
+            scene.update_epoch(pipeline_id, epoch);
+        }
+
+        if let Some(id) = txn.set_root_pipeline {
+            scene.set_root_pipeline_id(id);
+        }
+
+        for &(pipeline_id, _) in &txn.removed_pipelines {
+            scene.remove_pipeline(pipeline_id);
+            self.removed_pipelines.insert(pipeline_id);
+        }
+
         for update in txn.display_list_updates.drain(..) {
+            if self.removed_pipelines.contains(&update.pipeline_id) {
+                continue;
+            }
+
             scene.set_display_list(
                 update.pipeline_id,
                 update.epoch,
@@ -540,17 +559,7 @@ impl SceneBuilderThread {
             );
         }
 
-        for &(pipeline_id, epoch) in &txn.epoch_updates {
-            scene.update_epoch(pipeline_id, epoch);
-        }
-
-        if let Some(id) = txn.set_root_pipeline {
-            scene.set_root_pipeline_id(id);
-        }
-
-        for &(pipeline_id, _) in &txn.removed_pipelines {
-            scene.remove_pipeline(pipeline_id)
-        }
+        self.removed_pipelines.clear();
 
         let mut built_scene = None;
         let mut interner_updates = None;
