@@ -19,7 +19,6 @@
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
 #include "mozJSComponentLoader.h"
-#include "nsAutoPtr.h"
 #include "nsNetUtil.h"
 #include "nsContentSecurityUtils.h"
 
@@ -630,9 +629,10 @@ static void CompartmentDestroyedCallback(JSFreeOp* fop,
   // NB - This callback may be called in JS_DestroyContext, which happens
   // after the XPCJSRuntime has been torn down.
 
-  // Get the current compartment private into an AutoPtr (which will do the
+  // Get the current compartment private into a UniquePtr (which will do the
   // cleanup for us), and null out the private (which may already be null).
-  nsAutoPtr<CompartmentPrivate> priv(CompartmentPrivate::Get(compartment));
+  mozilla::UniquePtr<CompartmentPrivate> priv(
+      CompartmentPrivate::Get(compartment));
   JS_SetCompartmentPrivate(compartment, nullptr);
 }
 

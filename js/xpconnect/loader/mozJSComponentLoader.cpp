@@ -25,7 +25,6 @@
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::SourceText
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsExceptionHandler.h"
 #include "nsIComponentManager.h"
 #include "mozilla/Module.h"
@@ -416,7 +415,7 @@ const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
   bool isCriticalModule =
       StringEndsWith(spec, NS_LITERAL_CSTRING("/nsAsyncShutdown.js"));
 
-  nsAutoPtr<ModuleEntry> entry(new ModuleEntry(RootingContext::get(cx)));
+  auto entry = MakeUnique<ModuleEntry>(RootingContext::get(cx));
   RootedValue exn(cx);
   rv = ObjectForLocation(info, file, &entry->obj, &entry->thisObjectKey,
                          &entry->location, isCriticalModule, &exn);
@@ -497,10 +496,10 @@ const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
 #endif
 
   // Cache this module for later
-  mModules.Put(spec, entry);
+  mModules.Put(spec, entry.get());
 
   // The hash owns the ModuleEntry now, forget about it
-  return entry.forget();
+  return entry.release();
 }
 
 void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
@@ -1302,13 +1301,10 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   ModuleEntry* mod;
-  nsAutoPtr<ModuleEntry> newEntry;
+  UniquePtr<ModuleEntry> newEntry;
   if (!mImports.Get(info.Key(), &mod) &&
       !mInProgressImports.Get(info.Key(), &mod)) {
-    newEntry = new ModuleEntry(RootingContext::get(aCx));
-    if (!newEntry) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    newEntry = MakeUnique<ModuleEntry>(RootingContext::get(aCx));
 
     // Note: This implies EnsureURI().
     MOZ_TRY(info.EnsureResolvedURI());
@@ -1347,7 +1343,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
 
     RootedValue exception(aCx);
     {
-      mInProgressImports.Put(info.Key(), newEntry);
+      mInProgressImports.Put(info.Key(), newEntry.get());
       auto cleanup =
           MakeScopeExit([&]() { mInProgressImports.Remove(info.Key()); });
 
@@ -1377,7 +1373,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
     }
 #endif
 
-    mod = newEntry;
+    mod = newEntry.get();
   }
 
   MOZ_ASSERT(mod->obj, "Import table contains entry with no object");
@@ -1395,8 +1391,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
 
   // Cache this module for later
   if (newEntry) {
-    mImports.Put(info.Key(), newEntry);
-    newEntry.forget();
+    mImports.Put(info.Key(), newEntry.release());
   }
 
   return NS_OK;
