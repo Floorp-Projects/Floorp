@@ -1036,7 +1036,8 @@ class StaticAnalysis(MachCommandBase):
                      help='Generate the baseline for the regression test. Based on'
                      ' this baseline we will test future results.')
     @CommandArgument('--intree-tool', '-i', default=False, action='store_true',
-                     help='Use a pre-aquired in-tree clang-tidy package.')
+                     help='Use a pre-aquired in-tree clang-tidy package from the automation env.'
+                     ' This option is only valid on automation environments.')
     @CommandArgument('checker_names', nargs='*', default=[],
                      help='Checkers that are going to be auto-tested.')
     def autotest(self, verbose=False, dump_results=False, intree_tool=False, checker_names=[]):
@@ -1063,6 +1064,15 @@ class StaticAnalysis(MachCommandBase):
 
         # Configure the tree or download clang-tidy package, depending on the option that we choose
         if intree_tool:
+            if 'MOZ_AUTOMATION' not in os.environ:
+                self.log(logging.INFO, 'static-analysis', {},
+                         'The `autotest` with `--intree-tool` can only be ran in automation.')
+                return 1
+            if 'MOZ_FETCHES_DIR' not in os.environ:
+                self.log(logging.INFO, 'static-analysis', {},
+                         '`MOZ_FETCHES_DIR` is missing from the environment variables.')
+                return 1
+
             _, config, _ = self._get_config_environment()
             clang_tools_path = os.environ['MOZ_FETCHES_DIR']
             self._clang_tidy_path = mozpath.join(
