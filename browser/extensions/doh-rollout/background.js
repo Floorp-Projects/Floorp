@@ -189,7 +189,7 @@ const stateManager = {
     return !doorhangerShown;
   },
 
-  async showDoorHangerAndEnableDoH() {
+  async showDoorhanger() {
     browser.experiments.doorhanger.onDoorhangerAccept.addListener(
       rollout.doorhangerAcceptListener
     );
@@ -208,10 +208,6 @@ const stateManager = {
         "doorhangerButtonCancelAccessKey"
       ),
     });
-
-    // By default, enable DoH when showing the doorhanger,
-    // if heuristics returned no reason to not run.
-    await stateManager.setState("enabled");
   },
 };
 
@@ -246,13 +242,19 @@ const rollout = {
   },
 
   async heuristics(evaluateReason) {
+    let shouldRunHeuristics = await stateManager.shouldRunHeuristics();
+
+    if (!shouldRunHeuristics) {
+      return;
+    }
+
     // Run heuristics defined in heuristics.js and experiments/heuristics/api.js
     let results;
 
     if (await rollout.isTesting()) {
       results = await browser.experiments.preferences.getCharPref(
         MOCK_HEURISTICS_PREF,
-        "disable_doh"
+        `{ "test": "disable_doh" }`
       );
       results = JSON.parse(results);
     } else {
@@ -270,7 +272,14 @@ const rollout = {
     results.evaluateReason = evaluateReason;
     browser.experiments.heuristics.sendHeuristicsPing(decision, results);
 
-    return decision;
+    if (decision === "disable_doh") {
+      await stateManager.setState("disabled");
+    } else {
+      await stateManager.setState("enabled");
+      if (await stateManager.shouldShowDoorhanger()) {
+        await stateManager.showDoorhanger();
+      }
+    }
   },
 
   async getSetting(name, defaultValue) {
@@ -472,81 +481,67 @@ const rollout = {
       await this.enterprisePolicyCheck("startup", results);
     }
 
-    if (await stateManager.shouldRunHeuristics()) {
-      await this.runStartupHeuristics();
+    if (!(await stateManager.shouldRunHeuristics())) {
+      return;
+    }
+
+    let networkStatus = (await browser.networkStatus.getLinkInfo()).status;
+    let captiveState = "unknown";
+    try {
+      captiveState = await browser.captivePortal.getState();
+    } catch (e) {
+      // Captive Portal Service is disabled.
+    }
+
+    if (networkStatus == "up" && captiveState != "locked_portal") {
+      await rollout.heuristics("startup");
     }
 
     // Listen for network change events to run heuristics again
-    browser.networkStatus.onConnectionChanged.addListener(async () => {
-      log("onConnectionChanged");
-
-      let linkInfo = await browser.networkStatus.getLinkInfo();
-      if (linkInfo.status !== "up") {
-        log("Link down.");
-        if (rollout.networkSettledTimeout) {
-          log("Canceling queued heuristics run.");
-          clearTimeout(rollout.networkSettledTimeout);
-          rollout.networkSettledTimeout = null;
-        }
-        return;
-      }
-
-      log("Queing a heuristics run in 60s, will cancel if network fluctuates.");
-      let gracePeriod = (await rollout.isTesting()) ? 0 : 60000;
-      rollout.networkSettledTimeout = setTimeout(async () => {
-        log("No network fluctuation for 60 seconds, running heuristics.");
-        // Only run the heuristics if user hasn't explicitly enabled/disabled DoH
-        let shouldRunHeuristics = await stateManager.shouldRunHeuristics();
-        let shouldShowDoorhanger = await stateManager.shouldShowDoorhanger();
-
-        if (!shouldRunHeuristics) {
-          return;
-        }
-
-        const netChangeDecision = await rollout.heuristics("netChange");
-
-        if (netChangeDecision === "disable_doh") {
-          await stateManager.setState("disabled");
-        } else if (shouldShowDoorhanger) {
-          await stateManager.showDoorHangerAndEnableDoH();
-        } else {
-          await stateManager.setState("enabled");
-        }
-      }, gracePeriod);
-    });
+    browser.networkStatus.onConnectionChanged.addListener(
+      rollout.onConnectionChanged
+    );
 
     // Listen to the captive portal when it unlocks
-    browser.captivePortal.onConnectivityAvailable.addListener(async () => {
-      log("Captive portal onConnectivityAvailable, running heuristics.");
-      if (rollout.networkSettledTimeout) {
-        log("Canceling queued heuristics run.");
-        clearTimeout(rollout.networkSettledTimeout);
-        rollout.networkSettledTimeout = null;
-      }
-
-      let shouldRunHeuristics = await stateManager.shouldRunHeuristics();
-
-      if (!shouldRunHeuristics) {
-        return;
-      }
-
-      await this.runStartupHeuristics();
-    });
+    try {
+      browser.captivePortal.onStateChange.addListener(
+        rollout.onCaptiveStateChanged
+      );
+    } catch (e) {
+      // Captive Portal Service is disabled.
+    }
   },
 
-  async runStartupHeuristics() {
-    let decision = await this.heuristics("startup");
-    let shouldShowDoorhanger = await stateManager.shouldShowDoorhanger();
-    if (decision === "disable_doh") {
-      await stateManager.setState("disabled");
+  async onConnectionChanged({ status }) {
+    log("onConnectionChanged", status);
 
-      // If the heuristics say to enable DoH, determine if the doorhanger
-      // should be shown
-    } else if (shouldShowDoorhanger) {
-      await stateManager.showDoorHangerAndEnableDoH();
-    } else {
-      // Doorhanger has been shown before and did not opt-out
-      await stateManager.setState("enabled");
+    if (status != "up") {
+      return;
+    }
+
+    let captiveState = "unknown";
+    try {
+      captiveState = await browser.captivePortal.getState();
+    } catch (e) {
+      // Captive Portal Service is disabled.
+    }
+
+    if (captiveState == "locked_portal") {
+      return;
+    }
+
+    // The network is up and we don't know that we're in a locked portal.
+    // Run heuristics. If we detect a portal later, we'll run heuristics again
+    // when it's unlocked. In that case, this run will likely have failed.
+    await rollout.heuristics("netchange");
+  },
+
+  async onCaptiveStateChanged({ state }) {
+    log("onCaptiveStateChanged", state);
+    // unlocked_portal means we were previously in a locked portal and then
+    // network access was granted.
+    if (state == "unlocked_portal") {
+      await rollout.heuristics("netchange");
     }
   },
 };

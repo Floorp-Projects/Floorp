@@ -27,6 +27,7 @@ add_task(async function testCleanFlow() {
   await promise;
 
   await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
 
   await BrowserTestUtils.waitForCondition(() => {
     return Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF);
@@ -51,24 +52,26 @@ add_task(async function testCleanFlow() {
   setFailingHeuristics();
   simulateNetworkChange();
   await ensureTRRMode(0);
+  await checkHeuristicsTelemetry("disable_doh", "netchange");
 
   // Trigger another network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
+  await checkHeuristicsTelemetry("disable_doh", "netchange");
 
   // Restart the add-on for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(0);
+  await checkHeuristicsTelemetry("disable_doh", "startup");
 
   // Set a passing environment and simulate a network change.
   setPassingHeuristics();
   simulateNetworkChange();
   await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "netchange");
 
   // Again, repeat and check nothing changed.
   simulateNetworkChange();
   await ensureNoTRRModeChange(2);
-
-  // Clean up.
-  await resetPrefsAndRestartAddon();
+  await checkHeuristicsTelemetry("enable_doh", "netchange");
 });
