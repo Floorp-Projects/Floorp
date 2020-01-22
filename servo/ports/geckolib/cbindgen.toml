@@ -682,22 +682,6 @@ renaming_overrides_prefixing = true
   inline nsRect ToLayoutRect(nscoord aAutoSize = NS_MAXSIZE) const;
 """
 
-"VecU8" = """
-  StyleVecU8(): data(nullptr), length(0), capacity(0) {}
-  StyleVecU8(const StyleVecU8& aOther) = delete;
-  StyleVecU8(StyleVecU8&& aOther)
-    : data(aOther.data), length(aOther.length), capacity(aOther.capacity) {
-    aOther.data = nullptr;
-    aOther.length = 0;
-    aOther.capacity = 0;
-  }
-  StyleVecU8& operator=(StyleVecU8&& aOther) = delete;
-  StyleVecU8& operator=(const StyleVecU8& aOther) = delete;
-
-  // This type is not safe to return by value. Should be careful.
-  inline ~StyleVecU8();
-"""
-
 "GenericRotate" = """
 public:
   // The implementation of IPC LayersMessages needs this to be public.
