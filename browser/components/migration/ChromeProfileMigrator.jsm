@@ -653,13 +653,27 @@ if (AppConstants.platform != "macosx") {
   EXPORTED_SYMBOLS.push("ChromeBetaMigrator");
 }
 
+function ChromiumEdgeMigrator() {
+  this._chromeUserDataPathSuffix = "Edge";
+  this._keychainServiceName = "Microsoft Edge Safe Storage";
+  this._keychainAccountName = "Microsoft Edge";
+}
+ChromiumEdgeMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+ChromiumEdgeMigrator.prototype.classDescription =
+  "Chromium Edge Profile Migrator";
+ChromiumEdgeMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=chromium-edge";
+ChromiumEdgeMigrator.prototype.classID = Components.ID(
+  "{3c7f6b7c-baa9-4338-acfa-04bf79f1dcf1}"
+);
+
 function ChromiumEdgeBetaMigrator() {
   this._chromeUserDataPathSuffix = "Edge Beta";
   this._keychainServiceName = "Microsoft Edge Safe Storage";
   this._keychainAccountName = "Microsoft Edge";
 }
 ChromiumEdgeBetaMigrator.prototype = Object.create(
-  ChromeProfileMigrator.prototype
+  ChromiumEdgeMigrator.prototype
 );
 ChromiumEdgeBetaMigrator.prototype.classDescription =
   "Chromium Edge Beta Profile Migrator";
@@ -670,5 +684,5 @@ ChromiumEdgeBetaMigrator.prototype.classID = Components.ID(
 );
 
 if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
-  EXPORTED_SYMBOLS.push("ChromiumEdgeBetaMigrator");
+  EXPORTED_SYMBOLS.push("ChromiumEdgeMigrator", "ChromiumEdgeBetaMigrator");
 }
