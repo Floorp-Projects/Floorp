@@ -15,6 +15,7 @@
 #include "mozilla/layers/WebRenderUserData.h"
 #include "nsDisplayList.h"
 #include "nsIFrame.h"
+#include "DisplayItemCache.h"
 
 namespace mozilla {
 
@@ -82,14 +83,7 @@ class WebRenderCommandBuilder final {
   typedef nsTHashtable<nsRefPtrHashKey<WebRenderCanvasData>> CanvasDataSet;
 
  public:
-  explicit WebRenderCommandBuilder(WebRenderLayerManager* aManager)
-      : mManager(aManager),
-        mRootStackingContexts(nullptr),
-        mCurrentClipManager(nullptr),
-        mLastAsr(nullptr),
-        mDumpIndent(0),
-        mDoGrouping(false),
-        mContainsSVGGroup(false) {}
+  explicit WebRenderCommandBuilder(WebRenderLayerManager* aManager);
 
   void Destroy();
 
@@ -233,6 +227,11 @@ class WebRenderCommandBuilder final {
 
  private:
   RenderRootStateManager* GetRenderRootStateManager(wr::RenderRoot aRenderRoot);
+  void CreateWebRenderCommands(nsDisplayItem* aItem,
+                               mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::wr::IpcResourceUpdateQueue& aResources,
+                               const StackingContextHelper& aSc,
+                               nsDisplayListBuilder* aDisplayListBuilder);
 
   wr::RenderRootArray<Maybe<StackingContextHelper>>* mRootStackingContexts;
   wr::RenderRootArray<ClipManager> mClipManagers;
@@ -255,6 +254,8 @@ class WebRenderCommandBuilder final {
 
   wr::RenderRootArray<wr::usize> mBuilderDumpIndex;
   wr::usize mDumpIndent;
+
+  DisplayItemCache mDisplayItemCache;
 
  public:
   // Whether consecutive inactive display items should be grouped into one
