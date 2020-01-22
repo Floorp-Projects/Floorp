@@ -27,6 +27,7 @@ class MessagePortChild;
 struct PostMessageOptions;
 class PostMessageRunnable;
 class SharedMessagePortMessage;
+class RefMessageBodyService;
 class StrongWorkerRef;
 
 // A class to hold a MessagePortIdentifier from
@@ -206,6 +207,8 @@ class MessagePort final : public DOMEventTargetHelper {
   RefPtr<MessagePortChild> mActor;
 
   RefPtr<MessagePort> mUnshippedEntangledPort;
+
+  RefPtr<RefMessageBodyService> mRefMessageBodyService;
 
   nsTArray<RefPtr<SharedMessagePortMessage>> mMessages;
   nsTArray<RefPtr<SharedMessagePortMessage>> mMessagesForTheOtherPort;

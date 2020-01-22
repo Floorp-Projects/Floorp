@@ -67,7 +67,7 @@ class SharedJSAllocatedData final {
     return sharedData.forget();
   }
 
-  NS_INLINE_DECL_REFCOUNTING(SharedJSAllocatedData)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedJSAllocatedData)
 
   JSStructuredCloneData& Data() { return mData; }
   size_t DataLength() const { return mData.Size(); }
