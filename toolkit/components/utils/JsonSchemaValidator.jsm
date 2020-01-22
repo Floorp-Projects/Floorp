@@ -39,16 +39,6 @@ var JsonSchemaValidator = {
 };
 
 function validateAndParseParamRecursive(param, properties) {
-  // If the param is a boolean, don't check the enum values.
-  // This allows for values that are both a string with enums
-  // and a boolean.
-  if (properties.enum && typeof param !== "boolean") {
-    if (properties.enum.includes(param)) {
-      return [true, param];
-    }
-    return [false, null];
-  }
-
   log.debug(`checking @${param}@ for type ${properties.type}`);
 
   if (Array.isArray(properties.type)) {
@@ -77,7 +67,13 @@ function validateAndParseParamRecursive(param, properties) {
     case "URLorEmpty":
     case "origin":
     case "null":
-      return validateAndParseSimpleParam(param, properties.type);
+      let [valid, data] = validateAndParseSimpleParam(param, properties.type);
+      if (properties.enum && typeof data !== "boolean") {
+        if (!properties.enum.includes(param)) {
+          return [false, null];
+        }
+      }
+      return [valid, data];
 
     case "array":
       if (!Array.isArray(param)) {
