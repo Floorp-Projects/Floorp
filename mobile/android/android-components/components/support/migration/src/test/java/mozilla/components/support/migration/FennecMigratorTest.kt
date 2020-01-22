@@ -550,6 +550,54 @@ class FennecMigratorTest {
     }
 
     @Test
+    fun `history migration - browserdb does not exist`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val historyStorage: PlacesHistoryStorage = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateHistory(historyStorage)
+            .setBrowserDbName("doesnotexist.db")
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("combined"), "basic").absolutePath, true)
+            )
+            .setCoroutineContext(this.coroutineContext)
+            .build()
+
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.History))
+            assertTrue(this.getValue(Migration.History).success)
+        }
+        verifyZeroInteractions(crashReporter)
+        verifyZeroInteractions(historyStorage)
+    }
+
+    @Test
+    fun `bookmarks migration - browserdb does not exist`() = runBlocking {
+        val crashReporter: CrashReporter = mock()
+        val historyStorage: PlacesHistoryStorage = mock()
+        val bookmarksStorage: PlacesBookmarksStorage = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateHistory(historyStorage)
+            .migrateBookmarks(bookmarksStorage)
+            .setBrowserDbName("doesnotexist.db")
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("combined"), "basic").absolutePath, true)
+            )
+            .setCoroutineContext(this.coroutineContext)
+            .build()
+
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(2, this.size)
+            assertTrue(this.containsKey(Migration.Bookmarks))
+            assertTrue(this.containsKey(Migration.History))
+            assertTrue(this.getValue(Migration.Bookmarks).success)
+            assertTrue(this.getValue(Migration.History).success)
+        }
+        verifyZeroInteractions(crashReporter)
+        verifyZeroInteractions(bookmarksStorage)
+    }
+
+    @Test
     fun `logins migrations - no master password`() = runBlocking {
         val crashReporter: CrashReporter = mock()
         val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
