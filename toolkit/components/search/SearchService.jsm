@@ -3134,6 +3134,12 @@ SearchService.prototype = {
   },
 
   set defaultPrivateEngine(newEngine) {
+    if (!this._separatePrivateDefaultPrefValue) {
+      Services.prefs.setBoolPref(
+        SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+        true
+      );
+    }
     this._setEngineDefault(this._separatePrivateDefault, newEngine);
   },
 
