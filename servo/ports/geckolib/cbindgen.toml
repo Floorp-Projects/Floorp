@@ -715,3 +715,9 @@ public:
   // The implementation of IPC LayersMessages needs this to be public.
   StyleGenericTranslate(): tag(Tag::None) {}
 """
+
+"GenericOffsetPath" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericOffsetPath(): tag(Tag::None) {}
+"""
