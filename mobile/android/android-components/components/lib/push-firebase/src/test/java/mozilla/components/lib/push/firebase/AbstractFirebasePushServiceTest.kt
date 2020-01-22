@@ -88,7 +88,7 @@ class AbstractFirebasePushServiceTest {
         verify(processor).onError(captor.capture())
 
         assertTrue(captor.value is PushError.MalformedMessage)
-        assertTrue(captor.value.desc.contains("NoSuchElementException"))
+        assertTrue(captor.value.message.contains("NoSuchElementException"))
     }
 
     @Test

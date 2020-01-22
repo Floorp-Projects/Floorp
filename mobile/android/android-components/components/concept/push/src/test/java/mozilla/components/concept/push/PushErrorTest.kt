@@ -6,7 +6,6 @@ package mozilla.components.concept.push
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.lang.IllegalStateException
 
 class PushErrorTest {
     @Test
@@ -14,18 +13,20 @@ class PushErrorTest {
         // This test is mostly to satisfy coverage.
 
         var error: PushError = PushError.MalformedMessage("message")
-        assertEquals("message", error.desc)
+        assertEquals("message", error.message)
 
         error = PushError.Network("network")
-        assertEquals("network", error.desc)
+        assertEquals("network", error.message)
 
         error = PushError.Registration("reg")
-        assertEquals("reg", error.desc)
+        assertEquals("reg", error.message)
 
-        error = PushError.Rust(IllegalStateException("boo"))
-        assertEquals("java.lang.IllegalStateException: boo", error.desc)
+        val exception = IllegalStateException()
+        val rustError = PushError.Rust(exception, "rust")
+        assertEquals("rust", rustError.message)
+        assertEquals(exception, rustError.cause)
 
         error = PushError.ServiceUnavailable("service")
-        assertEquals("service", error.desc)
+        assertEquals("service", error.message)
     }
 }

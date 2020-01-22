@@ -15,10 +15,17 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import mozilla.appservices.push.AlreadyRegisteredError
 import mozilla.appservices.push.CommunicationError
 import mozilla.appservices.push.CommunicationServerError
+import mozilla.appservices.push.CryptoError
+import mozilla.appservices.push.MissingRegistrationTokenError
 import mozilla.appservices.push.RecordNotFoundError
+import mozilla.appservices.push.StorageError
+import mozilla.appservices.push.StorageSqlError
 import mozilla.appservices.push.SubscriptionResponse
+import mozilla.appservices.push.TranscodingError
+import mozilla.appservices.push.UrlParseError
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
@@ -182,17 +189,9 @@ class AutoPushFeature(
     }
 
     override fun onError(error: PushError) {
-        logger.error("${error.javaClass.simpleName} error: ${error.desc}")
+        logger.error("${error.javaClass.simpleName} error: ${error.message}")
 
-        // Submit via our configured CrashReporter, as well.
-        when (error) {
-            is PushError.Rust -> {
-                crashReporter?.submitCaughtException(error.cause)
-            }
-            else -> {
-                crashReporter?.submitCaughtException(GenericPushError(error.desc))
-            }
-        }
+        crashReporter?.submitCaughtException(error)
     }
 
     /**
@@ -319,7 +318,7 @@ class AutoPushFeature(
 
     private fun CoroutineScope.launchAndTry(block: suspend CoroutineScope.() -> Unit): Job {
         return launchAndTry(block, { e ->
-            onError(PushError.Rust(e))
+            onError(PushError.Rust(e, e.message.orEmpty()))
         })
     }
 
@@ -351,6 +350,9 @@ class AutoPushFeature(
     }
 }
 
+/**
+ * Catches all known non-fatal push errors logs.
+ */
 internal fun CoroutineScope.launchAndTry(
     block: suspend CoroutineScope.() -> Unit,
     errorBlock: (Exception) -> Unit
@@ -359,7 +361,21 @@ internal fun CoroutineScope.launchAndTry(
         try {
             block()
         } catch (e: RustPushError) {
-            if (e !is CommunicationServerError && e !is CommunicationError && e !is RecordNotFoundError) {
+            val result = when (e) {
+                is CryptoError,
+                is CommunicationError,
+                is CommunicationServerError,
+                is AlreadyRegisteredError,
+                is StorageError,
+                is MissingRegistrationTokenError,
+                is StorageSqlError,
+                is TranscodingError,
+                is RecordNotFoundError,
+                is UrlParseError -> false
+                else -> true
+            }
+
+            if (result) {
                 throw e
             }
 
@@ -367,8 +383,6 @@ internal fun CoroutineScope.launchAndTry(
         }
     }
 }
-
-private class GenericPushError(desc: String) : Exception(desc)
 
 /**
  * The different kind of message types that a [EncryptedPushMessage] can be:

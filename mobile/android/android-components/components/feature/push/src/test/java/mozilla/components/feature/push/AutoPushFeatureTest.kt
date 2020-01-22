@@ -16,11 +16,13 @@ import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.EncryptedPushMessage
+import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushService
 import mozilla.components.feature.push.AutoPushFeature.Companion.LAST_VERIFIED
 import mozilla.components.feature.push.AutoPushFeature.Companion.PERIODIC_INTERVAL_MILLISECONDS
 import mozilla.components.feature.push.AutoPushFeature.Companion.PREFERENCE_NAME
 import mozilla.components.feature.push.AutoPushFeature.Companion.PREF_TOKEN
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -336,6 +338,25 @@ class AutoPushFeatureTest {
         }, owner, false)
 
         feature.verifyActiveSubscriptions()
+    }
+
+    @Test
+    fun `crash reporter is notified of errors`() = runBlockingTest {
+        val native: PushConnection = TestPushConnection(true)
+        val crashReporter: CrashReporter = mock()
+        val feature = spy(
+            AutoPushFeature(
+                context = testContext,
+                service = mock(),
+                config = mock(),
+                coroutineContext = coroutineContext,
+                connection = native,
+                crashReporter = crashReporter
+            )
+        )
+        feature.onError(PushError.Rust(PushError.MalformedMessage("Bad things happened!")))
+
+        verify(crashReporter).submitCaughtException(any<PushError.Rust>())
     }
 
     companion object {
