@@ -234,6 +234,7 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
     @imports('os')
     @imports(_from='mozbuild.configure.util', _import='LineIO')
     @imports(_from='mozbuild.shellutil', _import='quote')
+    @imports(_from='six', _import='ensure_binary')
     @imports(_from='tempfile', _import='mkstemp')
     @imports(_from='textwrap', _import='dedent')
     def rust_target(rustc, host_or_target, compiler_info,
@@ -360,7 +361,7 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
         # Check to see whether our rustc has a reasonably functional stdlib
         # for our chosen target.
         target_arg = '--target=' + rustc_target
-        in_fd, in_path = mkstemp(prefix='conftest', suffix='.rs')
+        in_fd, in_path = mkstemp(prefix='conftest', suffix='.rs', text=True)
         out_fd, out_path = mkstemp(prefix='conftest', suffix='.rlib')
         os.close(out_fd)
         try:
@@ -369,7 +370,7 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
             with LineIO(lambda l: log.debug('| %s', l)) as out:
                 out.write(source)
 
-            os.write(in_fd, source)
+            os.write(in_fd, ensure_binary(source))
             os.close(in_fd)
 
             cmd = [
