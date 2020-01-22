@@ -831,3 +831,51 @@ add_task(async function test_JSON_type() {
 
   ok(!valid, "Object is not valid since input wasn't an object");
 });
+
+add_task(async function test_enum() {
+  let schema = {
+    type: "string",
+    enum: ["one", "two"],
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    "one",
+    schema
+  );
+  ok(valid && parsed == "one", "Parsed string value correctly");
+
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    "three",
+    schema
+  );
+  ok(!valid, "String value wasn't in enum");
+});
+
+add_task(async function test_bool_enum() {
+  let schema = {
+    type: "boolean",
+    enum: ["one", "two"],
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    true,
+    schema
+  );
+  ok(valid && parsed === true, "Enum is ignored because it is a boolean.");
+});
+
+add_task(async function test_boolint_enum() {
+  let schema = {
+    type: "boolean",
+    enum: ["one", "two"],
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
+  ok(
+    valid && parsed === true,
+    "Enum is ignored because it is a boolean converted from an integer."
+  );
+});
