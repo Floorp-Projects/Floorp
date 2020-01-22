@@ -7,7 +7,6 @@ geckoview.jar:
     content/ext-c-android.js
     content/ext-c-tabs.js
     content/ext-browserAction.js
-    content/ext-browsingData.js
     content/ext-pageAction.js
     content/ext-tabs.js
     content/ext-utils.js
