@@ -45,7 +45,7 @@
         document.querySelector("#perf-settings-features-summary").click();
 
         is(selectors.getFeatures(getState()).join(","),
-          filterFeatures(["js", "leaf", "stackwalk"]).join(","),
+          filterFeatures(["js"]).join(","),
           "The features starts out with the default");
         is(recordingPreferencesCalls.length, 0,
           "No calls have been made to set preferences");
@@ -55,18 +55,18 @@
 
 
         is(selectors.getFeatures(getState()).join(","),
-          filterFeatures(["leaf", "stackwalk"]).join(","),
+          filterFeatures([]).join(","),
           "The feature has been removed.");
         is(recordingPreferencesCalls.length, 1,
           "The preferences have been updated.");
         is(recordingPreferencesCalls[0].features.join(","),
-          filterFeatures(["leaf", "stackwalk"]).join(","),
+          filterFeatures([]).join(","),
           "The preferences have been updated.");
 
         // Enable a feature
         document.querySelector("#perf-settings-feature-checkbox-screenshots").click();
         is(selectors.getFeatures(getState()).join(","),
-          filterFeatures(["screenshots", "leaf", "stackwalk"]).join(","),
+          filterFeatures(["screenshots"]).join(","),
           "Another feature was added");
 
         // Start the profiler by clicking the start button, and flushing the async
@@ -77,7 +77,7 @@
         is(perfFrontMock._startProfilerCalls.length, 1,
           "Start profiler was called once");
         is(perfFrontMock._startProfilerCalls[0].features.join(","),
-          filterFeatures(["screenshots", "leaf", "stackwalk"]).join(","),
+          filterFeatures(["screenshots"]).join(","),
           "Start profiler was called with the correct features");
       });
     </script>
