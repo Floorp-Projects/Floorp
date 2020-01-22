@@ -29,7 +29,7 @@ object Performance {
     fun instrumentColdStartupToHomescreenTime(activity: HomeActivity) {
         // For greater accuracy, we could add an onDrawListener instead of a preDrawListener but:
         // - single use onDrawListeners are not built-in and it's non-trivial to write one
-        // - the difference is timing is minimal (< 7ms on Pixel 2)
+        // - the difference in timing is minimal (< 7ms on Pixel 2)
         // - if we compare against another app using a preDrawListener, it should be comparable
         //
         // Unfortunately, this is tightly coupled to the root view of HomeActivity's view hierarchy
