@@ -218,6 +218,8 @@ class PrettyPrinted:
 class ASYNC(PrettyPrinted):
     pretty = 'async'
 
+class TAINTED(PrettyPrinted):
+    pretty = 'tainted'
 
 class INTR(PrettyPrinted):
     pretty = 'intr'
@@ -302,6 +304,7 @@ class MessageDecl(Node):
         self.inParams = []
         self.outParams = []
         self.compress = ''
+        self.tainted = ''
         self.verify = ''
 
     def addInParams(self, inParamsList):
@@ -316,6 +319,8 @@ class MessageDecl(Node):
                 self.compress = modifier
             elif modifier == 'verify':
                 self.verify = modifier
+            elif modifier.startswith('tainted'):
+                self.tainted = modifier
             elif modifier != '':
                 raise Exception("Unexpected message modifier `%s'" % modifier)
 
