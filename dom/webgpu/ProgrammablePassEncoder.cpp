@@ -16,5 +16,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ProgrammablePassEncoder)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ProgrammablePassEncoder)
 
+ProgrammablePassEncoder::ProgrammablePassEncoder() = default;
+
 }  // namespace webgpu
 }  // namespace mozilla

@@ -11,10 +11,10 @@
 namespace mozilla {
 namespace webgpu {
 
-Sampler::~Sampler() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(Sampler, mParent)
 GPU_IMPL_JS_WRAP(Sampler)
+
+Sampler::~Sampler() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla

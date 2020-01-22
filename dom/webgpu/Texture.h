@@ -27,6 +27,7 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
  private:
   Texture() = delete;
   virtual ~Texture();
+  void Cleanup() {}
 
  public:
 };

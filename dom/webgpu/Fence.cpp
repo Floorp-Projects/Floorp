@@ -10,8 +10,6 @@
 namespace mozilla {
 namespace webgpu {
 
-Fence::~Fence() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(Fence, mParent)
 GPU_IMPL_JS_WRAP(Fence)
 

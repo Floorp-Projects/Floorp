@@ -11,7 +11,5 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(DeviceLostInfo, mParent)
 GPU_IMPL_JS_WRAP(DeviceLostInfo)
 
-DeviceLostInfo::~DeviceLostInfo() = default;
-
 }  // namespace webgpu
 }  // namespace mozilla

@@ -7,6 +7,8 @@
 #define GPU_ComputePassEncoder_H_
 
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 #include "ObjectModel.h"
 #include "ProgrammablePassEncoder.h"
 
@@ -25,12 +27,18 @@ class ComputePassEncoder final : public ProgrammablePassEncoder,
       ComputePassEncoder, ProgrammablePassEncoder)
   GPU_DECL_JS_WRAP(ComputePassEncoder)
 
-  ComputePassEncoder() = delete;
+  ComputePassEncoder(CommandEncoder* const aParent,
+                     const dom::GPUComputePassDescriptor& aDesc);
 
  private:
   virtual ~ComputePassEncoder();
+  void Cleanup() {}
+
+  ffi::WGPURawPass mRaw;
 
  public:
+  void Dispatch(uint32_t x, uint32_t y, uint32_t z);
+  void EndPass(ErrorResult& aRv);
 };
 
 }  // namespace webgpu

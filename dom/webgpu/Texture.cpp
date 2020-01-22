@@ -10,10 +10,10 @@
 namespace mozilla {
 namespace webgpu {
 
-Texture::~Texture() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(Texture, mParent)
 GPU_IMPL_JS_WRAP(Texture)
+
+Texture::~Texture() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla

@@ -11,10 +11,10 @@
 namespace mozilla {
 namespace webgpu {
 
-PipelineLayout::~PipelineLayout() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(PipelineLayout, mParent)
 GPU_IMPL_JS_WRAP(PipelineLayout)
+
+PipelineLayout::~PipelineLayout() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla

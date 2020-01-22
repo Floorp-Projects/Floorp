@@ -36,6 +36,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
 
  private:
   virtual ~Buffer();
+  void Cleanup();
 
   const RawId mId;
   // Note: we can't map a buffer with the size that don't fit into `size_t`

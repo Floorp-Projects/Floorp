@@ -22,6 +22,7 @@ class Sampler final : public ObjectBase, public ChildOf<Device> {
  private:
   Sampler() = delete;
   virtual ~Sampler();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

@@ -22,6 +22,7 @@ class ShaderModule final : public ObjectBase, public ChildOf<Device> {
  private:
   ShaderModule() = delete;
   virtual ~ShaderModule();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

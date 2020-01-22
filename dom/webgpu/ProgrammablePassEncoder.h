@@ -29,10 +29,11 @@ class ProgrammablePassEncoder : public nsISupports, public ObjectBase {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ProgrammablePassEncoder)
 
-  ProgrammablePassEncoder() = delete;
+  ProgrammablePassEncoder();
 
  protected:
-  virtual ~ProgrammablePassEncoder() = default;
+  ~ProgrammablePassEncoder() = default;
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

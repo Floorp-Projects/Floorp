@@ -21,6 +21,7 @@ class ValidationError final : public nsWrapperCache, public ChildOf<Device> {
 
  private:
   virtual ~ValidationError();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

@@ -40,6 +40,16 @@ class WebGPUChild final : public PWebGPUChild {
                                     const dom::GPUDeviceDescriptor& aDesc);
   RawId DeviceCreateBuffer(RawId aSelfId,
                            const dom::GPUBufferDescriptor& aDesc);
+  RawId DeviceCreateCommandEncoder(
+      RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc);
+  RawId CommandEncoderFinish(RawId aSelfId,
+                             const dom::GPUCommandBufferDescriptor& aDesc);
+  void QueueSubmit(RawId aSelfId, const nsTArray<RawId>& aCommandBufferIds);
+
+  void DestroyAdapter(RawId aId);
+  void DestroyBuffer(RawId aId);
+  void DestroyCommandEncoder(RawId aId);
+  void DestroyCommandBuffer(RawId aId);
 
  private:
   virtual ~WebGPUChild();
