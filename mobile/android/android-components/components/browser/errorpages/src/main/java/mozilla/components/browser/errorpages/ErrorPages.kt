@@ -12,7 +12,6 @@ import mozilla.components.support.ktx.android.content.appName
 object ErrorPages {
 
     private const val HTML_RESOURCE_FILE = "error_page_js.html"
-    private const val CSS_RESOURCE_FILE = "error_style.css"
 
     /**
      * Load and generate error page for the given error type and html/css resources.
@@ -70,8 +69,7 @@ object ErrorPages {
         context: Context,
         errorType: ErrorType,
         uri: String? = null,
-        htmlResource: String = HTML_RESOURCE_FILE,
-        cssResource: String = CSS_RESOURCE_FILE
+        htmlResource: String = HTML_RESOURCE_FILE
     ): String {
         val title = context.getString(errorType.titleRes)
         val button = context.getString(errorType.refreshButtonRes)
@@ -100,7 +98,6 @@ object ErrorPages {
             "&button=$button" +
             "&description=$description" +
             "&image=$imageName" +
-            "&css=$cssResource" +
             "&showSSL=$showSSLAdvanced" +
             "&badCertAdvanced=$badCertAdvanced" +
             "&badCertTechInfo=$badCertTechInfo" +

@@ -111,14 +111,12 @@ class ErrorPagesTest {
         val context = spy(testContext)
 
         val htmlFilename = "htmlResource.html"
-        val cssFilename = "cssResource.css"
 
         val errorPage = createUrlEncodedErrorPage(
             context,
             errorType,
             null,
-            htmlFilename,
-            cssFilename
+            htmlFilename
         )
 
         val expectedImageName = if (errorType.imageNameRes != null) {
@@ -131,6 +129,5 @@ class ErrorPagesTest {
         assertTrue(errorPage.contains("&button=${context.resources.getString(errorType.refreshButtonRes)}"))
         assertTrue(errorPage.contains("&description=${context.resources.getString(errorType.messageRes)}"))
         assertTrue(errorPage.contains("&image=$expectedImageName"))
-        assertTrue(errorPage.contains("&css=$cssFilename"))
     }
 }
