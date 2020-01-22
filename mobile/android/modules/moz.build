@@ -31,7 +31,6 @@ EXTRA_JS_MODULES += [
     'MediaPlayerApp.jsm',
     'NetErrorHelper.jsm',
     'Notifications.jsm',
-    'Prompt.jsm',
     'RuntimePermissions.jsm',
     'Sanitizer.jsm',
     'SharedPreferences.jsm',
