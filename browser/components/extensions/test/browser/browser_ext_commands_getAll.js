@@ -106,7 +106,7 @@ add_task(async function() {
           );
 
           browser.test.assertEq(
-            null,
+            "",
             command.shortcut,
             "The shortcut should be empty if not provided"
           );
@@ -122,7 +122,7 @@ add_task(async function() {
           );
 
           browser.test.assertEq(
-            null,
+            "",
             command.shortcut,
             "The shortcut should be empty if not provided"
           );

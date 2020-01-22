@@ -1099,6 +1099,10 @@ const FORMATS = {
       `https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json/commands#Key_combinations`;
     throw new Error(errorMessage);
   },
+
+  manifestShortcutKeyOrEmpty(string, context) {
+    return string === "" ? "" : FORMATS.manifestShortcutKey(string, context);
+  },
 };
 
 // Schema files contain namespaces, and each namespace contains types,
