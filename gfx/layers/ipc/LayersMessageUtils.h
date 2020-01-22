@@ -815,6 +815,22 @@ struct ParamTraits<mozilla::layers::CompositionPayload> {
   }
 };
 
+template <>
+struct ParamTraits<mozilla::RayReferenceData> {
+  typedef mozilla::RayReferenceData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mInitialPosition);
+    WriteParam(aMsg, aParam.mContainingBlockRect);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->mInitialPosition) &&
+            ReadParam(aMsg, aIter, &aResult->mContainingBlockRect));
+  }
+};
+
 inline mozilla::ipc::ByteBuf ConvertToByteBuf(mozilla::StyleVecU8&& aVec) {
   mozilla::ipc::ByteBuf out(aVec.data, aVec.length, aVec.capacity);
   aVec.data = nullptr;
@@ -834,71 +850,30 @@ inline mozilla::StyleVecU8 ConvertToStyleVecU8(mozilla::ipc::ByteBuf&& aOther) {
   return v;
 }
 
-template <>
-struct ParamTraits<mozilla::LengthPercentage> {
-  typedef mozilla::LengthPercentage paramType;
+#define IMPL_PARAMTRAITS_BY_SERDE(type_)                                    \
+  template <>                                                               \
+  struct ParamTraits<mozilla::type_> {                                      \
+    typedef mozilla::type_ paramType;                                       \
+    static void Write(Message* aMsg, const paramType& aParam) {             \
+      mozilla::StyleVecU8 v;                                                \
+      mozilla::DebugOnly<bool> rv = Servo_##type_##_Serialize(&aParam, &v); \
+      MOZ_ASSERT(rv, "Serialize ##type_## failed");                         \
+      WriteParam(aMsg, ConvertToByteBuf(std::move(v)));                     \
+    }                                                                       \
+    static bool Read(const Message* aMsg, PickleIterator* aIter,            \
+                     paramType* aResult) {                                  \
+      mozilla::ipc::ByteBuf in;                                             \
+      bool rv = ReadParam(aMsg, aIter, &in);                                \
+      if (!rv) {                                                            \
+        return false;                                                       \
+      }                                                                     \
+      mozilla::StyleVecU8 v = ConvertToStyleVecU8(std::move(in));           \
+      return v.data && Servo_##type_##_Deserialize(&v, aResult);            \
+    }                                                                       \
+  };
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    mozilla::StyleVecU8 v;
-    mozilla::DebugOnly<bool> rv = Servo_LengthPercentage_Serialize(&aParam, &v);
-    MOZ_ASSERT(rv, "Serialize LengthPercentage failed");
-
-    WriteParam(aMsg, ConvertToByteBuf(std::move(v)));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    mozilla::ipc::ByteBuf in;
-    bool rv = ReadParam(aMsg, aIter, &in);
-    if (!rv) {
-      return false;
-    }
-
-    mozilla::StyleVecU8 v = ConvertToStyleVecU8(std::move(in));
-    return v.data && Servo_LengthPercentage_Deserialize(&v, aResult);
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::RayFunction> {
-  typedef mozilla::RayFunction paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    mozilla::StyleVecU8 v;
-    mozilla::DebugOnly<bool> rv = Servo_RayFunction_Serialize(&aParam, &v);
-    MOZ_ASSERT(rv, "Serialize RayFunction failed");
-
-    WriteParam(aMsg, ConvertToByteBuf(std::move(v)));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    mozilla::ipc::ByteBuf in;
-    bool rv = ReadParam(aMsg, aIter, &in);
-    if (!rv) {
-      return false;
-    }
-
-    mozilla::StyleVecU8 v = ConvertToStyleVecU8(std::move(in));
-    return v.data && Servo_RayFunction_Deserialize(&v, aResult);
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::RayReferenceData> {
-  typedef mozilla::RayReferenceData paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mInitialPosition);
-    WriteParam(aMsg, aParam.mContainingBlockRect);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mInitialPosition) &&
-            ReadParam(aMsg, aIter, &aResult->mContainingBlockRect));
-  }
-};
+IMPL_PARAMTRAITS_BY_SERDE(LengthPercentage)
+IMPL_PARAMTRAITS_BY_SERDE(RayFunction)
 
 } /* namespace IPC */
 
