@@ -29,7 +29,6 @@ EXTRA_JS_MODULES += [
     'HomeProvider.jsm',
     'LightweightThemeConsumer.jsm',
     'MediaPlayerApp.jsm',
-    'NetErrorHelper.jsm',
     'Notifications.jsm',
     'RuntimePermissions.jsm',
     'Sanitizer.jsm',
