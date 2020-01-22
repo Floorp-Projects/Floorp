@@ -107,9 +107,7 @@ nsXULElement::~nsXULElement() {}
 
 void nsXULElement::MaybeUpdatePrivateLifetime() {
   if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::windowtype,
-                  NS_LITERAL_STRING("navigator:browser"), eCaseMatters) ||
-      AttrValueIs(kNameSpaceID_None, nsGkAtoms::windowtype,
-                  NS_LITERAL_STRING("navigator:geckoview"), eCaseMatters)) {
+                  NS_LITERAL_STRING("navigator:browser"), eCaseMatters)) {
     return;
   }
 

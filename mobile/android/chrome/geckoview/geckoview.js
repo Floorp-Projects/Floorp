@@ -200,7 +200,7 @@ var ModuleManager = {
     const windowType = aSettings.isPopup
       ? "navigator:popup"
       : "navigator:geckoview";
-    window.document.documentElement.setAttribute("windowtype", windowType);
+    window.document.documentElement.setAttribute("windowType", windowType);
 
     this.forEach(module => {
       if (module.impl) {
