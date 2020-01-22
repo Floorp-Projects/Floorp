@@ -36,7 +36,6 @@ EXTRA_JS_MODULES += [
     'Prompt.jsm',
     'RuntimePermissions.jsm',
     'Sanitizer.jsm',
-    'SelectHelper.jsm',
     'SharedPreferences.jsm',
     'Snackbars.jsm',
     'WebsiteMetadata.jsm'
