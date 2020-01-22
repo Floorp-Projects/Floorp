@@ -2722,6 +2722,7 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
   bool needsArgCheck_ : 1;
   bool needsClassCheck_ : 1;
   bool maybeCrossRealm_ : 1;
+  bool needsThisCheck_ : 1;
 
   MCall(WrappedFunction* target, uint32_t numActualArgs, bool construct,
         bool ignoresReturnValue)
@@ -2732,7 +2733,8 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
         ignoresReturnValue_(ignoresReturnValue),
         needsArgCheck_(true),
         needsClassCheck_(true),
-        maybeCrossRealm_(true) {
+        maybeCrossRealm_(true),
+        needsThisCheck_(false) {
     setResultType(MIRType::Value);
   }
 
@@ -2755,6 +2757,12 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
 
   bool maybeCrossRealm() const { return maybeCrossRealm_; }
   void setNotCrossRealm() { maybeCrossRealm_ = false; }
+
+  bool needsThisCheck() const { return needsThisCheck_; }
+  void setNeedsThisCheck() {
+    MOZ_ASSERT(construct_);
+    needsThisCheck_ = true;
+  }
 
   MDefinition* getFunction() const { return getOperand(FunctionOperandIndex); }
   void replaceFunction(MInstruction* newfunc) {

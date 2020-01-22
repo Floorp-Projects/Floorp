@@ -346,8 +346,10 @@ class IonBuilder : public MIRGenerator,
   MDefinition* createThisScripted(MDefinition* callee, MDefinition* newTarget);
   MDefinition* createThisScriptedSingleton(JSFunction* target);
   MDefinition* createThisScriptedBaseline(MDefinition* callee);
+  MDefinition* createThisSlow(MDefinition* callee, MDefinition* newTarget,
+                              bool inlining);
   MDefinition* createThis(JSFunction* target, MDefinition* callee,
-                          MDefinition* newTarget);
+                          MDefinition* newTarget, bool inlining);
   MInstruction* createNamedLambdaObject(MDefinition* callee,
                                         MDefinition* envObj);
   AbortReasonOr<MInstruction*> createCallObject(MDefinition* callee,

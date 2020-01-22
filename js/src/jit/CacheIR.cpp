@@ -5112,9 +5112,8 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
     return true;
   }
 
-  // Saving the template object is unsound for super(), as a single
-  // callsite can have multiple possible prototype objects created
-  // (via different newTargets)
+  // Don't allocate a template object for super() calls as Ion doesn't support
+  // super() yet.
   bool isSuper = op_ == JSOp::SuperCall || op_ == JSOp::SpreadSuperCall;
   if (isSuper) {
     return true;
@@ -5268,9 +5267,8 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
                                                  MutableHandleObject res) {
   AutoRealm ar(cx_, calleeFunc);
 
-  // Saving the template object is unsound for super(), as a single
-  // callsite can have multiple possible prototype objects created
-  // (via different newTargets)
+  // Don't allocate a template object for super() calls as Ion doesn't support
+  // super() yet.
   bool isSuper = op_ == JSOp::SuperCall || op_ == JSOp::SpreadSuperCall;
   if (isSuper) {
     return true;
@@ -5437,9 +5435,8 @@ bool CallIRGenerator::getTemplateObjectForClassHook(
   MOZ_ASSERT(IsConstructPC(pc_));
   JSNative hook = calleeObj->constructHook();
 
-  // Saving the template object is unsound for super(), as a single
-  // callsite can have multiple possible prototype objects created
-  // (via different newTargets)
+  // Don't allocate a template object for super() calls as Ion doesn't support
+  // super() yet.
   bool isSuper = op_ == JSOp::SuperCall || op_ == JSOp::SpreadSuperCall;
   if (isSuper) {
     return true;

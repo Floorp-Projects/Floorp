@@ -416,8 +416,8 @@ bool JSFunction::needsPrototypeProperty() {
    * created eagerly.
    *
    * ES5 15.3.4.5: bound functions don't have a prototype property. The
-   * isBuiltin() test covers this case because bound functions are native
-   * (and thus built-in) functions by definition/construction.
+   * isBuiltin() test covers this case because bound functions are self-hosted
+   * (scripted) built-ins.
    *
    * ES6 9.2.8 MakeConstructor defines the .prototype property on constructors.
    * Generators are not constructors, but they have a .prototype property
@@ -430,6 +430,27 @@ bool JSFunction::needsPrototypeProperty() {
    * - Async functions
    */
   return !isBuiltin() && (isConstructor() || isGenerator());
+}
+
+bool JSFunction::hasNonConfigurablePrototypeDataProperty() {
+  if (!isBuiltin()) {
+    return needsPrototypeProperty();
+  }
+
+  if (isSelfHostedBuiltin()) {
+    // Self-hosted constructors have a non-configurable .prototype data
+    // property. See the MakeConstructible intrinsic.
+    return isConstructor();
+  }
+
+  if (!isConstructor()) {
+    // We probably don't have a .prototype property. Avoid the lookup below.
+    return false;
+  }
+
+  PropertyName* prototypeName = runtimeFromMainThread()->commonNames->prototype;
+  Shape* shape = lookupPure(prototypeName);
+  return shape && shape->isDataProperty() && !shape->configurable();
 }
 
 static bool fun_mayResolve(const JSAtomState& names, jsid id, JSObject*) {
