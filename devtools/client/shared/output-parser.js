@@ -58,9 +58,6 @@ const BASIC_SHAPE_FUNCTIONS = ["polygon", "circle", "ellipse", "inset"];
 const BACKDROP_FILTER_ENABLED = Services.prefs.getBoolPref(
   "layout.css.backdrop-filter.enabled"
 );
-const SHARED_SWATCH_CLASS = "ruleview-swatch";
-const COLOR_SWATCH_CLASS = "ruleview-colorswatch";
-
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -665,6 +662,8 @@ OutputParser.prototype = {
     if (options.bezierSwatchClass) {
       const swatch = this._createNode("span", {
         class: options.bezierSwatchClass,
+        tabindex: "0",
+        role: "button",
       });
       container.appendChild(swatch);
     }
@@ -739,6 +738,8 @@ OutputParser.prototype = {
 
     const toggle = this._createNode("span", {
       class: options.shapeSwatchClass,
+      tabindex: "0",
+      role: "button",
     });
 
     for (const { prefix, coordParser } of shapeTypes) {
@@ -1409,6 +1410,8 @@ OutputParser.prototype = {
     if (options.angleSwatchClass) {
       const swatch = this._createNode("span", {
         class: options.angleSwatchClass,
+        tabindex: "0",
+        role: "button",
       });
       this.angleSwatches.set(swatch, angleObj);
       swatch.addEventListener("mousedown", this._onAngleSwatchMouseDown);
@@ -1482,16 +1485,21 @@ OutputParser.prototype = {
       });
 
       if (options.colorSwatchClass) {
-        const swatch = this._createNode(
-          options.colorSwatchClass ===
-            `${SHARED_SWATCH_CLASS} ${COLOR_SWATCH_CLASS}`
-            ? "button"
-            : "span",
-          {
-            class: options.colorSwatchClass,
-            style: "background-color:" + color,
-          }
-        );
+        let attributes = {
+          class: options.colorSwatchClass,
+          style: "background-color:" + color,
+        };
+
+        // Color swatches next to values trigger the color editor everywhere aside from
+        // the Computed panel where values are read-only.
+        if (!options.colorSwatchClass.startsWith("computed-")) {
+          attributes = { ...attributes, tabindex: "0", role: "button" };
+        }
+
+        // The swatch is a <span> instead of a <button> intentionally. See Bug 1597125.
+        // It is made keyboard accessbile via `tabindex` and has keydown handlers
+        // attached for pressing SPACE and RETURN in SwatchBasedEditorTooltip.js
+        const swatch = this._createNode("span", attributes);
         this.colorSwatches.set(swatch, colorObj);
         swatch.addEventListener("mousedown", this._onColorSwatchMouseDown);
         EventEmitter.decorate(swatch);
@@ -1544,6 +1552,8 @@ OutputParser.prototype = {
     if (options.filterSwatchClass) {
       const swatch = this._createNode("span", {
         class: options.filterSwatchClass,
+        tabindex: "0",
+        role: "button",
       });
       container.appendChild(swatch);
     }
