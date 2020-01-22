@@ -6570,11 +6570,11 @@ void Document::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
   }
 }
 
-void Document::SetStyleSheetApplicableState(StyleSheet& aSheet,
-                                            bool aApplicable) {
+void Document::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
+  const bool applicable = aSheet.IsApplicable();
   // If we're actually in the document style sheet list
   if (mStyleSheets.IndexOf(&aSheet) != mStyleSheets.NoIndex) {
-    if (aApplicable) {
+    if (applicable) {
       AddStyleSheetToStyleSets(&aSheet);
     } else {
       RemoveStyleSheetFromStyleSets(&aSheet);
@@ -6586,7 +6586,7 @@ void Document::SetStyleSheetApplicableState(StyleSheet& aSheet,
     init.mBubbles = true;
     init.mCancelable = true;
     init.mStylesheet = &aSheet;
-    init.mApplicable = aApplicable;
+    init.mApplicable = applicable;
 
     RefPtr<StyleSheetApplicableStateChangeEvent> event =
         StyleSheetApplicableStateChangeEvent::Constructor(
