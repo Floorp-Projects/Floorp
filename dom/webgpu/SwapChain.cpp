@@ -8,10 +8,10 @@
 namespace mozilla {
 namespace webgpu {
 
-SwapChain::~SwapChain() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(SwapChain, mParent)
 GPU_IMPL_JS_WRAP(SwapChain)
+
+SwapChain::~SwapChain() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla

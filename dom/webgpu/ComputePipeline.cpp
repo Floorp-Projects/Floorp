@@ -10,8 +10,6 @@
 namespace mozilla {
 namespace webgpu {
 
-ComputePipeline::~ComputePipeline() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(ComputePipeline, mParent)
 GPU_IMPL_JS_WRAP(ComputePipeline)
 

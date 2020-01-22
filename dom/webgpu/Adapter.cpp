@@ -14,12 +14,20 @@
 namespace mozilla {
 namespace webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(Adapter, mBridge, mParent)
+GPU_IMPL_CYCLE_COLLECTION(Adapter, mParent, mBridge)
 GPU_IMPL_JS_WRAP(Adapter)
 
 Adapter::Adapter(Instance* const aParent, RawId aId)
     : ChildOf(aParent), mBridge(aParent->GetBridge()), mId(aId) {}
-Adapter::~Adapter() = default;
+
+Adapter::~Adapter() { Cleanup(); }
+
+void Adapter::Cleanup() {
+  if (mValid && mBridge && mBridge->IsOpen()) {
+    mValid = false;
+    mBridge->DestroyAdapter(mId);
+  }
+}
 
 WebGPUChild* Adapter::GetBridge() const { return mBridge; }
 

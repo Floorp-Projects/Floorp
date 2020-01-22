@@ -24,6 +24,7 @@ class OutOfMemoryError final : public nsWrapperCache, public ChildOf<Device> {
 
  private:
   virtual ~OutOfMemoryError();
+  void Cleanup() {}
 
  public:
 };

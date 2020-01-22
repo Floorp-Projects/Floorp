@@ -31,7 +31,8 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
 
  private:
   Adapter() = delete;
-  virtual ~Adapter();
+  ~Adapter();
+  void Cleanup();
 
   const RefPtr<WebGPUChild> mBridge;
   const RawId mId;

@@ -34,6 +34,8 @@ class ObjectBase : public nsWrapperCache {
 
  protected:
   virtual ~ObjectBase() = default;
+  // Internal mutability model for WebGPU objects.
+  bool mValid = true;
 
  public:
   void GetLabel(nsAString& aValue) const;
@@ -56,10 +58,21 @@ class ObjectBase : public nsWrapperCache {
     return dom::GPU##T##_Binding::Wrap(cx, this, givenProto);                \
   }
 
-#define GPU_IMPL_CYCLE_COLLECTION(T, ...)            \
-  NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(T, AddRef)    \
-  NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(T, Release) \
-  NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(T, __VA_ARGS__)
+// Note: we don't use `NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE` directly
+// because there is a custom action we need to always do.
+#define GPU_IMPL_CYCLE_COLLECTION(T, ...)             \
+  NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(T, AddRef)     \
+  NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(T, Release)  \
+  NS_IMPL_CYCLE_COLLECTION_CLASS(T)                   \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(T)            \
+    tmp->Cleanup();                                   \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)      \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_END                 \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(T)          \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)    \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END               \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(T)
 
 template <typename T>
 void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,

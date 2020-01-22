@@ -21,9 +21,9 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Buffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Buffer, Release)
 NS_IMPL_CYCLE_COLLECTION_CLASS(Buffer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Buffer)
+  tmp->Cleanup();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mMapping.reset();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Buffer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
@@ -45,10 +45,15 @@ Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize)
 }
 
 Buffer::~Buffer() {
+  Cleanup();
+  mozilla::DropJSObjects(this);
+}
+
+void Buffer::Cleanup() {
   if (mParent) {
     mParent->DestroyBuffer(mId);
   }
-  mozilla::DropJSObjects(this);
+  mMapping.reset();
 }
 
 void Buffer::InitMapping(ipc::Shmem&& aShmem, JSObject* aArrayBuffer) {

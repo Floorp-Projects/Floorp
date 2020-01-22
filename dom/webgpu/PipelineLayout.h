@@ -22,6 +22,7 @@ class PipelineLayout final : public ObjectBase, public ChildOf<Device> {
  private:
   PipelineLayout() = delete;
   virtual ~PipelineLayout();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

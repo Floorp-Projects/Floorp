@@ -22,6 +22,7 @@ class TextureView final : public ObjectBase, public ChildOf<Device> {
  private:
   TextureView() = delete;
   virtual ~TextureView();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

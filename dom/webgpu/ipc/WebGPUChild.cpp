@@ -82,11 +82,57 @@ Maybe<RawId> WebGPUChild::AdapterRequestDevice(
 
 RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
                                       const dom::GPUBufferDescriptor& aDesc) {
-  RawId id = ffi::wgpu_client_make_device_id(mClient, aSelfId);
+  RawId id = ffi::wgpu_client_make_buffer_id(mClient, aSelfId);
   if (!SendDeviceCreateBuffer(aSelfId, aDesc, id)) {
     MOZ_CRASH("IPC failure");
   }
   return id;
+}
+
+RawId WebGPUChild::DeviceCreateCommandEncoder(
+    RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc) {
+  RawId id = ffi::wgpu_client_make_encoder_id(mClient, aSelfId);
+  if (!SendDeviceCreateCommandEncoder(aSelfId, aDesc, id)) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
+}
+
+RawId WebGPUChild::CommandEncoderFinish(
+    RawId aSelfId, const dom::GPUCommandBufferDescriptor& aDesc) {
+  if (!SendCommandEncoderFinish(aSelfId, aDesc)) {
+    MOZ_CRASH("IPC failure");
+  }
+  // We rely on knowledge that `CommandEncoderId` == `CommandBufferId`
+  // TODO: refactor this to truly behave as if the encoder is being finished,
+  // and a new command buffer ID is being created from it. Resolve the ID
+  // type aliasing at the place that introduces it: `wgpu-core`.
+  return aSelfId;
+}
+
+void WebGPUChild::QueueSubmit(RawId aSelfId,
+                              const nsTArray<RawId>& aCommandBufferIds) {
+  SendQueueSubmit(aSelfId, aCommandBufferIds);
+  for (const auto& cur : aCommandBufferIds) {
+    ffi::wgpu_client_kill_encoder_id(mClient, cur);
+  }
+}
+
+void WebGPUChild::DestroyAdapter(RawId aId) {
+  SendAdapterDestroy(aId);
+  ffi::wgpu_client_kill_adapter_ids(mClient, &aId, 1);
+}
+void WebGPUChild::DestroyBuffer(RawId aId) {
+  SendBufferDestroy(aId);
+  ffi::wgpu_client_kill_buffer_id(mClient, aId);
+}
+void WebGPUChild::DestroyCommandEncoder(RawId aId) {
+  SendCommandEncoderDestroy(aId);
+  ffi::wgpu_client_kill_encoder_id(mClient, aId);
+}
+void WebGPUChild::DestroyCommandBuffer(RawId aId) {
+  SendCommandBufferDestroy(aId);
+  ffi::wgpu_client_kill_encoder_id(mClient, aId);
 }
 
 }  // namespace webgpu

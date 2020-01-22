@@ -22,6 +22,7 @@ class RenderBundle final : public ObjectBase, public ChildOf<Device> {
  private:
   RenderBundle() = delete;
   virtual ~RenderBundle();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

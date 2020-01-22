@@ -19,9 +19,16 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(CommandBuffer)
   GPU_DECL_JS_WRAP(CommandBuffer)
 
+  CommandBuffer(Device* const aParent, RawId aId);
+
+  Maybe<RawId> Commit();
+
  private:
   CommandBuffer() = delete;
-  virtual ~CommandBuffer();
+  ~CommandBuffer();
+  void Cleanup();
+
+  const RawId mId;
 };
 
 }  // namespace webgpu

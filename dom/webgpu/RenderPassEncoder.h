@@ -36,6 +36,7 @@ class RenderPassEncoder final : public RenderEncoderBase,
 
  protected:
   virtual ~RenderPassEncoder();
+  void Cleanup() {}
 
  public:
 };

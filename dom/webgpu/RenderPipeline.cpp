@@ -10,10 +10,10 @@
 namespace mozilla {
 namespace webgpu {
 
-RenderPipeline::~RenderPipeline() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(RenderPipeline, mParent)
 GPU_IMPL_JS_WRAP(RenderPipeline)
+
+RenderPipeline::~RenderPipeline() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla

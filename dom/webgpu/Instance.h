@@ -35,6 +35,7 @@ class Instance final : public nsWrapperCache {
  private:
   explicit Instance(nsIGlobalObject* aOwner, WebGPUChild* aBridge);
   virtual ~Instance();
+  void Cleanup();
 
   nsCOMPtr<nsIGlobalObject> mOwner;
   const RefPtr<WebGPUChild> mBridge;

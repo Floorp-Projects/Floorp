@@ -11,6 +11,7 @@
 #include "Device.h"
 
 #include "Adapter.h"
+#include "Queue.h"
 #include "ipc/WebGPUChild.h"
 
 namespace mozilla {
@@ -18,7 +19,8 @@ namespace webgpu {
 
 mozilla::LazyLogModule gWebGPULog("WebGPU");
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(Device, DOMEventTargetHelper, mBridge)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(Device, DOMEventTargetHelper, mBridge,
+                                   mQueue)
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(Device, DOMEventTargetHelper)
 GPU_IMPL_JS_WRAP(Device)
 
@@ -37,17 +39,22 @@ JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aSize,
 Device::Device(Adapter* const aParent, RawId aId)
     : DOMEventTargetHelper(aParent->GetParentObject()),
       mBridge(aParent->GetBridge()),
-      mId(aId) {}
+      mId(aId),
+      mQueue(new Queue(this, aParent->GetBridge(), aId)) {}
 
-Device::~Device() {
-  // could be `nullptr` if CC-ed
-  if (mBridge && mBridge->IsOpen()) {
+Device::~Device() { Cleanup(); }
+
+void Device::Cleanup() {
+  if (mValid && mBridge && mBridge->IsOpen()) {
+    mValid = false;
     mBridge->SendDeviceDestroy(mId);
   }
 }
 
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
+
+Queue* Device::DefaultQueue() const { return mQueue; }
 
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc) {
@@ -115,7 +122,7 @@ RefPtr<MappingPromise> Device::MapBufferForReadAsync(RawId aId, size_t aSize,
     return nullptr;
   }
 
-  return mBridge->SendDeviceMapBufferRead(mId, aId, std::move(shmem));
+  return mBridge->SendBufferMapRead(aId, std::move(shmem));
 }
 
 void Device::UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem) {
@@ -124,7 +131,26 @@ void Device::UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem) {
 
 void Device::DestroyBuffer(RawId aId) {
   if (mBridge && mBridge->IsOpen()) {
-    mBridge->SendBufferDestroy(aId);
+    mBridge->DestroyBuffer(aId);
+  }
+}
+
+already_AddRefed<CommandEncoder> Device::CreateCommandEncoder(
+    const dom::GPUCommandEncoderDescriptor& aDesc) {
+  RawId id = mBridge->DeviceCreateCommandEncoder(mId, aDesc);
+  RefPtr<CommandEncoder> encoder = new CommandEncoder(this, mBridge, id);
+  return encoder.forget();
+}
+
+void Device::DestroyCommandEncoder(RawId aId) {
+  if (mBridge && mBridge->IsOpen()) {
+    mBridge->DestroyCommandEncoder(aId);
+  }
+}
+
+void Device::DestroyCommandBuffer(RawId aId) {
+  if (mBridge && mBridge->IsOpen()) {
+    mBridge->DestroyCommandBuffer(aId);
   }
 }
 

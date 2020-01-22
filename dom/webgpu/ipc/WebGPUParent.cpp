@@ -9,9 +9,18 @@
 namespace mozilla {
 namespace webgpu {
 
-WebGPUParent::WebGPUParent() : mContext(ffi::wgpu_server_new()) {}
+const uint64_t POLL_TIME_MS = 100;
+
+WebGPUParent::WebGPUParent() : mContext(ffi::wgpu_server_new()) {
+  mTimer.Start(base::TimeDelta::FromMilliseconds(POLL_TIME_MS), this,
+               &WebGPUParent::MaintainDevices);
+}
 
 WebGPUParent::~WebGPUParent() = default;
+
+void WebGPUParent::MaintainDevices() {
+  ffi::wgpu_server_poll_all_devices(mContext, false);
+}
 
 ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
     const dom::GPURequestAdapterOptions& aOptions,
@@ -35,11 +44,16 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
 }
 
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
-    RawId aSelfId, const dom::GPUDeviceDescriptor& aOptions, RawId aNewId) {
+    RawId aSelfId, const dom::GPUDeviceDescriptor& aDesc, RawId aNewId) {
   ffi::WGPUDeviceDescriptor desc = {};
+  Unused << aDesc;  // no useful fields
   // TODO: fill up the descriptor
-
   ffi::wgpu_server_adapter_request_device(mContext, aSelfId, &desc, aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvAdapterDestroy(RawId aSelfId) {
+  ffi::wgpu_server_adapter_destroy(mContext, aSelfId);
   return IPC_OK();
 }
 
@@ -57,16 +71,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateBuffer(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvDeviceMapBufferRead(
-    RawId aSelfId, RawId aBufferId, Shmem&& shmem,
-    DeviceMapBufferReadResolver&& resolver) {
-  ffi::wgpu_server_device_get_buffer_sub_data(mContext, aSelfId, aBufferId, 0,
-                                              shmem.get<uint8_t>(),
-                                              shmem.Size<uint8_t>());
-  resolver(std::move(shmem));
-  return IPC_OK();
-}
-
 ipc::IPCResult WebGPUParent::RecvDeviceUnmapBuffer(RawId aSelfId,
                                                    RawId aBufferId,
                                                    Shmem&& shmem) {
@@ -76,12 +80,82 @@ ipc::IPCResult WebGPUParent::RecvDeviceUnmapBuffer(RawId aSelfId,
   return IPC_OK();
 }
 
+struct MapReadRequest {
+  ipc::Shmem mShmem;
+  WebGPUParent::BufferMapReadResolver mResolver;
+  MapReadRequest(ipc::Shmem&& shmem,
+                 WebGPUParent::BufferMapReadResolver&& resolver)
+      : mShmem(shmem), mResolver(resolver) {}
+};
+
+void MapReadCallback(ffi::WGPUBufferMapAsyncStatus status, const uint8_t* ptr,
+                     uint8_t* userdata) {
+  auto req = reinterpret_cast<MapReadRequest*>(userdata);
+  // TODO: better handle errors
+  MOZ_ASSERT(status == ffi::WGPUBufferMapAsyncStatus_Success);
+  memcpy(req->mShmem.get<uint8_t>(), ptr, req->mShmem.Size<uint8_t>());
+  req->mResolver(std::move(req->mShmem));
+  delete req;
+}
+
+ipc::IPCResult WebGPUParent::RecvBufferMapRead(
+    RawId aSelfId, Shmem&& shmem, BufferMapReadResolver&& resolver) {
+  auto size = shmem.Size<uint8_t>();
+  auto request = new MapReadRequest(std::move(shmem), std::move(resolver));
+  ffi::wgpu_server_buffer_map_read(mContext, aSelfId, 0, size, &MapReadCallback,
+                                   reinterpret_cast<uint8_t*>(request));
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aSelfId) {
   ffi::wgpu_server_buffer_destroy(mContext, aSelfId);
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvDeviceCreateCommandEncoder(
+    RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc,
+    RawId aNewId) {
+  Unused << aDesc;  // no useful fields
+  ffi::WGPUCommandEncoderDescriptor desc = {};
+  ffi::wgpu_server_device_create_encoder(mContext, aSelfId, &desc, aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvCommandEncoderRunComputePass(RawId aSelfId,
+                                                              Shmem&& shmem) {
+  ffi::wgpu_server_encode_compute_pass(mContext, aSelfId, shmem.get<uint8_t>(),
+                                       shmem.Size<uint8_t>());
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvCommandEncoderFinish(
+    RawId aSelfId, const dom::GPUCommandBufferDescriptor& aDesc) {
+  Unused << aDesc;
+  ffi::WGPUCommandBufferDescriptor desc = {};
+  ffi::wgpu_server_encoder_finish(mContext, aSelfId, &desc);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvCommandEncoderDestroy(RawId aSelfId) {
+  ffi::wgpu_server_encoder_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvCommandBufferDestroy(RawId aSelfId) {
+  ffi::wgpu_server_command_buffer_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvQueueSubmit(
+    RawId aSelfId, const nsTArray<RawId>& aCommandBuffers) {
+  ffi::wgpu_server_queue_submit(mContext, aSelfId, aCommandBuffers.Elements(),
+                                aCommandBuffers.Length());
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvShutdown() {
+  mTimer.Stop();
+  ffi::wgpu_server_poll_all_devices(mContext, true);
   ffi::wgpu_server_delete(const_cast<ffi::WGPUGlobal*>(mContext));
   return IPC_OK();
 }

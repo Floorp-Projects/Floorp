@@ -6,13 +6,32 @@
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Queue.h"
 
+#include "CommandBuffer.h"
+#include "ipc/WebGPUChild.h"
+
 namespace mozilla {
 namespace webgpu {
 
-Queue::~Queue() = default;
-
-GPU_IMPL_CYCLE_COLLECTION(Queue, mParent)
+GPU_IMPL_CYCLE_COLLECTION(Queue, mParent, mBridge)
 GPU_IMPL_JS_WRAP(Queue)
+
+Queue::Queue(Device* const aParent, WebGPUChild* aBridge, RawId aId)
+    : ChildOf(aParent), mBridge(aBridge), mId(aId) {}
+
+Queue::~Queue() { Cleanup(); }
+
+void Queue::Submit(
+    const dom::Sequence<OwningNonNull<CommandBuffer>>& aCommandBuffers) {
+  nsTArray<RawId> list(aCommandBuffers.Length());
+  for (uint32_t i = 0; i < aCommandBuffers.Length(); ++i) {
+    auto idMaybe = aCommandBuffers[i]->Commit();
+    if (idMaybe) {
+      list.AppendElement(*idMaybe);
+    }
+  }
+
+  mBridge->QueueSubmit(mId, list);
+}
 
 }  // namespace webgpu
 }  // namespace mozilla

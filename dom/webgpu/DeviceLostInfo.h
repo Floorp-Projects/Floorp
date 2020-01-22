@@ -20,7 +20,8 @@ class DeviceLostInfo final : public nsWrapperCache, public ChildOf<Device> {
 
  private:
   DeviceLostInfo() = delete;
-  virtual ~DeviceLostInfo();
+  ~DeviceLostInfo() = default;
+  void Cleanup() {}
 
  public:
   void GetMessage(nsAString& aValue) const {}

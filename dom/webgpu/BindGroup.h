@@ -21,7 +21,8 @@ class BindGroup final : public ObjectBase, public ChildOf<Device> {
 
  private:
   BindGroup() = delete;
-  virtual ~BindGroup();
+  ~BindGroup() = default;
+  void Cleanup();
 };
 
 }  // namespace webgpu

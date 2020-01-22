@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(Instance, mBridge, mOwner)
+GPU_IMPL_CYCLE_COLLECTION(Instance, mOwner, mBridge)
 
 /*static*/
 already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
@@ -36,7 +36,9 @@ already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
 Instance::Instance(nsIGlobalObject* aOwner, WebGPUChild* aBridge)
     : mOwner(aOwner), mBridge(aBridge) {}
 
-Instance::~Instance() = default;
+Instance::~Instance() { Cleanup(); }
+
+void Instance::Cleanup() {}
 
 JSObject* Instance::WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> givenProto) {
