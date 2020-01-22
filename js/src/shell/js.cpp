@@ -2762,7 +2762,9 @@ static bool CpuNow(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool ClearKeptObjects(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
   JS::ClearKeptObjects(cx);
+  args.rval().setUndefined();
   return true;
 }
 
