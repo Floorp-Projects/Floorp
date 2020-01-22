@@ -13,10 +13,10 @@ add_task(async function() {
   const id = getCookieId("test1", ".test1.example.org", "/browser");
   await startCellEdit(id, "name");
 
-  PressKeyXTimes("VK_TAB", 18);
+  PressKeyXTimes("VK_TAB", 15);
   is(getCurrentEditorValue(), "value3", "We have tabbed to the correct cell.");
 
-  PressKeyXTimes("VK_TAB", 18, { shiftKey: true });
+  PressKeyXTimes("VK_TAB", 15, { shiftKey: true });
   is(
     getCurrentEditorValue(),
     "test1",

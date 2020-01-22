@@ -708,16 +708,16 @@ StorageActors.createActor(
       return [
         { name: "uniqueKey", editable: false, private: true },
         { name: "name", editable: true, hidden: false },
+        { name: "value", editable: true, hidden: false },
         { name: "host", editable: true, hidden: false },
         { name: "path", editable: true, hidden: false },
         { name: "expires", editable: true, hidden: false },
+        { name: "isHttpOnly", editable: true, hidden: false },
+        { name: "isSecure", editable: true, hidden: false },
+        { name: "sameSite", editable: false, hidden: false },
         { name: "lastAccessed", editable: false, hidden: false },
         { name: "creationTime", editable: false, hidden: true },
-        { name: "value", editable: true, hidden: false },
         { name: "hostOnly", editable: false, hidden: true },
-        { name: "isSecure", editable: true, hidden: true },
-        { name: "isHttpOnly", editable: true, hidden: false },
-        { name: "sameSite", editable: false, hidden: false },
       ];
     },
 
