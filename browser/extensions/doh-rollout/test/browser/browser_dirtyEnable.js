@@ -22,19 +22,20 @@ add_task(async function testDirtyEnable() {
     "Breadcrumb not saved."
   );
   await ensureNoTRRModeChange(2);
+  checkHeuristicsTelemetry("prefHasUserValue", "first_run");
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(2);
+  ensureNoHeuristicsTelemetry();
 
   // Restart for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(2);
+  ensureNoHeuristicsTelemetry();
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(2);
-
-  // Clean up.
-  await resetPrefsAndRestartAddon();
+  ensureNoHeuristicsTelemetry();
 });
