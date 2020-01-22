@@ -9,7 +9,6 @@ import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/Impression
 import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { DSContextFooter } from "../DSContextFooter/DSContextFooter.jsx";
-import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 
 // Default Meta that displays CTA as link if cta_variant in layout is set as "link"
 export const DefaultMeta = ({
@@ -57,16 +56,8 @@ export const CTAButtonMeta = ({
   <div className="meta">
     <div className="info-wrap">
       <p className="source clamp">
-        {context && (
-          <FluentOrText
-            message={{
-              id: `newtab-label-sponsored`,
-              values: { sponsorOrSource: sponsor ? sponsor : source },
-            }}
-          />
-        )}
-
-        {!context && (sponsor ? sponsor : source)}
+        {sponsor ? sponsor : source}
+        {context && ` · Sponsored`}
       </p>
       <header className="title clamp">{title}</header>
       {excerpt && <p className="excerpt clamp">{excerpt}</p>}
