@@ -394,8 +394,6 @@ class RTCPeerConnection {
 
     this._pc = null;
     this._closed = false;
-    this._currentRole = null;
-    this._pendingRole = null;
 
     // http://rtcweb-wg.github.io/jsep/#rfc.section.4.1.9
     // canTrickle == null means unknown; when a remote description is received it
@@ -1088,16 +1086,12 @@ class RTCPeerConnection {
       });
       this._negotiationNeeded = false;
       if (type == "answer") {
-        this._currentRole = "answerer";
-        this._pendingRole = null;
         if (this._localUfragsToReplace.size > 0) {
           const ufrags = new Set(this._getUfragsWithPwds(sdp));
           if (![...this._localUfragsToReplace].some(uf => ufrags.has(uf))) {
             this._localUfragsToReplace.clear();
           }
         }
-      } else {
-        this._pendingRole = "offerer";
       }
       this.updateNegotiationNeeded();
     });
@@ -1203,8 +1197,6 @@ class RTCPeerConnection {
       await haveSetRemote;
       this._negotiationNeeded = false;
       if (type == "answer") {
-        this._currentRole = "offerer";
-        this._pendingRole = null;
         if (this._localUfragsToReplace.size > 0) {
           const ufrags = new Set(
             this._getUfragsWithPwds(this._impl.currentLocalDescription)
@@ -1213,8 +1205,6 @@ class RTCPeerConnection {
             this._localUfragsToReplace.clear();
           }
         }
-      } else {
-        this._pendingRole = "answerer";
       }
       this.updateNegotiationNeeded();
     });
@@ -1716,21 +1706,21 @@ class RTCPeerConnection {
 
   get currentLocalDescription() {
     this._checkClosed();
-    let sdp = this._impl.currentLocalDescription;
+    const sdp = this._impl.currentLocalDescription;
     if (sdp.length == 0) {
       return null;
     }
-    const type = this._currentRole == "answerer" ? "answer" : "offer";
+    const type = this._impl.currentOfferer ? "offer" : "answer";
     return new this._win.RTCSessionDescription({ type, sdp });
   }
 
   get pendingLocalDescription() {
     this._checkClosed();
-    let sdp = this._impl.pendingLocalDescription;
+    const sdp = this._impl.pendingLocalDescription;
     if (sdp.length == 0) {
       return null;
     }
-    const type = this._pendingRole == "answerer" ? "answer" : "offer";
+    const type = this._impl.pendingOfferer ? "offer" : "answer";
     return new this._win.RTCSessionDescription({ type, sdp });
   }
 
@@ -1740,21 +1730,21 @@ class RTCPeerConnection {
 
   get currentRemoteDescription() {
     this._checkClosed();
-    let sdp = this._impl.currentRemoteDescription;
+    const sdp = this._impl.currentRemoteDescription;
     if (sdp.length == 0) {
       return null;
     }
-    const type = this._currentRole == "offerer" ? "answer" : "offer";
+    const type = this._impl.currentOfferer ? "answer" : "offer";
     return new this._win.RTCSessionDescription({ type, sdp });
   }
 
   get pendingRemoteDescription() {
     this._checkClosed();
-    let sdp = this._impl.pendingRemoteDescription;
+    const sdp = this._impl.pendingRemoteDescription;
     if (sdp.length == 0) {
       return null;
     }
-    const type = this._pendingRole == "offerer" ? "answer" : "offer";
+    const type = this._impl.pendingOfferer ? "answer" : "offer";
     return new this._win.RTCSessionDescription({ type, sdp });
   }
 

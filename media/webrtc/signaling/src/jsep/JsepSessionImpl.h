@@ -29,8 +29,6 @@ class JsepSessionImpl : public JsepSession {
  public:
   JsepSessionImpl(const std::string& name, UniquePtr<JsepUuidGenerator> uuidgen)
       : JsepSession(name),
-        mIsOfferer(false),
-        mWasOffererLastTime(false),
         mIceControlling(false),
         mRemoteIsIceLite(false),
         mBundlePolicy(kBundleBalanced),
@@ -121,7 +119,13 @@ class JsepSessionImpl : public JsepSession {
 
   virtual bool IsIceControlling() const override { return mIceControlling; }
 
-  virtual bool IsOfferer() const override { return mIsOfferer; }
+  virtual Maybe<bool> IsPendingOfferer() const override {
+    return mIsPendingOfferer;
+  }
+
+  virtual Maybe<bool> IsCurrentOfferer() const override {
+    return mIsCurrentOfferer;
+  }
 
   virtual bool IsIceRestarting() const override {
     return !mOldIceUfrag.empty();
@@ -227,8 +231,8 @@ class JsepSessionImpl : public JsepSession {
   // So we can rollback. Not as simple as just going back to the old, though...
   std::vector<RefPtr<JsepTransceiver>> mOldTransceivers;
 
-  bool mIsOfferer;
-  bool mWasOffererLastTime;
+  Maybe<bool> mIsPendingOfferer;
+  Maybe<bool> mIsCurrentOfferer;
   bool mIceControlling;
   std::string mIceUfrag;
   std::string mIcePwd;

@@ -1371,6 +1371,16 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
           if (NS_WARN_IF(jrv.Failed())) {
             return;
           }
+          mPendingRemoteDescription =
+              mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
+          mCurrentRemoteDescription =
+              mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
+          mPendingLocalDescription =
+              mJsepSession->GetLocalDescription(kJsepDescriptionPending);
+          mCurrentLocalDescription =
+              mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
+          mPendingOfferer = mJsepSession->IsPendingOfferer();
+          mCurrentOfferer = mJsepSession->IsCurrentOfferer();
           if (newSignalingState != mSignalingState) {
             mSignalingState = newSignalingState;
             mPCObserver->OnStateChange(PCObserverStateType::SignalingState,
@@ -1538,6 +1548,16 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
           if (NS_WARN_IF(jrv.Failed())) {
             return;
           }
+          mPendingRemoteDescription =
+              mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
+          mCurrentRemoteDescription =
+              mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
+          mPendingLocalDescription =
+              mJsepSession->GetLocalDescription(kJsepDescriptionPending);
+          mCurrentLocalDescription =
+              mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
+          mPendingOfferer = mJsepSession->IsPendingOfferer();
+          mCurrentOfferer = mJsepSession->IsCurrentOfferer();
           if (newSignalingState != mSignalingState) {
             mSignalingState = newSignalingState;
             mPCObserver->OnStateChange(PCObserverStateType::SignalingState,
@@ -1610,7 +1630,6 @@ PeerConnectionImpl::AddIceCandidate(
     return NS_OK;
   }
 
-  JSErrorResult rv;
   STAMP_TIMECARD(mTimeCard, "Add Ice Candidate");
 
   CSFLogDebug(LOGTAG, "AddIceCandidate: %s %s", aCandidate, aUfrag);
@@ -1631,7 +1650,19 @@ PeerConnectionImpl::AddIceCandidate(
       mMedia->AddIceCandidate(aCandidate, transportId, aUfrag);
       mRawTrickledCandidates.push_back(aCandidate);
     }
-    mPCObserver->OnAddIceCandidateSuccess(rv);
+    // Spec says we queue a task for these updates
+    mThread->Dispatch(NS_NewRunnableFunction(
+        __func__, [this, self = RefPtr<PeerConnectionImpl>(this)] {
+          if (IsClosed()) {
+            return;
+          }
+          mPendingRemoteDescription =
+              mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
+          mCurrentRemoteDescription =
+              mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
+          JSErrorResult rv;
+          mPCObserver->OnAddIceCandidateSuccess(rv);
+        }));
   } else {
     std::string errorString = mJsepSession->GetLastError();
 
@@ -1641,8 +1672,16 @@ PeerConnectionImpl::AddIceCandidate(
                 static_cast<unsigned>(*result.mError), aCandidate,
                 level.valueOr(-1), errorString.c_str());
 
-    mPCObserver->OnAddIceCandidateError(*buildJSErrorData(result, errorString),
-                                        rv);
+    mThread->Dispatch(NS_NewRunnableFunction(
+        __func__,
+        [this, self = RefPtr<PeerConnectionImpl>(this), errorString, result] {
+          if (IsClosed()) {
+            return;
+          }
+          JSErrorResult rv;
+          mPCObserver->OnAddIceCandidateError(
+              *buildJSErrorData(result, errorString), rv);
+        }));
   }
 
   return NS_OK;
@@ -2061,36 +2100,36 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint) {
   return NS_OK;
 }
 
-void PeerConnectionImpl::GetCurrentLocalDescription(nsAString& aSDP) {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  std::string localSdp =
-      mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
-  aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
+void PeerConnectionImpl::GetCurrentLocalDescription(nsAString& aSDP) const {
+  aSDP = NS_ConvertASCIItoUTF16(mCurrentLocalDescription.c_str());
 }
 
-void PeerConnectionImpl::GetPendingLocalDescription(nsAString& aSDP) {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  std::string localSdp =
-      mJsepSession->GetLocalDescription(kJsepDescriptionPending);
-  aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
+void PeerConnectionImpl::GetPendingLocalDescription(nsAString& aSDP) const {
+  aSDP = NS_ConvertASCIItoUTF16(mPendingLocalDescription.c_str());
 }
 
-void PeerConnectionImpl::GetCurrentRemoteDescription(nsAString& aSDP) {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  std::string remoteSdp =
-      mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
-  aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
+void PeerConnectionImpl::GetCurrentRemoteDescription(nsAString& aSDP) const {
+  aSDP = NS_ConvertASCIItoUTF16(mCurrentRemoteDescription.c_str());
 }
 
-void PeerConnectionImpl::GetPendingRemoteDescription(nsAString& aSDP) {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+void PeerConnectionImpl::GetPendingRemoteDescription(nsAString& aSDP) const {
+  aSDP = NS_ConvertASCIItoUTF16(mPendingRemoteDescription.c_str());
+}
 
-  std::string remoteSdp =
-      mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
-  aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
+dom::Nullable<bool> PeerConnectionImpl::GetCurrentOfferer() const {
+  dom::Nullable<bool> result;
+  if (mCurrentOfferer.isSome()) {
+    result.SetValue(*mCurrentOfferer);
+  }
+  return result;
+}
+
+dom::Nullable<bool> PeerConnectionImpl::GetPendingOfferer() const {
+  dom::Nullable<bool> result;
+  if (mPendingOfferer.isSome()) {
+    result.SetValue(*mPendingOfferer);
+  }
+  return result;
 }
 
 NS_IMETHODIMP
@@ -2440,6 +2479,10 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
     return;
   }
 
+  mPendingLocalDescription =
+      mJsepSession->GetLocalDescription(kJsepDescriptionPending);
+  mCurrentLocalDescription =
+      mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
   CSFLogDebug(LOGTAG, "Passing local candidate to content: %s",
               candidate.c_str());
   SendLocalIceCandidateToContent(level, mid, candidate, ufrag);
@@ -2955,7 +2998,14 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
           NS_ConvertASCIItoUTF16(localDescription.c_str()));
       report->mRemoteSdp.Construct(
           NS_ConvertASCIItoUTF16(remoteDescription.c_str()));
-      report->mOfferer.Construct(mJsepSession->IsOfferer());
+      if (mJsepSession->IsPendingOfferer().isSome()) {
+        report->mOfferer.Construct(*mJsepSession->IsPendingOfferer());
+      } else if (mJsepSession->IsCurrentOfferer().isSome()) {
+        report->mOfferer.Construct(*mJsepSession->IsCurrentOfferer());
+      } else {
+        // Silly.
+        report->mOfferer.Construct(false);
+      }
     }
   }
 
