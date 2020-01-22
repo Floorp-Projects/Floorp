@@ -1913,7 +1913,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 
   mResizeSuppressed = false;
 
-  auto restoreInRefresh = MakeScopeExit([&] { mInRefresh = false; });
+  bool oldInRefresh = mInRefresh;
+  auto restoreInRefresh = MakeScopeExit([&] { mInRefresh = oldInRefresh; });
   mInRefresh = true;
 
   AutoRestore<TimeStamp> restoreTickStart(mTickStart);
