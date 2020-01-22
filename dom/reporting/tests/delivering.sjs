@@ -53,7 +53,7 @@ function handleRequest(aRequest, aResponse) {
         return;
       }
     }
-      
+
     aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
     aResponse.write(getState("report"));
 
@@ -70,22 +70,25 @@ function handleRequest(aRequest, aResponse) {
       Array.prototype.push.apply(bytes, body.readByteArray(avail));
      }
 
-    let data = {
-      contentType: aRequest.getHeader("content-type"),
-      origin: aRequest.getHeader("origin"),
-      body: JSON.parse(String.fromCharCode.apply(null, bytes)),
-      url: aRequest.scheme + "://" + aRequest.host + aRequest.path +
-             (aRequest.queryString ? "&" + aRequest.queryString : ""),
-    }
+     let reports = getState("report");
+     if (!reports) {
+       reports = [];
+     } else {
+       reports = JSON.parse(reports);
+     }
 
-    let reports = getState("report");
-    if (!reports) {
-      reports = [];
-    } else {
-      reports = JSON.parse(reports);
-    }
+     const incoming_reports = JSON.parse(String.fromCharCode.apply(null, bytes));
+     for (let report of incoming_reports) {
+      let data = {
+        contentType: aRequest.getHeader("content-type"),
+        origin: aRequest.getHeader("origin"),
+        body: report,
+        url: aRequest.scheme + "://" + aRequest.host + aRequest.path +
+               (aRequest.queryString ? "&" + aRequest.queryString : ""),
+      }
+      reports.push(data);
+     }
 
-    reports.push(data);
     setState("report", JSON.stringify(reports));
 
     if (params.has("410")) {
