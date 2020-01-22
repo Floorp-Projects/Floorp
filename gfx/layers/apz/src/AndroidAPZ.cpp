@@ -25,11 +25,9 @@ namespace mozilla {
 namespace layers {
 
 AndroidSpecificState::AndroidSpecificState() {
-  using namespace mozilla::java;
-
-  sdk::ViewConfiguration::LocalRef config;
-  if (sdk::ViewConfiguration::Get(GeckoAppShell::GetApplicationContext(),
-                                  &config) == NS_OK) {
+  java::sdk::ViewConfiguration::LocalRef config;
+  if (java::sdk::ViewConfiguration::Get(
+          java::GeckoAppShell::GetApplicationContext(), &config) == NS_OK) {
     int32_t speed = 0;
     if (config->GetScaledMaximumFlingVelocity(&speed) == NS_OK) {
       sMaxFlingSpeed = (float)speed * 0.001f;
@@ -43,9 +41,9 @@ AndroidSpecificState::AndroidSpecificState() {
     ANDROID_APZ_LOG("%p Failed to get ViewConfiguration\n", this);
   }
 
-  StackScroller::LocalRef scroller;
-  if (StackScroller::New(GeckoAppShell::GetApplicationContext(), &scroller) !=
-      NS_OK) {
+  java::StackScroller::LocalRef scroller;
+  if (java::StackScroller::New(java::GeckoAppShell::GetApplicationContext(),
+                               &scroller) != NS_OK) {
     ANDROID_APZ_LOG("%p Failed to create Android StackScroller\n", this);
     return;
   }
