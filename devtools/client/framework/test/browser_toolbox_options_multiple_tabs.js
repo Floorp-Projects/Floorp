@@ -85,7 +85,7 @@ async function toggleTool({ doc, panelWin, checkbox, tab }, toolId) {
 
 async function checkUnregistered(toolId) {
   ok(
-    !tab1.doc.getElementById("toolbox-tab-" + toolId),
+    !getToolboxTab(tab1.doc, toolId),
     `Tab for unregistered tool ${toolId} is not present in first toolbox`
   );
   ok(
@@ -93,7 +93,7 @@ async function checkUnregistered(toolId) {
     `Checkbox for unregistered tool ${toolId} is not checked in first toolbox`
   );
   ok(
-    !tab2.doc.getElementById("toolbox-tab-" + toolId),
+    !getToolboxTab(tab2.doc, toolId),
     `Tab for unregistered tool ${toolId} is not present in second toolbox`
   );
   ok(
@@ -104,7 +104,7 @@ async function checkUnregistered(toolId) {
 
 function checkRegistered(toolId) {
   ok(
-    tab1.doc.getElementById("toolbox-tab-" + toolId),
+    getToolboxTab(tab1.doc, toolId),
     `Tab for registered tool ${toolId} is present in first toolbox`
   );
   ok(
@@ -112,7 +112,7 @@ function checkRegistered(toolId) {
     `Checkbox for registered tool ${toolId} is checked in first toolbox`
   );
   ok(
-    tab2.doc.getElementById("toolbox-tab-" + toolId),
+    getToolboxTab(tab2.doc, toolId),
     `Tab for registered tool ${toolId} is present in second toolbox`
   );
   ok(
