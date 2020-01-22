@@ -199,3 +199,48 @@ add_task(async function test_bookmarkBehaviorDisabled_untagged() {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 });
+
+add_task(async function test_diacritics() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, false);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
+
+  // Enable the bookmark behavior in UnifiedComplete.
+  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
+
+  let controller = UrlbarTestUtils.newMockController();
+  let searchString = "agui";
+  let context = createContext(searchString, { isPrivate: false });
+
+  await PlacesUtils.bookmarks.insert({
+    url: "https://bookmark.mozilla.org/%C3%A3gu%C4%A9",
+    title: "Test bookmark with accents in path",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  });
+
+  await controller.startQuery(context);
+
+  info(
+    "Results:\n" +
+      context.results.map(m => `${m.title} - ${m.payload.url}`).join("\n")
+  );
+  Assert.equal(
+    context.results.length,
+    2,
+    "Found the expected number of matches"
+  );
+
+  Assert.deepEqual(
+    [UrlbarUtils.RESULT_TYPE.SEARCH, UrlbarUtils.RESULT_TYPE.URL],
+    context.results.map(m => m.type),
+    "Check result types"
+  );
+
+  Assert.deepEqual(
+    [searchString, "Test bookmark with accents in path"],
+    context.results.map(m => m.title),
+    "Check match titles"
+  );
+
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
+});
