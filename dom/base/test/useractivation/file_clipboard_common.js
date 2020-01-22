@@ -1,5 +1,4 @@
-/** Test for Bug 1012662 **/
-// This test is called from both test_bug1012662_editor.html and test_bug1012662_noeditor.html
+// This test is called from both test_clipboard_editor.html and test_clipboard_noeditor.html
 // This is to test that the code works both in the presence of a contentEditable node, and in the absense of one
 var WATCH_TIMEOUT = 300;
 
@@ -373,6 +372,7 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
   function testStep(n) {
     gTestN1 = n;
     switch (n) {
+      /** Test for Bug 1012662 **/
       case 0:
         // Keyboard issued
         cutCopyAll(
@@ -412,7 +412,7 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
         return;
 
       case 2:
-        // Button issued
+        // Not triggered by user gesture
         cutCopyAll(
           function doCut(aSucc) {
             is(
@@ -439,12 +439,7 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
 
       default:
         aCb();
-        return;
     }
-
-    SimpleTest.executeSoon(function() {
-      testStep(n + 1);
-    });
   }
   testStep(0);
 }
