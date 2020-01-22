@@ -92,6 +92,9 @@
         <action
             android:id="@+id/action_homeFragment_to_shareFragment"
             app:destination="@id/shareFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_privateBrowsingFragment"
+            app:destination="@id/privateBrowsingFragment" />
     </fragment>
 
     <fragment

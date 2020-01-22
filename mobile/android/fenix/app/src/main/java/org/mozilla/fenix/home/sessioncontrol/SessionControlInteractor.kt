@@ -87,6 +87,11 @@ interface OnboardingInteractor {
      * Hides the onboarding and navigates to Search. Called when a user clicks on the "Start Browsing" button.
      */
     fun onStartBrowsingClicked()
+
+    /**
+     * Hides the onboarding and navigates to Settings. Called when a user clicks on the "Open settings" button.
+     */
+    fun onOpenSettingsClicked()
 }
 
 /**
@@ -260,6 +265,10 @@ class SessionControlInteractor(
 
     override fun onStartBrowsingClicked() {
         controller.handleStartBrowsingClicked()
+    }
+
+    override fun onOpenSettingsClicked() {
+        controller.handleOpenSettingsClicked()
     }
 
     override fun onToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {

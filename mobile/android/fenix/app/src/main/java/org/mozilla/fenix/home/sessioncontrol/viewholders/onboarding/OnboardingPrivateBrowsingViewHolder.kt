@@ -17,8 +17,12 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_private_browsing.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.setBounds
+import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
-class OnboardingPrivateBrowsingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+class OnboardingPrivateBrowsingViewHolder(
+    view: View,
+    private val interactor: OnboardingInteractor
+) : RecyclerView.ViewHolder(view) {
 
     init {
         view.header_text.setOnboardingIcon(R.drawable.ic_onboarding_private_browsing)
@@ -27,7 +31,7 @@ class OnboardingPrivateBrowsingViewHolder(view: View) : RecyclerView.ViewHolder(
         val inlineIcon = PrivateBrowsingImageSpan(
             view.context,
             R.drawable.ic_private_browsing,
-            view.description_text.lineHeight
+            view.description_text_once.lineHeight
         )
 
         val text = SpannableString(view.context.getString(R.string.onboarding_private_browsing_description1)).apply {
@@ -40,8 +44,11 @@ class OnboardingPrivateBrowsingViewHolder(view: View) : RecyclerView.ViewHolder(
             )
         }
 
-        view.description_text.text = text
+        view.description_text_once.text = text
         view.contentDescription = String.format(text.toString(), view.header_text.text)
+        view.open_settings_button.setOnClickListener {
+            interactor.onOpenSettingsClicked()
+        }
     }
 
     class PrivateBrowsingImageSpan(

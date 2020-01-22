@@ -110,8 +110,8 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
             it.getString(R.string.onboarding_feature_section_header, appName)
         },
         AdapterItem.OnboardingWhatsNew,
-        AdapterItem.OnboardingThemePicker,
         AdapterItem.OnboardingTrackingProtection,
+        AdapterItem.OnboardingThemePicker,
         AdapterItem.OnboardingPrivateBrowsing,
         AdapterItem.OnboardingToolbarPositionPicker,
         AdapterItem.OnboardingPrivacyNotice,

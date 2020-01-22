@@ -47,6 +47,7 @@ class DefaultSessionControlControllerTest {
     private val closeAllTabs: (isPrivateMode: Boolean) -> Unit = mockk(relaxed = true)
     private val getListOfTabs: () -> List<Tab> = { emptyList() }
     private val hideOnboarding: () -> Unit = mockk(relaxed = true)
+    private val openSettingsScreen: () -> Unit = mockk(relaxed = true)
     private val invokePendingDeleteJobs: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
     private val scrollToTheTop: () -> Unit = mockk(relaxed = true)
@@ -81,7 +82,8 @@ class DefaultSessionControlControllerTest {
             invokePendingDeleteJobs = invokePendingDeleteJobs,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             scrollToTheTop = scrollToTheTop,
-            showDeleteCollectionPrompt = showDeleteCollectionPrompt
+            showDeleteCollectionPrompt = showDeleteCollectionPrompt,
+            openSettingsScreen = openSettingsScreen
         )
     }
 
@@ -197,6 +199,12 @@ class DefaultSessionControlControllerTest {
     fun handleStartBrowsingClicked() {
         controller.handleStartBrowsingClicked()
         verify { hideOnboarding() }
+    }
+
+    @Test
+    fun handleOpenSettingsClicked() {
+        controller.handleOpenSettingsClicked()
+        verify { openSettingsScreen() }
     }
 
     @Test

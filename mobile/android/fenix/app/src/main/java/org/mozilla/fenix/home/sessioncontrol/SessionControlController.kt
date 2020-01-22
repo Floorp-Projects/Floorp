@@ -140,6 +140,11 @@ interface SessionControlController {
     fun handleStartBrowsingClicked()
 
     /**
+     * @see [OnboardingInteractor.onOpenSettingsClicked]
+     */
+    fun handleOpenSettingsClicked()
+
+    /**
      * @see [CollectionInteractor.onToggleCollectionExpanded]
      */
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
@@ -159,7 +164,8 @@ class DefaultSessionControlController(
     private val invokePendingDeleteJobs: () -> Unit,
     private val registerCollectionStorageObserver: () -> Unit,
     private val scrollToTheTop: () -> Unit,
-    private val showDeleteCollectionPrompt: (tabCollection: TabCollection) -> Unit
+    private val showDeleteCollectionPrompt: (tabCollection: TabCollection) -> Unit,
+    private val openSettingsScreen: () -> Unit
 ) : SessionControlController {
     private val metrics: MetricController
         get() = activity.components.analytics.metrics
@@ -356,6 +362,10 @@ class DefaultSessionControlController(
 
     override fun handleStartBrowsingClicked() {
         hideOnboarding()
+    }
+
+    override fun handleOpenSettingsClicked() {
+        openSettingsScreen()
     }
 
     override fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {

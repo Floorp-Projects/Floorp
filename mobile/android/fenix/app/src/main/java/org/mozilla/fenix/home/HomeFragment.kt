@@ -206,7 +206,8 @@ class HomeFragment : Fragment() {
                 invokePendingDeleteJobs = ::invokePendingDeleteJobs,
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
                 scrollToTheTop = ::scrollToTheTop,
-                showDeleteCollectionPrompt = ::showDeleteCollectionPrompt
+                showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
+                openSettingsScreen = :: openSettingsScreen
             )
         )
         updateLayout(view)
@@ -545,6 +546,11 @@ class HomeFragment : Fragment() {
         val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
             sessionId = null
         )
+        nav(R.id.homeFragment, directions)
+    }
+
+    private fun openSettingsScreen() {
+        val directions = HomeFragmentDirections.actionHomeFragmentToPrivateBrowsingFragment()
         nav(R.id.homeFragment, directions)
     }
 
