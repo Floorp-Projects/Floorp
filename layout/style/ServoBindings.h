@@ -59,9 +59,9 @@ BASIC_RULE_FUNCS(CounterStyle)
 #undef BASIC_RULE_FUNCS
 #undef BASIC_RULE_FUNCS_WITHOUT_GETTER
 
-#define BASIC_SERDE_FUNCS(type_)                                 \
-  bool Servo_##type_##_Deserialize(StyleVecU8* input, type_* v); \
-  bool Servo_##type_##_Serialize(const type_* v, StyleVecU8* output);
+#define BASIC_SERDE_FUNCS(type_)                                            \
+  bool Servo_##type_##_Deserialize(mozilla::ipc::ByteBuf* input, type_* v); \
+  bool Servo_##type_##_Serialize(const type_* v, mozilla::ipc::ByteBuf* output);
 
 using RayFunction = StyleRayFunction<StyleAngle>;
 BASIC_SERDE_FUNCS(LengthPercentage)
