@@ -97,7 +97,8 @@ add_task(async function test_no_show_hide_for_private_window() {
   );
 
   // Open and close a menu on the public window.
-  await openContextMenu();
+  await openContextMenu("body");
+
   // We naturally expect both extensions here.
   ok(document.getElementById(extMenuId), `menu exists ${extMenuId}`);
   ok(document.getElementById(pb_extMenuId), `menu exists ${pb_extMenuId}`);
