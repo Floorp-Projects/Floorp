@@ -61,6 +61,10 @@ class MediaController final {
   void Play();
   void Pause();
   void Stop();
+  void PrevTrack();
+  void NextTrack();
+  void SeekBackward();
+  void SeekForward();
 
   // Calling this method explicitly would mark this controller as deprecated,
   // then calling any its method won't take any effect.
