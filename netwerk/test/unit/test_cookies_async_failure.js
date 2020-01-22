@@ -135,13 +135,28 @@ function* run_test_1(generator) {
   yield;
 
   // Open a database connection now, before we load the profile and begin
-  // asynchronous write operations.
-  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
-  Assert.equal(do_count_cookies_in_db(db.db), 1);
+  // asynchronous write operations. In order to tell when the async delete
+  // statement has completed, we do something tricky: open a schema 2 connection
+  // and add a cookie with null baseDomain. We can then wait until we see it
+  // deleted in the new database.
+  let db2 = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
+  db2.db.executeSimpleSQL("INSERT INTO moz_cookies (baseDomain) VALUES (NULL)");
+  db2.close();
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 4);
+  Assert.equal(do_count_cookies_in_db(db.db), 2);
 
   // Load the profile, and wait for async read completion...
   do_load_profile(sub_generator);
   yield;
+
+  // ... and the DELETE statement to finish.
+  while (do_count_cookies_in_db(db.db) == 2) {
+    executeSoon(function() {
+      do_run_generator(sub_generator);
+    });
+    yield;
+  }
+  Assert.equal(do_count_cookies_in_db(db.db), 1);
 
   // Insert a row.
   db.insertCookie(cookie);
@@ -255,18 +270,23 @@ function* run_test_2(generator) {
   // succeeded.
   Assert.ok(!do_get_backup_file(profile).exists());
 
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 1);
-  Assert.equal(do_count_cookies(), 3000);
+  // Recreate a new database since it was corrupted
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 0);
+  Assert.equal(do_count_cookies(), 0);
 
   // Close the profile.
   do_close_profile(sub_generator);
   yield;
 
-  Assert.ok(!do_get_backup_file(profile).exists());
+  // Check that the original database was renamed.
+  Assert.ok(do_get_backup_file(profile).exists());
+  Assert.equal(do_get_backup_file(profile).fileSize, size);
+  let db = Services.storage.openDatabase(do_get_cookie_file(profile));
+  db.close();
 
   do_load_profile();
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 1);
-  Assert.equal(do_count_cookies(), 3000);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 0);
+  Assert.equal(do_count_cookies(), 0);
 
   // Close the profile.
   do_close_profile(sub_generator);
@@ -274,6 +294,7 @@ function* run_test_2(generator) {
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
+  do_get_backup_file(profile).remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
   Assert.ok(!do_get_backup_file(profile).exists());
   do_run_generator(generator);
@@ -322,22 +343,46 @@ function* run_test_3(generator) {
   Assert.ok(!do_get_backup_file(profile).exists());
 
   // Recreate a new database since it was corrupted
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("hither.com"), 10);
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("haithur.com"), 2990);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("hither.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("haithur.com"), 0);
 
   // Close the profile.
   do_close_profile(sub_generator);
   yield;
   let db = Services.storage.openDatabase(do_get_cookie_file(profile));
-  Assert.equal(do_count_cookies_in_db(db, "hither.com"), 10);
-  Assert.equal(do_count_cookies_in_db(db), 3000);
+  Assert.equal(do_count_cookies_in_db(db, "hither.com"), 0);
+  Assert.equal(do_count_cookies_in_db(db), 0);
   db.close();
 
-  // Check that the original database was removed.
+  // Check that the original database was renamed.
+  Assert.ok(do_get_backup_file(profile).exists());
+  Assert.equal(do_get_backup_file(profile).fileSize, size);
+
+  // Rename it back, and try loading the entire database synchronously.
+  do_get_backup_file(profile).moveTo(null, "cookies.sqlite");
+  do_load_profile();
+
+  // At this point, the database connection should be open. Ensure that it
+  // succeeded.
   Assert.ok(!do_get_backup_file(profile).exists());
+
+  // Synchronously read in everything.
+  Assert.equal(do_count_cookies(), 0);
+
+  // Close the profile.
+  do_close_profile(sub_generator);
+  yield;
+  db = Services.storage.openDatabase(do_get_cookie_file(profile));
+  Assert.equal(do_count_cookies_in_db(db), 0);
+  db.close();
+
+  // Check that the original database was renamed.
+  Assert.ok(do_get_backup_file(profile).exists());
+  Assert.equal(do_get_backup_file(profile).fileSize, size);
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
+  do_get_backup_file(profile).remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
   Assert.ok(!do_get_backup_file(profile).exists());
   do_run_generator(generator);
@@ -368,7 +413,7 @@ function* run_test_4(generator) {
   Assert.ok(!do_get_backup_file(profile).exists());
 
   // Recreate a new database since it was corrupted
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 1);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 0);
 
   // Queue up an INSERT for the same base domain. This should also go into
   // memory and be written out during database rebuild.
@@ -376,20 +421,21 @@ function* run_test_4(generator) {
   Services.cookies.setCookieString(uri, null, "oh2=hai; max-age=1000", null);
 
   // At this point, the cookies should still be in memory.
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 2);
-  Assert.equal(do_count_cookies(), 3001);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 1);
+  Assert.equal(do_count_cookies(), 1);
 
   // Close the profile.
   do_close_profile(sub_generator);
   yield;
 
-  // Check that the backup file does not exist.
-  Assert.ok(!do_get_backup_file(profile).exists());
+  // Check that the original database was renamed.
+  Assert.ok(do_get_backup_file(profile).exists());
+  Assert.equal(do_get_backup_file(profile).fileSize, size);
 
   // Load the profile, and check that it contains the new cookie.
   do_load_profile();
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 2);
-  Assert.equal(do_count_cookies(), 3001);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 1);
+  Assert.equal(do_count_cookies(), 1);
 
   // Close the profile.
   do_close_profile(sub_generator);
@@ -397,6 +443,7 @@ function* run_test_4(generator) {
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
+  do_get_backup_file(profile).remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
   Assert.ok(!do_get_backup_file(profile).exists());
   do_run_generator(generator);
@@ -434,26 +481,28 @@ function* run_test_5(generator) {
   Assert.ok(!do_get_backup_file(profile).exists());
 
   // Recreate a new database since it was corrupted
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 1);
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 1);
-  Assert.equal(do_count_cookies(), 3001);
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 0);
+  Assert.equal(do_count_cookies(), 0);
+  Assert.ok(do_get_backup_file(profile).exists());
+  Assert.equal(do_get_backup_file(profile).fileSize, size);
+  Assert.ok(!do_get_rebuild_backup_file(profile).exists());
 
   // Open a database connection, and write a row that will trigger a constraint
   // violation.
-  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
-  try {
-    db.insertCookie(cookie);
-  } catch (e) {}
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 4);
+  db.insertCookie(cookie);
   Assert.equal(do_count_cookies_in_db(db.db, "bar.com"), 1);
-  Assert.equal(do_count_cookies_in_db(db.db), 3001);
+  Assert.equal(do_count_cookies_in_db(db.db), 1);
   db.close();
 
-  Assert.ok(!do_get_backup_file(profile).exists());
+  // Check that the original backup and the database itself are gone.
+  Assert.ok(do_get_backup_file(profile).exists());
+  Assert.equal(do_get_backup_file(profile).fileSize, size);
 
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 1);
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 1);
-  Assert.equal(do_count_cookies(), 3001);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("0.com"), 0);
+  Assert.equal(do_count_cookies(), 0);
 
   // Close the profile. We do not need to wait for completion, because the
   // database has already been closed. Ensure the cookie file is unlocked.
@@ -462,6 +511,7 @@ function* run_test_5(generator) {
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
+  do_get_backup_file(profile).remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
   Assert.ok(!do_get_backup_file(profile).exists());
   do_run_generator(generator);
