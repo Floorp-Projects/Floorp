@@ -190,7 +190,7 @@ class FennecMigrator private constructor(
     private val engine: Engine?,
     private val profile: FennecProfile?,
     private val fxaState: File?,
-    private val browserDbName: String,
+    private val browserDbPath: String?,
     private val signonsDbName: String,
     private val key4DbName: String,
     private val coroutineContext: CoroutineContext
@@ -215,7 +215,7 @@ class FennecMigrator private constructor(
 
         private var fxaState = File("${context.filesDir}", "fxa.account.json")
         private var fennecProfile = FennecProfile.findDefault(context, crashReporter)
-        private var browserDbName = "browser.db"
+        private var browserDbPath: String? = null
         private var signonsDbName = "signons.sqlite"
         private var key4DbName = "key4.db"
         private var masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD
@@ -356,7 +356,7 @@ class FennecMigrator private constructor(
                 engine,
                 fennecProfile,
                 fxaState,
-                browserDbName,
+                browserDbPath ?: fennecProfile?.let { "${it.path}/browser.db" },
                 signonsDbName,
                 key4DbName,
                 coroutineContext
@@ -371,8 +371,8 @@ class FennecMigrator private constructor(
         }
 
         @VisibleForTesting
-        internal fun setBrowserDbName(name: String): Builder {
-            browserDbName = name
+        internal fun setBrowserDbPath(name: String): Builder {
+            browserDbPath = name
             return this
         }
 
@@ -406,8 +406,6 @@ class FennecMigrator private constructor(
     // Used to ensure migration runs do not overlap.
     private val migrationLock = Object()
 
-    private val dbPath = profile?.let { "${it.path}/$browserDbName" }
-
     /**
      * Performs configured data migration. See [Builder] for how to configure a data migration.
      *
@@ -417,10 +415,13 @@ class FennecMigrator private constructor(
         store: MigrationStore
     ): Deferred<MigrationResults> = synchronized(migrationLock) {
         val migrationsToRun = getMigrationsToRun()
+        // This check is performed in `startMigrationIfNeeded`, but this method may also be called
+        // directly so we repeat it here.
+        val isFennecInstall = isFennecInstallation()
 
         // Short-circuit if there's nothing to do.
-        if (migrationsToRun.isEmpty()) {
-            logger.debug("No migrationz to run.")
+        if (migrationsToRun.isEmpty() || !isFennecInstall) {
+            logger.debug("No migrations to run. Fennec install - $isFennecInstall.")
             val result = CompletableDeferred<MigrationResults>()
             result.complete(emptyMap())
             return result
@@ -436,10 +437,12 @@ class FennecMigrator private constructor(
         return getMigrationsToRun().isNotEmpty()
     }
 
-    private fun isFennecInstallation(): Boolean {
-        // Not implemented yet.
-        // https://github.com/mozilla-mobile/android-components/issues/5115
-        return true
+    @VisibleForTesting
+    internal fun isFennecInstallation(): Boolean {
+        // We consider presence of 'browser.db' as a proxy for 'this is a fennec install'.
+        // Just 'profile' isn't enough, since a profile directory will be created by GV in the same
+        // way as it may be already present in Fennec. However, in Fenix we do not have 'browser.db'.
+        return browserDbPath?.let { File(it).exists() } ?: false
     }
 
     /**
@@ -574,23 +577,18 @@ class FennecMigrator private constructor(
         checkNotNull(historyStorage) { "History storage must be configured to migrate history" }
 
         // There's no dbPath without a profile, but if a profile is present we expect dbPath to be also present.
-        if (profile != null && dbPath == null) {
+        if (profile != null && browserDbPath == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing DB path during history migration"))
         }
 
-        if (dbPath == null) {
+        if (browserDbPath == null) {
             MigrationHistory.failureReason.add(FailureReasonTelemetryCodes.HISTORY_MISSING_DB_PATH.code)
             return Result.Failure(IllegalStateException("Missing DB path during history migration"))
         }
 
-        if (!File(dbPath).exists()) {
-            MigrationHistory.successReason.add(SuccessReasonTelemetryCodes.HISTORY_NO_DB.code)
-            return Result.Success(Unit)
-        }
-
         val migrationMetrics = try {
             logger.debug("Migrating history...")
-            historyStorage.importFromFennec(dbPath)
+            historyStorage.importFromFennec(browserDbPath)
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateHistoryException(e))
             MigrationHistory.failureReason.add(FailureReasonTelemetryCodes.HISTORY_RUST_EXCEPTION.code)
@@ -624,23 +622,18 @@ class FennecMigrator private constructor(
         checkNotNull(bookmarksStorage) { "Bookmarks storage must be configured to migrate bookmarks" }
 
         // There's no dbPath without a profile, but if a profile is present we expect dbPath to be also present.
-        if (profile != null && dbPath == null) {
+        if (profile != null && browserDbPath == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing DB path during bookmark migration"))
         }
 
-        if (dbPath == null) {
+        if (browserDbPath == null) {
             MigrationBookmarks.failureReason.add(FailureReasonTelemetryCodes.BOOKMARKS_MISSING_DB_PATH.code)
             return Result.Failure(IllegalStateException("Missing DB path during bookmark migration"))
         }
 
-        if (!File(dbPath).exists()) {
-            MigrationBookmarks.successReason.add(SuccessReasonTelemetryCodes.BOOKMARKS_NO_DB.code)
-            return Result.Success(Unit)
-        }
-
         val migrationMetrics = try {
             logger.debug("Migrating bookmarks...")
-            bookmarksStorage.importFromFennec(dbPath)
+            bookmarksStorage.importFromFennec(browserDbPath)
         } catch (e: Exception) {
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateBookmarksException(e)

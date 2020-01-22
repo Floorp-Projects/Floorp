@@ -125,6 +125,33 @@ class FennecMigratorTest {
     }
 
     @Test
+    fun `is not a fennec install detected`() = runBlocking {
+        val historyStore = PlacesHistoryStorage(testContext)
+
+        val migrator1 = FennecMigrator.Builder(testContext, mock())
+            .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
+            .migrateHistory(historyStore)
+            .build()
+
+        assertTrue(migrator1.isFennecInstallation())
+        with(migrator1.migrateAsync(mock()).await()) {
+            assertTrue(this.containsKey(Migration.History))
+        }
+
+        val migrator2 = FennecMigrator.Builder(testContext, mock())
+            .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/no-browser.db").absolutePath)
+            .migrateHistory(historyStore)
+            .build()
+
+        assertFalse(migrator2.isFennecInstallation())
+        with(migrator2.migrateAsync(mock()).await()) {
+            assertTrue(this.isEmpty())
+        }
+    }
+
+    @Test
     fun `migrations versioning basics`() = runBlocking {
         val historyStore = PlacesHistoryStorage(testContext)
         val bookmarksStore = PlacesBookmarksStorage(testContext)
@@ -134,7 +161,6 @@ class FennecMigratorTest {
             .setProfile(FennecProfile(
                 "test", File(getTestPath("combined"), "basic").absolutePath, true)
             )
-            .setBrowserDbName("browser.db")
             .migrateHistory(historyStore)
             .migrateBookmarks(bookmarksStore)
             .build()
@@ -207,12 +233,13 @@ class FennecMigratorTest {
 
     @Test
     fun `failing migrations are reported - case 1`() = runBlocking {
-        val historyStorage: PlacesHistoryStorage = mock()
+        val historyStorage = PlacesHistoryStorage(testContext)
 
-        // DB path/profile are not configured correctly for the test environment
+        // DB path is set, but db is corrupt.
         val migrator = FennecMigrator.Builder(testContext, mock())
             .migrateHistory(historyStorage)
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/corrupt.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -237,6 +264,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, mock())
             .migrateHistory(historyStorage)
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .setProfile(FennecProfile(
                 "test",
                 File(getTestPath("combined"),
@@ -250,32 +278,6 @@ class FennecMigratorTest {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.History))
             assertFalse(this.getValue(Migration.History).success)
-        }
-
-        // Doesn't auto-rerun failed migration.
-        with(migrator.migrateAsync(mock()).await()) {
-            assertTrue(this.isEmpty())
-        }
-    }
-
-    @Test
-    fun `failing migrations are reported - case 3`() = runBlocking {
-        val bookmarkStorage: PlacesBookmarksStorage = mock()
-        val historyStorage: PlacesHistoryStorage = mock()
-
-        // DB path missing.
-        val migrator = FennecMigrator.Builder(testContext, mock())
-            .migrateHistory(historyStorage)
-            .migrateBookmarks(bookmarkStorage)
-            .setCoroutineContext(this.coroutineContext)
-            .build()
-
-        with(migrator.migrateAsync(mock()).await()) {
-            assertEquals(2, this.size)
-            assertTrue(this.containsKey(Migration.History))
-            assertTrue(this.containsKey(Migration.Bookmarks))
-            assertFalse(this.getValue(Migration.History).success)
-            assertFalse(this.getValue(Migration.Bookmarks).success)
         }
 
         // Doesn't auto-rerun failed migration.
@@ -362,6 +364,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, mock())
             .migrateOpenTabs(mock())
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -378,6 +381,7 @@ class FennecMigratorTest {
             .migrateFxa(accountManager)
             .setFxaState(File(getTestPath("fxa"), "corrupt-married-v4.json"))
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -396,6 +400,7 @@ class FennecMigratorTest {
             .migrateFxa(accountManager)
             .setFxaState(File(getTestPath("fxa"), "separated-bad-pickle-version-v4.json"))
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -414,6 +419,7 @@ class FennecMigratorTest {
             .migrateFxa(accountManager)
             .setFxaState(File(getTestPath("fxa"), "separated-bad-state-version-v10.json"))
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -432,6 +438,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, mock())
             .migrateFxa(accountManager)
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -458,6 +465,7 @@ class FennecMigratorTest {
             .migrateFxa(accountManager)
             .setFxaState(File(getTestPath("fxa"), "separated-v4.json"))
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -483,6 +491,7 @@ class FennecMigratorTest {
             .migrateFxa(accountManager)
             .setFxaState(File(getTestPath("fxa"), "married-v4.json"))
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(true))
@@ -519,6 +528,7 @@ class FennecMigratorTest {
             .migrateFxa(accountManager)
             .setFxaState(File(getTestPath("fxa"), "cohabiting-v4.json"))
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         // For now, we don't treat sign-in failure any different from success. E.g. it's a one-shot attempt.
@@ -550,54 +560,6 @@ class FennecMigratorTest {
     }
 
     @Test
-    fun `history migration - browserdb does not exist`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
-        val historyStorage: PlacesHistoryStorage = mock()
-        val migrator = FennecMigrator.Builder(testContext, crashReporter)
-            .migrateHistory(historyStorage)
-            .setBrowserDbName("doesnotexist.db")
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("combined"), "basic").absolutePath, true)
-            )
-            .setCoroutineContext(this.coroutineContext)
-            .build()
-
-        with(migrator.migrateAsync(mock()).await()) {
-            assertEquals(1, this.size)
-            assertTrue(this.containsKey(Migration.History))
-            assertTrue(this.getValue(Migration.History).success)
-        }
-        verifyZeroInteractions(crashReporter)
-        verifyZeroInteractions(historyStorage)
-    }
-
-    @Test
-    fun `bookmarks migration - browserdb does not exist`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
-        val historyStorage: PlacesHistoryStorage = mock()
-        val bookmarksStorage: PlacesBookmarksStorage = mock()
-        val migrator = FennecMigrator.Builder(testContext, crashReporter)
-            .migrateHistory(historyStorage)
-            .migrateBookmarks(bookmarksStorage)
-            .setBrowserDbName("doesnotexist.db")
-            .setProfile(FennecProfile(
-                "test", File(getTestPath("combined"), "basic").absolutePath, true)
-            )
-            .setCoroutineContext(this.coroutineContext)
-            .build()
-
-        with(migrator.migrateAsync(mock()).await()) {
-            assertEquals(2, this.size)
-            assertTrue(this.containsKey(Migration.Bookmarks))
-            assertTrue(this.containsKey(Migration.History))
-            assertTrue(this.getValue(Migration.Bookmarks).success)
-            assertTrue(this.getValue(Migration.History).success)
-        }
-        verifyZeroInteractions(crashReporter)
-        verifyZeroInteractions(bookmarksStorage)
-    }
-
-    @Test
     fun `logins migrations - no master password`() = runBlocking {
         val crashReporter: CrashReporter = mock()
         val loginStorage = AsyncLoginsStorageAdapter.forDatabase(File(testContext.filesDir, "logins.sqlite").canonicalPath)
@@ -608,6 +570,7 @@ class FennecMigratorTest {
             )
             .setKey4DbName("key4.db")
             .setSignonsDbName("signons.sqlite")
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -669,6 +632,7 @@ class FennecMigratorTest {
             )
             .setKey4DbName("key4.db")
             .setSignonsDbName("signons.sqlite")
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         // Expect MP presence to be detected, and migration to succeed. But, not actual records are imported.
@@ -701,6 +665,7 @@ class FennecMigratorTest {
             )
             .setKey4DbName("empty-key4.db")
             .setSignonsDbName("signons.sqlite")
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         // Empty key4db means we can't decrypt records, or even check for MP status.
@@ -730,6 +695,7 @@ class FennecMigratorTest {
                 "test", File(getTestPath("logins"), "with-mp").absolutePath, true)
             )
             .setKey4DbName("noNss-key4.db")
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .setSignonsDbName("signons.sqlite")
             .build()
 
@@ -759,6 +725,7 @@ class FennecMigratorTest {
             .migrateLogins(loginStorage, "test storage key")
             .setKey4DbName("noNss-key4.db")
             .setSignonsDbName("signons.sqlite")
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         // Empty nss table in key4db means we can't decrypt records, but we still check the master password.
@@ -784,6 +751,7 @@ class FennecMigratorTest {
             )
             .setKey4DbName("key4.db")
             .setSignonsDbName("signons-v5.sqlite")
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         // MP is checked first, so we don't even get to check signons version.
@@ -808,6 +776,7 @@ class FennecMigratorTest {
             )
             .setKey4DbName("key4.db")
             .setSignonsDbName("signons-v5.sqlite")
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -827,6 +796,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateSettings()
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -848,6 +818,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateSettings()
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -874,6 +845,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateAddons(engine)
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -904,6 +876,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateAddons(engine)
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -926,6 +899,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateAddons(engine)
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
@@ -975,6 +949,7 @@ class FennecMigratorTest {
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateAddons(engine)
             .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
         with(migrator.migrateAsync(mock()).await()) {
