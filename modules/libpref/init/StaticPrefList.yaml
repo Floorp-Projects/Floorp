@@ -903,6 +903,12 @@
   value: true
   mirror: always
 
+# Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
+- name: browser.privatebrowsing.forceMediaMemoryCache
+  type: bool
+  value: false
+  mirror: always
+
 # Blocked plugin content
 - name: browser.safebrowsing.blockedURIs.enabled
   type: bool
