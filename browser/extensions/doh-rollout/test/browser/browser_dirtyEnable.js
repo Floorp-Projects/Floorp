@@ -1,5 +1,7 @@
 "use strict";
 
+add_task(setup);
+
 add_task(async function testDirtyEnable() {
   // Set up a failing environment, pre-set DoH to enabled, and verify that
   // when the add-on is enabled, it doesn't do anything - DoH remains turned on.

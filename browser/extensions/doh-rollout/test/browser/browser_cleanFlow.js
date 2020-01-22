@@ -1,5 +1,7 @@
 "use strict";
 
+add_task(setup);
+
 add_task(async function testCleanFlow() {
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
