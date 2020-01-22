@@ -184,16 +184,15 @@ class MotionPathUtils final {
       const CSSSize& aFrameSize, gfx::Path* aCachedMotionPath);
 
   /**
-   * Normalize and convert StyleSVGPathData into nsTArray<layers::PathCommand>.
+   * Normalize StyleSVGPathData.
    *
    * The algorithm of normalization is the same as normalize() in
    * servo/components/style/values/specified/svg_path.rs
    * FIXME: Bug 1489392: We don't have to normalize the path here if we accept
-   * the spec issue which would like to normalize svg paths ar computed time.
+   * the spec issue which would like to normalize svg paths at computed time.
    * https://github.com/w3c/svgwg/issues/321
    */
-  static nsTArray<layers::PathCommand> NormalizeAndConvertToPathCommands(
-      const StyleSVGPathData& aPath);
+  static StyleSVGPathData NormalizeSVGPathData(const StyleSVGPathData& aPath);
 
   /**
    * Build a gfx::Path from the computed svg path. We should give it a path
