@@ -22,7 +22,7 @@ const libraryMap = [
   },
   {
     label: "React",
-    pattern: /(node_modules\/(?:react|react-dom)\/)|(react(\.[a-z]+)*\.js$)/,
+    pattern: /(node_modules\/(?:react|react-dom)\/)|(react(-dom)?(\.[a-z]+)*\.js$)/,
   },
   {
     label: "Immutable",

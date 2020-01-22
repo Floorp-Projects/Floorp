@@ -60,6 +60,11 @@ describe("getLibraryFromUrl", () => {
         "https://debugger-example.com/react.production.min.js",
         "https://debugger-react-example.com/react.js",
         "https://debugger-react-example.com/react/react.js",
+        "https://debugger-example.com/react-dom.js",
+        "https://debugger-example.com/react-dom.development.js",
+        "https://debugger-example.com/react-dom.production.min.js",
+        "https://debugger-react-example.com/react-dom.js",
+        "https://debugger-react-example.com/react/react-dom.js",
         "/node_modules/react/test.js",
         "/node_modules/react-dom/test.js",
       ];
