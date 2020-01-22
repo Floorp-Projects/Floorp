@@ -8,7 +8,7 @@ import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.api.RuleSet
 import io.gitlab.arturbosch.detekt.api.RuleSetProvider
 
-class CustomRulesetProvider: RuleSetProvider {
+class CustomRulesetProvider : RuleSetProvider {
     override val ruleSetId: String = "mozilla-detekt-rules"
 
     override fun instance(config: Config): RuleSet = RuleSet(
@@ -17,6 +17,4 @@ class CustomRulesetProvider: RuleSetProvider {
             MozillaBannedPropertyAccess(config)
         )
     )
-
-
 }

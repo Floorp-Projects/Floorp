@@ -76,6 +76,7 @@ class DefaultSearchController(
     }
 
     override fun handleEditingCancelled() {
+        store.dispatch(SearchFragmentAction.UpdateEditingCanceled)
         navController.navigateUp()
     }
 

@@ -13,8 +13,8 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
 import io.mockk.mockkObject
+import io.mockk.verify
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -85,7 +85,7 @@ class SearchInteractorTest {
     @Test
     fun onEditingCanceled() {
         val navController: NavController = mockk(relaxed = true)
-        val store: SearchFragmentStore = mockk()
+        val store: SearchFragmentStore = mockk(relaxed = true)
 
         every { store.state } returns mockk(relaxed = true)
 
@@ -99,6 +99,7 @@ class SearchInteractorTest {
         interactor.onEditingCanceled()
 
         verify {
+            store.dispatch(SearchFragmentAction.UpdateEditingCanceled)
             navController.navigateUp()
         }
     }

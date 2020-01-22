@@ -13,7 +13,7 @@ import io.gitlab.arturbosch.detekt.api.Rule
 import io.gitlab.arturbosch.detekt.api.Severity
 import org.jetbrains.kotlin.psi.*
 
-class MozillaBannedPropertyAccess(config: Config = Config.empty): Rule(config) {
+class MozillaBannedPropertyAccess(config: Config = Config.empty) : Rule(config) {
     override val issue = Issue(
         "MozillaBannedPropertyAccess",
         Severity.Defect,
@@ -27,7 +27,6 @@ class MozillaBannedPropertyAccess(config: Config = Config.empty): Rule(config) {
             listOf<String>()
         } else {
             bannedPropertiesList.split(",")
-
         }
     }
 
@@ -44,7 +43,7 @@ class MozillaBannedPropertyAccess(config: Config = Config.empty): Rule(config) {
             CodeSmell(
                 issue,
                 Entity.from(expression),
-                "Using ${possiblyBannedPropertyAccess} is not allowed because accessing property ${it} is against Mozilla policy. See 'mozilla-detekt-rules' stanza in 'config/detekt.yml' for more information.\n"
+                "Using $possiblyBannedPropertyAccess is not allowed because accessing property $it is against Mozilla policy. See 'mozilla-detekt-rules' stanza in 'config/detekt.yml' for more information.\n"
             )
         }.forEach { report(it) }
     }

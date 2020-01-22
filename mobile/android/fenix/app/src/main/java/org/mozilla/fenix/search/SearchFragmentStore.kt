@@ -57,13 +57,16 @@ data class SearchFragmentState(
     val showBookmarkSuggestions: Boolean,
     val session: Session?,
     val pastedText: String? = null,
-    val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?
+    val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?,
+    val isAnimatingOut: Boolean
 ) : State
 
 /**
  * Actions to dispatch through the `SearchStore` to modify `SearchState` through the reducer.
  */
 sealed class SearchFragmentAction : Action {
+    object UpdateEditingCanceled : SearchFragmentAction()
+    object ConsumeEditingCancelled : SearchFragmentAction()
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
     data class SelectNewDefaultSearchEngine(val engine: SearchEngine) : SearchFragmentAction()
     data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
@@ -91,5 +94,9 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             )
         is SearchFragmentAction.ShowSearchSuggestionsHint ->
             state.copy(showSearchSuggestionsHint = action.show)
+        is SearchFragmentAction.UpdateEditingCanceled ->
+            state.copy(isAnimatingOut = true)
+        is SearchFragmentAction.ConsumeEditingCancelled ->
+            state.copy(isAnimatingOut = false)
     }
 }
