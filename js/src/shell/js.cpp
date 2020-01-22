@@ -5246,7 +5246,8 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Directives directives(false);
-  GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
+  GlobalSharedContext globalsc(cx, ScopeKind::Global, parseInfo, directives,
+                               false);
 
   auto parseFunc = mode == Multipart
                        ? ParseBinASTData<frontend::BinASTTokenReaderMultipart>
@@ -5351,7 +5352,7 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
 
     ModuleBuilder builder(cx, module, &parser);
 
-    ModuleSharedContext modulesc(cx, module, nullptr, builder);
+    ModuleSharedContext modulesc(cx, module, parseInfo, nullptr, builder);
     pn = parser.moduleBody(&modulesc);
   }
   if (!pn) {
