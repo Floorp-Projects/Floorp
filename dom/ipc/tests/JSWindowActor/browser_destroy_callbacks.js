@@ -152,7 +152,7 @@ declTest("destroy actor by tab being closed", {
 
     info("setting up destroy listeners");
     await SpecialPowers.spawn(newTabBrowser, [], () => {
-      let child = content.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
 
