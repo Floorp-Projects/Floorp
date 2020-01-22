@@ -102,6 +102,7 @@ UNIFIED_SOURCES += [
     'testSetPropertyIgnoringNamedGetter.cpp',
     'testSharedImmutableStringsCache.cpp',
     'testSourcePolicy.cpp',
+    'testSparseBitmap.cpp',
     'testStringBuffer.cpp',
     'testStringIsArrayIndex.cpp',
     'testStructuredClone.cpp',
