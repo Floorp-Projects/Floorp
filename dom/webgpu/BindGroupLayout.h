@@ -21,7 +21,8 @@ class BindGroupLayout final : public ObjectBase, public ChildOf<Device> {
 
  private:
   BindGroupLayout() = delete;
-  virtual ~BindGroupLayout();
+  ~BindGroupLayout() = default;
+  void Cleanup();
 };
 
 }  // namespace webgpu

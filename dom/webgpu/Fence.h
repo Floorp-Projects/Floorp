@@ -24,7 +24,8 @@ class Fence final : public ObjectBase, public ChildOf<Device> {
 
  private:
   Fence() = delete;
-  virtual ~Fence();
+  ~Fence() = default;
+  void Cleanup() {}
 
  public:
 };

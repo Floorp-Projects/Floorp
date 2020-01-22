@@ -7,6 +7,7 @@
 #define GPU_CommandEncoder_H_
 
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
@@ -36,9 +37,21 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(CommandEncoder)
   GPU_DECL_JS_WRAP(CommandEncoder)
 
+  CommandEncoder(Device* const aParent, WebGPUChild* const aBridge, RawId aId);
+  RawId GetId() const { return mId; }
+  void EndComputePass(Span<const uint8_t> aData, ErrorResult& aRv);
+
+  already_AddRefed<ComputePassEncoder> BeginComputePass(
+      const dom::GPUComputePassDescriptor& aDesc);
+  already_AddRefed<CommandBuffer> Finish(
+      const dom::GPUCommandBufferDescriptor& aDesc);
+
  private:
-  CommandEncoder() = delete;
-  virtual ~CommandEncoder();
+  ~CommandEncoder();
+  void Cleanup();
+
+  const RefPtr<WebGPUChild> mBridge;
+  const RawId mId;
 };
 
 }  // namespace webgpu

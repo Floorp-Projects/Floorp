@@ -10,10 +10,10 @@
 namespace mozilla {
 namespace webgpu {
 
-TextureView::~TextureView() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(TextureView, mParent)
 GPU_IMPL_JS_WRAP(TextureView)
+
+TextureView::~TextureView() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla

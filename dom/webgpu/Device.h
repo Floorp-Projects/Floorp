@@ -73,29 +73,38 @@ class Device final : public DOMEventTargetHelper {
   GPU_DECL_JS_WRAP(Device)
 
   explicit Device(Adapter* const aParent, RawId aId);
+
   static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aSize,
                                              ipc::Shmem& aShmem);
   RefPtr<MappingPromise> MapBufferForReadAsync(RawId aId, size_t aSize,
                                                ErrorResult& aRv);
   void UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem);
   void DestroyBuffer(RawId aId);
+  void DestroyCommandEncoder(RawId aId);
+  void DestroyCommandBuffer(RawId aId);
 
  private:
-  Device() = delete;
-  virtual ~Device();
+  ~Device();
+  void Cleanup();
 
   const RefPtr<WebGPUChild> mBridge;
   const RawId mId;
+  bool mValid = true;
   nsString mLabel;
+  const RefPtr<Queue> mQueue;
 
  public:
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
 
+  Queue* DefaultQueue() const;
+
   already_AddRefed<Buffer> CreateBuffer(const dom::GPUBufferDescriptor& aDesc);
   void CreateBufferMapped(JSContext* aCx, const dom::GPUBufferDescriptor& aDesc,
                           nsTArray<JS::Value>& aSequence, ErrorResult& aRv);
 
+  already_AddRefed<CommandEncoder> CreateCommandEncoder(
+      const dom::GPUCommandEncoderDescriptor& aDesc);
   // IMPL_EVENT_HANDLER(uncapturederror)
 };
 

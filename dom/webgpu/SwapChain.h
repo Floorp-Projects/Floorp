@@ -23,6 +23,7 @@ class SwapChain final : public ObjectBase, public ChildOf<Device> {
  private:
   SwapChain() = delete;
   virtual ~SwapChain();
+  void Cleanup() {}
 
  public:
 };

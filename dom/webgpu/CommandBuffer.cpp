@@ -11,10 +11,32 @@
 namespace mozilla {
 namespace webgpu {
 
-CommandBuffer::~CommandBuffer() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(CommandBuffer, mParent)
 GPU_IMPL_JS_WRAP(CommandBuffer)
+
+CommandBuffer::CommandBuffer(Device* const aParent, RawId aId)
+    : ChildOf(aParent), mId(aId) {
+  if (!aId) {
+    mValid = false;
+  }
+}
+
+CommandBuffer::~CommandBuffer() { Cleanup(); }
+
+void CommandBuffer::Cleanup() {
+  if (mValid && mParent) {
+    mValid = false;
+    mParent->DestroyCommandBuffer(mId);
+  }
+}
+
+Maybe<RawId> CommandBuffer::Commit() {
+  if (!mValid) {
+    return Nothing();
+  }
+  mValid = false;
+  return Some(mId);
+}
 
 }  // namespace webgpu
 }  // namespace mozilla

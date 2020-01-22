@@ -11,10 +11,10 @@
 namespace mozilla {
 namespace webgpu {
 
-BindGroupLayout::~BindGroupLayout() = default;
-
 GPU_IMPL_CYCLE_COLLECTION(BindGroupLayout, mParent)
 GPU_IMPL_JS_WRAP(BindGroupLayout)
+
+void BindGroupLayout::Cleanup() {}
 
 }  // namespace webgpu
 }  // namespace mozilla

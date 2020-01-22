@@ -26,7 +26,7 @@ class RenderBundleEncoder final : public RenderEncoderBase,
   RenderBundleEncoder() = delete;
 
  private:
-  virtual ~RenderBundleEncoder() = default;
+  ~RenderBundleEncoder() = default;
 
  public:
 };

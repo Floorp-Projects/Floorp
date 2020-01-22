@@ -21,7 +21,8 @@ class ComputePipeline final : public ObjectBase, public ChildOf<Device> {
 
  private:
   ComputePipeline() = delete;
-  virtual ~ComputePipeline();
+  ~ComputePipeline() = default;
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

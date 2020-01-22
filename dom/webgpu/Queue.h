@@ -10,6 +10,10 @@
 #include "ObjectModel.h"
 
 namespace mozilla {
+namespace dom {
+template <typename T>
+class Sequence;
+}
 namespace webgpu {
 
 class CommandBuffer;
@@ -21,9 +25,18 @@ class Queue final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(Queue)
   GPU_DECL_JS_WRAP(Queue)
 
+  Queue(Device* const aParent, WebGPUChild* aBridge, RawId aId);
+
+  void Submit(
+      const dom::Sequence<OwningNonNull<CommandBuffer>>& aCommandBuffers);
+
  private:
   Queue() = delete;
   virtual ~Queue();
+  void Cleanup() {}
+
+  RefPtr<WebGPUChild> mBridge;
+  const RawId mId;
 
  public:
 };

@@ -22,6 +22,7 @@ class RenderPipeline final : public ObjectBase, public ChildOf<Device> {
  private:
   RenderPipeline() = delete;
   virtual ~RenderPipeline();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu
