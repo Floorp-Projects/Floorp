@@ -1544,6 +1544,21 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   mCurrentClipManager->EndList(aSc);
 }
 
+WebRenderCommandBuilder::WebRenderCommandBuilder(
+    WebRenderLayerManager* aManager)
+    : mManager(aManager),
+      mRootStackingContexts(nullptr),
+      mCurrentClipManager(nullptr),
+      mLastAsr(nullptr),
+      mDumpIndent(0),
+      mDoGrouping(false),
+      mContainsSVGGroup(false) {
+  if (XRE_IsContentProcess() &&
+      StaticPrefs::gfx_webrender_enable_item_cache_AtStartup()) {
+    mDisplayItemCache.SetCapacity(10000, 10000);
+  }
+}
+
 void WebRenderCommandBuilder::Destroy() {
   mLastCanvasDatas.Clear();
   ClearCachedResources();
@@ -1587,6 +1602,13 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   mLastAsr = nullptr;
   mContainsSVGGroup = false;
   MOZ_ASSERT(mDumpIndent == 0);
+
+  if (mDisplayItemCache.IsEnabled()) {
+    mDisplayItemCache.UpdateState(aDisplayListBuilder->PartialBuildFailed(),
+                                  aBuilder.CurrentPipelineId());
+    aBuilder.SetDisplayListCacheSize(mDisplayItemCache.CurrentCacheSize());
+    // mDisplayItemCache.Stats().Reset();
+  }
 
   {
     nsPresContext* presContext =
@@ -1657,6 +1679,10 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   // Remove the user data those are not displayed on the screen and
   // also reset the data to unused for next transaction.
   RemoveUnusedAndResetWebRenderUserData();
+
+  if (mDisplayItemCache.IsEnabled()) {
+    // mDisplayItemCache.Stats().Print();
+  }
 }
 
 bool WebRenderCommandBuilder::ShouldDumpDisplayList(
@@ -1666,6 +1692,37 @@ bool WebRenderCommandBuilder::ShouldDumpDisplayList(
            StaticPrefs::gfx_webrender_dl_dump_parent()) ||
           (XRE_IsContentProcess() &&
            StaticPrefs::gfx_webrender_dl_dump_content()));
+}
+
+void WebRenderCommandBuilder::CreateWebRenderCommands(
+    nsDisplayItem* aItem, mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  auto* item = aItem->AsPaintedDisplayItem();
+  MOZ_RELEASE_ASSERT(item, "Tried to paint item that cannot be painted");
+
+  if (mDisplayItemCache.ReuseItem(item, aBuilder)) {
+    // No further processing should be needed, since the item was reused.
+    return;
+  }
+
+  mDisplayItemCache.MaybeStartCaching(item, aBuilder);
+
+  aItem->SetPaintRect(aItem->GetBuildingRect());
+  RenderRootStateManager* manager =
+      mManager->GetRenderRootStateManager(aBuilder.GetRenderRoot());
+
+  // Note: this call to CreateWebRenderCommands can recurse back into
+  // this function if the |item| is a wrapper for a sublist.
+  const bool createdWRCommands = aItem->CreateWebRenderCommands(
+      aBuilder, aResources, aSc, manager, aDisplayListBuilder);
+
+  if (!createdWRCommands) {
+    PushItemAsImage(aItem, aBuilder, aResources, aSc, aDisplayListBuilder);
+  }
+
+  mDisplayItemCache.MaybeEndCaching(aBuilder);
 }
 
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
@@ -1769,16 +1826,8 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         printf_stderr("%s", ss.str().c_str());
       }
 
-      // Note: this call to CreateWebRenderCommands can recurse back into
-      // this function if the |item| is a wrapper for a sublist.
-      item->SetPaintRect(item->GetBuildingRect());
-      RenderRootStateManager* manager =
-          mManager->GetRenderRootStateManager(aBuilder.GetRenderRoot());
-      bool createdWRCommands = item->CreateWebRenderCommands(
-          aBuilder, aResources, aSc, manager, aDisplayListBuilder);
-      if (!createdWRCommands) {
-        PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
-      }
+      CreateWebRenderCommands(item, aBuilder, aResources, aSc,
+                              aDisplayListBuilder);
 
       if (dumpEnabled) {
         mBuilderDumpIndex[aBuilder.GetRenderRoot()] = aBuilder.Dump(

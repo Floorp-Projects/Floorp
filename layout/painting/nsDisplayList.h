@@ -3213,6 +3213,8 @@ class nsPaintedDisplayItem : public nsDisplayItem {
     MOZ_ASSERT_UNREACHABLE("Paint() is not implemented!");
   }
 
+  Maybe<uint16_t>& CacheIndex() { return mCacheIndex; }
+
  protected:
   nsPaintedDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : nsDisplayItem(aBuilder, aFrame) {}
@@ -3228,6 +3230,7 @@ class nsPaintedDisplayItem : public nsDisplayItem {
  private:
   mozilla::DisplayItemData* mDisplayItemData = nullptr;
   mozilla::layers::LayerManager* mDisplayItemDataLayerManager = nullptr;
+  mozilla::Maybe<uint16_t> mCacheIndex;
 };
 
 /**
