@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.addons.ui
 
+import java.text.NumberFormat
 import java.util.Locale
 
 /**
@@ -12,4 +13,11 @@ import java.util.Locale
 fun Map<String, String>.translate(): String {
     val lang = Locale.getDefault().language
     return get(lang) ?: getValue("en-US")
+}
+
+/**
+ * Get the formatted number amount for the current default locale.
+ */
+internal fun getFormattedAmount(amount: Int): String {
+    return NumberFormat.getNumberInstance(Locale.getDefault()).format(amount)
 }

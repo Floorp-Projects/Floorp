@@ -11,5 +11,5 @@
         android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"
         android:padding="16dp"
-        tools:text="@string/addon_settings_recommended_header"
+        tools:text="Recommended"
         android:textStyle="bold" />
