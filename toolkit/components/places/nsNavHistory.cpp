@@ -54,6 +54,7 @@ using namespace mozilla::places;
 
 // preference ID strings
 #define PREF_HISTORY_ENABLED "places.history.enabled"
+#define PREF_MATCH_DIACRITICS "places.search.matchDiacritics"
 
 #define PREF_FREC_NUM_VISITS "places.frecency.numVisits"
 #define PREF_FREC_NUM_VISITS_DEF 10
@@ -140,6 +141,7 @@ using namespace mozilla::places;
 #define TOPIC_PROFILE_CHANGE "profile-before-change"
 
 static const char* kObservedPrefs[] = {PREF_HISTORY_ENABLED,
+                                       PREF_MATCH_DIACRITICS,
                                        PREF_FREC_NUM_VISITS,
                                        PREF_FREC_FIRST_BUCKET_CUTOFF,
                                        PREF_FREC_SECOND_BUCKET_CUTOFF,
@@ -375,6 +377,7 @@ nsNavHistory::nsNavHistory()
       mRecentLink(RECENT_EVENTS_INITIAL_CACHE_LENGTH),
       mRecentBookmark(RECENT_EVENTS_INITIAL_CACHE_LENGTH),
       mHistoryEnabled(true),
+      mMatchDiacritics(false),
       mNumVisitsForFrecency(10),
       mDecayFrecencyPendingCount(0),
       mTagsFolder(-1),
@@ -560,6 +563,7 @@ nsresult nsNavHistory::GetOrCreateIdForPage(nsIURI* aURI, int64_t* _pageId,
 void nsNavHistory::LoadPrefs() {
   // History preferences.
   mHistoryEnabled = Preferences::GetBool(PREF_HISTORY_ENABLED, true);
+  mMatchDiacritics = Preferences::GetBool(PREF_MATCH_DIACRITICS, false);
 
   // Frecency preferences.
 #define FRECENCY_PREF(_prop, _pref) \
