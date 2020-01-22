@@ -333,21 +333,14 @@ static TimingFunction ToTimingFunction(
       aCTF->GetSteps().mSteps, static_cast<uint8_t>(aCTF->GetSteps().mPos)));
 }
 
-static Animatable GetOffsetPath(const StyleOffsetPath& aOffsetPath) {
-  Animatable result;
-  switch (aOffsetPath.tag) {
-    case StyleOffsetPath::Tag::Path:
-      result = OffsetPath(MotionPathUtils::NormalizeAndConvertToPathCommands(
-          aOffsetPath.AsPath()));
-      break;
-    case StyleOffsetPath::Tag::Ray:
-      result = OffsetPath(aOffsetPath.AsRay());
-      break;
-    case StyleOffsetPath::Tag::None:
-    default:
-      result = OffsetPath(null_t());
+// FIXME: Bug 1489392: We don't have to normalize the path here if we accept
+// the spec issue which would like to normalize svg paths at computed time.
+static StyleOffsetPath NormalizeOffsetPath(const StyleOffsetPath& aOffsetPath) {
+  if (aOffsetPath.IsPath()) {
+    return StyleOffsetPath::Path(
+        MotionPathUtils::NormalizeSVGPathData(aOffsetPath.AsPath()));
   }
-  return result;
+  return StyleOffsetPath(aOffsetPath);
 }
 
 static void SetAnimatable(nsCSSPropertyID aProperty,
@@ -388,7 +381,8 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
           aAnimationValue.GetTransformProperty(), aRefBox);
       break;
     case eCSSProperty_offset_path:
-      aAnimatable = GetOffsetPath(aAnimationValue.GetOffsetPathProperty());
+      aAnimatable =
+          NormalizeOffsetPath(aAnimationValue.GetOffsetPathProperty());
       break;
     case eCSSProperty_offset_distance:
       aAnimatable = aAnimationValue.GetOffsetDistanceProperty();
@@ -775,7 +769,7 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
         break;
       case eCSSProperty_offset_path:
         if (!display->mOffsetPath.IsNone()) {
-          appendFakeAnimation(id, GetOffsetPath(display->mOffsetPath));
+          appendFakeAnimation(id, NormalizeOffsetPath(display->mOffsetPath));
         }
         break;
       case eCSSProperty_offset_distance:
