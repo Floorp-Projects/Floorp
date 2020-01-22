@@ -1057,11 +1057,10 @@
 
       this._appendStatusPanel();
 
-      if (
-        (oldBrowser.blockedPopups && !newBrowser.blockedPopups) ||
-        (!oldBrowser.blockedPopups && newBrowser.blockedPopups)
-      ) {
-        newBrowser.updateBlockedPopups();
+      let oldBrowserPopupsBlocked = oldBrowser.popupBlocker.getBlockedPopupCount();
+      let newBrowserPopupsBlocked = newBrowser.popupBlocker.getBlockedPopupCount();
+      if (oldBrowserPopupsBlocked != newBrowserPopupsBlocked) {
+        newBrowser.popupBlocker.updateBlockedPopupsUI();
       }
 
       // Update the URL bar.

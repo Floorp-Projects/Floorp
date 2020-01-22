@@ -263,6 +263,19 @@ let ACTORS = {
     allFrames: true,
   },
 
+  PopupBlocking: {
+    parent: {
+      moduleURI: "resource://gre/actors/PopupBlockingParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/PopupBlockingChild.jsm",
+      events: {
+        DOMPopupBlocked: { capture: true },
+      },
+    },
+    allFrames: true,
+  },
+
   PurgeSessionHistory: {
     child: {
       moduleURI: "resource://gre/actors/PurgeSessionHistoryChild.jsm",
@@ -452,15 +465,6 @@ let LEGACY_ACTORS = {
         "DOM:WebManifest:fetchIcon",
         "DOM:WebManifest:hasManifestLink",
       ],
-    },
-  },
-
-  PopupBlocking: {
-    child: {
-      module: "resource://gre/actors/PopupBlockingChild.jsm",
-      events: {
-        DOMPopupBlocked: { capture: true },
-      },
     },
   },
 

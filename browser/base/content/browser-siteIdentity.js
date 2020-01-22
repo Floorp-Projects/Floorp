@@ -906,10 +906,7 @@ var gIdentityHandler = {
 
     // Show blocked popup icon in the identity-box if popups are blocked
     // irrespective of popup permission capability value.
-    if (
-      gBrowser.selectedBrowser.blockedPopups &&
-      gBrowser.selectedBrowser.blockedPopups.length
-    ) {
+    if (gBrowser.selectedBrowser.popupBlocker.getBlockedPopupCount()) {
       let icon = permissionAnchors.popup;
       icon.setAttribute("showing", "true");
     }
@@ -1398,6 +1395,7 @@ var gIdentityHandler = {
       }
     }
 
+    let totalBlockedPopups = gBrowser.selectedBrowser.popupBlocker.getBlockedPopupCount();
     let hasBlockedPopupIndicator = false;
     for (let permission of permissions) {
       if (permission.id == "storage-access") {
@@ -1411,12 +1409,8 @@ var gIdentityHandler = {
       }
       this._permissionList.appendChild(item);
 
-      if (
-        permission.id == "popup" &&
-        gBrowser.selectedBrowser.blockedPopups &&
-        gBrowser.selectedBrowser.blockedPopups.length
-      ) {
-        this._createBlockedPopupIndicator();
+      if (permission.id == "popup" && totalBlockedPopups) {
+        this._createBlockedPopupIndicator(totalBlockedPopups);
         hasBlockedPopupIndicator = true;
       } else if (
         permission.id == "geo" &&
@@ -1426,11 +1420,7 @@ var gIdentityHandler = {
       }
     }
 
-    if (
-      gBrowser.selectedBrowser.blockedPopups &&
-      gBrowser.selectedBrowser.blockedPopups.length &&
-      !hasBlockedPopupIndicator
-    ) {
+    if (totalBlockedPopups && !hasBlockedPopupIndicator) {
       let permission = {
         id: "popup",
         state: SitePermissions.getDefault("popup"),
@@ -1438,7 +1428,7 @@ var gIdentityHandler = {
       };
       let item = this._createPermissionItem(permission);
       this._permissionList.appendChild(item);
-      this._createBlockedPopupIndicator();
+      this._createBlockedPopupIndicator(totalBlockedPopups);
     }
 
     // Show a placeholder text if there's no permission and no reload hint.
@@ -1757,7 +1747,7 @@ var gIdentityHandler = {
       .appendChild(indicator);
   },
 
-  _createBlockedPopupIndicator() {
+  _createBlockedPopupIndicator(aTotalBlockedPopups) {
     let indicator = document.createXULElement("hbox");
     indicator.setAttribute("class", "identity-popup-permission-item");
     indicator.setAttribute("align", "center");
@@ -1770,18 +1760,17 @@ var gIdentityHandler = {
     text.setAttribute("flex", "1");
     text.setAttribute("class", "identity-popup-permission-label");
 
-    let popupCount = gBrowser.selectedBrowser.blockedPopups.length;
     let messageBase = gNavigatorBundle.getString(
       "popupShowBlockedPopupsIndicatorText"
     );
-    let message = PluralForm.get(popupCount, messageBase).replace(
+    let message = PluralForm.get(aTotalBlockedPopups, messageBase).replace(
       "#1",
-      popupCount
+      aTotalBlockedPopups
     );
     text.textContent = message;
 
     text.addEventListener("click", () => {
-      gPopupBlockerObserver.showAllBlockedPopups(gBrowser.selectedBrowser);
+      gBrowser.selectedBrowser.popupBlocker.unblockAllPopups();
     });
 
     indicator.appendChild(icon);
