@@ -22,7 +22,9 @@ function allocUntilFail() {
 gczeal(0);
 
 // Set a small heap limit.
-gcparam("maxBytes", 1024 * 1024);
+gc();
+let currentSize = gcparam("gcBytes");
+gcparam("maxBytes", currentSize + 16 * 1024);
 
 // Set the time limit for skipping last ditch GCs to 5 seconds.
 gcparam("minLastDitchGCPeriod", 5);
