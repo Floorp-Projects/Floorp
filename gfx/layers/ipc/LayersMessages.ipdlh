@@ -59,8 +59,8 @@ using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 using mozilla::LengthPercentage from "mozilla/ServoStyleConsts.h";
-using mozilla::RayFunction from "mozilla/MotionPathUtils.h";
 using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
+using mozilla::StyleOffsetPath from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleRotate from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleScale from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleTranslate from "mozilla/ServoStyleConsts.h";
@@ -126,50 +126,6 @@ struct CSSAngle {
 
 struct LayerColor { Color value; };
 
-struct MoveTo { Point point; };
-struct LineTo { Point point; };
-struct HorizontalLineTo { float x; };
-struct VerticalLineTo { float y; };
-struct CurveTo {
-  Point control1;
-  Point control2;
-  Point point;
-};
-struct SmoothCurveTo { Point control2; Point point; };
-struct QuadBezierCurveTo { Point control1; Point point; };
-struct SmoothQuadBezierCurveTo { Point point; };
-struct EllipticalArc {
-  float rx;
-  float ry;
-  float angle;
-  bool largeArcFlag;
-  bool sweepFlag;
-  Point point;
-};
-
-// PathCommand should be always absolute because we normalize it when passing
-// it through ipc.
-union PathCommand {
-  // Use null_t to represent ClosePath.
-  null_t;
-  MoveTo;
-  LineTo;
-  HorizontalLineTo;
-  VerticalLineTo;
-  CurveTo;
-  SmoothCurveTo;
-  QuadBezierCurveTo;
-  SmoothQuadBezierCurveTo;
-  EllipticalArc;
-};
-
-union OffsetPath {
-  // null_t represents None.
-  null_t;
-  PathCommand[];
-  RayFunction;
-};
-
 struct OffsetRotate {
   CSSAngle angle;
   bool isAuto;
@@ -194,7 +150,7 @@ union Animatable {
   StyleScale;
   StyleTranslate;
   StyleTransform;
-  OffsetPath;
+  StyleOffsetPath;
   LengthPercentage;
   OffsetRotate;
   OffsetAnchor;
