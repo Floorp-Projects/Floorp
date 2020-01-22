@@ -1713,13 +1713,13 @@ intl.ui.browserLanguage:
       installId: The id for an install.
     products:
       - firefox
-    expiry_version: "75"
+    expiry_version: "85"
     notification_emails:
       - flod@mozilla.com
       - mstriemer@mozilla.com
     release_channel_collection: opt-out
     record_in_processes: ["main"]
-    bug_numbers: [1486507, 1553311]
+    bug_numbers: [1486507, 1553311, 1607501]
 
 security:
   evalUsage:
