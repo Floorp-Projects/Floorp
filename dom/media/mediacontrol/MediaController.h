@@ -61,6 +61,9 @@ class MediaController final {
   void Play();
   void Pause();
   void Stop();
+
+  // Calling this method explicitly would mark this controller as deprecated,
+  // then calling any its method won't take any effect.
   void Shutdown();
 
   uint64_t Id() const;
@@ -97,6 +100,7 @@ class MediaController final {
   bool mIsRegisteredToService = false;
   int64_t mControlledMediaNum = 0;
   int64_t mPlayingControlledMediaNum = 0;
+  bool mShutdown = false;
 
   PlaybackState mState = PlaybackState::eStopped;
   MediaEventProducer<PlaybackState> mPlaybackStateChangedEvent;
