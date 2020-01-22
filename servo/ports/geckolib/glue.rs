@@ -49,6 +49,7 @@ use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
+use style::gecko_bindings::structs::ipc::ByteBuf;
 use style::gecko_bindings::structs::nsAtom;
 use style::gecko_bindings::structs::nsCSSCounterDesc;
 use style::gecko_bindings::structs::nsCSSFontDesc;
@@ -968,65 +969,42 @@ pub extern "C" fn Servo_AnimationValue_Uncompute(
     .into_strong()
 }
 
-// This is an intermediate type for passing Vec<u8> through FFI.
-// We convert this type into ByteBuf when passing it through IPC.
-#[repr(C)]
-pub struct VecU8 {
-    data: *mut u8,
-    length: usize,
-    capacity: usize,
+#[inline]
+fn create_byte_buf_from_vec(mut v: Vec<u8>) -> ByteBuf {
+    let w = ByteBuf {
+        mData: v.as_mut_ptr(),
+        mLen: v.len(),
+        mCapacity: v.capacity(),
+    };
+    std::mem::forget(v);
+    w
 }
 
-impl VecU8 {
-    #[inline]
-    fn from_vec(mut v: Vec<u8>) -> Self {
-        let w = VecU8 {
-            data: v.as_mut_ptr(),
-            length: v.len(),
-            capacity: v.capacity(),
-        };
-        std::mem::forget(v);
-        w
+#[inline]
+fn view_byte_buf(b: &ByteBuf) -> &[u8] {
+    if b.mData.is_null() {
+        debug_assert_eq!(b.mCapacity, 0);
+        return &[];
     }
-
-    #[inline]
-    fn flush_into_vec(&mut self) -> Vec<u8> {
-        if self.data.is_null() {
-            debug_assert_eq!(self.capacity, 0);
-            return Vec::new();
-        }
-
-        let vec = unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) };
-        self.data = ptr::null_mut();
-        self.length = 0;
-        self.capacity = 0;
-        vec
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_VecU8_Free(v: &mut VecU8) {
-    if !v.data.is_null() {
-        v.flush_into_vec();
-    }
+    unsafe { std::slice::from_raw_parts(b.mData, b.mLen) }
 }
 
 macro_rules! impl_basic_serde_funcs {
     ($ser_name:ident, $de_name:ident, $computed_type:ty) => {
         #[no_mangle]
-        pub extern "C" fn $ser_name(v: &$computed_type, output: &mut VecU8) -> bool {
+        pub extern "C" fn $ser_name(v: &$computed_type, output: &mut ByteBuf) -> bool {
             let buf = match serialize(v) {
                 Ok(buf) => buf,
                 Err(..) => return false,
             };
 
-            *output = VecU8::from_vec(buf);
+            *output = create_byte_buf_from_vec(buf);
             true
         }
 
         #[no_mangle]
-        pub extern "C" fn $de_name(input: &mut VecU8, v: &mut $computed_type) -> bool {
-            let buf = match deserialize(&input.flush_into_vec()) {
+        pub extern "C" fn $de_name(input: &ByteBuf, v: &mut $computed_type) -> bool {
+            let buf = match deserialize(view_byte_buf(input)) {
                 Ok(buf) => buf,
                 Err(..) => return false,
             };
