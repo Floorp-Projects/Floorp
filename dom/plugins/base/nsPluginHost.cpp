@@ -265,6 +265,7 @@ nsPluginHost::nsPluginHost()
     : mPluginsLoaded(false),
       mOverrideInternalTypes(false),
       mPluginsDisabled(false),
+      mFlashOnly(true),
       mDoReloadOnceFindingFinished(false),
       mAddedFinderShutdownBlocker(false),
       mPluginEpoch(0) {
@@ -272,7 +273,9 @@ nsPluginHost::nsPluginHost()
   // full page mode for certain image mime types that we handle internally
   mOverrideInternalTypes =
       Preferences::GetBool("plugin.override_internal_types", false);
-  mFlashOnly = Preferences::GetBool("plugin.load_flash_only", true);
+  if (xpc::IsInAutomation()) {
+    mFlashOnly = Preferences::GetBool("plugin.load_flash_only", true);
+  }
 
   bool waylandBackend = false;
 #if MOZ_WIDGET_GTK
