@@ -47,6 +47,19 @@ interface nsIApplicationReputationService : nsISupports {
    */
   void queryReputation(in nsIApplicationReputationQuery aQuery,
                        in nsIApplicationReputationCallback aCallback);
+
+  /**
+   * Check if a file with this name should be treated as a binary executable,
+   * and is therefore subject to application reputation checks.
+   * Will return true if the filename's extension is either:
+   * - in kBinaryFileExtensions in ApplicationReputation.cpp
+   * - in sExecutableExts in nsLocalFileCommon.h *and* not in
+   *   kNonBinaryExecutables in ApplicationReputation.cpp
+   *
+   * @param aFilename
+   *        The filename to check.
+   */
+  bool isBinary(in AUTF8String aFilename);
 };
 
 /**
