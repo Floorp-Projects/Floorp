@@ -459,7 +459,7 @@ class PeerConnectionImpl final
   // Gets the RTC Signaling State of the JSEP session
   dom::RTCSignalingState GetSignalingState() const;
 
-  void OnOfferAnswerComplete(bool rollback);
+  void OnSetDescriptionSuccess(bool rollback);
 
   bool IsClosed() const;
   // called when DTLS connects; we only need this once
