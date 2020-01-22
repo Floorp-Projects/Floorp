@@ -51,100 +51,6 @@ static inline StyleAngle GetCSSAngle(const layers::CSSAngle& aAngle) {
   return StyleAngle{aAngle.value()};
 }
 
-static StyleTransformOperation OperationFromLayers(
-    const layers::TransformFunction& aFunction) {
-  switch (aFunction.type()) {
-    case layers::TransformFunction::TRotationX: {
-      const layers::CSSAngle& angle = aFunction.get_RotationX().angle();
-      return StyleTransformOperation::RotateX(GetCSSAngle(angle));
-    }
-    case layers::TransformFunction::TRotationY: {
-      const layers::CSSAngle& angle = aFunction.get_RotationY().angle();
-      return StyleTransformOperation::RotateY(GetCSSAngle(angle));
-    }
-    case layers::TransformFunction::TRotationZ: {
-      const layers::CSSAngle& angle = aFunction.get_RotationZ().angle();
-      return StyleTransformOperation::RotateZ(GetCSSAngle(angle));
-    }
-    case layers::TransformFunction::TRotation: {
-      const layers::CSSAngle& angle = aFunction.get_Rotation().angle();
-      return StyleTransformOperation::Rotate(GetCSSAngle(angle));
-    }
-    case layers::TransformFunction::TRotation3D: {
-      float x = aFunction.get_Rotation3D().x();
-      float y = aFunction.get_Rotation3D().y();
-      float z = aFunction.get_Rotation3D().z();
-      const layers::CSSAngle& angle = aFunction.get_Rotation3D().angle();
-      return StyleTransformOperation::Rotate3D(x, y, z, GetCSSAngle(angle));
-    }
-    case layers::TransformFunction::TScale: {
-      float x = aFunction.get_Scale().x();
-      float y = aFunction.get_Scale().y();
-      float z = aFunction.get_Scale().z();
-      return StyleTransformOperation::Scale3D(x, y, z);
-    }
-    case layers::TransformFunction::TTranslation: {
-      float x = aFunction.get_Translation().x();
-      float y = aFunction.get_Translation().y();
-      float z = aFunction.get_Translation().z();
-      return StyleTransformOperation::Translate3D(
-          LengthPercentage::FromPixels(x), LengthPercentage::FromPixels(y),
-          Length{z});
-    }
-    case layers::TransformFunction::TSkewX: {
-      const layers::CSSAngle& x = aFunction.get_SkewX().x();
-      return StyleTransformOperation::SkewX(GetCSSAngle(x));
-    }
-    case layers::TransformFunction::TSkewY: {
-      const layers::CSSAngle& y = aFunction.get_SkewY().y();
-      return StyleTransformOperation::SkewY(GetCSSAngle(y));
-    }
-    case layers::TransformFunction::TSkew: {
-      const layers::CSSAngle& x = aFunction.get_Skew().x();
-      const layers::CSSAngle& y = aFunction.get_Skew().y();
-      return StyleTransformOperation::Skew(GetCSSAngle(x), GetCSSAngle(y));
-    }
-    case layers::TransformFunction::TTransformMatrix: {
-      const gfx::Matrix4x4& matrix = aFunction.get_TransformMatrix().value();
-      return StyleTransformOperation::Matrix3D({
-          matrix._11,
-          matrix._12,
-          matrix._13,
-          matrix._14,
-          matrix._21,
-          matrix._22,
-          matrix._23,
-          matrix._24,
-          matrix._31,
-          matrix._32,
-          matrix._33,
-          matrix._34,
-          matrix._41,
-          matrix._42,
-          matrix._43,
-          matrix._44,
-      });
-    }
-    case layers::TransformFunction::TPerspective: {
-      float perspective = aFunction.get_Perspective().value();
-      return StyleTransformOperation::Perspective(Length{perspective});
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("All functions should be implemented?");
-      return StyleTransformOperation::TranslateX(LengthPercentage::Zero());
-  }
-}
-
-static nsTArray<StyleTransformOperation> CreateTransformList(
-    const nsTArray<layers::TransformFunction>& aFunctions) {
-  nsTArray<StyleTransformOperation> result;
-  result.SetCapacity(aFunctions.Length());
-  for (const layers::TransformFunction& function : aFunctions) {
-    result.AppendElement(OperationFromLayers(function));
-  }
-  return result;
-}
-
 static StylePathCommand CommandFromLayers(const layers::PathCommand& aCommand) {
   switch (aCommand.type()) {
     case layers::PathCommand::TMoveTo:
@@ -388,11 +294,11 @@ already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
   switch (aAnimatable.type()) {
     case layers::Animatable::Tnull_t:
       break;
-    case layers::Animatable::TArrayOfTransformFunction: {
-      nsTArray<StyleTransformOperation> ops =
-          CreateTransformList(aAnimatable.get_ArrayOfTransformFunction());
-      return Servo_AnimationValue_Transform(ops.Elements(), ops.Length())
-          .Consume();
+    case layers::Animatable::TStyleTransform: {
+      const StyleTransform& transform = aAnimatable.get_StyleTransform();
+      MOZ_ASSERT(!transform.HasPercent(),
+                 "Received transform operations should have been resolved.");
+      return Servo_AnimationValue_Transform(&transform).Consume();
     }
     case layers::Animatable::Tfloat:
       return Servo_AnimationValue_Opacity(aAnimatable.get_float()).Consume();
