@@ -21,7 +21,7 @@
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ipc/ByteBufUtils.h"
+#include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
@@ -815,6 +815,75 @@ struct ParamTraits<mozilla::layers::CompositionPayload> {
   }
 };
 
+inline mozilla::ipc::ByteBuf ConvertToByteBuf(mozilla::StyleVecU8&& aVec) {
+  mozilla::ipc::ByteBuf out(aVec.data, aVec.length, aVec.capacity);
+  aVec.data = nullptr;
+  aVec.length = 0;
+  aVec.capacity = 0;
+  return out;
+}
+
+inline mozilla::StyleVecU8 ConvertToStyleVecU8(mozilla::ipc::ByteBuf&& aOther) {
+  mozilla::StyleVecU8 v;
+  v.data = aOther.mData;
+  v.length = aOther.mLen;
+  v.capacity = aOther.mCapacity;
+  aOther.mData = nullptr;
+  aOther.mLen = 0;
+  aOther.mCapacity = 0;
+  return v;
+}
+
+template <>
+struct ParamTraits<mozilla::LengthPercentage> {
+  typedef mozilla::LengthPercentage paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    mozilla::StyleVecU8 v;
+    mozilla::DebugOnly<bool> rv = Servo_LengthPercentage_Serialize(&aParam, &v);
+    MOZ_ASSERT(rv, "Serialize LengthPercentage failed");
+
+    WriteParam(aMsg, ConvertToByteBuf(std::move(v)));
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    mozilla::ipc::ByteBuf in;
+    bool rv = ReadParam(aMsg, aIter, &in);
+    if (!rv) {
+      return false;
+    }
+
+    mozilla::StyleVecU8 v = ConvertToStyleVecU8(std::move(in));
+    return v.data && Servo_LengthPercentage_Deserialize(&v, aResult);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::RayFunction> {
+  typedef mozilla::RayFunction paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    mozilla::StyleVecU8 v;
+    mozilla::DebugOnly<bool> rv = Servo_RayFunction_Serialize(&aParam, &v);
+    MOZ_ASSERT(rv, "Serialize RayFunction failed");
+
+    WriteParam(aMsg, ConvertToByteBuf(std::move(v)));
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    mozilla::ipc::ByteBuf in;
+    bool rv = ReadParam(aMsg, aIter, &in);
+    if (!rv) {
+      return false;
+    }
+
+    mozilla::StyleVecU8 v = ConvertToStyleVecU8(std::move(in));
+    return v.data && Servo_RayFunction_Deserialize(&v, aResult);
+  }
+};
+
 template <>
 struct ParamTraits<mozilla::RayReferenceData> {
   typedef mozilla::RayReferenceData paramType;
@@ -830,36 +899,6 @@ struct ParamTraits<mozilla::RayReferenceData> {
             ReadParam(aMsg, aIter, &aResult->mContainingBlockRect));
   }
 };
-
-#define IMPL_PARAMTRAITS_BY_SERDE(type_)                                    \
-  template <>                                                               \
-  struct ParamTraits<mozilla::type_> {                                      \
-    typedef mozilla::type_ paramType;                                       \
-    static void Write(Message* aMsg, const paramType& aParam) {             \
-      mozilla::ipc::ByteBuf v;                                              \
-      mozilla::DebugOnly<bool> rv = Servo_##type_##_Serialize(&aParam, &v); \
-      MOZ_ASSERT(rv, "Serialize ##type_## failed");                         \
-      WriteParam(aMsg, std::move(v));                                       \
-    }                                                                       \
-    static bool Read(const Message* aMsg, PickleIterator* aIter,            \
-                     paramType* aResult) {                                  \
-      mozilla::ipc::ByteBuf in;                                             \
-      bool rv = ReadParam(aMsg, aIter, &in);                                \
-      if (!rv) {                                                            \
-        return false;                                                       \
-      }                                                                     \
-      return in.mData && Servo_##type_##_Deserialize(&in, aResult);         \
-    }                                                                       \
-  };
-
-IMPL_PARAMTRAITS_BY_SERDE(LengthPercentage)
-IMPL_PARAMTRAITS_BY_SERDE(StyleOffsetPath)
-IMPL_PARAMTRAITS_BY_SERDE(StyleOffsetRotate)
-IMPL_PARAMTRAITS_BY_SERDE(StylePositionOrAuto)
-IMPL_PARAMTRAITS_BY_SERDE(StyleRotate)
-IMPL_PARAMTRAITS_BY_SERDE(StyleScale)
-IMPL_PARAMTRAITS_BY_SERDE(StyleTranslate)
-IMPL_PARAMTRAITS_BY_SERDE(StyleTransform)
 
 } /* namespace IPC */
 
