@@ -324,8 +324,9 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, fun, toStringStart, inheritedDirectives,
-      options().extraWarningsOption, generatorKind, asyncKind);
+      cx_, traceListHead_, fun, toStringStart, this->getParseInfo(),
+      inheritedDirectives, options().extraWarningsOption, generatorKind,
+      asyncKind);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -353,8 +354,9 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    */
 
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, fcd, toStringStart, inheritedDirectives,
-      options().extraWarningsOption, generatorKind, asyncKind);
+      cx_, traceListHead_, fcd, toStringStart, this->getParseInfo(),
+      inheritedDirectives, options().extraWarningsOption, generatorKind,
+      asyncKind);
 
   if (!funbox) {
     ReportOutOfMemory(cx_);
@@ -426,8 +428,8 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   MOZ_ASSERT(checkOptionsCalled_);
 
   Directives directives(options().forceStrictMode());
-  GlobalSharedContext globalsc(cx_, ScopeKind::Global, directives,
-                               options().extraWarningsOption);
+  GlobalSharedContext globalsc(cx_, ScopeKind::Global, this->getParseInfo(),
+                               directives, options().extraWarningsOption);
   SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
     return null();

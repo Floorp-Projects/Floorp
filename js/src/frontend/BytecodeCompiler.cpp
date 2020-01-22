@@ -580,7 +580,8 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   ModuleBuilder builder(cx, module, parser.ptr());
 
   RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
-  ModuleSharedContext modulesc(cx, module, enclosingScope, builder);
+  ModuleSharedContext modulesc(cx, module, info.parseInfo, enclosingScope,
+                               builder);
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
     return nullptr;
@@ -748,7 +749,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   }
 
   Directives directives(options.forceStrictMode());
-  GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
+  GlobalSharedContext globalsc(cx, ScopeKind::Global, parseInfo, directives,
                                options.extraWarningsOption);
 
   frontend::BinASTParser<ParserT> parser(cx, parseInfo, options,
