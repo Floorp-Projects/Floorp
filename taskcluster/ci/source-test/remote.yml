@@ -3,6 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
+    when:
+        files-changed:
+            - "remote/**"
     platform: linux64/opt
     require-build: true
     fetches:
@@ -20,6 +23,7 @@ job-defaults:
 
 puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
+    run-on-projects: ["mozilla-central", "try"]
     treeherder:
         symbol: remote(pup)
     run:
@@ -30,6 +34,7 @@ puppeteer:
 
 puppeteer-fis:
     description: Puppeteer tests against Firefox CDP-based remote protocol with Fission (site isolation) turned on
+    run-on-projects: ["try"]
     treeherder:
         symbol: remote(pup-fis)
     run:
