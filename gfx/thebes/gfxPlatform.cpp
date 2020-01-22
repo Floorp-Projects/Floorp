@@ -3423,6 +3423,12 @@ void gfxPlatform::InitOMTPConfig() {
                           Preferences::GetBool("layers.omtp.enabled", false,
                                                PrefValueKind::Default));
 
+  if (sizeof(void*) <= sizeof(uint32_t)) {
+    omtp.ForceDisable(FeatureStatus::Broken,
+                      "OMTP is not supported on 32-bit platforms",
+                      NS_LITERAL_CSTRING("FEATURE_FAILURE_OMTP_32BIT"));
+  }
+
   if (mContentBackend == BackendType::CAIRO) {
     omtp.ForceDisable(FeatureStatus::Broken,
                       "OMTP is not supported when using cairo",
