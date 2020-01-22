@@ -149,6 +149,9 @@ class StructuredCloneData : public StructuredCloneHolder {
 
   StructuredCloneData(StructuredCloneData&& aOther);
 
+  // Only DifferentProcess and UnknownDestination scopes are supported.
+  explicit StructuredCloneData(StructuredCloneScope aScope);
+
   ~StructuredCloneData();
 
   StructuredCloneData& operator=(const StructuredCloneData& aOther) = delete;

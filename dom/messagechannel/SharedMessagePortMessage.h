@@ -20,36 +20,37 @@ class SharedMessagePortMessage final : public ipc::StructuredCloneData {
  public:
   NS_INLINE_DECL_REFCOUNTING(SharedMessagePortMessage)
 
-  SharedMessagePortMessage() : ipc::StructuredCloneData() {}
+  SharedMessagePortMessage()
+      : ipc::StructuredCloneData(StructuredCloneScope::UnknownDestination) {}
 
-  // Note that the populated ClonedMessageData borrows the underlying
+  // Note that the populated MessageData borrows the underlying
   // JSStructuredCloneData from the SharedMessagePortMessage, so the caller is
-  // required to ensure that the ClonedMessageData instances are destroyed prior
-  // to the SharedMessagePortMessage instances.
+  // required to ensure that the MessageData instances are destroyed prior to
+  // the SharedMessagePortMessage instances.
   static void FromSharedToMessagesChild(
       MessagePortChild* aActor,
       const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-      nsTArray<ClonedMessageData>& aArray);
+      nsTArray<MessageData>& aArray);
 
   static bool FromMessagesToSharedChild(
-      nsTArray<ClonedMessageData>& aArray,
+      nsTArray<MessageData>& aArray,
       FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
 
-  // Note that the populated ClonedMessageData borrows the underlying
+  // Note that the populated MessageData borrows the underlying
   // JSStructuredCloneData from the SharedMessagePortMessage, so the caller is
-  // required to ensure that the ClonedMessageData instances are destroyed prior
-  // to the SharedMessagePortMessage instances.
+  // required to ensure that the MessageData instances are destroyed prior to
+  // the SharedMessagePortMessage instances.
   static bool FromSharedToMessagesParent(
       MessagePortParent* aActor,
       const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-      FallibleTArray<ClonedMessageData>& aArray);
+      FallibleTArray<MessageData>& aArray);
 
   static bool FromMessagesToSharedParent(
-      nsTArray<ClonedMessageData>& aArray,
+      nsTArray<MessageData>& aArray,
       FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
 
  private:
-  ~SharedMessagePortMessage() {}
+  ~SharedMessagePortMessage() = default;
 };
 
 }  // namespace dom
