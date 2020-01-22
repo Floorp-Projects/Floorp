@@ -30,11 +30,6 @@ ChromeUtils.defineModuleGetter(
   "perfService",
   "resource://activity-stream/common/PerfService.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "UserDomainAffinityProvider",
-  "resource://activity-stream/lib/UserDomainAffinityProvider.jsm"
-);
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
@@ -70,7 +65,6 @@ const PREF_SHOW_SPONSORED = "showSponsored";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
 const PREF_FLIGHT_BLOCKS = "discoverystream.flight.blocks";
 const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
-const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
 
 let getHardcodedLayout;
 
@@ -185,7 +179,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   get personalized() {
-    return this.config.personalized;
+    return this.config.personalized && !!this.providerSwitcher;
+  }
+
+  get providerSwitcher() {
+    if (this._providerSwitcher) {
+      return this._providerSwitcher;
+    }
+    this._providerSwitcher = this.store.feeds.get(
+      "feeds.recommendationproviderswitcher"
+    );
+    return this._providerSwitcher;
   }
 
   setupPrefs() {
@@ -556,6 +560,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     });
   }
 
+  // I wonder, can this be better as a reducer?
+  // See Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1606717
   placementsForEach(callback) {
     const { placements } = this.store.getState().DiscoveryStream.spocs;
     // Backwards comp for before we had placements, assume just a single spocs placement.
@@ -704,11 +710,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     });
   }
 
+  /*
+   * This just re hydrates the provider from cache.
+   * We can call this on startup because it's generally fast.
+   * It reports to devtools the last time the data in the cache was updated.
+   */
   async loadAffinityScoresCache() {
     const cachedData = (await this.cache.get()) || {};
     const { affinities } = cachedData;
     if (this.personalized && affinities && affinities.scores) {
-      this.affinityProvider = new UserDomainAffinityProvider(
+      this.providerSwitcher.setAffinityProvider(
         affinities.timeSegments,
         affinities.parameterSets,
         affinities.maxHistoryQueryResults,
@@ -729,7 +740,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
-  updateDomainAffinityScores() {
+  /*
+   * This creates a new affinityProvider using fresh affinities,
+   * It's run on a last updated timer. This is the opposite of loadAffinityScoresCache.
+   * This is also much slower so we only trigger this in the background on idle-daily.
+   * It causes new profiles to pick up personalization slowly because the first time
+   * a new profile is run you don't have any old cache to use, so it needs to wait for the first
+   * idle-daily. Older profiles can rely on cache during the idle-daily gap. Idle-daily is
+   * usually run once every 24 hours.
+   */
+  async updateDomainAffinityScores() {
     if (
       !this.personalized ||
       !this.affinities ||
@@ -740,7 +760,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       return;
     }
 
-    this.affinityProvider = new UserDomainAffinityProvider(
+    this.providerSwitcher.setAffinityProvider(
       this.affinities.timeSegments,
       this.affinities.parameterSets,
       this.affinities.maxHistoryQueryResults,
@@ -748,7 +768,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       undefined
     );
 
-    const affinities = this.affinityProvider.getAffinities();
+    await this.providerSwitcher.init();
+
+    const affinities = this.providerSwitcher.getAffinities();
     this.domainAffinitiesLastUpdated = Date.now();
 
     this.store.dispatch(
@@ -787,17 +809,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       // Sort by highest scores.
       .sort((a, b) => b.score - a.score);
 
-    if (this.affinityProvider) {
-      if (this.affinityProvider.dispatchRelevanceScoreDuration) {
-        this.affinityProvider.dispatchRelevanceScoreDuration(scoreStart);
-      } else {
-        this.store.dispatch(
-          ac.PerfEvent({
-            event: "PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION",
-            value: Math.round(perfService.absNow() - scoreStart),
-          })
-        );
-      }
+    if (this.personalized) {
+      this.providerSwitcher.dispatchRelevanceScoreDuration(scoreStart);
     }
     return { data, filtered };
   }
@@ -808,13 +821,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     if (item.score !== 0 && !item.score) {
       item.score = 1;
     }
-    if (this.personalized && this.affinityProvider) {
-      const scoreResult = this.affinityProvider.calculateItemRelevanceScore(
-        item
-      );
-      if (scoreResult === 0 || scoreResult) {
-        item.score = scoreResult;
-      }
+    if (this.personalized) {
+      this.providerSwitcher.calculateItemRelevanceScore(item);
     }
     return item;
   }
@@ -1060,11 +1068,123 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    * @property {boolean} isStartup - When the function is called at browser startup
    *
    * Refreshes layout, component feeds, and spocs in order if caches have expired.
-   * @param {RefreshAllOptions} options
+   * @param {RefreshAll} options
    */
   async refreshAll(options = {}) {
-    this.loadAffinityScoresCache();
+    const affinityCacheLoadPromise = this.loadAffinityScoresCache();
+    let expirationPerComponent = {};
+    if (this.personalized) {
+      // We store this before we refresh content.
+      // This way, we can know what and if something got updated,
+      // so we can know to score the results.
+      expirationPerComponent = await this._checkExpirationPerComponent();
+    }
     await this.refreshContent(options);
+
+    if (this.personalized) {
+      // affinityCacheLoadPromise is probably done, because of the refreshContent await above,
+      // but to be sure, we should check that it's done, without making the parent function wait.
+      affinityCacheLoadPromise.then(() => {
+        // If we don't have expired stories or feeds, we don't need to score after init.
+        // If we do have expired stories, we want to score after init.
+        // In both cases, we don't want these to block the parent function.
+        // This is why we store the promise, and call then to do our scoring work.
+        const initPromise = this.providerSwitcher.init();
+        initPromise.then(() => {
+          // Both scoreFeeds and scoreSpocs are promises,
+          // but they don't need to wait for each other.
+          // We can just fire them and forget at this point.
+          const { feeds, spocs } = this.store.getState().DiscoveryStream;
+          if (feeds.loaded && expirationPerComponent.feeds) {
+            this.scoreFeeds(feeds);
+          }
+          if (spocs.loaded && expirationPerComponent.spocs) {
+            this.scoreSpocs(spocs);
+          }
+        });
+      });
+    }
+  }
+
+  async scoreFeeds(feedsState) {
+    if (feedsState.data) {
+      const feedsResult = Object.keys(feedsState.data).reduce((feeds, url) => {
+        let feed = feedsState.data[url];
+        const { data: scoredItems } = this.scoreItems(
+          feed.data.recommendations
+        );
+        const { recsExpireTime } = feed.data.settings;
+        const recommendations = this.rotate(scoredItems, recsExpireTime);
+
+        feed = {
+          ...feed,
+          data: {
+            ...feed.data,
+            recommendations,
+          },
+        };
+
+        feeds[url] = feed;
+
+        this.store.dispatch(
+          ac.AlsoToPreloaded({
+            type: at.DISCOVERY_STREAM_FEED_UPDATE,
+            data: {
+              feed,
+              url,
+            },
+          })
+        );
+        return feeds;
+      }, {});
+      await this.cache.set("feeds", feedsResult);
+    }
+  }
+
+  async scoreSpocs(spocsState) {
+    let belowMinScore = [];
+    this.placementsForEach(placement => {
+      const items = spocsState.data[placement.name];
+
+      if (!items || !items.length) {
+        return;
+      }
+
+      const { data: scoreResult, filtered: minScoreFilter } = this.scoreItems(
+        items
+      );
+
+      belowMinScore = [...belowMinScore, ...minScoreFilter];
+
+      spocsState.data = {
+        ...spocsState.data,
+        [placement.name]: scoreResult,
+      };
+    });
+
+    // Update cache here so we don't need to re calculate scores on loads from cache.
+    // Related Bug 1606276
+    await this.cache.set("spocs", {
+      lastUpdated: spocsState.lastUpdated,
+      spocs: spocsState.data,
+    });
+    this.store.dispatch(
+      ac.AlsoToPreloaded({
+        type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
+        data: {
+          lastUpdated: spocsState.lastUpdated,
+          spocs: spocsState.data,
+        },
+      })
+    );
+    if (belowMinScore.length) {
+      this._sendSpocsFill(
+        {
+          below_min_score: belowMinScore,
+        },
+        false
+      );
+    }
   }
 
   async refreshContent(options = {}) {
@@ -1115,7 +1235,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   /**
-   * Reports the cache age in second for Discovery Stream.
+   * Reports the cache age in seconds for Discovery Stream.
    */
   async reportCacheAge() {
     const cachedData = (await this.cache.get()) || {};
@@ -1206,29 +1326,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
-  /**
-   * Sets affinityProvider state to the correct version.
-   */
-  setAffinityProviderVersion() {
-    const version = this.store.getState().Prefs.values[
-      PREF_PERSONALIZATION_VERSION
-    ];
-
-    this.store.dispatch(
-      ac.BroadcastToContent({
-        type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION,
-        data: {
-          version,
-        },
-      })
-    );
-  }
-
   async enable() {
     // Note that cache age needs to be reported prior to refreshAll.
     await this.reportCacheAge();
     const start = perfService.absNow();
-    this.setAffinityProviderVersion();
     await this.refreshAll({ updateOpenTabs: true, isStartup: true });
     Services.obs.addObserver(this, "idle-daily");
     this.loaded = true;
@@ -1242,16 +1343,21 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     if (this.loaded) {
       Services.obs.removeObserver(this, "idle-daily");
     }
-    if (this.affinityProvider && this.affinityProvider.teardown) {
-      this.affinityProvider.teardown();
-    }
     this.resetState();
   }
 
   async resetCache() {
+    await this.resetAllCache();
+  }
+
+  async resetContentCache() {
     await this.cache.set("layout", {});
     await this.cache.set("feeds", {});
     await this.cache.set("spocs", {});
+  }
+
+  async resetAllCache() {
+    await this.resetContentCache();
     await this.cache.set("affinities", {});
   }
 
@@ -1281,6 +1387,20 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       // Load data from all endpoints
       await this.enable();
     }
+  }
+
+  // This is a request to change the config from somewhere.
+  // Can be from a spefici pref related to Discovery Stream,
+  // or can be a generic request from an external feed that
+  // something changed.
+  configReset() {
+    this._prefCache.config = null;
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_CONFIG_CHANGE,
+        data: this.config,
+      })
+    );
   }
 
   recordFlightImpression(flightId) {
@@ -1374,15 +1494,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case PREF_HARDCODED_BASIC_LAYOUT:
       case PREF_SPOCS_ENDPOINT:
       case PREF_LANG_LAYOUT_CONFIG:
-      case PREF_PERSONALIZATION_VERSION:
-        // Clear the cached config and broadcast the newly computed value
-        this._prefCache.config = null;
-        this.store.dispatch(
-          ac.BroadcastToContent({
-            type: at.DISCOVERY_STREAM_CONFIG_CHANGE,
-            data: this.config,
-          })
-        );
+        // This is a config reset directly related to Discovery Stream pref.
+        this.configReset();
         break;
       case PREF_TOPSTORIES:
         if (!action.data.value) {
@@ -1434,17 +1547,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         RemoteSettings.pollChanges();
         break;
       case at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE:
-        await this.resetCache();
-        break;
-      case at.DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE:
-        let version = this.store.getState().Prefs.values[
-          PREF_PERSONALIZATION_VERSION
-        ];
-
-        // Toggle the version between 1 and 2.
-        this.store.dispatch(
-          ac.SetPref(PREF_PERSONALIZATION_VERSION, version === 1 ? 2 : 1)
-        );
+        // Affinities update at a slower interval than content, so in order to debug,
+        // we want to be able to expire just content to trigger the earlier expire times.
+        await this.resetContentCache();
         break;
       case at.DISCOVERY_STREAM_CONFIG_SET_VALUE:
         // Use the original string pref to then set a value instead of
@@ -1458,6 +1563,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             })
           )
         );
+        break;
+
+      case at.DISCOVERY_STREAM_CONFIG_RESET:
+        // This is a generic config reset likely related to an external feed pref.
+        this.configReset();
         break;
       case at.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS:
         this.resetConfigDefauts();
@@ -1562,6 +1672,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.UNINIT:
         // When this feed is shutting down:
         this.uninitPrefs();
+        this._providerSwitcher = null;
         break;
       case at.BLOCK_URL: {
         // If we block a story that also has a flight_id
