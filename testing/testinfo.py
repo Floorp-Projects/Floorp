@@ -663,17 +663,11 @@ class TestInfoReport(TestInfo):
         path = path.split('?')[0]
         # "<path>#<fragment>" -> "<path>"
         path = path.split('#')[0]
-        # "chrome://reftest/content/<path>" -> "layout/reftests/<path>"
-        path = path.replace('chrome://reftest/content', 'layout/reftests')
         return path
 
     def path_mod_jsreftest(self, path):
-        # "<path-to>/jsreftest.html?test=<path>" -> "<path>"
-        path = path.split('=')[1]
         # "<path>;assert" -> "<path>"
         path = path.split(';')[0]
-        # "<rel-path>" -> "js/src/tests/<path>"
-        path = os.path.join('js', 'src', 'tests', path)
         return path
 
     def path_mod_marionette(self, path):
@@ -681,16 +675,6 @@ class TestInfoReport(TestInfo):
         path = path.split(' ')[0]
         # "part1\part2" -> "part1/part2"
         path = path.replace('\\', os.path.sep)
-        return path
-
-    def path_mod_crashtest(self, path):
-        # TODO: revisit the need for these transforms after bug 1596567
-        # "chrome://reftest/content/crashtests/<path>" -> "<path>"
-        path = path.replace('chrome://reftest/content/crashtests/', '')
-        # "file://<path2>/reftests/tests/<path>" -> "<path>"
-        path = re.sub(r'file://.*/reftest/tests/', '', path)
-        # "http://<ip>/tests/<path>" -> "<path>"
-        path = re.sub(r'http://\d*\.\d*\.\d*\.\d*:\d*/tests/', '', path)
         return path
 
     def path_mod_wpt(self, path):
@@ -709,6 +693,11 @@ class TestInfoReport(TestInfo):
         # "<path>" -> "js/src/jit-test/tests/<path>"
         return os.path.join('js', 'src', 'jit-test', 'tests', path)
 
+    def path_mod_xpcshell(self, path):
+        # <manifest>.ini:<path> -> "<path>"
+        path = path.split('.ini:')[-1]
+        return path
+
     def add_activedata(self, branches, days, by_component):
         suites = {
             # List of known suites requiring special path handling and/or
@@ -726,12 +715,12 @@ class TestInfoReport(TestInfo):
             "web-platform-tests-reftests": (self.path_mod_wpt,
                                             [{"regex": {"result.test": "/css/css-.*"}},
                                              {"not": {"regex": {"result.test": "/css/css-.*"}}}]),
-            "crashtest": (self.path_mod_crashtest,
-                          [{"regex": {"result.test": ".*/tests/[a-m].*"}},
-                           {"not": {"regex": {"result.test": ".*/tests/[a-m].*"}}}]),
+            "crashtest": (None,
+                          [{"regex": {"result.test": "[a-g].*"}},
+                           {"not": {"regex": {"result.test": "[a-g].*"}}}]),
             "web-platform-tests-wdspec": (self.path_mod_wpt, [None]),
             "web-platform-tests-crashtests": (self.path_mod_wpt, [None]),
-            "xpcshell": (None, [None]),
+            "xpcshell": (self.path_mod_xpcshell, [None]),
             "mochitest-plain": (None, [None]),
             "mochitest-browser-chrome": (None, [None]),
             "mochitest-media": (None, [None]),
