@@ -277,9 +277,9 @@ void StyleSheet::ApplicableStateChanged(bool aApplicable) {
 
   nsINode& node = mDocumentOrShadowRoot->AsNode();
   if (auto* shadow = ShadowRoot::FromNode(node)) {
-    shadow->StyleSheetApplicableStateChanged(*this, aApplicable);
+    shadow->StyleSheetApplicableStateChanged(*this);
   } else {
-    node.AsDocument()->SetStyleSheetApplicableState(*this, aApplicable);
+    node.AsDocument()->StyleSheetApplicableStateChanged(*this);
   }
 }
 

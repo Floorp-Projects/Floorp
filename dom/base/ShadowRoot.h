@@ -78,7 +78,7 @@ class ShadowRoot final : public DocumentFragment,
   void RuleChanged(StyleSheet&, css::Rule*);
   void ImportRuleLoaded(CSSImportRule&, StyleSheet&);
   void SheetCloned(StyleSheet&);
-  void StyleSheetApplicableStateChanged(StyleSheet&, bool aApplicable);
+  void StyleSheetApplicableStateChanged(StyleSheet&);
 
   /**
    * Clones internal state, for example stylesheets, of aOther to 'this'.

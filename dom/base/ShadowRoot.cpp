@@ -400,8 +400,7 @@ void ShadowRoot::InsertSheetIntoAuthorData(size_t aIndex, StyleSheet& aSheet) {
 
 // FIXME(emilio): This needs to notify document observers and such,
 // presumably.
-void ShadowRoot::StyleSheetApplicableStateChanged(StyleSheet& aSheet,
-                                                  bool aApplicable) {
+void ShadowRoot::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
   int32_t index = IndexOfSheet(aSheet);
   if (index < 0) {
     // NOTE(emilio): @import sheets are handled in the relevant RuleAdded
@@ -413,7 +412,7 @@ void ShadowRoot::StyleSheetApplicableStateChanged(StyleSheet& aSheet,
                           "It'd better be an @import sheet");
     return;
   }
-  if (aApplicable) {
+  if (aSheet.IsApplicable()) {
     InsertSheetIntoAuthorData(size_t(index), aSheet);
   } else {
     MOZ_ASSERT(mServoStyles);
