@@ -134,6 +134,55 @@ function click(node, button = 0) {
   }
 }
 
+async function showCol(id) {
+  const onPopupHidden = once(table.menupopup, "popuphidden");
+  const event = table.once(TableWidget.EVENTS.HEADER_CONTEXT_MENU);
+  const menuItem = table.menupopup.querySelector(`[data-id='${id}']`);
+  const columnWrapper = table.tbody
+    .querySelector(`#${id}`)
+    .closest(".table-widget-wrapper");
+
+  info(`Showing ${id}`);
+  ok(
+    columnWrapper.hasAttribute("hidden"),
+    "Column is hidden before showing it"
+  );
+
+  click(menuItem);
+  const toShow = await event;
+  await onPopupHidden;
+
+  is(toShow, id, `#${id} was selected to be shown`);
+  ok(
+    !columnWrapper.hasAttribute("hidden"),
+    "Column is not hidden after showing it"
+  );
+}
+
+async function hideCol(id) {
+  const onPopupHidden = once(table.menupopup, "popuphidden");
+  const event = table.once(TableWidget.EVENTS.HEADER_CONTEXT_MENU);
+  const menuItem = table.menupopup.querySelector(`[data-id='${id}']`);
+  const columnWrapper = table.tbody
+    .querySelector(`#${id}`)
+    .closest(".table-widget-wrapper");
+
+  info(`selecting to hide #${id}`);
+  ok(
+    !columnWrapper.hasAttribute("hidden"),
+    `Column #${id} is not hidden before hiding it`
+  );
+  click(menuItem);
+  const toHide = await event;
+  await onPopupHidden;
+  is(toHide, id, `#${id} was selected to be hidden`);
+  is(
+    columnWrapper.getAttribute("hidden"),
+    "true",
+    `Column #${id} is hidden after hiding it`
+  );
+}
+
 /**
  * Tests if clicking the table items does the expected behavior
  */
@@ -142,7 +191,7 @@ var testMouseInteraction = async function() {
   ok(!table.selectedRow, "Nothing should be selected beforehand");
 
   let event = table.once(TableWidget.EVENTS.ROW_SELECTED);
-  const firstColumnFirstRowCell = table.tbody.firstChild.firstChild.children[1];
+  const firstColumnFirstRowCell = table.tbody.querySelector("[data-id=id1]");
   info("clicking on the first row");
   ok(
     !firstColumnFirstRowCell.classList.contains("theme-selected"),
@@ -250,23 +299,7 @@ var testMouseInteraction = async function() {
 
   // popup should be open now
   // clicking on second column label
-  let onPopupHidden = once(table.menupopup, "popuphidden");
-  event = table.once(TableWidget.EVENTS.HEADER_CONTEXT_MENU);
-  node = table.menupopup.querySelector("[data-id='col2']");
-  info("selecting to hide the second column");
-  ok(
-    !table.tbody.children[2].hasAttribute("hidden"),
-    "Column is not hidden before hiding it"
-  );
-  click(node);
-  id = await event;
-  await onPopupHidden;
-  is(id, "col2", "Correct column was triggered to be hidden");
-  is(
-    table.tbody.children[2].getAttribute("hidden"),
-    "true",
-    "Column is hidden after hiding it"
-  );
+  await hideCol("col2");
 
   // hiding third column
   // event listener for popupshown
@@ -281,25 +314,8 @@ var testMouseInteraction = async function() {
     1,
     "Only 1 menuitem is disabled"
   );
-  // popup should be open now
-  // clicking on second column label
-  onPopupHidden = once(table.menupopup, "popuphidden");
-  event = table.once(TableWidget.EVENTS.HEADER_CONTEXT_MENU);
-  node = table.menupopup.querySelector("[data-id='col3']");
-  info("selecting to hide the second column");
-  ok(
-    !table.tbody.children[4].hasAttribute("hidden"),
-    "Column is not hidden before hiding it"
-  );
-  click(node);
-  id = await event;
-  await onPopupHidden;
-  is(id, "col3", "Correct column was triggered to be hidden");
-  is(
-    table.tbody.children[4].getAttribute("hidden"),
-    "true",
-    "Column is hidden after hiding it"
-  );
+
+  await hideCol("col3");
 
   // opening again to see if 2 items are disabled now
   // event listener for popupshown
@@ -328,23 +344,7 @@ var testMouseInteraction = async function() {
   // showing back 2nd column
   // popup should be open now
   // clicking on second column label
-  onPopupHidden = once(table.menupopup, "popuphidden");
-  event = table.once(TableWidget.EVENTS.HEADER_CONTEXT_MENU);
-  node = table.menupopup.querySelector("[data-id='col2']");
-  info("selecting to hide the second column");
-  is(
-    table.tbody.children[2].getAttribute("hidden"),
-    "true",
-    "Column is hidden before unhiding it"
-  );
-  click(node);
-  id = await event;
-  await onPopupHidden;
-  is(id, "col2", "Correct column was triggered to be hidden");
-  ok(
-    !table.tbody.children[2].hasAttribute("hidden"),
-    "Column is not hidden after unhiding it"
-  );
+  await showCol("col2");
 
   // showing back 3rd column
   // event listener for popupshown
@@ -356,23 +356,7 @@ var testMouseInteraction = async function() {
 
   // popup should be open now
   // clicking on second column label
-  onPopupHidden = once(table.menupopup, "popuphidden");
-  event = table.once(TableWidget.EVENTS.HEADER_CONTEXT_MENU);
-  node = table.menupopup.querySelector("[data-id='col3']");
-  info("selecting to hide the second column");
-  is(
-    table.tbody.children[4].getAttribute("hidden"),
-    "true",
-    "Column is hidden before unhiding it"
-  );
-  click(node);
-  id = await event;
-  await onPopupHidden;
-  is(id, "col3", "Correct column was triggered to be hidden");
-  ok(
-    !table.tbody.children[4].hasAttribute("hidden"),
-    "Column is not hidden after unhiding it"
-  );
+  await showCol("col3");
 
   // reset table state
   table.clearSelection();

@@ -1426,13 +1426,16 @@ Column.prototype = {
     }
     if (checked) {
       this.wrapper.removeAttribute("hidden");
+      this.tbody.insertBefore(this.splitter, this.wrapper.nextSibling);
     } else {
       this.wrapper.setAttribute("hidden", "true");
+      this.splitter.remove();
     }
   },
 
   /**
-   * Removes the corresponding item from the column.
+   * Removes the corresponding item from the column and hide the last visible
+   * splitter with CSS, so we do not add splitter elements for hidden columns.
    */
   remove: function(item) {
     this._updateItems();
