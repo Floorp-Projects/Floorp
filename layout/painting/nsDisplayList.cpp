@@ -203,10 +203,6 @@ nsCString ActiveScrolledRoot::ToString(
   return std::move(str);
 }
 
-static inline CSSAngle MakeCSSAngle(const StyleAngle& aValue) {
-  return CSSAngle(aValue.ToDegrees(), eCSSUnit_Degree);
-}
-
 static StyleTransformOperation ResolveTranslate(
     TransformReferenceBox& aRefBox, const LengthPercentage& aX,
     const LengthPercentage& aY = LengthPercentage::Zero(),
@@ -386,21 +382,12 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
     case eCSSProperty_offset_distance:
       aAnimatable = aAnimationValue.GetOffsetDistanceProperty();
       break;
-    case eCSSProperty_offset_rotate: {
-      const StyleOffsetRotate& r = aAnimationValue.GetOffsetRotateProperty();
-      aAnimatable = OffsetRotate(MakeCSSAngle(r.angle), r.auto_);
+    case eCSSProperty_offset_rotate:
+      aAnimatable = aAnimationValue.GetOffsetRotateProperty();
       break;
-    }
-    case eCSSProperty_offset_anchor: {
-      const StylePositionOrAuto& p = aAnimationValue.GetOffsetAnchorProperty();
-      if (p.IsAuto()) {
-        aAnimatable = OffsetAnchor(null_t());
-        break;
-      }
-      aAnimatable = OffsetAnchor(
-          AnchorPosition(p.AsPosition().horizontal, p.AsPosition().vertical));
+    case eCSSProperty_offset_anchor:
+      aAnimatable = aAnimationValue.GetOffsetAnchorProperty();
       break;
-    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported property");
   }
@@ -779,16 +766,12 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
       case eCSSProperty_offset_rotate:
         if (hasMotion && (!display->mOffsetRotate.auto_ ||
                           display->mOffsetRotate.angle.ToDegrees() != 0.0)) {
-          const StyleOffsetRotate& rotate = display->mOffsetRotate;
-          appendFakeAnimation(
-              id, OffsetRotate(MakeCSSAngle(rotate.angle), rotate.auto_));
+          appendFakeAnimation(id, display->mOffsetRotate);
         }
         break;
       case eCSSProperty_offset_anchor:
         if (hasMotion && !display->mOffsetAnchor.IsAuto()) {
-          const StylePosition& position = display->mOffsetAnchor.AsPosition();
-          appendFakeAnimation(id, OffsetAnchor(AnchorPosition(
-                                      position.horizontal, position.vertical)));
+          appendFakeAnimation(id, display->mOffsetAnchor);
         }
         break;
       default:
