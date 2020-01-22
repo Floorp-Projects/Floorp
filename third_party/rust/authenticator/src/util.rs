@@ -56,15 +56,6 @@ pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
     }
 }
 
-#[cfg(any(target_os = "openbsd"))]
-pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
-    if rv.is_negative() {
-        Err(io::Error::last_os_error())
-    } else {
-        Ok(rv)
-    }
-}
-
 pub fn io_err(msg: &str) -> io::Error {
     io::Error::new(io::ErrorKind::Other, msg)
 }
