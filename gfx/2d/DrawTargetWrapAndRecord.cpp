@@ -92,7 +92,7 @@ class SourceSurfaceWrapAndRecord : public SourceSurface {
         RecordedSourceSurfaceDestruction(ReferencePtr(this)));
   }
 
-  SurfaceType GetType() const override { return SurfaceType::RECORDING; }
+  SurfaceType GetType() const override { return SurfaceType::WRAP_AND_RECORD; }
   IntSize GetSize() const override { return mFinalSurface->GetSize(); }
   SurfaceFormat GetFormat() const override {
     return mFinalSurface->GetFormat();
@@ -128,7 +128,7 @@ class GradientStopsWrapAndRecord : public GradientStops {
 };
 
 static SourceSurface* GetSourceSurface(SourceSurface* aSurface) {
-  if (aSurface->GetType() != SurfaceType::RECORDING) {
+  if (aSurface->GetType() != SurfaceType::WRAP_AND_RECORD) {
     return aSurface;
   }
 

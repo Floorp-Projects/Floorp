@@ -434,6 +434,9 @@ void AppendToString(std::stringstream& aStream, gfx::SurfaceType aType,
     case SurfaceType::RECORDING:
       aStream << "SurfaceType::RECORDING";
       break;
+    case SurfaceType::WRAP_AND_RECORD:
+      aStream << "SurfaceType::WRAP_AND_RECORD";
+      break;
     case SurfaceType::TILED:
       aStream << "SurfaceType::TILED";
       break;
