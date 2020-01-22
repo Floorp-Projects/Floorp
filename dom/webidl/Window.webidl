@@ -159,7 +159,7 @@ typedef OfflineResourceList ApplicationCache;
                     RTCSctpTransport,
                     Sensor,
                     SensorErrorEvent,
-                    _SharedArrayBuffer,
+                    SharedArrayBuffer,
                     styleMedia,
                     StylePropertyMap,
                     StylePropertyMapReadOnly,

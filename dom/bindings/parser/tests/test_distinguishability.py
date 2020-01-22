@@ -161,7 +161,7 @@ def WebIDLTest(parser, harness):
                  "record<UTF8String, long>",
                  "Date", "Date?", "any",
                  "Promise<any>", "Promise<any>?",
-                 "USVString", "JSString", "ArrayBuffer", "ArrayBufferView", "SharedArrayBuffer",
+                 "USVString", "JSString", "ArrayBuffer", "ArrayBufferView",
                  "Uint8Array", "Uint16Array",
                  "(long or Callback)", "(long or Dict)",
     ]
@@ -183,9 +183,8 @@ def WebIDLTest(parser, harness):
     nonObjects = primitives + strings
     objects = allBut(argTypes, nonObjects )
     bufferSourceTypes = ["ArrayBuffer", "ArrayBufferView", "Uint8Array", "Uint16Array"]
-    sharedBufferSourceTypes = ["SharedArrayBuffer"]
     interfaces = [ "Interface", "Interface?", "AncestorInterface",
-                   "UnrelatedInterface" ] + bufferSourceTypes + sharedBufferSourceTypes
+                   "UnrelatedInterface" ] + bufferSourceTypes
     nullables = (["long?", "short?", "boolean?", "Interface?",
                   "CallbackInterface?", "Dict", "Dict2",
                   "Date?", "any", "Promise<any>?"] +
@@ -195,7 +194,7 @@ def WebIDLTest(parser, harness):
     nonUserObjects = nonObjects + interfaces + dates + sequences
     otherObjects = allBut(argTypes, nonUserObjects + ["object"])
     notRelatedInterfaces = (nonObjects + ["UnrelatedInterface"] +
-                            otherObjects + dates + sequences + bufferSourceTypes + sharedBufferSourceTypes)
+                            otherObjects + dates + sequences + bufferSourceTypes)
     records = [ "record<DOMString, object>", "record<USVString, Dict>",
                 "record<ByteString, long>", "record<UTF8String, long>" ] # JSString not supported in records
 
@@ -252,7 +251,6 @@ def WebIDLTest(parser, harness):
     setDistinguishable("ArrayBufferView", allBut(argTypes, ["ArrayBufferView", "Uint8Array", "Uint16Array", "object"]))
     setDistinguishable("Uint8Array", allBut(argTypes, ["ArrayBufferView", "Uint8Array", "object"]))
     setDistinguishable("Uint16Array", allBut(argTypes, ["ArrayBufferView", "Uint16Array", "object"]))
-    setDistinguishable("SharedArrayBuffer", allBut(argTypes, ["SharedArrayBuffer", "object"]))
     setDistinguishable("(long or Callback)",
                        allBut(nonUserObjects, numerics))
     setDistinguishable("(long or Dict)",

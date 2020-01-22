@@ -2172,9 +2172,6 @@ class IDLType(IDLObject):
     def isArrayBufferView(self):
         return False
 
-    def isSharedArrayBuffer(self):
-        return False
-
     def isTypedArray(self):
         return False
 
@@ -2196,7 +2193,6 @@ class IDLType(IDLObject):
             type that is implemented in SpiderMonkey. """
         return self.isInterface() and (self.isArrayBuffer() or
                                        self.isArrayBufferView() or
-                                       self.isSharedArrayBuffer() or
                                        self.isTypedArray() or
                                        self.isReadableStream())
 
@@ -2414,9 +2410,6 @@ class IDLNullableType(IDLParametrizedType):
 
     def isArrayBufferView(self):
         return self.inner.isArrayBufferView()
-
-    def isSharedArrayBuffer(self):
-        return self.inner.isSharedArrayBuffer()
 
     def isTypedArray(self):
         return self.inner.isTypedArray()
@@ -2821,9 +2814,6 @@ class IDLTypedefType(IDLType):
     def isArrayBufferView(self):
         return self.inner.isArrayBufferView()
 
-    def isSharedArrayBuffer(self):
-        return self.inner.isSharedArrayBuffer()
-
     def isTypedArray(self):
         return self.inner.isTypedArray()
 
@@ -3141,7 +3131,6 @@ class IDLBuiltinType(IDLType):
         # Funny stuff
         'ArrayBuffer',
         'ArrayBufferView',
-        'SharedArrayBuffer',
         'Int8Array',
         'Uint8Array',
         'Uint8ClampedArray',
@@ -3179,7 +3168,6 @@ class IDLBuiltinType(IDLType):
         Types.void: IDLType.Tags.void,
         Types.ArrayBuffer: IDLType.Tags.interface,
         Types.ArrayBufferView: IDLType.Tags.interface,
-        Types.SharedArrayBuffer: IDLType.Tags.interface,
         Types.Int8Array: IDLType.Tags.interface,
         Types.Uint8Array: IDLType.Tags.interface,
         Types.Uint8ClampedArray: IDLType.Tags.interface,
@@ -3286,9 +3274,6 @@ class IDLBuiltinType(IDLType):
     def isArrayBufferView(self):
         return self._typeTag == IDLBuiltinType.Types.ArrayBufferView
 
-    def isSharedArrayBuffer(self):
-        return self._typeTag == IDLBuiltinType.Types.SharedArrayBuffer
-
     def isTypedArray(self):
         return (self._typeTag >= IDLBuiltinType.Types.Int8Array and
                 self._typeTag <= IDLBuiltinType.Types.Float64Array)
@@ -3302,7 +3287,6 @@ class IDLBuiltinType(IDLType):
         # all of it internally.
         return (self.isArrayBuffer() or
                 self.isArrayBufferView() or
-                self.isSharedArrayBuffer() or
                 self.isTypedArray() or
                 self.isReadableStream())
 
@@ -3373,7 +3357,6 @@ class IDLBuiltinType(IDLType):
                  # ArrayBuffer is distinguishable from everything
                  # that's not an ArrayBuffer or a callback interface
                  (self.isArrayBuffer() and not other.isArrayBuffer()) or
-                 (self.isSharedArrayBuffer() and not other.isSharedArrayBuffer()) or
                  (self.isReadableStream() and not other.isReadableStream()) or
                  # ArrayBufferView is distinguishable from everything
                  # that's not an ArrayBufferView or typed array.
@@ -3500,9 +3483,6 @@ BuiltinTypes = {
     IDLBuiltinType.Types.ArrayBufferView:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "ArrayBufferView",
                        IDLBuiltinType.Types.ArrayBufferView),
-    IDLBuiltinType.Types.SharedArrayBuffer:
-        IDLBuiltinType(BuiltinLocation("<builtin type>"), "SharedArrayBuffer",
-                       IDLBuiltinType.Types.SharedArrayBuffer),
     IDLBuiltinType.Types.Int8Array:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Int8Array",
                        IDLBuiltinType.Types.Int8Array),
@@ -5751,7 +5731,6 @@ class Tokenizer(object):
         "<": "LT",
         ">": "GT",
         "ArrayBuffer": "ARRAYBUFFER",
-        "SharedArrayBuffer": "SHAREDARRAYBUFFER",
         "or": "OR",
         "maplike": "MAPLIKE",
         "setlike": "SETLIKE",
@@ -7093,7 +7072,6 @@ class Parser(Tokenizer):
         """
             DistinguishableType : PrimitiveType Null
                                 | ARRAYBUFFER Null
-                                | SHAREDARRAYBUFFER Null
                                 | READABLESTREAM Null
                                 | OBJECT Null
         """
@@ -7101,8 +7079,6 @@ class Parser(Tokenizer):
             type = BuiltinTypes[IDLBuiltinType.Types.object]
         elif p[1] == "ArrayBuffer":
             type = BuiltinTypes[IDLBuiltinType.Types.ArrayBuffer]
-        elif p[1] == "SharedArrayBuffer":
-            type = BuiltinTypes[IDLBuiltinType.Types.SharedArrayBuffer]
         elif p[1] == "ReadableStream":
             type = BuiltinTypes[IDLBuiltinType.Types.ReadableStream]
         else:
