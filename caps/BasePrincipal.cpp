@@ -22,6 +22,8 @@
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/Components.h"
+#include "nsIURIFixup.h"
 
 #include "json/json.h"
 #include "nsSerializationHelper.h"
@@ -53,7 +55,7 @@ BasePrincipal::GetAsciiOrigin(nsACString& aOrigin) {
   nsCOMPtr<nsIURI> prinURI;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
   if (NS_FAILED(rv) || !prinURI) {
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
   }
   return nsContentUtils::GetASCIIOrigin(prinURI, aOrigin);
 }
@@ -321,6 +323,17 @@ BasePrincipal::EqualsConsideringDomain(nsIPrincipal* aOther, bool* aResult) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::EqualsURI(nsIURI* aOtherURI, bool* aResult) {
+  *aResult = false;
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->EqualsExceptRef(aOtherURI, aResult);
+}
+
+NS_IMETHODIMP
 BasePrincipal::Subsumes(nsIPrincipal* aOther, bool* aResult) {
   NS_ENSURE_ARG_POINTER(aOther);
 
@@ -478,6 +491,30 @@ BasePrincipal::GetAsciiSpec(nsACString& aSpec) {
     return NS_OK;
   }
   return prinURI->GetAsciiSpec(aSpec);
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetExposablePrePath(nsACString& aPrepath) {
+  aPrepath.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURIFixup> fixup(components::URIFixup::Service());
+  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
+  if (NS_WARN_IF(!urifixup)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> fixedURI;
+  rv = fixup->CreateExposableURI(prinURI, getter_AddRefs(fixedURI));
+
+  if (NS_FAILED(rv) || NS_WARN_IF(!fixedURI)) {
+    return NS_OK;
+  }
+  return fixedURI->GetDisplayPrePath(aPrepath);
 }
 
 NS_IMETHODIMP
