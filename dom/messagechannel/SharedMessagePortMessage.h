@@ -15,58 +15,41 @@ namespace dom {
 class MessagePortChild;
 class MessagePortMessage;
 class MessagePortParent;
-class RefMessageBody;
-class RefMessageBodyService;
 
-class SharedMessagePortMessage final {
+class SharedMessagePortMessage final : public ipc::StructuredCloneData {
  public:
   NS_INLINE_DECL_REFCOUNTING(SharedMessagePortMessage)
 
-  SharedMessagePortMessage();
+  SharedMessagePortMessage() : ipc::StructuredCloneData() {}
 
-  // Note that the populated MessageData borrows the underlying
+  // Note that the populated ClonedMessageData borrows the underlying
   // JSStructuredCloneData from the SharedMessagePortMessage, so the caller is
-  // required to ensure that the MessageData instances are destroyed prior to
-  // the SharedMessagePortMessage instances.
+  // required to ensure that the ClonedMessageData instances are destroyed prior
+  // to the SharedMessagePortMessage instances.
   static void FromSharedToMessagesChild(
       MessagePortChild* aActor,
       const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-      nsTArray<MessageData>& aArray);
+      nsTArray<ClonedMessageData>& aArray);
 
   static bool FromMessagesToSharedChild(
-      nsTArray<MessageData>& aArray,
+      nsTArray<ClonedMessageData>& aArray,
       FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
 
-  // Note that the populated MessageData borrows the underlying
+  // Note that the populated ClonedMessageData borrows the underlying
   // JSStructuredCloneData from the SharedMessagePortMessage, so the caller is
-  // required to ensure that the MessageData instances are destroyed prior to
-  // the SharedMessagePortMessage instances.
+  // required to ensure that the ClonedMessageData instances are destroyed prior
+  // to the SharedMessagePortMessage instances.
   static bool FromSharedToMessagesParent(
       MessagePortParent* aActor,
       const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-      FallibleTArray<MessageData>& aArray);
+      FallibleTArray<ClonedMessageData>& aArray);
 
   static bool FromMessagesToSharedParent(
-      nsTArray<MessageData>& aArray,
+      nsTArray<ClonedMessageData>& aArray,
       FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
 
-  void Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
-            RefMessageBodyService* aRefMessageBodyService, ErrorResult& aRv);
-
-  void Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
-             JS::Handle<JS::Value> aTransfers, nsID& aPortID,
-             RefMessageBodyService* aRefMessageBodyService, ErrorResult& aRv);
-
-  bool TakeTransferredPortsAsSequence(
-      Sequence<OwningNonNull<mozilla::dom::MessagePort>>& aPorts);
-
  private:
-  ~SharedMessagePortMessage() = default;
-
-  UniquePtr<ipc::StructuredCloneData> mCloneData;
-
-  RefPtr<RefMessageBody> mRefData;
-  nsID mRefDataId;
+  ~SharedMessagePortMessage() {}
 };
 
 }  // namespace dom

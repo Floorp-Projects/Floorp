@@ -783,8 +783,7 @@ JSObject* PromiseWorkerProxy::CustomReadHandler(
 
 bool PromiseWorkerProxy::CustomWriteHandler(JSContext* aCx,
                                             JSStructuredCloneWriter* aWriter,
-                                            JS::Handle<JSObject*> aObj,
-                                            bool* aSameProcessScopeRequired) {
+                                            JS::Handle<JSObject*> aObj) {
   if (NS_WARN_IF(!mCallbacks)) {
     return false;
   }

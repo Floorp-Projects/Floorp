@@ -160,8 +160,7 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
                               uint32_t aTag, uint32_t aIndex) override;
 
   bool CustomWriteHandler(JSContext* aCx, JSStructuredCloneWriter* aWriter,
-                          JS::Handle<JSObject*> aObj,
-                          bool* aSameProcessScopeRequired) override;
+                          JS::Handle<JSObject*> aObj) override;
 
  protected:
   virtual void ResolvedCallback(JSContext* aCx,
