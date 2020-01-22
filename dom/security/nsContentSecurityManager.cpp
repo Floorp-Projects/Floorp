@@ -27,6 +27,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryComms.h"
 #include "xpcpublic.h"
@@ -795,8 +796,8 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
   //    privileged contexts but with some exceptions, like e.g. the
   //    discoverURL.
   if (contentPolicyType == nsIContentPolicy::TYPE_SCRIPT) {
-    if (Preferences::GetBool("domsecurity.skip_remote_script_assertion_in_"
-                             "system_priv_context")) {
+    if (StaticPrefs::
+            dom_security_skip_remote_script_assertion_in_system_priv_context()) {
       return NS_OK;
     }
     nsAutoCString scriptSpec;

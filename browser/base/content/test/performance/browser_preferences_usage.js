@@ -127,9 +127,6 @@ add_task(async function startup() {
       min: 0,
       max: 50,
     },
-    "csp.skip_about_page_has_csp_assert": {
-      // This is accessed in debug only.
-    },
   };
 
   let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
