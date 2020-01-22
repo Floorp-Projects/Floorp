@@ -849,12 +849,6 @@ inline nsRect StyleGenericClipRect<LengthOrAuto>::ToLayoutRect(
   return nsRect(x, y, width, height);
 }
 
-inline StyleVecU8::~StyleVecU8() {
-  if (data) {
-    Servo_VecU8_Free(this);
-  }
-}
-
 }  // namespace mozilla
 
 #endif
