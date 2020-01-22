@@ -539,11 +539,6 @@ def build_docker_worker_payload(config, task, task_def):
                 trust_domain=config.graph_config['trust-domain'],
                 level=config.params['level'])
         )
-        task_def['scopes'].append(
-            'auth:gcp:access-token:{project}/tc-l{level}*'.format(
-                project=SCCACHE_GCS_PROJECT,
-                level=config.params['level'])
-        )
         worker['env']['USE_SCCACHE'] = '1'
         worker['env']['SCCACHE_GCS_PROJECT'] = SCCACHE_GCS_PROJECT
         # Disable sccache idle shutdown.
