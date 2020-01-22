@@ -29,7 +29,6 @@ EXTRA_JS_MODULES += [
     'HelperApps.jsm',
     'Home.jsm',
     'HomeProvider.jsm',
-    'InputWidgetHelper.jsm',
     'LightweightThemeConsumer.jsm',
     'MediaPlayerApp.jsm',
     'NetErrorHelper.jsm',
