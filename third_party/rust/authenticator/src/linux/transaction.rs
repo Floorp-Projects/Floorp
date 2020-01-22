@@ -19,7 +19,7 @@ impl Transaction {
         new_device_cb: F,
     ) -> Result<Self, ::Error>
     where
-        F: Fn(OsString, &dyn Fn() -> bool) + Sync + Send + 'static,
+        F: Fn(OsString, &Fn() -> bool) + Sync + Send + 'static,
         T: 'static,
     {
         let thread = RunLoop::new_with_timeout(

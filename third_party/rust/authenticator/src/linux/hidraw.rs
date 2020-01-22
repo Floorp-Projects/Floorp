@@ -6,9 +6,9 @@
 extern crate libc;
 
 use std::io;
+use std::mem;
 use std::os::unix::io::RawFd;
 
-use super::hidwrapper::{_HIDIOCGRDESC, _HIDIOCGRDESCSIZE};
 use hidproto::*;
 use util::{from_unix_result, io_err};
 
@@ -19,26 +19,42 @@ pub struct LinuxReportDescriptor {
     value: [u8; 4096],
 }
 
+const NRBITS: u32 = 8;
+const TYPEBITS: u32 = 8;
+
+const READ: u8 = 2;
+const SIZEBITS: u8 = 14;
+
+const NRSHIFT: u32 = 0;
+const TYPESHIFT: u32 = NRSHIFT + NRBITS as u32;
+const SIZESHIFT: u32 = TYPESHIFT + TYPEBITS as u32;
+const DIRSHIFT: u32 = SIZESHIFT + SIZEBITS as u32;
+
+// https://github.com/torvalds/linux/blob/master/include/uapi/linux/hid.h
 const HID_MAX_DESCRIPTOR_SIZE: usize = 4096;
 
-#[cfg(not(target_env = "musl"))]
-type IocType = libc::c_ulong;
-#[cfg(target_env = "musl")]
-type IocType = libc::c_int;
+macro_rules! ioctl {
+    ($dir:expr, $name:ident, $ioty:expr, $nr:expr; $ty:ty) => {
+        pub unsafe fn $name(fd: libc::c_int, val: *mut $ty) -> io::Result<libc::c_int> {
+            let size = mem::size_of::<$ty>();
+            let ioc = (($dir as u32) << DIRSHIFT)
+                | (($ioty as u32) << TYPESHIFT)
+                | (($nr as u32) << NRSHIFT)
+                | ((size as u32) << SIZESHIFT);
 
-pub unsafe fn hidiocgrdescsize(
-    fd: libc::c_int,
-    val: *mut ::libc::c_int,
-) -> io::Result<libc::c_int> {
-    from_unix_result(libc::ioctl(fd, _HIDIOCGRDESCSIZE as IocType, val))
+            #[cfg(not(target_env = "musl"))]
+            type IocType = libc::c_ulong;
+            #[cfg(target_env = "musl")]
+            type IocType = libc::c_int;
+
+            from_unix_result(libc::ioctl(fd, ioc as IocType, val))
+        }
+    };
 }
 
-pub unsafe fn hidiocgrdesc(
-    fd: libc::c_int,
-    val: *mut LinuxReportDescriptor,
-) -> io::Result<libc::c_int> {
-    from_unix_result(libc::ioctl(fd, _HIDIOCGRDESC as IocType, val))
-}
+// https://github.com/torvalds/linux/blob/master/include/uapi/linux/hidraw.h
+ioctl!(READ, hidiocgrdescsize, b'H', 0x01; ::libc::c_int);
+ioctl!(READ, hidiocgrdesc, b'H', 0x02; /*struct*/ LinuxReportDescriptor);
 
 pub fn is_u2f_device(fd: RawFd) -> bool {
     match read_report_descriptor(fd) {

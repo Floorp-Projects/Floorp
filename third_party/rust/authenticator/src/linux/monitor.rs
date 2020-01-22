@@ -30,7 +30,7 @@ fn poll(fds: &mut Vec<::libc::pollfd>) -> io::Result<()> {
 
 pub struct Monitor<F>
 where
-    F: Fn(OsString, &dyn Fn() -> bool) + Sync,
+    F: Fn(OsString, &Fn() -> bool) + Sync,
 {
     runloops: HashMap<OsString, RunLoop>,
     new_device_cb: Arc<F>,
@@ -38,7 +38,7 @@ where
 
 impl<F> Monitor<F>
 where
-    F: Fn(OsString, &dyn Fn() -> bool) + Send + Sync + 'static,
+    F: Fn(OsString, &Fn() -> bool) + Send + Sync + 'static,
 {
     pub fn new(new_device_cb: F) -> Self {
         Self {
@@ -47,7 +47,7 @@ where
         }
     }
 
-    pub fn run(&mut self, alive: &dyn Fn() -> bool) -> io::Result<()> {
+    pub fn run(&mut self, alive: &Fn() -> bool) -> io::Result<()> {
         let ctx = libudev::Context::new()?;
 
         let mut enumerator = libudev::Enumerator::new(&ctx)?;
