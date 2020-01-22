@@ -77,13 +77,6 @@ extensions.registerModules({
     manifest: ["browser_action"],
     paths: [["browserAction"]],
   },
-  browsingData: {
-    url: "chrome://geckoview/content/ext-browsingData.js",
-    schema: "chrome://geckoview/content/schemas/browsing_data.json",
-    scopes: ["addon_parent"],
-    manifest: ["browsing_data"],
-    paths: [["browsingData"]],
-  },
   pageAction: {
     url: "chrome://geckoview/content/ext-pageAction.js",
     schema: "chrome://extensions/content/schemas/page_action.json",
