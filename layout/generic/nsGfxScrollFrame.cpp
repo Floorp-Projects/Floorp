@@ -1209,11 +1209,6 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
     mHelper.PostScrolledAreaEvent();
   }
 
-  if (mHelper.mIsRoot &&
-      oldScrolledAreaBounds.Size() != newScrolledAreaBounds.Size()) {
-    mHelper.mIsRoot = true;
-  }
-
   mHelper.UpdatePrevScrolledRect();
 
   aStatus.Reset();  // This type of frame can't be split.
@@ -2098,6 +2093,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mHasOutOfFlowContentInsideFilter(false),
       mSuppressScrollbarRepaints(false),
       mIsUsingMinimumScaleSize(false),
+      mMinimumScaleSizeChanged(false),
       mProcessingScrollEvent(false),
       mVelocityQueue(aOuter->PresContext()) {
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
