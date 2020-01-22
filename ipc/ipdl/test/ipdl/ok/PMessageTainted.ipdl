@@ -1,0 +1,4 @@
+intr protocol PMessageTainted {
+child:
+    async foo() tainted;
+};

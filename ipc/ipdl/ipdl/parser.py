@@ -136,6 +136,7 @@ reserved = set((
     'returns',
     'struct',
     'sync',
+    'tainted',
     'union',
     'UniquePtr',
     'upto',
@@ -531,7 +532,8 @@ def p_OptionalMessageModifiers(p):
 
 def p_MessageModifier(p):
     """ MessageModifier : MessageVerify
-                        | MessageCompress """
+                        | MessageCompress
+                        | MessageTainted """
     p[0] = p[1]
 
 
@@ -543,6 +545,10 @@ def p_MessageVerify(p):
 def p_MessageCompress(p):
     """MessageCompress : COMPRESS
                        | COMPRESSALL"""
+    p[0] = p[1]
+
+def p_MessageTainted(p):
+    """MessageTainted : TAINTED"""
     p[0] = p[1]
 
 
