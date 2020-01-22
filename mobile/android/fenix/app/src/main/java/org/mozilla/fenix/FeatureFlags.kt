@@ -58,4 +58,9 @@ object FeatureFlags {
      * Enables the new language picker
      */
     val fenixLanguagePicker = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables deleting individual tracking protection exceptions.
+     */
+    val deleteIndividualTrackingProtectionExceptions = Config.channel.isNightlyOrDebug
 }
