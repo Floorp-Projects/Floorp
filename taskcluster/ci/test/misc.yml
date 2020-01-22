@@ -50,8 +50,8 @@ test-verify:
             .*-asan/.*: []
             (?:windows10-64|windows7-32|linux1804-64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
-            # do not run on beta or release: usually just confirms earlier results
-            default: ['trunk', 'try']
+            # do not run on mozilla-central, beta or release: usually just confirms earlier results
+            default: ['autoland', 'try']
     target:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
@@ -107,8 +107,8 @@ test-verify-gpu:
             .*-asan/.*: []
             (?:windows10-64|windows7-32|linux1804-64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
-            # do not run on beta or release: usually just confirms earlier results
-            default: ['trunk', 'try']
+            # do not run on mozilla-central, beta or release: usually just confirms earlier results
+            default: ['autoland', 'try']
     tier: 2
     mozharness:
         script:
