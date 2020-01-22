@@ -12,23 +12,31 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.menu.R
 import mozilla.components.browser.menu.WebExtensionBrowserMenu
 import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class WebExtensionBrowserMenuItemTest {
+
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Test
     fun `web extension menu item is visible by default`() {
@@ -71,6 +79,7 @@ class WebExtensionBrowserMenuItemTest {
 
         val action = WebExtensionBrowserMenuItem(browserAction) {}
         action.bind(mock(), view)
+        testDispatcher.advanceUntilIdle()
 
         assertFalse(view.isEnabled)
     }
@@ -99,6 +108,7 @@ class WebExtensionBrowserMenuItemTest {
 
         val action = WebExtensionBrowserMenuItem(browserAction) {}
         action.bind(mock(), view)
+        testDispatcher.advanceUntilIdle()
 
         val iconCaptor = argumentCaptor<BitmapDrawable>()
         verify(imageView).setImageDrawable(iconCaptor.capture())
@@ -134,6 +144,7 @@ class WebExtensionBrowserMenuItemTest {
 
         val action = WebExtensionBrowserMenuItem(browserAction) {}
         action.bind(mock(), view)
+        testDispatcher.advanceUntilIdle()
 
         verify(imageView).setImageResource(R.drawable.mozac_ic_web_extension_default_icon)
     }
@@ -169,6 +180,7 @@ class WebExtensionBrowserMenuItemTest {
         val menu: WebExtensionBrowserMenu = mock()
 
         item.bind(menu, view)
+        testDispatcher.advanceUntilIdle()
 
         labelView.performClick()
 
@@ -203,6 +215,7 @@ class WebExtensionBrowserMenuItemTest {
         val menu: WebExtensionBrowserMenu = mock()
 
         item.bind(menu, view)
+        testDispatcher.advanceUntilIdle()
 
         verify(labelView).setText("title")
         verify(badgeView).setText("badgeText")
