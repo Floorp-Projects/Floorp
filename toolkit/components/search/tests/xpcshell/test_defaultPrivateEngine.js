@@ -145,7 +145,7 @@ add_task(async function test_defaultPrivateEngine_turned_off() {
 
   promise = promiseDefaultNotification("normal");
   let privatePromise = promiseDefaultNotification("private");
-  Services.search.defaultPrivateEngine = engine1;
+  Services.search.defaultEngine = engine1;
   Assert.equal(
     await promise,
     engine1,
@@ -166,7 +166,7 @@ add_task(async function test_defaultPrivateEngine_turned_off() {
     engine1,
     "Should keep the default engine in sync with the pref off"
   );
-  promise = promiseDefaultNotification("normal");
+  promise = promiseDefaultNotification("private");
   Services.search.defaultPrivateEngine = engine2;
   Assert.equal(
     await promise,
@@ -180,10 +180,18 @@ add_task(async function test_defaultPrivateEngine_turned_off() {
   );
   Assert.equal(
     Services.search.defaultEngine,
-    engine2,
-    "Should keep the default engine in sync with the pref off"
+    engine1,
+    "Should not change the normal mode default engine"
   );
-  promise = promiseDefaultNotification("normal");
+  Assert.equal(
+    Services.prefs.getBoolPref(
+      SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+      false
+    ),
+    true,
+    "Should have set the separate private default pref to true"
+  );
+  promise = promiseDefaultNotification("private");
   Services.search.defaultPrivateEngine = engine1;
   Assert.equal(
     await promise,
@@ -199,49 +207,6 @@ add_task(async function test_defaultPrivateEngine_turned_off() {
     Services.search.defaultEngine,
     engine1,
     "Should keep the default engine in sync with the pref off"
-  );
-
-  // Test that hiding the currently-default engine affects the defaultEngine getter
-  // We fallback first to the original default...
-  engine1.hidden = true;
-  Assert.equal(
-    Services.search.defaultPrivateEngine,
-    originalDefault,
-    "Should reset to the original engine"
-  );
-  Assert.equal(
-    Services.search.defaultEngine,
-    originalDefault,
-    "Should also reset the normal default to the original engine"
-  );
-
-  // ... and then to the first visible engine in the list, so move our second
-  // engine to that position.
-  await Services.search.moveEngine(engine2, 0);
-  originalDefault.hidden = true;
-  Assert.equal(
-    Services.search.defaultPrivateEngine,
-    engine2,
-    "Should correctly set the second engine as private default"
-  );
-  Assert.equal(
-    Services.search.defaultEngine,
-    engine2,
-    "Should also set the normal default to the second engine"
-  );
-
-  // Test that setting defaultPrivateEngine to an already-hidden engine works, but
-  // doesn't change the return value of the getter
-  Services.search.defaultPrivateEngine = engine1;
-  Assert.equal(
-    Services.search.defaultPrivateEngine,
-    engine2,
-    "Should not change anything if attempted to be set to a hidden engine"
-  );
-  Assert.equal(
-    Services.search.defaultEngine,
-    engine2,
-    "Should also keep the normal default if attempted to be set to a hidden engine"
   );
 });
 
