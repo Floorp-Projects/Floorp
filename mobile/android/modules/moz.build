@@ -40,6 +40,5 @@ EXTRA_JS_MODULES += [
     'SelectHelper.jsm',
     'SharedPreferences.jsm',
     'Snackbars.jsm',
-    'WebrtcUI.jsm',
     'WebsiteMetadata.jsm'
 ]
