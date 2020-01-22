@@ -1073,6 +1073,18 @@ impl_basic_serde_funcs!(
     computed::motion::OffsetPath
 );
 
+impl_basic_serde_funcs!(
+    Servo_StyleOffsetRotate_Serialize,
+    Servo_StyleOffsetRotate_Deserialize,
+    computed::motion::OffsetRotate
+);
+
+impl_basic_serde_funcs!(
+    Servo_StylePositionOrAuto_Serialize,
+    Servo_StylePositionOrAuto_Deserialize,
+    computed::position::PositionOrAuto
+);
+
 #[no_mangle]
 pub extern "C" fn Servo_SVGPathData_Normalize(
     input: &specified::SVGPathData,
