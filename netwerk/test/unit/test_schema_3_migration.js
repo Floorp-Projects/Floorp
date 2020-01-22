@@ -165,5 +165,43 @@ function* do_run_test() {
   let cookie = cookies[0];
   Assert.equal(cookie.expiry, futureExpiry + 44);
 
+  do_close_profile(test_generator);
+  yield;
+
+  // Open the database so we can execute some more schema 3 statements on it.
+  schema3db = new CookieDatabaseConnection(do_get_cookie_file(profile), 3);
+
+  // Populate it with more cookies.
+  for (let i = 60; i < 80; ++i) {
+    let cookie = new Cookie(
+      "oh" + i,
+      "hai",
+      "cat.com",
+      "/",
+      futureExpiry,
+      now,
+      now + i,
+      false,
+      false,
+      false
+    );
+
+    schema3db.insertCookie(cookie);
+  }
+
+  // Close it.
+  schema3db.close();
+  schema3db = null;
+
+  // Load the database. The cookies added immediately prior will have a NULL
+  // creationTime column.
+  do_load_profile();
+
+  // Test the expected set of cookies.
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("cat.com"), 20);
+  cookies = Services.cookiemgr.getCookiesFromHost("cat.com", {});
+  cookie = cookies[0];
+  Assert.equal(cookie.creationTime, 0);
+
   finish_test();
 }
