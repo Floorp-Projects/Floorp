@@ -8,8 +8,6 @@
 #include "mozilla/MediaDrmCDMProxy.h"
 #include "MediaDrmCDMCallbackProxy.h"
 
-using namespace mozilla::java::sdk;
-
 namespace mozilla {
 
 MediaDrmSessionType ToMediaDrmSessionType(
