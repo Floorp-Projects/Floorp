@@ -49,7 +49,7 @@ internal object WebExtensionReducer {
             }
             is WebExtensionAction.UpdatePopupSessionAction -> {
                 state.updateWebExtensionState(action.extensionId) {
-                    it.copy(browserActionPopupSession = action.popupSessionId)
+                    it.copy(popupSessionId = action.popupSessionId, popupSession = action.popupSession)
                 }
             }
             is WebExtensionAction.UpdateTabBrowserAction -> {

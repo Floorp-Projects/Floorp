@@ -309,7 +309,8 @@ sealed class WebExtensionAction : BrowserAction() {
      */
     data class UpdatePopupSessionAction(
         val extensionId: String,
-        val popupSessionId: String
+        val popupSessionId: String? = null,
+        val popupSession: EngineSession? = null
     ) : WebExtensionAction()
 
     /**

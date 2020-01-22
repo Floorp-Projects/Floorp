@@ -91,6 +91,9 @@ object WebExtensionSupport {
      * be triggered when a tab is selected to display a web extension popup.
      * This is a lambda accepting the [WebExtension] and the session/tab ID to
      * select.
+     * @param onActionPopupToggleOverride (optional) override of behaviour that should
+     * be triggered when a browser or page action is toggled to display a web extension popup.
+     * This is a lambda accepting the [WebExtension].
      * @param onUpdatePermissionRequest (optional) Invoked when a web extension has changed its
      * permissions while trying to update to a new version. This requires user interaction as
      * the updated extension will not be installed, until the user grants the new permissions.
@@ -102,6 +105,7 @@ object WebExtensionSupport {
         onNewTabOverride: ((WebExtension?, EngineSession, String) -> String)? = null,
         onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
         onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null,
+        onActionPopupToggleOverride: ((WebExtension) -> Unit)? = null,
         onUpdatePermissionRequest: ((current: WebExtension, updated: WebExtension, newPermissions: List<String>, onPermissionsGranted: ((Boolean) -> Unit)) -> Unit)? = { _, _, _, _ -> }
     ) {
         this.onUpdatePermissionRequest = onUpdatePermissionRequest
@@ -140,19 +144,25 @@ object WebExtensionSupport {
                 engineSession: EngineSession,
                 action: Action
             ): EngineSession? {
-                val popupSessionId = store.state.extensions[webExtension.id]?.browserActionPopupSession
-                return if (popupSessionId != null && store.state.tabs.find { it.id == popupSessionId } != null) {
-                    if (popupSessionId == store.state.selectedTabId) {
-                        closeTab(popupSessionId, store, onCloseTabOverride, webExtension)
-                    } else {
-                        onSelectTabOverride?.invoke(webExtension, popupSessionId)
-                                ?: store.dispatch(TabListAction.SelectTabAction(popupSessionId))
-                    }
-                    null
-                } else {
-                    val sessionId = openTab(store, onNewTabOverride, webExtension, engineSession, "")
-                    store.dispatch(WebExtensionAction.UpdatePopupSessionAction(webExtension.id, sessionId))
+                return if (onActionPopupToggleOverride != null) {
+                    store.dispatch(WebExtensionAction.UpdatePopupSessionAction(webExtension.id, popupSession = engineSession))
+                    onActionPopupToggleOverride.invoke(webExtension)
                     engineSession
+                } else {
+                    val popupSessionId = store.state.extensions[webExtension.id]?.popupSessionId
+                    if (popupSessionId != null && store.state.tabs.find { it.id == popupSessionId } != null) {
+                        if (popupSessionId == store.state.selectedTabId) {
+                            closeTab(popupSessionId, store, onCloseTabOverride, webExtension)
+                        } else {
+                            onSelectTabOverride?.invoke(webExtension, popupSessionId)
+                                    ?: store.dispatch(TabListAction.SelectTabAction(popupSessionId))
+                        }
+                        null
+                    } else {
+                        val sessionId = openTab(store, onNewTabOverride, webExtension, engineSession, "")
+                        store.dispatch(WebExtensionAction.UpdatePopupSessionAction(webExtension.id, sessionId))
+                        engineSession
+                    }
                 }
             }
 
