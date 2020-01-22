@@ -113,7 +113,9 @@ class AppRequestInterceptorTest {
     }
 
     private fun createActualErrorPage(error: ErrorType): String {
-        return interceptor.onErrorRequest(session = mockk(), errorType = error, uri = null)?.data!!
+        val errorPage = interceptor.onErrorRequest(session = mockk(), errorType = error, uri = null)
+                as RequestInterceptor.ErrorResponse.Content
+        return errorPage.data
     }
 
     private fun createExpectedErrorPage(error: ErrorType, @RawRes html: Int, @RawRes css: Int): String {

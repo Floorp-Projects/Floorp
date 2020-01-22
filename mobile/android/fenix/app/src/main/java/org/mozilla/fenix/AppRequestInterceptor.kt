@@ -65,7 +65,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
 
         context.components.analytics.metrics.track(Event.ErrorPageVisited(improvedErrorType))
 
-        return RequestInterceptor.ErrorResponse(
+        return RequestInterceptor.ErrorResponse.Content(
             ErrorPages.createErrorPage(
                 context,
                 improvedErrorType,
