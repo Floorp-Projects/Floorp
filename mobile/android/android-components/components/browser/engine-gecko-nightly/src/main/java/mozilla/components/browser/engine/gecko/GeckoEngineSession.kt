@@ -314,6 +314,13 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.markActiveForWebExtensions].
+     */
+    override fun markActiveForWebExtensions(active: Boolean) {
+        runtime.webExtensionController.setTabActive(geckoSession, active)
+    }
+
+    /**
      * See [EngineSession.close].
      */
     override fun close() {

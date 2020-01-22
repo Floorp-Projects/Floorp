@@ -20,8 +20,10 @@ class AllSessionsObserverTest {
     fun `Observer will be registered on all already existing Sessions`() {
         val session1: Session = mock()
         `when`(session1.id).thenReturn("1")
+        `when`(session1.engineSessionHolder).thenReturn(mock())
         val session2: Session = mock()
         `when`(session2.id).thenReturn("2")
+        `when`(session2.engineSessionHolder).thenReturn(mock())
 
         val sessionManager = SessionManager(engine = mock()).apply {
             add(session1)
@@ -48,8 +50,10 @@ class AllSessionsObserverTest {
 
         val session1: Session = mock()
         `when`(session1.id).thenReturn("1")
+        `when`(session1.engineSessionHolder).thenReturn(mock())
         val session2: Session = mock()
         `when`(session2.id).thenReturn("2")
+        `when`(session2.engineSessionHolder).thenReturn(mock())
 
         sessionManager.add(session1)
         sessionManager.add(session2)
@@ -61,7 +65,9 @@ class AllSessionsObserverTest {
     @Test
     fun `Observer will be unregistered if Session gets removed`() {
         val session1: Session = spy(Session("https://www.mozilla.org"))
+        `when`(session1.engineSessionHolder).thenReturn(mock())
         val session2: Session = mock()
+        `when`(session2.engineSessionHolder).thenReturn(mock())
 
         val sessionManager = SessionManager(engine = mock()).apply {
             add(session1)
