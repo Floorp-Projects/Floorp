@@ -55,15 +55,57 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         nativeGetEditableParent(child, contentId, tabId);
     }
 
+    public static final class Selector {
+        private final GeckoProcessType mType;
+        private final int mPid;
+
+        @WrapForJNI
+        private Selector(@NonNull final GeckoProcessType type, final int pid) {
+            if (pid == INVALID_PID) {
+                throw new RuntimeException("Invalid PID");
+            }
+
+            mType = type;
+            mPid = pid;
+        }
+
+        public GeckoProcessType getType() {
+            return mType;
+        }
+
+        public int getPid() {
+            return mPid;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            if (obj == ((Object)this)) {
+                return true;
+            }
+
+            final Selector other = (Selector) obj;
+            return mType == other.mType && mPid == other.mPid;
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * mType.hashCode() + mPid;
+        }
+    }
+
     private static final class ChildConnection implements ServiceConnection,
                                                           IBinder.DeathRecipient {
-        private final String mType;
+        private final GeckoProcessType mType;
         private IChildProcess mChild;
         private GeckoResult<IChildProcess> mPendingBind;
         private GeckoResult<Void> mPendingUnbind;
         private int mPid;
 
-        public ChildConnection(final String type) {
+        public ChildConnection(@NonNull final GeckoProcessType type) {
             mType = type;
         }
 
@@ -73,7 +115,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 try {
                     mPid = mChild.getPid();
                 } catch (final RemoteException e) {
-                    Log.e(LOGTAG, "Cannot get pid for " + mType, e);
+                    Log.e(LOGTAG, "Cannot get pid for " + mType.toString(), e);
                 }
             }
             return mPid;
@@ -82,7 +124,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         private String buildLogMsg(@NonNull final String msgStart) {
             final StringBuilder builder = new StringBuilder(msgStart);
             builder.append(" ");
-            builder.append(mType);
+            builder.append(mType.toString());
 
             int pid = getPid();
             if (pid != INVALID_PID) {
@@ -128,7 +170,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             final Context context = GeckoAppShell.getApplicationContext();
             final Intent intent = new Intent();
             intent.setClassName(context,
-                                GeckoServiceChildProcess.class.getName() + '$' + mType);
+                                GeckoServiceChildProcess.class.getName() + '$' + mType.toString());
 
             mPendingBind = new GeckoResult<>();
             try {
@@ -267,13 +309,13 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
     }
 
-    private final SimpleArrayMap<String, ChildConnection> mConnections;
+    private final SimpleArrayMap<GeckoProcessType, ChildConnection> mConnections;
 
     private GeckoProcessManager() {
-        mConnections = new SimpleArrayMap<String, ChildConnection>();
+        mConnections = new SimpleArrayMap<GeckoProcessType, ChildConnection>();
     }
 
-    private ChildConnection getConnection(final String type) {
+    private ChildConnection getConnection(final GeckoProcessType type) {
         XPCOMEventTarget.assertOnLauncherThread();
 
         ChildConnection connection = mConnections.get(type);
@@ -284,15 +326,15 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         return connection;
     }
 
-    public void preload(final String... types) {
+    public void preload(final GeckoProcessType... types) {
         XPCOMEventTarget.launcherThread().dispatch(() -> {
-            for (final String type : types) {
+            for (final GeckoProcessType type : types) {
                 final ChildConnection connection = getConnection(type);
                 connection.bind().accept(child -> {
                     try {
                         child.getPid();
                     } catch (final RemoteException e) {
-                        Log.e(LOGTAG, "Cannot get pid for " + type, e);
+                        Log.e(LOGTAG, "Cannot get pid for " + type.toString(), e);
                     }
                 });
             }
@@ -301,7 +343,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     public void crashChild() {
         XPCOMEventTarget.launcherThread().dispatch(() -> {
-            final ChildConnection conn = mConnections.get("tab");
+            final ChildConnection conn = mConnections.get(GeckoProcessType.CONTENT);
             if (conn == null) {
                 return;
             }
@@ -316,9 +358,9 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     @WrapForJNI
-    private static void markAsDead(final String type) {
+    private static void markAsDead(final Selector selector) {
         XPCOMEventTarget.assertOnLauncherThread();
-        final ChildConnection conn = INSTANCE.mConnections.get(type);
+        final ChildConnection conn = INSTANCE.mConnections.get(selector.getType());
         if (conn == null) {
             return;
         }
@@ -327,7 +369,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     @WrapForJNI
-    private static GeckoResult<Integer> start(final String type,
+    private static GeckoResult<Integer> start(final GeckoProcessType type,
                                               final String[] args,
                                               final int prefsFd,
                                               final int prefMapFd,
@@ -351,7 +393,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         return flags & GeckoThread.FLAG_ENABLE_NATIVE_CRASHREPORTER;
     }
 
-    private void start(final GeckoResult<Integer> result, final String type,
+    private void start(final GeckoResult<Integer> result, final GeckoProcessType type,
                        final String[] args, final Bundle extras, final int flags,
                        final int prefsFd, final int prefMapFd, final int ipcFd,
                        final int crashFd, final int crashAnnotationFd,
@@ -360,7 +402,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
               crashFd, crashAnnotationFd, isRetry, /* prevException */ null);
     }
 
-    private void start(final GeckoResult<Integer> result, final String type,
+    private void start(final GeckoResult<Integer> result, final GeckoProcessType type,
                        final String[] args, final Bundle extras, final int flags,
                        final int prefsFd, final int prefMapFd, final int ipcFd,
                        final int crashFd, final int crashAnnotationFd,
@@ -384,7 +426,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 }
 
                 builder.append("; Type: ");
-                builder.append(type);
+                builder.append(type.toString());
 
                 result.completeExceptionally(new RuntimeException(builder.toString()));
             });
@@ -393,7 +435,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     private void start(final GeckoResult<Integer> result,
                        final ChildConnection connection,
                        final IChildProcess child,
-                       final String type, final String[] args,
+                       final GeckoProcessType type, final String[] args,
                        final Bundle extras, final int flags,
                        final int prefsFd, final int prefMapFd,
                        final int ipcFd, final int crashFd,
@@ -442,7 +484,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
 
         if (isRetry) {
-            Log.e(LOGTAG, "Cannot restart child " + type);
+            Log.e(LOGTAG, "Cannot restart child " + type.toString());
             final StringBuilder builder = new StringBuilder("Cannot restart child.");
             if (prevException != null) {
                 builder.append(" Initial RemoteException: ");
@@ -454,14 +496,14 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
             if (exception == null && prevException == null) {
                 builder.append(" No exceptions thrown; type = ");
-                builder.append(type);
+                builder.append(type.toString());
             }
             result.completeExceptionally(new RuntimeException(builder.toString()));
             return;
         }
 
         final RemoteException captureException = exception;
-        Log.w(LOGTAG, "Attempting to kill running child " + type);
+        Log.w(LOGTAG, "Attempting to kill running child " + type.toString());
         connection.unbind().accept(v -> {
             start(result, type, args, extras, flags, prefsFd, prefMapFd, ipcFd,
                   crashFd, crashAnnotationFd, /* isRetry */ true, captureException);
@@ -474,7 +516,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 }
 
                 builder.append("; Type = ");
-                builder.append(type);
+                builder.append(type.toString());
 
                 result.completeExceptionally(new RuntimeException(builder.toString()));
             });

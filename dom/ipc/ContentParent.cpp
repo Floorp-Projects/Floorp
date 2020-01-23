@@ -1657,10 +1657,14 @@ void ContentParent::MarkAsDead() {
   nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
   MOZ_ASSERT(launcherThread);
 
-  launcherThread->Dispatch(
-      NS_NewRunnableFunction("ContentParent::MarkAsDead", []() {
-        java::GeckoProcessManager::MarkAsDead(
-            XRE_GeckoProcessTypeToString(GeckoProcessType_Content));
+  auto procType = java::GeckoProcessType::CONTENT();
+  auto selector =
+      java::GeckoProcessManager::Selector::New(procType, OtherPid());
+
+  launcherThread->Dispatch(NS_NewRunnableFunction(
+      "ContentParent::MarkAsDead",
+      [selector = java::GeckoProcessManager::Selector::GlobalRef(selector)]() {
+        java::GeckoProcessManager::MarkAsDead(selector);
       }));
 #endif
 }
