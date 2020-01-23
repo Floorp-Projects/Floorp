@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
-import six
-from six import StringIO
+
+from StringIO import StringIO
 
 from mozunit import main
 
@@ -222,18 +222,18 @@ def CLANGXX(version):
 CLANG_3_3 = CLANG('3.3.0') + DEFAULT_C99
 CLANGXX_3_3 = CLANGXX('3.3.0')
 CLANG_4_0 = CLANG('4.0.2') + DEFAULT_C11 + {
-    '__has_attribute(diagnose_if)': 1,
+    '__has_attribute(diagnose_if)': '1',
 }
 CLANGXX_4_0 = CLANGXX('4.0.2') + SUPPORTS_GNUXX1Z + {
-    '__has_attribute(diagnose_if)': 1,
+    '__has_attribute(diagnose_if)': '1',
 }
 CLANG_5_0 = CLANG('5.0.1') + DEFAULT_C11 + {
-    '__has_attribute(diagnose_if)': 1,
-    '__has_warning("-Wunguarded-availability")': 1,
+    '__has_attribute(diagnose_if)': '1',
+    '__has_warning("-Wunguarded-availability")': '1',
 }
 CLANGXX_5_0 = CLANGXX('5.0.1') + SUPPORTS_GNUXX17 + {
-    '__has_attribute(diagnose_if)': 1,
-    '__has_warning("-Wunguarded-availability")': 1,
+    '__has_attribute(diagnose_if)': '1',
+    '__has_warning("-Wunguarded-availability")': '1',
 }
 DEFAULT_CLANG = CLANG_5_0
 DEFAULT_CLANGXX = CLANGXX_5_0
@@ -415,7 +415,6 @@ class BaseToolchainTest(BaseConfigureTest):
                 result = {}
             try:
                 self.out.truncate(0)
-                self.out.seek(0)
                 compiler = sandbox._value_for(sandbox[var])
                 # Add var on both ends to make it clear which of the
                 # variables is failing the test when that happens.
@@ -668,7 +667,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         # We'll try gcc and clang, but since there is no gcc (gcc-x.y doesn't
         # count), find clang.
         paths = {
-            k: v for k, v in six.iteritems(self.PATHS)
+            k: v for k, v in self.PATHS.iteritems()
             if os.path.basename(k) not in ('gcc', 'g++')
         }
         self.do_toolchain_test(paths, {
@@ -705,7 +704,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         # Even if there are gcc-x.y or clang-x.y compilers available, we
         # don't try them. This could be considered something to improve.
         paths = {
-            k: v for k, v in six.iteritems(self.PATHS)
+            k: v for k, v in self.PATHS.iteritems()
             if os.path.basename(k) not in ('gcc', 'g++', 'clang', 'clang++')
         }
         self.do_toolchain_test(paths, {
@@ -910,7 +909,7 @@ class OSXToolchainTest(BaseToolchainTest):
     def test_not_gcc(self):
         # We won't pick GCC if it's the only thing available.
         paths = {
-            k: v for k, v in six.iteritems(self.PATHS)
+            k: v for k, v in self.PATHS.iteritems()
             if os.path.basename(k) not in ('clang', 'clang++')
         }
         self.do_toolchain_test(paths, {
@@ -1038,7 +1037,7 @@ class WindowsToolchainTest(BaseToolchainTest):
     def test_gcc(self):
         # We'll pick GCC if msvc and clang-cl can't be found.
         paths = {
-            k: v for k, v in six.iteritems(self.PATHS)
+            k: v for k, v in self.PATHS.iteritems()
             if os.path.basename(k) not in ('cl', 'clang-cl')
         }
         self.do_toolchain_test(paths, {
@@ -1057,7 +1056,7 @@ class WindowsToolchainTest(BaseToolchainTest):
     def test_clang(self):
         # We'll pick clang if nothing else is found.
         paths = {
-            k: v for k, v in six.iteritems(self.PATHS)
+            k: v for k, v in self.PATHS.iteritems()
             if os.path.basename(k) not in ('cl', 'clang-cl', 'gcc')
         }
         self.do_toolchain_test(paths, {
