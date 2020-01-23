@@ -39,8 +39,7 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * Browse our [current Issues](https://github.com/mozilla-mobile/fenix/issues), or [file a security issue][sec issue].
 
-* Slack: #fenix channel on [mozilla-android.slack.com](https://mozilla-android.slack.com) | [Join here](https://join.slack.com/t/mozilla-android/shared_invite/enQtODU0ODk2MTgyMjQyLTU5MWU1ZGJkOGRjZmFjOTg2MTE1ZjlmNTU5ZTc5MDc4NjA1MmM0MjQ5Yjg1N2IzMjZjMGVmOTE0MzI1ZjQ3MTA)
-(**We're available Monday-Friday, GMT and PST working hours**).
+* Matrix: [#fenix:mozilla.org channel](https://chat.mozilla.org/#/room/#fenix:mozilla.org) (**We're available Monday-Friday, GMT and PST working hours**).
 
 * Check out the [project wiki](https://github.com/mozilla-mobile/fenix/wiki) for more information.
 
@@ -63,13 +62,13 @@ Note: Both Android SDK and NDK are required.
   ```shell
   ./gradlew clean app:assembleGeckoBetaDebug
   ```
-  
+
   Use app:assembleGeckoNightlyDebug to build with the Gecko Nightly version instead.
 
 3. Make sure to select the correct build variant in Android Studio. See the next section.
 
 ### Guide to Build Variants
-We have a lot of build variants. Each variant is composed of two flavors. One flavor is the version of Gecko to use and the other describes 
+We have a lot of build variants. Each variant is composed of two flavors. One flavor is the version of Gecko to use and the other describes
 which app id and settings to use. Here is a description of what each means:
 
 - **geckoBeta** (recommended) uses the Beta variant of the Gecko rendering engine, which corresponds to the next version of Gecko which will go to production
