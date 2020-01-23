@@ -90,9 +90,7 @@ function doStep()
 }
 
 function startTest() {
-  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, 'context': document}], function() {
-    postMsg('frame loaded');
-  });
+  postMsg('frame loaded');
 }
 </script>
 
