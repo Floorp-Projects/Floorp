@@ -16,8 +16,6 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class ReportBody;
-
 class ReportDeliver final : public nsIObserver, public nsITimerCallback {
  public:
   NS_DECL_ISUPPORTS

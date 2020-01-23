@@ -481,25 +481,19 @@ void ReportingHeader::GetEndpointForReport(
     const nsAString& aGroupName,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     nsACString& aEndpointURI) {
-  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
-  if (NS_WARN_IF(!principal)) {
-    return;
-  }
-  GetEndpointForReport(aGroupName, principal, aEndpointURI);
-}
-
-/* static */
-void ReportingHeader::GetEndpointForReport(const nsAString& aGroupName,
-                                           nsIPrincipal* aPrincipal,
-                                           nsACString& aEndpointURI) {
   MOZ_ASSERT(aEndpointURI.IsEmpty());
 
   if (!gReporting) {
     return;
   }
 
+  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
+  if (NS_WARN_IF(!principal)) {
+    return;
+  }
+
   nsAutoCString origin;
-  nsresult rv = aPrincipal->GetOrigin(origin);
+  nsresult rv = principal->GetOrigin(origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
