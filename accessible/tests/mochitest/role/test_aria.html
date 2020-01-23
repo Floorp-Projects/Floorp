@@ -14,6 +14,14 @@
 
   <script type="application/javascript">
 
+    // To test initial roles on body elements, we need to use an iframe.
+    function testBodyRole(iframeId, role) {
+      let iframe = getNode(iframeId);
+      let doc = iframe.contentDocument;
+      let docAcc = getAccessible(doc);
+      testRole(docAcc, role);
+    }
+
     function doTest() {
       // ARIA role map.
       testRole("aria_alert", ROLE_ALERT);
@@ -159,12 +167,29 @@
       testRole(testDoc, ROLE_DOCUMENT);
       document.body.setAttribute("role", "application");
       testRole(testDoc, ROLE_APPLICATION);
+      document.body.setAttribute("role", "dialog");
+      testRole(testDoc, ROLE_DIALOG);
+      // Other roles aren't valid on body elements.
+      document.body.setAttribute("role", "document");
+      testRole(testDoc, ROLE_DOCUMENT);
+      document.body.setAttribute("role", "button");
+      testRole(testDoc, ROLE_DOCUMENT);
+      document.body.setAttribute("role", "main");
+      testRole(testDoc, ROLE_DOCUMENT);
 
       // Test equation image
       testRole("img_eq", ROLE_FLAT_EQUATION);
 
       // Test textual equation
       testRole("txt_eq", ROLE_FLAT_EQUATION);
+
+      // Test initial ARIA roles on the body element.
+      testBodyRole("iframe_aria_application", ROLE_APPLICATION);
+      testBodyRole("iframe_aria_dialog", ROLE_DIALOG);
+      // Other roles aren't valid on body elements.
+      testBodyRole("iframe_aria_document", ROLE_DOCUMENT);
+      testBodyRole("iframe_aria_button", ROLE_DOCUMENT);
+      testBodyRole("iframe_aria_button", ROLE_DOCUMENT);
 
       SimpleTest.finish();
     }
@@ -375,6 +400,17 @@
   <p>Text:
     <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> +
       y<sup>2</sup> + z<sup>2</sup></span>
+  </p>
 
+  <iframe id="iframe_aria_application"
+    src="data:text/html,<body role='application'>"></iframe>
+  <iframe id="iframe_aria_dialog"
+    src="data:text/html,<body role='dialog'>"></iframe>
+  <iframe id="iframe_aria_document"
+    src="data:text/html,<body role='document'>"></iframe>
+  <iframe id="iframe_aria_button"
+    src="data:text/html,<body role='button'>"></iframe>
+  <iframe id="iframe_aria_main"
+    src="data:text/html,<body role='main'>"></iframe>
 </body>
 </html>
