@@ -237,35 +237,24 @@ impl ImageData {
                                     // Create a task to blit from the texture cache to
                                     // a normal transient render task surface. This will
                                     // copy only the sub-rect, if specified.
-                                    let cache_to_target_task = if false {
-                                        // TODO: figure out if/when this can be used
-                                        RenderTask::new_blit_with_padding(
-                                            *size,
-                                            padding,
-                                            BlitSource::Image { key: image_cache_key },
-                                        )
-                                    } else {
-                                        RenderTask::new_scaling_with_padding(
-                                            BlitSource::Image { key: image_cache_key },
-                                            render_tasks,
-                                            target_kind,
-                                            *size,
-                                            padding,
-                                        )
-                                    };
-                                    let cache_to_target_task_id = render_tasks.add(cache_to_target_task);
+                                    // TODO: figure out if/when we can do a blit instead.
+                                    let cache_to_target_task_id = RenderTask::new_scaling_with_padding(
+                                        BlitSource::Image { key: image_cache_key },
+                                        render_tasks,
+                                        target_kind,
+                                        *size,
+                                        padding,
+                                    );
 
                                     // Create a task to blit the rect from the child render
                                     // task above back into the right spot in the persistent
                                     // render target cache.
-                                    let target_to_cache_task = RenderTask::new_blit(
+                                    render_tasks.add().init(RenderTask::new_blit(
                                         *size,
                                         BlitSource::RenderTask {
                                             task_id: cache_to_target_task_id,
                                         },
-                                    );
-
-                                    render_tasks.add(target_to_cache_task)
+                                    ))
                                 }
                             ));
                         }

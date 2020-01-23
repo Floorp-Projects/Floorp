@@ -1063,7 +1063,7 @@ impl BrushSegment {
                     }
                 };
 
-                let clip_task = RenderTask::new_mask(
+                let clip_task_id = RenderTask::new_mask(
                     device_rect.to_i32(),
                     clip_chain.clips_range,
                     root_spatial_node_index,
@@ -1075,8 +1075,6 @@ impl BrushSegment {
                     device_pixel_scale,
                     frame_context.fb_config,
                 );
-
-                let clip_task_id = frame_state.render_tasks.add(clip_task);
                 let port = frame_state
                     .surfaces[surface_index.0]
                     .render_tasks
@@ -2903,14 +2901,13 @@ impl PrimitiveStore {
                         None,
                         false,
                         |render_tasks| {
-                            let task = RenderTask::new_line_decoration(
+                            render_tasks.add().init(RenderTask::new_line_decoration(
                                 task_size,
                                 cache_key.style,
                                 cache_key.orientation,
                                 cache_key.wavy_line_thickness.to_f32_px(),
                                 LayoutSize::from_au(cache_key.size),
-                            );
-                            render_tasks.add(task)
+                            ))
                         }
                     ));
                 }
@@ -3025,7 +3022,7 @@ impl PrimitiveStore {
                         None,
                         false,          // TODO(gw): We don't calculate opacity for borders yet!
                         |render_tasks| {
-                            let task = RenderTask::new_border_segment(
+                            render_tasks.add().init(RenderTask::new_border_segment(
                                 cache_size,
                                 build_border_instances(
                                     &segment.cache_key,
@@ -3033,9 +3030,7 @@ impl PrimitiveStore {
                                     &border_data.border,
                                     scale,
                                 ),
-                            );
-
-                            render_tasks.add(task)
+                            ))
                         }
                     ));
                 }
@@ -3207,15 +3202,13 @@ impl PrimitiveStore {
                         None,
                         prim_data.stops_opacity.is_opaque,
                         |render_tasks| {
-                            let task = RenderTask::new_gradient(
+                            render_tasks.add().init(RenderTask::new_gradient(
                                 size,
                                 stops,
                                 orientation,
                                 start_point,
                                 end_point,
-                            );
-
-                            render_tasks.add(task)
+                            ))
                         }
                     ));
                 }
@@ -4024,7 +4017,7 @@ impl PrimitiveInstance {
                 prim_info.clipped_world_rect,
                 device_pixel_scale,
             ) {
-                let clip_task = RenderTask::new_mask(
+                let clip_task_id = RenderTask::new_mask(
                     device_rect,
                     prim_info.clip_chain.clips_range,
                     root_spatial_node_index,
@@ -4036,8 +4029,6 @@ impl PrimitiveInstance {
                     device_pixel_scale,
                     frame_context.fb_config,
                 );
-
-                let clip_task_id = frame_state.render_tasks.add(clip_task);
                 if self.is_chased() {
                     println!("\tcreated task {:?} with device rect {:?}",
                         clip_task_id, device_rect);

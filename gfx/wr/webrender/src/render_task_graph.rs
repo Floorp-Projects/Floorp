@@ -11,6 +11,7 @@ use crate::render_target::{RenderTarget, RenderTargetKind, RenderTargetList, Col
 use crate::render_target::{PictureCacheTarget, TextureCacheRenderTarget, AlphaRenderTarget};
 use crate::render_task::{BlitSource, RenderTask, RenderTaskKind, RenderTaskAddress, RenderTaskData};
 use crate::render_task::{RenderTaskLocation};
+use crate::util::{VecHelper, Allocation};
 use std::{cmp, usize, f32, i32, u32};
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -25,6 +26,28 @@ pub struct RenderTaskGraph {
     pub cacheable_render_tasks: Vec<RenderTaskId>,
     next_saved: SavedTargetIndex,
     frame_id: FrameId,
+}
+
+/// Allows initializing a render task directly into the render task buffer.
+///
+/// See utils::VecHelpers. RenderTask is fairly large so avoiding the move when
+/// pushing into the vector can save a lot of exensive memcpys on pages with many
+/// render tasks.
+pub struct RenderTaskAllocation<'a> {
+    alloc: Allocation<'a, RenderTask>,
+    #[cfg(debug_assertions)]
+    frame_id: FrameId,
+}
+
+impl<'l> RenderTaskAllocation<'l> {
+    #[inline(always)]
+    pub fn init(self, value: RenderTask) -> RenderTaskId {
+        RenderTaskId {
+            index: self.alloc.init(value) as u32,
+            #[cfg(debug_assertions)]
+            frame_id: self.frame_id,
+        }
+    }
 }
 
 impl RenderTaskGraph {
@@ -49,11 +72,9 @@ impl RenderTaskGraph {
         }
     }
 
-    pub fn add(&mut self, task: RenderTask) -> RenderTaskId {
-        let index = self.tasks.len() as _;
-        self.tasks.push(task);
-        RenderTaskId {
-            index,
+    pub fn add(&mut self) -> RenderTaskAllocation {
+        RenderTaskAllocation {
+            alloc: self.tasks.alloc(),
             #[cfg(debug_assertions)]
             frame_id: self.frame_id,
         }
@@ -174,13 +195,13 @@ impl RenderTaskGraph {
 
         passes.reserve(max_depth as usize + 1);
         for _ in 0..max_depth {
-            passes.push(RenderPass::new_off_screen(screen_size, gpu_supports_fast_clears));
+            passes.alloc().init(RenderPass::new_off_screen(screen_size, gpu_supports_fast_clears));
         }
 
         if for_main_framebuffer {
-            passes.push(RenderPass::new_main_framebuffer(screen_size, gpu_supports_fast_clears));
+            passes.alloc().init(RenderPass::new_main_framebuffer(screen_size, gpu_supports_fast_clears));
         } else {
-            passes.push(RenderPass::new_off_screen(screen_size, gpu_supports_fast_clears));
+            passes.alloc().init(RenderPass::new_off_screen(screen_size, gpu_supports_fast_clears));
         }
 
         // Assign tasks to their render passes.
@@ -315,7 +336,7 @@ impl RenderTaskGraph {
                     frame_id: self.frame_id,
                 };
 
-                self.tasks.push(blit);
+                self.tasks.alloc().init(blit);
 
                 passes[child_pass_index as usize + 1].tasks.push(blit_id);
 
@@ -715,11 +736,11 @@ fn diamond_task_graph() {
     let counters = RenderTaskGraphCounters::new();
     let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
 
-    let a = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
-    let b1 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a]));
-    let b2 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a]));
+    let a = tasks.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
+    let b1 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a]));
+    let b2 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a]));
 
-    let main_pic = tasks.add(RenderTask::new_test(
+    let main_pic = tasks.add().init(RenderTask::new_test(
         color,
         RenderTaskLocation::Fixed(rect(0, 0, 3200, 1800)),
         smallvec![b1, b2],
@@ -752,31 +773,31 @@ fn blur_task_graph() {
     let counters = RenderTaskGraphCounters::new();
     let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
 
-    let pic = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
-    let scale1 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), smallvec![pic]));
-    let scale2 = tasks.add(RenderTask::new_test(color, dyn_location(160, 160), smallvec![scale1]));
-    let scale3 = tasks.add(RenderTask::new_test(color, dyn_location(80, 80), smallvec![scale2]));
-    let scale4 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale3]));
+    let pic = tasks.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
+    let scale1 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![pic]));
+    let scale2 = tasks.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![scale1]));
+    let scale3 = tasks.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![scale2]));
+    let scale4 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale3]));
 
-    let vblur1 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale4]));
-    let hblur1 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), smallvec![vblur1]));
+    let vblur1 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale4]));
+    let hblur1 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![vblur1]));
 
-    let vblur2 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale4]));
-    let hblur2 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), smallvec![vblur2]));
+    let vblur2 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![scale4]));
+    let hblur2 = tasks.add().init(RenderTask::new_test(color, dyn_location(40, 40), smallvec![vblur2]));
 
     // Insert a task that is an even number of passes away from its dependency.
     // This means the source and destination are on the same target and we have to resolve
     // this conflict by automatically inserting a blit task.
-    let vblur3 = tasks.add(RenderTask::new_test(color, dyn_location(80, 80), smallvec![scale3]));
-    let hblur3 = tasks.add(RenderTask::new_test(color, dyn_location(80, 80), smallvec![vblur3]));
+    let vblur3 = tasks.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![scale3]));
+    let hblur3 = tasks.add().init(RenderTask::new_test(color, dyn_location(80, 80), smallvec![vblur3]));
 
     // Insert a task that is an odd number > 1 of passes away from its dependency.
     // This should force us to mark the dependency "for saving" to keep its content valid
     // until the task can access it.
-    let vblur4 = tasks.add(RenderTask::new_test(color, dyn_location(160, 160), smallvec![scale2]));
-    let hblur4 = tasks.add(RenderTask::new_test(color, dyn_location(160, 160), smallvec![vblur4]));
+    let vblur4 = tasks.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![scale2]));
+    let hblur4 = tasks.add().init(RenderTask::new_test(color, dyn_location(160, 160), smallvec![vblur4]));
 
-    let main_pic = tasks.add(RenderTask::new_test(
+    let main_pic = tasks.add().init(RenderTask::new_test(
         color,
         RenderTaskLocation::Fixed(rect(0, 0, 3200, 1800)),
         smallvec![hblur1, hblur2, hblur3, hblur4],
@@ -837,14 +858,14 @@ fn culled_tasks() {
     let counters = RenderTaskGraphCounters::new();
     let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
 
-    let a1 = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
-    let _a2 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a1]));
+    let a1 = tasks.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
+    let _a2 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![a1]));
 
-    let b1 = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
-    let b2 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), smallvec![b1]));
-    let _b3 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), smallvec![b2]));
+    let b1 = tasks.add().init(RenderTask::new_test(color, dyn_location(640, 640), SmallVec::new()));
+    let b2 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![b1]));
+    let _b3 = tasks.add().init(RenderTask::new_test(color, dyn_location(320, 320), smallvec![b2]));
 
-    let main_pic = tasks.add(RenderTask::new_test(
+    let main_pic = tasks.add().init(RenderTask::new_test(
         color,
         RenderTaskLocation::Fixed(rect(0, 0, 3200, 1800)),
         smallvec![b2],

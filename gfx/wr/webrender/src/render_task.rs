@@ -526,7 +526,7 @@ impl RenderTask {
         clip_data_store: &mut ClipDataStore,
         device_pixel_scale: DevicePixelScale,
         fb_config: &FrameBuilderConfig,
-    ) -> Self {
+    ) -> RenderTaskId {
         // Step through the clip sources that make up this mask. If we find
         // any box-shadow clip sources, request that image from the render
         // task cache. This allows the blurred box-shadow rect to be cached
@@ -563,15 +563,13 @@ impl RenderTask {
                         false,
                         |render_tasks| {
                             // Draw the rounded rect.
-                            let mask_task = RenderTask::new_rounded_rect_mask(
+                            let mask_task_id = render_tasks.add().init(RenderTask::new_rounded_rect_mask(
                                 cache_size,
                                 clip_data_address,
                                 source.minimal_shadow_rect.origin,
                                 device_pixel_scale,
                                 fb_config,
-                            );
-
-                            let mask_task_id = render_tasks.add(mask_task);
+                            ));
 
                             // Blur it
                             RenderTask::new_blur(
@@ -610,16 +608,18 @@ impl RenderTask {
             ClearMode::DontCare
         };
 
-        RenderTask::with_dynamic_location(
-            outer_rect.size,
-            smallvec![],
-            RenderTaskKind::CacheMask(CacheMaskTask {
-                actual_rect: outer_rect,
-                clip_node_range,
-                root_spatial_node_index,
-                device_pixel_scale,
-            }),
-            clear_mode,
+        render_tasks.add().init(
+            RenderTask::with_dynamic_location(
+                outer_rect.size,
+                smallvec![],
+                RenderTaskKind::CacheMask(CacheMaskTask {
+                    actual_rect: outer_rect,
+                    clip_node_range,
+                    root_spatial_node_index,
+                    device_pixel_scale,
+                }),
+                clear_mode,
+            )
         )
     }
 
@@ -720,13 +720,12 @@ impl RenderTask {
             };
 
             downscaling_src_task_id = cached_task.unwrap_or_else(|| {
-                let downscaling_task = RenderTask::new_scaling(
+                RenderTask::new_scaling(
                     downscaling_src_task_id,
                     render_tasks,
                     target_kind,
                     adjusted_blur_target_size,
-                );
-                render_tasks.add(downscaling_task)
+                )
             });
 
             if let Some(ref mut cache) = blur_cache {
@@ -747,7 +746,7 @@ impl RenderTask {
         let blur_region = blur_region / (scale_factor as i32);
 
         let blur_task_id = cached_task.unwrap_or_else(|| {
-            let blur_task_v = RenderTask::with_dynamic_location(
+            let blur_task_v = render_tasks.add().init(RenderTask::with_dynamic_location(
                 adjusted_blur_target_size,
                 smallvec![downscaling_src_task_id],
                 RenderTaskKind::VerticalBlur(BlurTask {
@@ -758,13 +757,11 @@ impl RenderTask {
                     uv_rect_kind,
                 }),
                 clear_mode,
-            );
+            ));
 
-            let blur_task_v_id = render_tasks.add(blur_task_v);
-
-            let blur_task_h = RenderTask::with_dynamic_location(
+            render_tasks.add().init(RenderTask::with_dynamic_location(
                 adjusted_blur_target_size,
-                smallvec![blur_task_v_id],
+                smallvec![blur_task_v],
                 RenderTaskKind::HorizontalBlur(BlurTask {
                     blur_std_deviation: adjusted_blur_std_deviation.width,
                     target_kind,
@@ -773,9 +770,7 @@ impl RenderTask {
                     uv_rect_kind,
                 }),
                 clear_mode,
-            );
-
-            render_tasks.add(blur_task_h)
+            ))
         });
 
         if let Some(ref mut cache) = blur_cache {
@@ -804,7 +799,7 @@ impl RenderTask {
         render_tasks: &mut RenderTaskGraph,
         target_kind: RenderTargetKind,
         size: DeviceIntSize,
-    ) -> Self {
+    ) -> RenderTaskId {
         Self::new_scaling_with_padding(
             BlitSource::RenderTask { task_id: src_task_id },
             render_tasks,
@@ -820,22 +815,24 @@ impl RenderTask {
         target_kind: RenderTargetKind,
         padded_size: DeviceIntSize,
         padding: DeviceIntSideOffsets,
-    ) -> Self {
+    ) -> RenderTaskId {
         let (uv_rect_kind, children, image) = match source {
             BlitSource::RenderTask { task_id } => (render_tasks[task_id].uv_rect_kind(), smallvec![task_id], None),
             BlitSource::Image { key } => (UvRectKind::Rect, smallvec![], Some(key)),
         };
 
-        RenderTask::with_dynamic_location(
-            padded_size,
-            children,
-            RenderTaskKind::Scaling(ScalingTask {
-                target_kind,
-                image,
-                uv_rect_kind,
-                padding,
-            }),
-            ClearMode::DontCare,
+        render_tasks.add().init(
+            RenderTask::with_dynamic_location(
+                padded_size,
+                children,
+                RenderTaskKind::Scaling(ScalingTask {
+                    target_kind,
+                    image,
+                    uv_rect_kind,
+                    padding,
+                }),
+                ClearMode::DontCare,
+            )
         )
     }
 
@@ -871,22 +868,20 @@ impl RenderTask {
 
             match (input_color_space, color_space) {
                 (ColorSpace::Srgb, ColorSpace::LinearRgb) => {
-                    let task = RenderTask::new_svg_filter_primitive(
+                    task_id = render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![task_id],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::SrgbToLinear,
-                    );
-                    task_id = render_tasks.add(task);
+                    ));
                 },
                 (ColorSpace::LinearRgb, ColorSpace::Srgb) => {
-                    let task = RenderTask::new_svg_filter_primitive(
+                    task_id = render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![task_id],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::LinearToSrgb,
-                    );
-                    task_id = render_tasks.add(task);
+                    ));
                 },
                 _ => {},
             }
@@ -930,22 +925,20 @@ impl RenderTask {
                         primitive.color_space
                     );
 
-                    let task = RenderTask::new_svg_filter_primitive(
+                    render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![input_1_task_id, input_2_task_id],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::Blend(blend.mode),
-                    );
-                    render_tasks.add(task)
+                    ))
                 },
                 FilterPrimitiveKind::Flood(ref flood) => {
-                    let task = RenderTask::new_svg_filter_primitive(
+                    render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::Flood(flood.color),
-                    );
-                    render_tasks.add(task)
+                    ))
                 }
                 FilterPrimitiveKind::Blur(ref blur) => {
                     let blur_std_deviation = blur.radius * device_pixel_scale.0;
@@ -959,17 +952,16 @@ impl RenderTask {
                         primitive.color_space
                     );
 
-                    // TODO: This is a hack to ensure that a blur task's input is always in the blur's previous pass.
-                    let svg_task = RenderTask::new_svg_filter_primitive(
-                        smallvec![input_task_id],
-                        content_size,
-                        uv_rect_kind,
-                        SvgFilterInfo::Identity,
-                    );
-
                     RenderTask::new_blur(
                         DeviceSize::new(blur_std_deviation, blur_std_deviation),
-                        render_tasks.add(svg_task),
+                        // TODO: This is a hack to ensure that a blur task's input is always
+                        // in the blur's previous pass.
+                        render_tasks.add().init(RenderTask::new_svg_filter_primitive(
+                            smallvec![input_task_id],
+                            content_size,
+                            uv_rect_kind,
+                            SvgFilterInfo::Identity,
+                        )),
                         render_tasks,
                         RenderTargetKind::Color,
                         ClearMode::Transparent,
@@ -988,13 +980,12 @@ impl RenderTask {
                         primitive.color_space
                     );
 
-                    let task = RenderTask::new_svg_filter_primitive(
+                    render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![input_task_id],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::Opacity(opacity.opacity),
-                    );
-                    render_tasks.add(task)
+                    ))
                 }
                 FilterPrimitiveKind::ColorMatrix(ref color_matrix) => {
                     let input_task_id = get_task_input(
@@ -1007,13 +998,12 @@ impl RenderTask {
                         primitive.color_space
                     );
 
-                    let task = RenderTask::new_svg_filter_primitive(
+                    render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![input_task_id],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::ColorMatrix(Box::new(color_matrix.matrix)),
-                    );
-                    render_tasks.add(task)
+                    ))
                 }
                 FilterPrimitiveKind::DropShadow(ref drop_shadow) => {
                     let input_task_id = get_task_input(
@@ -1029,13 +1019,14 @@ impl RenderTask {
                     let blur_std_deviation = drop_shadow.shadow.blur_radius * device_pixel_scale.0;
                     let offset = drop_shadow.shadow.offset * LayoutToWorldScale::new(1.0) * device_pixel_scale;
 
-                    let offset_task = RenderTask::new_svg_filter_primitive(
-                        smallvec![input_task_id],
-                        content_size,
-                        uv_rect_kind,
-                        SvgFilterInfo::Offset(offset),
+                    let offset_task_id = render_tasks.add().init(
+                        RenderTask::new_svg_filter_primitive(
+                            smallvec![input_task_id],
+                            content_size,
+                            uv_rect_kind,
+                            SvgFilterInfo::Offset(offset),
+                        )
                     );
-                    let offset_task_id = render_tasks.add(offset_task);
 
                     let blur_task_id = RenderTask::new_blur(
                         DeviceSize::new(blur_std_deviation, blur_std_deviation),
@@ -1047,13 +1038,12 @@ impl RenderTask {
                         content_size,
                     );
 
-                    let task = RenderTask::new_svg_filter_primitive(
+                    render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![input_task_id, blur_task_id],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::DropShadow(drop_shadow.shadow.color),
-                    );
-                    render_tasks.add(task)
+                    ))
                 }
                 FilterPrimitiveKind::ComponentTransfer(ref component_transfer) => {
                     let input_task_id = get_task_input(
@@ -1071,13 +1061,12 @@ impl RenderTask {
                     if filter_data.is_identity() {
                         input_task_id
                     } else {
-                        let task = RenderTask::new_svg_filter_primitive(
+                        render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                             smallvec![input_task_id],
                             content_size,
                             uv_rect_kind,
                             SvgFilterInfo::ComponentTransfer(filter_data.clone()),
-                        );
-                        render_tasks.add(task)
+                        ))
                     }
                 }
                 FilterPrimitiveKind::Offset(ref info) => {
@@ -1092,13 +1081,12 @@ impl RenderTask {
                     );
 
                     let offset = info.offset * LayoutToWorldScale::new(1.0) * device_pixel_scale;
-                    let offset_task = RenderTask::new_svg_filter_primitive(
+                    render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![input_task_id],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::Offset(offset),
-                    );
-                    render_tasks.add(offset_task)
+                    ))
                 }
                 FilterPrimitiveKind::Composite(info) => {
                     let input_1_task_id = get_task_input(
@@ -1120,13 +1108,12 @@ impl RenderTask {
                         primitive.color_space
                     );
 
-                    let task = RenderTask::new_svg_filter_primitive(
+                    render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                         smallvec![input_1_task_id, input_2_task_id],
                         content_size,
                         uv_rect_kind,
                         SvgFilterInfo::Composite(info.operator),
-                    );
-                    render_tasks.add(task)
+                    ))
                 }
             };
             outputs.push(render_task_id);
@@ -1137,13 +1124,12 @@ impl RenderTask {
 
         // Convert to sRGB if needed
         if filter_primitives.last().unwrap().color_space == ColorSpace::LinearRgb {
-            let task = RenderTask::new_svg_filter_primitive(
+            render_task_id = render_tasks.add().init(RenderTask::new_svg_filter_primitive(
                 smallvec![render_task_id],
                 content_size,
                 uv_rect_kind,
                 SvgFilterInfo::LinearToSrgb,
-            );
-            render_task_id = render_tasks.add(task);
+            ));
         }
 
         render_task_id
@@ -1558,6 +1544,7 @@ impl RenderTask {
     }
 
     /// Mark this render task for keeping the results alive up until the end of the frame.
+    #[inline]
     pub fn mark_for_saving(&mut self) {
         match self.location {
             RenderTaskLocation::Fixed(..) |
