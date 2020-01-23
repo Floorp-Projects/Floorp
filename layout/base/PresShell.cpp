@@ -1865,6 +1865,14 @@ void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
   }
 }
 
+void PresShell::AddResizeEventFlushObserverIfNeeded() {
+  if (!mIsDestroying && !mResizeEventPending &&
+      MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
+    mResizeEventPending = true;
+    mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);
+  }
+}
+
 nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
                                                ResizeReflowOptions aOptions) {
   MOZ_ASSERT(!mIsReflowing, "Shouldn't be in reflow here!");
@@ -1875,11 +1883,8 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   RefPtr<PresShell> kungFuDeathGrip(this);
 
   auto postResizeEventIfNeeded = [this, initialized]() {
-    if (initialized && !mIsDestroying && !mResizeEventPending) {
-      mResizeEventPending = true;
-      if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
-        mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);
-      }
+    if (initialized) {
+      AddResizeEventFlushObserverIfNeeded();
     }
   };
 

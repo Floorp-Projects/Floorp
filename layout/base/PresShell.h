@@ -350,6 +350,12 @@ class PresShell final : public nsStubDocumentObserver,
                                                          nscoord aHeight,
                                                          ResizeReflowOptions);
 
+  /**
+   * Add this pres shell to the refresh driver to be observed for resize
+   * event if applicable.
+   */
+  void AddResizeEventFlushObserverIfNeeded();
+
  private:
   /**
    * This is what ResizeReflowIgnoreOverride does when not shrink-wrapping (that
