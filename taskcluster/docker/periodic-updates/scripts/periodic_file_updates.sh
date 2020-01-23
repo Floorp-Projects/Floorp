@@ -95,13 +95,8 @@ REMOTE_SETTINGS_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${REMOTE_SETTINGS_DIFF_ARTIFACT:
 SUFFIX_LIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${SUFFIX_LIST_DIFF_ARTIFACT:-"effective_tld_names.diff"}"
 
 # duplicate the functionality of taskcluster-lib-urls, but in bash..
-if [ "$TASKCLUSTER_ROOT_URL" = "https://taskcluster.net" ]; then
-    queue_base='https://queue.taskcluster.net/v1'
-    index_base='https://index.taskcluster.net/v1'
-else
-    queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
-    index_base="$TASKCLUSTER_ROOT_URL/api/index/v1"
-fi
+queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
+index_base="$TASKCLUSTER_ROOT_URL/api/index/v1"
 
 # Get the current in-tree version for a code branch.
 function get_version {
