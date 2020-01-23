@@ -75,18 +75,12 @@ class ZoomChild extends JSWindowActorChild {
   }
 
   handleEvent(event) {
-    // Send do zoom events to our parent as messages, to be re-dispatched.
-    if (event.type == "DoZoomEnlargeBy10") {
-      this.sendAsyncMessage("DoZoomEnlargeBy10", {});
+    if (event.type == "ZoomChangeUsingMouseWheel") {
+      this.sendAsyncMessage("ZoomChangeUsingMouseWheel", {});
       return;
     }
 
-    if (event.type == "DoZoomReduceBy10") {
-      this.sendAsyncMessage("DoZoomReduceBy10", {});
-      return;
-    }
-
-    // Only handle remaining events for top-level content.
+    // Only handle this event for top-level content.
     if (this.browsingContext != this.browsingContext.top) {
       return;
     }
@@ -98,6 +92,8 @@ class ZoomChild extends JSWindowActorChild {
       if (this._resolutionBeforeFullZoomChange == 0) {
         this._resolutionBeforeFullZoomChange = this.contentWindow.windowUtils.getResolution();
       }
+
+      this.sendAsyncMessage("PreFullZoomChange", {});
       return;
     }
 
@@ -117,6 +113,8 @@ class ZoomChild extends JSWindowActorChild {
         );
         this._resolutionBeforeFullZoomChange = 0;
       }
+
+      this.sendAsyncMessage("PostFullZoomChange", {});
       return;
     }
 

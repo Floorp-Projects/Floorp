@@ -26,6 +26,7 @@
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/UserActivation.h"
@@ -2222,18 +2223,44 @@ nsresult EventStateManager::GetContentViewer(nsIContentViewer** aCv) {
   return NS_OK;
 }
 
-nsresult EventStateManager::ChangeZoom(int32_t change) {
-  MOZ_ASSERT(change == 1 || change == -1, "Can only change by +/- 10%.");
+nsresult EventStateManager::ChangeTextSize(int32_t change) {
+  nsCOMPtr<nsIContentViewer> cv;
+  nsresult rv = GetContentViewer(getter_AddRefs(cv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Send the zoom change as a chrome event so it will be handled
-  // by the front end actors in the same way as other zoom actions.
-  // This excludes documents hosted in non-browser containers, like
-  // in a WebExtension.
-  nsContentUtils::DispatchChromeEvent(
-      mDocument, ToSupports(mDocument),
-      (change == 1 ? NS_LITERAL_STRING("DoZoomEnlargeBy10")
-                   : NS_LITERAL_STRING("DoZoomReduceBy10")),
-      CanBubble::eYes, Cancelable::eYes);
+  if (cv) {
+    float textzoom;
+    float zoomMin = ((float)StaticPrefs::zoom_minPercent()) / 100;
+    float zoomMax = ((float)StaticPrefs::zoom_maxPercent()) / 100;
+    cv->GetTextZoom(&textzoom);
+    textzoom += ((float)change) / 10;
+    if (textzoom < zoomMin)
+      textzoom = zoomMin;
+    else if (textzoom > zoomMax)
+      textzoom = zoomMax;
+    cv->SetTextZoom(textzoom);
+  }
+
+  return NS_OK;
+}
+
+nsresult EventStateManager::ChangeFullZoom(int32_t change) {
+  nsCOMPtr<nsIContentViewer> cv;
+  nsresult rv = GetContentViewer(getter_AddRefs(cv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (cv) {
+    float fullzoom;
+    float zoomMin = ((float)StaticPrefs::zoom_minPercent()) / 100;
+    float zoomMax = ((float)StaticPrefs::zoom_maxPercent()) / 100;
+    cv->GetFullZoom(&fullzoom);
+    fullzoom += ((float)change) / 10;
+    if (fullzoom < zoomMin)
+      fullzoom = zoomMin;
+    else if (fullzoom > zoomMax)
+      fullzoom = zoomMax;
+    cv->SetFullZoom(fullzoom);
+  }
 
   return NS_OK;
 }
@@ -2261,7 +2288,12 @@ void EventStateManager::DoScrollZoom(nsIFrame* aTargetFrame,
     int32_t change = (adjustment > 0) ? -1 : 1;
 
     EnsureDocument(mPresContext);
-    ChangeZoom(change);
+    if (Preferences::GetBool("browser.zoom.full") ||
+        content->OwnerDoc()->IsSyntheticDocument()) {
+      ChangeFullZoom(change);
+    } else {
+      ChangeTextSize(change);
+    }
     nsContentUtils::DispatchChromeEvent(
         mDocument, ToSupports(mDocument),
         NS_LITERAL_STRING("ZoomChangeUsingMouseWheel"), CanBubble::eYes,
@@ -3104,8 +3136,8 @@ void EventStateManager::PostHandleKeyboardEvent(
   switch (aKeyboardEvent->mKeyNameIndex) {
     case KEY_NAME_INDEX_ZoomIn:
     case KEY_NAME_INDEX_ZoomOut:
-      ChangeZoom(aKeyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_ZoomIn ? 1
-                                                                        : -1);
+      ChangeFullZoom(
+          aKeyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_ZoomIn ? 1 : -1);
       aStatus = nsEventStatus_eConsumeNoDefault;
       break;
     default:
