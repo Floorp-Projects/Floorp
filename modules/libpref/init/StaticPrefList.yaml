@@ -1914,7 +1914,7 @@
 # Are missing-property use counters for certain DOM attributes enabled?
 - name: dom.missing_prop_counters.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Is support for module scripts (<script type="module">) enabled for content?
@@ -5451,13 +5451,13 @@
 # Are counters for implemented CSS properties enabled?
 - name: layout.css.use-counters.enabled
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
 
 # Are counters for unimplemented CSS properties enabled?
 - name: layout.css.use-counters-unimplemented.enabled
   type: RelaxedAtomicBool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
   rust: true
 
