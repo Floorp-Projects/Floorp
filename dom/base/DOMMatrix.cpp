@@ -192,7 +192,7 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromMatrix(
 already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat32Array(
     const GlobalObject& aGlobal, const Float32Array& aArray32,
     ErrorResult& aRv) {
-  aArray32.ComputeLengthAndData();
+  aArray32.ComputeState();
 
   const int length = aArray32.Length();
   const bool is2D = length == 6;
@@ -206,7 +206,7 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat32Array(
 already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat64Array(
     const GlobalObject& aGlobal, const Float64Array& aArray64,
     ErrorResult& aRv) {
-  aArray64.ComputeLengthAndData();
+  aArray64.ComputeState();
 
   const int length = aArray64.Length();
   const bool is2D = length == 6;
@@ -640,7 +640,7 @@ already_AddRefed<DOMMatrix> DOMMatrix::FromMatrix(
 already_AddRefed<DOMMatrix> DOMMatrix::FromFloat32Array(
     const GlobalObject& aGlobal, const Float32Array& aArray32,
     ErrorResult& aRv) {
-  aArray32.ComputeLengthAndData();
+  aArray32.ComputeState();
 
   const int length = aArray32.Length();
   const bool is2D = length == 6;
@@ -653,7 +653,7 @@ already_AddRefed<DOMMatrix> DOMMatrix::FromFloat32Array(
 already_AddRefed<DOMMatrix> DOMMatrix::FromFloat64Array(
     const GlobalObject& aGlobal, const Float64Array& aArray64,
     ErrorResult& aRv) {
-  aArray64.ComputeLengthAndData();
+  aArray64.ComputeState();
 
   const int length = aArray64.Length();
   const bool is2D = length == 6;

@@ -64,7 +64,7 @@ already_AddRefed<ImageData> ImageData::Constructor(
     const GlobalObject& aGlobal, const Uint8ClampedArray& aData,
     const uint32_t aWidth, const Optional<uint32_t>& aHeight,
     ErrorResult& aRv) {
-  aData.ComputeLengthAndData();
+  aData.ComputeState();
 
   uint32_t length = aData.Length();
   if (length == 0 || length % 4) {

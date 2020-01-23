@@ -758,7 +758,7 @@ bool TCPSocket::Send(JSContext* aCx, const ArrayBuffer& aData,
 
   nsCOMPtr<nsIArrayBufferInputStream> stream;
 
-  aData.ComputeLengthAndData();
+  aData.ComputeState();
   uint32_t byteLength =
       aByteLength.WasPassed() ? aByteLength.Value() : aData.Length();
 

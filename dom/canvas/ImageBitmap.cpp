@@ -866,7 +866,7 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   DebugOnly<bool> inited = array.Init(aImageData.GetDataObject());
   MOZ_ASSERT(inited);
 
-  array.ComputeLengthAndData();
+  array.ComputeState();
   const SurfaceFormat FORMAT = SurfaceFormat::R8G8B8A8;
   // ImageData's underlying data is not alpha-premultiplied.
   const auto alphaType = gfxAlphaType::NonPremult;

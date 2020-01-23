@@ -205,7 +205,7 @@ void MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
 
     else if (data.IsArrayBuffer()) {
       const ArrayBuffer& buffer = data.GetAsArrayBuffer();
-      buffer.ComputeLengthAndData();
+      buffer.ComputeState();
       aRv = blobSet.AppendVoidPtr(buffer.Data(), buffer.Length());
       if (aRv.Failed()) {
         return;
@@ -214,7 +214,7 @@ void MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
 
     else if (data.IsArrayBufferView()) {
       const ArrayBufferView& buffer = data.GetAsArrayBufferView();
-      buffer.ComputeLengthAndData();
+      buffer.ComputeState();
       aRv = blobSet.AppendVoidPtr(buffer.Data(), buffer.Length());
       if (aRv.Failed()) {
         return;

@@ -39,12 +39,12 @@ uint8_t* CryptoBuffer::Assign(const nsTArray<uint8_t>& aData) {
 }
 
 uint8_t* CryptoBuffer::Assign(const ArrayBuffer& aData) {
-  aData.ComputeLengthAndData();
+  aData.ComputeState();
   return Assign(aData.Data(), aData.Length());
 }
 
 uint8_t* CryptoBuffer::Assign(const ArrayBufferView& aData) {
-  aData.ComputeLengthAndData();
+  aData.ComputeState();
   return Assign(aData.Data(), aData.Length());
 }
 
@@ -75,7 +75,7 @@ uint8_t* CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData) {
 }
 
 uint8_t* CryptoBuffer::Assign(const Uint8Array& aArray) {
-  aArray.ComputeLengthAndData();
+  aArray.ComputeState();
   return Assign(aArray.Data(), aArray.Length());
 }
 

@@ -198,8 +198,8 @@ TEST(PrioEncoder, VerifyFull)
                                     prioEncodedData, rv);
   ASSERT_FALSE(rv.Failed());
 
-  prioEncodedData.mA.Value().ComputeLengthAndData();
-  prioEncodedData.mB.Value().ComputeLengthAndData();
+  prioEncodedData.mA.Value().ComputeState();
+  prioEncodedData.mB.Value().ComputeState();
 
   forServerA = prioEncodedData.mA.Value().Data();
   forServerB = prioEncodedData.mB.Value().Data();

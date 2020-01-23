@@ -261,7 +261,7 @@ void FetchStreamReader::ResolvedCallback(JSContext* aCx,
   }
 
   Uint8Array& array = value.mValue.Value();
-  array.ComputeLengthAndData();
+  array.ComputeState();
   uint32_t len = array.Length();
 
   if (len == 0) {

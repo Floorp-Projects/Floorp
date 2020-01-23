@@ -107,12 +107,12 @@ void TextDecoder::Decode(const Optional<ArrayBufferViewOrArrayBuffer>& aBuffer,
   uint8_t* data;
   uint32_t length;
   if (buf.IsArrayBufferView()) {
-    buf.GetAsArrayBufferView().ComputeLengthAndData();
+    buf.GetAsArrayBufferView().ComputeState();
     data = buf.GetAsArrayBufferView().Data();
     length = buf.GetAsArrayBufferView().Length();
   } else {
     MOZ_ASSERT(buf.IsArrayBuffer());
-    buf.GetAsArrayBuffer().ComputeLengthAndData();
+    buf.GetAsArrayBuffer().ComputeState();
     data = buf.GetAsArrayBuffer().Data();
     length = buf.GetAsArrayBuffer().Length();
   }

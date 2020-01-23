@@ -303,9 +303,9 @@ void BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
                                             const Float32Array& aMagResponse,
                                             const Float32Array& aPhaseResponse,
                                             ErrorResult& aRv) {
-  aFrequencyHz.ComputeLengthAndData();
-  aMagResponse.ComputeLengthAndData();
-  aPhaseResponse.ComputeLengthAndData();
+  aFrequencyHz.ComputeState();
+  aMagResponse.ComputeState();
+  aPhaseResponse.ComputeState();
 
   if (!(aFrequencyHz.Length() == aMagResponse.Length() &&
         aMagResponse.Length() == aPhaseResponse.Length())) {

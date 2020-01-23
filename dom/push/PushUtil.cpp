@@ -13,7 +13,7 @@ namespace dom {
 bool PushUtil::CopyArrayBufferToArray(const ArrayBuffer& aBuffer,
                                       nsTArray<uint8_t>& aArray) {
   MOZ_ASSERT(aArray.IsEmpty());
-  aBuffer.ComputeLengthAndData();
+  aBuffer.ComputeState();
   return aArray.SetCapacity(aBuffer.Length(), fallible) &&
          aArray.InsertElementsAt(0, aBuffer.Data(), aBuffer.Length(), fallible);
 }
@@ -22,7 +22,7 @@ bool PushUtil::CopyArrayBufferToArray(const ArrayBuffer& aBuffer,
 bool PushUtil::CopyArrayBufferViewToArray(const ArrayBufferView& aView,
                                           nsTArray<uint8_t>& aArray) {
   MOZ_ASSERT(aArray.IsEmpty());
-  aView.ComputeLengthAndData();
+  aView.ComputeState();
   return aArray.SetCapacity(aView.Length(), fallible) &&
          aArray.InsertElementsAt(0, aView.Data(), aView.Length(), fallible);
 }

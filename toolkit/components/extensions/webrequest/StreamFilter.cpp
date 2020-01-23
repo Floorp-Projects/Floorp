@@ -132,7 +132,7 @@ bool StreamFilter::CheckAlive() {
 template <typename T>
 static inline bool ReadTypedArrayData(nsTArray<uint8_t>& aData, const T& aArray,
                                       ErrorResult& aRv) {
-  aArray.ComputeLengthAndData();
+  aArray.ComputeState();
   if (!aData.SetLength(aArray.Length(), fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return false;

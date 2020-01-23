@@ -884,7 +884,7 @@ inline Range<T> MakeRange(RawBuffer<T>& from) {
 template <typename T>
 inline auto MakeRangeAbv(const T& abv)
     -> Range<const typename T::element_type> {
-  abv.ComputeLengthAndData();
+  abv.ComputeState();
   return {abv.Data(), abv.Length()};
 }
 

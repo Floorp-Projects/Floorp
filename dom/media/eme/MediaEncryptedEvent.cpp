@@ -78,7 +78,7 @@ already_AddRefed<MediaEncryptedEvent> MediaEncryptedEvent::Constructor(
   e->mInitDataType = aEventInitDict.mInitDataType;
   if (!aEventInitDict.mInitData.IsNull()) {
     const auto& a = aEventInitDict.mInitData.Value();
-    a.ComputeLengthAndData();
+    a.ComputeState();
     e->mInitData = ArrayBuffer::Create(aGlobal.Context(), a.Length(), a.Data());
     if (!e->mInitData) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
