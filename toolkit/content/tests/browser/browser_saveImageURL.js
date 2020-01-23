@@ -48,7 +48,7 @@ add_task(async function preferred_API() {
         false,
         null,
         null,
-        null,
+        "image/jpeg",
         null,
         false,
         gBrowser.contentPrincipal
@@ -114,7 +114,17 @@ add_task(async function deprecated_API() {
         }
       });
       let filePickerPromise = waitForFilePicker();
-      saveImageURL(url, "image.jpg", null, true, false, null, doc, null, null);
+      saveImageURL(
+        url,
+        "image.jpg",
+        null,
+        true,
+        false,
+        null,
+        doc,
+        "image/jpeg",
+        null
+      );
       await filePickerPromise;
     }
   );
