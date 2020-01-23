@@ -197,6 +197,7 @@ def find_program(file, paths=None):
 
 @imports('os')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports(_from='six', _import='ensure_binary')
 @imports(_from='tempfile', _import='mkstemp')
 def try_invoke_compiler(compiler, language, source, flags=None, onerror=None):
     flags = flags or []
@@ -210,7 +211,7 @@ def try_invoke_compiler(compiler, language, source, flags=None, onerror=None):
         'C++': '.cpp',
     }[language]
 
-    fd, path = mkstemp(prefix='conftest.', suffix=suffix)
+    fd, path = mkstemp(prefix='conftest.', suffix=suffix, text=True)
     try:
         source = source.encode('ascii', 'replace')
 
@@ -218,7 +219,7 @@ def try_invoke_compiler(compiler, language, source, flags=None, onerror=None):
         with LineIO(lambda l: log.debug('| %s', l)) as out:
             out.write(source)
 
-        os.write(fd, source)
+        os.write(fd, ensure_binary(source))
         os.close(fd)
         cmd = compiler + list(flags) + [path]
         kwargs = {'onerror': onerror}
