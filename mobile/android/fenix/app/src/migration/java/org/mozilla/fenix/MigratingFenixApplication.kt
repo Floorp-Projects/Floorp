@@ -38,6 +38,10 @@ class MigratingFenixApplication : FenixApplication() {
         // These migrations need to run before regular initialization happens.
         migrateBlocking()
 
+        // Now that we have migrated from Fennec whether the user wants to enable telemetry we can
+        // initialize Glean
+        initializeGlean()
+
         // Fenix application initialization can happen now.
         super.setupInMainProcessOnly()
 

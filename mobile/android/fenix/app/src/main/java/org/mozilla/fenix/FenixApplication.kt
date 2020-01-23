@@ -59,21 +59,22 @@ open class FenixApplication : LocaleAwareApplication() {
             return
         }
 
-        // We need to always initialize Glean and do it early here.
-        // It is important that this initialization happens *here* before calling into
-        // setupInMainProcessOnly() which behaves differently for fenix and fennec builds.
-        val enableGlean = if (Config.channel.isFennec) {
-            // We are disabling Glean here because for Fennec builds we may not know yet whether
-            // we can enable telemetry yet. We first need to migrate the setting from Fennec to
-            // know the user's choice. The blocking migration in `MigratingFenixApplication` will
-            // notify glean once the value has been migrated.
-            false
-        } else {
-            // We initialize Glean with telemetry enabled (or disabled) early here so that we do not
-            // end up loosing data for components that collect telemetry very early.
-            settings().isTelemetryEnabled
+        if (Config.channel.isFenix) {
+            // We need to always initialize Glean and do it early here.
+            // Note that we are only initializing Glean here for "fenix" builds. "fennec" builds
+            // will initialize in MigratingFenixApplication because we first need to migrate the
+            // user's choice from Fennec.
+            initializeGlean()
         }
-        logger.debug("Initializing Glean (uploadEnabled=$enableGlean, isFennec=${Config.channel.isFennec})")
+
+        setupInMainProcessOnly()
+    }
+
+    protected fun initializeGlean() {
+        val telemetryEnabled = settings().isTelemetryEnabled
+
+        logger.debug("Initializing Glean (uploadEnabled=$telemetryEnabled, isFennec=${Config.channel.isFennec})")
+
         Glean.initialize(
             applicationContext = this,
             configuration = Configuration(
@@ -81,10 +82,8 @@ open class FenixApplication : LocaleAwareApplication() {
                 httpClient = ConceptFetchHttpUploader(
                     lazy(LazyThreadSafetyMode.NONE) { components.core.client }
                 )),
-            uploadEnabled = enableGlean
+            uploadEnabled = telemetryEnabled
         )
-
-        setupInMainProcessOnly()
     }
 
     @CallSuper
