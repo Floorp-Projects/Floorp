@@ -2,7 +2,7 @@
 
 # getLayoutResource
 
-`fun getLayoutResource(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuImageSwitch.kt#L32)
+`fun getLayoutResource(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuImageSwitch.kt#L35)
 
 Overrides [BrowserMenuItem.getLayoutResource](../../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md)
 

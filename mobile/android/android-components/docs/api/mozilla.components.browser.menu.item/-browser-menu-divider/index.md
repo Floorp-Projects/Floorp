@@ -2,7 +2,7 @@
 
 # BrowserMenuDivider
 
-`class BrowserMenuDivider : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuDivider.kt#L15)
+`class BrowserMenuDivider : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuDivider.kt#L18)
 
 A browser menu item to display a horizontal divider.
 
@@ -23,6 +23,7 @@ A browser menu item to display a horizontal divider.
 
 | Name | Summary |
 |---|---|
+| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`DividerMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-divider-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `fun bind(menu: `[`BrowserMenu`](../../mozilla.components.browser.menu/-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 | [getLayoutResource](get-layout-resource.md) | `fun getLayoutResource(): <ERROR CLASS>`<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 

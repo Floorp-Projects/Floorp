@@ -2,7 +2,7 @@
 
 # BrowserMenuCompoundButton
 
-`abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuCompoundButton.kt#L22)
+`abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuCompoundButton.kt#L25)
 
 A browser menu compound button. A basic sub-class would only have to provide a layout resource to
 satisfy [BrowserMenuItem.getLayoutResource](../../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md) which contains a [View](#) that inherits from [CompoundButton](#).
@@ -38,6 +38,7 @@ satisfy [BrowserMenuItem.getLayoutResource](../../mozilla.components.browser.men
 
 | Name | Summary |
 |---|---|
+| [asCandidate](as-candidate.md) | `open fun asCandidate(context: <ERROR CLASS>): `[`CompoundMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-compound-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `open fun bind(menu: `[`BrowserMenu`](../../mozilla.components.browser.menu/-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 
 ### Inherited Functions

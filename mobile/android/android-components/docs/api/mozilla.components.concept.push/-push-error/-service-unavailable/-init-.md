@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`ServiceUnavailable(desc: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+`ServiceUnavailable(message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`

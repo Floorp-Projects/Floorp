@@ -2,7 +2,7 @@
 
 # WebExtensionToolbarFeature
 
-`class WebExtensionToolbarFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/WebExtensionToolbarFeature.kt#L29)
+`class WebExtensionToolbarFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/WebExtensionToolbarFeature.kt#L31)
 
 Web extension toolbar implementation that updates the toolbar whenever the state of web
 extensions changes.

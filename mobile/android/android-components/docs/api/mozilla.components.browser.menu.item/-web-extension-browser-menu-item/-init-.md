@@ -2,12 +2,12 @@
 
 # &lt;init&gt;
 
-`WebExtensionBrowserMenuItem(browserAction: `[`WebExtensionBrowserAction`](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`
+`WebExtensionBrowserMenuItem(action: `[`Action`](../../mozilla.components.concept.engine.webextension/-action/index.md)`, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`
 
-A browser menu item displaying web extension.
+A browser menu item displaying a web extension action.
 
 ### Parameters
 
-`browserAction` - Associated [WebExtensionBrowserAction](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)
+`action` - the [Action](../../mozilla.components.concept.engine.webextension/-action/index.md) to display.
 
-`listener` - Callback to be invoked when this menu item is clicked.
+`listener` - a callback to be invoked when this menu item is clicked.

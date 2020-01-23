@@ -8,7 +8,7 @@ An action button that represents an web extension item to be added to the toolba
 
 ### Parameters
 
-`browserAction` - Associated [WebExtensionBrowserAction](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)
+`action` - Associated [WebExtensionBrowserAction](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)
 
 `listener` - Callback that will be invoked whenever the button is pressed
 
@@ -16,7 +16,7 @@ An action button that represents an web extension item to be added to the toolba
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebExtensionToolbarAction(browserAction: `[`WebExtensionBrowserAction`](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`, padding: `[`Padding`](../../mozilla.components.support.base.android/-padding/index.md)`? = null, iconJobDispatcher: CoroutineDispatcher, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>An action button that represents an web extension item to be added to the toolbar. |
+| [&lt;init&gt;](-init-.md) | `WebExtensionToolbarAction(action: `[`WebExtensionBrowserAction`](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`, padding: `[`Padding`](../../mozilla.components.support.base.android/-padding/index.md)`? = null, iconJobDispatcher: CoroutineDispatcher, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>An action button that represents an web extension item to be added to the toolbar. |
 
 ### Inherited Properties
 

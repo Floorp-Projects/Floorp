@@ -2,7 +2,7 @@
 
 # browserAction
 
-`val browserAction: `[`WebExtensionBrowserAction`](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/WebExtensionState.kt#L26)
+`val browserAction: `[`WebExtensionBrowserAction`](../../mozilla.components.concept.engine.webextension/-web-extension-browser-action.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/WebExtensionState.kt#L28)
 
 The browser action state of this extension.
 

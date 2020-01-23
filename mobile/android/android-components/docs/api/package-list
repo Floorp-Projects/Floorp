@@ -108,6 +108,7 @@ mozilla.components.browser.menu.ext
 mozilla.components.browser.menu.item
 mozilla.components.browser.menu.view
 mozilla.components.browser.menu2
+mozilla.components.browser.menu2.candidate
 mozilla.components.browser.search
 mozilla.components.browser.search.provider
 mozilla.components.browser.search.provider.filter

@@ -2,7 +2,7 @@
 
 # BrowserMenuCategory
 
-`class BrowserMenuCategory : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuCategory.kt#L24)
+`class BrowserMenuCategory : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuCategory.kt#L31)
 
 A browser menu item displaying styleable text, usable for menu categories
 
@@ -40,6 +40,7 @@ A browser menu item displaying styleable text, usable for menu categories
 
 | Name | Summary |
 |---|---|
+| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`DecorativeTextMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-decorative-text-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [bind](bind.md) | `fun bind(menu: `[`BrowserMenu`](../../mozilla.components.browser.menu/-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 | [getLayoutResource](get-layout-resource.md) | `fun getLayoutResource(): <ERROR CLASS>`<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 

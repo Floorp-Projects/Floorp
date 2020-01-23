@@ -2,7 +2,7 @@
 
 # getLayoutResource
 
-`fun getLayoutResource(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/WebExtensionBrowserMenuItem.kt#L31)
+`fun getLayoutResource(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/WebExtensionBrowserMenuItem.kt#L40)
 
 Overrides [BrowserMenuItem.getLayoutResource](../../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md)
 
