@@ -2,10 +2,42 @@
 
 const TEST_HOST = "example.org";
 const TEST_DOMAIN = "https://" + TEST_HOST;
+const TEST_PATH = "/browser/dom/reporting/tests/";
+const TEST_TOP_PAGE = TEST_DOMAIN + TEST_PATH + "empty.html";
+const TEST_SJS = TEST_DOMAIN + TEST_PATH + "delivering.sjs";
 
-const TEST_PATH = "/dom/reporting/tests/";
-const TEST_TOP_PAGE = TEST_DOMAIN + "/browser" + TEST_PATH + "empty.html";
-const TEST_SJS = TEST_DOMAIN + "/tests" + TEST_PATH + "delivering.sjs";
+async function storeReportingHeader(browser, extraParams = "") {
+  await SpecialPowers.spawn(
+    browser,
+    [{ url: TEST_SJS, extraParams }],
+    async obj => {
+      await content
+        .fetch(
+          obj.url +
+            "?task=header" +
+            (obj.extraParams.length ? "&" + obj.extraParams : "")
+        )
+        .then(r => r.text())
+        .then(text => {
+          is(text, "OK", "Report-to header sent");
+        });
+    }
+  );
+}
+
+add_task(async function() {
+  await SpecialPowers.flushPrefEnv();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.reporting.enabled", true],
+      ["dom.reporting.header.enabled", true],
+      ["dom.reporting.testing.enabled", true],
+      ["dom.reporting.delivering.timeout", 1],
+      ["dom.reporting.cleanup.timeout", 1],
+      ["privacy.userContext.enabled", true],
+    ],
+  });
+});
 
 add_task(async function() {
   info("Testing a total cleanup");
@@ -21,7 +53,7 @@ add_task(async function() {
     "No data before the test"
   );
 
-  await storeReportingHeader(browser, TEST_SJS);
+  await storeReportingHeader(browser);
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
@@ -53,7 +85,7 @@ add_task(async function() {
     "No data before the test"
   );
 
-  await storeReportingHeader(browser, TEST_SJS);
+  await storeReportingHeader(browser);
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
@@ -85,7 +117,7 @@ add_task(async function() {
     "No data before the test"
   );
 
-  await storeReportingHeader(browser, TEST_SJS);
+  await storeReportingHeader(browser);
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
@@ -120,7 +152,7 @@ add_task(async function() {
     "No data before the test"
   );
 
-  await storeReportingHeader(browser, TEST_SJS, "410=true");
+  await storeReportingHeader(browser, "410=true");
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await SpecialPowers.spawn(browser, [], async _ => {
@@ -178,7 +210,7 @@ add_task(async function() {
     "No data before the test"
   );
 
-  await storeReportingHeader(browser, TEST_SJS);
+  await storeReportingHeader(browser);
   ok(
     !ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
     "We don't have data for the origin"
@@ -217,7 +249,7 @@ add_task(async function() {
     "No data before the test"
   );
 
-  await storeReportingHeader(browser, TEST_SJS);
+  await storeReportingHeader(browser);
   ok(
     ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN),
     "We have data for the origin"
@@ -241,7 +273,4 @@ add_task(async function() {
       resolve()
     );
   });
-
-  // need to check the reports, to cleanup the server state.
-  await checkReport(TEST_SJS);
 });
