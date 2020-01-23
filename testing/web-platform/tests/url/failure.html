@@ -30,7 +30,7 @@ function runTests(testData) {
 
     self.test(() => {
       const client = new XMLHttpRequest()
-      assert_throws("SyntaxError", () => client.open("GET", test.input))
+      assert_throws_dom("SyntaxError", () => client.open("GET", test.input))
     }, "XHR: " + name)
 
     self.test(() => {
@@ -42,7 +42,7 @@ function runTests(testData) {
     }, "Location's href: " + name)
 
     self.test(() => {
-      assert_throws("SyntaxError", () => self.open(test.input).close())
+      assert_throws_dom("SyntaxError", () => self.open(test.input).close())
     }, "window.open(): " + name)
   }
 }

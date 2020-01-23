@@ -61,7 +61,7 @@ var testAudio = async_test(function() {
     this.step_func(function(stream) {
       assert_equals(stream.getAudioTracks().length, 1);
       assert_equals(stream.getVideoTracks().length, 0);
-      assert_throws("NotSupportedError",
+      assert_throws_dom("NotSupportedError",
                     function() {
                       var capturer = new ImageCapture(stream.getAudioTracks()[0]);
                     },

@@ -11,7 +11,7 @@
 function assert_origin_unclean_getImageData(bitmap) {
   const context = document.createElement("canvas").getContext("2d");
   context.drawImage(bitmap, 0, 0);
-  assert_throws("SecurityError", () => {
+  assert_throws_dom("SecurityError", () => {
     context.getImageData(0, 0, 1, 1);
   });
 }

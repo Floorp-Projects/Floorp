@@ -12,18 +12,18 @@ test(function() {
     var t1 = video.addTextTrack('subtitles');
     var t2 = video.addTextTrack('subtitles');
     var c1 = new VTTCue(0, 1, 'text1');
-    assert_throws("NOT_FOUND_ERR", function() {
+    assert_throws_dom("NOT_FOUND_ERR", function() {
         t1.removeCue(c1);
     }, 'standalone');
     t1.addCue(c1);
-    assert_throws("NOT_FOUND_ERR", function() {
+    assert_throws_dom("NOT_FOUND_ERR", function() {
         t2.removeCue(c1);
     }, 'listed in t1, remove from t2');
     t1.removeCue(c1);
-    assert_throws("NOT_FOUND_ERR", function() {
+    assert_throws_dom("NOT_FOUND_ERR", function() {
         t1.removeCue(c1);
     }, 'standalone, remove from t1');
-    assert_throws("NOT_FOUND_ERR", function() {
+    assert_throws_dom("NOT_FOUND_ERR", function() {
         t2.removeCue(c1);
     }, 'standalone, remove from t2');
 }, document.title+', two elementless tracks');

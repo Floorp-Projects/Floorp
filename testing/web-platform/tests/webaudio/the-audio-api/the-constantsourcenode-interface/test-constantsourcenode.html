@@ -22,7 +22,7 @@ test(function(t) {
 
   var csn = ac.createConstantSource();
 
-  assert_throws("InvalidStateError", function() {
+  assert_throws_dom("InvalidStateError", function() {
     csn.stop(1);
   }, "Start must be called before stop");
 
