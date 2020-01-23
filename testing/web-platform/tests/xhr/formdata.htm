@@ -72,7 +72,7 @@
     let counter = 0;
     form.addEventListener('formdata', e => {
       ++counter;
-      assert_throws('InvalidStateError', () => { new FormData(e.target) });
+      assert_throws_dom('InvalidStateError', () => { new FormData(e.target) });
     });
     new FormData(form);
     assert_equals(counter, 1);

@@ -125,11 +125,11 @@ test(() => {
   const flags = {valueMissing: true};
   const m = 'non-empty message';
 
-  assert_throws('NotFoundError', () => {
+  assert_throws_dom('NotFoundError', () => {
     control.i.setValidity(flags, m, document.body);
   }, 'Not a descendant');
 
-  assert_throws('NotFoundError', () => {
+  assert_throws_dom('NotFoundError', () => {
     control.i.setValidity(flags, m, control);
   }, 'Self');
 

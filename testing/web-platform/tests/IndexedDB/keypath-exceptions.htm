@@ -40,7 +40,7 @@ indexeddb_test(
     // will have no such property, so key path evaluation
     // will fail.
     const s1 = db.createObjectStore('s1', {keyPath: 'throws'});
-    assert_throws('DataError', () => {
+    assert_throws_dom('DataError', () => {
       s1.put(o);
     }, 'Key path failing to resolve should throw');
 
@@ -49,7 +49,7 @@ indexeddb_test(
     // will have no such property, so key path evaluation
     // will fail.
     const s2 = db.createObjectStore('s2', {keyPath: 'throws.x'});
-    assert_throws('DataError', () => {
+    assert_throws_dom('DataError', () => {
       s2.put(o);
     }, 'Key path failing to resolve should throw');
 
@@ -143,7 +143,7 @@ indexeddb_test(
     // will have no own property, so key path evaluation will
     // fail and DataError should be thrown.
     const s1 = db.createObjectStore('s1', {keyPath: 'throws'});
-    assert_throws('DataError', with_proto_getter(function() {
+    assert_throws_dom('DataError', with_proto_getter(function() {
       s1.put({});
     }), 'Key path resolving to no own property throws DataError');
 
@@ -152,7 +152,7 @@ indexeddb_test(
     // will have no own property, so key path evaluation will
     // fail and DataError should be thrown.
     const s2 = db.createObjectStore('s2', {keyPath: 'throws.x'});
-    assert_throws('DataError', with_proto_getter(function() {
+    assert_throws_dom('DataError', with_proto_getter(function() {
       s2.put({});
     }), 'Key path resolving past no own property throws DataError');
 
@@ -203,7 +203,7 @@ indexeddb_test(
     // The clone will have no own property, so key path
     // evaluation will fail and DataError should be thrown.
     const s1 = db.createObjectStore('s1', {keyPath: 'throws'});
-    assert_throws('DataError', with_proto_getter(function() {
+    assert_throws_dom('DataError', with_proto_getter(function() {
       s1.put({});
     }), 'Key path resolving to no own property throws DataError');
 
@@ -211,7 +211,7 @@ indexeddb_test(
     // The clone will have no own property, so key path
     // evaluation will fail and DataError should be thrown.
     const s2 = db.createObjectStore('s2', {keyPath: 'throws.x'});
-    assert_throws('DataError', with_proto_getter(function() {
+    assert_throws_dom('DataError', with_proto_getter(function() {
       s2.put({});
     }), 'Key path resolving past throwing getter rethrows');
 
