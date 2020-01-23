@@ -38,6 +38,7 @@ use cranelift_codegen::ir::{
 };
 use cranelift_codegen::packed_option::ReservedValue;
 use cranelift_frontend::{FunctionBuilder, Variable};
+use std::vec::Vec;
 use wasmparser::{MemoryImmediate, Operator};
 
 // Clippy warns about "flags: _" but its important to document that the flags field is ignored
@@ -439,7 +440,9 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             };
             {
                 let return_args = state.peekn_mut(return_count);
-                let return_types = &builder.func.signature.return_types();
+                let return_types = wasm_param_types(&builder.func.signature.returns, |i| {
+                    environ.is_wasm_return(&builder.func.signature, i)
+                });
                 bitcast_arguments(return_args, &return_types, builder);
                 match environ.return_mode() {
                     ReturnMode::NormalReturns => builder.ins().return_(return_args),
@@ -463,7 +466,10 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let callee_signature =
                 &builder.func.dfg.signatures[builder.func.dfg.ext_funcs[fref].signature];
             let args = state.peekn_mut(num_args);
-            bitcast_arguments(args, &callee_signature.param_types(), builder);
+            let types = wasm_param_types(&callee_signature.params, |i| {
+                environ.is_wasm_parameter(&callee_signature, i)
+            });
+            bitcast_arguments(args, &types, builder);
 
             let call = environ.translate_call(
                 builder.cursor(),
@@ -492,7 +498,10 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             // Bitcast any vector arguments to their default type, I8X16, before calling.
             let callee_signature = &builder.func.dfg.signatures[sigref];
             let args = state.peekn_mut(num_args);
-            bitcast_arguments(args, &callee_signature.param_types(), builder);
+            let types = wasm_param_types(&callee_signature.params, |i| {
+                environ.is_wasm_parameter(&callee_signature, i)
+            });
+            bitcast_arguments(args, &types, builder);
 
             let call = environ.translate_call_indirect(
                 builder.cursor(),
@@ -1149,6 +1158,32 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let splatted = builder.ins().splat(type_of(op), state.pop1());
             state.push1(splatted)
         }
+        Operator::V8x16LoadSplat {
+            memarg: MemoryImmediate { flags: _, offset },
+        }
+        | Operator::V16x8LoadSplat {
+            memarg: MemoryImmediate { flags: _, offset },
+        }
+        | Operator::V32x4LoadSplat {
+            memarg: MemoryImmediate { flags: _, offset },
+        }
+        | Operator::V64x2LoadSplat {
+            memarg: MemoryImmediate { flags: _, offset },
+        } => {
+            // TODO: For spec compliance, this is initially implemented as a combination of `load +
+            // splat` but could be implemented eventually as a single instruction (`load_splat`).
+            // See https://github.com/bytecodealliance/cranelift/issues/1348.
+            translate_load(
+                *offset,
+                ir::Opcode::Load,
+                type_of(op).lane_type(),
+                builder,
+                state,
+                environ,
+            )?;
+            let splatted = builder.ins().splat(type_of(op), state.pop1());
+            state.push1(splatted)
+        }
         Operator::I8x16ExtractLaneS { lane } | Operator::I16x8ExtractLaneS { lane } => {
             let vector = pop1_with_bitcast(state, type_of(op), builder);
             let extracted = builder.ins().extractlane(vector, lane.clone());
@@ -1401,10 +1436,6 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I32x4WidenLowI16x8U { .. }
         | Operator::I32x4WidenHighI16x8U { .. }
         | Operator::V8x16Swizzle
-        | Operator::V8x16LoadSplat { .. }
-        | Operator::V16x8LoadSplat { .. }
-        | Operator::V32x4LoadSplat { .. }
-        | Operator::V64x2LoadSplat { .. }
         | Operator::I16x8Load8x8S { .. }
         | Operator::I16x8Load8x8U { .. }
         | Operator::I32x4Load16x4S { .. }
@@ -1725,6 +1756,7 @@ fn type_of(operator: &Operator) -> Type {
 
         Operator::V8x16Shuffle { .. }
         | Operator::I8x16Splat
+        | Operator::V8x16LoadSplat { .. }
         | Operator::I8x16ExtractLaneS { .. }
         | Operator::I8x16ExtractLaneU { .. }
         | Operator::I8x16ReplaceLane { .. }
@@ -1753,6 +1785,7 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::I8x16Mul => I8X16,
 
         Operator::I16x8Splat
+        | Operator::V16x8LoadSplat { .. }
         | Operator::I16x8ExtractLaneS { .. }
         | Operator::I16x8ExtractLaneU { .. }
         | Operator::I16x8ReplaceLane { .. }
@@ -1781,6 +1814,7 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::I16x8Mul => I16X8,
 
         Operator::I32x4Splat
+        | Operator::V32x4LoadSplat { .. }
         | Operator::I32x4ExtractLane { .. }
         | Operator::I32x4ReplaceLane { .. }
         | Operator::I32x4Eq
@@ -1806,6 +1840,7 @@ fn type_of(operator: &Operator) -> Type {
         | Operator::F32x4ConvertI32x4U => I32X4,
 
         Operator::I64x2Splat
+        | Operator::V64x2LoadSplat { .. }
         | Operator::I64x2ExtractLane { .. }
         | Operator::I64x2ReplaceLane { .. }
         | Operator::I64x2Neg
@@ -1931,4 +1966,17 @@ pub fn bitcast_arguments(
             arguments[i] = optionally_bitcast_vector(arguments[i], *t, builder)
         }
     }
+}
+
+/// A helper to extract all the `Type` listings of each variable in `params`
+/// for only parameters the return true for `is_wasm`, typically paired with
+/// `is_wasm_return` or `is_wasm_parameter`.
+pub fn wasm_param_types(params: &[ir::AbiParam], is_wasm: impl Fn(usize) -> bool) -> Vec<Type> {
+    let mut ret = Vec::with_capacity(params.len());
+    for (i, param) in params.iter().enumerate() {
+        if is_wasm(i) {
+            ret.push(param.value_type);
+        }
+    }
+    return ret;
 }
