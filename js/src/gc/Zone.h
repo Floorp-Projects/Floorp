@@ -652,6 +652,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Delete an empty compartment after its contents have been merged.
   void deleteEmptyCompartment(JS::Compartment* comp);
 
+  void clearRootsForShutdownGC();
   void finishRoots();
 
  private:

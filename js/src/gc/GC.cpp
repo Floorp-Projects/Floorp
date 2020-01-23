@@ -3981,6 +3981,12 @@ static void BufferGrayRoots(GCParallelTask* task) {
   task->gc->bufferGrayRoots();
 }
 
+static bool IsShutdownGC(JS::GCReason reason) {
+  return reason == JS::GCReason::WORKER_SHUTDOWN ||
+         reason == JS::GCReason::SHUTDOWN_CC ||
+         reason == JS::GCReason::DESTROY_RUNTIME;
+}
+
 bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
 #ifdef DEBUG
   if (fullCompartmentChecks) {
@@ -4064,6 +4070,13 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
      * it. This object might never be marked, so a GC hazard would exist.
      */
     purgeRuntime();
+
+    if (IsShutdownGC(reason)) {
+      /* Clear any engine roots that may hold external data live. */
+      for (GCZonesIter zone(this, SkipAtoms); !zone.done(); zone.next()) {
+        zone->clearRootsForShutdownGC();
+      }
+    }
   }
 
   /*
@@ -4929,18 +4942,12 @@ static void SweepUniqueIds(GCParallelTask* task) {
   }
 }
 
-static bool IsShutdownGC(JS::GCReason reason) {
-  return reason == JS::GCReason::WORKER_SHUTDOWN ||
-         reason == JS::GCReason::SHUTDOWN_CC ||
-         reason == JS::GCReason::DESTROY_RUNTIME;
-}
-
 void GCRuntime::sweepFinalizationGroupsOnMainThread() {
   // This calls back into the browser which expects to be called from the main
   // thread.
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_FINALIZATION_GROUPS);
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    sweepFinalizationGroups(zone, IsShutdownGC(initialReason));
+    sweepFinalizationGroups(zone);
   }
 }
 
