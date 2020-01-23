@@ -248,7 +248,7 @@ renaming_overrides_prefixing = true
 "CSSPixelLength" = """
   inline nscoord ToAppUnits() const;
   inline bool IsZero() const;
-  CSSCoord ToCSSPixels() const { return _0; }
+  float ToCSSPixels() const { return _0; }
   inline void ScaleBy(float);
 """
 
@@ -296,10 +296,11 @@ renaming_overrides_prefixing = true
   static inline Self FromPercentage(float);
 
   inline void ScaleLengthsBy(float);
+  inline CSSCoord LengthInCSSPixels() const;
+  inline float Percentage() const;
   inline bool HasPercent() const;
   inline bool ConvertsToLength() const;
   inline nscoord ToLength() const;
-  inline CSSCoord ToLengthInCSSPixels() const;
   inline bool ConvertsToPercentage() const;
   inline bool HasLengthAndPercentage() const;
   inline float ToPercentage() const;
