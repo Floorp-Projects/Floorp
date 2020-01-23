@@ -650,7 +650,6 @@ struct GetUniformData final {
 struct ICRData {
   gfx::IntSize size;
   bool hasAlpha;
-  bool supportsAlpha;
   bool isPremultAlpha;
 };
 

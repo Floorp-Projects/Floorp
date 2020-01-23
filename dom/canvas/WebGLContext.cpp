@@ -965,7 +965,6 @@ Maybe<ICRData> WebGLContext::InitializeCanvasRenderer(
   ICRData ret;
   ret.size = {DrawingBufferSize().x, DrawingBufferSize().y};
   ret.hasAlpha = mOptions.alpha;
-  ret.supportsAlpha = gl->Caps().alpha;
   ret.isPremultAlpha = IsPremultAlpha();
 
   auto flags = layers::TextureFlags::ORIGIN_BOTTOM_LEFT;

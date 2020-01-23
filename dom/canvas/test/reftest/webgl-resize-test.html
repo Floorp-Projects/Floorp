@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
-<head>
-<meta charset="UTF-8">
+<html class='reftest-wait'>
+  <head>
+    <meta charset='UTF-8'>
+    <script type='text/javascript' src='webgl-utils.js'></script>
+  </head>
 
-<script type="text/javascript" src="webgl-utils.js"></script>
-<script type="text/javascript">
+  <body>
+    <canvas id='e_canvas'></canvas>
+    <br>
+    <div id='e_log'></div>
+    <script>
 /* Resize Test
  *
  * Create canvas of wrong size.
@@ -13,46 +18,36 @@
  * Clear to green.
  */
 
-"use strict";
+'use strict';
 
-function render(gl) {
-  gl.clearColor(1.0, 0.0, 0.0, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  gl.canvas.width = 256;
-  gl.canvas.height = 256;
-  gl.clearColor(0.0, 1.0, 0.0, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  gl.finish();
-}
-
-function renderFailure(canvas) {
-  // This will also trigger RAF for us.
-  var context = canvas.getContext("2d");
-  context.fillText('WebGL failed.', 64, 64);
-}
-
-function runTest() {
-  var canvas = document.getElementById("canvas");
-
-  var gl = initGL(canvas);
-  if (gl)
-    render(gl);
-  else
-    renderFailure(canvas);
-
-  waitForComposite(testComplete);
+async function awaitComposite() {
+  await new Promise((res, rej) => {
+    waitForComposite(res);
+  });
 }
 
 function testComplete() {
-  document.documentElement.removeAttribute("class");
+  document.documentElement.removeAttribute('class');
 }
-</script>
-</head>
 
-<body onload="rAF(runTest);">
-  <canvas id="canvas" width="128" height="128" bgcolor='yellow'></canvas>
-</body>
+(async function() {
+  const gl = initGL(e_canvas);
+  if (!gl) {
+    e_log.textContent = 'WebGL failed.';
+  } else {
+    gl.clearColor(1.0, 0.0, 0.0, 1.0); // red
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    await awaitComposite();
 
+    gl.canvas.width = 256;
+    gl.canvas.height = 256;
+    gl.clearColor(0.0, 1.0, 0.0, 1.0); // green
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+
+  await awaitComposite();
+  testComplete();
+})();
+    </script>
+  </body>
 </html>
