@@ -38,7 +38,6 @@ private const val MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id="
 class AppLinksUseCases(
     private val context: Context,
     private val launchInApp: () -> Boolean = { false },
-    private val failedToLunch: () -> Unit = { },
     browserPackageNames: Set<String>? = null,
     unguessableWebUrl: String = "https://${UUID.randomUUID()}.net"
 ) {
