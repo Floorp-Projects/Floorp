@@ -571,7 +571,7 @@
               test.expectEvent(sourceBuffer, "update", "Append success.");
               test.expectEvent(sourceBuffer, "updateend", "Append ended.");
 
-              assert_throws( { name: "TypeError"} ,
+              assert_throws_js( TypeError,
                   function() { sourceBuffer.appendBuffer(null); },
                   "appendBuffer(null) throws an exception.");
               test.done();
