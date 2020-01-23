@@ -84,7 +84,68 @@ def WebIDLTest(parser, harness):
         harness.ok(method2[1].type.nullable(), "bar argument of method2 is nullable")
         harness.ok(method2[1].type.hasClamp(), "bar argument of method2 has [Clamp]")
 
-    ATTRIBUTES = [("[Clamp]", "long"), ("[EnforceRange]", "long"), ("[TreatNullAs=EmptyString]", "DOMString")]
+    # Test [AllowShared]
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            typedef [AllowShared] ArrayBufferView Foo;
+            dictionary A {
+                required [AllowShared] ArrayBufferView a;
+                [ChromeOnly, AllowShared] ArrayBufferView b;
+                Foo c;
+            };
+            interface B {
+                attribute Foo typedefFoo;
+                attribute [AllowShared] ArrayBufferView foo;
+                void method([AllowShared] ArrayBufferView foo);
+                void method2(optional [AllowShared] ArrayBufferView foo);
+            };
+            interface C {
+                attribute [AllowShared] ArrayBufferView? foo;
+                void method([AllowShared] ArrayBufferView? foo);
+                void method2(optional [AllowShared] ArrayBufferView? foo);
+            };
+            interface Setlike {
+                setlike<[AllowShared] ArrayBufferView>;
+            };
+            interface Maplike {
+                maplike<[Clamp] long, [AllowShared] ArrayBufferView>;
+            };
+            interface Iterable {
+                iterable<[Clamp] long, [AllowShared] ArrayBufferView>;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(not threw, "Should not have thrown on parsing normal")
+    if not threw:
+        harness.ok(results[0].innerType.hasAllowShared(), "Foo is [AllowShared]")
+        A = results[1]
+        harness.ok(A.members[0].type.hasAllowShared(), "A.a is [AllowShared]")
+        harness.ok(A.members[1].type.hasAllowShared(), "A.b is [AllowShared]")
+        harness.ok(A.members[2].type.hasAllowShared(), "A.c is [AllowShared]")
+        B = results[2]
+        harness.ok(B.members[0].type.hasAllowShared(), "B.typedefFoo is [AllowShared]")
+        harness.ok(B.members[1].type.hasAllowShared(), "B.foo is [AllowShared]")
+        method = B.members[2].signatures()[0][1]
+        harness.ok(method[0].type.hasAllowShared(), "foo argument of method is [AllowShared]")
+        method2 = B.members[3].signatures()[0][1]
+        harness.ok(method2[0].type.hasAllowShared(), "foo argument of method2 is [AllowShared]")
+        C = results[3]
+        harness.ok(C.members[0].type.nullable(), "C.foo is nullable")
+        harness.ok(C.members[0].type.hasAllowShared(), "C.foo is [AllowShared]")
+        method = C.members[1].signatures()[0][1]
+        harness.ok(method[0].type.nullable(), "foo argument of method is nullable")
+        harness.ok(method[0].type.hasAllowShared(), "foo argument of method is [AllowShared]")
+        method2 = C.members[2].signatures()[0][1]
+        harness.ok(method2[0].type.nullable(), "foo argument of method2 is nullable")
+        harness.ok(method2[0].type.hasAllowShared(), "foo argument of method2 is [AllowShared]")
+
+    ATTRIBUTES = [("[Clamp]", "long"), ("[EnforceRange]", "long"),
+                  ("[TreatNullAs=EmptyString]", "DOMString"), ("[AllowShared]", "ArrayBufferView")]
     TEMPLATES = [
         ("required dictionary members", """
             dictionary Foo {
@@ -114,7 +175,54 @@ def WebIDLTest(parser, harness):
               readonly attribute Bar baz;
             };
             typedef %s %s Bar;
-        """)              
+        """),
+        ("method", """
+            interface Foo {
+              %s %s foo();
+            };
+        """),
+        ("interface","""
+            %s
+            interface Foo {
+              attribute %s foo;
+            };
+        """),
+        ("partial interface","""
+            interface Foo {
+              void foo();
+            };
+            %s
+            partial interface Foo {
+              attribute %s bar;
+            };
+        """),
+        ("interface mixin","""
+            %s
+            interface mixin Foo {
+              attribute %s foo;
+            };
+        """),
+        ("namespace","""
+            %s
+            namespace Foo {
+              attribute %s foo;
+            };
+        """),
+        ("partial namespace","""
+            namespace Foo {
+              void foo();
+            };
+            %s
+            partial namespace Foo {
+              attribute %s bar;
+            };
+        """),
+        ("dictionary","""
+            %s
+            dictionary Foo {
+              %s foo;
+            };
+        """)
     ];
 
     for (name, template) in TEMPLATES:
@@ -251,6 +359,28 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should not allow [TreatNullAs] on nullable DOMString")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            typedef [AllowShared] DOMString Foo;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw, "[AllowShared] only allowed on buffer source types")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            typedef [AllowShared=something] ArrayBufferView Foo;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw, "[AllowShared] must take no arguments")
 
     parser = parser.reset()
     threw = False

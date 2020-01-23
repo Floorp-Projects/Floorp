@@ -846,6 +846,21 @@ interface TestExampleInterface {
   [NeedsWindowsUndef]
   const unsigned long NO_ERROR = 0xffffffff;
 
+  // [AllowShared] tests
+  attribute [AllowShared] ArrayBufferViewTypedef allowSharedArrayBufferViewTypedef;
+  attribute [AllowShared] ArrayBufferView allowSharedArrayBufferView;
+  attribute [AllowShared] ArrayBufferView? allowSharedNullableArrayBufferView;
+  attribute [AllowShared] ArrayBuffer allowSharedArrayBuffer;
+  attribute [AllowShared] ArrayBuffer? allowSharedNullableArrayBuffer;
+
+  void passAllowSharedArrayBufferViewTypedef(AllowSharedArrayBufferViewTypedef foo);
+  void passAllowSharedArrayBufferView([AllowShared] ArrayBufferView foo);
+  void passAllowSharedNullableArrayBufferView([AllowShared] ArrayBufferView? foo);
+  void passAllowSharedArrayBuffer([AllowShared] ArrayBuffer foo);
+  void passAllowSharedNullableArrayBuffer([AllowShared] ArrayBuffer? foo);
+  void passUnionArrayBuffer((DOMString or ArrayBuffer) foo);
+  void passUnionAllowSharedArrayBuffer((DOMString or [AllowShared] ArrayBuffer) foo);
+
   // If you add things here, add them to TestCodeGen and TestJSImplGen as well
 };
 

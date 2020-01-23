@@ -1089,6 +1089,30 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void SetClampedByte(int8_t);
   int8_t ClampedByte();
 
+  // Test AllowShared
+  void SetAllowSharedArrayBufferViewTypedef(const ArrayBufferView&);
+  void GetAllowSharedArrayBufferViewTypedef(JSContext*,
+                                            JS::MutableHandle<JSObject*>);
+  void SetAllowSharedArrayBufferView(const ArrayBufferView&);
+  void GetAllowSharedArrayBufferView(JSContext*, JS::MutableHandle<JSObject*>);
+  void SetAllowSharedNullableArrayBufferView(const Nullable<ArrayBufferView>&);
+  void GetAllowSharedNullableArrayBufferView(JSContext*,
+                                             JS::MutableHandle<JSObject*>);
+  void SetAllowSharedArrayBuffer(const ArrayBuffer&);
+  void GetAllowSharedArrayBuffer(JSContext*, JS::MutableHandle<JSObject*>);
+  void SetAllowSharedNullableArrayBuffer(const Nullable<ArrayBuffer>&);
+  void GetAllowSharedNullableArrayBuffer(JSContext*,
+                                         JS::MutableHandle<JSObject*>);
+
+  void PassAllowSharedArrayBufferViewTypedef(const ArrayBufferView&);
+  void PassAllowSharedArrayBufferView(const ArrayBufferView&);
+  void PassAllowSharedNullableArrayBufferView(const Nullable<ArrayBufferView>&);
+  void PassAllowSharedArrayBuffer(const ArrayBuffer&);
+  void PassAllowSharedNullableArrayBuffer(const Nullable<ArrayBuffer>&);
+  void PassUnionArrayBuffer(const StringOrArrayBuffer& foo);
+  void PassUnionAllowSharedArrayBuffer(
+      const StringOrMaybeSharedArrayBuffer& foo);
+
  private:
   // We add signatures here that _could_ start matching if the codegen
   // got data types wrong.  That way if it ever does we'll have a call

@@ -4715,6 +4715,9 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     If isClamp is true, we're converting an integer and clamping if the
     value is out of range.
 
+    If isAllowShared is false, we're converting a buffer source and throwing if
+    it is a SharedArrayBuffer or backed by a SharedArrayBuffer.
+
     If lenientFloatCode is not None, it should be used in cases when
     we're a non-finite float that's not unrestricted.
 
@@ -4749,6 +4752,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
     isClamp = type.hasClamp()
     isEnforceRange = type.hasEnforceRange()
+    isAllowShared = type.hasAllowShared()
 
     # If exceptionCode is not set, we'll just rethrow the exception we got.
     # Note that we can't just set failureCode to exceptionCode, because setting
@@ -4775,6 +4779,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             failureCode or
             ('ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s", "%s");\n'
              '%s' % (firstCap(sourceDescription), typeName, exceptionCode)))
+
+    def onFailureIsShared(failureCode):
+        return CGGeneric(
+            failureCode or
+            ('ThrowErrorMessage(cx, MSG_TYPEDARRAY_IS_SHARED, "%s");\n'
+             '%s' % (firstCap(sourceDescription), exceptionCode)))
 
     def onFailureNotCallable(failureCode):
         return CGGeneric(
@@ -4913,7 +4923,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     assert not (isEnforceRange and isClamp)  # These are mutually exclusive
 
     if type.isSequence():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
 
         if failureCode is None:
             notSequence = ('ThrowErrorMessage(cx, MSG_NOT_SEQUENCE, "%s");\n'
@@ -5051,7 +5061,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         holderArgs=holderArgs)
 
     if type.isRecord():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
         if failureCode is None:
             notRecord = ('ThrowErrorMessage(cx, MSG_NOT_OBJECT, "%s");\n'
                          "%s" % (firstCap(sourceDescription), exceptionCode))
@@ -5699,7 +5709,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         dealWithOptional=isOptional)
 
     if type.isGeckoInterface():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
 
         descriptor = descriptorProvider.getDescriptor(
             type.unroll().inner.identifier.name)
@@ -5867,6 +5877,21 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             """,
             objRef=objRef,
             badType=onFailureBadType(failureCode, type.name).define())
+        if not isAllowShared and type.isBufferSource():
+            if type.isArrayBuffer():
+                isSharedMethod = "JS::IsSharedArrayBufferObject"
+            else:
+                assert type.isArrayBufferView() or type.isTypedArray()
+                isSharedMethod = "JS::IsArrayBufferViewShared"
+            template += fill(
+                """
+                if (${isSharedMethod}(${objRef}.Obj())) {
+                  $*{badType}
+                }
+                """,
+                isSharedMethod=isSharedMethod,
+                objRef=objRef,
+                badType=onFailureIsShared(failureCode).define())
         template = wrapObjectTemplate(template, type, "${declName}.SetNull();\n",
                                       failureCode)
         if not isMember:
@@ -5903,7 +5928,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         holderArgs=holderArgs)
 
     if type.isJSString():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
         if type.nullable():
             raise TypeError("Nullable JSString not supported");
 
@@ -5942,7 +5967,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         declArgs=declArgs)
 
     if type.isDOMString() or type.isUSVString() or type.isUTF8String():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
 
         treatAs = {
             "Default": "eStringify",
@@ -6035,7 +6060,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             holderType=holderType)
 
     if type.isByteString():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
 
         nullable = toStringBool(type.nullable())
 
@@ -6062,7 +6087,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             dealWithOptional=isOptional)
 
     if type.isEnum():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
 
         enumName = type.unroll().inner.identifier.name
         declType = CGGeneric(enumName)
@@ -6128,7 +6153,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         dealWithOptional=isOptional)
 
     if type.isCallback():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
         assert not type.treatNonCallableAsNull() or type.nullable()
         assert not type.treatNonObjectAsNull() or type.nullable()
         assert not type.treatNonObjectAsNull() or not type.treatNonCallableAsNull()
@@ -6179,7 +6204,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         dealWithOptional=isOptional)
 
     if type.isAny():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
 
         declArgs = None
         if isMember in ("Variadic", "Sequence", "Dictionary", "Record"):
@@ -6232,7 +6257,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         declArgs=declArgs)
 
     if type.isObject():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
         return handleJSObjectType(type, isMember, failureCode, exceptionCode, sourceDescription)
 
     if type.isDictionary():
@@ -6343,7 +6368,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         return JSToNativeConversionInfo("")
 
     if type.isDate():
-        assert not isEnforceRange and not isClamp
+        assert not isEnforceRange and not isClamp and not isAllowShared
 
         declType = CGGeneric("Date")
         if type.nullable():
