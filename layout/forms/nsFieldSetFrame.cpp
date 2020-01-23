@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsFieldSetFrame.h"
+#include "mozilla/dom/HTMLLegendElement.h"
 
 #include <algorithm>
 #include "gfxContext.h"
@@ -387,6 +388,8 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
                              ReflowOutput& aDesiredSize,
                              const ReflowInput& aReflowInput,
                              nsReflowStatus& aStatus) {
+  using LegendAlignValue = HTMLLegendElement::LegendAlignValue;
+
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFieldSetFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
@@ -672,21 +675,21 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
       // NOTE legend @align values are: left/right/center
       // GetLogicalAlign converts left/right to start/end for the given WM.
       // @see HTMLLegendElement::ParseAttribute, nsLegendFrame::GetLogicalAlign
-      int32_t align =
+      LegendAlignValue align =
           static_cast<nsLegendFrame*>(legend->GetContentInsertionFrame())
               ->GetLogicalAlign(wm);
       switch (align) {
-        case NS_STYLE_TEXT_ALIGN_END:
+        case LegendAlignValue::InlineEnd:
           mLegendRect.IStart(wm) =
               innerContentRect.IEnd(wm) - mLegendRect.ISize(wm);
           break;
-        case NS_STYLE_TEXT_ALIGN_CENTER:
+        case LegendAlignValue::Center:
           // Note: rounding removed; there doesn't seem to be any need
           mLegendRect.IStart(wm) =
               innerContentRect.IStart(wm) +
               (innerContentRect.ISize(wm) - mLegendRect.ISize(wm)) / 2;
           break;
-        case NS_STYLE_TEXT_ALIGN_START:
+        case LegendAlignValue::InlineStart:
           mLegendRect.IStart(wm) = innerContentRect.IStart(wm);
           break;
         default:
