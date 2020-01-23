@@ -11,8 +11,9 @@ import copy
 import logging
 import os
 import re
+from functools import reduce
 
-from six import text_type
+from six import text_type, string_types
 
 from requests.exceptions import HTTPError
 
@@ -252,8 +253,7 @@ def add_args_to_command(cmd_parts, extra_args=[]):
         # windows has single cmd part as dict: 'task-reference', with long string
         cmd_parts = cmd_parts[0]['task-reference'].split(' ')
         cmd_type = 'dict'
-    elif len(cmd_parts) == 1 and (isinstance(cmd_parts[0], unicode) or
-                                  isinstance(cmd_parts[0], str)):
+    elif len(cmd_parts) == 1 and isinstance(cmd_parts[0], string_types):
         # windows has single cmd part as a long string
         cmd_parts = cmd_parts[0].split(' ')
         cmd_type = 'unicode'

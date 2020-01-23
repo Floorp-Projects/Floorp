@@ -43,7 +43,7 @@ def add_all_talos(parameters, graph_config, input, task_group_id, task_id):
         parameters, graph_config)
 
     times = input.get('times', 1)
-    for i in xrange(times):
+    for i in range(times):
         to_run = [label
                   for label, entry
                   in full_task_graph.tasks.iteritems()
