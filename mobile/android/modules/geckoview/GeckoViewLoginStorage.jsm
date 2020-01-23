@@ -115,6 +115,13 @@ const GeckoViewLoginStorage = {
     });
   },
 
+  /**
+   * Delegates login entry saving to the attached LoginStorage GeckoView delegate.
+   * Call this when a new login entry or a new password for an existing login
+   * entry has been submitted.
+   *
+   * @param aLogin The {LoginEntry} to be saved.
+   */
   onLoginSave(aLogin) {
     debug`onLoginSave ${aLogin}`;
 
@@ -124,6 +131,14 @@ const GeckoViewLoginStorage = {
     });
   },
 
+  /**
+   * Delegates login entry password usage to the attached LoginStorage GeckoView
+   * delegate.
+   * Call this when the password of an existing login entry, as returned by
+   * fetchLogins, has been used for autofill.
+   *
+   * @param aLogin The {LoginEntry} whose password was used.
+   */
   onLoginPasswordUsed(aLogin) {
     debug`onLoginUsed ${aLogin}`;
 
