@@ -74,34 +74,46 @@ static bool ValidateBufferUsageEnum(WebGLContext* webgl, GLenum usage) {
   return false;
 }
 
-void WebGLBuffer::BufferData(GLenum target, uint64_t size, const void* data,
-                             GLenum usage) {
-  // Careful: data.Length() could conceivably be any uint32_t, but GLsizeiptr
-  // is like intptr_t.
-  if (!CheckedInt<GLsizeiptr>(size).isValid())
-    return mContext->ErrorOutOfMemory("bad size");
+void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
+                             const void* const maybeData, const GLenum usage) {
+  // The driver knows only GLsizeiptr, which is int32_t on 32bit!
+  bool sizeValid = CheckedInt<GLsizeiptr>(size).isValid();
+
+  if (mContext->gl->WorkAroundDriverBugs()) {
+    // Bug 790879
+#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
+    sizeValid &= CheckedInt<int32_t>(size).isValid();
+#endif
+
+    // Bug 1610383
+    if (mContext->gl->IsANGLE()) {
+      // While ANGLE seems to support up to `unsigned int`, UINT32_MAX-4 causes
+      // GL_OUT_OF_MEMORY in glFlush??
+      sizeValid &= CheckedInt<int32_t>(size).isValid();
+    }
+  }
+
+  if (!sizeValid) {
+    mContext->ErrorOutOfMemory("Size not valid for platform: %" PRIu64, size);
+    return;
+  }
+
+  // -
 
   if (!ValidateBufferUsageEnum(mContext, usage)) return;
 
-#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
-  // bug 790879
-  if (mContext->gl->WorkAroundDriverBugs() && size > INT32_MAX) {
-    mContext->ErrorOutOfMemory("Allocation size too large.");
-    return;
-  }
-#endif
-
+  const void* uploadData = maybeData;
   UniqueBuffer maybeCalloc;
-  if (!data) {
+  if (!uploadData) {
     maybeCalloc = calloc(1, AssertedCast<size_t>(size));
     if (!maybeCalloc) {
       mContext->ErrorOutOfMemory("Failed to alloc zeros.");
       return;
     }
-    data = maybeCalloc.get();
+    uploadData = maybeCalloc.get();
   }
+  MOZ_ASSERT(uploadData);
 
-  const void* uploadData = data;
   UniqueBuffer newIndexCache;
   if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER &&
       mContext->mNeedsIndexValidation) {
@@ -116,7 +128,7 @@ void WebGLBuffer::BufferData(GLenum target, uint64_t size, const void* data,
     // * We only read out of the single copy, and only after copying.
     // * If we get data value corruption from racing read-during-write, that's
     // fine.
-    memcpy(newIndexCache.get(), data, size);
+    memcpy(newIndexCache.get(), uploadData, size);
     uploadData = newIndexCache.get();
   }
 
