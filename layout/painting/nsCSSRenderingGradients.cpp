@@ -36,12 +36,10 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-static gfxPoint ResolvePosition(const Position& aPos, const nsSize& aSize,
-                                int32_t aAppUnitsPerPixel) {
-  nscoord h = aPos.horizontal.Resolve(aSize.width);
-  nscoord v = aPos.vertical.Resolve(aSize.height);
-  return gfxPoint(NSAppUnitsToFloatPixels(h, aAppUnitsPerPixel),
-                  NSAppUnitsToFloatPixels(v, aAppUnitsPerPixel));
+static CSSPoint ResolvePosition(const Position& aPos, const CSSSize& aSize) {
+  CSSCoord h = aPos.horizontal.ResolveToCSSPixels(aSize.width);
+  CSSCoord v = aPos.vertical.ResolveToCSSPixels(aSize.height);
+  return CSSPoint(h, v);
 }
 
 // Given a box with size aBoxSize and origin (0,0), and an angle aAngle,
@@ -49,22 +47,22 @@ static gfxPoint ResolvePosition(const Position& aPos, const nsSize& aSize,
 // the gradient line --- the intersection of the gradient line with a line
 // perpendicular to aAngle that passes through the farthest corner in the
 // direction aAngle.
-static gfxPoint ComputeGradientLineEndFromAngle(const gfxPoint& aStart,
+static CSSPoint ComputeGradientLineEndFromAngle(const CSSPoint& aStart,
                                                 double aAngle,
-                                                const gfxSize& aBoxSize) {
+                                                const CSSSize& aBoxSize) {
   double dx = cos(-aAngle);
   double dy = sin(-aAngle);
-  gfxPoint farthestCorner(dx > 0 ? aBoxSize.width : 0,
+  CSSPoint farthestCorner(dx > 0 ? aBoxSize.width : 0,
                           dy > 0 ? aBoxSize.height : 0);
-  gfxPoint delta = farthestCorner - aStart;
+  CSSPoint delta = farthestCorner - aStart;
   double u = delta.x * dy - delta.y * dx;
-  return farthestCorner + gfxPoint(-u * dy, u * dx);
+  return farthestCorner + CSSPoint(-u * dy, u * dx);
 }
 
 // Compute the start and end points of the gradient line for a linear gradient.
-static Tuple<gfxPoint, gfxPoint> ComputeLinearGradientLine(
+static Tuple<CSSPoint, CSSPoint> ComputeLinearGradientLine(
     nsPresContext* aPresContext, const StyleGradient& aGradient,
-    const gfxSize& aBoxSize) {
+    const CSSSize& aBoxSize) {
   using X = StyleHorizontalPositionKeyword;
   using Y = StyleVerticalPositionKeyword;
 
@@ -72,28 +70,28 @@ static Tuple<gfxPoint, gfxPoint> ComputeLinearGradientLine(
   const bool isModern =
       aGradient.compat_mode == StyleGradientCompatMode::Modern;
 
-  gfxPoint center(aBoxSize.width / 2, aBoxSize.height / 2);
+  CSSPoint center(aBoxSize.width / 2, aBoxSize.height / 2);
   switch (direction.tag) {
     case StyleLineDirection::Tag::Angle: {
       double angle = direction.AsAngle().ToRadians();
       if (isModern) {
         angle = M_PI_2 - angle;
       }
-      gfxPoint end = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
-      gfxPoint start = gfxPoint(aBoxSize.width, aBoxSize.height) - end;
+      CSSPoint end = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
+      CSSPoint start = CSSPoint(aBoxSize.width, aBoxSize.height) - end;
       return MakeTuple(start, end);
     }
     case StyleLineDirection::Tag::Vertical: {
-      gfxPoint start(center.x, 0);
-      gfxPoint end(center.x, aBoxSize.height);
+      CSSPoint start(center.x, 0);
+      CSSPoint end(center.x, aBoxSize.height);
       if (isModern == (direction.AsVertical() == Y::Top)) {
         std::swap(start.y, end.y);
       }
       return MakeTuple(start, end);
     }
     case StyleLineDirection::Tag::Horizontal: {
-      gfxPoint start(0, center.y);
-      gfxPoint end(aBoxSize.width, center.y);
+      CSSPoint start(0, center.y);
+      CSSPoint end(aBoxSize.width, center.y);
       if (isModern == (direction.AsHorizontal() == X::Left)) {
         std::swap(start.x, end.x);
       }
@@ -108,36 +106,36 @@ static Tuple<gfxPoint, gfxPoint> ComputeLinearGradientLine(
         float xSign = h == X::Right ? 1.0 : -1.0;
         float ySign = v == Y::Top ? 1.0 : -1.0;
         double angle = atan2(ySign * aBoxSize.width, xSign * aBoxSize.height);
-        gfxPoint end = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
-        gfxPoint start = gfxPoint(aBoxSize.width, aBoxSize.height) - end;
+        CSSPoint end = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
+        CSSPoint start = CSSPoint(aBoxSize.width, aBoxSize.height) - end;
         return MakeTuple(start, end);
       }
 
-      gfxFloat startX = h == X::Left ? 0.0 : aBoxSize.width;
-      gfxFloat startY = v == Y::Top ? 0.0 : aBoxSize.height;
+      CSSCoord startX = h == X::Left ? 0.0 : aBoxSize.width;
+      CSSCoord startY = v == Y::Top ? 0.0 : aBoxSize.height;
 
-      gfxPoint start(startX, startY);
-      gfxPoint end = gfxPoint(aBoxSize.width, aBoxSize.height) - start;
+      CSSPoint start(startX, startY);
+      CSSPoint end = CSSPoint(aBoxSize.width, aBoxSize.height) - start;
       return MakeTuple(start, end);
     }
     default:
       break;
   }
   MOZ_ASSERT_UNREACHABLE("Unknown line direction");
-  return MakeTuple(gfxPoint(), gfxPoint());
+  return MakeTuple(CSSPoint(), CSSPoint());
 }
 
 using EndingShape = StyleGenericEndingShape<Length, LengthPercentage>;
-using RadialGradientRadii = Variant<StyleShapeExtent, Pair<nscoord, nscoord>>;
+using RadialGradientRadii = Variant<StyleShapeExtent, Pair<CSSCoord, CSSCoord>>;
 
 static RadialGradientRadii ComputeRadialGradientRadii(const EndingShape& aShape,
-                                                      const nsSize& aSize) {
+                                                      const CSSSize& aSize) {
   if (aShape.IsCircle()) {
     auto& circle = aShape.AsCircle();
     if (circle.IsExtent()) {
       return RadialGradientRadii(circle.AsExtent());
     }
-    nscoord radius = circle.AsRadius().ToAppUnits();
+    CSSCoord radius = circle.AsRadius().ToCSSPixels();
     return RadialGradientRadii(MakePair(radius, radius));
   }
   auto& ellipse = aShape.AsEllipse();
@@ -147,30 +145,28 @@ static RadialGradientRadii ComputeRadialGradientRadii(const EndingShape& aShape,
 
   auto& radii = ellipse.AsRadii();
   return RadialGradientRadii(
-      MakePair(radii._0.Resolve(aSize.width), radii._1.Resolve(aSize.height)));
+      MakePair(radii._0.ResolveToCSSPixels(aSize.width),
+               radii._1.ResolveToCSSPixels(aSize.height)));
 }
 
 // Compute the start and end points of the gradient line for a radial gradient.
 // Also returns the horizontal and vertical radii defining the circle or
 // ellipse to use.
-static Tuple<gfxPoint, gfxPoint, double, double> ComputeRadialGradientLine(
-    nsPresContext* aPresContext, const StyleGradient& aGradient,
-    const gfxSize& aBoxSize, const nsSize& aBoxSizeInAppUnits) {
+static Tuple<CSSPoint, CSSPoint, CSSCoord, CSSCoord> ComputeRadialGradientLine(
+    const StyleGradient& aGradient, const CSSSize& aBoxSize) {
   const auto& radial = aGradient.kind.AsRadial();
   const EndingShape& endingShape = radial._0;
   const Position& position = radial._1;
-  int32_t appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
-  gfxPoint start =
-      ResolvePosition(position, aBoxSizeInAppUnits, appUnitsPerPixel);
+  CSSPoint start = ResolvePosition(position, aBoxSize);
 
   // Compute gradient shape: the x and y radii of an ellipse.
-  double radiusX, radiusY;
-  double leftDistance = Abs(start.x);
-  double rightDistance = Abs(aBoxSize.width - start.x);
-  double topDistance = Abs(start.y);
-  double bottomDistance = Abs(aBoxSize.height - start.y);
+  CSSCoord radiusX, radiusY;
+  CSSCoord leftDistance = Abs(start.x);
+  CSSCoord rightDistance = Abs(aBoxSize.width - start.x);
+  CSSCoord topDistance = Abs(start.y);
+  CSSCoord bottomDistance = Abs(aBoxSize.height - start.y);
 
-  auto radii = ComputeRadialGradientRadii(endingShape, aBoxSizeInAppUnits);
+  auto radii = ComputeRadialGradientRadii(endingShape, aBoxSize);
   if (radii.is<StyleShapeExtent>()) {
     switch (radii.as<StyleShapeExtent>()) {
       case StyleShapeExtent::ClosestSide:
@@ -182,8 +178,8 @@ static Tuple<gfxPoint, gfxPoint, double, double> ComputeRadialGradientLine(
         break;
       case StyleShapeExtent::ClosestCorner: {
         // Compute x and y distances to nearest corner
-        double offsetX = std::min(leftDistance, rightDistance);
-        double offsetY = std::min(topDistance, bottomDistance);
+        CSSCoord offsetX = std::min(leftDistance, rightDistance);
+        CSSCoord offsetY = std::min(topDistance, bottomDistance);
         if (endingShape.IsCircle()) {
           radiusX = radiusY = NS_hypot(offsetX, offsetY);
         } else {
@@ -202,8 +198,8 @@ static Tuple<gfxPoint, gfxPoint, double, double> ComputeRadialGradientLine(
         break;
       case StyleShapeExtent::FarthestCorner: {
         // Compute x and y distances to nearest corner
-        double offsetX = std::max(leftDistance, rightDistance);
-        double offsetY = std::max(topDistance, bottomDistance);
+        CSSCoord offsetX = std::max(leftDistance, rightDistance);
+        CSSCoord offsetY = std::max(topDistance, bottomDistance);
         if (endingShape.IsCircle()) {
           radiusX = radiusY = NS_hypot(offsetX, offsetY);
         } else {
@@ -218,15 +214,14 @@ static Tuple<gfxPoint, gfxPoint, double, double> ComputeRadialGradientLine(
         radiusX = radiusY = 0;
     }
   } else {
-    auto pair = radii.as<Pair<nscoord, nscoord>>();
-    int32_t appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
-    radiusX = NSAppUnitsToFloatPixels(pair.first(), appUnitsPerPixel);
-    radiusY = NSAppUnitsToFloatPixels(pair.second(), appUnitsPerPixel);
+    auto pair = radii.as<Pair<CSSCoord, CSSCoord>>();
+    radiusX = pair.first();
+    radiusY = pair.second();
   }
 
   // The gradient line end point is where the gradient line intersects
   // the ellipse.
-  gfxPoint end = start + gfxPoint(radiusX, 0);
+  CSSPoint end = start + CSSPoint(radiusX, 0);
   return MakeTuple(start, end, radiusX, radiusY);
 }
 
@@ -469,7 +464,6 @@ static ColorStop InterpolateColorStop(const ColorStop& aFirst,
   MOZ_ASSERT(aPosition <= aSecond.mPosition);
 
   double delta = aSecond.mPosition - aFirst.mPosition;
-
   if (delta < 1e-6) {
     return ColorStop(aPosition, false, aDefault);
   }
@@ -547,17 +541,7 @@ static Color GetSpecifiedColor(const StyleGradientItem& aItem,
 }
 
 static Maybe<double> GetSpecifiedGradientPosition(
-    const StyleGradientItem& aItem, int32_t aAppUnitsPerPixel,
-    gfxFloat aLineLength) {
-  auto GetCoord = [&](CSSCoord aCoord) -> double {
-    if (aLineLength < 1e-6) {
-      return 0.0;
-    }
-    return NSAppUnitsToFloatPixels(CSSPixel::ToAppUnits(aCoord),
-                                   aAppUnitsPerPixel) /
-           aLineLength;
-  };
-
+    const StyleGradientItem& aItem, CSSCoord aLineLength) {
   if (aItem.IsSimpleColorStop()) {
     return Nothing();
   }
@@ -570,13 +554,15 @@ static Maybe<double> GetSpecifiedGradientPosition(
     return Some(pos.ToPercentage());
   }
 
-  return Some(pos.Percentage() + GetCoord(pos.LengthInCSSPixels()));
+  if (aLineLength < 1e-6) {
+    return Some(0.0);
+  }
+  return Some(pos.ResolveToCSSPixels(aLineLength) / aLineLength);
 }
 
 static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
                                              const StyleGradient& aGradient,
-                                             int32_t aAppUnitsPerPixel,
-                                             gfxFloat aLineLength) {
+                                             CSSCoord aLineLength) {
   MOZ_ASSERT(aGradient.items.Length() >= 2,
              "The parser should reject gradients with less than two stops");
 
@@ -591,7 +577,7 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
     double position;
 
     Maybe<double> specifiedPosition =
-        GetSpecifiedGradientPosition(stop, aAppUnitsPerPixel, aLineLength);
+        GetSpecifiedGradientPosition(stop, aLineLength);
 
     if (specifiedPosition) {
       position = *specifiedPosition;
@@ -646,32 +632,29 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
 nsCSSGradientRenderer nsCSSGradientRenderer::Create(
     nsPresContext* aPresContext, ComputedStyle* aComputedStyle,
     const StyleGradient& aGradient, const nsSize& aIntrinsicSize) {
-  nscoord appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
-  gfxSize srcSize =
-      gfxSize(gfxFloat(aIntrinsicSize.width) / appUnitsPerDevPixel,
-              gfxFloat(aIntrinsicSize.height) / appUnitsPerDevPixel);
+  auto srcSize = CSSSize::FromAppUnits(aIntrinsicSize);
 
   // Compute "gradient line" start and end relative to the intrinsic size of
   // the gradient.
-  gfxPoint lineStart, lineEnd;
-  double radiusX = 0, radiusY = 0;  // for radial gradients only
+  CSSPoint lineStart, lineEnd;
+  CSSCoord radiusX = 0, radiusY = 0;  // for radial gradients only
   if (aGradient.kind.IsLinear()) {
     Tie(lineStart, lineEnd) =
         ComputeLinearGradientLine(aPresContext, aGradient, srcSize);
   } else {
-    Tie(lineStart, lineEnd, radiusX, radiusY) = ComputeRadialGradientLine(
-        aPresContext, aGradient, srcSize, aIntrinsicSize);
+    Tie(lineStart, lineEnd, radiusX, radiusY) =
+        ComputeRadialGradientLine(aGradient, srcSize);
   }
   // Avoid sending Infs or Nans to downwind draw targets.
   if (!lineStart.IsFinite() || !lineEnd.IsFinite()) {
-    lineStart = lineEnd = gfxPoint(0, 0);
+    lineStart = lineEnd = CSSPoint(0, 0);
   }
-  gfxFloat lineLength =
+  CSSCoord lineLength =
       NS_hypot(lineEnd.x - lineStart.x, lineEnd.y - lineStart.y);
 
   // Build color stop array and compute stop positions
-  nsTArray<ColorStop> stops = ComputeColorStops(
-      aComputedStyle, aGradient, appUnitsPerDevPixel, lineLength);
+  nsTArray<ColorStop> stops =
+      ComputeColorStops(aComputedStyle, aGradient, lineLength);
 
   ResolveMidpoints(stops);
 
@@ -679,10 +662,16 @@ nsCSSGradientRenderer nsCSSGradientRenderer::Create(
   renderer.mPresContext = aPresContext;
   renderer.mGradient = &aGradient;
   renderer.mStops = std::move(stops);
-  renderer.mLineStart = lineStart;
-  renderer.mLineEnd = lineEnd;
-  renderer.mRadiusX = radiusX;
-  renderer.mRadiusY = radiusY;
+  renderer.mLineStart = {
+      aPresContext->CSSPixelsToDevPixels(lineStart.x),
+      aPresContext->CSSPixelsToDevPixels(lineStart.y),
+  };
+  renderer.mLineEnd = {
+      aPresContext->CSSPixelsToDevPixels(lineEnd.x),
+      aPresContext->CSSPixelsToDevPixels(lineEnd.y),
+  };
+  renderer.mRadiusX = aPresContext->CSSPixelsToDevPixels(radiusX);
+  renderer.mRadiusY = aPresContext->CSSPixelsToDevPixels(radiusY);
   return renderer;
 }
 
