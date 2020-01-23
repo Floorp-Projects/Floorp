@@ -253,8 +253,6 @@ void TransceiverImpl::SetReceiveTrackMuted(bool aMuted) {
     return;
   }
 
-  MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__
-                                << " aMuted=" << aMuted);
   // This sets the muted state for mReceiveTrack and all its clones.
   static_cast<RemoteTrackSource&>(mReceiveTrack->GetSource()).SetMuted(aMuted);
 }
@@ -449,13 +447,6 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
       DebugOnly<nsresult> rv = UpdateConduit();
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-  }
-
-  // If a SRD has unset the receive bit, stop the receive pipeline so incoming
-  // RTP does not unmute the receive track.
-  if (!mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit() ||
-      !mJsepTransceiver->mRecvTrack.GetActive()) {
-    mReceivePipeline->Stop();
   }
 
   // mid from JSEP
@@ -989,15 +980,9 @@ void TransceiverImpl::GetRtpSources(
   audio_conduit->GetRtpSources(aTimeNow, outSources);
 }
 
-void TransceiverImpl::OnRtcpBye() {
-  MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__);
-  SetReceiveTrackMuted(true);
-}
+void TransceiverImpl::OnRtcpBye() { SetReceiveTrackMuted(true); }
 
-void TransceiverImpl::OnRtcpTimeout() {
-  MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__);
-  SetReceiveTrackMuted(true);
-}
+void TransceiverImpl::OnRtcpTimeout() { SetReceiveTrackMuted(true); }
 
 void TransceiverImpl::InsertAudioLevelForContributingSource(
     const uint32_t aSource, const int64_t aTimestamp,

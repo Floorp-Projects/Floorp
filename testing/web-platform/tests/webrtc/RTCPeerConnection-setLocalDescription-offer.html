@@ -192,34 +192,4 @@
     assert_equals(pc2.getTransceivers()[0].receiver.track.kind, "audio");
   }, "Negotiation works when there has been a repeated setLocalDescription(offer)");
 
-  promise_test(async t => {
-    const pc = new RTCPeerConnection();
-    t.add_cleanup(() => pc.close());
-
-    const sldPromise = pc.setLocalDescription(await pc.createOffer({offerToReceiveAudio: true}));
-
-    assert_equals(pc.signalingState, "stable", "signalingState should not be set synchronously after a call to sLD");
-
-    assert_equals(pc.pendingLocalDescription, null, "pendingRemoteDescription should never be set due to sLD");
-    assert_equals(pc.pendingRemoteDescription, null, "pendingLocalDescription should not be set synchronously after a call to sLD");
-    assert_equals(pc.currentLocalDescription, null, "currentLocalDescription should not be set synchronously after a call to sLD");
-    assert_equals(pc.currentRemoteDescription, null, "currentRemoteDescription should not be set synchronously after a call to sLD");
-
-    const statePromise = new Promise(resolve => {
-      pc.onsignalingstatechange = () => {
-        resolve(pc.signalingState);
-      }
-    });
-    const raceValue = await Promise.race([statePromise, sldPromise]);
-    assert_equals(raceValue, "have-local-offer", "signalingstatechange event should fire before sLD resolves");
-    assert_equals(pc.pendingRemoteDescription, null, "pendingRemoteDescription should never be set due to sLD");
-    assert_not_equals(pc.pendingLocalDescription, null, "pendingLocalDescription should be updated before the signalingstatechange event");
-    assert_equals(pc.pendingLocalDescription.type, "offer");
-    assert_equals(pc.pendingLocalDescription.sdp, pc.localDescription.sdp);
-    assert_equals(pc.currentLocalDescription, null, "currentLocalDescription should never be updated due to sLD(offer)");
-    assert_equals(pc.currentRemoteDescription, null, "currentRemoteDescription should never be updated due to sLD(offer)");
-
-    await sldPromise;
-  }, "setLocalDescription(offer) should update internal state with a queued task, in the right order");
-
 </script>

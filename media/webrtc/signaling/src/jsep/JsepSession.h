@@ -165,8 +165,7 @@ class JsepSession {
 
   // ICE controlling or controlled
   virtual bool IsIceControlling() const = 0;
-  virtual Maybe<bool> IsPendingOfferer() const = 0;
-  virtual Maybe<bool> IsCurrentOfferer() const = 0;
+  virtual bool IsOfferer() const = 0;
   virtual bool IsIceRestarting() const = 0;
 
   virtual const std::string GetLastError() const { return "Error"; }
