@@ -563,26 +563,6 @@ LengthPercentage LengthPercentage::FromPercentage(float aPercentage) {
   return l;
 }
 
-CSSCoord LengthPercentage::LengthInCSSPixels() const {
-  if (IsLength()) {
-    return AsLength().ToCSSPixels();
-  }
-  if (IsPercentage()) {
-    return 0;
-  }
-  return AsCalc().length.ToCSSPixels();
-}
-
-float LengthPercentage::Percentage() const {
-  if (IsLength()) {
-    return 0;
-  }
-  if (IsPercentage()) {
-    return AsPercentage()._0;
-  }
-  return AsCalc().percentage._0;
-}
-
 bool LengthPercentage::HasPercent() const {
   return IsPercentage() || (IsCalc() && AsCalc().has_percentage);
 }
@@ -592,6 +572,11 @@ bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
 nscoord LengthPercentage::ToLength() const {
   MOZ_ASSERT(ConvertsToLength());
   return IsLength() ? AsLength().ToAppUnits() : AsCalc().length.ToAppUnits();
+}
+
+CSSCoord LengthPercentage::ToLengthInCSSPixels() const {
+  MOZ_ASSERT(ConvertsToLength());
+  return IsLength() ? AsLength().ToCSSPixels() : AsCalc().length.ToCSSPixels();
 }
 
 bool LengthPercentage::ConvertsToPercentage() const {
@@ -607,7 +592,10 @@ bool LengthPercentage::ConvertsToPercentage() const {
 
 float LengthPercentage::ToPercentage() const {
   MOZ_ASSERT(ConvertsToPercentage());
-  return Percentage();
+  if (IsPercentage()) {
+    return AsPercentage()._0;
+  }
+  return AsCalc().percentage._0;
 }
 
 bool LengthPercentage::HasLengthAndPercentage() const {
@@ -626,7 +614,14 @@ bool LengthPercentage::IsDefinitelyZero() const {
 }
 
 CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
-  return LengthInCSSPixels() + Percentage() * aPercentageBasis;
+  if (IsLength()) {
+    return AsLength().ToCSSPixels();
+  }
+  if (IsPercentage()) {
+    return AsPercentage()._0 * aPercentageBasis;
+  }
+  auto& calc = AsCalc();
+  return calc.length.ToCSSPixels() + calc.percentage._0 * aPercentageBasis;
 }
 
 template <typename T>
@@ -634,7 +629,7 @@ CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
   static_assert(std::is_same<decltype(aPercentageGetter()), CSSCoord>::value,
                 "Should return CSS pixels");
   if (ConvertsToLength()) {
-    return LengthInCSSPixels();
+    return ToLengthInCSSPixels();
   }
   return ResolveToCSSPixels(aPercentageGetter());
 }
@@ -668,15 +663,14 @@ nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
 
 template <typename T>
 nscoord LengthPercentage::Resolve(T aPercentageGetter) const {
-  static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
-                "Should return app units");
   return Resolve(aPercentageGetter, NSToCoordFloorClamped);
 }
 
 template <typename T>
 nscoord LengthPercentage::Resolve(nscoord aPercentageBasis,
                                   T aPercentageRounder) const {
-  return Resolve([=] { return aPercentageBasis; }, aPercentageRounder);
+  return Resolve([aPercentageBasis] { return aPercentageBasis; },
+                 aPercentageRounder);
 }
 
 void LengthPercentage::ScaleLengthsBy(float aScale) {
