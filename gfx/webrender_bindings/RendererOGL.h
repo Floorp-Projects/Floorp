@@ -109,6 +109,8 @@ class RendererOGL {
 
   gl::GLContext* gl() const;
 
+  bool EnsureAsyncScreenshot();
+
  protected:
   RefPtr<RenderThread> mThread;
   UniquePtr<RenderCompositor> mCompositor;
@@ -116,6 +118,8 @@ class RendererOGL {
   layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;
   TimeStamp mFrameStartTime;
+
+  bool mDisableNativeCompositor;
 
   RendererScreenshotGrabber mScreenshotGrabber;
 };
