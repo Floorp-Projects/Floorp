@@ -5,13 +5,13 @@
 
 <script>
 test(function () {
-  assert_throws(RangeError(), function() {
+  assert_throws_js(RangeError, function() {
     new IntersectionObserver(e => {}, {threshold: [1.1]})
   })
 }, "IntersectionObserver constructor with { threshold: [1.1] }");
 
 test(function () {
-  assert_throws(TypeError(), function() {
+  assert_throws_js(TypeError, function() {
     new IntersectionObserver(e => {}, {threshold: ["foo"]})
   })
 }, 'IntersectionObserver constructor with { threshold: ["foo"] }');
@@ -53,7 +53,7 @@ test(function () {
 }, 'IntersectionObserver constructor with { rootMargin: "1px 1px 1px 1px 1px" }');
 
 test(function () {
-  assert_throws(TypeError(), function() {
+  assert_throws_js(TypeError, function() {
     let observer = new IntersectionObserver(c => {}, {});
     observer.observe("foo");
   })

@@ -10,11 +10,11 @@ test(t => {
 }, "Cross-origin `importScripts()` blocked in " + self.location.protocol + self.location.search);
 
 test(t => {
-  assert_throws(EvalError(),
+  assert_throws_js(EvalError,
                 _ => eval("1 + 1"),
                 "`eval()` should throw 'EvalError'.");
 
-  assert_throws(EvalError(),
+  assert_throws_js(EvalError,
                 _ => new Function("1 + 1"),
                 "`new Function()` should throw 'EvalError'.");
 }, "`eval()` blocked in " + self.location.protocol + self.location.search);

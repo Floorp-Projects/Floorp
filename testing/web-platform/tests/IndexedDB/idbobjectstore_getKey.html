@@ -34,7 +34,7 @@ function getkey_test(func, name) {
 getkey_test(function(t, db) {
     var tx = db.transaction('basic');
     var store = tx.objectStore('basic');
-    assert_throws(TypeError(), function() { store.getKey(); });
+    assert_throws_js(TypeError, function() { store.getKey(); });
     assert_throws({name: 'DataError'}, function() { store.getKey(null); });
     assert_throws({name: 'DataError'}, function() { store.getKey({}); });
     t.done();
