@@ -557,50 +557,162 @@ loser:
     return A;
 }
 
+struct KDFCacheItemStr {
+    SECItem *hash;
+    SECItem *salt;
+    SECItem *pwItem;
+    HASH_HashType hashType;
+    int iterations;
+    int keyLen;
+};
+typedef struct KDFCacheItemStr KDFCacheItem;
+
 /* Bug 1606992 - Cache the hash result for the common case that we're
  * asked to repeatedly compute the key for the same password item,
  * hash, iterations and salt. */
-static PZLock *PBE_cache_lock = NULL;
-static SECItem *cached_PBKDF2_item = NULL;
-static HASH_HashType cached_hashType;
-static int cached_iterations;
-static int cached_keyLen;
-static SECItem *cached_salt = NULL;
-static SECItem *cached_pwitem = NULL;
+static struct {
+    PZLock *lock;
+    struct {
+        KDFCacheItem common;
+        int ivLen;
+        PRBool faulty3DES;
+    } cacheKDF1;
+    struct {
+        KDFCacheItem common;
+    } cacheKDF2;
+} PBECache;
 
 void
 sftk_PBELockInit(void)
 {
-    if (!PBE_cache_lock) {
-        PBE_cache_lock = PZ_NewLock(nssIPBECacheLock);
+    if (!PBECache.lock) {
+        PBECache.lock = PZ_NewLock(nssIPBECacheLock);
     }
 }
 
 static void
-sftk_clearPBECacheItems(void)
+sftk_clearPBECommonCacheItemsLocked(KDFCacheItem *item)
 {
-    if (cached_PBKDF2_item) {
-        SECITEM_FreeItem(cached_PBKDF2_item, PR_TRUE);
-        cached_PBKDF2_item = NULL;
+    if (item->hash) {
+        SECITEM_ZfreeItem(item->hash, PR_TRUE);
+        item->hash = NULL;
     }
-    if (cached_salt) {
-        SECITEM_FreeItem(cached_salt, PR_TRUE);
-        cached_salt = NULL;
+    if (item->salt) {
+        SECITEM_FreeItem(item->salt, PR_TRUE);
+        item->salt = NULL;
     }
-    if (cached_pwitem) {
-        SECITEM_FreeItem(cached_pwitem, PR_TRUE);
-        cached_pwitem = NULL;
+    if (item->pwItem) {
+        SECITEM_ZfreeItem(item->pwItem, PR_TRUE);
+        item->pwItem = NULL;
     }
+}
+
+static void
+sftk_setPBECommonCacheItemsKDFLocked(KDFCacheItem *cacheItem,
+                                     const SECItem *hash,
+                                     const NSSPKCS5PBEParameter *pbe_param,
+                                     const SECItem *pwItem)
+{
+    cacheItem->hash = SECITEM_DupItem(hash);
+    cacheItem->hashType = pbe_param->hashType;
+    cacheItem->iterations = pbe_param->iter;
+    cacheItem->keyLen = pbe_param->keyLen;
+    cacheItem->salt = SECITEM_DupItem(&pbe_param->salt);
+    cacheItem->pwItem = SECITEM_DupItem(pwItem);
+}
+
+static void
+sftk_setPBECacheKDF2(const SECItem *hash,
+                     const NSSPKCS5PBEParameter *pbe_param,
+                     const SECItem *pwItem)
+{
+    PZ_Lock(PBECache.lock);
+
+    sftk_clearPBECommonCacheItemsLocked(&PBECache.cacheKDF2.common);
+
+    sftk_setPBECommonCacheItemsKDFLocked(&PBECache.cacheKDF2.common,
+                                         hash, pbe_param, pwItem);
+
+    PZ_Unlock(PBECache.lock);
+}
+
+static void
+sftk_setPBECacheKDF1(const SECItem *hash,
+                     const NSSPKCS5PBEParameter *pbe_param,
+                     const SECItem *pwItem,
+                     PRBool faulty3DES)
+{
+    PZ_Lock(PBECache.lock);
+
+    sftk_clearPBECommonCacheItemsLocked(&PBECache.cacheKDF1.common);
+
+    sftk_setPBECommonCacheItemsKDFLocked(&PBECache.cacheKDF1.common,
+                                         hash, pbe_param, pwItem);
+    PBECache.cacheKDF1.faulty3DES = faulty3DES;
+    PBECache.cacheKDF1.ivLen = pbe_param->ivLen;
+
+    PZ_Unlock(PBECache.lock);
+}
+
+static PRBool
+sftk_comparePBECommonCacheItemLocked(const KDFCacheItem *cacheItem,
+                                     const NSSPKCS5PBEParameter *pbe_param,
+                                     const SECItem *pwItem)
+{
+    return (cacheItem->hash &&
+            cacheItem->salt &&
+            cacheItem->pwItem &&
+            pbe_param->hashType == cacheItem->hashType &&
+            pbe_param->iter == cacheItem->iterations &&
+            pbe_param->keyLen == cacheItem->keyLen &&
+            SECITEM_ItemsAreEqual(&pbe_param->salt, cacheItem->salt) &&
+            SECITEM_ItemsAreEqual(pwItem, cacheItem->pwItem));
+}
+
+static SECItem *
+sftk_getPBECacheKDF2(const NSSPKCS5PBEParameter *pbe_param,
+                     const SECItem *pwItem)
+{
+    SECItem *result = NULL;
+    const KDFCacheItem *cacheItem = &PBECache.cacheKDF2.common;
+
+    PZ_Lock(PBECache.lock);
+    if (sftk_comparePBECommonCacheItemLocked(cacheItem, pbe_param, pwItem)) {
+        result = SECITEM_DupItem(cacheItem->hash);
+    }
+    PZ_Unlock(PBECache.lock);
+
+    return result;
+}
+
+static SECItem *
+sftk_getPBECacheKDF1(const NSSPKCS5PBEParameter *pbe_param,
+                     const SECItem *pwItem,
+                     PRBool faulty3DES)
+{
+    SECItem *result = NULL;
+    const KDFCacheItem *cacheItem = &PBECache.cacheKDF1.common;
+
+    PZ_Lock(PBECache.lock);
+    if (sftk_comparePBECommonCacheItemLocked(cacheItem, pbe_param, pwItem) &&
+        PBECache.cacheKDF1.faulty3DES == faulty3DES &&
+        PBECache.cacheKDF1.ivLen == pbe_param->ivLen) {
+        result = SECITEM_DupItem(cacheItem->hash);
+    }
+    PZ_Unlock(PBECache.lock);
+
+    return result;
 }
 
 void
 sftk_PBELockShutdown(void)
 {
-    if (PBE_cache_lock) {
-        PZ_DestroyLock(PBE_cache_lock);
-        PBE_cache_lock = 0;
+    if (PBECache.lock) {
+        PZ_DestroyLock(PBECache.lock);
+        PBECache.lock = 0;
     }
-    sftk_clearPBECacheItems();
+    sftk_clearPBECommonCacheItemsLocked(&PBECache.cacheKDF1.common);
+    sftk_clearPBECommonCacheItemsLocked(&PBECache.cacheKDF2.common);
 }
 
 /*
@@ -635,7 +747,11 @@ nsspkcs5_ComputeKeyAndIV(NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem,
     hashObj = HASH_GetRawHashObject(pbe_param->hashType);
     switch (pbe_param->pbeType) {
         case NSSPKCS5_PBKDF1:
-            hash = nsspkcs5_PBKDF1Extended(hashObj, pbe_param, pwitem, faulty3DES);
+            hash = sftk_getPBECacheKDF1(pbe_param, pwitem, faulty3DES);
+            if (!hash) {
+                hash = nsspkcs5_PBKDF1Extended(hashObj, pbe_param, pwitem, faulty3DES);
+                sftk_setPBECacheKDF1(hash, pbe_param, pwitem, faulty3DES);
+            }
             if (hash == NULL) {
                 goto loser;
             }
@@ -646,34 +762,10 @@ nsspkcs5_ComputeKeyAndIV(NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem,
 
             break;
         case NSSPKCS5_PBKDF2:
-            PZ_Lock(PBE_cache_lock);
-            if (cached_PBKDF2_item) {
-                if (pbe_param->hashType == cached_hashType &&
-                    pbe_param->iter == cached_iterations &&
-                    pbe_param->keyLen == cached_keyLen &&
-                    cached_salt &&
-                    SECITEM_ItemsAreEqual(&pbe_param->salt, cached_salt) &&
-                    cached_pwitem &&
-                    SECITEM_ItemsAreEqual(pwitem, cached_pwitem)) {
-                    hash = SECITEM_DupItem(cached_PBKDF2_item);
-                } else {
-                    sftk_clearPBECacheItems();
-                }
-            }
-            PZ_Unlock(PBE_cache_lock);
+            hash = sftk_getPBECacheKDF2(pbe_param, pwitem);
             if (!hash) {
                 hash = nsspkcs5_PBKDF2(hashObj, pbe_param, pwitem);
-                PZ_Lock(PBE_cache_lock);
-                /* ensure no other thread was quicker than us setting the cache */
-                if (!cached_PBKDF2_item) {
-                    cached_PBKDF2_item = SECITEM_DupItem(hash);
-                    cached_hashType = pbe_param->hashType;
-                    cached_iterations = pbe_param->iter;
-                    cached_keyLen = pbe_param->keyLen;
-                    cached_salt = SECITEM_DupItem(&pbe_param->salt);
-                    cached_pwitem = SECITEM_DupItem(pwitem);
-                }
-                PZ_Unlock(PBE_cache_lock);
+                sftk_setPBECacheKDF2(hash, pbe_param, pwitem);
             }
             if (getIV) {
                 PORT_Memcpy(iv->data, pbe_param->ivData, iv->len);

@@ -126,10 +126,12 @@
         '<(DEPTH)/exports.gyp:nss_exports'
       ],
       'cflags': [
-        '-mfpu=neon'
+        '-mfpu=neon',
+        '<@(softfp_cflags)',
       ],
       'cflags_mozilla': [
-        '-mfpu=neon'
+        '-mfpu=neon',
+        '<@(softfp_cflags)',
       ]
     },
     {
@@ -179,11 +181,13 @@
         [ 'target_arch=="arm"', {
           'cflags': [
             '-march=armv8-a',
-            '-mfpu=crypto-neon-fp-armv8'
+            '-mfpu=crypto-neon-fp-armv8',
+            '<@(softfp_cflags)',
           ],
           'cflags_mozilla': [
             '-march=armv8-a',
-            '-mfpu=crypto-neon-fp-armv8'
+            '-mfpu=crypto-neon-fp-armv8',
+            '<@(softfp_cflags)',
           ],
         }, 'target_arch=="arm64" or target_arch=="aarch64"', {
           'cflags': [
@@ -532,6 +536,11 @@
         ],
       }, {
         'have_int128_support%': 0,
+      }],
+      [ 'target_arch=="arm"', {
+        # When the compiler uses the softfloat ABI, we want to use the compatible softfp ABI when enabling NEON for these objects.
+        # Confusingly, __SOFTFP__ is the name of the define for the softfloat ABI, not for the softfp ABI.
+        'softfp_cflags': '<!(${CC:-cc} -o - -E -dM - ${CFLAGS} < /dev/null | grep __SOFTFP__ > /dev/null && echo -mfloat-abi=softfp || true)',
       }],
     ],
   }
