@@ -37,6 +37,7 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.session.NotificationSessionObserver
+import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
@@ -143,6 +144,10 @@ open class FenixApplication : LocaleAwareApplication() {
         // if ((System.currentTimeMillis() - settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
         //    runStorageMaintenance()
         // }
+
+        registerActivityLifecycleCallbacks(
+            PerformanceActivityLifecycleCallbacks(components.performance.visualCompletenessTaskManager)
+        )
     }
 
     // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.

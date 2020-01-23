@@ -7,11 +7,19 @@ package org.mozilla.fenix
 import android.content.Context
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.migration.FennecMigrator
+import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 
 /**
  * An application class which knows how to migrate Fennec data.
  */
 class MigratingFenixApplication : FenixApplication() {
+
+    init {
+        PerformanceActivityLifecycleCallbacks.isTransientActivityInMigrationVariant = {
+            if (it is MigrationDecisionActivity) true else false
+        }
+    }
+
     val migrator by lazy {
         FennecMigrator.Builder(this, this.components.analytics.crashReporter)
             .migrateOpenTabs(this.components.core.sessionManager)

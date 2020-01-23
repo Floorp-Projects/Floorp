@@ -15,13 +15,14 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PROTECTED
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import kotlinx.android.synthetic.main.activity_home.navigationToolbarStub
+import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
@@ -69,6 +70,7 @@ import org.mozilla.fenix.settings.logins.SavedLoginsFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
+import org.mozilla.fenix.utils.StartupTaskManager
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 open class HomeActivity : LocaleAwareAppCompatActivity() {
@@ -76,6 +78,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     private var webExtScope: CoroutineScope? = null
     lateinit var themeManager: ThemeManager
     lateinit var browsingModeManager: BrowsingModeManager
+
+    private var isVisuallyComplete = false
+
+    private var visualCompletenessTaskManager: StartupTaskManager? = null
 
     private var sessionObserver: SessionManager.Observer? = null
 
@@ -107,6 +113,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
         setupThemeAndBrowsingMode(getModeFromIntentOrLastKnown(intent))
         setContentView(R.layout.activity_home)
+
+        // Must be after we set the content view
+        if (isVisuallyComplete) {
+            rootContainer.doOnPreDraw {
+                // This delay is temporary. We are delaying 5 seconds until the performance
+                // team can locate the real point of visual completeness.
+                it.postDelayed({
+                    visualCompletenessTaskManager!!.start()
+                }, delay)
+            }
+        }
+
         Performance.instrumentColdStartupToHomescreenTime(this)
 
         externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
@@ -390,6 +408,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         navHost.navController.navigate(action)
     }
 
+    /**
+     * The root container is null at this point, so let the HomeActivity know that
+     * we are visually complete.
+     */
+    fun postVisualCompletenessQueue(visualCompletenessTaskManager: StartupTaskManager) {
+        isVisuallyComplete = true
+        this.visualCompletenessTaskManager = visualCompletenessTaskManager
+    }
+
     companion object {
         const val OPEN_TO_BROWSER = "open_to_browser"
         const val OPEN_TO_BROWSER_AND_LOAD = "open_to_browser_and_load"
@@ -397,5 +424,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         const val PRIVATE_BROWSING_MODE = "private_browsing_mode"
         const val EXTRA_DELETE_PRIVATE_TABS = "notification_delete_and_open"
         const val EXTRA_OPENED_FROM_NOTIFICATION = "notification_open"
+        const val delay = 5000L
     }
 }

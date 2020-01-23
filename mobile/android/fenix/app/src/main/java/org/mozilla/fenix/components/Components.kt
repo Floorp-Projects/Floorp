@@ -78,4 +78,5 @@ class Components(private val context: Context) {
     val publicSuffixList by lazy { PublicSuffixList(context) }
     val clipboardHandler by lazy { ClipboardHandler(context) }
     val migrationStore by lazy { MigrationStore() }
+    val performance by lazy { PerformanceComponent() }
 }
