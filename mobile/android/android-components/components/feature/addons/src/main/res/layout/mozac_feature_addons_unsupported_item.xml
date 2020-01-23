@@ -41,5 +41,4 @@
         android:contentDescription="@string/mozac_feature_addons_remove"
         android:src="@drawable/mozac_ic_delete" />
 
-
 </LinearLayout>

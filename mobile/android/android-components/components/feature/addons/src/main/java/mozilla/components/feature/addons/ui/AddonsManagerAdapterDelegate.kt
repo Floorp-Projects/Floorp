@@ -12,16 +12,22 @@ import mozilla.components.feature.addons.Addon
 interface AddonsManagerAdapterDelegate {
     /**
      * Handler for when an add-on item is clicked.
+     *
+     * @param addon The [Addon] that was clicked.
      */
     fun onAddonItemClicked(addon: Addon) = Unit
 
     /**
      * Handler for when the install add-on button is clicked.
+     *
+     * @param addon The [Addon] to install.
      */
     fun onInstallAddonButtonClicked(addon: Addon) = Unit
 
     /**
      * Handler for when the not yet supported section is clicked.
+     *
+     * @param unsupportedAddons The list of unsupported [Addon].
      */
     fun onNotYetSupportedSectionClicked(unsupportedAddons: ArrayList<Addon>) = Unit
 }
