@@ -93,36 +93,36 @@ void image_brush_vs(
         local_rect = segment_rect;
         stretch_size = local_rect.size;
 
-        float dx = segment_data.z - segment_data.x;
-        float dy = segment_data.w - segment_data.y;
-
         // If the extra data is a texel rect, modify the UVs.
         if ((brush_flags & BRUSH_FLAG_TEXEL_RECT) != 0) {
-
             vec2 uv_size = res.uv_rect.p1 - res.uv_rect.p0;
             uv0 = res.uv_rect.p0 + segment_data.xy * uv_size;
             uv1 = res.uv_rect.p0 + segment_data.zw * uv_size;
+
+            // Size of the uv rect of the segment we are considering when computing
+            // the repetitions. In most case it is the current segment, but for the
+            // middle area we look at the border size instead.
+            vec2 segment_uv_size = uv1 - uv0;
 
             #ifdef WR_FEATURE_REPETITION
             // The repetition parameters for the middle area of a nine-patch are based
             // on the size of the border segments rather than the middle segment itself,
             // taking top and left by default, falling back to bottom and right when a
             // size is empty.
-            // TODO(bug 1609893): Move this logic of the CPU as well as other sources of
+            // TODO(bug 1609893): Move this logic to the CPU as well as other sources of
             // branchiness in this shader.
             if ((brush_flags & BRUSH_FLAG_SEGMENT_NINEPATCH_MIDDLE) != 0) {
-                dx = segment_data.x;
-                dy = segment_data.y;
+                segment_uv_size = uv0 - res.uv_rect.p0;
                 stretch_size.x = segment_rect.p0.x - prim_rect.p0.x;
                 stretch_size.y = segment_rect.p0.y - prim_rect.p0.y;
                 float epsilon = 0.001;
-                if (dx < epsilon || stretch_size.x < epsilon) {
-                    dx = 1.0 - segment_data.z;
+                if (segment_uv_size.x < epsilon || stretch_size.x < epsilon) {
+                    segment_uv_size.x = res.uv_rect.p1.x - uv1.x;
                     stretch_size.x = prim_rect.p0.x + prim_rect.size.x
                         - segment_rect.p0.x - segment_rect.size.x;
                 }
-                if (dy < epsilon || stretch_size.y < epsilon) {
-                    dy = 1.0 - segment_data.w;
+                if (segment_uv_size.y < epsilon || stretch_size.y < epsilon) {
+                    segment_uv_size.y = res.uv_rect.p1.y - uv1.y;
                     stretch_size.y = prim_rect.p0.y + prim_rect.size.y
                         - segment_rect.p0.y - segment_rect.size.y;
                 }
@@ -130,20 +130,20 @@ void image_brush_vs(
 
             vec2 original_stretch_size = stretch_size;
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
-              stretch_size.x = original_stretch_size.y / dy * dx;
+              stretch_size.x = original_stretch_size.y / segment_uv_size.y * segment_uv_size.x;
             }
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
-              stretch_size.y = original_stretch_size.x / dx * dy;
+              stretch_size.y = original_stretch_size.x / segment_uv_size.x * segment_uv_size.y;
             }
             #endif
 
         } else {
             #ifdef WR_FEATURE_REPETITION
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
-                stretch_size.x = dx;
+                stretch_size.x = segment_data.z - segment_data.x;
             }
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
-                stretch_size.y = dy;
+                stretch_size.y = segment_data.w - segment_data.y;
             }
             #endif
         }
