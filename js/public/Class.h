@@ -942,6 +942,7 @@ enum class ESClass {
   Arguments,
   Error,
   BigInt,
+  Function,  // Note: Only JSFunction objects.
 
   /** None of the above. */
   Other
