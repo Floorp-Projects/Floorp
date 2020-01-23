@@ -112,7 +112,7 @@ fuzzy-if(skiaContent,0-1,0-5) == flexbox-resizeviewport-2.xhtml flexbox-resizevi
 
 # Tests with widgets as flex items
 fuzzy-if(gtkWidget,0-1,0-66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
-fuzzy-if(gtkWidget,0-1,0-74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
+fuzzy-if(gtkWidget,0-1,0-74) fuzzy-if(webrender&&winWidget,0-1,0-5) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
 skip-if(gtkWidget) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html # bug 1260965
 fuzzy-if(gtkWidget,0-1,0-31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
 
