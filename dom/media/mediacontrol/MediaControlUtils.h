@@ -51,13 +51,13 @@ ConvertMediaControlKeysTestEventToMediaControlKeysEvent(
       return MediaControlKeysEvent::ePause;
     case MediaControlKeysTestEvent::PlayPause:
       return MediaControlKeysEvent::ePlayPause;
-    case MediaControlKeysTestEvent::PrevTrack:
+    case MediaControlKeysTestEvent::Previoustrack:
       return MediaControlKeysEvent::ePrevTrack;
-    case MediaControlKeysTestEvent::NextTrack:
+    case MediaControlKeysTestEvent::Nexttrack:
       return MediaControlKeysEvent::eNextTrack;
-    case MediaControlKeysTestEvent::SeekBackward:
+    case MediaControlKeysTestEvent::Seekbackward:
       return MediaControlKeysEvent::eSeekBackward;
-    case MediaControlKeysTestEvent::SeekForward:
+    case MediaControlKeysTestEvent::Seekforward:
       return MediaControlKeysEvent::eSeekForward;
     default:
       MOZ_ASSERT(aEvent == MediaControlKeysTestEvent::Stop);
