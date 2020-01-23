@@ -1856,27 +1856,22 @@ panelview[mainview] #PanelUI-whatsNew-content {
 
 #PanelUI-whatsNew .whatsNew-message {
   cursor: pointer;
-  margin: 0;
-  padding: 0 12px;
+  margin: 0 12px;
+  padding: 0;
 }
 
-#PanelUI-whatsNew .whatsNew-message::before {
+#PanelUI-whatsNew .whatsNew-message:not(:first-child)::before {
   content: "";
   display: block;
   height: 1px;
   background: var(--panel-separator-color);
 }
 
-#PanelUI-whatsNew .whatsNew-message:last-child {
-  border-bottom: none;
-}
-
 #PanelUI-whatsNew .whatsNew-message-date {
   font-size: .85em;
   margin: 0 -12px;
-  margin-top: -1px; /* Hide the border separator between messages */
   padding: 6px 16px;
-  background: var(--toolbar-bgcolor);
+  background: var(--arrowpanel-dimmed);
 }
 
 #PanelUI-whatsNew .whatsNew-message-body {
