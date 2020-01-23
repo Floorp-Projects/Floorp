@@ -160,6 +160,7 @@ describe("ASRouter", () => {
       init: sandbox.stub(),
       uninit: sandbox.stub(),
       forceShowMessage: sandbox.stub(),
+      enableToolbarButton: sandbox.stub(),
     };
     FakeToolbarBadgeHub = {
       init: sandbox.stub(),
@@ -2915,6 +2916,64 @@ describe("ASRouter", () => {
 
         assert.calledOnce(setReferrerUrl);
         assert.calledWithMatch(setReferrerUrl, "", "?foo=FOO!&bar=BAR%3F");
+      });
+    });
+    describe("#onMessage: FORCE_WHATSNEW_PANEL", () => {
+      it("should call forceWNPanel", async () => {
+        let messages = [];
+        const msg = fakeAsyncMessage({
+          type: "FORCE_WHATSNEW_PANEL",
+          data: { messages },
+        });
+        sandbox.stub(Router, "forceWNPanel");
+
+        await Router.onMessage(msg);
+
+        assert.calledOnce(Router.forceWNPanel);
+      });
+      describe("forceWNPanel", () => {
+        let browser = {
+          document: new Document(),
+          PanelUI: {
+            showSubView: sinon.stub(),
+          },
+        };
+        it("should call enableToolbarButton", async () => {
+          await Router.forceWNPanel(browser);
+
+          assert.calledOnce(FakeToolbarPanelHub.enableToolbarButton);
+        });
+        it("should call PanelUI.showSubView", () => {
+          assert.calledOnce(browser.PanelUI.showSubView);
+        });
+      });
+    });
+    describe("#onMessage: RENDER_WHATSNEW_MESSAGES", () => {
+      it("should call renderWNMessages", async () => {
+        let messages = [];
+        const msg = fakeAsyncMessage({
+          type: "RENDER_WHATSNEW_MESSAGES",
+          data: { messages },
+        });
+        sandbox.stub(Router, "renderWNMessages");
+
+        await Router.onMessage(msg);
+
+        assert.calledOnce(Router.renderWNMessages);
+      });
+      describe("renderWNMessages", () => {
+        let messages = [{}, {}];
+        let browser = {
+          document: new Document(),
+          PanelUI: {
+            showSubView: sinon.stub(),
+          },
+        };
+        it("should call forceShowMessage", () => {
+          Router.renderWNMessages(browser, messages);
+
+          assert.calledOnce(FakeToolbarPanelHub.forceShowMessage);
+        });
       });
     });
     describe("#onMessage: default", () => {

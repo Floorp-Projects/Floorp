@@ -840,22 +840,6 @@ add_task(async function check_hasAccessedFxAPanel() {
   );
 });
 
-add_task(async function check_isWhatsNewPanelEnabled() {
-  is(
-    await ASRouterTargeting.Environment.isWhatsNewPanelEnabled,
-    true,
-    "Enabled by default"
-  );
-
-  await pushPrefs(["browser.messaging-system.whatsNewPanel.enabled", false]);
-
-  is(
-    await ASRouterTargeting.Environment.isWhatsNewPanelEnabled,
-    false,
-    "Should update based on pref, e.g., for holdback"
-  );
-});
-
 add_task(async function checkCFRFeaturesUserPref() {
   await pushPrefs([
     "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",

@@ -596,15 +596,15 @@ class _ToolbarPanelHub {
 
   /**
    * @param {object} browser MessageChannel target argument as a response to a user action
-   * @param {object} message Message selected from devtools page
+   * @param {object[]} messages Messages selected from devtools page
    */
-  forceShowMessage(browser, message) {
+  forceShowMessage(browser, messages) {
     const win = browser.browser.ownerGlobal;
     const doc = browser.browser.ownerDocument;
     this.removeMessages(win, WHATS_NEW_PANEL_SELECTOR);
     this.renderMessages(win, doc, WHATS_NEW_PANEL_SELECTOR, {
       force: true,
-      messages: [message],
+      messages: Array.isArray(messages) ? messages : [messages],
     });
     win.PanelUI.panel.addEventListener("popuphidden", event =>
       this.removeMessages(event.target.ownerGlobal, WHATS_NEW_PANEL_SELECTOR)
