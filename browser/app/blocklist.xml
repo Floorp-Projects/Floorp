@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1579250265716">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1579624011498">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3520,6 +3520,26 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="b6f17555-93b5-4721-a92d-53500d1fe0fe" id="/^((\{525f4b51-8ea1-4db8-bc81-829cf10a14a0\})|(\{2411143d-8afe-41ea-874d-ea4a8dc8b1c7\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3db3364a-0e20-4635-bc63-f2bba4a10415" id="/^((\{293476ee-263e-4cad-8dc4-2fe03209adc7\})|(\{622303be-705e-4247-bc2e-9016d8867e3d\})|(\{6ac09a19-8de3-418f-a4e1-1ee3e8810990\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="30ab36b8-c080-4ded-8531-07259112779c" id="/^((f53pabhktayw2qusajt8@f53pabhktayw2qusajt8\.com)|(weatherpool@bwv9ggnrvitryck9k8tf\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="448ff9b0-94eb-4d24-af8e-b56141824c80" id="/^((crisstehn@ffmust)|(jjwalter@junior)|(qlobthedark@ggmay)|(ficlever@roentgen)|(nzclever@roentgen)|(ukkinda@rottaai)|(GOEORG_RF_ANA_N@BDOFsKOKK)|(ioadjf9340joif024rf@ioadjf9340joif024rf\.com)|(f1a1cz46o6rzl335xcrg@f1a1cz46o6rzl335xcrg\.com)|(03t4joaijlcvjja@03t4joaijlcvjja\.com)|(bdojfkobidjfo9e@bdojfkobidjfo9e\.com)|(0iwtjvpvfhqyv2go1237@0iwtjvpvfhqyv2go1237\.com)|(g68xhmxwozq8xtp4emty@g68xhmxwozq8xtp4emty\.com)|(idyzvr0haermejvwfaqm@idyzvr0haermejvwfaqm\.com)|(czaoyj52ki5owo07318z@czaoyj52ki5owo07318z\.com)|(4sgly4c7s5pca7o220g0@4sgly4c7s5pca7o220g0\.com)|(8sd351lwavakull4dcqd@8sd351lwavakull4dcqd\.com)|(ukkindaa@rottaai)|(besth@lgimm)|(canaddxd@ptrx)|(nlextt@awes)|(bestseg@bbcd)|(swlguy@swlg)|(germctr@prx)|(pro@socialsmonetization\.com)|(nicejohnus@lg)|(beta@lvvtqmq4qrhgmjb2zd7o\.com)|(beta@b96mupkh82zywdrmxecz\.com)|(dvhi19naabzond6ikvl6@dvhi19naabzond6ikvl6\.com)|(approver@vdmqsgm5nyfiirwh8ryy\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="54396dc1-f469-4a88-b0f8-352985a85b13" id="{669207af-aef4-42e5-b1fa-675995be9cf9}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
@@ -3552,15 +3572,15 @@
       <infoURL>https://get.adobe.com/shockwave/</infoURL>
       <versionRange maxVersion="12.2.0.162" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
-      <match name="filename" exp="libflashplayer\.so"/>
-      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.293" minVersion="0" severity="0" vulnerabilitystatus="1"/>
-    </pluginItem>
     <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
       <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.293" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.303" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
+      <match name="filename" exp="libflashplayer\.so"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="32.0.0.303" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
