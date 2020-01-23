@@ -83,6 +83,28 @@ static JSString* SymbolToSource(JSContext* cx, Symbol* symbol) {
   return buf.finishString();
 }
 
+static JSString* BoxedToSource(JSContext* cx, HandleObject obj,
+                               const char* constructor) {
+  RootedValue value(cx);
+  if (!Unbox(cx, obj, &value)) {
+    return nullptr;
+  }
+  MOZ_ASSERT(!value.isUndefined());
+
+  RootedString str(cx, ValueToSource(cx, value));
+  if (!str) {
+    return nullptr;
+  }
+
+  JSStringBuilder buf(cx);
+  if (!buf.append("new ") || !buf.append(constructor, strlen(constructor)) ||
+      !buf.append('(') || !buf.append(str) || !buf.append(')')) {
+    return nullptr;
+  }
+
+  return buf.finishString();
+}
+
 JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
   if (!CheckRecursionLimit(cx)) {
     return nullptr;
@@ -168,6 +190,18 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
           }
           return ToString<CanGC>(cx, rval);
         }
+
+        case ESClass::Boolean:
+          return BoxedToSource(cx, obj, "Boolean");
+
+        case ESClass::Number:
+          return BoxedToSource(cx, obj, "Number");
+
+        case ESClass::String:
+          return BoxedToSource(cx, obj, "String");
+
+        case ESClass::Date:
+          return BoxedToSource(cx, obj, "Date");
 
         default:
           return ObjectToSource(cx, obj);
