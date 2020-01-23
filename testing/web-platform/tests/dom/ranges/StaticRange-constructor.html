@@ -169,31 +169,31 @@ test(function() {
 }, 'Throw on DocumentType or Attr container');
 
 test(function () {
-    assert_throws({'name': 'TypeError'}, function () {
+    assert_throws_js(TypeError, function () {
         const staticRange = new StaticRange();
     }, 'throw a TypeError when no argument is passed');
 
-    assert_throws({'name': 'TypeError'}, function () {
+    assert_throws_js(TypeError, function () {
         const staticRange = new StaticRange({startOffset: 0, endContainer: testDiv, endOffset: 0});
     }, 'throw a TypeError when a startContainer is not passed');
 
-    assert_throws({'name': 'TypeError'}, function () {
+    assert_throws_js(TypeError, function () {
         const staticRange = new StaticRange({startContainer: testDiv, endContainer: testDiv, endOffset: 0});
     }, 'throw a TypeError when a startOffset is not passed');
 
-    assert_throws({'name': 'TypeError'}, function () {
+    assert_throws_js(TypeError, function () {
         const staticRange = new StaticRange({startContainer: testDiv, startOffset: 0, endOffset: 0});
     }, 'throw a TypeError when an endContainer is not passed');
 
-    assert_throws({'name': 'TypeError'}, function () {
+    assert_throws_js(TypeError, function () {
         const staticRange = new StaticRange({startContainer: testDiv, startOffset: 0, endContainer: testDiv});
     }, 'throw a TypeError when an endOffset is not passed');
 
-    assert_throws({'name': 'TypeError'}, function () {
+    assert_throws_js(TypeError, function () {
         const staticRange = new StaticRange({startContainer: null, startOffset: 0, endContainer: testDiv, endOffset: 0});
     }, 'throw a TypeError when a null startContainer is passed');
 
-    assert_throws({'name': 'TypeError'}, function () {
+    assert_throws_js(TypeError, function () {
         const staticRange = new StaticRange({startContainer: testDiv, startOffset: 0, endContainer: null, endOffset: 0});
     }, 'throw a TypeError when a null endContainer is passed');
 }, 'Throw on missing or invalid arguments');
