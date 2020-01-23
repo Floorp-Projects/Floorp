@@ -82,6 +82,15 @@ class ClipboardSuggestionProviderTest {
             "https://www.mozilla.org")
 
         assertClipboardYieldsUrl(
+                """
+                This is a longer
+                text over multiple lines
+                and it www.mozilla.org contains
+                URLs as well. https://www.firefox.com
+            """,
+                "https://www.firefox.com")
+
+        assertClipboardYieldsUrl(
         """
             mozilla.org
             firefox.com
@@ -89,7 +98,9 @@ class ClipboardSuggestionProviderTest {
             """,
             "mozilla.org")
 
-        assertClipboardYieldsUrl("My IP is 192.168.0.1.", "192.168.0.1")
+        // Note that the new, less-lenient URL detection process (Issue #5594) allows the dot
+        // at the end of the IP address to be part of the URL. Gecko handles this.
+        assertClipboardYieldsUrl("My IP is 192.168.0.1.", "192.168.0.1.")
     }
 
     @Test
@@ -112,8 +123,6 @@ class ClipboardSuggestionProviderTest {
         assertClipboardYieldsNothing("Hello World")
 
         assertClipboardYieldsNothing("Is this mozilla org")
-
-        assertClipboardYieldsNothing("192.168.")
     }
 
     @Test

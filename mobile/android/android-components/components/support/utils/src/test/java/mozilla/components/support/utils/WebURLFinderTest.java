@@ -4,6 +4,8 @@
 package mozilla.components.support.utils;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -16,11 +18,17 @@ import static org.junit.Assert.assertNull;
 public class WebURLFinderTest {
 
     public String find(String string) {
-        return new WebURLFinder(string).bestWebURL();
+        // Test with explicit unicode support. Implicit unicode support is available in Android
+        // but not on host systems where testing will take place. See the comment in WebURLFinder
+        // for additional information.
+        return new WebURLFinder(string, true).bestWebURL();
     }
 
     public String find(String[] strings) {
-        return new WebURLFinder(Arrays.asList(strings)).bestWebURL();
+        // Test with explicit unicode support. Implicit unicode support is available in Android
+        // but not on host systems where testing will take place. See the comment in WebURLFinder
+        // for additional information.
+        return new WebURLFinder(Arrays.asList(strings), true).bestWebURL();
     }
 
     public void testNoEmail() {
@@ -30,6 +38,7 @@ public class WebURLFinderTest {
     @Test
     public void testSchemeFirst() {
         assertEquals("http://scheme.com", find("test.com http://scheme.com"));
+        assertEquals("http://ç.çơḿ", find("www.cnn.com http://ç.çơḿ"));
     }
 
     @Test
@@ -38,11 +47,12 @@ public class WebURLFinderTest {
         assertEquals("http://s-scheme.com:8080/inner#anchor&arg=1", find("test.com http://s-scheme.com:8080/inner#anchor&arg=1"));
         assertEquals("http://t-example:8080/appversion-1.0.0/f/action.xhtml", find("test.com http://t-example:8080/appversion-1.0.0/f/action.xhtml"));
         assertEquals("http://t-example:8080/appversion-1.0.0/f/action.xhtml", find("http://t-example:8080/appversion-1.0.0/f/action.xhtml"));
+        assertEquals("http://ß.de/", find("http://ß.de/ çnn.çơḿ"));
     }
 
     @Test
     public void testNoScheme() {
-        assertEquals("noscheme.com", find("noscheme.com"));
+        assertEquals("noscheme.com", find("noscheme.com example.com"));
     }
 
     @Test
@@ -56,5 +66,6 @@ public class WebURLFinderTest {
         assertEquals("http://test.com", find(new String[]{"noschemefirst.com", "http://test.com"}));
         assertEquals("http://test.com/inner#test", find(new String[]{"noschemefirst.com", "http://test.com/inner#test", "http://second.org/fark"}));
         assertEquals("http://test.com", find(new String[]{"javascript:///test.js", "http://test.com"}));
+        assertEquals("http://çnn.çơḿ", find(new String[]{"www.cnn.com http://çnn.çơḿ"}));
     }
 }
