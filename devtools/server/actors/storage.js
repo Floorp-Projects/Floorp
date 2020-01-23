@@ -39,12 +39,12 @@ loader.lazyRequireGetter(
   true
 );
 
-// "Lax", "Strict" and "Unset" are special values of the sameSite property
+// "Lax", "Strict" and "None" are special values of the sameSite property
 // that should not be translated.
 const COOKIE_SAMESITE = {
   LAX: "Lax",
   STRICT: "Strict",
-  UNSET: "Unset",
+  NONE: "None",
 };
 
 // GUID to be used as a separator in compound keys. This must match the same
@@ -598,7 +598,7 @@ StorageActors.createActor(
           return COOKIE_SAMESITE.STRICT;
       }
       // cookie.SAMESITE_NONE
-      return COOKIE_SAMESITE.UNSET;
+      return COOKIE_SAMESITE.NONE;
     },
 
     populateStoresForHost(host) {
