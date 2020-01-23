@@ -14,7 +14,7 @@ add_task(async function test_subscribed_events_fired_after_context_destroy() {
     },
     files: {
       "page.html": `<!DOCTYPE html>
-        <meta charset="uft-8"><script src="page.js"></script>
+        <meta charset="utf-8"><script src="page.js"></script>
         Extension Page
       `,
       "page.js": async function() {
@@ -37,22 +37,19 @@ add_task(async function test_subscribed_events_fired_after_context_destroy() {
   const pageURL = `moz-extension://${extension.uuid}/page.html`;
 
   info("Loading extension page in a tab");
-  const tab1 = BrowserTestUtils.addTab(gBrowser, pageURL);
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageURL);
   await extension.awaitMessage("page-loaded");
 
   info("Loading extension page in another tab");
-  const tab2 = BrowserTestUtils.addTab(gBrowser, pageURL);
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageURL);
   await extension.awaitMessage("page-loaded");
 
-  info("Select the first tab");
-  gBrowser.selectedTab = tab1;
-
-  info("Remove the second tab");
-  BrowserTestUtils.removeTab(tab2);
+  info("Remove the first tab");
+  BrowserTestUtils.removeTab(tab1);
 
   info("Open a context menu and expect menu.onShown to be fired");
-  await window.promiseDocumentFlushed(() => {});
   await openContextMenu("body");
+
   await extension.awaitMessage("menu-onShown");
 
   info("Close context menu and expect menu.onHidden to be fired");
@@ -61,7 +58,7 @@ add_task(async function test_subscribed_events_fired_after_context_destroy() {
 
   ok(true, "The expected menu events have been fired");
 
-  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 
   await extension.unload();
 });
