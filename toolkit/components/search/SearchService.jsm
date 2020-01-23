@@ -323,7 +323,9 @@ function fetchRegion(ss) {
         resolve();
       };
 
-      if (result && gGeoSpecificDefaultsEnabled && !gModernConfig) {
+      if (result && gGeoSpecificDefaultsEnabled && gModernConfig) {
+        ss._maybeReloadEngines().then(callback);
+      } else if (result && gGeoSpecificDefaultsEnabled && !gModernConfig) {
         fetchRegionDefault(ss)
           .then(callback)
           .catch(err => {
@@ -1126,7 +1128,6 @@ SearchService.prototype = {
   async _loadEngines(cache, isReload) {
     SearchUtils.log("_loadEngines: start");
     let engines = await this._findEngines();
-    SearchUtils.log("_loadEngines: loading - " + engines.join(","));
 
     // Get the non-empty distribution directories into distDirs...
     let distDirs = [];
@@ -1389,7 +1390,7 @@ SearchService.prototype = {
   async _maybeReloadEngines() {
     // There's no point in already reloading the list of engines, when the service
     // hasn't even initialized yet.
-    if (!gInitialized || gModernConfig) {
+    if (!gInitialized) {
       SearchUtils.log("Ignoring maybeReloadEngines() as inside init()");
       return;
     }
