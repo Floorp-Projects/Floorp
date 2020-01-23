@@ -29,7 +29,8 @@ class nsLegendFrame final : public nsBlockFrame {
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  int32_t GetLogicalAlign(mozilla::WritingMode aCBWM);
+  HTMLLegendElement::LegendAlignValue GetLogicalAlign(
+      mozilla::WritingMode aCBWM);
 };
 
 #endif  // guard
