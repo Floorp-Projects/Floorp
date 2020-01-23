@@ -198,14 +198,14 @@ class TransportTestPeer : public sigslot::has_slots<> {
   int received() const { return received_; }
   bool connected() const { return connected_; }
 
-  static TransportResult SendPacket_s(nsAutoPtr<MediaPacket> packet,
+  static TransportResult SendPacket_s(UniquePtr<MediaPacket> packet,
                                       const RefPtr<TransportFlow>& flow,
                                       TransportLayer* layer) {
     return layer->SendPacket(*packet);
   }
 
   TransportResult SendPacket(const unsigned char* data, size_t len) {
-    nsAutoPtr<MediaPacket> packet(new MediaPacket);
+    UniquePtr<MediaPacket> packet(new MediaPacket);
     packet->Copy(data, len);
 
     // Uses DISPATCH_NORMAL to avoid possible deadlocks when we're called
@@ -215,8 +215,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     // a refptr to flow_ to avoid any async deletion issues (since we can't
     // make 'this' into a refptr as it isn't refcounted)
     RUN_ON_THREAD(test_utils_->sts_target(),
-                  WrapRunnableNM(&TransportTestPeer::SendPacket_s, packet,
-                                 flow_, loopback_),
+                  WrapRunnableNM(&TransportTestPeer::SendPacket_s,
+                                 std::move(packet), flow_, loopback_),
                   NS_DISPATCH_NORMAL);
 
     return 0;

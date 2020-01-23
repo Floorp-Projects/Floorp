@@ -869,12 +869,12 @@ void MediaTransportHandler::OnConnectionStateChange(
 }
 
 void MediaTransportHandler::OnPacketReceived(const std::string& aTransportId,
-                                             MediaPacket& aPacket) {
+                                             const MediaPacket& aPacket) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
         WrapRunnable(RefPtr<MediaTransportHandler>(this),
                      &MediaTransportHandler::OnPacketReceived, aTransportId,
-                     aPacket),
+                     const_cast<MediaPacket&>(aPacket)),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -883,12 +883,12 @@ void MediaTransportHandler::OnPacketReceived(const std::string& aTransportId,
 }
 
 void MediaTransportHandler::OnEncryptedSending(const std::string& aTransportId,
-                                               MediaPacket& aPacket) {
+                                               const MediaPacket& aPacket) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
         WrapRunnable(RefPtr<MediaTransportHandler>(this),
                      &MediaTransportHandler::OnEncryptedSending, aTransportId,
-                     aPacket),
+                     const_cast<MediaPacket&>(aPacket)),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -958,12 +958,12 @@ MediaTransportHandlerSTS::GetIceLog(const nsCString& aPattern) {
       mStsThread, __func__, [=, self = RefPtr<MediaTransportHandlerSTS>(this)] {
         dom::Sequence<nsString> converted;
         RLogConnector* logs = RLogConnector::GetInstance();
-        nsAutoPtr<std::deque<std::string>> result(new std::deque<std::string>);
+        std::deque<std::string> result;
         // Might not exist yet.
         if (logs) {
-          logs->Filter(aPattern.get(), 0, result);
+          logs->Filter(aPattern.get(), 0, &result);
         }
-        for (auto& line : *result) {
+        for (auto& line : result) {
           converted.AppendElement(NS_ConvertUTF8toUTF16(line.c_str()),
                                   fallible);
         }

@@ -19,7 +19,6 @@
 #include "mozilla/dom/WebrtcGlobalInformationBinding.h"
 #include "mozilla/dom/ContentChild.h"
 
-#include "nsAutoPtr.h"
 #include "nsNetCID.h"               // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
 #include "nsServiceManagerUtils.h"  // do_GetService
 #include "mozilla/ErrorResult.h"

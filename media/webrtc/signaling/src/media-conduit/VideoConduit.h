@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/SharedThreadPool.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsITimer.h"
 
 #include "MediaConduitInterface.h"
@@ -523,7 +523,7 @@ class WebrtcVideoConduit
   nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
 
   // Written only on main thread. Guarded by mMutex, except for reads on main.
-  nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
+  UniquePtr<VideoCodecConfig> mCurSendCodecConfig;
 
   bool mUpdateResolution = false;
   int mSinkWantsPixelCount = std::numeric_limits<int>::max();

@@ -51,7 +51,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nspr.h"
 #include "prio.h"
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsASocketHandler.h"
 #include "nsXPCOM.h"
@@ -196,13 +195,13 @@ class NrSocket : public NrSocketBase, public nsASocketHandler {
 };
 
 struct nr_udp_message {
-  nr_udp_message(const PRNetAddr& from, nsAutoPtr<MediaPacket>& data)
-      : from(from), data(data) {}
+  nr_udp_message(const PRNetAddr& from, UniquePtr<MediaPacket>&& data)
+      : from(from), data(std::move(data)) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nr_udp_message);
 
   PRNetAddr from;
-  nsAutoPtr<MediaPacket> data;
+  UniquePtr<MediaPacket> data;
 
  private:
   ~nr_udp_message() {}
@@ -272,11 +271,11 @@ class NrUdpSocketIpc : public NrSocketIpc {
   // Main or private thread executors of the NrSocketBase APIs
   void create_i(const nsACString& host, const uint16_t port);
   void connect_i(const nsACString& host, const uint16_t port);
-  void sendto_i(const net::NetAddr& addr, nsAutoPtr<MediaPacket> buf);
+  void sendto_i(const net::NetAddr& addr, UniquePtr<MediaPacket> buf);
   void close_i();
 #if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
   static void destroy_i(dom::UDPSocketChild* aChild,
-                        nsCOMPtr<nsIEventTarget>& aStsThread);
+                        const nsCOMPtr<nsIEventTarget>& aStsThread);
 #endif
   // STS thread executor
   void recv_callback_s(RefPtr<nr_udp_message> msg);

@@ -1142,9 +1142,9 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(
     }
   }
 
-  nsAutoPtr<MediaPacket> buf(new MediaPacket);
+  auto buf = MakeUnique<MediaPacket>();
   buf->Copy(data.Elements(), data.Length());
-  RefPtr<nr_udp_message> msg(new nr_udp_message(addr, buf));
+  RefPtr<nr_udp_message> msg(new nr_udp_message(addr, std::move(buf)));
 
   RUN_ON_THREAD(sts_thread_,
                 mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
@@ -1323,13 +1323,14 @@ int NrUdpSocketIpc::sendto(const void* msg, size_t len, int flags,
     return R_WOULDBLOCK;
   }
 
-  nsAutoPtr<MediaPacket> buf(new MediaPacket);
+  UniquePtr<MediaPacket> buf(new MediaPacket);
   buf->Copy(static_cast<const uint8_t*>(msg), len);
 
-  RUN_ON_THREAD(io_thread_,
-                mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
-                                      &NrUdpSocketIpc::sendto_i, addr, buf),
-                NS_DISPATCH_NORMAL);
+  RUN_ON_THREAD(
+      io_thread_,
+      mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
+                            &NrUdpSocketIpc::sendto_i, addr, std::move(buf)),
+      NS_DISPATCH_NORMAL);
   return 0;
 }
 
@@ -1532,7 +1533,7 @@ void NrUdpSocketIpc::connect_i(const nsACString& host, const uint16_t port) {
 }
 
 void NrUdpSocketIpc::sendto_i(const net::NetAddr& addr,
-                              nsAutoPtr<MediaPacket> buf) {
+                              UniquePtr<MediaPacket> buf) {
   ASSERT_ON_THREAD(io_thread_);
 
   ReentrantMonitorAutoEnter mon(monitor_);
@@ -1564,7 +1565,7 @@ static void ReleaseIOThread_s() { sThread->ReleaseUse(); }
 // close(), but transfer the socket_child_ reference to die as well
 // static
 void NrUdpSocketIpc::destroy_i(dom::UDPSocketChild* aChild,
-                               nsCOMPtr<nsIEventTarget>& aStsThread) {
+                               const nsCOMPtr<nsIEventTarget>& aStsThread) {
   RefPtr<dom::UDPSocketChild> socket_child_ref =
       already_AddRefed<dom::UDPSocketChild>(aChild);
   if (socket_child_ref) {
