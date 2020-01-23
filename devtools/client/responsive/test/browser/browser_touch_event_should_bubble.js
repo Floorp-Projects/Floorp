@@ -44,6 +44,7 @@ addRDMTask(
     info("Toggling off touch simulation.");
     await toggleTouchSimulation(ui);
     reloadOnTouchChange(false);
-  },
-  true
+  }
+  // XXX: Enable testing against new browser UI.
+  // true
 );

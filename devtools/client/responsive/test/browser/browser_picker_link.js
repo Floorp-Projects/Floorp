@@ -48,8 +48,9 @@ addRDMTask(
       !hasNavigated,
       "The page should not have navigated when picking the <a> element"
     );
-  },
-  true
+  }
+  // XXX: Enable testing against new browser UI.
+  // true
 );
 
 /**
