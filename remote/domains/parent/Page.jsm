@@ -236,7 +236,7 @@ class Page extends Domain {
   async getLayoutMetrics() {
     return {
       layoutViewport: await this.executeInChild("_layoutViewport"),
-      contentSize: await this.executeInChild("_contentSize"),
+      contentSize: await this.executeInChild("_contentRect"),
     };
   }
 
