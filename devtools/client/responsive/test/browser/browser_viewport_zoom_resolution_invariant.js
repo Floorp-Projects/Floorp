@@ -78,7 +78,8 @@ for (const { content, res_target } of TESTS) {
           `${content} zoom ${zoom} resolution should be near ${res_target}, and we got ${resolution}.`
         );
       }
-    },
-    true
+    }
+    // XXX: Enable testing against new browser UI.
+    // true
   );
 }
