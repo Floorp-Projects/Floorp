@@ -1349,7 +1349,8 @@ impl NinePatchDescriptor {
             rect: LayoutRect,
             uv_rect: TexelRect,
             repeat_horizontal: RepeatMode,
-            repeat_vertical: RepeatMode
+            repeat_vertical: RepeatMode,
+            extra_flags: BrushFlags,
         ) {
             if uv_rect.uv1.x < uv_rect.uv0.x || uv_rect.uv1.y < uv_rect.uv0.y {
                 return;
@@ -1359,7 +1360,8 @@ impl NinePatchDescriptor {
             // instances in this primitive.
             let mut brush_flags =
                 BrushFlags::SEGMENT_RELATIVE |
-                BrushFlags::SEGMENT_TEXEL_RECT;
+                BrushFlags::SEGMENT_TEXEL_RECT |
+                extra_flags;
 
             // Enable repeat modes on the segment.
             if repeat_horizontal == RepeatMode::Repeat {
@@ -1399,7 +1401,8 @@ impl NinePatchDescriptor {
             LayoutRect::from_floats(tl_outer.x, tl_outer.y, tl_inner.x, tl_inner.y),
             TexelRect::new(px0, py0, px1, py1),
             RepeatMode::Stretch,
-            RepeatMode::Stretch
+            RepeatMode::Stretch,
+            BrushFlags::empty(),
         );
         // Top right
         add_segment(
@@ -1407,7 +1410,8 @@ impl NinePatchDescriptor {
             LayoutRect::from_floats(tr_inner.x, tr_outer.y, tr_outer.x, tr_inner.y),
             TexelRect::new(px2, py0, px3, py1),
             RepeatMode::Stretch,
-            RepeatMode::Stretch
+            RepeatMode::Stretch,
+            BrushFlags::empty(),
         );
         // Bottom right
         add_segment(
@@ -1415,7 +1419,8 @@ impl NinePatchDescriptor {
             LayoutRect::from_floats(br_inner.x, br_inner.y, br_outer.x, br_outer.y),
             TexelRect::new(px2, py2, px3, py3),
             RepeatMode::Stretch,
-            RepeatMode::Stretch
+            RepeatMode::Stretch,
+            BrushFlags::empty(),
         );
         // Bottom left
         add_segment(
@@ -1423,7 +1428,8 @@ impl NinePatchDescriptor {
             LayoutRect::from_floats(bl_outer.x, bl_inner.y, bl_inner.x, bl_outer.y),
             TexelRect::new(px0, py2, px1, py3),
             RepeatMode::Stretch,
-            RepeatMode::Stretch
+            RepeatMode::Stretch,
+            BrushFlags::empty(),
         );
 
         // Center
@@ -1433,7 +1439,8 @@ impl NinePatchDescriptor {
                 LayoutRect::from_floats(tl_inner.x, tl_inner.y, tr_inner.x, bl_inner.y),
                 TexelRect::new(px1, py1, px2, py2),
                 self.repeat_horizontal,
-                self.repeat_vertical
+                self.repeat_vertical,
+                BrushFlags::SEGMENT_NINEPATCH_MIDDLE,
             );
         }
 
@@ -1446,6 +1453,7 @@ impl NinePatchDescriptor {
             TexelRect::new(px1, py0, px2, py1),
             self.repeat_horizontal,
             RepeatMode::Stretch,
+            BrushFlags::empty(),
         );
         // Bottom
         add_segment(
@@ -1454,6 +1462,7 @@ impl NinePatchDescriptor {
             TexelRect::new(px1, py2, px2, py3),
             self.repeat_horizontal,
             RepeatMode::Stretch,
+            BrushFlags::empty(),
         );
         // Left
         add_segment(
@@ -1462,6 +1471,7 @@ impl NinePatchDescriptor {
             TexelRect::new(px0, py1, px1, py2),
             RepeatMode::Stretch,
             self.repeat_vertical,
+            BrushFlags::empty(),
         );
         // Right
         add_segment(
@@ -1470,6 +1480,7 @@ impl NinePatchDescriptor {
             TexelRect::new(px2, py1, px3, py2),
             RepeatMode::Stretch,
             self.repeat_vertical,
+            BrushFlags::empty(),
         );
 
         segments
