@@ -10489,15 +10489,6 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
           ("  shAvailable=%i updateSHistory=%i updateGHistory=%i"
            " equalURI=%i\n",
            shAvailable, updateSHistory, updateGHistory, equalUri));
-
-  if (shAvailable && mCurrentURI && !mOSHE && aLoadType != LOAD_ERROR_PAGE) {
-    // XXX mCurrentURI can be changed from any caller regardless what actual
-    // loaded document is, so testing mCurrentURI isn't really a reliable way.
-    // Session restore is one example which changes current URI in order to
-    // show address before loading. See bug 1301399.
-    NS_ASSERTION(NS_IsAboutBlank(mCurrentURI),
-                 "no SHEntry for a non-transient viewer?");
-  }
 #endif
 
   /* If the url to be loaded is the same as the one already there,
