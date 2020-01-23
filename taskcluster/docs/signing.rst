@@ -169,13 +169,13 @@ any other team.
 .. _addonscript: https://github.com/mozilla-releng/addonscript/
 .. _code signing: https://en.wikipedia.org/wiki/Code_signing
 .. _chain of trust: https://scriptworker.readthedocs.io/en/latest/chain_of_trust.html
-.. _depsigning: https://tools.taskcluster.net/provisioners/scriptworker-prov-v1/worker-types/depsigning
+.. _depsigning: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-t-signing
 .. _should_sign_windows: https://github.com/mozilla-releng/signingscript/blob/65cbb99ea53896fda9f4844e050a9695c762d24f/signingscript/sign.py#L369
 .. _Encrypted Media Extensions: https://hacks.mozilla.org/2014/05/reconciling-mozillas-mission-and-w3c-eme/
 .. _signing password files: https://github.com/mozilla/build-puppet/tree/feff5e12ab70f2c060b29940464e77208c7f0ef2/modules/signing_scriptworker/templates
 .. _signingscript: https://github.com/mozilla-releng/signingscript/
-.. _signing-linux-dev: https://tools.taskcluster.net/provisioners/scriptworker-prov-v1/worker-types/signing-linux-dev
-.. _signing-linux-v1: https://tools.taskcluster.net/provisioners/scriptworker-prov-v1/worker-types/signing-linux-v1
+.. _signing-linux-dev: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-t-signing-dev
+.. _signing-linux-v1: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-3-signing
 .. _signtool: https://github.com/mozilla-releng/signtool
 .. _Scriptworker: https://github.com/mozilla-releng/scriptworker/
 .. _widevine site: https://www.widevine.com/wv_drm.html
