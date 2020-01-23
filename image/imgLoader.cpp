@@ -809,9 +809,9 @@ static nsresult NewImageChannel(
     bool* aForcePrincipalCheckForCacheEntry, nsIURI* aURI,
     nsIURI* aInitialDocumentURI, int32_t aCORSMode,
     nsIReferrerInfo* aReferrerInfo, nsILoadGroup* aLoadGroup,
-    const nsCString& aAcceptHeader, nsLoadFlags aLoadFlags,
-    nsContentPolicyType aPolicyType, nsIPrincipal* aTriggeringPrincipal,
-    nsISupports* aRequestingContext, bool aRespectPrivacy) {
+    nsLoadFlags aLoadFlags, nsContentPolicyType aPolicyType,
+    nsIPrincipal* aTriggeringPrincipal, nsISupports* aRequestingContext,
+    bool aRespectPrivacy) {
   MOZ_ASSERT(aResult);
 
   nsresult rv;
@@ -921,10 +921,6 @@ static nsresult NewImageChannel(
   // Initialize HTTP-specific attributes
   newHttpChannel = do_QueryInterface(*aResult);
   if (newHttpChannel) {
-    rv = newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                          aAcceptHeader, false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
         do_QueryInterface(newHttpChannel);
     NS_ENSURE_TRUE(httpChannelInternal, NS_ERROR_UNEXPECTED);
@@ -1328,10 +1324,6 @@ nsresult imgLoader::InitCache() {
 nsresult imgLoader::Init() {
   InitCache();
 
-  ReadAcceptHeaderPref();
-
-  Preferences::AddWeakObserver(this, "image.http.accept");
-
   return NS_OK;
 }
 
@@ -1344,13 +1336,7 @@ imgLoader::RespectPrivacyNotifications() {
 NS_IMETHODIMP
 imgLoader::Observe(nsISupports* aSubject, const char* aTopic,
                    const char16_t* aData) {
-  // We listen for pref change notifications...
-  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    if (!NS_strcmp(aData, u"image.http.accept")) {
-      ReadAcceptHeaderPref();
-    }
-
-  } else if (strcmp(aTopic, "memory-pressure") == 0) {
+  if (strcmp(aTopic, "memory-pressure") == 0) {
     MinimizeCaches();
   } else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
     MinimizeCaches();
@@ -1372,17 +1358,6 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   return NS_OK;
-}
-
-void imgLoader::ReadAcceptHeaderPref() {
-  nsAutoCString accept;
-  nsresult rv = Preferences::GetCString("image.http.accept", accept);
-  if (NS_SUCCEEDED(rv)) {
-    mAcceptHeader = accept;
-  } else {
-    mAcceptHeader =
-        IMAGE_PNG "," IMAGE_WILDCARD ";q=0.8," ANY_WILDCARD ";q=0.5";
-  }
 }
 
 NS_IMETHODIMP
@@ -1733,7 +1708,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
   bool forcePrincipalCheck;
   rv = NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
                        aInitialDocumentURI, aCORSMode, aReferrerInfo,
-                       aLoadGroup, mAcceptHeader, aLoadFlags, aLoadPolicyType,
+                       aLoadGroup, aLoadFlags, aLoadPolicyType,
                        aTriggeringPrincipal, aCX, mRespectPrivacy);
   if (NS_FAILED(rv)) {
     return false;
@@ -2246,9 +2221,8 @@ nsresult imgLoader::LoadImage(
     bool forcePrincipalCheck;
     rv = NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
                          aInitialDocumentURI, corsmode, aReferrerInfo,
-                         aLoadGroup, mAcceptHeader, requestFlags,
-                         aContentPolicyType, aTriggeringPrincipal, aContext,
-                         mRespectPrivacy);
+                         aLoadGroup, requestFlags, aContentPolicyType,
+                         aTriggeringPrincipal, aContext, mRespectPrivacy);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
