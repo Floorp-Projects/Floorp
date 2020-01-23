@@ -22,6 +22,13 @@ const TEST_CASES = [
     }`, `(new X("msg", "file", 1))`],
     [`/a(b)c/`, `/a(b)c/`],
     [`/abc/gi`, `/abc/gi`],
+    [`new Boolean(false)`, `new Boolean(false)`],
+    [`Object(false)`, `new Boolean(false)`],
+    [`new String("abc")`, `new String("abc")`],
+    [`Object("abc")`, `new String("abc")`],
+    [`new Number(42)`, `new Number(42)`],
+    [`Object(42)`, `new Number(42)`],
+    [`new Date(1579447335)`, `new Date(1579447335)`],
 ]
 
 let g = newGlobal({newCompartment: true});
