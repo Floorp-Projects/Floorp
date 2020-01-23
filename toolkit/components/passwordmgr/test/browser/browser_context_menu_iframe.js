@@ -130,8 +130,8 @@ add_task(async function test_context_menu_iframe_sandbox() {
         function checkDisabled() {
           let popupHeader = document.getElementById("fill-login");
           ok(
-            popupHeader.disabled,
-            "Check that the Fill Login menu item is disabled"
+            popupHeader.hidden,
+            "Check that the Fill Login menu item is hidden"
           );
           return false;
         },
@@ -158,6 +158,10 @@ add_task(async function test_context_menu_iframe_sandbox_same_origin() {
         "#form-basic-password",
         function checkDisabled() {
           let popupHeader = document.getElementById("fill-login");
+          ok(
+            !popupHeader.hidden,
+            "Check that the Fill Login menu item is visible"
+          );
           ok(
             !popupHeader.disabled,
             "Check that the Fill Login menu item is disabled"
