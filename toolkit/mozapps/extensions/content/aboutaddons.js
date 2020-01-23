@@ -1936,8 +1936,7 @@ class InlineOptionsBrowser extends HTMLElement {
       let messageListener = {
         receiveMessage({ name, data }) {
           if (name === "Extension:BrowserResized") {
-            // Add a pixel to work around a scrolling issue, bug 1548687.
-            browser.style.height = `${data.height + 1}px`;
+            browser.style.height = `${data.height}px`;
           } else if (name === "Extension:BrowserContentLoaded") {
             resolve();
           }
