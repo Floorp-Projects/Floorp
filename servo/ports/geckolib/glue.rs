@@ -6851,3 +6851,11 @@ pub unsafe extern "C" fn Servo_LoadData_GetLazy(
 ) -> *const url::LoadData {
     source.get()
 }
+
+#[no_mangle]
+pub extern "C" fn Servo_LengthPercentage_ToCss(
+    lp: &computed::LengthPercentage,
+    result: &mut nsAString
+) {
+    lp.to_css(&mut CssWriter::new(result)).unwrap();
+}

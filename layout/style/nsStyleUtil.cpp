@@ -256,18 +256,15 @@ static bool ObjectPositionCoordMightCauseOverflow(
   // Any nonzero length in "object-position" can push us to overflow
   // (particularly if our concrete object size is exactly the same size as the
   // replaced element's content-box).
-  if (aCoord.LengthInCSSPixels() != 0.) {
-    return true;
+  if (!aCoord.ConvertsToPercentage()) {
+    return !aCoord.ConvertsToLength() || aCoord.ToLengthInCSSPixels() != 0.0f;
   }
 
   // Percentages are interpreted as a fraction of the extra space. So,
   // percentages in the 0-100% range are safe, but values outside of that
   // range could cause overflow.
-  if (aCoord.HasPercent() &&
-      (aCoord.Percentage() < 0.0f || aCoord.Percentage() > 1.0f)) {
-    return true;
-  }
-  return false;
+  float percentage = aCoord.ToPercentage();
+  return percentage < 0.0f || percentage > 1.0f;
 }
 
 /* static */
