@@ -1095,6 +1095,11 @@ class SpecialPowersParent extends JSWindowActorParent {
         return ServiceWorkerCleanUp.removeFromHost("example.com");
       }
 
+      case "SPGenerateMediaControlKeyTestEvent": {
+        ChromeUtils.generateMediaControlKeysTestEvent(aMessage.data.event);
+        return undefined;
+      }
+
       default:
         throw new SpecialPowersError(
           `Unrecognized Special Powers API: ${aMessage.name}`

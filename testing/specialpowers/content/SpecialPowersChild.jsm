@@ -1293,6 +1293,10 @@ class SpecialPowersChild extends JSWindowActorChild {
     );
   }
 
+  async generateMediaControlKeyTestEvent(event) {
+    await this.sendQuery("SPGenerateMediaControlKeyTestEvent", { event });
+  }
+
   // Note: each call to registerConsoleListener MUST be paired with a
   // call to postConsoleSentinel; when the callback receives the
   // sentinel it will unregister itself (_after_ calling the
