@@ -82,12 +82,6 @@ already_AddRefed<ImageData> ImageData::Constructor(
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
-  if (JS_GetTypedArraySharedness(aData.Obj())) {
-    // Throw if the object is mapping shared memory (must opt in).
-    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(
-        NS_LITERAL_STRING("Argument of ImageData constructor"));
-    return nullptr;
-  }
   RefPtr<ImageData> imageData = new ImageData(aWidth, height, *aData.Obj());
   return imageData.forget();
 }

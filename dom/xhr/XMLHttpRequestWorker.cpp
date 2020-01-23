@@ -1922,14 +1922,6 @@ void XMLHttpRequestWorker::Send(
   else if (aData.Value().IsArrayBufferView()) {
     const ArrayBufferView& body = aData.Value().GetAsArrayBufferView();
 
-    if (JS_IsTypedArrayObject(body.Obj()) &&
-        JS_GetTypedArraySharedness(body.Obj())) {
-      // Throw if the object is mapping shared memory (must opt in).
-      aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(
-          NS_LITERAL_STRING("Argument of XMLHttpRequest.send"));
-      return;
-    }
-
     sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
 
     JS::Rooted<JS::Value> value(aCx);
