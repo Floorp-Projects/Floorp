@@ -108,6 +108,8 @@ class SharedContext {
 
   Kind kind_;
 
+  ParseInfo& parseInfo_;
+
   ThisBinding thisBinding_;
 
  public:
@@ -159,10 +161,11 @@ class SharedContext {
   void computeThisBinding(Scope* scope);
 
  public:
-  SharedContext(JSContext* cx, Kind kind, Directives directives,
-                bool extraWarnings)
+  SharedContext(JSContext* cx, Kind kind, ParseInfo& parseInfo,
+                Directives directives, bool extraWarnings)
       : cx_(cx),
         kind_(kind),
+        parseInfo_(parseInfo),
         thisBinding_(ThisBinding::Global),
         strictScript(directives.strict()),
         localStrict(false),
@@ -204,6 +207,8 @@ class SharedContext {
     MOZ_ASSERT(kind_ == Kind::FunctionBox);
     return false;
   }
+
+  ParseInfo& parseInfo() const { return parseInfo_; }
 
   ThisBinding thisBinding() const { return thisBinding_; }
 
@@ -247,9 +252,9 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
  public:
   Rooted<GlobalScope::Data*> bindings;
 
-  GlobalSharedContext(JSContext* cx, ScopeKind scopeKind, Directives directives,
-                      bool extraWarnings)
-      : SharedContext(cx, Kind::Global, directives, extraWarnings),
+  GlobalSharedContext(JSContext* cx, ScopeKind scopeKind, ParseInfo& parseInfo,
+                      Directives directives, bool extraWarnings)
+      : SharedContext(cx, Kind::Global, parseInfo, directives, extraWarnings),
         scopeKind_(scopeKind),
         bindings(cx) {
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
@@ -273,7 +278,7 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
  public:
   Rooted<EvalScope::Data*> bindings;
 
-  EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
+  EvalSharedContext(JSContext* cx, JSObject* enclosingEnv, ParseInfo& parseInfo,
                     Scope* enclosingScope, Directives directives,
                     bool extraWarnings);
 
@@ -314,7 +319,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
   VarScope::Data* extraVarScopeBindings_;
 
   FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-              uint32_t toStringStart, Directives directives, bool extraWarnings,
+              uint32_t toStringStart, ParseInfo& parseInfo,
+              Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               JSAtom* explicitName, FunctionFlags flags);
 
@@ -434,12 +440,13 @@ class FunctionBox : public ObjectBox, public SharedContext {
   }
 
   FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
-              uint32_t toStringStart, Directives directives, bool extraWarnings,
+              uint32_t toStringStart, ParseInfo& parseInfo,
+              Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
   FunctionBox(JSContext* cx, TraceListNode* traceListHead,
               Handle<FunctionCreationData> data, uint32_t toStringStart,
-              Directives directives, bool extraWarnings,
+              ParseInfo& parseInfo, Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
 #ifdef DEBUG

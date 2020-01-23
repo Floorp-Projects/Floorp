@@ -174,14 +174,14 @@
      */
     function replaceIFrameBodyOnARIARoleBody(aID) {
       this.__proto__ = new rootContentReplaced(aID, "New Hello",
-                                               ROLE_PUSHBUTTON);
+                                               ROLE_APPLICATION);
 
       this.invoke = function replaceIFrameBodyOnARIARoleBody_invoke() {
         var docNode = getDocNode(aID);
         var newBodyNode = docNode.createElement("body");
         var newTextNode = docNode.createTextNode("New Hello");
         newBodyNode.appendChild(newTextNode);
-        newBodyNode.setAttribute("role", "button");
+        newBodyNode.setAttribute("role", "application");
         docNode.documentElement.replaceChild(newBodyNode, docNode.body);
       };
 

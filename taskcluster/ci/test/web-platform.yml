@@ -201,7 +201,7 @@ test-verify-wpt:
             (?:windows10-64|windows7-32|linux.*64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
             # do not run on beta or release: usually just confirms earlier results
-            default: ['trunk', 'try']
+            default: ['autoland', 'try']
     tier: 2
     mozharness:
         extra-options:

@@ -420,22 +420,14 @@ class UrlbarView {
     }
     this._updateResults(queryContext);
 
-    let isHeuristicResult = false;
-    if (queryContext.lastResultCount == 0) {
-      let firstResult = queryContext.results[0];
+    let firstResult = queryContext.results[0];
 
-      if (firstResult.heuristic) {
-        isHeuristicResult = true;
-        this._selectElement(this._getFirstSelectableElement(), {
-          updateInput: false,
-          setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
-        });
-      } else {
-        // Clear the selection when we get a new set of results.
-        this._selectElement(null, {
-          updateInput: false,
-        });
-      }
+    if (queryContext.lastResultCount == 0) {
+      // Clear the selection when we get a new set of results.
+      this._selectElement(null, {
+        updateInput: false,
+      });
+
       // Hide the one-off search buttons if the search string is empty, or
       // starts with a potential @ search alias or the search restriction
       // character.
@@ -452,9 +444,19 @@ class UrlbarView {
       this.input.maybeClearAutofillPlaceholder(firstResult);
     }
 
+    if (firstResult.heuristic) {
+      // Select the heuristic result.  The heuristic may not be the first result
+      // added, which is why we do this check here when each result is added and
+      // not above.
+      this._selectElement(this._getFirstSelectableElement(), {
+        updateInput: false,
+        setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
+      });
+    }
+
     this._openPanel();
 
-    if (isHeuristicResult) {
+    if (firstResult.heuristic) {
       // The heuristic result may be a search alias result, so apply formatting
       // if necessary.  Conversely, the heuristic result of the previous query
       // may have been an alias, so remove formatting if necessary.

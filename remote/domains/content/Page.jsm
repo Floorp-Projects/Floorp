@@ -332,7 +332,7 @@ class Page extends ContentProcessDomain {
     }
   }
 
-  _contentSize() {
+  _contentRect() {
     const docEl = this.content.document.documentElement;
 
     return {

@@ -695,8 +695,44 @@ public class WebExtension {
                     }
                     continue;
                 }
-                mIconUris.put(intKey, bundle.getString(key));
+
+                final String value = getIconValue(bundle.get(key));
+                if (value != null) {
+                    mIconUris.put(intKey, value);
+                }
             }
+        }
+
+        private String getIconValue(final Object value) {
+            // The icon value can either be an object containing icons for each theme...
+            if (value instanceof GeckoBundle) {
+                // We don't support theme_icons yet, so let's just return the default value.
+                final GeckoBundle themeIcons = (GeckoBundle) value;
+                final Object defaultIcon = themeIcons.get("default");
+
+                if (!(defaultIcon instanceof String)) {
+                    if (BuildConfig.DEBUG) {
+                        throw new RuntimeException("Unexpected themed_icon value.");
+                    }
+                    Log.e(LOGTAG, "Unexpected themed_icon value.");
+                    return null;
+                }
+
+                return (String) defaultIcon;
+            }
+
+            // ... or just a URL
+            if (value instanceof String) {
+                return (String) value;
+            }
+
+            // We never expect it to be something else, so let's error out here
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException("Unexpected icon value: " + value);
+            }
+
+            Log.e(LOGTAG, "Unexpected icon value.");
+            return null;
         }
 
         /** Override for tests. */

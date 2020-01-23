@@ -1,7 +1,5 @@
 "use strict";
 
-add_task(setup);
-
 add_task(async function testDirtyEnable() {
   // Set up a failing environment, pre-set DoH to enabled, and verify that
   // when the add-on is enabled, it doesn't do anything - DoH remains turned on.
@@ -22,20 +20,19 @@ add_task(async function testDirtyEnable() {
     "Breadcrumb not saved."
   );
   await ensureNoTRRModeChange(2);
-  checkHeuristicsTelemetry("prefHasUserValue", "first_run");
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(2);
-  ensureNoHeuristicsTelemetry();
 
   // Restart for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(2);
-  ensureNoHeuristicsTelemetry();
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(2);
-  ensureNoHeuristicsTelemetry();
+
+  // Clean up.
+  await resetPrefsAndRestartAddon();
 });

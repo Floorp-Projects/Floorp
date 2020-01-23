@@ -19,6 +19,11 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITouchBarInput"
 );
 
+const TEST_PATH = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "http://example.com"
+);
+
 function is_element_visible(aElement, aMsg) {
   isnot(aElement, null, "Element should not be null when checking visibility");
   ok(!BrowserTestUtils.is_hidden(aElement), aMsg);
@@ -74,10 +79,6 @@ add_task(async function updateReaderView() {
     "ReaderView Touch Bar button should be disabled by default."
   );
 
-  const TEST_PATH = getRootDirectory(gTestPath).replace(
-    "chrome://mochitests/content",
-    "http://example.com"
-  );
   let url = TEST_PATH + "readerModeArticle.html";
   await BrowserTestUtils.withNewTab(url, async function() {
     await BrowserTestUtils.waitForCondition(() => !readerButton.hidden);
@@ -89,3 +90,59 @@ add_task(async function updateReaderView() {
     );
   });
 });
+
+add_task(async function updateMainButtonInFullscreen() {
+  Assert.equal(
+    TouchBarHelper.getTouchBarInput("OpenLocation").image.spec,
+    "chrome://browser/skin/search-glass.svg",
+    "OpenLocation should be displaying the search glass icon."
+  );
+  await BrowserTestUtils.loadURI(
+    gBrowser.selectedBrowser,
+    TEST_PATH + "video_test.html"
+  );
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  let entered = waitForFullScreenState(gBrowser.selectedBrowser, true);
+  // Fullscreen video must be triggered from a user input handler so the video
+  // page contains a script to enter fullscreen on Enter instead of us calling
+  // requestFullscreen directly here.
+  EventUtils.synthesizeKey("KEY_Enter");
+  await entered;
+  Assert.equal(
+    TouchBarHelper.getTouchBarInput("OpenLocation").image.spec,
+    "chrome://browser/skin/fullscreen-exit.svg",
+    "OpenLocation should be displaying the exit fullscreen icon."
+  );
+  let exited = waitForFullScreenState(gBrowser.selectedBrowser, false);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await exited;
+  Assert.equal(
+    TouchBarHelper.getTouchBarInput("OpenLocation").image.spec,
+    "chrome://browser/skin/search-glass.svg",
+    "OpenLocation should be displaying the search glass icon."
+  );
+});
+
+function waitForFullScreenState(browser, state) {
+  info("inside waitforfullscreenstate");
+  return new Promise(resolve => {
+    let eventReceived = false;
+
+    let observe = (subject, topic, data) => {
+      if (!eventReceived) {
+        return;
+      }
+      Services.obs.removeObserver(observe, "fullscreen-painted");
+      resolve();
+    };
+    Services.obs.addObserver(observe, "fullscreen-painted");
+
+    window.addEventListener(
+      `MozDOMFullscreen:${state ? "Entered" : "Exited"}`,
+      () => {
+        eventReceived = true;
+      },
+      { once: true }
+    );
+  });
+}

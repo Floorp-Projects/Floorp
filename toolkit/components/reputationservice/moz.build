@@ -10,6 +10,7 @@ with Files('*'):
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 EXPORTS.mozilla += [
+    'ApplicationReputation.h',
     'LoginReputationIPC.h'
 ]
 

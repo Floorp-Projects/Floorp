@@ -18,7 +18,6 @@
  * well as providing refcounting support.
  */
 
-#include "nsAutoPtr.h"
 #include "nscore.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"

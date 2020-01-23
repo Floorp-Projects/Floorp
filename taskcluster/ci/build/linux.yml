@@ -1073,7 +1073,7 @@ linux64-noopt/debug:
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
-    run-on-projects: ['trunk', 'try']
+    run-on-projects: ['mozilla-central', 'try']
     fetches:
         toolchain:
             - linux64-binutils

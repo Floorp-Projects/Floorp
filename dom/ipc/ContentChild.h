@@ -162,10 +162,6 @@ class ContentChild final
 
   static void UpdateCookieStatus(nsIChannel* aChannel);
 
-  static already_AddRefed<RemoteBrowser> CreateBrowser(
-      nsFrameLoader* aFrameLoader, const TabContext& aContext,
-      const nsString& aRemoteType, BrowsingContext* aBrowsingContext);
-
   mozilla::ipc::IPCResult RecvInitGMPService(
       Endpoint<PGMPServiceChild>&& aGMPService);
 

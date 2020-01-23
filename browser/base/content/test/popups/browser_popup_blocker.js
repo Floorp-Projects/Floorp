@@ -71,27 +71,13 @@ add_task(async function test_opening_blocked_popups() {
 
   // Show the menu.
   let popupShown = BrowserTestUtils.waitForEvent(window, "popupshown");
-  let popupFilled = BrowserTestUtils.waitForMessage(
-    gBrowser.selectedBrowser.messageManager,
-    "PopupBlocking:ReplyGetBlockedPopupList"
-  );
+  let popupFilled = waitForBlockedPopups(2);
   notification.querySelector("button").doCommand();
   let popup_event = await popupShown;
   let menu = popup_event.target;
   is(menu.id, "blockedPopupOptions", "Blocked popup menu shown");
 
   await popupFilled;
-  // The menu is filled on the same message that we waited for, so let's ensure that it
-  // had a chance of running before this test code.
-  await new Promise(resolve => executeSoon(resolve));
-
-  // Check the menu contents.
-  let sep = menu.querySelector("menuseparator");
-  let popupCount = 0;
-  for (let i = sep.nextElementSibling; i; i = i.nextElementSibling) {
-    popupCount++;
-  }
-  is(popupCount, 2, "Two popups were blocked");
 
   // Pressing "allow" should open all blocked popups.
   let popupTabs = [];

@@ -1,7 +1,5 @@
 "use strict";
 
-add_task(setup);
-
 add_task(async function testDoorhangerUserReject() {
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
@@ -13,7 +11,6 @@ add_task(async function testDoorhangerUserReject() {
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
   is(
     Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
@@ -22,7 +19,6 @@ add_task(async function testDoorhangerUserReject() {
   );
 
   await ensureTRRMode(2);
-  await checkHeuristicsTelemetry("enable_doh", "startup");
 
   // Click the doorhanger's "reject" button.
   let button = panel.querySelector(".popup-notification-secondary-button");
@@ -50,24 +46,21 @@ add_task(async function testDoorhangerUserReject() {
     "Breadcrumb cleared."
   );
 
-  BrowserTestUtils.removeTab(tab);
-
   await ensureTRRMode(5);
-  await checkHeuristicsTelemetry("disable_doh", "doorhangerDecline");
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(5);
-  ensureNoHeuristicsTelemetry();
 
   // Restart the add-on for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(5);
-  ensureNoHeuristicsTelemetry();
 
   // Set failing environment and trigger another network change.
   setFailingHeuristics();
   simulateNetworkChange();
   await ensureNoTRRModeChange(5);
-  ensureNoHeuristicsTelemetry();
+
+  // Clean up.
+  await resetPrefsAndRestartAddon();
 });

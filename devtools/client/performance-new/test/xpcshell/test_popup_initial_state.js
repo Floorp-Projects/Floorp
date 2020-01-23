@@ -69,7 +69,10 @@ add_task(function test() {
     getRecordingPreferencesFromBrowser,
     setRecordingPreferencesOnBrowser,
     revertRecordingPreferences,
+    changePreset,
   } = setupBackgroundJsm();
+
+  changePreset("custom");
 
   Assert.ok(
     getRecordingPreferencesFromBrowser().features.includes("js"),

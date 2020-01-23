@@ -296,18 +296,45 @@ var UrlbarUtils = {
     let hits = new Array(str.length).fill(
       highlightType == this.HIGHLIGHT.SUGGESTED ? 1 : 0
     );
-    for (let { lowerCaseValue } of tokens) {
+    for (let { lowerCaseValue: needle } of tokens) {
       // Ideally we should never hit the empty token case, but just in case
       // the `needle` check protects us from an infinite loop.
-      for (let index = 0, needle = lowerCaseValue; index >= 0 && needle; ) {
+      if (!needle) {
+        continue;
+      }
+      let index = 0;
+      let found = false;
+      // First try a diacritic-sensitive search.
+      for (;;) {
         index = str.indexOf(needle, index);
-        if (index >= 0) {
-          hits.fill(
-            highlightType == this.HIGHLIGHT.SUGGESTED ? 0 : 1,
-            index,
-            index + needle.length
-          );
-          index += needle.length;
+        if (index < 0) {
+          break;
+        }
+        hits.fill(
+          highlightType == this.HIGHLIGHT.SUGGESTED ? 0 : 1,
+          index,
+          index + needle.length
+        );
+        index += needle.length;
+        found = true;
+      }
+      // If that fails to match anything, try a (computationally intensive)
+      // diacritic-insensitive search.
+      if (!found) {
+        const options = { sensitivity: "base" };
+        index = 0;
+        while (index < str.length) {
+          let hay = str.substr(index, needle.length);
+          if (needle.localeCompare(hay, [], options) == 0) {
+            hits.fill(
+              highlightType == this.HIGHLIGHT.SUGGESTED ? 0 : 1,
+              index,
+              index + needle.length
+            );
+            index += needle.length;
+          } else {
+            index++;
+          }
         }
       }
     }

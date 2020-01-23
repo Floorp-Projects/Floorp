@@ -58,12 +58,21 @@ static bool SanitizeForBCP47(nsACString& aLocale, bool strict) {
     return true;
   }
 
+  nsAutoCString locale(aLocale);
+  locale.Trim(" ");
+
+  // POSIX may bring us locales such as "en-US.UTF8", which
+  // ICU converts to `en-US-u-va-posix`. Let's cut out
+  // the `.UTF8`, since it doesn't matter for us.
+  int32_t pos = locale.FindChar('.');
+  if (pos != -1) {
+    locale.Cut(pos, locale.Length() - pos);
+  }
+
   // The rest of this function will use ICU canonicalization for any other
   // tag that may come this way.
   const int32_t LANG_TAG_CAPACITY = 128;
   char langTag[LANG_TAG_CAPACITY];
-  nsAutoCString locale(aLocale);
-  locale.Trim(" ");
   UErrorCode err = U_ZERO_ERROR;
   // This is a fail-safe method that will set langTag to "und" if it cannot
   // match any part of the input locale code.

@@ -467,6 +467,7 @@ renaming_overrides_prefixing = true
 
   inline StyleOwnedSlice(const StyleOwnedSlice&);
   inline StyleOwnedSlice(StyleOwnedSlice&&);
+  inline explicit StyleOwnedSlice(Vector<T>&&);
 
   inline ~StyleOwnedSlice();
 
@@ -681,18 +682,32 @@ renaming_overrides_prefixing = true
   inline nsRect ToLayoutRect(nscoord aAutoSize = NS_MAXSIZE) const;
 """
 
-"VecU8" = """
-  StyleVecU8(): data(nullptr), length(0), capacity(0) {}
-  StyleVecU8(const StyleVecU8& aOther) = delete;
-  StyleVecU8(StyleVecU8&& aOther)
-    : data(aOther.data), length(aOther.length), capacity(aOther.capacity) {
-    aOther.data = nullptr;
-    aOther.length = 0;
-    aOther.capacity = 0;
-  }
-  StyleVecU8& operator=(StyleVecU8&& aOther) = delete;
-  StyleVecU8& operator=(const StyleVecU8& aOther) = delete;
+"GenericRotate" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericRotate(): tag(Tag::None) {}
+"""
 
-  // This type is not safe to return by value. Should be careful.
-  inline ~StyleVecU8();
+"GenericScale" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericScale(): tag(Tag::None) {}
+"""
+
+"GenericTranslate" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericTranslate(): tag(Tag::None) {}
+"""
+
+"GenericOffsetPath" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericOffsetPath(): tag(Tag::None) {}
+"""
+
+"GenericPositionOrAuto" = """
+public:
+  // The implementation of IPC LayersMessages needs this to be public.
+  StyleGenericPositionOrAuto(): tag(Tag::Auto) {}
 """

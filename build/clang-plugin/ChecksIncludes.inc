@@ -27,6 +27,7 @@
 #include "NonMemMovableMemberChecker.h"
 #include "NonMemMovableTemplateArgChecker.h"
 #include "NonParamInsideFunctionDeclChecker.h"
+#include "NoUsingNamespaceMozillaJavaChecker.h"
 #include "OverrideBaseCallChecker.h"
 #include "OverrideBaseCallUsageChecker.h"
 #include "ParamTraitsEnumChecker.h"

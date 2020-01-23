@@ -291,6 +291,11 @@ class EvalUsageNotificationRunnable final : public Runnable {
   uint32_t mColumnNumber;
 };
 
+// The Web Extension process pref may be toggled during a session, at which
+// point stuff may be loaded in the parent process but we would send telemetry
+// for it. Avoid this by observing if the pref ever was disabled.
+static bool sWebExtensionsRemoteWasEverDisabled = false;
+
 /* static */
 bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
                                            bool aIsSystemPrincipal,
@@ -377,9 +382,16 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
 
   if (XRE_IsE10sParentProcess() &&
       !StaticPrefs::extensions_webextensions_remote()) {
+    sWebExtensionsRemoteWasEverDisabled = true;
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("Allowing eval() in parent process because the web extension "
              "process is disabled"));
+    return true;
+  }
+  if (XRE_IsE10sParentProcess() && sWebExtensionsRemoteWasEverDisabled) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() in parent process because the web extension "
+             "process was disabled at some point"));
     return true;
   }
 
@@ -737,9 +749,17 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
 
   if (XRE_IsE10sParentProcess() &&
       !StaticPrefs::extensions_webextensions_remote()) {
+    sWebExtensionsRemoteWasEverDisabled = true;
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("Allowing a javascript load of %s because the web extension "
              "process is disabled.",
+             aFilename));
+    return true;
+  }
+  if (XRE_IsE10sParentProcess() && sWebExtensionsRemoteWasEverDisabled) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing a javascript load of %s because the web extension "
+             "process was disabled at some point.",
              aFilename));
     return true;
   }

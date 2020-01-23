@@ -102,18 +102,25 @@ void MediaActionHandler::HandleMediaControlKeysEvent(
   switch (aEvent) {
     case MediaControlKeysEvent::ePlay:
       controller.Play();
-      break;
+      return;
     case MediaControlKeysEvent::ePause:
       controller.Pause();
-      break;
+      return;
     case MediaControlKeysEvent::eStop:
       controller.Stop();
-      break;
-    case MediaControlKeysEvent::ePlayPause:
+      return;
     case MediaControlKeysEvent::ePrevTrack:
+      controller.PreviousTrack();
+      return;
     case MediaControlKeysEvent::eNextTrack:
+      controller.NextTrack();
+      return;
     case MediaControlKeysEvent::eSeekBackward:
+      controller.SeekBackward();
+      return;
     case MediaControlKeysEvent::eSeekForward:
+      controller.SeekForward();
+      return;
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid event.");
   };
