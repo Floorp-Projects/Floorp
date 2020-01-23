@@ -16,6 +16,8 @@
 
 <!ENTITY fillLoginMenu.label          "Fill Login">
 <!ENTITY fillLoginMenu.accesskey      "F">
+<!ENTITY useGeneratedPassword.label   "Use a Securely Generated Password…">
+<!ENTITY useGeneratedPassword.accesskey "S">
 <!ENTITY fillPasswordMenu.label       "Fill Password">
 <!ENTITY fillPasswordMenu.accesskey   "F">
 <!ENTITY fillUsernameMenu.label       "Fill Username">
