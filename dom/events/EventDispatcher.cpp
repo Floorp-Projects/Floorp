@@ -1238,14 +1238,10 @@ nsresult EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
       aEventType.LowerCaseEqualsLiteral("mouseevents")) {
     return NS_NewDOMMouseEvent(aOwner, aPresContext, nullptr);
   }
-  if (aEventType.LowerCaseEqualsLiteral("mousescrollevents")) {
-    return NS_NewDOMMouseScrollEvent(aOwner, aPresContext, nullptr);
-  }
   if (aEventType.LowerCaseEqualsLiteral("dragevent")) {
     return NS_NewDOMDragEvent(aOwner, aPresContext, nullptr);
   }
-  if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
-      aEventType.LowerCaseEqualsLiteral("keyevents")) {
+  if (aEventType.LowerCaseEqualsLiteral("keyboardevent")) {
     return NS_NewDOMKeyboardEvent(aOwner, aPresContext, nullptr);
   }
   if (aEventType.LowerCaseEqualsLiteral("compositionevent") ||
@@ -1276,18 +1272,12 @@ nsresult EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
       aEventType.LowerCaseEqualsLiteral("svgevents")) {
     return NS_NewDOMEvent(aOwner, aPresContext, nullptr);
   }
-  if (aEventType.LowerCaseEqualsLiteral("timeevent")) {
-    return NS_NewDOMTimeEvent(aOwner, aPresContext, nullptr);
-  }
   if (aEventType.LowerCaseEqualsLiteral("messageevent")) {
     RefPtr<Event> event = new MessageEvent(aOwner, aPresContext, nullptr);
     return event.forget();
   }
   if (aEventType.LowerCaseEqualsLiteral("beforeunloadevent")) {
     return NS_NewDOMBeforeUnloadEvent(aOwner, aPresContext, nullptr);
-  }
-  if (aEventType.LowerCaseEqualsLiteral("scrollareaevent")) {
-    return NS_NewDOMScrollAreaEvent(aOwner, aPresContext, nullptr);
   }
   if (aEventType.LowerCaseEqualsLiteral("touchevent") &&
       TouchEvent::LegacyAPIEnabled(

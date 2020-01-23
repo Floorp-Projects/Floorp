@@ -212,16 +212,8 @@ const kEventConstructors = {
                                                          return new MouseEvent(aName, aProps);
                                                        },
                                              },
-  MouseScrollEvent:                          { create (aName, aProps) {
-                                                         var e = document.createEvent("mousescrollevents");
-                                                         e.initMouseScrollEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                                aProps.view, aProps.detail,
-                                                                                aProps.screenX, aProps.screenY,
-                                                                                aProps.clientX, aProps.clientY,
-                                                                                aProps.ctrlKey, aProps.altKey, aProps.shiftKey, aProps.metaKey,
-                                                                                aProps.button, aProps.relatedTarget, aProps.axis);
-                                                         return e;
-                                                       },
+  MouseScrollEvent:                          { create: null
+                                               // Cannot create untrusted event from JS
                                              },
   MozApplicationEvent:                       { create (aName, aProps) {
                                                          return new MozApplicationEvent(aName, aProps);
@@ -321,14 +313,8 @@ const kEventConstructors = {
   RTCTrackEvent:                             {
                                                // Difficult to test required arguments.
                                              },
-  ScrollAreaEvent:                           { create (aName, aProps) {
-                                                         var e = document.createEvent("scrollareaevent");
-                                                         e.initScrollAreaEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                               aProps.view, aProps.details,
-                                                                               aProps.x || 0.0, aProps.y || 0.0,
-                                                                               aProps.width || 0.0, aProps.height || 0.0);
-                                                         return e;
-                                                       },
+  ScrollAreaEvent:                           { create: null
+                                               // Cannot create untrusted event from JS
                                              },
   SpeechRecognitionError:                    { create (aName, aProps) {
                                                          return new SpeechRecognitionError(aName, aProps);
@@ -370,11 +356,8 @@ const kEventConstructors = {
                                                          return new TCPServerSocketEvent(aName, aProps);
                                                        },
                                              },
-  TimeEvent:                                 { create (aName, aProps) {
-                                                         var e = document.createEvent("timeevent");
-                                                         e.initTimeEvent(aName, aProps.view, aProps.detail);
-                                                         return e;
-                                                       },
+  TimeEvent:                                 { create: null
+                                               // Cannot create untrusted event from JS
                                              },
   TouchEvent:                                { create (aName, aProps) {
                                                          var e = document.createEvent("touchevent");
