@@ -212,9 +212,9 @@ JSObject* IIRFilterNode::WrapObject(JSContext* aCx,
 void IIRFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
                                          const Float32Array& aMagResponse,
                                          const Float32Array& aPhaseResponse) {
-  aFrequencyHz.ComputeLengthAndData();
-  aMagResponse.ComputeLengthAndData();
-  aPhaseResponse.ComputeLengthAndData();
+  aFrequencyHz.ComputeState();
+  aMagResponse.ComputeState();
+  aPhaseResponse.ComputeState();
 
   uint32_t length =
       std::min(std::min(aFrequencyHz.Length(), aMagResponse.Length()),

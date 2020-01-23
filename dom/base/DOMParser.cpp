@@ -119,7 +119,7 @@ already_AddRefed<Document> DOMParser::ParseFromSafeString(const nsAString& aStr,
 already_AddRefed<Document> DOMParser::ParseFromBuffer(const Uint8Array& aBuf,
                                                       SupportedType aType,
                                                       ErrorResult& aRv) {
-  aBuf.ComputeLengthAndData();
+  aBuf.ComputeState();
   return ParseFromBuffer(MakeSpan(aBuf.Data(), aBuf.Length()), aType, aRv);
 }
 

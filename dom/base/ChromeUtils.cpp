@@ -91,12 +91,12 @@ void ChromeUtils::Base64URLEncode(GlobalObject& aGlobal,
   uint8_t* data = nullptr;
   if (aSource.IsArrayBuffer()) {
     const ArrayBuffer& buffer = aSource.GetAsArrayBuffer();
-    buffer.ComputeLengthAndData();
+    buffer.ComputeState();
     length = buffer.Length();
     data = buffer.Data();
   } else if (aSource.IsArrayBufferView()) {
     const ArrayBufferView& view = aSource.GetAsArrayBufferView();
-    view.ComputeLengthAndData();
+    view.ComputeState();
     length = view.Length();
     data = view.Data();
   } else {

@@ -300,7 +300,7 @@ bool AudioBuffer::RestoreJSChannelData(JSContext* aJSContext) {
 void AudioBuffer::CopyFromChannel(const Float32Array& aDestination,
                                   uint32_t aChannelNumber,
                                   uint32_t aStartInChannel, ErrorResult& aRv) {
-  aDestination.ComputeLengthAndData();
+  aDestination.ComputeState();
 
   if (aChannelNumber >= NumberOfChannels() || aStartInChannel > Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -340,7 +340,7 @@ void AudioBuffer::CopyToChannel(JSContext* aJSContext,
                                 const Float32Array& aSource,
                                 uint32_t aChannelNumber,
                                 uint32_t aStartInChannel, ErrorResult& aRv) {
-  aSource.ComputeLengthAndData();
+  aSource.ComputeState();
 
   if (aChannelNumber >= NumberOfChannels() || aStartInChannel > Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);

@@ -45,7 +45,7 @@ template <>
 nsresult BodyExtractor<const ArrayBuffer>::GetAsStream(
     nsIInputStream** aResult, uint64_t* aContentLength,
     nsACString& aContentTypeWithCharset, nsACString& aCharset) const {
-  mBody->ComputeLengthAndData();
+  mBody->ComputeState();
   return GetBufferDataAsStream(mBody->Data(), mBody->Length(), aResult,
                                aContentLength, aContentTypeWithCharset,
                                aCharset);
@@ -55,7 +55,7 @@ template <>
 nsresult BodyExtractor<const ArrayBufferView>::GetAsStream(
     nsIInputStream** aResult, uint64_t* aContentLength,
     nsACString& aContentTypeWithCharset, nsACString& aCharset) const {
-  mBody->ComputeLengthAndData();
+  mBody->ComputeState();
   return GetBufferDataAsStream(mBody->Data(), mBody->Length(), aResult,
                                aContentLength, aContentTypeWithCharset,
                                aCharset);

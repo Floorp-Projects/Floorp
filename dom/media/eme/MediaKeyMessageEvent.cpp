@@ -76,7 +76,7 @@ already_AddRefed<MediaKeyMessageEvent> MediaKeyMessageEvent::Constructor(
   RefPtr<MediaKeyMessageEvent> e = new MediaKeyMessageEvent(owner);
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
-  aEventInitDict.mMessage.ComputeLengthAndData();
+  aEventInitDict.mMessage.ComputeState();
   e->mMessage =
       ArrayBuffer::Create(aGlobal.Context(), aEventInitDict.mMessage.Length(),
                           aEventInitDict.mMessage.Data());

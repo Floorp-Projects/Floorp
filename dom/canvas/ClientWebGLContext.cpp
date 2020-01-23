@@ -2616,7 +2616,7 @@ void ClientWebGLContext::BufferData(
   if (!ValidateNonNull("src", maybeSrc)) return;
   const auto& src = maybeSrc.Value();
 
-  src.ComputeLengthAndData();
+  src.ComputeState();
   const auto view = RawBuffer<const uint8_t>(src.Length(), src.Data());
 
   Run<RPROC(BufferData)>(target, view, usage);
@@ -2644,7 +2644,7 @@ void ClientWebGLContext::BufferSubData(GLenum target,
                                        WebGLsizeiptr dstByteOffset,
                                        const dom::ArrayBuffer& src) {
   const FuncScope funcScope(*this, "bufferSubData");
-  src.ComputeLengthAndData();
+  src.ComputeState();
   Run<RPROC(BufferSubData)>(target, dstByteOffset,
                             RawBuffer<const uint8_t>(src.Length(), src.Data()));
 }
@@ -5076,7 +5076,7 @@ bool ClientWebGLContext::ValidateArrayBufferView(
     const dom::ArrayBufferView& view, GLuint elemOffset,
     GLuint elemCountOverride, const GLenum errorEnum, uint8_t** const out_bytes,
     size_t* const out_byteLen) const {
-  view.ComputeLengthAndData();
+  view.ComputeState();
   uint8_t* const bytes = view.Data();
   const size_t byteLen = view.Length();
 

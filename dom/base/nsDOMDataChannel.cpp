@@ -199,7 +199,7 @@ void nsDOMDataChannel::Send(Blob& aData, ErrorResult& aRv) {
 void nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
-  aData.ComputeLengthAndData();
+  aData.ComputeState();
 
   static_assert(sizeof(*aData.Data()) == 1, "byte-sized data required");
 
@@ -213,7 +213,7 @@ void nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
 void nsDOMDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
-  aData.ComputeLengthAndData();
+  aData.ComputeState();
 
   static_assert(sizeof(*aData.Data()) == 1, "byte-sized data required");
 

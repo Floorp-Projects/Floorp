@@ -330,7 +330,7 @@ void WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve,
   }
 
   const Float32Array& floats = aCurve.Value();
-  floats.ComputeLengthAndData();
+  floats.ComputeState();
 
   nsTArray<float> curve;
   uint32_t argLength = floats.Length();
