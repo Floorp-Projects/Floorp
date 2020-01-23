@@ -16,17 +16,11 @@ const { LoginManagerStorage_json } = ChromeUtils.import(
   "resource://gre/modules/storage-json.js"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "GeckoViewLoginStorage",
-  "resource://gre/modules/GeckoViewLoginStorage.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  GeckoViewLoginStorage: "resource://gre/modules/GeckoViewLoginStorage.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  LoginEntry: "resource://gre/modules/GeckoViewLoginStorage.jsm",
+});
 
 class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   get classID() {
@@ -79,7 +73,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   }
 
   recordPasswordUse(login) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    GeckoViewLoginStorage.onLoginPasswordUsed(LoginEntry.fromLoginInfo(login));
   }
 
   getAllLogins() {
