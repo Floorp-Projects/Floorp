@@ -109,9 +109,13 @@ function createPendingCrashReports(howMany, accessDate) {
   let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
     Ci.nsIUUIDGenerator
   );
-  // CrashSubmit expects there to be a ServerURL key-value
-  // pair in the .extra file, so we'll satisfy it.
-  let extraFileContents = JSON.stringify({ ServerURL: SERVER_URL });
+  // Some annotations are always present in the .extra file and CrashSubmit.jsm
+  // expects there to be a ServerURL entry, so we'll add them here.
+  let extraFileContents = JSON.stringify({
+    ServerURL: SERVER_URL,
+    TelemetryServerURL: "http://telemetry.mozilla.org/",
+    TelemetryClientId: "c69e7487-df10-4c98-ab1a-c85660feecf3",
+  });
 
   return (async function() {
     let uuids = [];
@@ -147,6 +151,21 @@ function waitForSubmittedReports(reportIDs) {
           let dumpID = propBag.getPropertyAsAString("minidumpID");
           if (dumpID == reportID) {
             return true;
+          }
+          let extra = propBag.getPropertyAsInterface(
+            "extra",
+            Ci.nsIPropertyBag2
+          );
+          const blockedAnnotations = [
+            "ServerURL",
+            "TelemetryClientId",
+            "TelemetryServerURL",
+          ];
+          for (const key of blockedAnnotations) {
+            Assert.ok(
+              !extra.hasKey(key),
+              "The " + key + " annotation should have been stripped away"
+            );
           }
         }
         return false;
