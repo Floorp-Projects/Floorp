@@ -37,7 +37,7 @@ void StyleInfo::TextIndent(nsAString& aValue) {
 
   const auto& textIndent = mComputedStyle->StyleText()->mTextIndent;
   if (textIndent.ConvertsToLength()) {
-    aValue.AppendFloat(textIndent.LengthInCSSPixels());
+    aValue.AppendFloat(textIndent.ToLengthInCSSPixels());
     aValue.AppendLiteral("px");
     return;
   }
@@ -46,7 +46,8 @@ void StyleInfo::TextIndent(nsAString& aValue) {
     aValue.AppendLiteral("%");
     return;
   }
-  // FIXME: This doesn't handle calc in any meaningful way?
+  // FIXME: This doesn't handle calc in any meaningful way? Probably should just
+  // use the Servo serialization code...
   aValue.AppendLiteral("0px");
 }
 
