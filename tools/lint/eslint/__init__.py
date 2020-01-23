@@ -8,7 +8,6 @@ from __future__ import absolute_import, print_function
 
 import json
 import os
-import re
 import signal
 import sys
 
@@ -75,6 +74,7 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
                 # This keeps ext as a single argument.
                 '--ext', '[{}]'.format(','.join(config['extensions'])),
                 '--format', 'json',
+                '--no-error-on-unmatched-pattern',
                 ] + extra_args + exclude_args + paths
     log.debug("Command: {}".format(' '.join(cmd_args)))
 
@@ -106,10 +106,6 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
         jsonresult = json.loads(proc.output[0])
     except ValueError:
         output = "\n".join(proc.output)
-        if re.search(r'No files matching the pattern "(.*)" were found.', output):
-            print("warning: no files to lint (eslint)")
-            return []
-
         print(ESLINT_ERROR_MESSAGE.format(output))
         return 1
 
