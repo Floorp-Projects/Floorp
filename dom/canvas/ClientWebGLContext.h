@@ -984,7 +984,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
  private:
   uvec2 DrawingBufferSize();
-  bool HasAlphaSupport() { return mSurfaceInfo.supportsAlpha; }
 
   ICRData mSurfaceInfo;
 

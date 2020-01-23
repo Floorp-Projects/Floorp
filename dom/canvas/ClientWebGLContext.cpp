@@ -488,7 +488,10 @@ already_AddRefed<layers::Layer> ClientWebGLContext::GetCanvasLayer(
   CanvasRenderer* canvasRenderer = canvasLayer->CreateOrGetCanvasRenderer();
   if (!InitializeCanvasRenderer(builder, canvasRenderer)) return nullptr;
 
-  uint32_t flags = HasAlphaSupport() ? 0 : Layer::CONTENT_OPAQUE;
+  uint32_t flags = 0;
+  if (GetIsOpaque()) {
+    flags |= Layer::CONTENT_OPAQUE;
+  }
   canvasLayer->SetContentFlags(flags);
 
   mResetLayer = false;
@@ -654,6 +657,8 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
   if (!size.y) {
     size.y = 1;
   }
+
+  mResetLayer = true;  // Always treat this as resize.
 
   if (mNotLost) {
     auto& state = State();
