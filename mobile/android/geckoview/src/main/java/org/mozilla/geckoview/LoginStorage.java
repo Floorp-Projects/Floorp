@@ -6,7 +6,11 @@
 
 package org.mozilla.geckoview;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 import android.support.annotation.AnyThread;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
@@ -44,13 +48,27 @@ import org.mozilla.gecko.util.GeckoBundle;
  * Based on the provided login entries, GeckoView will attempt to autofill the
  * login input fields.
  *
+ * Update API
+ *
+ * When the user submits some login input fields, GeckoView dispatches another
+ * <code>LoginStorage.Delegate.onLoginFetch(&quot;example.com&quot;)</code>
+ * request to check whether the submitted login exists or whether it's a new or
+ * updated login entry.
+ * If the submitted login is already contained as-is in the collection returned
+ * by <code>onLoginFetch</code>, then GeckoView dispatches
+ * <code>LoginStorage.Delegate.onLoginUsed</code> with the submitted login
+ * entry.
+ * If the submitted login is a new or updated entry, GeckoView dispatches
+ * a sequence of requests to save/update the login entry, see the Save API
+ * example.
+ *
  * Save API
  *
- * The user enters login credentials in some login input fields and commits
- * explicitely (submit action) or by navigation.
+ * The user enters new or updated (password) login credentials in some login
+ * input fields and submits explicitely (submit action) or by navigation.
  * GeckoView identifies the entered credentials and dispatches a
  * <code>GeckoSession.PromptDelegate.onLoginStoragePrompt(session, prompt)</code>
- * with the <code>prompt</code> being of type
+ * request with the <code>prompt</code> being of type
  * <code>LoginStoragePrompt.Type.SAVE</code> and containing the entered
  * credentials.
  *
@@ -269,6 +287,22 @@ public class LoginStorage {
         }
     }
 
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(flag = true,
+            value = { UsedField.PASSWORD })
+    /* package */ @interface LSUsedField {}
+
+    // Sync with UsedField in GeckoViewLoginStorage.jsm.
+    /**
+     * Possible login entry field types for {@link onLoginUsed}.
+     */
+    public static class UsedField {
+        /**
+         * The password field of a login entry.
+         */
+        public static final int PASSWORD = 1;
+    }
+
     /**
      * Implement this interface to handle runtime login storage requests.
      * Login storage events include login entry requests for autofill and
@@ -307,6 +341,21 @@ public class LoginStorage {
          */
         @UiThread
         default void onLoginSave(@NonNull LoginEntry login) {}
+
+        /**
+         * Notify that the given login was used to autofill login input fields.
+         * This is triggered by autofilling elements with unmodified login
+         * entries as provided via {@link #onLoginFetch}.
+         *
+         * @param login The {@link LoginEntry} that was used for the
+         *              autofilling.
+         * @param usedFields The login entry fields used for autofilling.
+         *                   A combination of {@link UsedField}.
+         */
+        @UiThread
+        default void onLoginUsed(
+                @NonNull LoginEntry login,
+                @LSUsedField int usedFields) {}
     }
 
     /* package */ final static class Proxy implements BundleEventListener {
@@ -314,6 +363,7 @@ public class LoginStorage {
 
         private static final String FETCH_EVENT = "GeckoView:LoginStorage:Fetch";
         private static final String SAVE_EVENT = "GeckoView:LoginStorage:Save";
+        private static final String USED_EVENT = "GeckoView:LoginStorage:Used";
 
         private @Nullable Delegate mDelegate;
 
@@ -323,14 +373,16 @@ public class LoginStorage {
             EventDispatcher.getInstance().registerUiThreadListener(
                     this,
                     FETCH_EVENT,
-                    SAVE_EVENT);
+                    SAVE_EVENT,
+                    USED_EVENT);
         }
 
         private void unregisterListener() {
             EventDispatcher.getInstance().unregisterUiThreadListener(
                     this,
                     FETCH_EVENT,
-                    SAVE_EVENT);
+                    SAVE_EVENT,
+                    USED_EVENT);
         }
 
         public synchronized void setDelegate(final @Nullable Delegate delegate) {
@@ -394,6 +446,12 @@ public class LoginStorage {
                 final LoginEntry login = new LoginEntry(loginBundle);
 
                 mDelegate.onLoginSave(login);
+            } else if (USED_EVENT.equals(event)) {
+                final GeckoBundle loginBundle = message.getBundle("login");
+                final LoginEntry login = new LoginEntry(loginBundle);
+                final int fields = message.getInt("usedFields");
+
+                mDelegate.onLoginUsed(login, fields);
             }
         }
     }
