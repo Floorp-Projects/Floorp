@@ -187,6 +187,95 @@ Nullable<uint8_t> TestFunctions::GetEnforcedNullableOctet() const {
   return mEnforcedNullableOctet;
 }
 
+void TestFunctions::SetArrayBufferView(const ArrayBufferView& aBuffer) {}
+
+void TestFunctions::GetArrayBufferView(JSContext* aCx,
+                                       JS::Handle<JSObject*> aObj,
+                                       JS::MutableHandle<JSObject*> aRetval,
+                                       ErrorResult& aError) {
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void TestFunctions::SetAllowSharedArrayBufferView(
+    const ArrayBufferView& aBuffer) {}
+
+void TestFunctions::GetAllowSharedArrayBufferView(
+    JSContext* aCx, JS::Handle<JSObject*> aObj,
+    JS::MutableHandle<JSObject*> aRetval, ErrorResult& aError) {
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void TestFunctions::SetSequenceOfArrayBufferView(
+    const Sequence<ArrayBufferView>& aBuffers) {}
+
+void TestFunctions::GetSequenceOfArrayBufferView(JSContext* aCx,
+                                                 JS::Handle<JSObject*> aObj,
+                                                 nsTArray<JSObject*>& aRetval,
+                                                 ErrorResult& aError) {
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void TestFunctions::SetSequenceOfAllowSharedArrayBufferView(
+    const Sequence<ArrayBufferView>& aBuffers) {}
+
+void TestFunctions::GetSequenceOfAllowSharedArrayBufferView(
+    JSContext* aCx, JS::Handle<JSObject*> aObj, nsTArray<JSObject*>& aRetval,
+    ErrorResult& aError) {
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void TestFunctions::SetArrayBuffer(const ArrayBuffer& aBuffer) {}
+
+void TestFunctions::GetArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                                   JS::MutableHandle<JSObject*> aRetval,
+                                   ErrorResult& aError) {
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void TestFunctions::SetAllowSharedArrayBuffer(const ArrayBuffer& aBuffer) {}
+
+void TestFunctions::GetAllowSharedArrayBuffer(
+    JSContext* aCx, JS::Handle<JSObject*> aObj,
+    JS::MutableHandle<JSObject*> aRetval, ErrorResult& aError) {
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void TestFunctions::SetSequenceOfArrayBuffer(
+    const Sequence<ArrayBuffer>& aBuffers) {}
+
+void TestFunctions::GetSequenceOfArrayBuffer(JSContext* aCx,
+                                             JS::Handle<JSObject*> aObj,
+                                             nsTArray<JSObject*>& aRetval,
+                                             ErrorResult& aError) {
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void TestFunctions::SetSequenceOfAllowSharedArrayBuffer(
+    const Sequence<ArrayBuffer>& aBuffers) {}
+
+void TestFunctions::GetSequenceOfAllowSharedArrayBuffer(
+    JSContext* aCx, JS::Handle<JSObject*> aObj, nsTArray<JSObject*>& aRetval,
+    ErrorResult& aError) {
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void TestFunctions::TestNotAllowShared(const ArrayBufferView& aBuffer) {}
+
+void TestFunctions::TestNotAllowShared(const ArrayBuffer& aBuffer) {}
+
+void TestFunctions::TestAllowShared(const ArrayBufferView& aBuffer) {}
+
+void TestFunctions::TestAllowShared(const ArrayBuffer& aBuffer) {}
+
+void TestFunctions::TestDictWithAllowShared(
+    const DictWithAllowSharedBufferSource& aDict) {}
+
+void TestFunctions::TestUnionOfBuffferSource(
+    const ArrayBufferOrArrayBufferView& aUnion) {}
+
+void TestFunctions::TestUnionOfAllowSharedBuffferSource(
+    const MaybeSharedArrayBufferOrMaybeSharedArrayBufferView& aUnion) {}
+
 bool TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj) {
   // We purposefully don't use WindowOrNull here, because we want to
   // demonstrate the incorrect behavior we get, not just fail some asserts.

@@ -102,4 +102,36 @@ interface TestFunctions {
 
   attribute [Clamp] octet? clampedNullableOctet;
   attribute [EnforceRange] octet? enforcedNullableOctet;
+
+  // Testing for [AllowShared]
+  [GetterThrows]
+  attribute ArrayBufferView arrayBufferView;
+  [GetterThrows]
+  attribute [AllowShared] ArrayBufferView allowSharedArrayBufferView;
+  [Cached, Pure, GetterThrows]
+  attribute sequence<ArrayBufferView> sequenceOfArrayBufferView;
+  [Cached, Pure, GetterThrows]
+  attribute sequence<[AllowShared] ArrayBufferView> sequenceOfAllowSharedArrayBufferView;
+  [GetterThrows]
+  attribute ArrayBuffer arrayBuffer;
+  [GetterThrows]
+  attribute [AllowShared] ArrayBuffer allowSharedArrayBuffer;
+  [Cached, Pure, GetterThrows]
+  attribute sequence<ArrayBuffer> sequenceOfArrayBuffer;
+  [Cached, Pure, GetterThrows]
+  attribute sequence<[AllowShared] ArrayBuffer> sequenceOfAllowSharedArrayBuffer;
+  void testNotAllowShared(ArrayBufferView buffer);
+  void testNotAllowShared(ArrayBuffer buffer);
+  void testAllowShared([AllowShared] ArrayBufferView buffer);
+  void testAllowShared([AllowShared] ArrayBuffer buffer);
+  void testDictWithAllowShared(optional DictWithAllowSharedBufferSource buffer = {});
+  void testUnionOfBuffferSource((ArrayBuffer or ArrayBufferView) foo);
+  void testUnionOfAllowSharedBuffferSource(([AllowShared] ArrayBuffer or [AllowShared] ArrayBufferView) foo);
+};
+
+dictionary DictWithAllowSharedBufferSource {
+  ArrayBuffer arrayBuffer;
+  ArrayBufferView arrayBufferView;
+  [AllowShared] ArrayBuffer allowSharedArrayBuffer;
+  [AllowShared] ArrayBufferView allowSharedArrayBufferView;
 };

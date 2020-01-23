@@ -8,6 +8,7 @@
 
 #include "builtin/DataViewObject.h"
 #include "gc/Nursery.h"
+#include "js/SharedArrayBuffer.h"
 #include "vm/JSContext.h"
 #include "vm/TypedArrayObject.h"
 
@@ -248,4 +249,12 @@ JS_FRIEND_API void js::GetArrayBufferViewLengthAndData(JSObject* obj,
   *isSharedMemory = view.isSharedMemory();
   *data = static_cast<uint8_t*>(
       view.dataPointerEither().unwrap(/*safe - caller sees isShared flag*/));
+}
+
+JS_PUBLIC_API bool JS::IsArrayBufferViewShared(JSObject* obj) {
+  ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
+  if (!view) {
+    return false;
+  }
+  return view->isSharedMemory();
 }
