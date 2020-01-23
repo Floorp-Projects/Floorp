@@ -2902,7 +2902,7 @@ gfx.adapter:
     description: >
       Graphics adapter device identification
       This is a temporary workaround for some early telemetry system issues. See Bug 1601091 for more information
-    expires: "74"
+    expires: "76"
     kind: string
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
@@ -3024,7 +3024,7 @@ gfx:
     description: >
       Name of the graphics compositor in use. possible values are "opengl, d3d11, client, webrender or basic".
       This is a temporary workaround for some early telemetry system issues. See Bug 1601091 for more information
-    expires: "74"
+    expires: "76"
     kind: string
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
