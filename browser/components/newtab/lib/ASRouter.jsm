@@ -555,6 +555,8 @@ class _ASRouter {
     this.dispatch = this.dispatch.bind(this);
     this._onLocaleChanged = this._onLocaleChanged.bind(this);
     this.isUnblockedMessage = this.isUnblockedMessage.bind(this);
+    this.renderWNMessages = this.renderWNMessages.bind(this);
+    this.forceWNPanel = this.forceWNPanel.bind(this);
   }
 
   async onPrefChange(prefName) {
@@ -2064,6 +2066,21 @@ class _ASRouter {
     await this._sendMessageToTarget(message, target, trigger);
   }
 
+  renderWNMessages(browserWindow, messageIds) {
+    let messages = messageIds.map(msgId => this.getMessageById(msgId));
+
+    ToolbarPanelHub.forceShowMessage(browserWindow, messages);
+  }
+
+  async forceWNPanel(browserWindow) {
+    await ToolbarPanelHub.enableToolbarButton();
+
+    browserWindow.PanelUI.showSubView(
+      "PanelUI-whatsNew",
+      browserWindow.document.getElementById("whats-new-menu-button")
+    );
+  }
+
   /* eslint-disable complexity */
   async onMessage({ data: action, target }) {
     switch (action.type) {
@@ -2203,6 +2220,12 @@ class _ASRouter {
         break;
       case "FORCE_ATTRIBUTION":
         this.forceAttribution(action.data);
+        break;
+      case "FORCE_WHATSNEW_PANEL":
+        this.forceWNPanel(target.browser.ownerGlobal);
+        break;
+      case "RENDER_WHATSNEW_MESSAGES":
+        this.renderWNMessages(target.browser.ownerGlobal, action.data);
         break;
       default:
         Cu.reportError("Unknown message received");

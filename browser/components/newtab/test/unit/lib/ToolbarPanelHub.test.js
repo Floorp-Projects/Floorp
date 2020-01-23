@@ -688,10 +688,10 @@ describe("ToolbarPanelHub", () => {
       let removeMessagesSpy;
       let renderMessagesStub;
       let addEventListenerStub;
-      let message;
+      let messages;
       let browser;
       beforeEach(async () => {
-        message = (await PanelTestProvider.getMessages()).find(
+        messages = (await PanelTestProvider.getMessages()).find(
           m => m.id === "WHATS_NEW_70_1"
         );
         removeMessagesSpy = sandbox.spy(instance, "removeMessages");
@@ -703,13 +703,13 @@ describe("ToolbarPanelHub", () => {
         fakeElementById.querySelectorAll.returns([fakeElementById]);
       });
       it("should call removeMessages when forcing a message to show", () => {
-        instance.forceShowMessage(browser, message);
+        instance.forceShowMessage(browser, messages);
 
         assert.calledOnce(removeMessagesSpy);
         assert.calledWithExactly(removeMessagesSpy, fakeWindow, panelSelector);
       });
       it("should call renderMessages when forcing a message to show", () => {
-        instance.forceShowMessage(browser, message);
+        instance.forceShowMessage(browser, messages);
 
         assert.calledOnce(renderMessagesStub);
         assert.calledWithExactly(
@@ -719,12 +719,12 @@ describe("ToolbarPanelHub", () => {
           panelSelector,
           {
             force: true,
-            messages: [message],
+            messages: Array.isArray(messages) ? messages : [messages],
           }
         );
       });
       it("should cleanup after the panel is hidden when forcing a message to show", () => {
-        instance.forceShowMessage(browser, message);
+        instance.forceShowMessage(browser, messages);
 
         assert.calledOnce(addEventListenerStub);
         assert.calledWithExactly(
