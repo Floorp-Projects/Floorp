@@ -252,9 +252,9 @@ impl AndroidHandler {
                 debug!("Pushing {} to {}", profile.path.display(), self.profile.display());
                 process.device.push_dir(&profile.path, &self.profile, 0o777)?;
 
-                // Pushing GeckoView configuration file to the device
-                let mut target_path = PathBuf::from("/data/local/tmp");
-                target_path.push(&format!("{}-geckoview-config.yaml", process.package));
+                let target_path = PathBuf::from(format!(
+                    "/data/local/tmp/{}-geckoview-config.yaml",
+                    process.package));
 
                 let contents = self.generate_config_file(env)?;
                 debug!("Content of generated GeckoView config file:\n{}", contents);
