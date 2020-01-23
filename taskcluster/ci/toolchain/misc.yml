@@ -182,10 +182,28 @@ wrench-deps:
         docker-image: {in-tree: webrender}
     run:
         script: wrench-deps-vendoring.sh
-        sparse-profile: null  # need all of gfx/wr checked out for this script
+        sparse-profile: null
         resources:
             - 'gfx/wr/Cargo.lock'
         toolchain-artifact: public/build/wrench-deps.tar.bz2
+    fetches:
+        fetch:
+            - android-rs-glue
+        toolchain:
+            - linux64-rust-1.39  # whatever m-c is built with
+
+wgpu-deps:
+    description: "Downloads all the crates needed for testing wgpu"
+    treeherder:
+        symbol: Wgpu(deps)
+    worker:
+        docker-image: {in-tree: wgpu}
+    run:
+        script: wgpu-deps-vendoring.sh
+        sparse-profile: null
+        resources:
+            - 'gfx/wgpu/Cargo.lock'
+        toolchain-artifact: public/build/wgpu-deps.tar.bz2
     fetches:
         fetch:
             - android-rs-glue

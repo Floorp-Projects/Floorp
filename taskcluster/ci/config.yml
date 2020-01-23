@@ -135,6 +135,7 @@ treeherder:
         'UV': 'Update verify'
         'pipfu': 'pipfile update'
         'WR': 'WebRender standalone'
+        'Wgpu': 'WebGPU standalone'
         'Gd': 'Geckodriver'
         'cpp': 'C/C++ checks'
         'pedantic': 'pedantic checks'
