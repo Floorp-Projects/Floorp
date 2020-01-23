@@ -1817,9 +1817,6 @@ class InlineOptionsBrowser extends HTMLElement {
         // Select boxes can appear in the wrong spot after scrolling, this will
         // clear that up. Bug 1390445.
         this.browser.frameLoader.requestUpdatePosition();
-        // Sometimes after scrolling the inner brower needs to repaint to get
-        // the right mouse position. Force that to happen. Bug 1548687.
-        window.windowUtils.flushApzRepaints();
       }
     }, 100);
   }
