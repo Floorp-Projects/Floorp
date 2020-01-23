@@ -13,8 +13,8 @@ pycodestyle==2.5.0 \
 setuptools==40.7.1 \
     --hash=sha256:252520b7969fb4f2fcaf08c014b2891041d56f31180ec0d581297a28597205ff \
     --hash=sha256:5926bbea397d0fcec2f7946f1691f5820ef0234247b2d5fa83d30cc216d613ec
-autopep8==1.4.3 \
-    --hash=sha256:33d2b5325b7e1afb4240814fe982eea3a92ebea712869bfd08b3c0393404248c
+autopep8==1.5 \
+    --hash=sha256:0f592a0447acea0c2b0a9602be1e4e3d86db52badd2e3c84f0193bfd89fd3a43
 entrypoints==0.3 \
     --hash=sha256:589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19 \
     --hash=sha256:c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451
