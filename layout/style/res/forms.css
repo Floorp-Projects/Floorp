@@ -148,7 +148,7 @@ textarea .anonymous-div,
 input .anonymous-div,
 input::placeholder,
 textarea::placeholder,
-input .preview-div
+input .preview-div,
 textarea .preview-div {
   overflow: auto;
   border: 0px;
@@ -784,8 +784,8 @@ input[type="submit"]:disabled {
   *  the <optgroup> gets displayed. The <option>s don't use anonymous boxes,
   *  so they need no special rules.
   */
-textarea > .anonymous-div,
-input > .anonymous-div,
+textarea .anonymous-div,
+input .anonymous-div,
 input::placeholder,
 textarea::placeholder,
 *|*::-moz-button-content,
