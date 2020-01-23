@@ -95,7 +95,7 @@ class AbstractAmazonPushServiceTest {
         verify(processor).onError(captor.capture())
 
         assertTrue(captor.value is PushError.Registration)
-        assertTrue(captor.value.desc.contains("registration failed"))
+        assertTrue(captor.value.message.contains("registration failed"))
     }
 
     @Test
@@ -111,7 +111,7 @@ class AbstractAmazonPushServiceTest {
         verify(processor).onError(captor.capture())
 
         assertTrue(captor.value is PushError.MalformedMessage)
-        assertTrue(captor.value.desc.contains("NoSuchElementException"))
+        assertTrue(captor.value.message.contains("NoSuchElementException"))
     }
 
     @Test

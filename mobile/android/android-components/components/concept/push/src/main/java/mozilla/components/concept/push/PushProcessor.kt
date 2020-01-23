@@ -95,13 +95,16 @@ data class EncryptedPushMessage(
 /**
  *  Various error types.
  */
-sealed class PushError(open val desc: String) {
-    data class Registration(override val desc: String) : PushError(desc)
-    data class Network(override val desc: String) : PushError(desc)
+sealed class PushError(override val message: String) : Exception() {
+    data class Registration(override val message: String) : PushError(message)
+    data class Network(override val message: String) : PushError(message)
     /**
      * @property cause Original exception from Rust code.
      */
-    data class Rust(val cause: Exception) : PushError(cause.toString())
-    data class MalformedMessage(override val desc: String) : PushError(desc)
-    data class ServiceUnavailable(override val desc: String) : PushError(desc)
+    data class Rust(
+        override val cause: Throwable?,
+        override val message: String = cause?.message.orEmpty()
+    ) : PushError(message)
+    data class MalformedMessage(override val message: String) : PushError(message)
+    data class ServiceUnavailable(override val message: String) : PushError(message)
 }
