@@ -23,6 +23,13 @@
         "description": "Returns the value of the 'extensions.screenshots.upload-disabled' preference",
         "parameters": [],
         "async": true
+      },
+      {
+        "name": "initLibraryButton",
+        "type": "function",
+        "description": "Initializes the Photon-based Library menu item for Screenshots",
+        "parameters": [],
+        "async": true
       }
     ]
   }

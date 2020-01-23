@@ -12,27 +12,6 @@
 */
 const startTime = Date.now();
 
-// Set up to be able to use fluent:
-(function() {
-  let link = document.createElement("link");
-  link.setAttribute("rel", "localization");
-  link.setAttribute("href", "browser/screenshots.ftl");
-  document.head.appendChild(link);
-
-  link = document.createElement("link");
-  link.setAttribute("rel", "localization");
-  link.setAttribute("href", "browser/branding/brandings.ftl");
-  document.head.appendChild(link);
-})();
-
-this.getStrings = async function(ids) {
-  if (document.readyState != "complete") {
-    await new Promise(resolve => window.addEventListener("load", resolve, {once: true}));
-  }
-  await document.l10n.ready;
-  return document.l10n.formatValues(ids);
-}
-
 this.startBackground = (function() {
   const exports = {startTime};
 
@@ -62,13 +41,11 @@ this.startBackground = (function() {
     });
   });
 
-  this.getStrings([{id: "screenshots-context-menu"}]).then(msgs => {
-    browser.contextMenus.create({
-      id: "create-screenshot",
-      title: msgs[0],
-      contexts: ["page", "selection"],
-      documentUrlPatterns: ["<all_urls>", "about:reader*"],
-    });
+  browser.contextMenus.create({
+    id: "create-screenshot",
+    title: browser.i18n.getMessage("contextMenuLabel"),
+    contexts: ["page", "selection"],
+    documentUrlPatterns: ["<all_urls>", "about:reader*"],
   });
 
   browser.contextMenus.onClicked.addListener((info, tab) => {

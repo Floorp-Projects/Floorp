@@ -1,0 +1,187 @@
+{
+  "addonDescription": {
+    "message": "จับภาพหน้าจอจากเว็บและบันทึกไว้ชั่วคราวหรือถาวร"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "จับภาพหน้าจอ"
+  },
+  "myShotsLink": {
+    "message": "ภาพหน้าจอของฉัน"
+  },
+  "screenshotInstructions": {
+    "message": "ลากหรือคลิกที่หน้าเพื่อเลือกบริเวณ กด ESC เพื่อยกเลิก"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "บันทึก"
+  },
+  "uploadScreenshotSelectedArea": {
+    "message": "อัปโหลด"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "บันทึกส่วนที่มองเห็น"
+  },
+  "saveScreenshotFullPage": {
+    "message": "บันทึกเต็มหน้า"
+  },
+  "cancelScreenshot": {
+    "message": "ยกเลิก"
+  },
+  "downloadScreenshot": {
+    "message": "ดาวน์โหลด"
+  },
+  "downloadScreenshotTitle": {
+    "message": "ดาวน์โหลดภาพหน้าจอ"
+  },
+  "downloadOnlyNotice": {
+    "message": "คุณกำลังอยู่ในโหมดดาวน์โหลดเท่านั้น"
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots จะเปลี่ยนเป็นโหมดดาวน์โหลดอย่างเดียวโดยอัตโนมัติในสถานการณ์เหล่านี้:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "ในหน้าต่างการท่องเว็บแบบส่วนตัว"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "คุกกี้บุคคลที่สามถูกปิดการใช้งาน"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“ไม่จดจำประวัติเสมอ” ถูกเปิดใช้งานอยู่"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "คุณกำลังใช้ Firefox ESR"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "อัปโหลดได้ถูกปิดใช้งาน"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "คัดลอกลิงก์แล้ว"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "คัดลอกลิงก์ไปยังภาพหน้าจอของคุณไปยังคลิปบอร์ดแล้ว กด $META_KEY$-V เพื่อวาง",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "คัดลอก"
+  },
+  "copyScreenshotTitle": {
+    "message": "คัดลอกภาพหน้าจอไปยังคลิปบอร์ด"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "คัดลอกภาพหน้าจอแล้ว"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "คัดลอกภาพของคุณไปยังคลิปบอร์ดแล้ว กด $META_KEY$-V เพื่อวาง",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "ภาพที่บันทึกจะถูกครอบตัดให้มีความสูง $PIXELS$ พิกเซล",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "ใช้งานไม่ได้"
+  },
+  "requestErrorDetails": {
+    "message": "ขออภัย! เราไม่สามารถบันทึกภาพหน้าจอของคุณ โปรดลองอีกครั้งในภายหลัง"
+  },
+  "connectionErrorTitle": {
+    "message": "เราไม่สามารถเชื่อมต่อกับภาพหน้าจอของคุณ"
+  },
+  "connectionErrorDetails": {
+    "message": "โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ หากคุณสามารถเชื่อมต่ออินเทอร์เน็ต บริการ Firefox Screenshots อาจมีปัญหาชั่วคราว"
+  },
+  "loginErrorDetails": {
+    "message": "เราไม่สามารถบันทึกภาพหน้าจอของคุณเนื่องจากบริการ Firefox Screenshots มีปัญหา โปรดลองอีกครั้งในภายหลัง"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "เราไม่สามารถจับภาพหน้าจอหน้านี้"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "นี่ไม่ใช่หน้าเว็บมาตรฐาน คุณจึงไม่สามารถจับภาพหน้าจอได้"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "คุณไม่สามารถจับภาพหน้าจอของหน้า Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "การเลือกของคุณเล็กเกินไป"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots ถูกปิดใช้งานในโหมดการท่องเว็บแบบส่วนตัว"
+  },
+  "privateWindowErrorDetails": {
+    "message": "ขออภัยในความไม่สะดวก เรากำลังพัฒนาคุณลักษณะนี้สำหรับรุ่นในอนาคต"
+  },
+  "genericErrorTitle": {
+    "message": "โอ๊ย! Firefox Screenshots รวน"
+  },
+  "genericErrorDetails": {
+    "message": "เราไม่แน่ใจว่าเกิดอะไรขึ้น ต้องการลองอีกครั้งหรือจับภาพหน้าจอของหน้าอื่น?"
+  },
+  "tourBodyIntroServerless": {
+    "message": "จับ คัดลอก และดาวน์โหลดภาพหน้าจอโดยไม่ต้องออกจาก Firefox"
+  },
+  "tourHeaderPageAction": {
+    "message": "หนทางใหม่ในการบันทึก"
+  },
+  "tourBodyPageAction": {
+    "message": "ขยายเมนูการกระทำหน้าในแถบที่อยู่ทุกครั้งที่คุณต้องการจับภาพหน้าจอ"
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "จับภาพแค่สิ่งที่คุณต้องการ"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "คลิกแล้วลากเพื่อจับภาพแค่บางส่วนของหน้า คุณยังสามารถวางเมาส์เพื่อเน้นการเลือกของคุณ"
+  },
+  "tourHeaderFullPage": {
+    "message": "จับภาพหน้าต่างหรือทั้งหน้า"
+  },
+  "tourBodyFullPage": {
+    "message": "คลิกที่ปุ่มด้านบนขวาเพื่อจับภาพพื้นที่ที่มองเห็นในหน้าต่างหรือเพื่อจับภาพทั้งหน้า"
+  },
+  "tourSkip": {
+    "message": "ข้าม"
+  },
+  "tourNext": {
+    "message": "ภาพนิ่งถัดไป"
+  },
+  "tourPrevious": {
+    "message": "ภาพนิ่งก่อนหน้า"
+  },
+  "tourDone": {
+    "message": "เสร็จสิ้น"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "เพื่อใช้ Firefox Screenshots คุณยอมรับ $TERMSANDPRIVACYNOTICETERMSLINK$ และ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ของเรา",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "ข้อกำหนด"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ประกาศความเป็นส่วนตัว"
+  },
+  "libraryLabel": {
+    "message": "ภาพหน้าจอ"
+  }
+}

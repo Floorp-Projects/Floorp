@@ -25,6 +25,370 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org'] += [
   'sitehelper.js'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ach"] += [
+  '_locales/ach/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ar"] += [
+  '_locales/ar/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ast"] += [
+  '_locales/ast/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["az"] += [
+  '_locales/az/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["be"] += [
+  '_locales/be/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["bg"] += [
+  '_locales/bg/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["bn_BD"] += [
+  '_locales/bn_BD/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["br"] += [
+  '_locales/br/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["bs"] += [
+  '_locales/bs/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ca"] += [
+  '_locales/ca/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["cak"] += [
+  '_locales/cak/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["crh"] += [
+  '_locales/crh/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["cs"] += [
+  '_locales/cs/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["cy"] += [
+  '_locales/cy/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["da"] += [
+  '_locales/da/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["de"] += [
+  '_locales/de/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["dsb"] += [
+  '_locales/dsb/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["el"] += [
+  '_locales/el/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["en_US"] += [
+  '_locales/en_US/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["eo"] += [
+  '_locales/eo/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["es_AR"] += [
+  '_locales/es_AR/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["es_CL"] += [
+  '_locales/es_CL/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["es_ES"] += [
+  '_locales/es_ES/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["es_MX"] += [
+  '_locales/es_MX/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["et"] += [
+  '_locales/et/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["eu"] += [
+  '_locales/eu/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["fa"] += [
+  '_locales/fa/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ff"] += [
+  '_locales/ff/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["fi"] += [
+  '_locales/fi/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["fr"] += [
+  '_locales/fr/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["fy_NL"] += [
+  '_locales/fy_NL/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ga_IE"] += [
+  '_locales/ga_IE/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["gd"] += [
+  '_locales/gd/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["gl"] += [
+  '_locales/gl/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["gn"] += [
+  '_locales/gn/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["gu_IN"] += [
+  '_locales/gu_IN/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["he"] += [
+  '_locales/he/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["hi_IN"] += [
+  '_locales/hi_IN/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["hr"] += [
+  '_locales/hr/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["hsb"] += [
+  '_locales/hsb/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["hu"] += [
+  '_locales/hu/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["hy_AM"] += [
+  '_locales/hy_AM/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ia"] += [
+  '_locales/ia/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["id"] += [
+  '_locales/id/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["it"] += [
+  '_locales/it/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ja"] += [
+  '_locales/ja/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ka"] += [
+  '_locales/ka/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["kab"] += [
+  '_locales/kab/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["kk"] += [
+  '_locales/kk/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["km"] += [
+  '_locales/km/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["kn"] += [
+  '_locales/kn/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ko"] += [
+  '_locales/ko/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["lij"] += [
+  '_locales/lij/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["lo"] += [
+  '_locales/lo/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["lt"] += [
+  '_locales/lt/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["mai"] += [
+  '_locales/mai/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["mk"] += [
+  '_locales/mk/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ml"] += [
+  '_locales/ml/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["mn"] += [
+  '_locales/mn/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["mr"] += [
+  '_locales/mr/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ms"] += [
+  '_locales/ms/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["my"] += [
+  '_locales/my/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["nb_NO"] += [
+  '_locales/nb_NO/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ne_NP"] += [
+  '_locales/ne_NP/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["nl"] += [
+  '_locales/nl/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["nn_NO"] += [
+  '_locales/nn_NO/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["pa_IN"] += [
+  '_locales/pa_IN/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["pl"] += [
+  '_locales/pl/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["pt_BR"] += [
+  '_locales/pt_BR/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["pt_PT"] += [
+  '_locales/pt_PT/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["rm"] += [
+  '_locales/rm/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ro"] += [
+  '_locales/ro/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ru"] += [
+  '_locales/ru/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["si"] += [
+  '_locales/si/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sk"] += [
+  '_locales/sk/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sl"] += [
+  '_locales/sl/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sq"] += [
+  '_locales/sq/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sr"] += [
+  '_locales/sr/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["su"] += [
+  '_locales/su/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sv_SE"] += [
+  '_locales/sv_SE/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ta"] += [
+  '_locales/ta/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["te"] += [
+  '_locales/te/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["th"] += [
+  '_locales/th/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["tl"] += [
+  '_locales/tl/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["tr"] += [
+  '_locales/tr/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["uk"] += [
+  '_locales/uk/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["ur"] += [
+  '_locales/ur/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["uz"] += [
+  '_locales/uz/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["vi"] += [
+  '_locales/vi/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["zh_CN"] += [
+  '_locales/zh_CN/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["zh_TW"] += [
+  '_locales/zh_TW/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["background"] += [
   'background/analytics.js',
   'background/auth.js',
@@ -40,6 +404,8 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["background"] += [
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["build"] += [
   'build/buildSettings.js',
   'build/inlineSelectionCss.js',
+  'build/onboardingCss.js',
+  'build/onboardingHtml.js',
   'build/raven.js',
   'build/selection.js',
   'build/shot.js',
@@ -52,10 +418,13 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["experiments"]["screensho
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["icons"] += [
+  'icons/back-highlight.svg',
+  'icons/back.svg',
   'icons/cancel.svg',
   'icons/cloud.svg',
   'icons/copied-notification.svg',
   'icons/copy.svg',
+  'icons/done.svg',
   'icons/download-white.svg',
   'icons/download.svg',
   'icons/help-16.svg',
@@ -66,6 +435,15 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["icons"] += [
   'icons/menu-myshot-white.svg',
   'icons/menu-myshot.svg',
   'icons/menu-visible.svg',
+  'icons/onboarding-1.png',
+  'icons/onboarding-2.png',
+  'icons/onboarding-3.png',
+  'icons/onboarding-4.png'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["onboarding"] += [
+  'onboarding/slides.html',
+  'onboarding/slides.js'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["selector"] += [
