@@ -2390,7 +2390,8 @@ class nsContentUtils {
    * allowed for the given subject principal. These are only allowed if the user
    * initiated them (like with a mouse-click or key press).
    */
-  static bool IsCutCopyAllowed(nsIPrincipal& aSubjectPrincipal);
+  static bool IsCutCopyAllowed(Document* aDocument,
+                               nsIPrincipal& aSubjectPrincipal);
 
   /*
    * Returns true if the browser should attempt to prevent the given caller type

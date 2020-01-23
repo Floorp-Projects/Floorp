@@ -6612,9 +6612,10 @@ bool nsContentUtils::ChannelShouldInheritPrincipal(
 }
 
 /* static */
-bool nsContentUtils::IsCutCopyAllowed(nsIPrincipal& aSubjectPrincipal) {
-  if (StaticPrefs::dom_allow_cut_copy() &&
-      UserActivation::IsHandlingUserInput()) {
+bool nsContentUtils::IsCutCopyAllowed(Document* aDocument,
+                                      nsIPrincipal& aSubjectPrincipal) {
+  if (StaticPrefs::dom_allow_cut_copy() && aDocument &&
+      aDocument->HasValidTransientUserGestureActivation()) {
     return true;
   }
 
