@@ -176,6 +176,9 @@ class nsNavHistory final : public nsSupportsWeakReference,
   // Returns whether history is enabled or not.
   bool IsHistoryDisabled() { return !mHistoryEnabled; }
 
+  // Returns whether or not diacritics must match in history text searches.
+  bool MatchDiacritics() const { return mMatchDiacritics; }
+
   // Constants for the columns returned by the above statement.
   static const int32_t kGetInfoIndex_PageID;
   static const int32_t kGetInfoIndex_URL;
@@ -482,6 +485,10 @@ class nsNavHistory final : public nsSupportsWeakReference,
   // Whether history is enabled or not.
   // Will mimic value of the places.history.enabled preference.
   bool mHistoryEnabled;
+
+  // Whether or not diacritics must match in history text searches.
+  // Will mimic value of the places.search.matchDiacritics preference.
+  bool mMatchDiacritics;
 
   // Frecency preferences.
   int32_t mNumVisitsForFrecency;

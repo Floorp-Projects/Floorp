@@ -19,7 +19,6 @@
 #include "mozilla/Casting.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
-#include "nsAutoPtr.h"
 
 using namespace js;
 using namespace JS;

@@ -265,8 +265,11 @@ function terminalInputChanged(expression) {
 
 function getEagerEvaluationResult(response) {
   const result = response.exception || response.result;
-  // Don't show syntax errors or undefined results to the user.
-  if (!result || result.isSyntaxError || result.type == "undefined") {
+  // Don't show syntax errors results to the user.
+  if (
+    (result && result.isSyntaxError) ||
+    (result && result.type == "undefined")
+  ) {
     return null;
   }
 

@@ -6,6 +6,7 @@
 
 #include "nsLegendFrame.h"
 
+#include "mozilla/dom/HTMLLegendElement.h"
 #include "mozilla/PresShell.h"
 #include "ComputedStyle.h"
 #include "nsIContent.h"
@@ -58,26 +59,31 @@ void nsLegendFrame::Reflow(nsPresContext* aPresContext,
                               aStatus);
 }
 
-int32_t nsLegendFrame::GetLogicalAlign(WritingMode aCBWM) {
-  int32_t intValue = NS_STYLE_TEXT_ALIGN_START;
-  nsGenericHTMLElement* content = nsGenericHTMLElement::FromNode(mContent);
-  if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::align);
-    if (attr && attr->Type() == nsAttrValue::eEnum) {
-      intValue = attr->GetEnumValue();
-      switch (intValue) {
-        case NS_STYLE_TEXT_ALIGN_LEFT:
-          intValue = aCBWM.IsBidiLTR() ? NS_STYLE_TEXT_ALIGN_START
-                                       : NS_STYLE_TEXT_ALIGN_END;
-          break;
-        case NS_STYLE_TEXT_ALIGN_RIGHT:
-          intValue = aCBWM.IsBidiLTR() ? NS_STYLE_TEXT_ALIGN_END
-                                       : NS_STYLE_TEXT_ALIGN_START;
-          break;
-      }
-    }
+dom::HTMLLegendElement::LegendAlignValue nsLegendFrame::GetLogicalAlign(
+    WritingMode aCBWM) {
+  using LegendAlignValue = dom::HTMLLegendElement::LegendAlignValue;
+
+  auto* element = nsGenericHTMLElement::FromNode(mContent);
+  if (!element) {
+    return LegendAlignValue::InlineStart;
   }
-  return intValue;
+
+  const nsAttrValue* attr = element->GetParsedAttr(nsGkAtoms::align);
+  if (!attr || attr->Type() != nsAttrValue::eEnum) {
+    return LegendAlignValue::InlineStart;
+  }
+
+  auto value = static_cast<LegendAlignValue>(attr->GetEnumValue());
+  switch (value) {
+    case LegendAlignValue::Left:
+      return aCBWM.IsBidiLTR() ? LegendAlignValue::InlineStart
+                               : LegendAlignValue::InlineEnd;
+    case LegendAlignValue::Right:
+      return aCBWM.IsBidiLTR() ? LegendAlignValue::InlineEnd
+                               : LegendAlignValue::InlineStart;
+    default:
+      return value;
+  }
 }
 
 #ifdef DEBUG_FRAME_DUMP

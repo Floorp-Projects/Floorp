@@ -87,7 +87,7 @@ const kInputTypes = {
 /**
  * An object containing all implemented TouchBarInput objects.
  */
-const kBuiltInInputs = {
+var gBuiltInInputs = {
   Back: {
     title: "back",
     image: "chrome://browser/skin/back.svg",
@@ -164,6 +164,7 @@ const kBuiltInInputs = {
     disabled: true, // Updated when the page is found to be Reader View-able.
   },
   OpenLocation: {
+    key: "open-location",
     title: "open-location",
     image: "chrome://browser/skin/search-glass.svg",
     type: kInputTypes.MAIN_BUTTON,
@@ -244,6 +245,7 @@ var localizedStrings = {};
 
 const kHelperObservers = new Set([
   "bookmark-icon-updated",
+  "fullscreen-painted",
   "reader-mode-available",
   "touchbar-location-change",
   "quit-application",
@@ -265,11 +267,7 @@ class TouchBarHelper {
     // created/destroyed for the urlbar-focus/blur events.
     this._searchPopover = this.getTouchBarInput("SearchPopover");
 
-    // The test machines do not have Touch Bars, so _inputsNotUpdated is never
-    // initialized. This causes problems in the tests.
-    if (Cu.isInAutomation) {
-      this._inputsNotUpdated = new Set();
-    }
+    this._inputsNotUpdated = new Set();
   }
 
   destructor() {
@@ -296,18 +294,19 @@ class TouchBarHelper {
       Ci.nsIMutableArray
     );
 
-    for (let inputName of Object.keys(kBuiltInInputs)) {
+    // Every input must be updated at least once so that all assets (titles,
+    // icons) are loaded. We keep track of which inputs haven't updated and
+    // run an update on them ASAP.
+    this._inputsNotUpdated.clear();
+
+    for (let inputName of Object.keys(gBuiltInInputs)) {
       let input = this.getTouchBarInput(inputName);
       if (!input) {
         continue;
       }
+      this._inputsNotUpdated.add(inputName);
       layoutItems.appendElement(input);
     }
-
-    // Every input must be updated at least once so that all assets (titles,
-    // icons) are loaded. We keep track of which inputs haven't updated and
-    // run an update on them after the first location change.
-    this._inputsNotUpdated = new Set(Object.keys(kBuiltInInputs));
 
     return layoutItems;
   }
@@ -343,11 +342,11 @@ class TouchBarHelper {
       return this._searchPopover;
     }
 
-    if (!inputName || !kBuiltInInputs.hasOwnProperty(inputName)) {
+    if (!inputName || !gBuiltInInputs.hasOwnProperty(inputName)) {
       return null;
     }
 
-    let inputData = kBuiltInInputs[inputName];
+    let inputData = gBuiltInInputs[inputName];
 
     let item = new TouchBarInput(inputData);
 
@@ -361,7 +360,7 @@ class TouchBarHelper {
     }
 
     // Async l10n fills in the localized input labels after the initial load.
-    this._l10n.formatValue(item.key).then(result => {
+    this._l10n.formatValue(inputData.title).then(result => {
       item.title = result;
       localizedStrings[inputData.title] = result; // Cache result.
       // Checking TouchBarHelper.window since this callback can fire after all windows are closed.
@@ -381,7 +380,7 @@ class TouchBarHelper {
   /**
    * Fetches a specific Touch Bar Input by name and updates it on the Touch Bar.
    * @param {...*} inputNames
-   *        A key/keys to a value/values in the kBuiltInInputs object in this file.
+   *        A key/keys to a value/values in the gBuiltInInputs object in this file.
    */
   _updateTouchBarInputs(...inputNames) {
     if (!TouchBarHelper.window || !inputNames.length) {
@@ -389,14 +388,13 @@ class TouchBarHelper {
     }
 
     let inputs = [];
-    for (let inputName of new Set(inputNames)) {
+    for (let inputName of new Set([...inputNames, ...this._inputsNotUpdated])) {
       let input = this.getTouchBarInput(inputName);
       if (!input) {
         continue;
       }
-      if (this._inputsNotUpdated) {
-        this._inputsNotUpdated.delete(inputName);
-      }
+
+      this._inputsNotUpdated.delete(inputName);
       inputs.push(input);
     }
 
@@ -433,28 +431,43 @@ class TouchBarHelper {
         this.activeUrl = data;
         // ReaderView button is disabled on every location change since
         // Reader View must determine if the new page can be Reader Viewed.
-        kBuiltInInputs.ReaderView.disabled = !data.startsWith("about:reader");
-        kBuiltInInputs.Back.disabled = !TouchBarHelper.window.gBrowser
+        gBuiltInInputs.ReaderView.disabled = !data.startsWith("about:reader");
+        gBuiltInInputs.Back.disabled = !TouchBarHelper.window.gBrowser
           .canGoBack;
-        kBuiltInInputs.Forward.disabled = !TouchBarHelper.window.gBrowser
+        gBuiltInInputs.Forward.disabled = !TouchBarHelper.window.gBrowser
           .canGoForward;
-        this._updateTouchBarInputs(
-          "ReaderView",
-          "Back",
-          "Forward",
-          ...this._inputsNotUpdated
-        );
+        this._updateTouchBarInputs("ReaderView", "Back", "Forward");
+        break;
+      case "fullscreen-painted":
+        if (TouchBarHelper.window.document.fullscreenElement) {
+          gBuiltInInputs.OpenLocation.title = "touchbar-fullscreen-exit";
+          gBuiltInInputs.OpenLocation.image =
+            "chrome://browser/skin/fullscreen-exit.svg";
+          gBuiltInInputs.OpenLocation.callback = () => {
+            TouchBarHelper.window.windowUtils.exitFullscreen();
+            let telemetry = Services.telemetry.getHistogramById(
+              "TOUCHBAR_BUTTON_PRESSES"
+            );
+            telemetry.add("OpenLocation");
+          };
+        } else {
+          gBuiltInInputs.OpenLocation.title = "open-location";
+          gBuiltInInputs.OpenLocation.image =
+            "chrome://browser/skin/search-glass.svg";
+          gBuiltInInputs.OpenLocation.callback = () =>
+            execCommand("Browser:OpenLocation", "OpenLocation");
+        }
+        this._updateTouchBarInputs("OpenLocation");
         break;
       case "bookmark-icon-updated":
-        data == "starred"
-          ? (kBuiltInInputs.AddBookmark.image =
-              "chrome://browser/skin/bookmark.svg")
-          : (kBuiltInInputs.AddBookmark.image =
-              "chrome://browser/skin/bookmark-hollow.svg");
+        gBuiltInInputs.AddBookmark.image =
+          data == "starred"
+            ? "chrome://browser/skin/bookmark.svg"
+            : "chrome://browser/skin/bookmark-hollow.svg";
         this._updateTouchBarInputs("AddBookmark");
         break;
       case "reader-mode-available":
-        kBuiltInInputs.ReaderView.disabled = false;
+        gBuiltInInputs.ReaderView.disabled = false;
         this._updateTouchBarInputs("ReaderView");
         break;
       case "urlbar-focus":
@@ -487,7 +500,7 @@ class TouchBarHelper {
         this._l10n = new Localization(["browser/touchbar/touchbar.ftl"]);
         helperProto._l10n = this._l10n;
 
-        this._updateTouchBarInputs(...Object.keys(kBuiltInInputs));
+        this._updateTouchBarInputs(...Object.keys(gBuiltInInputs));
         break;
       case "quit-application":
         this.destructor();

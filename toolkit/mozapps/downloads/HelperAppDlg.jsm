@@ -6,10 +6,20 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "EnableDelayHelper",
   "resource://gre/modules/SharedPromptUtils.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gReputationService",
+  "@mozilla.org/reputationservice/application-reputation-service;1",
+  Ci.nsIApplicationReputationService
 );
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -511,10 +521,14 @@ nsUnknownContentTypeDialog.prototype = {
     // if always-save and is-executable and no-handler
     // then set up simple ui
     var mimeType = this.mLauncher.MIMEInfo.MIMEType;
+    let isPlain = mimeType == "text/plain";
     var shouldntRememberChoice =
       mimeType == "application/octet-stream" ||
       mimeType == "application/x-msdownload" ||
-      this.mLauncher.targetFileIsExecutable;
+      this.mLauncher.targetFileIsExecutable ||
+      // Do not offer to remember text/plain mimetype choices if the file
+      // isn't actually a 'plain' text file.
+      (isPlain && gReputationService.isBinary(suggestedFileName));
     if (
       (shouldntRememberChoice && !this.openWithDefaultOK()) ||
       Services.prefs.getBoolPref("browser.download.forbid_open_with")
@@ -567,7 +581,7 @@ nsUnknownContentTypeDialog.prototype = {
       // if (type == "application/octet-stream") {
       if (shouldntRememberChoice) {
         rememberChoice.checked = false;
-        rememberChoice.disabled = true;
+        rememberChoice.hidden = true;
       } else {
         rememberChoice.checked =
           !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling &&

@@ -494,16 +494,6 @@ class BrowserParent final : public PBrowserParent,
       ManagedEndpoint<PWindowGlobalParent>&& aEndpoint,
       const WindowGlobalInit& aInit);
 
-  already_AddRefed<PBrowserBridgeParent> AllocPBrowserBridgeParent(
-      const nsString& aPresentationURL, const nsString& aRemoteType,
-      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
-      const TabId& aTabId);
-
-  virtual mozilla::ipc::IPCResult RecvPBrowserBridgeConstructor(
-      PBrowserBridgeParent* aActor, const nsString& aPresentationURL,
-      const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
-      const uint32_t& aChromeFlags, const TabId& aTabId) override;
-
   mozilla::ipc::IPCResult RecvIsWindowSupportingProtectedMedia(
       const uint64_t& aOuterWindowID,
       IsWindowSupportingProtectedMediaResolver&& aResolve);

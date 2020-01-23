@@ -347,6 +347,19 @@ AST_MATCHER(CXXDefaultArgExpr, isNullDefaultArg) {
                                              Expr::NPC_NeverValueDependent);
 }
 
+AST_MATCHER(UsingDirectiveDecl, isUsingNamespaceMozillaJava) {
+  const NamespaceDecl *Namespace = Node.getNominatedNamespace();
+  const std::string &FQName = Namespace->getQualifiedNameAsString();
+
+  static const char NAMESPACE[] = "mozilla::java";
+  static const char PREFIX[] = "mozilla::java::";
+
+  // We match both the `mozilla::java` namespace itself as well as any other
+  // namespaces contained within the `mozilla::java` namespace.
+  return !FQName.compare(NAMESPACE) ||
+         !FQName.compare(0, sizeof(PREFIX) - 1, PREFIX);
+}
+
 } // namespace ast_matchers
 } // namespace clang
 

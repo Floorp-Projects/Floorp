@@ -254,11 +254,13 @@ class MozconfigLoader(object):
                                 'action', 'dump_env.py')]
 
         try:
+            env = dict(os.environ)
+            env['PYTHONIOENCODING'] = 'utf-8'
             # We need to capture stderr because that's where the shell sends
             # errors if execution fails.
             output = six.ensure_text(subprocess.check_output(
                 command, stderr=subprocess.STDOUT, cwd=self.topsrcdir,
-                env=ensure_subprocess_env(os.environ), universal_newlines=True))
+                env=ensure_subprocess_env(env), universal_newlines=True))
         except subprocess.CalledProcessError as e:
             lines = e.output.splitlines()
 

@@ -25,6 +25,7 @@ const { AppConstants } = ChromeUtils.import(
  * @typedef {import("../@types/perf").PopupBackgroundFeatures} PopupBackgroundFeatures
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").PerformancePref} PerformancePref
+ * @typedef {import("../@types/perf").PresetDefinitions} PresetDefinitions
  */
 
 /** @type {PerformancePref["Entries"]} */
@@ -39,6 +40,8 @@ const THREADS_PREF = "devtools.performance.recording.threads";
 const OBJDIRS_PREF = "devtools.performance.recording.objdirs";
 /** @type {PerformancePref["Duration"]} */
 const DURATION_PREF = "devtools.performance.recording.duration";
+/** @type {PerformancePref["Preset"]} */
+const PRESET_PREF = "devtools.performance.recording.preset";
 
 // The following utilities are lazily loaded as they are not needed when controlling the
 // global state of the profiler, and only are used during specific funcationality like
@@ -262,16 +265,26 @@ function _getArrayOfStringsHostPref(prefName) {
 function getRecordingPreferencesFromBrowser() {
   // If you add a new preference here, please do not forget to update
   // `revertRecordingPreferences` as well.
+  const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF);
+  const presetName = Services.prefs.getCharPref(PRESET_PREF);
+
+  // First try to get the values from a preset.
+  const recordingPrefs = getRecordingPrefsFromPreset(presetName, objdirs);
+  if (recordingPrefs) {
+    return recordingPrefs;
+  }
+
+  // Next use the preferences to get the values.
   const entries = Services.prefs.getIntPref(ENTRIES_PREF);
   const interval = Services.prefs.getIntPref(INTERVAL_PREF);
   const features = _getArrayOfStringsPref(FEATURES_PREF);
   const threads = _getArrayOfStringsPref(THREADS_PREF);
-  const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF);
   const duration = Services.prefs.getIntPref(DURATION_PREF);
 
   const supportedFeatures = new Set(Services.profiler.GetFeatures());
 
   return {
+    presetName: "custom",
     entries,
     interval,
     // Validate the features before passing them to the profiler.
@@ -283,9 +296,44 @@ function getRecordingPreferencesFromBrowser() {
 }
 
 /**
+ * @param {string} presetName
+ * @param {string[]} objdirs
+ * @return {RecordingStateFromPreferences | null}
+ */
+function getRecordingPrefsFromPreset(presetName, objdirs) {
+  const { presets } = lazyRecordingUtils();
+
+  if (presetName === "custom") {
+    return null;
+  }
+
+  const preset = presets[presetName];
+  if (!preset) {
+    console.error(`Unknown profiler preset was encountered: "${presetName}"`);
+    return null;
+  }
+
+  const supportedFeatures = new Set(Services.profiler.GetFeatures());
+
+  return {
+    presetName,
+    entries: preset.entries,
+    // The interval is stored in preferences as microseconds, but the preset
+    // defines it in terms of milliseconds. Make the conversion here.
+    interval: preset.interval * 1000,
+    // Validate the features before passing them to the profiler.
+    features: preset.features.filter(feature => supportedFeatures.has(feature)),
+    threads: preset.threads,
+    objdirs,
+    duration: preset.duration,
+  };
+}
+
+/**
  * @param {RecordingStateFromPreferences} prefs
  */
 function setRecordingPreferencesOnBrowser(prefs) {
+  Services.prefs.setCharPref(PRESET_PREF, prefs.presetName);
   Services.prefs.setIntPref(ENTRIES_PREF, prefs.entries);
   // The interval pref stores the value in microseconds for extra precision.
   Services.prefs.setIntPref(INTERVAL_PREF, prefs.interval);
@@ -300,12 +348,33 @@ const platform = AppConstants.platform;
  * @type {() => void}
  */
 function revertRecordingPreferences() {
+  Services.prefs.clearUserPref(PRESET_PREF);
   Services.prefs.clearUserPref(ENTRIES_PREF);
   Services.prefs.clearUserPref(INTERVAL_PREF);
   Services.prefs.clearUserPref(FEATURES_PREF);
   Services.prefs.clearUserPref(THREADS_PREF);
   Services.prefs.clearUserPref(OBJDIRS_PREF);
   Services.prefs.clearUserPref(DURATION_PREF);
+}
+
+/**
+ * Change the prefs based on a preset. This mechanism is used by the popup to
+ * easily switch between different settings.
+ * @param {string} presetName
+ */
+function changePreset(presetName) {
+  const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF);
+  let recordingPrefs = getRecordingPrefsFromPreset(presetName, objdirs);
+
+  if (!recordingPrefs) {
+    // No recordingPrefs were found for that preset. Most likely this means this
+    // is a custom preset, or it's one that we dont recognize for some reason.
+    // Get the preferences from the individual preference values.
+    Services.prefs.setCharPref(PRESET_PREF, presetName);
+    recordingPrefs = getRecordingPreferencesFromBrowser();
+  }
+
+  setRecordingPreferencesOnBrowser(recordingPrefs);
 }
 
 /**
@@ -326,6 +395,7 @@ let _defaultPrefsForOlderFirefox;
 function getDefaultRecordingPreferencesForOlderFirefox() {
   if (!_defaultPrefsForOlderFirefox) {
     _defaultPrefsForOlderFirefox = {
+      presetName: "custom",
       entries: 10000000, // ~80mb,
       // Do not expire markers, let them roll off naturally from the circular buffer.
       duration: 0,
@@ -358,6 +428,7 @@ module.exports = {
   getRecordingPreferencesFromBrowser,
   setRecordingPreferencesOnBrowser,
   revertRecordingPreferences,
+  changePreset,
   getDefaultRecordingPreferencesForOlderFirefox,
 };
 

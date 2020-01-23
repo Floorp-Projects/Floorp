@@ -86,7 +86,7 @@ function makeColorTest(name, value, segments) {
         COLOR_TEST_CLASS +
         '" style="background-color:' +
         segment.name +
-        '"></span><span>' +
+        '" tabindex="0" role="button"></span><span>' +
         segment.name +
         "</span></span>";
     }

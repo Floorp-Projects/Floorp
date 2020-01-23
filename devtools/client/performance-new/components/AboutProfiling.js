@@ -37,6 +37,9 @@ const {
 const Settings = createFactory(
   require("devtools/client/performance-new/components/Settings.js")
 );
+const Presets = createFactory(
+  require("devtools/client/performance-new/components/Presets")
+);
 
 const selectors = require("devtools/client/performance-new/store/selectors");
 const {
@@ -112,7 +115,7 @@ class AboutProfiling extends PureComponent {
       ),
       // The presets aren't built yet, but this div serves as a place to put the
       // visual divider that is in the UX mock-up.
-      div({ className: "perf-presets" }),
+      Presets(),
       Settings()
     );
   }

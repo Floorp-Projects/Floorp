@@ -149,6 +149,11 @@ add_task(function test() {
       phrase: "mozilla mozzarella momo",
       expected: [[0, 2], [8, 2], [19, 4]],
     },
+    {
+      tokens: ["resume"],
+      phrase: "résumé",
+      expected: [[0, 6]],
+    },
   ];
   for (let { tokens, phrase, expected } of tests) {
     tokens = tokens.map(t => ({

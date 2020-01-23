@@ -72,6 +72,8 @@ function interval(state = 1, action) {
   switch (action.type) {
     case "CHANGE_INTERVAL":
       return action.interval;
+    case "CHANGE_PRESET":
+      return action.preset ? action.preset.interval : state;
     case "INITIALIZE_STORE":
       return action.recordingSettingsFromPreferences.interval;
     default:
@@ -87,6 +89,8 @@ function entries(state = 0, action) {
   switch (action.type) {
     case "CHANGE_ENTRIES":
       return action.entries;
+    case "CHANGE_PRESET":
+      return action.preset ? action.preset.entries : state;
     case "INITIALIZE_STORE":
       return action.recordingSettingsFromPreferences.entries;
     default:
@@ -102,6 +106,8 @@ function features(state = [], action) {
   switch (action.type) {
     case "CHANGE_FEATURES":
       return action.features;
+    case "CHANGE_PRESET":
+      return action.preset ? action.preset.features : state;
     case "INITIALIZE_STORE":
       return action.recordingSettingsFromPreferences.features;
     default:
@@ -117,6 +123,8 @@ function threads(state = [], action) {
   switch (action.type) {
     case "CHANGE_THREADS":
       return action.threads;
+    case "CHANGE_PRESET":
+      return action.preset ? action.preset.threads : state;
     case "INITIALIZE_STORE":
       return action.recordingSettingsFromPreferences.threads;
     default:
@@ -134,6 +142,27 @@ function objdirs(state = [], action) {
       return action.objdirs;
     case "INITIALIZE_STORE":
       return action.recordingSettingsFromPreferences.objdirs;
+    default:
+      return state;
+  }
+}
+
+/**
+ * The current preset name, used to select
+ * @type {Reducer<string>}
+ */
+function presetName(state = "", action) {
+  switch (action.type) {
+    case "INITIALIZE_STORE":
+      return action.recordingSettingsFromPreferences.presetName;
+    case "CHANGE_PRESET":
+      return action.presetName;
+    case "CHANGE_INTERVAL":
+    case "CHANGE_ENTRIES":
+    case "CHANGE_FEATURES":
+    case "CHANGE_THREADS":
+      // When updating any values, switch the preset over to "custom".
+      return "custom";
     default:
       return state;
   }
@@ -192,6 +221,7 @@ module.exports = combineReducers({
   features,
   threads,
   objdirs,
+  presetName,
   initializedValues,
   promptEnvRestart,
 });

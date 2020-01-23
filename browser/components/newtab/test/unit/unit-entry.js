@@ -36,6 +36,7 @@ chai.use(chaiAssertions);
 chai.use(chaiJsonSchema);
 
 const overrider = new GlobalOverrider();
+
 const RemoteSettings = name => ({
   get: () => {
     if (name === "attachment") {
@@ -47,6 +48,7 @@ const RemoteSettings = name => ({
   off: () => {},
 });
 RemoteSettings.pollChanges = () => {};
+
 const TEST_GLOBAL = {
   AddonManager: {
     getActiveAddons() {

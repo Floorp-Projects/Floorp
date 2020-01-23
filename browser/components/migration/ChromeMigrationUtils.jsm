@@ -250,12 +250,14 @@ var ChromeMigrationUtils = {
         "Chrome Beta": ["Google", "Chrome Beta"],
         Chromium: ["Chromium"],
         Canary: ["Google", "Chrome SxS"],
+        Edge: ["Microsoft", "Edge"],
         "Edge Beta": ["Microsoft", "Edge Beta"],
       },
       macosx: {
         Chrome: ["Google", "Chrome"],
         Chromium: ["Chromium"],
         Canary: ["Google", "Chrome Canary"],
+        Edge: ["Microsoft Edge"],
         "Edge Beta": ["Microsoft Edge Beta"],
       },
       linux: {
@@ -264,6 +266,7 @@ var ChromeMigrationUtils = {
         "Chrome Dev": ["google-chrome-unstable"],
         Chromium: ["chromium"],
         // Canary is not available on Linux.
+        // Edge is not available on Linux.
       },
     };
     let dirKey, subfolders;

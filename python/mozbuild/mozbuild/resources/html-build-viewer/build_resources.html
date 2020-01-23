@@ -460,13 +460,13 @@ function renderTimeline(id, resources) {
       var e = d3.event;
       x_offset = 10;
 
-      if (e.pageX > window.innerWidth / 2) {
+      if (e.clientX > window.innerWidth / 2) {
         x_offset = -150;
       }
 
       d3.select("#tooltip")
-        .style("left", (e.pageX + x_offset) + "px")
-        .style("top", (e.pageY + 10) + "px")
+        .style("left", (e.clientX + x_offset) + "px")
+        .style("top", (e.clientY + 10) + "px")
         ;
     })
     ;

@@ -1,4 +1,4 @@
-# mozharness configuration for Android x86 7.0 unit tests
+# mozharness configuration for Android x86 7.0 wrench tests
 #
 # This configuration should be combined with suite definitions and other
 # mozharness configuration from android_common.py, or similar.
@@ -24,6 +24,5 @@ config = {
     "env": {
         "DISPLAY": ":0.0",
         "PATH": "%(PATH)s:%(abs_work_dir)s/android-sdk-linux/emulator:%(abs_work_dir)s/android-sdk-linux/tools:%(abs_work_dir)s/android-sdk-linux/platform-tools",
-        "MINIDUMP_SAVEPATH": "%(abs_work_dir)s/minidumps",
     },
 }

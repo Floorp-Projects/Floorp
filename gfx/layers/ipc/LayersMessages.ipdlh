@@ -59,8 +59,14 @@ using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 using mozilla::LengthPercentage from "mozilla/ServoStyleConsts.h";
-using mozilla::RayFunction from "mozilla/MotionPathUtils.h";
 using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
+using mozilla::StyleOffsetPath from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleOffsetRotate from "mozilla/ServoStyleConsts.h";
+using mozilla::StylePositionOrAuto from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleRotate from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleScale from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleTranslate from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleTransform from "mozilla/ServoStyleConsts.h";
 
 namespace mozilla {
 namespace layers {
@@ -113,134 +119,20 @@ union TimingFunction {
   StepFunction;
 };
 
-// Send the angle with units rather than sending all angles in radians
-// to avoid having floating point error introduced by unit switching.
-struct CSSAngle {
-  float value;
-  int unit; // an nsCSSUnit that is valid for angles
-};
-
 struct LayerColor { Color value; };
-struct Perspective { float value; };
-struct RotationX { CSSAngle angle; };
-struct RotationY { CSSAngle angle; };
-struct RotationZ { CSSAngle angle; };
-struct Rotation { CSSAngle angle; };
-struct Rotation3D {
-  float x;
-  float y;
-  float z;
-  CSSAngle angle;
-};
-struct Scale {
-  float x;
-  float y;
-  float z;
-};
-struct Skew { CSSAngle x; CSSAngle y; };
-struct SkewX { CSSAngle x; };
-struct SkewY { CSSAngle y; };
-struct TransformMatrix { Matrix4x4 value; };
-struct Translation {
-  float x;
-  float y;
-  float z;
-};
-
-union Rotate {
-  // null_t represents |rotate: none|.
-  null_t;
-  Rotation;
-  Rotation3D;
-};
-
-union TransformFunction {
-  Perspective;
-  RotationX;
-  RotationY;
-  RotationZ;
-  Rotation;
-  Rotation3D;
-  Scale;
-  Skew;
-  SkewX;
-  SkewY;
-  Translation;
-  TransformMatrix;
-};
-
-struct MoveTo { Point point; };
-struct LineTo { Point point; };
-struct HorizontalLineTo { float x; };
-struct VerticalLineTo { float y; };
-struct CurveTo {
-  Point control1;
-  Point control2;
-  Point point;
-};
-struct SmoothCurveTo { Point control2; Point point; };
-struct QuadBezierCurveTo { Point control1; Point point; };
-struct SmoothQuadBezierCurveTo { Point point; };
-struct EllipticalArc {
-  float rx;
-  float ry;
-  float angle;
-  bool largeArcFlag;
-  bool sweepFlag;
-  Point point;
-};
-
-// PathCommand should be always absolute because we normalize it when passing
-// it through ipc.
-union PathCommand {
-  // Use null_t to represent ClosePath.
-  null_t;
-  MoveTo;
-  LineTo;
-  HorizontalLineTo;
-  VerticalLineTo;
-  CurveTo;
-  SmoothCurveTo;
-  QuadBezierCurveTo;
-  SmoothQuadBezierCurveTo;
-  EllipticalArc;
-};
-
-union OffsetPath {
-  // null_t represents None.
-  null_t;
-  PathCommand[];
-  RayFunction;
-};
-
-struct OffsetRotate {
-  CSSAngle angle;
-  bool isAuto;
-};
-
-struct AnchorPosition {
-  LengthPercentage horizontal;
-  LengthPercentage vertical;
-};
-
-union OffsetAnchor {
-  // null_t represents auto
-  null_t;
-  AnchorPosition;
-};
 
 union Animatable {
   null_t;
   float;
   nscolor;
-  Rotate;
-  Scale;
-  Translation;
-  TransformFunction[];
-  OffsetPath;
+  StyleRotate;
+  StyleScale;
+  StyleTranslate;
+  StyleTransform;
+  StyleOffsetPath;
   LengthPercentage;
-  OffsetRotate;
-  OffsetAnchor;
+  StyleOffsetRotate;
+  StylePositionOrAuto;
 };
 
 struct AnimationSegment {

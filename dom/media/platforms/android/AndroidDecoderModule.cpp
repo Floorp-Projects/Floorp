@@ -26,7 +26,6 @@
           ("%s: " arg, __func__, ##__VA_ARGS__))
 
 using namespace mozilla;
-using namespace mozilla::java::sdk;
 using media::TimeUnit;
 
 namespace mozilla {
