@@ -16,11 +16,7 @@ job-defaults:
     description: Release Promotion version bump/tag
     run-on-projects: []
     shipping-phase: ship
-    worker-type:
-        by-project:
-            mozilla-(beta|release|esr.*): scriptworker-k8s/gecko-3-tree
-            maple: scriptworker-k8s/gecko-3-tree
-            default: scriptworker-k8s/gecko-1-tree
+    worker-type: tree
     worker:
         implementation: treescript
         dontbuild: true

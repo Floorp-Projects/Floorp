@@ -13,11 +13,7 @@ job-defaults:
     description: Release Promotion version tag for buildN
     run-on-projects: []
     shipping-phase: promote
-    worker-type:
-        by-project:
-            mozilla-(beta|release|esr.*): scriptworker-k8s/gecko-3-tree
-            maple: scriptworker-k8s/gecko-3-tree
-            default: scriptworker-k8s/gecko-1-tree
+    worker-type: tree
     worker:
         implementation: treescript
         tags: ['buildN']

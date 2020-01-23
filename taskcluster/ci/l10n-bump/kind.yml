@@ -10,10 +10,7 @@ transforms:
 
 
 job-defaults:
-    worker-type:
-        by-project:
-            mozilla-(beta|central|esr.*): scriptworker-k8s/gecko-3-tree
-            default: scriptworker-k8s/gecko-1-tree
+    worker-type: tree
     worker:
         implementation: treescript
         tags: []

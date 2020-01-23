@@ -353,6 +353,14 @@ workers:
                 by-release-level:
                     production: signing-mac-v1
                     staging: depsigning-mac-v1
+        tree:
+            provisioner: scriptworker-k8s
+            implementation: treescript
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    production: gecko-3-tree
+                    staging: gecko-1-tree
         t-ap.*:
             provisioner: proj-autophone
             implementation: script-engine-autophone
