@@ -1223,6 +1223,7 @@ package org.mozilla.geckoview {
   public static interface LoginStorage.Delegate {
     method @UiThread @Nullable default public GeckoResult<LoginStorage.LoginEntry[]> onLoginFetch(@NonNull String);
     method @UiThread default public void onLoginSave(@NonNull LoginStorage.LoginEntry);
+    method @UiThread default public void onLoginUsed(@NonNull LoginStorage.LoginEntry, int);
   }
 
   public static class LoginStorage.LoginEntry {
@@ -1244,6 +1245,11 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder origin(@NonNull String);
     method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder password(@NonNull String);
     method @AnyThread @NonNull public LoginStorage.LoginEntry.Builder username(@NonNull String);
+  }
+
+  public static class LoginStorage.UsedField {
+    ctor public UsedField();
+    field public static final int PASSWORD = 1;
   }
 
   @AnyThread public class MediaElement {
