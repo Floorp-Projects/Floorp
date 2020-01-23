@@ -909,73 +909,86 @@ class nsContextMenu {
   }
 
   initPasswordManagerItems() {
-    let loginFillInfo = this.contentData && this.contentData.loginFillInfo;
-    let documentURI = this.contentData.documentURIObject;
+    let showFill = false;
+    let showGenerate = false;
+    try {
+      let loginFillInfo = this.contentData && this.contentData.loginFillInfo;
+      let documentURI = this.contentData.documentURIObject;
 
-    // If we could not find a password field we
-    // don't want to show the form fill option.
-    let showFill =
-      loginFillInfo &&
-      loginFillInfo.passwordField.found &&
-      !documentURI.schemeIs("about");
+      // If we could not find a password field we
+      // don't want to show the form fill option.
+      if (
+        !loginFillInfo ||
+        !loginFillInfo.passwordField.found ||
+        documentURI.schemeIs("about")
+      ) {
+        // Both generation and fill will default to disabled.
+        return;
+      }
+      showFill = true;
 
-    // Disable the fill option if the user hasn't unlocked with their master password
-    // or if the password field or target field are disabled.
-    // XXX: Bug 1529025 to respect signon.rememberSignons
-    let disableFill =
-      !loginFillInfo ||
-      !Services.logins ||
-      !Services.logins.isLoggedIn ||
-      loginFillInfo.passwordField.disabled ||
-      (!this.onPassword && loginFillInfo.usernameField.disabled);
+      // Disable the fill option if the user hasn't unlocked with their master password
+      // or if the password field or target field are disabled.
+      // XXX: Bug 1529025 to respect signon.rememberSignons
+      let disableFill =
+        !loginFillInfo ||
+        !Services.logins ||
+        !Services.logins.isLoggedIn ||
+        loginFillInfo.passwordField.disabled ||
+        (!this.onPassword && loginFillInfo.usernameField.disabled);
 
-    this.showItem("fill-login-separator", showFill);
-    this.showItem("fill-login", showFill);
-    this.setItemAttr("fill-login", "disabled", disableFill);
+      this.setItemAttr("fill-login", "disabled", disableFill);
 
-    // Set the correct label for the fill menu
-    let fillMenu = document.getElementById("fill-login");
-    if (this.onPassword) {
-      fillMenu.setAttribute("label", fillMenu.getAttribute("label-password"));
-      fillMenu.setAttribute(
-        "accesskey",
-        fillMenu.getAttribute("accesskey-password")
+      // Set the correct label for the fill menu
+      let fillMenu = document.getElementById("fill-login");
+      if (this.onPassword) {
+        fillMenu.setAttribute("label", fillMenu.getAttribute("label-password"));
+        fillMenu.setAttribute(
+          "accesskey",
+          fillMenu.getAttribute("accesskey-password")
+        );
+      } else {
+        fillMenu.setAttribute("label", fillMenu.getAttribute("label-login"));
+        fillMenu.setAttribute(
+          "accesskey",
+          fillMenu.getAttribute("accesskey-login")
+        );
+      }
+
+      let formOrigin = LoginHelper.getLoginOrigin(documentURI.spec);
+      let isGeneratedPasswordEnabled =
+        LoginHelper.generationAvailable && LoginHelper.generationEnabled;
+      showGenerate =
+        this.onPassword &&
+        isGeneratedPasswordEnabled &&
+        Services.logins.getLoginSavingEnabled(formOrigin);
+
+      if (disableFill) {
+        // No need to update the submenu if the fill item is disabled.
+        return;
+      }
+
+      // Update sub-menu items.
+      let fragment = nsContextMenu.LoginManagerContextMenu.addLoginsToMenu(
+        this.targetIdentifier,
+        this.browser,
+        formOrigin
       );
-    } else {
-      fillMenu.setAttribute("label", fillMenu.getAttribute("label-login"));
-      fillMenu.setAttribute(
-        "accesskey",
-        fillMenu.getAttribute("accesskey-login")
-      );
+
+      this.showItem("fill-login-no-logins", !fragment);
+
+      if (!fragment) {
+        return;
+      }
+      let popup = document.getElementById("fill-login-popup");
+      let insertBeforeElement = document.getElementById("fill-login-no-logins");
+      popup.insertBefore(fragment, insertBeforeElement);
+    } finally {
+      this.showItem("fill-login-separator", showFill);
+      this.showItem("fill-login", showFill);
+      this.showItem("fill-login-generated-password", showGenerate);
+      this.showItem("generated-password-separator", showGenerate);
     }
-
-    if (!showFill || disableFill) {
-      return;
-    }
-
-    let formOrigin = LoginHelper.getLoginOrigin(documentURI.spec);
-    let fragment = nsContextMenu.LoginManagerContextMenu.addLoginsToMenu(
-      this.targetIdentifier,
-      this.browser,
-      formOrigin
-    );
-    let isGeneratedPasswordEnabled =
-      LoginHelper.generationAvailable && LoginHelper.generationEnabled;
-    let canFillGeneratedPassword =
-      this.onPassword &&
-      isGeneratedPasswordEnabled &&
-      Services.logins.getLoginSavingEnabled(formOrigin);
-
-    this.showItem("fill-login-no-logins", !fragment);
-    this.showItem("fill-login-generated-password", canFillGeneratedPassword);
-    this.showItem("generated-password-separator", canFillGeneratedPassword);
-
-    if (!fragment) {
-      return;
-    }
-    let popup = document.getElementById("fill-login-popup");
-    let insertBeforeElement = document.getElementById("fill-login-no-logins");
-    popup.insertBefore(fragment, insertBeforeElement);
   }
 
   initSyncItems() {
