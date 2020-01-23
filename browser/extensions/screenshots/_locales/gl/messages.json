@@ -1,0 +1,64 @@
+{
+  "myShotsLink": {
+    "message": "As miñas capturas"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Gardar"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Gardar a parte visible"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Gardar a páxina completa"
+  },
+  "cancelScreenshot": {
+    "message": "Cancelar"
+  },
+  "downloadScreenshot": {
+    "message": "Descargar"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Nunha xanela de navegación privada."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cando as cookies de terceiros están desactivadas."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Cando está activa a opción \"Nunca gardará o historial\"."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Está usando Firefox ESR."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Copiouse a ligazón"
+  },
+  "copyScreenshot": {
+    "message": "Copiar"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Copiouse a captura"
+  },
+  "tourDone": {
+    "message": "Feito"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Ao usar Firefox Screenshots, vostede acepta os nosos $TERMSANDPRIVACYNOTICETERMSLINK$ e a $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Termos"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Política de privacidade"
+  },
+  "libraryLabel": {
+    "message": "Capturas de pantalla"
+  }
+}

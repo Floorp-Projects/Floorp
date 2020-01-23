@@ -16,41 +16,41 @@ this.senderror = (function() {
 
   const messages = {
     REQUEST_ERROR: {
-      titleKey: "screenshots-request-error-title",
-      infoKey: "screenshots-request-error-details",
+      title: browser.i18n.getMessage("requestErrorTitle"),
+      info: browser.i18n.getMessage("requestErrorDetails"),
     },
     CONNECTION_ERROR: {
-      titleKey: "screenshots-connection-error-title",
-      infoKey: "screenshots-connection-error-details",
+      title: browser.i18n.getMessage("connectionErrorTitle"),
+      info: browser.i18n.getMessage("connectionErrorDetails"),
     },
     LOGIN_ERROR: {
-      titleKey: "screenshots-request-error-title",
-      infoKey: "screenshots-login-error-details",
+      title: browser.i18n.getMessage("requestErrorTitle"),
+      info: browser.i18n.getMessage("loginErrorDetails"),
     },
     LOGIN_CONNECTION_ERROR: {
-      titleKey: "screenshots-connection-error-title",
-      infoKey: "screenshots-connection-error-details",
+      title: browser.i18n.getMessage("connectionErrorTitle"),
+      info: browser.i18n.getMessage("connectionErrorDetails"),
     },
     UNSHOOTABLE_PAGE: {
-      titleKey: "screenshots-unshootable-page-error-title",
-      infoKey: "screenshots-unshootable-page-error-details",
+      title: browser.i18n.getMessage("unshootablePageErrorTitle"),
+      info: browser.i18n.getMessage("unshootablePageErrorDetails"),
     },
     SHOT_PAGE: {
-      titleKey: "screenshots-self-screenshot-error-title",
+      title: browser.i18n.getMessage("selfScreenshotErrorTitle"),
     },
     MY_SHOTS: {
-      titleKey: "screenshots-self-screenshot-error-title",
+      title: browser.i18n.getMessage("selfScreenshotErrorTitle"),
     },
     EMPTY_SELECTION: {
-      titleKey: "screenshots-empty-selection-error-title",
+      title: browser.i18n.getMessage("emptySelectionErrorTitle"),
     },
     PRIVATE_WINDOW: {
-      titleKey: "screenshots-private-window-error-title",
-      infoKey: "screenshots-private-window-error-details",
+      title: browser.i18n.getMessage("privateWindowErrorTitle"),
+      info: browser.i18n.getMessage("privateWindowErrorDetails"),
     },
     generic: {
-      titleKey: "screenshots-generic-error-title",
-      infoKey: "screenshots-generic-error-details",
+      title: browser.i18n.getMessage("genericErrorTitle"),
+      info: browser.i18n.getMessage("genericErrorDetails"),
       showMessage: true,
     },
   };
@@ -61,7 +61,7 @@ this.senderror = (function() {
 
   let lastErrorTime;
 
-  exports.showError = async function(error) {
+  exports.showError = function(error) {
     if (lastErrorTime && (Date.now() - lastErrorTime) < ERROR_TIME_LIMIT) {
       return;
     }
@@ -71,20 +71,9 @@ this.senderror = (function() {
     if (!messages[popupMessage]) {
       popupMessage = "generic";
     }
-
-    let item = messages[popupMessage];
-    if (!("title" in item)) {
-      let keys = [{id: item.titleKey}];
-      if ("infoKey" in item) {
-        keys.push({id: item.infoKey});
-      }
-
-      [item.title, item.info] = await getStrings(keys);
-    }
-
-    let title = item.title;
-    let message = item.info || "";
-    const showMessage = item.showMessage;
+    const title = messages[popupMessage].title;
+    let message = messages[popupMessage].info || "";
+    const showMessage = messages[popupMessage].showMessage;
     if (error.message && showMessage) {
       if (message) {
         message += "\n" + error.message;

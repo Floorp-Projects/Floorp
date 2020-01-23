@@ -50,6 +50,26 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     }), 50);
   }
 
+  function localizeText(doc) {
+    const els = doc.querySelectorAll("[data-l10n-id], [data-l10n-title]");
+    for (const el of els) {
+      const id = el.getAttribute("data-l10n-id");
+      if (id) {
+        const text = browser.i18n.getMessage(id);
+        el.textContent = text;
+      }
+      const title = el.getAttribute("data-l10n-title");
+      if (title) {
+        const titleText = browser.i18n.getMessage(title);
+        const sanitized = titleText && titleText.replace("&", "&amp;")
+                                              .replace('"', "&quot;")
+                                              .replace("<", "&lt;")
+                                              .replace(">", "&gt;");
+        el.setAttribute("title", sanitized);
+      }
+    }
+  }
+
   function highContrastCheck(win) {
     const doc = win.document;
     const el = doc.createElement("div");
@@ -243,7 +263,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             // eslint-disable-next-line no-unsanitized/property
             this.document.documentElement.innerHTML = `
                <head>
-                <link rel="localization" href="browser/screenshots.ftl">
                 <style>${substitutedCss}</style>
                 <title></title>
                </head>
@@ -255,15 +274,15 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                        <div class="eye right"><div class="eyeball"></div></div>
                        <div class="face"></div>
                      </div>
-                     <div class="preview-instructions" data-l10n-id="screenshots-instructions"></div>
-                     <button class="cancel-shot" data-l10n-id="screenshots-cancel-button"></button>
+                     <div class="preview-instructions" data-l10n-id="screenshotInstructions"></div>
+                     <button class="cancel-shot">${browser.i18n.getMessage("cancelScreenshot")}</button>
                      <div class="myshots-all-buttons-container">
                        ${showMyShots() ? `
-                         <button class="myshots-button" tabindex="3" data-l10n-id="screenshots-my-shots-button"></button>
+                         <button class="myshots-button" tabindex="3" data-l10n-id="myShotsLink"></button>
                          <div class="spacer"></div>
                        ` : ""}
-                       <button class="visible" tabindex="2" data-l10n-id="screenshots-save-visible-button"></button>
-                       <button class="full-page" tabindex="1" data-l10n-id="screenshots-save-page-button"></button>
+                       <button class="visible" tabindex="2" data-l10n-id="saveScreenshotVisibleArea"></button>
+                       <button class="full-page" tabindex="1" data-l10n-id="saveScreenshotFullPage"></button>
                      </div>
                    </div>
                  </div>
@@ -275,6 +294,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             this.document.documentElement.dir = browser.i18n.getMessage("@@bidi_dir");
             this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
             const overlay = this.document.querySelector(".preview-overlay");
+            localizeText(this.document);
             if (showMyShots()) {
               overlay.querySelector(".myshots-button").addEventListener(
                 "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onOpenMyShots)));
@@ -285,7 +305,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
               "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onClickFullPage)));
             overlay.querySelector(".cancel-shot").addEventListener(
               "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onClickCancel)));
-
             resolve();
           }), {once: true});
           document.body.appendChild(this.element);
@@ -337,14 +356,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     },
   };
 
-  let msgsPromise = callBackground("getStrings", [
-    "screenshots-cancel-button",
-    "screenshots-copy-button-tooltip",
-    "screenshots-download-button-tooltip",
-    "screenshots-copy-button",
-    "screenshots-download-button",
-  ]);
-
   const iframePreview = exports.iframePreview = {
     element: null,
     document: null,
@@ -360,28 +371,27 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
           this.element.style.width = "100%";
           this.element.setAttribute("role", "dialog");
           this.element.onload = watchFunction(() => {
-            msgsPromise.then(([cancelTitle, copyTitle, downloadTitle]) => {
-              this.document = this.element.contentDocument;
-              // eslint-disable-next-line no-unsanitized/property
-              this.document.documentElement.innerHTML = `
-                <head>
-                  <link rel="localization" href="browser/screenshots.ftl">
-                  <style>${substitutedCss}</style>
-                  <title></title>
-                </head>
-                <body>
-                  <div class="preview-overlay">
-                    <div class="preview-image">
-                      <div class="preview-buttons">
-                        <button class="highlight-button-cancel" title="${cancelTitle}">
-                          <img src="${browser.extension.getURL("icons/cancel.svg")}" />
-                        </button>
-                        <button class="highlight-button-copy" data-l10n-id="screenshots-copy-button" title="${copyTitle}">
-                        <img src="${browser.extension.getURL("icons/copy.svg")}" /></button>
-                      <button class="highlight-button-download" title="${downloadTitle}">
-                        <img src="${browser.extension.getURL("icons/download-white.svg")}"
-                             data-l10n-id="screenshots-download-button"/>
-                      </button>
+            this.document = this.element.contentDocument;
+            // eslint-disable-next-line no-unsanitized/property
+            this.document.documentElement.innerHTML = `
+              <head>
+                <style>${substitutedCss}</style>
+                <title></title>
+              </head>
+              <body>
+                <div class="preview-overlay">
+                  <div class="preview-image">
+                    <div class="preview-buttons">
+                      <button class="highlight-button-cancel"
+                        data-l10n-title="cancelScreenshot"><img
+                        src="${browser.extension.getURL("icons/cancel.svg")}" /></button>
+                      <button class="highlight-button-copy"
+                        data-l10n-title="copyScreenshotTitle"><img
+                        src="${browser.extension.getURL("icons/copy.svg")}" />${browser.i18n.getMessage("copyScreenshot")}</button>
+                      <button class="highlight-button-download"
+                        data-l10n-title="downloadScreenshotTitle"><img
+                        src="${browser.extension.getURL("icons/download-white.svg")}"
+                        />${browser.i18n.getMessage("downloadScreenshot")}</button>
                     </div>
                       <div class="preview-image-wrapper"></div>
                   </div>
@@ -390,20 +400,18 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                   </div>
                 </div>
               </body>`;
-
-              installHandlerOnDocument(this.document);
-              this.document.documentElement.dir = browser.i18n.getMessage("@@bidi_dir");
-              this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
-
-              const overlay = this.document.querySelector(".preview-overlay");
-              overlay.querySelector(".highlight-button-copy").addEventListener(
-                "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onCopyPreview)));
-              overlay.querySelector(".highlight-button-download").addEventListener(
-                "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onDownloadPreview)));
-              overlay.querySelector(".highlight-button-cancel").addEventListener(
-                "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.cancel)));
-              resolve();
-            });
+            installHandlerOnDocument(this.document);
+            this.document.documentElement.dir = browser.i18n.getMessage("@@bidi_dir");
+            this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
+            localizeText(this.document);
+            const overlay = this.document.querySelector(".preview-overlay");
+            overlay.querySelector(".highlight-button-copy").addEventListener(
+              "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onCopyPreview)));
+            overlay.querySelector(".highlight-button-download").addEventListener(
+              "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onDownloadPreview)));
+            overlay.querySelector(".highlight-button-cancel").addEventListener(
+              "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.cancel)));
+            resolve();
           });
           document.body.appendChild(this.element);
         } else {
@@ -506,8 +514,8 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
   /** Creates the selection box */
   exports.Box = {
 
-    async display(pos, callbacks) {
-      await this._createEl();
+    display(pos, callbacks) {
+      this._createEl();
       if (callbacks !== undefined && callbacks.cancel) {
         // We use onclick here because we don't want addEventListener
         // to add multiple event handlers to the same button
@@ -619,26 +627,25 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       }
     },
 
-    async _createEl() {
+    _createEl() {
       let boxEl = this.el;
       if (boxEl) {
         return;
       }
-      let [cancelTitle, copyTitle, downloadTitle, copyText, downloadText ] = await msgsPromise;
       boxEl = makeEl("div", "highlight");
       const buttons = makeEl("div", "highlight-buttons");
       const cancel = makeEl("button", "highlight-button-cancel");
       const cancelImg = makeEl("img");
       cancelImg.src = browser.extension.getURL("icons/cancel.svg");
-      cancel.title = cancelTitle;
+      cancel.title = browser.i18n.getMessage("cancelScreenshot");
       cancel.appendChild(cancelImg);
       buttons.appendChild(cancel);
 
       const copy = makeEl("button", "highlight-button-copy");
-      copy.title = copyTitle;
+      copy.title = browser.i18n.getMessage("copyScreenshotTitle");
       const copyImg = makeEl("img");
       const copyString = makeEl("span");
-      copyString.textContent = copyText;
+      copyString.textContent = browser.i18n.getMessage("copyScreenshot");
       copyImg.src = browser.extension.getURL("icons/copy.svg");
       copy.appendChild(copyImg);
       copy.appendChild(copyString);
@@ -648,8 +655,8 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       const downloadImg = makeEl("img");
       downloadImg.src = browser.extension.getURL("icons/download-white.svg");
       download.appendChild(downloadImg);
-      download.append(downloadText);
-      download.title = downloadTitle;
+      download.append(browser.i18n.getMessage("downloadScreenshot"));
+      download.title = browser.i18n.getMessage("downloadScreenshotTitle");
       buttons.appendChild(download);
       this.cancel = cancel;
       this.download = download;
