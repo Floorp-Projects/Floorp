@@ -604,13 +604,6 @@ already_AddRefed<Promise> AudioContext::DecodeAudioData(
 
   aBuffer.ComputeLengthAndData();
 
-  if (aBuffer.IsShared()) {
-    // Throw if the object is mapping shared memory (must opt in).
-    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(
-        NS_LITERAL_STRING("Argument of AudioContext.decodeAudioData"));
-    return nullptr;
-  }
-
   if (!aBuffer.Data()) {
     // Throw if the buffer is detached
     aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_DETACHED>(
