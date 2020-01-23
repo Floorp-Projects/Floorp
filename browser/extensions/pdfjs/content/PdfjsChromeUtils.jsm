@@ -18,7 +18,6 @@
 var EXPORTED_SYMBOLS = ["PdfjsChromeUtils"];
 
 const PREF_PREFIX = "pdfjs";
-const PDF_CONTENT_TYPE = "application/pdf";
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -66,7 +65,6 @@ var PdfjsChromeUtils = {
       this._ppmm.addMessageListener("PDFJS:Parent:setBoolPref", this);
       this._ppmm.addMessageListener("PDFJS:Parent:setCharPref", this);
       this._ppmm.addMessageListener("PDFJS:Parent:setStringPref", this);
-      this._ppmm.addMessageListener("PDFJS:Parent:isDefaultHandlerApp", this);
 
       // global dom message manager (MMg)
       this._mmg = Services.mm;
@@ -89,10 +87,6 @@ var PdfjsChromeUtils = {
       this._ppmm.removeMessageListener("PDFJS:Parent:setBoolPref", this);
       this._ppmm.removeMessageListener("PDFJS:Parent:setCharPref", this);
       this._ppmm.removeMessageListener("PDFJS:Parent:setStringPref", this);
-      this._ppmm.removeMessageListener(
-        "PDFJS:Parent:isDefaultHandlerApp",
-        this
-      );
 
       this._mmg.removeMessageListener("PDFJS:Parent:displayWarning", this);
 
@@ -135,8 +129,6 @@ var PdfjsChromeUtils = {
       case "PDFJS:Parent:setStringPref":
         this._setStringPref(aMsg.data.name, aMsg.data.value);
         break;
-      case "PDFJS:Parent:isDefaultHandlerApp":
-        return this.isDefaultHandlerApp();
       case "PDFJS:Parent:displayWarning":
         this._displayWarning(aMsg);
         break;
@@ -342,19 +334,6 @@ var PdfjsChromeUtils = {
   _setStringPref(aPrefName, aPrefValue) {
     this._ensurePreferenceAllowed(aPrefName);
     Services.prefs.setStringPref(aPrefName, aPrefValue);
-  },
-
-  /*
-   * Svc.mime doesn't have profile information in the child, so
-   * we bounce this pdfjs enabled configuration check over to the
-   * parent.
-   */
-  isDefaultHandlerApp() {
-    var handlerInfo = Svc.mime.getFromTypeAndExtension(PDF_CONTENT_TYPE, "pdf");
-    return (
-      !handlerInfo.alwaysAskBeforeHandling &&
-      handlerInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally
-    );
   },
 
   /*
