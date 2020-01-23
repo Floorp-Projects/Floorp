@@ -66,6 +66,14 @@ const threadSpec = generateActorSpec({
     newSource: {
       source: Option(0, "json"),
     },
+    replayStatusUpdate: {
+      status: Option(0, "json"),
+    },
+    replayFramePositions: {
+      positions: Option(0, "array:json"),
+      frame: Option(0, "string"),
+      thread: Option(0, "string"),
+    },
   },
 
   methods: {
@@ -88,6 +96,7 @@ const threadSpec = generateActorSpec({
     resume: {
       request: {
         resumeLimit: Arg(0, "nullable:json"),
+        rewind: Arg(1, "boolean"),
       },
       response: RetVal("nullable:json"),
     },
@@ -112,6 +121,11 @@ const threadSpec = generateActorSpec({
       },
       response: {
         skip: Arg(0, "json"),
+      },
+    },
+    fetchAncestorFramePositions: {
+      request: {
+        index: Arg(0, "number"),
       },
     },
     dumpThread: {
@@ -169,9 +183,26 @@ const threadSpec = generateActorSpec({
       },
     },
 
+    paint: {
+      request: {
+        point: Arg(0, "json"),
+      },
+    },
+
+    paintCurrentPoint: {
+      request: {},
+    },
+
     toggleEventLogging: {
       request: {
         logEventBreakpoints: Arg(0, "string"),
+      },
+    },
+
+    // For testing.
+    debuggerRequests: {
+      response: {
+        value: RetVal("array:json"),
       },
     },
   },

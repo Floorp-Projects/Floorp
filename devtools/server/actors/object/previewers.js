@@ -197,7 +197,9 @@ const previewers = {
         } else if (raw && !Object.getOwnPropertyDescriptor(raw, i)) {
           items.push(null);
         } else {
-          // Workers do not have access to Cu.
+          // Workers do not have access to Cu, and when recording/replaying we
+          // don't have a raw object. In either case we do not need to deal with
+          // xray wrappers.
           const value = DevToolsUtils.getProperty(obj, i);
           items.push(hooks.createValueGrip(value));
         }
@@ -513,7 +515,10 @@ function GenericObject(
     }
   }
 
-  if (i < OBJECT_PREVIEW_MAX_ITEMS) {
+  // Do not search for safe getters when generating previews while replaying.
+  // This involves a lot of back-and-forth communication which we don't want to
+  // incur while previewing objects.
+  if (i < OBJECT_PREVIEW_MAX_ITEMS && !isReplaying) {
     preview.safeGetterValues = objectActor._findSafeGetterValues(
       Object.keys(preview.ownProperties),
       OBJECT_PREVIEW_MAX_ITEMS - i
@@ -856,6 +861,12 @@ previewers.Object = [
     // - At least it has the "0" array index.
     // - The array indices are consecutive.
     // - The value of "length", if present, is the number of array indices.
+
+    // Don't generate pseudo array previews when replaying. We don't want to
+    // have to enumerate all the properties in order to determine this.
+    if (isReplaying) {
+      return false;
+    }
 
     let keys;
     try {

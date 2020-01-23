@@ -1,6 +1,9 @@
 {
   "name": "webconsole-tests",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=8.9.4"
+  },
   "scripts": {
     "//": [
       "Here's the script to run tests with `npm test`. Here's what it does: ",
