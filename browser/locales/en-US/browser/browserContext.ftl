@@ -285,6 +285,10 @@ main-context-menu-view-background-image =
     .label = View Background Image
     .accesskey = w
 
+main-context-menu-generate-new-password =
+    .label = Use Generated Password…
+    .accesskey = G
+
 main-context-menu-keyword =
     .label = Add a Keyword for this Search…
     .accesskey = K
