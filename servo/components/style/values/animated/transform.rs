@@ -1168,11 +1168,10 @@ impl ComputeSquaredDistance for ComputedTransformOperation {
                 // However, dropping percentage makes us impossible to compute
                 // the distance for the percentage-percentage case, but Gecko
                 // uses the same formula, so it's fine for now.
-                let basis = Length::new(0.);
-                let fx = fx.resolve(basis).px();
-                let fy = fy.resolve(basis).px();
-                let tx = tx.resolve(basis).px();
-                let ty = ty.resolve(basis).px();
+                let fx = fx.length_component().px();
+                let fy = fy.length_component().px();
+                let tx = tx.length_component().px();
+                let ty = ty.length_component().px();
 
                 Ok(fx.compute_squared_distance(&tx)? +
                     fy.compute_squared_distance(&ty)? +

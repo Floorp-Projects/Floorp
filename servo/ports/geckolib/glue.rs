@@ -4966,9 +4966,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     use style::properties::PropertyDeclaration;
     use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
-    use style::values::specified::length::{LengthPercentage, NoCalcLength};
+    use style::values::specified::length::LengthPercentage;
+    use style::values::specified::length::NoCalcLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
-    use style::values::specified::FontSize;
 
     let long = get_longhand_from_id!(property);
     let nocalc = match unit {
@@ -5002,7 +5002,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
         R =>  NonNegative(LengthPercentage::Length(nocalc)),
         Rx => LengthPercentageOrAuto::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
         Ry => LengthPercentageOrAuto::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
-        FontSize => FontSize::Length(LengthPercentage::Length(nocalc)),
+        FontSize => LengthPercentage::from(nocalc).into(),
         MozScriptMinSize => MozScriptMinSize(nocalc),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
@@ -5045,7 +5045,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
     use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
     use style::values::specified::length::LengthPercentage;
-    use style::values::specified::FontSize;
 
     let long = get_longhand_from_id!(property);
     let pc = Percentage(value);
@@ -5066,7 +5065,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
         MarginRight => lp_or_auto,
         MarginBottom => lp_or_auto,
         MarginLeft => lp_or_auto,
-        FontSize => FontSize::Length(LengthPercentage::Percentage(pc)),
+        FontSize => LengthPercentage::from(pc).into(),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
@@ -6851,12 +6850,4 @@ pub unsafe extern "C" fn Servo_LoadData_GetLazy(
     source: &url::LoadDataSource,
 ) -> *const url::LoadData {
     source.get()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_LengthPercentage_ToCss(
-    lp: &computed::LengthPercentage,
-    result: &mut nsAString
-) {
-    lp.to_css(&mut CssWriter::new(result)).unwrap();
 }

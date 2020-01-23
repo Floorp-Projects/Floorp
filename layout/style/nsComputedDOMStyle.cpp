@@ -2288,8 +2288,21 @@ void nsComputedDOMStyle::SetValueToLengthPercentage(
     return aValue->SetPercent(result);
   }
 
-  nsAutoString result;
-  Servo_LengthPercentage_ToCss(&aLength, &result);
+  // TODO(emilio): This intentionally matches the serialization of
+  // SetValueToCalc, but goes against the spec. Update this when possible.
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  nsAutoString tmp, result;
+  result.AppendLiteral("calc(");
+  val->SetAppUnits(CSSPixel::ToAppUnits(aLength.LengthInCSSPixels()));
+  val->GetCssText(tmp);
+  result.Append(tmp);
+  if (aLength.HasPercent()) {
+    result.AppendLiteral(" + ");
+    val->SetPercent(aLength.Percentage());
+    val->GetCssText(tmp);
+    result.Append(tmp);
+  }
+  result.Append(')');
   aValue->SetString(result);
 }
 
