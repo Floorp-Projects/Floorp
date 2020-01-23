@@ -2160,8 +2160,8 @@ bool FlexItem::CanMainSizeInfluenceCrossSize(
 class MOZ_STACK_CLASS PositionTracker {
  public:
   // Accessor for the current value of the position that we're tracking.
-  inline nscoord GetPosition() const { return mPosition; }
-  inline LogicalAxis GetAxis() const { return mAxis; }
+  inline nscoord Position() const { return mPosition; }
+  inline LogicalAxis Axis() const { return mAxis; }
 
   inline LogicalSide StartSide() {
     return MakeLogicalSide(
@@ -4057,7 +4057,7 @@ void FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
     mainAxisPosnTracker.EnterMargin(item->Margin());
     mainAxisPosnTracker.EnterChildFrame(itemMainBorderBoxSize);
 
-    item->SetMainPosition(mainAxisPosnTracker.GetPosition());
+    item->SetMainPosition(mainAxisPosnTracker.Position());
 
     mainAxisPosnTracker.ExitChildFrame(itemMainBorderBoxSize);
     mainAxisPosnTracker.ExitMargin(item->Margin());
@@ -4157,7 +4157,7 @@ void FlexLine::PositionItemsInCrossAxis(
     lineCrossAxisPosnTracker.EnterChildFrame(itemCrossBorderBoxSize);
 
     item->SetCrossPosition(aLineStartPosition +
-                           lineCrossAxisPosnTracker.GetPosition());
+                           lineCrossAxisPosnTracker.Position());
 
     // Back out to cross-axis edge of the line.
     lineCrossAxisPosnTracker.ResetPosition();
@@ -4721,7 +4721,7 @@ void nsFlexContainerFrame::DoFlexLayout(
       flexContainerAscent = nscoord_MIN;
     } else {
       flexContainerAscent = ComputePhysicalAscentFromFlexRelativeAscent(
-          crossAxisPosnTracker.GetPosition() + firstLineBaselineOffset,
+          crossAxisPosnTracker.Position() + firstLineBaselineOffset,
           contentBoxCrossSize, aReflowInput, aAxisTracker);
     }
   }
@@ -4761,12 +4761,12 @@ void nsFlexContainerFrame::DoFlexLayout(
     // See if we need to extract some computed info for this line.
     if (MOZ_UNLIKELY(containerInfo)) {
       ComputedFlexLineInfo& lineInfo = containerInfo->mLines[lineIndex];
-      lineInfo.mCrossStart = crossAxisPosnTracker.GetPosition();
+      lineInfo.mCrossStart = crossAxisPosnTracker.Position();
     }
 
     // Cross-Axis Alignment - Flexbox spec section 9.6
     // ===============================================
-    line->PositionItemsInCrossAxis(crossAxisPosnTracker.GetPosition(),
+    line->PositionItemsInCrossAxis(crossAxisPosnTracker.Position(),
                                    aAxisTracker);
     crossAxisPosnTracker.TraverseLine(*line);
     crossAxisPosnTracker.TraversePackingSpace();
@@ -4788,7 +4788,7 @@ void nsFlexContainerFrame::DoFlexLayout(
       flexContainerAscent = nscoord_MIN;
     } else {
       flexContainerAscent = ComputePhysicalAscentFromFlexRelativeAscent(
-          crossAxisPosnTracker.GetPosition() - lastLineBaselineOffset,
+          crossAxisPosnTracker.Position() - lastLineBaselineOffset,
           contentBoxCrossSize, aReflowInput, aAxisTracker);
     }
   }
