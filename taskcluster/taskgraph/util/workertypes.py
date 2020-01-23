@@ -23,8 +23,6 @@ WORKER_TYPES = {
     "scriptworker-prov-v1/signing-linux-v1": ('scriptworker-signing', None),
     "scriptworker-k8s/gecko-3-shipit": ('shipit', None),
     "scriptworker-k8s/gecko-1-shipit": ('shipit', None),
-    "scriptworker-k8s/gecko-3-tree": ('treescript', None),
-    "scriptworker-k8s/gecko-1-tree": ('treescript', None),
     'terraform-packet/gecko-t-linux': ('docker-worker', 'linux'),
     'releng-hardware/gecko-t-osx-1014': ('generic-worker', 'macosx'),
     'releng-hardware/gecko-t-osx-1014-power': ('generic-worker', 'macosx'),
