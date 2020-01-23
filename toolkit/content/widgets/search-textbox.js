@@ -46,34 +46,9 @@
         });
       }
 
-      this.addEventListener("input", event => {
-        if (this.searchButton) {
-          this._searchIcons.selectedIndex = 0;
-          return;
-        }
-        if (this._timer) {
-          clearTimeout(this._timer);
-        }
-        this._timer =
-          this.timeout && setTimeout(this._fireCommand, this.timeout, this);
-        this._searchIcons.selectedIndex = this.value ? 1 : 0;
-      });
-
-      this.addEventListener("keypress", event => {
-        switch (event.keyCode) {
-          case KeyEvent.DOM_VK_ESCAPE:
-            if (this._clearSearch()) {
-              event.preventDefault();
-              event.stopPropagation();
-            }
-            break;
-          case KeyEvent.DOM_VK_RETURN:
-            this._enterSearch();
-            event.preventDefault();
-            event.stopPropagation();
-            break;
-        }
-      });
+      this.addEventListener("input", this);
+      this.addEventListener("keypress", this);
+      this.addEventListener("mousedown", this);
     }
 
     static get inheritedAttributes() {
@@ -98,10 +73,8 @@
       const input = this.inputField;
       input.className = "textbox-input";
       input.setAttribute("mozactionhint", "search");
-      input.addEventListener("focus", () =>
-        this.setAttribute("focused", "true")
-      );
-      input.addEventListener("blur", () => this.removeAttribute("focused"));
+      input.addEventListener("focus", this);
+      input.addEventListener("blur", this);
 
       const searchBtn = (this._searchButtonIcon = document.createXULElement(
         "image"
@@ -200,6 +173,50 @@
 
     get disabled() {
       return this.inputField.disabled;
+    }
+
+    on_blur() {
+      this.removeAttribute("focused");
+    }
+
+    on_focus() {
+      this.setAttribute("focused", "true");
+    }
+
+    on_input() {
+      if (this.searchButton) {
+        this._searchIcons.selectedIndex = 0;
+        return;
+      }
+      if (this._timer) {
+        clearTimeout(this._timer);
+      }
+      this._timer =
+        this.timeout && setTimeout(this._fireCommand, this.timeout, this);
+      this._searchIcons.selectedIndex = this.value ? 1 : 0;
+    }
+
+    on_keypress(event) {
+      switch (event.keyCode) {
+        case KeyEvent.DOM_VK_ESCAPE:
+          if (this._clearSearch()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          break;
+        case KeyEvent.DOM_VK_RETURN:
+          this._enterSearch();
+          event.preventDefault();
+          event.stopPropagation();
+          break;
+      }
+    }
+
+    on_mousedown(event) {
+      if (!this.hasAttribute("focused")) {
+        this.setSelectionRange(0, 0);
+        this.focus();
+      }
     }
 
     _fireCommand(me) {
