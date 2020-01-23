@@ -74,7 +74,7 @@ class CompilerPreprocessor(Preprocessor):
         def repl(matchobj):
             varname = matchobj.group('VAR')
             if varname in self.context:
-                result = six.text_type(self.context[varname])
+                result = str(self.context[varname])
                 # The C preprocessor inserts whitespaces around expanded
                 # symbols.
                 start, end = matchobj.span('VAR')
@@ -104,8 +104,8 @@ class TestCompilerPreprocessor(unittest.TestCase):
 
     def test_normalization(self):
         pp = CompilerPreprocessor({
-            '__has_attribute(bar)': 1,
-            '__has_warning("-Wc++98-foo")': 1,
+            '__has_attribute(bar)': '1',
+            '__has_warning("-Wc++98-foo")': '1',
         })
         pp.out = StringIO()
         input = StringIO(dedent('''\
@@ -161,7 +161,7 @@ class TestCompilerPreprocessor(unittest.TestCase):
         input.name = 'foo'
         pp.do_include(input)
 
-        self.assertEquals('IFDEF_A\nIF_A\nIF_NOT_B\nIF_NOT_C\n', pp.out.getvalue())
+        self.assertEquals('IFDEF_A\nIF_A\nIF_B\nIF_NOT_C\n', pp.out.getvalue())
 
 
 class FakeCompiler(dict):

@@ -4,11 +4,11 @@
 
 from __future__ import print_function
 import buildconfig
-from collections import defaultdict
 import os
-from six import StringIO
 import sys
 import yaml
+from collections import defaultdict
+from io import BytesIO
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import ensureParentDir, FileAvoidWrite
 
@@ -349,7 +349,7 @@ def emit_code(fd, pref_list_filename):
     if buildconfig.substs.get('MOZ_DEBUG'):
         pp.context['DEBUG'] = '1'
 
-    pp.out = StringIO()
+    pp.out = BytesIO()
     pp.do_filter('substitution')
     pp.do_include(pref_list_filename)
 
