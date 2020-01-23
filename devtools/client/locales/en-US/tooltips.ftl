@@ -63,4 +63,4 @@ inactive-css-non-replaced-inline-or-table-column-or-column-group-fix = Try addin
 
 inactive-css-not-display-block-on-floated-fix = Try removing <strong>float</strong> or adding <strong>display:block</strong>. { learn-more }
 
-inactive-css-position-property-on-unpositioned-box-fix = Try setting its <strong>position</strong> property to something else than <strong>static</strong>. { learn-more }
+inactive-css-position-property-on-unpositioned-box-fix = Try setting its <strong>position</strong> property to something other than <strong>static</strong>. { learn-more }
