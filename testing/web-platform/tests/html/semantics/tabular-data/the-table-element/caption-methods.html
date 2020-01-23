@@ -140,7 +140,7 @@
       caption.appendChild(table5)
 
       // Node cannot be inserted at the specified point in the hierarchy
-      assert_throws("HierarchyRequestError", function() {
+      assert_throws_dom("HierarchyRequestError", function() {
         table5.caption = caption;
       });
 
