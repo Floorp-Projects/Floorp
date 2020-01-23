@@ -67,6 +67,3 @@ user_pref("media.block-autoplay-until-in-foreground", false);
 user_pref("toolkit.telemetry.coverage.endpoint.base", "http://localhost");
 // Don't ask for a request in testing unless explicitly set this as true.
 user_pref("media.geckoview.autoplay.request", false);
-// Remove it when we expose media session without checking the pref in bug
-// 1611029.
-user_pref("dom.media.mediasession.enabled", true);
