@@ -1648,7 +1648,8 @@ user_specified_search_engines:
     description: >
       A user deleted a custom search engine
     bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/5586
+      - https://github.com/mozilla-mobile/fenix/issues/5884
+      - https://github.com/mozilla-mobile/fenix/issues/7881
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6918
     notification_emails:

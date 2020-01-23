@@ -129,7 +129,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
                 onItemTapped = {
                     when (it) {
                         is SearchEngineMenu.Item.Edit -> editCustomSearchEngine(engine)
-                        is SearchEngineMenu.Item.Delete -> deleteSearchEngine(context, engine)
+                        is SearchEngineMenu.Item.Delete -> deleteSearchEngine(context, engine, isCustomSearchEngine)
                     }
                 }
             ).menuBuilder.build(context).show(wrapper.overflow_menu)
@@ -162,7 +162,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         Navigation.findNavController(searchEngineGroup!!).navigate(directions)
     }
 
-    private fun deleteSearchEngine(context: Context, engine: SearchEngine) {
+    private fun deleteSearchEngine(context: Context, engine: SearchEngine, isCustomSearchEngine: Boolean) {
         val isDefaultEngine = engine == context.components.search.provider.getDefaultEngine(context)
         val initialEngineList = searchEngineList.copy()
         val initialDefaultEngine = searchEngineList.default
@@ -192,7 +192,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
                         .getDefaultEngine(context)
                         .name
                 }
-                if (CustomSearchEngineStore.isCustomSearchEngine(context, engine.identifier)) {
+                if (isCustomSearchEngine) {
                     context.components.analytics.metrics.track(Event.CustomEngineDeleted)
                 }
                 refreshSearchEngineViews(context)
