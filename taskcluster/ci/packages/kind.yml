@@ -189,12 +189,26 @@ jobs:
         description: "Valgrind for Debian Wheezy"
         treeherder:
             symbol: Deb7(valgrind)
+        worker:
+            env:
+                VERSION: 3.15.99.git20200122
+                COMMIT: 16eb4436e2b2c2e6e4fc51520b1ef16607204313
         run:
             using: debian-package
             dsc:
                 url: http://snapshot.debian.org/archive/debian/20190714T155055Z/pool/main/v/valgrind/valgrind_3.15.0-1.dsc
                 sha256: 2bd467ec486302060ed4e91452231b2c0a09afcd51c25d4ba8d3028218328681
+            packages:
+                - deb7-git
             patch: valgrind-wheezy.diff
+            pre-build-command: >-
+                git clone -n git://sourceware.org/git/valgrind.git ../valgrind-git &&
+                git -C ../valgrind-git archive --format=tar --prefix=valgrind-$VERSION/ $COMMIT | bzip2 > ../valgrind_$VERSION.orig.tar.bz2 &&
+                tar -C .. -jxf ../valgrind_$VERSION.orig.tar.bz2 &&
+                cp -r debian ../valgrind-$VERSION &&
+                cd ../valgrind-$VERSION &&
+                sed -i '/08_fix-spelling-in-manpage.patch/d;/11_arm64-cache-flush.patch/d' debian/patches/series &&
+                debchange -v 1:$VERSION-1.deb7moz1 --distribution wheezy "Mozilla backport of git master as of 2020-01-22." < /dev/null
 
     deb7-dh-python:
         description: "dh-python for Debian wheezy"
