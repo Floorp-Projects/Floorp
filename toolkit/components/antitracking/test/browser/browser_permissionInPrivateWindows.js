@@ -13,9 +13,7 @@ AntiTracking.runTest(
       let Services = SpecialPowers.Services;
       // We would use TEST_3RD_PARTY_DOMAIN here, except that the variable isn't
       // accessible in the context of the web page...
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        "https://tracking.example.org/"
-      );
+      let principal = SpecialPowers.wrap(document).nodePrincipal;
       for (let perm of Services.perms.getAllForPrincipal(principal)) {
         // Ignore permissions other than storage access
         if (!perm.type.startsWith("3rdPartyStorage^")) {
