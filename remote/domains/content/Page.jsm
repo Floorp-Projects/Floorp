@@ -343,6 +343,10 @@ class Page extends ContentProcessDomain {
     };
   }
 
+  _devicePixelRatio() {
+    return this.content.devicePixelRatio;
+  }
+
   _getIndexForHistoryEntryId(id) {
     const sessionHistory = this.docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
