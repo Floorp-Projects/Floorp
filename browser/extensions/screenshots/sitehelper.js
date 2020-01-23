@@ -74,10 +74,6 @@ this.sitehelper = (function() {
     }));
   }));
 
-  registerListener("request-onboarding", catcher.watchFunction((event) => {
-    callBackground("requestOnboarding");
-  }));
-
   registerListener("copy-to-clipboard", catcher.watchFunction(event => {
     catcher.watchPromise(callBackground("copyShotToClipboard", event.detail));
   }));
