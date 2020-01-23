@@ -44,17 +44,17 @@ var that = this;
 gc();
 
 let wr1;
-(function() {
-  let obj = {};
+// Allocate the object in the function to prevent marked as a singleton so the
+// object won't be kept alive by IC stub.
+function allocObj() { return {}; }
+
+(function () {
+  let obj = allocObj();
   wr1 = new WeakRef(obj);
   obj = null;
 })();
 
-// TODO:
-// Bug 1603330: WeakRef.deref() makes the target being kept even
-// ClearKeptObjects() is called.
-//
-// don't call wr1.deref() here to prevent the target of wr1 is kept.
+assertEq(undefined === wr1.deref(), false);
 
 gc();
 
