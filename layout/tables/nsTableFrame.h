@@ -691,12 +691,6 @@ class nsTableFrame : public nsContainerFrame {
                       nsTableRowGroupFrame** aHead = nullptr,
                       nsTableRowGroupFrame** aFoot = nullptr) const;
 
-  // Return the thead, if any
-  nsTableRowGroupFrame* GetTHead() const;
-
-  // Return the tfoot, if any
-  nsTableRowGroupFrame* GetTFoot() const;
-
   // Returns true if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex, the number of
   // effective columns limits the search up to that column
