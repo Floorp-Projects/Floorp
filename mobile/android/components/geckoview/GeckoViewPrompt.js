@@ -30,6 +30,8 @@ function PromptFactory() {
   this.wrappedJSObject = this;
 }
 
+const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompt"); // eslint-disable-line no-unused-vars
+
 PromptFactory.prototype = {
   classID: Components.ID("{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"),
 
@@ -332,7 +334,7 @@ PromptFactory.prototype = {
   _handlePopupBlocked: function(aEvent) {
     const dwi = aEvent.requestingWindow;
     const popupWindowURISpec = aEvent.popupWindowURI
-      ? aEvent.popupWindowURI.spec
+      ? aEvent.popupWindowURI.displaySpec
       : "about:blank";
 
     let prompt = new PromptDelegate(aEvent.requestingWindow);
@@ -341,8 +343,8 @@ PromptFactory.prototype = {
         type: "popup",
         targetUri: popupWindowURISpec,
       },
-      allowed => {
-        if (allowed && dwi) {
+      ({ response }) => {
+        if (response && dwi) {
           dwi.open(
             popupWindowURISpec,
             aEvent.popupWindowName,

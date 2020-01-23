@@ -173,6 +173,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.waitForJS(js: String): Any? =
             sessionRule.waitForJS(this, js)
 
+    fun GeckoSession.waitForRoundTrip() = sessionRule.waitForRoundTrip(this)
+
     @Suppress("UNCHECKED_CAST")
     fun Any?.asJsonArray(): JSONArray = this as JSONArray
 
