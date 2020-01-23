@@ -207,15 +207,14 @@ class MediaPipeline : public sigslot::has_slots<> {
   void RtpStateChange(const std::string& aTransportId, TransportLayer::State);
   void RtcpStateChange(const std::string& aTransportId, TransportLayer::State);
   virtual void CheckTransportStates();
-  void PacketReceived(const std::string& aTransportId,
-                      const MediaPacket& packet);
+  void PacketReceived(const std::string& aTransportId, MediaPacket& packet);
   void AlpnNegotiated(const std::string& aAlpn, bool aPrivacyRequested);
 
-  void RtpPacketReceived(const MediaPacket& packet);
-  void RtcpPacketReceived(const MediaPacket& packet);
+  void RtpPacketReceived(MediaPacket& packet);
+  void RtcpPacketReceived(MediaPacket& packet);
 
   void EncryptedPacketSending(const std::string& aTransportId,
-                              const MediaPacket& aPacket);
+                              MediaPacket& aPacket);
 
   void SetDescription_s(const std::string& description);
 

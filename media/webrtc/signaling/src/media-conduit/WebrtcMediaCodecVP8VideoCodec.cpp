@@ -170,7 +170,7 @@ static java::sdk::MediaCodec::LocalRef CreateEncoder(const char* aMimeType) {
   return codec;
 }
 
-static void ShutdownThread(const nsCOMPtr<nsIThread>& aThread) {
+static void ShutdownThread(nsCOMPtr<nsIThread>& aThread) {
   aThread->Shutdown();
 }
 

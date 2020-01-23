@@ -249,9 +249,8 @@ void UDPSocketParent::DoSendConnectResponse(
   mozilla::Unused << SendCallbackConnected(aAddressInfo);
 }
 
-void UDPSocketParent::SendConnectResponse(
-    const nsCOMPtr<nsIEventTarget>& aThread,
-    const UDPAddressInfo& aAddressInfo) {
+void UDPSocketParent::SendConnectResponse(nsIEventTarget* aThread,
+                                          const UDPAddressInfo& aAddressInfo) {
   Unused << NS_WARN_IF(NS_FAILED(aThread->Dispatch(
       WrapRunnable(RefPtr<UDPSocketParent>(this),
                    &UDPSocketParent::DoSendConnectResponse, aAddressInfo),
@@ -259,8 +258,8 @@ void UDPSocketParent::SendConnectResponse(
 }
 
 // Runs on STS thread
-void UDPSocketParent::DoConnect(const nsCOMPtr<nsIUDPSocket>& aSocket,
-                                const nsCOMPtr<nsIEventTarget>& aReturnThread,
+void UDPSocketParent::DoConnect(nsCOMPtr<nsIUDPSocket>& aSocket,
+                                nsCOMPtr<nsIEventTarget>& aReturnThread,
                                 const UDPAddressInfo& aAddressInfo) {
   UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, aAddressInfo.addr().get(),
                  aAddressInfo.port()));
@@ -554,7 +553,7 @@ void UDPSocketParent::FireInternalError(uint32_t aLineNo) {
                                        NS_LITERAL_CSTRING(__FILE__), aLineNo);
 }
 
-void UDPSocketParent::SendInternalError(const nsCOMPtr<nsIEventTarget>& aThread,
+void UDPSocketParent::SendInternalError(nsIEventTarget* aThread,
                                         uint32_t aLineNo) {
   UDPSOCKET_LOG(("SendInternalError: %u", aLineNo));
   Unused << NS_WARN_IF(NS_FAILED(aThread->Dispatch(

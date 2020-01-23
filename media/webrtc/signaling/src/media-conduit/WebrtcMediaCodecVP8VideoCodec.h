@@ -9,6 +9,7 @@
 
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
+#include "nsAutoPtr.h"
 
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
