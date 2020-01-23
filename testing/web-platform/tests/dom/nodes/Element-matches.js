@@ -31,7 +31,7 @@ function runSpecialMatchesTests(method, type, element) {
   }, type + "." + method + "(undefined)")
 
   test(function() { // 3
-    assert_throws(TypeError(), function() {
+    assert_throws_js(element.ownerDocument.defaultView.TypeError, function() {
       element[method]();
     }, "This should throw a TypeError.")
   }, type + "." + method + " no parameter")
