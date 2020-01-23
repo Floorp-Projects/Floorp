@@ -253,10 +253,18 @@ class InactivePropertyHelper {
         numFixProps: 1,
         learnMoreURL: VISITED_MDN_LINK,
       },
-      // top, right, bottom, left and z-index properties used on non positioned boxes.
+      // top, right, bottom, left properties used on non positioned boxes.
       {
-        invalidProperties: ["top", "right", "bottom", "left", "z-index"],
+        invalidProperties: ["top", "right", "bottom", "left"],
         when: () => !this.isPositioned,
+        fixId: "inactive-css-position-property-on-unpositioned-box-fix",
+        msgId: "inactive-css-position-property-on-unpositioned-box",
+        numFixProps: 1,
+      },
+      // z-index property used on non positioned boxes that are not grid/flex items.
+      {
+        invalidProperties: ["z-index"],
+        when: () => !this.isPositioned && !this.gridItem && !this.flexItem,
         fixId: "inactive-css-position-property-on-unpositioned-box-fix",
         msgId: "inactive-css-position-property-on-unpositioned-box",
         numFixProps: 1,
