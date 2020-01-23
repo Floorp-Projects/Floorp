@@ -17,6 +17,9 @@ import java.util.UUID
 private const val EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url"
 private const val MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id="
 
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal const val APP_LINKS_CACHE_INTERVAL = 30 * 1000L // 30 seconds
+
 /**
  * These use cases allow for the detection of, and opening of links that other apps have registered
  * an [IntentFilter]s to open.
@@ -87,6 +90,15 @@ class AppLinksUseCases(
         private val includeInstallAppFallback: Boolean = false
     ) {
         operator fun invoke(url: String): AppLinkRedirect {
+            val urlHash = (url + includeHttpAppLinks + ignoreDefaultBrowser + includeHttpAppLinks).hashCode()
+            val currentTimeStamp = System.currentTimeMillis()
+            // since redirectCache is mutable, get the latest
+            val cache = redirectCache
+            if (cache != null && urlHash == cache.cachedUrlHash &&
+                    currentTimeStamp <= cache.cacheTimeStamp + APP_LINKS_CACHE_INTERVAL) {
+                return cache.cachedAppLinkRedirect
+            }
+
             val redirectData = createBrowsableIntents(url)
             val isAppIntentHttpOrHttps = redirectData.appIntent?.data?.isHttpOrHttps ?: false
 
@@ -110,7 +122,9 @@ class AppLinksUseCases(
                 else -> null
             }
 
-            return AppLinkRedirect(appIntent, fallbackUrl, marketplaceIntent)
+            val appLinkRedirect = AppLinkRedirect(appIntent, fallbackUrl, marketplaceIntent)
+            redirectCache = AppLinkRedirectCache(currentTimeStamp, urlHash, appLinkRedirect)
+            return appLinkRedirect
         }
 
         private fun isDefaultBrowser(intent: Intent) =
@@ -217,4 +231,16 @@ class AppLinksUseCases(
         val marketplaceIntent: Intent? = null,
         val resolveInfo: ResolveInfo? = null
     )
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal data class AppLinkRedirectCache(
+        var cacheTimeStamp: Long,
+        var cachedUrlHash: Int,
+        var cachedAppLinkRedirect: AppLinkRedirect
+    )
+
+    companion object {
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal var redirectCache: AppLinkRedirectCache? = null
+    }
 }

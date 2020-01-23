@@ -10,6 +10,10 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -17,6 +21,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
@@ -24,6 +29,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows.shadowOf
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class AppLinksUseCasesTest {
 
@@ -32,7 +38,13 @@ class AppLinksUseCasesTest {
     private val browserPackage = "com.browser"
     private val testBrowserPackage = "com.current.browser"
 
+    @Before
+    fun setup() {
+        AppLinksUseCases.redirectCache = null
+    }
+
     private fun createContext(vararg urlToPackages: Pair<String, String>, default: Boolean = false): Context {
+
         val pm = testContext.packageManager
         val packageManager = shadowOf(pm)
 
@@ -217,5 +229,30 @@ class AppLinksUseCasesTest {
 
         verify(context).startActivity(any())
         assert(failedToLaunch)
+    }
+
+    @Test
+    fun `AppLinksUsecases uses cache`() {
+        val testDispatcher = TestCoroutineDispatcher()
+        TestCoroutineScope(testDispatcher).launch {
+            val context = createContext(appUrl to appPackage)
+
+            var subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
+            var redirect = subject.interceptedAppLinkRedirect(appUrl)
+            assertTrue(redirect.isRedirect())
+            val timestamp = AppLinksUseCases.redirectCache?.cacheTimeStamp
+
+            testDispatcher.advanceTimeBy(APP_LINKS_CACHE_INTERVAL / 2)
+            subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
+            redirect = subject.interceptedAppLinkRedirect(appUrl)
+            assertTrue(redirect.isRedirect())
+            assert(timestamp == AppLinksUseCases.redirectCache?.cacheTimeStamp)
+
+            testDispatcher.advanceTimeBy(APP_LINKS_CACHE_INTERVAL / 2 + 1)
+            subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
+            redirect = subject.interceptedAppLinkRedirect(appUrl)
+            assertTrue(redirect.isRedirect())
+            assert(timestamp != AppLinksUseCases.redirectCache?.cacheTimeStamp)
+        }
     }
 }
