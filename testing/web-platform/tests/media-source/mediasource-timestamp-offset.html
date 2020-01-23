@@ -21,7 +21,7 @@
                       "Initial timestampOffset of a SourceBuffer is 0");
 
                   if (expected == "TypeError")  {
-                      assert_throws({name: "TypeError"},
+                      assert_throws_js(TypeError,
                           function() { sourceBuffer.timestampOffset = value; },
                           "setting timestampOffset to " + description + " throws an exception.");
                   } else {
