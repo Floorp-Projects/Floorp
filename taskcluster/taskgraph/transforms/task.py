@@ -112,7 +112,7 @@ task_description_schema = Schema({
     Optional('extra'): {text_type: object},
 
     # treeherder-related information; see
-    # https://schemas.taskcluster.net/taskcluster-treeherder/v1/task-treeherder-config.json
+    # https://firefox-ci-tc.services.mozilla.com/schemas/taskcluster-treeherder/v1/task-treeherder-config.json
     # If not specified, no treeherder extra information or routes will be
     # added to the task
     Optional('treeherder'): {
