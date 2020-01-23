@@ -949,7 +949,16 @@ class nsContextMenu {
       );
     }
 
+    if (!showFill || disableFill) {
+      return;
+    }
+
     let formOrigin = LoginHelper.getLoginOrigin(documentURI.spec);
+    let fragment = nsContextMenu.LoginManagerContextMenu.addLoginsToMenu(
+      this.targetIdentifier,
+      this.browser,
+      formOrigin
+    );
     let isGeneratedPasswordEnabled =
       LoginHelper.generationAvailable && LoginHelper.generationEnabled;
     let canFillGeneratedPassword =
@@ -957,21 +966,9 @@ class nsContextMenu {
       isGeneratedPasswordEnabled &&
       Services.logins.getLoginSavingEnabled(formOrigin);
 
+    this.showItem("fill-login-no-logins", !fragment);
     this.showItem("fill-login-generated-password", canFillGeneratedPassword);
     this.showItem("generated-password-separator", canFillGeneratedPassword);
-
-    if (!showFill || disableFill) {
-      return;
-    }
-
-    // Update sub-menu items.
-    let fragment = nsContextMenu.LoginManagerContextMenu.addLoginsToMenu(
-      this.targetIdentifier,
-      this.browser,
-      formOrigin
-    );
-
-    this.showItem("fill-login-no-logins", !fragment);
 
     if (!fragment) {
       return;
