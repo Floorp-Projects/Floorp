@@ -26,10 +26,10 @@ import org.mozilla.gecko.util.GeckoBundle;
  * complete range of heuristics for login forms, autofill and autocomplete
  * scenarios.
  *
- * Examples
+ * <h2>Examples</h2>
  *
- * Autofill/Fetch API
- *
+ * <h3>Autofill/Fetch API</h3>
+ * <p>
  * GeckoView loads <code>https://example.com</code> which contains (for the
  * purpose of this example) elements resembling a login form, e.g.,
  * <pre><code>
@@ -39,31 +39,41 @@ import org.mozilla.gecko.util.GeckoBundle;
  *     &lt;input type=&quot;submit&quot; value=&quot;submit&quot;&gt;
  *   &lt;/form&gt;
  * </code></pre>
- *
+ * </p>
+ * <p>
  * With the document parsed and the login input fields identified, GeckoView
  * dispatches a
  * <code>LoginStorage.Delegate.onLoginFetch(&quot;example.com&quot;)</code>
  * request to fetch logins for the given domain.
+ * </p>
  *
+ * <p>
  * Based on the provided login entries, GeckoView will attempt to autofill the
  * login input fields.
+ * </p>
  *
- * Update API
- *
+ * <h3>Update API</h3>
+ * <p>
  * When the user submits some login input fields, GeckoView dispatches another
  * <code>LoginStorage.Delegate.onLoginFetch(&quot;example.com&quot;)</code>
  * request to check whether the submitted login exists or whether it's a new or
  * updated login entry.
+ * </p>
+ * <p>
  * If the submitted login is already contained as-is in the collection returned
  * by <code>onLoginFetch</code>, then GeckoView dispatches
  * <code>LoginStorage.Delegate.onLoginUsed</code> with the submitted login
  * entry.
+ * </p>
+ * <p>
  * If the submitted login is a new or updated entry, GeckoView dispatches
  * a sequence of requests to save/update the login entry, see the Save API
  * example.
+ * </p>
  *
- * Save API
+ * <h3>Save API</h3>
  *
+ * <p>
  * The user enters new or updated (password) login credentials in some login
  * input fields and submits explicitely (submit action) or by navigation.
  * GeckoView identifies the entered credentials and dispatches a
@@ -71,7 +81,9 @@ import org.mozilla.gecko.util.GeckoBundle;
  * request with the <code>prompt</code> being of type
  * <code>LoginStoragePrompt.Type.SAVE</code> and containing the entered
  * credentials.
+ * </p>
  *
+ * <p>
  * The app may dismiss the prompt request via
  * <code>return GeckoResult.fromValue(prompt.dismiss())</code>
  * which terminates this saving request, or confirm it via
@@ -79,16 +91,19 @@ import org.mozilla.gecko.util.GeckoBundle;
  * where <code>login</code> either holds the credentials originally provided by
  * the prompt request (<code>prompt.logins[0]</code>) or a new or modified login
  * entry.
+ * </p>
  *
+ * <p>
  * The login entry returned in a confirmed save prompt is used to request for
  * saving in the runtime delegate via
  * <code>LoginStorage.Delegate.onLoginSave(login)</code>.
  * If the app has already stored the entry during the prompt request handling,
  * it may ignore this storage saving request.
+ * </p>
  *
- * @see GeckoRuntime#setLoginStorageDelegate
- * @see GeckoSession#setPromptDelegate
- * @see GeckoSession.PromptDelegate#onLoginStoragePrompt
+ * <br>@see GeckoRuntime#setLoginStorageDelegate
+ * <br>@see GeckoSession#setPromptDelegate
+ * <br>@see GeckoSession.PromptDelegate#onLoginStoragePrompt
  */
 public class LoginStorage {
     private static final String LOGTAG = "LoginStorage";
