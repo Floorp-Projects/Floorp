@@ -70,11 +70,6 @@ void wr_compositor_end_frame(void* aCompositor) {
   compositor->CompositorEndFrame();
 }
 
-void wr_compositor_enable_native_compositor(void* aCompositor, bool aEnable) {
-  RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
-  compositor->EnableNativeCompositor(aEnable);
-}
-
 void wr_compositor_unbind(void* aCompositor) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
   compositor->Unbind();

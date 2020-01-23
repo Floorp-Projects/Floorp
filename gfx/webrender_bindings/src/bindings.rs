@@ -1220,10 +1220,6 @@ extern "C" {
         clip_rect: DeviceIntRect,
     );
     fn wr_compositor_end_frame(compositor: *mut c_void);
-    fn wr_compositor_enable_native_compositor(
-        compositor: *mut c_void,
-        enable: bool,
-    );
 }
 
 pub struct WrCompositor(*mut c_void);
@@ -1346,15 +1342,6 @@ impl Compositor for WrCompositor {
         unsafe {
             wr_compositor_end_frame(
                 self.0,
-            );
-        }
-    }
-
-    fn enable_native_compositor(&mut self, enable: bool) {
-        unsafe {
-            wr_compositor_enable_native_compositor(
-                self.0,
-                enable,
             );
         }
     }
@@ -1596,11 +1583,6 @@ pub unsafe extern "C" fn wr_api_accumulate_memory_report(
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_clear_all_caches(dh: &mut DocumentHandle) {
     dh.api.send_debug_cmd(DebugCommand::ClearCaches(ClearCache::all()));
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_api_enable_native_compositor(dh: &mut DocumentHandle, enable: bool) {
-    dh.api.send_debug_cmd(DebugCommand::EnableNativeCompositor(enable));
 }
 
 fn make_transaction(do_async: bool) -> Transaction {

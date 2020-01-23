@@ -70,8 +70,7 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
       mCompositor(std::move(aCompositor)),
       mRenderer(aRenderer),
       mBridge(aBridge),
-      mWindowId(aWindowId),
-      mDisableNativeCompositor(false) {
+      mWindowId(aWindowId) {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mCompositor);
   MOZ_ASSERT(mRenderer);
@@ -106,11 +105,6 @@ void RendererOGL::Update() {
 static void DoNotifyWebRenderContextPurge(
     layers::CompositorBridgeParent* aBridge) {
   aBridge->NotifyWebRenderContextPurge();
-}
-
-static void DoWebRenderDisableNativeCompositor(
-    layers::CompositorBridgeParent* aBridge) {
-  aBridge->NotifyWebRenderDisableNativeCompositor();
 }
 
 RenderedFrameId RendererOGL::UpdateAndRender(
@@ -174,7 +168,7 @@ RenderedFrameId RendererOGL::UpdateAndRender(
     }
   }
 
-  mScreenshotGrabber.MaybeGrabScreenshot(this, size.ToUnknownSize());
+  mScreenshotGrabber.MaybeGrabScreenshot(mRenderer, size.ToUnknownSize());
 
   RenderedFrameId frameId = mCompositor->EndFrame(result.DirtyRects());
 
@@ -190,27 +184,12 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   mFrameStartTime = TimeStamp();
 #endif
 
-  mScreenshotGrabber.MaybeProcessQueue(this);
+  mScreenshotGrabber.MaybeProcessQueue(mRenderer);
 
   // TODO: Flush pending actions such as texture deletions/unlocks and
   //       textureHosts recycling.
 
   return frameId;
-}
-
-bool RendererOGL::EnsureAsyncScreenshot() {
-  if (mCompositor->SupportAsyncScreenshot()) {
-    return true;
-  }
-  if (!mDisableNativeCompositor) {
-    layers::CompositorThreadHolder::Loop()->PostTask(
-        NewRunnableFunction("DoWebRenderDisableNativeCompositorRunnable",
-                            &DoWebRenderDisableNativeCompositor, mBridge));
-
-    mDisableNativeCompositor = true;
-    gfxCriticalNote << "Disable native compositor for async screenshot";
-  }
-  return false;
 }
 
 void RendererOGL::CheckGraphicsResetStatus() {

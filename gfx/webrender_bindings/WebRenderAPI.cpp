@@ -521,10 +521,6 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
 
 void WebRenderAPI::ClearAllCaches() { wr_api_clear_all_caches(mDocHandle); }
 
-void WebRenderAPI::EnableNativeCompositor(bool aEnable) {
-  wr_api_enable_native_compositor(mDocHandle, aEnable);
-}
-
 void WebRenderAPI::Pause() {
   class PauseEvent : public RendererEvent {
    public:

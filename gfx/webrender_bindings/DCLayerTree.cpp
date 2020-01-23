@@ -52,12 +52,9 @@ DCLayerTree::DCLayerTree(gl::GLContext* aGL, EGLConfig aEGLConfig,
       mDebugCounter(false),
       mDebugVisualRedrawRegions(false),
       mEGLImage(EGL_NO_IMAGE),
-      mColorRBO(0),
-      mPendingCommit(false) {}
+      mColorRBO(0) {}
 
-DCLayerTree::~DCLayerTree() { ReleaseNativeCompositorResources(); }
-
-void DCLayerTree::ReleaseNativeCompositorResources() {
+DCLayerTree::~DCLayerTree() {
   const auto gl = GetGLContext();
 
   DestroyEGLSurface();
@@ -123,7 +120,7 @@ void DCLayerTree::SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {
   // Default SwapChain's visual does not need linear interporation.
   mDefaultSwapChainVisual->SetBitmapInterpolationMode(
       DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
-  mPendingCommit = true;
+  mCompositionDevice->Commit();
 }
 
 void DCLayerTree::MaybeUpdateDebug() {
@@ -131,28 +128,12 @@ void DCLayerTree::MaybeUpdateDebug() {
   updated |= MaybeUpdateDebugCounter();
   updated |= MaybeUpdateDebugVisualRedrawRegions();
   if (updated) {
-    mPendingCommit = true;
+    mCompositionDevice->Commit();
   }
-}
-
-void DCLayerTree::MaybeCommit() {
-  if (!mPendingCommit) {
-    return;
-  }
-  mCompositionDevice->Commit();
 }
 
 void DCLayerTree::WaitForCommitCompletion() {
   mCompositionDevice->WaitForCommitCompletion();
-}
-
-void DCLayerTree::DisableNativeCompositor() {
-  MOZ_ASSERT(mCurrentSurface.isNothing());
-  MOZ_ASSERT(mCurrentLayers.empty());
-
-  ReleaseNativeCompositorResources();
-  mPrevLayers.clear();
-  mRootVisual->RemoveAllVisuals();
 }
 
 bool DCLayerTree::MaybeUpdateDebugCounter() {

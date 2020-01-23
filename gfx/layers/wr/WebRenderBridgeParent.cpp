@@ -1734,15 +1734,6 @@ void WebRenderBridgeParent::FlushFramePresentation() {
   mApis[wr::RenderRoot::Default]->WaitFlushed();
 }
 
-void WebRenderBridgeParent::DisableNativeCompositor() {
-  // Make sure that SceneBuilder thread does not have a task.
-  mApis[wr::RenderRoot::Default]->FlushSceneBuilder();
-  // Disable WebRender's native compositor usage
-  mApis[wr::RenderRoot::Default]->EnableNativeCompositor(false);
-  // Ensure we generate and render a frame immediately.
-  ScheduleForcedGenerateFrame();
-}
-
 void WebRenderBridgeParent::UpdateQualitySettings() {
   for (auto& api : mApis) {
     if (!api) {
