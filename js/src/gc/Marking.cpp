@@ -1097,8 +1097,12 @@ bool js::GCMarker::mark(T* thing) {
 
   MarkColor color =
       TraceKindCanBeGray<T>::value ? markColor() : MarkColor::Black;
-  markCount++;
-  return cell->markIfUnmarked(color);
+  bool marked = cell->markIfUnmarked(color);
+  if (marked) {
+    markCount++;
+  }
+
+  return marked;
 }
 
 /*** Inline, Eager GC Marking ***********************************************/
