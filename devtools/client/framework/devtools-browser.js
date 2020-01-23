@@ -145,12 +145,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       remoteEnabled && win.gMultiProcessBrowser
     );
 
-    // Enable record/replay menu items?
-    const recordReplayEnabled = Services.prefs.getBoolPref(
-      "devtools.recordreplay.enabled"
-    );
-    toggleMenuItem("menu_webreplay", recordReplayEnabled);
-
     // The profiler's popup is experimental. The plan is to eventually turn it on
     // everywhere, but while it's under active development we don't want everyone
     // having it enabled. For now the default pref is to turn it on with Nightly,

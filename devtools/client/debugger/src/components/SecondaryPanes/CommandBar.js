@@ -12,7 +12,6 @@ import classnames from "classnames";
 import { features } from "../../utils/prefs";
 import {
   getIsWaitingOnBreak,
-  getCanRewind,
   getSkipPausing,
   getCurrentThread,
   getThreadContext,
@@ -82,15 +81,12 @@ type Props = {
   cx: ThreadContext,
   isWaitingOnBreak: boolean,
   horizontal: boolean,
-  canRewind: boolean,
   skipPausing: boolean,
   resume: typeof actions.resume,
   stepIn: typeof actions.stepIn,
   stepOut: typeof actions.stepOut,
   stepOver: typeof actions.stepOver,
   breakOnNext: typeof actions.breakOnNext,
-  rewind: typeof actions.rewind,
-  reverseStepOver: typeof actions.reverseStepOver,
   pauseOnExceptions: typeof actions.pauseOnExceptions,
   toggleSkipPausing: typeof actions.toggleSkipPausing,
 };
@@ -200,68 +196,6 @@ class CommandBar extends Component<Props> {
     );
   }
 
-  renderReplayButtons() {
-    const { cx } = this.props;
-
-    const className = cx.isPaused ? "active" : "disabled";
-
-    return [
-      debugBtn(
-        () => this.props.breakOnNext(cx),
-        "pause",
-        !cx.isPaused ? "active" : "disabled",
-        L10N.getFormatStr("pauseButtonTooltip", formatKey("resume")),
-        cx.isPaused
-      ),
-      <div key="divider-1" className="divider" />,
-      debugBtn(
-        () => this.props.rewind(cx),
-        "rewind",
-        className,
-        "Rewind Execution",
-        !cx.isPaused
-      ),
-      debugBtn(
-        () => this.props.resume(cx),
-        "resume",
-        className,
-        L10N.getFormatStr("resumeButtonTooltip", formatKey("resume")),
-        !cx.isPaused
-      ),
-      <div key="divider-2" className="divider" />,
-      debugBtn(
-        () => this.props.reverseStepOver(cx),
-        "reverseStepOver",
-        className,
-        "Reverse step over",
-        !cx.isPaused
-      ),
-      debugBtn(
-        () => this.props.stepOver(cx),
-        "stepOver",
-        className,
-        L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")),
-        !cx.isPaused
-      ),
-      <div key="divider-3" className="divider" />,
-      debugBtn(
-        () => this.props.stepOut(cx),
-        "stepOut",
-        className,
-        L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")),
-        !cx.isPaused
-      ),
-
-      debugBtn(
-        () => this.props.stepIn(cx),
-        "stepIn",
-        className,
-        L10N.getFormatStr("stepInTooltip", formatKey("stepIn")),
-        !cx.isPaused
-      ),
-    ];
-  }
-
   renderSkipPausingButton() {
     const { skipPausing, toggleSkipPausing } = this.props;
 
@@ -297,9 +231,7 @@ class CommandBar extends Component<Props> {
           vertical: !this.props.horizontal,
         })}
       >
-        {this.props.canRewind
-          ? this.renderReplayButtons()
-          : this.renderStepButtons()}
+        {this.renderStepButtons()}
         <div className="filler" />
         {this.renderSkipPausingButton()}
       </div>
@@ -314,7 +246,6 @@ CommandBar.contextTypes = {
 const mapStateToProps = state => ({
   cx: getThreadContext(state),
   isWaitingOnBreak: getIsWaitingOnBreak(state, getCurrentThread(state)),
-  canRewind: getCanRewind(state),
   skipPausing: getSkipPausing(state),
 });
 
@@ -326,8 +257,6 @@ export default connect<Props, OwnProps, _, _, _, _>(
     stepOut: actions.stepOut,
     stepOver: actions.stepOver,
     breakOnNext: actions.breakOnNext,
-    rewind: actions.rewind,
-    reverseStepOver: actions.reverseStepOver,
     pauseOnExceptions: actions.pauseOnExceptions,
     toggleSkipPausing: actions.toggleSkipPausing,
   }
