@@ -43,9 +43,7 @@ class CrashReporterHelper {
   bool GenerateCrashReport(base::ProcessId aPid,
                            nsString* aMinidumpId = nullptr) {
     if (!mCrashReporter) {
-      CrashReporter::FinalizeOrphanedMinidump(aPid, PT, aMinidumpId);
-      CrashReporterHost::RecordCrash(PT, nsICrashService::CRASH_TYPE_CRASH,
-                                     *aMinidumpId);
+      HandleOrphanedMinidump(aPid, aMinidumpId);
       return false;
     }
 
@@ -56,6 +54,18 @@ class CrashReporterHelper {
 
     mCrashReporter = nullptr;
     return generated;
+  }
+
+  void HandleOrphanedMinidump(base::ProcessId aPid, nsString* aMinidumpId) {
+    if (CrashReporter::FinalizeOrphanedMinidump(aPid, PT, aMinidumpId)) {
+      CrashReporterHost::RecordCrash(PT, nsICrashService::CRASH_TYPE_CRASH,
+                                     *aMinidumpId);
+    } else {
+      NS_WARNING(nsPrintfCString("child process pid = %d crashed without "
+                                 "leaving a minidump behind",
+                                 aPid)
+                     .get());
+    }
   }
 
   UniquePtr<ipc::CrashReporterHost> mCrashReporter;

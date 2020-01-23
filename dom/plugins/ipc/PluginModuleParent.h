@@ -421,6 +421,7 @@ class PluginModuleChromeParent : public PluginModuleParent,
   virtual bool ShouldContinueFromReplyTimeout() override;
 
   void ProcessFirstMinidump();
+  void HandleOrphanedMinidump();
   void AddCrashAnnotations();
 
   PluginProcessParent* Process() const { return mSubprocess; }

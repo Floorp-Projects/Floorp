@@ -1770,11 +1770,7 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
           dumpID = mCrashReporter->MinidumpID();
         }
       } else {
-        CrashReporter::FinalizeOrphanedMinidump(
-            OtherPid(), GeckoProcessType_Content, &dumpID);
-        CrashReporterHost::RecordCrash(GeckoProcessType_Content,
-                                       nsICrashService::CRASH_TYPE_CRASH,
-                                       dumpID);
+        HandleOrphanedMinidump(&dumpID);
       }
 
       if (!dumpID.IsEmpty()) {
@@ -3593,6 +3589,19 @@ void ContentParent::GeneratePairedMinidump(const char* aReason) {
             this, nullptr, NS_LITERAL_CSTRING("browser"))) {
       mCreatedPairedMinidumps = mCrashReporter->FinalizeCrashReport();
     }
+  }
+}
+
+void ContentParent::HandleOrphanedMinidump(nsString* aDumpId) {
+  if (CrashReporter::FinalizeOrphanedMinidump(
+          OtherPid(), GeckoProcessType_Content, aDumpId)) {
+    CrashReporterHost::RecordCrash(GeckoProcessType_Content,
+                                   nsICrashService::CRASH_TYPE_CRASH, *aDumpId);
+  } else {
+    NS_WARNING(nsPrintfCString("content process pid = %d crashed without "
+                               "leaving a minidump behind",
+                               OtherPid())
+                   .get());
   }
 }
 
