@@ -13,7 +13,7 @@ indexeddb_test(
   },
   (t, db) => {
     const tx = db.transaction('store', 'readwrite');
-    assert_throws({name: 'DataError'}, () => {
+    assert_throws_dom('DataError', () => {
       tx.objectStore('store').put({a: {b: "foo"}});
     }, 'Put should throw if key can not be inserted at key path location.');
     t.done();

@@ -581,7 +581,7 @@
           {
               mediaSource.removeSourceBuffer(sourceBuffer);
 
-              assert_throws( { name: "InvalidStateError"} ,
+              assert_throws_dom( "InvalidStateError",
                   function() { sourceBuffer.appendBuffer(mediaData); },
                   "appendBuffer() throws an exception when called after removeSourceBuffer().");
               test.done();
