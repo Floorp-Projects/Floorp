@@ -103,20 +103,35 @@ void image_brush_vs(
             uv0 = res.uv_rect.p0 + segment_data.xy * uv_size;
             uv1 = res.uv_rect.p0 + segment_data.zw * uv_size;
 
+            #ifdef WR_FEATURE_REPETITION
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
               stretch_size.x = local_rect.size.y / dy * dx;
             }
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
               stretch_size.y = local_rect.size.x / dx * dy;
             }
+            #endif
         } else {
+            #ifdef WR_FEATURE_REPETITION
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
                 stretch_size.x = dx;
             }
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
                 stretch_size.y = dy;
             }
+            #endif
         }
+
+        #ifdef WR_FEATURE_REPETITION
+        if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X_ROUND) != 0) {
+            float nx = max(1.0, round(segment_rect.size.x / stretch_size.x));
+            stretch_size.x = segment_rect.size.x / nx;
+        }
+        if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y_ROUND) != 0) {
+            float ny = max(1.0, round(segment_rect.size.y / stretch_size.y));
+            stretch_size.y = segment_rect.size.y / ny;
+        }
+        #endif
     }
 
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;

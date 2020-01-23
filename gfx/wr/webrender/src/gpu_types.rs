@@ -403,16 +403,20 @@ bitflags! {
     #[derive(MallocSizeOf)]
     pub struct BrushFlags: u8 {
         /// Apply perspective interpolation to UVs
-        const PERSPECTIVE_INTERPOLATION = 0x1;
+        const PERSPECTIVE_INTERPOLATION = 1;
         /// Do interpolation relative to segment rect,
         /// rather than primitive rect.
-        const SEGMENT_RELATIVE = 0x2;
+        const SEGMENT_RELATIVE = 2;
         /// Repeat UVs horizontally.
-        const SEGMENT_REPEAT_X = 0x4;
+        const SEGMENT_REPEAT_X = 4;
         /// Repeat UVs vertically.
-        const SEGMENT_REPEAT_Y = 0x8;
+        const SEGMENT_REPEAT_Y = 8;
+        /// Horizontally follow border-image-repeat: round
+        const SEGMENT_REPEAT_X_ROUND = 16;
+        /// Vorizontally follow border-image-repeat: round
+        const SEGMENT_REPEAT_Y_ROUND = 32;
         /// The extra segment data is a texel rect.
-        const SEGMENT_TEXEL_RECT = 0x10;
+        const SEGMENT_TEXEL_RECT = 64;
     }
 }
 

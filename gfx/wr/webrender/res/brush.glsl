@@ -112,7 +112,9 @@ void multi_brush_vs(
 #define BRUSH_FLAG_SEGMENT_RELATIVE             2
 #define BRUSH_FLAG_SEGMENT_REPEAT_X             4
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y             8
-#define BRUSH_FLAG_TEXEL_RECT                  16
+#define BRUSH_FLAG_SEGMENT_REPEAT_X_ROUND      16
+#define BRUSH_FLAG_SEGMENT_REPEAT_Y_ROUND      32
+#define BRUSH_FLAG_TEXEL_RECT                  64
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
