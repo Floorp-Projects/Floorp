@@ -564,42 +564,42 @@ LengthPercentage LengthPercentage::FromPercentage(float aPercentage) {
 }
 
 bool LengthPercentage::HasPercent() const {
-  return IsPercentage() || (IsCalc() && AsCalc().has_percentage);
+  return IsPercentage() || IsCalc();
 }
 
-bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
+bool LengthPercentage::ConvertsToLength() const { return IsLength(); }
 
 nscoord LengthPercentage::ToLength() const {
   MOZ_ASSERT(ConvertsToLength());
-  return IsLength() ? AsLength().ToAppUnits() : AsCalc().length.ToAppUnits();
+  return AsLength().ToAppUnits();
 }
 
 CSSCoord LengthPercentage::ToLengthInCSSPixels() const {
   MOZ_ASSERT(ConvertsToLength());
-  return IsLength() ? AsLength().ToCSSPixels() : AsCalc().length.ToCSSPixels();
+  return AsLength().ToCSSPixels();
 }
 
 bool LengthPercentage::ConvertsToPercentage() const {
   if (IsPercentage()) {
     return true;
   }
-  if (IsCalc()) {
-    auto& calc = AsCalc();
-    return calc.has_percentage && calc.length.IsZero();
-  }
+  MOZ_ASSERT(IsLength() || !AsCalc().length.IsZero(),
+             "Should've been simplified to a percentage");
   return false;
 }
 
 float LengthPercentage::ToPercentage() const {
   MOZ_ASSERT(ConvertsToPercentage());
-  if (IsPercentage()) {
-    return AsPercentage()._0;
-  }
-  return AsCalc().percentage._0;
+  return AsPercentage()._0;
 }
 
 bool LengthPercentage::HasLengthAndPercentage() const {
-  return IsCalc() && !ConvertsToLength() && !ConvertsToPercentage();
+  if (!IsCalc()) {
+    return false;
+  }
+  MOZ_ASSERT(!ConvertsToLength() && !ConvertsToPercentage(),
+             "Should've been simplified earlier");
+  return true;
 }
 
 bool LengthPercentage::IsDefinitelyZero() const {
@@ -609,8 +609,9 @@ bool LengthPercentage::IsDefinitelyZero() const {
   if (IsPercentage()) {
     return AsPercentage()._0 == 0.0f;
   }
-  auto& calc = AsCalc();
-  return calc.length.IsZero() && calc.percentage._0 == 0.0f;
+  MOZ_ASSERT(!AsCalc().length.IsZero(),
+             "Should've been simplified to a percentage");
+  return false;
 }
 
 CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
