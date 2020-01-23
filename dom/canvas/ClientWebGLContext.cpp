@@ -837,6 +837,7 @@ ClientWebGLContext::SetContextOptions(JSContext* cx,
   newOpts.preserveDrawingBuffer = attributes.mPreserveDrawingBuffer;
   newOpts.failIfMajorPerformanceCaveat =
       attributes.mFailIfMajorPerformanceCaveat;
+  newOpts.xrCompatible = attributes.mXrCompatible;
   newOpts.powerPreference = attributes.mPowerPreference;
   newOpts.enableDebugRendererInfo =
       Preferences::GetBool("webgl.enable-debug-renderer-info", false);
