@@ -536,7 +536,7 @@ gfx.adapter.primary:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: "2020-02-01"
+    expires: "2020-04-01"
   subsystem_id:
     description: >
       Graphics adapter subsystem identification
@@ -652,7 +652,7 @@ gfx.status:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - ktaeleman@mozilla.com
-    expires: "2020-02-01"
+    expires: "2020-04-01"
   headless:
     description: >
       Boolean indicated whether graphics is running in headless (no display) mode
