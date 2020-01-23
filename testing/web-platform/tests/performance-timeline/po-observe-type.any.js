@@ -18,7 +18,7 @@ test(() => {
 
 test(() => {
   const obs = new PerformanceObserver(() =>{});
-  assert_throws(new SyntaxError(), function () {
+  assert_throws_dom("SyntaxError", function () {
     obs.observe({type: "mark", entryTypes: ["measure"]});
   });
 }, "Calling observe() with type and entryTypes should throw a SyntaxError");

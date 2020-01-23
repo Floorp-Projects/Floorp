@@ -82,11 +82,11 @@ var testParameter = test(function() {
     "",
     true
   ];
-  assert_throws(new TypeError(),
+  assert_throws_js(TypeError,
                 function() { var capturer = new ImageCapture(); },
                'an ImageCapturer can not be created with no parameter');
   invalidParameters.map(parameter => {
-    assert_throws(new TypeError(),
+    assert_throws_js(TypeError,
                   function() { var capturer = new ImageCapture(parameter); },
                  `an ImageCapturer can not be created with a ${parameter} parameter`);
   });

@@ -27,7 +27,7 @@
 
           mediasource_test(function(test, mediaElement, mediaSource)
           {
-              assert_throws(new TypeError(),
+              assert_throws_js(TypeError,
                           function() { mediaSource.removeSourceBuffer(null); },
                           "removeSourceBuffer() threw an exception when passed null.");
               test.done();

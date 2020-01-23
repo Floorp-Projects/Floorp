@@ -16,7 +16,7 @@ test(() => {
 }, 'Writable stream: throwing strategy.size getter');
 
 test(() => {
-  assert_throws(new TypeError(), () => {
+  assert_throws_js(TypeError, () => {
     new WritableStream({}, { size: 'a string' });
   });
 }, 'reject any non-function value for strategy.size');
@@ -37,7 +37,7 @@ test(() => {
 test(() => {
 
   for (const highWaterMark of [-1, -Infinity, NaN, 'foo', {}]) {
-    assert_throws(new RangeError(), () => {
+    assert_throws_js(RangeError, () => {
       new WritableStream({}, {
         size() {
           return 1;
@@ -88,7 +88,7 @@ promise_test(() => {
 }, 'Writable stream: invalid strategy.size return value');
 
 test(() => {
-  assert_throws(new TypeError(), () => new WritableStream(undefined, {
+  assert_throws_js(TypeError, () => new WritableStream(undefined, {
     size: 'not a function',
     highWaterMark: NaN
   }), 'WritableStream constructor should throw a TypeError');

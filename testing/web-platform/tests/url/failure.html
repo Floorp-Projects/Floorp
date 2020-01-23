@@ -20,7 +20,7 @@ function runTests(testData) {
     self.test(() => { // URL's constructor's first argument is tested by url-constructor.html
       // If a URL fails to parse with any valid base, it must also fail to parse with no base, i.e.
       // when used as a base URL itself.
-      assert_throws(new TypeError(), () => new URL("about:blank", test.input));
+      assert_throws_js(TypeError, () => new URL("about:blank", test.input));
     }, "URL's constructor's base argument: " + name)
 
     self.test(() => {
