@@ -2264,6 +2264,9 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
   }
 
   RefPtr<QuotaObject> databaseQuotaObject = GetQuotaObjectForFile(file);
+  if (NS_WARN_IF(!databaseQuotaObject)) {
+    return NS_ERROR_FAILURE;
+  }
 
   srv = ::sqlite3_file_control(mDBConn, nullptr, SQLITE_FCNTL_JOURNAL_POINTER,
                                &file);
@@ -2272,6 +2275,9 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
   }
 
   RefPtr<QuotaObject> journalQuotaObject = GetQuotaObjectForFile(file);
+  if (NS_WARN_IF(!journalQuotaObject)) {
+    return NS_ERROR_FAILURE;
+  }
 
   databaseQuotaObject.forget(aDatabaseQuotaObject);
   journalQuotaObject.forget(aJournalQuotaObject);
