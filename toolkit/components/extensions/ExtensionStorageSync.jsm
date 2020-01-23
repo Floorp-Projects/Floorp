@@ -1196,7 +1196,7 @@ class ExtensionStorageSync {
       ) {
         // Check if our token is still valid, or if we got locked out
         // between starting the sync and talking to Kinto.
-        const isSessionValid = await this._fxaService.checkAccountStatus();
+        const isSessionValid = await this._fxaService.sessionStatus();
         if (isSessionValid) {
           log.error(
             "Couldn't decipher old keyring; deleting the default bucket and resetting sync status"
