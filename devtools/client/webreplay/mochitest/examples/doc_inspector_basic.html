@@ -1,0 +1,14 @@
+<body>
+<div style="color: red" onclick="console.log('LOG')" id="maindiv">HELLO</div>
+<script>
+const cpmm = SpecialPowers.Services.cpmm;
+function recordingFinished() {
+  cpmm.sendAsyncMessage("RecordingFinished");
+}
+function foo() {
+  document.getElementById("maindiv").innerHTML = "GOODBYE";
+  window.setTimeout(recordingFinished);
+}
+window.setTimeout(foo);
+</script>
+</body>

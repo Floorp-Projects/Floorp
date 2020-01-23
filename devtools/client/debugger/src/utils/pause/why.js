@@ -21,6 +21,7 @@ const reasons = {
   setWatchpoint: "whyPaused.setWatchpoint",
   mutationBreakpoint: "whyPaused.mutationBreakpoint",
   interrupted: "whyPaused.interrupted",
+  replayForcedPause: "whyPaused.replayForcedPause",
 
   // V8
   DOM: "whyPaused.breakpoint",

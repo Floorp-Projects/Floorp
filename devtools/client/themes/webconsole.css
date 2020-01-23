@@ -130,6 +130,15 @@ a {
   border-bottom-width: 0;
 }
 
+.can-rewind .webconsole-output .message:last-of-type {
+  border-bottom: 1px solid var(--purple-50);
+}
+
+.can-rewind .webconsole-output .paused ~ .message:last-of-type,
+.can-rewind .webconsole-output .paused:last-of-type {
+  border-bottom-width: 0;
+}
+
 /*
  * By default, prevent any element in message to overflow.
  * We exclude network messages as it may cause issues in the network detail panel.
@@ -290,9 +299,24 @@ a {
   background-image: url(chrome://devtools/skin/images/webconsole/navigation.svg);
 }
 
+.message:hover > .icon.rewindable {
+  background-image: url(chrome://devtools/skin/images/next-circle.svg);
+  cursor: pointer;
+  transform: rotate(180deg);
+}
+
 .message > .icon.logpoint {
   background-image: url(resource://devtools/client/debugger/images/webconsole-logpoint.svg);
   color: var(--theme-graphs-purple);
+}
+
+/*
+ * we flip the next.svg icon by default because when we're
+ * not paused, we would jump back. We remove the transform here
+ * because we want to jump forward.
+ */
+.message.paused ~ .message:hover .icon.rewindable {
+  transform: none;
 }
 
 .message > .message-body-wrapper {
