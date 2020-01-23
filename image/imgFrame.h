@@ -355,8 +355,11 @@ class DrawableFrameRef final {
         mFrame = nullptr;
         mRef.reset();
       }
-    } else {
-      MOZ_ASSERT(aFrame->mOptSurface);
+    } else if (!aFrame->mOptSurface || !aFrame->mOptSurface->IsValid()) {
+      // The optimized surface has become invalid, so we need to redecode.
+      // For example, on Windows, there may have been a device reset, and
+      // all D2D surfaces now need to be recreated.
+      mFrame = nullptr;
     }
   }
 
