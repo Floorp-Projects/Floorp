@@ -29,6 +29,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "nsCOMPtr.h"
+#include "nsDebug.h"
 #include "nsString.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionListener.h"
@@ -684,6 +685,8 @@ static nsresult CompareToRangeStart(const nsINode* aCompareNode,
   if (aCompareNode->GetComposedDoc() != start->GetComposedDoc() ||
       !start->GetComposedDoc() ||
       aCompareNode->SubtreeRoot() != start->SubtreeRoot()) {
+    NS_WARNING(
+        "`CompareToRangeStart` couldn't compare nodes, pretending some order.");
     *aCmp = 1;
   } else {
     // The points are in the same subtree, hence there has to be an order.
@@ -703,6 +706,8 @@ static nsresult CompareToRangeEnd(const nsINode* aCompareNode,
   if (aCompareNode->GetComposedDoc() != end->GetComposedDoc() ||
       !end->GetComposedDoc() ||
       aCompareNode->SubtreeRoot() != end->SubtreeRoot()) {
+    NS_WARNING(
+        "`CompareToRangeEnd` couldn't compare nodes, pretending some order.");
     *aCmp = 1;
   } else {
     // The points are in the same subtree, hence there has to be an order.
