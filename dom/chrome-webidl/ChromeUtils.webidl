@@ -685,9 +685,9 @@ enum MediaControlKeysTestEvent {
   "play",
   "pause",
   "playPause",
-  "prevTrack",
-  "nextTrack",
-  "seekBackward",
-  "seekForward",
+  "previoustrack",
+  "nexttrack",
+  "seekbackward",
+  "seekforward",
   "stop",
 };
