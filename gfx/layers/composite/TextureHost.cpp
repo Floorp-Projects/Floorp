@@ -555,6 +555,14 @@ void BufferTextureHost::SetTextureSourceProvider(
 
 void BufferTextureHost::DeallocateDeviceData() {
   if (mFirstSource && mFirstSource->NumCompositableRefs() > 0) {
+    // WrappingTextureSourceYCbCrBasic wraps YUV format BufferTextureHost.
+    // When BufferTextureHost is destroyed, data of
+    // WrappingTextureSourceYCbCrBasic becomes invalid.
+    if (mFirstSource->AsWrappingTextureSourceYCbCrBasic() &&
+        mFirstSource->IsOwnedBy(this)) {
+      mFirstSource->SetOwner(nullptr);
+      mFirstSource->DeallocateDeviceData();
+    }
     return;
   }
 
