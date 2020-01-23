@@ -770,7 +770,7 @@ nsStyleSVG::nsStyleSVG(const Document& aDocument)
       mPaintOrder(0),
       mShapeRendering(StyleShapeRendering::Auto),
       mStrokeLinecap(StyleStrokeLinecap::Butt),
-      mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER),
+      mStrokeLinejoin(StyleStrokeLinejoin::Miter),
       mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO),
       mTextAnchor(StyleTextAnchor::Start),
       mContextFlags(
