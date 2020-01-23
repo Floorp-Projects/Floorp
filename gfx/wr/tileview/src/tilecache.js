@@ -75,7 +75,6 @@ function go_to_svg(index) {
     is_loading = false;
   }
   backbuffer.setAttribute('data', svg_files[svg_index]);
-  document.getElementById('intern').src = intern_files[svg_index];
 
   // also see https://stackoverflow.com/a/29915275
 }
