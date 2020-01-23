@@ -23,7 +23,7 @@
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Actualizar</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">El campo de contraseña no debe estar vacío</string>
+    <string name="mozac_feature_prompt_error_empty_password">El campo de contraseña no puede estar vacío</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">No se puede guardar el inicio de sesión</string>
     <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->

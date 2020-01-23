@@ -36,6 +36,20 @@
       </ul>
     ]]></string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Додатково…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Хтось може намагатися видати себе за сайт, тому вас не слід продовжувати.</label>
+        <br><br>
+        <label>Вебсайти засвідчують свою справжність за допомогою сертифікатів. %1$s не довіряє <b>%2$s</b>, тому що видавець його сертифіката невідомий, сертифікат самопідписаний, або сервер не надсилає правильні посередницькі сертифікати</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Назад (Рекомендовано)</string>
+
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Погодитись на ризик і продовжити</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">З’єднання перервано</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->

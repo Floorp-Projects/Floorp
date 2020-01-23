@@ -162,11 +162,30 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Endereço inválido</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>O endereço fornecido não está em um formato conhecido. Verifique se há erros na barra de endereços e tente novamente.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">O endereço não é válido</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Endereços web geralmente são escritos como <strong>http://www.example.com/</strong></li>
+        <li>Verifique se está usando barras comuns (ou seja, <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocolo desconhecido</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>O endereço especifica um protocolo (por exemplo, <q>wxyz://</q>) que o navegador não reconhece, assim ele não consegue se conectar corretamente com o site.</p>
+      <ul>
+        <li>Você está tentando acessar conteúdo multimídia ou outro serviço que não seja de texto? Verifique se o site exige requisitos adicionais.</li>
+        <li>Alguns protocolos podem necessitar de  softwares ou plugins de terceiros para que o navegador possa reconhecer.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Arquivo não encontrado</string>
@@ -190,6 +209,15 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Servidor proxy recusou a conexão</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>O navegador está configurado para usar um servidor proxy, mas o proxy recusou uma conexão.</p>
+      <ul>
+        <li>A configuração de proxy do navegador está correta? Verifique a configuração e tente novamente.</li>
+        <li>O serviço proxy permite conexões a partir desta rede?</li>
+        <li>O problema persiste? Peça ajuda ao administrador de rede ou ao suporte do provedor de internet.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Servidor proxy não encontrado</string>
