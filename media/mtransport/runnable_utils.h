@@ -12,8 +12,9 @@
 #include <utility>
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/Tuple.h"
 #include "nsThreadUtils.h"
+#include <functional>
+#include <tuple>
 
 // Abstract base class for all of our templates
 namespace mozilla {
@@ -36,48 +37,6 @@ class runnable_args_base : public Runnable {
   NS_IMETHOD Run() override = 0;
 };
 
-template <typename R>
-struct RunnableFunctionCallHelper {
-  template <typename FunType, typename... Args, size_t... Indices>
-  static R apply(FunType func, Tuple<Args...>& args,
-                 std::index_sequence<Indices...>) {
-    return func(Get<Indices>(args)...);
-  }
-};
-
-// A void specialization is needed in the case where the template instantiator
-// knows we don't want to return a value, but we don't know whether the called
-// function returns void or something else.
-template <>
-struct RunnableFunctionCallHelper<void> {
-  template <typename FunType, typename... Args, size_t... Indices>
-  static void apply(FunType func, Tuple<Args...>& args,
-                    std::index_sequence<Indices...>) {
-    func(Get<Indices>(args)...);
-  }
-};
-
-template <typename R>
-struct RunnableMethodCallHelper {
-  template <typename Class, typename M, typename... Args, size_t... Indices>
-  static R apply(Class obj, M method, Tuple<Args...>& args,
-                 std::index_sequence<Indices...>) {
-    return ((*obj).*method)(Get<Indices>(args)...);
-  }
-};
-
-// A void specialization is needed in the case where the template instantiator
-// knows we don't want to return a value, but we don't know whether the called
-// method returns void or something else.
-template <>
-struct RunnableMethodCallHelper<void> {
-  template <typename Class, typename M, typename... Args, size_t... Indices>
-  static void apply(Class obj, M method, Tuple<Args...>& args,
-                    std::index_sequence<Indices...>) {
-    ((*obj).*method)(Get<Indices>(args)...);
-  }
-};
-
 }  // namespace detail
 
 template <typename FunType, typename... Args>
@@ -89,14 +48,13 @@ class runnable_args_func : public detail::runnable_args_base<detail::NoResult> {
       : mFunc(f), mArgs(std::forward<Arguments>(args)...) {}
 
   NS_IMETHOD Run() override {
-    detail::RunnableFunctionCallHelper<void>::apply(
-        mFunc, mArgs, std::index_sequence_for<Args...>{});
+    std::apply(mFunc, std::move(mArgs));
     return NS_OK;
   }
 
  private:
   FunType mFunc;
-  Tuple<Args...> mArgs;
+  std::tuple<Args...> mArgs;
 };
 
 template <typename FunType, typename... Args>
@@ -116,15 +74,14 @@ class runnable_args_func_ret
       : mReturn(ret), mFunc(f), mArgs(std::forward<Arguments>(args)...) {}
 
   NS_IMETHOD Run() override {
-    *mReturn = detail::RunnableFunctionCallHelper<Ret>::apply(
-        mFunc, mArgs, std::index_sequence_for<Args...>{});
+    *mReturn = std::apply(mFunc, std::move(mArgs));
     return NS_OK;
   }
 
  private:
   Ret* mReturn;
   FunType mFunc;
-  Tuple<Args...> mArgs;
+  std::tuple<Args...> mArgs;
 };
 
 template <typename R, typename FunType, typename... Args>
@@ -140,27 +97,36 @@ class runnable_args_memfn
     : public detail::runnable_args_base<detail::NoResult> {
  public:
   template <typename... Arguments>
-  runnable_args_memfn(Class obj, M method, Arguments&&... args)
-      : mObj(obj), mMethod(method), mArgs(std::forward<Arguments>(args)...) {}
+  runnable_args_memfn(Class&& obj, M method, Arguments&&... args)
+      : mObj(std::forward<Class>(obj)),
+        mMethod(method),
+        mArgs(std::forward<Arguments>(args)...) {}
 
   NS_IMETHOD Run() override {
-    detail::RunnableMethodCallHelper<void>::apply(
-        mObj, mMethod, mArgs, std::index_sequence_for<Args...>{});
+    // Capturing `this` is okay here, the call is synchronous `mObj` and
+    // `mMethod` are not passed to the callback and will not be modified.
+    std::apply(
+        [this](Args&&... args) {
+          ((*mObj).*mMethod)(std::forward<Args>(args)...);
+        },
+        std::move(mArgs));
     return NS_OK;
   }
 
  private:
-  Class mObj;
+  // For holders such as RefPtr and UniquePtr make sure concrete copy is held
+  // rather than a potential dangling reference.
+  typename mozilla::Decay<Class>::Type mObj;
   M mMethod;
-  Tuple<Args...> mArgs;
+  std::tuple<Args...> mArgs;
 };
 
 template <typename Class, typename M, typename... Args>
 runnable_args_memfn<Class, M, typename mozilla::Decay<Args>::Type...>*
-WrapRunnable(Class obj, M method, Args&&... args) {
+WrapRunnable(Class&& obj, M method, Args&&... args) {
   return new runnable_args_memfn<Class, M,
                                  typename mozilla::Decay<Args>::Type...>(
-      obj, method, std::forward<Args>(args)...);
+      std::forward<Class>(obj), method, std::forward<Args>(args)...);
 }
 
 template <typename Ret, typename Class, typename M, typename... Args>
@@ -168,31 +134,39 @@ class runnable_args_memfn_ret
     : public detail::runnable_args_base<detail::ReturnsResult> {
  public:
   template <typename... Arguments>
-  runnable_args_memfn_ret(Ret* ret, Class obj, M method, Arguments... args)
+  runnable_args_memfn_ret(Ret* ret, Class&& obj, M method, Arguments... args)
       : mReturn(ret),
-        mObj(obj),
+        mObj(std::forward<Class>(obj)),
         mMethod(method),
         mArgs(std::forward<Arguments>(args)...) {}
 
   NS_IMETHOD Run() override {
-    *mReturn = detail::RunnableMethodCallHelper<Ret>::apply(
-        mObj, mMethod, mArgs, std::index_sequence_for<Args...>{});
+    // Capturing `this` is okay here, the call is synchronous `mObj`,
+    // `mMethod`, and `mReturn` are not passed to the callback and will not be
+    // modified.
+    std::apply(
+        [this](Args&&... args) {
+          *mReturn = ((*mObj).*mMethod)(std::forward<Args>(args)...);
+        },
+        std::move(mArgs));
     return NS_OK;
   }
 
  private:
   Ret* mReturn;
-  Class mObj;
+  // For holders such as RefPtr and UniquePtr make sure concrete copy is held
+  // rather than a potential dangling reference.
+  typename mozilla::Decay<Class>::Type mObj;
   M mMethod;
-  Tuple<Args...> mArgs;
+  std::tuple<Args...> mArgs;
 };
 
 template <typename R, typename Class, typename M, typename... Args>
 runnable_args_memfn_ret<R, Class, M, typename mozilla::Decay<Args>::Type...>*
-WrapRunnableRet(R* ret, Class obj, M method, Args&&... args) {
+WrapRunnableRet(R* ret, Class&& obj, M method, Args&&... args) {
   return new runnable_args_memfn_ret<R, Class, M,
                                      typename mozilla::Decay<Args>::Type...>(
-      ret, obj, method, std::forward<Args>(args)...);
+      ret, std::forward<Class>(obj), method, std::forward<Args>(args)...);
 }
 
 static inline nsresult RUN_ON_THREAD(
