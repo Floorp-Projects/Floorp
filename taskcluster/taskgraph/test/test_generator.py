@@ -10,6 +10,7 @@ from mozunit import main
 
 from taskgraph.generator import TaskGraphGenerator, Kind
 from taskgraph.optimize import OptimizationStrategy
+from taskgraph.config import GraphConfig
 from taskgraph.util.templates import merge
 from taskgraph import (
     generator,
@@ -60,7 +61,9 @@ class WithFakeKind(TaskGraphGenerator):
 
 
 def fake_load_graph_config(root_dir):
-    return {'trust-domain': 'test-domain'}
+    graph_config = GraphConfig({'trust-domain': 'test-domain', "taskgraph": {}}, root_dir)
+    graph_config.__dict__['register'] = lambda: None
+    return graph_config
 
 
 class FakeParameters(dict):

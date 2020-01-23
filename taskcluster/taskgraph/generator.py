@@ -223,6 +223,8 @@ class TaskGraphGenerator(object):
 
         yield ('graph_config', graph_config)
 
+        graph_config.register()
+
         if callable(self._parameters):
             parameters = self._parameters(graph_config)
         else:

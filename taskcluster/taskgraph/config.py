@@ -6,10 +6,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import logging
+import sys
 import attr
 from six import text_type
 from mozpack import path
 
+from .util.python_path import find_object
 from .util.schema import validate_schema, Schema, optionally_keyed_by
 from voluptuous import Required, Optional, Any
 from .util.yaml import load_yaml
@@ -92,6 +94,12 @@ graph_config_schema = Schema({
         Required('mac-entitlements'):
             optionally_keyed_by('platform', 'release-level', text_type),
     },
+    Required("taskgraph"): {
+        Optional(
+            "register",
+            description="Python function to call to register extensions.",
+        ): text_type,
+    },
 })
 
 
@@ -100,8 +108,23 @@ class GraphConfig(object):
     _config = attr.ib()
     root_dir = attr.ib()
 
+    _PATH_MODIFIED = False
+
     def __getitem__(self, name):
         return self._config[name]
+
+    def register(self):
+        """
+        Add the project's taskgraph directory to the python path, and register
+        any extensions present.
+        """
+        if GraphConfig._PATH_MODIFIED:
+            raise Exception("Can't register multiple directories on python path.")
+        GraphConfig._PATH_MODIFIED = True
+        sys.path.insert(0, os.path.dirname(self.root_dir))
+        register_path = self['taskgraph'].get('register')
+        if register_path:
+            find_object(register_path)(self)
 
     @property
     def taskcluster_yml(self):
