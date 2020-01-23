@@ -138,24 +138,13 @@ dom
 editor
 ------
 
-The editor directory contains C++ interfaces, C++ code, and
-XUL/Javascript for the embeddable editor component, which is used for
-the HTML Editor("Composer"), for plain and HTML mail composition, and
-for text fields and text areas throughout the product. The editor is
-designed like a "browser window with editing features": it adds some
-special classes for editing text and managing transaction undo/redo, but
-reuses browser code for nearly everything else.
-
-Contains:
-
--  The backend for HTML and text editing. This is not only used for the
-   mail composer and the page editor composer, but also for `rich text
-   editing inside
-   webpages <https://www.mozilla.org/editor/midas-spec.html>`__.
-   Textarea and input fields are using such an editor as well (in the
-   plaintext variant). See `Mozilla
-   Editor <https://www.mozilla.org/editor/>`__.
--  The frontend for the HTML editor that is part of SeaMonkey.
+The editor directory contains XUL/Javascript for the embeddable editor
+component, which is used for the HTML Editor("Composer"), for plain and
+HTML mail composition, and for text fields and text areas throughout the
+product. The editor is designed like a
+"browser window with editing features": it adds some special classes for
+editing text and managing transaction undo/redo, but reuses browser code
+for nearly everything else.
 
 extensions
 ----------
@@ -199,11 +188,6 @@ graphics toolkits, along with implementations on various platforms.
 These interfaces provide methods for things like drawing images, text,
 and basic shapes. It also contains basic data structures such as points
 and rectangles used here and in other parts of Mozilla.
-
-It is also the home of the new graphics architecture based on cairo (via
-a C++ wrapper called thebes). See
-`NewGFXAPIs <https://wiki.mozilla.org/Mozilla2:NewGFXAPIs>`__ and
-`GFXEvolution <https://wiki.mozilla.org/Mozilla2:GFXEvolution>`__.
 
 gradle
 ------
