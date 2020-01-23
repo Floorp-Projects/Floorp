@@ -219,7 +219,6 @@ class PermissionDelegateTest : BaseSessionTest() {
     }
 
     @Test fun notification() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.requireuserinteraction" to false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
