@@ -1120,8 +1120,12 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     this.onCopyTargetingParams = this.onCopyTargetingParams.bind(this);
     this.onPasteTargetingParams = this.onPasteTargetingParams.bind(this);
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
+    this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
+    this.handleForceWNP = this.handleForceWNP.bind(this);
+    this.pushWNMessage = this.pushWNMessage.bind(this);
     this.state = {
       messageFilter: "all",
+      WNMessages: [],
       evaluationStatus: {},
       trailhead: {},
       stringTargetingParameters: null,
@@ -1201,6 +1205,20 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
 
   handleOverride(id) {
     return () => _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].overrideMessage(id);
+  }
+
+  handleUpdateWNMessages() {
+    let messages = this.state.WNMessages;
+    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].sendMessage({
+      type: "RENDER_WHATSNEW_MESSAGES",
+      data: messages
+    });
+  }
+
+  handleForceWNP() {
+    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].sendMessage({
+      type: "FORCE_WHATSNEW_PANEL"
+    });
   }
 
   expireCache() {
@@ -1414,6 +1432,24 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }, isBlocked && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, "Block reason:", isBlockedByGroup && " Blocked by group", isProviderExcluded && " Excluded by provider", isMessageBlocked && " Message blocked"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("pre", null, JSON.stringify(msg, null, 2)))));
   }
 
+  pushWNMessage(event, msg) {
+    let ele = event.target;
+
+    if (ele.checked) {
+      this.setState(prevState => ({
+        WNMessages: prevState.WNMessages.concat(msg)
+      }));
+    } else if (!ele.checked && this.state.WNMessages.length === 1) {
+      this.setState({
+        WNMessages: []
+      });
+    } else {
+      this.setState(prevState => ({
+        WNMessages: prevState.WNMessages.splice(prevState.WNMessages.indexOf(msg), 1)
+      }));
+    }
+  }
+
   renderWNMessageItem(msg) {
     const isBlocked = this.state.messageBlockList.includes(msg.id) || this.state.messageBlockList.includes(msg.campaign);
     const impressions = this.state.messageImpressions[msg.id] ? this.state.messageImpressions[msg.id].length : 0;
@@ -1430,7 +1466,10 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       className: "message-id"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, msg.id, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "(", impressions, " impressions)")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       type: "checkbox",
-      value: "Show"
+      id: `${msg.id} checkbox`,
+      name: `${msg.id} checkbox` // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onClick: e => this.pushWNMessage(e, msg.id)
     })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
       className: "message-summary"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("pre", null, JSON.stringify(msg, null, 2))));
@@ -1459,7 +1498,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       return null;
     }
 
-    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", null, "Show messages from", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("select", {
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", null, "Show messages from ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("select", {
       value: this.state.messageFilter,
       onChange: this.onChangeMessageFilter
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("option", {
@@ -1764,7 +1803,17 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
   }
 
   renderWNPTests() {
-    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", null, "Force What's New Panel"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Messages"), this.renderWNMessages());
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
+      className: "helpLink"
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
+      className: "icon icon-small-spacer icon-info"
+    }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To correctly render selected messages, please check \"Disable Popup Auto-Hide\" in the browser toolbox, or set", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "ui.popup.disable_autohide"), " to ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, "true"), " in", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "about:config"), ".")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "ASRouterButton primary button",
+      onClick: this.handleForceWNP
+    }, "Open What's New Panel"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "ASRouterButton secondary button",
+      onClick: this.handleUpdateWNMessages
+    }, "Render Selected Messages"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Messages"), this.renderWNMessages()));
   }
 
   getSection() {

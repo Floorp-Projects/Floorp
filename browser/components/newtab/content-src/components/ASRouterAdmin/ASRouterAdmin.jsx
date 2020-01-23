@@ -474,8 +474,12 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.onCopyTargetingParams = this.onCopyTargetingParams.bind(this);
     this.onPasteTargetingParams = this.onPasteTargetingParams.bind(this);
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
+    this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
+    this.handleForceWNP = this.handleForceWNP.bind(this);
+    this.pushWNMessage = this.pushWNMessage.bind(this);
     this.state = {
       messageFilter: "all",
+      WNMessages: [],
       evaluationStatus: {},
       trailhead: {},
       stringTargetingParameters: null,
@@ -550,6 +554,18 @@ export class ASRouterAdminInner extends React.PureComponent {
 
   handleOverride(id) {
     return () => ASRouterUtils.overrideMessage(id);
+  }
+
+  handleUpdateWNMessages() {
+    let messages = this.state.WNMessages;
+    ASRouterUtils.sendMessage({
+      type: "RENDER_WHATSNEW_MESSAGES",
+      data: messages,
+    });
+  }
+
+  handleForceWNP() {
+    ASRouterUtils.sendMessage({ type: "FORCE_WHATSNEW_PANEL" });
   }
 
   expireCache() {
@@ -764,6 +780,24 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
+  pushWNMessage(event, msg) {
+    let ele = event.target;
+    if (ele.checked) {
+      this.setState(prevState => ({
+        WNMessages: prevState.WNMessages.concat(msg),
+      }));
+    } else if (!ele.checked && this.state.WNMessages.length === 1) {
+      this.setState({ WNMessages: [] });
+    } else {
+      this.setState(prevState => ({
+        WNMessages: prevState.WNMessages.splice(
+          prevState.WNMessages.indexOf(msg),
+          1
+        ),
+      }));
+    }
+  }
+
   renderWNMessageItem(msg) {
     const isBlocked =
       this.state.messageBlockList.includes(msg.id) ||
@@ -786,7 +820,13 @@ export class ASRouterAdminInner extends React.PureComponent {
           </span>
         </td>
         <td>
-          <input type="checkbox" value="Show" />
+          <input
+            type="checkbox"
+            id={`${msg.id} checkbox`}
+            name={`${msg.id} checkbox`}
+            // eslint-disable-next-line react/jsx-no-bind
+            onClick={e => this.pushWNMessage(e, msg.id)}
+          />
         </td>
         <td className="message-summary">
           <pre>{JSON.stringify(msg, null, 2)}</pre>
@@ -835,8 +875,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     return (
       <p>
         {/* eslint-disable-next-line prettier/prettier */}
-        Show messages from{" "}
-        {/* eslint-disable-next-line jsx-a11y/no-onchange */}
+        Show messages from {/* eslint-disable-next-line jsx-a11y/no-onchange */}
         <select
           value={this.state.messageFilter}
           onChange={this.onChangeMessageFilter}
@@ -1366,9 +1405,31 @@ export class ASRouterAdminInner extends React.PureComponent {
   renderWNPTests() {
     return (
       <div>
-        <button>Force What's New Panel</button>
-        <h2>Messages</h2>
-        {this.renderWNMessages()}
+        <p className="helpLink">
+          <span className="icon icon-small-spacer icon-info" />{" "}
+          <span>
+            To correctly render selected messages, please check "Disable Popup
+            Auto-Hide" in the browser toolbox, or set{" "}
+            <i>ui.popup.disable_autohide</i> to <b>true</b> in{" "}
+            <i>about:config</i>.
+          </span>
+        </p>
+        <div>
+          <button
+            className="ASRouterButton primary button"
+            onClick={this.handleForceWNP}
+          >
+            Open What's New Panel
+          </button>
+          <button
+            className="ASRouterButton secondary button"
+            onClick={this.handleUpdateWNMessages}
+          >
+            Render Selected Messages
+          </button>
+          <h2>Messages</h2>
+          {this.renderWNMessages()}
+        </div>
       </div>
     );
   }
