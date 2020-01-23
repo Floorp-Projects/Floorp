@@ -88,12 +88,12 @@
   }, `setConfiguration({ bundlePolicy: 'max-bundle' }) with initial bundlePolicy max-bundle should succeed`);
 
   test(() => {
-    assert_throws(new TypeError(), () =>
+    assert_throws_js(TypeError, () =>
       new RTCPeerConnection({ bundlePolicy: null }));
   }, `new RTCPeerConnection({ bundlePolicy: null }) should throw TypeError`);
 
   test(() => {
-    assert_throws(new TypeError(), () =>
+    assert_throws_js(TypeError, () =>
       new RTCPeerConnection({ bundlePolicy: 'invalid' }));
   }, `new RTCPeerConnection({ bundlePolicy: 'invalid' }) should throw TypeError`);
 

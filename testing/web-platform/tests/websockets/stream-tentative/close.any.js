@@ -50,7 +50,7 @@ promise_test(async () => {
 promise_test(async () => {
   const wss = new WebSocketStream(ECHOURL);
   await wss.connection;
-  assert_throws(new TypeError(), () => wss.close(true),
+  assert_throws_js(TypeError, () => wss.close(true),
                 'close should throw a TypeError');
 }, 'close(true) should throw a TypeError');
 

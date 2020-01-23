@@ -25,7 +25,7 @@ test(function() {
   assert_equals(blob.type, "");
 }, "Blob constructor with no arguments");
 test(function() {
-  assert_throws(new TypeError(), function() { var blob = Blob(); });
+  assert_throws_js(TypeError, function() { var blob = Blob(); });
 }, "Blob constructor with no arguments, without 'new'");
 test(function() {
   var blob = new Blob;
@@ -59,7 +59,7 @@ test(function() {
     window,
   ];
   args.forEach(function(arg) {
-    assert_throws(new TypeError(), function() {
+    assert_throws_js(TypeError, function() {
       new Blob(arg);
     }, "Should throw for argument " + format_value(arg) + ".");
   });
@@ -226,7 +226,7 @@ test(function() {
       valueOf: function() { assert_unreached("Should not call valueOf if toString is present."); }
     }]);
   }, "Throwing toString and valueOf");
-  assert_throws(new TypeError(), function() {
+  assert_throws_js(TypeError, function() {
     new Blob([{toString: null, valueOf: null}]);
   }, "Null toString and valueOf");
 }, "ToString should be called on elements of the blobParts array and any exceptions should be propagated.");
@@ -464,7 +464,7 @@ test(function() {
   'abc'
 ].forEach(arg => {
   test(t => {
-    assert_throws(new TypeError(), () => new Blob([], arg),
+    assert_throws_js(TypeError, () => new Blob([], arg),
                   'Blob constructor should throw with invalid property bag');
   }, `Passing ${JSON.stringify(arg)} for options should throw`);
 });

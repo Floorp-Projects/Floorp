@@ -40,8 +40,8 @@ testRanges.forEach(function(rangeData, index) {
 
 test(function() {
     var selection = getSelection();
-    assert_throws(new TypeError(), function() { selection.removeRange(null); });
-    assert_throws(new TypeError(), function() { selection.removeRange(selection); });
+    assert_throws_js(TypeError, function() { selection.removeRange(null); });
+    assert_throws_js(TypeError, function() { selection.removeRange(selection); });
 }, 'removeRange() argument is non-optional Range');
 </script>
 </body>

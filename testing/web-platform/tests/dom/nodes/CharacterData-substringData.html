@@ -12,8 +12,8 @@ function testNode(create, type) {
     var node = create()
     assert_equals(node.data, "test")
 
-    assert_throws(new TypeError(), function() { node.substringData() })
-    assert_throws(new TypeError(), function() { node.substringData(0) })
+    assert_throws_js(TypeError, function() { node.substringData() })
+    assert_throws_js(TypeError, function() { node.substringData(0) })
   }, type + ".substringData() with too few arguments")
 
   test(function() {

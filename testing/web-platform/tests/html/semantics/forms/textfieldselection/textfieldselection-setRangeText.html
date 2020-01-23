@@ -100,7 +100,7 @@
     }, element.id + " setRangeText with 3rd argument greater than 2nd argument throws an IndexSizeError exception");
 
     test(function(){
-      assert_throws(new TypeError(), function() {
+      assert_throws_js(TypeError, function() {
         element.setRangeText();
       });
     }, element.id + " setRangeText without argument throws a type error");

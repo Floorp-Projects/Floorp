@@ -39,7 +39,7 @@ test(() => {
 
 test(t => {
   const iceTransport = makeIceTransport(t);
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     iceTransport.gather({ iceServers: null }));
 }, 'gather() with { iceServers: null } should throw TypeError');
 
@@ -140,10 +140,10 @@ test(() => {
 
 test(() => {
   const iceTransport = new RTCIceTransport();
-  assert_throws(new TypeError(), () => iceTransport.start({}));
-  assert_throws(new TypeError(),
+  assert_throws_js(TypeError, () => iceTransport.start({}));
+  assert_throws_js(TypeError,
     () => iceTransport.start({ usernameFragment: 'dummy' }));
-  assert_throws(new TypeError(),
+  assert_throws_js(TypeError,
     () => iceTransport.start({ password: 'dummy' }));
   assert_equals(iceTransport.getRemoteParameters(), null);
 }, 'start() throws if usernameFragment or password not set');

@@ -13,7 +13,7 @@ test(function() {
 })
 test(function() {
   var r = document.createRange();
-  assert_throws(new TypeError(), function() { r.comparePoint(null, 0) })
+  assert_throws_js(TypeError, function() { r.comparePoint(null, 0) })
 })
 test(function() {
   var doc = document.implementation.createHTMLDocument("tralala")

@@ -14,11 +14,11 @@ test(() => {
       '<button type="button"></button>' +
       '</form>');
   let form = document.querySelector('form');
-  assert_throws(new TypeError(), () => {
+  assert_throws_js(TypeError, () => {
     form.requestSubmit(document.body);
   });
   for (let control of form.elements) {
-    assert_throws(new TypeError(), () => { form.requestSubmit(control); });
+    assert_throws_js(TypeError, () => { form.requestSubmit(control); });
   }
 }, 'Passing an element which is not a submit button should throw');
 

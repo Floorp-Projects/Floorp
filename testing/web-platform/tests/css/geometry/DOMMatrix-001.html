@@ -195,7 +195,7 @@
                 [], // 0 elements
             ].forEach(function(sequence) {
                 test(function() {
-                    assert_throws(new TypeError(), function() { new self[constr](sequence); });
+                    assert_throws_js(TypeError, function() { new self[constr](sequence); });
                 }, `new ${constr}(sequence) ${sequence.length} elements`);
             });
         });

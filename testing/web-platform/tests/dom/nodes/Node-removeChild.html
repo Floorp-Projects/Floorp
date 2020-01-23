@@ -48,7 +48,7 @@ documents.forEach(function(d) {
 });
 
 test(function() {
-  assert_throws(new TypeError(), function() { document.body.removeChild(null) })
-  assert_throws(new TypeError(), function() { document.body.removeChild({'a':'b'}) })
+  assert_throws_js(TypeError, function() { document.body.removeChild(null) })
+  assert_throws_js(TypeError, function() { document.body.removeChild({'a':'b'}) })
 }, "Passing a value that is not a Node reference to removeChild should throw TypeError.")
 </script>

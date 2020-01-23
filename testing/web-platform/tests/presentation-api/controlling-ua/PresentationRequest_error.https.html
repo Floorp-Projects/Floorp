@@ -9,7 +9,7 @@
 <script>
 
   test(() => {
-    assert_throws(new TypeError(), () => {
+    assert_throws_js(TypeError, () => {
       new PresentationRequest();
     }, 'Call PresentationRequest() constructor without presentation URL. TypeError Exception expected.');
 

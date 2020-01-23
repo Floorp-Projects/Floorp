@@ -23,13 +23,13 @@ test(() => {
     });
   }, 'constructor should throw same error as throwing start method');
 
-  assert_throws(new TypeError(), () => {
+  assert_throws_js(TypeError, () => {
     new WritableStream({
       start: 'not a function or undefined'
     });
   }, 'constructor should throw TypeError when passed a non-function start property');
 
-  assert_throws(new TypeError(), () => {
+  assert_throws_js(TypeError, () => {
     new WritableStream({
       start: { apply() {} }
     });
@@ -162,7 +162,7 @@ promise_test(t => {
 }, 'write: returning a rejected promise (second write) should cause writer write() and ready to reject');
 
 test(() => {
-  assert_throws(new TypeError(), () => new WritableStream({
+  assert_throws_js(TypeError, () => new WritableStream({
     abort: { apply() {} }
   }), 'constructor should throw');
 }, 'abort: non-function abort method with .apply');

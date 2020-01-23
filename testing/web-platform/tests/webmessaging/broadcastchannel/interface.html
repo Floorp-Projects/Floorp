@@ -4,7 +4,7 @@
 <script src="/resources/testharnessreport.js"></script>
 <script>
 
-test(() => assert_throws(new TypeError(), () => new BroadcastChannel()),
+test(() => assert_throws_js(TypeError, () => new BroadcastChannel()),
   'Should throw if no name is provided');
 
 test(() => {
@@ -29,7 +29,7 @@ test(() => {
 
 test(() => {
     let c = new BroadcastChannel('');
-    assert_throws(new TypeError(), () => c.postMessage());
+    assert_throws_js(TypeError, () => c.postMessage());
   }, 'postMessage without parameters should throw');
 
 test(() => {
