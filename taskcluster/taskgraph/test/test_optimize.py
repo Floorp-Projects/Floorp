@@ -179,7 +179,7 @@ class TestOptimize(unittest.TestCase):
     def assert_subgraph(self, graph, removed_tasks, replaced_tasks,
                         label_to_taskid, exp_subgraph, exp_label_to_taskid):
         self.maxDiff = None
-        optimize.slugid = ('tid{}'.format(i) for i in xrange(1, 10)).next
+        optimize.slugid = ('tid{}'.format(i) for i in range(1, 10)).next
         try:
             got_subgraph = optimize.get_subgraph(graph, removed_tasks,
                                                  replaced_tasks, label_to_taskid)

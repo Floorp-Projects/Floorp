@@ -169,7 +169,7 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
         with_downstream = ' (with downstream) '
 
     times = input.get('times', 1)
-    for i in xrange(times):
+    for i in range(times):
         create_tasks(
             graph_config,
             to_run,
@@ -287,7 +287,7 @@ def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
             # those labels.
             _rerun_task(label_to_taskid[label], label)
 
-        for j in xrange(times):
+        for j in range(times):
             suffix = '{}-{}'.format(i, j)
             suffixes.append(suffix)
             create_tasks(

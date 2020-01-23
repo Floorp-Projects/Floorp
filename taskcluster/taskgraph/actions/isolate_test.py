@@ -12,6 +12,8 @@ import logging
 import os
 import re
 
+import six
+
 from slugid import nice as slugid
 from taskgraph.util.taskcluster import list_artifacts, get_artifact, get_task_definition
 from ..util.parameterization import resolve_task_references

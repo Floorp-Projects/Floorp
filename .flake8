@@ -124,7 +124,6 @@ per-file-ignores =
     mozglue/**: F821
     python/mozbuild/**: F821
     python/mozversioncontrol/**: F821
-    taskcluster/**: F821
     testing/mozharness/**: F821
     testing/talos/**: F821
     toolkit/components/telemetry/**: F821
