@@ -137,6 +137,7 @@ class WebExtensionActionTest {
                 "extensionId" to WebExtensionState(
                     "extensionId",
                     "url",
+                    "name",
                     true,
                     mockedBrowserAction1
                 )
@@ -218,6 +219,7 @@ class WebExtensionActionTest {
                 "extensionId" to WebExtensionState(
                     "extensionId",
                     "url",
+                    "name",
                     true,
                     mockedPageAction1
                 )

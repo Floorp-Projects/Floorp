@@ -365,7 +365,7 @@ class WebExtensionSupportTest {
         )))
 
         val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
-        WebExtensionSupport.initialize(engine, store)
+        WebExtensionSupport.initialize(engine, store, openPopupInTab = true)
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
 
         // Toggling should open tab
@@ -417,13 +417,9 @@ class WebExtensionSupportTest {
 
         val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
 
-        var webExtensionId = ""
         WebExtensionSupport.initialize(
             engine,
-            store,
-            onActionPopupToggleOverride = {
-                webExtensionId = it.id
-            }
+            store
         )
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
 
@@ -432,18 +428,8 @@ class WebExtensionSupportTest {
         val actionCaptor = argumentCaptor<mozilla.components.browser.state.action.BrowserAction>()
         verify(store, times(1)).dispatch(actionCaptor.capture())
 
-        store.waitUntilIdle()
         val value = actionCaptor.value
         assertNotNull((value as WebExtensionAction.UpdatePopupSessionAction).popupSession)
-        assertNotNull(store.state.extensions[webExtensionId]?.popupSession)
-
-        // Update store to clear popupSession reference
-        store.dispatch(
-            WebExtensionAction.UpdatePopupSessionAction(webExtensionId, popupSession = null)
-        ).joinBlocking()
-
-        store.waitUntilIdle()
-        assertNull(store.state.extensions[webExtensionId]?.popupSession)
     }
 
     @Test

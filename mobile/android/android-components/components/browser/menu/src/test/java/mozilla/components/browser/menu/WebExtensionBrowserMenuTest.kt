@@ -59,6 +59,7 @@ class WebExtensionBrowserMenuTest {
             "browser_action" to WebExtensionState(
                 "browser_action",
                 "url",
+                "name",
                 true,
                 browserAction = browserAction,
                 pageAction = pageAction
@@ -94,6 +95,7 @@ class WebExtensionBrowserMenuTest {
             "id" to WebExtensionState(
                 "id",
                 "url",
+                "name",
                 true,
                 browserAction = defaultBrowserAction,
                 pageAction = defaultPageAction
@@ -116,6 +118,7 @@ class WebExtensionBrowserMenuTest {
             "id2" to WebExtensionState(
                 "id2",
                 "url",
+                "name",
                 true,
                 browserAction = anotherBrowserAction,
                 pageAction = anotherPageAction
@@ -146,6 +149,7 @@ class WebExtensionBrowserMenuTest {
             "id" to WebExtensionState(
                 "id",
                 "url",
+                "name",
                 true,
                 browserAction = defaultBrowserAction,
                 pageAction = defaultPageAction
@@ -155,6 +159,7 @@ class WebExtensionBrowserMenuTest {
             "id" to WebExtensionState(
                 "id",
                 "url",
+                "name",
                 true,
                 browserAction = overriddenBrowserAction,
                 pageAction = overriddenPageAction
@@ -198,6 +203,7 @@ class WebExtensionBrowserMenuTest {
             "enabled" to WebExtensionState(
                 "enabled",
                 "url",
+                "name",
                 true,
                 browserAction = enabledBrowserAction,
                 pageAction = enabledPageAction
@@ -205,6 +211,7 @@ class WebExtensionBrowserMenuTest {
             "disabled" to WebExtensionState(
                 "disabled",
                 "url",
+                "name",
                 false,
                 browserAction = disabledBrowserAction,
                 pageAction = disabledPageAction
