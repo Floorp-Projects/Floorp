@@ -42,6 +42,7 @@ private const val KEY_LOGIN_HTTP_REALM = "KEY_LOGIN_HTTP_REALM"
  * [android.support.v4.app.DialogFragment] implementation to display a
  * dialog that allows users to save/update usernames and passwords for a given domain.
  */
+@Suppress("TooManyFunctions")
 internal class LoginDialogFragment : PromptDialogFragment() {
 
     private inner class SafeArgString(private val key: String) {
@@ -62,6 +63,8 @@ internal class LoginDialogFragment : PromptDialogFragment() {
     private var password by SafeArgString(KEY_LOGIN_PASSWORD)
 
     private var stateUpdate: Job? = null
+
+    override fun shouldDismissOnLoad(): Boolean = false
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return BottomSheetDialog(requireContext(), this.theme).apply {

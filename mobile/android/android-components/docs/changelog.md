@@ -19,6 +19,9 @@ permalink: /changelog/
     * Return the corresponding ErrorResponse (ErrorResponse.Content or ErrorResponse.Uri) as ErrorResponse can no longer be directly instantiated.
   * Added support for loading images into error pages with `createUrlEncodedErrorPage`. These error pages load dynamically with javascript by parsing params in the URL
   * ⚠️ To use custom HTML & CSS with image error pages, resources **must** be located in the assets folder
+  
+* **feature-prompts**
+  * Save login prompts will no longer be closed on page load
 
 # 28.0.0
 

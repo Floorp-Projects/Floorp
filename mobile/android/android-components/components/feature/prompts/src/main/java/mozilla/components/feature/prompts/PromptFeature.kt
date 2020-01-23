@@ -223,7 +223,10 @@ class PromptFeature private constructor(
                 .ifChanged { it.content.progress }
                 .filter { it.content.progress >= PROGRESS_ALMOST_COMPLETE }
                 .collect {
-                    activePrompt?.get()?.dismiss()
+                    val prompt = activePrompt?.get()
+                    if (prompt?.shouldDismissOnLoad() == true) {
+                        prompt.dismiss()
+                    }
                     activePrompt?.clear()
                 }
         }
