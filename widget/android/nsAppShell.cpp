@@ -367,7 +367,7 @@ class XPCOMEventTargetWrapper final
     java::XPCOMEventTarget::Natives<XPCOMEventTargetWrapper>::Init();
     CreateWrapper(NS_LITERAL_STRING("main"), do_GetMainThread());
     if (XRE_IsParentProcess()) {
-        CreateWrapper(NS_LITERAL_STRING("launcher"), ipc::GetIPCLauncher());
+      CreateWrapper(NS_LITERAL_STRING("launcher"), ipc::GetIPCLauncher());
     }
   }
 
