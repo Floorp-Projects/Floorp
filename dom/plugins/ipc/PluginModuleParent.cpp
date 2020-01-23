@@ -1280,11 +1280,7 @@ void PluginModuleChromeParent::ProcessFirstMinidump() {
   mozilla::MutexAutoLock lock(mCrashReporterMutex);
 
   if (!mCrashReporter) {
-    CrashReporter::FinalizeOrphanedMinidump(OtherPid(), GeckoProcessType_Plugin,
-                                            &mOrphanedDumpId);
-    CrashReporterHost::RecordCrash(GeckoProcessType_Plugin,
-                                   nsICrashService::CRASH_TYPE_CRASH,
-                                   mOrphanedDumpId);
+    HandleOrphanedMinidump();
     return;
   }
 
@@ -1353,6 +1349,20 @@ void PluginModuleChromeParent::ProcessFirstMinidump() {
                                   flashProcessType);
   }
   mCrashReporter->FinalizeCrashReport();
+}
+
+void PluginModuleChromeParent::HandleOrphanedMinidump() {
+  if (CrashReporter::FinalizeOrphanedMinidump(
+          OtherPid(), GeckoProcessType_Plugin, &mOrphanedDumpId)) {
+    CrashReporterHost::RecordCrash(GeckoProcessType_Plugin,
+                                   nsICrashService::CRASH_TYPE_CRASH,
+                                   mOrphanedDumpId);
+  } else {
+    NS_WARNING(nsPrintfCString("plugin process pid = %d crashed without "
+                               "leaving a minidump behind",
+                               OtherPid())
+                   .get());
+  }
 }
 
 void PluginModuleParent::ActorDestroy(ActorDestroyReason why) {
