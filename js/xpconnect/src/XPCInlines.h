@@ -248,20 +248,6 @@ inline bool XPCNativeSet::FindMember(JS::HandleId name,
   return true;
 }
 
-inline XPCNativeInterface* XPCNativeSet::FindInterfaceWithIID(
-    const nsIID& iid) const {
-  XPCNativeInterface* const* pp = mInterfaces;
-
-  for (int i = (int)mInterfaceCount; i > 0; i--, pp++) {
-    XPCNativeInterface* iface = *pp;
-
-    if (iface->GetIID()->Equals(iid)) {
-      return iface;
-    }
-  }
-  return nullptr;
-}
-
 inline bool XPCNativeSet::HasInterface(XPCNativeInterface* aInterface) const {
   XPCNativeInterface* const* pp = mInterfaces;
 
@@ -319,10 +305,6 @@ inline XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff() {
 }
 
 /***************************************************************************/
-
-inline bool XPCWrappedNative::HasInterfaceNoQI(const nsIID& iid) {
-  return nullptr != GetSet()->FindInterfaceWithIID(iid);
-}
 
 inline void XPCWrappedNative::SweepTearOffs() {
   for (XPCWrappedNativeTearOff* to = &mFirstTearOff; to;
