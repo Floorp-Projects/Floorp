@@ -1,0 +1,184 @@
+{
+  "addonDescription": {
+    "message": "Бележите снимке екрана са веба и сачувајте их привремено или трајно."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Усликај екран"
+  },
+  "myShotsLink": {
+    "message": "Моји снимци"
+  },
+  "screenshotInstructions": {
+    "message": "Превуците или кликните на страницу да изаберете област. Притисните ESC да прекинете."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Сачувај"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Сачувај видљиво"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Сачувај целу страницу"
+  },
+  "cancelScreenshot": {
+    "message": "Откажи"
+  },
+  "downloadScreenshot": {
+    "message": "Преузми"
+  },
+  "downloadOnlyNotice": {
+    "message": "Тренутно сте у режиму где можете само преузимати."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots се пребацује у режим где се само преузима у следећим ситуацијама:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "У прозору приватног прегледања."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Колачићи трећих страна су онемогућени."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Опција „Никада не памти историјат“ је омогућена."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Користите Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Отпремања су онемогућена."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Веза копирана"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Веза коју сте забележили је копирана у бележницу. Притисните $META_KEY$-V да налепите.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Копирај"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Снимак је копиран"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Ваш снимак је копиран. Притисните $META_KEY$-V да налепите.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Сачуване слике ће бити исечене на $PIXELS$px у висину.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Не ради."
+  },
+  "requestErrorDetails": {
+    "message": "Жао нам је! Нисмо могли сачувати ваш снимак. Покушајте поново касније."
+  },
+  "connectionErrorTitle": {
+    "message": "Не можемо се повезати на ваше снимке."
+  },
+  "connectionErrorDetails": {
+    "message": "Проверите вашу интернет конекцију. Ако можете да се конектујете, онда можда постоји привремени проблем са Firefox Screenshots-ом."
+  },
+  "loginErrorDetails": {
+    "message": "Нисмо могли сачувати ваш снимак јер постоји проблем са Firefox Screenshots-ом. Покушајте поново касније."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Не можемо забележити снимак ове странице."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ово није стандардна веб страница, тако да не можете забележити њен снимак."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Не можете усликати Firefox Screenshots страницу!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Ваша селекција је премала"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Снимци екрана су онемогућени у приватном режиму"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Жао нам је због овог неспоразума. Радимо на овој могућности за следећа издања."
+  },
+  "genericErrorTitle": {
+    "message": "Ајој! Firefox Screenshots је пошашавио."
+  },
+  "genericErrorDetails": {
+    "message": "Нисмо сигурни шта се управо догодило. Желите ли покушати поново или да усликате другачију страницу?"
+  },
+  "tourBodyIntro": {
+    "message": "Забележите, сачувајте и поделите снимке екрана без напуштања Firefox-а."
+  },
+  "tourHeaderPageAction": {
+    "message": "Нови начин да сачувате"
+  },
+  "tourBodyPageAction": {
+    "message": "Проширите страницу из менија у адресној траци кад год желите да усликате екран."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Усликајте баш оно што желите"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Кликните и превуците да усликате само део странице. Такође можете означити вашу селекцију."
+  },
+  "tourHeaderFullPage": {
+    "message": "Усликајте прозоре или целе странице"
+  },
+  "tourBodyFullPage": {
+    "message": "Изаберите дугмад у горњем десном углу да усликате видљиве делове прозора или да усликате целу страницу."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Као што волите"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Сачувајте ваш исечени снимак на веб ради лакшег дељења или преузимања на ваш рачунар. Такође можете кликнути на дугме \"Моји снимци\" да пронађете све ваше снимке."
+  },
+  "tourSkip": {
+    "message": "Прескочи"
+  },
+  "tourNext": {
+    "message": "Следећи слајд"
+  },
+  "tourPrevious": {
+    "message": "Претходни слајд"
+  },
+  "tourDone": {
+    "message": "Готово"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Коришћењем Firefox Screenshots прихватате наше $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "услове"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "обавештење о приватности"
+  },
+  "libraryLabel": {
+    "message": "Снимци екрана"
+  }
+}

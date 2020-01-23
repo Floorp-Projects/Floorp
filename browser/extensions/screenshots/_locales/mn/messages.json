@@ -1,0 +1,17 @@
+{
+  "addonDescription": {
+    "message": "Вэбээс авсан клип болон дэлгэцийн зургийг аваад тэдгээрийг түр эсвэл бүрмөсөн хадгал."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Хадгалах"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Бүтэн хуудсыг хадгалах"
+  },
+  "cancelScreenshot": {
+    "message": "Цуцлах"
+  },
+  "downloadScreenshot": {
+    "message": "Татаж авах"
+  }
+}

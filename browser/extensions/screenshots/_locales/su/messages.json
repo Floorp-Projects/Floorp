@@ -1,0 +1,187 @@
+{
+  "addonDescription": {
+    "message": "Cokot klip jeung téwakan layar ti Raramat turta teundeun saheulaanan atawa salilana."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Cokot Téwakan Layar"
+  },
+  "myShotsLink": {
+    "message": "Téwakan Kami"
+  },
+  "screenshotInstructions": {
+    "message": "Gusur atawa klik dina kaca pikeun milih téwakeun. Pencét ESC pikeun bolay."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Teundeun"
+  },
+  "uploadScreenshotSelectedArea": {
+    "message": "Unggah"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Teundeun nu katempo"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Teundeun kaca lengkep"
+  },
+  "cancelScreenshot": {
+    "message": "Bolay"
+  },
+  "downloadScreenshot": {
+    "message": "Undeur"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Unduh téwakan layar"
+  },
+  "downloadOnlyNotice": {
+    "message": "Anjeun ayeuna keur dina modeu Ukur-Undeur."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots otomatis robah ka mode Ukur-Ngundeur dina situasi ieu:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Dina jandéla Langlangan Nyamuni."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Kuki pihak katilu ditumpurkeun."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Ulah inget jujutan” diaktipkeun."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Anjeun maké Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Unggahan keur ditumpurkeun."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Tutumbu Ditiron"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Tutumbu ka téwakan anjeun geus ditiron kana papan klip. Pencét $META_KEY$-V pikeun napelkeun.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Tiron"
+  },
+  "copyScreenshotTitle": {
+    "message": "Tiron téwakan layar kana papan klip"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Téwakan Ditiron"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Téwakan anjeun geus ditiron kana papan klip. Pencét $META_KEY$-V pikeun napelkeun.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Gambar anu diteundeun bakal dipotong nepi ka jangkungna jadi $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Béakeun."
+  },
+  "requestErrorDetails": {
+    "message": "Hampura! Téwakan teu bisa diteundeun. Cobaan deui engké."
+  },
+  "connectionErrorTitle": {
+    "message": "Teu bisa nyambung ka téwakan layar anjeun."
+  },
+  "connectionErrorDetails": {
+    "message": "Pariksa sambungan Internétna. Lamun nyambung, sigana aya masalah témporér dina layanan Firefox Screenshotsna."
+  },
+  "loginErrorDetails": {
+    "message": "Téwakan teu bisa diteundeun alatan aya masalah dina layanan Firefox Screenshots. Cobaan deui engké."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ieu kaca teu bisa ditéwak layarna."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ieu lain kaca Raramat biasa, ku kituna anjeun teu bisa néwak layarna."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Anjeun teu bisa néwak kaca Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Pilihan anjeun leutik teuing"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Téwakan layar ditumpurkeun Mode Langlangan Nyamuni"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Hampura. Fitur ieu keur dihanca pikeun rilis jaga."
+  },
+  "genericErrorTitle": {
+    "message": "Euleuh! Firefox Screenshotsna ngaco."
+  },
+  "genericErrorDetails": {
+    "message": "Teuing kunaon. Cobaan deui atawa coba téwak layar kaca lian?"
+  },
+  "tourBodyIntroServerless": {
+    "message": "Téwak, tiron, sarta undeur téwakan layar tanpa ninggalkeun FIrefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Cara anyar pikeun neundeun"
+  },
+  "tourBodyPageAction": {
+    "message": "Legaan menu peta kaca dina palang alamat iraha baé anjeun rék néwak layar."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Téwak Sakahayang"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Klik jeung gusur pikeun néwak sabagian kaca. Anjeun ogé bisa nandaan pilihanana."
+  },
+  "tourHeaderFullPage": {
+    "message": "Téwak Jandéla atawa Sakabéh Kaca"
+  },
+  "tourBodyFullPage": {
+    "message": "Pilih tombol di luhur katuhu pikeun néwak anu katémbong dina layar atawa sakur eusi kaca."
+  },
+  "tourSkip": {
+    "message": "LIWAT"
+  },
+  "tourNext": {
+    "message": "Layar Saterusna"
+  },
+  "tourPrevious": {
+    "message": "Layar Saméméhna"
+  },
+  "tourDone": {
+    "message": "Anggeus"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Ku maké Firefox Screenshots, anjeun satuju kana $TERMSANDPRIVACYNOTICETERMSLINK$ jeung $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Katangtuan"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Wawar Privasi"
+  },
+  "libraryLabel": {
+    "message": "Screenshots"
+  }
+}

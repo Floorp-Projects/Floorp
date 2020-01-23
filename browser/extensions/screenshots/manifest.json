@@ -2,8 +2,8 @@
   "manifest_version": 2,
   "name": "Firefox Screenshots",
   "version": "39.0.0",
-  "description": "Take clips and screenshots from the Web and save them temporarily or permanently.",
-  "author": "Mozilla <screenshots-feedback@mozilla.com>",
+  "description": "__MSG_addonDescription__",
+  "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
   "incognito": "spanning",
   "applications": {
@@ -12,7 +12,7 @@
       "strict_min_version": "57.0a1"
     }
   },
-  "l10n_resources": [ "browser/screenshots.ftl" ],
+  "default_locale": "en_US",
   "background": {
     "scripts": [
       "build/buildSettings.js",
@@ -44,7 +44,7 @@
     "default_icon" : {
       "32": "icons/icon-v2.svg"
     },
-    "default_title": "__MSG_screenshots-context-menu__",
+    "default_title": "__MSG_contextMenuLabel__",
     "show_matches": ["<all_urls>", "about:reader*"],
     "pinned": false
   },
@@ -57,10 +57,19 @@
     "icons/download.svg",
     "icons/copy.svg",
     "icons/icon-256.png",
+    "icons/back.svg",
+    "icons/back-highlight.svg",
     "icons/help-16.svg",
     "icons/menu-fullpage.svg",
     "icons/menu-visible.svg",
     "icons/menu-myshot.svg",
+    "icons/onboarding-1.png",
+    "icons/onboarding-2.png",
+    "icons/onboarding-3.png",
+    "icons/onboarding-4.png",
+    "icons/onboarding-5.png",
+    "icons/onboarding-6.png",
+    "icons/done.svg",
     "icons/icon-welcome-face-without-eyes.svg"
   ],
   "permissions": [

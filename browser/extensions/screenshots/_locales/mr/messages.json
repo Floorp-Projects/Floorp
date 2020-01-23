@@ -1,0 +1,184 @@
+{
+  "addonDescription": {
+    "message": "वेबवरून क्लिप आणि स्क्रीनशॉट घ्या आणि त्यांना तात्पुरते किंवा कायमचे जतन करा."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "स्क्रीनशॉट घ्या"
+  },
+  "myShotsLink": {
+    "message": "माझे शॉट"
+  },
+  "screenshotInstructions": {
+    "message": "प्रदेश निवडण्यासाठी पृष्ठावर ड्रॅग करा किंवा क्लिक करा. रद्द करण्यासाठी ESC दाबा."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "साठवा"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "दृश्यमय साठवा"
+  },
+  "saveScreenshotFullPage": {
+    "message": "संपूर्ण पृष्ठ साठवा"
+  },
+  "cancelScreenshot": {
+    "message": "रद्द करा"
+  },
+  "downloadScreenshot": {
+    "message": "डाउनलोड करा"
+  },
+  "downloadOnlyNotice": {
+    "message": "आपण सध्या केवळ-डाउनलोड मोडमध्ये आहात."
+  },
+  "downloadOnlyDetails": {
+    "message": "या स्थितींमध्ये Firefox स्क्रीनशॉट आपोआप फक्त-डाउनलोड या मोड वर बदलते:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "खाजगी ब्राउझिंग विंडोमध्ये."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "तृतीय-पक्षाच्या कुकीज निष्क्रीय आहेत."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“इतिहास कधीच लक्षात ठेवु नका” कार्यान्वित आहे."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "आपण Firefox ESR वापरात आहात."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "अपलोड निष्क्रिय आहेत."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "दुवा कॉपी केला"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "आपल्या शॉटचा दुवा क्लिपबोर्डवर कॉपी झाला आहे. चिटकवण्यासाठी $META_KEY$ -V दाबा.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "प्रत बनवा"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "शॉट प्रतिकृत केला"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "आपला शॉट क्लिपबोर्डवर कॉपी झाला आहे. चिटकवण्यासाठी $META_KEY$ -V दाबा.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "साठवलेल्या प्रतिमा $PIXELS$px उंचीला कापल्या जातील.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "नादुरुस्त."
+  },
+  "requestErrorDetails": {
+    "message": "क्षमस्व! आम्ही आपला शॉट साठवु शकलो नाही. कृपया नंतर प्रयत्न करा."
+  },
+  "connectionErrorTitle": {
+    "message": "आम्ही आपल्या स्क्रीनशॉटशी जोडणी करु शकत नाही."
+  },
+  "connectionErrorDetails": {
+    "message": "कृपया आपले इंटरनेट जोडणी तपासा. आपण इंटरनेटशी जुळण्यास अक्षम असल्यास, Firefox स्क्रीनशॉट सेवेमध्ये एक तात्पुरती समस्या असु शकते."
+  },
+  "loginErrorDetails": {
+    "message": "Firefox स्क्रीनशॉट सेवेमध्ये समस्या असल्या कारणाने आम्ही आपला शॉट साठवु शकलो नाही. कृपया नंतर प्रयत्न करा."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "आम्ही हे पृष्ठ स्क्रीनशॉट करू शकत नाही."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "हे मानक वेब पृष्ठ नाही, म्हणून आपण त्याचा स्क्रीनशॉट घेऊ शकत नाही."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "आपण Firefox स्क्रीनशॉट पृष्ठाचा शॉट घेऊ शकत नाही!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "आपली निवड खूप लहान आहे"
+  },
+  "privateWindowErrorTitle": {
+    "message": "खाजगी ब्राउझिंग पद्धतीमध्ये स्क्रीनशॉट्स निष्क्रिय केले आहेत"
+  },
+  "privateWindowErrorDetails": {
+    "message": "गैरसोयीबद्दल क्षमस्व. आम्ही भविष्यातील प्रकाशनासाठी या वैशिष्ट्यांवर कार्यरत आहोत."
+  },
+  "genericErrorTitle": {
+    "message": "हुअ! Firefox स्क्रीनशॉट अव्यवस्थित झाले आहे."
+  },
+  "genericErrorDetails": {
+    "message": "काय घडले याची आम्हाला खात्री नाही. पुन्हा प्रयत्न करा किंवा भिन्न पृष्ठाचा शॉट घ्या?"
+  },
+  "tourBodyIntro": {
+    "message": "Firefox न सोडता स्क्रीनशॉट घ्या, जतन करा आणि सामायिक करा."
+  },
+  "tourHeaderPageAction": {
+    "message": "जतन करण्याचा एक नवीन मार्ग"
+  },
+  "tourBodyPageAction": {
+    "message": "जेव्हा आपल्याला स्क्रीनशॉट घ्यायचा असेल तेव्हा पत्ता पट्टीवरील पृष्ठ क्रिया मेनू वाढवा."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "आपल्याला पाहिजे असलेल्या गोष्टी फक्त कॅप्चर करा"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "पृष्ठाचा फक्त एक भाग कॅप्चर करण्यासाठी क्लिक आणि ड्रॅग करा. आपण आपल्या निवडीवर ठळकपणे होव्हर देखील करू शकता."
+  },
+  "tourHeaderFullPage": {
+    "message": "Windows किंवा संपूर्ण पृष्ठे कॅप्चर करा"
+  },
+  "tourBodyFullPage": {
+    "message": "पटलामध्ये दृश्यमान क्षेत्र कॅप्चर करण्यासाठी किंवा संपूर्ण पृष्ठ कॅप्चर करण्यासाठी वरील उजवीकडील बटणे निवडा."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "जसे आपल्याला आवडते"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "आपले क्रॉप केलेले शॉट्स वेबवर सुलभ सामायिक करण्यासाठी जतन करा, किंवा त्यांना आपल्या संगणकावर डाउनलोड करा. आपण घेतलेले सर्व शॉट्स शोधण्यासाठी आपण माझे शॉट्स बटणावर क्लिक करू शकता."
+  },
+  "tourSkip": {
+    "message": "दुर्लक्षित करा"
+  },
+  "tourNext": {
+    "message": "पुढील स्लाइड"
+  },
+  "tourPrevious": {
+    "message": "मागची स्लाइड"
+  },
+  "tourDone": {
+    "message": "झाले"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox Screenshots वापरून, आपण आमच्या $TERMSANDPRIVACYNOTICETERMSLINK$आणि $TERMSANDPRIVACYNOTICEPRIVACYLINK$ शी सहमत आहात.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "अटी"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "गोपनीयता सूचना"
+  },
+  "libraryLabel": {
+    "message": "स्क्रीनशॉट"
+  }
+}

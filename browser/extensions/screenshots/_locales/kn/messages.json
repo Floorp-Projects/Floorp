@@ -1,0 +1,32 @@
+{
+  "myShotsLink": {
+    "message": "ನನ್ನ ಫೋಟೋಗಳು‍"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "ಉಳಿಸು"
+  },
+  "cancelScreenshot": {
+    "message": "ರದ್ದುಗೊಳಿಸು"
+  },
+  "downloadScreenshot": {
+    "message": "ಡೌನ್‌ಲೋಡ್"
+  },
+  "copyScreenshot": {
+    "message": "ನಕಲಿಸು"
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourDone": {
+    "message": "ಆಯಿತು"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "ನಿಯಮಗಳು"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ಗೌಪ್ಯತಾ ಸೂಚನೆ"
+  },
+  "libraryLabel": {
+    "message": "ತೆರೆಚಿತ್ರಗಳು"
+  }
+}

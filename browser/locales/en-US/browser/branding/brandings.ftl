@@ -15,4 +15,3 @@
 -monitor-brand-short-name = Monitor
 -pocket-brand-name = Pocket
 -send-brand-name = Firefox Send
--screenshots-brand-name = Firefox Screenshots
