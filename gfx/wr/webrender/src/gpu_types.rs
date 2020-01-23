@@ -411,12 +411,14 @@ bitflags! {
         const SEGMENT_REPEAT_X = 4;
         /// Repeat UVs vertically.
         const SEGMENT_REPEAT_Y = 8;
-        /// Horizontally follow border-image-repeat: round
+        /// Horizontally follow border-image-repeat: round.
         const SEGMENT_REPEAT_X_ROUND = 16;
-        /// Vorizontally follow border-image-repeat: round
+        /// Vertically follow border-image-repeat: round.
         const SEGMENT_REPEAT_Y_ROUND = 32;
+        /// Middle (fill) area of a border-image-repeat.
+        const SEGMENT_NINEPATCH_MIDDLE = 64;
         /// The extra segment data is a texel rect.
-        const SEGMENT_TEXEL_RECT = 64;
+        const SEGMENT_TEXEL_RECT = 128;
     }
 }
 
