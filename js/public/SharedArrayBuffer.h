@@ -66,6 +66,16 @@ extern JS_PUBLIC_API void GetSharedArrayBufferLengthAndData(
  */
 extern JS_PUBLIC_API bool ContainsSharedArrayBuffer(JSContext* cx);
 
+/**
+ * Return the isShared flag of a ArrayBufferView subtypes, which denotes whether
+ * the underlying buffer is a SharedArrayBuffer.
+ *
+ * |obj| must have passed a JS_IsArrayBufferViewObject test, or somehow
+ * be known that it would pass such a test: it is a ArrayBufferView subtypes or
+ * a wrapper of a ArrayBufferView subtypes, and the unwrapping will succeed.
+ */
+extern JS_PUBLIC_API bool IsArrayBufferViewShared(JSObject* obj);
+
 }  // namespace JS
 
 #endif /* js_SharedArrayBuffer_h */
