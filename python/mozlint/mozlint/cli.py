@@ -96,6 +96,13 @@ class MozlintParser(ArgumentParser):
           'default': False,
           'help': "Bootstrap linter dependencies without running any of the linters."
           }],
+        [['-j', '--jobs'],
+         {'default': None,
+          'dest': 'num_procs',
+          'type': int,
+          'help': "Number of worker processes to spawn when running linters. "
+                  "Defaults to the number of cores in your CPU.",
+          }],
         [['extra_args'],
          {'nargs': REMAINDER,
           'help': "Extra arguments that will be forwarded to the underlying linter.",
@@ -181,7 +188,7 @@ def find_linters(linters=None):
 
 
 def run(paths, linters, formats, outgoing, workdir, edit,
-        setup=False, list_linters=False, **lintargs):
+        setup=False, list_linters=False, num_procs=None, **lintargs):
     from mozlint import LintRoller, formatters
     from mozlint.editor import edit_issues
 
@@ -201,11 +208,11 @@ def run(paths, linters, formats, outgoing, workdir, edit,
         return ret
 
     # run all linters
-    result = lint.roll(paths, outgoing=outgoing, workdir=workdir)
+    result = lint.roll(paths, outgoing=outgoing, workdir=workdir, num_procs=num_procs)
 
     if edit and result.issues:
         edit_issues(result)
-        result = lint.roll(result.issues.keys())
+        result = lint.roll(result.issues.keys(), num_procs=num_procs)
 
     for formatter_name, path in formats:
         formatter = formatters.get(formatter_name)
