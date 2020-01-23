@@ -844,7 +844,7 @@ void DataChannelConnection::ProcessQueuedOpens() {
 }
 
 void DataChannelConnection::SctpDtlsInput(const std::string& aTransportId,
-                                          MediaPacket& packet) {
+                                          const MediaPacket& packet) {
   if ((packet.type() != MediaPacket::SCTP) || (mTransportId != aTransportId)) {
     return;
   }
