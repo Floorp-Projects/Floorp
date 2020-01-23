@@ -52,7 +52,7 @@ struct Epoch(u64);
 /// provided by the interning structure.
 pub struct UpdateList<S> {
     /// The additions and removals to apply.
-    updates: Vec<Update>,
+    pub updates: Vec<Update>,
     /// Actual new data to insert.
     data: Vec<S>,
 }
@@ -122,8 +122,8 @@ pub enum UpdateKind {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(MallocSizeOf)]
 pub struct Update {
-    index: usize,
-    kind: UpdateKind,
+    pub index: usize,
+    pub kind: UpdateKind,
 }
 
 pub trait InternDebug {
