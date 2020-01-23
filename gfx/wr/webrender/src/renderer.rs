@@ -1896,8 +1896,6 @@ pub struct Renderer {
     /// The compositing config, affecting how WR composites into the final scene.
     compositor_config: CompositorConfig,
 
-    current_compositor_kind: CompositorKind,
-
     /// Maintains a set of allocated native composite surfaces. This allows any
     /// currently allocated surfaces to be cleaned up as soon as deinit() is
     /// called (the normal bookkeeping for native surfaces exists in the
@@ -2425,7 +2423,6 @@ impl Renderer {
             documents_seen: FastHashSet::default(),
             force_redraw: true,
             compositor_config: options.compositor_config,
-            current_compositor_kind: compositor_kind,
             allocated_native_surfaces: FastHashSet::default(),
             debug_overlay_state: DebugOverlayState::new(),
         };
@@ -2873,8 +2870,7 @@ impl Renderer {
             }
             DebugCommand::ClearCaches(_)
             | DebugCommand::SimulateLongSceneBuild(_)
-            | DebugCommand::SimulateLongLowPrioritySceneBuild(_)
-            | DebugCommand::EnableNativeCompositor(_) => {}
+            | DebugCommand::SimulateLongLowPrioritySceneBuild(_) => {}
             DebugCommand::InvalidateGpuCache => {
                 match self.gpu_cache_texture.bus {
                     GpuCacheBus::PixelBuffer { ref mut rows, .. } => {
@@ -2965,9 +2961,7 @@ impl Renderer {
         );
 
         // Update the debug overlay surface, if we are running in native compositor mode.
-        if let CompositorKind::Native { .. } = self.current_compositor_kind {
-            let compositor = self.compositor_config.compositor().unwrap();
-
+        if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
             // If there is a current surface, destroy it if we don't need it for this frame, or if
             // the size has changed.
             if let Some(current_size) = self.debug_overlay_state.current_size {
@@ -2996,8 +2990,7 @@ impl Renderer {
     fn bind_debug_overlay(&mut self) {
         // Debug overlay setup are only required in native compositing mode
         if self.debug_overlay_state.is_enabled {
-            if let CompositorKind::Native { .. } = self.current_compositor_kind {
-                let compositor = self.compositor_config.compositor().unwrap();
+            if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
                 let surface_size = self.debug_overlay_state.current_size.unwrap();
 
                 // Bind the native surface
@@ -3031,8 +3024,7 @@ impl Renderer {
     fn unbind_debug_overlay(&mut self) {
         // Debug overlay setup are only required in native compositing mode
         if self.debug_overlay_state.is_enabled {
-            if let CompositorKind::Native { .. } = self.current_compositor_kind {
-                let compositor = self.compositor_config.compositor().unwrap();
+            if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
                 // Unbind the draw target and add it to the visual tree to be composited
                 compositor.unbind();
 
@@ -3061,35 +3053,6 @@ impl Renderer {
         if self.active_documents.is_empty() {
             self.last_time = precise_time_ns();
             return Ok(results);
-        }
-
-        let compositor_kind = self.active_documents[0].1.frame.composite_state.compositor_kind;
-        // CompositorKind is updated
-        if self.current_compositor_kind != compositor_kind {
-            let enable = match (self.current_compositor_kind, compositor_kind) {
-                (CompositorKind::Native { .. }, CompositorKind::Draw { .. }) => {
-                    if self.debug_overlay_state.current_size.is_some() {
-                        self.compositor_config
-                            .compositor()
-                            .unwrap()
-                            .destroy_surface(NativeSurfaceId::DEBUG_OVERLAY);
-                        self.debug_overlay_state.current_size = None;
-                    }
-                    false
-                }
-                (CompositorKind::Draw { .. }, CompositorKind::Native { .. }) => {
-                    true
-                }
-                (_, _) => {
-                    unreachable!();
-                }
-            };
-
-            self.compositor_config
-                .compositor()
-                .unwrap()
-                .enable_native_compositor(enable);
-            self.current_compositor_kind = compositor_kind;
         }
 
         let mut frame_profiles = Vec::new();
@@ -3140,8 +3103,7 @@ impl Renderer {
         // Inform the client that we are starting a composition transaction if native
         // compositing is enabled. This needs to be done early in the frame, so that
         // we can create debug overlays after drawing the main surfaces.
-        if let CompositorKind::Native { .. } = self.current_compositor_kind {
-            let compositor = self.compositor_config.compositor().unwrap();
+        if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
             compositor.begin_frame();
         }
 
@@ -3158,8 +3120,6 @@ impl Renderer {
 
             let last_document_index = active_documents.len() - 1;
             for (doc_index, (document_id, RenderedDocument { ref mut frame, .. })) in active_documents.iter_mut().enumerate() {
-                assert!(self.current_compositor_kind == frame.composite_state.compositor_kind);
-
                 if self.shared_texture_cache_cleared {
                     assert!(self.documents_seen.contains(&document_id),
                             "Cleared texture cache without sending new document frame.");
@@ -3320,9 +3280,9 @@ impl Renderer {
                 let scale = if small_screen { 1.6 } else { 1.0 };
                 // TODO(gw): Tidy this up so that compositor config integrates better
                 //           with the (non-compositor) surface y-flip options.
-                let surface_origin_is_top_left = match self.current_compositor_kind {
-                    CompositorKind::Native { .. } => true,
-                    CompositorKind::Draw { .. } => self.device.surface_origin_is_top_left(),
+                let surface_origin_is_top_left = match self.compositor_config {
+                    CompositorConfig::Native { .. } => true,
+                    CompositorConfig::Draw { .. } => self.device.surface_origin_is_top_left(),
                 };
                 debug_renderer.render(
                     &mut self.device,
@@ -3351,8 +3311,7 @@ impl Renderer {
         // Inform the client that we are finished this composition transaction if native
         // compositing is enabled. This must be called after any debug / profiling compositor
         // surfaces have been drawn and added to the visual tree.
-        if let CompositorKind::Native { .. } = self.current_compositor_kind {
-            let compositor = self.compositor_config.compositor().unwrap();
+        if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
             compositor.end_frame();
         }
 
@@ -5255,12 +5214,11 @@ impl Renderer {
                         if frame.composite_state.picture_caching_is_enabled {
                             // If we have a native OS compositor, then make use of that interface
                             // to specify how to composite each of the picture cache surfaces.
-                            match self.current_compositor_kind {
-                                CompositorKind::Native { .. } => {
-                                    let compositor = self.compositor_config.compositor().unwrap();
+                            match self.compositor_config {
+                                CompositorConfig::Native { ref mut compositor, .. } => {
                                     frame.composite_state.composite_native(&mut **compositor);
                                 }
-                                CompositorKind::Draw { max_partial_present_rects, .. } => {
+                                CompositorConfig::Draw { max_partial_present_rects, .. } => {
                                     self.composite_simple(
                                         &frame.composite_state,
                                         clear_framebuffer,
@@ -5339,12 +5297,11 @@ impl Renderer {
                                     )
                                 }
                                 ResolvedSurfaceTexture::Native { id, size } => {
-                                    let surface_info = match self.current_compositor_kind {
-                                        CompositorKind::Native { .. } => {
-                                            let compositor = self.compositor_config.compositor().unwrap();
+                                    let surface_info = match self.compositor_config {
+                                        CompositorConfig::Native { ref mut compositor, .. } => {
                                             compositor.bind(id, picture_target.dirty_rect)
                                         }
-                                        CompositorKind::Draw { .. } => {
+                                        CompositorConfig::Draw { .. } => {
                                             unreachable!();
                                         }
                                     };
@@ -5377,12 +5334,11 @@ impl Renderer {
 
                             // Native OS surfaces must be unbound at the end of drawing to them
                             if let ResolvedSurfaceTexture::Native { .. } = picture_target.surface {
-                                match self.current_compositor_kind {
-                                    CompositorKind::Native { .. } => {
-                                        let compositor = self.compositor_config.compositor().unwrap();
+                                match self.compositor_config {
+                                    CompositorConfig::Native { ref mut compositor, .. } => {
                                         compositor.unbind();
                                     }
-                                    CompositorKind::Draw { .. } => {
+                                    CompositorConfig::Draw { .. } => {
                                         unreachable!();
                                     }
                                 }

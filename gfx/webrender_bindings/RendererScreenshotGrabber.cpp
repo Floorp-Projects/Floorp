@@ -16,33 +16,27 @@ RendererScreenshotGrabber::RendererScreenshotGrabber() {
 }
 
 void RendererScreenshotGrabber::MaybeGrabScreenshot(
-    RendererOGL* aRendererOGL, const gfx::IntSize& aWindowSize) {
-  bool isEnabled =
-      ProfilerScreenshots::IsEnabled() && aRendererOGL->EnsureAsyncScreenshot();
-
-  if (isEnabled) {
+    Renderer* aRenderer, const gfx::IntSize& aWindowSize) {
+  if (ProfilerScreenshots::IsEnabled()) {
     if (!mProfilerScreenshots) {
       mProfilerScreenshots = new ProfilerScreenshots();
     }
 
-    GrabScreenshot(aRendererOGL->GetRenderer(), aWindowSize);
+    GrabScreenshot(aRenderer, aWindowSize);
   } else if (mProfilerScreenshots) {
-    Destroy(aRendererOGL->GetRenderer());
+    Destroy(aRenderer);
   }
 }
 
-void RendererScreenshotGrabber::MaybeProcessQueue(RendererOGL* aRendererOGL) {
-  bool isEnabled =
-      ProfilerScreenshots::IsEnabled() && aRendererOGL->EnsureAsyncScreenshot();
-
-  if (isEnabled) {
+void RendererScreenshotGrabber::MaybeProcessQueue(Renderer* aRenderer) {
+  if (ProfilerScreenshots::IsEnabled()) {
     if (!mProfilerScreenshots) {
       mProfilerScreenshots = new ProfilerScreenshots();
     }
 
-    ProcessQueue(aRendererOGL->GetRenderer());
+    ProcessQueue(aRenderer);
   } else if (mProfilerScreenshots) {
-    Destroy(aRendererOGL->GetRenderer());
+    Destroy(aRenderer);
   }
 }
 
