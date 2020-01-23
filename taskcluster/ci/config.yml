@@ -317,6 +317,16 @@ workers:
                 by-release-level:
                     production: gecko-3-balrog
                     staging: gecko-1-balrog
+        bouncer:
+            provisioner: scriptworker-k8s
+            # Note that this implementation doesn't correspond with an
+            # payload_builder, there are several `bouncer-*` implemenations.
+            implementation: bouncer
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    production: gecko-3-bouncer
+                    staging: gecko-1-bouncer
         beetmover:
             provisioner: scriptworker-k8s
             implementation: beetmover
