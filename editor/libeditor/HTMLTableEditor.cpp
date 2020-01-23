@@ -2228,18 +2228,18 @@ nsresult HTMLEditor::CopyCellBackgroundColor(Element* aDestCell,
     return NS_ERROR_INVALID_ARG;
   }
 
-  // Copy backgournd color to new cell.
-  nsAutoString color;
-  bool isSet;
-  nsresult rv = GetAttributeValue(aSourceCell, NS_LITERAL_STRING("bgcolor"),
-                                  color, &isSet);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!isSet) {
+  if (!aSourceCell->HasAttr(nsGkAtoms::bgcolor)) {
     return NS_OK;
   }
-  return SetAttributeWithTransaction(*aDestCell, *nsGkAtoms::bgcolor, color);
+
+  // Copy backgournd color to new cell.
+  nsString backgroundColor;
+  aSourceCell->GetAttr(nsGkAtoms::bgcolor, backgroundColor);
+  nsresult rv = SetAttributeWithTransaction(*aDestCell, *nsGkAtoms::bgcolor,
+                                            backgroundColor);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "SetAttributeWithTransaction() failed");
+  return rv;
 }
 
 nsresult HTMLEditor::SplitCellIntoColumns(Element* aTable, int32_t aRowIndex,

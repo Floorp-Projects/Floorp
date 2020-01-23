@@ -67,18 +67,24 @@ NS_IMPL_RELEASE_INHERITED(CreateElementTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CreateElementTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-NS_IMETHODIMP
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 CreateElementTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTag) ||
       NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mNewNode = mEditorBase->CreateHTMLContent(mTag);
+  RefPtr<EditorBase> editorBase(mEditorBase);
+
+  mNewNode = editorBase->CreateHTMLContent(mTag);
   NS_ENSURE_STATE(mNewNode);
 
   // Try to insert formatting whitespace for the new node:
-  mEditorBase->MarkNodeDirty(mNewNode);
+  OwningNonNull<Element> newElement(*mNewNode);
+  nsresult rv = editorBase->MarkElementDirty(newElement);
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
 
   // Insert the new node
   ErrorResult error;
@@ -88,12 +94,12 @@ CreateElementTransaction::DoTransaction() {
   }
 
   // Only set selection to insertion point if editor gives permission
-  if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
+  if (!editorBase->AllowsTransactionsToChangeSelection()) {
     // Do nothing - DOM range gravity will adjust selection
     return NS_OK;
   }
 
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  RefPtr<Selection> selection = editorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   EditorRawDOMPoint afterNewNode(mNewNode);
