@@ -1722,6 +1722,7 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
       case ESClass::SetIterator:
       case ESClass::Arguments:
       case ESClass::Error:
+      case ESClass::Function:
         break;
 
       case ESClass::Other: {

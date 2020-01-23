@@ -302,6 +302,8 @@ JS_FRIEND_API bool js::GetBuiltinClass(JSContext* cx, HandleObject obj,
     *cls = ESClass::Error;
   } else if (obj->is<BigIntObject>()) {
     *cls = ESClass::BigInt;
+  } else if (obj->is<JSFunction>()) {
+    *cls = ESClass::Function;
   } else {
     *cls = ESClass::Other;
   }
