@@ -556,7 +556,10 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     const Optional<uint64_t>& aVersion,
     const Optional<StorageType>& aStorageType, bool aDeleting,
     CallerType aCallerType, ErrorResult& aRv) {
-  MOZ_ASSERT(mGlobal);
+  if (NS_WARN_IF(!mGlobal)) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return nullptr;
+  }
 
   CommonFactoryRequestParams commonParams;
 
