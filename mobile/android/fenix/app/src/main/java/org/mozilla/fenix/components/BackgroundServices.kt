@@ -87,7 +87,7 @@ class BackgroundServices(
             syncPeriodInMinutes = 240L) // four hours
     }
 
-    val pushService by lazy { FirebasePush() }
+    val pushService by lazy { FirebasePushService() }
 
     val push by lazy { makePushConfig()?.let { makePush(it) } }
 

@@ -154,7 +154,8 @@ object Deps {
     const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
 
-    const val leanplum = "com.leanplum:leanplum-core:${Versions.leanplum}"
+    const val leanplum_core = "com.leanplum:leanplum-core:${Versions.leanplum}"
+    const val leanplum_fcm = "com.leanplum:leanplum-fcm:${Versions.leanplum}"
 
     const val androidx_annotation = "androidx.annotation:annotation:${Versions.androidx_annotation}"
     const val androidx_biometric = "androidx.biometric:biometric:${Versions.androidx_biometric}"
