@@ -119,7 +119,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
     return mLength;
   }
 
-  inline void ComputeLengthAndData() const {
+  inline void ComputeState() const {
     MOZ_ASSERT(inited());
     MOZ_ASSERT(!mComputed);
     GetLengthAndDataAndSharedness(mImplObj, &mLength, &mShared, &mData);

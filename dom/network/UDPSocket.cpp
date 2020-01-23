@@ -345,12 +345,12 @@ bool UDPSocket::Send(const StringOrBlobOrArrayBufferOrArrayBufferView& aData,
       aRv = strStream->SetData(data.BeginReading(), data.Length());
     } else if (aData.IsArrayBuffer()) {
       const ArrayBuffer& data = aData.GetAsArrayBuffer();
-      data.ComputeLengthAndData();
+      data.ComputeState();
       aRv = strStream->SetData(reinterpret_cast<const char*>(data.Data()),
                                data.Length());
     } else {
       const ArrayBufferView& data = aData.GetAsArrayBufferView();
-      data.ComputeLengthAndData();
+      data.ComputeState();
       aRv = strStream->SetData(reinterpret_cast<const char*>(data.Data()),
                                data.Length());
     }

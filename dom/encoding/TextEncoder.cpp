@@ -30,7 +30,7 @@ void TextEncoder::EncodeInto(JSContext* aCx, JS::Handle<JSString*> aSrc,
                              const Uint8Array& aDst,
                              TextEncoderEncodeIntoResult& aResult,
                              OOMReporter& aError) {
-  aDst.ComputeLengthAndData();
+  aDst.ComputeState();
   size_t read;
   size_t written;
   auto maybe = JS_EncodeStringToUTF8BufferPartial(

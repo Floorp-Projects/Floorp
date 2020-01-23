@@ -112,7 +112,7 @@ static UniquePtr<webgl::TexUnpackBlob> FromImageData(
   DebugOnly<bool> inited = scopedArr->Init(imageData.GetDataObject());
   MOZ_ASSERT(inited);
 
-  scopedArr->ComputeLengthAndData();
+  scopedArr->ComputeState();
   const DebugOnly<size_t> dataSize = scopedArr->Length();
   const void* const data = scopedArr->Data();
 

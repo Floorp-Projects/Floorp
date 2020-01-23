@@ -500,8 +500,8 @@ already_AddRefed<OscillatorNode> AudioContext::CreateOscillator(
 already_AddRefed<PeriodicWave> AudioContext::CreatePeriodicWave(
     const Float32Array& aRealData, const Float32Array& aImagData,
     const PeriodicWaveConstraints& aConstraints, ErrorResult& aRv) {
-  aRealData.ComputeLengthAndData();
-  aImagData.ComputeLengthAndData();
+  aRealData.ComputeState();
+  aImagData.ComputeState();
 
   if (aRealData.Length() != aImagData.Length() || aRealData.Length() == 0) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -602,7 +602,7 @@ already_AddRefed<Promise> AudioContext::DecodeAudioData(
     return nullptr;
   }
 
-  aBuffer.ComputeLengthAndData();
+  aBuffer.ComputeState();
 
   if (!aBuffer.Data()) {
     // Throw if the buffer is detached

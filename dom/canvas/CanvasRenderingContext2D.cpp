@@ -5201,7 +5201,7 @@ nsresult CanvasRenderingContext2D::PutImageData_explicit(
     return NS_OK;
   }
 
-  aArray->ComputeLengthAndData();
+  aArray->ComputeState();
 
   uint32_t dataLen = aArray->Length();
 
