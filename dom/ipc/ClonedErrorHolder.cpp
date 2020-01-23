@@ -279,6 +279,15 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
   if (mType == Type::JSError) {
     JS::Rooted<JSString*> filename(aCx);
     JS::Rooted<JSString*> message(aCx);
+
+    // For some unknown reason, we can end up with a void string in mFilename,
+    // which will cause filename to be null, which causes JS::CreateError() to
+    // crash. Make this code against robust against this by treating void
+    // strings as the empty string.
+    if (mFilename.IsVoid()) {
+      mFilename.Assign(EmptyCString());
+    }
+
     if (!ToJSString(aCx, mFilename, &filename) ||
         !ToJSString(aCx, mMessage, &message)) {
       return false;
