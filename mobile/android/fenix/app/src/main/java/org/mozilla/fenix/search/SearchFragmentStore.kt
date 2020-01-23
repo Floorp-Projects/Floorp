@@ -70,7 +70,7 @@ sealed class SearchFragmentAction : Action {
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
     data class SelectNewDefaultSearchEngine(val engine: SearchEngine) : SearchFragmentAction()
     data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
-    data class ShowSearchSuggestionsHint(val show: Boolean) : SearchFragmentAction()
+    data class AllowSearchSuggestionsInPrivateModePrompt(val show: Boolean) : SearchFragmentAction()
     data class UpdateQuery(val query: String) : SearchFragmentAction()
 }
 
@@ -92,7 +92,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             state.copy(
                 searchEngineSource = SearchEngineSource.Default(action.engine)
             )
-        is SearchFragmentAction.ShowSearchSuggestionsHint ->
+        is SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt ->
             state.copy(showSearchSuggestionsHint = action.show)
         is SearchFragmentAction.UpdateEditingCanceled ->
             state.copy(isAnimatingOut = true)

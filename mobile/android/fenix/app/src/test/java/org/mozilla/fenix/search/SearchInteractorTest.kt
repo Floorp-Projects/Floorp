@@ -123,7 +123,7 @@ class SearchInteractorTest {
         interactor.onTextChanged("test")
 
         verify { store.dispatch(SearchFragmentAction.UpdateQuery("test")) }
-        verify { store.dispatch(SearchFragmentAction.ShowSearchSuggestionsHint(false)) }
+        verify { store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false)) }
     }
 
     @Test
