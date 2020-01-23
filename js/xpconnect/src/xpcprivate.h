@@ -686,28 +686,22 @@ class MOZ_STACK_CLASS XPCCallContext final {
   inline XPCCallContext* GetPrevCallContext() const;
 
   inline JSObject* GetFlattenedJSObject() const;
-  inline nsISupports* GetIdentityObject() const;
   inline XPCWrappedNative* GetWrapper() const;
-  inline XPCWrappedNativeProto* GetProto() const;
 
   inline bool CanGetTearOff() const;
   inline XPCWrappedNativeTearOff* GetTearOff() const;
 
   inline nsIXPCScriptable* GetScriptable() const;
-  inline bool CanGetSet() const;
   inline XPCNativeSet* GetSet() const;
   inline bool CanGetInterface() const;
   inline XPCNativeInterface* GetInterface() const;
   inline XPCNativeMember* GetMember() const;
   inline bool HasInterfaceAndMember() const;
-  inline jsid GetName() const;
   inline bool GetStaticMemberIsLocal() const;
   inline unsigned GetArgc() const;
   inline JS::Value* GetArgv() const;
-  inline JS::Value* GetRetVal() const;
 
   inline uint16_t GetMethodIndex() const;
-  inline void SetMethodIndex(uint16_t index);
 
   inline jsid GetResolveName() const;
   inline jsid SetResolveName(JS::HandleId name);
