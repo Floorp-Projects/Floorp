@@ -19,8 +19,7 @@ from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          generate_beetmover_upstream_artifacts,
                                          generate_beetmover_partials_artifact_map,
                                          get_beetmover_bucket_scope,
-                                         get_beetmover_action_scope,
-                                         get_worker_type_for_scope)
+                                         get_beetmover_action_scope)
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.treeherder import replace_group, inherit_treeherder_from_dep
 from taskgraph.transforms.task import task_description_schema
@@ -118,7 +117,7 @@ def make_task_description(config, jobs):
         task = {
             'label': label,
             'description': description,
-            'worker-type': get_worker_type_for_scope(config, bucket_scope),
+            'worker-type': 'beetmover',
             'scopes': [bucket_scope, action_scope],
             'dependencies': dependencies,
             'attributes': attributes,

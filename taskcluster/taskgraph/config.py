@@ -56,8 +56,6 @@ graph_config_schema = Schema({
     Required('scriptworker'): {
         # Prefix to add to scopes controlling scriptworkers
         Required('scope-prefix'): text_type,
-        # Mapping of scriptworker types to scopes they accept
-        Required('worker-types'): {text_type: [text_type]}
     },
     Required('task-priority'): optionally_keyed_by('project', Any(
         'highest',

@@ -16,8 +16,7 @@ from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          generate_beetmover_upstream_artifacts,
                                          get_beetmover_action_scope,
-                                         get_beetmover_bucket_scope,
-                                         get_worker_type_for_scope)
+                                         get_beetmover_bucket_scope)
 from voluptuous import Optional, Required
 from taskgraph.util.treeherder import replace_group
 from taskgraph.transforms.task import task_description_schema
@@ -92,7 +91,7 @@ def make_beetmover_checksums_description(config, jobs):
         task = {
             'label': label,
             'description': description,
-            'worker-type': get_worker_type_for_scope(config, bucket_scope),
+            'worker-type': 'beetmover',
             'scopes': [bucket_scope, action_scope],
             'dependencies': dependencies,
             'attributes': attributes,

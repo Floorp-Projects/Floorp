@@ -14,9 +14,6 @@ from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import (
     optionally_keyed_by, resolve_keyed_by,
 )
-from taskgraph.util.scriptworker import (
-    get_balrog_server_scope, get_worker_type_for_scope
-)
 from taskgraph.util.treeherder import replace_group
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Optional
@@ -112,12 +109,10 @@ def make_task_description(config, jobs):
             ],
         }]
 
-        server_scope = get_balrog_server_scope(config)
-
         task = {
             'label': label,
             'description': description,
-            'worker-type': get_worker_type_for_scope(config, server_scope),
+            'worker-type': 'balrog',
             'worker': {
                 'implementation': 'balrog',
                 'upstream-artifacts': upstream_artifacts,
