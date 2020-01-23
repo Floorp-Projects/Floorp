@@ -40,9 +40,10 @@ test_with_window(w => {
   // We have to not throw during define(), but throw during super()
   let throws = false;
 
+  let err = { name: "prototype throws" };
   function TestElement() {
     throws = true;
-    assert_throws({ name: "prototype throws" }, () => {
+    assert_throws_exactly(err, () => {
       Reflect.construct(w.HTMLElement, [], new.target);
     });
   }
@@ -50,7 +51,7 @@ test_with_window(w => {
   const ElementWithDynamicPrototype = new Proxy(TestElement, {
     get: function (target, name) {
       if (throws && name == "prototype")
-        throw { name: "prototype throws" };
+        throw err;
       return target[name];
     }
   });
