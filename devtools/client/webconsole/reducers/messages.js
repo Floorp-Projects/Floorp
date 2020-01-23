@@ -59,12 +59,24 @@ loader.lazyRequireGetter(
   "devtools/client/webconsole/utils/messages",
   true
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "pointPrecedes",
+  "resource://devtools/shared/execution-point-utils.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "pointEquals",
+  "resource://devtools/shared/execution-point-utils.js"
+);
 
 const { UPDATE_REQUEST } = require("devtools/client/netmonitor/src/constants");
 
 const {
   processNetworkUpdates,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
+
+const maxNumber = 100000;
 
 const MessageState = overrides =>
   Object.freeze(
@@ -97,6 +109,12 @@ const MessageState = overrides =>
         // Map of the form {messageId : networkInformation}
         // `networkInformation` holds request, response, totalTime, ...
         networkMessagesUpdateById: {},
+        // Set of logpoint IDs that have been removed
+        removedLogpointIds: new Set(),
+        // Any execution point we are currently paused at, when replaying.
+        pausedExecutionPoint: null,
+        // Whether any messages with execution points have been seen.
+        hasExecutionPoints: false,
       },
       overrides
     )
@@ -114,6 +132,9 @@ function cloneState(state) {
     frontsToRelease: [...state.frontsToRelease],
     repeatById: { ...state.repeatById },
     networkMessagesUpdateById: { ...state.networkMessagesUpdateById },
+    removedLogpointIds: new Set(state.removedLogpointIds),
+    pausedExecutionPoint: state.pausedExecutionPoint,
+    hasExecutionPoints: state.hasExecutionPoints,
     warningGroupsById: new Map(state.warningGroupsById),
   };
 }
@@ -134,6 +155,16 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
 
   if (newMessage.type === constants.MESSAGE_TYPE.NULL_MESSAGE) {
     // When the message has a NULL type, we don't add it.
+    return state;
+  }
+
+  // After messages with a given logpoint ID have been removed, ignore all
+  // future messages with that ID.
+  if (
+    newMessage.logpointId &&
+    state.removedLogpointIds &&
+    state.removedLogpointIds.has(newMessage.logpointId)
+  ) {
     return state;
   }
 
@@ -162,7 +193,27 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     newMessage.indent = parentGroups.length;
   }
 
+  ensureExecutionPoint(state, newMessage);
+
+  if (newMessage.executionPoint) {
+    state.hasExecutionPoints = true;
+  }
+
+  // When replaying, we might get two messages with the same execution point and
+  // logpoint ID. In this case the first message is provisional and should be
+  // removed.
   const removedIds = [];
+  if (newMessage.logpointId) {
+    const existingMessage = [...state.messagesById.values()].find(existing => {
+      return (
+        existing.logpointId == newMessage.logpointId &&
+        pointEquals(existing.executionPoint, newMessage.executionPoint)
+      );
+    });
+    if (existingMessage) {
+      removedIds.push(existingMessage.id);
+    }
+  }
 
   // Check if the current message could be placed in a Warning Group.
   // This needs to be done before setting the new message in messagesById so we have a
@@ -330,6 +381,15 @@ function messages(
 
   let newState;
   switch (action.type) {
+    case constants.PAUSED_EXECUTION_POINT:
+      if (
+        state.pausedExecutionPoint &&
+        action.executionPoint &&
+        pointEquals(state.pausedExecutionPoint, action.executionPoint)
+      ) {
+        return state;
+      }
+      return { ...state, pausedExecutionPoint: action.executionPoint };
     case constants.MESSAGES_ADD:
       // Preemptively remove messages that will never be rendered
       const list = [];
@@ -400,6 +460,26 @@ function messages(
       return removeMessagesFromState(
         {
           ...state,
+        },
+        removedIds
+      );
+    }
+
+    case constants.MESSAGES_CLEAR_LOGPOINT: {
+      const removedIds = [];
+      for (const [id, message] of messagesById) {
+        if (message.logpointId == action.logpointId) {
+          removedIds.push(id);
+        }
+      }
+
+      return removeMessagesFromState(
+        {
+          ...state,
+          removedLogpointIds: new Set([
+            ...state.removedLogpointIds,
+            action.logpointId,
+          ]),
         },
         removedIds
       );
@@ -1406,6 +1486,70 @@ function getDefaultFiltersCounter() {
   return count;
 }
 
+// Make sure that message has an execution point which can be used for sorting
+// if other messages with real execution points appear later.
+function ensureExecutionPoint(state, newMessage) {
+  if (newMessage.executionPoint) {
+    return;
+  }
+
+  // Add a lastExecutionPoint property which will group messages evaluated during
+  // the same replay pause point. When applicable, it will place the message immediately
+  // after the last visible message in the group without an execution point when sorting.
+  let point = { checkpoint: 0, progress: 0 },
+    messageCount = 1;
+  if (state.pausedExecutionPoint) {
+    point = state.pausedExecutionPoint;
+    const lastMessage = getLastMessageWithPoint(state, point);
+    if (lastMessage.lastExecutionPoint) {
+      messageCount = lastMessage.lastExecutionPoint.messageCount + 1;
+    }
+  } else if (state.visibleMessages.length) {
+    const lastId = state.visibleMessages[state.visibleMessages.length - 1];
+    const lastMessage = state.messagesById.get(lastId);
+    if (lastMessage.executionPoint) {
+      // If the message is evaluated while we are not paused, we want
+      // to make sure that those messages are placed immediately after the execution
+      // point's message.
+      point = lastMessage.executionPoint;
+      messageCount = maxNumber + 1;
+    } else {
+      point = lastMessage.lastExecutionPoint.point;
+      messageCount = lastMessage.lastExecutionPoint.messageCount + 1;
+    }
+  }
+
+  newMessage.lastExecutionPoint = { point, messageCount };
+}
+
+function getLastMessageWithPoint(state, point) {
+  // Find all of the messageIds with no real execution point and the same progress
+  // value as the given point.
+  const filteredMessageId = state.visibleMessages.filter(function(p) {
+    const currentMessage = state.messagesById.get(p);
+    if (currentMessage.executionPoint) {
+      return false;
+    }
+
+    return point.progress === currentMessage.lastExecutionPoint.point.progress;
+  });
+
+  const lastMessageId = filteredMessageId[filteredMessageId.length - 1];
+  return state.messagesById.get(lastMessageId) || {};
+}
+
+function messageExecutionPoint(state, id) {
+  const message = state.messagesById.get(id);
+  return message.executionPoint || message.lastExecutionPoint.point;
+}
+
+function messageCountSinceLastExecutionPoint(state, id) {
+  const message = state.messagesById.get(id);
+  return message.lastExecutionPoint
+    ? message.lastExecutionPoint.messageCount
+    : 0;
+}
+
 /**
  * Sort state.visibleMessages if needed.
  *
@@ -1421,6 +1565,44 @@ function maybeSortVisibleMessages(
   sortWarningGroupMessage = false,
   timeStampSort = false
 ) {
+  // When using log points while replaying, messages can be added out of order
+  // with respect to how they originally executed. Use the execution point
+  // information in the messages to sort visible messages according to how
+  // they originally executed. This isn't necessary if we haven't seen any
+  // messages with execution points, as either we aren't replaying or haven't
+  // seen any messages yet.
+  if (state.hasExecutionPoints) {
+    state.visibleMessages.sort((a, b) => {
+      const pointA = messageExecutionPoint(state, a);
+      const pointB = messageExecutionPoint(state, b);
+      if (pointPrecedes(pointB, pointA)) {
+        return true;
+      } else if (pointPrecedes(pointA, pointB)) {
+        return false;
+      }
+
+      // When messages have the same execution point, they can still be
+      // distinguished by the number of messages since the last one which did
+      // have an execution point.
+      let countA = messageCountSinceLastExecutionPoint(state, a);
+      let countB = messageCountSinceLastExecutionPoint(state, b);
+
+      // Messages with real execution points will not have a message count.
+      // We overwrite that with maxNumber so that we can differentiate A) messages
+      // from evaluations while replaying a paused point and B) messages from evaluations
+      // when not replaying a paused point.
+      if (pointA.progress === pointB.progress) {
+        if (!countA) {
+          countA = maxNumber;
+        } else if (!countB) {
+          countB = maxNumber;
+        }
+      }
+
+      return countA > countB;
+    });
+  }
+
   if (state.warningGroupsById.size > 0 && sortWarningGroupMessage) {
     function getNaturalOrder(messageA, messageB) {
       const aFirst = -1;
@@ -1534,3 +1716,6 @@ function shouldGroupWarningMessages(
 }
 
 exports.messages = messages;
+
+// Export for testing purpose.
+exports.ensureExecutionPoint = ensureExecutionPoint;

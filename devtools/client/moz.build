@@ -27,6 +27,7 @@ DIRS += [
     'styleeditor',
     'themes',
     'webconsole',
+    'webreplay',
     'whats-new',
 ]
 

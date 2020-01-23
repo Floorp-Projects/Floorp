@@ -36,6 +36,11 @@ loader.lazyGetter(this, "MenuList", function() {
     require("devtools/client/shared/components/menu/MenuList")
   );
 });
+loader.lazyGetter(this, "WebReplayPlayer", function() {
+  return createFactory(
+    require("devtools/client/webreplay/components/WebReplayPlayer")
+  );
+});
 
 loader.lazyRequireGetter(
   this,
@@ -461,6 +466,17 @@ class ToolboxToolbar extends Component {
     const debugTargetInfo = debugTargetData
       ? DebugTargetInfo({ debugTargetData, L10N, toolbox })
       : null;
+
+    if (toolbox.target.canRewind) {
+      return div(
+        {},
+        WebReplayPlayer({
+          toolbox: toolbox,
+        }),
+        debugTargetInfo,
+        toolbar
+      );
+    }
 
     return div({}, debugTargetInfo, toolbar);
   }

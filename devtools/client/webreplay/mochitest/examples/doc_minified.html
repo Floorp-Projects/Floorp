@@ -1,0 +1,13 @@
+<div id="divvy">Hello World!</div>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="minified.js"></script>
+<script>
+const cpmm = SpecialPowers.Services.cpmm;
+function recordingFinished() {
+  cpmm.sendAsyncMessage("RecordingFinished");
+}
+window.setTimeout(() => {
+  synthesizeMouseAtCenter(divvy, {});
+  window.setTimeout(recordingFinished);
+});
+</script>
