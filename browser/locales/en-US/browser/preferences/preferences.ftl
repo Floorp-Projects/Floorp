@@ -713,6 +713,10 @@ containers-add-button =
     .label = Add New Container
     .accesskey = A
 
+containers-new-tab-check =
+    .label = Select a container for each new tab
+    .accesskey = S
+
 containers-preferences-button =
     .label = Preferences
 containers-remove-button =

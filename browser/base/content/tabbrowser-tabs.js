@@ -1022,24 +1022,15 @@
         case "nsPref:changed":
           // This is has to deal with changes in
           // privacy.userContext.enabled and
-          // privacy.userContext.longPressBehavior.
+          // privacy.userContext.newTabContainerOnLeftClick.enabled.
           let containersEnabled =
             Services.prefs.getBoolPref("privacy.userContext.enabled") &&
             !PrivateBrowsingUtils.isWindowPrivate(window);
 
           // This pref won't change so often, so just recreate the menu.
-          let longPressBehavior = Services.prefs.getIntPref(
-            "privacy.userContext.longPressBehavior"
+          const newTabLeftClickOpensContainersMenu = Services.prefs.getBoolPref(
+            "privacy.userContext.newTabContainerOnLeftClick.enabled"
           );
-
-          // If longPressBehavior pref is set to 0 (or any invalid value)
-          // long press menu is disabled.
-          if (
-            containersEnabled &&
-            (longPressBehavior <= 0 || longPressBehavior > 2)
-          ) {
-            containersEnabled = false;
-          }
 
           // There are separate "new tab" buttons for when the tab strip
           // is overflowed and when it is not.  Attach the long click
@@ -1052,51 +1043,34 @@
               continue;
             }
 
-            gClickAndHoldListenersOnElement.remove(parent);
             parent.removeAttribute("type");
             if (parent.menupopup) {
               parent.menupopup.remove();
             }
 
             if (containersEnabled) {
-              let popup = document.createElementNS(
-                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                "menupopup"
-              );
-              if (parent.id) {
-                popup.id = parent.id + "-popup";
+              parent.setAttribute("context", "new-tab-button-popup");
+
+              if (newTabLeftClickOpensContainersMenu) {
+                let popup = document
+                  .getElementById("new-tab-button-popup")
+                  .cloneNode(true);
+                popup.removeAttribute("id");
+                popup.className = "new-tab-popup";
+                popup.setAttribute("position", "after_end");
+                parent.prepend(popup);
+                parent.setAttribute("type", "menu");
+                // Update tooltip text
+                nodeToTooltipMap[parent.id] = "newTabAlwaysContainer.tooltip";
               } else {
-                popup.setAttribute("anonid", "newtab-popup");
+                nodeToTooltipMap[parent.id] = "newTabButton.tooltip";
               }
-              popup.className = "new-tab-popup";
-              popup.setAttribute("position", "after_end");
-              popup.addEventListener("popupshowing", event => {
-                createUserContextMenu(event, {
-                  useAccessKeys: false,
-                  showDefaultTab:
-                    Services.prefs.getIntPref(
-                      "privacy.userContext.longPressBehavior"
-                    ) == 1,
-                });
-              });
-              parent.prepend(popup);
-
-              // longPressBehavior == 2 means that the menu is shown after X
-              // millisecs. Otherwise, with 1, the menu is open immediatelly.
-              if (longPressBehavior == 2) {
-                gClickAndHoldListenersOnElement.add(parent);
-              }
-
-              parent.setAttribute("type", "menu");
-            }
-
-            // Update tooltip text and evict from tooltip cache
-            if (containersEnabled) {
-              nodeToTooltipMap[parent.id] = "newTabContainer.tooltip";
             } else {
               nodeToTooltipMap[parent.id] = "newTabButton.tooltip";
+              parent.removeAttribute("context", "new-tab-button-popup");
             }
 
+            // evict from tooltip cache
             gDynamicTooltipCache.delete(parent.id);
           }
 

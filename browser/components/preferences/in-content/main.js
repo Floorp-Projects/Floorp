@@ -198,6 +198,10 @@ Preferences.addAll([
   { id: "browser.search.update", type: "bool" },
 
   { id: "privacy.userContext.enabled", type: "bool" },
+  {
+    id: "privacy.userContext.newTabContainerOnLeftClick.enabled",
+    type: "bool",
+  },
 
   // Picture-in-Picture
   {
