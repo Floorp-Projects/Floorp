@@ -293,6 +293,8 @@ task-priority:
         'mozilla-inbound': 'low'
         'default': 'very-low'
 
+taskgraph: {}
+
 workers:
     aliases:
         b-linux.*:

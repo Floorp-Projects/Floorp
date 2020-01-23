@@ -16,7 +16,7 @@ from taskgraph import decision
 from taskgraph.util.yaml import load_yaml
 
 
-FAKE_GRAPH_CONFIG = {'product-dir': 'browser'}
+FAKE_GRAPH_CONFIG = {'product-dir': 'browser', 'taskgraph': {}}
 
 
 class TestDecision(unittest.TestCase):
