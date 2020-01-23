@@ -102,7 +102,23 @@ function startTest() {
     return;
   }
 
-  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, 'context': document}], function() {
+  SpecialPowers.pushPermissions([
+    {
+      type: "cookie",
+      allow: SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION,
+      context: "http://example.com",
+    },
+    {
+      type: "cookie",
+      allow: SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION,
+      context: "http://test1.example.com",
+    },
+    {
+      type: "cookie",
+      allow: SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION,
+      context: "https://test2.example.com",
+    },
+  ], function() {
     // Initialy setup the quota to testing value of 1024B and
     // set a 500 bytes key with name length 1 (allocate 501 bytes)
     SpecialPowers.pushPrefEnv({"set": [["dom.storage.default_quota", 1], ["security.mixed_content.block_display_content", false], ["security.mixed_content.block_active_content", false]]}, doNextTest);
