@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "js/ArrayBuffer.h"
+#include "js/ArrayBufferMaybeShared.h"
 #include "js/GCAPI.h"       // JS::AutoCheckCannotGC
 #include "js/RootingAPI.h"  // JS::Rooted
 #include "js/SharedArrayBuffer.h"
@@ -282,14 +283,11 @@ typedef ArrayBufferView_base<js::UnwrapArrayBufferView,
                              js::GetArrayBufferViewLengthAndData,
                              JS_GetArrayBufferViewType>
     ArrayBufferView;
-typedef TypedArray<uint8_t, JS::UnwrapArrayBuffer, JS::GetArrayBufferData,
-                   JS::GetArrayBufferLengthAndData, JS::NewArrayBuffer>
+typedef TypedArray<uint8_t, JS::UnwrapArrayBufferMaybeShared,
+                   JS::GetArrayBufferMaybeSharedData,
+                   JS::GetArrayBufferMaybeSharedLengthAndData,
+                   JS::NewArrayBuffer>
     ArrayBuffer;
-
-typedef TypedArray<
-    uint8_t, JS::UnwrapSharedArrayBuffer, JS::GetSharedArrayBufferData,
-    JS::GetSharedArrayBufferLengthAndData, JS::NewSharedArrayBuffer>
-    SharedArrayBuffer;
 
 // A class for converting an nsTArray to a TypedArray
 // Note: A TypedArrayCreator must not outlive the nsTArray it was created from.
