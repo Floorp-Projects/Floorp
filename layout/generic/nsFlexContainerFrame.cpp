@@ -202,7 +202,7 @@ static inline bool IsAutoOrEnumOnBSize(const StyleSize& aSize, bool aIsInline) {
 // (an inline-axis expression vs. a block-axis expression), to get a
 // main-axis or cross-axis component.
 // For code that has e.g. a LogicalSize object, the methods
-// FlexboxAxisTracker::GetMainComponent and GetCrossComponent are cleaner
+// FlexboxAxisTracker::MainComponent and CrossComponent are cleaner
 // than these macros. But in cases where we simply have two separate
 // expressions for ISize and BSize (which may be expensive to evaluate),
 // these macros can be used to ensure that only the needed expression is
@@ -280,27 +280,27 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   bool IsColumnOriented() const { return !mIsRowOriented; }
 
   // aSize is expected to match the flex container's WritingMode.
-  nscoord GetMainComponent(const LogicalSize& aSize) const {
+  nscoord MainComponent(const LogicalSize& aSize) const {
     return IsRowOriented() ? aSize.ISize(mWM) : aSize.BSize(mWM);
   }
-  int32_t GetMainComponent(const LayoutDeviceIntSize& aIntSize) const {
+  int32_t MainComponent(const LayoutDeviceIntSize& aIntSize) const {
     return IsMainAxisHorizontal() ? aIntSize.width : aIntSize.height;
   }
 
   // aSize is expected to match the flex container's WritingMode.
-  nscoord GetCrossComponent(const LogicalSize& aSize) const {
+  nscoord CrossComponent(const LogicalSize& aSize) const {
     return IsRowOriented() ? aSize.BSize(mWM) : aSize.ISize(mWM);
   }
-  int32_t GetCrossComponent(const LayoutDeviceIntSize& aIntSize) const {
+  int32_t CrossComponent(const LayoutDeviceIntSize& aIntSize) const {
     return IsMainAxisHorizontal() ? aIntSize.height : aIntSize.width;
   }
 
   // NOTE: aMargin is expected to use the flex container's WritingMode.
-  nscoord GetMarginSizeInMainAxis(const LogicalMargin& aMargin) const {
+  nscoord MarginSizeInMainAxis(const LogicalMargin& aMargin) const {
     // If we're row-oriented, our main axis is the inline axis.
     return IsRowOriented() ? aMargin.IStartEnd(mWM) : aMargin.BStartEnd(mWM);
   }
-  nscoord GetMarginSizeInCrossAxis(const LogicalMargin& aMargin) const {
+  nscoord MarginSizeInCrossAxis(const LogicalMargin& aMargin) const {
     // If we're row-oriented, our cross axis is the block axis.
     return IsRowOriented() ? aMargin.BStartEnd(mWM) : aMargin.IStartEnd(mWM);
   }
@@ -1314,17 +1314,17 @@ UniquePtr<FlexItem> nsFlexContainerFrame::GenerateFlexItemForChild(
         &canOverride);
 
     nscoord widgetMainMinSize = aPresContext->DevPixelsToAppUnits(
-        aAxisTracker.GetMainComponent(widgetMinSize));
+        aAxisTracker.MainComponent(widgetMinSize));
     nscoord widgetCrossMinSize = aPresContext->DevPixelsToAppUnits(
-        aAxisTracker.GetCrossComponent(widgetMinSize));
+        aAxisTracker.CrossComponent(widgetMinSize));
 
     // GetMinimumWidgetSize() returns border-box. We need content-box, so
     // subtract borderPadding.
     const LogicalMargin bpInChildWM = childRI.ComputedLogicalBorderPadding();
     const LogicalMargin bpInFlexWM =
         bpInChildWM.ConvertTo(aAxisTracker.GetWritingMode(), childWM);
-    widgetMainMinSize -= aAxisTracker.GetMarginSizeInMainAxis(bpInFlexWM);
-    widgetCrossMinSize -= aAxisTracker.GetMarginSizeInCrossAxis(bpInFlexWM);
+    widgetMainMinSize -= aAxisTracker.MarginSizeInMainAxis(bpInFlexWM);
+    widgetCrossMinSize -= aAxisTracker.MarginSizeInCrossAxis(bpInFlexWM);
     // ... (but don't let that push these min sizes below 0).
     widgetMainMinSize = std::max(0, widgetMainMinSize);
     widgetCrossMinSize = std::max(0, widgetCrossMinSize);
