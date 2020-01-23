@@ -63,8 +63,10 @@ RenderCompositorANGLE::RenderCompositorANGLE(
       mEGLSurface(nullptr),
       mUseTripleBuffering(false),
       mUseAlpha(false),
+      mUseNativeCompositor(true),
       mUsePartialPresent(false),
-      mFullRender(false) {}
+      mFullRender(false),
+      mDisablingNativeCompositor(false) {}
 
 RenderCompositorANGLE::~RenderCompositorANGLE() {
   DestroyEGLSurface();
@@ -496,8 +498,16 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
     }
   }
 
+  if (mDisablingNativeCompositor) {
+    // During disabling native compositor, we need to wait all gpu tasks
+    // complete. Otherwise, rendering window could cause white flash.
+    WaitForPreviousGraphicsCommandsFinishedQuery(/* aWaitAll */ true);
+    mDisablingNativeCompositor = false;
+  }
+
   if (mDCLayerTree) {
     mDCLayerTree->MaybeUpdateDebug();
+    mDCLayerTree->MaybeCommit();
   }
 
   return frameId;
@@ -690,8 +700,12 @@ void RenderCompositorANGLE::InsertGraphicsCommandsFinishedWaitQuery(
   mWaitForPresentQueries.emplace(aFrameId, query);
 }
 
-bool RenderCompositorANGLE::WaitForPreviousGraphicsCommandsFinishedQuery() {
+bool RenderCompositorANGLE::WaitForPreviousGraphicsCommandsFinishedQuery(
+    bool aWaitAll) {
   size_t waitLatency = mUseTripleBuffering ? 3 : 2;
+  if (aWaitAll) {
+    waitLatency = 1;
+  }
 
   while (mWaitForPresentQueries.size() >= waitLatency) {
     auto queryPair = mWaitForPresentQueries.front();
@@ -743,10 +757,18 @@ bool RenderCompositorANGLE::IsContextLost() {
 }
 
 bool RenderCompositorANGLE::UseCompositor() {
+  if (!mUseNativeCompositor) {
+    return false;
+  }
+
   if (!mDCLayerTree || !gfx::gfxVars::UseWebRenderCompositor()) {
     return false;
   }
   return true;
+}
+
+bool RenderCompositorANGLE::SupportAsyncScreenshot() {
+  return !UseCompositor() && !mDisablingNativeCompositor;
 }
 
 bool RenderCompositorANGLE::ShouldUseNativeCompositor() {
@@ -801,6 +823,42 @@ void RenderCompositorANGLE::AddSurface(wr::NativeSurfaceId aId,
                                        wr::DeviceIntPoint aPosition,
                                        wr::DeviceIntRect aClipRect) {
   mDCLayerTree->AddSurface(aId, aPosition, aClipRect);
+}
+
+void RenderCompositorANGLE::EnableNativeCompositor(bool aEnable) {
+  // XXX Re-enable native compositor is not handled yet.
+  MOZ_RELEASE_ASSERT(!mDisablingNativeCompositor);
+  MOZ_RELEASE_ASSERT(!aEnable);
+
+  if (!UseCompositor()) {
+    return;
+  }
+
+  mUseNativeCompositor = false;
+  mDCLayerTree->DisableNativeCompositor();
+
+  bool useAlpha = mWidget->AsWindows()->HasGlass();
+  DestroyEGLSurface();
+  mBufferSize.reset();
+
+  RefPtr<IDXGISwapChain1> swapChain1 =
+      CreateSwapChainForDComp(mUseTripleBuffering, useAlpha);
+  if (swapChain1) {
+    mSwapChain = swapChain1;
+    mUseAlpha = useAlpha;
+    mDCLayerTree->SetDefaultSwapChain(swapChain1);
+    // When alpha is used, we want to disable partial present.
+    // See Bug 1595027.
+    if (useAlpha) {
+      mFullRender = true;
+    }
+    ResizeBufferIfNeeded();
+  } else {
+    gfxCriticalNote << "Failed to re-create SwapChain";
+    RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+    return;
+  }
+  mDisablingNativeCompositor = true;
 }
 
 void RenderCompositorANGLE::InitializeUsePartialPresent() {

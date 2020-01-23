@@ -247,6 +247,7 @@ class WebRenderAPI final {
                 const Range<uint8_t>& aBuffer);
 
   void ClearAllCaches();
+  void EnableNativeCompositor(bool aEnable);
 
   void Pause();
   bool Resume();
