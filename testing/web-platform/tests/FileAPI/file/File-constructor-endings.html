@@ -42,7 +42,7 @@ function readBlobAsPromise(blob) {
 
 test(t => {
   const test_error = {name: 'test'};
-  assert_throws(
+  assert_throws_exactly(
     test_error,
     () => new File([], "name", { get endings() { throw test_error; }}),
     'File constructor should propagate exceptions from "endings" property');
