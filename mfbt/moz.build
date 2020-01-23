@@ -101,6 +101,7 @@ EXPORTS.mozilla = [
     'SPSCQueue.h',
     'StaticAnalysisFunctions.h',
     'TaggedAnonymousMemory.h',
+    'Tainting.h',
     'TemplateLib.h',
     'TextUtils.h',
     'ThreadLocal.h',
