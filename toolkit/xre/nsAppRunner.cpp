@@ -232,6 +232,11 @@
 #include "mozilla/mozalloc_oom.h"
 #include "SafeMode.h"
 
+#ifdef MOZ_THUNDERBIRD
+#  include "nsIPK11TokenDB.h"
+#  include "nsIPK11Token.h"
+#endif
+
 extern uint32_t gRestartMode;
 extern void InstallSignalHandlers(const char* ProgramName);
 
@@ -4416,6 +4421,22 @@ nsresult XREMain::XRE_mainRun() {
   NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
 
   mDirProvider.DoStartup();
+
+#ifdef MOZ_THUNDERBIRD
+  if (Preferences::GetBool("security.prompt_for_master_password_on_startup",
+                           false)) {
+    // Prompt for the master password prior to opening application windows,
+    // to avoid the race that triggers multiple prompts (see bug 177175).
+    // We use this code until we have a better solution, possibly as
+    // described in bug 177175 comment 384.
+    nsCOMPtr<nsIPK11TokenDB> db =
+        do_GetService("@mozilla.org/security/pk11tokendb;1");
+    nsCOMPtr<nsIPK11Token> token;
+    if (NS_SUCCEEDED(db->GetInternalKeyToken(getter_AddRefs(token)))) {
+      Unused << token->Login(false);
+    }
+  }
+#endif
 
   // As FilePreferences need the profile directory, we must initialize right
   // here.
