@@ -76,7 +76,7 @@ eslint:
             cp -r /build/node_modules_eslint node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
-            ./mach lint -v -l eslint -f treeherder --quiet -f json:/builds/worker/mozlint.json
+            ./mach lint -v -l eslint -f treeherder --quiet -f json:/builds/worker/mozlint.json *
     when:
         files-changed:
             # Files that are likely audited.
