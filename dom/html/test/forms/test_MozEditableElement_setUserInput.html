@@ -375,6 +375,77 @@ SimpleTest.waitForFocus(async () => {
   }
   testValidationMessage("email", "f", "foo@example.com");
 
+  function testValueMissing(aType, aValidValue) {
+    let tag = aType === "textarea" ? "<textarea required>" : `<input type="${aType}" required>`;
+    content.innerHTML = `${tag}${aType === "textarea" ? "</textarea>" : ""}`;
+    content.scrollTop; // Flush pending layout.
+    let target = content.firstChild;
+
+    let inputEvents = [], beforeInputEvents = [];
+    function reset() {
+      beforeInputEvents = [];
+      inputEvents = [];
+    }
+
+    function onBeforeInput(aEvent) {
+      aEvent.validity = aEvent.target.checkValidity();
+      beforeInputEvents.push(aEvent);
+    }
+    function onInput(aEvent) {
+      aEvent.validity = aEvent.target.checkValidity();
+      inputEvents.push(aEvent);
+    }
+    target.addEventListener("beforeinput", onBeforeInput);
+    target.addEventListener("input", onInput);
+
+    reset();
+    SpecialPowers.wrap(target).setUserInput(aValidValue);
+    is(beforeInputEvents.length, 1, `Calling  ${tag}.setUserInput(${aValidValue}) should cause a "beforeinput" event (before gets focus)`);
+    if (beforeInputEvents.length > 0) {
+      is(beforeInputEvents[0].validity, false,
+         `The ${tag} should be invalid at "beforeinput" event (before gets focus)`);
+    }
+    is(inputEvents.length, 1, `Calling  ${tag}.setUserInput(${aValidValue}) should cause a "input" event (before gets focus)`);
+    if (inputEvents.length > 0) {
+      is(inputEvents[0].validity, true,
+         `The ${tag} should be valid at "input" event (before gets focus)`);
+    }
+
+    target.removeEventListener("beforeinput", onBeforeInput);
+    target.removeEventListener("input", onInput);
+
+    content.innerHTML = "";
+    content.scrollTop; // Flush pending layout.
+    content.innerHTML = `${tag}${aType === "textarea" ? "</textarea>" : ""}`;
+    content.scrollTop; // Flush pending layout.
+    target = content.firstChild;
+
+    target.focus();
+    target.addEventListener("beforeinput", onBeforeInput);
+    target.addEventListener("input", onInput);
+
+    reset();
+    SpecialPowers.wrap(target).setUserInput(aValidValue);
+    is(beforeInputEvents.length, 1, `Calling  ${tag}.setUserInput(${aValidValue}) should cause a "beforeinput" event (after gets focus)`);
+    if (beforeInputEvents.length > 0) {
+      is(beforeInputEvents[0].validity, false,
+         `The ${tag} should be invalid at "beforeinput" event (after gets focus)`);
+    }
+    is(inputEvents.length, 1, `Calling  ${tag}.setUserInput(${aValidValue}) should cause a "input" event (after gets focus)`);
+    if (inputEvents.length > 0) {
+      is(inputEvents[0].validity, true,
+         `The ${tag} should be valid at "input" event (after gets focus)`);
+    }
+
+    target.removeEventListener("beforeinput", onBeforeInput);
+    target.removeEventListener("input", onInput);
+  }
+  testValueMissing("text", "abc");
+  testValueMissing("password", "abc");
+  testValueMissing("textarea", "abc");
+  testValueMissing("email", "foo@example.com");
+  testValueMissing("url", "https://example.com/");
+
   function testEditorValueAtEachEvent(aType) {
     let tag = aType === "textarea" ? "<textarea>" : `<input type="${aType}">`
     let closeTag = aType === "textarea" ? "</textarea>" : "";
