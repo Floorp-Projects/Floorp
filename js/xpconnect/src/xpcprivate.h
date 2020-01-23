@@ -1050,7 +1050,6 @@ class XPCNativeInterface final {
   inline const char* GetNameString() const;
   inline XPCNativeMember* FindMember(jsid name) const;
 
-  inline bool HasAncestor(const nsIID* iid) const;
   static inline size_t OffsetOfMembers();
 
   uint16_t GetMemberCount() const { return mMemberCount; }
@@ -1165,8 +1164,6 @@ class XPCNativeSet final {
                          XPCNativeSet* protoSet, bool* pIsLocal) const;
 
   inline bool HasInterface(XPCNativeInterface* aInterface) const;
-  inline bool HasInterfaceWithAncestor(XPCNativeInterface* aInterface) const;
-  inline bool HasInterfaceWithAncestor(const nsIID* iid) const;
 
   inline XPCNativeInterface* FindInterfaceWithIID(const nsIID& iid) const;
 
