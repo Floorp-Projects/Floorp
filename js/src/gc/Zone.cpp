@@ -917,15 +917,17 @@ void Zone::clearScriptLCov(Realm* realm) {
   }
 }
 
-void Zone::finishRoots() {
-  for (RealmsInZoneIter r(this); !r.done(); r.next()) {
-    r->finishRoots();
-  }
-
+void Zone::clearRootsForShutdownGC() {
   // Finalization callbacks are not called if we're shutting down.
   finalizationRecordMap().clear();
 
   clearKeptObjects();
+}
+
+void Zone::finishRoots() {
+  for (RealmsInZoneIter r(this); !r.done(); r.next()) {
+    r->finishRoots();
+  }
 }
 
 void Zone::traceKeptObjects(JSTracer* trc) { keptObjects.ref().trace(trc); }
