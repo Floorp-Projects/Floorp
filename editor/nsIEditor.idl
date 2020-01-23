@@ -355,20 +355,6 @@ interface nsIEditor  : nsISupports
                     in AString attvalue);
 
   /**
-   * getAttributeValue() retrieves the attribute's value for aElement.
-   *
-   * @param aElement      the content element to operate on
-   * @param aAttribute    the string representation of the attribute to get
-   * @param aResultValue  [OUT] the value of aAttribute.
-   *                      Only valid if aResultIsSet is PR_TRUE
-   * @return              PR_TRUE if aAttribute is set on the current node,
-   *                      PR_FALSE if it is not.
-   */
-  boolean getAttributeValue(in Element aElement,
-                            in AString attributestr,
-                            out AString resultValue);
-
-  /**
    * removeAttribute() deletes aAttribute from the attribute list of aElement.
    * If aAttribute is not an attribute of aElement, nothing is done.
    *
@@ -378,20 +364,6 @@ interface nsIEditor  : nsISupports
   [can_run_script]
   void removeAttribute(in Element aElement,
                        in AString aAttribute);
-
-  /**
-   * cloneAttribute() copies the attribute from the source node to
-   * the destination node and delete those not in the source.
-   *
-   * The supplied nodes MUST BE ELEMENTS (most callers are working with nodes)
-   * @param aAttribute     the name of the attribute to copy
-   * @param aDestElement   the destination element to operate on
-   * @param aSourceElement the source element to copy attributes from
-   * @exception NS_ERROR_NULL_POINTER at least one of the elements is null
-   */
-  [can_run_script]
-  void cloneAttribute(in AString aAttribute,
-                      in Element aDestElement, in Element aSourceElement);
 
   /**
    * cloneAttributes() is similar to Node::cloneNode(),
@@ -423,48 +395,11 @@ interface nsIEditor  : nsISupports
 
 
   /**
-   * splitNode() creates a new node identical to an existing node,
-   * and split the contents between the two nodes
-   * @param aExistingRightNode   the node to split.
-   *                             It will become the new node's next sibling.
-   * @param aOffset              the offset of aExistingRightNode's
-   *                             content|children to do the split at
-   * @param aNewLeftNode         [OUT] the new node resulting from the split,
-   *                             becomes aExistingRightNode's previous sibling.
-   */
-  [can_run_script]
-  void splitNode(in Node existingRightNode,
-                 in long offset,
-                 out Node newLeftNode);
-
-  /**
-   * joinNodes() takes 2 nodes and merge their content|children.
-   * @param aLeftNode     The left node.  It will be deleted.
-   * @param aRightNode    The right node. It will remain after the join.
-   * @param aParent       The parent of aExistingRightNode
-   *
-   *                      There is no requirement that the two nodes be
-   *                      of the same type.  However, a text node can be
-   *                      merged only with another text node.
-   */
-  [can_run_script]
-  void joinNodes(in Node leftNode,
-                 in Node rightNode,
-                 in Node parent);
-
-  /**
    * deleteNode removes aChild from aParent.
    * @param aChild    The node to delete
    */
   [can_run_script]
   void deleteNode(in Node child);
-
-  /**
-   * markNodeDirty() sets a special dirty attribute on the node.
-   * Usually this will be called immediately after creating a new node.
-   * @param aNode      The node for which to insert formatting.
-   */
-  void markNodeDirty(in Node node);
 
 /* ------------ Output methods -------------- */
 
@@ -482,9 +417,6 @@ interface nsIEditor  : nsISupports
 
   /** add an EditorObserver to the editors list of observers. */
   void addEditorObserver(in nsIEditorObserver observer);
-
-  /** Remove an EditorObserver from the editor's list of observers. */
-  void removeEditorObserver(in nsIEditorObserver observer);
 
   /** add an EditActionListener to the editors list of listeners. */
   void addEditActionListener(in nsIEditActionListener listener);
