@@ -4698,7 +4698,7 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
 
   // Do security check first.
   if (commandData.IsCutOrCopyCommand()) {
-    if (!nsContentUtils::IsCutCopyAllowed(aSubjectPrincipal)) {
+    if (!nsContentUtils::IsCutCopyAllowed(this, aSubjectPrincipal)) {
       // We have rejected the event due to it not being performed in an
       // input-driven context therefore, we report the error to the console.
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -4904,7 +4904,7 @@ bool Document::QueryCommandEnabled(const nsAString& aHTMLCommandName,
 
   // cut & copy are always allowed
   if (commandData.IsCutOrCopyCommand()) {
-    return nsContentUtils::IsCutCopyAllowed(aSubjectPrincipal);
+    return nsContentUtils::IsCutCopyAllowed(this, aSubjectPrincipal);
   }
 
   // Report false for restricted commands
