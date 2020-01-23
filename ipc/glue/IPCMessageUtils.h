@@ -78,6 +78,11 @@ struct SerializedStructuredCloneBuffer final {
   SerializedStructuredCloneBuffer()
       : data(JS::StructuredCloneScope::Unassigned) {}
 
+  SerializedStructuredCloneBuffer(SerializedStructuredCloneBuffer&&) noexcept =
+      default;
+  SerializedStructuredCloneBuffer& operator=(
+      SerializedStructuredCloneBuffer&&) noexcept = default;
+
   SerializedStructuredCloneBuffer(const SerializedStructuredCloneBuffer& aOther)
       : SerializedStructuredCloneBuffer() {
     *this = aOther;
