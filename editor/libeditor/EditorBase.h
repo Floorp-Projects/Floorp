@@ -1894,6 +1894,14 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   MaybeCreatePaddingBRElementForEmptyEditor();
 
+  /**
+   * MarkElementDirty() sets a special dirty attribute on the element.
+   * Usually this will be called immediately after creating a new node.
+   *
+   * @param aElement    The element for which to insert formatting.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MarkElementDirty(Element& aElement);
+
   MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
 
   virtual bool IsBlockNode(nsINode* aNode) const;

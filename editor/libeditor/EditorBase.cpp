@@ -1226,23 +1226,6 @@ nsresult EditorBase::SetAttributeWithTransaction(Element& aElement,
 }
 
 NS_IMETHODIMP
-EditorBase::GetAttributeValue(Element* aElement, const nsAString& aAttribute,
-                              nsAString& aResultValue, bool* aResultIsSet) {
-  NS_ENSURE_TRUE(aResultIsSet, NS_ERROR_NULL_POINTER);
-  *aResultIsSet = false;
-  if (!aElement) {
-    return NS_OK;
-  }
-  nsAutoString value;
-  aElement->GetAttribute(aAttribute, value);
-  if (!DOMStringIsNull(value)) {
-    *aResultIsSet = true;
-    aResultValue = value;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EditorBase::RemoveAttribute(Element* aElement, const nsAString& aAttribute) {
   if (NS_WARN_IF(aAttribute.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
@@ -1274,17 +1257,14 @@ nsresult EditorBase::RemoveAttributeWithTransaction(Element& aElement,
   return DoTransactionInternal(transaction);
 }
 
-NS_IMETHODIMP
-EditorBase::MarkNodeDirty(nsINode* aNode) {
+nsresult EditorBase::MarkElementDirty(Element& aElement) {
   // Mark the node dirty, but not for webpages (bug 599983)
   if (!OutputsMozDirty()) {
     return NS_OK;
   }
-  if (RefPtr<Element> element = Element::FromNodeOrNull(aNode)) {
-    element->SetAttr(kNameSpaceID_None, nsGkAtoms::mozdirty, EmptyString(),
-                     false);
-  }
-  return NS_OK;
+  aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::mozdirty, EmptyString(),
+                   false);
+  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1558,28 +1538,6 @@ EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
   return CreateElementResult(newBRElement.forget());
 }
 
-NS_IMETHODIMP
-EditorBase::SplitNode(nsINode* aNode, int32_t aOffset, nsINode** aNewLeftNode) {
-  if (NS_WARN_IF(!aNode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eSplitNode);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  int32_t offset =
-      std::min(std::max(aOffset, 0), static_cast<int32_t>(aNode->Length()));
-  ErrorResult error;
-  nsCOMPtr<nsIContent> newNode =
-      SplitNodeWithTransaction(EditorDOMPoint(aNode, offset), error);
-  newNode.forget(aNewLeftNode);
-  NS_WARNING_ASSERTION(!error.Failed(), "SplitNodeWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(error.StealNSResult());
-}
-
 already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
     const EditorDOMPoint& aStartOfRightNode, ErrorResult& aError) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -1640,24 +1598,6 @@ already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
   }
 
   return newContent.forget();
-}
-
-NS_IMETHODIMP
-EditorBase::JoinNodes(nsINode* aLeftNode, nsINode* aRightNode, nsINode*) {
-  if (NS_WARN_IF(!aLeftNode) || NS_WARN_IF(!aRightNode) ||
-      NS_WARN_IF(!aLeftNode->GetParentNode())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eJoinNodes);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  rv = JoinNodesWithTransaction(*aLeftNode, *aRightNode);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "JoinNodesWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
 }
 
 nsresult EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
@@ -2123,18 +2063,6 @@ EditorBase::AddEditorObserver(nsIEditorObserver* aObserver) {
 }
 
 NS_IMETHODIMP
-EditorBase::RemoveEditorObserver(nsIEditorObserver* aObserver) {
-  NS_ENSURE_TRUE(aObserver, NS_ERROR_FAILURE);
-
-  NS_WARNING_ASSERTION(
-      mEditorObservers.Length() != 1,
-      "All nsIEditorObservers have been removed, this editor becomes faster");
-  mEditorObservers.RemoveElement(aObserver);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EditorBase::NotifySelectionChanged(Document* aDocument, Selection* aSelection,
                                    int16_t aReason) {
   if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
@@ -2524,28 +2452,6 @@ void EditorBase::DoSetText(Text& aText, const nsAString& aStringToSet,
               ->DidInsertText(aText.Length(), 0, aStringToSet.Length());
     NS_WARNING_ASSERTION(!aRv.Failed(), "TextEditor::DidInsertText() failed");
   }
-}
-
-NS_IMETHODIMP
-EditorBase::CloneAttribute(const nsAString& aAttribute, Element* aDestElement,
-                           Element* aSourceElement) {
-  NS_ENSURE_TRUE(aDestElement && aSourceElement, NS_ERROR_NULL_POINTER);
-  if (NS_WARN_IF(aAttribute.IsEmpty())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eSetAttribute);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  rv =
-      CloneAttributeWithTransaction(*attribute, *aDestElement, *aSourceElement);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "CloneAttributeWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
 }
 
 nsresult EditorBase::CloneAttributeWithTransaction(nsAtom& aAttribute,

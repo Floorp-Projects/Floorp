@@ -52,8 +52,7 @@ NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
-NS_IMETHODIMP
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 SplitNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mStartOfRightNode.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -71,8 +70,17 @@ SplitNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!clone)) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  RefPtr<EditorBase> editorBase(mEditorBase);
+
   mNewLeftNode = dont_AddRef(clone.forget().take()->AsContent());
-  mEditorBase->MarkNodeDirty(mStartOfRightNode.GetContainer());
+  if (RefPtr<Element> startOfRightNode =
+          mStartOfRightNode.GetContainerAsElement()) {
+    nsresult rv = editorBase->MarkElementDirty(*startOfRightNode);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditorBase::ToGenericNSResult(rv);
+    }
+  }
 
   // Get the parent node
   mParent = mStartOfRightNode.GetContainer()->GetParentNode();
@@ -81,7 +89,6 @@ SplitNodeTransaction::DoTransaction() {
   }
 
   // Insert the new node
-  RefPtr<EditorBase> editorBase = mEditorBase;
   nsCOMPtr<nsIContent> newLeftNode = mNewLeftNode;
   editorBase->DoSplitNode(EditorDOMPoint(mStartOfRightNode), *newLeftNode,
                           error);

@@ -170,12 +170,6 @@ enum class EditAction {
   // eDeleteNode indicates to remove a node form the tree.
   eRemoveNode,
 
-  // eSplitNode indicates to split a node.
-  eSplitNode,
-
-  // eJoinNodes indicates to join 2 nodes.
-  eJoinNodes,
-
   // eInsertBlockElement indicates to insert a block-level element like <div>,
   // <pre>, <li>, <dd> etc.
   eInsertBlockElement,
