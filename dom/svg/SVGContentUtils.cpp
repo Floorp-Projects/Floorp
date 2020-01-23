@@ -286,13 +286,13 @@ void SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
     aStrokeOptions->mMiterLimit = Float(styleSVG->mStrokeMiterlimit);
 
     switch (styleSVG->mStrokeLinejoin) {
-      case NS_STYLE_STROKE_LINEJOIN_MITER:
+      case StyleStrokeLinejoin::Miter:
         aStrokeOptions->mLineJoin = JoinStyle::MITER_OR_BEVEL;
         break;
-      case NS_STYLE_STROKE_LINEJOIN_ROUND:
+      case StyleStrokeLinejoin::Round:
         aStrokeOptions->mLineJoin = JoinStyle::ROUND;
         break;
-      case NS_STYLE_STROKE_LINEJOIN_BEVEL:
+      case StyleStrokeLinejoin::Bevel:
         aStrokeOptions->mLineJoin = JoinStyle::BEVEL;
         break;
     }

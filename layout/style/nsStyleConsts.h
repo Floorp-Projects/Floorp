@@ -769,9 +769,11 @@ enum class StyleStrokeLinecap : uint8_t {
 };
 
 // stroke-linejoin
-#define NS_STYLE_STROKE_LINEJOIN_MITER 0
-#define NS_STYLE_STROKE_LINEJOIN_ROUND 1
-#define NS_STYLE_STROKE_LINEJOIN_BEVEL 2
+enum class StyleStrokeLinejoin : uint8_t {
+  Miter,
+  Round,
+  Bevel,
+};
 
 // text-anchor
 enum class StyleTextAnchor : uint8_t {
