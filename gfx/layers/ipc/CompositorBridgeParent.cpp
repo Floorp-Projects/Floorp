@@ -2500,6 +2500,13 @@ void CompositorBridgeParent::NotifyWebRenderContextPurge() {
   api->ClearAllCaches();
 }
 
+void CompositorBridgeParent::NotifyWebRenderDisableNativeCompositor() {
+  MOZ_ASSERT(CompositorLoop() == MessageLoop::current());
+  if (mWrBridge) {
+    mWrBridge->DisableNativeCompositor();
+  }
+}
+
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 //#define PLUGINS_LOG(...) printf_stderr("CP [%s]: ", __FUNCTION__);
 //                         printf_stderr(__VA_ARGS__);

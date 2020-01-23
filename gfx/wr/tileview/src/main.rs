@@ -26,6 +26,7 @@ static CSS_NO_TEXTURE: &str              = "fill:#c04040;fill-opacity:0.1;";
 static CSS_NO_SURFACE: &str              = "fill:#40c040;fill-opacity:0.1;";
 static CSS_PRIM_COUNT: &str              = "fill:#40f0f0;fill-opacity:0.1;";
 static CSS_CONTENT: &str                 = "fill:#f04040;fill-opacity:0.1;";
+static CSS_COMPOSITOR_KIND_CHANGED: &str = "fill:#f0c070;fill-opacity:0.1;";
 
 fn tile_node_to_svg(node: &TileNode, x: f32, y: f32) -> String
 {
@@ -62,6 +63,7 @@ fn tile_to_svg(key: TileOffset,
             Some(InvalidationReason::NoTexture) => CSS_NO_TEXTURE.to_string(),
             Some(InvalidationReason::NoSurface) => CSS_NO_SURFACE.to_string(),
             Some(InvalidationReason::PrimCount) => CSS_PRIM_COUNT.to_string(),
+            Some(InvalidationReason::CompositorKindChanged) => CSS_COMPOSITOR_KIND_CHANGED.to_string(),
             Some(InvalidationReason::Content { prim_compare_result } ) => {
                 let _foo = prim_compare_result;
                 CSS_CONTENT.to_string() //TODO do something with the compare result
