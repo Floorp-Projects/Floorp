@@ -485,7 +485,7 @@ void MediaPipeline::IncrementRtcpPacketsReceived() {
   }
 }
 
-void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
+void MediaPipeline::RtpPacketReceived(MediaPacket& packet) {
   if (mDirection == DirectionType::TRANSMIT) {
     return;
   }
@@ -572,7 +572,7 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
                                     header.ssrc);  // Ignore error codes
 }
 
-void MediaPipeline::RtcpPacketReceived(const MediaPacket& packet) {
+void MediaPipeline::RtcpPacketReceived(MediaPacket& packet) {
   if (!mTransport->Pipeline()) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("Discarding incoming packet; transport disconnected"));
@@ -620,7 +620,7 @@ void MediaPipeline::RtcpPacketReceived(const MediaPacket& packet) {
 }
 
 void MediaPipeline::PacketReceived(const std::string& aTransportId,
-                                   const MediaPacket& packet) {
+                                   MediaPacket& packet) {
   if (mTransportId != aTransportId) {
     return;
   }
@@ -650,7 +650,7 @@ void MediaPipeline::AlpnNegotiated(const std::string& aAlpn,
 }
 
 void MediaPipeline::EncryptedPacketSending(const std::string& aTransportId,
-                                           const MediaPacket& aPacket) {
+                                           MediaPacket& aPacket) {
   if (mTransportId == aTransportId) {
     dom::mozPacketDumpType type;
     if (aPacket.type() == MediaPacket::SRTP) {

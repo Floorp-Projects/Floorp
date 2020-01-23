@@ -14,7 +14,6 @@
 #include "nsXPCOM.h"
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
 
 #include "nsASocketHandler.h"
 #include "nsServiceManagerUtils.h"
@@ -29,62 +28,6 @@
 using namespace mozilla;
 
 namespace {
-
-// Helper used ot make sure args are properly copied and/or moved.
-struct CtorDtorState {
-  enum class State { Empty, Copy, Explicit, Move, Moved };
-
-  static const char* ToStr(const State& state) {
-    switch (state) {
-      case State::Empty:
-        return "empty";
-      case State::Copy:
-        return "copy";
-      case State::Explicit:
-        return "explicit";
-      case State::Move:
-        return "move";
-      case State::Moved:
-        return "moved";
-      default:
-        return "unknown";
-    }
-  }
-
-  void DumpState() const { std::cerr << ToStr(state_) << std::endl; }
-
-  CtorDtorState() { DumpState(); }
-
-  explicit CtorDtorState(int* destroyed)
-      : dtor_count_(destroyed), state_(State::Explicit) {
-    DumpState();
-  }
-
-  CtorDtorState(const CtorDtorState& other)
-      : dtor_count_(other.dtor_count_), state_(State::Copy) {
-    DumpState();
-  }
-
-  // Clear the other's dtor counter so it's not counted if moved.
-  CtorDtorState(CtorDtorState&& other)
-      : dtor_count_(std::exchange(other.dtor_count_, nullptr)),
-        state_(State::Move) {
-    other.state_ = State::Moved;
-    DumpState();
-  }
-
-  ~CtorDtorState() {
-    const char* const state = ToStr(state_);
-    std::cerr << "Destructor called with end state: " << state << std::endl;
-
-    if (dtor_count_) {
-      ++*dtor_count_;
-    }
-  }
-
-  int* dtor_count_ = nullptr;
-  State state_ = State::Empty;
-};
 
 class Destructor {
  private:
@@ -124,6 +67,7 @@ class TargetClass {
     std::cerr << __FUNCTION__ << std::endl;
     return x;
   }
+  void destructor_target(Destructor*) {}
 
   void destructor_target_ref(RefPtr<Destructor> destructor) {}
 
@@ -234,114 +178,26 @@ TEST_F(DispatchTest, TestNonMethodRet) {
   ASSERT_EQ(10, z);
 }
 
+TEST_F(DispatchTest, TestDestructor) {
+  bool destroyed = false;
+  RefPtr<Destructor> destructor = new Destructor(&destroyed);
+  target_->Dispatch(
+      WrapRunnable(&cl_, &TargetClass::destructor_target, destructor),
+      NS_DISPATCH_SYNC);
+  ASSERT_FALSE(destroyed);
+  destructor = nullptr;
+  ASSERT_TRUE(destroyed);
+}
+
 TEST_F(DispatchTest, TestDestructorRef) {
   bool destroyed = false;
-  {
-    RefPtr<Destructor> destructor = new Destructor(&destroyed);
-    target_->Dispatch(
-        WrapRunnable(&cl_, &TargetClass::destructor_target_ref, destructor),
-        NS_DISPATCH_SYNC);
-    ASSERT_FALSE(destroyed);
-  }
+  RefPtr<Destructor> destructor = new Destructor(&destroyed);
+  target_->Dispatch(
+      WrapRunnable(&cl_, &TargetClass::destructor_target_ref, destructor),
+      NS_DISPATCH_SYNC);
+  ASSERT_FALSE(destroyed);
+  destructor = nullptr;
   ASSERT_TRUE(destroyed);
-
-  // Now try with a move.
-  destroyed = false;
-  {
-    RefPtr<Destructor> destructor = new Destructor(&destroyed);
-    target_->Dispatch(WrapRunnable(&cl_, &TargetClass::destructor_target_ref,
-                                   std::move(destructor)),
-                      NS_DISPATCH_SYNC);
-    ASSERT_TRUE(destroyed);
-  }
-}
-
-TEST_F(DispatchTest, TestMove) {
-  int destroyed = 0;
-  {
-    CtorDtorState state(&destroyed);
-
-    // Dispatch with:
-    //   - moved arg
-    //   - by-val capture in function should consume a move
-    //   - expect destruction in the function scope
-    target_->Dispatch(WrapRunnableNM([](CtorDtorState s) {}, std::move(state)),
-                      NS_DISPATCH_SYNC);
-    ASSERT_EQ(1, destroyed);
-  }
-  // Still shouldn't count when we go out of scope as it was moved.
-  ASSERT_EQ(1, destroyed);
-
-  {
-    CtorDtorState state(&destroyed);
-
-    // Dispatch with:
-    //   - copied arg
-    //   - by-val capture in function should consume a move
-    //   - expect destruction in the function scope and call scope
-    target_->Dispatch(WrapRunnableNM([](CtorDtorState s) {}, state),
-                      NS_DISPATCH_SYNC);
-    ASSERT_EQ(2, destroyed);
-  }
-  // Original state should be destroyed
-  ASSERT_EQ(3, destroyed);
-
-  {
-    CtorDtorState state(&destroyed);
-
-    // Dispatch with:
-    //   - moved arg
-    //   - by-ref in function should accept a moved arg
-    //   - expect destruction in the wrapper invocation scope
-    target_->Dispatch(
-        WrapRunnableNM([](const CtorDtorState& s) {}, std::move(state)),
-        NS_DISPATCH_SYNC);
-    ASSERT_EQ(4, destroyed);
-  }
-  // Still shouldn't count when we go out of scope as it was moved.
-  ASSERT_EQ(4, destroyed);
-
-  {
-    CtorDtorState state(&destroyed);
-
-    // Dispatch with:
-    //   - moved arg
-    //   - r-value function should accept a moved arg
-    //   - expect destruction in the wrapper invocation scope
-    target_->Dispatch(
-        WrapRunnableNM([](CtorDtorState&& s) {}, std::move(state)),
-        NS_DISPATCH_SYNC);
-    ASSERT_EQ(5, destroyed);
-  }
-  // Still shouldn't count when we go out of scope as it was moved.
-  ASSERT_EQ(5, destroyed);
-}
-
-TEST_F(DispatchTest, TestUniquePtr) {
-  // Test that holding the class in UniquePtr works
-  int ran = 0;
-  auto cl = MakeUnique<TargetClass>(&ran);
-
-  target_->Dispatch(WrapRunnable(std::move(cl), &TargetClass::m1, 1),
-                    NS_DISPATCH_SYNC);
-  ASSERT_EQ(1, ran);
-
-  // Test that UniquePtr works as a param to the runnable
-  int destroyed = 0;
-  {
-    auto state = MakeUnique<CtorDtorState>(&destroyed);
-
-    // Dispatch with:
-    //   - moved arg
-    //   - Function should move construct from arg
-    //   - expect destruction in the wrapper invocation scope
-    target_->Dispatch(
-        WrapRunnableNM([](UniquePtr<CtorDtorState> s) {}, std::move(state)),
-        NS_DISPATCH_SYNC);
-    ASSERT_EQ(1, destroyed);
-  }
-  // Still shouldn't count when we go out of scope as it was moved.
-  ASSERT_EQ(1, destroyed);
 }
 
 }  // end of namespace

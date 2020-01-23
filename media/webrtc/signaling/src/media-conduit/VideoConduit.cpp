@@ -13,7 +13,6 @@
 #include "mozilla/TemplateLib.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/UniquePtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIGfxInfo.h"
@@ -452,7 +451,7 @@ RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
     return nullptr;
   }
 
-  auto obj = MakeRefPtr<WebrtcVideoConduit>(aCall, aStsThread);
+  nsAutoPtr<WebrtcVideoConduit> obj(new WebrtcVideoConduit(aCall, aStsThread));
   if (obj->Init() != kMediaConduitNoError) {
     CSFLogError(LOGTAG, "%s VideoConduit Init Failed ", __FUNCTION__);
     return nullptr;
@@ -942,7 +941,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
       codecConfig->RtcpFbNackIsSet("") ? 1000 : 0;
 
   // Copy the applied config for future reference.
-  mCurSendCodecConfig = MakeUnique<VideoCodecConfig>(*codecConfig);
+  mCurSendCodecConfig = new VideoCodecConfig(*codecConfig);
 
   mSendStreamConfig.rtp.rids.clear();
   bool has_rid = false;
@@ -1798,7 +1797,7 @@ void WebrtcVideoConduit::SelectSendResolution(unsigned short width,
   }
 
   unsigned int framerate = SelectSendFrameRate(
-      mCurSendCodecConfig.get(), mSendingFramerate, width, height);
+      mCurSendCodecConfig, mSendingFramerate, width, height);
   if (mSendingFramerate != framerate) {
     CSFLogDebug(LOGTAG, "%s: framerate changing to %u (from %u)", __FUNCTION__,
                 framerate, mSendingFramerate);

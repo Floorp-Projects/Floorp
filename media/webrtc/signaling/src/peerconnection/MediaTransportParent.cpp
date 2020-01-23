@@ -61,13 +61,12 @@ class MediaTransportParent::Impl : public sigslot::has_slots<> {
         mParent->SendOnConnectionStateChange(static_cast<int>(aState)));
   }
 
-  void OnPacketReceived(const std::string& aTransportId,
-                        const MediaPacket& aPacket) {
+  void OnPacketReceived(const std::string& aTransportId, MediaPacket& aPacket) {
     NS_ENSURE_TRUE_VOID(mParent->SendOnPacketReceived(aTransportId, aPacket));
   }
 
   void OnEncryptedSending(const std::string& aTransportId,
-                          const MediaPacket& aPacket) {
+                          MediaPacket& aPacket) {
     NS_ENSURE_TRUE_VOID(mParent->SendOnEncryptedSending(aTransportId, aPacket));
   }
 
