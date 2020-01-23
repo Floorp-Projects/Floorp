@@ -16,7 +16,7 @@
 
             // TypeError: bound requires more than 0 arguments
             test( function() {
-                assert_throws(new TypeError(), function() {
+                assert_throws_js(TypeError, function() {
                     IDBKeyRange.bound();
                 });
             }, "IDBKeyRange.bound() - bound requires more than 0 arguments.");
@@ -67,10 +67,10 @@
             // ReferenceError: the variable is not defined
             test( function() {
                 var goodVariable = 1;
-                assert_throws(new ReferenceError(), function() {
+                assert_throws_js(ReferenceError, function() {
                     IDBKeyRange.bound(noExistingVariable, 1);
                 });
-                assert_throws(new ReferenceError(), function() {
+                assert_throws_js(ReferenceError, function() {
                     IDBKeyRange.bound(goodVariable, noExistingVariable);
                 });
             }, "IDBKeyRange.bound(noExistingVariable, 1 / goodVariable, noExistingVariable) - noExistingVariable is not defined.");

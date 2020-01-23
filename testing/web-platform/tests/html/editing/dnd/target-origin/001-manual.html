@@ -15,7 +15,7 @@ window.onload = function () {
       assert_true( !!e.dataTransfer.allowTargetOrigin );
     }, 'allowTargetOrigin should be supported' );
     test(function() {
-      assert_throws( new TypeError(), function () { e.dataTransfer.allowTargetOrigin(); } );
+      assert_throws_js( TypeError, function () { e.dataTransfer.allowTargetOrigin(); } );
     }, 'no parameter should throw TypeError' );
     test(function() {
       assert_throws( 'SYNTAX_ERR', function () { e.dataTransfer.allowTargetOrigin(''); } );

@@ -14,7 +14,7 @@ setup({
 })
 
 test(function() {
-  assert_throws(new TypeError(), function() { document.dispatchEvent(null) })
+  assert_throws_js(TypeError, function() { document.dispatchEvent(null) })
 }, "Calling dispatchEvent(null).")
 
 for (var alias in aliases) {

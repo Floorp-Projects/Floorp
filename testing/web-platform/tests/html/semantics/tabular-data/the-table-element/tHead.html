@@ -45,7 +45,7 @@ test(function() {
     assert_equals(t.tHead.previousSibling, tcaption);
     assert_equals(t.tHead.nextSibling, tbody1);
 
-    assert_throws(new TypeError(), function(){
+    assert_throws_js(TypeError, function(){
         t.tHead = document.createElement("div");
     });
 

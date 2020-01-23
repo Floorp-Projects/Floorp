@@ -13,7 +13,7 @@
 function testLeafNode(nodeName, createNodeFunction) {
   test(function() {
     var node = createNodeFunction();
-    assert_throws(new TypeError(), function() { node.insertBefore(null, null) })
+    assert_throws_js(TypeError, function() { node.insertBefore(null, null) })
   }, "Calling insertBefore with a non-Node first argument on a leaf node " + nodeName + " must throw TypeError.")
   test(function() {
     var node = createNodeFunction();
@@ -27,9 +27,9 @@ function testLeafNode(nodeName, createNodeFunction) {
 
 test(function() {
   // WebIDL.
-  assert_throws(new TypeError(), function() { document.body.insertBefore(null, null) })
-  assert_throws(new TypeError(), function() { document.body.insertBefore(null, document.body.firstChild) })
-  assert_throws(new TypeError(), function() { document.body.insertBefore({'a':'b'}, document.body.firstChild) })
+  assert_throws_js(TypeError, function() { document.body.insertBefore(null, null) })
+  assert_throws_js(TypeError, function() { document.body.insertBefore(null, document.body.firstChild) })
+  assert_throws_js(TypeError, function() { document.body.insertBefore({'a':'b'}, document.body.firstChild) })
 }, "Calling insertBefore with a non-Node first argument must throw TypeError.")
 
 testLeafNode("DocumentType", function () { return document.doctype; } )

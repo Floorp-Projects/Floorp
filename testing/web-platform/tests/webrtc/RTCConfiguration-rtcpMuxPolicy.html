@@ -71,12 +71,12 @@
   }, `new RTCPeerConnection({ rtcpMuxPolicy: 'negotiate' }) may succeed or throw NotSupportedError`);
 
   config_test(makePc => {
-    assert_throws(new TypeError(), () =>
+    assert_throws_js(TypeError, () =>
       makePc({ rtcpMuxPolicy: null }));
   }, `with { rtcpMuxPolicy: null } should throw TypeError`);
 
   config_test(makePc => {
-    assert_throws(new TypeError(), () =>
+    assert_throws_js(TypeError, () =>
       makePc({ rtcpMuxPolicy: 'invalid' }));
   }, `with { rtcpMuxPolicy: 'invalid' } should throw TypeError`);
 

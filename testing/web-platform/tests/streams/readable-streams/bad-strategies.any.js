@@ -63,7 +63,7 @@ promise_test(t => {
     }
   );
 
-  assert_throws(new RangeError(), () => controller.enqueue('a'), 'enqueue should throw a RangeError');
+  assert_throws_js(RangeError, () => controller.enqueue('a'), 'enqueue should throw a RangeError');
 
   return promise_rejects(t, theError, rs.getReader().closed, 'closed should reject with the error');
 
@@ -112,7 +112,7 @@ test(() => {
 test(() => {
 
   for (const highWaterMark of [-1, -Infinity, NaN, 'foo', {}]) {
-    assert_throws(new RangeError(), () => {
+    assert_throws_js(RangeError, () => {
       new ReadableStream({}, {
         size() {
           return 1;

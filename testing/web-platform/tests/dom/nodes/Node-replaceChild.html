@@ -15,15 +15,15 @@
 // IDL.
 test(function() {
   var a = document.createElement("div");
-  assert_throws(new TypeError(), function() {
+  assert_throws_js(TypeError, function() {
     a.replaceChild(null, null);
   });
 
   var b = document.createElement("div");
-  assert_throws(new TypeError(), function() {
+  assert_throws_js(TypeError, function() {
     a.replaceChild(b, null);
   });
-  assert_throws(new TypeError(), function() {
+  assert_throws_js(TypeError, function() {
     a.replaceChild(null, b);
   });
 }, "Passing null to replaceChild should throw a TypeError.")
