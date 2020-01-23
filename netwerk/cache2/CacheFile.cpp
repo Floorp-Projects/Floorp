@@ -2335,9 +2335,7 @@ bool CacheFile::IsDoomed() {
 }
 
 bool CacheFile::IsWriteInProgress() {
-  // Returns true when there is a potentially unfinished write operation.
-  // Not using lock for performance reasons.  mMetadata is never released
-  // during life time of CacheFile.
+  CacheFileAutoLock lock(this);
 
   bool result = false;
 
