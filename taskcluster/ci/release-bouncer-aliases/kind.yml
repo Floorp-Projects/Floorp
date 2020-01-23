@@ -14,10 +14,7 @@ kind-dependencies:
 
 job-defaults:
     description: Update bouncer aliases job
-    worker-type:
-        by-release-level:
-            production: scriptworker-k8s/gecko-3-bouncer
-            staging: scriptworker-k8s/gecko-1-bouncer
+    worker-type: bouncer
     worker:
         implementation: bouncer-aliases
     scopes:
