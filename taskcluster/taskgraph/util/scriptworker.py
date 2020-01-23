@@ -374,31 +374,6 @@ def get_signing_cert_scope_per_platform(build_platform, is_nightly, config):
         return add_scope_prefix(config, 'signing:cert:dep-signing')
 
 
-def get_worker_type_for_scope(config, scope):
-    """Get the scriptworker type that will accept the given scope.
-
-    Args:
-        config (TransformConfig): The configuration for the kind being transformed.
-        scope (string): The scope being used.
-
-    Returns:
-        string: The worker-type to use.
-    """
-    for worker_type, scopes in config.graph_config['scriptworker']['worker-types'].items():
-        if scope in scopes:
-            return worker_type
-    raise RuntimeError(
-        "Unsupported scriptworker scope {scope}. (supported scopes: {available_scopes})".format(
-            scope=scope,
-            available_scopes=sorted(
-                scope
-                for scopes in config.graph_config['scriptworker']['worker-types'].values()
-                for scope in scopes
-            ),
-        )
-    )
-
-
 # generate_beetmover_upstream_artifacts {{{1
 def generate_beetmover_upstream_artifacts(
     config, job, platform, locale=None, dependencies=None, **kwargs

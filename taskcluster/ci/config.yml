@@ -254,24 +254,6 @@ release-promotion:
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
     scope-prefix: 'project:releng'
-    worker-types:
-        'scriptworker-k8s/gecko-3-beetmover':
-            - 'project:releng:beetmover:bucket:release'
-            - 'project:releng:beetmover:bucket:nightly'
-            - 'project:releng:beetmover:bucket:partner'
-            - 'project:releng:beetmover:bucket:maven-production'
-        'scriptworker-k8s/gecko-1-beetmover':
-            - 'project:releng:beetmover:bucket:dep'
-            - 'project:releng:beetmover:bucket:dep-partner'
-            - 'project:releng:beetmover:bucket:maven-staging'
-        'scriptworker-k8s/gecko-3-balrog':
-            - 'project:releng:balrog:server:nightly'
-            - 'project:releng:balrog:server:aurora'
-            - 'project:releng:balrog:server:beta'
-            - 'project:releng:balrog:server:release'
-            - 'project:releng:balrog:server:esr'
-        'scriptworker-k8s/gecko-1-balrog':
-            - 'project:releng:balrog:server:dep'
 
 partner-urls:
     release-partner-repack:
@@ -327,6 +309,22 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
+        balrog:
+            provisioner: scriptworker-k8s
+            implementation: balrog
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    production: gecko-3-balrog
+                    staging: gecko-1-balrog
+        beetmover:
+            provisioner: scriptworker-k8s
+            implementation: beetmover
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    production: gecko-3-beetmover
+                    staging: gecko-1-beetmover
         linux-depsigning:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing

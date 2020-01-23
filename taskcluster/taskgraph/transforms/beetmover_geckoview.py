@@ -21,8 +21,7 @@ from taskgraph.util.declarative_artifacts import (
     get_geckoview_artifact_id,
 )
 from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
-from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
-                                         get_worker_type_for_scope)
+from taskgraph.util.scriptworker import generate_beetmover_artifact_map
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
@@ -98,7 +97,7 @@ def make_task_description(config, jobs):
         task = {
             'label': label,
             'description': description,
-            'worker-type': get_worker_type_for_scope(config, job['bucket-scope']),
+            'worker-type': 'beetmover',
             'scopes': [job['bucket-scope'], 'project:releng:beetmover:action:push-to-maven'],
             'dependencies': dependencies,
             'attributes': attributes,

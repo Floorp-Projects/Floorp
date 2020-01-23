@@ -24,7 +24,6 @@ from taskgraph.util.schema import (
 from taskgraph.util.scriptworker import (
     add_scope_prefix,
     get_beetmover_bucket_scope,
-    get_worker_type_for_scope,
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.transforms.task import task_description_schema
@@ -137,7 +136,7 @@ def populate_scopes_and_worker_type(config, job, bucket_scope, partner_public=Fa
 
     task = deepcopy(job)
     task['scopes'] = [bucket_scope, action_scope]
-    task['worker-type'] = get_worker_type_for_scope(config, bucket_scope)
+    task['worker-type'] = 'beetmover'
     task['partner_public'] = partner_public
     if partner_public:
         task['label'] = "{}-public".format(task['label'])
