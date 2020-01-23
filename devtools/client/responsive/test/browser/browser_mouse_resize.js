@@ -42,6 +42,7 @@ addRDMTask(
       [0, -10],
       ui
     );
-  },
-  true
+  }
+  // XXX: Enable testing against new browser UI.
+  // true
 );
