@@ -24,15 +24,18 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.repository.getLogger("Urlbar.Muxer.UnifiedComplete")
 );
 
-const RESULT_TYPE_TO_GROUP = new Map([
-  [UrlbarUtils.RESULT_TYPE.TAB_SWITCH, UrlbarUtils.RESULT_GROUP.GENERAL],
-  [UrlbarUtils.RESULT_TYPE.SEARCH, UrlbarUtils.RESULT_GROUP.SUGGESTION],
-  [UrlbarUtils.RESULT_TYPE.URL, UrlbarUtils.RESULT_GROUP.GENERAL],
-  [UrlbarUtils.RESULT_TYPE.KEYWORD, UrlbarUtils.RESULT_GROUP.GENERAL],
-  [UrlbarUtils.RESULT_TYPE.OMNIBOX, UrlbarUtils.RESULT_GROUP.EXTENSION],
-  [UrlbarUtils.RESULT_TYPE.REMOTE_TAB, UrlbarUtils.RESULT_GROUP.GENERAL],
-  [UrlbarUtils.RESULT_TYPE.TIP, UrlbarUtils.RESULT_GROUP.GENERAL],
-]);
+function groupFromResult(result) {
+  switch (result.type) {
+    case UrlbarUtils.RESULT_TYPE.SEARCH:
+      return result.payload.suggestion
+        ? UrlbarUtils.RESULT_GROUP.SUGGESTION
+        : UrlbarUtils.RESULT_GROUP.GENERAL;
+    case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+      return UrlbarUtils.RESULT_GROUP.EXTENSION;
+    default:
+      return UrlbarUtils.RESULT_GROUP.GENERAL;
+  }
+}
 
 /**
  * Class used to create a muxer.
@@ -112,7 +115,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           sortedResults.unshift(result);
           handled.add(result);
           slots--;
-        } else if (group == RESULT_TYPE_TO_GROUP.get(result.type)) {
+        } else if (group == groupFromResult(result)) {
           // If there's no suggestedIndex, insert the result now, otherwise
           // we'll handle it later.
           if (result.suggestedIndex < 0) {
@@ -120,12 +123,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           }
           handled.add(result);
           slots--;
-        } else if (!RESULT_TYPE_TO_GROUP.has(result.type)) {
-          let errorMsg = `Result type ${
-            result.type
-          } is not mapped to a match group.`;
-          logger.error(errorMsg);
-          Cu.reportError(errorMsg);
         }
       }
     }
