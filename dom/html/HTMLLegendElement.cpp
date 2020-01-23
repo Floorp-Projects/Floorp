@@ -34,9 +34,9 @@ bool HTMLLegendElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                        nsAttrValue& aResult) {
   // this contains center, because IE4 does
   static const nsAttrValue::EnumTable kAlignTable[] = {
-      {"left", NS_STYLE_TEXT_ALIGN_LEFT},
-      {"right", NS_STYLE_TEXT_ALIGN_RIGHT},
-      {"center", NS_STYLE_TEXT_ALIGN_CENTER},
+      {"left", LegendAlignValue::Left},
+      {"right", LegendAlignValue::Right},
+      {"center", LegendAlignValue::Center},
       {nullptr, 0}};
 
   if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
