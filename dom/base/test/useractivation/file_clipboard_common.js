@@ -45,29 +45,26 @@ function selectInputNode(aSelector, aCb) {
 }
 
 // Callback functions for attaching to the button
-function execCut(aShouldSucceed) {
+function execCommand(aCommand, aShouldSucceed, aAsync = false) {
   var cb = function(e) {
     e.preventDefault();
     document.removeEventListener("keydown", cb);
 
-    is(
-      aShouldSucceed,
-      document.execCommand("cut"),
-      "Keydown caused cut invocation" + testLoc()
-    );
-  };
-  return cb;
-}
-function execCopy(aShouldSucceed) {
-  var cb = function(e) {
-    e.preventDefault();
-    document.removeEventListener("keydown", cb);
-
-    is(
-      aShouldSucceed,
-      document.execCommand("copy"),
-      "Keydown caused copy invocation" + testLoc()
-    );
+    if (aAsync) {
+      setTimeout(() => {
+        is(
+          aShouldSucceed,
+          document.execCommand(aCommand),
+          "Keydown caused " + aCommand + " invocation" + testLoc()
+        );
+      }, 0);
+    } else {
+      is(
+        aShouldSucceed,
+        document.execCommand(aCommand),
+        "Keydown caused " + aCommand + " invocation" + testLoc()
+      );
+    }
   };
   return cb;
 }
@@ -395,11 +392,11 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
         // Button issued
         cutCopyAll(
           function docut(aSucc) {
-            document.addEventListener("keydown", execCut(aSucc));
+            document.addEventListener("keydown", execCommand("cut", aSucc));
             sendString("Q");
           },
           function docopy(aSucc) {
-            document.addEventListener("keydown", execCopy(aSucc));
+            document.addEventListener("keydown", execCommand("copy", aSucc));
             sendString("Q");
           },
           function done() {
@@ -432,6 +429,33 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
             testStep(n + 1);
           },
           true,
+          aClipOverride,
+          aNegateAll
+        );
+        return;
+
+      /** Test for Bug 1597857 **/
+      case 3:
+        // Button issued async
+        cutCopyAll(
+          function docut(aSucc) {
+            document.addEventListener(
+              "keydown",
+              execCommand("cut", aSucc, true)
+            );
+            sendString("Q");
+          },
+          function docopy(aSucc) {
+            document.addEventListener(
+              "keydown",
+              execCommand("copy", aSucc, true)
+            );
+            sendString("Q");
+          },
+          function done() {
+            testStep(n + 1);
+          },
+          false,
           aClipOverride,
           aNegateAll
         );
