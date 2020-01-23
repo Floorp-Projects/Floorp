@@ -4235,6 +4235,19 @@ ArrayObject* js::NewPartlyAllocatedArrayTryUseGroup(JSContext* cx,
                                                                     length);
 }
 
+static bool CanReuseGroupForNewArray(JSObject* obj, JSContext* cx) {
+  if (!obj->is<ArrayObject>()) {
+    return false;
+  }
+  if (obj->as<ArrayObject>().realm() != cx->realm()) {
+    return false;
+  }
+  if (obj->staticPrototype() != cx->global()->maybeGetArrayPrototype()) {
+    return false;
+  }
+  return true;
+}
+
 // Return a new array with the default prototype and specified allocated
 // capacity and length. If possible, try to reuse the group of the input
 // object. The resulting array will either reuse the input object's group or
@@ -4243,11 +4256,7 @@ template <uint32_t maxLength>
 static inline ArrayObject* NewArrayTryReuseGroup(
     JSContext* cx, HandleObject obj, size_t length,
     NewObjectKind newKind = GenericObject) {
-  if (!obj->is<ArrayObject>()) {
-    return NewArray<maxLength>(cx, length, nullptr, newKind);
-  }
-
-  if (obj->staticPrototype() != cx->global()->maybeGetArrayPrototype()) {
+  if (!CanReuseGroupForNewArray(obj, cx)) {
     return NewArray<maxLength>(cx, length, nullptr, newKind);
   }
 
