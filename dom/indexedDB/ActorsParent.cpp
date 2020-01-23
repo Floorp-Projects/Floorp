@@ -6433,7 +6433,7 @@ class TransactionBase {
     CommitOrAbort();
   }
 
-  PBackgroundIDBRequestParent* AllocRequest(const RequestParams& aParams,
+  PBackgroundIDBRequestParent* AllocRequest(RequestParams&& aParams,
                                             bool aTrustParams);
 
   bool StartRequest(PBackgroundIDBRequestParent* aActor);
@@ -7415,7 +7415,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
  private:
   // Only created by TransactionBase.
   ObjectStoreAddOrPutRequestOp(RefPtr<TransactionBase> aTransaction,
-                               const RequestParams& aParams);
+                               RequestParams&& aParams);
 
   ~ObjectStoreAddOrPutRequestOp() override = default;
 
@@ -14658,7 +14658,7 @@ void TransactionBase::Invalidate() {
 }
 
 PBackgroundIDBRequestParent* TransactionBase::AllocRequest(
-    const RequestParams& aParams, bool aTrustParams) {
+    RequestParams&& aParams, bool aTrustParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
@@ -14682,7 +14682,7 @@ PBackgroundIDBRequestParent* TransactionBase::AllocRequest(
   switch (aParams.type()) {
     case RequestParams::TObjectStoreAddParams:
     case RequestParams::TObjectStorePutParams:
-      actor = new ObjectStoreAddOrPutRequestOp(this, aParams);
+      actor = new ObjectStoreAddOrPutRequestOp(this, std::move(aParams));
       break;
 
     case RequestParams::TObjectStoreGetParams:
@@ -14958,7 +14958,8 @@ NormalTransaction::AllocPBackgroundIDBRequestParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  return AllocRequest(aParams, IsSameProcessActor());
+  return AllocRequest(std::move(const_cast<RequestParams&>(aParams)),
+                      IsSameProcessActor());
 }
 
 mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBRequestConstructor(
@@ -15591,7 +15592,8 @@ VersionChangeTransaction::AllocPBackgroundIDBRequestParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  return AllocRequest(aParams, IsSameProcessActor());
+  return AllocRequest(std::move(const_cast<RequestParams&>(aParams)),
+                      IsSameProcessActor());
 }
 
 mozilla::ipc::IPCResult
@@ -24702,11 +24704,12 @@ mozilla::ipc::IPCResult NormalTransactionOp::RecvContinue(
 }
 
 ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
-    RefPtr<TransactionBase> aTransaction, const RequestParams& aParams)
+    RefPtr<TransactionBase> aTransaction, RequestParams&& aParams)
     : NormalTransactionOp(std::move(aTransaction)),
-      mParams(aParams.type() == RequestParams::TObjectStoreAddParams
-                  ? aParams.get_ObjectStoreAddParams().commonParams()
-                  : aParams.get_ObjectStorePutParams().commonParams()),
+      mParams(
+          std::move(aParams.type() == RequestParams::TObjectStoreAddParams
+                        ? aParams.get_ObjectStoreAddParams().commonParams()
+                        : aParams.get_ObjectStorePutParams().commonParams())),
       mGroup(Transaction().GetDatabase()->Group()),
       mOrigin(Transaction().GetDatabase()->Origin()),
       mPersistenceType(Transaction().GetDatabase()->Type()),
