@@ -139,6 +139,7 @@ class AddTest(MachCommandBase):
     def addtest(self, suite=None, test=None, doc=None, overwrite=False,
                 editor=MISSING_ARG, **kwargs):
         import addtest
+        import io
         from moztest.resolve import TEST_SUITES
 
         if not suite and not test:
@@ -205,7 +206,7 @@ class AddTest(MachCommandBase):
                 except OSError:
                     pass
 
-                with open(path, "w", newline='\n') as f:
+                with io.open(path, "w", newline='\n') as f:
                     f.write(template)
             else:
                 # write to stdout if you passed only suite and doc and not a file path
