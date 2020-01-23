@@ -3,15 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use webrender::{TileNode, TileNodeKind, InvalidationReason, TileOffset};
-use webrender::{TileSerializer, TileCacheInstanceSerializer, TileCacheLoggerUpdateLists};
+use webrender::{TileSerializer, TileCacheInstanceSerializer};
 use serde::Deserialize;
 //use ron::de::from_reader;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::ffi::OsString;
-use webrender::api::enumerate_interners;
-use webrender::UpdateKind;
 
 #[derive(Deserialize)]
 pub struct Slice {
@@ -234,7 +232,7 @@ fn slices_to_svg(slices: &[Slice], prev_slices: Option<Vec<Slice>>,
             + "\n</svg>\n"
 }
 
-fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) {
+fn write_html(output_dir: &Path, svg_files: &[String]) {
     let html_head = "<!DOCTYPE html>\n\
                      <html>\n\
                      <head>\n\
@@ -253,14 +251,7 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
     for svg_file in svg_files {
         script = format!("{}    \"{}\",\n", script, svg_file);
     }
-    script = format!("{}];\n\n", script);
-
-    script = format!("{}var intern_files = [\n", script);
-    for intern_file in intern_files {
-        script = format!("{}    \"{}\",\n", script, intern_file);
-    }
     script = format!("{}];\n</script>\n\n", script);
-
     //TODO this requires copying the js file from somewhere?
     script = format!("{}<script src=\"tilecache.js\" type=\"text/javascript\"></script>\n\n", script);
 
@@ -271,17 +262,8 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
 
     let html_body = format!(
         "{}\n\
-        <div class=\"split left\">\n\
-            <div>\n\
-                <object id=\"svg_container0\" type=\"image/svg+xml\" data=\"{}\" class=\"tile_svg\" ></object>\n\
-                <object id=\"svg_container1\" type=\"image/svg+xml\" data=\"{}\" class=\"tile_svg\" ></object>\n\
-            </div>\n\
-        </div>\n\
-        \n\
-        <div class=\"split right\">\n\
-            <iframe width=\"100%\" id=\"intern\" src=\"{}\"></iframe>\n\
-        </div>\n\
-        \n\
+        <object id=\"svg_container0\" type=\"image/svg+xml\" data=\"{}\" class=\"tile_svg\" ></object>\n\
+        <object id=\"svg_container1\" type=\"image/svg+xml\" data=\"{}\" class=\"tile_svg\" ></object>\n\
         <div id=\"svg_ui_overlay\">\n\
             <div id=\"text_frame_counter\">{}</div>\n\
             <div id=\"text_spacebar\">Spacebar to Play</div>\n\
@@ -291,7 +273,6 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
         html_body,
         svg_files[0],
         svg_files[0],
-        intern_files[0],
         svg_files[0],
         svg_files.len() );
 
@@ -304,59 +285,32 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
 
 fn write_css(output_dir: &Path, max_slice_index: usize) {
     let mut css = ".tile_svg {\n\
-                    float: left;\n\
-                   }\n\
-                   \n\
-                   .split {\n\
-                      position: fixed;\n\
-                      z-index: 1;\n\
-                      top: 0;\n\
-                      padding-top: 20px;\n\
-                   }\n\
-                   \n\
-                   .left {\n\
-                      left: 0;\n\
-                   }\n\
-                   \n\
-                   .right {\n\
-                      right: 0;\n\
-                      width: 20%;\n\
-                      height: 100%;\n\
-                      opacity: 90%;\n\
-                   }\n\
-                   \n\
-                   #intern {\n\
-                    position:relative;\n\
-                    top:60px;\n\
-                    width: 100%;\n\
-                    height: 100%;\n\
-                    color: orange;\n\
-                    background-color:white;\n\
-                   }\n\
+                   position: fixed;\n\
+                   }\n\n\n\
                    .svg_invalidated {\n\
-                       fill: white;\n\
-                       font-family:monospace;\n\
+                    fill: white;\n\
+                    font-family:monospace;\n\
                    }\n\n\n\
                    #svg_ui_overlay {\n\
-                       position:absolute;\n\
-                       right:0; \n\
-                       top:0; \n\
-                       z-index:70; \n\
-                       color: rgb(255,255,100);\n\
-                       font-family:monospace;\n\
-                       background-color: #404040a0;\n\
+                     position:absolute;\n\
+                     right:0; \n\
+                     top:0; \n\
+                     z-index:70; \n\
+                     color: rgb(255,255,100);\n\
+                     font-family:monospace;\n\
+                     background-color: #404040a0;\n\
                    }\n\n\n\
                    .svg_quadtree {\n\
-                       fill: none;\n\
-                       stroke-width: 1;\n\
-                       stroke: orange;\n\
+                    fill: none;\n\
+                    stroke-width: 1;\n\
+                    stroke: orange;\n\
                    }\n\n\n\
                    .svg_changed_prim {\n\
-                       stroke: red;\n\
-                       stroke-width: 2.0;\n\
+                     stroke: red;\n\
+                     stroke-width: 2.0;\n\
                    }\n\n\n\
                    #svg_ui_slider {\n\
-                       width:90%;\n\
+                     width:90%;\n\
                    }\n\n".to_string();
 
     for ix in 0..max_slice_index + 1 {
@@ -387,64 +341,6 @@ fn write_css(output_dir: &Path, max_slice_index: usize) {
     css_output.write_all(css.as_bytes()).unwrap();
 }
 
-macro_rules! updatelist_to_html_macro {
-    ( $( $name:ident: $ty:ty, )+ ) => {
-        fn updatelist_to_html(update_lists: &TileCacheLoggerUpdateLists) -> String {
-            let mut html = String::new();
-            $(
-                html += &format!("<h4 style=\"margin:5px;\">{}</h4>\n<font color=\"green\">\n", stringify!($name));
-                let mut was_insert = true;
-                for update in &update_lists.$name.1 {
-                    let is_insert = match update.kind {
-                        UpdateKind::Insert => true,
-                        _ => false
-                    };
-                    if was_insert != is_insert {
-                        html += &format!("</font><font color=\"{}\">", if is_insert { "green" } else { "red" });
-                    }
-                    html += &format!("{}, \n", update.index);
-                    was_insert = is_insert;
-                }
-                html += &"</font><hr/>\n";
-            )+
-            html
-        }
-    }
-}
-enumerate_interners!(updatelist_to_html_macro);
-
-fn write_tile_cache_visualizer_svg(entry: &std::fs::DirEntry, output_dir: &Path,
-                                   slices: &[Slice], prev_slices: Option<Vec<Slice>>,
-                                   svg_width: &mut i32, svg_height: &mut i32,
-                                   max_slice_index: &mut usize,
-                                   svg_files: &mut Vec::<String>)
-{
-    let svg = slices_to_svg(&slices, prev_slices, svg_width, svg_height, max_slice_index);
-
-    let mut output_filename = OsString::from(entry.path().file_name().unwrap());
-    output_filename.push(".svg");
-    svg_files.push(output_filename.to_string_lossy().to_string());
-
-    output_filename = output_dir.join(output_filename).into_os_string();
-    let mut svg_output = File::create(output_filename).unwrap();
-    svg_output.write_all(svg.as_bytes()).unwrap();
-}
-
-fn write_update_list_html(entry: &std::fs::DirEntry, output_dir: &Path,
-                          update_lists: &TileCacheLoggerUpdateLists,
-                          html_files: &mut Vec::<String>)
-{
-    let html = updatelist_to_html(update_lists);
-
-    let mut output_filename = OsString::from(entry.path().file_name().unwrap());
-    output_filename.push(".html");
-    html_files.push(output_filename.to_string_lossy().to_string());
-
-    output_filename = output_dir.join(output_filename).into_os_string();
-    let mut html_output = File::create(output_filename).unwrap();
-    html_output.write_all(html.as_bytes()).unwrap();
-}
-
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
@@ -470,7 +366,6 @@ fn main() {
     entries.sort_by_key(|dir| dir.path());
 
     let mut svg_files: Vec::<String> = Vec::new();
-    let mut intern_files: Vec::<String> = Vec::new();
     let mut prev_slices = None;
 
     for entry in &entries {
@@ -478,33 +373,31 @@ fn main() {
             continue;
         }
         print!("processing {:?}\t", entry.path());
-        let file_data = std::fs::read_to_string(entry.path()).unwrap();
-        let chunks: Vec<_> = file_data.split("// @@@ chunk @@@").collect();
-        let slices: Vec<Slice> = match ron::de::from_str(&chunks[0]) {
+        let f = File::open(entry.path()).unwrap();
+        let slices: Vec<Slice> = match ron::de::from_reader(f) {
             Ok(data) => { data }
             Err(e) => {
-                println!("ERROR: failed to deserialize slicesg {:?}\n{:?}", entry.path(), e);
+                println!("ERROR: failed to deserialize {:?}\n{:?}", entry.path(), e);
                 prev_slices = None;
                 continue;
             }
         };
-        let mut update_lists = TileCacheLoggerUpdateLists::new();
-        update_lists.from_ron(&chunks[1]);
 
-        write_tile_cache_visualizer_svg(&entry, &output_dir,
-                                        &slices, prev_slices,
-                                        &mut svg_width, &mut svg_height,
-                                        &mut max_slice_index,
-                                        &mut svg_files);
+        let svg = slices_to_svg(&slices, prev_slices, &mut svg_width, &mut svg_height, &mut max_slice_index);
 
-        write_update_list_html(&entry, &output_dir, &update_lists,
-                               &mut intern_files);
+        let mut output_filename = OsString::from(entry.path().file_name().unwrap());
+        output_filename.push(".svg");
+        svg_files.push(output_filename.to_string_lossy().to_string());
+
+        output_filename = output_dir.join(output_filename).into_os_string();
+        let mut svg_output = File::create(output_filename).unwrap();
+        svg_output.write_all(svg.as_bytes()).unwrap();
 
         print!("\r");
         prev_slices = Some(slices);
     }
 
-    write_html(output_dir, &svg_files, &intern_files);
+    write_html(output_dir, &svg_files);
     write_css(output_dir, max_slice_index);
 
     println!("OK. For now, manually copy tilecache.js to the output folder please.                           ");
