@@ -5528,8 +5528,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       return false;
     }
 
-    // Inherit most things (principals, version, etc) from the
-    // parent.  Use default values for the rest.
+    // Only propagate transitive compiler options (principals, version, etc)
+    // from the parent. The remaining values will use their defaults.
     MOZ_ASSERT(script->mutedErrors() == parser->options().mutedErrors());
     const JS::TransitiveCompileOptions& transitiveOptions = parser->options();
     JS::CompileOptions options(cx, transitiveOptions);
@@ -6572,10 +6572,9 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
    */
   bool wantval = false;
   bool useful = false;
-  if (sc->isFunctionBox()) {
-    MOZ_ASSERT(!script->noScriptRval());
-  } else {
-    useful = wantval = !script->noScriptRval();
+  if (!sc->isFunctionBox()) {
+    MOZ_ASSERT(parser->options().noScriptRval == script->noScriptRval());
+    useful = wantval = !parser->options().noScriptRval;
   }
 
   /* Don't eliminate expressions with side effects. */
