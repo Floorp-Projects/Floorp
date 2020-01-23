@@ -257,10 +257,6 @@ function enumObjectProperties(objectActor, options) {
 }
 
 function getMapEntries(obj, forPreview) {
-  if (isReplaying) {
-    return obj.containerContents(forPreview);
-  }
-
   // Iterating over a Map via .entries goes through various intermediate
   // objects - an Iterator object, then a 2-element Array object, then the
   // actual values we care about. We don't have Xrays to Iterator objects,
@@ -352,10 +348,6 @@ function enumStorageEntries(objectActor) {
 }
 
 function getWeakMapEntries(obj, forPreview) {
-  if (isReplaying) {
-    return obj.containerContents(forPreview);
-  }
-
   // We currently lack XrayWrappers for WeakMap, so when we iterate over
   // the values, the temporary iterator objects get created in the target
   // compartment. However, we _do_ have Xrays to Object now, so we end up
@@ -402,10 +394,6 @@ function enumWeakMapEntries(objectActor, forPreview = false) {
 }
 
 function getSetValues(obj, forPreview) {
-  if (isReplaying) {
-    return obj.containerContents(forPreview);
-  }
-
   // We currently lack XrayWrappers for Set, so when we iterate over
   // the values, the temporary iterator objects get created in the target
   // compartment. However, we _do_ have Xrays to Object now, so we end up
@@ -449,10 +437,6 @@ function enumSetEntries(objectActor, forPreview = false) {
 }
 
 function getWeakSetEntries(obj, forPreview) {
-  if (isReplaying) {
-    return obj.containerContents(forPreview);
-  }
-
   // We currently lack XrayWrappers for WeakSet, so when we iterate over
   // the values, the temporary iterator objects get created in the target
   // compartment. However, we _do_ have Xrays to Object now, so we end up
