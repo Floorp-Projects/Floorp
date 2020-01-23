@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Unused.h"
 
@@ -25,6 +26,7 @@
 #include "unicode/ulistformatter.h"
 #include "unicode/utypes.h"
 #include "vm/JSContext.h"
+#include "vm/Runtime.h"  // js::ReportAllocationOverflow
 #include "vm/SelfHosting.h"
 #include "vm/StringType.h"
 
@@ -35,6 +37,7 @@
 using namespace js;
 
 using mozilla::AssertedCast;
+using mozilla::CheckedInt;
 
 using js::intl::CallICU;
 using js::intl::IcuLocale;
@@ -457,9 +460,13 @@ bool js::intl_FormatList(JSContext* cx, unsigned argc, Value* vp) {
   ListFormatStringVector strings(cx);
   ListFormatStringLengthVector stringLengths(cx);
 
+  // Keep a conservative running count of overall length.
+  CheckedInt<int32_t> stringLengthTotal(0);
+
   RootedArrayObject list(cx, &args[1].toObject().as<ArrayObject>());
   RootedValue value(cx);
-  for (uint32_t i = 0; i < list->length(); i++) {
+  uint32_t listLen = list->length();
+  for (uint32_t i = 0; i < listLen; i++) {
     if (!GetElement(cx, list, list, i, &value)) {
       return false;
     }
@@ -473,6 +480,7 @@ bool js::intl_FormatList(JSContext* cx, unsigned argc, Value* vp) {
     if (!stringLengths.append(linearLength)) {
       return false;
     }
+    stringLengthTotal += linearLength;
 
     UniqueTwoByteChars chars = cx->make_pod_array<char16_t>(linearLength);
     if (!chars) {
@@ -483,6 +491,16 @@ bool js::intl_FormatList(JSContext* cx, unsigned argc, Value* vp) {
     if (!strings.append(std::move(chars))) {
       return false;
     }
+  }
+
+  // Add space for N unrealistically large conjunctions.
+  constexpr int32_t MaxConjunctionLen = 100;
+  stringLengthTotal += CheckedInt<int32_t>(listLen) * MaxConjunctionLen;
+
+  // If the overestimate exceeds ICU length limits, don't try to format.
+  if (!stringLengthTotal.isValid()) {
+    ReportAllocationOverflow(cx);
+    return false;
   }
 
   // Use the UListFormatter to actually format the strings.
