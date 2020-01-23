@@ -35,7 +35,7 @@ add_task(async function() {
   const sameSite2 = getRowValues(id2).sameSite;
   const sameSite3 = getRowValues(id3).sameSite;
 
-  is(sameSite1, "Unset", `sameSite1 is "Unset"`);
+  is(sameSite1, "None", `sameSite1 is "None"`);
   is(sameSite2, "Lax", `sameSite2 is "Lax"`);
   is(sameSite3, "Strict", `sameSite3 is "Strict"`);
 
