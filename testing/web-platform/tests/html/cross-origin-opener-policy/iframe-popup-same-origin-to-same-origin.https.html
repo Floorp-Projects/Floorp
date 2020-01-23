@@ -10,14 +10,14 @@
 <script>
 [
 [SAME_ORIGIN, SAME_ORIGIN, "same-origin", true, true],
-[SAME_SITE, SAME_ORIGIN, "same-origin", false, true],
-[CROSS_ORIGIN, SAME_ORIGIN, "same-origin", false, true],
+[SAME_SITE, SAME_ORIGIN, "same-origin", false, false],
+[CROSS_ORIGIN, SAME_ORIGIN, "same-origin", false, false],
 [SAME_ORIGIN, SAME_SITE, "same-origin", false, false],
-[SAME_SITE, SAME_SITE, "same-origin", false, true],
-[CROSS_ORIGIN, SAME_SITE, "same-origin", false, true],
+[SAME_SITE, SAME_SITE, "same-origin", false, false],
+[CROSS_ORIGIN, SAME_SITE, "same-origin", false, false],
 [SAME_ORIGIN, CROSS_ORIGIN, "same-origin", false, false],
-[SAME_SITE, CROSS_ORIGIN, "same-origin", false, true],
-[CROSS_ORIGIN, CROSS_ORIGIN, "same-origin", false, true],
+[SAME_SITE, CROSS_ORIGIN, "same-origin", false, false],
+[CROSS_ORIGIN, CROSS_ORIGIN, "same-origin", false, false],
 ].forEach( value => {
     run_coop_test_iframe("same-origin", value[0], value[1], value[2], value[3], value[4]);
 });
