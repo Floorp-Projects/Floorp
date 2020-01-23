@@ -586,6 +586,11 @@ webrender
 Tasks used to do testing of WebRender standalone (without gecko). The
 WebRender code lives in gfx/wr and has its own testing infrastructure.
 
+wgpu
+---------
+Tasks used to do testing of WebGPU standalone (without gecko). The
+WebGPU code lives in gfx/wgpu and has its own testing infrastructure.
+
 github-sync
 ------------
 Tasks used to do synchronize parts of Gecko that have downstream GitHub
