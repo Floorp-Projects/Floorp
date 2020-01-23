@@ -1347,7 +1347,10 @@
         }
       }
 
-      if (this._controller) {
+      // All controllers are released upon browser element removal, but not
+      // when destruction is triggered before element removal in tabbrowser.
+      // Release the controller in the latter case.
+      if (this._controller && this.controllers.getControllerCount()) {
         try {
           this.controllers.removeController(this._controller);
         } catch (ex) {
