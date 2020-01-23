@@ -270,19 +270,19 @@ impl FrameBuilder {
             fb_config: &scene.config,
         };
 
-        let root_render_task = RenderTask::new_picture(
-            RenderTaskLocation::Fixed(scene.output_rect),
-            scene.output_rect.size.to_f32(),
-            scene.root_pic_index,
-            DeviceIntPoint::zero(),
-            UvRectKind::Rect,
-            ROOT_SPATIAL_NODE_INDEX,
-            global_device_pixel_scale,
-            PrimitiveVisibilityMask::all(),
-            None,
+        let root_render_task_id = render_tasks.add().init(
+            RenderTask::new_picture(
+                RenderTaskLocation::Fixed(scene.output_rect),
+                scene.output_rect.size.to_f32(),
+                scene.root_pic_index,
+                DeviceIntPoint::zero(),
+                UvRectKind::Rect,
+                ROOT_SPATIAL_NODE_INDEX,
+                global_device_pixel_scale,
+                PrimitiveVisibilityMask::all(),
+                None,
+            )
         );
-
-        let root_render_task_id = render_tasks.add(root_render_task);
 
         // Construct a dummy root surface, that represents the
         // main framebuffer surface.

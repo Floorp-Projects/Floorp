@@ -3755,19 +3755,19 @@ impl PicturePrimitive {
                             true,
                         );
 
-                        let picture_task = RenderTask::new_picture(
-                            RenderTaskLocation::Dynamic(None, device_rect.size),
-                            unclipped.size,
-                            pic_index,
-                            device_rect.origin,
-                            uv_rect_kind,
-                            surface_spatial_node_index,
-                            device_pixel_scale,
-                            PrimitiveVisibilityMask::all(),
-                            None,
+                        let picture_task_id = frame_state.render_tasks.add().init(
+                            RenderTask::new_picture(
+                                RenderTaskLocation::Dynamic(None, device_rect.size),
+                                unclipped.size,
+                                pic_index,
+                                device_rect.origin,
+                                uv_rect_kind,
+                                surface_spatial_node_index,
+                                device_pixel_scale,
+                                PrimitiveVisibilityMask::all(),
+                                None,
+                            )
                         );
-
-                        let picture_task_id = frame_state.render_tasks.add(picture_task);
 
                         let blur_render_task_id = RenderTask::new_blur(
                             blur_std_deviation,
@@ -3818,20 +3818,22 @@ impl PicturePrimitive {
                             true,
                         );
 
-                        let mut picture_task = RenderTask::new_picture(
-                            RenderTaskLocation::Dynamic(None, device_rect.size),
-                            unclipped.size,
-                            pic_index,
-                            device_rect.origin,
-                            uv_rect_kind,
-                            surface_spatial_node_index,
-                            device_pixel_scale,
-                            PrimitiveVisibilityMask::all(),
-                            None,
-                        );
-                        picture_task.mark_for_saving();
+                        let picture_task_id = frame_state.render_tasks.add().init({
+                            let mut picture_task = RenderTask::new_picture(
+                                RenderTaskLocation::Dynamic(None, device_rect.size),
+                                unclipped.size,
+                                pic_index,
+                                device_rect.origin,
+                                uv_rect_kind,
+                                surface_spatial_node_index,
+                                device_pixel_scale,
+                                PrimitiveVisibilityMask::all(),
+                                None,
+                            );
+                            picture_task.mark_for_saving();
 
-                        let picture_task_id = frame_state.render_tasks.add(picture_task);
+                            picture_task
+                        });
 
                         self.secondary_render_task_id = Some(picture_task_id);
 
@@ -3865,19 +3867,7 @@ impl PicturePrimitive {
                             true,
                         );
 
-                        let picture_task = RenderTask::new_picture(
-                            RenderTaskLocation::Dynamic(None, clipped.size),
-                            unclipped.size,
-                            pic_index,
-                            clipped.origin,
-                            uv_rect_kind,
-                            surface_spatial_node_index,
-                            device_pixel_scale,
-                            PrimitiveVisibilityMask::all(),
-                            None,
-                        );
-
-                        let readback_task_id = frame_state.render_tasks.add(
+                        let readback_task_id = frame_state.render_tasks.add().init(
                             RenderTask::new_readback(clipped)
                         );
 
@@ -3888,7 +3878,19 @@ impl PicturePrimitive {
 
                         self.secondary_render_task_id = Some(readback_task_id);
 
-                        let render_task_id = frame_state.render_tasks.add(picture_task);
+                        let render_task_id = frame_state.render_tasks.add().init(
+                            RenderTask::new_picture(
+                                RenderTaskLocation::Dynamic(None, clipped.size),
+                                unclipped.size,
+                                pic_index,
+                                clipped.origin,
+                                uv_rect_kind,
+                                surface_spatial_node_index,
+                                device_pixel_scale,
+                                PrimitiveVisibilityMask::all(),
+                                None,
+                            )
+                        );
 
                         Some((render_task_id, render_task_id))
                     }
@@ -3901,19 +3903,19 @@ impl PicturePrimitive {
                             true,
                         );
 
-                        let picture_task = RenderTask::new_picture(
-                            RenderTaskLocation::Dynamic(None, clipped.size),
-                            unclipped.size,
-                            pic_index,
-                            clipped.origin,
-                            uv_rect_kind,
-                            surface_spatial_node_index,
-                            device_pixel_scale,
-                            PrimitiveVisibilityMask::all(),
-                            None,
+                        let render_task_id = frame_state.render_tasks.add().init(
+                            RenderTask::new_picture(
+                                RenderTaskLocation::Dynamic(None, clipped.size),
+                                unclipped.size,
+                                pic_index,
+                                clipped.origin,
+                                uv_rect_kind,
+                                surface_spatial_node_index,
+                                device_pixel_scale,
+                                PrimitiveVisibilityMask::all(),
+                                None,
+                            )
                         );
-
-                        let render_task_id = frame_state.render_tasks.add(picture_task);
 
                         Some((render_task_id, render_task_id))
                     }
@@ -3926,19 +3928,19 @@ impl PicturePrimitive {
                             true,
                         );
 
-                        let picture_task = RenderTask::new_picture(
-                            RenderTaskLocation::Dynamic(None, clipped.size),
-                            unclipped.size,
-                            pic_index,
-                            clipped.origin,
-                            uv_rect_kind,
-                            surface_spatial_node_index,
-                            device_pixel_scale,
-                            PrimitiveVisibilityMask::all(),
-                            None,
+                        let render_task_id = frame_state.render_tasks.add().init(
+                            RenderTask::new_picture(
+                                RenderTaskLocation::Dynamic(None, clipped.size),
+                                unclipped.size,
+                                pic_index,
+                                clipped.origin,
+                                uv_rect_kind,
+                                surface_spatial_node_index,
+                                device_pixel_scale,
+                                PrimitiveVisibilityMask::all(),
+                                None,
+                            )
                         );
-
-                        let render_task_id = frame_state.render_tasks.add(picture_task);
 
                         Some((render_task_id, render_task_id))
                     }
@@ -4138,22 +4140,22 @@ impl PicturePrimitive {
                                     tile_cache.current_tile_size,
                                 );
 
-                                let task = RenderTask::new_picture(
-                                    RenderTaskLocation::PictureCache {
-                                        size: tile_cache.current_tile_size,
-                                        surface,
-                                    },
-                                    tile_cache.current_tile_size.to_f32(),
-                                    pic_index,
-                                    content_origin.to_i32(),
-                                    UvRectKind::Rect,
-                                    surface_spatial_node_index,
-                                    device_pixel_scale,
-                                    *visibility_mask,
-                                    Some(scissor_rect.to_i32()),
+                                let render_task_id = frame_state.render_tasks.add().init(
+                                    RenderTask::new_picture(
+                                        RenderTaskLocation::PictureCache {
+                                            size: tile_cache.current_tile_size,
+                                            surface,
+                                        },
+                                        tile_cache.current_tile_size.to_f32(),
+                                        pic_index,
+                                        content_origin.to_i32(),
+                                        UvRectKind::Rect,
+                                        surface_spatial_node_index,
+                                        device_pixel_scale,
+                                        *visibility_mask,
+                                        Some(scissor_rect.to_i32()),
+                                    )
                                 );
-
-                                let render_task_id = frame_state.render_tasks.add(task);
 
                                 frame_state.render_tasks.add_dependency(
                                     frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port,
@@ -4202,19 +4204,19 @@ impl PicturePrimitive {
                             supports_snapping,
                         );
 
-                        let picture_task = RenderTask::new_picture(
-                            RenderTaskLocation::Dynamic(None, clipped.size),
-                            unclipped.size,
-                            pic_index,
-                            clipped.origin,
-                            uv_rect_kind,
-                            surface_spatial_node_index,
-                            device_pixel_scale,
-                            PrimitiveVisibilityMask::all(),
-                            None,
+                        let render_task_id = frame_state.render_tasks.add().init(
+                            RenderTask::new_picture(
+                                RenderTaskLocation::Dynamic(None, clipped.size),
+                                unclipped.size,
+                                pic_index,
+                                clipped.origin,
+                                uv_rect_kind,
+                                surface_spatial_node_index,
+                                device_pixel_scale,
+                                PrimitiveVisibilityMask::all(),
+                                None,
+                            )
                         );
-
-                        let render_task_id = frame_state.render_tasks.add(picture_task);
 
                         Some((render_task_id, render_task_id))
                     }
@@ -4227,19 +4229,19 @@ impl PicturePrimitive {
                             true,
                         );
 
-                        let picture_task = RenderTask::new_picture(
-                            RenderTaskLocation::Dynamic(None, clipped.size),
-                            unclipped.size,
-                            pic_index,
-                            clipped.origin,
-                            uv_rect_kind,
-                            surface_spatial_node_index,
-                            device_pixel_scale,
-                            PrimitiveVisibilityMask::all(),
-                            None,
+                        let picture_task_id = frame_state.render_tasks.add().init(
+                            RenderTask::new_picture(
+                                RenderTaskLocation::Dynamic(None, clipped.size),
+                                unclipped.size,
+                                pic_index,
+                                clipped.origin,
+                                uv_rect_kind,
+                                surface_spatial_node_index,
+                                device_pixel_scale,
+                                PrimitiveVisibilityMask::all(),
+                                None,
+                            )
                         );
-
-                        let picture_task_id = frame_state.render_tasks.add(picture_task);
 
                         let filter_task_id = RenderTask::new_svg_filter(
                             primitives,
