@@ -4947,7 +4947,7 @@ firstStartup:
       - 1515712
     description: >-
       Status of the FirstRun service, which runs post-install/early-startup in Firefox.
-    expires: "75"
+    expires: "80"
     kind: uint
     notification_emails:
       - rhelmer@mozilla.com
@@ -4962,7 +4962,7 @@ firstStartup:
       - 1515712
     description: >-
       Number of milliseconds the FirstRun service took to run.
-    expires: "75"
+    expires: "80"
     kind: uint
     notification_emails:
       - rhelmer@mozilla.com
