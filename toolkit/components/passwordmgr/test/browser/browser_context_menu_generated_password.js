@@ -49,6 +49,7 @@ add_task(async function test_hidden_by_prefs() {
 
       await openPasswordContextMenu(browser, passwordInputSelector);
 
+      let loginPopup = document.getElementById("fill-login-popup");
       let generatedPasswordItem = document.getElementById(
         "fill-login-generated-password"
       );
@@ -56,6 +57,8 @@ add_task(async function test_hidden_by_prefs() {
         "generated-password-separator"
       );
 
+      // Check the content of the password manager popup
+      ok(BrowserTestUtils.is_visible(loginPopup), "popup is visible");
       ok(
         !BrowserTestUtils.is_visible(generatedPasswordItem),
         "generated password item is hidden"
@@ -86,6 +89,7 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
 
       await openPasswordContextMenu(browser, passwordInputSelector);
 
+      let loginPopup = document.getElementById("fill-login-popup");
       let generatedPasswordItem = document.getElementById(
         "fill-login-generated-password"
       );
@@ -93,6 +97,8 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
         "generated-password-separator"
       );
 
+      // Check the content of the password manager popup
+      ok(BrowserTestUtils.is_visible(loginPopup), "popup is visible");
       ok(
         !BrowserTestUtils.is_visible(generatedPasswordItem),
         "generated password item is hidden"
