@@ -23,7 +23,6 @@ extern "C" {
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
-#include "nsAutoPtr.h"
 #include "runnable_utils.h"
 
 #include <vector>

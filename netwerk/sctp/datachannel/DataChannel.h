@@ -242,7 +242,8 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void* data);
   void SendPacket(std::unique_ptr<MediaPacket>&& packet);
-  void SctpDtlsInput(const std::string& aTransportId, MediaPacket& packet);
+  void SctpDtlsInput(const std::string& aTransportId,
+                     const MediaPacket& packet);
   static int SctpDtlsOutput(void* addr, void* buffer, size_t length,
                             uint8_t tos, uint8_t set_df);
 #endif

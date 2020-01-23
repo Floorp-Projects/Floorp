@@ -25,19 +25,18 @@ TransportFlow::~TransportFlow() {
   // is still some possibility that someone is accessing this
   // object simultaneously, but as long as smart pointer discipline
   // is maintained, it shouldn't be possible to access and
-  // destroy it simultaneously. The conversion to an nsAutoPtr
+  // destroy it simultaneously. The conversion to a UniquePtr
   // ensures automatic destruction of the queue at exit of
   // DestroyFinal.
   MOZ_RELEASE_ASSERT(target_);
-  nsAutoPtr<std::deque<TransportLayer*>> layers_tmp(layers_.release());
   DebugOnly<nsresult> rv = target_->Dispatch(
-      WrapRunnableNM(&TransportFlow::DestroyFinal, layers_tmp),
+      WrapRunnableNM(&TransportFlow::DestroyFinal, std::move(layers_)),
       NS_DISPATCH_NORMAL);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void TransportFlow::DestroyFinal(
-    nsAutoPtr<std::deque<TransportLayer*>> layers) {
+    UniquePtr<std::deque<TransportLayer*>> layers) {
   ClearLayers(layers.get());
 }
 
