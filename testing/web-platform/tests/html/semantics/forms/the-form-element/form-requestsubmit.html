@@ -31,14 +31,14 @@ test(() => {
   let form = document.querySelector('form');
   let submitButton = document.createElement('button');
   submitButton.type = 'submit';
-  assert_throws('NotFoundError', () => {
+  assert_throws_dom('NotFoundError', () => {
     form.requestSubmit(submitButton);
   });
 
   let buttons = form.querySelectorAll('input, button');
   assert_equals(buttons.length, 2);
   for (let control of buttons) {
-    assert_throws('NotFoundError', () => { form.requestSubmit(control) },
+    assert_throws_dom('NotFoundError', () => { form.requestSubmit(control) },
         control.outerHTML);
   }
 }, 'Passing a submit button not owned by the context object should throw');

@@ -39,7 +39,7 @@ function check_method(receiver, method, args) {
             receiver[method](throwing_key('getter'));
         }, 'key conversion with throwing getter should rethrow');
 
-        assert_throws('DataError', () => {
+        assert_throws_dom('DataError', () => {
             receiver[method](invalid_key);
         }, 'key conversion with invalid key should throw DataError');
     } else {
@@ -47,7 +47,7 @@ function check_method(receiver, method, args) {
             receiver[method](throwing_key('getter 1'), throwing_key('getter 2'));
         }, 'first key conversion with throwing getter should rethrow');
 
-        assert_throws('DataError', () => {
+        assert_throws_dom('DataError', () => {
             receiver[method](invalid_key, throwing_key('getter 2'));
         }, 'first key conversion with invalid key should throw DataError');
 
@@ -55,7 +55,7 @@ function check_method(receiver, method, args) {
             receiver[method](valid_key, throwing_key('getter 2'));
         }, 'second key conversion with throwing getter should rethrow');
 
-        assert_throws('DataError', () => {
+        assert_throws_dom('DataError', () => {
             receiver[method](valid_key, invalid_key);
         }, 'second key conversion with invalid key should throw DataError');
     }
@@ -118,7 +118,7 @@ indexeddb_upgrade_only_test((t, db) => {
         // are used for key path evaluation.
 
         value.prop = invalid_key;
-        assert_throws('DataError', () => {
+        assert_throws_dom('DataError', () => {
             cursor.update(value);
         }, 'key conversion with invalid key should throw DataError');
     });
@@ -145,7 +145,7 @@ test(t => {
             out_of_line[method]('value', throwing_key('getter'));
         }, 'key conversion with throwing getter should rethrow');
 
-        assert_throws('DataError', () => {
+        assert_throws_dom('DataError', () => {
             out_of_line[method]('value', invalid_key);
         }, 'key conversion with invalid key should throw DataError');
 
@@ -161,7 +161,7 @@ test(t => {
         // are used for key path evaluation.
 
         value.prop = invalid_key;
-        assert_throws('DataError', () => {
+        assert_throws_dom('DataError', () => {
             in_line[method](value);
         }, 'key conversion with invalid key should throw DataError');
     }, `IDBObjectStore ${method}() method with throwing/invalid keys`);

@@ -12,7 +12,7 @@ test(function() {
   assert_own_property(window,'DragEvent');
 }, 'window.DragEvent should be exposed' );
 test(function() {
-  assert_throws('NOT_SUPPORTED_ERR', function() {
+  assert_throws_dom('NOT_SUPPORTED_ERR', function() {
     var evt = document.createEvent('DragEvent');
   });
 }, 'createEvent should not be able to create a DragEvent' );
