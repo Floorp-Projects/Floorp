@@ -362,7 +362,7 @@ add_task(async function clipScaleAndDevicePixelRatio({ client }) {
 
   const expectedSize = size * ratio * scale;
 
-  console.info(`Create reference screenshot: ${expectedSize} x ${expectedSize}`);
+  console.info(`Create reference screenshot: ${expectedSize}x${expectedSize}`);
   await loadURLWithElement({
     width: expectedSize,
     height: expectedSize,
