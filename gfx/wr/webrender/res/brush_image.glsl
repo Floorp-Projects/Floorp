@@ -93,23 +93,28 @@ void image_brush_vs(
         local_rect = segment_rect;
         stretch_size = local_rect.size;
 
-        if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
-            stretch_size.x = (segment_data.z - segment_data.x);
-        }
-        if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
-            stretch_size.y = (segment_data.w - segment_data.y);
-        }
+        float dx = segment_data.z - segment_data.x;
+        float dy = segment_data.w - segment_data.y;
 
         // If the extra data is a texel rect, modify the UVs.
         if ((brush_flags & BRUSH_FLAG_TEXEL_RECT) != 0) {
+
             vec2 uv_size = res.uv_rect.p1 - res.uv_rect.p0;
             uv0 = res.uv_rect.p0 + segment_data.xy * uv_size;
             uv1 = res.uv_rect.p0 + segment_data.zw * uv_size;
+
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
-              stretch_size.x = stretch_size.x * uv_size.x;
+              stretch_size.x = local_rect.size.y / dy * dx;
             }
             if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
-              stretch_size.y = stretch_size.y * uv_size.y;
+              stretch_size.y = local_rect.size.x / dx * dy;
+            }
+        } else {
+            if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
+                stretch_size.x = dx;
+            }
+            if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
+                stretch_size.y = dy;
             }
         }
     }
