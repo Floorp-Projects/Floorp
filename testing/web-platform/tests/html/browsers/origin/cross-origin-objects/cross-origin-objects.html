@@ -341,8 +341,8 @@ addTest(function(win) {
   if (Object.setPrototypeOf)
     setters.push(function(p) { Object.setPrototypeOf(this, p); });
   setters.forEach(function(protoSetter) {
-    assert_throws(new TypeError, function() { protoSetter.call(win, new Object()); }, "proto setter |call| on cross-origin Window");
-    assert_throws(new TypeError, function() { protoSetter.call(win.location, new Object()); }, "proto setter |call| on cross-origin Location");
+    assert_throws_js(TypeError, function() { protoSetter.call(win, new Object()); }, "proto setter |call| on cross-origin Window");
+    assert_throws_js(TypeError, function() { protoSetter.call(win.location, new Object()); }, "proto setter |call| on cross-origin Location");
   });
   // Hack to avoid "duplicate test name" harness issues.
   setters.forEach(function(protoSetter) {
@@ -375,9 +375,9 @@ addTest(function(win) {
  * [[PreventExtensions]]
  */
 addTest(function(win) {
-  assert_throws(new TypeError, function() { Object.preventExtensions(win) },
+  assert_throws_js(TypeError, function() { Object.preventExtensions(win) },
                 "preventExtensions on cross-origin Window should throw");
-  assert_throws(new TypeError, function() { Object.preventExtensions(win.location) },
+  assert_throws_js(TypeError, function() { Object.preventExtensions(win.location) },
                 "preventExtensions on cross-origin Location should throw");
 }, "[[PreventExtensions]] should throw for cross-origin objects");
 
