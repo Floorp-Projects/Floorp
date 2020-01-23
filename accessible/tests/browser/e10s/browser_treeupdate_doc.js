@@ -91,13 +91,13 @@ addAccessibleTask(
       let newTextNode = docNode.createTextNode("New Hello");
       newBodyNode.id = contentId;
       newBodyNode.appendChild(newTextNode);
-      newBodyNode.setAttribute("role", "button");
+      newBodyNode.setAttribute("role", "application");
       docNode.documentElement.replaceChild(newBodyNode, docNode.body);
     });
     await reorderEventPromise;
 
     tree = {
-      role: ROLE_PUSHBUTTON,
+      role: ROLE_APPLICATION,
       children: [
         {
           role: ROLE_TEXT_LEAF,
@@ -299,14 +299,14 @@ addAccessibleTask(
       let newBodyNode = docNode.createElement("body");
       let newTextNode = docNode.createTextNode("New Hello");
       newBodyNode.appendChild(newTextNode);
-      newBodyNode.setAttribute("role", "button");
+      newBodyNode.setAttribute("role", "application");
       newBodyNode.id = contentId;
       docNode.documentElement.replaceChild(newBodyNode, docNode.body);
     });
     await reorderEventPromise;
 
     tree = {
-      role: ROLE_PUSHBUTTON,
+      role: ROLE_APPLICATION,
       children: [
         {
           role: ROLE_TEXT_LEAF,
