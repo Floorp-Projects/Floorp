@@ -57,6 +57,7 @@ class WebPushTest : BaseSessionTest() {
 
     @Before
     fun setup() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.requireuserinteraction" to false))
         // Grant "desktop notification" permission
         mainSession.delegateUntilTestEnd(object : Callbacks.PermissionDelegate {
             override fun onContentPermissionRequest(session: GeckoSession, uri: String?, type: Int, callback: GeckoSession.PermissionDelegate.Callback) {
