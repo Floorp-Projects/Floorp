@@ -493,8 +493,7 @@ void RenderThread::UpdateAndRender(
 
   if (latestFrameId.IsValid()) {
     auto recorderIt = mCompositionRecorders.find(aWindowId);
-    if (recorderIt != mCompositionRecorders.end() &&
-        renderer->EnsureAsyncScreenshot()) {
+    if (recorderIt != mCompositionRecorders.end()) {
       recorderIt->second->MaybeRecordFrame(renderer->GetRenderer(), info.get());
     }
   }

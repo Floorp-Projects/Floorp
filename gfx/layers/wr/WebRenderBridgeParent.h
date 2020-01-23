@@ -317,8 +317,6 @@ class WebRenderBridgeParent final
    */
   RefPtr<wr::WebRenderAPI::GetCollectedFramesPromise> GetCollectedFrames();
 
-  void DisableNativeCompositor();
-
  private:
   class ScheduleSharedSurfaceRelease;
 
