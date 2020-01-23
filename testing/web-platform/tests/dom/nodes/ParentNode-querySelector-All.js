@@ -218,13 +218,13 @@ function runInvalidSelectorTest(type, root, selectors) {
     var q = s["selector"];
 
     test(function() {
-      assert_throws("SyntaxError", function() {
+      assert_throws_dom("SyntaxError", function() {
         root.querySelector(q)
       })
     }, type + ".querySelector: " + n + ": " + q);
 
     test(function() {
-      assert_throws("SyntaxError", function() {
+      assert_throws_dom("SyntaxError", function() {
         root.querySelectorAll(q)
       })
     }, type + ".querySelectorAll: " + n + ": " + q);

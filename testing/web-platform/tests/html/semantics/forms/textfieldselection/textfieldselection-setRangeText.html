@@ -94,7 +94,7 @@
     }, element.id + " selectionMode 'preserve'");
 
     test(function(){
-      assert_throws("INDEX_SIZE_ERR", function() {
+      assert_throws_dom("INDEX_SIZE_ERR", function() {
         element.setRangeText("barfoo", 2, 1);
       });
     }, element.id + " setRangeText with 3rd argument greater than 2nd argument throws an IndexSizeError exception");

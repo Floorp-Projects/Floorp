@@ -44,7 +44,7 @@ self.testSettingImmutablePrototype =
     }, `${prefix}: setting the prototype to ${originalValueString} via __proto__ should not throw`);
   } else {
     test(() => {
-      assert_throws("SecurityError", function() {
+      assert_throws_dom("SecurityError", function() {
         target.__proto__ = newValue;
       });
     }, `${prefix}: setting the prototype to ${originalValueString} via __proto__ should throw a "SecurityError" since ` +

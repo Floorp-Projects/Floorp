@@ -16,7 +16,7 @@ function testLeaf(node, desc) {
 
   // Pre-insert step 1.
   test(function() {
-    assert_throws("HIERARCHY_REQUEST_ERR", function() { node.appendChild(document.createTextNode("fail")) })
+    assert_throws_dom("HIERARCHY_REQUEST_ERR", function() { node.appendChild(document.createTextNode("fail")) })
   }, "Appending to a " + desc)
 }
 
@@ -36,7 +36,7 @@ test(function() {
 // Pre-insert step 5.
 test(function() {
   var frameDoc = frames[0].document
-  assert_throws("HIERARCHY_REQUEST_ERR", function() { document.body.appendChild(frameDoc) })
+  assert_throws_dom("HIERARCHY_REQUEST_ERR", function() { document.body.appendChild(frameDoc) })
 }, "Appending a document")
 
 // Pre-insert step 8.

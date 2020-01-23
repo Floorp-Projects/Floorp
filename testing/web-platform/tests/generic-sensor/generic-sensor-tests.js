@@ -465,12 +465,12 @@ function runGenericSensorTests(sensorName,
 
 //  Re-enable after https://github.com/w3c/sensors/issues/361 is fixed.
 //  test(() => {
-//     assert_throws("NotSupportedError",
+//     assert_throws_dom("NotSupportedError",
 //         () => { new sensorType({invalid: 1}) });
-//     assert_throws("NotSupportedError",
+//     assert_throws_dom("NotSupportedError",
 //         () => { new sensorType({frequency: 60, invalid: 1}) });
 //     if (!expectedRemappedReadings) {
-//       assert_throws("NotSupportedError",
+//       assert_throws_dom("NotSupportedError",
 //           () => { new sensorType({referenceFrame: "screen"}) });
 //     }
 //  }, `${sensorName}: throw 'NotSupportedError' for an unsupported sensor\

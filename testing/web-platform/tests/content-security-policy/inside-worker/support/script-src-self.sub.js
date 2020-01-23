@@ -3,7 +3,7 @@ importScripts("{{location[server]}}/content-security-policy/support/testharness-
 
 test(t => {
   self.a = false;
-  assert_throws("NetworkError",
+  assert_throws_dom("NetworkError",
                 _ => importScripts("http://{{domains[www]}}:{{ports[http][1]}}/content-security-policy/support/var-a.js"),
                 "importScripts should throw `NetworkError`");
   assert_false(self.a);

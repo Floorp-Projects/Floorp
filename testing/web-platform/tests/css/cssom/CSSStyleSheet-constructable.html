@@ -503,18 +503,18 @@ test(() => {
 const import_text = '@import url("support/constructable-import.css");';
 
 test(() => {
-  assert_throws("NotAllowedError", () => { (new CSSStyleSheet).replaceSync(import_text) });
+  assert_throws_dom("NotAllowedError", () => { (new CSSStyleSheet).replaceSync(import_text) });
 }, 'CSSStyleSheet.replaceSync throws exception when there is import rule inside');
 
 test(() => {
-  assert_throws("NotAllowedError", () => { (new CSSStyleSheet).insertRule(import_text) });
+  assert_throws_dom("NotAllowedError", () => { (new CSSStyleSheet).insertRule(import_text) });
 }, 'Inserting an @import rule through insertRule on a constructed stylesheet throws an exception');
 
 async_test(t => {
     const importUrl = "support/constructable-import.css";
     const sheet = new CSSStyleSheet();
 
-    assert_throws("NotAllowedError", () => { sheet.replaceSync(`@import url("${importUrl}");`) });
+    assert_throws_dom("NotAllowedError", () => { sheet.replaceSync(`@import url("${importUrl}");`) });
 
     const timeAfterReplaceSync = performance.now();
     let link = document.createElement("link");
