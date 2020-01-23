@@ -4,7 +4,9 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
 
 /**
  * A simple browser menu checkbox.
@@ -19,4 +21,8 @@ class BrowserMenuCheckbox(
     listener: (Boolean) -> Unit
 ) : BrowserMenuCompoundButton(label, initialState, listener) {
     override fun getLayoutResource() = R.layout.mozac_browser_menu_item_checkbox
+
+    override fun asCandidate(context: Context) = super.asCandidate(context).copy(
+        end = CompoundMenuCandidate.ButtonType.CHECKBOX
+    )
 }

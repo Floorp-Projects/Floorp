@@ -9,9 +9,14 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.content.ContextCompat.getColor
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.ContainerStyle
+import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.browser.menu2.candidate.RowMenuCandidate
+import mozilla.components.browser.menu2.candidate.SmallMenuCandidate
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -290,5 +295,101 @@ class BrowserMenuItemToolbarTest {
 
         assertTrue(callbackInvoked)
         verify(menu).dismiss()
+    }
+
+    @Test
+    fun `toolbar can be converted to candidate`() {
+        val listener = {}
+
+        assertEquals(
+            RowMenuCandidate(emptyList()),
+            BrowserMenuItemToolbar(emptyList()).asCandidate(testContext)
+        )
+
+        var isEnabled = false
+        var isInPrimaryState = true
+        val toolbarWithTwoState = BrowserMenuItemToolbar(listOf(
+            BrowserMenuItemToolbar.Button(
+                R.drawable.abc_ic_ab_back_material,
+                "Button01",
+                isEnabled = { isEnabled },
+                listener = listener
+            ),
+            BrowserMenuItemToolbar.Button(
+                R.drawable.abc_ic_ab_back_material,
+                "Button02",
+                iconTintColorResource = R.color.accent_material_light,
+                listener = listener
+            ),
+            BrowserMenuItemToolbar.TwoStateButton(
+                primaryImageResource = R.drawable.abc_ic_go_search_api_material,
+                primaryContentDescription = "TwoStatePrimary",
+                secondaryImageResource = R.drawable.abc_ic_clear_material,
+                secondaryContentDescription = "TwoStateSecondary",
+                isInPrimaryState = { isInPrimaryState },
+                listener = listener
+            )
+        ))
+
+        assertEquals(
+            RowMenuCandidate(listOf(
+                SmallMenuCandidate(
+                    "Button01",
+                    icon = DrawableMenuIcon(null),
+                    containerStyle = ContainerStyle(isEnabled = false),
+                    onClick = listener
+                ),
+                SmallMenuCandidate(
+                    "Button02",
+                    icon = DrawableMenuIcon(
+                        null,
+                        tint = getColor(testContext, R.color.accent_material_light)
+                    ),
+                    onClick = listener
+                ),
+                SmallMenuCandidate(
+                    "TwoStatePrimary",
+                    icon = DrawableMenuIcon(null),
+                    onClick = listener
+                )
+            )),
+            toolbarWithTwoState.asCandidate(testContext).run {
+                copy(items = items.map {
+                    it.copy(icon = it.icon.copy(drawable = null))
+                })
+            }
+        )
+
+        isEnabled = true
+        isInPrimaryState = false
+
+        assertEquals(
+            RowMenuCandidate(listOf(
+                SmallMenuCandidate(
+                    "Button01",
+                    icon = DrawableMenuIcon(null),
+                    containerStyle = ContainerStyle(isEnabled = true),
+                    onClick = listener
+                ),
+                SmallMenuCandidate(
+                    "Button02",
+                    icon = DrawableMenuIcon(
+                        null,
+                        tint = getColor(testContext, R.color.accent_material_light)
+                    ),
+                    onClick = listener
+                ),
+                SmallMenuCandidate(
+                    "TwoStateSecondary",
+                    icon = DrawableMenuIcon(null),
+                    onClick = listener
+                )
+            )),
+            toolbarWithTwoState.asCandidate(testContext).run {
+                copy(items = items.map {
+                    it.copy(icon = it.icon.copy(drawable = null))
+                })
+            }
+        )
     }
 }

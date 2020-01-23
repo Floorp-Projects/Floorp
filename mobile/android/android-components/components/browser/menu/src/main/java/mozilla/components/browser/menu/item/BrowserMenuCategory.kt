@@ -4,13 +4,20 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.graphics.Typeface
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.ContainerStyle
+import mozilla.components.browser.menu2.candidate.DecorativeTextMenuCandidate
+import mozilla.components.browser.menu2.candidate.TextAlignment
+import mozilla.components.browser.menu2.candidate.TextStyle
+import mozilla.components.browser.menu2.candidate.TypefaceStyle
 
 /**
  * A browser menu item displaying styleable text, usable for menu categories
@@ -26,8 +33,8 @@ class BrowserMenuCategory(
     private val textSize: Float = NO_ID.toFloat(),
     @ColorRes
     private val textColorResource: Int = NO_ID,
-    private val textStyle: Int = Typeface.BOLD,
-    private val textAlignment: Int = View.TEXT_ALIGNMENT_VIEW_START
+    @TypefaceStyle private val textStyle: Int = Typeface.BOLD,
+    @TextAlignment private val textAlignment: Int = View.TEXT_ALIGNMENT_VIEW_START
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
@@ -48,4 +55,15 @@ class BrowserMenuCategory(
         textView.setTypeface(textView.typeface, textStyle)
         textView.textAlignment = textAlignment
     }
+
+    override fun asCandidate(context: Context) = DecorativeTextMenuCandidate(
+        label,
+        textStyle = TextStyle(
+            size = if (textSize == NO_ID.toFloat()) null else textSize,
+            color = if (textColorResource == NO_ID) null else getColor(context, textColorResource),
+            textStyle = textStyle,
+            textAlignment = textAlignment
+        ),
+        containerStyle = ContainerStyle(isVisible = visible())
+    )
 }

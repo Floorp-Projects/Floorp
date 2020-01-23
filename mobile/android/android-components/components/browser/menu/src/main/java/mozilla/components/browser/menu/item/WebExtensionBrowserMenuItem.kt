@@ -4,15 +4,24 @@
 
 package mozilla.components.browser.menu.item
 
-import android.graphics.drawable.BitmapDrawable
+import android.content.Context
+import android.graphics.drawable.Drawable
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import androidx.core.graphics.drawable.toDrawable
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.ContainerStyle
+import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.browser.menu2.candidate.TextMenuCandidate
+import mozilla.components.browser.menu2.candidate.TextMenuIcon
+import mozilla.components.browser.menu2.candidate.TextStyle
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.support.base.log.Log
 
@@ -48,18 +57,8 @@ class WebExtensionBrowserMenuItem(
         action.badgeBackgroundColor?.let { badgeView.setBackgroundColor(it) }
 
         MainScope().launch {
-            try {
-                val icon = action.loadIcon?.invoke(imageView.measuredHeight)
-                icon?.let { imageView.setImageDrawable(BitmapDrawable(view.context.resources, it)) }
-            } catch (throwable: Throwable) {
-                imageView.setImageResource(R.drawable.mozac_ic_web_extension_default_icon)
-
-                Log.log(
-                    Log.Priority.ERROR,
-                    "mozac-webextensions",
-                    throwable,
-                    "Failed to load browser action icon, falling back to default."
-                )
+            loadIcon(view.context, imageView.measuredHeight)?.let {
+                imageView.setImageDrawable(it)
             }
         }
 
@@ -83,5 +82,41 @@ class WebExtensionBrowserMenuItem(
 
         labelView.invalidate()
         badgeView.invalidate()
+    }
+
+    override fun asCandidate(context: Context) = TextMenuCandidate(
+        action.title.orEmpty(),
+        start = runBlocking {
+            val height = context.resources
+                .getDimensionPixelSize(R.dimen.mozac_browser_menu_item_web_extension_icon_height)
+            loadIcon(context, height)?.let { DrawableMenuIcon(it) }
+        },
+        end = TextMenuIcon(
+            action.badgeText.orEmpty(),
+            textStyle = TextStyle(
+                color = action.badgeTextColor
+            )
+        ),
+        containerStyle = ContainerStyle(
+            isVisible = visible(),
+            isEnabled = action.enabled ?: false
+        ),
+        onClick = listener
+    )
+
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun loadIcon(context: Context, height: Int): Drawable? {
+        return try {
+            action.loadIcon?.invoke(height)?.toDrawable(context.resources)
+        } catch (throwable: Throwable) {
+            Log.log(
+                Log.Priority.ERROR,
+                "mozac-webextensions",
+                throwable,
+                "Failed to load browser action icon, falling back to default."
+            )
+
+            getDrawable(context, R.drawable.mozac_ic_web_extension_default_icon)
+        }
     }
 }

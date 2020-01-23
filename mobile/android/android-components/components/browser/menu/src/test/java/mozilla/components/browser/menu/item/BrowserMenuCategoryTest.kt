@@ -9,8 +9,10 @@ import androidx.core.content.ContextCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
-import org.junit.Assert.assertEquals
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.DecorativeTextMenuCandidate
+import mozilla.components.browser.menu2.candidate.TextStyle
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,6 +78,69 @@ class BrowserMenuCategoryTest {
         val textView = view.findViewById<TextView>(R.id.category_text)
 
         assertEquals(View.TEXT_ALIGNMENT_VIEW_END, textView.textAlignment)
+    }
+
+    @Test
+    fun `menu category can be converted to candidate`() {
+        assertEquals(
+            DecorativeTextMenuCandidate(
+                label,
+                textStyle = TextStyle(
+                    textStyle = Typeface.BOLD,
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                )
+            ),
+            BrowserMenuCategory(label).asCandidate(context)
+        )
+
+        assertEquals(
+            DecorativeTextMenuCandidate(
+                label,
+                textStyle = TextStyle(
+                    size = 12f,
+                    textStyle = Typeface.BOLD,
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                )
+            ),
+            BrowserMenuCategory(label, 12f).asCandidate(context)
+        )
+
+        assertEquals(
+            DecorativeTextMenuCandidate(
+                label,
+                textStyle = TextStyle(
+                    color = ContextCompat.getColor(context, android.R.color.holo_red_dark),
+                    textStyle = Typeface.BOLD,
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                )
+            ),
+            BrowserMenuCategory(
+                label,
+                textColorResource = android.R.color.holo_red_dark
+            ).asCandidate(context)
+        )
+
+        assertEquals(
+            DecorativeTextMenuCandidate(
+                label,
+                textStyle = TextStyle(
+                    textStyle = Typeface.ITALIC,
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                )
+            ),
+            BrowserMenuCategory(label, textStyle = Typeface.ITALIC).asCandidate(context)
+        )
+
+        assertEquals(
+            DecorativeTextMenuCandidate(
+                label,
+                textStyle = TextStyle(
+                    textStyle = Typeface.BOLD,
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_END
+                )
+            ),
+            BrowserMenuCategory(label, textAlignment = View.TEXT_ALIGNMENT_VIEW_END).asCandidate(context)
+        )
     }
 
     private fun inflate(browserMenuCategory: BrowserMenuCategory): View {

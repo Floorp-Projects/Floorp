@@ -28,6 +28,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.notNull
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -99,7 +100,7 @@ class WebExtensionBrowserMenuItemTest {
         whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(badgeView)
         whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
         whenever(view.findViewById<View>(R.id.container)).thenReturn(container)
-        whenever(view.context).thenReturn(mock())
+        whenever(view.context).thenReturn(testContext)
 
         val browserAction = Action(
             title = "title",
@@ -137,7 +138,7 @@ class WebExtensionBrowserMenuItemTest {
         whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(badgeView)
         whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
         whenever(view.findViewById<View>(R.id.container)).thenReturn(container)
-        whenever(view.context).thenReturn(mock())
+        whenever(view.context).thenReturn(testContext)
 
         val browserAction = Action(
                 title = "title",
@@ -152,7 +153,7 @@ class WebExtensionBrowserMenuItemTest {
         action.bind(mock(), view)
         testDispatcher.advanceUntilIdle()
 
-        verify(imageView).setImageResource(R.drawable.mozac_ic_web_extension_default_icon)
+        verify(imageView).setImageDrawable(notNull())
     }
 
     @Test

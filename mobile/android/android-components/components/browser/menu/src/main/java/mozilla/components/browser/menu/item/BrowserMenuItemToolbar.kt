@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -11,9 +12,14 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.appcompat.widget.TooltipCompat
+import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.ContainerStyle
+import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.browser.menu2.candidate.RowMenuCandidate
+import mozilla.components.browser.menu2.candidate.SmallMenuCandidate
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
 /**
@@ -58,6 +64,11 @@ class BrowserMenuItemToolbar(
         }
     }
 
+    override fun asCandidate(context: Context) = RowMenuCandidate(
+        items = items.map { it.asCandidate(context) },
+        containerStyle = ContainerStyle(isVisible = visible())
+    )
+
     /**
      * A button to be shown in a toolbar inside the browser menu.
      *
@@ -86,6 +97,17 @@ class BrowserMenuItemToolbar(
         internal open fun invalidate(view: ImageView) {
             view.isEnabled = isEnabled()
         }
+
+        internal open fun asCandidate(context: Context) = SmallMenuCandidate(
+            contentDescription,
+            icon = DrawableMenuIcon(
+                context,
+                resource = imageResource,
+                tint = if (iconTintColorResource == NO_ID) null else getColor(context, iconTintColorResource)
+            ),
+            containerStyle = ContainerStyle(isEnabled = isEnabled()),
+            onClick = listener
+        )
     }
 
     /**
@@ -139,6 +161,25 @@ class BrowserMenuItemToolbar(
             if (isInPrimaryState() != wasInPrimaryState) {
                 bind(view)
             }
+        }
+
+        override fun asCandidate(context: Context): SmallMenuCandidate = if (isInPrimaryState()) {
+            super.asCandidate(context)
+        } else {
+            SmallMenuCandidate(
+                secondaryContentDescription,
+                icon = DrawableMenuIcon(
+                    context,
+                    resource = secondaryImageResource,
+                    tint = if (secondaryImageTintResource == NO_ID) {
+                        null
+                    } else {
+                        getColor(context, secondaryImageTintResource)
+                    }
+                ),
+                containerStyle = ContainerStyle(isEnabled = !disableInSecondaryState),
+                onClick = listener
+            )
         }
     }
 }

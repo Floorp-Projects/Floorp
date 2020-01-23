@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -11,9 +12,14 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.ContainerStyle
+import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.browser.menu2.candidate.TextMenuCandidate
+import mozilla.components.browser.menu2.candidate.TextStyle
 
 internal const val NO_ID = -1
 
@@ -77,4 +83,18 @@ open class BrowserMenuImageText(
             setTintResource(iconTintColorResource)
         }
     }
+
+    override fun asCandidate(context: Context) = TextMenuCandidate(
+        label,
+        start = DrawableMenuIcon(
+            context,
+            resource = imageResource,
+            tint = if (iconTintColorResource == NO_ID) null else getColor(context, iconTintColorResource)
+        ),
+        textStyle = TextStyle(
+            color = if (textColorResource == NO_ID) null else getColor(context, textColorResource)
+        ),
+        containerStyle = ContainerStyle(isVisible = visible()),
+        onClick = listener
+    )
 }

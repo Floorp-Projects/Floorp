@@ -4,7 +4,9 @@
 
 package mozilla.components.browser.menu
 
+import android.content.Context
 import android.view.View
+import mozilla.components.browser.menu2.candidate.MenuCandidate
 
 /**
  * Interface to be implemented by menu items to be shown in the browser menu.
@@ -38,4 +40,9 @@ interface BrowserMenuItem {
      * Called by the browser menu to update the displayed data of this item using the passed view.
      */
     fun invalidate(view: View) = Unit
+
+    /**
+     * Converts the menu item into a menu candidate.
+     */
+    fun asCandidate(context: Context): MenuCandidate? = null
 }
