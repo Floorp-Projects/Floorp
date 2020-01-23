@@ -1,3 +1,14 @@
+commit 3885ee272685941f6dfb6cd941d550b107f033d2
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Wed Jan 22 18:42:56 2020 -0800
+
+    Validate `context` before use in ValidateStreamConsumerGLTextureExternalAttribsNV.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1608235
+    
+    Bug: angleproject:4333
+    Change-Id: I957b6412f7c744e4bbaa7d8084b3c81ee58d45ca
+
 commit 5eaf76b0bfd1f149d7b03393500c6e49a393c167
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Thu Dec 26 20:58:48 2019 -0800
