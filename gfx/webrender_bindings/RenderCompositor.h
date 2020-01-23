@@ -79,6 +79,8 @@ class RenderCompositor {
 
   virtual bool IsContextLost();
 
+  virtual bool SupportAsyncScreenshot() { return true; }
+
   virtual bool ShouldUseNativeCompositor() { return false; }
   virtual uint32_t GetMaxUpdateRects() { return 0; }
 
@@ -95,6 +97,7 @@ class RenderCompositor {
   virtual void DestroyTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) {}
   virtual void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                           wr::DeviceIntRect aClipRect) {}
+  virtual void EnableNativeCompositor(bool aEnable) {}
 
   // Interface for partial present
   virtual bool UsePartialPresent() { return false; }

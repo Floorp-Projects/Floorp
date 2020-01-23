@@ -94,6 +94,19 @@ pub enum CompositorConfig {
     }
 }
 
+impl CompositorConfig {
+    pub fn compositor(&mut self) -> Option<&mut Box<dyn Compositor>> {
+        match self {
+            CompositorConfig::Native { ref mut compositor, .. } => {
+                Some(compositor)
+            }
+            CompositorConfig::Draw { .. } => {
+                None
+            }
+        }
+    }
+}
+
 impl Default for CompositorConfig {
     /// Default compositor config is full present without partial present.
     fn default() -> Self {
@@ -506,6 +519,9 @@ pub trait Compositor {
     /// this once when all surface and visual updates are complete, to signal
     /// that the OS composite transaction should be applied.
     fn end_frame(&mut self);
+
+    /// Enable/disable native compositor usage
+    fn enable_native_compositor(&mut self, enable: bool);
 }
 
 /// Return the total area covered by a set of occluders, accounting for

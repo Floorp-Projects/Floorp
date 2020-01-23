@@ -32,14 +32,14 @@ class RendererScreenshotGrabber final {
    * The captured screenshot will not be mapped until the second call to
    * |MaybeProcessQueue| after this call to |MaybeGrabScreenshot|.
    */
-  void MaybeGrabScreenshot(Renderer* aRenderer,
+  void MaybeGrabScreenshot(RendererOGL* aRendererOGL,
                            const gfx::IntSize& aWindowSize);
 
   /**
    * Process the screenshots pending in the queue if we are profiling and
    * screenshots are enabled.
    */
-  void MaybeProcessQueue(Renderer* aRenderer);
+  void MaybeProcessQueue(RendererOGL* aRenderer);
 
  private:
   /**

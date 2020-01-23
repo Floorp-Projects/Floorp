@@ -608,6 +608,8 @@ pub enum InvalidationReason {
         /// What changed in the primitive that was different
         prim_compare_result: PrimitiveCompareResult,
     },
+    // The compositor type changed
+    CompositorKindChanged,
 }
 
 /// A minimal subset of Tile for debug capturing
@@ -2099,6 +2101,36 @@ impl TileCacheInstance {
             self.old_tiles.values_mut(),
             frame_state.resource_cache,
         );
+
+        // If compositor mode is changed, need to drop all incompatible tiles.
+        match (frame_context.config.compositor_kind, self.native_surface_id) {
+            (CompositorKind::Draw { .. }, Some(_)) => {
+                frame_state.composite_state.destroy_native_tiles(
+                    self.tiles.values_mut(),
+                    frame_state.resource_cache,
+                );
+                for tile in self.tiles.values_mut() {
+                    tile.surface = None;
+                    // Invalidate the entire tile to force a redraw.
+                    tile.invalidate(None, InvalidationReason::CompositorKindChanged);
+                }
+                if let Some(native_surface_id) = self.native_surface_id.take() {
+                    frame_state.resource_cache.destroy_compositor_surface(native_surface_id);
+                }
+            }
+            (CompositorKind::Native { .. }, None) => {
+                // This could hit even when compositor mode is not changed,
+                // then we need to check if there are incompatible tiles.
+                for tile in self.tiles.values_mut() {
+                    if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::TextureCache { .. }, .. }) = tile.surface {
+                        tile.surface = None;
+                        // Invalidate the entire tile to force a redraw.
+                        tile.invalidate(None, InvalidationReason::CompositorKindChanged);
+                    }
+                }
+            }
+            (_, _) => {}
+        }
 
         world_culling_rect
     }
