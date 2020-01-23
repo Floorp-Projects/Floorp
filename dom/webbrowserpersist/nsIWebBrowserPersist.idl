@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsICancelable.idl"
+#include "nsIContentPolicy.idl"
 
 interface nsIURI;
 interface nsIInputStream;
@@ -124,6 +125,7 @@ interface nsIWebBrowserPersist : nsICancelable
    * @param aFile      Target file. This may be a nsIFile object or an
    *                   nsIURI object with a file scheme or a scheme that
    *                   supports uploading (e.g. ftp).
+   * @param aContentPolicyType The type of content we're saving.
    * @param aPrivacyContext A context from which the privacy status of this
    *                   save operation can be determined. Must only be null
    *                   in situations in which no such context is available
@@ -141,6 +143,7 @@ interface nsIWebBrowserPersist : nsICancelable
       in nsIReferrerInfo aReferrerInfo,
       in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
+      in nsContentPolicyType aContentPolicyType,
       in nsILoadContext aPrivacyContext);
 
   /**
@@ -154,6 +157,7 @@ interface nsIWebBrowserPersist : nsICancelable
       in nsIReferrerInfo aReferrerInfo,
       in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
+      in nsContentPolicyType aContentPolicyType,
       in boolean aIsPrivate);
 
   /**

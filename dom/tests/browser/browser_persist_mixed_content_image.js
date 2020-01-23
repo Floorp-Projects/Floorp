@@ -75,15 +75,15 @@ add_task(async function test_image_download() {
         MockFilePicker.filterIndex = 0; // just save the file
         info("done showCallback");
       };
-      let downloadFinishedPromise = new Promise(async resolve => {
-        let dls = await Downloads.getList(Downloads.PUBLIC);
-        dls.addView({
+      let publicDownloads = await Downloads.getList(Downloads.PUBLIC);
+      let downloadFinishedPromise = new Promise(resolve => {
+        publicDownloads.addView({
           onDownloadChanged(download) {
             info("Download changed!");
             if (download.succeeded || download.error) {
               info("Download succeeded or errored");
-              dls.removeView(this);
-              dls.removeFinished();
+              publicDownloads.removeView(this);
+              publicDownloads.removeFinished();
               resolve(download);
             }
           },

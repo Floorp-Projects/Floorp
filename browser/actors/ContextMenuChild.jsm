@@ -223,6 +223,8 @@ class ContextMenuChild extends JSWindowActorChild {
         let ctxDraw = canvas.getContext("2d");
         ctxDraw.drawImage(video, 0, 0);
 
+        // Note: if changing the content type, don't forget to update
+        // consumers that also hardcode this content type.
         return Promise.resolve(canvas.toDataURL("image/jpeg", ""));
       }
 
