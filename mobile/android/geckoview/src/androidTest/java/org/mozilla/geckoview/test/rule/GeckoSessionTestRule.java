@@ -1322,6 +1322,13 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     /**
+     * This simply sends an empty message to the web content and waits for a reply.
+     */
+    public void waitForRoundTrip(final GeckoSession session) {
+        waitForJS(session, "true");
+    }
+
+    /**
      * Wait until a page load has finished on any session. A session must have started a
      * page load since the last wait, or this method will wait indefinitely.
      */
