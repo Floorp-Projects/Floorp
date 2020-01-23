@@ -19,14 +19,6 @@ this.main = (function() {
     return false;
   };
 
-  let hasSeenOnboarding = browser.storage.local.get(["hasSeenOnboarding"]).then((result) => {
-    const onboarded = !!result.hasSeenOnboarding;
-    hasSeenOnboarding = Promise.resolve(onboarded);
-    return hasSeenOnboarding;
-  }).catch((error) => {
-    log.error("Error getting hasSeenOnboarding:", error);
-  });
-
   exports.setBackend = function(newBackend) {
     backend = newBackend;
     backend = backend.replace(/\/*$/, "");
@@ -39,10 +31,6 @@ this.main = (function() {
   communication.register("getBackend", () => {
     return backend;
   });
-
-  function getOnboardingUrl() {
-    return backend + "/#hello";
-  }
 
   for (const permission of manifest.permissions) {
     if (/^https?:\/\//.test(permission)) {
@@ -58,7 +46,7 @@ this.main = (function() {
 
   function toggleSelector(tab) {
     return analytics.refreshTelemetryPref()
-      .then(() => selectorLoader.toggle(tab.id, hasSeenOnboarding))
+      .then(() => selectorLoader.toggle(tab.id))
       .then(active => {
         setIconActive(active, tab.id);
         return active;
@@ -72,18 +60,6 @@ this.main = (function() {
       });
   }
 
-  function startSelectionWithOnboarding(tab) {
-    return analytics.refreshTelemetryPref().then(() => {
-      return selectorLoader.testIfLoaded(tab.id);
-    }).then((isLoaded) => {
-      if (!isLoaded) {
-        sendEvent("start-shot", "site-request", {incognito: tab.incognito});
-        setIconActive(true, tab.id);
-        selectorLoader.toggle(tab.id, Promise.resolve(false));
-      }
-    });
-  }
-
   function shouldOpenMyShots(url) {
     return /^about:(?:newtab|blank|home)/i.test(url) || /^resource:\/\/activity-streams\//i.test(url);
   }
@@ -93,10 +69,6 @@ this.main = (function() {
   exports.onClicked = catcher.watchFunction((tab) => {
     _startShotFlow(tab, "toolbar-button");
   });
-
-  function forceOnboarding() {
-    return browser.tabs.create({url: getOnboardingUrl()});
-  }
 
   exports.onClickedContextMenu = catcher.watchFunction((info, tab) => {
     _startShotFlow(tab, "context-menu");
@@ -116,39 +88,30 @@ this.main = (function() {
   };
 
   const _startShotFlow = (tab, inputType) => {
-    catcher.watchPromise(hasSeenOnboarding.then(onboarded => {
-      if (!tab) {
-        // Not in a page/tab context, ignore
-        return;
-      }
-      if (!urlEnabled(tab.url)) {
-        if (!onboarded) {
-          // Updated generic "selection-button" event data to inputType
-          sendEvent("goto-onboarding", inputType, {incognito: tab.incognito});
-          forceOnboarding();
-          return;
-        }
-        senderror.showError({
-          popupMessage: "UNSHOOTABLE_PAGE",
-        });
-        return;
-      } else if (shouldOpenMyShots(tab.url)) {
-        _openMyShots(tab, inputType);
-        return;
-      }
-      // No need to catch() here because of watchPromise().
-      // eslint-disable-next-line promise/catch-or-return
-      toggleSelector(tab)
-        .then(active => {
-          let event = "start-shot";
-          if (inputType !== "context-menu") {
-            event = active ? "start-shot" : "cancel-shot";
-          }
-          sendEvent(event, inputType, {incognito: tab.incognito});
-        }).catch((error) => {
-        throw error;
+    if (!tab) {
+      // Not in a page/tab context, ignore
+      return;
+    }
+    if (!urlEnabled(tab.url)) {
+      senderror.showError({
+        popupMessage: "UNSHOOTABLE_PAGE",
       });
-    }));
+      return;
+    } else if (shouldOpenMyShots(tab.url)) {
+      _openMyShots(tab, inputType);
+      return;
+    }
+
+    catcher.watchPromise(toggleSelector(tab)
+      .then(active => {
+        let event = "start-shot";
+        if (inputType !== "context-menu") {
+          event = active ? "start-shot" : "cancel-shot";
+        }
+        sendEvent(event, inputType, {incognito: tab.incognito});
+      }).catch((error) => {
+        throw error;
+      }));
   };
 
   function urlEnabled(url) {
@@ -298,11 +261,6 @@ this.main = (function() {
 
   communication.register("closeSelector", (sender) => {
     setIconActive(false, sender.tab.id);
-  });
-
-  communication.register("hasSeenOnboarding", () => {
-    hasSeenOnboarding = Promise.resolve(true);
-    catcher.watchPromise(browser.storage.local.set({hasSeenOnboarding: true}));
   });
 
   communication.register("abortStartShot", () => {
