@@ -73,7 +73,8 @@ class nsContentAreaDragDropDataProvider : public nsIFlavorDataProvider {
 
   nsresult SaveURIToFile(nsIURI* inSourceURI,
                          nsIPrincipal* inTriggeringPrincipal,
-                         nsIFile* inDestFile, bool isPrivate);
+                         nsIFile* inDestFile, nsContentPolicyType inPolicyType,
+                         bool isPrivate);
 };
 
 #endif /* nsContentAreaDragDrop_h__ */

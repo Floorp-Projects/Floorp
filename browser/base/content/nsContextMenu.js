@@ -1285,7 +1285,7 @@ class nsContextMenu {
         false, // don't skip prompt for where to save
         referrerInfo, // referrer info
         null, // document
-        null, // content type
+        "image/jpeg", // content type - keep in sync with ContextMenuChild!
         null, // content disposition
         isPrivate,
         this.principal
@@ -1593,7 +1593,7 @@ class nsContextMenu {
           false,
           referrerInfo,
           null,
-          null,
+          "image/png", // _canvasToBlobURL uses image/png by default.
           null,
           isPrivate,
           document.nodePrincipal /* system, because blob: */
