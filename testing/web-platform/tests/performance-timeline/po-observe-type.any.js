@@ -3,7 +3,7 @@
 test(() => {
   const obs = new PerformanceObserver(() =>{});
   obs.observe({entryTypes: ["mark"]});
-  assert_throws('InvalidModificationError', function () {
+  assert_throws_dom('InvalidModificationError', function () {
     obs.observe({type: "measure"});
   });
 }, "Calling observe() with entryTypes and then type should throw an InvalidModificationError");
@@ -11,7 +11,7 @@ test(() => {
 test(() => {
   const obs = new PerformanceObserver(() =>{});
   obs.observe({type: "mark"});
-  assert_throws('InvalidModificationError', function () {
+  assert_throws_dom('InvalidModificationError', function () {
     obs.observe({entryTypes: ["measure"]});
   });
 }, "Calling observe() with type and then entryTypes should throw an InvalidModificationError");

@@ -139,7 +139,7 @@
              'unset',
             ].forEach(function(string) {
                 test(function() {
-                    assert_throws('SyntaxError', function() { new self[constr](string); });
+                    assert_throws_dom('SyntaxError', function() { new self[constr](string); });
                 }, `new ${constr}(${format_value(string)})`);
             });
 
