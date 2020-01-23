@@ -12,6 +12,7 @@
 
 #include "prlock.h"
 #include "mozilla/RefPtr.h"
+#include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIUUIDGenerator.h"

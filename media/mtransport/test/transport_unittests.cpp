@@ -228,7 +228,7 @@ class DtlsRecordParser {
     buffer_.Copy(data, len);
   }
 
-  bool NextRecord(uint8_t* ct, UniquePtr<MediaPacket>* buffer) {
+  bool NextRecord(uint8_t* ct, nsAutoPtr<MediaPacket>* buffer) {
     if (!remaining()) return false;
 
     CHECK_LENGTH(13U);
@@ -240,12 +240,12 @@ class DtlsRecordParser {
     consume(2);
 
     CHECK_LENGTH(length);
-    auto db = MakeUnique<MediaPacket>();
+    MediaPacket* db = new MediaPacket;
     db->Copy(ptr(), length);
     consume(length);
 
     *ct = *ctp;
-    *buffer = std::move(db);
+    *buffer = db;
 
     return true;
   }
@@ -268,7 +268,7 @@ class DtlsRecordInspector : public Inspector {
     DtlsRecordParser parser(data, len);
 
     uint8_t ct;
-    UniquePtr<MediaPacket> buf;
+    nsAutoPtr<MediaPacket> buf;
     while (parser.NextRecord(&ct, &buf)) {
       OnRecord(layer, ct, buf->data(), buf->len());
     }

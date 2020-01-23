@@ -917,7 +917,7 @@ void GeckoMediaPluginServiceParent::RemoveOnGMPThread(
 }
 
 // May remove when Bug 1043671 is fixed
-static void Dummy(RefPtr<GMPParent> aOnDeathsDoor) {
+static void Dummy(RefPtr<GMPParent>& aOnDeathsDoor) {
   // exists solely to do nothing and let the Runnable kill the GMPParent
   // when done.
 }

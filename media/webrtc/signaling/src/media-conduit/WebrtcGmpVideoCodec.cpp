@@ -322,8 +322,7 @@ void WebrtcGmpVideoEncoder::RegetEncoderForResolutionChange(
 }
 
 void WebrtcGmpVideoEncoder::Encode_g(
-    const RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
-    webrtc::VideoFrame aInputImage,
+    RefPtr<WebrtcGmpVideoEncoder>& aEncoder, webrtc::VideoFrame aInputImage,
     std::vector<webrtc::FrameType> aFrameTypes) {
   if (!aEncoder->mGMP) {
     // destroyed via Terminate(), failed to init, or just not initted yet
@@ -421,7 +420,7 @@ int32_t WebrtcGmpVideoEncoder::RegisterEncodeCompleteCallback(
 
 /* static */
 void WebrtcGmpVideoEncoder::ReleaseGmp_g(
-    const RefPtr<WebrtcGmpVideoEncoder>& aEncoder) {
+    RefPtr<WebrtcGmpVideoEncoder>& aEncoder) {
   aEncoder->Close_g();
 }
 
@@ -744,7 +743,8 @@ int32_t WebrtcGmpVideoDecoder::GmpInitDone(GMPVideoDecoderProxy* aGMP,
     nsTArray<UniquePtr<GMPDecodeData>> temp;
     temp.SwapElements(mQueuedFrames);
     for (auto& queued : temp) {
-      Decode_g(RefPtr<WebrtcGmpVideoDecoder>(this), std::move(queued));
+      Decode_g(RefPtr<WebrtcGmpVideoDecoder>(this),
+               nsAutoPtr<GMPDecodeData>(queued.release()));
     }
   }
 
@@ -792,13 +792,13 @@ int32_t WebrtcGmpVideoDecoder::Decode(
   // know to request a PLI and the video stream will remain frozen unless an IDR
   // happens to arrive for other reasons. Bug 1492852 tracks implementing a
   // proper solution.
-  auto decodeData =
-      MakeUnique<GMPDecodeData>(aInputImage, aMissingFrames, aRenderTimeMs);
+  nsAutoPtr<GMPDecodeData> decodeData(
+      new GMPDecodeData(aInputImage, aMissingFrames, aRenderTimeMs));
 
-  mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoDecoder::Decode_g,
-                                      RefPtr<WebrtcGmpVideoDecoder>(this),
-                                      std::move(decodeData)),
-                       NS_DISPATCH_NORMAL);
+  mGMPThread->Dispatch(
+      WrapRunnableNM(&WebrtcGmpVideoDecoder::Decode_g,
+                     RefPtr<WebrtcGmpVideoDecoder>(this), decodeData),
+      NS_DISPATCH_NORMAL);
 
   if (mDecoderStatus != GMPNoErr) {
     GMP_LOG_ERROR("%s: Decoder status is bad (%u)!", __PRETTY_FUNCTION__,
@@ -810,12 +810,13 @@ int32_t WebrtcGmpVideoDecoder::Decode(
 }
 
 /* static */
+// Using nsAutoPtr because WrapRunnable doesn't support move semantics
 void WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
-                                     UniquePtr<GMPDecodeData>&& aDecodeData) {
+                                     nsAutoPtr<GMPDecodeData> aDecodeData) {
   if (!aThis->mGMP) {
     if (aThis->mInitting) {
       // InitDone hasn't been called yet (race)
-      aThis->mQueuedFrames.AppendElement(std::move(aDecodeData));
+      aThis->mQueuedFrames.AppendElement(aDecodeData.forget());
       return;
     }
     // destroyed via Terminate(), failed to init, or just not initted yet
@@ -908,7 +909,7 @@ int32_t WebrtcGmpVideoDecoder::RegisterDecodeCompleteCallback(
 
 /* static */
 void WebrtcGmpVideoDecoder::ReleaseGmp_g(
-    const RefPtr<WebrtcGmpVideoDecoder>& aDecoder) {
+    RefPtr<WebrtcGmpVideoDecoder>& aDecoder) {
   aDecoder->Close_g();
 }
 
