@@ -12,12 +12,13 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jsfriendapi.h"  // CheckRecursionLimit
+#include "jsfriendapi.h"  // CheckRecursionLimit, GetBuiltinClass
 
 #include "builtin/Array.h"    // ArrayToSource
 #include "builtin/Boolean.h"  // BooleanToString
 #include "builtin/Object.h"   // ObjectToSource
 #include "gc/Allocator.h"     // CanGC
+#include "js/Class.h"         // ESClass
 #include "js/Symbol.h"        // SymbolCode, JS::WellKnownSymbolLimit
 #include "js/TypeDecls.h"  // Rooted{Function, Object, String, Value}, HandleValue, Latin1Char
 #include "js/Utility.h"         // UniqueChars
@@ -27,9 +28,8 @@
 #include "vm/ErrorObject.h"     // ErrorObject, ErrorToSource
 #include "vm/Interpreter.h"     // Call
 #include "vm/JSContext.h"       // JSContext
-#include "vm/JSFunction.h"      // JSFunction, FunctionToString
+#include "vm/JSFunction.h"      // JSFunction, fun_toStringHelper
 #include "vm/Printer.h"         // QuoteString
-#include "vm/RegExpObject.h"    // RegExpObject
 #include "vm/SelfHosting.h"     // CallSelfHostedFunction
 #include "vm/Stack.h"           // FixedInvokeArgs
 #include "vm/StringType.h"      // NewStringCopy{N,Z}, ToString
@@ -143,30 +143,35 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
         return ToString<CanGC>(cx, v);
       }
 
-      if (obj->is<JSFunction>()) {
-        RootedFunction fun(cx, &obj->as<JSFunction>());
-        return FunctionToString(cx, fun, true);
+      ESClass cls;
+      if (!GetBuiltinClass(cx, obj, &cls)) {
+        return nullptr;
       }
 
-      if (obj->is<ArrayObject>()) {
-        return ArrayToSource(cx, obj);
-      }
+      // All ToSource functions must be able to handle wrapped objects!
+      switch (cls) {
+        case ESClass::Function:
+          return fun_toStringHelper(cx, obj, true);
 
-      if (obj->is<ErrorObject>()) {
-        return ErrorToSource(cx, obj);
-      }
+        case ESClass::Array:
+          return ArrayToSource(cx, obj);
 
-      if (obj->is<RegExpObject>()) {
-        FixedInvokeArgs<0> args(cx);
-        RootedValue rval(cx);
-        if (!CallSelfHostedFunction(cx, cx->names().RegExpToString, v, args,
-                                    &rval)) {
-          return nullptr;
+        case ESClass::Error:
+          return ErrorToSource(cx, obj);
+
+        case ESClass::RegExp: {
+          FixedInvokeArgs<0> args(cx);
+          RootedValue rval(cx);
+          if (!CallSelfHostedFunction(cx, cx->names().RegExpToString, v, args,
+                                      &rval)) {
+            return nullptr;
+          }
+          return ToString<CanGC>(cx, rval);
         }
-        return ToString<CanGC>(cx, rval);
-      }
 
-      return ObjectToSource(cx, obj);
+        default:
+          return ObjectToSource(cx, obj);
+      }
     }
 
     case JS::ValueType::PrivateGCThing:
