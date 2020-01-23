@@ -18,7 +18,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const EXT_SEARCH_PREFIX = "resource://search-extensions/";
-const ENGINE_CONFIG_URL = `${EXT_SEARCH_PREFIX}engines.json`;
+const DEFAULT_CONFIG_URL = `${EXT_SEARCH_PREFIX}engines.json`;
+const ENGINE_CONFIG_PREF = "search.config.url";
+
 const USER_LOCALE = "$USER_LOCALE";
 
 function log(str) {
@@ -34,8 +36,9 @@ class SearchEngineSelector {
   /**
    * @param {string} url - Location of the configuration.
    */
-  async init(url = ENGINE_CONFIG_URL) {
-    this.configuration = await this.getEngineConfiguration(url);
+  async init(url = DEFAULT_CONFIG_URL) {
+    let configUrl = Services.prefs.getStringPref(ENGINE_CONFIG_PREF, url);
+    this.configuration = await this.getEngineConfiguration(configUrl);
   }
 
   /**
@@ -160,7 +163,10 @@ class SearchEngineSelector {
     }
 
     if (SearchUtils.loggingEnabled) {
-      log("fetchEngineConfiguration: " + JSON.stringify(result));
+      log(
+        "fetchEngineConfiguration: " +
+          result.engines.map(e => e.webExtension.id)
+      );
     }
     return result;
   }

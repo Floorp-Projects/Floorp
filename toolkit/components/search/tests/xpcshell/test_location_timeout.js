@@ -79,6 +79,8 @@ add_task(async function test_location_timeout() {
   // everything dependent should also be updated.
   equal(Services.prefs.getCharPref("browser.search.region"), "AU");
 
+  await SearchTestUtils.promiseSearchNotification("engines-reloaded");
+
   await (() => {
     return new Promise(resolve => {
       server.stop(resolve);
