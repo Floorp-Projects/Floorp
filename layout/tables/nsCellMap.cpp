@@ -206,21 +206,28 @@ nsCellMap* nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
     return map;
   }
 
-  // if aRowGroup is a repeated header or footer find the header or footer it
-  // was repeated from
+  // If aRowGroup is a repeated header or footer find the header or footer it
+  // was repeated from.
   if (aRowGroup->IsRepeatable()) {
-    nsTableFrame* fifTable =
-        static_cast<nsTableFrame*>(mTableFrame.FirstInFlow());
-
-    const nsStyleDisplay* display = aRowGroup->StyleDisplay();
-    nsTableRowGroupFrame* rgOrig =
-        (StyleDisplay::TableHeaderGroup == display->mDisplay)
-            ? fifTable->GetTHead()
-            : fifTable->GetTFoot();
-    // find the row group cell map using the original header/footer
-    if (rgOrig && rgOrig != aRowGroup) {
+    auto findOtherRowGroupOfType =
+        [aRowGroup](nsTableFrame* aTable) -> nsTableRowGroupFrame* {
+      const auto display = aRowGroup->StyleDisplay()->mDisplay;
+      auto* table = aTable->FirstContinuation();
+      for (; table; table = table->GetNextContinuation()) {
+        for (auto* child : table->PrincipalChildList()) {
+          if (child->StyleDisplay()->mDisplay == display &&
+              child != aRowGroup) {
+            return static_cast<nsTableRowGroupFrame*>(child);
+          }
+        }
+      }
+      return nullptr;
+    };
+    if (auto* rgOrig = findOtherRowGroupOfType(&mTableFrame)) {
       return GetMapFor(rgOrig, aStartHint);
     }
+    MOZ_ASSERT_UNREACHABLE("A repeated header/footer should always have an "
+                           "original header/footer it was repeated from");
   }
 
   return nullptr;
