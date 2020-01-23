@@ -7,6 +7,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from six import string_types
+
 
 def match_utc(params, sched):
     """Return True if params['time'] matches the given schedule.
@@ -28,8 +30,8 @@ def match_utc(params, sched):
     if sched.get('day') is not None and sched.get('day') != params['time'].day:
         return False
 
-    if isinstance(sched.get('weekday'), str) or isinstance(sched.get('weekday'), unicode):
-        if sched.get('weekday', str()).lower() != params['time'].strftime('%A').lower():
+    if isinstance(sched.get('weekday'), string_types):
+        if sched['weekday'].lower() != params['time'].strftime('%A').lower():
             return False
     elif sched.get('weekday') is not None:
         # don't accept other values.

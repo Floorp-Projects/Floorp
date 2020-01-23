@@ -56,7 +56,7 @@ def add_new_jobs_action(parameters, graph_config, input, task_group_id, task_id)
             raise Exception('{} was not found in the task-graph'.format(elem))
 
     times = input.get('times', 1)
-    for i in xrange(times):
+    for i in range(times):
         create_tasks(
             graph_config,
             to_run,
