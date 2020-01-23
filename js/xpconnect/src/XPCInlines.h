@@ -40,14 +40,6 @@ inline XPCCallContext* XPCCallContext::GetPrevCallContext() const {
   return mPrevCallContext;
 }
 
-inline nsISupports* XPCCallContext::GetIdentityObject() const {
-  CHECK_STATE(HAVE_OBJECT);
-  if (mWrapper) {
-    return mWrapper->GetIdentityObject();
-  }
-  return nullptr;
-}
-
 inline XPCWrappedNative* XPCCallContext::GetWrapper() const {
   if (mState == INIT_FAILED) {
     return nullptr;
@@ -55,11 +47,6 @@ inline XPCWrappedNative* XPCCallContext::GetWrapper() const {
 
   CHECK_STATE(HAVE_OBJECT);
   return mWrapper;
-}
-
-inline XPCWrappedNativeProto* XPCCallContext::GetProto() const {
-  CHECK_STATE(HAVE_OBJECT);
-  return mWrapper ? mWrapper->GetProto() : nullptr;
 }
 
 inline bool XPCCallContext::CanGetTearOff() const {
@@ -75,8 +62,6 @@ inline nsIXPCScriptable* XPCCallContext::GetScriptable() const {
   CHECK_STATE(HAVE_OBJECT);
   return mScriptable;
 }
-
-inline bool XPCCallContext::CanGetSet() const { return mState >= HAVE_NAME; }
 
 inline XPCNativeSet* XPCCallContext::GetSet() const {
   CHECK_STATE(HAVE_NAME);
@@ -97,11 +82,6 @@ inline bool XPCCallContext::HasInterfaceAndMember() const {
   return mState >= HAVE_NAME && mInterface && mMember;
 }
 
-inline jsid XPCCallContext::GetName() const {
-  CHECK_STATE(HAVE_NAME);
-  return mName;
-}
-
 inline bool XPCCallContext::GetStaticMemberIsLocal() const {
   CHECK_STATE(HAVE_NAME);
   return mStaticMemberIsLocal;
@@ -115,11 +95,6 @@ inline unsigned XPCCallContext::GetArgc() const {
 inline JS::Value* XPCCallContext::GetArgv() const {
   CHECK_STATE(READY_TO_CALL);
   return mArgv;
-}
-
-inline JS::Value* XPCCallContext::GetRetVal() const {
-  CHECK_STATE(READY_TO_CALL);
-  return mRetVal;
 }
 
 inline void XPCCallContext::SetRetVal(const JS::Value& val) {
@@ -153,11 +128,6 @@ inline XPCWrappedNative* XPCCallContext::SetResolvingWrapper(
 inline uint16_t XPCCallContext::GetMethodIndex() const {
   CHECK_STATE(HAVE_OBJECT);
   return mMethodIndex;
-}
-
-inline void XPCCallContext::SetMethodIndex(uint16_t index) {
-  CHECK_STATE(HAVE_OBJECT);
-  mMethodIndex = index;
 }
 
 /***************************************************************************/
