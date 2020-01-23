@@ -7,7 +7,7 @@ import logging
 import os
 import copy
 import attr
-from six import text_type
+from six import text_type, ensure_text
 
 from . import filter_tasks
 from .graph import Graph
@@ -115,7 +115,7 @@ class TaskGraphGenerator(object):
         """
         if root_dir is None:
             root_dir = 'taskcluster/ci'
-        self.root_dir = root_dir
+        self.root_dir = ensure_text(root_dir)
         self._parameters = parameters
         self._target_kind = target_kind
 
