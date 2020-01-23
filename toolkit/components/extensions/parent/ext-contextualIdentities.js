@@ -23,7 +23,6 @@ var { ExtensionError } = ExtensionUtils;
 
 const CONTAINER_PREF_INSTALL_DEFAULTS = {
   "privacy.userContext.enabled": true,
-  "privacy.userContext.longPressBehavior": 2,
   "privacy.userContext.ui.enabled": true,
   "privacy.usercontext.about_newtab_segregation.enabled": true,
   "privacy.userContext.extension": undefined,

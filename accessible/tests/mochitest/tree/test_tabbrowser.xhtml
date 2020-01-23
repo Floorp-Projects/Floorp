@@ -93,7 +93,10 @@
         } else {
           SimpleTest.ok(true, "Testing Firefox tabbrowser UI.");
           let newTabChildren = [];
-          if (SpecialPowers.getBoolPref("privacy.userContext.enabled")) {
+          if (SpecialPowers.getBoolPref("privacy.userContext.enabled") &&
+              SpecialPowers.getBoolPref(
+                "privacy.userContext.newTabContainerOnLeftClick.enabled"
+              )) {
             newTabChildren = [
               {
                 role: ROLE_MENUPOPUP,

@@ -7,51 +7,46 @@ function findPopup(browser = gBrowser) {
   return browser.tabContainer.querySelector(".new-tab-popup");
 }
 
-add_task(async function test_menu_with_timeout() {
+function findContextPopup() {
+  return document.querySelector("#new-tab-button-popup");
+}
+
+add_task(async function test_containers_no_left_click() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.userContext.enabled", true],
-      ["privacy.userContext.longPressBehavior", 2],
+      ["privacy.userContext.newTabContainerOnLeftClick.enabled", false],
     ],
   });
 
   let newTabButton = gBrowser.tabContainer.newTabButton;
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");
-
-  await BrowserTestUtils.waitForCondition(
-    () => !!findPopup(),
-    "Wait for popup to exist"
-  );
-
   let popup = findPopup();
+  ok(!popup, "new tab should not have a popup");
 
-  for (let i = 1; i <= 4; i++) {
-    let popupShownPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(newTabButton, { type: "mousedown" });
+  // Test context menu
+  let contextMenu = findContextPopup();
+  is(contextMenu.state, "closed", "Context menu is initally closed.");
 
-    await popupShownPromise;
-    let contextIdItem = popup.querySelector(
-      `menuitem[data-usercontextid="${i}"]`
-    );
+  let popupshown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
 
-    ok(contextIdItem, `User context id ${i} exists`);
+  let target = gBrowser.tabContainer.newTabButton;
+  EventUtils.synthesizeMouseAtCenter(target, { type: "contextmenu" });
+  await popupshown;
 
-    let waitForTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-    EventUtils.synthesizeMouseAtCenter(contextIdItem, {});
-
-    let tab = await waitForTabPromise;
-
-    is(tab.getAttribute("usercontextid"), i, `New tab has UCI equal ${i}`);
-    BrowserTestUtils.removeTab(tab);
-  }
+  is(contextMenu.state, "open", "Context menu is open.");
+  let contextIdItems = contextMenu.querySelectorAll("menuitem");
+  // 4 + default + manage containers
+  is(contextIdItems.length, 6, "Has 6 menu items");
+  contextMenu.hidePopup();
 });
 
-add_task(async function test_menu_without_timeout() {
+add_task(async function test_containers_with_left_click() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.userContext.enabled", true],
-      ["privacy.userContext.longPressBehavior", 1],
+      ["privacy.userContext.newTabContainerOnLeftClick.enabled", true],
     ],
   });
 
@@ -102,13 +97,29 @@ add_task(async function test_menu_without_timeout() {
     }
     BrowserTestUtils.removeTab(tab);
   }
+
+  // Test context menu
+  let contextMenu = findContextPopup();
+  is(contextMenu.state, "closed", "Context menu is initally closed.");
+
+  let popupshown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+
+  let target = gBrowser.tabContainer.newTabButton;
+  EventUtils.synthesizeMouseAtCenter(target, { type: "contextmenu" });
+  await popupshown;
+
+  is(contextMenu.state, "open", "Context menu is open.");
+  contextIdItems = contextMenu.querySelectorAll("menuitem");
+  // 4 + default + manage containers
+  is(contextIdItems.length, 6, "Has 6 menu items");
+  contextMenu.hidePopup();
 });
 
-add_task(async function test_no_menu() {
+add_task(async function test_no_containers_no_left_click() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.userContext.enabled", true],
-      ["privacy.userContext.longPressBehavior", 0],
+      ["privacy.userContext.enabled", false],
+      ["privacy.userContext.newTabContainerOnLeftClick.enabled", false],
     ],
   });
 
@@ -117,6 +128,12 @@ add_task(async function test_no_menu() {
   ok(!newTabButton.hidden, "New tab button is visible");
   let popup = findPopup();
   ok(!popup, "new tab should not have a popup");
+
+  // Test context menu
+  let contextMenu = findContextPopup();
+  let target = gBrowser.tabContainer.newTabButton;
+  EventUtils.synthesizeMouseAtCenter(target, { type: "contextmenu" });
+  is(contextMenu.state, "closed", "Context menu does not open.");
 });
 
 add_task(async function test_private_mode() {
