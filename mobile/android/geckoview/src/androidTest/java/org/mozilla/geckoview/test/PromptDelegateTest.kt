@@ -20,24 +20,6 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class PromptDelegateTest : BaseSessionTest() {
-    @Ignore("disable test for frequently failing Bug 1535423")
-    @Test fun popupTest() {
-        // Ensure popup blocking is enabled for this test.
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to true))
-        sessionRule.session.loadTestPath(POPUP_HTML_PATH)
-
-        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
-            @AssertCalled(count = 1)
-            override fun onPopupPrompt(session: GeckoSession, prompt: PromptDelegate.PopupPrompt)
-                    : GeckoResult<PromptDelegate.PromptResponse>? {
-                assertThat("Session should not be null", session, notNullValue())
-                assertThat("URL should not be null", prompt.targetUri, notNullValue())
-                assertThat("URL should match", prompt.targetUri, endsWith(HELLO_HTML_PATH))
-                return null
-            }
-        })
-    }
-
     @Test fun popupTestAllow() {
         // Ensure popup blocking is enabled for this test.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to true))
@@ -60,6 +42,13 @@ class PromptDelegateTest : BaseSessionTest() {
                 assertThat("URL should match", request.uri, endsWith(forEachCall(POPUP_HTML_PATH, HELLO_HTML_PATH)))
                 return null
             }
+
+            @AssertCalled(count = 1)
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                assertThat("URL should not be null", uri, notNullValue())
+                assertThat("URL should match", uri, endsWith(HELLO_HTML_PATH))
+                return null
+            }
         })
 
         sessionRule.session.loadTestPath(POPUP_HTML_PATH)
@@ -70,7 +59,7 @@ class PromptDelegateTest : BaseSessionTest() {
         // Ensure popup blocking is enabled for this test.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to true))
 
-        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate, Callbacks.NavigationDelegate {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate, Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onPopupPrompt(session: GeckoSession, prompt: PromptDelegate.PopupPrompt)
                     : GeckoResult<PromptDelegate.PromptResponse>? {
@@ -96,7 +85,8 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         sessionRule.session.loadTestPath(POPUP_HTML_PATH)
-        sessionRule.session.waitForPageStop()
+        sessionRule.waitForPageStop()
+        sessionRule.session.waitForRoundTrip()
     }
 
     @Ignore // TODO: Reenable when 1501574 is fixed.
