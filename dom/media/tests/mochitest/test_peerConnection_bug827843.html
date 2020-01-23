@@ -16,6 +16,15 @@ var steps = [
     var description;
     var exception = null;
 
+    // handle the event which the close() triggers
+    var localClosed = new Promise(resolve => {
+      test.pcLocal.onsignalingstatechange = e => {
+        is(e.target.signalingState, "closed",
+           "Received expected onsignalingstatechange event on 'closed'");
+        resolve();
+      }
+    });
+
     test.pcLocal.close();
 
     try { description = test.pcLocal.localDescription; } catch (e) { exception = e; }
@@ -26,6 +35,15 @@ var steps = [
     ok(exception, "Attempt to access remoteDescription of pcLocal after close throws exception");
     exception = null;
 
+    // handle the event which the close() triggers
+    var remoteClosed = new Promise(resolve => {
+      test.pcRemote.onsignalingstatechange = e => {
+        is(e.target.signalingState, "closed",
+           "Received expected onsignalingstatechange event on 'closed'");
+        resolve();
+      }
+    });
+
     test.pcRemote.close();
 
     try  { description = test.pcRemote.localDescription; } catch (e) { exception = e; }
@@ -34,6 +52,8 @@ var steps = [
 
     try  { description = test.pcRemote.remoteDescription; } catch (e) { exception = e; }
     ok(exception, "Attempt to access remoteDescription of pcRemote after close throws exception");
+
+    return Promise.all([localClosed, remoteClosed]);
   }
 ];
 

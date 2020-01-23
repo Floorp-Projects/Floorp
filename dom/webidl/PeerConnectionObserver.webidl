@@ -26,8 +26,10 @@ interface PeerConnectionObserver
   void onCreateOfferError(PCErrorData error);
   void onCreateAnswerSuccess(DOMString answer);
   void onCreateAnswerError(PCErrorData error);
-  void onSetDescriptionSuccess();
-  void onSetDescriptionError(PCErrorData error);
+  void onSetLocalDescriptionSuccess();
+  void onSetRemoteDescriptionSuccess();
+  void onSetLocalDescriptionError(PCErrorData error);
+  void onSetRemoteDescriptionError(PCErrorData error);
   void onAddIceCandidateSuccess();
   void onAddIceCandidateError(PCErrorData error);
   void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate, DOMString ufrag);
