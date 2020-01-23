@@ -685,6 +685,7 @@ async function doFillGeneratedPasswordContextMenuItem(browser, passwordInput) {
   await SimpleTest.promiseFocus(browser);
   await openPasswordContextMenu(browser, passwordInput);
 
+  let loginPopup = document.getElementById("fill-login-popup");
   let generatedPasswordItem = document.getElementById(
     "fill-login-generated-password"
   );
@@ -692,6 +693,8 @@ async function doFillGeneratedPasswordContextMenuItem(browser, passwordInput) {
     "generated-password-separator"
   );
 
+  // Check the content of the password manager popup
+  ok(BrowserTestUtils.is_visible(loginPopup), "Popup is visible");
   ok(
     BrowserTestUtils.is_visible(generatedPasswordItem),
     "generated password item is visible"
