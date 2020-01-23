@@ -198,10 +198,13 @@ Common questions/considerations
   improvement should be observed.
 
 * My build output is incomprehensible due to a flood of warnings: clang will
-  treat some warnings differently when its fed preprocessed code in a separate
-  invocation (preprocessing occurs locally with sccache-dist). See the
-  following note about disabling problematic warnings:
-  https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Using_Icecream#I_get_build_failures_due_to_-Werror_when_building_remotely_but_not_when_building_locally
+  treat some warnings differently when it's fed preprocessed code in a separate
+  invocation (preprocessing occurs locally with sccache-dist). Adding
+  ``rewrite_includes_only = true`` to the ``dist`` section of your client config
+  will improve this; however, setting this will cause build failures with a
+  commonly deployed version of ``glibc``. This option will default to ``true``
+  once the fix is more widely available. Details of this fix can be found in
+  `this patch <https://sourceware.org/ml/libc-alpha/2019-11/msg00431.html>`_.
 
 * My build fails with a message about incompatible versions of rustc between
   dependent crates: if you're using a custom toolchain check that the version
