@@ -324,9 +324,6 @@ with Files("tests/css/css-properties-values-api/**"):
 with Files("tests/css/css-pseudo/**"):
     BUG_COMPONENT = ("Core", "Layout: Generated Content, Lists, and Counters")
 
-with Files("tests/css/css-regions/**"):
-    BUG_COMPONENT = ("Core", "Layout")
-
 with Files("tests/css/css-rhythm/**"):
     BUG_COMPONENT = ("Core", "Layout: Block and Inline")
 
