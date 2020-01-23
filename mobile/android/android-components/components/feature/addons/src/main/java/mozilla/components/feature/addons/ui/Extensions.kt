@@ -4,8 +4,14 @@
 
 package mozilla.components.feature.addons.ui
 
+import mozilla.components.feature.addons.Addon
 import java.text.NumberFormat
 import java.util.Locale
+
+/**
+ * A shortcut to get the localized name of an add-on.
+ */
+val Addon.translatedName: String get() = translatableName.translate()
 
 /**
  * Try to find the default language on the map otherwise defaults to "en-US".

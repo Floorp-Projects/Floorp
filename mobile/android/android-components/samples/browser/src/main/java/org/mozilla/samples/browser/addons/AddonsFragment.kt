@@ -22,6 +22,7 @@ import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
+import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
 
@@ -77,7 +78,11 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 }
             } catch (e: AddonManagerException) {
                 scope.launch(Dispatchers.Main) {
-                    Toast.makeText(activity, "Failed to query Add-ons!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        activity,
+                        R.string.mozac_feature_addons_failed_to_query_add_ons,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -133,7 +138,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
             onSuccess = {
                 Toast.makeText(
                     requireContext(),
-                    "Successfully installed: ${it.translatableName.translate()}",
+                    getString(R.string.mozac_feature_addons_successfully_installed, it.translatedName),
                     Toast.LENGTH_SHORT
                 ).show()
 
@@ -146,7 +151,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
             onError = { _, _ ->
                 Toast.makeText(
                     requireContext(),
-                    "Failed to install: ${addon.translatableName.translate()}",
+                    getString(R.string.mozac_feature_addons_failed_to_install, addon.translatedName),
                     Toast.LENGTH_SHORT
                 ).show()
 
