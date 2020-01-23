@@ -34,13 +34,13 @@ test(function () {
 test(function () {
     class MyCustomElement extends HTMLElement {};
 
-    assert_throws({'name': 'SyntaxError'}, function () { customElements.define(null, MyCustomElement); },
+    assert_throws_dom('SyntaxError', function () { customElements.define(null, MyCustomElement); },
         'customElements.define must throw a SyntaxError if the tag name is null');
-    assert_throws({'name': 'SyntaxError'}, function () { customElements.define('', MyCustomElement); },
+    assert_throws_dom('SyntaxError', function () { customElements.define('', MyCustomElement); },
         'customElements.define must throw a SyntaxError if the tag name is empty');
-    assert_throws({'name': 'SyntaxError'}, function () { customElements.define('abc', MyCustomElement); },
+    assert_throws_dom('SyntaxError', function () { customElements.define('abc', MyCustomElement); },
         'customElements.define must throw a SyntaxError if the tag name does not contain "-"');
-    assert_throws({'name': 'SyntaxError'}, function () { customElements.define('a-Bc', MyCustomElement); },
+    assert_throws_dom('SyntaxError', function () { customElements.define('a-Bc', MyCustomElement); },
         'customElements.define must throw a SyntaxError if the tag name contains an upper case letter');
 
     var builtinTagNames = [
@@ -55,7 +55,7 @@ test(function () {
     ];
 
     for (var tagName of builtinTagNames) {
-        assert_throws({'name': 'SyntaxError'}, function () { customElements.define(tagName, MyCustomElement); },
+        assert_throws_dom('SyntaxError', function () { customElements.define(tagName, MyCustomElement); },
             'customElements.define must throw a SyntaxError if the tag name is "' + tagName + '"');
     }
 
@@ -73,7 +73,7 @@ test(function () {
     })
 
     customElements.define('some-custom-element', SomeCustomElement);
-    assert_throws({'name': 'NotSupportedError'}, function () { customElements.define('some-custom-element', OtherCustomElement); },
+    assert_throws_dom('NotSupportedError', function () { customElements.define('some-custom-element', OtherCustomElement); },
         'customElements.define must throw a NotSupportedError if the specified tag name is already used');
     assert_array_equals(calls, [], 'customElements.define must validate the custom element name before getting the prototype of the constructor');
 
@@ -83,7 +83,7 @@ test(function () {
     class AnotherCustomElement extends HTMLElement {};
 
     customElements.define('another-custom-element', AnotherCustomElement);
-    assert_throws({'name': 'NotSupportedError'}, function () { customElements.define('some-other-element', AnotherCustomElement); },
+    assert_throws_dom('NotSupportedError', function () { customElements.define('some-other-element', AnotherCustomElement); },
         'customElements.define must throw a NotSupportedError if the specified class already defines an element');
 
 }, 'customElements.define must throw a NotSupportedError when there is already a custom element with the same class');
@@ -105,7 +105,7 @@ test(function () {
         }
     });
 
-    assert_throws({'name': 'NotSupportedError'}, function () { customElements.define('outer-custom-element', OuterCustomElement); },
+    assert_throws_dom('NotSupportedError', function () { customElements.define('outer-custom-element', OuterCustomElement); },
         'customElements.define must throw a NotSupportedError if the specified class already defines an element');
     assert_array_equals(outerCalls, ['prototype'], 'customElements.define must get "prototype"');
     assert_array_equals(innerCalls, [],
@@ -141,7 +141,7 @@ test(function () {
         }
     });
 
-    assert_throws({'name': 'SyntaxError'}, function () {
+    assert_throws_dom('SyntaxError', function () {
         customElements.define('element-with-bad-inner-name', ElementWithBadInnerName);
     }, 'customElements.define must throw a SyntaxError if the specified name is not a valid custom element name');
 
@@ -213,7 +213,7 @@ test(function () {
         }
     });
 
-    assert_throws({'name': 'SyntaxError'}, function () {
+    assert_throws_dom('SyntaxError', function () {
         customElements.define('element-with-bad-inner-name', ElementWithBadInnerName);
     }, 'customElements.define must throw a SyntaxError if the specified name is not a valid custom element name');
 

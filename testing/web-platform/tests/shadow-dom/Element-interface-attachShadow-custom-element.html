@@ -92,7 +92,7 @@ class MyCustomizedBuiltinElement extends HTMLInputElement {
 customElements.define('my-input', MyCustomizedBuiltinElement, { extends: 'input' });
 
 test(() => {
-  assert_throws({'name': 'NotSupportedError'}, () => {
+  assert_throws_dom('NotSupportedError', () => {
     document.createElement('input', {is: 'my-input'}).attachShadow({mode: "open"});
   });
 }, 'Element.attachShadow must throw a NotSupportedError for customized built-in elements');

@@ -79,8 +79,8 @@ promise_test(t => {
           assert_equals(worker.scriptURL, normalizeURL(script));
           assert_equals(worker.state, 'activated');
           worker.onstatechange = () => { /* empty */ };
-          assert_throws(
-              { name: 'InvalidStateError' },
+          assert_throws_dom(
+              'InvalidStateError',
               () => { worker.postMessage(''); },
               'postMessage on a detached client should throw an exception.');
         });

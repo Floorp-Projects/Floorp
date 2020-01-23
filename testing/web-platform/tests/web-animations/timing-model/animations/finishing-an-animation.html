@@ -17,7 +17,7 @@ test(t => {
   const animation = div.animate(null, 100 * MS_PER_SEC);
   animation.playbackRate = 0;
 
-  assert_throws({name: 'InvalidStateError'}, () => {
+  assert_throws_dom('InvalidStateError', () => {
     animation.finish();
   });
 }, 'Finishing an animation with a zero playback rate throws');
@@ -28,7 +28,7 @@ test(t => {
                                 { duration : 100 * MS_PER_SEC,
                                   iterations : Infinity });
 
-  assert_throws({name: 'InvalidStateError'}, () => {
+  assert_throws_dom('InvalidStateError', () => {
     animation.finish();
   });
 }, 'Finishing an infinite animation throws');
