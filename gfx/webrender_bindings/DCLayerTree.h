@@ -60,7 +60,9 @@ class DCLayerTree {
 
   void SetDefaultSwapChain(IDXGISwapChain1* aSwapChain);
   void MaybeUpdateDebug();
+  void MaybeCommit();
   void WaitForCommitCompletion();
+  void DisableNativeCompositor();
 
   // Interface for wr::Compositor
   void CompositorBeginFrame();
@@ -96,6 +98,7 @@ class DCLayerTree {
       wr::DeviceIntRect aDirtyRect, wr::DeviceIntPoint* aOffset,
       RefPtr<IDCompositionSurface> aCompositionSurface,
       wr::DeviceIntPoint aSurfaceOffset);
+  void ReleaseNativeCompositorResources();
 
   RefPtr<gl::GLContext> mGL;
   EGLConfig mEGLConfig;
@@ -147,6 +150,8 @@ class DCLayerTree {
   // TODO(gw): Might be faster as a hashmap? The length is typically much less
   // than 10.
   std::vector<CachedFrameBuffer> mFrameBuffers;
+
+  bool mPendingCommit;
 };
 
 /**

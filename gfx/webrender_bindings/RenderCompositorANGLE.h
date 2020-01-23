@@ -64,6 +64,8 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   bool SurfaceOriginIsTopLeft() override { return true; }
 
+  bool SupportAsyncScreenshot() override;
+
   bool ShouldUseNativeCompositor() override;
   uint32_t GetMaxUpdateRects() override;
 
@@ -80,6 +82,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                   wr::DeviceIntRect aClipRect) override;
+  void EnableNativeCompositor(bool aEnable) override;
 
   // Interface for partial present
   bool UsePartialPresent() override;
@@ -95,7 +98,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   void InitializeUsePartialPresent();
   void InsertGraphicsCommandsFinishedWaitQuery(
       RenderedFrameId aRenderedFrameId);
-  bool WaitForPreviousGraphicsCommandsFinishedQuery();
+  bool WaitForPreviousGraphicsCommandsFinishedQuery(bool aWaitAll = false);
   bool ResizeBufferIfNeeded();
   bool CreateEGLSurface();
   void DestroyEGLSurface();
@@ -106,6 +109,7 @@ class RenderCompositorANGLE : public RenderCompositor {
                                                   bool aUseAlpha);
   bool SutdownEGLLibraryIfNecessary();
   RefPtr<ID3D11Query> GetD3D11Query();
+  void ReleaseNativeCompositorResources();
 
   EGLConfig mEGLConfig;
   EGLSurface mEGLSurface;
@@ -126,8 +130,11 @@ class RenderCompositorANGLE : public RenderCompositor {
   RenderedFrameId mLastCompletedFrameId;
 
   Maybe<LayoutDeviceIntSize> mBufferSize;
+  bool mUseNativeCompositor;
   bool mUsePartialPresent;
   bool mFullRender;
+  // Used to know a timing of disabling native compositor.
+  bool mDisablingNativeCompositor;
 };
 
 }  // namespace wr

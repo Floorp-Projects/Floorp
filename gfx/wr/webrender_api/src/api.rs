@@ -967,6 +967,8 @@ pub enum DebugCommand {
     LoadCapture(PathBuf, MsgSender<CapturedDocument>),
     /// Clear cached resources, forcing them to be re-uploaded from templates.
     ClearCaches(ClearCache),
+    /// Enable/disable native compositor usage
+    EnableNativeCompositor(bool),
     /// Invalidate GPU cache, forcing the update from the CPU mirror.
     InvalidateGpuCache,
     /// Causes the scene builder to pause for a given amount of milliseconds each time it

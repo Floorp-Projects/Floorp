@@ -443,6 +443,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   bool IsSameProcess() const override;
 
   void NotifyWebRenderContextPurge();
+  void NotifyWebRenderDisableNativeCompositor();
+
   void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                               const wr::Epoch& aEpoch,
                               const VsyncId& aCompositeStartId,
