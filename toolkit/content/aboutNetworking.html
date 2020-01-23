@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -6,12 +5,13 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
     <head>
+        <meta charset="utf-8">
         <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
-        <title data-l10n-id="title"/>
+        <title data-l10n-id="title"></title>
         <link rel="stylesheet" href="chrome://global/skin/aboutNetworking.css" type="text/css" />
-        <script src="chrome://global/content/aboutNetworking.js" />
+        <script src="chrome://global/content/aboutNetworking.js"></script>
         <link rel="localization"  href="toolkit/about/aboutNetworking.ftl"/>
     </head>
     <body id="body">
@@ -44,11 +44,11 @@
         </div>
         <div class="main-content">
             <div class="header">
-                <div id="sectionTitle" class="header-name" data-l10n-id="http"/>
+                <div id="sectionTitle" class="header-name" data-l10n-id="http"></div>
                 <div id="refreshDiv" class="toggle-container-with-text">
-                    <button id="refreshButton" data-l10n-id="refresh"/>
+                    <button id="refreshButton" data-l10n-id="refresh"></button>
                     <input id="autorefcheck" type="checkbox" name="Autorefresh" role="checkbox" />
-                    <label for="autorefcheck" data-l10n-id="auto-refresh"/>
+                    <label for="autorefcheck" data-l10n-id="auto-refresh"></label>
                 </div>
             </div>
 
@@ -125,9 +125,9 @@
           </div>
 
           <div id="dnslookuptool" class="tab" hidden="true">
-              <label data-l10n-id="dns-domain"/>
+              <label data-l10n-id="dns-domain"></label>
               <input type="text" name="host" id="host"></input>
-              <button id="dnsLookupButton" data-l10n-id="dns-lookup-button"/>
+              <button id="dnsLookupButton" data-l10n-id="dns-lookup-button"></button>
               <hr/>
               <table>
                   <thead>
@@ -218,27 +218,29 @@
 
           <div id="logging" class="tab" hidden="true">
             <div>
-                <a href='https://developer.mozilla.org/docs/Mozilla/Debugging/HTTP_logging' data-l10n-name="logging"></a>
-            </div>
-            <br/>
-            <div>
-              <button id="start-logging-button" data-l10n-id="start-logging"/>
-              <button id="stop-logging-button" data-l10n-id="stop-logging"/>
+              <button id="start-logging-button" data-l10n-id="start-logging"></button>
+              <button id="stop-logging-button" data-l10n-id="stop-logging"></button>
             </div>
             <br/>
             <br/>
             <div>
-              <label data-l10n-id="current-log-file"/>
+              <label data-l10n-id="current-log-file"></label>
               <div id="current-log-file"></div><br/>
               <input type="text" name="log-file" id="log-file"></input>
-              <button id="set-log-file-button" data-l10n-id="set-log-file"/>
+              <button id="set-log-file-button" data-l10n-id="set-log-file"></button>
             </div>
             <div>
-              <label data-l10n-id="current-log-modules"/>
+              <label data-l10n-id="current-log-modules"></label>
               <div id="current-log-modules"></div><br/>
               <input type="text" name="log-modules" id="log-modules" value="timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5"></input>
-              <button id="set-log-modules-button" data-l10n-id="set-log-modules"/>
+              <button id="set-log-modules-button" data-l10n-id="set-log-modules"></button>
             </div>
+            <br>
+            <br>
+
+            <p id="log-tutorial" data-l10n-id="log-tutorial">
+              <a data-l10n-name="logging" href="https://developer.mozilla.org/docs/Mozilla/Debugging/HTTP_logging"></a>
+            </p>
           </div>
 
           <div id="networkid" class="tab" hidden="true">
