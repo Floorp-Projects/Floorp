@@ -41,8 +41,10 @@ var gRootItems = new Map();
 // Menu IDs that were eligible for being shown in the current menu.
 var gShownMenuItems = new DefaultMap(() => []);
 
-// Set of extensions that are listening to onShown.
-var gOnShownSubscribers = new Set();
+// Map[Extension -> Set[Contexts]]
+// A DefaultMap (keyed by extension) which keeps track of the
+// contexts with a subscribed onShown event listener.
+var gOnShownSubscribers = new DefaultMap(() => new Set());
 
 // If id is not specified for an item we use an integer.
 var gNextMenuItemID = 0;
@@ -571,7 +573,9 @@ var gMenuBuilder = {
     if (contextData.onBrowserAction || contextData.onPageAction) {
       dispatchOnShownEvent(contextData.extension);
     } else {
-      gOnShownSubscribers.forEach(dispatchOnShownEvent);
+      for (const extension of gOnShownSubscribers.keys()) {
+        dispatchOnShownEvent(extension);
+      }
     }
 
     this.contextData = contextData;
@@ -1270,10 +1274,14 @@ this.menusInternal = class extends ExtensionAPI {
             let tab = nativeTab && extension.tabManager.convert(nativeTab);
             fire.sync(info, tab);
           };
-          gOnShownSubscribers.add(extension);
+          gOnShownSubscribers.get(extension).add(context);
           extension.on("webext-menu-shown", listener);
           return () => {
-            gOnShownSubscribers.delete(extension);
+            const contexts = gOnShownSubscribers.get(extension);
+            contexts.delete(context);
+            if (contexts.size === 0) {
+              gOnShownSubscribers.delete(extension);
+            }
             extension.off("webext-menu-shown", listener);
           };
         },

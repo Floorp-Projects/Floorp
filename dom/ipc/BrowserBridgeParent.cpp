@@ -103,23 +103,6 @@ nsresult BrowserBridgeParent::InitWithProcess(
   return NS_OK;
 }
 
-nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
-                                   const nsString& aRemoteType,
-                                   const WindowGlobalInit& aWindowInit,
-                                   uint32_t aChromeFlags, TabId aTabId) {
-  // Get our ConstructorSender object.
-  RefPtr<ContentParent> constructorSender =
-      ContentParent::GetNewOrUsedBrowserProcess(
-          nullptr, aRemoteType, PROCESS_PRIORITY_FOREGROUND, nullptr, false);
-  if (NS_WARN_IF(!constructorSender)) {
-    MOZ_ASSERT(false, "Unable to allocate content process!");
-    return NS_ERROR_FAILURE;
-  }
-
-  return InitWithProcess(constructorSender, aPresentationURL, aWindowInit,
-                         aChromeFlags, aTabId);
-}
-
 CanonicalBrowsingContext* BrowserBridgeParent::GetBrowsingContext() {
   return mBrowserParent->GetBrowsingContext();
 }

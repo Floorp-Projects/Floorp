@@ -34,6 +34,18 @@
     "resource://gre/modules/RemoteWebNavigation.jsm"
   );
 
+  ChromeUtils.defineModuleGetter(
+    LazyModules,
+    "PopupBlocker",
+    "resource://gre/actors/PopupBlockingParent.jsm"
+  );
+
+  ChromeUtils.defineModuleGetter(
+    LazyModules,
+    "XPCOMUtils",
+    "resource://gre/modules/XPCOMUtils.jsm"
+  );
+
   const elementsToDestroyOnUnload = new Set();
 
   window.addEventListener(
@@ -94,6 +106,10 @@
       // Track progress listeners added to this <browser>. These need to persist
       // between calls to destroy().
       this.progressListeners = [];
+
+      LazyModules.XPCOMUtils.defineLazyGetter(this, "popupBlocker", () => {
+        return new LazyModules.PopupBlocker(this);
+      });
 
       this.addEventListener(
         "keypress",
@@ -340,8 +356,6 @@
       this.mPrefs = Services.prefs;
 
       this._mStrBundle = null;
-
-      this.blockedPopups = null;
 
       this._audioMuted = false;
 
@@ -1078,38 +1092,6 @@
       }
     }
 
-    updateBlockedPopups() {
-      let event = document.createEvent("Events");
-      event.initEvent("DOMUpdateBlockedPopups", true, true);
-      this.dispatchEvent(event);
-    }
-
-    retrieveListOfBlockedPopups() {
-      this.messageManager.sendAsyncMessage(
-        "PopupBlocking:GetBlockedPopupList",
-        null
-      );
-      return new Promise(resolve => {
-        let self = this;
-        this.messageManager.addMessageListener(
-          "PopupBlocking:ReplyGetBlockedPopupList",
-          function replyReceived(msg) {
-            self.messageManager.removeMessageListener(
-              "PopupBlocking:ReplyGetBlockedPopupList",
-              replyReceived
-            );
-            resolve(msg.data.popupData);
-          }
-        );
-      });
-    }
-
-    unblockPopup(aPopupIndex) {
-      this.messageManager.sendAsyncMessage("PopupBlocking:UnblockPopup", {
-        index: aPopupIndex,
-      });
-    }
-
     audioPlaybackStarted() {
       if (this._audioMuted) {
         return;
@@ -1340,10 +1322,6 @@
 
       if (this.messageManager) {
         this.messageManager.addMessageListener(
-          "PopupBlocking:UpdateBlockedPopups",
-          this
-        );
-        this.messageManager.addMessageListener(
           "UnselectedTabHover:Toggle",
           this
         );
@@ -1403,15 +1381,6 @@
     _receiveMessage(aMessage) {
       let data = aMessage.data;
       switch (aMessage.name) {
-        case "PopupBlocking:UpdateBlockedPopups": {
-          this.blockedPopups = {
-            length: data.count,
-            reported: !data.freshPopup,
-          };
-
-          this.updateBlockedPopups();
-          break;
-        }
         case "UnselectedTabHover:Toggle":
           this._shouldSendUnselectedTabHover = data.enable
             ? ++this._unselectedTabHoverMessageListenerCount > 0

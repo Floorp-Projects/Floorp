@@ -371,13 +371,26 @@ function activeConfigurationHasThread(thread) {
 }
 
 /**
- * @param {HTMLElement} featureTextElement
+ * Grabs the associated input from the element, or it walks up the DOM from a text
+ * element and tries to query select an input.
+ *
+ * @param {Document} document
+ * @param {string} text
  * @param {HTMLInputElement}
  */
-function getFeatureInputFromLabel(featureTextElement) {
-  const input = featureTextElement.parentElement.querySelector("input");
-  if (!input) {
-    throw new Error("Could not find the input near text element.");
+async function getNearestInputFromText(document, text) {
+  const textElement = await getElementFromDocumentByText(document, text);
+  if (textElement.control) {
+    // This is a label, just grab the input.
+    return textElement.control;
   }
-  return input;
+  // A non-label node
+  let next = textElement;
+  while ((next = next.parentElement)) {
+    const input = next.querySelector("input");
+    if (input) {
+      return input;
+    }
+  }
+  throw new Error("Could not find an input near text element.");
 }

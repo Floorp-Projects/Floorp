@@ -33,7 +33,8 @@
 # NB: if you add items to this list, please also assign them a unique migrator ID in MigrationUtils.jsm
       <radio id="firefox"   label="&importFromFirefox.label;"   accesskey="&importFromFirefox.accesskey;"/>
 #ifdef XP_WIN
-      <radio id="edge"      label="&importFromEdge.label;"      accesskey="&importFromEdge.accesskey;"/>
+      <radio id="chromium-edge" label="&importFromEdge.label;"  accesskey="&importFromEdge.accesskey;"/>
+      <radio id="edge"      label="&importFromEdgeLegacy.label;" accesskey="&importFromEdgeLegacy.accesskey;"/>
       <radio id="chromium-edge-beta" label="&importFromEdgeBeta.label;" accesskey="&importFromEdgeBeta.accesskey;"/>
       <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
@@ -44,6 +45,7 @@
 #elifdef XP_MACOSX
       <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
+      <radio id="chromium-edge" label="&importFromEdge.label;"  accesskey="&importFromEdge.accesskey;"/>
       <radio id="chromium-edge-beta" label="&importFromEdgeBeta.label;" accesskey="&importFromEdgeBeta.accesskey;"/>
       <radio id="chromium"  label="&importFromChromium.label;"  accesskey="&importFromChromium.accesskey;"/>
       <radio id="canary"    label="&importFromCanary.label;"    accesskey="&importFromCanary.accesskey;"/>

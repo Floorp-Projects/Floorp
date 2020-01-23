@@ -53,8 +53,8 @@ JavaScript API
 
 ``browser/components/touchbar/MacTouchBar.js`` defines what specific inputs are
 available to the user, what icon they will have, what action they will perform,
-and so on. Inputs are defined in the ``kBuiltInInputs`` object `in that file`_.
-When creating a new object in ``kBuiltInInputs``, the available properties are
+and so on. Inputs are defined in the ``gBuiltInInputs`` object `in that file`_.
+When creating a new object in ``gBuiltInInputs``, the available properties are
 documented in the JSDoc for ``TouchBarInput``:
 
 .. highlight:: JavaScript
@@ -95,7 +95,7 @@ Clarification on some of these properties is warranted.
   second string, "Back", records an interaction with the back button in
   Telemetry.
 * ``children`` is an array of objects with the same properties as members of
-  ``kBuiltInInputs``. When used with an input of type
+  ``gBuiltInInputs``. When used with an input of type
   ``kInputTypes.SCROLLVIEW``, ``children`` can only contain inputs of type
   ``kInputTypes.BUTTON``. When used with an input of type
   ``kInputTypes.POPOVER``, any input type except another ``kInputTypes.POPOVER``
@@ -159,7 +159,7 @@ Scroll View
 
 Examples
 --------
-Some examples of ``kBuiltInInputs`` objects follow.
+Some examples of ``gBuiltInInputs`` objects follow.
 
 A simple button
   .. highlight:: JavaScript
@@ -246,13 +246,13 @@ The search popover
 
 Adding a new input
 ------------------
-Adding a new input is easy: just add a new object to ``kBuiltInInputs``. This
+Adding a new input is easy: just add a new object to ``gBuiltInInputs``. This
 will make the input available in the Touch Bar customization window (accessible
 from the Firefox menu bar item).
 
 If you want to to add your new input to the default set, add its identifier
 here_, where ``type`` is a value from ``kAllowedInputTypes`` in that
-file and ``key`` is the value you set for ``title`` in ``kBuiltInInputs``.
+file and ``key`` is the value you set for ``title`` in ``gBuiltInInputs``.
 You should request approval from UX before changing the default set of inputs.
 
 .. _here: https://searchfox.org/mozilla-central/rev/ebe492edacc75bb122a2b380e4cafcca3470864c/widget/cocoa/nsTouchBar.mm#100
@@ -323,7 +323,7 @@ If you need to generate an identifier, use the convenience method
   will be erased.
 
 Each identifier is tied to a ``TouchBarInput``. ``TouchBarInput`` is a class
-that holds the properties specified for each input in ``kBuiltInInputs``.
+that holds the properties specified for each input in ``gBuiltInInputs``.
 ``nsTouchBar`` uses them to create instances of ``NSTouchBarItem``
 which are the actual objects used by Apple's Touch Bar API and displayed in the
 Touch Bar. It is important to understand the difference between

@@ -655,7 +655,7 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
 }
 
 void DocumentOrShadowRoot::GetAdoptedStyleSheets(
-    nsTArray<RefPtr<StyleSheet>>& aAdoptedStyleSheets, ErrorResult& aRv) const {
+    nsTArray<RefPtr<StyleSheet>>& aAdoptedStyleSheets) const {
   aAdoptedStyleSheets = mAdoptedStyleSheets;
 }
 

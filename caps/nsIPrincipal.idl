@@ -66,6 +66,11 @@ interface nsIPrincipal : nsISerializable
       DECL_FAST_INLINE_HELPER(EqualsConsideringDomain)
     %}
 
+    /*
+    * Returns whether the Principals URI is equal to the other URI
+    */
+    boolean EqualsURI(in nsIURI aOtherURI);
+
     /**
      * Returns a hash value for the principal.
      */
@@ -221,6 +226,11 @@ interface nsIPrincipal : nsISerializable
       * just for logging purposes!
      */
     [noscript] readonly attribute ACString asciiSpec;
+
+    /* Returns the Pre Path of the Principals URI with
+    * user:pass stripped for privacy and spoof prevention
+    */
+    readonly attribute ACString ExposablePrePath;
 
     /**
     * Checks if the Principal's URI Scheme matches with the parameter

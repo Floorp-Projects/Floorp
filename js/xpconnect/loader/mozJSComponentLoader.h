@@ -12,7 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
 #include "mozilla/StaticPtr.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
 #include "nsClassHashtable.h"
@@ -186,13 +186,6 @@ class mozJSComponentLoader final {
 
   nsresult ExtractExports(JSContext* aCx, ComponentLoaderInfo& aInfo,
                           ModuleEntry* aMod, JS::MutableHandleObject aExports);
-
-  static size_t DataEntrySizeOfExcludingThis(
-      const nsACString& aKey, ModuleEntry* const& aData,
-      mozilla::MallocSizeOf aMallocSizeOf, void* arg);
-  static size_t ClassEntrySizeOfExcludingThis(
-      const nsACString& aKey, const nsAutoPtr<ModuleEntry>& aData,
-      mozilla::MallocSizeOf aMallocSizeOf, void* arg);
 
   // Modules are intentionally leaked, but still cleared.
   nsDataHashtable<nsCStringHashKey, ModuleEntry*> mModules;

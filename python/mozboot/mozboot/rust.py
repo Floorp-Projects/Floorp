@@ -13,21 +13,21 @@ import sys
 RUSTUP_URL_BASE = 'https://static-rust-lang-org.s3.amazonaws.com/rustup'
 
 # Pull this to get the lastest stable version number.
-RUSTUP_MANIFEST = os.path.join(RUSTUP_URL_BASE, 'release-stable.toml')
+RUSTUP_MANIFEST = RUSTUP_URL_BASE + '/release-stable.toml'
 
 # We bake in a known version number so we can verify a checksum.
-RUSTUP_VERSION = '1.9.0'
+RUSTUP_VERSION = '1.21.1'
 
 # SHA-256 checksums of the installers, per platform.
 RUSTUP_HASHES = {
     'x86_64-unknown-freebsd':
-        'ef830f79b25f9c3ec9cffba6318740089fc8133c8e760f4a1f780f1547d6cc3c',
+        'a6bfc71c58b7ac3dad0d6ea0937990ca72f3b636096244c0c9ba814a627cbcc1',
     'x86_64-apple-darwin':
-        '8319dbcd09f34f670a2c0aab22070fcce67477dcd620ce762b75a5718c35e335',
+        'fd76f7093bd810f9ee9050786678c74155d6f5fcc3aac958d24c0783e435a994',
     'x86_64-unknown-linux-gnu':
-        '4b7a67cd971d713e0caef48b5754190aca19192d1863927a005c3432512b12dc',
+        'ad1f8b5199b3b9e231472ed7aa08d2e5d1d539198a15c5b1e53c746aad81d27b',
     'x86_64-pc-windows-msvc':
-        '9f48dfec34c71336177e5ca2e275f368867f6519079aeb3b974715db93ad03e7',
+        '9f9e33fa4759075ec60e4da13798d1d66a4c2f43c5500e08714399313409dcf5',
 }
 
 NO_PLATFORM = '''
@@ -104,7 +104,7 @@ def rustup_latest_version():
     # version = '0.6.5'
     #
     for line in f:
-        key, value = map(str.strip, line.split('=', 2))
+        key, value = map(str.strip, line.split(b'=', 2))
         if key == 'schema-version':
             schema = int(unquote(value))
             if schema != 1:

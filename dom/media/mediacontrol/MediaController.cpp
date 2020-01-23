@@ -49,6 +49,30 @@ void MediaController::Pause() {
       MediaControlKeysEvent::ePause);
 }
 
+void MediaController::PrevTrack() {
+  LOG("Prev Track");
+  UpdateMediaControlKeysEventToContentMediaIfNeeded(
+      MediaControlKeysEvent::ePrevTrack);
+}
+
+void MediaController::NextTrack() {
+  LOG("Next Track");
+  UpdateMediaControlKeysEventToContentMediaIfNeeded(
+      MediaControlKeysEvent::eNextTrack);
+}
+
+void MediaController::SeekBackward() {
+  LOG("Seek Backward");
+  UpdateMediaControlKeysEventToContentMediaIfNeeded(
+      MediaControlKeysEvent::eSeekBackward);
+}
+
+void MediaController::SeekForward() {
+  LOG("Seek Forward");
+  UpdateMediaControlKeysEventToContentMediaIfNeeded(
+      MediaControlKeysEvent::eSeekForward);
+}
+
 void MediaController::Stop() {
   LOG("Stop");
   SetPlayState(PlaybackState::eStopped);

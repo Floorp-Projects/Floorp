@@ -27,6 +27,9 @@ describe("ActivityStream", () => {
       "lib/TopStoriesFeed.jsm": { TopStoriesFeed: Fake },
       "lib/HighlightsFeed.jsm": { HighlightsFeed: Fake },
       "lib/ASRouterFeed.jsm": { ASRouterFeed: Fake },
+      "lib/RecommendationProviderSwitcher.jsm": {
+        RecommendationProviderSwitcher: Fake,
+      },
       "lib/DiscoveryStreamFeed.jsm": { DiscoveryStreamFeed: Fake },
     }));
     as = new ActivityStream();
@@ -149,6 +152,10 @@ describe("ActivityStream", () => {
     });
     it("should create a ASRouter feed", () => {
       const feed = as.feeds.get("feeds.asrouterfeed")();
+      assert.instanceOf(feed, Fake);
+    });
+    it("should create a RecommendationProviderSwitcher feed", () => {
+      const feed = as.feeds.get("feeds.recommendationproviderswitcher")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a DiscoveryStreamFeed feed", () => {

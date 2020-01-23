@@ -45,6 +45,7 @@ h2 {
 .perf-presets {
   margin: 2em 0;
   border-bottom: 1px solid var(--in-content-border-color);
+  padding-bottom: 1em;
 }
 
 .perf-settings-row {
@@ -105,7 +106,6 @@ h2 {
 
 .perf-settings-feature-label {
   margin: 1.3em 0;
-
 }
 
 .perf-settings-checkbox-and-name {
@@ -167,4 +167,32 @@ h2 {
 
 .perf-settings-dir-list-button-group input[type=button] {
   margin-left: 0;
+}
+
+.perf-presets-input-container {
+  height: 20px;
+  display: flex;
+}
+
+.perf-presets-input {
+  width: 15px;
+  margin: 0 10px;
+}
+
+.pref-preset-text-label {
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.perf-presets-description {
+  font-size: 13px;
+  color: var(--grey-60);
+  margin: 5px 0;
+}
+
+.perf-presets-label {
+  padding: 7px 0;
+  display: flex;
+  align-items: start;
 }

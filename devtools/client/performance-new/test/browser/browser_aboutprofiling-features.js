@@ -13,11 +13,7 @@ add_task(async function test() {
   );
 
   await openAboutProfiling(async document => {
-    const jsFeatureText = await getElementFromDocumentByText(
-      document,
-      "JavaScript"
-    );
-    const jsInput = getFeatureInputFromLabel(jsFeatureText);
+    const jsInput = await getNearestInputFromText(document, "JavaScript");
 
     ok(
       activeConfigurationHasFeature("js"),

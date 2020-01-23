@@ -860,6 +860,9 @@ pref("devtools.recordreplay.cloudServer", "");
 // profiler.firefox.com, or in tests. This isn't exposed directly to the user.
 pref("devtools.performance.recording.ui-base-url", "https://profiler.firefox.com");
 
+// The preset to use for the recording settings. If set to "custom" then the pref
+// values below will be used.
+pref("devtools.performance.recording.preset", "web-developer");
 // Profiler buffer size. It is the maximum number of 8-bytes entries in the
 // profiler's buffer. 10000000 is ~80mb.
 pref("devtools.performance.recording.entries", 10000000);

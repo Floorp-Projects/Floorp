@@ -26,6 +26,7 @@
 #  include "mozilla/MemoryReporting.h"
 #  include "mozilla/ServoTypes.h"
 #  include "mozilla/ServoBindingTypes.h"
+#  include "mozilla/Vector.h"
 #  include "nsCSSPropertyID.h"
 #  include "nsCompatibility.h"
 #  include "nsIURI.h"
@@ -50,7 +51,7 @@ struct gfxFontFeature;
 namespace mozilla {
 namespace gfx {
 struct FontVariation;
-}
+}  // namespace gfx
 }  // namespace mozilla
 typedef mozilla::gfx::FontVariation gfxFontVariation;
 
@@ -115,6 +116,10 @@ enum class CallerType : uint32_t;
 class Element;
 class Document;
 }  // namespace dom
+
+namespace ipc {
+class ByteBuf;
+}  // namespace ipc
 
 // Replacement for a Rust Box<T> for a non-dynamically-sized-type.
 //

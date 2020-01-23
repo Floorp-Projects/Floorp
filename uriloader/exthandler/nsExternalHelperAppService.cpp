@@ -57,6 +57,8 @@
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 
+#include "nsIApplicationReputation.h"
+
 #include "nsDSURIContentListener.h"
 #include "nsMimeTypes.h"
 // used for header disposition information.
@@ -96,6 +98,7 @@
 #  include "nsWindowsHelpers.h"
 #endif
 
+#include "mozilla/Components.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -1613,6 +1616,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 
   bool alwaysAsk = true;
   mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+  nsAutoCString MIMEType;
+  mMimeInfo->GetMIMEType(MIMEType);
   if (alwaysAsk) {
     // But we *don't* ask if this mimeInfo didn't come from
     // our user configuration datastore and the user has said
@@ -1627,8 +1632,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
       handlerSvc->Exists(mMimeInfo, &mimeTypeIsInDatastore);
     }
     if (!handlerSvc || !mimeTypeIsInDatastore) {
-      nsAutoCString MIMEType;
-      mMimeInfo->GetMIMEType(MIMEType);
       if (!GetNeverAskFlagFromPref(NEVER_ASK_FOR_SAVE_TO_DISK_PREF,
                                    MIMEType.get())) {
         // Don't need to ask after all.
@@ -1640,6 +1643,21 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
         // Don't need to ask after all.
         alwaysAsk = false;
       }
+    }
+  } else if (MIMEType.EqualsLiteral("text/plain")) {
+    nsAutoCString ext;
+    mMimeInfo->GetPrimaryExtension(ext);
+    // If people are sending us ApplicationReputation-eligible files with
+    // text/plain mimetypes, enforce asking the user what to do.
+    if (!ext.IsEmpty()) {
+      nsAutoCString dummyFileName("f");
+      if (ext.First() != '.') {
+        dummyFileName.Append(".");
+      }
+      ext.ReplaceChar(KNOWN_PATH_SEPARATORS FILE_ILLEGAL_CHARACTERS, '_');
+      nsCOMPtr<nsIApplicationReputationService> appRep =
+          components::ApplicationReputation::Service();
+      appRep->IsBinary(dummyFileName + ext, &alwaysAsk);
     }
   }
 

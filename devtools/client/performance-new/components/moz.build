@@ -8,6 +8,7 @@ DevToolsModules(
     'Description.js',
     'DevToolsAndPopup.js',
     'DirectoryPicker.js',
+    'Presets.js',
     'ProfilerEventHandling.js',
     'Range.js',
     'RecordingButton.js',

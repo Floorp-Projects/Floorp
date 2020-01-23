@@ -2985,6 +2985,10 @@ bitflags! {
         const SCROLLBAR_CONTAINER = 64;
         /// If set, this cluster contains clear rectangle primitives.
         const IS_CLEAR_PRIMITIVE = 128;
+        /// This is used as a performance hint - this primitive may be promoted to a native
+        /// compositor surface under certain (implementation specific) conditions. This
+        /// is typically used for large videos, and canvas elements.
+        const PREFER_COMPOSITOR_SURFACE = 256;
     }
 }
 
@@ -3110,6 +3114,10 @@ impl PrimitiveList {
 
         if prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER) {
             flags.insert(ClusterFlags::SCROLLBAR_CONTAINER);
+        }
+
+        if prim_flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE) {
+            flags.insert(ClusterFlags::PREFER_COMPOSITOR_SURFACE);
         }
 
         // Insert the primitive into the first or last cluster as required

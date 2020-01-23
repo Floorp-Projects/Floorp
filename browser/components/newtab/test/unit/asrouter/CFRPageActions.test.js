@@ -316,29 +316,21 @@ describe("CFRPageActions", () => {
     });
 
     describe("#_popupStateChange", () => {
-      it("should collapse and remove the notification on 'dismissed'", () => {
+      it("should collapse the notification on 'dismissed'", () => {
         pageAction._expand();
-        const fakeNotification = {};
 
-        pageAction.currentNotification = fakeNotification;
         pageAction._popupStateChange("dismissed");
         assert.equal(
           pageAction.urlbarinput.getAttribute("cfr-recommendation-state"),
           "collapsed"
         );
-        assert.calledOnce(global.PopupNotifications.remove);
-        assert.calledWith(global.PopupNotifications.remove, fakeNotification);
       });
-      it("should collapse and remove the notification on 'removed'", () => {
+      it("should remove the notification on 'removed'", () => {
         pageAction._expand();
         const fakeNotification = {};
 
         pageAction.currentNotification = fakeNotification;
         pageAction._popupStateChange("removed");
-        assert.equal(
-          pageAction.urlbarinput.getAttribute("cfr-recommendation-state"),
-          "collapsed"
-        );
         assert.calledOnce(global.PopupNotifications.remove);
         assert.calledWith(global.PopupNotifications.remove, fakeNotification);
       });

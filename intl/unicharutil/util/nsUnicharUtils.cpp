@@ -432,7 +432,8 @@ int32_t CaseInsensitiveCompare(const char* aLeft, const char* aRight,
 bool CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
                                    const char* aLeftEnd, const char* aRightEnd,
                                    const char** aLeftNext,
-                                   const char** aRightNext, bool* aErr) {
+                                   const char** aRightNext, bool* aErr,
+                                   bool aMatchDiacritics) {
   NS_ASSERTION(aLeftNext, "Out pointer shouldn't be null.");
   NS_ASSERTION(aRightNext, "Out pointer shouldn't be null.");
   NS_ASSERTION(aErr, "Out pointer shouldn't be null.");
@@ -454,6 +455,11 @@ bool CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
 
   // Can't have an error past this point.
   *aErr = false;
+
+  if (!aMatchDiacritics) {
+    leftChar = ToNaked(leftChar);
+    rightChar = ToNaked(rightChar);
+  }
 
   return leftChar == rightChar;
 }

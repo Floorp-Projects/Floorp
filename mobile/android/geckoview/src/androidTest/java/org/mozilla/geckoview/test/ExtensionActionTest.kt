@@ -386,6 +386,22 @@ class ExtensionActionTest : BaseSessionTest() {
     }
 
     @Test
+    fun themeIcons() {
+        assumeThat("Only browserAction supports this API.", id, equalTo("#browserAction"))
+
+        val png32 = GeckoResult<Void>()
+
+        default!!.icon!!.get(32).accept ({ actual ->
+            compareBitmap("web_extensions/actions/button/beasts-32.png", actual!!)
+            png32.complete(null)
+        }, { error ->
+            png32.completeExceptionally(error!!)
+        })
+
+        sessionRule.waitForResult(png32)
+    }
+
+    @Test
     fun setIconPng() {
         val png100 = GeckoResult<Void>()
         val png38 = GeckoResult<Void>()

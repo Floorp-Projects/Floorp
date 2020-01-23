@@ -12,6 +12,7 @@ const {
 const {
   getEnvironmentVariable,
 } = require("devtools/client/performance-new/browser");
+const { presets } = require("devtools/shared/performance-new/recording-utils");
 
 /**
  * @typedef {import("../@types/perf").Action} Action
@@ -137,6 +138,20 @@ exports.changeThreads = threads =>
   _dispatchAndUpdatePreferences({
     type: "CHANGE_THREADS",
     threads,
+  });
+
+/**
+ * Change the preset.
+ * @param {string} presetName
+ * @return {ThunkAction<void>}
+ */
+exports.changePreset = presetName =>
+  _dispatchAndUpdatePreferences({
+    type: "CHANGE_PRESET",
+    presetName,
+    // Also dispatch the preset so that the reducers can pre-fill the values
+    // from a preset.
+    preset: presets[presetName],
   });
 
 /**
