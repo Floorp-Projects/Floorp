@@ -193,6 +193,10 @@ this.main = (function() {
     return badDomains.includes(domain);
   }
 
+  communication.register("getStrings", (sender, ids) => {
+    return getStrings(ids.map(id => ({id})));
+  });
+
   communication.register("sendEvent", (sender, ...args) => {
     catcher.watchPromise(sendEvent(...args));
     // We don't wait for it to complete:
@@ -205,14 +209,18 @@ this.main = (function() {
       .then(() => browser.tabs.create({url: backend + "/shots"})));
   });
 
-  communication.register("openShot", (sender, {url, copied}) => {
+  communication.register("openShot", async (sender, {url, copied}) => {
     if (copied) {
       const id = makeUuid();
+      const [ title, message ] = await getStrings([
+        { id: "screenshots-notification-link-copied-title" },
+        { id: "screenshots-notification-link-copied-details" },
+      ]);
       return browser.notifications.create(id, {
         type: "basic",
         iconUrl: "../icons/copied-notification.svg",
-        title: browser.i18n.getMessage("notificationLinkCopiedTitle"),
-        message: browser.i18n.getMessage("notificationLinkCopiedDetails", pasteSymbol),
+        title,
+        message,
       });
     }
     return null;
@@ -237,18 +245,21 @@ this.main = (function() {
     return dataUrl;
   });
 
-  communication.register("copyShotToClipboard", (sender, blob) => {
-    return blobConverters.blobToArray(blob).then(buffer => {
-      return browser.clipboard.setImageData(
-        buffer, blob.type.split("/", 2)[1]).then(() => {
-          catcher.watchPromise(incrementCount("copy"));
-          return browser.notifications.create({
-            type: "basic",
-            iconUrl: "../icons/copied-notification.svg",
-            title: browser.i18n.getMessage("notificationImageCopiedTitle"),
-            message: browser.i18n.getMessage("notificationImageCopiedDetails", pasteSymbol),
-          });
-        });
+  communication.register("copyShotToClipboard", async (sender, blob) => {
+    let buffer = await blobConverters.blobToArray(blob);
+    await browser.clipboard.setImageData(buffer, blob.type.split("/", 2)[1]);
+
+    const [title, message] = await getStrings([
+      { id: "screenshots-notification-image-copied-title" },
+      { id: "screenshots-notification-image-copied-details" },
+    ]);
+
+    catcher.watchPromise(incrementCount("copy"));
+    return browser.notifications.create({
+      type: "basic",
+      iconUrl: "../icons/copied-notification.svg",
+      title,
+      message,
     });
   });
 

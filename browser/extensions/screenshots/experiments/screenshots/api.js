@@ -2,74 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals browser, AppConstants, CustomizableUI, ExtensionCommon, Services, ExtensionAPI */
+/* globals browser, AppConstants, Services, ExtensionAPI */
 
 "use strict";
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "CustomizableUI",
-                               "resource:///modules/CustomizableUI.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionCommon",
-                               "resource://gre/modules/ExtensionCommon.jsm");
-ChromeUtils.defineModuleGetter(this, "PageActions",
-                               "resource:///modules/PageActions.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
-
-const LibraryButton = {
-  ITEM_ID: "appMenu-library-screenshots",
-
-  init(webExtension) {
-    this._initialized = true;
-    const permissionPages = [...webExtension.permissions].filter(p => (/^https?:\/\//i).test(p));
-    if (permissionPages.length > 1) {
-      Cu.reportError(new Error("Should not have more than 1 permission page, but got: " + JSON.stringify(permissionPages)));
-    }
-    this.PAGE_TO_OPEN = permissionPages.length === 1 ? permissionPages[0].replace(/\*$/, "") : "https://screenshots.firefox.com/";
-    this.PAGE_TO_OPEN += "shots";
-    this.ICON_URL = webExtension.getURL("icons/icon-v2.svg");
-    this.LABEL = webExtension.localizeMessage("libraryLabel");
-    CustomizableUI.addListener(this);
-    for (const win of CustomizableUI.windows) {
-      this.onWindowOpened(win);
-    }
-  },
-
-  uninit() {
-    if (!this._initialized) {
-      return;
-    }
-    for (const win of CustomizableUI.windows) {
-      const item = win.document.getElementById(this.ITEM_ID);
-      if (item) {
-        item.remove();
-      }
-    }
-    CustomizableUI.removeListener(this);
-    this._initialized = false;
-  },
-
-  onWindowOpened(win) {
-    const libraryViewInsertionPoint = win.document.getElementById("appMenu-library-remotetabs-button");
-    // If the library view doesn't exist (on non-photon builds, for instance),
-    // this will be null, and we bail out early.
-    if (!libraryViewInsertionPoint) {
-      return;
-    }
-    const parent = libraryViewInsertionPoint.parentNode;
-    const {nextSibling} = libraryViewInsertionPoint;
-    const item = win.document.createXULElement("toolbarbutton");
-    item.className = "subviewbutton subviewbutton-iconic";
-    item.addEventListener("command", () => win.openWebLinkIn(this.PAGE_TO_OPEN, "tab"));
-    item.id = this.ITEM_ID;
-    const iconURL = this.ICON_URL;
-    item.setAttribute("image", iconURL);
-    item.setAttribute("label", this.LABEL);
-
-    parent.insertBefore(item, nextSibling);
-  },
-};
 
 this.screenshots = class extends ExtensionAPI {
   getAPI(context) {
@@ -99,18 +39,6 @@ this.screenshots = class extends ExtensionAPI {
           },
           isUploadDisabled() {
             return Services.prefs.getBoolPref("extensions.screenshots.upload-disabled", false);
-          },
-          initLibraryButton() {
-            context.callOnClose({
-              close: () => {
-                try {
-                  LibraryButton.uninit();
-                } catch (ex) {
-                  Services.console.logStringMessage("Firefox Screenshots LibraryButton shutdown error: ", ex);
-                }
-              },
-            });
-            return LibraryButton.init(extension);
           },
         },
       },
