@@ -1159,8 +1159,6 @@ class XPCNativeSet final {
 
   inline bool HasInterface(XPCNativeInterface* aInterface) const;
 
-  inline XPCNativeInterface* FindInterfaceWithIID(const nsIID& iid) const;
-
   uint16_t GetInterfaceCount() const { return mInterfaceCount; }
   XPCNativeInterface** GetInterfaceArray() { return mInterfaces; }
 
@@ -1462,8 +1460,6 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
   static bool SetAttribute(XPCCallContext& ccx) {
     return CallMethod(ccx, CALL_SETTER);
   }
-
-  inline bool HasInterfaceNoQI(const nsIID& iid);
 
   XPCWrappedNativeTearOff* FindTearOff(JSContext* cx,
                                        XPCNativeInterface* aInterface,
