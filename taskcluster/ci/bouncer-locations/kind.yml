@@ -17,10 +17,7 @@ job-defaults:
     description: nightly bouncer locations job
     attributes:
         nightly: true
-    worker-type:
-        by-project:
-            mozilla-central: scriptworker-k8s/gecko-3-bouncer
-            default: scriptworker-k8s/gecko-1-bouncer
+    worker-type: bouncer
     worker:
         implementation: bouncer-locations
     scopes:
