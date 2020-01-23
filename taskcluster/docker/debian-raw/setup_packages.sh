@@ -4,11 +4,7 @@ TASKCLUSTER_ROOT_URL=$1
 shift
 
 # duplicate the functionality of taskcluster-lib-urls, but in bash..
-if [ "$TASKCLUSTER_ROOT_URL" = "https://taskcluster.net" ]; then
-    queue_base='https://queue.taskcluster.net/v1'
-else
-    queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
-fi
+queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
 
 
 for task in "$@"; do
