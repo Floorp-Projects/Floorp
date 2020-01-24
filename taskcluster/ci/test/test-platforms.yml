@@ -150,7 +150,6 @@ linux64-asan/opt:
 linux64-qr/opt:
     build-platform: linux64/opt
     test-sets:
-        - linux-qr-tests
         - talos
         - web-platform-tests-1604
         - raptor-firefox
@@ -160,7 +159,6 @@ linux64-qr/opt:
 linux64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
     test-sets:
-        - linux-qr-tests
         - talos
         - web-platform-tests-1604
         - raptor-firefox
@@ -170,7 +168,6 @@ linux64-shippable-qr/opt:
 linux64-qr/debug:
     build-platform: linux64/debug
     test-sets:
-        - linux-qr-tests
         - web-platform-tests-1604
 
 linux64-ccov/opt:
