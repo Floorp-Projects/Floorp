@@ -222,7 +222,10 @@ void nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
     nsRect rect;
     mMathMLChar[mRadicalCharIndex].GetRect(rect);
-    rect.MoveBy(StyleVisibility()->mDirection ? -mContentWidth : rect.width, 0);
+    rect.MoveBy(StyleVisibility()->mDirection == StyleDirection::Rtl
+                    ? -mContentWidth
+                    : rect.width,
+                0);
     rect.SizeTo(mContentWidth, mRadicalRuleThickness);
     DisplayBar(aBuilder, this, rect, aLists, NOTATION_RADICAL);
   }
@@ -505,7 +508,9 @@ nsresult nsMathMLmencloseFrame::PlaceInternal(DrawTarget* aDrawTarget,
   ///////////////
   // radical notation:
   if (IsToDraw(NOTATION_RADICAL)) {
-    nscoord* dx_leading = StyleVisibility()->mDirection ? &dx_right : &dx_left;
+    nscoord* dx_leading = StyleVisibility()->mDirection == StyleDirection::Rtl
+                              ? &dx_right
+                              : &dx_left;
 
     if (aWidthOnly) {
       nscoord radical_width = mMathMLChar[mRadicalCharIndex].GetMaxWidth(
@@ -524,7 +529,7 @@ nsresult nsMathMLmencloseFrame::PlaceInternal(DrawTarget* aDrawTarget,
       mMathMLChar[mRadicalCharIndex].Stretch(
           this, aDrawTarget, fontSizeInflation, NS_STRETCH_DIRECTION_VERTICAL,
           contSize, bmRadicalChar, NS_STRETCH_LARGER,
-          StyleVisibility()->mDirection);
+          StyleVisibility()->mDirection == StyleDirection::Rtl);
       mMathMLChar[mRadicalCharIndex].GetBoundingMetrics(bmRadicalChar);
 
       // Update horizontal parameters
@@ -641,9 +646,9 @@ nsresult nsMathMLmencloseFrame::PlaceInternal(DrawTarget* aDrawTarget,
           bmLongdivChar.ascent + bmLongdivChar.descent));
 
     if (IsToDraw(NOTATION_RADICAL)) {
-      nscoord dx =
-          (StyleVisibility()->mDirection ? dx_left + bmBase.width
-                                         : dx_left - bmRadicalChar.width);
+      nscoord dx = (StyleVisibility()->mDirection == StyleDirection::Rtl
+                        ? dx_left + bmBase.width
+                        : dx_left - bmRadicalChar.width);
 
       mMathMLChar[mRadicalCharIndex].SetRect(nsRect(
           dx, aDesiredSize.BlockStartAscent() - radicalAscent,

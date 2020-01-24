@@ -423,7 +423,7 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
     bool supportsAfter = SupportsCollapseDirection(After);
 
     const bool isRTL =
-        mOuter->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+        mOuter->StyleVisibility()->mDirection == StyleDirection::Rtl;
     bool pastEnd = oldPos > 0 && oldPos > pos;
     bool pastBegin = oldPos < 0 && oldPos < pos;
     if (isRTL) {

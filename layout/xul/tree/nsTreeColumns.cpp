@@ -87,8 +87,7 @@ nsresult nsTreeColumn::GetRect(nsTreeBodyFrame* aBodyFrame, nscoord aY,
     return NS_ERROR_FAILURE;
   }
 
-  bool isRTL =
-      aBodyFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  bool isRTL = aBodyFrame->StyleVisibility()->mDirection == StyleDirection::Rtl;
   *aResult = frame->GetRect();
   aResult->y = aY;
   aResult->height = aHeight;
@@ -150,9 +149,9 @@ void nsTreeColumn::Invalidate(ErrorResult& aRv) {
   mTextAlignment = textStyle->mTextAlign;
   // START or END alignment sometimes means RIGHT
   if ((mTextAlignment == NS_STYLE_TEXT_ALIGN_START &&
-       vis->mDirection == NS_STYLE_DIRECTION_RTL) ||
+       vis->mDirection == StyleDirection::Rtl) ||
       (mTextAlignment == NS_STYLE_TEXT_ALIGN_END &&
-       vis->mDirection == NS_STYLE_DIRECTION_LTR)) {
+       vis->mDirection == StyleDirection::Ltr)) {
     mTextAlignment = NS_STYLE_TEXT_ALIGN_RIGHT;
   } else if (mTextAlignment == NS_STYLE_TEXT_ALIGN_START ||
              mTextAlignment == NS_STYLE_TEXT_ALIGN_END) {

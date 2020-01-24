@@ -96,6 +96,7 @@ rusty-enums = [
     "mozilla::StyleClear",
     "mozilla::StyleColumnFill",
     "mozilla::StyleColumnSpan",
+    "mozilla::StyleDirection",
     "mozilla::StyleFloat",
     "mozilla::StyleImageOrientation",
     "mozilla::StyleUserModify",

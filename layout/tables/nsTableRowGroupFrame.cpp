@@ -1699,7 +1699,7 @@ void nsTableRowGroupFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
 int32_t nsTableRowGroupFrame::GetNumLines() { return GetRowCount(); }
 
 bool nsTableRowGroupFrame::GetDirection() {
-  return (NS_STYLE_DIRECTION_RTL ==
+  return (StyleDirection::Rtl ==
           GetTableFrame()->StyleVisibility()->mDirection);
 }
 
@@ -1793,7 +1793,7 @@ nsTableRowGroupFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
     }
   }
   NS_ASSERTION(frame, "cellmap is lying");
-  bool isRTL = (NS_STYLE_DIRECTION_RTL == table->StyleVisibility()->mDirection);
+  bool isRTL = (StyleDirection::Rtl == table->StyleVisibility()->mDirection);
 
   nsIFrame* closestFromStart = nullptr;
   nsIFrame* closestFromEnd = nullptr;

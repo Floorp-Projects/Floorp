@@ -161,7 +161,7 @@ void nsMathMLmfracFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   /////////////
   // paint the fraction line
   if (mIsBevelled) {
-    DisplaySlash(aBuilder, this, mLineRect, mLineThickness, aLists);
+    DisplaySlash(aBuilder, mLineRect, mLineThickness, aLists);
   } else {
     DisplayBar(aBuilder, this, mLineRect, aLists);
   }
@@ -276,12 +276,11 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
     nscoord leftSpace = onePixel;
     nscoord rightSpace = onePixel;
     if (outermostEmbellished) {
+      const bool isRTL = StyleVisibility()->mDirection == StyleDirection::Rtl;
       nsEmbellishData coreData;
       GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
-      leftSpace += StyleVisibility()->mDirection ? coreData.trailingSpace
-                                                 : coreData.leadingSpace;
-      rightSpace += StyleVisibility()->mDirection ? coreData.leadingSpace
-                                                  : coreData.trailingSpace;
+      leftSpace += isRTL ? coreData.trailingSpace : coreData.leadingSpace;
+      rightSpace += isRTL ? coreData.leadingSpace : coreData.trailingSpace;
     }
 
     nscoord actualRuleThickness = mLineThickness;
@@ -550,7 +549,7 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
     }
 
     // Set horizontal bounding metrics
-    if (StyleVisibility()->mDirection) {
+    if (StyleVisibility()->mDirection == StyleDirection::Rtl) {
       mBoundingMetrics.leftBearing = trailingSpace + bmDen.leftBearing;
       mBoundingMetrics.rightBearing =
           trailingSpace + bmDen.width + mLineRect.width + bmNum.rightBearing;
@@ -605,11 +604,10 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
 class nsDisplayMathMLSlash : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLSlash(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                       const nsRect& aRect, nscoord aThickness, bool aRTL)
+                       const nsRect& aRect, nscoord aThickness)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
-        mThickness(aThickness),
-        mRTL(aRTL) {
+        mThickness(aThickness) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSlash);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -622,7 +620,6 @@ class nsDisplayMathMLSlash : public nsPaintedDisplayItem {
  private:
   nsRect mRect;
   nscoord mThickness;
-  bool mRTL;
 };
 
 void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
@@ -640,7 +637,7 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
   // draw the slash as a parallelogram
   Point delta = Point(presContext->AppUnitsToGfxUnits(mThickness), 0);
   RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-  if (mRTL) {
+  if (mFrame->StyleVisibility()->mDirection == StyleDirection::Rtl) {
     builder->MoveTo(rect.TopLeft());
     builder->LineTo(rect.TopLeft() + delta);
     builder->LineTo(rect.BottomRight());
@@ -656,11 +653,12 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 void nsMathMLmfracFrame::DisplaySlash(nsDisplayListBuilder* aBuilder,
-                                      nsIFrame* aFrame, const nsRect& aRect,
-                                      nscoord aThickness,
+                                      const nsRect& aRect, nscoord aThickness,
                                       const nsDisplayListSet& aLists) {
-  if (!aFrame->StyleVisibility()->IsVisible() || aRect.IsEmpty()) return;
+  if (!StyleVisibility()->IsVisible() || aRect.IsEmpty()) {
+    return;
+  }
 
-  aLists.Content()->AppendNewToTop<nsDisplayMathMLSlash>(
-      aBuilder, aFrame, aRect, aThickness, StyleVisibility()->mDirection);
+  aLists.Content()->AppendNewToTop<nsDisplayMathMLSlash>(aBuilder, this, aRect,
+                                                         aThickness);
 }

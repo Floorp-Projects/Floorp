@@ -645,8 +645,6 @@ nsresult nsCaret::GetCaretFrameForNodeOffset(
   //
   // Direction Style from visibility->mDirection
   // ------------------
-  // NS_STYLE_DIRECTION_LTR : LTR or Default
-  // NS_STYLE_DIRECTION_RTL
   if (theFrame->PresContext()->BidiEnabled()) {
     // If there has been a reflow, take the caret Bidi level to be the level of
     // the current frame
@@ -853,7 +851,7 @@ void nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
 
   // on RTL frames the right edge of mCaretRect must be equal to framePos
   const nsStyleVisibility* vis = aFrame->StyleVisibility();
-  if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+  if (StyleDirection::Rtl == vis->mDirection) {
     if (isVertical) {
       aCaretRect->y -= aCaretRect->height;
     } else {

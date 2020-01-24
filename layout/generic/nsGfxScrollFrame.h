@@ -725,7 +725,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool HasPluginFrames();
   bool HasPerspective() const { return mOuter->ChildrenHavePerspective(); }
   bool HasBgAttachmentLocal() const;
-  uint8_t GetScrolledFrameDir() const;
+  mozilla::StyleDirection GetScrolledFrameDir() const;
 
   bool IsForTextControlWithNoScrollbars() const;
 

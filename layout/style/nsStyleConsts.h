@@ -334,8 +334,7 @@ enum class StyleBorderCollapse : uint8_t { Collapse, Separate };
 enum class StyleBorderImageRepeat : uint8_t { Stretch, Repeat, Round, Space };
 
 // See nsStyleVisibility
-#define NS_STYLE_DIRECTION_LTR 0
-#define NS_STYLE_DIRECTION_RTL 1
+enum class StyleDirection : uint8_t { Ltr, Rtl };
 
 // See nsStyleVisibility
 // NOTE: WritingModes.h depends on the particular values used here.
