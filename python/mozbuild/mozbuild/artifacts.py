@@ -44,11 +44,12 @@ import pickle
 import re
 import requests
 import shutil
+import six
 import stat
 import subprocess
 import tarfile
 import tempfile
-import urlparse
+import six.moves.urllib_parse as urlparse
 import zipfile
 
 import pylru
@@ -220,7 +221,7 @@ class ArtifactJob(object):
 
         with JarWriter(file=processed_filename, compress_level=5) as writer:
             reader = JarReader(filename)
-            for filename, entry in reader.entries.iteritems():
+            for filename, entry in six.iteritems(reader.entries):
                 for pattern, (src_prefix, dest_prefix) in self.test_artifact_patterns:
                     if not mozpath.match(filename, pattern):
                         continue
@@ -956,7 +957,7 @@ class Artifacts(object):
 
             candidate_pushheads = collections.defaultdict(list)
 
-            for tree, pushid in found_pushids.iteritems():
+            for tree, pushid in six.iteritems(found_pushids):
                 end = pushid
                 start = pushid - NUM_PUSHHEADS_TO_QUERY_PER_PARENT
 
@@ -1023,7 +1024,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             rev, node = line.split(':', 1)
             return (int(rev), node)
 
-        pairs = map(to_pair, last_revs)
+        pairs = [to_pair(r) for r in last_revs]
 
         # Python's tuple sort orders by first component: here, the (local)
         # revision number.
@@ -1250,7 +1251,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         """
         if source and os.path.isfile(source):
             return self.install_from_file(source, distdir)
-        elif source and urlparse.urlparse(source).scheme:
+        elif source and urlparse(source).scheme:
             return self.install_from_url(source, distdir)
         else:
             if source is None and 'MOZ_ARTIFACT_REVISION' in os.environ:
