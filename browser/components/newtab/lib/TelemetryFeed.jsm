@@ -31,11 +31,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "AboutNewTabStartupRecorder",
-  "resource:///modules/AboutNewTabService.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "PingCentre",
   "resource:///modules/PingCentre.jsm"
 );
@@ -1048,7 +1043,7 @@ this.TelemetryFeed = class TelemetryFeed {
       !HomePage.overridden &&
       Services.prefs.getIntPref("browser.startup.page") === 1
     ) {
-      AboutNewTabStartupRecorder.maybeRecordTopsitesPainted(timestamp);
+      aboutNewTabService.maybeRecordTopsitesPainted(timestamp);
     }
 
     Object.assign(session.perf, data);
