@@ -963,6 +963,10 @@ class UrlbarInput {
     if (!this.megabar) {
       return;
     }
+    if (!this._toolbar) {
+      // Expanding requires a parent toolbar.
+      return;
+    }
     await this._updateLayoutBreakoutDimensions();
     this.startLayoutExtend();
   }
@@ -987,9 +991,7 @@ class UrlbarInput {
     }
     this.removeAttribute("breakout-extend-disabled");
 
-    if (this._toolbar) {
-      this._toolbar.setAttribute("urlbar-exceeds-toolbar-bounds", "true");
-    }
+    this._toolbar.setAttribute("urlbar-exceeds-toolbar-bounds", "true");
     this.setAttribute("breakout-extend", "true");
 
     // Enable the animation only after the first extend call to ensure it
@@ -1012,9 +1014,7 @@ class UrlbarInput {
       return;
     }
     this.removeAttribute("breakout-extend");
-    if (this._toolbar) {
-      this._toolbar.removeAttribute("urlbar-exceeds-toolbar-bounds");
-    }
+    this._toolbar.removeAttribute("urlbar-exceeds-toolbar-bounds");
   }
 
   setPageProxyState(state) {
@@ -1051,7 +1051,7 @@ class UrlbarInput {
         );
         this.textbox.style.setProperty(
           "--urlbar-toolbar-height",
-          px(getBoundsWithoutFlushing(this.textbox.closest("toolbar")).height)
+          px(getBoundsWithoutFlushing(this._toolbar).height)
         );
 
         this.setAttribute("breakout", "true");
