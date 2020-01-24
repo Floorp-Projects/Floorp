@@ -121,6 +121,7 @@ using gfxSparseBitSet from "gfxFontUtils.h";
 using mozilla::dom::MediaControlKeysEvent from "ipc/MediaControlIPC.h";
 using mozilla::dom::ControlledMediaState from "ipc/MediaControlIPC.h";
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
+using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/ServiceWorkerShutdownState.h";
 
 union ChromeRegistryItem
 {
@@ -1523,6 +1524,15 @@ parent:
      */
     async GetModulesTrust(ModulePaths aModPaths, bool aRunAtNormalPriority)
         returns (ModulesMapResult? modMapResult);
+
+    /**
+     * Used to route shutdown diagnostic info from the content process
+     * ServiceWorkers to the parent process' ServiceWorkerManager's
+     * ServiceWorkerShutdownBlocker. (The only other actor chain available
+     * for this would be very convoluted and create ordering problems).
+     */
+    async ReportServiceWorkerShutdownProgress(uint32_t aShutdownStateId,
+                                              Progress aProgress);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,

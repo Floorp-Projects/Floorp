@@ -322,8 +322,8 @@ ServiceWorkerManager::~ServiceWorkerManager() {
   }
 }
 
-void ServiceWorkerManager::BlockShutdownOn(
-    GenericNonExclusivePromise* aPromise) {
+void ServiceWorkerManager::BlockShutdownOn(GenericNonExclusivePromise* aPromise,
+                                           uint32_t aShutdownStateId) {
   AssertIsOnMainThread();
 
   // This may be called when in non-e10s mode with parent-intercept enabled.
@@ -334,7 +334,7 @@ void ServiceWorkerManager::BlockShutdownOn(
   MOZ_ASSERT(mShutdownBlocker);
   MOZ_ASSERT(aPromise);
 
-  mShutdownBlocker->WaitOnPromise(aPromise);
+  mShutdownBlocker->WaitOnPromise(aPromise, aShutdownStateId);
 }
 
 void ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar) {
@@ -3143,6 +3143,21 @@ void ServiceWorkerManager::RemoveOrphanedRegistration(
   MOZ_ASSERT(mOrphanedRegistrations.has(aRegistration));
 
   mOrphanedRegistrations.remove(aRegistration);
+}
+
+uint32_t ServiceWorkerManager::MaybeInitServiceWorkerShutdownProgress() const {
+  if (!mShutdownBlocker) {
+    return ServiceWorkerShutdownBlocker::kInvalidShutdownStateId;
+  }
+
+  return mShutdownBlocker->CreateShutdownState();
+}
+
+void ServiceWorkerManager::ReportServiceWorkerShutdownProgress(
+    uint32_t aShutdownStateId,
+    ServiceWorkerShutdownState::Progress aProgress) const {
+  MOZ_ASSERT(mShutdownBlocker);
+  mShutdownBlocker->ReportShutdownProgress(aShutdownStateId, aProgress);
 }
 
 }  // namespace dom
