@@ -36,6 +36,19 @@
 	</ul>
 	]]></string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avanzate…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶
+        <label>Potrebbe trattarsi di un tentativo di sostituirsi al sito originale. È sconsigliato proseguire.</label>¶
+        <br><br>¶
+        <label>I siti web garantiscono la propria identità attraverso certificati. %1$s non considera il sito <b>%2$s</b> attendibile perché l’autorità emittente del certificato è sconosciuta, il certificato è autofirmato oppure il server non ha inviato i certificati intermedi previsti.</label>¶
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Torna indietro (consigliato)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Accetta il rischio e continua</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">La connessione è stata interrotta</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
