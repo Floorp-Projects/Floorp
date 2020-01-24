@@ -5,8 +5,6 @@
 
 #include "mozilla/dom/WebGPUBinding.h"
 #include "ComputePassEncoder.h"
-#include "BindGroup.h"
-#include "ComputePipeline.h"
 
 #include "mozilla/webgpu/ffi/wgpu.h"
 
@@ -31,28 +29,12 @@ ffi::WGPURawPass BeginComputePass(RawId aEncoderId,
 
 ComputePassEncoder::ComputePassEncoder(
     CommandEncoder* const aParent, const dom::GPUComputePassDescriptor& aDesc)
-    : ChildOf(aParent), mRaw(BeginComputePass(aParent->mId, aDesc)) {}
+    : ChildOf(aParent), mRaw(BeginComputePass(aParent->GetId(), aDesc)) {}
 
 ComputePassEncoder::~ComputePassEncoder() {
   if (mValid) {
     mValid = false;
     ffi::wgpu_compute_pass_destroy(mRaw);
-  }
-}
-
-void ComputePassEncoder::SetBindGroup(
-    uint32_t aSlot, const BindGroup& aBindGroup,
-    const dom::Sequence<uint32_t>& aDynamicOffsets) {
-  if (mValid) {
-    ffi::wgpu_compute_pass_set_bind_group(&mRaw, aSlot, aBindGroup.mId,
-                                          aDynamicOffsets.Elements(),
-                                          aDynamicOffsets.Length());
-  }
-}
-
-void ComputePassEncoder::SetPipeline(const ComputePipeline& aPipeline) {
-  if (mValid) {
-    ffi::wgpu_compute_pass_set_pipeline(&mRaw, aPipeline.mId);
   }
 }
 

@@ -13,6 +13,8 @@ namespace mozilla {
 namespace dom {
 template <typename T>
 class Sequence;
+template <typename T>
+class Optional;
 }  // namespace dom
 namespace webgpu {
 
@@ -32,12 +34,6 @@ class ProgrammablePassEncoder : public nsISupports, public ObjectBase {
  protected:
   ~ProgrammablePassEncoder() = default;
   void Cleanup() {}
-
- public:
-  // TODO: remove all of this, see
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1611024
-  virtual void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
-                            const dom::Sequence<uint32_t>& aDynamicOffsets) = 0;
 };
 
 }  // namespace webgpu

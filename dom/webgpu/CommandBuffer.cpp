@@ -26,10 +26,7 @@ CommandBuffer::~CommandBuffer() { Cleanup(); }
 void CommandBuffer::Cleanup() {
   if (mValid && mParent) {
     mValid = false;
-    WebGPUChild* bridge = mParent->mBridge;
-    if (bridge && bridge->IsOpen()) {
-      bridge->DestroyCommandBuffer(mId);
-    }
+    mParent->DestroyCommandBuffer(mId);
   }
 }
 

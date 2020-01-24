@@ -19,8 +19,6 @@ class TextureView final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(TextureView)
   GPU_DECL_JS_WRAP(TextureView)
 
-  const RawId mId;
-
  private:
   TextureView() = delete;
   virtual ~TextureView();
