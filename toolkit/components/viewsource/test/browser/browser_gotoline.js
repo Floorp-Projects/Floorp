@@ -24,9 +24,13 @@ var checkViewSource = async function(aTab) {
   });
 
   for (let i = 1; i <= 3; i++) {
-    browser.messageManager.sendAsyncMessage("ViewSource:GoToLine", {
-      lineNumber: i,
-    });
+    browser.sendMessageToActor(
+      "ViewSource:GoToLine",
+      {
+        lineNumber: i,
+      },
+      "ViewSourcePage"
+    );
     await SpecialPowers.spawn(browser, [i], async function(i) {
       let selection = content.getSelection();
       Assert.equal(selection.toString(), "line " + i, "Correct text selected");

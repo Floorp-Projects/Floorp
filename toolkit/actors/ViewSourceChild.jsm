@@ -3,28 +3,183 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["SelectionSourceChild"];
+var EXPORTED_SYMBOLS = ["ViewSourceChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class SelectionSourceChild extends ActorChild {
-  receiveMessage(message) {
-    const global = message.target;
+ChromeUtils.defineModuleGetter(
+  this,
+  "ViewSourcePageChild",
+  "resource://gre/actors/ViewSourcePageChild.jsm"
+);
 
-    if (message.name == "ViewSource:GetSelection") {
-      let selectionDetails;
-      try {
-        selectionDetails = this.getSelection(global);
-      } finally {
-        global.sendAsyncMessage(
-          "ViewSource:GetSelectionDone",
-          selectionDetails
+class ViewSourceChild extends JSWindowActorChild {
+  receiveMessage(message) {
+    let data = message.data;
+    switch (message.name) {
+      case "ViewSource:LoadSource":
+        this.viewSource(
+          data.URL,
+          data.outerWindowID,
+          data.lineNumber,
+          data.shouldWrap
         );
+        break;
+      case "ViewSource:LoadSourceWithSelection":
+        this.viewSourceWithSelection(
+          data.URL,
+          data.drawSelection,
+          data.baseURI
+        );
+        break;
+      case "ViewSource:GetSelection":
+        let selectionDetails;
+        try {
+          selectionDetails = this.getSelection(this.document.ownerGlobal);
+        } catch (e) {}
+        return selectionDetails;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Called when the parent sends a message to view some source code.
+   *
+   * @param URL (required)
+   *        The URL string of the source to be shown.
+   * @param outerWindowID (optional)
+   *        The outerWindowID of the content window that has hosted
+   *        the document, in case we want to retrieve it from the network
+   *        cache.
+   * @param lineNumber (optional)
+   *        The line number to focus as soon as the source has finished
+   *        loading.
+   */
+  viewSource(URL, outerWindowID, lineNumber) {
+    let pageDescriptor, forcedCharSet;
+
+    if (outerWindowID) {
+      let contentWindow = Services.wm.getOuterWindowWithId(outerWindowID);
+      if (contentWindow) {
+        let otherDocShell = contentWindow.docShell;
+
+        try {
+          pageDescriptor = otherDocShell.QueryInterface(Ci.nsIWebPageDescriptor)
+            .currentDescriptor;
+        } catch (e) {
+          // We couldn't get the page descriptor, so we'll probably end up re-retrieving
+          // this document off of the network.
+        }
+
+        let utils = contentWindow.windowUtils;
+        let doc = contentWindow.document;
+        forcedCharSet = utils.docCharsetIsForced ? doc.characterSet : null;
       }
     }
+
+    this.loadSource(URL, pageDescriptor, lineNumber, forcedCharSet);
+  }
+
+  /**
+   * Loads a view source selection showing the given view-source url and
+   * highlight the selection.
+   *
+   * @param uri view-source uri to show
+   * @param drawSelection true to highlight the selection
+   * @param baseURI base URI of the original document
+   */
+  viewSourceWithSelection(uri, drawSelection, baseURI) {
+    // This isn't ideal, but set a global in the view source page actor
+    // that indicates that a selection should be drawn. It will be read
+    // when by the page's pageshow listener. This should work as the
+    // view source page is always loaded in the same process.
+    ViewSourcePageChild.setNeedsDrawSelection(drawSelection);
+
+    // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
+    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    let webNav = this.docShell.QueryInterface(Ci.nsIWebNavigation);
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags,
+      baseURI: Services.io.newURI(baseURI),
+    };
+    webNav.loadURI(uri, loadURIOptions);
+  }
+
+  /**
+   * Common utility function used by both the current and deprecated APIs
+   * for loading source.
+   *
+   * @param URL (required)
+   *        The URL string of the source to be shown.
+   * @param pageDescriptor (optional)
+   *        The currentDescriptor off of an nsIWebPageDescriptor, in the
+   *        event that the caller wants to try to load the source out of
+   *        the network cache.
+   * @param lineNumber (optional)
+   *        The line number to focus as soon as the source has finished
+   *        loading.
+   * @param forcedCharSet (optional)
+   *        The document character set to use instead of the default one.
+   */
+  loadSource(URL, pageDescriptor, lineNumber, forcedCharSet) {
+    const viewSrcURL = "view-source:" + URL;
+
+    if (forcedCharSet) {
+      try {
+        this.docShell.charset = forcedCharSet;
+      } catch (e) {
+        /* invalid charset */
+      }
+    }
+
+    ViewSourcePageChild.setInitialLineNumber(lineNumber);
+
+    if (!pageDescriptor) {
+      this.loadSourceFromURL(viewSrcURL);
+      return;
+    }
+
+    try {
+      let pageLoader = this.docShell.QueryInterface(Ci.nsIWebPageDescriptor);
+      pageLoader.loadPage(
+        pageDescriptor,
+        Ci.nsIWebPageDescriptor.DISPLAY_AS_SOURCE
+      );
+    } catch (e) {
+      // We were not able to load the source from the network cache.
+      this.loadSourceFromURL(viewSrcURL);
+      return;
+    }
+
+    let shEntrySource = pageDescriptor.QueryInterface(Ci.nsISHEntry);
+    let shistory = this.docShell.QueryInterface(Ci.nsIWebNavigation)
+      .sessionHistory.legacySHistory;
+    let shEntry = shistory.createEntry();
+    shEntry.URI = Services.io.newURI(viewSrcURL);
+    shEntry.title = viewSrcURL;
+    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    shEntry.triggeringPrincipal = systemPrincipal;
+    shEntry.setLoadTypeAsHistory();
+    shEntry.cacheKey = shEntrySource.cacheKey;
+    shistory.addEntry(shEntry, true);
+  }
+
+  /**
+   * Load some URL in the browser.
+   *
+   * @param URL
+   *        The URL string to load.
+   */
+  loadSourceFromURL(URL) {
+    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    let webNav = this.docShell.QueryInterface(Ci.nsIWebNavigation);
+    let loadURIOptions = {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      loadFlags,
+    };
+    webNav.loadURI(URL, loadURIOptions);
   }
 
   /**
@@ -213,7 +368,7 @@ class SelectionSourceChild extends ActorChild {
     tmpNode.appendChild(ancestorContainer);
 
     return {
-      uri:
+      URL:
         (isHTML
           ? "view-source:data:text/html;charset=utf-8,"
           : "view-source:data:application/xml;charset=utf-8,") +
