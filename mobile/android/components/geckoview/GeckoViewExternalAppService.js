@@ -45,7 +45,7 @@ ExternalAppService.prototype = {
       uri: channel.URI.displaySpec,
       contentType: channel.contentType,
       contentLength: channel.contentLength,
-      filename: filename,
+      filename,
     });
 
     request.cancel(Cr.NS_ERROR_ABORT);

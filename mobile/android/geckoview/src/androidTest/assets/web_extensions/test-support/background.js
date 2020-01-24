@@ -5,31 +5,31 @@
 const port = browser.runtime.connectNative("browser");
 
 const APIS = {
-  AddHistogram: function({ id, value }) {
+  AddHistogram({ id, value }) {
     browser.test.addHistogram(id, value);
   },
-  SetScalar: function({ id, value }) {
+  SetScalar({ id, value }) {
     browser.test.setScalar(id, value);
   },
-  GetRequestedLocales: function() {
+  GetRequestedLocales() {
     return browser.test.getRequestedLocales();
   },
-  GetLinkColor: function({ uri, selector }) {
+  GetLinkColor({ uri, selector }) {
     return browser.test.getLinkColor(uri, selector);
   },
-  GetPrefs: function({ prefs }) {
+  GetPrefs({ prefs }) {
     return browser.test.getPrefs(prefs);
   },
-  RemoveCertOverride: function({ host, port }) {
+  RemoveCertOverride({ host, port }) {
     browser.test.removeCertOverride(host, port);
   },
-  RestorePrefs: function({ oldPrefs }) {
+  RestorePrefs({ oldPrefs }) {
     return browser.test.restorePrefs(oldPrefs);
   },
-  SetPrefs: function({ oldPrefs, newPrefs }) {
+  SetPrefs({ oldPrefs, newPrefs }) {
     return browser.test.setPrefs(oldPrefs, newPrefs);
   },
-  SetResolutionAndScaleTo: function({ resolution }) {
+  SetResolutionAndScaleTo({ resolution }) {
     return browser.test.setResolutionAndScaleTo(resolution);
   },
 };

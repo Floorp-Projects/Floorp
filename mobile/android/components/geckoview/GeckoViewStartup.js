@@ -42,7 +42,7 @@ GeckoViewStartup.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   /* ----------  nsIObserver  ---------- */
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     debug`observe: ${aTopic}`;
     switch (aTopic) {
       case "app-startup": {

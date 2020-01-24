@@ -42,7 +42,7 @@ function createSubscription({
   });
 
   return new PushSubscription({
-    endpoint: endpoint,
+    endpoint,
     scope,
     p256dhKey: decodedBrowserKey,
     authenticationSecret: decodedAuthSecret,

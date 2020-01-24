@@ -7,7 +7,6 @@ module.exports = {
     "consistent-return": "off",
     "no-empty": "off",
     "no-redeclare": "off",
-    "object-shorthand": "off",
   },
 
   "overrides": [{

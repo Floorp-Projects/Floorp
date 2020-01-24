@@ -80,7 +80,7 @@ var GeckoViewUtils = {
    * @param once      if true, only listen to the specified
    *                  events/messages/notifications once.
    */
-  addLazyGetter: function(
+  addLazyGetter(
     scope,
     name,
     { service, module, handler, observers, ppmm, mm, ged, init, once }
@@ -152,7 +152,7 @@ var GeckoViewUtils = {
     }
   },
 
-  _addLazyListeners: function(events, handler, scope, name, addFn, handleFn) {
+  _addLazyListeners(events, handler, scope, name, addFn, handleFn) {
     if (!handler) {
       handler = _ =>
         Array.isArray(name) ? name.map(n => scope[n]) : scope[name];
@@ -188,11 +188,7 @@ var GeckoViewUtils = {
    * @param name    See handler.
    * @param options Options for addEventListener.
    */
-  addLazyEventListener: function(
-    target,
-    events,
-    { handler, scope, name, options }
-  ) {
+  addLazyEventListener(target, events, { handler, scope, name, options }) {
     this._addLazyListeners(
       events,
       handler,
@@ -229,7 +225,7 @@ var GeckoViewUtils = {
    * @param name    See handler.
    * @param once    If true, only listen to the specified events once.
    */
-  registerLazyWindowEventListener: function(
+  registerLazyWindowEventListener(
     window,
     events,
     { handler, scope, name, once }
@@ -272,7 +268,7 @@ var GeckoViewUtils = {
    * @param name    See handler.
    * @param once    If true, only observe the specified prefs once.
    */
-  addLazyPrefObserver: function(aPrefs, { handler, scope, name, once }) {
+  addLazyPrefObserver(aPrefs, { handler, scope, name, once }) {
     this._addLazyListeners(
       aPrefs,
       handler,
@@ -314,7 +310,7 @@ var GeckoViewUtils = {
     );
   },
 
-  getRootDocShell: function(aWin) {
+  getRootDocShell(aWin) {
     if (!aWin) {
       return null;
     }
@@ -333,7 +329,7 @@ var GeckoViewUtils = {
    *
    * @param aWin a DOM window.
    */
-  getChromeWindow: function(aWin) {
+  getChromeWindow(aWin) {
     const docShell = this.getRootDocShell(aWin);
     return docShell && docShell.domWindow;
   },
@@ -344,7 +340,7 @@ var GeckoViewUtils = {
    *
    * @param aWin a DOM window.
    */
-  getContentFrameMessageManager: function(aWin) {
+  getContentFrameMessageManager(aWin) {
     const docShell = this.getRootDocShell(aWin);
     return docShell && docShell.getInterface(Ci.nsIBrowserChild).messageManager;
   },
@@ -355,7 +351,7 @@ var GeckoViewUtils = {
    *
    * @param aWin a DOM window.
    */
-  getDispatcherForWindow: function(aWin) {
+  getDispatcherForWindow(aWin) {
     try {
       if (!this.IS_PARENT_PROCESS) {
         const mm = this.getContentFrameMessageManager(aWin.top || aWin);
@@ -369,7 +365,7 @@ var GeckoViewUtils = {
     return null;
   },
 
-  getActiveDispatcherAndWindow: function() {
+  getActiveDispatcherAndWindow() {
     const win = Services.focus.activeWindow;
     let dispatcher = this.getDispatcherForWindow(win);
     if (dispatcher) {
@@ -405,7 +401,7 @@ var GeckoViewUtils = {
    * @param aTag Name of the Log.jsm logger to forward logs to.
    * @param aScope Scope to add the logging functions to.
    */
-  initLogging: function(aTag, aScope) {
+  initLogging(aTag, aScope) {
     aScope = aScope || {};
     const tag = "GeckoView." + aTag.replace(/^GeckoView\.?/, "");
 
@@ -438,7 +434,7 @@ var GeckoViewUtils = {
     return this._rootLogger;
   },
 
-  _log: function(aLogger, aLevel, aStrings, aExprs) {
+  _log(aLogger, aLevel, aStrings, aExprs) {
     if (!Array.isArray(aStrings)) {
       const [, file, line] = new Error().stack.match(/.*\n.*\n.*@(.*):(\d+):/);
       throw Error(

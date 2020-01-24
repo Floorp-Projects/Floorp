@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1214366
   function get_last_visited(prePath) {
     return EventDispatcher.instance.sendRequestForResult({
       type: "History:GetPrePathLastVisitedTimeMilliseconds",
-      prePath: prePath,
+      prePath,
     });
   }
 

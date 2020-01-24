@@ -108,9 +108,9 @@ function makeObserver(observerId) {
     id: observerId,
     count: 0,
     promise: deferred.promise,
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
       ret.count += 1;
-      let msg = { subject: subject, topic: topic, data: data };
+      let msg = { subject, topic, data };
       deferred.resolve(msg);
     },
   };

@@ -291,7 +291,7 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
 
       this.eventDispatcher.sendRequest({
         type: "GeckoView:HideSelectionAction",
-        reason: reason,
+        reason,
       });
     } else {
       warn`Unknown reason: ${reason}`;
