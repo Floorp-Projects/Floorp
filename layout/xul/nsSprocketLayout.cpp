@@ -22,6 +22,8 @@
 #include "mozilla/Likely.h"
 #include <algorithm>
 
+using mozilla::StyleDirection;
+
 nsBoxLayout* nsSprocketLayout::gInstance = nullptr;
 
 nsresult NS_NewSprocketLayout(nsCOMPtr<nsBoxLayout>& aNewLayout) {
@@ -47,7 +49,7 @@ void nsSprocketLayout::GetFrameState(nsIFrame* aBox, nsFrameState& aState) {
   aState = aBox->GetStateBits();
 }
 
-static uint8_t GetFrameDirection(nsIFrame* aBox) {
+static StyleDirection GetFrameDirection(nsIFrame* aBox) {
   return aBox->StyleVisibility()->mDirection;
 }
 
@@ -58,7 +60,7 @@ static void HandleBoxPack(nsIFrame* aBox, const nsFrameState& aFrameState,
   // (e.g., |x| will get bigger for a horizontal box, and |y| will get bigger
   // for a vertical box).  In the reverse direction, the opposite is true. We'll
   // be laying out each child at a smaller |x| or |y|.
-  uint8_t frameDirection = GetFrameDirection(aBox);
+  StyleDirection frameDirection = GetFrameDirection(aBox);
 
   if (aFrameState & NS_STATE_IS_HORIZONTAL) {
     if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL) {
@@ -72,7 +74,7 @@ static void HandleBoxPack(nsIFrame* aBox, const nsFrameState& aFrameState,
     aY = aClientRect.y;
   } else {
     // take direction property into account for |x| in vertical boxes
-    if (frameDirection == NS_STYLE_DIRECTION_LTR) {
+    if (frameDirection == StyleDirection::Ltr) {
       // The normal direction. |x| increases as we move through our children.
       aX = aClientRect.x;
     } else {
@@ -371,7 +373,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState) {
           nextY += (childBoxSize->right);
         else
           nextY -= (childBoxSize->left);
-        if (GetFrameDirection(aBox) == NS_STYLE_DIRECTION_LTR) {
+        if (GetFrameDirection(aBox) == StyleDirection::Ltr) {
           childRect.x = originalClientRect.x;
         } else {
           // keep the right edge of the box the same
@@ -497,7 +499,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState) {
         }
 
         if (!(frameState & NS_STATE_IS_HORIZONTAL)) {
-          if (GetFrameDirection(aBox) != NS_STYLE_DIRECTION_LTR) {
+          if (GetFrameDirection(aBox) != StyleDirection::Ltr) {
             // keep the right edge the same
             newChildRect.x = childRect.XMost() - newChildRect.width;
           }
@@ -876,7 +878,7 @@ void nsSprocketLayout::AlignChildren(nsIFrame* aBox, nsBoxLayoutState& aState) {
       maxAscent = aBox->GetXULBoxAscent(aState);
     }
   } else {
-    isLTR = GetFrameDirection(aBox) == NS_STYLE_DIRECTION_LTR;
+    isLTR = GetFrameDirection(aBox) == StyleDirection::Ltr;
     halign = aBox->GetXULHAlign();
   }
 

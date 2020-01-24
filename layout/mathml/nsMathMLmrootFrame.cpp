@@ -243,7 +243,8 @@ void nsMathMLmrootFrame::Reflow(nsPresContext* aPresContext,
   nsBoundingMetrics radicalSize;
   mSqrChar.Stretch(this, drawTarget, fontSizeInflation,
                    NS_STRETCH_DIRECTION_VERTICAL, contSize, radicalSize,
-                   NS_STRETCH_LARGER, StyleVisibility()->mDirection);
+                   NS_STRETCH_LARGER,
+                   StyleVisibility()->mDirection == StyleDirection::Rtl);
   // radicalSize have changed at this point, and should match with
   // the bounding metrics of the char
   mSqrChar.GetBoundingMetrics(bmSqr);

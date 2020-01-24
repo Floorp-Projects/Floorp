@@ -397,23 +397,21 @@ nsresult nsMathMLmpaddedFrame::Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
   // there are attributes, tweak our metrics and move children to achieve the
   // desired visual effects.
 
-  if ((StyleVisibility()->mDirection ? mWidthSign : mLeadingSpaceSign) !=
-      NS_MATHML_SIGN_INVALID) {
+  const bool isRTL = StyleVisibility()->mDirection == StyleDirection::Rtl;
+  if ((isRTL ? mWidthSign : mLeadingSpaceSign) != NS_MATHML_SIGN_INVALID) {
     // there was padding on the left. dismiss the left italic correction now
     // (so that our parent won't correct us)
     mBoundingMetrics.leftBearing = 0;
   }
 
-  if ((StyleVisibility()->mDirection ? mLeadingSpaceSign : mWidthSign) !=
-      NS_MATHML_SIGN_INVALID) {
+  if ((isRTL ? mLeadingSpaceSign : mWidthSign) != NS_MATHML_SIGN_INVALID) {
     // there was padding on the right. dismiss the right italic correction now
     // (so that our parent won't correct us)
     mBoundingMetrics.width = width;
     mBoundingMetrics.rightBearing = mBoundingMetrics.width;
   }
 
-  nscoord dx =
-      (StyleVisibility()->mDirection ? width - initialWidth - lspace : lspace);
+  nscoord dx = (isRTL ? width - initialWidth - lspace : lspace);
 
   aDesiredSize.SetBlockStartAscent(height);
   aDesiredSize.Width() = mBoundingMetrics.width;

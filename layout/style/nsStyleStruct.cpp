@@ -3127,8 +3127,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
 
 nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
     : mDirection(aDocument.GetBidiOptions() == IBMBIDI_TEXTDIRECTION_RTL
-                     ? NS_STYLE_DIRECTION_RTL
-                     : NS_STYLE_DIRECTION_LTR),
+                     ? StyleDirection::Rtl
+                     : StyleDirection::Ltr),
       mVisible(StyleVisibility::Visible),
       mImageRendering(NS_STYLE_IMAGE_RENDERING_AUTO),
       mWritingMode(NS_STYLE_WRITING_MODE_HORIZONTAL_TB),

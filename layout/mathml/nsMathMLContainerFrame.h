@@ -139,9 +139,9 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   // helper function to apply mirroring to a horizontal coordinate, if needed.
   nscoord MirrorIfRTL(nscoord aParentWidth, nscoord aChildWidth,
                       nscoord aChildLeading) {
-    return (StyleVisibility()->mDirection
-                ? aParentWidth - aChildWidth - aChildLeading
-                : aChildLeading);
+    return StyleVisibility()->mDirection == mozilla::StyleDirection::Rtl
+               ? aParentWidth - aChildWidth - aChildLeading
+               : aChildLeading;
   }
 
   // --------------------------------------------------------------------------

@@ -167,7 +167,7 @@ uint8_t nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset) {
   uint8_t offsetSpecified = 0;
   nsIContent* content = aChild->GetContent();
   if (content && content->IsElement()) {
-    bool ltr = aChild->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
+    bool ltr = aChild->StyleVisibility()->mDirection == StyleDirection::Ltr;
     nsAutoString value;
     nsresult error;
 

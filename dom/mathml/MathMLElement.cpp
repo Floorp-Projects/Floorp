@@ -797,8 +797,8 @@ void MathMLElement::MapMathMLAttributesInto(
       !aDecls.PropertyIsSet(eCSSProperty_direction)) {
     nsAutoString str(value->GetStringValue());
     static const char dirs[][4] = {"ltr", "rtl"};
-    static const int32_t dirValues[MOZ_ARRAY_LENGTH(dirs)] = {
-        NS_STYLE_DIRECTION_LTR, NS_STYLE_DIRECTION_RTL};
+    static const StyleDirection dirValues[MOZ_ARRAY_LENGTH(dirs)] = {
+        StyleDirection::Ltr, StyleDirection::Rtl};
     for (uint32_t i = 0; i < ArrayLength(dirs); ++i) {
       if (str.LowerCaseEqualsASCII(dirs[i])) {
         aDecls.SetKeywordValue(eCSSProperty_direction, dirValues[i]);

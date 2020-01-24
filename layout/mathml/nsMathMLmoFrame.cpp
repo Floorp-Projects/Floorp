@@ -719,7 +719,8 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
     // let the MathMLChar stretch itself...
     nsresult res = mMathMLChar.Stretch(
         this, aDrawTarget, fontSizeInflation, aStretchDirection, container,
-        charSize, stretchHint, StyleVisibility()->mDirection);
+        charSize, stretchHint,
+        StyleVisibility()->mDirection == StyleDirection::Rtl);
     if (NS_FAILED(res)) {
       // gracefully handle cases where stretching the char failed (i.e.,
       // GetBoundingMetrics failed) clear our 'form' to behave as if the
@@ -844,7 +845,9 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
     aDesiredStretchSize.Width() = mBoundingMetrics.width;
     aDesiredStretchSize.mBoundingMetrics.width = mBoundingMetrics.width;
 
-    nscoord dx = (StyleVisibility()->mDirection ? trailingSpace : leadingSpace);
+    nscoord dx = StyleVisibility()->mDirection == StyleDirection::Rtl
+                     ? trailingSpace
+                     : leadingSpace;
     if (dx) {
       // adjust the offsets
       mBoundingMetrics.leftBearing += dx;
@@ -946,7 +949,8 @@ nsresult nsMathMLmoFrame::Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
     rv = mMathMLChar.Stretch(
         this, aDrawTarget, nsLayoutUtils::FontSizeInflationFor(this),
         NS_STRETCH_DIRECTION_VERTICAL, aDesiredSize.mBoundingMetrics,
-        newMetrics, NS_STRETCH_LARGEOP, StyleVisibility()->mDirection);
+        newMetrics, NS_STRETCH_LARGEOP,
+        StyleVisibility()->mDirection == StyleDirection::Rtl);
 
     if (NS_FAILED(rv)) {
       // Just use the initial size
@@ -1011,7 +1015,7 @@ void nsMathMLmoFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
   // leadingSpace and trailingSpace are actually applied to the outermost
   // embellished container but for determining total intrinsic width it should
   // be safe to include it for the core here instead.
-  bool isRTL = StyleVisibility()->mDirection;
+  bool isRTL = StyleVisibility()->mDirection == StyleDirection::Rtl;
   aDesiredSize.Width() +=
       mEmbellishData.leadingSpace + mEmbellishData.trailingSpace;
   aDesiredSize.mBoundingMetrics.width = aDesiredSize.Width();

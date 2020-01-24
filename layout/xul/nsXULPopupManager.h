@@ -121,7 +121,8 @@ enum nsIgnoreKeys {
 #define NS_DIRECTION_IS_BLOCK_TO_EDGE(dir) \
   (dir == eNavigationDirection_First || dir == eNavigationDirection_Last)
 
-static_assert(NS_STYLE_DIRECTION_LTR == 0 && NS_STYLE_DIRECTION_RTL == 1,
+static_assert(static_cast<uint8_t>(mozilla::StyleDirection::Ltr) == 0 &&
+                  static_cast<uint8_t>(mozilla::StyleDirection::Rtl) == 1,
               "Left to Right should be 0 and Right to Left should be 1");
 
 /**
@@ -131,10 +132,10 @@ static_assert(NS_STYLE_DIRECTION_LTR == 0 && NS_STYLE_DIRECTION_RTL == 1,
  */
 extern const nsNavigationDirection DirectionFromKeyCodeTable[2][6];
 
-#define NS_DIRECTION_FROM_KEY_CODE(frame, keycode)                 \
-  (DirectionFromKeyCodeTable[frame->StyleVisibility()->mDirection] \
-                            [keycode -                             \
-                             mozilla::dom::KeyboardEvent_Binding::DOM_VK_END])
+#define NS_DIRECTION_FROM_KEY_CODE(frame, keycode) \
+  (DirectionFromKeyCodeTable[static_cast<uint8_t>( \
+      (frame)->StyleVisibility()->mDirection)][(   \
+      keycode)-mozilla::dom::KeyboardEvent_Binding::DOM_VK_END])
 
 // nsMenuChainItem holds info about an open popup. Items are stored in a
 // doubly linked list. Note that the linked list is stored beginning from

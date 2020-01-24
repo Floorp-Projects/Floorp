@@ -4778,7 +4778,7 @@ void SVGTextFrame::DoAnchoring() {
 
     if (left != std::numeric_limits<gfxFloat>::infinity()) {
       bool isRTL =
-          chunkFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+          chunkFrame->StyleVisibility()->mDirection == StyleDirection::Rtl;
       TextAnchorSide anchor = ConvertLogicalTextAnchorToPhysical(
           chunkFrame->StyleSVG()->mTextAnchor, isRTL);
 

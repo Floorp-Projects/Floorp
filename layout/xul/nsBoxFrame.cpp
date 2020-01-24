@@ -307,8 +307,9 @@ void nsBoxFrame::GetInitialDirection(bool& aIsNormal) {
     // For horizontal boxes only, we initialize our value based off the CSS
     // 'direction' property. This means that BiDI users will end up with
     // horizontally inverted chrome.
-    aIsNormal = (StyleVisibility()->mDirection ==
-                 NS_STYLE_DIRECTION_LTR);  // If text runs RTL then so do we.
+    //
+    // If text runs RTL then so do we.
+    aIsNormal = StyleVisibility()->mDirection == StyleDirection::Ltr;
     if (GetContent()->IsElement()) {
       Element* element = GetContent()->AsElement();
 

@@ -227,12 +227,12 @@ void StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame,
                           computedOffsets->bottom - rect.height - sfOffset.y);
   }
 
-  uint8_t direction = cbFrame->StyleVisibility()->mDirection;
+  StyleDirection direction = cbFrame->StyleVisibility()->mDirection;
 
   // Left
   if (computedOffsets->left != NS_AUTOOFFSET &&
       (computedOffsets->right == NS_AUTOOFFSET ||
-       direction == NS_STYLE_DIRECTION_LTR ||
+       direction == StyleDirection::Ltr ||
        rect.width <= sfSize.width - computedOffsets->LeftRight())) {
     aStick->SetLeftEdge(mScrollPosition.x + sfPadding.left +
                         computedOffsets->left - sfOffset.x);
@@ -241,7 +241,7 @@ void StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame,
   // Right
   if (computedOffsets->right != NS_AUTOOFFSET &&
       (computedOffsets->left == NS_AUTOOFFSET ||
-       direction == NS_STYLE_DIRECTION_RTL ||
+       direction == StyleDirection::Rtl ||
        rect.width <= sfSize.width - computedOffsets->LeftRight())) {
     aStick->SetRightEdge(mScrollPosition.x + sfPadding.left + sfSize.width -
                          computedOffsets->right - rect.width - sfOffset.x);

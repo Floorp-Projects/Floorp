@@ -83,7 +83,7 @@ static char16_t GetBidiOverride(ComputedStyle* aComputedStyle) {
   }
   const nsStyleTextReset* text = aComputedStyle->StyleTextReset();
   if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE) {
-    return NS_STYLE_DIRECTION_RTL == vis->mDirection ? kRLO : kLRO;
+    return StyleDirection::Rtl == vis->mDirection ? kRLO : kLRO;
   }
   return 0;
 }
@@ -102,7 +102,7 @@ static char16_t GetBidiControl(ComputedStyle* aComputedStyle) {
   const nsStyleVisibility* vis = aComputedStyle->StyleVisibility();
   const nsStyleTextReset* text = aComputedStyle->StyleTextReset();
   if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_EMBED) {
-    return NS_STYLE_DIRECTION_RTL == vis->mDirection ? kRLE : kLRE;
+    return StyleDirection::Rtl == vis->mDirection ? kRLE : kLRE;
   }
   if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_ISOLATE) {
     if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE) {
@@ -111,7 +111,7 @@ static char16_t GetBidiControl(ComputedStyle* aComputedStyle) {
     }
     // <bdi> element already has its directionality set from content so
     // we never need to return kFSI.
-    return NS_STYLE_DIRECTION_RTL == vis->mDirection ? kRLI : kLRI;
+    return StyleDirection::Rtl == vis->mDirection ? kRLI : kLRI;
   }
   if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
     return kFSI;
@@ -2420,7 +2420,7 @@ nsBidiLevel nsBidiPresUtils::BidiLevelFromStyle(ComputedStyle* aComputedStyle) {
     return NSBIDI_DEFAULT_LTR;
   }
 
-  if (aComputedStyle->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (aComputedStyle->StyleVisibility()->mDirection == StyleDirection::Rtl) {
     return NSBIDI_RTL;
   }
 
