@@ -39,7 +39,6 @@ import org.mozilla.gecko.util.GeckoBundle;
  *     &lt;input type=&quot;submit&quot; value=&quot;submit&quot;&gt;
  *   &lt;/form&gt;
  * </code></pre>
- * </p>
  * <p>
  * With the document parsed and the login input fields identified, GeckoView
  * dispatches a
@@ -309,7 +308,7 @@ public class LoginStorage {
 
     // Sync with UsedField in GeckoViewLoginStorage.jsm.
     /**
-     * Possible login entry field types for {@link onLoginUsed}.
+     * Possible login entry field types for {@link Delegate#onLoginUsed}.
      */
     public static class UsedField {
         /**
