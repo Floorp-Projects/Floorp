@@ -1260,21 +1260,7 @@ public class GeckoSessionTestRule implements TestRule {
                     mServer.start(TEST_PORT);
 
                     RuntimeCreator.setPortDelegate(mPortDelegate);
-
                     getRuntime();
-
-                    long timeout = env.getDefaultTimeoutMillis() + System.currentTimeMillis();
-                    while (!GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-                        if (System.currentTimeMillis() > timeout) {
-                            throw new TimeoutException("Could not startup runtime after "
-                                    + env.getDefaultTimeoutMillis() + ".ms");
-                        }
-                        Log.e(LOGTAG, "GeckoThread not ready, sleeping 1000ms.");
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ex) {
-                        }
-                    }
 
                     Log.e(LOGTAG, "====");
                     Log.e(LOGTAG, "before prepareStatement " + description);
