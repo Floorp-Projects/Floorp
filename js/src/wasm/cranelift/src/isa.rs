@@ -157,6 +157,10 @@ fn make_shared_flags(
         sb.enable("use_pinned_reg_as_heap_base")?;
     }
 
+    if env.refTypesEnabled {
+        sb.enable("enable_safepoints")?;
+    }
+
     Ok(settings::Flags::new(sb))
 }
 
