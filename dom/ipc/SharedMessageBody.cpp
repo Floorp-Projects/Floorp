@@ -4,11 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SharedMessagePortMessage.h"
-#include "MessagePort.h"
-#include "MessagePortChild.h"
-#include "MessagePortParent.h"
+#include "SharedMessageBody.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/RefMessageBodyService.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -20,12 +18,12 @@ using namespace ipc;
 
 namespace dom {
 
-SharedMessagePortMessage::SharedMessagePortMessage() : mRefDataId({}) {}
+SharedMessageBody::SharedMessageBody() : mRefDataId({}) {}
 
-void SharedMessagePortMessage::Write(
-    JSContext* aCx, JS::Handle<JS::Value> aValue,
-    JS::Handle<JS::Value> aTransfers, nsID& aPortID,
-    RefMessageBodyService* aRefMessageBodyService, ErrorResult& aRv) {
+void SharedMessageBody::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                              JS::Handle<JS::Value> aTransfers, nsID& aPortID,
+                              RefMessageBodyService* aRefMessageBodyService,
+                              ErrorResult& aRv) {
   MOZ_ASSERT(!mCloneData && !mRefData);
   MOZ_ASSERT(aRefMessageBodyService);
 
@@ -47,9 +45,10 @@ void SharedMessagePortMessage::Write(
   mRefDataId = aRefMessageBodyService->Register(refData.forget(), aRv);
 }
 
-void SharedMessagePortMessage::Read(
-    JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
-    RefMessageBodyService* aRefMessageBodyService, ErrorResult& aRv) {
+void SharedMessageBody::Read(JSContext* aCx,
+                             JS::MutableHandle<JS::Value> aValue,
+                             RefMessageBodyService* aRefMessageBodyService,
+                             ErrorResult& aRv) {
   MOZ_ASSERT(aRefMessageBodyService);
 
   if (mCloneData) {
@@ -66,7 +65,7 @@ void SharedMessagePortMessage::Read(
   mRefData->CloneData()->Read(aCx, aValue, aRv);
 }
 
-bool SharedMessagePortMessage::TakeTransferredPortsAsSequence(
+bool SharedMessageBody::TakeTransferredPortsAsSequence(
     Sequence<OwningNonNull<mozilla::dom::MessagePort>>& aPorts) {
   if (mCloneData) {
     return mCloneData->TakeTransferredPortsAsSequence(aPorts);
@@ -77,24 +76,21 @@ bool SharedMessagePortMessage::TakeTransferredPortsAsSequence(
 }
 
 /* static */
-void SharedMessagePortMessage::FromSharedToMessagesChild(
-    MessagePortChild* aActor,
-    const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
+void SharedMessageBody::FromSharedToMessagesChild(
+    PBackgroundChild* aManager,
+    const nsTArray<RefPtr<SharedMessageBody>>& aData,
     nsTArray<MessageData>& aArray) {
-  MOZ_ASSERT(aActor);
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(aArray.IsEmpty());
   aArray.SetCapacity(aData.Length());
-
-  PBackgroundChild* backgroundManager = aActor->Manager();
-  MOZ_ASSERT(backgroundManager);
 
   for (auto& data : aData) {
     MessageData* message = aArray.AppendElement();
 
     if (data->mCloneData) {
       ClonedMessageData clonedData;
-      data->mCloneData->BuildClonedMessageDataForBackgroundChild(
-          backgroundManager, clonedData);
+      data->mCloneData->BuildClonedMessageDataForBackgroundChild(aManager,
+                                                                 clonedData);
       *message = clonedData;
       continue;
     }
@@ -104,9 +100,9 @@ void SharedMessagePortMessage::FromSharedToMessagesChild(
 }
 
 /* static */
-bool SharedMessagePortMessage::FromMessagesToSharedChild(
+bool SharedMessageBody::FromMessagesToSharedChild(
     nsTArray<MessageData>& aArray,
-    FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData) {
+    FallibleTArray<RefPtr<SharedMessageBody>>& aData) {
   MOZ_ASSERT(aData.IsEmpty());
 
   if (NS_WARN_IF(!aData.SetCapacity(aArray.Length(), mozilla::fallible))) {
@@ -114,7 +110,7 @@ bool SharedMessagePortMessage::FromMessagesToSharedChild(
   }
 
   for (auto& message : aArray) {
-    RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
+    RefPtr<SharedMessageBody> data = new SharedMessageBody();
 
     if (message.type() == MessageData::TClonedMessageData) {
       data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
@@ -134,26 +130,24 @@ bool SharedMessagePortMessage::FromMessagesToSharedChild(
 }
 
 /* static */
-bool SharedMessagePortMessage::FromSharedToMessagesParent(
-    MessagePortParent* aActor,
-    const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
+bool SharedMessageBody::FromSharedToMessagesParent(
+    PBackgroundParent* aManager,
+    const nsTArray<RefPtr<SharedMessageBody>>& aData,
     FallibleTArray<MessageData>& aArray) {
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(aArray.IsEmpty());
 
   if (NS_WARN_IF(!aArray.SetCapacity(aData.Length(), mozilla::fallible))) {
     return false;
   }
 
-  PBackgroundParent* backgroundManager = aActor->Manager();
-  MOZ_ASSERT(backgroundManager);
-
   for (auto& data : aData) {
     MessageData* message = aArray.AppendElement(mozilla::fallible);
 
     if (data->mCloneData) {
       ClonedMessageData clonedData;
-      data->mCloneData->BuildClonedMessageDataForBackgroundParent(
-          backgroundManager, clonedData);
+      data->mCloneData->BuildClonedMessageDataForBackgroundParent(aManager,
+                                                                  clonedData);
       *message = clonedData;
       continue;
     }
@@ -165,9 +159,9 @@ bool SharedMessagePortMessage::FromSharedToMessagesParent(
 }
 
 /* static */
-bool SharedMessagePortMessage::FromMessagesToSharedParent(
+bool SharedMessageBody::FromMessagesToSharedParent(
     nsTArray<MessageData>& aArray,
-    FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData) {
+    FallibleTArray<RefPtr<SharedMessageBody>>& aData) {
   MOZ_ASSERT(aData.IsEmpty());
 
   if (NS_WARN_IF(!aData.SetCapacity(aArray.Length(), mozilla::fallible))) {
@@ -175,7 +169,7 @@ bool SharedMessagePortMessage::FromMessagesToSharedParent(
   }
 
   for (auto& message : aArray) {
-    RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
+    RefPtr<SharedMessageBody> data = new SharedMessageBody();
 
     if (message.type() == MessageData::TClonedMessageData) {
       data->mCloneData = MakeUnique<ipc::StructuredCloneData>(

@@ -6,7 +6,7 @@
 
 #include "MessagePortParent.h"
 #include "MessagePortService.h"
-#include "SharedMessagePortMessage.h"
+#include "mozilla/dom/SharedMessageBody.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -40,9 +40,9 @@ bool MessagePortParent::Entangle(const nsID& aDestinationUUID,
 mozilla::ipc::IPCResult MessagePortParent::RecvPostMessages(
     nsTArray<MessageData>&& aMessages) {
   // This converts the object in a data struct where we have BlobImpls.
-  FallibleTArray<RefPtr<SharedMessagePortMessage>> messages;
-  if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedParent(
-          aMessages, messages))) {
+  FallibleTArray<RefPtr<SharedMessageBody>> messages;
+  if (NS_WARN_IF(!SharedMessageBody::FromMessagesToSharedParent(aMessages,
+                                                                messages))) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -68,9 +68,9 @@ mozilla::ipc::IPCResult MessagePortParent::RecvPostMessages(
 mozilla::ipc::IPCResult MessagePortParent::RecvDisentangle(
     nsTArray<MessageData>&& aMessages) {
   // This converts the object in a data struct where we have BlobImpls.
-  FallibleTArray<RefPtr<SharedMessagePortMessage>> messages;
-  if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedParent(
-          aMessages, messages))) {
+  FallibleTArray<RefPtr<SharedMessageBody>> messages;
+  if (NS_WARN_IF(!SharedMessageBody::FromMessagesToSharedParent(aMessages,
+                                                                messages))) {
     return IPC_FAIL_NO_REASON(this);
   }
 
