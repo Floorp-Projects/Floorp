@@ -33,7 +33,7 @@ GeckoViewPermission.prototype = {
   _appPermissions: {},
 
   /* ----------  nsIObserver  ---------- */
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "getUserMedia:ask-device-permission": {
         this.handleMediaAskDevicePermission(aData, aSubject);
@@ -70,7 +70,7 @@ GeckoViewPermission.prototype = {
     }
   },
 
-  handleMediaAskDevicePermission: function(aType, aCallback) {
+  handleMediaAskDevicePermission(aType, aCallback) {
     let perms = [];
     if (aType === "video" || aType === "all") {
       perms.push(PERM_CAMERA);
@@ -95,7 +95,7 @@ GeckoViewPermission.prototype = {
     }
   },
 
-  handleMediaRequest: function(aRequest) {
+  handleMediaRequest(aRequest) {
     let constraints = aRequest.getConstraints();
     let callId = aRequest.callID;
     let denyRequest = _ => {
@@ -195,7 +195,7 @@ GeckoViewPermission.prototype = {
       });
   },
 
-  handlePeerConnectionRequest: function(aRequest) {
+  handlePeerConnectionRequest(aRequest) {
     Services.obs.notifyObservers(
       null,
       "PeerConnection:response:allow",
@@ -203,11 +203,11 @@ GeckoViewPermission.prototype = {
     );
   },
 
-  checkAppPermissions: function(aPerms) {
+  checkAppPermissions(aPerms) {
     return aPerms.every(perm => this._appPermissions[perm]);
   },
 
-  getAppPermissions: function(aDispatcher, aPerms) {
+  getAppPermissions(aDispatcher, aPerms) {
     let perms = aPerms.filter(perm => !this._appPermissions[perm]);
     if (!perms.length) {
       return Promise.resolve(/* granted */ true);
@@ -215,7 +215,7 @@ GeckoViewPermission.prototype = {
     return aDispatcher
       .sendRequestForResult({
         type: "GeckoView:AndroidPermission",
-        perms: perms,
+        perms,
       })
       .then(granted => {
         if (granted) {
@@ -227,7 +227,7 @@ GeckoViewPermission.prototype = {
       });
   },
 
-  prompt: function(aRequest) {
+  prompt(aRequest) {
     // Only allow exactly one permission request here.
     let types = aRequest.types.QueryInterface(Ci.nsIArray);
     if (types.length !== 1) {

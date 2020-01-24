@@ -61,16 +61,16 @@
   }
 
   var browserListener = {
-    onOpenWindow: function(aXulWin) {
-        var win = aXulWin.docShell.domWindow;
-        win.addEventListener("UIReady", function(aEvent) {
-            attachTo(win);
-        }, {once: true});
-    },
+    onOpenWindow(aXulWin) {
+      var win = aXulWin.docShell.domWindow;
+      win.addEventListener("UIReady", function(aEvent) {
+          attachTo(win);
+      }, {once: true});
+  },
 
-    onCloseWindow: function(aWindow) {
-        detachFrom(aWindow);
-    },
+    onCloseWindow(aWindow) {
+      detachFrom(aWindow);
+  },
   };
 
   function doFullGc(aCallback, aIterations) {
@@ -99,9 +99,9 @@
             Services.obs.notifyObservers(null, "child-gc-request");
 
             if (schedGC) {
-                schedGC.call(Cu, { callback: function() {
-                    runSoon(function() { cc(); runSoon(minimizeInner); });
-                } });
+                schedGC.call(Cu, { callback() {
+                  runSoon(function() { cc(); runSoon(minimizeInner); });
+              } });
             } else {
                 if (domWindowUtils.garbageCollect) {
                     domWindowUtils.garbageCollect();

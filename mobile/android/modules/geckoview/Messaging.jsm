@@ -41,7 +41,7 @@ DispatcherDelegate.prototype = {
    * @param aListener Target listener implementing nsIAndroidEventListener.
    * @param aEvents   String or array of strings of events to listen to.
    */
-  registerListener: function(aListener, aEvents) {
+  registerListener(aListener, aEvents) {
     if (!this._dispatcher) {
       throw new Error("Can only listen in parent process");
     }
@@ -54,7 +54,7 @@ DispatcherDelegate.prototype = {
    * @param aListener Registered listener implementing nsIAndroidEventListener.
    * @param aEvents   String or array of strings of events to stop listening to.
    */
-  unregisterListener: function(aListener, aEvents) {
+  unregisterListener(aListener, aEvents) {
     if (!this._dispatcher) {
       throw new Error("Can only listen in parent process");
     }
@@ -71,7 +71,7 @@ DispatcherDelegate.prototype = {
    * @param aCallback  Optional callback implementing nsIAndroidEventCallback.
    * @param aFinalizer Optional finalizer implementing nsIAndroidEventFinalizer.
    */
-  dispatch: function(aEvent, aData, aCallback, aFinalizer) {
+  dispatch(aEvent, aData, aCallback, aFinalizer) {
     if (this._dispatcher) {
       this._dispatcher.dispatch(aEvent, aData, aCallback, aFinalizer);
       return;
@@ -102,7 +102,7 @@ DispatcherDelegate.prototype = {
    * @param aMsg      Message to send; must be an object with a "type" property
    * @param aCallback Optional callback implementing nsIAndroidEventCallback.
    */
-  sendRequest: function(aMsg, aCallback) {
+  sendRequest(aMsg, aCallback) {
     const type = aMsg.type;
     aMsg.type = undefined;
     this.dispatch(type, aMsg, aCallback);
@@ -114,7 +114,7 @@ DispatcherDelegate.prototype = {
    * @param aMsg Message to send; must be an object with a "type" property
    * @return A Promise resolving to the response
    */
-  sendRequestForResult: function(aMsg) {
+  sendRequestForResult(aMsg) {
     return new Promise((resolve, reject) => {
       const type = aMsg.type;
       aMsg.type = undefined;
@@ -137,7 +137,7 @@ DispatcherDelegate.prototype = {
     });
   },
 
-  finalize: function() {
+  finalize() {
     if (!this._replies) {
       return;
     }
@@ -151,7 +151,7 @@ DispatcherDelegate.prototype = {
     this._replies.clear();
   },
 
-  receiveMessage: function(aMsg) {
+  receiveMessage(aMsg) {
     const { uuid, type } = aMsg.data;
     const reply = this._replies.get(uuid);
     if (!reply) {
@@ -190,7 +190,7 @@ var EventDispatcher = {
    *
    * @param aWindow a chrome DOM window.
    */
-  for: function(aWindow) {
+  for(aWindow) {
     const view =
       aWindow &&
       aWindow.arguments &&
@@ -217,11 +217,11 @@ var EventDispatcher = {
    *
    * @param aWindow a message manager.
    */
-  forMessageManager: function(aMessageManager) {
+  forMessageManager(aMessageManager) {
     return new DispatcherDelegate(null, aMessageManager);
   },
 
-  receiveMessage: function(aMsg) {
+  receiveMessage(aMsg) {
     // aMsg.data includes keys: global, event, data, uuid
     let callback;
     if (aMsg.data.uuid) {
