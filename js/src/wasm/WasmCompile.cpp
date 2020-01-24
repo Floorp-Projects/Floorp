@@ -515,7 +515,11 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
   gcTypes_ = gcEnabled;
-  refTypes_ = true;
+#ifdef ENABLE_WASM_REFTYPES
+  refTypes_ = !craneliftEnabled;
+#else
+  refTypes_ = false;
+#endif
 #ifdef ENABLE_WASM_MULTI_VALUE
   multiValues_ = !craneliftEnabled;
 #else
@@ -623,7 +627,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
 
   bool gcTypesConfigured = false;  // No optimized backend support yet
 #ifdef ENABLE_WASM_REFTYPES
-  bool refTypesConfigured = true;
+  bool refTypesConfigured = !args.craneliftEnabled;
 #else
   bool refTypesConfigured = false;
 #endif
