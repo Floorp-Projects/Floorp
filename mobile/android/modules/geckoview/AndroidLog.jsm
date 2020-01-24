@@ -69,16 +69,16 @@ var __android_log_write = liblog.declare(
 ); // message
 
 var AndroidLog = {
-  MAX_TAG_LENGTH: MAX_TAG_LENGTH,
+  MAX_TAG_LENGTH,
   v: (tag, msg) => __android_log_write(ANDROID_LOG_VERBOSE, "Gecko" + tag, msg),
   d: (tag, msg) => __android_log_write(ANDROID_LOG_DEBUG, "Gecko" + tag, msg),
   i: (tag, msg) => __android_log_write(ANDROID_LOG_INFO, "Gecko" + tag, msg),
   w: (tag, msg) => __android_log_write(ANDROID_LOG_WARN, "Gecko" + tag, msg),
   e: (tag, msg) => __android_log_write(ANDROID_LOG_ERROR, "Gecko" + tag, msg),
 
-  bind: function(tag) {
+  bind(tag) {
     return {
-      MAX_TAG_LENGTH: MAX_TAG_LENGTH,
+      MAX_TAG_LENGTH,
       v: AndroidLog.v.bind(null, tag),
       d: AndroidLog.d.bind(null, tag),
       i: AndroidLog.i.bind(null, tag),

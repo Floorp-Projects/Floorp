@@ -196,7 +196,7 @@ const GeckoViewTabBridge = {
 
     await window.WindowEventDispatcher.sendRequestForResult({
       type: "GeckoView:WebExtension:CloseTab",
-      extensionId: extensionId,
+      extensionId,
     });
   },
 };

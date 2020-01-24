@@ -52,11 +52,11 @@ XPCOMUtils.defineLazyServiceGetter(
  *   InitLater(() => Bar.init(), this, "Bar");
  */
 var DelayedInit = {
-  schedule: function(fn, object, name, maxWait) {
+  schedule(fn, object, name, maxWait) {
     return Impl.scheduleInit(fn, object, name, maxWait);
   },
 
-  scheduleList: function(fns, maxWait) {
+  scheduleList(fns, maxWait) {
     for (const fn of fns) {
       Impl.scheduleInit(fn, null, null, maxWait);
     }
@@ -70,7 +70,7 @@ const MAX_IDLE_RUN_MS = 50;
 var Impl = {
   pendingInits: [],
 
-  onIdle: function() {
+  onIdle() {
     const startTime = Cu.now();
     let time = startTime;
     let nextDue;
@@ -103,12 +103,12 @@ var Impl = {
     }
   },
 
-  addPendingInit: function(fn, wait) {
+  addPendingInit(fn, wait) {
     const init = {
-      fn: fn,
+      fn,
       due: Cu.now() + wait,
       complete: false,
-      maybeInit: function() {
+      maybeInit() {
         if (this.complete) {
           return false;
         }
@@ -127,7 +127,7 @@ var Impl = {
     return init;
   },
 
-  scheduleInit: function(fn, object, name, wait) {
+  scheduleInit(fn, object, name, wait) {
     const init = this.addPendingInit(fn, wait);
 
     if (!object || !name) {
@@ -170,7 +170,7 @@ var Impl = {
         }
         return prop.value;
       },
-      set: function(newVal) {
+      set(newVal) {
         init.maybeInit();
 
         // Since our initializer already ran,

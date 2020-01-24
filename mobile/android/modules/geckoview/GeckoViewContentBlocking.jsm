@@ -67,7 +67,7 @@ class GeckoViewContentBlocking extends GeckoViewModule {
           });
           return {
             origin: key,
-            blockData: blockData,
+            blockData,
           };
         });
 
@@ -104,7 +104,7 @@ class GeckoViewContentBlocking extends GeckoViewModule {
 
     const message = {
       type: "GeckoView:ContentBlockingEvent",
-      uri: uri,
+      uri,
       category: aEvent,
       blockedList,
       loadedLists,
