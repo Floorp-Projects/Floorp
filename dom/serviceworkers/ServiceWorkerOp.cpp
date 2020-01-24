@@ -24,6 +24,7 @@
 #include "nsThreadUtils.h"
 
 #include "ServiceWorkerCloneData.h"
+#include "ServiceWorkerShutdownState.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
@@ -333,6 +334,8 @@ bool ServiceWorkerOp::MaybeStart(RemoteWorkerChild* aOwner,
         GetCurrentThreadSerialEventTarget(), __func__,
         [self](
             const GenericNonExclusivePromise::ResolveOrRejectValue& aResult) {
+          MaybeReportServiceWorkerShutdownProgress(self->mArgs, true);
+
           MOZ_ASSERT(!self->mPromiseHolder.IsEmpty());
 
           if (NS_WARN_IF(aResult.IsReject())) {
@@ -348,6 +351,8 @@ bool ServiceWorkerOp::MaybeStart(RemoteWorkerChild* aOwner,
 
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       __func__, [self = std::move(self), owner = std::move(owner)]() mutable {
+        MaybeReportServiceWorkerShutdownProgress(self->mArgs);
+
         auto lock = owner->mState.Lock();
         auto& state = lock.ref();
 

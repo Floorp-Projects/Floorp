@@ -11,7 +11,9 @@
 #include "nsIAsyncShutdown.h"
 #include "nsISupportsImpl.h"
 
+#include "ServiceWorkerShutdownState.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/HashTable.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,6 +23,9 @@ namespace dom {
  */
 class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker {
  public:
+  using Progress = ServiceWorkerShutdownState::Progress;
+  static const uint32_t kInvalidShutdownStateId = 0;
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
@@ -37,8 +42,12 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker {
    * Can be called multiple times, and shutdown will be blocked until all the
    * calls' promises settle, but all of these calls must happen before
    * `StopAcceptingPromises()` is called (assertions will enforce this).
+   *
+   * See `CreateShutdownState` for aShutdownStateId, which is needed to clear
+   * the shutdown state if the shutdown process aborts for some reason.
    */
-  void WaitOnPromise(GenericNonExclusivePromise* aPromise);
+  void WaitOnPromise(GenericNonExclusivePromise* aPromise,
+                     uint32_t aShutdownStateId);
 
   /**
    * Once this is called, shutdown will be blocked until all promises
@@ -46,6 +55,17 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker {
    * `WaitOnPromise()` (assertions will enforce this).
    */
   void StopAcceptingPromises();
+
+  /**
+   * Start tracking the shutdown of an individual ServiceWorker for hang
+   * reporting purposes. Returns a "shutdown state ID" that should be used
+   * in subsequent calls to ReportShutdownProgress. The shutdown of an
+   * individual ServiceWorker is presumed to be completed when its `Progress`
+   * reaches `Progress::ShutdownCompleted`.
+   */
+  uint32_t CreateShutdownState();
+
+  void ReportShutdownProgress(uint32_t aShutdownStateId, Progress aProgress);
 
  private:
   ServiceWorkerShutdownBlocker();
@@ -84,6 +104,8 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker {
   Variant<AcceptingPromises, NotAcceptingPromises> mState;
 
   nsCOMPtr<nsIAsyncShutdownClient> mShutdownClient;
+
+  HashMap<uint32_t, ServiceWorkerShutdownState> mShutdownStates;
 };
 
 }  // namespace dom
