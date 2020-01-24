@@ -226,6 +226,8 @@ class nsXPConnect final : public nsIXPConnect {
   static XPCJSRuntime* GetRuntimeInstance();
   XPCJSContext* GetContext() { return mContext; }
 
+  static bool IsISupportsDescendant(const nsXPTInterfaceInfo* info);
+
   static nsIScriptSecurityManager* SecurityManager() {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(gScriptSecurityManager);
