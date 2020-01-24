@@ -266,6 +266,10 @@ SourceMapURLService.prototype.originalPositionFor = async function(
   line,
   column
 ) {
+  if (!this._prefValue) {
+    return null;
+  }
+
   // Ensure the sources are loaded before replying.
   await this._getLoadingPromise();
 
@@ -425,11 +429,12 @@ SourceMapURLService.prototype.unsubscribe = function(
  * This function notifies all subscribers of the state change.
  */
 SourceMapURLService.prototype._onPrefChanged = function() {
+  this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
+
   if (!this._subscriptions) {
     return;
   }
 
-  this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
   for (const [, subscriptionEntry] of this._subscriptions) {
     for (const callback of subscriptionEntry.callbacks) {
       this._callOneCallback(subscriptionEntry, callback);
