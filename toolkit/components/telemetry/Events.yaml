@@ -1610,9 +1610,10 @@ security.ui.protectionspopup:
     objects: ["protections_popup"]
     bug_numbers:
       - 1560327
+      - 1607488
     description: >
       How many times the protections panel was opened.
-    expiry_version: "75"
+    expiry_version: "80"
     notification_emails:
       - ewright@mozilla.com
       - nhnt11@mozilla.com
@@ -1644,10 +1645,12 @@ security.ui.protectionspopup:
     bug_numbers:
       - 1560327
       - 1602015
+      - 1607488
     description: >
       User interaction by click events in the protections panel.
-    expiry_version: "75"
+    expiry_version: "80"
     notification_emails:
+      - ewright@mozilla.com
       - nhnt11@mozilla.com
       - jhofmann@mozilla.com
       - chsiang@mozilla.com
