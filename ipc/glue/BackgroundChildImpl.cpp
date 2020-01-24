@@ -456,8 +456,7 @@ bool BackgroundChildImpl::DeallocPUDPSocketChild(PUDPSocketChild* child) {
 dom::PBroadcastChannelChild* BackgroundChildImpl::AllocPBroadcastChannelChild(
     const PrincipalInfo& aPrincipalInfo, const nsCString& aOrigin,
     const nsString& aChannel) {
-  RefPtr<dom::BroadcastChannelChild> agent =
-      new dom::BroadcastChannelChild(aOrigin);
+  RefPtr<dom::BroadcastChannelChild> agent = new dom::BroadcastChannelChild();
   return agent.forget().take();
 }
 

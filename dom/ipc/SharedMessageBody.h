@@ -25,20 +25,37 @@ class SharedMessageBody final {
  public:
   NS_INLINE_DECL_REFCOUNTING(SharedMessageBody)
 
-  SharedMessageBody();
+  explicit SharedMessageBody(
+      StructuredCloneHolder::TransferringSupport aSupportsTransferring);
 
   // Note that the populated MessageData borrows the underlying
   // JSStructuredCloneData from the SharedMessageBody, so the caller is
   // required to ensure that the MessageData instances are destroyed prior to
   // the SharedMessageBody instances.
+  static void FromSharedToMessageChild(
+      mozilla::ipc::PBackgroundChild* aBackgroundManager,
+      SharedMessageBody* aData, MessageData& aMessage);
   static void FromSharedToMessagesChild(
       mozilla::ipc::PBackgroundChild* aBackgroundManager,
       const nsTArray<RefPtr<SharedMessageBody>>& aData,
       nsTArray<MessageData>& aArray);
 
+  // Const MessageData.
+  static already_AddRefed<SharedMessageBody> FromMessageToSharedChild(
+      MessageData& aMessage,
+      StructuredCloneHolder::TransferringSupport aSupportsTransferring =
+          StructuredCloneHolder::TransferringSupported);
+  // Non-const MessageData.
+  static already_AddRefed<SharedMessageBody> FromMessageToSharedChild(
+      const MessageData& aMessage,
+      StructuredCloneHolder::TransferringSupport aSupportsTransferring =
+          StructuredCloneHolder::TransferringSupported);
+  // Array of MessageData objects
   static bool FromMessagesToSharedChild(
       nsTArray<MessageData>& aArray,
-      FallibleTArray<RefPtr<SharedMessageBody>>& aData);
+      FallibleTArray<RefPtr<SharedMessageBody>>& aData,
+      StructuredCloneHolder::TransferringSupport aSupportsTransferring =
+          StructuredCloneHolder::TransferringSupported);
 
   // Note that the populated MessageData borrows the underlying
   // JSStructuredCloneData from the SharedMessageBody, so the caller is
@@ -49,12 +66,24 @@ class SharedMessageBody final {
       const nsTArray<RefPtr<SharedMessageBody>>& aData,
       FallibleTArray<MessageData>& aArray);
 
+  static already_AddRefed<SharedMessageBody> FromMessageToSharedParent(
+      MessageData& aMessage,
+      StructuredCloneHolder::TransferringSupport aSupportsTransferring =
+          StructuredCloneHolder::TransferringSupported);
   static bool FromMessagesToSharedParent(
       nsTArray<MessageData>& aArray,
-      FallibleTArray<RefPtr<SharedMessageBody>>& aData);
+      FallibleTArray<RefPtr<SharedMessageBody>>& aData,
+      StructuredCloneHolder::TransferringSupport aSupportsTransferring =
+          StructuredCloneHolder::TransferringSupported);
+
+  enum ReadMethod {
+    StealRefMessageBody,
+    KeepRefMessageBody,
+  };
 
   void Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
-            RefMessageBodyService* aRefMessageBodyService, ErrorResult& aRv);
+            RefMessageBodyService* aRefMessageBodyService,
+            ReadMethod aReadMethod, ErrorResult& aRv);
 
   void Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
              JS::Handle<JS::Value> aTransfers, nsID& aPortID,
@@ -70,6 +99,7 @@ class SharedMessageBody final {
 
   RefPtr<RefMessageBody> mRefData;
   nsID mRefDataId;
+  StructuredCloneHolder::TransferringSupport mSupportsTransferring;
 };
 
 }  // namespace dom

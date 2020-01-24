@@ -30,7 +30,7 @@ class BroadcastChannelParent final : public PBroadcastChannelParent {
   ~BroadcastChannelParent();
 
   virtual mozilla::ipc::IPCResult RecvPostMessage(
-      const ClonedMessageData& aData) override;
+      const MessageData& aData) override;
 
   virtual mozilla::ipc::IPCResult RecvClose() override;
 

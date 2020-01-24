@@ -150,7 +150,8 @@ class StructuredCloneData : public StructuredCloneHolder {
   StructuredCloneData(StructuredCloneData&& aOther);
 
   // Only DifferentProcess and UnknownDestination scopes are supported.
-  explicit StructuredCloneData(StructuredCloneScope aScope);
+  StructuredCloneData(StructuredCloneScope aScope,
+                      TransferringSupport aSupportsTransferring);
 
   ~StructuredCloneData();
 
@@ -271,8 +272,6 @@ class StructuredCloneData : public StructuredCloneHolder {
   bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
 
  protected:
-  explicit StructuredCloneData(TransferringSupport aSupportsTransferring);
-
   already_AddRefed<SharedJSAllocatedData> TakeSharedData();
 
  private:
@@ -283,15 +282,6 @@ class StructuredCloneData : public StructuredCloneHolder {
   // sending of the data via IPC. This will be fixed by bug 1353475.
   FallibleTArray<mozilla::ipc::AutoIPCStream> mIPCStreams;
   bool mInitialized;
-};
-
-/**
- * For use when transferring should not be supported.
- */
-class StructuredCloneDataNoTransfers : public StructuredCloneData {
- public:
-  StructuredCloneDataNoTransfers()
-      : StructuredCloneData(StructuredCloneHolder::TransferringNotSupported) {}
 };
 
 }  // namespace ipc

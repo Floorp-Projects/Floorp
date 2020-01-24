@@ -11,6 +11,7 @@ include protocol PParentToChildStream; // FIXME: bug 792908
 include DOMTypes;
 
 using struct mozilla::SerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
+using struct nsID from "nsID.h";
 
 namespace mozilla {
 namespace dom {
@@ -21,11 +22,17 @@ protocol PBroadcastChannel
   manager PBackground;
 
 parent:
-  async PostMessage(ClonedMessageData message);
+  async PostMessage(MessageData message);
   async Close();
 
 child:
-  async Notify(ClonedMessageData message);
+  // A message must be delivered.
+  async Notify(MessageData message);
+
+  // A message has been delivered to other channels. It can be removed after
+  // all the actorsOnSamePid have retrieved it.
+  async RefMessageDelivered(nsID messageID, uint32_t actorsOnSamePid);
+
   async __delete__();
 };
 

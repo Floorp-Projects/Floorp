@@ -18,7 +18,9 @@ using namespace ipc;
 
 namespace dom {
 
-SharedMessageBody::SharedMessageBody() : mRefDataId({}) {}
+SharedMessageBody::SharedMessageBody(
+    StructuredCloneHolder::TransferringSupport aSupportsTransferring)
+    : mRefDataId({}), mSupportsTransferring(aSupportsTransferring) {}
 
 void SharedMessageBody::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
                               JS::Handle<JS::Value> aTransfers, nsID& aPortID,
@@ -28,7 +30,7 @@ void SharedMessageBody::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
   MOZ_ASSERT(aRefMessageBodyService);
 
   mCloneData = MakeUnique<ipc::StructuredCloneData>(
-      JS::StructuredCloneScope::UnknownDestination);
+      JS::StructuredCloneScope::UnknownDestination, mSupportsTransferring);
   mCloneData->Write(aCx, aValue, aTransfers, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
@@ -48,6 +50,7 @@ void SharedMessageBody::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
 void SharedMessageBody::Read(JSContext* aCx,
                              JS::MutableHandle<JS::Value> aValue,
                              RefMessageBodyService* aRefMessageBodyService,
+                             SharedMessageBody::ReadMethod aReadMethod,
                              ErrorResult& aRv) {
   MOZ_ASSERT(aRefMessageBodyService);
 
@@ -56,7 +59,14 @@ void SharedMessageBody::Read(JSContext* aCx,
   }
 
   MOZ_ASSERT(!mRefData);
-  mRefData = aRefMessageBodyService->Steal(mRefDataId);
+
+  if (aReadMethod == SharedMessageBody::StealRefMessageBody) {
+    mRefData = aRefMessageBodyService->Steal(mRefDataId);
+  } else {
+    MOZ_ASSERT(aReadMethod == SharedMessageBody::KeepRefMessageBody);
+    mRefData = aRefMessageBodyService->GetAndCount(mRefDataId);
+  }
+
   if (!mRefData) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
@@ -76,6 +86,24 @@ bool SharedMessageBody::TakeTransferredPortsAsSequence(
 }
 
 /* static */
+void SharedMessageBody::FromSharedToMessageChild(
+    mozilla::ipc::PBackgroundChild* aManager, SharedMessageBody* aData,
+    MessageData& aMessage) {
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(aData);
+
+  if (aData->mCloneData) {
+    ClonedMessageData clonedData;
+    aData->mCloneData->BuildClonedMessageDataForBackgroundChild(aManager,
+                                                                clonedData);
+    aMessage = clonedData;
+    return;
+  }
+
+  aMessage = RefMessageData(aData->mRefDataId);
+}
+
+/* static */
 void SharedMessageBody::FromSharedToMessagesChild(
     PBackgroundChild* aManager,
     const nsTArray<RefPtr<SharedMessageBody>>& aData,
@@ -86,23 +114,52 @@ void SharedMessageBody::FromSharedToMessagesChild(
 
   for (auto& data : aData) {
     MessageData* message = aArray.AppendElement();
-
-    if (data->mCloneData) {
-      ClonedMessageData clonedData;
-      data->mCloneData->BuildClonedMessageDataForBackgroundChild(aManager,
-                                                                 clonedData);
-      *message = clonedData;
-      continue;
-    }
-
-    *message = RefMessageData(data->mRefDataId);
+    FromSharedToMessageChild(aManager, data, *message);
   }
+}
+
+/* static */
+already_AddRefed<SharedMessageBody> SharedMessageBody::FromMessageToSharedChild(
+    MessageData& aMessage,
+    StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(aSupportsTransferring);
+
+  if (aMessage.type() == MessageData::TClonedMessageData) {
+    data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
+        JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
+    data->mCloneData->StealFromClonedMessageDataForBackgroundChild(
+        aMessage.get_ClonedMessageData());
+  } else {
+    MOZ_ASSERT(aMessage.type() == MessageData::TRefMessageData);
+    data->mRefDataId = aMessage.get_RefMessageData().uuid();
+  }
+
+  return data.forget();
+}
+
+/* static */
+already_AddRefed<SharedMessageBody> SharedMessageBody::FromMessageToSharedChild(
+    const MessageData& aMessage,
+    StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(aSupportsTransferring);
+
+  if (aMessage.type() == MessageData::TClonedMessageData) {
+    data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
+        JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
+    data->mCloneData->BorrowFromClonedMessageDataForBackgroundChild(aMessage);
+  } else {
+    MOZ_ASSERT(aMessage.type() == MessageData::TRefMessageData);
+    data->mRefDataId = aMessage.get_RefMessageData().uuid();
+  }
+
+  return data.forget();
 }
 
 /* static */
 bool SharedMessageBody::FromMessagesToSharedChild(
     nsTArray<MessageData>& aArray,
-    FallibleTArray<RefPtr<SharedMessageBody>>& aData) {
+    FallibleTArray<RefPtr<SharedMessageBody>>& aData,
+    StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
   MOZ_ASSERT(aData.IsEmpty());
 
   if (NS_WARN_IF(!aData.SetCapacity(aArray.Length(), mozilla::fallible))) {
@@ -110,18 +167,9 @@ bool SharedMessageBody::FromMessagesToSharedChild(
   }
 
   for (auto& message : aArray) {
-    RefPtr<SharedMessageBody> data = new SharedMessageBody();
-
-    if (message.type() == MessageData::TClonedMessageData) {
-      data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
-          JS::StructuredCloneScope::UnknownDestination);
-      data->mCloneData->StealFromClonedMessageDataForBackgroundChild(message);
-    } else {
-      MOZ_ASSERT(message.type() == MessageData::TRefMessageData);
-      data->mRefDataId = message.get_RefMessageData().uuid();
-    }
-
-    if (!aData.AppendElement(data, mozilla::fallible)) {
+    RefPtr<SharedMessageBody> data =
+        FromMessageToSharedChild(message, aSupportsTransferring);
+    if (!data || !aData.AppendElement(data, mozilla::fallible)) {
       return false;
     }
   }
@@ -159,9 +207,28 @@ bool SharedMessageBody::FromSharedToMessagesParent(
 }
 
 /* static */
+already_AddRefed<SharedMessageBody>
+SharedMessageBody::FromMessageToSharedParent(
+    MessageData& aMessage,
+    StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(aSupportsTransferring);
+
+  if (aMessage.type() == MessageData::TClonedMessageData) {
+    data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
+        JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
+    data->mCloneData->StealFromClonedMessageDataForBackgroundParent(aMessage);
+  } else {
+    MOZ_ASSERT(aMessage.type() == MessageData::TRefMessageData);
+    data->mRefDataId = aMessage.get_RefMessageData().uuid();
+  }
+
+  return data.forget();
+}
+
 bool SharedMessageBody::FromMessagesToSharedParent(
     nsTArray<MessageData>& aArray,
-    FallibleTArray<RefPtr<SharedMessageBody>>& aData) {
+    FallibleTArray<RefPtr<SharedMessageBody>>& aData,
+    StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
   MOZ_ASSERT(aData.IsEmpty());
 
   if (NS_WARN_IF(!aData.SetCapacity(aArray.Length(), mozilla::fallible))) {
@@ -169,18 +236,8 @@ bool SharedMessageBody::FromMessagesToSharedParent(
   }
 
   for (auto& message : aArray) {
-    RefPtr<SharedMessageBody> data = new SharedMessageBody();
-
-    if (message.type() == MessageData::TClonedMessageData) {
-      data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
-          JS::StructuredCloneScope::UnknownDestination);
-      data->mCloneData->StealFromClonedMessageDataForBackgroundParent(message);
-    } else {
-      MOZ_ASSERT(message.type() == MessageData::TRefMessageData);
-      data->mRefDataId = message.get_RefMessageData().uuid();
-    }
-
-    if (!aData.AppendElement(data, mozilla::fallible)) {
+    RefPtr<SharedMessageBody> data = FromMessageToSharedParent(message);
+    if (!data || !aData.AppendElement(data, mozilla::fallible)) {
       return false;
     }
   }

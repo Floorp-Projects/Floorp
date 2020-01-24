@@ -24,7 +24,6 @@ class PrincipalInfo;
 namespace dom {
 
 class BroadcastChannelChild;
-class BroadcastChannelMessage;
 class RefMessageBodyService;
 class WorkerRef;
 
@@ -63,9 +62,15 @@ class BroadcastChannel final : public DOMEventTargetHelper {
 
   ~BroadcastChannel();
 
+  void MessageReceived(const MessageData& aData);
+
+  void MessageDelivered(const nsID& aMessageID, uint32_t aOtherBCs);
+
   void RemoveDocFromBFCache();
 
   void DisconnectFromOwner() override;
+
+  void DispatchError(JSContext* aCx);
 
   RefPtr<BroadcastChannelChild> mActor;
 
@@ -74,6 +79,7 @@ class BroadcastChannel final : public DOMEventTargetHelper {
   RefPtr<WorkerRef> mWorkerRef;
 
   nsString mChannel;
+  nsString mOrigin;
 
   enum { StateActive, StateClosed } mState;
 

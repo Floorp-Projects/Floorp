@@ -41,8 +41,8 @@ RefMessageBodyService::~RefMessageBodyService() {
   sService = nullptr;
 }
 
-nsID RefMessageBodyService::Register(already_AddRefed<RefMessageBody> aBody,
-                                     ErrorResult& aRv) {
+const nsID RefMessageBodyService::Register(
+    already_AddRefed<RefMessageBody> aBody, ErrorResult& aRv) {
   RefPtr<RefMessageBody> body = aBody;
   MOZ_ASSERT(body);
 
@@ -57,7 +57,7 @@ nsID RefMessageBodyService::Register(already_AddRefed<RefMessageBody> aBody,
   return uuid;
 }
 
-already_AddRefed<RefMessageBody> RefMessageBodyService::Steal(nsID& aID) {
+already_AddRefed<RefMessageBody> RefMessageBodyService::Steal(const nsID& aID) {
   StaticMutexAutoLock lock(sRefMessageBodyServiceMutex);
   if (!sService) {
     return nullptr;
@@ -69,7 +69,50 @@ already_AddRefed<RefMessageBody> RefMessageBodyService::Steal(nsID& aID) {
   return body.forget();
 }
 
-void RefMessageBodyService::ForgetPort(nsID& aPortID) {
+already_AddRefed<RefMessageBody> RefMessageBodyService::GetAndCount(
+    const nsID& aID) {
+  StaticMutexAutoLock lock(sRefMessageBodyServiceMutex);
+  if (!sService) {
+    return nullptr;
+  }
+
+  RefPtr<RefMessageBody> body = sService->mMessages.Get(aID);
+  if (!body) {
+    return nullptr;
+  }
+
+  ++body->mCount;
+
+  MOZ_ASSERT_IF(body->mMaxCount.isSome(),
+                body->mCount <= body->mMaxCount.value());
+  if (body->mMaxCount.isSome() && body->mCount >= body->mMaxCount.value()) {
+    sService->mMessages.Remove(aID);
+  }
+
+  return body.forget();
+}
+
+void RefMessageBodyService::SetMaxCount(const nsID& aID, uint32_t aMaxCount) {
+  StaticMutexAutoLock lock(sRefMessageBodyServiceMutex);
+  if (!sService) {
+    return;
+  }
+
+  RefPtr<RefMessageBody> body = sService->mMessages.Get(aID);
+  if (!body) {
+    return;
+  }
+
+  MOZ_ASSERT(body->mMaxCount.isNothing());
+  body->mMaxCount.emplace(aMaxCount);
+
+  MOZ_ASSERT(body->mCount <= body->mMaxCount.value());
+  if (body->mCount >= body->mMaxCount.value()) {
+    sService->mMessages.Remove(aID);
+  }
+}
+
+void RefMessageBodyService::ForgetPort(const nsID& aPortID) {
   StaticMutexAutoLock lock(sRefMessageBodyServiceMutex);
   if (!sService) {
     return;
