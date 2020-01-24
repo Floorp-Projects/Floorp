@@ -656,6 +656,12 @@ add_task(async function checkFrecentSites() {
 });
 
 add_task(async function check_pinned_sites() {
+  // Fresh profiles come with an empty set of pinned websites (pref doesn't
+  // exist). Search shortcut topsites make this test more complicated because
+  // the feature pins a new website on startup. Behaviour can vary when running
+  // with --verify so it's more predictable to clear pins entirely.
+  Services.prefs.clearUserPref("browser.newtabpage.pinned");
+  NewTabUtils.pinnedLinks.resetCache();
   const originalPin = JSON.stringify(NewTabUtils.pinnedLinks.links);
   const sitesToPin = [
     { url: "https://foo.com" },
@@ -710,6 +716,8 @@ add_task(async function check_pinned_sites() {
   sitesToPin.forEach(site => NewTabUtils.pinnedLinks.unpin(site));
 
   await clearHistoryAndBookmarks();
+  Services.prefs.clearUserPref("browser.newtabpage.pinned");
+  NewTabUtils.pinnedLinks.resetCache();
   is(
     JSON.stringify(NewTabUtils.pinnedLinks.links),
     originalPin,
