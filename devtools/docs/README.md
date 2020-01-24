@@ -1,21 +1,17 @@
-# Firefox Developer Tools
+# Firefox Developer Tools: Contributor Docs
 
-**NOTE:** This is the documentation *for working on* the Developer Tools. If you are looking for help with *using* the tools, please check out [the end user documentation](https://developer.mozilla.org/en-US/docs/Tools) instead.
+Note: This is a guide to working on code contributions to DevTools. If you're looking for help with using the tools, view the [user docs](https://developer.mozilla.org/en-US/docs/Tools) instead. For other ways to get involved, see our [community site](https://firefox-dev.tools).
 
 ---
 
-**Hello!**
+**Hello,** and thanks for your interest in contributing to Firefox DevTools! 
 
-First of all, **thank you for making it this far!**
+DevTools is a complex web app, but if you're familiar with either HTML/CSS or JavaScript, you can create a patch!
 
-Developer Tools is a complex web application, and learning the code base will take some time, even if you're a very experienced contributor to other projects. 
+The initial setup process of building Firefox can take a while. If you get stuck at any point, you can ask for help on the [DevTools Slack](https://devtools-html-slack.herokuapp.com/). 
 
-Likewise, getting and building the code locally, sending contributions for review, and other essential tasks can take a bit longer and be a bit different from what you're used to seeing.
+We all make lots of errors when we get started, so don't worry about that—there are safeguards in place to ensure that any commits that land in the Firefox repository are peer-reviewed, can be built, and pass the tests in multiple configurations and operating systems.
 
-But there are good news: most of the initial, lengthy tasks don't need to be repeated once your computer is set up. And there's a huge infrastructure in place (both technical and people) to ensure that many commits can land into the Firefox repository with the peace of mind that the code is peer reviewed, can be built and passes the tests, in multiple configurations and operating systems.
+(Note: You can navigate these docs with the arrow keys.)
 
-So don't be afraid of committing errors: you will. This is what happens to us all the time.
-
-It's a big system, and no one knows *absolutely everything*. What we do know is that we are not going to break Firefox. If we do something wrong, the system will let us know before we mess things up for real. Users won't ever notice, and you will learn a new thing.
-
-[Let's get started](./getting-started/).
+[Let's get started!](./getting-started/)
