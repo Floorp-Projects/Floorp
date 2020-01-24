@@ -461,7 +461,7 @@ function test_broadcastChannel() {
 
   runTests({
     clonableObjectsEveryWhere: true,
-    clonableObjectsSameProcess: false,
+    clonableObjectsSameProcess: true,
     transferableObjects: false,
     send(what, ports) {
       return new Promise(function(r, rr) {
