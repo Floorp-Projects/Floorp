@@ -81,6 +81,8 @@ const GeckoViewRecordingMedia = {
             return STATUS_RECORDING;
           case MediaManagerService.STATE_NOCAPTURE:
             return STATUS_INACTIVE;
+          default:
+            throw new Error("Unexpected activityStatus value");
         }
       };
 

@@ -1,14 +1,6 @@
 "use strict";
 
 module.exports = {
-  rules: {
-    // Rules enabled in mozilla/recommended, and disabled for now, we should
-    // re-enable these over time.
-    "consistent-return": "off",
-    "no-empty": "off",
-    "no-redeclare": "off",
-  },
-
   "overrides": [{
     files: [
       // Bug 1425048 - mainly going away, see bug 1583370.
