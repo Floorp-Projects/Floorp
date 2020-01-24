@@ -329,20 +329,16 @@ EditorEventListener::HandleEvent(Event* aEvent) {
       RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
       return DragEnter(dragEvent);
     }
-    // dragover
-    case eDragOver: {
+    // dragover and drop
+    case eDragOver:
+    case eDrop: {
       RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
-      return DragOver(dragEvent);
+      return DragOverOrDrop(dragEvent);
     }
     // dragexit
     case eDragExit: {
       RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
       return DragExit(dragEvent);
-    }
-    // drop
-    case eDrop: {
-      RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
-      return Drop(dragEvent);
     }
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keydown
@@ -718,64 +714,129 @@ nsresult EditorEventListener::DragEnter(DragEvent* aDragEvent) {
 
   presShell->SetCaret(mCaret);
 
-  return DragOver(aDragEvent);
+  return DragOverOrDrop(aDragEvent);
 }
 
-nsresult EditorEventListener::DragOver(DragEvent* aDragEvent) {
-  if (NS_WARN_IF(!aDragEvent) ||
-      DetachedFromEditorOrDefaultPrevented(aDragEvent->WidgetEventPtr())) {
+void EditorEventListener::RefuseToDropAndHideCaret(DragEvent* aDragEvent) {
+  MOZ_ASSERT(aDragEvent->WidgetEventPtr()->mFlags.mInSystemGroup);
+
+  aDragEvent->PreventDefault();
+  aDragEvent->StopImmediatePropagation();
+  MOZ_ASSERT(aDragEvent->GetDataTransfer());
+  aDragEvent->GetDataTransfer()->SetDropEffectInt(
+      nsIDragService::DRAGDROP_ACTION_NONE);
+  if (mCaret) {
+    mCaret->SetVisible(false);
+  }
+}
+
+nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
+  MOZ_ASSERT(aDragEvent);
+  MOZ_ASSERT(aDragEvent->WidgetEventPtr()->mMessage == eDrop ||
+             aDragEvent->WidgetEventPtr()->mMessage == eDragOver ||
+             aDragEvent->WidgetEventPtr()->mMessage == eDragEnter);
+
+  if (aDragEvent->WidgetEventPtr()->mMessage == eDrop) {
+    CleanupDragDropCaret();
+    MOZ_ASSERT(!mCaret);
+  }
+
+  if (DetachedFromEditorOrDefaultPrevented(aDragEvent->WidgetEventPtr())) {
     return NS_OK;
   }
 
   int32_t dropOffset = -1;
   nsCOMPtr<nsIContent> dropParentContent =
       aDragEvent->GetRangeParentContentAndOffset(&dropOffset);
-  if (NS_WARN_IF(!dropParentContent)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (dropParentContent->IsEditable() && CanDrop(aDragEvent)) {
-    aDragEvent->PreventDefault();  // consumed
-
-    // If we handle the dragged item, we need should adjust drop effect here
-    // because once DataTransfer is retrieved, DragEvent has initialized it
-    // with nsContentUtils::SetDataTransferInEvent() but it does not check
-    // whether the content is movable or not.
-    DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
-    MOZ_ASSERT(dataTransfer);
-    if (dataTransfer->DropEffectInt() == nsIDragService::DRAGDROP_ACTION_MOVE) {
-      nsCOMPtr<nsINode> dragSource = dataTransfer->GetMozSourceNode();
-      if (dragSource && !dragSource->IsEditable()) {
-        // In this case, we shouldn't allow "move" because the drag source
-        // isn't editable.
-        dataTransfer->SetDropEffectInt(nsContentUtils::FilterDropEffect(
-            nsIDragService::DRAGDROP_ACTION_COPY,
-            dataTransfer->EffectAllowedInt()));
-      }
-    }
-
-    if (!mCaret) {
-      return NS_OK;
-    }
-
-    mCaret->SetVisible(true);
-    mCaret->SetCaretPosition(dropParentContent, dropOffset);
-
+  if (DetachedFromEditor()) {
+    RefuseToDropAndHideCaret(aDragEvent);
     return NS_OK;
   }
 
-  if (!IsFileControlTextBox()) {
-    // This is needed when dropping on an input, to prevent the editor for
-    // the editable parent from receiving the event.
-    aDragEvent->StopPropagation();
-    DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
-    MOZ_ASSERT(dataTransfer);
-    dataTransfer->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
-  }
+  bool notEditable = !dropParentContent->IsEditable() ||
+                     mEditorBase->IsReadonly() || mEditorBase->IsDisabled();
 
-  if (mCaret) {
+  // First of all, hide caret if we won't insert the drop data into the editor
+  // obviously.
+  if (mCaret && (IsFileControlTextBox() || notEditable)) {
     mCaret->SetVisible(false);
   }
+
+  // If we're a native anonymous <input> element in <input type="file">,
+  // we don't need to handle the drop.
+  if (IsFileControlTextBox()) {
+    return NS_OK;
+  }
+
+  // If the drop target isn't ediable, the drop should be handled by the
+  // element.
+  if (notEditable) {
+    // If we're a text control element which is readonly or disabled,
+    // we should refuse to drop.
+    if (!mEditorBase->AsHTMLEditor()) {
+      RefuseToDropAndHideCaret(aDragEvent);
+      return NS_OK;
+    }
+    // Otherwise, we shouldn't handle the drop.
+    return NS_OK;
+  }
+
+  // If the drag event does not have any data which we can handle, we should
+  // refuse to drop even if some parents can handle it because user may be
+  // trying to drop it on us, not our parent.  For example, users don't want
+  // to drop HTML data to parent contenteditable element if they drop it on
+  // a child <input> element.
+  if (!DragEventHasSupportingData(aDragEvent)) {
+    RefuseToDropAndHideCaret(aDragEvent);
+    return NS_OK;
+  }
+
+  // If we don't accept the data drop at the point, for example, while dragging
+  // selection, it's not allowed dropping on its selection ranges. In this
+  // case, any parents shouldn't handle the drop instead of us, for example,
+  // dropping text shouldn't be treated as URL and load new page.
+  if (!CanInsertAtDropPosition(aDragEvent)) {
+    RefuseToDropAndHideCaret(aDragEvent);
+    return NS_OK;
+  }
+
+  aDragEvent->PreventDefault();
+  aDragEvent->StopImmediatePropagation();
+
+  if (aDragEvent->WidgetEventPtr()->mMessage == eDrop) {
+    RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
+    nsresult rv = textEditor->OnDrop(aDragEvent);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "TextEditor::OnDrop() failed");
+    return rv;
+  }
+
+  MOZ_ASSERT(aDragEvent->WidgetEventPtr()->mMessage == eDragOver ||
+             aDragEvent->WidgetEventPtr()->mMessage == eDragEnter);
+
+  // If we handle the dragged item, we need to adjust drop effect here
+  // because once DataTransfer is retrieved, DragEvent has initialized it
+  // with nsContentUtils::SetDataTransferInEvent() but it does not check
+  // whether the content is movable or not.
+  MOZ_ASSERT(aDragEvent->GetDataTransfer());
+  DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
+  if (dataTransfer->DropEffectInt() == nsIDragService::DRAGDROP_ACTION_MOVE) {
+    nsCOMPtr<nsINode> dragSource = dataTransfer->GetMozSourceNode();
+    if (dragSource && !dragSource->IsEditable()) {
+      // In this case, we shouldn't allow "move" because the drag source
+      // isn't editable.
+      dataTransfer->SetDropEffectInt(
+          nsContentUtils::FilterDropEffect(nsIDragService::DRAGDROP_ACTION_COPY,
+                                           dataTransfer->EffectAllowedInt()));
+    }
+  }
+
+  if (!mCaret) {
+    return NS_OK;
+  }
+
+  mCaret->SetVisible(true);
+  mCaret->SetCaretPosition(dropParentContent, dropOffset);
+
   return NS_OK;
 }
 
@@ -810,68 +871,33 @@ nsresult EditorEventListener::DragExit(DragEvent* aDragEvent) {
   return NS_OK;
 }
 
-nsresult EditorEventListener::Drop(DragEvent* aDragEvent) {
-  CleanupDragDropCaret();
-
-  if (NS_WARN_IF(!aDragEvent) ||
-      DetachedFromEditorOrDefaultPrevented(aDragEvent->WidgetEventPtr())) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContent> dropParentContent = aDragEvent->GetRangeParentContent();
-  if (NS_WARN_IF(!dropParentContent)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!dropParentContent->IsEditable() || !CanDrop(aDragEvent)) {
-    if ((mEditorBase->IsReadonly() || mEditorBase->IsDisabled()) &&
-        !IsFileControlTextBox()) {
-      // it was decided to "eat" the event as this is the "least surprise"
-      // since someone else handling it might be unintentional and the
-      // user could probably re-drag to be not over the disabled/readonly
-      // editfields if that is what is desired.
-      aDragEvent->StopPropagation();
-    }
-    return NS_OK;
-  }
-
-  aDragEvent->StopPropagation();
-  aDragEvent->PreventDefault();
-
-  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-  nsresult rv = textEditor->OnDrop(aDragEvent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
-}
-
-bool EditorEventListener::CanDrop(DragEvent* aEvent) {
-  MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(aEvent->WidgetEventPtr()));
-
-  // if the target doc is read-only, we can't drop
-  RefPtr<EditorBase> editorBase(mEditorBase);
-  if (editorBase->IsReadonly() || editorBase->IsDisabled()) {
-    return false;
-  }
-
-  RefPtr<DataTransfer> dataTransfer = aEvent->GetDataTransfer();
-  NS_ENSURE_TRUE(dataTransfer, false);
+bool EditorEventListener::DragEventHasSupportingData(
+    DragEvent* aDragEvent) const {
+  MOZ_ASSERT(
+      !DetachedFromEditorOrDefaultPrevented(aDragEvent->WidgetEventPtr()));
+  MOZ_ASSERT(aDragEvent->GetDataTransfer());
 
   // Plaintext editors only support dropping text. Otherwise, HTML and files
   // can be dropped as well.
-  if (!dataTransfer->HasType(NS_LITERAL_STRING(kTextMime)) &&
-      !dataTransfer->HasType(NS_LITERAL_STRING(kMozTextInternal)) &&
-      (editorBase->IsPlaintextEditor() ||
-       (!dataTransfer->HasType(NS_LITERAL_STRING(kHTMLMime)) &&
-        !dataTransfer->HasType(NS_LITERAL_STRING(kFileMime))))) {
-    return false;
-  }
+  DataTransfer* dataTransfer = aDragEvent->GetDataTransfer();
+  return dataTransfer->HasType(NS_LITERAL_STRING(kTextMime)) ||
+         dataTransfer->HasType(NS_LITERAL_STRING(kMozTextInternal)) ||
+         (!mEditorBase->IsPlaintextEditor() &&
+          (dataTransfer->HasType(NS_LITERAL_STRING(kHTMLMime)) ||
+           dataTransfer->HasType(NS_LITERAL_STRING(kFileMime))));
+}
+
+bool EditorEventListener::CanInsertAtDropPosition(DragEvent* aDragEvent) {
+  MOZ_ASSERT(
+      !DetachedFromEditorOrDefaultPrevented(aDragEvent->WidgetEventPtr()));
+  MOZ_ASSERT(!mEditorBase->IsReadonly() && !mEditorBase->IsDisabled());
+  MOZ_ASSERT(DragEventHasSupportingData(aDragEvent));
 
   // If there is no source node, this is probably an external drag and the
   // drop is allowed. The later checks rely on checking if the drag target
   // is the same as the drag source.
-  nsCOMPtr<nsINode> sourceNode = dataTransfer->GetMozSourceNode();
+  nsCOMPtr<nsINode> sourceNode =
+      aDragEvent->GetDataTransfer()->GetMozSourceNode();
   if (!sourceNode) {
     return true;
   }
@@ -879,25 +905,27 @@ bool EditorEventListener::CanDrop(DragEvent* aEvent) {
   // There is a source node, so compare the source documents and this document.
   // Disallow drops on the same document.
 
-  RefPtr<Document> domdoc = editorBase->GetDocument();
-  NS_ENSURE_TRUE(domdoc, false);
+  RefPtr<Document> targetDocument = mEditorBase->GetDocument();
+  if (NS_WARN_IF(!targetDocument)) {
+    return false;
+  }
 
-  RefPtr<Document> sourceDoc = sourceNode->OwnerDoc();
+  RefPtr<Document> sourceDocument = sourceNode->OwnerDoc();
 
   // If the source and the dest are not same document, allow to drop it always.
-  if (domdoc != sourceDoc) {
+  if (targetDocument != sourceDocument) {
     return true;
   }
 
   // If the source node is a remote browser, treat this as coming from a
   // different document and allow the drop.
-  nsCOMPtr<nsIContent> sourceContent = do_QueryInterface(sourceNode);
+  nsIContent* sourceContent = nsIContent::FromNode(sourceNode);
   BrowserParent* tp = BrowserParent::GetFrom(sourceContent);
   if (tp) {
     return true;
   }
 
-  RefPtr<Selection> selection = editorBase->GetSelection();
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
   if (!selection) {
     return false;
   }
@@ -909,8 +937,8 @@ bool EditorEventListener::CanDrop(DragEvent* aEvent) {
 
   int32_t dropOffset = -1;
   nsCOMPtr<nsIContent> dropParentContent =
-      aEvent->GetRangeParentContentAndOffset(&dropOffset);
-  if (!dropParentContent) {
+      aDragEvent->GetRangeParentContentAndOffset(&dropOffset);
+  if (!dropParentContent || NS_WARN_IF(DetachedFromEditor())) {
     return false;
   }
 
