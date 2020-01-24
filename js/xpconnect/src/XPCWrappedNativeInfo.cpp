@@ -248,16 +248,6 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
 
   uint16_t methodCount = aInfo->MethodCount();
   uint16_t constCount = aInfo->ConstantCount();
-
-  // If the interface does not have nsISupports in its inheritance chain
-  // then we know we can't reflect its methods. However, some interfaces that
-  // are used just to reflect constants are declared this way. We need to
-  // go ahead and build the thing. But, we'll ignore whatever methods it may
-  // have.
-  if (!nsXPConnect::IsISupportsDescendant(aInfo)) {
-    methodCount = 0;
-  }
-
   totalCount = methodCount + constCount;
 
   if (totalCount > MAX_LOCAL_MEMBER_COUNT) {
