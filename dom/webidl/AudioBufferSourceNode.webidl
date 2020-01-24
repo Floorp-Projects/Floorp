@@ -25,6 +25,7 @@ interface AudioBufferSourceNode : AudioScheduledSourceNode {
     constructor(BaseAudioContext context,
                 optional AudioBufferSourceOptions options = {});
 
+    [SetterThrows]
     attribute AudioBuffer? buffer;
 
     readonly attribute AudioParam playbackRate;
