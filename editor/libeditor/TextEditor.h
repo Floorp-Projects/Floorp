@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsINamed.h"
-#include "nsIPlaintextEditor.h"
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
 #include "nscore.h"
@@ -36,10 +35,7 @@ class Selection;
  * The text editor implementation.
  * Use to edit text document represented as a DOM tree.
  */
-class TextEditor : public EditorBase,
-                   public nsIPlaintextEditor,
-                   public nsITimerCallback,
-                   public nsINamed {
+class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
  public:
   /****************************************************************************
    * NOTE: DO NOT MAKE YOUR NEW METHODS PUBLIC IF they are called by other
@@ -56,7 +52,6 @@ class TextEditor : public EditorBase,
 
   TextEditor();
 
-  NS_DECL_NSIPLAINTEXTEDITOR
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
@@ -69,6 +64,8 @@ class TextEditor : public EditorBase,
 
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD SetDocumentCharacterSet(const nsACString& characterSet) override;
+
+  NS_IMETHOD GetTextLength(int32_t* aCount) override;
 
   /**
    * Do "undo" or "redo".
@@ -194,20 +191,6 @@ class TextEditor : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult PasteAsAction(int32_t aClipboardType,
                                             bool aDispatchPasteEvent,
                                             nsIPrincipal* aPrincipal = nullptr);
-
-  /**
-   * InsertTextAsAction() inserts aStringToInsert at selection.
-   * Although this method is implementation of nsIPlaintextEditor.insertText(),
-   * this treats the input is an edit action.  If you'd like to insert text
-   * as part of edit action, you probably should use InsertTextAsSubAction().
-   *
-   * @param aStringToInsert     The string to insert.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertTextAsAction(
-      const nsAString& aStringToInsert, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
@@ -341,14 +324,6 @@ class TextEditor : public EditorBase,
   }
 
   /**
-   * Similar to the setter for wrapWidth, but just sets the editor
-   * internal state without actually changing the content being edited
-   * to wrap at that column.  This should only be used by callers who
-   * are sure that their content is already set up correctly.
-   */
-  void SetWrapColumn(int32_t aWrapColumn) { mWrapColumn = aWrapColumn; }
-
-  /**
    * The following methods are available only when the instance is a password
    * editor.  They return whether there is unmasked range or not and range
    * start and length.
@@ -406,15 +381,6 @@ class TextEditor : public EditorBase,
                                             bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
-
-  /**
-   * InsertTextAsSubAction() inserts aStringToInsert at selection.  This
-   * should be used for handling it as an edit sub-action.
-   *
-   * @param aStringToInsert     The string to insert.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  InsertTextAsSubAction(const nsAString& aStringToInsert);
 
   /**
    * DeleteSelectionAsSubAction() removes selection content or content around
@@ -598,18 +564,18 @@ class TextEditor : public EditorBase,
    * Handles the newline characters according to the default system prefs
    * (editor.singleLine.pasteNewlines).
    * Each value means:
-   *   nsIPlaintextEditor::eNewlinesReplaceWithSpaces (2, Firefox default):
+   *   nsIEditor::eNewlinesReplaceWithSpaces (2, Firefox default):
    *     replace newlines with spaces.
-   *   nsIPlaintextEditor::eNewlinesStrip (3):
+   *   nsIEditor::eNewlinesStrip (3):
    *     remove newlines from the string.
-   *   nsIPlaintextEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
+   *   nsIEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
    *     replace newlines with commas.
-   *   nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace (5):
+   *   nsIEditor::eNewlinesStripSurroundingWhitespace (5):
    *     collapse newlines and surrounding whitespace characters and
    *     remove them from the string.
-   *   nsIPlaintextEditor::eNewlinesPasteIntact (0):
+   *   nsIEditor::eNewlinesPasteIntact (0):
    *     only remove the leading and trailing newlines.
-   *   nsIPlaintextEditor::eNewlinesPasteToFirst (1) or any other value:
+   *   nsIEditor::eNewlinesPasteToFirst (1) or any other value:
    *     remove the first newline and all characters following it.
    *
    * @param aString the string to be modified in place.
@@ -720,8 +686,6 @@ class TextEditor : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InitEditorContentAndSelection();
 
-  int32_t WrapWidth() const { return mWrapColumn; }
-
   /**
    * CanEchoPasswordNow() returns true if currently we can echo password.
    * If it's direct user input such as pasting or dropping text, this
@@ -742,12 +706,6 @@ class TextEditor : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   OnInputText(const nsAString& aStringToInsert);
-
-  /**
-   * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
-   * TextEditor or <br> if it's HTMLEditor.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertLineBreakAsSubAction();
 
   /**
    * PrepareInsertContent() is a helper method of InsertTextAt(),
@@ -901,9 +859,7 @@ class TextEditor : public EditorBase,
 
   mutable nsString mCachedDocumentEncoderType;
 
-  int32_t mWrapColumn;
   int32_t mMaxTextLength;
-  int32_t mNewlineHandling;
   int32_t mCaretStyle;
 
   // Unmasked character range.  Used only when it's a password field.

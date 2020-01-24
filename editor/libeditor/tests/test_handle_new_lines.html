@@ -46,17 +46,17 @@ async function copyPlaintext(aText) {
 }
 
 async function doTests() {
-  // nsIPlaintextEditor::eNewlinesPasteIntact (0):
+  // nsIEditor::eNewlinesPasteIntact (0):
   //   only remove the leading and trailing newlines.
-  // nsIPlaintextEditor::eNewlinesPasteToFirst (1) or any other value:
+  // nsIEditor::eNewlinesPasteToFirst (1) or any other value:
   //   remove the first newline and all characters following it.
-  // nsIPlaintextEditor::eNewlinesReplaceWithSpaces (2, Firefox default):
+  // nsIEditor::eNewlinesReplaceWithSpaces (2, Firefox default):
   //   replace newlines with spaces.
-  // nsIPlaintextEditor::eNewlinesStrip (3):
+  // nsIEditor::eNewlinesStrip (3):
   //   remove newlines from the string.
-  // nsIPlaintextEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
+  // nsIEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
   //   replace newlines with commas.
-  // nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace (5):
+  // nsIEditor::eNewlinesStripSurroundingWhitespace (5):
   //   collapse newlines and surrounding whitespace characters and
   //   remove them from the string.
 

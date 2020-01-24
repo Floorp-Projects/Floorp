@@ -121,9 +121,8 @@ class HTMLInputElement;
  * mValue member of the TextControlState object.
  *
  *   * If an editor has been initialized for the control, the value is set and
- * retrievd via the nsIPlaintextEditor interface, and is internally managed by
- * the editor as the native anonymous content tree attached to the control's
- * frame.
+ * retrievd via the nsIEditor interface, and is internally managed by the
+ * editor as the native anonymous content tree attached to the control's frame.
  *
  *   * If the text control state object is unbound from the control's frame, the
  * value is transferred to the mValue member variable, and will be managed there

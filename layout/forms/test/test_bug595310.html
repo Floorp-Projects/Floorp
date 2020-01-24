@@ -42,11 +42,7 @@ addLoadEvent(function() {
 
   function synthesizeDropText(aElement, aText)
   {
-    var editor = SpecialPowers.wrap(aElement)
-                              .editor
-                              .QueryInterface(SpecialPowers.Ci.nsIPlaintextEditor);
-
-    editor.insertText(aText);
+    SpecialPowers.wrap(aElement).editor.insertText(aText);
   }
 
   // We insert "bar" and we should only see "bar" now.

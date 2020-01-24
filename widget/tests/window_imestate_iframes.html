@@ -166,8 +166,7 @@ function runTests() {
   }
 
   function testOnEditorFlagChange(aDescription, aIsInDesignMode) {
-    const kReadonly =
-      Ci.nsIPlaintextEditor.eEditorReadonlyMask;
+    const kReadonly = Ci.nsIEditor.eEditorReadonlyMask;
     var description = "testOnEditorFlagChange: " + aDescription;
     resetFocusToParentHTML(description);
     var htmlEditor = iframe.contentWindow.docShell.editor;

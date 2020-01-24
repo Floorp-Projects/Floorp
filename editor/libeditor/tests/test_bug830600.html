@@ -31,8 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830600
           t.focus();
           t.value = "";
           var editor = SpecialPowers.wrap(t).editor;
-          editor.QueryInterface(Ci.nsIPlaintextEditor);
-          editor.newlineHandling = Ci.nsIPlaintextEditor.eNewlinesStripSurroundingWhitespace;
+          editor.newlineHandling = Ci.nsIEditor.eNewlinesStripSurroundingWhitespace;
           SimpleTest.waitForClipboard(str,
             function() {
               SpecialPowers.Cc["@mozilla.org/widget/clipboardhelper;1"]

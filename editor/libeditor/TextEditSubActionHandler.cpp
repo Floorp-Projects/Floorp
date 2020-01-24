@@ -29,7 +29,6 @@
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
-#include "nsIPlaintextEditor.h"
 #include "nsISupportsBase.h"
 #include "nsLiteralString.h"
 #include "nsTextNode.h"
@@ -337,16 +336,16 @@ void TextEditor::HandleNewLinesInStringForSingleLineEditor(
   }
 
   switch (mNewlineHandling) {
-    case nsIPlaintextEditor::eNewlinesReplaceWithSpaces:
+    case nsIEditor::eNewlinesReplaceWithSpaces:
       // Default of Firefox:
       // Strip trailing newlines first so we don't wind up with trailing spaces
       aString.Trim(LFSTR, false, true);
       aString.ReplaceChar(kLF, ' ');
       break;
-    case nsIPlaintextEditor::eNewlinesStrip:
+    case nsIEditor::eNewlinesStrip:
       aString.StripChar(kLF);
       break;
-    case nsIPlaintextEditor::eNewlinesPasteToFirst:
+    case nsIEditor::eNewlinesPasteToFirst:
     default: {
       // we get first *non-empty* line.
       int32_t offset = 0;
@@ -362,12 +361,12 @@ void TextEditor::HandleNewLinesInStringForSingleLineEditor(
       }
       break;
     }
-    case nsIPlaintextEditor::eNewlinesReplaceWithCommas:
+    case nsIEditor::eNewlinesReplaceWithCommas:
       // Default of Thunderbird:
       aString.Trim(LFSTR, true, true);
       aString.ReplaceChar(kLF, ',');
       break;
-    case nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace: {
+    case nsIEditor::eNewlinesStripSurroundingWhitespace: {
       nsAutoString result;
       uint32_t offset = 0;
       while (offset < aString.Length()) {
@@ -390,7 +389,7 @@ void TextEditor::HandleNewLinesInStringForSingleLineEditor(
       aString = result;
       break;
     }
-    case nsIPlaintextEditor::eNewlinesPasteIntact:
+    case nsIEditor::eNewlinesPasteIntact:
       // even if we're pasting newlines, don't paste leading/trailing ones
       aString.Trim(LFSTR, true, true);
       break;
@@ -949,7 +948,7 @@ EditActionResult TextEditor::TruncateInsertionStringForMaxLength(
 
 bool TextEditor::CanEchoPasswordNow() const {
   if (!LookAndFeel::GetEchoPassword() ||
-      (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword)) {
+      (mFlags & nsIEditor::eEditorDontEchoPassword)) {
     return false;
   }
 
