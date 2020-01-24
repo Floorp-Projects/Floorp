@@ -10,9 +10,17 @@
 | [AddonsManagerAdapterDelegate](-addons-manager-adapter-delegate/index.md) | `interface AddonsManagerAdapterDelegate`<br>Provides methods for handling the add-on items in the add-on manager. |
 | [CustomViewHolder](-custom-view-holder/index.md) | `sealed class CustomViewHolder : ViewHolder`<br>A base view holder. |
 | [PermissionsDialogFragment](-permissions-dialog-fragment/index.md) | `class PermissionsDialogFragment : AppCompatDialogFragment`<br>A dialog that shows a set of permission required by an [Addon](../mozilla.components.feature.addons/-addon/index.md). |
+| [UnsupportedAddonsAdapter](-unsupported-addons-adapter/index.md) | `class UnsupportedAddonsAdapter : Adapter<ViewHolder>`<br>An adapter for displaying unsupported add-on items. |
+| [UnsupportedAddonsAdapterDelegate](-unsupported-addons-adapter-delegate/index.md) | `interface UnsupportedAddonsAdapterDelegate`<br>Provides methods for handling the success and error callbacks from uninstalling an add-on in the list of unsupported add-on items. |
 
 ### Extensions for External Classes
 
 | Name | Summary |
 |---|---|
 | [kotlin.collections.Map](kotlin.collections.-map/index.md) |  |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [translatedName](translated-name.md) | `val `[`Addon`](../mozilla.components.feature.addons/-addon/index.md)`.translatedName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized name of an add-on. |

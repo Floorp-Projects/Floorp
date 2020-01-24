@@ -733,6 +733,8 @@
 | [mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor](../mozilla.components.feature.pwa.intent/-trusted-web-activity-intent-processor/index.md) | Processor for intents which open Trusted Web Activities. |
 | [mozilla.components.browser.menu2.candidate.TypefaceStyle](../mozilla.components.browser.menu2.candidate/-typeface-style/index.md) | Enum for [Typeface](#) values. |
 | [mozilla.components.support.utils.URLStringUtils](../mozilla.components.support.utils/-u-r-l-string-utils/index.md) |  |
+| [mozilla.components.feature.addons.ui.UnsupportedAddonsAdapter](../mozilla.components.feature.addons.ui/-unsupported-addons-adapter/index.md) | An adapter for displaying unsupported add-on items. |
+| [mozilla.components.feature.addons.ui.UnsupportedAddonsAdapterDelegate](../mozilla.components.feature.addons.ui/-unsupported-addons-adapter-delegate/index.md) | Provides methods for handling the success and error callbacks from uninstalling an add-on in the list of unsupported add-on items. |
 | [mozilla.components.concept.engine.UnsupportedSetting](../mozilla.components.concept.engine/-unsupported-setting/index.md) |  |
 | [mozilla.components.concept.engine.UnsupportedSettingException](../mozilla.components.concept.engine/-unsupported-setting-exception/index.md) | Exception thrown by default if a setting is not supported by an engine or session. |
 | [mozilla.components.browser.engine.system.matcher.UrlMatcher](../mozilla.components.browser.engine.system.matcher/-url-matcher/index.md) | Provides functionality to process categorized URL black/white lists and match URLs against these lists. |
