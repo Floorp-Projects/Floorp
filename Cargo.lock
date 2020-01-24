@@ -186,8 +186,8 @@ name = "baldrdash"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cranelift-codegen 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
- "cranelift-wasm 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
+ "cranelift-codegen 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
+ "cranelift-wasm 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -643,21 +643,21 @@ dependencies = [
 [[package]]
 name = "cranelift-bforest"
 version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17#98633eeb0d249efae23ee69ec03dc35b7d9bec17"
 dependencies = [
- "cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
+ "cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
 ]
 
 [[package]]
 name = "cranelift-codegen"
 version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17#98633eeb0d249efae23ee69ec03dc35b7d9bec17"
 dependencies = [
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "cranelift-bforest 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
- "cranelift-codegen-meta 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
- "cranelift-codegen-shared 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
- "cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
+ "cranelift-bforest 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
+ "cranelift-codegen-meta 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
+ "cranelift-codegen-shared 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
+ "cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "target-lexicon 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -667,16 +667,16 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen-meta"
 version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17#98633eeb0d249efae23ee69ec03dc35b7d9bec17"
 dependencies = [
- "cranelift-codegen-shared 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
- "cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
+ "cranelift-codegen-shared 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
+ "cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
 ]
 
 [[package]]
 name = "cranelift-codegen-shared"
 version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17#98633eeb0d249efae23ee69ec03dc35b7d9bec17"
 
 [[package]]
 name = "cranelift-entity"
@@ -686,14 +686,14 @@ source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=58498599272
 [[package]]
 name = "cranelift-entity"
 version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17#98633eeb0d249efae23ee69ec03dc35b7d9bec17"
 
 [[package]]
 name = "cranelift-frontend"
 version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17#98633eeb0d249efae23ee69ec03dc35b7d9bec17"
 dependencies = [
- "cranelift-codegen 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
+ "cranelift-codegen 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "target-lexicon 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -702,11 +702,11 @@ dependencies = [
 [[package]]
 name = "cranelift-wasm"
 version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17#98633eeb0d249efae23ee69ec03dc35b7d9bec17"
 dependencies = [
- "cranelift-codegen 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
- "cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
- "cranelift-frontend 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)",
+ "cranelift-codegen 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
+ "cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
+ "cranelift-frontend 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasmparser 0.47.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4656,14 +4656,14 @@ dependencies = [
 "checksum coreaudio-sys-utils 0.1.0 (git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=4d8fcc1954df217fbb29166e7ae750bf26d47203)" = "<none>"
 "checksum cose 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "72fa26cb151d3ae4b70f63d67d0fed57ce04220feafafbae7f503bef7aae590d"
 "checksum cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "49726015ab0ca765144fcca61e4a7a543a16b795a777fa53f554da2fffff9a94"
-"checksum cranelift-bforest 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)" = "<none>"
-"checksum cranelift-codegen 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)" = "<none>"
-"checksum cranelift-codegen-meta 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)" = "<none>"
-"checksum cranelift-codegen-shared 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)" = "<none>"
+"checksum cranelift-bforest 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)" = "<none>"
+"checksum cranelift-codegen 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)" = "<none>"
+"checksum cranelift-codegen-meta 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)" = "<none>"
+"checksum cranelift-codegen-shared 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)" = "<none>"
 "checksum cranelift-entity 0.41.0 (git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=58498599272e23ef797bb4304d0f181d7455ca57)" = "<none>"
-"checksum cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)" = "<none>"
-"checksum cranelift-frontend 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)" = "<none>"
-"checksum cranelift-wasm 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627)" = "<none>"
+"checksum cranelift-entity 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)" = "<none>"
+"checksum cranelift-frontend 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)" = "<none>"
+"checksum cranelift-wasm 0.56.0 (git+https://github.com/bytecodealliance/cranelift?rev=98633eeb0d249efae23ee69ec03dc35b7d9bec17)" = "<none>"
 "checksum crc32fast 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ba125de2af0df55319f41944744ad91c71113bf74a4646efff39afe1f6842db1"
 "checksum crossbeam-deque 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c3aa945d63861bfe624b55d153a39684da1e8c0bc8fba932f7ee3a3c16cea3ca"
 "checksum crossbeam-epoch 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5064ebdbf05ce3cb95e45c8b086f72263f4166b29b97f6baff7ef7fe047b55ac"

@@ -71,8 +71,8 @@ failure_derive = { git = "https://github.com/badboy/failure", rev = "64af847bc5f
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/bytecodealliance/cranelift"
-rev = "eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+rev = "98633eeb0d249efae23ee69ec03dc35b7d9bec17"
 
 [patch.crates-io.cranelift-wasm]
 git = "https://github.com/bytecodealliance/cranelift"
-rev = "eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+rev = "98633eeb0d249efae23ee69ec03dc35b7d9bec17"
