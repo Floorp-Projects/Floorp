@@ -585,8 +585,13 @@ enum ChunkType {
 
 // Tree of extents.
 struct extent_node_t {
-  // Linkage for the size/address-ordered tree.
-  RedBlackTreeNode<extent_node_t> mLinkBySize;
+  union {
+    // Linkage for the size/address-ordered tree for chunk recycling.
+    RedBlackTreeNode<extent_node_t> mLinkBySize;
+    // Arena id for huge allocations. It's meant to match mArena->mId,
+    // which only holds true when the arena hasn't been disposed of.
+    arena_id_t mArenaId;
+  };
 
   // Linkage for the address-ordered tree.
   RedBlackTreeNode<extent_node_t> mLinkByAddr;
@@ -881,9 +886,13 @@ struct arena_t {
 #  define ARENA_MAGIC 0x947d3d24
 #endif
 
-  arena_id_t mId;
   // Linkage for the tree of arenas by id.
   RedBlackTreeNode<arena_t> mLink;
+
+  // Arena id, that we keep away from the beginning of the struct so that
+  // free list pointers in TypedBaseAlloc<arena_t> don't overflow in it,
+  // and it keeps the value it had after the destructor.
+  arena_id_t mId;
 
   // All operations on this arena require that lock be locked.
   Mutex mLock;
@@ -958,6 +967,7 @@ struct arena_t {
   arena_bin_t mBins[1];  // Dynamically sized.
 
   explicit arena_t(arena_params_t* aParams);
+  ~arena_t();
 
  private:
   void InitChunk(arena_chunk_t* aChunk, bool aZeroed);
@@ -1025,15 +1035,9 @@ struct arena_t {
 #if !defined(_MSC_VER) || defined(_CPPUNWIND)
       noexcept
 #endif
-  {
-    MOZ_ASSERT(aCount == sizeof(arena_t));
-    // Allocate enough space for trailing bins.
-    return base_alloc(
-        aCount + (sizeof(arena_bin_t) * (kNumTinyClasses + kNumQuantumClasses +
-                                         gNumSubPageClasses - 1)));
-  }
+      ;
 
-  void operator delete(void*) = delete;
+  void operator delete(void*);
 };
 
 struct ArenaTreeTrait {
@@ -1072,10 +1076,10 @@ class ArenaCollection {
 
   void DisposeArena(arena_t* aArena) {
     MutexAutoLock lock(mLock);
-    (mPrivateArenas.Search(aArena) ? mPrivateArenas : mArenas).Remove(aArena);
-    // The arena is leaked, and remaining allocations in it still are alive
-    // until they are freed. After that, the arena will be empty but still
-    // taking have at least a chunk taking address space. TODO: bug 1364359.
+    MOZ_RELEASE_ASSERT(mPrivateArenas.Search(aArena),
+                       "Can only dispose of private arenas");
+    mPrivateArenas.Remove(aArena);
+    delete aArena;
   }
 
   using Tree = RedBlackTree<arena_t, ArenaTreeTrait>;
@@ -1410,6 +1414,8 @@ template <typename T>
 struct TypedBaseAlloc {
   static T* sFirstFree;
 
+  static size_t size_of() { return sizeof(T); }
+
   static T* alloc() {
     T* ret;
 
@@ -1420,7 +1426,7 @@ struct TypedBaseAlloc {
       base_mtx.Unlock();
     } else {
       base_mtx.Unlock();
-      ret = (T*)base_alloc(sizeof(T));
+      ret = (T*)base_alloc(size_of());
     }
 
     return ret;
@@ -1437,6 +1443,17 @@ using ExtentAlloc = TypedBaseAlloc<extent_node_t>;
 
 template <>
 extent_node_t* ExtentAlloc::sFirstFree = nullptr;
+
+template <>
+arena_t* TypedBaseAlloc<arena_t>::sFirstFree = nullptr;
+
+template <>
+size_t TypedBaseAlloc<arena_t>::size_of() {
+  // Allocate enough space for trailing bins.
+  return sizeof(arena_t) +
+         (sizeof(arena_bin_t) *
+          (kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses - 1));
+}
 
 template <typename T>
 struct BaseAllocFreePolicy {
@@ -3113,7 +3130,18 @@ class AllocInfo {
   size_t Size() { return mSize; }
 
   arena_t* Arena() {
-    return (mSize <= gMaxLargeClass) ? mChunk->arena : mNode->mArena;
+    if (mSize <= gMaxLargeClass) {
+      return mChunk->arena;
+    }
+    // Best effort detection that we're not trying to access an already
+    // disposed arena. In the case of a disposed arena, the memory location
+    // pointed by mNode->mArena is either free (but still a valid memory
+    // region, per TypedBaseAlloc<arena_t>), in which case its id was reset,
+    // or has been reallocated for a new region, and its id is very likely
+    // different (per randomness). In both cases, the id is unlikely to
+    // match what it was for the disposed arena.
+    MOZ_RELEASE_ASSERT(mNode->mArenaId == mNode->mArena->mId);
+    return mNode->mArena;
   }
 
  private:
@@ -3478,6 +3506,19 @@ void* arena_t::Ralloc(void* aPtr, size_t aSize, size_t aOldSize) {
                                    : RallocHuge(aPtr, aSize, aOldSize);
 }
 
+void* arena_t::operator new(size_t aCount, const fallible_t&)
+#if !defined(_MSC_VER) || defined(_CPPUNWIND)
+    noexcept
+#endif
+{
+  MOZ_ASSERT(aCount == sizeof(arena_t));
+  return TypedBaseAlloc<arena_t>::alloc();
+}
+
+void arena_t::operator delete(void* aPtr) {
+  TypedBaseAlloc<arena_t>::dealloc((arena_t*)aPtr);
+}
+
 arena_t::arena_t(arena_params_t* aParams) {
   unsigned i;
 
@@ -3527,6 +3568,32 @@ arena_t::arena_t(arena_params_t* aParams) {
 #endif
 }
 
+arena_t::~arena_t() {
+  size_t i;
+  MutexAutoLock lock(mLock);
+  MOZ_RELEASE_ASSERT(!mLink.Left() && !mLink.Right(),
+                     "Arena is still registered");
+  MOZ_RELEASE_ASSERT(!mStats.allocated_small && !mStats.allocated_large,
+                     "Arena is not empty");
+  if (mSpare) {
+    chunk_dealloc(mSpare, kChunkSize, ARENA_CHUNK);
+  }
+  for (i = 0; i < kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses;
+       i++) {
+    MOZ_RELEASE_ASSERT(!mBins[i].mNonFullRuns.First(), "Bin is not empty");
+  }
+#ifdef MOZ_DEBUG
+  {
+    MutexAutoLock lock(huge_mtx);
+    // This is an expensive check, so we only do it on debug builds.
+    for (auto node : huge.iter()) {
+      MOZ_RELEASE_ASSERT(node->mArenaId != mId, "Arena has huge allocations");
+    }
+  }
+#endif
+  mId = 0;
+}
+
 arena_t* ArenaCollection::CreateArena(bool aIsPrivate,
                                       arena_params_t* aParams) {
   fallible_t fallible;
@@ -3564,6 +3631,11 @@ arena_t* ArenaCollection::CreateArena(bool aIsPrivate,
       maybeRandomId = mozilla::RandomUint64();
     }
     MOZ_RELEASE_ASSERT(maybeRandomId.isSome());
+
+    // Avoid 0 as an arena Id. We use 0 for disposed arenas.
+    if (!maybeRandomId.value()) {
+      continue;
+    }
 
     // Keep looping until we ensure that the random number we just generated
     // isn't already in use by another active arena
@@ -3625,6 +3697,7 @@ void* arena_t::PallocHuge(size_t aSize, size_t aAlignment, bool aZero) {
   node->mAddr = ret;
   node->mSize = psize;
   node->mArena = this;
+  node->mArenaId = mId;
 
   {
     MutexAutoLock lock(huge_mtx);
@@ -3749,6 +3822,8 @@ static void huge_dalloc(void* aPtr, arena_t* aArena) {
     MOZ_RELEASE_ASSERT(node, "Double-free?");
     MOZ_ASSERT(node->mAddr == aPtr);
     MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
+    // See AllocInfo::Arena.
+    MOZ_RELEASE_ASSERT(node->mArenaId == node->mArena->mId);
     huge.Remove(node);
 
     mapped = CHUNK_CEILING(node->mSize + gPageSize);
@@ -4369,10 +4444,6 @@ inline arena_id_t MozJemalloc::moz_create_arena_with_params(
 
 template <>
 inline void MozJemalloc::moz_dispose_arena(arena_id_t aArenaId) {
-  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
-  // We want to catch any such occurances of that behavior.
-  MOZ_CRASH("Do not call moz_dispose_arena until Bug 1364359 is fixed.");
-
   arena_t* arena = gArenas.GetById(aArenaId, /* IsPrivate = */ true);
   MOZ_RELEASE_ASSERT(arena);
   gArenas.DisposeArena(arena);
