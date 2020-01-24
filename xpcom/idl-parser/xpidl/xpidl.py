@@ -704,8 +704,6 @@ class Interface(object):
                 raise IDLError("interface '%s' is not builtinclass but derives from "
                                "builtinclass '%s'" %
                                (self.name, self.base), self.location)
-        elif self.name != 'nsISupports':
-            raise IDLError("Interface '%s' must inherit from nsISupports" % self.name, self.location)
 
         for member in self.members:
             member.resolve(self)
