@@ -1970,6 +1970,13 @@ bool nsFrameLoader::OwnerIsMozBrowserFrame() {
   return browserFrame ? browserFrame->GetReallyIsBrowser() : false;
 }
 
+void nsFrameLoader::AssertSafeToInit() {
+  MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsSafeToRunScript() ||
+                            mOwnerContent->OwnerDoc()->IsStaticDocument(),
+                        "FrameLoader should never be initialized during "
+                        "document update or reflow!");
+}
+
 nsresult nsFrameLoader::MaybeCreateDocShell() {
   if (GetDocShell()) {
     return NS_OK;
@@ -1978,6 +1985,8 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     return NS_OK;
   }
   NS_ENSURE_STATE(!mDestroyCalled);
+
+  AssertSafeToInit();
 
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a
@@ -2461,6 +2470,8 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
       XRE_IsParentProcess(),
       "Remote subframes should only be created using the "
       "`CanonicalBrowsingContext::ChangeFrameRemoteness` API");
+
+  AssertSafeToInit();
 
   if (!mOwnerContent) {
     return false;

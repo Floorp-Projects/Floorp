@@ -424,6 +424,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsresult ReallyLoadFrameScripts();
   nsDocShell* GetDocShell() const { return mDocShell; }
 
+  void AssertSafeToInit();
+
   // Updates the subdocument position and size. This gets called only
   // when we have our own in-process DocShell.
   void UpdateBaseWindowPositionAndSize(nsSubDocumentFrame* aIFrame);
