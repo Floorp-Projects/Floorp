@@ -16,7 +16,7 @@ const { EventEmitter } = ChromeUtils.import(
 );
 
 const {
-  ExtensionUtils: { ExtensionError },
+  ExtensionUtils: { ExtensionError, promiseTimeout },
 } = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -26,8 +26,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Subprocess: "resource://gre/modules/Subprocess.jsm",
-  clearTimeout: "resource://gre/modules/Timer.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 // For a graceful shutdown (i.e., when the extension is unloaded or when it
@@ -71,7 +69,7 @@ var NativeApp = class extends EventEmitter {
     this.readPromise = null;
     this.sendQueue = [];
     this.writePromise = null;
-    this.sentDisconnect = false;
+    this.cleanupStarted = false;
 
     this.startupPromise = NativeManifests.lookupManifest(
       "stdio",
@@ -271,55 +269,67 @@ var NativeApp = class extends EventEmitter {
 
   // Shut down the native application and (by default) signal to the extension
   // that the connect has been disconnected.
-  _cleanup(err, fromExtension = false) {
+  async _cleanup(err, fromExtension = false) {
+    if (this.cleanupStarted) {
+      return;
+    }
+    this.cleanupStarted = true;
     this.context.forgetOnClose(this);
 
-    let doCleanup = () => {
-      // Set a timer to kill the process gracefully after one timeout
-      // interval and kill it forcefully after two intervals.
-      let timer = setTimeout(() => {
-        if (this.proc) {
-          this.proc.kill(GRACEFUL_SHUTDOWN_TIME);
-        }
-      }, GRACEFUL_SHUTDOWN_TIME);
-
-      let promise = Promise.all([
-        this.proc.stdin.close().catch(err => {
-          if (err.errorCode != Subprocess.ERROR_END_OF_FILE) {
-            throw err;
-          }
-        }),
-        this.proc.wait(),
-      ]).then(() => {
-        this.proc = null;
-        clearTimeout(timer);
-      });
-
-      AsyncShutdown.profileBeforeChange.addBlocker(
-        `Native Messaging: Wait for application ${this.name} to exit`,
-        promise
-      );
-
-      promise.then(() => {
-        AsyncShutdown.profileBeforeChange.removeBlocker(promise);
-      });
-
-      return promise;
-    };
-
-    if (this.proc) {
-      doCleanup();
-    } else if (this.startupPromise) {
-      this.startupPromise.then(doCleanup);
-    }
-
-    if (!this.sentDisconnect && !fromExtension) {
+    if (!fromExtension) {
       if (err && err.errorCode == Subprocess.ERROR_END_OF_FILE) {
         err = null;
       }
       this.emit("disconnect", err);
     }
-    this.sentDisconnect = true;
+
+    await this.startupPromise;
+
+    if (!this.proc) {
+      // Failed to initialize proc in the constructor.
+      return;
+    }
+
+    // To prevent an uncooperative process from blocking shutdown, we take the
+    // following actions, and wait for GRACEFUL_SHUTDOWN_TIME in between.
+    //
+    // 1. Allow exit by closing the stdin pipe.
+    // 2. Allow exit by a kill signal.
+    // 3. Allow exit by forced kill signal.
+    // 4. Give up and unblock shutdown despite the process still being alive.
+
+    // Close the stdin stream and allow the process to exit on its own.
+    // proc.wait() below will resolve once the process has exited gracefully.
+    this.proc.stdin.close().catch(err => {
+      if (err.errorCode != Subprocess.ERROR_END_OF_FILE) {
+        Cu.reportError(err);
+      }
+    });
+    let exitPromise = Promise.race([
+      // 1. Allow the process to exit on its own after closing stdin.
+      this.proc.wait().then(() => {
+        this.proc = null;
+      }),
+      promiseTimeout(GRACEFUL_SHUTDOWN_TIME).then(() => {
+        if (this.proc) {
+          // 2. Kill the process gracefully. 3. Force kill after a timeout.
+          this.proc.kill(GRACEFUL_SHUTDOWN_TIME);
+
+          // 4. If the process is still alive after a kill + timeout followed
+          // by a forced kill + timeout, give up and just resolve exitPromise.
+          //
+          // Note that waiting for just one interval is not enough, because the
+          // `proc.kill()` is asynchronous, so we need to wait a bit after the
+          // kill signal has been sent.
+          return promiseTimeout(2 * GRACEFUL_SHUTDOWN_TIME);
+        }
+      }),
+    ]);
+
+    AsyncShutdown.profileBeforeChange.addBlocker(
+      `Native Messaging: Wait for application ${this.name} to exit`,
+      exitPromise
+    );
   }
 
   // Called when the Context or Port is closed.
