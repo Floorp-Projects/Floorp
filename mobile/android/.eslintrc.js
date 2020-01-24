@@ -21,8 +21,6 @@ module.exports = {
 
   "overrides": [{
     files: [
-      // Bug 1425047.
-      "chrome/**",
       // Bug 1425048.
       "components/extensions/**",
     ],
@@ -30,6 +28,13 @@ module.exports = {
       "no-unused-vars": "off",
       "no-undef": "off",
     }
+  }, {
+    files: [
+      "chrome/geckoview/*Child.js",
+    ],
+    env: {
+      "mozilla/frame-script": true,
+    },
   }, {
     files: [
       "chrome/geckoview/**",
