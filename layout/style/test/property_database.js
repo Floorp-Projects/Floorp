@@ -12838,6 +12838,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
     other_values: [
+      "path('')",
+      "path(' ')",
       "path('M 10 10 20 20 H 90 V 90 Z')",
       "path('M10 10 20,20H90V90Z')",
       "path('M 10 10 C 20 20, 40 20, 50 10')",
@@ -12856,7 +12858,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
       "ray(calc(180deg - 45deg) farthest-side)",
     ],
     invalid_values: [
-      "path('')",
       "path()",
       "path(a)",
       "path('M 10 Z')",
@@ -12907,6 +12908,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
 
 if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
   gCSSProperties["clip-path"].other_values.push(
+    "path(evenodd, '')",
     "path(nonzero, 'M 10 10 h 100 v 100 h-100 v-100 z')",
     "path(evenodd, 'M 10 10 h 100 v 100 h-100 v-100 z')",
     "path('M10,30A20,20 0,0,1 50,30A20,20 0,0,1 90,30Q90,60 50,90Q10,60 10,30z')"
@@ -12914,7 +12916,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
 
   gCSSProperties["clip-path"].invalid_values.push(
     "path(nonzero)",
-    "path(evenodd, '')",
     "path(abs, 'M 10 10 L 10 10 z')"
   );
 }

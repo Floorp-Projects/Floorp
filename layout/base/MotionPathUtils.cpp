@@ -346,7 +346,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
   if (aPath.IsPath()) {
     const auto& path = aPath.AsPath();
     if (!path.mGfxPath) {
-      NS_WARNING("could not get a valid gfx path");
+      // Empty gfx::Path means it is path('') (i.e. empty path string).
       return Nothing();
     }
 
@@ -439,11 +439,13 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
   const StyleOffsetPath& path = aFrame->StyleDisplay()->mOffsetPath;
   switch (path.tag) {
     case StyleOffsetPath::Tag::Path: {
+      const StyleSVGPathData& pathData = path.AsPath();
       RefPtr<gfx::Path> gfxPath =
           aFrame->GetProperty(nsIFrame::OffsetPathCache());
-      MOZ_ASSERT(gfxPath,
-                 "Should have a valid cached gfx::Path for offset-path");
-      return OffsetPathData::Path(path.AsPath(), gfxPath.forget());
+      MOZ_ASSERT(
+          gfxPath || pathData._0.IsEmpty(),
+          "Should have a valid cached gfx::Path or an empty path string");
+      return OffsetPathData::Path(pathData, gfxPath.forget());
     }
     case StyleOffsetPath::Tag::Ray:
       return OffsetPathData::Ray(path.AsRay(), RayReferenceData(aFrame));
@@ -494,16 +496,16 @@ static OffsetPathData GenerateOffsetPathData(
     gfx::Path* aCachedMotionPath) {
   switch (aPath.tag) {
     case StyleOffsetPath::Tag::Path: {
-      const StyleSVGPathData& svgPathData = aPath.AsPath();
+      const StyleSVGPathData& pathData = aPath.AsPath();
       // If aCachedMotionPath is valid, we have a fixed path.
       // This means we have pre-built it already and no need to update.
       RefPtr<gfx::Path> path = aCachedMotionPath;
       if (!path) {
         RefPtr<gfx::PathBuilder> builder =
             MotionPathUtils::GetCompositorPathBuilder();
-        path = MotionPathUtils::BuildPath(svgPathData, builder);
+        path = MotionPathUtils::BuildPath(pathData, builder);
       }
-      return OffsetPathData::Path(svgPathData, path.forget());
+      return OffsetPathData::Path(pathData, path.forget());
     }
     case StyleOffsetPath::Tag::Ray:
       return OffsetPathData::Ray(aPath.AsRay(), aRayReferenceData);
