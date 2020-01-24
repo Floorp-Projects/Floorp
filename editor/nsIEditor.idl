@@ -50,6 +50,54 @@ interface nsIEditor  : nsISupports
   const short eStrip = 0;
   const short eNoStrip = 1;
 
+  // only plain text entry is allowed via events
+  const long eEditorPlaintextMask       = 0x0001;
+  // enter key and CR-LF handled specially
+  const long eEditorSingleLineMask      = 0x0002;
+  // text is not entered into content, only a representative character
+  const long eEditorPasswordMask        = 0x0004;
+  // editing events are disabled.  Editor may still accept focus.
+  const long eEditorReadonlyMask        = 0x0008;
+  // all events are disabled (like scrolling).  Editor will not accept focus.
+  const long eEditorDisabledMask        = 0x0010;
+  // text input is limited to certain character types, use mFilter
+  const long eEditorFilterInputMask     = 0x0020;
+  // use mail-compose editing rules
+  const long eEditorMailMask            = 0x0040;
+  // allow the editor to set font: monospace on the root node
+  const long eEditorEnableWrapHackMask  = 0x0080;
+  // bit for widgets (form elements)
+  const long eEditorWidgetMask          = 0x0100;
+  // this HTML editor should not create css styles
+  const long eEditorNoCSSMask           = 0x0200;
+  // whether HTML document specific actions are executed or not.
+  // e.g., if this flag is set, the editor doesn't handle Tab key.
+  // besides, anchors of HTML are not clickable.
+  const long eEditorAllowInteraction    = 0x0400;
+  // when this is set, the characters in password editor are always masked.
+  // see bug 530367 for the detail.
+  const long eEditorDontEchoPassword    = 0x0800;
+  // when this flag is set, the internal direction of the editor is RTL.
+  // if neither of the direction flags are set, the direction is determined
+  // from the text control's content node.
+  const long eEditorRightToLeft         = 0x1000;
+  // when this flag is set, the internal direction of the editor is LTR.
+  const long eEditorLeftToRight         = 0x2000;
+  // when this flag is set, the editor's text content is not spell checked.
+  const long eEditorSkipSpellCheck      = 0x4000;
+
+  /*
+   * The valid values for newlines handling.
+   * Can't change the values unless we remove
+   * use of the pref.
+   */
+  const long eNewlinesPasteIntact                = 0;
+  const long eNewlinesPasteToFirst               = 1;
+  const long eNewlinesReplaceWithSpaces          = 2;
+  const long eNewlinesStrip                      = 3;
+  const long eNewlinesReplaceWithCommas          = 4;
+  const long eNewlinesStripSurroundingWhitespace = 5;
+
   readonly attribute Selection selection;
 
   [can_run_script]
@@ -500,6 +548,46 @@ interface nsIEditor  : nsISupports
    * passwordMask attribute is a mask character which is used to mask password.
    */
   readonly attribute AString passwordMask;
+
+  /**
+    * The length of the contents in characters.
+    * XXX change this type to 'unsigned long'
+    */
+  readonly attribute long textLength;
+
+  /** Get and set the body wrap width.
+    *
+    * Special values:
+    *    0 = wrap to window width
+    *   -1 = no wrap at all
+    */
+  attribute long wrapWidth;
+
+  /** Get and set newline handling.
+   *
+   *  Values are the constants defined above.
+   */
+  attribute long newlineHandling;
+
+  /**
+   * Inserts a string at the current location,
+   * given by the selection.
+   * If the selection is not collapsed, the selection is deleted
+   * and the insertion takes place at the resulting collapsed selection.
+   *
+   * @param aString   the string to be inserted
+   */
+   [can_run_script]
+   void insertText(in AString aStringToInsert);
+
+  /**
+   * Insert a line break into the content model.
+   * The interpretation of a break is up to the implementation:
+   * it may enter a character, split a node in the tree, etc.
+   * This may be more efficient than calling InsertText with a newline.
+   */
+  [can_run_script]
+  void insertLineBreak();
 
 %{C++
   /**

@@ -58,7 +58,7 @@ SimpleTest.waitForFocus(async () => {
 
   // Tests when the editor is in plaintext mode.
 
-  getEditor().flags |= SpecialPowers.Ci.nsIPlaintextEditor.eEditorPlaintextMask;
+  getEditor().flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
 
   beforeInputEvents = [];
   inputEvents = [];
@@ -82,7 +82,7 @@ SimpleTest.waitForFocus(async () => {
                   "after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
 
   // Tests when the editor is in HTML editor mode.
-  getEditor().flags &= ~SpecialPowers.Ci.nsIPlaintextEditor.eEditorPlaintextMask;
+  getEditor().flags &= ~SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
 
   editor.innerHTML = "";
 

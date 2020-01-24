@@ -215,9 +215,9 @@ class MOZ_RAII AutoRestoreEditorState final {
     // appearing the method in profile.  So, this class should check if it's
     // necessary to call.
     uint32_t flags = mSavedFlags;
-    flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
-    flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
-    flags |= nsIPlaintextEditor::eEditorDontEchoPassword;
+    flags &= ~(nsIEditor::eEditorDisabledMask);
+    flags &= ~(nsIEditor::eEditorReadonlyMask);
+    flags |= nsIEditor::eEditorDontEchoPassword;
     if (mSavedFlags != flags) {
       mTextEditor->SetFlags(flags);
     }
@@ -1719,20 +1719,20 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
   PresShell* presShell = presContext->GetPresShell();
 
   // Setup the editor flags
-  uint32_t editorFlags = nsIPlaintextEditor::eEditorPlaintextMask;
+  uint32_t editorFlags = nsIEditor::eEditorPlaintextMask;
   if (IsSingleLineTextControl()) {
-    editorFlags |= nsIPlaintextEditor::eEditorSingleLineMask;
+    editorFlags |= nsIEditor::eEditorSingleLineMask;
   }
   if (IsPasswordTextControl()) {
-    editorFlags |= nsIPlaintextEditor::eEditorPasswordMask;
+    editorFlags |= nsIEditor::eEditorPasswordMask;
   }
 
   // All nsTextControlFrames are widgets
-  editorFlags |= nsIPlaintextEditor::eEditorWidgetMask;
+  editorFlags |= nsIEditor::eEditorWidgetMask;
 
   // Spell check is diabled at creation time. It is enabled once
   // the editor comes into focus.
-  editorFlags |= nsIPlaintextEditor::eEditorSkipSpellCheck;
+  editorFlags |= nsIEditor::eEditorSkipSpellCheck;
 
   bool shouldInitializeEditor = false;
   RefPtr<TextEditor> newTextEditor;  // the editor that we might create
@@ -1766,7 +1766,7 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
 
     // Don't lose application flags in the process.
     if (newTextEditor->IsMailEditor()) {
-      editorFlags |= nsIPlaintextEditor::eEditorMailMask;
+      editorFlags |= nsIEditor::eEditorMailMask;
     }
   }
 
@@ -1871,13 +1871,13 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
 
   // Check if the readonly attribute is set.
   if (mTextCtrlElement->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly)) {
-    editorFlags |= nsIPlaintextEditor::eEditorReadonlyMask;
+    editorFlags |= nsIEditor::eEditorReadonlyMask;
   }
 
   // Check if the disabled attribute is set.
   // TODO: call IsDisabled() here!
   if (mTextCtrlElement->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
-    editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
+    editorFlags |= nsIEditor::eEditorDisabledMask;
   }
 
   // Disable the selection if necessary.

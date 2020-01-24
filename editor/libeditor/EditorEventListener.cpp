@@ -36,7 +36,6 @@
 #include "mozilla/dom/Document.h"  // for Document
 #include "nsIFormControl.h"        // for nsIFormControl, etc.
 #include "nsINode.h"               // for nsINode, ::NODE_IS_EDITABLE, etc.
-#include "nsIPlaintextEditor.h"    // for nsIPlaintextEditor, etc.
 #include "nsIWidget.h"             // for nsIWidget
 #include "nsLiteralString.h"       // for NS_LITERAL_STRING
 #include "nsPIWindowRoot.h"        // for nsPIWindowRoot
@@ -1092,7 +1091,7 @@ void EditorEventListener::SpellCheckIfNeeded() {
   // disable it because focused editors are allowed to spell check.
   RefPtr<EditorBase> editorBase(mEditorBase);
   if (editorBase->ShouldSkipSpellCheck()) {
-    editorBase->RemoveFlags(nsIPlaintextEditor::eEditorSkipSpellCheck);
+    editorBase->RemoveFlags(nsIEditor::eEditorSkipSpellCheck);
   }
 }
 

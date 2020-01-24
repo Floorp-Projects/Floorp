@@ -24,9 +24,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=599983
 
   SimpleTest.waitForExplicitFinish();
 
-  const kAllowInteraction = Ci.nsIPlaintextEditor
-                              .eEditorAllowInteraction;
-  const kMailMask = Ci.nsIPlaintextEditor.eEditorMailMask;
+  const kAllowInteraction = Ci.nsIEditor.eEditorAllowInteraction;
+  const kMailMask = Ci.nsIEditor.eEditorMailMask;
 
   function runTest() {
     testEditor(false, false);

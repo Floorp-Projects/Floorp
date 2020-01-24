@@ -29,7 +29,6 @@
 #include "mozilla/dom/Document.h"        // for Document
 #include "nsIEditor.h"                   // for nsIEditor
 #include "nsIInterfaceRequestorUtils.h"  // for do_GetInterface
-#include "nsIPlaintextEditor.h"          // for nsIPlaintextEditor, etc
 #include "nsIRefreshURI.h"               // for nsIRefreshURI
 #include "nsIRequest.h"                  // for nsIRequest
 #include "nsITimer.h"                    // for nsITimer, etc
@@ -302,20 +301,20 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
   bool needHTMLController = false;
 
   if (mEditorType.EqualsLiteral("textmail")) {
-    mEditorFlags = nsIPlaintextEditor::eEditorPlaintextMask |
-                   nsIPlaintextEditor::eEditorEnableWrapHackMask |
-                   nsIPlaintextEditor::eEditorMailMask;
+    mEditorFlags = nsIEditor::eEditorPlaintextMask |
+                   nsIEditor::eEditorEnableWrapHackMask |
+                   nsIEditor::eEditorMailMask;
   } else if (mEditorType.EqualsLiteral("text")) {
-    mEditorFlags = nsIPlaintextEditor::eEditorPlaintextMask |
-                   nsIPlaintextEditor::eEditorEnableWrapHackMask;
+    mEditorFlags =
+        nsIEditor::eEditorPlaintextMask | nsIEditor::eEditorEnableWrapHackMask;
   } else if (mEditorType.EqualsLiteral("htmlmail")) {
     if (mimeCType.EqualsLiteral("text/html")) {
       needHTMLController = true;
-      mEditorFlags = nsIPlaintextEditor::eEditorMailMask;
+      mEditorFlags = nsIEditor::eEditorMailMask;
     } else {
       // Set the flags back to textplain.
-      mEditorFlags = nsIPlaintextEditor::eEditorPlaintextMask |
-                     nsIPlaintextEditor::eEditorEnableWrapHackMask;
+      mEditorFlags = nsIEditor::eEditorPlaintextMask |
+                     nsIEditor::eEditorEnableWrapHackMask;
     }
   } else {
     // Defaulted to html
@@ -323,7 +322,7 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
   }
 
   if (mInteractive) {
-    mEditorFlags |= nsIPlaintextEditor::eEditorAllowInteraction;
+    mEditorFlags |= nsIEditor::eEditorAllowInteraction;
   }
 
   // make the UI state maintainer

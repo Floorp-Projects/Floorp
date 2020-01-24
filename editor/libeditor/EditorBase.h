@@ -135,7 +135,7 @@ enum class SplitAtEdges {
  * delegate the actual commands to the editor independent of the XPFE
  * implementation.
  */
-class EditorBase : public nsIEditor,
+class EditorBase : public nsIPlaintextEditor,
                    public nsISelectionListener,
                    public nsSupportsWeakReference {
  public:
@@ -427,6 +427,14 @@ class EditorBase : public nsIEditor,
   virtual dom::EventTarget* GetDOMEventTarget() = 0;
 
   /**
+   * Similar to the setter for wrapWidth, but just sets the editor
+   * internal state without actually changing the content being edited
+   * to wrap at that column.  This should only be used by callers who
+   * are sure that their content is already set up correctly.
+   */
+  void SetWrapColumn(int32_t aWrapColumn) { mWrapColumn = aWrapColumn; }
+
+  /**
    * Accessor methods to flags.
    */
   uint32_t Flags() const { return mFlags; }
@@ -459,60 +467,58 @@ class EditorBase : public nsIEditor,
   }
 
   bool IsPlaintextEditor() const {
-    return (mFlags & nsIPlaintextEditor::eEditorPlaintextMask) != 0;
+    return (mFlags & nsIEditor::eEditorPlaintextMask) != 0;
   }
 
   bool IsSingleLineEditor() const {
-    return (mFlags & nsIPlaintextEditor::eEditorSingleLineMask) != 0;
+    return (mFlags & nsIEditor::eEditorSingleLineMask) != 0;
   }
 
   bool IsPasswordEditor() const {
-    return (mFlags & nsIPlaintextEditor::eEditorPasswordMask) != 0;
+    return (mFlags & nsIEditor::eEditorPasswordMask) != 0;
   }
 
   // FYI: Both IsRightToLeft() and IsLeftToRight() may return false if
   //      the editor inherits the content node's direction.
   bool IsRightToLeft() const {
-    return (mFlags & nsIPlaintextEditor::eEditorRightToLeft) != 0;
+    return (mFlags & nsIEditor::eEditorRightToLeft) != 0;
   }
   bool IsLeftToRight() const {
-    return (mFlags & nsIPlaintextEditor::eEditorLeftToRight) != 0;
+    return (mFlags & nsIEditor::eEditorLeftToRight) != 0;
   }
 
   bool IsReadonly() const {
-    return (mFlags & nsIPlaintextEditor::eEditorReadonlyMask) != 0;
+    return (mFlags & nsIEditor::eEditorReadonlyMask) != 0;
   }
 
   bool IsDisabled() const {
-    return (mFlags & nsIPlaintextEditor::eEditorDisabledMask) != 0;
+    return (mFlags & nsIEditor::eEditorDisabledMask) != 0;
   }
 
   bool IsInputFiltered() const {
-    return (mFlags & nsIPlaintextEditor::eEditorFilterInputMask) != 0;
+    return (mFlags & nsIEditor::eEditorFilterInputMask) != 0;
   }
 
   bool IsMailEditor() const {
-    return (mFlags & nsIPlaintextEditor::eEditorMailMask) != 0;
+    return (mFlags & nsIEditor::eEditorMailMask) != 0;
   }
 
   bool IsWrapHackEnabled() const {
-    return (mFlags & nsIPlaintextEditor::eEditorEnableWrapHackMask) != 0;
+    return (mFlags & nsIEditor::eEditorEnableWrapHackMask) != 0;
   }
 
   bool IsFormWidget() const {
-    return (mFlags & nsIPlaintextEditor::eEditorWidgetMask) != 0;
+    return (mFlags & nsIEditor::eEditorWidgetMask) != 0;
   }
 
-  bool NoCSS() const {
-    return (mFlags & nsIPlaintextEditor::eEditorNoCSSMask) != 0;
-  }
+  bool NoCSS() const { return (mFlags & nsIEditor::eEditorNoCSSMask) != 0; }
 
   bool IsInteractionAllowed() const {
-    return (mFlags & nsIPlaintextEditor::eEditorAllowInteraction) != 0;
+    return (mFlags & nsIEditor::eEditorAllowInteraction) != 0;
   }
 
   bool ShouldSkipSpellCheck() const {
-    return (mFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) != 0;
+    return (mFlags & nsIEditor::eEditorSkipSpellCheck) != 0;
   }
 
   bool IsTabbable() const {
@@ -604,6 +610,20 @@ class EditorBase : public nsIEditor,
    * we have to call this method for focused editor to set selection state.
    */
   void ReinitializeSelection(Element& aElement);
+
+  /**
+   * InsertTextAsAction() inserts aStringToInsert at selection.
+   * Although this method is implementation of nsIEditor.insertText(),
+   * this treats the input is an edit action.  If you'd like to insert text
+   * as part of edit action, you probably should use InsertTextAsSubAction().
+   *
+   * @param aStringToInsert     The string to insert.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTextAsAction(
+      const nsAString& aStringToInsert, nsIPrincipal* aPrincipal = nullptr);
 
  protected:  // May be used by friends.
   class AutoEditActionDataSetter;
@@ -1311,6 +1331,15 @@ class EditorBase : public nsIEditor,
    */
   EditorRawDOMPoint GetCompositionStartPoint() const;
   EditorRawDOMPoint GetCompositionEndPoint() const;
+
+  /**
+   * InsertTextAsSubAction() inserts aStringToInsert at selection.  This
+   * should be used for handling it as an edit sub-action.
+   *
+   * @param aStringToInsert     The string to insert.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertTextAsSubAction(const nsAString& aStringToInsert);
 
   /**
    * InsertTextWithTransaction() inserts aStringToInsert to aPointToInsert or
@@ -2339,6 +2368,8 @@ class EditorBase : public nsIEditor,
    */
   virtual ~EditorBase();
 
+  int32_t WrapWidth() const { return mWrapColumn; }
+
   /**
    * ToGenericNSResult() computes proper nsresult value for the editor users.
    * This should be used only when public methods return result of internal
@@ -2572,6 +2603,12 @@ class EditorBase : public nsIEditor,
    */
   MOZ_CAN_RUN_SCRIPT EditorDOMPoint
   PrepareToInsertBRElement(const EditorDOMPoint& aPointToInsert);
+
+  /**
+   * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
+   * TextEditor or <br> if it's HTMLEditor.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertLineBreakAsSubAction();
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
@@ -2813,13 +2850,16 @@ class EditorBase : public nsIEditor,
 
   // Number of modifications (for undo/redo stack).
   uint32_t mModCount;
-  // Behavior flags. See nsIPlaintextEditor.idl for the flags we use.
+  // Behavior flags. See nsIEditor.idl for the flags we use.
   uint32_t mFlags;
 
   int32_t mUpdateCount;
 
   // Nesting count for batching.
   int32_t mPlaceholderBatch;
+
+  int32_t mWrapColumn;
+  int32_t mNewlineHandling;
 
   // -1 = not initialized
   int8_t mDocDirtyState;

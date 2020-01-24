@@ -601,45 +601,45 @@ function runTests() {
 
   doTest(htmlEditor, "contenteditable=\"true\"", false, true, false);
 
-  const nsIPlaintextEditor = SpecialPowers.Ci.nsIPlaintextEditor;
+  const nsIEditor = SpecialPowers.Ci.nsIEditor;
   var editor = SpecialPowers.wrap(window).docShell.editor;
   var flags = editor.flags;
   // readonly
-  editor.flags = flags | nsIPlaintextEditor.eEditorReadonlyMask;
+  editor.flags = flags | nsIEditor.eEditorReadonlyMask;
   doTest(htmlEditor, "readonly HTML editor", true, true, false);
 
   // non-tabbable
-  editor.flags = flags & ~(nsIPlaintextEditor.eEditorAllowInteraction);
+  editor.flags = flags & ~(nsIEditor.eEditorAllowInteraction);
   doTest(htmlEditor, "non-tabbable HTML editor", false, false, false);
 
   // readonly and non-tabbable
   editor.flags =
-    (flags | nsIPlaintextEditor.eEditorReadonlyMask) &
-      ~(nsIPlaintextEditor.eEditorAllowInteraction);
+    (flags | nsIEditor.eEditorReadonlyMask) &
+      ~(nsIEditor.eEditorAllowInteraction);
   doTest(htmlEditor, "readonly and non-tabbable HTML editor",
          true, false, false);
 
   // plaintext
-  editor.flags = flags | nsIPlaintextEditor.eEditorPlaintextMask;
+  editor.flags = flags | nsIEditor.eEditorPlaintextMask;
   doTest(htmlEditor, "HTML editor but plaintext mode", false, true, true);
 
   // plaintext and non-tabbable
-  editor.flags = (flags | nsIPlaintextEditor.eEditorPlaintextMask) &
-                 ~(nsIPlaintextEditor.eEditorAllowInteraction);
+  editor.flags = (flags | nsIEditor.eEditorPlaintextMask) &
+                 ~(nsIEditor.eEditorAllowInteraction);
   doTest(htmlEditor, "non-tabbable HTML editor but plaintext mode",
          false, false, true);
 
 
   // readonly and plaintext
-  editor.flags = flags | nsIPlaintextEditor.eEditorPlaintextMask |
-                         nsIPlaintextEditor.eEditorReadonlyMask;
+  editor.flags = flags | nsIEditor.eEditorPlaintextMask |
+                         nsIEditor.eEditorReadonlyMask;
   doTest(htmlEditor, "readonly HTML editor but plaintext mode",
          true, true, true);
 
   // readonly, plaintext and non-tabbable
-  editor.flags = (flags | nsIPlaintextEditor.eEditorPlaintextMask |
-                          nsIPlaintextEditor.eEditorReadonlyMask) &
-                 ~(nsIPlaintextEditor.eEditorAllowInteraction);
+  editor.flags = (flags | nsIEditor.eEditorPlaintextMask |
+                          nsIEditor.eEditorReadonlyMask) &
+                 ~(nsIEditor.eEditorAllowInteraction);
   doTest(htmlEditor, "readonly and non-tabbable HTML editor but plaintext mode",
          true, false, true);
 

@@ -86,7 +86,7 @@ function makeMailEditor() {
   var Ci = SpecialPowers.Ci;
   var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
   var editor = editingSession.getEditorForWindow(window);
-  editor.flags |= Ci.nsIPlaintextEditor.eEditorMailMask;
+  editor.flags |= Ci.nsIEditor.eEditorMailMask;
 }
 </script>
 

@@ -1013,8 +1013,7 @@ function runComplexContenteditableTests() {
      description + "The editor doesn't get focus");
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
      description + "IME isn't enabled on HTML editor");
-  const kReadonly =
-    Ci.nsIPlaintextEditor.eEditorReadonlyMask;
+  const kReadonly = Ci.nsIEditor.eEditorReadonlyMask;
   var editor = window.docShell.editor;
   var flags = editor.flags;
   editor.flags = flags | kReadonly;
@@ -1209,8 +1208,8 @@ function runEditorFlagChangeTests() {
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
      description + "IME isn't enabled on HTML editor");
   const kIMEStateChangeFlags =
-    Ci.nsIPlaintextEditor.eEditorReadonlyMask |
-    Ci.nsIPlaintextEditor.eEditorDisabledMask;
+    Ci.nsIEditor.eEditorReadonlyMask |
+    Ci.nsIEditor.eEditorDisabledMask;
   var editor = window.docShell.editor;
   var flags = editor.flags;
 
@@ -1233,7 +1232,7 @@ function runEditorFlagChangeTests() {
      description + "#1 IME isn't enabled on HTML editor");
 
   editor.flags |=
-      ~(kIMEStateChangeFlags | Ci.nsIPlaintextEditor.eEditorPasswordMask);
+      ~(kIMEStateChangeFlags | Ci.nsIEditor.eEditorPasswordMask);
   ok(editor.composing,
      description + "#2 IME composition was committed unexpectedly");
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
