@@ -30,7 +30,6 @@ use smallvec::SmallVec;
 
 use crate::compile;
 use crate::utils::BasicError;
-use crate::wasm2clif::REF_TYPE;
 
 use self::low_level::*;
 
@@ -54,9 +53,6 @@ fn typecode_to_type(type_code: TypeCode) -> WasmResult<Option<ir::Type>> {
         TypeCode::I64 => Ok(Some(ir::types::I64)),
         TypeCode::F32 => Ok(Some(ir::types::F32)),
         TypeCode::F64 => Ok(Some(ir::types::F64)),
-        TypeCode::NullRef => Ok(Some(REF_TYPE)),
-        TypeCode::FuncRef => Ok(Some(REF_TYPE)),
-        TypeCode::AnyRef => Ok(Some(REF_TYPE)),
         TypeCode::BlockVoid => Ok(None),
         _ => Err(BasicError::new(format!("unknown type code: {:?}", type_code)).into()),
     }
@@ -109,10 +105,6 @@ impl GlobalDesc {
                 TypeCode::I64 => Ok(pos.ins().iconst(ir::types::I64, v.u.i64)),
                 TypeCode::F32 => Ok(pos.ins().f32const(Ieee32::with_bits(v.u.i32 as u32))),
                 TypeCode::F64 => Ok(pos.ins().f64const(Ieee64::with_bits(v.u.i64 as u64))),
-                TypeCode::Ref | TypeCode::AnyRef | TypeCode::FuncRef | TypeCode::NullRef => {
-                    assert!(v.u.r as usize == 0);
-                    Ok(pos.ins().null(REF_TYPE))
-                }
                 _ => Err(BasicError::new(format!("unexpected type: {}", v.t as u64)).into()),
             }
         }
@@ -238,10 +230,6 @@ impl FuncCompileInput {
     pub fn bytecode(&self) -> &[u8] {
         unsafe { slice::from_raw_parts(self.bytecode, self.bytecodeSize) }
     }
-
-    pub fn stackmaps(&self) -> Stackmaps {
-        Stackmaps(self.stackmaps)
-    }
 }
 
 impl CompiledFunc {
@@ -317,28 +305,6 @@ impl StaticEnvironment {
             isa::CallConv::BaldrdashWindows
         } else {
             isa::CallConv::BaldrdashSystemV
-        }
-    }
-}
-
-pub struct Stackmaps(*mut self::low_level::BD_Stackmaps);
-
-impl Stackmaps {
-    pub fn add_stackmap(
-        &mut self,
-        stack_slots: &ir::StackSlots,
-        offset: CodeOffset,
-        map: cranelift_codegen::binemit::Stackmap,
-    ) {
-        unsafe {
-            let bitslice = map.as_slice();
-            low_level::stackmaps_add(
-                self.0,
-                std::mem::transmute(bitslice.as_ptr()),
-                map.mapped_words() as usize,
-                stack_slots.layout_info.unwrap().inbound_args_size as usize,
-                offset as usize,
-            );
         }
     }
 }

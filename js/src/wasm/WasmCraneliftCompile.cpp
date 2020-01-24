@@ -26,9 +26,7 @@
 #include "wasm/cranelift/baldrapi.h"
 #include "wasm/cranelift/clifapi.h"
 #include "wasm/WasmFrameIter.h"  // js::wasm::GenerateFunction{Pro,Epi}logue
-#include "wasm/WasmGC.h"
 #include "wasm/WasmGenerator.h"
-#include "wasm/WasmStubs.h"
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -46,8 +44,6 @@ bool wasm::CraneliftCanCompile() {
 
 static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
   switch (bd) {
-    case BD_SymbolicAddress::RefFunc:
-      return SymbolicAddress::FuncRef;
     case BD_SymbolicAddress::MemoryGrow:
       return SymbolicAddress::MemoryGrow;
     case BD_SymbolicAddress::MemorySize:
@@ -96,10 +92,6 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
       return SymbolicAddress::TruncF;
     case BD_SymbolicAddress::TruncF64:
       return SymbolicAddress::TruncD;
-    case BD_SymbolicAddress::PreBarrier:
-      return SymbolicAddress::PreBarrierFiltering;
-    case BD_SymbolicAddress::PostBarrier:
-      return SymbolicAddress::PostBarrierFiltering;
     case BD_SymbolicAddress::Limit:
       break;
   }
@@ -108,13 +100,10 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
 
 static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
                                   const CraneliftCompiledFunc& func,
-                                  const FuncTypeWithId& funcType,
+                                  const FuncTypeIdDesc& funcTypeId,
                                   uint32_t lineOrBytecode,
                                   uint32_t funcBytecodeSize,
-                                  StackMaps* stackMaps, size_t stackMapsOffset,
-                                  size_t stackMapsCount, FuncOffsets* offsets) {
-  const FuncTypeIdDesc& funcTypeId = funcType.id;
-
+                                  FuncOffsets* offsets) {
   wasm::GenerateFunctionPrologue(masm, funcTypeId, mozilla::Nothing(), offsets);
 
   // Omit the check when framePushed is small and we know there's no
@@ -122,34 +111,8 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
   if (func.framePushed < MAX_UNCHECKED_LEAF_FRAME_SIZE && !func.containsCalls) {
     masm.reserveStack(func.framePushed);
   } else {
-    std::pair<CodeOffset, uint32_t> pair = masm.wasmReserveStackChecked(
-        func.framePushed, BytecodeOffset(lineOrBytecode));
-    CodeOffset trapInsnOffset = pair.first;
-    size_t nBytesReservedBeforeTrap = pair.second;
-
-    MachineState trapExitLayout;
-    size_t trapExitLayoutNumWords;
-    GenerateTrapExitMachineState(&trapExitLayout, &trapExitLayoutNumWords);
-
-    size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(funcType.args());
-
-    ArgTypeVector args(funcType);
-    wasm::StackMap* functionEntryStackMap = nullptr;
-    if (!CreateStackMapForFunctionEntryTrap(
-            args, trapExitLayout, trapExitLayoutNumWords,
-            nBytesReservedBeforeTrap, nInboundStackArgBytes,
-            &functionEntryStackMap)) {
-      return false;
-    }
-    // In debug builds, we'll always have a stack map, even if there are no
-    // refs to track.
-    MOZ_ALWAYS_TRUE(functionEntryStackMap);
-    if (functionEntryStackMap &&
-        !stackMaps->add((uint8_t*)(uintptr_t)trapInsnOffset.offset(),
-                        functionEntryStackMap)) {
-      functionEntryStackMap->destroy();
-      return false;
-    }
+    masm.wasmReserveStackChecked(func.framePushed,
+                                 BytecodeOffset(lineOrBytecode));
   }
   MOZ_ASSERT(masm.framePushed() == func.framePushed);
 
@@ -209,11 +172,6 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     return false;
   }
   offsets->end = masm.currentOffset();
-
-  for (size_t i = 0; i < stackMapsCount; i++) {
-    auto* maplet = stackMaps->getRef(stackMapsOffset + i);
-    maplet->offsetBy(funcBase);
-  }
 
   for (size_t i = 0; i < func.numMetadata; i++) {
     const CraneliftMetadataEntry& metadata = func.metadatas[i];
@@ -292,7 +250,6 @@ class AutoCranelift {
  public:
   explicit AutoCranelift(const ModuleEnvironment& env)
       : env_(env), compiler_(nullptr) {
-    staticEnv_.refTypesEnabled = env.refTypesEnabled();
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
     if (env.hugeMemoryEnabled()) {
       // In the huge memory configuration, we always reserve the full 4 GB
@@ -356,7 +313,6 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
 #else
       platformIsWindows(false),
 #endif
-      refTypesEnabled(false),
       staticMemoryBound(0),
       memoryGuardSize(0),
       memoryBaseTlsOffset(offsetof(TlsData, memoryBase)),
@@ -470,26 +426,20 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
       return false;
     }
 
-    size_t previousStackmapCount = code->stackMaps.length();
-
     CraneliftFuncCompileInput clifInput(func);
-    clifInput.stackmaps = (BD_Stackmaps*)&code->stackMaps;
 
     CraneliftCompiledFunc clifFunc;
-
     if (!cranelift_compile_function(compiler, &clifInput, &clifFunc)) {
       *error = JS_smprintf("Cranelift error in clifFunc #%u", clifInput.index);
       return false;
     }
 
     uint32_t lineOrBytecode = func.lineOrBytecode;
-    const FuncTypeWithId& funcType = *env.funcTypes[clifInput.index];
+    const FuncTypeIdDesc& funcTypeId = env.funcTypes[clifInput.index]->id;
 
     FuncOffsets offsets;
-    if (!GenerateCraneliftCode(
-            masm, clifFunc, funcType, lineOrBytecode, funcBytecodeSize,
-            &code->stackMaps, previousStackmapCount,
-            code->stackMaps.length() - previousStackmapCount, &offsets)) {
+    if (!GenerateCraneliftCode(masm, clifFunc, funcTypeId, lineOrBytecode,
+                               funcBytecodeSize, &offsets)) {
       return false;
     }
 
@@ -585,9 +535,6 @@ BD_ConstantValue global_constantValue(const GlobalDesc* global) {
     case TypeCode::F64:
       v.u.f64 = value.f64();
       break;
-    case TypeCode::Ref:
-      v.u.r = value.ref().forCompiledCode();
-      break;
     default:
       MOZ_CRASH("Bad type");
   }
@@ -605,6 +552,9 @@ size_t global_tlsOffset(const GlobalDesc* global) {
 // TableDesc
 
 size_t table_tlsOffset(const TableDesc* table) {
+  MOZ_RELEASE_ASSERT(
+      table->kind == TableKind::FuncRef || table->kind == TableKind::AsmJS,
+      "cranelift doesn't support AnyRef tables yet.");
   return globalToTlsOffset(table->globalDataOffset);
 }
 
@@ -638,26 +588,4 @@ size_t funcType_idImmediate(const FuncTypeWithId* funcType) {
 
 size_t funcType_idTlsOffset(const FuncTypeWithId* funcType) {
   return globalToTlsOffset(funcType->id.globalDataOffset());
-}
-
-void stackmaps_add(BD_Stackmaps* sink, const uint32_t* bitMap,
-                   size_t mappedWords, size_t argsSize, size_t codeOffset) {
-  const uint32_t BitElemSize = sizeof(uint32_t) * 8;
-
-  StackMaps* maps = (StackMaps*)sink;
-  StackMap* map = StackMap::create(mappedWords);
-  MOZ_ALWAYS_TRUE(map);
-
-  // Copy the cranelift stackmap into our spidermonkey one
-  // TODO: Take ownership of the cranelift stackmap and avoid a copy
-  for (uint32_t i = 0; i < mappedWords; i++) {
-    uint32_t bit = (bitMap[i / BitElemSize] >> (i % BitElemSize)) & 0x1;
-    if (bit) {
-      map->setBit(i);
-    }
-  }
-
-  map->setFrameOffsetFromTop((argsSize + sizeof(wasm::Frame)) /
-                             sizeof(uintptr_t));
-  MOZ_ALWAYS_TRUE(maps->add((uint8_t*)codeOffset, map));
 }
