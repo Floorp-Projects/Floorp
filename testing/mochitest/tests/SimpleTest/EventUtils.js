@@ -2873,6 +2873,12 @@ async function synthesizePlainDragAndDrop(aParams) {
     expectCancelDragStart = false,
     logFunc,
   } = aParams;
+  // Don't modify given dragEvent object because we modify dragEvent below and
+  // callers may use the object multiple times so that callers must not assume
+  // that it'll be modified.
+  if (aParams.dragEvent !== undefined) {
+    dragEvent = Object.assign({}, aParams.dragEvent);
+  }
 
   function rectToString(aRect) {
     return `left: ${aRect.left}, top: ${aRect.top}, right: ${
@@ -3108,53 +3114,61 @@ async function synthesizePlainDragAndDrop(aParams) {
 
       await new Promise(r => setTimeout(r, 0));
 
-      let dropEvent;
-      function onDrop(aEvent) {
-        dropEvent = aEvent;
-        if (logFunc) {
-          logFunc(`"${aEvent.type}" event is fired`);
+      // If there is not accept to drop the data, "drop" event shouldn't be
+      // fired.
+      // XXX nsIDragSession.canDrop is different only on Linux.  It must be
+      //     a bug of gtk/nsDragService since it manages `mCanDrop` by itself.
+      //     Thus, we should use nsIDragSession.dragAction instead.
+      if (session.dragAction != _EU_Ci.nsIDragService.DRAGDROP_ACTION_NONE) {
+        let dropEvent;
+        function onDrop(aEvent) {
+          dropEvent = aEvent;
+          if (logFunc) {
+            logFunc(`"${aEvent.type}" event is fired`);
+          }
+          if (
+            !destElement.contains(
+              _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
+            )
+          ) {
+            throw new Error(
+              'event target of "drop" is not destElement nor its descendant'
+            );
+          }
         }
-        if (
-          !destElement.contains(
-            _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
-          )
-        ) {
-          throw new Error(
-            'event target of "drop" is not destElement nor its descendant'
+        destWindow.addEventListener("drop", onDrop, { capture: true });
+        try {
+          let event = createDragEventObject(
+            "drop",
+            destElement,
+            destWindow,
+            null,
+            dragEvent
           );
+          sendDragEvent(event, destElement, destWindow);
+          if (!dropEvent && session.canDrop) {
+            throw new Error('"drop" event is not fired');
+          }
+        } finally {
+          destWindow.removeEventListener("drop", onDrop, { capture: true });
         }
+        return;
       }
-      destWindow.addEventListener("drop", onDrop, { capture: true });
-      try {
-        let event = createDragEventObject(
-          "drop",
-          destElement,
-          destWindow,
-          null,
-          dragEvent
-        );
-        sendDragEvent(event, destElement, destWindow);
-        if (!dropEvent && session.canDrop) {
-          throw new Error('"drop" event is not fired');
-        }
-      } finally {
-        destWindow.removeEventListener("drop", onDrop, { capture: true });
-      }
-    } else {
-      // Since we don't synthesize drop event, we need to set drag end point
-      // explicitly for "dragEnd" event which will be fired by
-      // endDragSession().
-      dragEvent.clientX = finalX;
-      dragEvent.clientY = finalY;
-      let event = createDragEventObject(
-        "dragend",
-        srcElement,
-        srcWindow,
-        null,
-        dragEvent
-      );
-      session.setDragEndPointForTests(event.screenX, event.screenY);
     }
+
+    // Since we don't synthesize drop event, we need to set drag end point
+    // explicitly for "dragEnd" event which will be fired by
+    // endDragSession().
+    dragEvent.clientX = finalX;
+    dragEvent.clientY = finalY;
+    let event = createDragEventObject(
+      "dragend",
+      destElement || srcElement,
+      destElement ? srcWindow : destWindow,
+      null,
+      dragEvent
+    );
+    session.setDragEndPointForTests(event.screenX, event.screenY);
   } finally {
     await new Promise(r => setTimeout(r, 0));
 
