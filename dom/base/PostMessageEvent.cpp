@@ -176,7 +176,7 @@ PostMessageEvent::Run() {
   if (mCallerAgentClusterId.isSome() && targetWindow->GetDocGroup() &&
       targetWindow->GetDocGroup()->AgentClusterId().Equals(
           mCallerAgentClusterId.ref())) {
-    cloneDataPolicy.allowSharedMemory();
+    cloneDataPolicy.allowIntraClusterClonableSharedObjects();
   }
 
   StructuredCloneHolder* holder;
