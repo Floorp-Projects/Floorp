@@ -96,8 +96,9 @@ void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
 
   // We need to keep the array alive for the life-time of this operation.
   nsTArray<RefPtr<BlobImpl>> blobImpls;
-  if (aData.type() == MessageData::TClonedMessageData) {
-    const nsTArray<IPCBlob>& blobs = aData.get_ClonedMessageData().blobs();
+  if (aData.data().type() == MessageDataType::TClonedMessageData) {
+    const nsTArray<IPCBlob>& blobs =
+        aData.data().get_ClonedMessageData().blobs();
     if (!blobs.IsEmpty()) {
       blobImpls.SetCapacity(blobs.Length());
 
@@ -127,10 +128,11 @@ void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
 
     // We need to have a copy of the data for this parent.
     MessageData newData(aData);
-    MOZ_ASSERT(newData.type() == aData.type());
+    MOZ_ASSERT(newData.data().type() == aData.data().type());
 
     if (!blobImpls.IsEmpty()) {
-      nsTArray<IPCBlob>& newBlobImpls = newData.get_ClonedMessageData().blobs();
+      nsTArray<IPCBlob>& newBlobImpls =
+          newData.data().get_ClonedMessageData().blobs();
       MOZ_ASSERT(blobImpls.Length() == newBlobImpls.Length());
 
       // Serialize Blob objects for this message.
@@ -147,9 +149,9 @@ void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
   }
 
   // If this is a refMessageData, we need to know when it can be released.
-  if (aData.type() == MessageData::TRefMessageData) {
+  if (aData.data().type() == MessageDataType::TRefMessageData) {
     Unused << aParent->SendRefMessageDelivered(
-        aData.get_RefMessageData().uuid(), selectedActorsOnSamePid);
+        aData.data().get_RefMessageData().uuid(), selectedActorsOnSamePid);
   }
 }
 

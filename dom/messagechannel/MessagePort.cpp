@@ -329,8 +329,17 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  RefPtr<SharedMessageBody> data =
-      new SharedMessageBody(StructuredCloneHolder::TransferringSupported);
+  Maybe<nsID> agentClusterId;
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  if (global) {
+    Maybe<ClientInfo> clientInfo = global->GetClientInfo();
+    if (clientInfo) {
+      agentClusterId = clientInfo->AgentClusterId();
+    }
+  }
+
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(
+      StructuredCloneHolder::TransferringSupported, agentClusterId);
 
   UniquePtr<AbstractTimelineMarker> start;
   UniquePtr<AbstractTimelineMarker> end;

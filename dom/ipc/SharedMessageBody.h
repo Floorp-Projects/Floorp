@@ -8,6 +8,7 @@
 #define mozilla_dom_SharedMessageBody_h
 
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
@@ -25,8 +26,9 @@ class SharedMessageBody final {
  public:
   NS_INLINE_DECL_REFCOUNTING(SharedMessageBody)
 
-  explicit SharedMessageBody(
-      StructuredCloneHolder::TransferringSupport aSupportsTransferring);
+  SharedMessageBody(
+      StructuredCloneHolder::TransferringSupport aSupportsTransferring,
+      const Maybe<nsID>& aAgentClusterId);
 
   // Note that the populated MessageData borrows the underlying
   // JSStructuredCloneData from the SharedMessageBody, so the caller is
@@ -98,8 +100,10 @@ class SharedMessageBody final {
   UniquePtr<ipc::StructuredCloneData> mCloneData;
 
   RefPtr<RefMessageBody> mRefData;
-  nsID mRefDataId;
-  StructuredCloneHolder::TransferringSupport mSupportsTransferring;
+  Maybe<nsID> mRefDataId;
+
+  const StructuredCloneHolder::TransferringSupport mSupportsTransferring;
+  const Maybe<nsID> mAgentClusterId;
 };
 
 }  // namespace dom
