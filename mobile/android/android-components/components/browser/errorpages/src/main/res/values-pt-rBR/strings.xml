@@ -131,6 +131,15 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">A conexão foi reiniciada</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>O link de rede foi interrompido ao negociar uma conexão. Tente novamente.</p>
+      <ul>
+        <li>O site pode estar temporariamente indisponível ou ocupado demais. Tente novamente daqui a pouco.</li>
+        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou Wi-Fi do seu dispositivo.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Tipo de arquivo inseguro</string>
 
@@ -144,14 +153,47 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Erro de conteúdo corrompido</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>A página que você está tentando ver não pode ser exibida porque foi detectado um erro na transmissão de dados.</p>
+      <ul>
+        <li>Entre em contato com os responsáveis pelo site para informar o problema.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Conteúdo travado</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>A página que você está tentando ver não pode ser exibida porque foi detectado um erro na transmissão de dados.</p>
+      <ul>
+        <li>Entre em contato com os responsáveis pelo site para informar o problema.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Erro na codificação do conteúdo</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>A página que você está tentando ver não pode ser exibida porque ela usa uma forma de compressão inválida ou não suportada.</p>
+      <ul>
+        <li>Entre em contato com os responsáveis pelo site para informar o problema.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Endereço não encontrado</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>O navegador não conseguiu encontrar o servidor de hospedagem do endereço fornecido.</p>
+      <ul>
+        <li>Verifique se há erros de digitação no endereço, como
+          <strong>ww</strong>.example.com em vez de
+          <strong>www</strong>.example.com.</li>
+        <li>Se não estiver conseguindo carregar nenhuma página, verifique a conexão de dados móveis ou Wi-Fi do seu dispositivo.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Sem conexão com a internet</string>
@@ -221,6 +263,15 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Servidor proxy não encontrado</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>O navegador está configurado para usar um servidor proxy, mas o proxy não foi encontrado.</p>
+      <ul>
+        <li>A configuração de proxy do navegador está correta? Verifique a configuração e tente novamente.</li>
+        <li>O computador está conectado a uma rede ativa?</li>
+        <li>O problema persiste? Peça ajuda ao administrador de rede ou ao suporte do provedor de internet.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema de site com malware</string>
