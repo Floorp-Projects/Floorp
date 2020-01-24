@@ -29,19 +29,19 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
   GPU_DECL_CYCLE_COLLECTION(Adapter)
   GPU_DECL_JS_WRAP(Adapter)
 
+  const RefPtr<WebGPUChild> mBridge;
+
  private:
   Adapter() = delete;
   ~Adapter();
   void Cleanup();
 
-  const RefPtr<WebGPUChild> mBridge;
   const RawId mId;
   const nsString mName;
 
  public:
   explicit Adapter(Instance* const aParent, RawId aId);
   void GetName(nsString& out) const { out = mName; }
-  WebGPUChild* GetBridge() const;
 
   already_AddRefed<dom::Promise> RequestDevice(
       const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv);

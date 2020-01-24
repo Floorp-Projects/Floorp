@@ -38,20 +38,26 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_JS_WRAP(CommandEncoder)
 
   CommandEncoder(Device* const aParent, WebGPUChild* const aBridge, RawId aId);
-  RawId GetId() const { return mId; }
-  void EndComputePass(Span<const uint8_t> aData, ErrorResult& aRv);
 
-  already_AddRefed<ComputePassEncoder> BeginComputePass(
-      const dom::GPUComputePassDescriptor& aDesc);
-  already_AddRefed<CommandBuffer> Finish(
-      const dom::GPUCommandBufferDescriptor& aDesc);
+  const RawId mId;
 
  private:
   ~CommandEncoder();
   void Cleanup();
 
   const RefPtr<WebGPUChild> mBridge;
-  const RawId mId;
+
+ public:
+  void EndComputePass(Span<const uint8_t> aData, ErrorResult& aRv);
+
+  void CopyBufferToBuffer(const Buffer& aSource, BufferAddress aSourceOffset,
+                          const Buffer& aDestination,
+                          BufferAddress aDestinationOffset,
+                          BufferAddress aSize);
+  already_AddRefed<ComputePassEncoder> BeginComputePass(
+      const dom::GPUComputePassDescriptor& aDesc);
+  already_AddRefed<CommandBuffer> Finish(
+      const dom::GPUCommandBufferDescriptor& aDesc);
 };
 
 }  // namespace webgpu

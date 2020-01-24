@@ -14,7 +14,20 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(PipelineLayout, mParent)
 GPU_IMPL_JS_WRAP(PipelineLayout)
 
-PipelineLayout::~PipelineLayout() = default;
+PipelineLayout::PipelineLayout(Device* const aParent, RawId aId)
+    : ChildOf(aParent), mId(aId) {}
+
+PipelineLayout::~PipelineLayout() { Cleanup(); }
+
+void PipelineLayout::Cleanup() {
+  if (mValid && mParent) {
+    mValid = false;
+    WebGPUChild* bridge = mParent->mBridge;
+    if (bridge && bridge->IsOpen()) {
+      bridge->DestroyPipelineLayout(mId);
+    }
+  }
+}
 
 }  // namespace webgpu
 }  // namespace mozilla

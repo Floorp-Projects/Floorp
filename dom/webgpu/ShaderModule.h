@@ -19,10 +19,13 @@ class ShaderModule final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(ShaderModule)
   GPU_DECL_JS_WRAP(ShaderModule)
 
+  ShaderModule(Device* const aParent, RawId aId);
+
+  const RawId mId;
+
  private:
-  ShaderModule() = delete;
   virtual ~ShaderModule();
-  void Cleanup() {}
+  void Cleanup();
 };
 
 }  // namespace webgpu
