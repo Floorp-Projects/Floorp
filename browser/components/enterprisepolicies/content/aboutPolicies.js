@@ -277,6 +277,7 @@ function generateDocumentation() {
     DisableSetDesktopBackground: "DisableSetAsDesktopBackground",
     Certificates: "CertificatesDescription",
     SanitizeOnShutdown: "SanitizeOnShutdown2",
+    Permissions: "Permissions2",
   };
 
   for (let policyName in schema.properties) {

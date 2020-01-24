@@ -127,7 +127,7 @@ policy-OverridePostUpdatePage = Override the post-update “What’s New” page
 
 policy-PasswordManagerEnabled = Enable saving passwords to the password manager.
 
-policy-Permissions = Configure permissions for camera, microphone, location and notifications.
+policy-Permissions2 = Configure permissions for camera, microphone, location, notifications, and autoplay.
 
 policy-PopupBlocking = Allow certain websites to display popups by default.
 
