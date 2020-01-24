@@ -1521,12 +1521,14 @@ security.ui.protections:
     ]
     bug_numbers:
       - 1557050
+      - 1610897
     description: >
       User arrived on the protection report.
-    expiry_version: "75"
+    expiry_version: "80"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
+      - ewright@mozilla.com
       - chsiang@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
@@ -1539,12 +1541,14 @@ security.ui.protections:
     ]
     bug_numbers:
       - 1557050
+      - 1610897
     description: >
       User closed on the protection report.
-    expiry_version: "75"
+    expiry_version: "80"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
+      - ewright@mozilla.com
       - chsiang@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
@@ -1555,6 +1559,7 @@ security.ui.protections:
     bug_numbers:
       - 1557050
       - 1572825
+      - 1610897
     description: >
       User interaction by click events on the protection report.
     objects: [
@@ -1568,10 +1573,11 @@ security.ui.protections:
       "mtr_signup_button",
       "trackers_about_link",
     ]
-    expiry_version: "75"
+    expiry_version: "80"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
+      - ewright@mozilla.com
       - chsiang@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
