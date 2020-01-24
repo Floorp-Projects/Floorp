@@ -84,7 +84,7 @@ void BroadcastChannelService::UnregisterActor(
 }
 
 void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
-                                          const ClonedMessageData& aData,
+                                          const MessageData& aData,
                                           const nsAString& aOriginChannelKey) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
@@ -96,16 +96,21 @@ void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
 
   // We need to keep the array alive for the life-time of this operation.
   nsTArray<RefPtr<BlobImpl>> blobImpls;
-  if (!aData.blobs().IsEmpty()) {
-    blobImpls.SetCapacity(aData.blobs().Length());
+  if (aData.type() == MessageData::TClonedMessageData) {
+    const nsTArray<IPCBlob>& blobs = aData.get_ClonedMessageData().blobs();
+    if (!blobs.IsEmpty()) {
+      blobImpls.SetCapacity(blobs.Length());
 
-    for (uint32_t i = 0, len = aData.blobs().Length(); i < len; ++i) {
-      RefPtr<BlobImpl> impl = IPCBlobUtils::Deserialize(aData.blobs()[i]);
+      for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
+        RefPtr<BlobImpl> impl = IPCBlobUtils::Deserialize(blobs[i]);
 
-      MOZ_ASSERT(impl);
-      blobImpls.AppendElement(impl);
+        MOZ_ASSERT(impl);
+        blobImpls.AppendElement(impl);
+      }
     }
   }
+
+  uint32_t selectedActorsOnSamePid = 0;
 
   // For each parent actor, we notify the message.
   for (uint32_t i = 0; i < parents->Length(); ++i) {
@@ -116,15 +121,22 @@ void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
       continue;
     }
 
+    if (parent->OtherPid() == aParent->OtherPid()) {
+      ++selectedActorsOnSamePid;
+    }
+
     // We need to have a copy of the data for this parent.
-    ClonedMessageData newData(aData);
-    MOZ_ASSERT(blobImpls.Length() == newData.blobs().Length());
+    MessageData newData(aData);
+    MOZ_ASSERT(newData.type() == aData.type());
 
     if (!blobImpls.IsEmpty()) {
+      nsTArray<IPCBlob>& newBlobImpls = newData.get_ClonedMessageData().blobs();
+      MOZ_ASSERT(blobImpls.Length() == newBlobImpls.Length());
+
       // Serialize Blob objects for this message.
       for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
         nsresult rv = IPCBlobUtils::Serialize(blobImpls[i], parent->Manager(),
-                                              newData.blobs()[i]);
+                                              newBlobImpls[i]);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return;
         }
@@ -132,6 +144,12 @@ void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
     }
 
     Unused << parent->SendNotify(newData);
+  }
+
+  // If this is a refMessageData, we need to know when it can be released.
+  if (aData.type() == MessageData::TRefMessageData) {
+    Unused << aParent->SendRefMessageDelivered(
+        aData.get_RefMessageData().uuid(), selectedActorsOnSamePid);
   }
 }
 

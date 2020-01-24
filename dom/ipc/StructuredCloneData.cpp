@@ -32,26 +32,22 @@ using mozilla::ipc::PBackgroundChild;
 using mozilla::ipc::PBackgroundParent;
 
 StructuredCloneData::StructuredCloneData()
-    : StructuredCloneData(StructuredCloneHolder::TransferringSupported) {}
+    : StructuredCloneData(
+          StructuredCloneHolder::StructuredCloneScope::DifferentProcess,
+          StructuredCloneHolder::TransferringSupported) {}
 
 StructuredCloneData::StructuredCloneData(StructuredCloneData&& aOther)
-    : StructuredCloneData(StructuredCloneHolder::TransferringSupported) {
+    : StructuredCloneData(
+          StructuredCloneHolder::StructuredCloneScope::DifferentProcess,
+          StructuredCloneHolder::TransferringSupported) {
   *this = std::move(aOther);
 }
 
 StructuredCloneData::StructuredCloneData(
+    StructuredCloneHolder::StructuredCloneScope aScope,
     TransferringSupport aSupportsTransferring)
-    : StructuredCloneHolder(
-          StructuredCloneHolder::CloningSupported, aSupportsTransferring,
-          StructuredCloneHolder::StructuredCloneScope::DifferentProcess),
-      mExternalData(JS::StructuredCloneScope::DifferentProcess),
-      mInitialized(false) {}
-
-StructuredCloneData::StructuredCloneData(
-    StructuredCloneHolder::StructuredCloneScope aScope)
     : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
-                            StructuredCloneHolder::TransferringSupported,
-                            aScope),
+                            aSupportsTransferring, aScope),
       mExternalData(JS::StructuredCloneScope::DifferentProcess),
       mInitialized(false) {
   MOZ_ASSERT(

@@ -123,7 +123,8 @@ class PostMessageRunnable final : public CancelableRunnable {
           MarkerTracingType::START);
     }
 
-    mData->Read(cx, &value, mPort->mRefMessageBodyService, rv);
+    mData->Read(cx, &value, mPort->mRefMessageBodyService,
+                SharedMessageBody::ReadMethod::StealRefMessageBody, rv);
 
     if (isTimelineRecording) {
       end = MakeUnique<MessagePortTimelineMarker>(
@@ -329,7 +330,8 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  RefPtr<SharedMessageBody> data = new SharedMessageBody();
+  RefPtr<SharedMessageBody> data =
+      new SharedMessageBody(StructuredCloneHolder::TransferringSupported);
 
   UniquePtr<AbstractTimelineMarker> start;
   UniquePtr<AbstractTimelineMarker> end;
