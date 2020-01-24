@@ -137,7 +137,7 @@ class ChannelProxy : public RtpPacketSinkInterface {
   virtual std::vector<webrtc::RtpSource> GetSources() const;
 
   virtual void SetRtpPacketObserver(RtpPacketObserver* observer);
-  void SetRtcpEventObserver(RtcpEventObserver* observer);
+  virtual void SetRtcpEventObserver(RtcpEventObserver* observer);
 
  private:
   Channel* channel() const;

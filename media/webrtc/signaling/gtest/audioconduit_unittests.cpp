@@ -36,6 +36,8 @@ class MockChannelProxy : public webrtc::voe::ChannelProxy {
 
   void RegisterTransport(Transport* transport) override {}
 
+  void SetRtcpEventObserver(webrtc::RtcpEventObserver* observer) override {}
+
   bool mSetSendAudioLevelIndicationStatusEnabled;
   bool mSetReceiveAudioLevelIndicationStatusEnabled;
   bool mSetReceiveCsrcAudioLevelIndicationStatusEnabled;

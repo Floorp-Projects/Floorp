@@ -1134,6 +1134,7 @@ void WebrtcAudioConduit::DeleteChannels() {
   }
 
   if (mRecvChannel != -1) {
+    mRecvChannelProxy->SetRtcpEventObserver(nullptr);
     mRecvChannelProxy = nullptr;
     mPtrVoEBase->DeleteChannel(mRecvChannel);
     mRecvChannel = -1;
