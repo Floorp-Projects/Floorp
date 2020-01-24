@@ -1095,24 +1095,6 @@ nsresult Selection::Clear(nsPresContext* aPresContext) {
   return NS_OK;
 }
 
-// RangeMatches*Point
-//
-//    Compares the range beginning or ending point, and returns true if it
-//    exactly matches the given DOM point.
-
-static inline bool RangeMatchesBeginPoint(const nsRange* aRange,
-                                          const nsINode* aNode,
-                                          int32_t aOffset) {
-  return aRange->GetStartContainer() == aNode &&
-         static_cast<int32_t>(aRange->StartOffset()) == aOffset;
-}
-
-static inline bool RangeMatchesEndPoint(const nsRange* aRange,
-                                        const nsINode* aNode, int32_t aOffset) {
-  return aRange->GetEndContainer() == aNode &&
-         static_cast<int32_t>(aRange->EndOffset()) == aOffset;
-}
-
 // Selection::EqualsRangeAtPoint
 //
 //    Utility method for checking equivalence of two ranges.
@@ -1123,9 +1105,10 @@ bool Selection::EqualsRangeAtPoint(const nsINode* aBeginNode,
                                    int32_t aRangeIndex) const {
   if (aRangeIndex >= 0 && aRangeIndex < (int32_t)mRanges.Length()) {
     const nsRange* range = mRanges[aRangeIndex].mRange;
-    if (RangeMatchesBeginPoint(range, aBeginNode, aBeginOffset) &&
-        RangeMatchesEndPoint(range, aEndNode, aEndOffset))
+    if (range->StartRef().Equals(aBeginNode, aBeginOffset) &&
+        range->EndRef().Equals(aEndNode, aEndOffset)) {
       return true;
+    }
   }
   return false;
 }
@@ -1194,7 +1177,9 @@ nsresult Selection::GetIndicesForInterval(
 
     // If the interval is strictly before the range at index 0, we can optimize
     // by returning now - all ranges start after the given interval
-    if (!RangeMatchesBeginPoint(endRange, aEndNode, aEndOffset)) return NS_OK;
+    if (!endRange->StartRef().Equals(aEndNode, aEndOffset)) {
+      return NS_OK;
+    }
 
     // We now know that the start point of mRanges[0].mRange equals the end of
     // the interval. Thus, when aAllowadjacent is true, the caller is always
@@ -1227,7 +1212,9 @@ nsresult Selection::GetIndicesForInterval(
     // first two possibilites hold
     while (endsBeforeIndex < (int32_t)mRanges.Length()) {
       const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
-      if (!RangeMatchesBeginPoint(endRange, aEndNode, aEndOffset)) break;
+      if (!endRange->StartRef().Equals(aEndNode, aEndOffset)) {
+        break;
+      }
       endsBeforeIndex++;
     }
 
@@ -1244,10 +1231,11 @@ nsresult Selection::GetIndicesForInterval(
     // adjacent range
     const nsRange* beginRange = mRanges[beginsAfterIndex].mRange;
     if (beginsAfterIndex > 0 && beginRange->Collapsed() &&
-        RangeMatchesEndPoint(beginRange, aBeginNode, aBeginOffset)) {
+        beginRange->EndRef().Equals(aBeginNode, aBeginOffset)) {
       beginRange = mRanges[beginsAfterIndex - 1].mRange;
-      if (RangeMatchesEndPoint(beginRange, aBeginNode, aBeginOffset))
+      if (beginRange->EndRef().Equals(aBeginNode, aBeginOffset)) {
         beginsAfterIndex--;
+      }
     }
   } else {
     // See above for the possibilities at this point. The only case where we
@@ -1255,9 +1243,10 @@ nsresult Selection::GetIndicesForInterval(
     // the given interval's start point, but that range isn't collapsed (a
     // collapsed range should be included in the returned results).
     const nsRange* beginRange = mRanges[beginsAfterIndex].mRange;
-    if (RangeMatchesEndPoint(beginRange, aBeginNode, aBeginOffset) &&
-        !beginRange->Collapsed())
+    if (beginRange->EndRef().Equals(aBeginNode, aBeginOffset) &&
+        !beginRange->Collapsed()) {
       beginsAfterIndex++;
+    }
 
     // Again, see above for the meaning of endsBeforeIndex at this point.
     // In particular, endsBeforeIndex may point to a collaped range which
@@ -1265,9 +1254,10 @@ nsresult Selection::GetIndicesForInterval(
     // included
     if (endsBeforeIndex < (int32_t)mRanges.Length()) {
       const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
-      if (RangeMatchesBeginPoint(endRange, aEndNode, aEndOffset) &&
-          endRange->Collapsed())
+      if (endRange->StartRef().Equals(aEndNode, aEndOffset) &&
+          endRange->Collapsed()) {
         endsBeforeIndex++;
+      }
     }
   }
 
