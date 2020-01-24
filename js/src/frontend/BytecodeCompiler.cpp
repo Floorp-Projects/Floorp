@@ -500,7 +500,8 @@ bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
     return false;
   }
 
-  parser->tokenStream.seek(startPosition);
+  // Rewind to starting position to retry.
+  parser->tokenStream.rewind(startPosition);
 
   // Assignment must be monotonic to prevent reparsing iloops
   MOZ_ASSERT_IF(info.directives.strict(), newDirectives.strict());
