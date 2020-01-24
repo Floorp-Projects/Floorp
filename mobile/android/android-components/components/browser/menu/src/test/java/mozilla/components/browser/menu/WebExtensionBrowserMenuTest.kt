@@ -341,4 +341,42 @@ class WebExtensionBrowserMenuTest {
         assertEquals(Color.RED, updatedExt1.action.badgeTextColor!!)
         assertEquals(Color.GREEN, updatedExt1.action.badgeBackgroundColor!!)
     }
+
+    @Test
+    fun `actions are sorted per extension name`() {
+        val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
+
+        val actionExt1 = Action(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val actionExt2 = Action(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val browserExtensions = HashMap<String, WebExtensionState>()
+        browserExtensions["1"] = WebExtensionState(id = "1", name = "extensionA", browserAction = actionExt1)
+        browserExtensions["2"] = WebExtensionState(id = "2", name = "extensionB", browserAction = actionExt2)
+
+        val tabSessionState = TabSessionState(
+            content = mock(),
+            extensionState = emptyMap()
+        )
+
+        val browserState = BrowserState(extensions = browserExtensions)
+        val actionItems = getOrUpdateWebExtensionMenuItems(browserState, tabSessionState)
+        assertEquals(2, actionItems.size)
+        assertEquals(actionExt1, (actionItems[0] as WebExtensionBrowserMenuItem).action)
+        assertEquals(actionExt2, (actionItems[1] as WebExtensionBrowserMenuItem).action)
+    }
 }

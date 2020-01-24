@@ -93,7 +93,7 @@ class WebExtensionToolbarFeature(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun renderWebExtensionActions(state: BrowserState, tab: SessionState? = null) {
         val extensions = state.extensions.values.toList()
-        extensions.filter { it.enabled }.forEach { extension ->
+        extensions.filter { it.enabled }.sortedBy { it.name }.forEach { extension ->
             extension.browserAction?.let { browserAction ->
                 addOrUpdateAction(
                     extension = extension,
