@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>BroadcastChannel + wasm</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script id='myWorker' type='text/worker'>
+const bc = new BroadcastChannel('b');
+bc.onmessage = e => {
+  bc.postMessage(e.data);
+  bc.close();
+}
+self.postMessage("ready");
+</script>
+
+<script type="application/javascript">
+
+let wasmModule;
+
+function create_wasmModule() {
+  info("Checking if we can play with WebAssembly...");
+
+  if (!SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported()) {
+    next();
+    return;
+  }
+
+  ok(WebAssembly, "WebAssembly object should exist");
+  ok(WebAssembly.compile, "WebAssembly.compile function should exist");
+
+  const wasmTextToBinary = SpecialPowers.unwrap(SpecialPowers.Cu.getJSTestingFunctions().wasmTextToBinary);
+  const fooModuleCode = wasmTextToBinary(`(module
+    (func $foo (result i32) (i32.const 42))
+    (export "foo" $foo)
+  )`);
+
+  WebAssembly.compile(fooModuleCode).then(m => {
+    ok(m instanceof WebAssembly.Module, "The WasmModule has been compiled.");
+    wasmModule = m;
+    next();
+  }, () => {
+    ok(false, "The compilation of the wasmModule failed.");
+  });
+}
+
+function test_simple() {
+  info("BroadcastChannel");
+
+  if (!wasmModule) {
+    next();
+    return;
+  }
+
+  const bc1 = new BroadcastChannel('a');
+  const bc2 = new BroadcastChannel('a');
+
+  bc1.onmessage = e => {
+    ok(e.data.wasmModule instanceof WebAssembly.Module, "WasmModule received");
+    bc1.close();
+    next();
+  };
+
+  bc2.postMessage({ wasmModule });
+  bc2.close();
+}
+
+function test_worker() {
+  info("BroadcastChannel in workers");
+
+  if (!wasmModule) {
+    next();
+    return;
+  }
+
+  const blob = new Blob([document.getElementById('myWorker').textContent]);
+  const w = new Worker(URL.createObjectURL(blob));
+  w.onmessage = e => {
+    is(e.data, "ready", "The worker is ready");
+    const bc = new BroadcastChannel('b');
+
+    bc.onmessage = ee => {
+      ok(ee.data.wasmModule instanceof WebAssembly.Module, "WasmModule received");
+      bc.close();
+      next();
+    };
+
+    bc.postMessage({ wasmModule });
+  };
+}
+
+const tests = [
+  create_wasmModule,
+  test_simple,
+  test_worker,
+];
+
+function next() {
+  if (tests.length === 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  const test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+
+</script>
+</body>
+</html>
