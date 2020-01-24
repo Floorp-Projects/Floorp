@@ -14,11 +14,6 @@ class AboutWindow(BaseWindow):
     """Representation of the About window."""
     window_type = 'Browser:About'
 
-    dtds = [
-        'chrome://branding/locale/brand.dtd',
-        'chrome://browser/locale/aboutDialog.dtd',
-    ]
-
     @property
     def deck(self):
         """The :class:`Deck` instance which represents the deck.

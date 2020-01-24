@@ -15,16 +15,6 @@ class PageInfoWindow(BaseWindow):
 
     window_type = 'Browser:page-info'
 
-    dtds = [
-        'chrome://browser/locale/pageInfo.dtd',
-    ]
-
-    properties = [
-        'chrome://browser/locale/browser.properties',
-        'chrome://browser/locale/pageInfo.properties',
-        'chrome://pippki/locale/pippki.properties',
-    ]
-
     @property
     def deck(self):
         """The :class:`Deck` instance which represents the deck.
@@ -52,8 +42,7 @@ class PageInfoWindow(BaseWindow):
             elif trigger == 'menu':
                 self.menubar.select_by_id('file-menu', 'menu_close')
             elif trigger == 'shortcut':
-                win.send_shortcut(win.localize_entity('closeWindow.key'),
-                                  accel=True)
+                win.send_shortcut('w', accel=True)
             else:
                 raise ValueError('Unknown closing method: "%s"' % trigger)
 

@@ -197,9 +197,6 @@ class TestBrowserWindow(PuppeteerMixin, MarionetteTestCase):
             super(TestBrowserWindow, self).tearDown()
 
     def test_basic(self):
-        self.assertNotEqual(self.browser.dtds, [])
-        self.assertNotEqual(self.browser.properties, [])
-
         self.assertFalse(self.browser.is_private)
 
         self.assertIsNotNone(self.browser.menubar)

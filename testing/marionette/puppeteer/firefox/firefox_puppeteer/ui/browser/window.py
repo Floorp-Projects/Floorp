@@ -26,18 +26,6 @@ class BrowserWindow(BaseWindow):
 
     window_type = 'navigator:browser'
 
-    dtds = [
-        'chrome://branding/locale/brand.dtd',
-        'chrome://browser/locale/browser.dtd',
-        'chrome://browser/locale/netError.dtd',
-    ]
-
-    properties = [
-        'chrome://branding/locale/brand.properties',
-        'chrome://browser/locale/browser.properties',
-        'chrome://global/locale/browser.properties',
-    ]
-
     def __init__(self, *args, **kwargs):
         super(BrowserWindow, self).__init__(*args, **kwargs)
 
@@ -160,8 +148,7 @@ class BrowserWindow(BaseWindow):
             elif trigger == 'menu':
                 self.menubar.select_by_id('file-menu', 'menu_closeWindow')
             elif trigger == 'shortcut':
-                win.send_shortcut(win.localize_entity('closeCmd.key'),
-                                  accel=True, shift=True)
+                win.send_shortcut('w', accel=True, shift=True)
             else:
                 raise ValueError('Unknown closing method: "%s"' % trigger)
 
@@ -198,8 +185,7 @@ class BrowserWindow(BaseWindow):
                 menu_id = 'menu_newPrivateWindow' if is_private else 'menu_newNavigator'
                 self.menubar.select_by_id('file-menu', menu_id)
             elif trigger == 'shortcut':
-                cmd_key = 'privateBrowsingCmd.commandkey' if is_private else 'newNavigatorCmd.key'
-                win.send_shortcut(win.localize_entity(cmd_key),
+                win.send_shortcut('p' if is_private else 'n',
                                   accel=True, shift=is_private)
             else:
                 raise ValueError('Unknown opening method: "%s"' % trigger)
@@ -244,8 +230,7 @@ class BrowserWindow(BaseWindow):
             elif trigger == 'shortcut':
                 if win.marionette.session_capabilities['platformName'] == 'windows':
                     raise ValueError('Page info shortcut not available on Windows.')
-                win.send_shortcut(win.localize_entity('pageInfoCmd.commandkey'),
-                                  accel=True)
+                win.send_shortcut('i', accel=True)
             elif trigger == 'context_menu':
                 # TODO: Add once we can do right clicks
                 pass
