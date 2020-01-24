@@ -7,6 +7,7 @@
 #include "CommandEncoder.h"
 
 #include "CommandBuffer.h"
+#include "Buffer.h"
 #include "ComputePassEncoder.h"
 #include "Device.h"
 
@@ -18,14 +19,29 @@ GPU_IMPL_JS_WRAP(CommandEncoder)
 
 CommandEncoder::CommandEncoder(Device* const aParent,
                                WebGPUChild* const aBridge, RawId aId)
-    : ChildOf(aParent), mBridge(aBridge), mId(aId) {}
+    : ChildOf(aParent), mId(aId), mBridge(aBridge) {}
 
 CommandEncoder::~CommandEncoder() { Cleanup(); }
 
 void CommandEncoder::Cleanup() {
   if (mValid && mParent) {
     mValid = false;
-    mParent->DestroyCommandEncoder(mId);
+    WebGPUChild* bridge = mParent->mBridge;
+    if (bridge && bridge->IsOpen()) {
+      bridge->DestroyCommandEncoder(mId);
+    }
+  }
+}
+
+void CommandEncoder::CopyBufferToBuffer(const Buffer& aSource,
+                                        BufferAddress aSourceOffset,
+                                        const Buffer& aDestination,
+                                        BufferAddress aDestinationOffset,
+                                        BufferAddress aSize) {
+  if (mValid) {
+    mBridge->SendCommandEncoderCopyBufferToBuffer(
+        mId, aSource.mId, aSourceOffset, aDestination.mId, aDestinationOffset,
+        aSize);
   }
 }
 

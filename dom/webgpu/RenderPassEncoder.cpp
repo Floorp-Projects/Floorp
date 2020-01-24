@@ -21,5 +21,13 @@ GPU_IMPL_JS_WRAP(RenderPassEncoder)
 
 RenderPassEncoder::~RenderPassEncoder() = default;
 
+void RenderPassEncoder::SetBindGroup(
+    uint32_t aSlot, const BindGroup& aBindGroup,
+    const dom::Sequence<uint32_t>& aDynamicOffsets) {
+  if (mValid) {
+    MOZ_CRASH("TODO");
+  }
+}
+
 }  // namespace webgpu
 }  // namespace mozilla

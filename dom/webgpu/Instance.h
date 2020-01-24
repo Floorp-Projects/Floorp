@@ -27,10 +27,14 @@ class Instance final : public nsWrapperCache {
   GPU_DECL_CYCLE_COLLECTION(Instance)
   GPU_DECL_JS_WRAP(Instance)
 
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
+
   static already_AddRefed<Instance> Create(nsIGlobalObject* aOwner);
 
   already_AddRefed<dom::Promise> RequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions, ErrorResult& aRv);
+
+  const RefPtr<WebGPUChild> mBridge;
 
  private:
   explicit Instance(nsIGlobalObject* aOwner, WebGPUChild* aBridge);
@@ -38,11 +42,8 @@ class Instance final : public nsWrapperCache {
   void Cleanup();
 
   nsCOMPtr<nsIGlobalObject> mOwner;
-  const RefPtr<WebGPUChild> mBridge;
 
  public:
-  nsIGlobalObject* GetParentObject() const { return mOwner; }
-  WebGPUChild* GetBridge() const;
 };
 
 }  // namespace webgpu

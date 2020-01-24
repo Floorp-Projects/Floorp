@@ -79,15 +79,13 @@ class Device final : public DOMEventTargetHelper {
   RefPtr<MappingPromise> MapBufferForReadAsync(RawId aId, size_t aSize,
                                                ErrorResult& aRv);
   void UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem);
-  void DestroyBuffer(RawId aId);
-  void DestroyCommandEncoder(RawId aId);
-  void DestroyCommandBuffer(RawId aId);
+
+  const RefPtr<WebGPUChild> mBridge;
 
  private:
   ~Device();
   void Cleanup();
 
-  const RefPtr<WebGPUChild> mBridge;
   const RawId mId;
   bool mValid = true;
   nsString mLabel;
@@ -105,6 +103,19 @@ class Device final : public DOMEventTargetHelper {
 
   already_AddRefed<CommandEncoder> CreateCommandEncoder(
       const dom::GPUCommandEncoderDescriptor& aDesc);
+
+  already_AddRefed<BindGroupLayout> CreateBindGroupLayout(
+      const dom::GPUBindGroupLayoutDescriptor& aDesc);
+  already_AddRefed<PipelineLayout> CreatePipelineLayout(
+      const dom::GPUPipelineLayoutDescriptor& aDesc);
+  already_AddRefed<BindGroup> CreateBindGroup(
+      const dom::GPUBindGroupDescriptor& aDesc);
+
+  already_AddRefed<ShaderModule> CreateShaderModule(
+      const dom::GPUShaderModuleDescriptor& aDesc);
+  already_AddRefed<ComputePipeline> CreateComputePipeline(
+      const dom::GPUComputePipelineDescriptor& aDesc);
+
   // IMPL_EVENT_HANDLER(uncapturederror)
 };
 
