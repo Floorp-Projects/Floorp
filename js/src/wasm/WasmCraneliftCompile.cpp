@@ -44,6 +44,8 @@ bool wasm::CraneliftCanCompile() {
 
 static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
   switch (bd) {
+    case BD_SymbolicAddress::RefFunc:
+      return SymbolicAddress::FuncRef;
     case BD_SymbolicAddress::MemoryGrow:
       return SymbolicAddress::MemoryGrow;
     case BD_SymbolicAddress::MemorySize:
@@ -552,9 +554,6 @@ size_t global_tlsOffset(const GlobalDesc* global) {
 // TableDesc
 
 size_t table_tlsOffset(const TableDesc* table) {
-  MOZ_RELEASE_ASSERT(
-      table->kind == TableKind::FuncRef || table->kind == TableKind::AsmJS,
-      "cranelift doesn't support AnyRef tables yet.");
   return globalToTlsOffset(table->globalDataOffset);
 }
 
