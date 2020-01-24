@@ -8,7 +8,7 @@
 # the locale directory, chrome registry entries and other information
 # necessary to produce the complete manifest file for a language pack.
 ###
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import argparse
 import sys
@@ -380,7 +380,7 @@ def get_version_maybe_buildid(min_version):
 ###
 def create_webmanifest(locstr, min_app_ver, max_app_ver, app_name,
                        l10n_basedir, langpack_eid, defines, chrome_entries):
-    locales = list(map(lambda loc: loc.strip(), locstr.split(',')))
+    locales = map(lambda loc: loc.strip(), locstr.split(','))
     main_locale = locales[0]
 
     author = build_author_string(
@@ -431,7 +431,7 @@ def create_webmanifest(locstr, min_app_ver, max_app_ver, app_name,
             'chrome_resources': cr
         }
 
-    return json.dumps(manifest, indent=2, ensure_ascii=False)
+    return json.dumps(manifest, indent=2, ensure_ascii=False, encoding='utf8')
 
 
 def main(args):
