@@ -51,7 +51,12 @@ def write_interface(iface, fd):
     if iface.namemap is None:
         raise Exception("Interface was not resolved.")
 
-    assert iface.base or (iface.name == "nsISupports")
+    # if we see a base class-less type other than nsISupports, we just need
+    # to discard anything else about it other than its constants.
+    if iface.base is None and iface.name != "nsISupports":
+        assert len([m for m in iface.members
+                    if type(m) == xpidl.Attribute or type(m) == xpidl.Method]) == 0
+        return
 
     base = 'Some("%s")' % iface.base if iface.base is not None else 'None'
     try:
