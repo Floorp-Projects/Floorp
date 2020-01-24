@@ -165,7 +165,7 @@ add_task(async function test_telemetry_events() {
     let loginSort = content.document
       .querySelector("login-list")
       .shadowRoot.querySelector("#login-sort");
-    loginSort.selectedIndex = 1;
+    loginSort.value = "last-used";
     loginSort.dispatchEvent(new content.Event("change", { bubbles: true }));
   });
   await LoginTestUtils.telemetry.waitForEventCount(14);
