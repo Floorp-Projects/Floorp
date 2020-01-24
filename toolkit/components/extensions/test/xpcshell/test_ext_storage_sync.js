@@ -491,7 +491,7 @@ async function withSignedInUser(user, f) {
     getOAuthToken() {
       return Promise.resolve("some-access-token");
     },
-    sessionStatus() {
+    checkAccountStatus() {
       return Promise.resolve(true);
     },
     removeCachedOAuthToken() {
