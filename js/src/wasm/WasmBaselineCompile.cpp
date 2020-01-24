@@ -13003,9 +13003,9 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
 bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
 #  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
   const uint8_t* insn = nextPC;
-  return (insn[-2] == 0x0F && insn[-1] == 0x0B) ||  // ud2
-         (insn[-2] == 0xFF && insn[-1] == 0xD0) ||  // call *%{rax,eax}
-         insn[-5] == 0xE8 ||                        // call simm32
+  return (insn[-2] == 0x0F && insn[-1] == 0x0B) ||           // ud2
+         (insn[-2] == 0xFF && (insn[-1] & 0xF8) == 0xD0) ||  // call *%r_
+         insn[-5] == 0xE8 ||                                 // call simm32
          (debugEnabled && insn[-5] == 0x0F && insn[-4] == 0x1F &&
           insn[-3] == 0x44 && insn[-2] == 0x00 &&
           insn[-1] == 0x00);  // nop_five
