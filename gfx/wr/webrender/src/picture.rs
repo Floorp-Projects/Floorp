@@ -374,12 +374,6 @@ pub struct SpatialNodeDependency {
 
 // Immutable context passed to picture cache tiles during pre_update
 struct TilePreUpdateContext {
-    /// The local rect of the overall picture cache
-    local_rect: PictureRect,
-
-    /// The local clip rect (in picture space) of the entire picture cache
-    local_clip_rect: PictureRect,
-
     /// Maps from picture cache coords -> world space coords.
     pic_to_world_mapper: SpaceMapper<PicturePixel, WorldPixel>,
 
@@ -396,6 +390,12 @@ struct TilePreUpdateContext {
 
 // Immutable context passed to picture cache tiles during post_update
 struct TilePostUpdateContext<'a> {
+    /// The local rect of the overall picture cache
+    local_rect: PictureRect,
+
+    /// The local clip rect (in picture space) of the entire picture cache
+    local_clip_rect: PictureRect,
+
     /// The calculated backdrop information for this cache instance.
     backdrop: BackdropInfo,
 
@@ -638,11 +638,15 @@ pub struct TileCacheInstanceSerializer {
 /// Information about a cached tile.
 pub struct Tile {
     /// The current world rect of this tile.
-    pub world_rect: WorldRect,
+    pub world_tile_rect: WorldRect,
     /// The current local rect of this tile.
-    pub rect: PictureRect,
-    /// The local rect of the tile clipped to the overall picture local rect.
-    clipped_rect: PictureRect,
+    pub local_tile_rect: PictureRect,
+    /// The picture space dirty rect for this tile.
+    local_dirty_rect: PictureRect,
+    /// The world space dirty rect for this tile.
+    /// TODO(gw): We have multiple dirty rects available due to the quadtree above. In future,
+    ///           expose these as multiple dirty rects, which will help in some cases.
+    pub world_dirty_rect: WorldRect,
     /// Uniquely describes the content of this tile, in a way that can be
     /// (reasonably) efficiently hashed and compared.
     pub current_descriptor: TileDescriptor,
@@ -669,12 +673,6 @@ pub struct Tile {
     pub is_opaque: bool,
     /// Root node of the quadtree dirty rect tracker.
     root: TileNode,
-    /// The picture space dirty rect for this tile.
-    dirty_rect: PictureRect,
-    /// The world space dirty rect for this tile.
-    /// TODO(gw): We have multiple dirty rects available due to the quadtree above. In future,
-    ///           expose these as multiple dirty rects, which will help in some cases.
-    pub world_dirty_rect: WorldRect,
     /// The last rendered background color on this tile.
     background_color: Option<ColorF>,
     /// The first reason the tile was invalidated this frame.
@@ -687,9 +685,10 @@ impl Tile {
         id: TileId,
     ) -> Self {
         Tile {
-            rect: PictureRect::zero(),
-            clipped_rect: PictureRect::zero(),
-            world_rect: WorldRect::zero(),
+            local_tile_rect: PictureRect::zero(),
+            world_tile_rect: WorldRect::zero(),
+            local_dirty_rect: PictureRect::zero(),
+            world_dirty_rect: WorldRect::zero(),
             surface: None,
             current_descriptor: TileDescriptor::new(),
             prev_descriptor: TileDescriptor::new(),
@@ -699,8 +698,6 @@ impl Tile {
             id,
             is_opaque: false,
             root: TileNode::new_leaf(Vec::new()),
-            dirty_rect: PictureRect::zero(),
-            world_dirty_rect: WorldRect::zero(),
             background_color: None,
             invalidation_reason: None,
         }
@@ -709,7 +706,7 @@ impl Tile {
     /// Print debug information about this tile to a tree printer.
     fn print(&self, pt: &mut dyn PrintTreePrinter) {
         pt.new_level(format!("Tile {:?}", self.id));
-        pt.add_item(format!("rect: {}", self.rect));
+        pt.add_item(format!("local_tile_rect: {}", self.local_tile_rect));
         pt.add_item(format!("fract_offset: {:?}", self.fract_offset));
         pt.add_item(format!("background_color: {:?}", self.background_color));
         pt.add_item(format!("invalidation_reason: {:?}", self.invalidation_reason));
@@ -782,10 +779,10 @@ impl Tile {
 
         match invalidation_rect {
             Some(rect) => {
-                self.dirty_rect = self.dirty_rect.union(&rect);
+                self.local_dirty_rect = self.local_dirty_rect.union(&rect);
             }
             None => {
-                self.dirty_rect = self.rect;
+                self.local_dirty_rect = self.local_tile_rect;
             }
         }
 
@@ -798,23 +795,18 @@ impl Tile {
     /// tile to setup state before primitive dependency calculations.
     fn pre_update(
         &mut self,
-        rect: PictureRect,
+        local_tile_rect: PictureRect,
         ctx: &TilePreUpdateContext,
     ) {
-        self.rect = rect;
+        self.local_tile_rect = local_tile_rect;
         self.invalidation_reason  = None;
 
-        self.clipped_rect = self.rect
-            .intersection(&ctx.local_rect)
-            .and_then(|r| r.intersection(&ctx.local_clip_rect))
-            .unwrap_or_else(PictureRect::zero);
-
-        self.world_rect = ctx.pic_to_world_mapper
-            .map(&self.rect)
+        self.world_tile_rect = ctx.pic_to_world_mapper
+            .map(&self.local_tile_rect)
             .expect("bug: map local tile rect");
 
         // Check if this tile is currently on screen.
-        self.is_visible = self.world_rect.intersects(&ctx.global_screen_world_rect);
+        self.is_visible = self.world_tile_rect.intersects(&ctx.global_screen_world_rect);
 
         // If the tile isn't visible, early exit, skipping the normal set up to
         // validate dependencies. Instead, we will only compare the current tile
@@ -844,7 +836,7 @@ impl Tile {
             &mut self.prev_descriptor,
         );
         self.current_descriptor.clear();
-        self.root.clear(rect);
+        self.root.clear(local_tile_rect);
     }
 
     /// Add dependencies for a given primitive to this tile.
@@ -874,8 +866,8 @@ impl Tile {
         //           in Gecko during scrolling. Consider investigating this so the
         //           hack / workaround below is not required.
         let (prim_origin, prim_clip_rect) = if info.clip_by_tile {
-            let tile_p0 = self.rect.origin;
-            let tile_p1 = self.rect.bottom_right();
+            let tile_p0 = self.local_tile_rect.origin;
+            let tile_p1 = self.local_tile_rect.bottom_right();
 
             let clip_p0 = PicturePoint::new(
                 clampf(info.prim_clip_rect.origin.x, tile_p0.x, tile_p1.x),
@@ -963,7 +955,11 @@ impl Tile {
         // Check if this tile can be considered opaque. Opacity state must be updated only
         // after all early out checks have been performed. Otherwise, we might miss updating
         // the native surface next time this tile becomes visible.
-        self.is_opaque = ctx.backdrop.rect.contains_rect(&self.clipped_rect);
+        let clipped_rect = self.local_tile_rect
+            .intersection(&ctx.local_rect)
+            .and_then(|r| r.intersection(&ctx.local_clip_rect))
+            .unwrap_or_else(PictureRect::zero);
+        self.is_opaque = ctx.backdrop.rect.contains_rect(&clipped_rect);
 
         // Check if the selected composite mode supports dirty rect updates. For Draw composite
         // mode, we can always update the content with smaller dirty rects. For native composite
@@ -997,12 +993,12 @@ impl Tile {
         // doesn't support partial updates, and this tile isn't valid, force the dirty
         // rect to be the size of the entire tile.
         if !self.is_valid && !supports_dirty_rects {
-            self.dirty_rect = self.rect;
+            self.local_dirty_rect = self.local_tile_rect;
         }
 
         // Ensure that the dirty rect doesn't extend outside the local tile rect.
-        self.dirty_rect = self.dirty_rect
-            .intersection(&self.rect)
+        self.local_dirty_rect = self.local_dirty_rect
+            .intersection(&self.local_tile_rect)
             .unwrap_or_else(PictureRect::zero);
 
         // See if this tile is a simple color, in which case we can just draw
@@ -2037,8 +2033,6 @@ impl TileCacheInstance {
         mem::swap(&mut self.tiles, &mut self.old_tiles);
 
         let ctx = TilePreUpdateContext {
-            local_rect: self.local_rect,
-            local_clip_rect: self.local_clip_rect,
             pic_to_world_mapper,
             fract_offset: self.fract_offset,
             background_color: self.background_color,
@@ -2086,7 +2080,7 @@ impl TileCacheInstance {
                 //     result in allocating _much_ smaller GPU surfaces for cases where the
                 //     true off-screen surface size is very large.
                 if tile.is_visible {
-                    world_culling_rect = world_culling_rect.union(&tile.world_rect);
+                    world_culling_rect = world_culling_rect.union(&tile.world_tile_rect);
                 }
 
                 self.tiles.insert(key, tile);
@@ -2536,6 +2530,8 @@ impl TileCacheInstance {
         }
 
         let ctx = TilePostUpdateContext {
+            local_rect: self.local_rect,
+            local_clip_rect: self.local_clip_rect,
             backdrop: self.backdrop,
             spatial_nodes: &self.spatial_nodes,
             opacity_bindings: &self.opacity_bindings,
@@ -3852,7 +3848,7 @@ impl PicturePrimitive {
                             let tile = tile_cache.tiles.get_mut(key).expect("bug: no tile found!");
 
                             // Get the world space rect that this tile will actually occupy on screem
-                            let tile_draw_rect = match world_clip_rect.intersection(&tile.world_rect) {
+                            let tile_draw_rect = match world_clip_rect.intersection(&tile.world_tile_rect) {
                                 Some(rect) => rect,
                                 None => {
                                     tile.is_visible = false;
@@ -3890,7 +3886,7 @@ impl PicturePrimitive {
                                 );
 
                                 let label_offset = DeviceVector2D::new(20.0, 30.0);
-                                let tile_device_rect = tile.world_rect * frame_context.global_device_pixel_scale;
+                                let tile_device_rect = tile.world_tile_rect * frame_context.global_device_pixel_scale;
                                 if tile_device_rect.size.height >= label_offset.y {
                                     let surface = tile.surface.as_ref().expect("no tile surface set!");
 
@@ -3937,7 +3933,7 @@ impl PicturePrimitive {
                             }
 
                             // Update the world dirty rect
-                            tile.world_dirty_rect = map_pic_to_world.map(&tile.dirty_rect).expect("bug");
+                            tile.world_dirty_rect = map_pic_to_world.map(&tile.local_dirty_rect).expect("bug");
 
                             if tile.is_valid {
                                 continue;
@@ -4009,7 +4005,7 @@ impl PicturePrimitive {
                                     );
                                 }
 
-                                let content_origin_f = tile.world_rect.origin * device_pixel_scale;
+                                let content_origin_f = tile.world_tile_rect.origin * device_pixel_scale;
                                 let content_origin = content_origin_f.round();
                                 debug_assert!((content_origin_f.x - content_origin.x).abs() < 0.01);
                                 debug_assert!((content_origin_f.y - content_origin.y).abs() < 0.01);
@@ -4017,7 +4013,7 @@ impl PicturePrimitive {
                                 // Get a task-local scissor rect for the dirty region of this
                                 // picture cache task.
                                 let scissor_rect = tile.world_dirty_rect.translate(
-                                    -tile.world_rect.origin.to_vector()
+                                    -tile.world_tile_rect.origin.to_vector()
                                 );
                                 // The world rect is guaranteed to be device pixel aligned, by the tile
                                 // sizing code in tile::pre_update. However, there might be some
@@ -4066,7 +4062,7 @@ impl PicturePrimitive {
                             }
 
                             // Now that the tile is valid, reset the dirty rect.
-                            tile.dirty_rect = PictureRect::zero();
+                            tile.local_dirty_rect = PictureRect::zero();
                             tile.is_valid = true;
                         }
 
@@ -4178,7 +4174,7 @@ impl PicturePrimitive {
                     };
                     for (key, tile) in &tile_cache.tiles {
                         tile_cache_tiny.tiles.insert(*key, TileSerializer {
-                            rect: tile.rect,
+                            rect: tile.local_tile_rect,
                             current_descriptor: tile.current_descriptor.clone(),
                             fract_offset: tile.fract_offset,
                             id: tile.id,
