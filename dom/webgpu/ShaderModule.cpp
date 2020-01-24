@@ -14,20 +14,7 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(ShaderModule, mParent)
 GPU_IMPL_JS_WRAP(ShaderModule)
 
-ShaderModule::ShaderModule(Device* const aParent, RawId aId)
-    : ChildOf(aParent), mId(aId) {}
-
-ShaderModule::~ShaderModule() { Cleanup(); }
-
-void ShaderModule::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    WebGPUChild* bridge = mParent->mBridge;
-    if (bridge && bridge->IsOpen()) {
-      bridge->DestroyShaderModule(mId);
-    }
-  }
-}
+ShaderModule::~ShaderModule() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla

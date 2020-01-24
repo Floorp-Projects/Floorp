@@ -38,9 +38,9 @@ JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aSize,
 
 Device::Device(Adapter* const aParent, RawId aId)
     : DOMEventTargetHelper(aParent->GetParentObject()),
-      mBridge(aParent->mBridge),
+      mBridge(aParent->GetBridge()),
       mId(aId),
-      mQueue(new Queue(this, aParent->mBridge, aId)) {}
+      mQueue(new Queue(this, aParent->GetBridge(), aId)) {}
 
 Device::~Device() { Cleanup(); }
 
@@ -129,6 +129,12 @@ void Device::UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem) {
   mBridge->SendDeviceUnmapBuffer(mId, aId, std::move(*aShmem));
 }
 
+void Device::DestroyBuffer(RawId aId) {
+  if (mBridge && mBridge->IsOpen()) {
+    mBridge->DestroyBuffer(aId);
+  }
+}
+
 already_AddRefed<CommandEncoder> Device::CreateCommandEncoder(
     const dom::GPUCommandEncoderDescriptor& aDesc) {
   RawId id = mBridge->DeviceCreateCommandEncoder(mId, aDesc);
@@ -136,37 +142,16 @@ already_AddRefed<CommandEncoder> Device::CreateCommandEncoder(
   return encoder.forget();
 }
 
-already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
-    const dom::GPUBindGroupLayoutDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateBindGroupLayout(mId, aDesc);
-  RefPtr<BindGroupLayout> object = new BindGroupLayout(this, id);
-  return object.forget();
-}
-already_AddRefed<PipelineLayout> Device::CreatePipelineLayout(
-    const dom::GPUPipelineLayoutDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreatePipelineLayout(mId, aDesc);
-  RefPtr<PipelineLayout> object = new PipelineLayout(this, id);
-  return object.forget();
-}
-already_AddRefed<BindGroup> Device::CreateBindGroup(
-    const dom::GPUBindGroupDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateBindGroup(mId, aDesc);
-  RefPtr<BindGroup> object = new BindGroup(this, id);
-  return object.forget();
+void Device::DestroyCommandEncoder(RawId aId) {
+  if (mBridge && mBridge->IsOpen()) {
+    mBridge->DestroyCommandEncoder(aId);
+  }
 }
 
-already_AddRefed<ShaderModule> Device::CreateShaderModule(
-    const dom::GPUShaderModuleDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateShaderModule(mId, aDesc);
-  RefPtr<ShaderModule> object = new ShaderModule(this, id);
-  return object.forget();
-}
-
-already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
-    const dom::GPUComputePipelineDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateComputePipeline(mId, aDesc);
-  RefPtr<ComputePipeline> object = new ComputePipeline(this, id);
-  return object.forget();
+void Device::DestroyCommandBuffer(RawId aId) {
+  if (mBridge && mBridge->IsOpen()) {
+    mBridge->DestroyCommandBuffer(aId);
+  }
 }
 
 }  // namespace webgpu

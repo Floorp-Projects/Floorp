@@ -8,7 +8,6 @@
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
-#include "mozilla/webgpu/WebGPUTypes.h"
 
 namespace mozilla {
 namespace webgpu {
@@ -20,13 +19,10 @@ class PipelineLayout final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(PipelineLayout)
   GPU_DECL_JS_WRAP(PipelineLayout)
 
-  PipelineLayout(Device* const aParent, RawId aId);
-
-  const RawId mId;
-
  private:
+  PipelineLayout() = delete;
   virtual ~PipelineLayout();
-  void Cleanup();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu
