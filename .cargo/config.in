@@ -75,7 +75,7 @@ replace-with = "vendored-sources"
 [source."https://github.com/ChunMinChang/cubeb-coreaudio-rs"]
 git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs"
 replace-with = "vendored-sources"
-rev = "acb90e9bf36e6e035ac6bbe51efa0a8825b5b6be"
+rev = "4d8fcc1954df217fbb29166e7ae750bf26d47203"
 
 [source.crates-io]
 replace-with = "vendored-sources"

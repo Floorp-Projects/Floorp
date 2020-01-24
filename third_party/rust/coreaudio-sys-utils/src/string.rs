@@ -44,10 +44,6 @@ impl StringRef {
         Self(string_ref)
     }
 
-    pub fn to_string(&self) -> String {
-        String::from_utf8(utf8_from_cfstringref(self.0)).expect("convert bytes to a String")
-    }
-
     pub fn into_string(self) -> String {
         self.to_string()
     }
@@ -72,6 +68,14 @@ impl Drop for StringRef {
     fn drop(&mut self) {
         use std::os::raw::c_void;
         unsafe { CFRelease(self.0 as *mut c_void) };
+    }
+}
+
+impl std::fmt::Display for StringRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string =
+            String::from_utf8(utf8_from_cfstringref(self.0)).expect("convert bytes to a String");
+        write!(f, "{}", string)
     }
 }
 
