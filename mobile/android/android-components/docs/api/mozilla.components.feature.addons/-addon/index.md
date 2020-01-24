@@ -63,6 +63,12 @@ https://addons.mozilla.org/en-US/firefox/
 |---|---|
 | [localizePermissions](localize-permissions.md) | `fun localizePermissions(permissions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>`<br>Takes a list of [permissions](localize-permissions.md#mozilla.components.feature.addons.Addon.Companion$localizePermissions(kotlin.collections.List((kotlin.String)))/permissions) and returns a list of id resources per each item. |
 
+### Extension Properties
+
+| Name | Summary |
+|---|---|
+| [translatedName](../../mozilla.components.feature.addons.ui/translated-name.md) | `val `[`Addon`](./index.md)`.translatedName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A shortcut to get the localized name of an add-on. |
+
 ### Extension Functions
 
 | Name | Summary |

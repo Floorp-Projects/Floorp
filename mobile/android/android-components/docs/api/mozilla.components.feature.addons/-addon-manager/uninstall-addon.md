@@ -12,4 +12,4 @@ Uninstalls the provided [Addon](../-addon/index.md).
 
 `onSuccess` - (optional) callback invoked if the addon was uninstalled successfully.
 
-`onError` - (optional) callback invoked if there was an error installing the addon.
+`onError` - (optional) callback invoked if there was an error uninstalling the addon.

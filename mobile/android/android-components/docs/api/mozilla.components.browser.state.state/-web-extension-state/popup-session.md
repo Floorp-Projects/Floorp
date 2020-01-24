@@ -2,7 +2,7 @@
 
 # popupSession
 
-`val popupSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/WebExtensionState.kt#L31)
+`val popupSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/WebExtensionState.kt#L33)
 
 The [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) displaying the browser or page action popup.
 
