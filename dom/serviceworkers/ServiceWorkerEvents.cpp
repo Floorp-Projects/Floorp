@@ -118,7 +118,6 @@ FetchEvent::FetchEvent(EventTarget* aOwner)
     : ExtendableEvent(aOwner),
       mPreventDefaultLineNumber(0),
       mPreventDefaultColumnNumber(0),
-      mIsReload(false),
       mWaitToRespond(false) {}
 
 FetchEvent::~FetchEvent() {}
@@ -154,7 +153,6 @@ already_AddRefed<FetchEvent> FetchEvent::Constructor(
   e->mRequest = aOptions.mRequest;
   e->mClientId = aOptions.mClientId;
   e->mResultingClientId = aOptions.mResultingClientId;
-  e->mIsReload = aOptions.mIsReload;
   return e.forget();
 }
 
