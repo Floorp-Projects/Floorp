@@ -42,6 +42,10 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc,
       RawId aNewId);
+  ipc::IPCResult RecvCommandEncoderCopyBufferToBuffer(
+      RawId aSelfId, RawId aSourceId, BufferAddress aSourceOffset,
+      RawId aDestinationId, BufferAddress aDestinationOffset,
+      BufferAddress aSize);
   ipc::IPCResult RecvCommandEncoderRunComputePass(RawId aSelfId, Shmem&& shmem);
   ipc::IPCResult RecvCommandEncoderFinish(
       RawId aSelfId, const dom::GPUCommandBufferDescriptor& aDesc);
@@ -49,6 +53,24 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvCommandBufferDestroy(RawId aSelfId);
   ipc::IPCResult RecvQueueSubmit(RawId aSelfId,
                                  const nsTArray<RawId>& aCommandBuffers);
+  ipc::IPCResult RecvDeviceCreateBindGroupLayout(
+      RawId aSelfId, const SerialBindGroupLayoutDescriptor& aDesc,
+      RawId aNewId);
+  ipc::IPCResult RecvBindGroupLayoutDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreatePipelineLayout(
+      RawId aSelfId, const SerialPipelineLayoutDescriptor& aDesc, RawId aNewId);
+  ipc::IPCResult RecvPipelineLayoutDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreateBindGroup(
+      RawId aSelfId, const SerialBindGroupDescriptor& aDesc, RawId aNewId);
+  ipc::IPCResult RecvBindGroupDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreateShaderModule(RawId aSelfId,
+                                              const nsTArray<uint32_t>& aData,
+                                              RawId aNewId);
+  ipc::IPCResult RecvShaderModuleDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreateComputePipeline(
+      RawId aSelfId, const SerialComputePipelineDescriptor& aDesc,
+      RawId aNewId);
+  ipc::IPCResult RecvComputePipelineDestroy(RawId aSelfId);
   ipc::IPCResult RecvShutdown();
 
  private:

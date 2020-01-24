@@ -46,6 +46,9 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
     RawId aSelfId, const dom::GPUDeviceDescriptor& aDesc, RawId aNewId) {
   ffi::WGPUDeviceDescriptor desc = {};
+  desc.limits.max_bind_groups = aDesc.mLimits.WasPassed()
+                                    ? aDesc.mLimits.Value().mMaxBindGroups
+                                    : WGPUDEFAULT_BIND_GROUPS;
   Unused << aDesc;  // no useful fields
   // TODO: fill up the descriptor
   ffi::wgpu_server_adapter_request_device(mContext, aSelfId, &desc, aNewId);
@@ -67,6 +70,11 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateBuffer(
   ffi::WGPUBufferDescriptor desc = {};
   desc.usage = aDesc.mUsage;
   desc.size = aDesc.mSize;
+  // tweak: imply STORAGE_READ. This is yet to be figured out by the spec,
+  // see https://github.com/gpuweb/gpuweb/issues/541
+  if (desc.usage & WGPUBufferUsage_STORAGE) {
+    desc.usage |= WGPUBufferUsage_STORAGE_READ;
+  }
   ffi::wgpu_server_device_create_buffer(mContext, aSelfId, &desc, aNewId);
   return IPC_OK();
 }
@@ -121,6 +129,16 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateCommandEncoder(
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvCommandEncoderCopyBufferToBuffer(
+    RawId aSelfId, RawId aSourceId, BufferAddress aSourceOffset,
+    RawId aDestinationId, BufferAddress aDestinationOffset,
+    BufferAddress aSize) {
+  ffi::wgpu_server_encoder_copy_buffer_to_buffer(mContext, aSelfId, aSourceId,
+                                                 aSourceOffset, aDestinationId,
+                                                 aDestinationOffset, aSize);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvCommandEncoderRunComputePass(RawId aSelfId,
                                                               Shmem&& shmem) {
   ffi::wgpu_server_encode_compute_pass(mContext, aSelfId, shmem.get<uint8_t>(),
@@ -150,6 +168,107 @@ ipc::IPCResult WebGPUParent::RecvQueueSubmit(
     RawId aSelfId, const nsTArray<RawId>& aCommandBuffers) {
   ffi::wgpu_server_queue_submit(mContext, aSelfId, aCommandBuffers.Elements(),
                                 aCommandBuffers.Length());
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDeviceCreateBindGroupLayout(
+    RawId aSelfId, const SerialBindGroupLayoutDescriptor& aDesc, RawId aNewId) {
+  ffi::WGPUBindGroupLayoutDescriptor desc = {};
+  desc.bindings = aDesc.mBindings.Elements();
+  desc.bindings_length = aDesc.mBindings.Length();
+  ffi::wgpu_server_device_create_bind_group_layout(mContext, aSelfId, &desc,
+                                                   aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvBindGroupLayoutDestroy(RawId aSelfId) {
+  ffi::wgpu_server_bind_group_layout_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDeviceCreatePipelineLayout(
+    RawId aSelfId, const SerialPipelineLayoutDescriptor& aDesc, RawId aNewId) {
+  ffi::WGPUPipelineLayoutDescriptor desc = {};
+  desc.bind_group_layouts = aDesc.mBindGroupLayouts.Elements();
+  desc.bind_group_layouts_length = aDesc.mBindGroupLayouts.Length();
+  ffi::wgpu_server_device_create_pipeline_layout(mContext, aSelfId, &desc,
+                                                 aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvPipelineLayoutDestroy(RawId aSelfId) {
+  ffi::wgpu_server_pipeline_layout_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDeviceCreateBindGroup(
+    RawId aSelfId, const SerialBindGroupDescriptor& aDesc, RawId aNewId) {
+  nsTArray<ffi::WGPUBindGroupBinding> ffiBindings(aDesc.mBindings.Length());
+  for (const auto& binding : aDesc.mBindings) {
+    ffi::WGPUBindGroupBinding bgb = {};
+    bgb.binding = binding.mBinding;
+    switch (binding.mType) {
+      case SerialBindGroupBindingType::Buffer:
+        bgb.resource.tag = ffi::WGPUBindingResource_Buffer;
+        bgb.resource.buffer._0.buffer = binding.mValue;
+        bgb.resource.buffer._0.offset = binding.mBufferOffset;
+        bgb.resource.buffer._0.size = binding.mBufferSize;
+        break;
+      case SerialBindGroupBindingType::Texture:
+        bgb.resource.tag = ffi::WGPUBindingResource_TextureView;
+        bgb.resource.texture_view._0 = binding.mValue;
+        break;
+      case SerialBindGroupBindingType::Sampler:
+        bgb.resource.tag = ffi::WGPUBindingResource_Sampler;
+        bgb.resource.sampler._0 = binding.mValue;
+        break;
+      default:
+        MOZ_CRASH("unreachable");
+    }
+    ffiBindings.AppendElement(bgb);
+  }
+  ffi::WGPUBindGroupDescriptor desc = {};
+  desc.layout = aDesc.mLayout;
+  desc.bindings = ffiBindings.Elements();
+  desc.bindings_length = ffiBindings.Length();
+  ffi::wgpu_server_device_create_bind_group(mContext, aSelfId, &desc, aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvBindGroupDestroy(RawId aSelfId) {
+  ffi::wgpu_server_bind_group_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
+    RawId aSelfId, const nsTArray<uint32_t>& aData, RawId aNewId) {
+  ffi::WGPUShaderModuleDescriptor desc = {};
+  desc.code.bytes = aData.Elements();
+  desc.code.length = aData.Length();
+  ffi::wgpu_server_device_create_shader_module(mContext, aSelfId, &desc,
+                                               aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvShaderModuleDestroy(RawId aSelfId) {
+  ffi::wgpu_server_shader_module_destroy(mContext, aSelfId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDeviceCreateComputePipeline(
+    RawId aSelfId, const SerialComputePipelineDescriptor& aDesc, RawId aNewId) {
+  NS_LossyConvertUTF16toASCII entryPoint(aDesc.mComputeStage.mEntryPoint);
+  ffi::WGPUComputePipelineDescriptor desc = {};
+  desc.layout = aDesc.mLayout;
+  desc.compute_stage.module = aDesc.mComputeStage.mModule;
+  desc.compute_stage.entry_point = entryPoint.get();
+  ffi::wgpu_server_device_create_compute_pipeline(mContext, aSelfId, &desc,
+                                                  aNewId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvComputePipelineDestroy(RawId aSelfId) {
+  ffi::wgpu_server_compute_pipeline_destroy(mContext, aSelfId);
   return IPC_OK();
 }
 

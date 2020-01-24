@@ -7,15 +7,56 @@
 #define WEBGPU_TYPES_H_
 
 #include <cstdint>
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace webgpu {
+namespace ffi {
+struct WGPUBindGroupLayoutBinding;
+}  // namespace ffi
 
 typedef uint64_t RawId;
 typedef uint64_t BufferAddress;
 
-}  // namespace webgpu
+struct SerialBindGroupLayoutDescriptor {
+  nsTArray<ffi::WGPUBindGroupLayoutBinding> mBindings;
+};
 
+struct SerialPipelineLayoutDescriptor {
+  nsTArray<RawId> mBindGroupLayouts;
+};
+
+enum class SerialBindGroupBindingType : uint8_t {
+  Buffer,
+  Texture,
+  Sampler,
+  EndGuard_
+};
+
+struct SerialBindGroupBinding {
+  uint32_t mBinding;
+  SerialBindGroupBindingType mType;
+  RawId mValue;
+  BufferAddress mBufferOffset;
+  BufferAddress mBufferSize;
+};
+
+struct SerialBindGroupDescriptor {
+  RawId mLayout;
+  nsTArray<SerialBindGroupBinding> mBindings;
+};
+
+struct SerialProgrammableStageDescriptor {
+  RawId mModule;
+  nsString mEntryPoint;
+};
+
+struct SerialComputePipelineDescriptor {
+  RawId mLayout;
+  SerialProgrammableStageDescriptor mComputeStage;
+};
+
+}  // namespace webgpu
 }  // namespace mozilla
 
 #endif  // WEBGPU_TYPES_H_
