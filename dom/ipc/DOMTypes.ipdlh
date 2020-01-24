@@ -72,9 +72,14 @@ struct RefMessageData {
   nsID uuid;
 };
 
-union MessageData {
+union MessageDataType {
   ClonedMessageData;
   RefMessageData;
+};
+
+struct MessageData {
+  nsID? agentClusterId;
+  MessageDataType data;
 };
 
 union IPCDataTransferData
