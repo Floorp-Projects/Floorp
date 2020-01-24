@@ -1949,7 +1949,7 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
   }
   mOwnerContent = aContent;
 
-  if (RefPtr<BrowsingContext> browsingContext = GetBrowsingContext()) {
+  if (RefPtr<BrowsingContext> browsingContext = GetExtantBrowsingContext()) {
     browsingContext->SetEmbedderElement(mOwnerContent);
   }
 
@@ -3198,12 +3198,22 @@ already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
 
 already_AddRefed<BrowsingContext> nsFrameLoader::GetBrowsingContext() {
   RefPtr<BrowsingContext> browsingContext;
-  if (IsRemoteFrame() && EnsureRemoteBrowser()) {
-    browsingContext = mRemoteBrowser->GetBrowsingContext();
-  } else if (GetDocShell(IgnoreErrors())) {
-    browsingContext = GetDocShell()->GetBrowsingContext();
+  if (IsRemoteFrame()) {
+    Unused << EnsureRemoteBrowser();
+  } else if (mOwnerContent) {
+    Unused << MaybeCreateDocShell();
   }
-  return browsingContext.forget();
+  return GetExtantBrowsingContext();
+}
+
+already_AddRefed<BrowsingContext> nsFrameLoader::GetExtantBrowsingContext() {
+  if (mRemoteBrowser) {
+    return do_AddRef(mRemoteBrowser->GetBrowsingContext());
+  }
+  if (mDocShell) {
+    return do_AddRef(mDocShell->GetBrowsingContext());
+  }
+  return nullptr;
 }
 
 void nsFrameLoader::InitializeBrowserAPI() {
