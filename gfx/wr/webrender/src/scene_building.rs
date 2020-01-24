@@ -449,9 +449,8 @@ impl<'a> SceneBuilder<'a> {
             device_pixel_scale,
         );
 
-        let cache = &root_pipeline.display_list_cache;
         builder.build_items(
-            &mut root_pipeline.display_list.iter_with_cache(cache),
+            &mut root_pipeline.display_list.iter(),
             root_pipeline.pipeline_id,
             true,
         );
@@ -688,45 +687,23 @@ impl<'a> SceneBuilder<'a> {
         apply_pipeline_clip: bool,
     ) {
         loop {
-            let item = match traversal.next() {
-                Some(item) => item,
-                None => break,
-            };
+            let subtraversal = {
+                let item = match traversal.next() {
+                    Some(item) => item,
+                    None => break,
+                };
 
-            let subtraversal = match item.item() {
-                DisplayItem::PushStackingContext(ref info) => {
-                    let space = self.get_space(&info.spatial_id);
-                    let mut subtraversal = item.sub_iter();
-                    self.build_stacking_context(
-                        &mut subtraversal,
-                        pipeline_id,
-                        &info.stacking_context,
-                        space,
-                        info.origin,
-                        item.filters(),
-                        &item.filter_datas(),
-                        item.filter_primitives(),
-                        info.prim_flags,
-                        apply_pipeline_clip,
-                    );
-                    Some(subtraversal)
+                match item.item() {
+                    DisplayItem::PopReferenceFrame |
+                    DisplayItem::PopStackingContext => return,
+                    _ => (),
                 }
-                DisplayItem::PushReferenceFrame(ref info) => {
-                    let parent_space = self.get_space(&info.parent_spatial_id);
-                    let mut subtraversal = item.sub_iter();
-                    self.build_reference_frame(
-                        &mut subtraversal,
-                        pipeline_id,
-                        parent_space,
-                        info.origin,
-                        &info.reference_frame,
-                        apply_pipeline_clip,
-                    );
-                    Some(subtraversal)
-                }
-                DisplayItem::PopReferenceFrame |
-                DisplayItem::PopStackingContext => return,
-                _ => None,
+
+                self.build_item(
+                    item,
+                    pipeline_id,
+                    apply_pipeline_clip,
+                )
             };
 
             // If build_item created a sub-traversal, we need `traversal` to have the
@@ -734,8 +711,6 @@ impl<'a> SceneBuilder<'a> {
             if let Some(mut subtraversal) = subtraversal {
                 subtraversal.merge_debug_stats_from(traversal);
                 *traversal = subtraversal;
-            } else {
-                self.build_item(item, pipeline_id, apply_pipeline_clip);
             }
         }
 
@@ -983,10 +958,8 @@ impl<'a> SceneBuilder<'a> {
 
         self.rf_mapper.push_scope();
         self.iframe_depth += 1;
-
-        let cache = &pipeline.display_list_cache;
         self.build_items(
-            &mut pipeline.display_list.iter_with_cache(cache),
+            &mut pipeline.display_list.iter(),
             pipeline.pipeline_id,
             true,
         );
@@ -1088,10 +1061,10 @@ impl<'a> SceneBuilder<'a> {
 
     fn build_item<'b>(
         &'b mut self,
-        item: DisplayItemRef,
+        item: DisplayItemRef<'a, 'b>,
         pipeline_id: PipelineId,
         apply_pipeline_clip: bool,
-    ) {
+    ) -> Option<BuiltDisplayListIter<'a>> {
         match *item.item() {
             DisplayItem::Image(ref info) => {
                 let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
@@ -1326,6 +1299,36 @@ impl<'a> SceneBuilder<'a> {
                     item.gradient_stops(),
                 );
             }
+            DisplayItem::PushStackingContext(ref info) => {
+                let space = self.get_space(&info.spatial_id);
+                let mut subtraversal = item.sub_iter();
+                self.build_stacking_context(
+                    &mut subtraversal,
+                    pipeline_id,
+                    &info.stacking_context,
+                    space,
+                    info.origin,
+                    item.filters(),
+                    item.filter_datas(),
+                    item.filter_primitives(),
+                    info.prim_flags,
+                    apply_pipeline_clip,
+                );
+                return Some(subtraversal);
+            }
+            DisplayItem::PushReferenceFrame(ref info) => {
+                let parent_space = self.get_space(&info.parent_spatial_id);
+                let mut subtraversal = item.sub_iter();
+                self.build_reference_frame(
+                    &mut subtraversal,
+                    pipeline_id,
+                    parent_space,
+                    info.origin,
+                    &info.reference_frame,
+                    apply_pipeline_clip,
+                );
+                return Some(subtraversal);
+            }
             DisplayItem::Iframe(ref info) => {
                 let space = self.get_space(&info.space_and_clip.spatial_id);
                 self.build_iframe(
@@ -1453,18 +1456,10 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::SetFilterData |
             DisplayItem::SetFilterPrimitives => {}
 
-            // Special items that are handled in the parent method
-            DisplayItem::PushStackingContext(..) |
-            DisplayItem::PushReferenceFrame(..) |
             DisplayItem::PopReferenceFrame |
             DisplayItem::PopStackingContext => {
                 unreachable!("Should have returned in parent method.")
             }
-
-            DisplayItem::ReuseItem(..) => {
-                unreachable!("Iterator logic error")
-            }
-
             DisplayItem::PushShadow(info) => {
                 let clip_and_scroll = self.get_clip_and_scroll(
                     &info.space_and_clip.clip_id,
@@ -1478,6 +1473,8 @@ impl<'a> SceneBuilder<'a> {
                 self.pop_all_shadows();
             }
         }
+
+        None
     }
 
     // Given a list of clip sources, a positioning node and

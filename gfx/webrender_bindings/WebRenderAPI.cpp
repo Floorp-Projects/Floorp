@@ -1395,22 +1395,6 @@ void DisplayListBuilder::PushBoxShadow(
                         aBorderRadius, aClipMode);
 }
 
-void DisplayListBuilder::ReuseItem(wr::ItemKey aKey) {
-  wr_dp_push_reuse_item(mWrState, aKey);
-}
-
-void DisplayListBuilder::StartCachedItem(wr::ItemKey aKey) {
-  wr_dp_start_cached_item(mWrState, aKey);
-}
-
-void DisplayListBuilder::EndCachedItem(wr::ItemKey aKey) {
-  wr_dp_end_cached_item(mWrState, aKey);
-}
-
-void DisplayListBuilder::SetDisplayListCacheSize(const size_t aCacheSize) {
-  wr_dp_set_cache_size(mWrState, aCacheSize);
-}
-
 Maybe<layers::ScrollableLayerGuid::ViewID>
 DisplayListBuilder::GetContainingFixedPosScrollTarget(
     const ActiveScrolledRoot* aAsr) {
