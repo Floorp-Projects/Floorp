@@ -71,7 +71,7 @@ class GeckoViewContentBlocking extends GeckoViewModule {
           };
         });
 
-        aCallback.onSuccess({ log:res });
+        aCallback.onSuccess({ log: res });
         break;
       }
     }
