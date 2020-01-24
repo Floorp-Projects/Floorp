@@ -8,6 +8,7 @@ import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
 const collator = new Intl.Collator();
 const sortFnOptions = {
   name: (a, b) => collator.compare(a.title, b.title),
+  "name-reverse": (a, b) => collator.compare(b.title, a.title),
   "last-used": (a, b) => a.timeLastUsed < b.timeLastUsed,
   "last-changed": (a, b) => a.timePasswordChanged < b.timePasswordChanged,
   breached: (a, b, breachesByLoginGUID) => {

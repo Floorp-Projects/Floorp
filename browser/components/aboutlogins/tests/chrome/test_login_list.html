@@ -457,7 +457,7 @@ add_task(async function test_sorted_list() {
 
   // sort by last used
   let loginSort = gLoginList.shadowRoot.getElementById("login-sort");
-  loginSort.selectedIndex = 1;
+  loginSort.value = "last-used";
   dispatchChangeEvent(loginSort);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
   is(loginListItems.length, 3, "The list should contain the three stored logins");
@@ -468,7 +468,7 @@ add_task(async function test_sorted_list() {
   is(timeUsed2 > timeUsed3, true, "Logins sorted by timeLastUsed. Second: " + timeUsed2 + "; Third: " + timeUsed3);
 
   // sort by title
-  loginSort.selectedIndex = 0;
+  loginSort.value = "name";
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
   let title1 = gLoginList._logins[loginListItems[0].dataset.guid].login.title;
@@ -477,8 +477,19 @@ add_task(async function test_sorted_list() {
   is(title1.localeCompare(title2), -1, "Logins sorted by title. First: " + title1 + "; Second: " + title2);
   is(title2.localeCompare(title3), -1, "Logins sorted by title. Second: " + title2 + "; Third: " + title3);
 
+  // sort by title in reverse alphabetical order
+  loginSort.value = "name-reverse";
+  dispatchChangeEvent(loginSort);
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
+  title1 = gLoginList._logins[loginListItems[0].dataset.guid].login.title;
+  title2 = gLoginList._logins[loginListItems[1].dataset.guid].login.title;
+  title3 = gLoginList._logins[loginListItems[2].dataset.guid].login.title;
+  let testDescription = "Logins sorted by title in reverse alphabetical order."
+  is(title1.localeCompare(title2), 1, `${testDescription} First: ${title2}; Second: ${title1}`);
+  is(title2.localeCompare(title3), 1, `${testDescription} Second: ${title3}; Third: ${title2}`);
+
   // sort by last changed
-  loginSort.selectedIndex = 2;
+  loginSort.value = "last-changed";
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
   let pwChanged1 = gLoginList._logins[loginListItems[0].dataset.guid].login.timePasswordChanged;
@@ -489,7 +500,7 @@ add_task(async function test_sorted_list() {
 
   // sort by breached when there are breached logins
   gLoginList.setBreaches(TEST_BREACHES_MAP);
-  loginSort.selectedIndex = 3;
+  loginSort.value = "breached";
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
   is(loginListItems[0].classList.contains("breached"), true, "Breached login should be displayed at top of list");
@@ -497,7 +508,7 @@ add_task(async function test_sorted_list() {
 
   // sort by name when there are no breached logins
   gLoginList.setBreaches(new Map());
-  loginSort.selectedIndex = 3;
+  loginSort.value = "breached";
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
   title1 = gLoginList._logins[loginListItems[0].dataset.guid].login.title;
