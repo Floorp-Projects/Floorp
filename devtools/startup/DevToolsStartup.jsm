@@ -94,6 +94,28 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcutsBundle", function() {
   return Services.strings.createBundle(url);
 });
 
+/**
+ * Safely retrieve a localized DevTools key shortcut from KeyShortcutsBundle.
+ * If the shortcut is not available, this will return null. Consumer code
+ * should rely on this to skip unavailable shortcuts.
+ *
+ * Note that all shortcuts should always be available, but there is a notable
+ * exception, which is why we have to do this. When a localization change is
+ * uplifted to beta, language packs will not be updated immediately when the
+ * updated beta is available.
+ *
+ * This means that language pack users might get a new Beta version but will not
+ * have a language pack with the new strings yet.
+ */
+function getLocalizedKeyShortcut(id) {
+  try {
+    return KeyShortcutsBundle.GetStringFromName(id);
+  } catch (e) {
+    console.error("Failed to retrieve DevTools localized shortcut for id", id);
+    return null;
+  }
+}
+
 XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
   const isMac = AppConstants.platform == "macosx";
 
@@ -110,41 +132,31 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
     // or the default one.
     {
       id: "toggleToolbox",
-      shortcut: KeyShortcutsBundle.GetStringFromName(
-        "toggleToolbox.commandkey"
-      ),
+      shortcut: getLocalizedKeyShortcut("toggleToolbox.commandkey"),
       modifiers,
     },
     // All locales are using F12
     {
       id: "toggleToolboxF12",
-      shortcut: KeyShortcutsBundle.GetStringFromName(
-        "toggleToolboxF12.commandkey"
-      ),
+      shortcut: getLocalizedKeyShortcut("toggleToolboxF12.commandkey"),
       modifiers: "", // F12 is the only one without modifiers
     },
     // Open the Browser Toolbox
     {
       id: "browserToolbox",
-      shortcut: KeyShortcutsBundle.GetStringFromName(
-        "browserToolbox.commandkey"
-      ),
+      shortcut: getLocalizedKeyShortcut("browserToolbox.commandkey"),
       modifiers: "accel,alt,shift",
     },
     // Open the Browser Console
     {
       id: "browserConsole",
-      shortcut: KeyShortcutsBundle.GetStringFromName(
-        "browserConsole.commandkey"
-      ),
+      shortcut: getLocalizedKeyShortcut("browserConsole.commandkey"),
       modifiers: "accel,shift",
     },
     // Toggle the Responsive Design Mode
     {
       id: "responsiveDesignMode",
-      shortcut: KeyShortcutsBundle.GetStringFromName(
-        "responsiveDesignMode.commandkey"
-      ),
+      shortcut: getLocalizedKeyShortcut("responsiveDesignMode.commandkey"),
       modifiers,
     },
     // The following keys are also registered in /client/definitions.js
@@ -153,57 +165,55 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
     // Key for opening the Inspector
     {
       toolId: "inspector",
-      shortcut: KeyShortcutsBundle.GetStringFromName("inspector.commandkey"),
+      shortcut: getLocalizedKeyShortcut("inspector.commandkey"),
       modifiers,
     },
     // Key for opening the Web Console
     {
       toolId: "webconsole",
-      shortcut: KeyShortcutsBundle.GetStringFromName("webconsole.commandkey"),
+      shortcut: getLocalizedKeyShortcut("webconsole.commandkey"),
       modifiers,
     },
     // Key for opening the Debugger
     {
       toolId: "jsdebugger",
-      shortcut: KeyShortcutsBundle.GetStringFromName("jsdebugger.commandkey2"),
+      shortcut: getLocalizedKeyShortcut("jsdebugger.commandkey2"),
       modifiers,
     },
     // Key for opening the Network Monitor
     {
       toolId: "netmonitor",
-      shortcut: KeyShortcutsBundle.GetStringFromName("netmonitor.commandkey"),
+      shortcut: getLocalizedKeyShortcut("netmonitor.commandkey"),
       modifiers,
     },
     // Key for opening the Style Editor
     {
       toolId: "styleeditor",
-      shortcut: KeyShortcutsBundle.GetStringFromName("styleeditor.commandkey"),
+      shortcut: getLocalizedKeyShortcut("styleeditor.commandkey"),
       modifiers: "shift",
     },
     // Key for opening the Performance Panel
     {
       toolId: "performance",
-      shortcut: KeyShortcutsBundle.GetStringFromName("performance.commandkey"),
+      shortcut: getLocalizedKeyShortcut("performance.commandkey"),
       modifiers: "shift",
     },
     // Key for opening the Storage Panel
     {
       toolId: "storage",
-      shortcut: KeyShortcutsBundle.GetStringFromName("storage.commandkey"),
+      shortcut: getLocalizedKeyShortcut("storage.commandkey"),
       modifiers: "shift",
     },
     // Key for opening the DOM Panel
     {
       toolId: "dom",
-      shortcut: KeyShortcutsBundle.GetStringFromName("dom.commandkey"),
+      shortcut: getLocalizedKeyShortcut("dom.commandkey"),
       modifiers,
     },
     // Key for opening the Accessibility Panel
     {
       toolId: "accessibility",
-      shortcut: KeyShortcutsBundle.GetStringFromName(
-        "accessibilityF12.commandkey"
-      ),
+      shortcut: getLocalizedKeyShortcut("accessibilityF12.commandkey"),
       modifiers: "shift",
     },
   ];
@@ -214,7 +224,7 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
     shortcuts.push({
       id: "inspectorMac",
       toolId: "inspector",
-      shortcut: KeyShortcutsBundle.GetStringFromName("inspector.commandkey"),
+      shortcut: getLocalizedKeyShortcut("inspector.commandkey"),
       modifiers: "accel,shift",
     });
   }
@@ -231,17 +241,13 @@ function getProfilerKeyShortcuts() {
     // Start/stop the profiler
     {
       id: "profilerStartStop",
-      shortcut: KeyShortcutsBundle.GetStringFromName(
-        "profilerStartStop.commandkey"
-      ),
+      shortcut: getLocalizedKeyShortcut("profilerStartStop.commandkey"),
       modifiers: "control,shift",
     },
     // Capture a profile
     {
       id: "profilerCapture",
-      shortcut: KeyShortcutsBundle.GetStringFromName(
-        "profilerCapture.commandkey"
-      ),
+      shortcut: getLocalizedKeyShortcut("profilerCapture.commandkey"),
       modifiers: "control,shift",
     },
   ];
@@ -682,6 +688,12 @@ DevToolsStartup.prototype = {
   attachKeys(doc, keyShortcuts, keyset = doc.getElementById("devtoolsKeyset")) {
     const window = doc.defaultView;
     for (const key of keyShortcuts) {
+      if (!key.shortcut) {
+        // Shortcuts might be missing when a user relies on a language packs
+        // which is missing a recently uplifted shortcut. Language packs are
+        // typically updated a few days after a code uplift.
+        continue;
+      }
       const xulKey = this.createKey(doc, key, () => this.onKey(window, key));
       keyset.appendChild(xulKey);
     }
