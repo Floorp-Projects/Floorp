@@ -14,7 +14,7 @@ bc.onmessage = e => {
   bc.postMessage(e.data);
   bc.close();
 }
-bc.postMessage("ready");
+self.postMessage("ready");
 </script>
 
 <script type="application/javascript">
@@ -76,20 +76,20 @@ function test_worker() {
     return;
   }
 
-  const bc = new BroadcastChannel('b');
-  bc.onmessage = e => {
-    if (e.data === "ready") {
-      bc.postMessage({ wasmModule });
-      return;
-    }
-
-    ok(e.data.wasmModule instanceof WebAssembly.Module, "WasmModule received");
-    bc.close();
-    next();
-  };
-
   const blob = new Blob([document.getElementById('myWorker').textContent]);
   const w = new Worker(URL.createObjectURL(blob));
+  w.onmessage = e => {
+    is(e.data, "ready", "The worker is ready");
+    const bc = new BroadcastChannel('b');
+
+    bc.onmessage = ee => {
+      ok(ee.data.wasmModule instanceof WebAssembly.Module, "WasmModule received");
+      bc.close();
+      next();
+    };
+
+    bc.postMessage({ wasmModule });
+  };
 }
 
 const tests = [
