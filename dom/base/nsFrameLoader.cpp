@@ -2253,46 +2253,25 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
              "Shouldn't call CheckForRecursiveLoad on remote frames.");
 
   mDepthTooGreat = false;
-  rv = MaybeCreateDocShell();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  MOZ_ASSERT(GetDocShell(), "MaybeCreateDocShell succeeded, but null docShell");
-  if (!GetDocShell()) {
-    return NS_ERROR_FAILURE;
-  }
+  RefPtr<BrowsingContext> parentBC(
+      mOwnerContent->OwnerDoc()->GetBrowsingContext());
+  MOZ_ASSERT(parentBC, "How can we not have a parent here?");
 
-  // Check that we're still in the docshell tree.
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  GetDocShell()->GetTreeOwner(getter_AddRefs(treeOwner));
-  NS_WARNING_ASSERTION(treeOwner,
-                       "Trying to load a new url to a docshell without owner!");
-  NS_ENSURE_STATE(treeOwner);
-
-  if (GetDocShell()->ItemType() != nsIDocShellTreeItem::typeContent) {
-    // No need to do recursion-protection here XXXbz why not??  Do we really
-    // trust people not to screw up with non-content docshells?
+  if (!parentBC->IsContent()) {
     return NS_OK;
   }
 
   // Bug 8065: Don't exceed some maximum depth in content frames
   // (MAX_DEPTH_CONTENT_FRAMES)
-  nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-  GetDocShell()->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   int32_t depth = 0;
-  while (parentAsItem) {
+  for (BrowsingContext* bc = parentBC; bc; bc = bc->GetParent()) {
     ++depth;
-
     if (depth >= MAX_DEPTH_CONTENT_FRAMES) {
       mDepthTooGreat = true;
       NS_WARNING("Too many nested content frames so giving up");
 
       return NS_ERROR_UNEXPECTED;  // Too deep, give up!  (silently?)
     }
-
-    nsCOMPtr<nsIDocShellTreeItem> temp;
-    temp.swap(parentAsItem);
-    temp->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   }
 
   // Bug 136580: Check for recursive frame loading excluding about:srcdoc URIs.
@@ -2310,14 +2289,12 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
     }
   }
   int32_t matchCount = 0;
-  GetDocShell()->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
-  while (parentAsItem) {
+  for (BrowsingContext* bc = parentBC; bc; bc = bc->GetParent()) {
     // Check the parent URI with the URI we're loading
-    nsCOMPtr<nsIWebNavigation> parentAsNav(do_QueryInterface(parentAsItem));
-    if (parentAsNav) {
+    if (auto* docShell = nsDocShell::Cast(bc->GetDocShell())) {
       // Does the URI match the one we're about to load?
       nsCOMPtr<nsIURI> parentURI;
-      parentAsNav->GetCurrentURI(getter_AddRefs(parentURI));
+      docShell->GetCurrentURI(getter_AddRefs(parentURI));
       if (parentURI) {
         // Bug 98158/193011: We need to ignore data after the #
         bool equal;
@@ -2335,9 +2312,6 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
         }
       }
     }
-    nsCOMPtr<nsIDocShellTreeItem> temp;
-    temp.swap(parentAsItem);
-    temp->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   }
 
   return NS_OK;
