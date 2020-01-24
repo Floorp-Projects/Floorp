@@ -1,0 +1,25 @@
+{
+  "messages": [
+    {
+      "weight": 50,
+      "id": "10533",
+      "template": "simple_snippet",
+      "template_version": "1.0.0",
+      "content": {
+        "icon": "",
+        "text": "On January 30th Nightly will introduce dedicated profiles, making it simpler to run different installations of Firefox side by side. <link0> Learn what this means for you</link0>.",
+        "tall": false,
+        "do_not_autoblock": false,
+        "links": {
+          "link0": {
+            "url": "https://support.mozilla.org/kb/dedicated-profiles-firefox-installation/?utm_source=desktop-snippet&utm_medium=snippet&utm_campaign=nightly_profile_management&utm_term=10533&utm_content=nightly"
+          }
+        }
+      },
+      "campaign": "nightly-profile-management",
+      "targeting": "true",
+      "provider_url": "https://snippets.cdn.mozilla.net/6/Firefox/66.0a1/20190122215349/Darwin_x86_64-gcc3/en-US/default/Darwin%2018.0.0/default/default/",
+      "provider": "snippets"
+    }
+  ]
+}
