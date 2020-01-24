@@ -6,7 +6,7 @@
 
 Overrides [Toolbar.removeBrowserAction](../../mozilla.components.concept.toolbar/-toolbar/remove-browser-action.md)
 
-Removes a previously added action (see [addBrowserAction](add-browser-action.md)). If the provided
+Removes a previously added browser action (see [addBrowserAction](add-browser-action.md)). If the provided
 action was never added, this method has no effect.
 
 ### Parameters

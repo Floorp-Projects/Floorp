@@ -2,7 +2,7 @@
 
 # BrowserMenuSwitch
 
-`class BrowserMenuSwitch : `[`BrowserMenuCompoundButton`](../-browser-menu-compound-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuSwitch.kt#L16)
+`class BrowserMenuSwitch : `[`BrowserMenuCompoundButton`](../-browser-menu-compound-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuSwitch.kt#L18)
 
 A simple browser menu switch.
 
@@ -31,6 +31,7 @@ A simple browser menu switch.
 
 | Name | Summary |
 |---|---|
+| [asCandidate](as-candidate.md) | `fun asCandidate(context: <ERROR CLASS>): `[`CompoundMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-compound-menu-candidate/index.md)<br>Converts the menu item into a menu candidate. |
 | [getLayoutResource](get-layout-resource.md) | `fun getLayoutResource(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
 
 ### Inherited Functions

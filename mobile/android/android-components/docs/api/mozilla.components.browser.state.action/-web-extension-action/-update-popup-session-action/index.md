@@ -10,11 +10,12 @@ Keeps track of the last session used to display an extension action popup.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `UpdatePopupSessionAction(extensionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, popupSessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Keeps track of the last session used to display an extension action popup. |
+| [&lt;init&gt;](-init-.md) | `UpdatePopupSessionAction(extensionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, popupSessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, popupSession: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`? = null)`<br>Keeps track of the last session used to display an extension action popup. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [extensionId](extension-id.md) | `val extensionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [popupSessionId](popup-session-id.md) | `val popupSessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [popupSession](popup-session.md) | `val popupSession: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`?` |
+| [popupSessionId](popup-session-id.md) | `val popupSessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |

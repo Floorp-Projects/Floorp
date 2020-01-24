@@ -39,6 +39,7 @@
 | [mozilla.components.browser.menu.item](mozilla.components.browser.menu.item/index.md) |  |
 | [mozilla.components.browser.menu.view](mozilla.components.browser.menu.view/index.md) |  |
 | [mozilla.components.browser.menu2](mozilla.components.browser.menu2/index.md) |  |
+| [mozilla.components.browser.menu2.candidate](mozilla.components.browser.menu2.candidate/index.md) |  |
 | [mozilla.components.browser.search](mozilla.components.browser.search/index.md) |  |
 | [mozilla.components.browser.search.provider](mozilla.components.browser.search.provider/index.md) |  |
 | [mozilla.components.browser.search.provider.filter](mozilla.components.browser.search.provider.filter/index.md) |  |

@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`MalformedMessage(desc: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+`MalformedMessage(message: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
