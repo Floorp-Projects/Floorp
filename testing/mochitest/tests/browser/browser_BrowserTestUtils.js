@@ -11,7 +11,7 @@ add_task(async function() {
     "<body onclick='" +
     onClickEvt +
     "' style='margin: 0'>" +
-    "<button id='one' style='margin: 0; margin-left: 16px; margin-top: 14px; width: 30px; height: 40px;'>Test</button>" +
+    "<button id='one' style='margin: 0; margin-left: 16px; margin-top: 14px; width: 80px; height: 40px;'>Test</button>" +
     "<div onmousedown='event.preventDefault()' style='margin: 0; width: 80px; height: 60px;'>Other</div>" +
     "<span id='out'></span></body>";
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -23,7 +23,7 @@ add_task(async function() {
   await BrowserTestUtils.synthesizeMouseAtCenter("#one", {}, browser);
   let details = await getLastEventDetails(browser);
 
-  is(details, "button,31,34", "synthesizeMouseAtCenter");
+  is(details, "button,56,34", "synthesizeMouseAtCenter");
 
   await BrowserTestUtils.synthesizeMouse("#one", 4, 9, {}, browser);
   details = await getLastEventDetails(browser);
