@@ -22,7 +22,6 @@ UNIFIED_SOURCES += [
     'MessagePortChild.cpp',
     'MessagePortParent.cpp',
     'MessagePortService.cpp',
-    'SharedMessagePortMessage.cpp',
 ]
 
 IPDL_SOURCES += [
