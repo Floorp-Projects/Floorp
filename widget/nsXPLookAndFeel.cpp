@@ -1100,7 +1100,7 @@ void LookAndFeel::SetPrefersReducedMotionOverrideForTest(bool aValue) {
 
   AutoTArray<LookAndFeelInt, 1> lookAndFeelCache;
   lookAndFeelCache.AppendElement(
-      LookAndFeelInt{.id = eIntID_PrefersReducedMotion, {.value = value}});
+      LookAndFeelInt{.id = eIntID_PrefersReducedMotion, .value = value});
 
   SetIntCache(lookAndFeelCache);
 }
