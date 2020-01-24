@@ -761,9 +761,8 @@ class Selection final : public nsSupportsWeakReference,
                               int32_t*),
       int32_t* aInsertionPoint);
 
-  bool EqualsRangeAtPoint(const nsINode* aBeginNode, int32_t aBeginOffset,
-                          const nsINode* aEndNode, int32_t aEndOffset,
-                          int32_t aRangeIndex) const;
+  bool HasEqualRangeBoundariesAt(const nsRange& aRange,
+                                 int32_t aRangeIndex) const;
   /**
    * Works on the same principle as GetRangesForIntervalArray, however
    * instead this returns the indices into mRanges between which the
