@@ -630,7 +630,10 @@ WebConsoleCommands._registerOriginal("cd", function(owner, window) {
  *        Object to inspect.
  */
 WebConsoleCommands._registerOriginal("inspect", function(owner, object) {
-  const dbgObj = owner.makeDebuggeeValue(object);
+  const dbgObj = owner.preprocessDebuggerObject(
+    owner.makeDebuggeeValue(object)
+  );
+
   const grip = owner.createValueGrip(dbgObj);
   owner.helperResult = {
     type: "inspectObject",

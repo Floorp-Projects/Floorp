@@ -47,6 +47,11 @@ async function testInspectingFunction(hud) {
   );
   ok(true, "inspected source-mapped function is now selected in the debugger");
 
+  info("Test `inspect(test_bound)`");
+  execute(hud, "inspect(test_bound)");
+  await waitFor(expectedSourceSelected("test-simple-function.js", 7));
+  ok(true, "inspected bound target function is now selected in the debugger");
+
   function expectedSourceSelected(sourceFilename, sourceLine) {
     return () => {
       const dbg = hud.toolbox.getPanel("jsdebugger");
