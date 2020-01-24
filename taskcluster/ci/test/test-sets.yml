@@ -18,7 +18,6 @@
 common-tests:
     - marionette
     - mochitest-browser-chrome
-    - mochitest-chrome
 
 web-platform-tests:
     - web-platform-tests
@@ -339,10 +338,7 @@ linux32-tests:
 linux-common-tests:
     - marionette
     - mochitest-browser-chrome
-    - mochitest-chrome
 
-# List of tests that are green on ubuntu1804 docker image.
-# See Bug 1602863 for information.
 linux1804-tests:
     - cppunit
     - crashtest
@@ -353,6 +349,7 @@ linux1804-tests:
     - jittest
     - mochitest
     - mochitest-a11y
+    - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
@@ -378,6 +375,7 @@ linux1804-qr-tests:
     - jsreftest
     - mochitest
     - mochitest-a11y
+    - mochitest-chrome
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgpu
@@ -398,6 +396,7 @@ linux1804-ccov-tests:
     - jsreftest
     - mochitest
     - mochitest-a11y
+    - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
@@ -414,9 +413,6 @@ linux1804-ccov-tests:
     - test-verify-gpu
     - test-verify-wpt
     - xpcshell
-
-linux-qr-tests:
-    - mochitest-chrome
 
 linux-qr-smoketests:
     - crashtest
