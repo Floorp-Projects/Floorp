@@ -49,6 +49,7 @@ login-list-count =
   }
 login-list-sort-label-text = Sort by:
 login-list-name-option = Name (A-Z)
+login-list-name-reverse-option = Name (Z-A)
 login-list-breached-option = Breached Websites
 login-list-last-changed-option = Last Modified
 login-list-last-used-option = Last Used
