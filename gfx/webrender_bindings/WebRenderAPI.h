@@ -400,7 +400,6 @@ class DisplayListBuilder final {
   void Save();
   void Restore();
   void ClearSave();
-
   usize Dump(usize aIndent, const Maybe<usize>& aStart,
              const Maybe<usize>& aEnd);
 
@@ -579,20 +578,9 @@ class DisplayListBuilder final {
                      const wr::BorderRadius& aBorderRadius,
                      const wr::BoxShadowClipMode& aClipMode);
 
-  void StartCachedItem(wr::ItemKey aKey);
-  void EndCachedItem(wr::ItemKey aKey);
-  void ReuseItem(wr::ItemKey aKey);
-  void SetDisplayListCacheSize(const size_t aCacheSize);
-
   uint64_t CurrentClipChainId() const {
     return mCurrentSpaceAndClipChain.clip_chain;
   }
-
-  const wr::WrSpaceAndClipChain& CurrentSpaceAndClipChain() const {
-    return mCurrentSpaceAndClipChain;
-  }
-
-  const wr::PipelineId& CurrentPipelineId() const { return mPipelineId; }
 
   // Checks to see if the innermost enclosing fixed pos item has the same
   // ASR. If so, it returns the scroll target for that fixed-pos item.
