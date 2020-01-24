@@ -30,6 +30,7 @@ use smallvec::SmallVec;
 
 use crate::compile;
 use crate::utils::BasicError;
+use crate::wasm2clif::REF_TYPE;
 
 use self::low_level::*;
 
@@ -53,6 +54,9 @@ fn typecode_to_type(type_code: TypeCode) -> WasmResult<Option<ir::Type>> {
         TypeCode::I64 => Ok(Some(ir::types::I64)),
         TypeCode::F32 => Ok(Some(ir::types::F32)),
         TypeCode::F64 => Ok(Some(ir::types::F64)),
+        TypeCode::NullRef => Ok(Some(REF_TYPE)),
+        TypeCode::FuncRef => Ok(Some(REF_TYPE)),
+        TypeCode::AnyRef => Ok(Some(REF_TYPE)),
         TypeCode::BlockVoid => Ok(None),
         _ => Err(BasicError::new(format!("unknown type code: {:?}", type_code)).into()),
     }
