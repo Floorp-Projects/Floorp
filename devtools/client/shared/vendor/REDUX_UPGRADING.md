@@ -9,14 +9,14 @@
 ```bash
 git clone https://github.com/reactjs/redux
 cd redux
-git checkout v3.7.2 # checkout the right version tag
+git checkout v4.0.5 # checkout the right version tag
 ```
 
 ## Building
 
 ```bash
 npm install
-npm run build:umd
+npm run build
 cp dist/redux.js <gecko-dev>/devtools/client/shared/vendor/redux.js
 ```
 
@@ -26,7 +26,7 @@ cp dist/redux.js <gecko-dev>/devtools/client/shared/vendor/redux.js
 - Add the version number to the top of the file:
   ```
   /**
-   * react-redux v3.7.2
+   * react-redux v4.0.5
    */
   ```
 - Replace all instances of `Function('return this')()` with `globalThis`. See Bug 1473549.
