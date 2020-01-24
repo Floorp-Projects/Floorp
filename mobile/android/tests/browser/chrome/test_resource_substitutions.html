@@ -12,9 +12,9 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  const {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm"); /* global Promise */
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm"); /* global Services */
-  const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm"); /* global NetUtil */
+  const {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
   function readChannel(url) {
     let deferred = Promise.defer();

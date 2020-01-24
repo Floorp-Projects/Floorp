@@ -482,7 +482,7 @@ var GeckoViewUtils = {
       }
     }
 
-    return aLogger[aLevel.toLowerCase()](strs, ...aExprs);
+    aLogger[aLevel.toLowerCase()](strs, ...aExprs);
   },
 };
 

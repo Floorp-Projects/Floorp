@@ -51,7 +51,7 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
     if (!this.isContentWindow) {
       debug`loadURI: not a content window`;
       // This is an internal Gecko window, nothing to do
-      return;
+      return false;
     }
 
     return LoadURIDelegate.load(
@@ -72,7 +72,7 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
     if (!this.isContentWindow) {
       // This is an internal Gecko window, nothing to do
       debug`handleLoadError: not a content window`;
-      return;
+      return null;
     }
 
     if (aUri && LoadURIDelegate.isSafeBrowsingError(aError)) {

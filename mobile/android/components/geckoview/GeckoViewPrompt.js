@@ -484,7 +484,7 @@ PromptDelegate.prototype = {
   _showPrompt(aMsg) {
     let result = undefined;
     if (!this._domWin || !this._changeModalState(/* aEntering */ true)) {
-      return;
+      return result;
     }
     try {
       this.asyncShowPrompt(aMsg, res => (result = res));
