@@ -33,7 +33,7 @@ where
     T: Copy + Debug + MixingCoefficient,
     T::Coef: AddAssign + Copy + Debug + Default + Mul<T::Coef, Output = T::Coef>,
 {
-    pub fn new(input_channels: Vec<Channel>, output_channels: Vec<Channel>) -> Self {
+    pub fn new(input_channels: &[Channel], output_channels: &[Channel]) -> Self {
         Self {
             coefficient: Coefficient::create(input_channels, output_channels),
         }

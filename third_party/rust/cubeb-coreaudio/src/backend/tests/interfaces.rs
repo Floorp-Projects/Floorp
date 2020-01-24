@@ -331,6 +331,62 @@ fn test_ops_context_register_device_collection_changed() {
 }
 
 #[test]
+fn test_ops_context_register_device_collection_changed_with_a_duplex_stream() {
+    use std::thread;
+    use std::time::Duration;
+
+    extern "C" fn callback(_: *mut ffi::cubeb, got_called_ptr: *mut c_void) {
+        let got_called = unsafe { &mut *(got_called_ptr as *mut bool) };
+        *got_called = true;
+    }
+
+    test_ops_context_operation(
+        "context: register device collection changed and create a duplex stream",
+        |context_ptr| {
+            let got_called = Box::new(false);
+            let got_called_ptr = Box::into_raw(got_called);
+
+            // Register a callback monitoring both input and output device collection.
+            assert_eq!(
+                unsafe {
+                    OPS.register_device_collection_changed.unwrap()(
+                        context_ptr,
+                        ffi::CUBEB_DEVICE_TYPE_INPUT | ffi::CUBEB_DEVICE_TYPE_OUTPUT,
+                        Some(callback),
+                        got_called_ptr as *mut c_void,
+                    )
+                },
+                ffi::CUBEB_OK
+            );
+
+            // The aggregate device is very likely to be created in the system
+            // when creating a duplex stream. We need to make sure it won't trigger
+            // the callback.
+            test_default_duplex_stream_operation("duplex stream", |_stream| {
+                // Do nothing but wait for device-collection change.
+                thread::sleep(Duration::from_millis(200));
+            });
+
+            // Unregister the callback.
+            assert_eq!(
+                unsafe {
+                    OPS.register_device_collection_changed.unwrap()(
+                        context_ptr,
+                        ffi::CUBEB_DEVICE_TYPE_INPUT | ffi::CUBEB_DEVICE_TYPE_OUTPUT,
+                        None,
+                        got_called_ptr as *mut c_void,
+                    )
+                },
+                ffi::CUBEB_OK
+            );
+
+            let got_called = unsafe { Box::from_raw(got_called_ptr) };
+            assert!(!got_called.as_ref());
+        },
+    );
+}
+
+#[test]
 #[ignore]
 fn test_ops_context_register_device_collection_changed_manual() {
     test_ops_context_operation(
@@ -412,6 +468,40 @@ where
         name,
         ptr::null_mut(), // Use default input device.
         ptr::null_mut(), // No input parameters.
+        ptr::null_mut(), // Use default output device.
+        &mut output_params,
+        4096,            // TODO: Get latency by get_min_latency instead ?
+        None,            // No data callback.
+        None,            // No state callback.
+        ptr::null_mut(), // No user data pointer.
+        operation,
+    );
+}
+
+fn test_default_duplex_stream_operation<F>(name: &'static str, operation: F)
+where
+    F: FnOnce(*mut ffi::cubeb_stream),
+{
+    // Make sure the parameters meet the requirements of AudioUnitContext::stream_init
+    // (in the comments).
+    let mut input_params = ffi::cubeb_stream_params::default();
+    input_params.format = ffi::CUBEB_SAMPLE_FLOAT32NE;
+    input_params.rate = 48000;
+    input_params.channels = 1;
+    input_params.layout = ffi::CUBEB_LAYOUT_UNDEFINED;
+    input_params.prefs = ffi::CUBEB_STREAM_PREF_NONE;
+
+    let mut output_params = ffi::cubeb_stream_params::default();
+    output_params.format = ffi::CUBEB_SAMPLE_FLOAT32NE;
+    output_params.rate = 44100;
+    output_params.channels = 2;
+    output_params.layout = ffi::CUBEB_LAYOUT_UNDEFINED;
+    output_params.prefs = ffi::CUBEB_STREAM_PREF_NONE;
+
+    test_ops_stream_operation(
+        name,
+        ptr::null_mut(), // Use default input device.
+        &mut input_params,
         ptr::null_mut(), // Use default output device.
         &mut output_params,
         4096,            // TODO: Get latency by get_min_latency instead ?
