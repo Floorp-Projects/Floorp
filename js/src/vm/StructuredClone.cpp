@@ -1259,7 +1259,7 @@ bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
 bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   MOZ_ASSERT(obj->canUnwrapAs<SharedArrayBufferObject>());
 
-  if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
+  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
@@ -1305,7 +1305,7 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
   MOZ_ASSERT(obj->canUnwrapAs<WasmMemoryObject>());
 
   // Check the policy here so that we can report a sane error.
-  if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
+  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
@@ -2234,7 +2234,7 @@ bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
 }
 
 bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
-  if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
+  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
@@ -2298,7 +2298,7 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
     return false;
   }
 
-  if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
+  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
@@ -2643,7 +2643,8 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
       if (!allObjs.append(dummy)) {
         return false;
       }
-      JSObject* obj = callbacks->read(context(), this, tag, data, closure);
+      JSObject* obj =
+          callbacks->read(context(), this, cloneDataPolicy, tag, data, closure);
       if (!obj) {
         return false;
       }
