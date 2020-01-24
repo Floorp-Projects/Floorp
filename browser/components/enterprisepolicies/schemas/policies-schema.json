@@ -605,6 +605,27 @@
           }
         },
 
+        "Autoplay": {
+          "type": "object",
+          "properties": {
+            "Allow": {
+              "type": "array",
+              "strict": false,
+              "items": {
+                "type": "origin"
+              }
+            },
+
+            "Block": {
+              "type": "array",
+              "strict": false,
+              "items": {
+                "type": "origin"
+              }
+            }
+          }
+        },
+
         "Location": {
           "type": "object",
           "properties": {
