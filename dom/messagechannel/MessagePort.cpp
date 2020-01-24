@@ -22,6 +22,7 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/dom/RefMessageBodyService.h"
+#include "mozilla/dom/SharedMessageBody.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/MessagePortTimelineMarker.h"
 #include "mozilla/ScopeExit.h"
@@ -31,7 +32,6 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsPresContext.h"
-#include "SharedMessagePortMessage.h"
 
 #include "nsIBFCacheEntry.h"
 #include "mozilla/dom/Document.h"
@@ -55,7 +55,7 @@ class PostMessageRunnable final : public CancelableRunnable {
   friend class MessagePort;
 
  public:
-  PostMessageRunnable(MessagePort* aPort, SharedMessagePortMessage* aData)
+  PostMessageRunnable(MessagePort* aPort, SharedMessageBody* aData)
       : CancelableRunnable("dom::PostMessageRunnable"),
         mPort(aPort),
         mData(aData) {
@@ -164,7 +164,7 @@ class PostMessageRunnable final : public CancelableRunnable {
   ~PostMessageRunnable() {}
 
   RefPtr<MessagePort> mPort;
-  RefPtr<SharedMessagePortMessage> mData;
+  RefPtr<SharedMessageBody> mData;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MessagePort)
@@ -329,7 +329,7 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
+  RefPtr<SharedMessageBody> data = new SharedMessageBody();
 
   UniquePtr<AbstractTimelineMarker> start;
   UniquePtr<AbstractTimelineMarker> end;
@@ -387,14 +387,15 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mMessagesForTheOtherPort.IsEmpty());
 
-  AutoTArray<RefPtr<SharedMessagePortMessage>, 1> array;
+  AutoTArray<RefPtr<SharedMessageBody>, 1> array;
   array.AppendElement(data);
 
   AutoTArray<MessageData, 1> messages;
   // note: `messages` will borrow the underlying buffer, but this is okay
   // because reverse destruction order means `messages` will be destroyed prior
   // to `array`/`data`.
-  SharedMessagePortMessage::FromSharedToMessagesChild(mActor, array, messages);
+  SharedMessageBody::FromSharedToMessagesChild(mActor->Manager(), array,
+                                               messages);
   mActor->SendPostMessages(messages);
 }
 
@@ -463,7 +464,7 @@ void MessagePort::Dispatch() {
       break;
   }
 
-  RefPtr<SharedMessagePortMessage> data = mMessages.ElementAt(0);
+  RefPtr<SharedMessageBody> data = mMessages.ElementAt(0);
   mMessages.RemoveElementAt(0);
 
   mPostMessageRunnable = new PostMessageRunnable(this, data);
@@ -572,8 +573,8 @@ void MessagePort::Entangled(nsTArray<MessageData>& aMessages) {
   if (!mMessagesForTheOtherPort.IsEmpty()) {
     {
       nsTArray<MessageData> messages;
-      SharedMessagePortMessage::FromSharedToMessagesChild(
-          mActor, mMessagesForTheOtherPort, messages);
+      SharedMessageBody::FromSharedToMessagesChild(
+          mActor->Manager(), mMessagesForTheOtherPort, messages);
       mActor->SendPostMessages(messages);
     }
     // Because `messages` borrow the underlying JSStructuredCloneData buffers,
@@ -581,10 +582,10 @@ void MessagePort::Entangled(nsTArray<MessageData>& aMessages) {
     mMessagesForTheOtherPort.Clear();
   }
 
-  // We must convert the messages into SharedMessagePortMessages to avoid leaks.
-  FallibleTArray<RefPtr<SharedMessagePortMessage>> data;
-  if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedChild(aMessages,
-                                                                      data))) {
+  // We must convert the messages into SharedMessageBodys to avoid leaks.
+  FallibleTArray<RefPtr<SharedMessageBody>> data;
+  if (NS_WARN_IF(
+          !SharedMessageBody::FromMessagesToSharedChild(aMessages, data))) {
     DispatchError();
     return;
   }
@@ -631,9 +632,9 @@ void MessagePort::MessagesReceived(nsTArray<MessageData>& aMessages) {
 
   RemoveDocFromBFCache();
 
-  FallibleTArray<RefPtr<SharedMessagePortMessage>> data;
-  if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedChild(aMessages,
-                                                                      data))) {
+  FallibleTArray<RefPtr<SharedMessageBody>> data;
+  if (NS_WARN_IF(
+          !SharedMessageBody::FromMessagesToSharedChild(aMessages, data))) {
     DispatchError();
     return;
   }
@@ -660,8 +661,8 @@ void MessagePort::Disentangle() {
 
   {
     nsTArray<MessageData> messages;
-    SharedMessagePortMessage::FromSharedToMessagesChild(mActor, mMessages,
-                                                        messages);
+    SharedMessageBody::FromSharedToMessagesChild(mActor->Manager(), mMessages,
+                                                 messages);
     mActor->SendDisentangle(messages);
   }
 

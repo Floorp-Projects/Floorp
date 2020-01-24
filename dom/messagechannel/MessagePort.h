@@ -26,7 +26,7 @@ class MessageData;
 class MessagePortChild;
 struct PostMessageOptions;
 class PostMessageRunnable;
-class SharedMessagePortMessage;
+class SharedMessageBody;
 class RefMessageBodyService;
 class StrongWorkerRef;
 
@@ -210,8 +210,8 @@ class MessagePort final : public DOMEventTargetHelper {
 
   RefPtr<RefMessageBodyService> mRefMessageBodyService;
 
-  nsTArray<RefPtr<SharedMessagePortMessage>> mMessages;
-  nsTArray<RefPtr<SharedMessagePortMessage>> mMessagesForTheOtherPort;
+  nsTArray<RefPtr<SharedMessageBody>> mMessages;
+  nsTArray<RefPtr<SharedMessageBody>> mMessagesForTheOtherPort;
 
   nsAutoPtr<MessagePortIdentifier> mIdentifier;
 
