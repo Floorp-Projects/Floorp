@@ -20,6 +20,9 @@ permalink: /changelog/
   * Added support for loading images into error pages with `createUrlEncodedErrorPage`. These error pages load dynamically with javascript by parsing params in the URL
   * ⚠️ To use custom HTML & CSS with image error pages, resources **must** be located in the assets folder
 
+* **lib-crash**
+  * Glean reports now distinguishes between fatal and non-fatal native code crashes.
+
 # 28.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v27.0.0...v28.0.0)

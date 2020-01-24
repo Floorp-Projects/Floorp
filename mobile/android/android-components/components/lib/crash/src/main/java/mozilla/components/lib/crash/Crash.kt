@@ -31,6 +31,7 @@ sealed class Crash {
      * A crash caused by an uncaught exception.
      *
      * @property throwable The [Throwable] that caused the crash.
+     * @property breadcrumbs List of breadcrumbs to send with the crash report.
      */
     data class UncaughtExceptionCrash(
         val throwable: Throwable,
@@ -61,6 +62,7 @@ sealed class Crash {
      * @property isFatal Whether or not the crash was fatal or not: If true, the main application process was affected
      *                   by the crash. If false, only an internal process used by Gecko has crashed and the application
      *                   may be able to recover.
+     * @property breadcrumbs List of breadcrumbs to send with the crash report.
      */
     data class NativeCodeCrash(
         val minidumpPath: String?,
