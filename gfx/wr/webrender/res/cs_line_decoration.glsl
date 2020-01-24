@@ -9,41 +9,37 @@
 #define LINE_STYLE_DASHED       2
 #define LINE_STYLE_WAVY         3
 
-// Local space position
+// Fragment position in the coordinate system used for positioning decorations.
+// To keep the code independent of whether the line is horizontal or vertical,
+// vLocalPos.x is always parallel, and .y always perpendicular, to the line
+// being decorated.
 varying vec2 vLocalPos;
 
-flat varying float vAxisSelect;
 flat varying int vStyle;
 flat varying vec4 vParams;
 
 #ifdef WR_VERTEX_SHADER
 
-#define LINE_ORIENTATION_VERTICAL       0
-#define LINE_ORIENTATION_HORIZONTAL     1
-
+// The size of the mask tile we're rendering, in pixels.
 in vec4 aTaskRect;
+
+// The size of the mask tile. aLocalSize.x is always horizontal and .y vertical,
+// regardless of the line's orientation. The size is chosen by
+// prim_store::get_line_decoration_sizes.
 in vec2 aLocalSize;
+
+// A LINE_STYLE_* value, indicating what sort of line to draw.
 in int aStyle;
-in int aOrientation;
+
+// 0.0 for a horizontal line, 1.0 for a vertical line.
+in float aAxisSelect;
+
+// The thickness of the wavy line itself, not the amplitude of the waves (i.e.,
+// the thickness of the final decorated line).
 in float aWavyLineThickness;
 
 void main(void) {
-    vec2 size;
-
-    switch (aOrientation) {
-        case LINE_ORIENTATION_HORIZONTAL:
-            vAxisSelect = 0.0;
-            size = aLocalSize;
-            break;
-        case LINE_ORIENTATION_VERTICAL:
-            vAxisSelect = 1.0;
-            size = aLocalSize.yx;
-            break;
-        default:
-            vAxisSelect = 0.0;
-            size = vec2(0.0);
-    }
-
+    vec2 size = mix(aLocalSize, aLocalSize.yx, aAxisSelect);
     vStyle = aStyle;
 
     switch (vStyle) {
@@ -86,7 +82,7 @@ void main(void) {
             vParams = vec4(0.0);
     }
 
-    vLocalPos = aPosition.xy * aLocalSize;
+    vLocalPos = mix(aPosition.xy, aPosition.yx, aAxisSelect) * size;
 
     gl_Position = uTransform * vec4(aTaskRect.xy + aTaskRect.zw * aPosition.xy, 0.0, 1.0);
 }
@@ -98,12 +94,9 @@ void main(void) {
 
 void main(void) {
     // Find the appropriate distance to apply the step over.
-    vec2 local_pos = vLocalPos;
-    float aa_range = compute_aa_range(local_pos);
+    vec2 pos = vLocalPos;
+    float aa_range = compute_aa_range(pos);
     float alpha = 1.0;
-
-    // Select the x/y coord, depending on which axis this edge is.
-    vec2 pos = mix(local_pos.xy, local_pos.yx, vAxisSelect);
 
     switch (vStyle) {
         case LINE_STYLE_SOLID: {

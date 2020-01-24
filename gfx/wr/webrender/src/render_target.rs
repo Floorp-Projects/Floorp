@@ -773,7 +773,10 @@ impl TextureCacheRenderTarget {
                     task_rect: target_rect.0.to_f32(),
                     local_size: info.local_size,
                     style: info.style as i32,
-                    orientation: info.orientation as i32,
+                    axis_select: match info.orientation {
+                        LineOrientation::Horizontal => 0.0,
+                        LineOrientation::Vertical => 1.0,
+                    },
                     wavy_line_thickness: info.wavy_line_thickness,
                 });
             }
@@ -1056,7 +1059,7 @@ pub struct LineDecorationJob {
     pub local_size: LayoutSize,
     pub wavy_line_thickness: f32,
     pub style: i32,
-    pub orientation: i32,
+    pub axis_select: f32,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
