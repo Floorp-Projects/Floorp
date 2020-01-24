@@ -336,7 +336,7 @@ class PackageFrontend(MachCommandBase):
             record = ArtifactRecord(task_id, name)
             records[record.filename] = record
 
-        for record in records.itervalues():
+        for record in six.itervalues(records):
             self.log(logging.INFO, 'artifact', {'name': record.basename},
                      'Setting up artifact {name}')
             valid = False
