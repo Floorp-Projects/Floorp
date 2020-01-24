@@ -97,11 +97,7 @@ class MOZ_STACK_CLASS AutoSavePendingResult {
 // static
 const nsXPTInterfaceInfo* nsXPCWrappedJS::GetInterfaceInfo(REFNSIID aIID) {
   const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
-  if (!info) {
-    return nullptr;
-  }
-
-  if (info->IsBuiltinClass() || !nsXPConnect::IsISupportsDescendant(info)) {
+  if (!info || info->IsBuiltinClass()) {
     return nullptr;
   }
 
