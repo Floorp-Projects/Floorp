@@ -1220,26 +1220,6 @@ public class GeckoViewActivity
             }
         }
 
-        class ExampleAutoplayCallback implements GeckoSession.PermissionDelegate.Callback {
-            private final GeckoSession.PermissionDelegate.Callback mCallback;
-            private final String mUri;
-            ExampleAutoplayCallback(final GeckoSession.PermissionDelegate.Callback callback, String uri) {
-                mCallback = callback;
-                mUri = uri;
-            }
-
-            @Override
-            public void reject() {
-                mCallback.reject();
-            }
-
-            @Override
-            public void grant() {
-                mAcceptedAutoplay.add(mUri);
-                mCallback.grant();
-            }
-        }
-
         public void onRequestPermissionsResult(final String[] permissions,
                                                final int[] grantResults) {
             if (mCallback == null) {
@@ -1296,14 +1276,9 @@ public class GeckoViewActivity
             } else if (PERMISSION_XR == type) {
                 resId = R.string.request_xr;
             } else if (PERMISSION_AUTOPLAY_AUDIBLE == type || PERMISSION_AUTOPLAY_INAUDIBLE == type) {
-                if (mAcceptedAutoplay.contains(uri)) {
-                    Log.w(LOGTAG, "Autoplay for " + uri + " already granted by user.");
-                    callback.grant();
-                    return;
-                }
-
-                resId = R.string.request_autoplay;
-                contentPermissionCallback = new ExampleAutoplayCallback(callback, uri);
+                Log.d(LOGTAG, "Rejecting autoplay request");
+                callback.reject();
+                return;
             } else {
                 Log.w(LOGTAG, "Unknown permission: " + type);
                 callback.reject();
