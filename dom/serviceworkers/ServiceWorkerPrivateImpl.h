@@ -85,7 +85,8 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
   nsresult SendFetchEvent(RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
                           nsCOMPtr<nsIInterceptedChannel> aChannel,
                           const nsAString& aClientId,
-                          const nsAString& aResultingClientId) override;
+                          const nsAString& aResultingClientId,
+                          bool aIsReload) override;
 
   nsresult SpawnWorkerIfNeeded() override;
 

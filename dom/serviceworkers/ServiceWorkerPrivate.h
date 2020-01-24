@@ -136,7 +136,7 @@ class ServiceWorkerPrivate final {
     virtual nsresult SendFetchEvent(
         RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
         nsCOMPtr<nsIInterceptedChannel> aChannel, const nsAString& aClientId,
-        const nsAString& aResultingClientId) = 0;
+        const nsAString& aResultingClientId, bool aIsReload) = 0;
 
     virtual nsresult SpawnWorkerIfNeeded() = 0;
 
@@ -177,7 +177,7 @@ class ServiceWorkerPrivate final {
 
   nsresult SendFetchEvent(nsIInterceptedChannel* aChannel,
                           nsILoadGroup* aLoadGroup, const nsAString& aClientId,
-                          const nsAString& aResultingClientId);
+                          const nsAString& aResultingClientId, bool aIsReload);
 
   bool MaybeStoreISupports(nsISupports* aSupports);
 

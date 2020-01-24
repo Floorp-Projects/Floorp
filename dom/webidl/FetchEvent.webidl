@@ -15,6 +15,7 @@ interface FetchEvent : ExtendableEvent {
   [SameObject, BinaryName="request_"] readonly attribute Request request;
   readonly attribute DOMString clientId;
   readonly attribute DOMString resultingClientId;
+  readonly attribute boolean isReload;
 
   [Throws]
   void respondWith(Promise<Response> r);
@@ -24,4 +25,5 @@ dictionary FetchEventInit : EventInit {
   required Request request;
   DOMString clientId = "";
   DOMString resultingClientId = "";
+  boolean isReload = false;
 };
