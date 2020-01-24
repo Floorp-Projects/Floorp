@@ -1113,6 +1113,15 @@ var Policies = {
         setDefaultPermission("microphone", param.Microphone);
       }
 
+      if (param.Autoplay) {
+        addAllowDenyPermissions(
+          "autoplay-media",
+          param.Autoplay.Allow,
+          param.Autoplay.Block
+        );
+        setDefaultPermission("autoplay-media", param.Autoplay);
+      }
+
       if (param.Location) {
         addAllowDenyPermissions(
           "geo",
