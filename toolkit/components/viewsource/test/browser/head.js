@@ -87,9 +87,13 @@ async function openViewSource() {
  * @param aCSSSelector - used to specify a node within the selection to
  *                       view the source of. It is expected that this node is
  *                       within an existing selection.
+ * @param aBrowsingContext - browsing context containing a subframe (optional).
  * @returns the new tab which shows the source.
  */
-async function openViewPartialSource(aCSSSelector) {
+async function openViewPartialSource(
+  aCSSSelector,
+  aBrowsingContext = gBrowser.selectedBrowser
+) {
   let contentAreaContextMenuPopup = document.getElementById(
     "contentAreaContextMenu"
   );
@@ -100,7 +104,7 @@ async function openViewPartialSource(aCSSSelector) {
   await BrowserTestUtils.synthesizeMouseAtCenter(
     aCSSSelector,
     { type: "contextmenu", button: 2 },
-    gBrowser.selectedBrowser
+    aBrowsingContext
   );
   await popupShownPromise;
 
@@ -161,13 +165,12 @@ async function openViewFrameSourceTab(aCSSSelector) {
  * complete.
  */
 function waitForSourceLoaded(tab) {
-  return new Promise(resolve => {
-    let mm = tab.linkedBrowser.messageManager;
-    mm.addMessageListener("ViewSource:SourceLoaded", function sourceLoaded() {
-      mm.removeMessageListener("ViewSource:SourceLoaded", sourceLoaded);
-      setTimeout(resolve, 0);
-    });
-  });
+  return BrowserTestUtils.waitForContentEvent(
+    tab.linkedBrowser,
+    "pageshow",
+    false,
+    event => String(event.target.location).startsWith("view-source")
+  );
 }
 
 /**

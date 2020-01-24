@@ -4,4 +4,3 @@
 
 toolkit.jar:
   content/global/viewSourceUtils.js         (content/viewSourceUtils.js)
-  content/global/viewSource-content.js      (content/viewSource-content.js)

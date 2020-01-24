@@ -9,11 +9,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
+var EXPORTED_SYMBOLS = ["ViewSourcePageChild"];
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["NodeFilter"]);
 
@@ -28,280 +24,105 @@ const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 const MARK_SELECTION_START = "\uFDD0";
 const MARK_SELECTION_END = "\uFDEF";
 
-var global = this;
+/**
+ * When showing selection source, chrome will construct a page fragment to
+ * show, and then instruct content to draw a selection after load.  This is
+ * set true when there is a pending request to draw selection.
+ */
+let gNeedsDrawSelection = false;
 
 /**
- * ViewSourceContent should be loaded in the <xul:browser> of the
- * view source window, and initialized as soon as it has loaded.
+ * Start at a specific line number.
  */
-var ViewSourceContent = {
-  /**
-   * These are the messages that ViewSourceContent is prepared to listen
-   * for. If you need ViewSourceContent to handle more messages, add them
-   * here.
-   */
-  messages: [
-    "ViewSource:LoadSource",
-    "ViewSource:LoadSourceWithSelection",
-    "ViewSource:GoToLine",
-  ],
+let gInitialLineNumber = -1;
 
-  /**
-   * When showing selection source, chrome will construct a page fragment to
-   * show, and then instruct content to draw a selection after load.  This is
-   * set true when there is a pending request to draw selection.
-   */
-  needsDrawSelection: false,
-
-  get isViewSource() {
-    let uri = content.document.documentURI;
-    return uri.startsWith("view-source:");
+/**
+ * In-page context menu items that are injected after page load.
+ */
+let gContextMenuItems = [
+  {
+    id: "goToLine",
+    accesskey: true,
+    handler(actor) {
+      actor.sendAsyncMessage("ViewSource:PromptAndGoToLine");
+    },
   },
-
-  get isAboutBlank() {
-    let uri = content.document.documentURI;
-    return uri == "about:blank";
+  {
+    id: "wrapLongLines",
+    get checked() {
+      return Services.prefs.getBoolPref("view_source.wrap_long_lines");
+    },
+    handler(actor) {
+      actor.toggleWrapping();
+    },
   },
+  {
+    id: "highlightSyntax",
+    get checked() {
+      return Services.prefs.getBoolPref("view_source.syntax_highlight");
+    },
+    handler(actor) {
+      actor.toggleSyntaxHighlighting();
+    },
+  },
+];
 
-  /**
-   * This should be called as soon as this frame script has loaded.
-   */
-  init() {
-    this.messages.forEach(msgName => {
-      addMessageListener(msgName, this);
+class ViewSourcePageChild extends JSWindowActorChild {
+  constructor() {
+    super();
+
+    XPCOMUtils.defineLazyGetter(this, "bundle", function() {
+      return Services.strings.createBundle(BUNDLE_URL);
     });
+  }
 
-    addEventListener("pagehide", this, true);
-    addEventListener("pageshow", this, true);
-    addEventListener("click", this);
-    addEventListener("unload", this);
-    Services.els.addSystemEventListener(global, "contextmenu", this, false);
-  },
+  static setNeedsDrawSelection(value) {
+    gNeedsDrawSelection = value;
+  }
 
-  /**
-   * This should be called when the frame script is being unloaded,
-   * and the browser is tearing down.
-   */
-  uninit() {
-    this.messages.forEach(msgName => {
-      removeMessageListener(msgName, this);
-    });
+  static setInitialLineNumber(value) {
+    gInitialLineNumber = value;
+  }
 
-    removeEventListener("pagehide", this, true);
-    removeEventListener("pageshow", this, true);
-    removeEventListener("click", this);
-    removeEventListener("unload", this);
-
-    Services.els.removeSystemEventListener(global, "contextmenu", this, false);
-  },
-
-  /**
-   * Anything added to the messages array will get handled here, and should
-   * get dispatched to a specific function for the message name.
-   */
   receiveMessage(msg) {
-    if (!this.isViewSource && !this.isAboutBlank) {
-      return;
+    if (msg.name == "ViewSource:GoToLine") {
+      this.goToLine(msg.data.lineNumber);
     }
-    let data = msg.data;
-    switch (msg.name) {
-      case "ViewSource:LoadSource":
-        this.viewSource(
-          data.URL,
-          data.outerWindowID,
-          data.lineNumber,
-          data.shouldWrap
-        );
-        break;
-      case "ViewSource:LoadSourceWithSelection":
-        this.viewSourceWithSelection(
-          data.URL,
-          data.drawSelection,
-          data.baseURI
-        );
-        break;
-      case "ViewSource:GoToLine":
-        this.goToLine(data.lineNumber);
-        break;
-    }
-  },
+  }
 
   /**
    * Any events should get handled here, and should get dispatched to
    * a specific function for the event type.
    */
   handleEvent(event) {
-    if (!this.isViewSource) {
-      return;
-    }
     switch (event.type) {
-      case "pagehide":
-        this.onPageHide(event);
-        break;
       case "pageshow":
         this.onPageShow(event);
         break;
       case "click":
         this.onClick(event);
         break;
-      case "unload":
-        this.uninit();
-        break;
-      case "contextmenu":
-        this.onContextMenu(event);
-        break;
     }
-  },
-
-  /**
-   * A getter for the view source string bundle.
-   */
-  get bundle() {
-    delete this.bundle;
-    this.bundle = Services.strings.createBundle(BUNDLE_URL);
-    return this.bundle;
-  },
+  }
 
   /**
    * A shortcut to the nsISelectionController for the content.
    */
   get selectionController() {
-    return docShell
+    return this.docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsISelectionDisplay)
       .QueryInterface(Ci.nsISelectionController);
-  },
+  }
 
   /**
    * A shortcut to the nsIWebBrowserFind for the content.
    */
   get webBrowserFind() {
-    return docShell
+    return this.docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebBrowserFind);
-  },
-
-  /**
-   * Called when the parent sends a message to view some source code.
-   *
-   * @param URL (required)
-   *        The URL string of the source to be shown.
-   * @param outerWindowID (optional)
-   *        The outerWindowID of the content window that has hosted
-   *        the document, in case we want to retrieve it from the network
-   *        cache.
-   * @param lineNumber (optional)
-   *        The line number to focus as soon as the source has finished
-   *        loading.
-   */
-  viewSource(URL, outerWindowID, lineNumber) {
-    let pageDescriptor, forcedCharSet;
-
-    if (outerWindowID) {
-      let contentWindow = Services.wm.getOuterWindowWithId(outerWindowID);
-      let otherDocShell = contentWindow.docShell;
-
-      try {
-        pageDescriptor = otherDocShell.QueryInterface(Ci.nsIWebPageDescriptor)
-          .currentDescriptor;
-      } catch (e) {
-        // We couldn't get the page descriptor, so we'll probably end up re-retrieving
-        // this document off of the network.
-      }
-
-      let utils = contentWindow.windowUtils;
-      let doc = contentWindow.document;
-      forcedCharSet = utils.docCharsetIsForced ? doc.characterSet : null;
-    }
-
-    this.loadSource(URL, pageDescriptor, lineNumber, forcedCharSet);
-  },
-
-  /**
-   * Common utility function used by both the current and deprecated APIs
-   * for loading source.
-   *
-   * @param URL (required)
-   *        The URL string of the source to be shown.
-   * @param pageDescriptor (optional)
-   *        The currentDescriptor off of an nsIWebPageDescriptor, in the
-   *        event that the caller wants to try to load the source out of
-   *        the network cache.
-   * @param lineNumber (optional)
-   *        The line number to focus as soon as the source has finished
-   *        loading.
-   * @param forcedCharSet (optional)
-   *        The document character set to use instead of the default one.
-   */
-  loadSource(URL, pageDescriptor, lineNumber, forcedCharSet) {
-    const viewSrcURL = "view-source:" + URL;
-
-    if (forcedCharSet) {
-      try {
-        docShell.charset = forcedCharSet;
-      } catch (e) {
-        /* invalid charset */
-      }
-    }
-
-    if (lineNumber && lineNumber > 0) {
-      let doneLoading = event => {
-        // Ignore possible initial load of about:blank
-        if (this.isAboutBlank || !content.document.body) {
-          return;
-        }
-        this.goToLine(lineNumber);
-        removeEventListener("pageshow", doneLoading);
-      };
-
-      addEventListener("pageshow", doneLoading);
-    }
-
-    if (!pageDescriptor) {
-      this.loadSourceFromURL(viewSrcURL);
-      return;
-    }
-
-    try {
-      let pageLoader = docShell.QueryInterface(Ci.nsIWebPageDescriptor);
-      pageLoader.loadPage(
-        pageDescriptor,
-        Ci.nsIWebPageDescriptor.DISPLAY_AS_SOURCE
-      );
-    } catch (e) {
-      // We were not able to load the source from the network cache.
-      this.loadSourceFromURL(viewSrcURL);
-      return;
-    }
-
-    let shEntrySource = pageDescriptor.QueryInterface(Ci.nsISHEntry);
-    let shistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory
-      .legacySHistory;
-    let shEntry = shistory.createEntry();
-    shEntry.URI = Services.io.newURI(viewSrcURL);
-    shEntry.title = viewSrcURL;
-    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    shEntry.triggeringPrincipal = systemPrincipal;
-    shEntry.setLoadTypeAsHistory();
-    shEntry.cacheKey = shEntrySource.cacheKey;
-    shistory.addEntry(shEntry, true);
-  },
-
-  /**
-   * Load some URL in the browser.
-   *
-   * @param URL
-   *        The URL string to load.
-   */
-  loadSourceFromURL(URL) {
-    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let loadURIOptions = {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      loadFlags,
-    };
-    webNav.loadURI(URL, loadURIOptions);
-  },
+  }
 
   /**
    * This handler is for click events from:
@@ -313,11 +134,11 @@ var ViewSourceContent = {
     let target = event.originalTarget;
     // Check for content menu actions
     if (target.id) {
-      this.contextMenuItems.forEach(itemSpec => {
+      gContextMenuItems.forEach(itemSpec => {
         if (itemSpec.id !== target.id) {
           return;
         }
-        itemSpec.handler.call(this, event);
+        itemSpec.handler(this);
         event.stopPropagation();
       });
     }
@@ -334,10 +155,10 @@ var ViewSourceContent = {
 
       if (target == errorDoc.getElementById("goBackButton")) {
         // Instead of loading some safe page, just close the window
-        sendAsyncMessage("ViewSource:Close");
+        this.sendAsyncMessage("ViewSource:Close");
       }
     }
-  },
+  }
 
   /**
    * Handler for the pageshow event.
@@ -346,57 +167,27 @@ var ViewSourceContent = {
    *        The pageshow event being handled.
    */
   onPageShow(event) {
-    content.focus();
+    this.contentWindow.focus();
 
     // If we need to draw the selection, wait until an actual view source page
     // has loaded, instead of about:blank.
     if (
-      this.needsDrawSelection &&
-      content.document.documentURI.startsWith("view-source:")
+      gNeedsDrawSelection &&
+      this.document.documentURI.startsWith("view-source:")
     ) {
-      this.needsDrawSelection = false;
+      gNeedsDrawSelection = false;
       this.drawSelection();
     }
 
-    if (content.document.body) {
+    if (gInitialLineNumber >= 0) {
+      this.goToLine(gInitialLineNumber);
+      gInitialLineNumber = -1;
+    }
+
+    if (this.document.body) {
       this.injectContextMenu();
     }
-
-    sendAsyncMessage("ViewSource:SourceLoaded");
-  },
-
-  /**
-   * Handler for the pagehide event.
-   *
-   * @param event
-   *        The pagehide event being handled.
-   */
-  onPageHide(event) {
-    sendAsyncMessage("ViewSource:SourceUnloaded");
-  },
-
-  onContextMenu(event) {
-    let node = event.target;
-
-    let result = {
-      isEmail: false,
-      isLink: false,
-      href: "",
-      // We have to pass these in the event that we're running in
-      // a remote browser, so that ViewSourceChrome knows where to
-      // open the context menu.
-      screenX: event.screenX,
-      screenY: event.screenY,
-    };
-
-    if (node && node.localName == "a") {
-      result.isLink = node.href.startsWith("view-source:");
-      result.isEmail = node.href.startsWith("mailto:");
-      result.href = node.href.substring(node.href.indexOf(":") + 1);
-    }
-
-    sendSyncMessage("ViewSource:ContextMenuOpening", result);
-  },
+  }
 
   /**
    * Attempts to go to a particular line in the source code being
@@ -409,7 +200,7 @@ var ViewSourceContent = {
    *        The line number to attempt to go to.
    */
   goToLine(lineNumber) {
-    let body = content.document.body;
+    let body = this.document.body;
 
     // The source document is made up of a number of pre elements with
     // id attributes in the format <pre id="line123">, meaning that
@@ -439,11 +230,11 @@ var ViewSourceContent = {
     let found = this.findLocation(pre, lineNumber, null, -1, false, result);
 
     if (!found) {
-      sendAsyncMessage("ViewSource:GoToLine:Failed");
+      this.sendAsyncMessage("ViewSource:GoToLine:Failed");
       return;
     }
 
-    let selection = content.getSelection();
+    let selection = this.document.defaultView.getSelection();
     selection.removeAllRanges();
 
     // In our case, the range's startOffset is after "\n" on the previous line.
@@ -484,8 +275,8 @@ var ViewSourceContent = {
       true
     );
 
-    sendAsyncMessage("ViewSource:GoToLine:Success", { lineNumber });
-  },
+    this.sendAsyncMessage("ViewSource:GoToLine:Success", { lineNumber });
+  }
 
   /**
    * Some old code from the original view source implementation. Original
@@ -514,7 +305,7 @@ var ViewSourceContent = {
     let curLine = pre.id ? parseInt(pre.id.substring(4)) : 1;
 
     // Walk through each of the text nodes and count newlines.
-    let treewalker = content.document.createTreeWalker(
+    let treewalker = this.document.createTreeWalker(
       pre,
       NodeFilter.SHOW_TEXT,
       null
@@ -573,7 +364,7 @@ var ViewSourceContent = {
             break;
           }
         } else if (curLine == lineNumber && !("range" in result)) {
-          result.range = content.document.createRange();
+          result.range = this.document.createRange();
           result.range.setStart(textNode, curPos);
 
           // This will always be overridden later, except when we look for
@@ -589,17 +380,17 @@ var ViewSourceContent = {
     }
 
     return found || "range" in result;
-  },
+  }
 
   /**
    * Toggles the "wrap" class on the document body, which sets whether
    * or not long lines are wrapped.  Notifies parent to update the pref.
    */
   toggleWrapping() {
-    let body = content.document.body;
+    let body = this.document.body;
     let state = body.classList.toggle("wrap");
-    sendAsyncMessage("ViewSource:StoreWrapping", { state });
-  },
+    this.sendAsyncMessage("ViewSource:StoreWrapping", { state });
+  }
 
   /**
    * Toggles the "highlight" class on the document body, which sets whether
@@ -607,32 +398,10 @@ var ViewSourceContent = {
    * pref.
    */
   toggleSyntaxHighlighting() {
-    let body = content.document.body;
+    let body = this.document.body;
     let state = body.classList.toggle("highlight");
-    sendAsyncMessage("ViewSource:StoreSyntaxHighlighting", { state });
-  },
-
-  /**
-   * Loads a view source selection showing the given view-source url and
-   * highlight the selection.
-   *
-   * @param uri view-source uri to show
-   * @param drawSelection true to highlight the selection
-   * @param baseURI base URI of the original document
-   */
-  viewSourceWithSelection(uri, drawSelection, baseURI) {
-    this.needsDrawSelection = drawSelection;
-
-    // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
-    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let loadURIOptions = {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      loadFlags,
-      baseURI: Services.io.newURI(baseURI),
-    };
-    webNav.loadURI(uri, loadURIOptions);
-  },
+    this.sendAsyncMessage("ViewSource:StoreSyntaxHighlighting", { state });
+  }
 
   /**
    * Using special markers left in the serialized source, this helper makes the
@@ -640,7 +409,7 @@ var ViewSourceContent = {
    * selected on the inflated view-source DOM.
    */
   drawSelection() {
-    content.document.title = this.bundle.GetStringFromName(
+    this.document.title = this.bundle.GetStringFromName(
       "viewSelectionSourceTitle"
     );
 
@@ -677,7 +446,7 @@ var ViewSourceContent = {
     var startLength = MARK_SELECTION_START.length;
     findInst.findNext();
 
-    var selection = content.getSelection();
+    var selection = this.document.defaultView.getSelection();
     if (!selection.rangeCount) {
       return;
     }
@@ -732,44 +501,13 @@ var ViewSourceContent = {
     findInst.wrapFind = wrapFind;
     findInst.findBackwards = findBackwards;
     findInst.searchString = searchString;
-  },
-
-  /**
-   * In-page context menu items that are injected after page load.
-   */
-  contextMenuItems: [
-    {
-      id: "goToLine",
-      accesskey: true,
-      handler() {
-        sendAsyncMessage("ViewSource:PromptAndGoToLine");
-      },
-    },
-    {
-      id: "wrapLongLines",
-      get checked() {
-        return Services.prefs.getBoolPref("view_source.wrap_long_lines");
-      },
-      handler() {
-        this.toggleWrapping();
-      },
-    },
-    {
-      id: "highlightSyntax",
-      get checked() {
-        return Services.prefs.getBoolPref("view_source.syntax_highlight");
-      },
-      handler() {
-        this.toggleSyntaxHighlighting();
-      },
-    },
-  ],
+  }
 
   /**
    * Add context menu items for view source specific actions.
    */
   injectContextMenu() {
-    let doc = content.document;
+    let doc = this.document;
 
     let menu = doc.createElementNS(NS_XHTML, "menu");
     menu.setAttribute("type", "context");
@@ -777,7 +515,7 @@ var ViewSourceContent = {
     doc.body.appendChild(menu);
     doc.body.setAttribute("contextmenu", "actions");
 
-    this.contextMenuItems.forEach(itemSpec => {
+    gContextMenuItems.forEach(itemSpec => {
       let item = doc.createElementNS(NS_XHTML, "menuitem");
       item.setAttribute("id", itemSpec.id);
       let labelName = `context_${itemSpec.id}_label`;
@@ -797,14 +535,14 @@ var ViewSourceContent = {
     });
 
     this.updateContextMenu();
-  },
+  }
 
   /**
    * Update state of checkbox-style context menu items.
    */
   updateContextMenu() {
-    let doc = content.document;
-    this.contextMenuItems.forEach(itemSpec => {
+    let doc = this.document;
+    gContextMenuItems.forEach(itemSpec => {
       if (!("checked" in itemSpec)) {
         return;
       }
@@ -815,6 +553,5 @@ var ViewSourceContent = {
         item.removeAttribute("checked");
       }
     });
-  },
-};
-ViewSourceContent.init();
+  }
+}
