@@ -51,3 +51,24 @@ add_task(async function testClickingSidebarEntriesChangesView() {
 
   await closeView(win);
 });
+
+add_task(async function testClickingSidebarPaddingNoChange() {
+  let win = await loadInitialView("theme");
+  let { managerWindow } = win;
+
+  let loaded = waitForViewLoad(win);
+  getAddonCard(win, THEME_ID).click();
+  await loaded;
+
+  ok(
+    managerWindow.gViewController.currentViewId.startsWith("addons://detail/"),
+    "The detail view loaded"
+  );
+
+  let themeCategory = managerWindow.document.getElementById("category-theme");
+  EventUtils.synthesizeMouse(themeCategory, -5, -5, {}, managerWindow);
+
+  ok(!managerWindow.gViewController.isLoading, "No view is loading");
+
+  await closeView(win);
+});
