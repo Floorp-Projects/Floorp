@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "RefMessageBodyService.h"
 #include "SharedMessagePortMessage.h"
 #include "MessagePort.h"
 #include "MessagePortChild.h"
@@ -18,6 +19,62 @@ namespace mozilla {
 using namespace ipc;
 
 namespace dom {
+
+SharedMessagePortMessage::SharedMessagePortMessage() : mRefDataId({}) {}
+
+void SharedMessagePortMessage::Write(
+    JSContext* aCx, JS::Handle<JS::Value> aValue,
+    JS::Handle<JS::Value> aTransfers, nsID& aPortID,
+    RefMessageBodyService* aRefMessageBodyService, ErrorResult& aRv) {
+  MOZ_ASSERT(!mCloneData && !mRefData);
+  MOZ_ASSERT(aRefMessageBodyService);
+
+  mCloneData = MakeUnique<ipc::StructuredCloneData>(
+      JS::StructuredCloneScope::UnknownDestination);
+  mCloneData->Write(aCx, aValue, aTransfers, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  if (mCloneData->CloneScope() == JS::StructuredCloneScope::DifferentProcess) {
+    return;
+  }
+
+  MOZ_ASSERT(mCloneData->CloneScope() == JS::StructuredCloneScope::SameProcess);
+  RefPtr<RefMessageBody> refData =
+      new RefMessageBody(aPortID, std::move(mCloneData));
+
+  mRefDataId = aRefMessageBodyService->Register(refData.forget(), aRv);
+}
+
+void SharedMessagePortMessage::Read(
+    JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+    RefMessageBodyService* aRefMessageBodyService, ErrorResult& aRv) {
+  MOZ_ASSERT(aRefMessageBodyService);
+
+  if (mCloneData) {
+    return mCloneData->Read(aCx, aValue, aRv);
+  }
+
+  MOZ_ASSERT(!mRefData);
+  mRefData = aRefMessageBodyService->Steal(mRefDataId);
+  if (!mRefData) {
+    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    return;
+  }
+
+  mRefData->CloneData()->Read(aCx, aValue, aRv);
+}
+
+bool SharedMessagePortMessage::TakeTransferredPortsAsSequence(
+    Sequence<OwningNonNull<mozilla::dom::MessagePort>>& aPorts) {
+  if (mCloneData) {
+    return mCloneData->TakeTransferredPortsAsSequence(aPorts);
+  }
+
+  MOZ_ASSERT(mRefData);
+  return mRefData->CloneData()->TakeTransferredPortsAsSequence(aPorts);
+}
 
 /* static */
 void SharedMessagePortMessage::FromSharedToMessagesChild(
@@ -34,18 +91,15 @@ void SharedMessagePortMessage::FromSharedToMessagesChild(
   for (auto& data : aData) {
     MessageData* message = aArray.AppendElement();
 
-    if (data->CloneScope() ==
-        StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
+    if (data->mCloneData) {
       ClonedMessageData clonedData;
-      data->BuildClonedMessageDataForBackgroundChild(backgroundManager,
-                                                     clonedData);
+      data->mCloneData->BuildClonedMessageDataForBackgroundChild(
+          backgroundManager, clonedData);
       *message = clonedData;
       continue;
     }
 
-    MOZ_ASSERT(data->CloneScope() ==
-               StructuredCloneHolder::StructuredCloneScope::SameProcess);
-    *message = RefMessageData();  // TODO
+    *message = RefMessageData(data->mRefDataId);
   }
 }
 
@@ -63,10 +117,12 @@ bool SharedMessagePortMessage::FromMessagesToSharedChild(
     RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
     if (message.type() == MessageData::TClonedMessageData) {
-      data->StealFromClonedMessageDataForBackgroundChild(message);
+      data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
+          JS::StructuredCloneScope::UnknownDestination);
+      data->mCloneData->StealFromClonedMessageDataForBackgroundChild(message);
     } else {
       MOZ_ASSERT(message.type() == MessageData::TRefMessageData);
-      // TODO
+      data->mRefDataId = message.get_RefMessageData().uuid();
     }
 
     if (!aData.AppendElement(data, mozilla::fallible)) {
@@ -94,18 +150,15 @@ bool SharedMessagePortMessage::FromSharedToMessagesParent(
   for (auto& data : aData) {
     MessageData* message = aArray.AppendElement(mozilla::fallible);
 
-    if (data->CloneScope() ==
-        StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
+    if (data->mCloneData) {
       ClonedMessageData clonedData;
-      data->BuildClonedMessageDataForBackgroundParent(backgroundManager,
-                                                      clonedData);
+      data->mCloneData->BuildClonedMessageDataForBackgroundParent(
+          backgroundManager, clonedData);
       *message = clonedData;
       continue;
     }
 
-    MOZ_ASSERT(data->CloneScope() ==
-               StructuredCloneHolder::StructuredCloneScope::SameProcess);
-    *message = RefMessageData();  // TODO
+    *message = RefMessageData(data->mRefDataId);
   }
 
   return true;
@@ -125,10 +178,12 @@ bool SharedMessagePortMessage::FromMessagesToSharedParent(
     RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
     if (message.type() == MessageData::TClonedMessageData) {
-      data->StealFromClonedMessageDataForBackgroundParent(message);
+      data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
+          JS::StructuredCloneScope::UnknownDestination);
+      data->mCloneData->StealFromClonedMessageDataForBackgroundParent(message);
     } else {
       MOZ_ASSERT(message.type() == MessageData::TRefMessageData);
-      // TODO
+      data->mRefDataId = message.get_RefMessageData().uuid();
     }
 
     if (!aData.AppendElement(data, mozilla::fallible)) {

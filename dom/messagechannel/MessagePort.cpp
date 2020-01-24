@@ -31,6 +31,7 @@
 #include "nsGlobalWindow.h"
 #include "nsPresContext.h"
 #include "SharedMessagePortMessage.h"
+#include "RefMessageBodyService.h"
 
 #include "nsIBFCacheEntry.h"
 #include "mozilla/dom/Document.h"
@@ -122,7 +123,7 @@ class PostMessageRunnable final : public CancelableRunnable {
           MarkerTracingType::START);
     }
 
-    mData->Read(cx, &value, rv);
+    mData->Read(cx, &value, mPort->mRefMessageBodyService, rv);
 
     if (isTimelineRecording) {
       end = MakeUnique<MessagePortTimelineMarker>(
@@ -196,6 +197,7 @@ NS_IMPL_RELEASE_INHERITED(MessagePort, DOMEventTargetHelper)
 
 MessagePort::MessagePort(nsIGlobalObject* aGlobal, State aState)
     : DOMEventTargetHelper(aGlobal),
+      mRefMessageBodyService(RefMessageBodyService::GetOrCreate()),
       mState(aState),
       mMessageQueueEnabled(false),
       mIsKeptAlive(false),
@@ -340,7 +342,8 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
         MarkerTracingType::START);
   }
 
-  data->Write(aCx, aMessage, transferable, aRv);
+  data->Write(aCx, aMessage, transferable, mIdentifier->uuid(),
+              mRefMessageBodyService, aRv);
 
   if (isTimelineRecording) {
     end = MakeUnique<MessagePortTimelineMarker>(
@@ -488,6 +491,10 @@ void MessagePort::CloseInternal(bool aSoftly) {
   if (!aSoftly) {
     mMessages.Clear();
   }
+
+  // Let's inform the RefMessageBodyService that any our shared messages are
+  // now invalid.
+  mRefMessageBodyService->ForgetPort(mIdentifier->uuid());
 
   if (mState == eStateUnshippedEntangled) {
     MOZ_DIAGNOSTIC_ASSERT(mUnshippedEntangledPort);
@@ -657,6 +664,11 @@ void MessagePort::Disentangle() {
                                                         messages);
     mActor->SendDisentangle(messages);
   }
+
+  // Let's inform the RefMessageBodyService that any our shared messages are
+  // now invalid.
+  mRefMessageBodyService->ForgetPort(mIdentifier->uuid());
+
   // Only clear mMessages after the MessageData instances have gone out of scope
   // because they borrow mMessages' underlying JSStructuredCloneDatas.
   mMessages.Clear();
