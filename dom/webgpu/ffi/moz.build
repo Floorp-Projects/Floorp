@@ -15,7 +15,9 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     GeneratedFile('wgpu_ffi_generated.h',
                   script='/layout/style/RunCbindgen.py',
                   entry_point='generate',
-                  inputs=['/gfx/wgpu/wgpu-remote'])
+                  inputs=[
+                    '/gfx/wgpu/wgpu-remote',
+                  ])
 
     EXPORTS.mozilla.webgpu.ffi += [
         '!wgpu_ffi_generated.h',

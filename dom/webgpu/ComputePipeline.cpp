@@ -13,5 +13,20 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(ComputePipeline, mParent)
 GPU_IMPL_JS_WRAP(ComputePipeline)
 
+ComputePipeline::ComputePipeline(Device* const aParent, RawId aId)
+    : ChildOf(aParent), mId(aId) {}
+
+ComputePipeline::~ComputePipeline() { Cleanup(); }
+
+void ComputePipeline::Cleanup() {
+  if (mValid && mParent) {
+    mValid = false;
+    WebGPUChild* bridge = mParent->mBridge;
+    if (bridge && bridge->IsOpen()) {
+      bridge->DestroyComputePipeline(mId);
+    }
+  }
+}
+
 }  // namespace webgpu
 }  // namespace mozilla

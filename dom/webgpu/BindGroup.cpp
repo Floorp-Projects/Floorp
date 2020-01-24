@@ -14,7 +14,20 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(BindGroup, mParent)
 GPU_IMPL_JS_WRAP(BindGroup)
 
-void BindGroup::Cleanup() {}
+BindGroup::BindGroup(Device* const aParent, RawId aId)
+    : ChildOf(aParent), mId(aId) {}
+
+BindGroup::~BindGroup() { Cleanup(); }
+
+void BindGroup::Cleanup() {
+  if (mValid && mParent) {
+    mValid = false;
+    WebGPUChild* bridge = mParent->mBridge;
+    if (bridge && bridge->IsOpen()) {
+      bridge->DestroyBindGroup(mId);
+    }
+  }
+}
 
 }  // namespace webgpu
 }  // namespace mozilla

@@ -8,6 +8,7 @@
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 
 namespace mozilla {
 namespace webgpu {
@@ -19,9 +20,12 @@ class BindGroup final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(BindGroup)
   GPU_DECL_JS_WRAP(BindGroup)
 
+  BindGroup(Device* const aParent, RawId aId);
+
+  const RawId mId;
+
  private:
-  BindGroup() = delete;
-  ~BindGroup() = default;
+  ~BindGroup();
   void Cleanup();
 };
 
