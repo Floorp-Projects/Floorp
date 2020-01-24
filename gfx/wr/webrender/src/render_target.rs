@@ -1050,6 +1050,7 @@ pub struct BlitJob {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug)]
 pub struct LineDecorationJob {
     pub task_rect: DeviceRect,
     pub local_size: LayoutSize,
