@@ -110,6 +110,100 @@ RawId WebGPUChild::CommandEncoderFinish(
   return aSelfId;
 }
 
+RawId WebGPUChild::DeviceCreateBindGroupLayout(
+    RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc) {
+  RawId id = ffi::wgpu_client_make_bind_group_layout_id(mClient, aSelfId);
+  nsTArray<ffi::WGPUBindGroupLayoutBinding> bindings(aDesc.mBindings.Length());
+  for (const auto& binding : aDesc.mBindings) {
+    ffi::WGPUBindGroupLayoutBinding b = {};
+    b.binding = binding.mBinding;
+    b.visibility = binding.mVisibility;
+    b.ty = ffi::WGPUBindingType(binding.mType);
+    Unused << binding.mTextureComponentType;  // TODO
+    b.texture_dimension =
+        ffi::WGPUTextureViewDimension(binding.mTextureDimension);
+    b.multisampled = binding.mMultisampled;
+    b.dynamic = binding.mDynamic;
+    bindings.AppendElement(b);
+  }
+  SerialBindGroupLayoutDescriptor desc = {std::move(bindings)};
+  if (!SendDeviceCreateBindGroupLayout(aSelfId, desc, id)) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
+}
+
+RawId WebGPUChild::DeviceCreatePipelineLayout(
+    RawId aSelfId, const dom::GPUPipelineLayoutDescriptor& aDesc) {
+  RawId id = ffi::wgpu_client_make_pipeline_layout_id(mClient, aSelfId);
+  SerialPipelineLayoutDescriptor desc = {};
+  for (const auto& layouts : aDesc.mBindGroupLayouts) {
+    desc.mBindGroupLayouts.AppendElement(layouts->mId);
+  }
+  if (!SendDeviceCreatePipelineLayout(aSelfId, desc, id)) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
+}
+
+RawId WebGPUChild::DeviceCreateBindGroup(
+    RawId aSelfId, const dom::GPUBindGroupDescriptor& aDesc) {
+  RawId id = ffi::wgpu_client_make_bind_group_id(mClient, aSelfId);
+  SerialBindGroupDescriptor desc = {};
+  desc.mLayout = aDesc.mLayout->mId;
+  for (const auto& binding : aDesc.mBindings) {
+    SerialBindGroupBinding bd = {};
+    bd.mBinding = binding.mBinding;
+    if (binding.mResource.IsGPUBufferBinding()) {
+      bd.mType = SerialBindGroupBindingType::Buffer;
+      const auto& bufBinding = binding.mResource.GetAsGPUBufferBinding();
+      bd.mValue = bufBinding.mBuffer->mId;
+      bd.mBufferOffset = bufBinding.mOffset;
+      bd.mBufferSize =
+          bufBinding.mSize.WasPassed() ? bufBinding.mSize.Value() : 0;
+    }
+    if (binding.mResource.IsGPUTextureView()) {
+      bd.mType = SerialBindGroupBindingType::Texture;
+      bd.mValue = binding.mResource.GetAsGPUTextureView()->mId;
+    }
+    if (binding.mResource.IsGPUSampler()) {
+      bd.mType = SerialBindGroupBindingType::Sampler;
+      bd.mValue = binding.mResource.GetAsGPUSampler()->mId;
+    }
+    desc.mBindings.AppendElement(bd);
+  }
+  if (!SendDeviceCreateBindGroup(aSelfId, desc, id)) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
+}
+
+RawId WebGPUChild::DeviceCreateShaderModule(
+    RawId aSelfId, const dom::GPUShaderModuleDescriptor& aDesc) {
+  RawId id = ffi::wgpu_client_make_shader_module_id(mClient, aSelfId);
+  MOZ_ASSERT(aDesc.mCode.IsUint32Array());
+  const auto& code = aDesc.mCode.GetAsUint32Array();
+  code.ComputeState();
+  nsTArray<uint32_t> data(code.Length());
+  data.AppendElements(code.Data(), code.Length());
+  if (!SendDeviceCreateShaderModule(aSelfId, data, id)) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
+}
+RawId WebGPUChild::DeviceCreateComputePipeline(
+    RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc) {
+  RawId id = ffi::wgpu_client_make_compute_pipeline_id(mClient, aSelfId);
+  SerialProgrammableStageDescriptor stage = {};
+  stage.mModule = aDesc.mComputeStage.mModule->mId;
+  stage.mEntryPoint = aDesc.mComputeStage.mEntryPoint;
+  SerialComputePipelineDescriptor desc = {aDesc.mLayout->mId, stage};
+  if (!SendDeviceCreateComputePipeline(aSelfId, desc, id)) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
+}
+
 void WebGPUChild::QueueSubmit(RawId aSelfId,
                               const nsTArray<RawId>& aCommandBufferIds) {
   SendQueueSubmit(aSelfId, aCommandBufferIds);
@@ -133,6 +227,26 @@ void WebGPUChild::DestroyCommandEncoder(RawId aId) {
 void WebGPUChild::DestroyCommandBuffer(RawId aId) {
   SendCommandBufferDestroy(aId);
   ffi::wgpu_client_kill_encoder_id(mClient, aId);
+}
+void WebGPUChild::DestroyBindGroupLayout(RawId aId) {
+  SendBindGroupLayoutDestroy(aId);
+  ffi::wgpu_client_kill_bind_group_layout_id(mClient, aId);
+}
+void WebGPUChild::DestroyPipelineLayout(RawId aId) {
+  SendPipelineLayoutDestroy(aId);
+  ffi::wgpu_client_kill_pipeline_layout_id(mClient, aId);
+}
+void WebGPUChild::DestroyBindGroup(RawId aId) {
+  SendBindGroupDestroy(aId);
+  ffi::wgpu_client_kill_bind_group_id(mClient, aId);
+}
+void WebGPUChild::DestroyShaderModule(RawId aId) {
+  SendShaderModuleDestroy(aId);
+  ffi::wgpu_client_kill_shader_module_id(mClient, aId);
+}
+void WebGPUChild::DestroyComputePipeline(RawId aId) {
+  SendComputePipelineDestroy(aId);
+  ffi::wgpu_client_kill_compute_pipeline_id(mClient, aId);
 }
 
 }  // namespace webgpu

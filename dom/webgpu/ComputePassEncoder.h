@@ -37,6 +37,9 @@ class ComputePassEncoder final : public ProgrammablePassEncoder,
   ffi::WGPURawPass mRaw;
 
  public:
+  void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
+                    const dom::Sequence<uint32_t>& aDynamicOffsets) override;
+  void SetPipeline(const ComputePipeline& aPipeline);
   void Dispatch(uint32_t x, uint32_t y, uint32_t z);
   void EndPass(ErrorResult& aRv);
 };
