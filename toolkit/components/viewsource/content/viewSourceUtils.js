@@ -16,11 +16,6 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
-  "ViewSourceBrowser",
-  "resource://gre/modules/ViewSourceBrowser.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -29,6 +24,11 @@ var gViewSourceUtils = {
   mnsIWebBrowserPersist: Ci.nsIWebBrowserPersist,
   mnsIWebProgress: Ci.nsIWebProgress,
   mnsIWebPageDescriptor: Ci.nsIWebPageDescriptor,
+
+  // Get the ViewSource actor for a browsing context.
+  getViewSourceActor(aBrowsingContext) {
+    return aBrowsingContext.currentWindowGlobal.getActor("ViewSource");
+  },
 
   /**
    * Opens the view source window.
@@ -106,9 +106,41 @@ var gViewSourceUtils = {
    *        lineNumber (optional):
    *          The line number to focus on once the source is loaded.
    */
-  viewSourceInBrowser(aArgs) {
-    let viewSourceBrowser = new ViewSourceBrowser(aArgs.viewSourceBrowser);
-    viewSourceBrowser.loadViewSource(aArgs);
+  viewSourceInBrowser({
+    URL,
+    viewSourceBrowser,
+    browser,
+    outerWindowID,
+    lineNumber,
+  }) {
+    if (!URL) {
+      throw new Error("Must supply a URL when opening view source.");
+    }
+
+    if (browser) {
+      viewSourceBrowser.sameProcessAsFrameLoader = browser.frameLoader;
+
+      // If we're dealing with a remote browser, then the browser
+      // for view source needs to be remote as well.
+      if (viewSourceBrowser.remoteType != browser.remoteType) {
+        // In this base case, where we are handed a <browser> someone else is
+        // managing, we don't know for sure that it's safe to toggle remoteness.
+        // For view source in a window, this is overridden to actually do the
+        // flip if needed.
+        throw new Error("View source browser's remoteness mismatch");
+      }
+    } else if (outerWindowID) {
+      throw new Error("Must supply the browser if passing the outerWindowID");
+    }
+
+    let viewSourceActor = this.getViewSourceActor(
+      viewSourceBrowser.browsingContext
+    );
+    viewSourceActor.sendAsyncMessage("ViewSource:LoadSource", {
+      URL,
+      outerWindowID,
+      lineNumber,
+    });
   },
 
   /**
@@ -116,31 +148,21 @@ var gViewSourceUtils = {
    * <browser>.  This allows for non-window display methods, such as a tab from
    * Firefox.
    *
-   * @param aViewSourceInBrowser
-   *        The browser containing the page to view the source of.
+   * @param aBrowsingContext:
+   *        The child browsing context containing the document to view the source of.
    * @param aGetBrowserFn
    *        A function that will return a browser to open the source in.
    */
-  viewPartialSourceInBrowser(aViewSourceInBrowser, aGetBrowserFn) {
-    let mm = aViewSourceInBrowser.messageManager;
-    mm.addMessageListener("ViewSource:GetSelectionDone", function gotSelection(
-      message
-    ) {
-      mm.removeMessageListener("ViewSource:GetSelectionDone", gotSelection);
+  async viewPartialSourceInBrowser(aBrowsingContext, aGetBrowserFn) {
+    let sourceActor = this.getViewSourceActor(aBrowsingContext);
+    if (sourceActor) {
+      let data = await sourceActor.sendQuery("ViewSource:GetSelection", {});
 
-      if (!message.data) {
-        return;
-      }
-
-      let viewSourceBrowser = new ViewSourceBrowser(aGetBrowserFn());
-      viewSourceBrowser.loadViewSourceFromSelection(
-        message.data.uri,
-        message.data.drawSelection,
-        message.data.baseURI
+      let targetActor = this.getViewSourceActor(
+        aGetBrowserFn().browsingContext
       );
-    });
-
-    mm.sendAsyncMessage("ViewSource:GetSelection");
+      targetActor.sendAsyncMessage("ViewSource:LoadSourceWithSelection", data);
+    }
   },
 
   buildEditorArgs(aPath, aLineNumber) {

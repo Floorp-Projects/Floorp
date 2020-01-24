@@ -300,6 +300,35 @@ let ACTORS = {
     allFrames: true,
   },
 
+  // This actor is available for all pages that one can
+  // view the source of, however it won't be created until a
+  // request to view the source is made via the message
+  // 'ViewSource:LoadSource' or 'ViewSource:LoadSourceWithSelection'.
+  ViewSource: {
+    child: {
+      moduleURI: "resource://gre/actors/ViewSourceChild.jsm",
+    },
+
+    allFrames: true,
+  },
+
+  // This actor is for the view-source page itself.
+  ViewSourcePage: {
+    parent: {
+      moduleURI: "resource://gre/actors/ViewSourcePageParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/ViewSourcePageChild.jsm",
+      events: {
+        pageshow: { capture: true },
+        click: {},
+      },
+    },
+
+    matches: ["view-source:*"],
+    allFrames: true,
+  },
+
   WebChannel: {
     parent: {
       moduleURI: "resource://gre/actors/WebChannelParent.jsm",
@@ -482,13 +511,6 @@ let LEGACY_ACTORS = {
         "Printing:Preview:ParseDocument",
         "Printing:Print",
       ],
-    },
-  },
-
-  SelectionSource: {
-    child: {
-      module: "resource://gre/actors/SelectionSourceChild.jsm",
-      messages: ["ViewSource:GetSelection"],
     },
   },
 

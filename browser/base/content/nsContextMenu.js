@@ -1174,7 +1174,10 @@ class nsContextMenu {
       return viewSourceBrowser;
     };
 
-    top.gViewSourceUtils.viewPartialSourceInBrowser(browser, openSelectionFn);
+    top.gViewSourceUtils.viewPartialSourceInBrowser(
+      this.actor.browsingContext,
+      openSelectionFn
+    );
   }
 
   // Open new "view source" window with the frame's URL.

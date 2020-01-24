@@ -208,7 +208,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TabStateCache: "resource:///modules/sessionstore/TabStateCache.jsm",
   TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
-  ViewSourceBrowser: "resource://gre/modules/ViewSourceBrowser.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
@@ -4708,12 +4707,6 @@ var SessionStoreInternal = {
         loadArguments,
         isRemotenessUpdate,
       });
-    }
-
-    // If the restored browser wants to show view source content, start up a
-    // view source browser that will load the required frame script.
-    if (uri && ViewSourceBrowser.isViewSource(uri)) {
-      new ViewSourceBrowser(browser);
     }
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent", {
