@@ -48,6 +48,7 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
       : Super(aX, aY, aWidth, aHeight) {
     MOZ_COUNT_CTOR(nsRect);
   }
+  nsRect& operator=(const nsRect&) = default;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsRect() { MOZ_COUNT_DTOR(nsRect); }
