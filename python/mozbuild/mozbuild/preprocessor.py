@@ -22,7 +22,7 @@ value :
   | \w+  # string identifier or value;
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import sys
 import os
@@ -46,15 +46,6 @@ __all__ = [
   'Preprocessor',
   'preprocess'
 ]
-
-
-def _to_text(a):
-    # We end up converting a lot of different types (text_type, binary_type,
-    # int, etc.) to Unicode in this script. This function handles all of those
-    # possibilities.
-    if isinstance(a, (six.text_type, six.binary_type)):
-        return six.ensure_text(a)
-    return six.text_type(a)
 
 
 def path_starts_with(path, prefix):
@@ -637,7 +628,7 @@ class Preprocessor:
         except Exception:
             # XXX do real error reporting
             raise Preprocessor.Error(self, 'SYNTAX_ERR', args)
-        if isinstance(val, six.text_type) or isinstance(val, six.binary_type):
+        if type(val) == str:
             # we're looking for a number value, strings are false
             val = False
         if not val:
@@ -648,6 +639,7 @@ class Preprocessor:
             self.ifStates[-1] = self.disableLevel
         else:
             self.ifStates.append(self.disableLevel)
+        pass
 
     def do_ifdef(self, args, replace=False):
         if self.disableLevel and not replace:
@@ -663,6 +655,7 @@ class Preprocessor:
             self.ifStates[-1] = self.disableLevel
         else:
             self.ifStates.append(self.disableLevel)
+        pass
 
     def do_ifndef(self, args, replace=False):
         if self.disableLevel and not replace:
@@ -678,6 +671,7 @@ class Preprocessor:
             self.ifStates[-1] = self.disableLevel
         else:
             self.ifStates.append(self.disableLevel)
+        pass
 
     def do_else(self, args, ifState=2):
         self.ensure_not_else()
@@ -721,7 +715,7 @@ class Preprocessor:
 
         def vsubst(v):
             if v in self.context:
-                return _to_text(self.context[v])
+                return str(self.context[v])
             return ''
         for i in range(1, len(lst), 2):
             lst[i] = vsubst(lst[i])
@@ -776,7 +770,7 @@ class Preprocessor:
         def repl(matchobj):
             varname = matchobj.group('VAR')
             if varname in self.context:
-                return _to_text(self.context[varname])
+                return str(self.context[varname])
             if fatal:
                 raise Preprocessor.Error(self, 'UNDEFINED_VAR', varname)
             return matchobj.group(0)
@@ -799,7 +793,7 @@ class Preprocessor:
         self.checkLineNumbers = False
         if isName:
             try:
-                args = _to_text(args)
+                args = str(args)
                 if filters:
                     args = self.applyFilters(args)
                 if not os.path.isabs(args):
@@ -808,7 +802,7 @@ class Preprocessor:
             except Preprocessor.Error:
                 raise
             except Exception:
-                raise Preprocessor.Error(self, 'FILE_NOT_FOUND', _to_text(args))
+                raise Preprocessor.Error(self, 'FILE_NOT_FOUND', str(args))
         self.checkLineNumbers = bool(re.search('\.(js|jsm|java|webidl)(?:\.in)?$', args.name))
         oldFile = self.context['FILE']
         oldLine = self.context['LINE']
@@ -850,7 +844,7 @@ class Preprocessor:
         self.do_include(args)
 
     def do_error(self, args):
-        raise Preprocessor.Error(self, 'Error: ', _to_text(args))
+        raise Preprocessor.Error(self, 'Error: ', str(args))
 
 
 def preprocess(includes=[sys.stdin], defines={},
