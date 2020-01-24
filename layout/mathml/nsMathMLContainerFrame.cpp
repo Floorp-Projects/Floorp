@@ -398,8 +398,9 @@ nsMathMLContainerFrame::Stretch(DrawTarget* aDrawTarget,
           aDesiredStretchSize.Width() = mBoundingMetrics.width;
           aDesiredStretchSize.mBoundingMetrics.width = mBoundingMetrics.width;
 
-          nscoord dx = (StyleVisibility()->mDirection ? coreData.trailingSpace
-                                                      : coreData.leadingSpace);
+          nscoord dx = StyleVisibility()->mDirection == StyleDirection::Rtl
+                           ? coreData.trailingSpace
+                           : coreData.leadingSpace;
           if (dx != 0) {
             mBoundingMetrics.leftBearing += dx;
             mBoundingMetrics.rightBearing += dx;
@@ -1114,7 +1115,8 @@ class nsMathMLContainerFrame::RowChildFrameIterator {
         mChildFrameType(eMathMLFrameType_UNKNOWN),
         mCarrySpace(0),
         mFromFrameType(eMathMLFrameType_UNKNOWN),
-        mRTL(aParentFrame->StyleVisibility()->mDirection) {
+        mRTL(aParentFrame->StyleVisibility()->mDirection ==
+             StyleDirection::Rtl) {
     if (!mRTL) {
       mChildFrame = aParentFrame->mFrames.FirstChild();
     } else {

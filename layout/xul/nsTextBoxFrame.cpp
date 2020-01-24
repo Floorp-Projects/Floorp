@@ -592,7 +592,7 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
   if (titleWidth <= aWidth) {
     mCroppedTitle = mTitle;
     if (HasRTLChars(mTitle) ||
-        StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+        StyleVisibility()->mDirection == StyleDirection::Rtl) {
       AddStateBits(NS_FRAME_IS_BIDI);
     }
     return titleWidth;  // fits, done.

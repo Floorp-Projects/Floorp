@@ -102,7 +102,7 @@
 #include "nsReadableUtils.h"   // for EmptyString, ToNewCString
 #include "nsString.h"          // for nsAutoString, nsString, etc.
 #include "nsStringFwd.h"       // for nsString
-#include "nsStyleConsts.h"     // for NS_STYLE_DIRECTION_RTL, etc.
+#include "nsStyleConsts.h"     // for StyleDirection::Rtl, etc.
 #include "nsStyleStruct.h"     // for nsStyleDisplay, nsStyleText, etc.
 #include "nsStyleStructFwd.h"  // for nsIFrame::StyleUIReset, etc.
 #include "nsStyleUtil.h"       // for nsStyleUtil
@@ -4909,7 +4909,7 @@ nsresult EditorBase::DetermineCurrentDirection() {
 
     // Set the flag here, to enable us to use the same code path below.
     // It will be flipped before returning from the function.
-    if (frame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+    if (frame->StyleVisibility()->mDirection == StyleDirection::Rtl) {
       mFlags |= nsIEditor::eEditorRightToLeft;
     } else {
       mFlags |= nsIEditor::eEditorLeftToRight;

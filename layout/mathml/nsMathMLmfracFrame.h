@@ -104,9 +104,8 @@ class nsMathMLmfracFrame final : public nsMathMLContainerFrame {
                          ReflowOutput& aDesiredSize, bool aWidthOnly);
 
   // Display a slash
-  void DisplaySlash(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    const nsRect& aRect, nscoord aThickness,
-                    const nsDisplayListSet& aLists);
+  void DisplaySlash(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                    nscoord aThickness, const nsDisplayListSet& aLists);
 
   nsRect mLineRect;
   nsMathMLChar* mSlashChar;

@@ -3764,8 +3764,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
       return nullptr;
     }
 
-    isRTL =
-        canvasStyle->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+    isRTL = canvasStyle->StyleVisibility()->mDirection == StyleDirection::Rtl;
   } else {
     isRTL = GET_BIDI_OPTION_DIRECTION(document->GetBidiOptions()) ==
             IBMBIDI_TEXTDIRECTION_RTL;

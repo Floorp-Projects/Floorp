@@ -521,8 +521,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
     return mAnchorContent && mAnchorContent->GetPrimaryFrame()
                ? mAnchorContent->GetPrimaryFrame()
                          ->StyleVisibility()
-                         ->mDirection == NS_STYLE_DIRECTION_RTL
-               : StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+                         ->mDirection == mozilla::StyleDirection::Rtl
+               : StyleVisibility()->mDirection == mozilla::StyleDirection::Rtl;
   }
 
   // Create a popup view for this frame. The view is added a child of the root

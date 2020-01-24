@@ -329,12 +329,12 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
         mBlockWM, LogicalPoint(mBlockWM, mScrollableFrame->GetScrollPosition(),
                                nullContainerSize));
   }
-  uint8_t direction = aBlockFrame->StyleVisibility()->mDirection;
+  StyleDirection direction = aBlockFrame->StyleVisibility()->mDirection;
   const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
 
   const auto& textOverflow = style->mTextOverflow;
   bool shouldToggleDirection =
-      textOverflow.sides_are_logical && (direction == NS_STYLE_DIRECTION_RTL);
+      textOverflow.sides_are_logical && (direction == StyleDirection::Rtl);
   const auto& leftSide =
       shouldToggleDirection ? textOverflow.second : textOverflow.first;
   const auto& rightSide =
