@@ -37,28 +37,37 @@ async function testInspectingElement(hud) {
 async function testInspectingFunction(hud) {
   info("Test `inspect(test)`");
   execute(hud, "inspect(test)");
-
-  await waitFor(() => {
-    const dbg = hud.toolbox.getPanel("jsdebugger");
-    if (!dbg) {
-      return false;
-    }
-
-    const selectedLocation = dbg._selectors.getSelectedLocation(
-      dbg._getState()
-    );
-
-    if (!selectedLocation) {
-      return false;
-    }
-
-    return (
-      selectedLocation.sourceId.includes("test-simple-function.js") &&
-      selectedLocation.line == 3
-    );
-  });
-
+  await waitFor(expectedSourceSelected("test-simple-function.js", 3));
   ok(true, "inspected function is now selected in the debugger");
+
+  info("Test `inspect(test_mangled)`");
+  execute(hud, "inspect(test_mangled)");
+  await waitFor(
+    expectedSourceSelected("test-mangled-function.js/originalSource-", 3)
+  );
+  ok(true, "inspected source-mapped function is now selected in the debugger");
+
+  function expectedSourceSelected(sourceFilename, sourceLine) {
+    return () => {
+      const dbg = hud.toolbox.getPanel("jsdebugger");
+      if (!dbg) {
+        return false;
+      }
+
+      const selectedLocation = dbg._selectors.getSelectedLocation(
+        dbg._getState()
+      );
+
+      if (!selectedLocation) {
+        return false;
+      }
+
+      return (
+        selectedLocation.sourceId.includes(sourceFilename) &&
+        selectedLocation.line == sourceLine
+      );
+    };
+  }
 }
 
 async function waitForSelectedElementInInspector(toolbox, displayName) {
