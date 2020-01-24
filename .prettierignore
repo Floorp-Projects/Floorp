@@ -55,3 +55,6 @@ devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/input.js
 devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js
 devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js.map
 devtools/client/debugger/src/test/mochitest/examples/ember/quickstart
+
+# These are source mapped and the locations are asserted in the test case.
+devtools/client/webconsole/test/browser/test-mangled-function.*

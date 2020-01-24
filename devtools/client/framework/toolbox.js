@@ -3509,8 +3509,13 @@ Toolbox.prototype = {
     }
 
     if (objectGrip.class == "Function") {
-      const { url, line } = objectGrip.location;
-      return this.viewSourceInDebugger(url, line);
+      if (!objectGrip.location) {
+        console.error("Missing location in Function objectGrip", objectGrip);
+        return;
+      }
+
+      const { url, line, column } = objectGrip.location;
+      return this.viewSourceInDebugger(url, line, column);
     }
 
     if (objectGrip.type !== "null" && objectGrip.type !== "undefined") {
@@ -3903,16 +3908,39 @@ Toolbox.prototype = {
   },
 
   /**
-   * Opens source in debugger. Falls back to plain "view-source:".
+   * Opens source in debugger, the sourcemapped location will be selected in
+   * the debugger panel, if the given location resolves to a know sourcemapped one.
+   *
+   * Falls back to plain "view-source:".
+   *
    * @see devtools/client/shared/source-utils.js
    */
-  viewSourceInDebugger: function(
+  viewSourceInDebugger: async function(
     sourceURL,
     sourceLine,
     sourceColumn,
     sourceId,
     reason
   ) {
+    try {
+      const sourceMappedLoc = await this.sourceMapURLService.originalPositionFor(
+        sourceURL,
+        sourceLine,
+        sourceColumn
+      );
+      if (sourceMappedLoc) {
+        sourceURL = sourceMappedLoc.sourceUrl;
+        sourceLine = sourceMappedLoc.line;
+        sourceColumn = sourceMappedLoc.column;
+      }
+    } catch (err) {
+      console.error(
+        "Failed to resolve sourcemapped location for the given source location",
+        { sourceURL, sourceLine, sourceColumn, sourceId, reason },
+        err
+      );
+    }
+
     return viewSource.viewSourceInDebugger(
       this,
       sourceURL,
