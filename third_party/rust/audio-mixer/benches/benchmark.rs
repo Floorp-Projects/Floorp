@@ -1,5 +1,5 @@
+use audio_mixer::{Channel, Mixer};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use mixer::{Channel, Mixer};
 
 use std::any::{Any, TypeId};
 
@@ -20,7 +20,7 @@ where
     T: Clone + Default + From<u8> + ?Sized + Any,
 {
     // Downmix from 5.1 to stereo.
-    let input_channels = vec![
+    let input_channels = [
         Channel::FrontLeft,
         Channel::FrontRight,
         Channel::FrontCenter,
@@ -28,8 +28,8 @@ where
         Channel::BackLeft,
         Channel::BackRight,
     ];
-    let output_channels = vec![Channel::FrontLeft, Channel::FrontRight];
-    mix::<T>(input_channels, output_channels, frames);
+    let output_channels = [Channel::FrontLeft, Channel::FrontRight];
+    mix::<T>(&input_channels, &output_channels, frames);
 }
 
 fn upmix<T>(frames: usize)
@@ -37,12 +37,12 @@ where
     T: Clone + Default + From<u8> + ?Sized + Any,
 {
     // upmix from mono to stereo.
-    let input_channels = vec![Channel::FrontCenter];
-    let output_channels = vec![Channel::FrontLeft, Channel::FrontRight];
-    mix::<T>(input_channels, output_channels, frames);
+    let input_channels = [Channel::FrontCenter];
+    let output_channels = [Channel::FrontLeft, Channel::FrontRight];
+    mix::<T>(&input_channels, &output_channels, frames);
 }
 
-fn mix<T>(input_channels: Vec<Channel>, output_channels: Vec<Channel>, frames: usize)
+fn mix<T>(input_channels: &[Channel], output_channels: &[Channel], frames: usize)
 where
     T: Clone + Default + From<u8> + ?Sized + Any,
 {
