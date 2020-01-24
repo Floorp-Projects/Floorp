@@ -945,6 +945,19 @@ class TokenStreamAnyChars : public TokenStreamShared {
   }
 
  public:
+  void adoptState(TokenStreamAnyChars& other) {
+    // If |other| has fresh information from directives, overwrite any
+    // previously recorded directives.  (There is no specification directing
+    // that last-in-source-order directive controls, sadly.  We behave this way
+    // in the ordinary case, so we ought do so here too.)
+    if (auto& url = other.displayURL_) {
+      displayURL_ = std::move(url);
+    }
+    if (auto& url = other.sourceMapURL_) {
+      sourceMapURL_ = std::move(url);
+    }
+  }
+
   // Compute error metadata for an error at no offset.
   void computeErrorMetadataNoOffset(ErrorMetadata* err);
 
@@ -1515,6 +1528,14 @@ class TokenStreamCharsShared {
     JSAtom* atom = AtomizeChars(cx, charBuffer.begin(), charBuffer.length());
     charBuffer.clear();
     return atom;
+  }
+
+ protected:
+  void adoptState(TokenStreamCharsShared& other) {
+    // The other stream's buffer may contain information for a
+    // gotten-then-ungotten token, that we must transfer into this stream so
+    // that token's final get behaves as desired.
+    charBuffer = std::move(other.charBuffer);
   }
 
  public:
@@ -2096,6 +2117,10 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
           this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
     }
 
+    // |charBuffer| should be empty here, but we may as well code defensively.
+    MOZ_ASSERT(this->charBuffer.length() == 0);
+    this->charBuffer.clear();
+
     // Template literals normalize only '\r' and "\r\n" to '\n'; Unicode
     // separators don't need special handling.
     // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
@@ -2378,6 +2403,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
  public:
   using GeneralCharsBase::anyCharsAccess;
   using GeneralCharsBase::computeLineAndColumn;
+  using TokenStreamCharsShared::adoptState;
 
  private:
   using typename CharsBase::SourceUnits;
@@ -2740,8 +2766,35 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   MOZ_MUST_USE bool advance(size_t position);
 
-  void seek(const Position& pos);
-  MOZ_MUST_USE bool seek(const Position& pos, const TokenStreamAnyChars& other);
+  void seekTo(const Position& pos);
+  MOZ_MUST_USE bool seekTo(const Position& pos,
+                           const TokenStreamAnyChars& other);
+
+  void rewind(const Position& pos) {
+    MOZ_ASSERT(pos.buf <= this->sourceUnits.addressOfNextCodeUnit(),
+               "should be rewinding here");
+    seekTo(pos);
+  }
+
+  MOZ_MUST_USE bool rewind(const Position& pos,
+                           const TokenStreamAnyChars& other) {
+    MOZ_ASSERT(pos.buf <= this->sourceUnits.addressOfNextCodeUnit(),
+               "should be rewinding here");
+    return seekTo(pos, other);
+  }
+
+  void fastForward(const Position& pos) {
+    MOZ_ASSERT(this->sourceUnits.addressOfNextCodeUnit() <= pos.buf,
+               "should be moving forward here");
+    seekTo(pos);
+  }
+
+  MOZ_MUST_USE bool fastForward(const Position& pos,
+                                const TokenStreamAnyChars& other) {
+    MOZ_ASSERT(this->sourceUnits.addressOfNextCodeUnit() <= pos.buf,
+               "should be moving forward here");
+    return seekTo(pos, other);
+  }
 
   const Unit* codeUnitPtrAt(size_t offset) const {
     return this->sourceUnits.codeUnitPtrAt(offset);
