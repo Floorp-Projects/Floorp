@@ -1778,6 +1778,9 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
       Directives inheritedDirectives, Directives* newDirectives);
 
+  MOZ_MUST_USE bool advancePastSyntaxParsedFunction(AutoKeepAtoms& keepAtoms,
+                                                    SyntaxParser* syntaxParser);
+
   bool skipLazyInnerFunction(FunctionNodeType funNode, uint32_t toStringStart,
                              FunctionSyntaxKind kind, bool tryAnnexB);
 
