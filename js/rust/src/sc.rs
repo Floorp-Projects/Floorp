@@ -57,7 +57,7 @@ impl StructuredCloneBuffer {
                 callbacks: &jsapi::JSStructuredCloneCallbacks)
                 -> Result<(), ()> {
         if unsafe {
-            (*self.raw).read(Runtime::get(), vp, jsapi::JS::CloneDataPolicy{ sharedArrayBuffer_: false }, callbacks, ptr::null_mut())
+            (*self.raw).read(Runtime::get(), vp, jsapi::JS::CloneDataPolicy{ allowIntraClusterClonableSharedObjects_: false }, callbacks, ptr::null_mut())
         } {
             Ok(())
         } else {
