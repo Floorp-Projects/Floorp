@@ -36,21 +36,15 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
     return;
   }
 
-  const bool isControllerPlaying =
-      controller->GetState() == PlaybackState::ePlaying;
   switch (aKeyEvent) {
     case MediaControlKeysEvent::ePlay:
-      if (!isControllerPlaying) {
-        controller->Play();
-      }
+      controller->Play();
       return;
     case MediaControlKeysEvent::ePause:
-      if (isControllerPlaying) {
-        controller->Pause();
-      }
+      controller->Pause();
       return;
     case MediaControlKeysEvent::ePlayPause: {
-      if (isControllerPlaying) {
+      if (controller->GetState() == PlaybackState::ePlaying) {
         controller->Pause();
       } else {
         controller->Play();

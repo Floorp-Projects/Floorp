@@ -460,10 +460,11 @@ class HTMLMediaElement::MediaControlEventListener final
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(IsStarted());
     MEDIACONTROL_LOG("OnKeyPressed '%s'", ToMediaControlKeysEventStr(aEvent));
-    if (aEvent == MediaControlKeysEvent::ePlay) {
+    if (aEvent == MediaControlKeysEvent::ePlay && Owner()->Paused()) {
       Owner()->Play();
-    } else if (aEvent == MediaControlKeysEvent::ePause ||
-               aEvent == MediaControlKeysEvent::eStop) {
+    } else if ((aEvent == MediaControlKeysEvent::ePause ||
+                aEvent == MediaControlKeysEvent::eStop) &&
+               !Owner()->Paused()) {
       Owner()->Pause();
     }
   }
