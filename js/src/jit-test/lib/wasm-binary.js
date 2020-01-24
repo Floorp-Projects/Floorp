@@ -41,7 +41,7 @@ const F32Code          = 0x7d;
 const F64Code          = 0x7c;
 const AnyFuncCode      = 0x70;
 const AnyrefCode       = 0x6f;
-const RefCode          = 0x6e;
+const RefCode          = 0x6d;
 const FuncCode         = 0x60;
 const VoidCode         = 0x40;
 
