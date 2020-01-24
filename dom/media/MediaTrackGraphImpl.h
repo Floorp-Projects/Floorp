@@ -485,7 +485,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     mTrackOrderDirty = true;
   }
 
+  // Get the current maximum channel count. Graph thread only.
   uint32_t AudioOutputChannelCount() const;
+  // Set a new maximum channel count. Graph thread only.
+  void SetMaxOutputChannelCount(uint32_t aMaxChannelCount);
 
   double AudioOutputLatency();
 
@@ -997,6 +1000,14 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * whenever the audio device running this MediaTrackGraph changes.
    */
   double mAudioOutputLatency;
+
+  /**
+   * The max audio output channel count the default audio output device
+   * supports. This is cached here because it can be expensive to query. The
+   * cache is invalidated when the device is changed. This is initialized in the
+   * ctor, and the read/write only on the graph thread.
+   */
+  uint32_t mMaxOutputChannelCount;
 };
 
 }  // namespace mozilla
