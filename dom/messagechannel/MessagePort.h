@@ -22,6 +22,7 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
+class MessageData;
 class MessagePortChild;
 struct PostMessageOptions;
 class PostMessageRunnable;
@@ -118,8 +119,8 @@ class MessagePort final : public DOMEventTargetHelper {
 
   // These methods are useful for MessagePortChild
 
-  void Entangled(nsTArray<ClonedMessageData>& aMessages);
-  void MessagesReceived(nsTArray<ClonedMessageData>& aMessages);
+  void Entangled(nsTArray<MessageData>& aMessages);
+  void MessagesReceived(nsTArray<MessageData>& aMessages);
   void StopSendingDataConfirmed();
   void Closed();
 
