@@ -152,6 +152,13 @@ DesktopAndCursorComposer::DesktopAndCursorComposer(
 
 DesktopAndCursorComposer::~DesktopAndCursorComposer() = default;
 
+std::unique_ptr<DesktopAndCursorComposer>
+DesktopAndCursorComposer::CreateWithoutMouseCursorMonitor(
+    std::unique_ptr<DesktopCapturer> desktop_capturer) {
+  return std::unique_ptr<DesktopAndCursorComposer>(
+      new DesktopAndCursorComposer(desktop_capturer.release(), nullptr));
+}
+
 void DesktopAndCursorComposer::Start(DesktopCapturer::Callback* callback) {
   callback_ = callback;
   if (mouse_monitor_)
