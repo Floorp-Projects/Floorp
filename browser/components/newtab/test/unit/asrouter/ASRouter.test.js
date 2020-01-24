@@ -50,6 +50,7 @@ function fakeExecuteUserAction(action) {
   return fakeAsyncMessage({ data: action, type: "USER_ACTION" });
 }
 
+// eslint-disable-next-line max-statements
 describe("ASRouter", () => {
   let Router;
   let globals;
@@ -345,7 +346,11 @@ describe("ASRouter", () => {
       getStringPrefStub.returns('["whitelist.com"]');
       await createRouterAndInit();
 
-      assert.propertyVal(Router.WHITELIST_HOSTS, "whitelist.com", "preview");
+      assert.propertyVal(
+        Router.WHITELIST_HOSTS,
+        "whitelist.com",
+        "snippets-preview"
+      );
       // Should still include the defaults
       assert.lengthOf(Object.keys(Router.WHITELIST_HOSTS), 3);
     });
@@ -357,7 +362,7 @@ describe("ASRouter", () => {
       assert.propertyVal(
         Router.WHITELIST_HOSTS,
         "snippets-admin.mozilla.org",
-        "preview"
+        "snippets-preview"
       );
       assert.propertyVal(
         Router.WHITELIST_HOSTS,
@@ -1156,6 +1161,28 @@ describe("ASRouter", () => {
       });
       assert.isNull(result);
     });
+    it("should allow messages with undefined providers (like 'preview')", async () => {
+      sandbox.stub(Router, "loadMessagesFromAllProviders");
+      await Router.setState(() => ({
+        providers: [{ id: "snippets", exclude: ["foo"] }],
+      }));
+
+      await Router.setState(() => ({
+        messages: [
+          {
+            id: "foo",
+            provider: "snippets-preview",
+            groups: ["snippets-preview"],
+          },
+        ],
+        messageBlockList: ["foocampaign"],
+      }));
+
+      const result = await Router.handleMessageRequest({
+        provider: "snippets-preview",
+      });
+      assert.propertyVal(result, "provider", "snippets-preview");
+    });
     it("should not return a message if the frequency cap has been hit", async () => {
       sandbox.stub(Router, "isBelowFrequencyCaps").returns(false);
       await Router.setState(() => ({
@@ -1636,21 +1663,22 @@ describe("ASRouter", () => {
       });
     });
     describe("#_addPreviewEndpoint", () => {
+      beforeEach(async () => {
+        await Router.setState(state => {
+          const providers = [...state.providers];
+          const snippetsPreview = {
+            id: "snippets-preview",
+            enabled: false,
+            type: "remote",
+          };
+          providers.push(snippetsPreview);
+          return { providers };
+        });
+      });
       it("should make a request to the provided endpoint on NEWTAB_MESSAGE_REQUEST", async () => {
         const url = "https://snippets-admin.mozilla.org/foo";
         const msg = fakeAsyncMessage({
           type: "NEWTAB_MESSAGE_REQUEST",
-          data: { endpoint: { url } },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledWith(global.fetch, url);
-        assert.lengthOf(Router.state.providers.filter(p => p.url === url), 0);
-      });
-      it("should make a request to the provided endpoint on ADMIN_CONNECT_STATE and remove the endpoint", async () => {
-        const url = "https://snippets-admin.mozilla.org/foo";
-        const msg = fakeAsyncMessage({
-          type: "ADMIN_CONNECT_STATE",
           data: { endpoint: { url } },
         });
         await Router.onMessage(msg);
@@ -2013,12 +2041,12 @@ describe("ASRouter", () => {
       it("should return the preview message if that's available and remove it from Router.state", async () => {
         const expectedObj = {
           id: "foo",
-          groups: ["preview"],
-          provider: "preview",
+          groups: ["snippets-preview"],
+          provider: "snippets-preview",
         };
         Router.setState({
           messages: [expectedObj],
-          providers: [{ id: "preview" }],
+          providers: [{ id: "snippets-preview" }],
         });
 
         await Router.sendNewTabMessage(channel, { endpoint: "foo.com" });
@@ -2029,7 +2057,7 @@ describe("ASRouter", () => {
           { type: "SET_MESSAGE", data: expectedObj }
         );
         assert.isUndefined(
-          Router.state.messages.find(m => m.provider === "preview")
+          Router.state.messages.find(m => m.provider === "snippets-preview")
         );
       });
       it("should call _getBundledMessages if we request a message that needs to be bundled", async () => {
@@ -3519,6 +3547,23 @@ describe("ASRouter", () => {
         assert.notCalled(Router._storage.set);
         assert.deepEqual(Router.state.messageImpressions, messageImpressions);
       });
+      it("should call setState before calling cleanupImpressions", async () => {
+        // The call order in `loadMessagesFromAllProviders` is important
+        const messages = [
+          { id: "foo", frequency: { lifetime: 10 } },
+          { id: "bar", frequency: { lifetime: 10 } },
+        ];
+        const setStateStub = sandbox.stub(Router, "setState");
+        const cleanupImpressionsStub = sandbox.stub(
+          Router,
+          "cleanupImpressions"
+        );
+        await createRouterAndInit([
+          { id: "onboarding", type: "local", messages, enabled: true },
+        ]);
+
+        cleanupImpressionsStub.calledImmediatelyAfter(setStateStub);
+      });
     });
   });
 
@@ -4036,6 +4081,27 @@ describe("ASRouter", () => {
         id: "unblock",
         value: true,
       });
+    });
+  });
+  describe("#loadMessagesForProvider", () => {
+    it("should fetch json from url", async () => {
+      let result = await MessageLoaderUtils.loadMessagesForProvider({
+        location: "http://fake.com/endpoint",
+        type: "json",
+      });
+
+      assert.property(result, "messages");
+      assert.lengthOf(result.messages, FAKE_REMOTE_MESSAGES.length);
+    });
+    it("should catch errors", async () => {
+      fetchStub.throws();
+      let result = await MessageLoaderUtils.loadMessagesForProvider({
+        location: "http://fake.com/endpoint",
+        type: "json",
+      });
+
+      assert.property(result, "messages");
+      assert.lengthOf(result.messages, 0);
     });
   });
 });
