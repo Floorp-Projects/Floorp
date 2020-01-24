@@ -166,6 +166,11 @@ XPCJSRuntime* nsXPConnect::GetRuntimeInstance() {
   return gSelf->mRuntime;
 }
 
+// static
+bool nsXPConnect::IsISupportsDescendant(const nsXPTInterfaceInfo* info) {
+  return info && info->HasAncestor(NS_GET_IID(nsISupports));
+}
+
 void xpc::ErrorBase::Init(JSErrorBase* aReport) {
   if (!aReport->filename) {
     mFileName.SetIsVoid(true);
