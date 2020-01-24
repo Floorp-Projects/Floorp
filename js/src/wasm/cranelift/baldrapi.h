@@ -165,6 +165,7 @@ struct BD_ConstantValue {
     int64_t i64;
     float f32;
     double f64;
+    void* r;
   } u;
 };
 
@@ -201,6 +202,8 @@ enum class BD_SymbolicAddress : uint32_t {
   NearestF64,
   TruncF32,
   TruncF64,
+  PreBarrier,
+  PostBarrier,
   Limit
 };
 
