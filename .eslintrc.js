@@ -46,6 +46,8 @@ const ignorePatterns = [
 
 module.exports = {
   ignorePatterns,
+  // Ignore eslint configurations in parent directories.
+  "root": true,
   // New rules and configurations should generally be added in
   // tools/lint/eslint/eslint-plugin-mozilla/lib/configs/recommended.js to
   // allow external repositories that use the plugin to pick them up as well.
