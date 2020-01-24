@@ -29,6 +29,8 @@ class RenderBundleEncoder final : public RenderEncoderBase,
   ~RenderBundleEncoder() = default;
 
  public:
+  void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
+                    const dom::Sequence<uint32_t>& aDynamicOffsets) override;
 };
 
 }  // namespace webgpu

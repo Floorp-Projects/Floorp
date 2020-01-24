@@ -44,12 +44,28 @@ class WebGPUChild final : public PWebGPUChild {
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc);
   RawId CommandEncoderFinish(RawId aSelfId,
                              const dom::GPUCommandBufferDescriptor& aDesc);
+  RawId DeviceCreateBindGroupLayout(
+      RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc);
+  RawId DeviceCreatePipelineLayout(
+      RawId aSelfId, const dom::GPUPipelineLayoutDescriptor& aDesc);
+  RawId DeviceCreateBindGroup(RawId aSelfId,
+                              const dom::GPUBindGroupDescriptor& aDesc);
+  RawId DeviceCreateShaderModule(RawId aSelfId,
+                                 const dom::GPUShaderModuleDescriptor& aDesc);
+  RawId DeviceCreateComputePipeline(
+      RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc);
+
   void QueueSubmit(RawId aSelfId, const nsTArray<RawId>& aCommandBufferIds);
 
   void DestroyAdapter(RawId aId);
   void DestroyBuffer(RawId aId);
   void DestroyCommandEncoder(RawId aId);
   void DestroyCommandBuffer(RawId aId);
+  void DestroyBindGroupLayout(RawId aId);
+  void DestroyPipelineLayout(RawId aId);
+  void DestroyBindGroup(RawId aId);
+  void DestroyShaderModule(RawId aId);
+  void DestroyComputePipeline(RawId aId);
 
  private:
   virtual ~WebGPUChild();
