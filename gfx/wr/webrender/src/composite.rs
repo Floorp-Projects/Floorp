@@ -312,7 +312,7 @@ impl CompositeState {
 
             visible_tile_count += 1;
 
-            let device_rect = (tile.world_rect * global_device_pixel_scale).round();
+            let device_rect = (tile.world_tile_rect * global_device_pixel_scale).round();
             let dirty_rect = (tile.world_dirty_rect * global_device_pixel_scale).round();
             let surface = tile.surface.as_ref().expect("no tile surface set!");
 
