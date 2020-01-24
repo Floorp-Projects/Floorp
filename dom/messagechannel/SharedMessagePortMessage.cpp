@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RefMessageBodyService.h"
 #include "SharedMessagePortMessage.h"
 #include "MessagePort.h"
 #include "MessagePortChild.h"
 #include "MessagePortParent.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/RefMessageBodyService.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
