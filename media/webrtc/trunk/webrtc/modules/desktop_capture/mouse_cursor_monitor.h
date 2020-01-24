@@ -54,13 +54,12 @@ class MouseCursorMonitor {
     // relative to the |window| specified in the constructor.
     // Deprecated: use the following overload instead.
     virtual void OnMouseCursorPosition(CursorState state,
-                                       const DesktopVector& position) = 0;
+                                       const DesktopVector& position) {}
 
     // Called in response to Capture(). |position| indicates cursor absolute
     // position on the system in fullscreen coordinate, i.e. the top-left
     // monitor always starts from (0, 0).
     // TODO(zijiehe): Ensure all implementations return the absolute position.
-    // TODO(zijiehe): Make this function pure virtual after Chromium changes.
     // TODO(zijiehe): Current this overload works correctly only when capturing
     // mouse cursor against fullscreen.
     virtual void OnMouseCursorPosition(const DesktopVector& position) {}

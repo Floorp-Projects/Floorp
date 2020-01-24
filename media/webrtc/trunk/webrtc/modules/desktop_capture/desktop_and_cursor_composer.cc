@@ -202,15 +202,6 @@ void DesktopAndCursorComposer::OnMouseCursor(MouseCursor* cursor) {
 }
 
 void DesktopAndCursorComposer::OnMouseCursorPosition(
-    MouseCursorMonitor::CursorState state,
-    const DesktopVector& position) {
-  if (!use_desktop_relative_cursor_position_) {
-    cursor_state_ = state;
-    cursor_position_ = position;
-  }
-}
-
-void DesktopAndCursorComposer::OnMouseCursorPosition(
     const DesktopVector& position) {
   if (use_desktop_relative_cursor_position_) {
     cursor_position_ = position;
