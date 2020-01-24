@@ -5,6 +5,8 @@
     <title>Test FinalizationGroup works in the browser</title>
     <script src="/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript">
+      let object4 = {};
+
       function go() {
         SimpleTest.waitForExplicitFinish();
 
@@ -29,7 +31,6 @@
         // Group with registered object that doesn't die.
         let holdings4 = [];
         let group4 = new FinalizationGroup(i => holdings4 = [...i]);
-        let object4 = {};
         group4.register(object4, 1);
 
         // Group observing cyclic JS data structure.
