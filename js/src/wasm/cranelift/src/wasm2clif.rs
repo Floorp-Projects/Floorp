@@ -45,6 +45,11 @@ pub const POINTER_SIZE: i32 = 8;
 #[cfg(target_pointer_width = "32")]
 pub const POINTER_SIZE: i32 = 4;
 
+#[cfg(target_pointer_width = "64")]
+pub const REF_TYPE: ir::Type = ir::types::R64;
+#[cfg(target_pointer_width = "32")]
+pub const REF_TYPE: ir::Type = ir::types::R32;
+
 /// Convert a TlsData offset into a `Offset32` for a global decl.
 fn offset32(offset: usize) -> ir::immediates::Offset32 {
     assert!(offset <= i32::max_value() as usize);
@@ -107,6 +112,7 @@ enum FailureMode {
     NotZero {
         internal_ret: bool,
     },
+    InvalidRef,
 }
 
 /// A description of builtin call to the `wasm::Instance`.
@@ -178,6 +184,24 @@ const FN_TABLE_SIZE: InstanceCall = InstanceCall {
     ret: Some(ir::types::I32),
     failure_mode: FailureMode::Infallible,
 };
+const FN_TABLE_GROW: InstanceCall = InstanceCall {
+    address: SymbolicAddress::TableGrow,
+    arguments: &[REF_TYPE, ir::types::I32, ir::types::I32],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::Infallible,
+};
+const FN_TABLE_GET: InstanceCall = InstanceCall {
+    address: SymbolicAddress::TableGet,
+    arguments: &[ir::types::I32, ir::types::I32],
+    ret: Some(REF_TYPE),
+    failure_mode: FailureMode::InvalidRef,
+};
+const FN_TABLE_SET: InstanceCall = InstanceCall {
+    address: SymbolicAddress::TableSet,
+    arguments: &[ir::types::I32, REF_TYPE, ir::types::I32],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero { internal_ret: true },
+};
 const FN_TABLE_COPY: InstanceCall = InstanceCall {
     address: SymbolicAddress::TableCopy,
     arguments: &[
@@ -187,6 +211,12 @@ const FN_TABLE_COPY: InstanceCall = InstanceCall {
         ir::types::I32,
         ir::types::I32,
     ],
+    ret: Some(ir::types::I32),
+    failure_mode: FailureMode::NotZero { internal_ret: true },
+};
+const FN_TABLE_FILL: InstanceCall = InstanceCall {
+    address: SymbolicAddress::TableFill,
+    arguments: &[ir::types::I32, REF_TYPE, ir::types::I32, ir::types::I32],
     ret: Some(ir::types::I32),
     failure_mode: FailureMode::NotZero { internal_ret: true },
 };
@@ -207,6 +237,12 @@ const FN_ELEM_DROP: InstanceCall = InstanceCall {
     arguments: &[ir::types::I32],
     ret: Some(ir::types::I32),
     failure_mode: FailureMode::NotZero { internal_ret: true },
+};
+const FN_REF_FUNC: InstanceCall = InstanceCall {
+    address: SymbolicAddress::RefFunc,
+    arguments: &[ir::types::I32],
+    ret: Some(REF_TYPE),
+    failure_mode: FailureMode::InvalidRef,
 };
 
 // Custom trap codes specific to this embedding
@@ -510,14 +546,14 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
             let mut sig = ir::Signature::new(call_conv);
             sig.params.push(ir::AbiParam::new(POINTER_TYPE));
             for argument in call.arguments {
-                sig.params.push(ir::AbiParam::new(*argument).uext());
+                sig.params.push(ir::AbiParam::new(*argument));
             }
             sig.params.push(ir::AbiParam::special(
                 POINTER_TYPE,
                 ir::ArgumentPurpose::VMContext,
             ));
             if let Some(ret) = &call.ret {
-                sig.returns.push(ir::AbiParam::new(*ret).uext());
+                sig.returns.push(ir::AbiParam::new(*ret));
             }
             sig
         });
@@ -557,6 +593,12 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
                 } else {
                     Some(ret)
                 }
+            }
+            FailureMode::InvalidRef => {
+                let invalid = pos.ins().is_invalid(ret);
+                pos.ins()
+                    .trapnz(invalid, ir::TrapCode::User(TRAP_THROW_REPORTED));
+                Some(ret)
             }
         }
     }
@@ -685,13 +727,6 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     }
 
     fn make_table(&mut self, func: &mut ir::Function, index: TableIndex) -> WasmResult<ir::Table> {
-        // Currently, Baldrdash doesn't support multiple tables.
-        if index.index() != 0 {
-            return Err(WasmError::Unsupported(
-                "only one wasm table supported".to_string(),
-            ));
-        }
-
         let table_desc = self.get_table(func, index);
 
         // TODO we'd need a better way to synchronize the shape of GlobalDataDesc and these
@@ -747,12 +782,6 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     ) -> WasmResult<ir::Inst> {
         let wsig = self.env.signature(sig_index);
 
-        // Currently, Baldrdash doesn't support multiple tables.
-        if table_index.index() != 0 {
-            return Err(WasmError::Unsupported(
-                "only one wasm table supported".to_string(),
-            ));
-        }
         let wtable = self.get_table(pos.func, table_index);
 
         // Follows `MacroAssembler::wasmCallIndirect`:
@@ -997,11 +1026,47 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         table_index: TableIndex,
         _table: ir::Table,
     ) -> WasmResult<ir::Value> {
-        assert!(table_index.index() == 0);
         let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
         Ok(self
             .instance_call(&mut pos, &FN_TABLE_SIZE, &[table_index])
             .unwrap())
+    }
+
+    fn translate_table_grow(
+        &mut self,
+        mut pos: FuncCursor,
+        table_index: u32,
+        delta: ir::Value,
+        init_value: ir::Value,
+    ) -> WasmResult<ir::Value> {
+        let table_index = pos.ins().iconst(ir::types::I32, table_index as i64);
+        Ok(self
+            .instance_call(&mut pos, &FN_TABLE_GROW, &[init_value, delta, table_index])
+            .unwrap())
+    }
+
+    fn translate_table_get(
+        &mut self,
+        mut pos: FuncCursor,
+        table_index: u32,
+        index: ir::Value,
+    ) -> WasmResult<ir::Value> {
+        let table_index = pos.ins().iconst(ir::types::I32, table_index as i64);
+        Ok(self
+            .instance_call(&mut pos, &FN_TABLE_GET, &[index, table_index])
+            .unwrap())
+    }
+
+    fn translate_table_set(
+        &mut self,
+        mut pos: FuncCursor,
+        table_index: u32,
+        value: ir::Value,
+        index: ir::Value,
+    ) -> WasmResult<()> {
+        let table_index = pos.ins().iconst(ir::types::I32, table_index as i64);
+        self.instance_call(&mut pos, &FN_TABLE_SET, &[index, value, table_index]);
+        Ok(())
     }
 
     fn translate_table_copy(
@@ -1015,14 +1080,30 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         src: ir::Value,
         len: ir::Value,
     ) -> WasmResult<()> {
-        assert!(dst_table_index.index() == 0);
-        assert!(src_table_index.index() == 0);
-        // Slightly lower the amount of SSA nodes as `dst == src`
-        let index = pos
+        let dst_index = pos
             .ins()
             .iconst(ir::types::I32, dst_table_index.index() as i64);
-        let ret = self.instance_call(&mut pos, &FN_TABLE_COPY, &[dst, src, len, index, index]);
-        debug_assert!(ret.is_none());
+        let src_index = pos
+            .ins()
+            .iconst(ir::types::I32, src_table_index.index() as i64);
+        self.instance_call(
+            &mut pos,
+            &FN_TABLE_COPY,
+            &[dst, src, len, dst_index, src_index],
+        );
+        Ok(())
+    }
+
+    fn translate_table_fill(
+        &mut self,
+        mut pos: FuncCursor,
+        table_index: u32,
+        dst: ir::Value,
+        val: ir::Value,
+        len: ir::Value,
+    ) -> WasmResult<()> {
+        let table_index = pos.ins().iconst(ir::types::I32, table_index as i64);
+        self.instance_call(&mut pos, &FN_TABLE_FILL, &[dst, val, len, table_index]);
         Ok(())
     }
 
@@ -1036,7 +1117,6 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         src: ir::Value,
         len: ir::Value,
     ) -> WasmResult<()> {
-        assert!(table_index.index() == 0);
         let seg_index = pos.ins().iconst(ir::types::I32, seg_index as i64);
         let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
         let ret = self.instance_call(
@@ -1053,6 +1133,17 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         let ret = self.instance_call(&mut pos, &FN_ELEM_DROP, &[seg_index]);
         debug_assert!(ret.is_none());
         Ok(())
+    }
+
+    fn translate_ref_func(
+        &mut self,
+        mut pos: FuncCursor,
+        func_index: u32,
+    ) -> WasmResult<ir::Value> {
+        let func_index = pos.ins().iconst(ir::types::I32, func_index as i64);
+        Ok(self
+            .instance_call(&mut pos, &FN_REF_FUNC, &[func_index])
+            .unwrap())
     }
 
     fn translate_loop_header(&mut self, mut pos: FuncCursor) -> WasmResult<()> {
