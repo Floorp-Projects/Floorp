@@ -28,7 +28,9 @@ log = logging.getLogger(__name__)
 
 
 ROOT_URL = os.environ['TASKCLUSTER_ROOT_URL']
-QUEUE_PREFIX = ROOT_URL + '/api/queue/'
+QUEUE_PREFIX = ("https://queue.taskcluster.net/"
+                if ROOT_URL == 'https://taskcluster.net'
+                else ROOT_URL + '/api/queue/')
 ALLOWED_URL_PREFIXES = (
     "http://download.cdn.mozilla.net/pub/mozilla.org/firefox/nightly/",
     "http://download.cdn.mozilla.net/pub/firefox/nightly/",
