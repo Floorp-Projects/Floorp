@@ -11,6 +11,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/dom/RefMessageBodyService.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -200,8 +201,13 @@ class TeardownRunnableOnWorker final : public WorkerControlRunnable,
 }  // namespace
 
 BroadcastChannel::BroadcastChannel(nsIGlobalObject* aGlobal,
-                                   const nsAString& aChannel)
-    : DOMEventTargetHelper(aGlobal), mChannel(aChannel), mState(StateActive) {
+                                   const nsAString& aChannel,
+                                   const nsID& aPortUUID)
+    : DOMEventTargetHelper(aGlobal),
+      mRefMessageBodyService(RefMessageBodyService::GetOrCreate()),
+      mChannel(aChannel),
+      mState(StateActive),
+      mPortUUID(aPortUUID) {
   MOZ_ASSERT(aGlobal);
   KeepAliveIfHasListenersFor(NS_LITERAL_STRING("message"));
 }
@@ -225,7 +231,14 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
     return nullptr;
   }
 
-  RefPtr<BroadcastChannel> bc = new BroadcastChannel(global, aChannel);
+  nsID portUUID = {};
+  aRv = nsContentUtils::GenerateUUIDInPlace(portUUID);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<BroadcastChannel> bc =
+      new BroadcastChannel(global, aChannel, portUUID);
 
   nsAutoCString origin;
   PrincipalInfo storagePrincipalInfo;
