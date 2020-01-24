@@ -23,7 +23,7 @@ namespace dom {
 void SharedMessagePortMessage::FromSharedToMessagesChild(
     MessagePortChild* aActor,
     const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-    nsTArray<ClonedMessageData>& aArray) {
+    nsTArray<MessageData>& aArray) {
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aArray.IsEmpty());
   aArray.SetCapacity(aData.Length());
@@ -32,14 +32,26 @@ void SharedMessagePortMessage::FromSharedToMessagesChild(
   MOZ_ASSERT(backgroundManager);
 
   for (auto& data : aData) {
-    ClonedMessageData* message = aArray.AppendElement();
-    data->BuildClonedMessageDataForBackgroundChild(backgroundManager, *message);
+    MessageData* message = aArray.AppendElement();
+
+    if (data->CloneScope() ==
+        StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
+      ClonedMessageData clonedData;
+      data->BuildClonedMessageDataForBackgroundChild(backgroundManager,
+                                                     clonedData);
+      *message = clonedData;
+      continue;
+    }
+
+    MOZ_ASSERT(data->CloneScope() ==
+               StructuredCloneHolder::StructuredCloneScope::SameProcess);
+    *message = RefMessageData();  // TODO
   }
 }
 
 /* static */
 bool SharedMessagePortMessage::FromMessagesToSharedChild(
-    nsTArray<ClonedMessageData>& aArray,
+    nsTArray<MessageData>& aArray,
     FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData) {
   MOZ_ASSERT(aData.IsEmpty());
 
@@ -49,7 +61,13 @@ bool SharedMessagePortMessage::FromMessagesToSharedChild(
 
   for (auto& message : aArray) {
     RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
-    data->StealFromClonedMessageDataForBackgroundChild(message);
+
+    if (message.type() == MessageData::TClonedMessageData) {
+      data->StealFromClonedMessageDataForBackgroundChild(message);
+    } else {
+      MOZ_ASSERT(message.type() == MessageData::TRefMessageData);
+      // TODO
+    }
 
     if (!aData.AppendElement(data, mozilla::fallible)) {
       return false;
@@ -63,7 +81,7 @@ bool SharedMessagePortMessage::FromMessagesToSharedChild(
 bool SharedMessagePortMessage::FromSharedToMessagesParent(
     MessagePortParent* aActor,
     const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-    FallibleTArray<ClonedMessageData>& aArray) {
+    FallibleTArray<MessageData>& aArray) {
   MOZ_ASSERT(aArray.IsEmpty());
 
   if (NS_WARN_IF(!aArray.SetCapacity(aData.Length(), mozilla::fallible))) {
@@ -74,9 +92,20 @@ bool SharedMessagePortMessage::FromSharedToMessagesParent(
   MOZ_ASSERT(backgroundManager);
 
   for (auto& data : aData) {
-    ClonedMessageData* message = aArray.AppendElement(mozilla::fallible);
-    data->BuildClonedMessageDataForBackgroundParent(backgroundManager,
-                                                    *message);
+    MessageData* message = aArray.AppendElement(mozilla::fallible);
+
+    if (data->CloneScope() ==
+        StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
+      ClonedMessageData clonedData;
+      data->BuildClonedMessageDataForBackgroundParent(backgroundManager,
+                                                      clonedData);
+      *message = clonedData;
+      continue;
+    }
+
+    MOZ_ASSERT(data->CloneScope() ==
+               StructuredCloneHolder::StructuredCloneScope::SameProcess);
+    *message = RefMessageData();  // TODO
   }
 
   return true;
@@ -84,7 +113,7 @@ bool SharedMessagePortMessage::FromSharedToMessagesParent(
 
 /* static */
 bool SharedMessagePortMessage::FromMessagesToSharedParent(
-    nsTArray<ClonedMessageData>& aArray,
+    nsTArray<MessageData>& aArray,
     FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData) {
   MOZ_ASSERT(aData.IsEmpty());
 
@@ -94,7 +123,13 @@ bool SharedMessagePortMessage::FromMessagesToSharedParent(
 
   for (auto& message : aArray) {
     RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
-    data->StealFromClonedMessageDataForBackgroundParent(message);
+
+    if (message.type() == MessageData::TClonedMessageData) {
+      data->StealFromClonedMessageDataForBackgroundParent(message);
+    } else {
+      MOZ_ASSERT(message.type() == MessageData::TRefMessageData);
+      // TODO
+    }
 
     if (!aData.AppendElement(data, mozilla::fallible)) {
       return false;
