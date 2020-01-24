@@ -72,7 +72,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-siz
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004-ref.html # Bug 1392106
 == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html
 == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
-== grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-75) == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
 fuzzy-if(webrender&&winWidget,0-1,0-75) == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
 == grid-track-intrinsic-sizing-004.html grid-track-intrinsic-sizing-004-ref.html
 == grid-track-percent-sizing-001.html grid-track-percent-sizing-001-ref.html
