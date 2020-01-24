@@ -112,7 +112,7 @@ MALLOC_DECL(moz_create_arena_with_params, arena_id_t, arena_params_t*)
 
 // Dispose of the given arena. Subsequent uses of the arena will crash.
 // Passing an invalid id (inexistent or already disposed) to this function
-// will crash.
+// will crash. The arena must be empty prior to calling this function.
 MALLOC_DECL(moz_dispose_arena, void, arena_id_t)
 #  endif
 
