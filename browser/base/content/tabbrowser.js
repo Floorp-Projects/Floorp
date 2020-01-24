@@ -2538,6 +2538,7 @@
         bulkOrderedOpen,
         charset,
         createLazyBrowser,
+        disableTRR,
         eventDetail,
         focusUrlBar,
         forceNotRemote,
@@ -2864,6 +2865,9 @@
           }
           if (!allowInheritPrincipal) {
             flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+          }
+          if (disableTRR) {
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISABLE_TRR;
           }
           try {
             b.loadURI(aURI, {

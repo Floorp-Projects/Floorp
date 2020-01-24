@@ -227,6 +227,12 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_IS_REDIRECT = 0x800000;
 
   /**
+   * These flags force TRR modes 1 or 3 for the load.
+   */
+  const unsigned long LOAD_FLAGS_DISABLE_TRR = 0x1000000;
+  const unsigned long LOAD_FLAGS_FORCE_TRR = 0x2000000;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content
