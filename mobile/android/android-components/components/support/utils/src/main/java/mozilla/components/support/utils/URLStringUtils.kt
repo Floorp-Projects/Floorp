@@ -53,25 +53,40 @@ object URLStringUtils {
     }
 
     private val isURLLenient by lazy {
-        // Be lenient about what is classified as potentially a URL. Anything that contains a :,
-        // ://, or . and has no internal spaces is potentially a URL.
+        // Be lenient about what is classified as potentially a URL.
+        // (\w+-)*\w+(://[/]*|:|\.)(\w+-)*\w+([\S&&[^\w-]]\S*)?
+        // -------                 -------
+        // 0 or more pairs of consecutive word letters followed by a dash
+        //        ---                     ---
+        // followed by at least a single word letter.
+        // -----------             ----------
+        // Combined, that means "w", "w-w", "w-w-w", etc match, but "w-", "w-w-", "w-w-w-" do not.
+        //          --------------
+        // That surrounds :, :// or .
+        //                                                    -
+        // At the end, there may be an optional
+        //                                    ------------
+        // non-word, non-- but still non-space character (e.g., ':', '/', '.', '?' but not 'a', '-', '\t')
+        //                                                ---
+        // and 0 or more non-space characters.
         //
-        // Use java.util.regex because it is always unicode aware on Android.
-        // https://developer.android.com/reference/java/util/regex/Pattern.html
-
-        // Use both the \w+ and \S* after the punctuation because they seem to match slightly
-        // different things. The \S matches any non-whitespace character (e.g., '~') and \w
-        // matches only word characters. In other words, the regex is requiring that there be a
-        // non-symbol character somewhere after the ., : or :// and before any other character
-        // or the end of the string. For example, match
-        // mozilla.com/~userdir
-        // and not
-        // mozilla./~ or mozilla:/
-        // Without the [/]* after the :// in the alternation of the characters required to be a
-        // valid URL,
-        // file:///home/user/myfile.html
-        // is considered a search term; it is clearly a URL.
-        Pattern.compile("^\\s*\\w+(://[/]*|:|\\.)\\w+\\S*\\s*$", flags)
+        // These are some (odd) examples of valid urls according to this pattern:
+        // c-c.com
+        // c-c-c-c.c-c-c
+        // c-http://c.com
+        // about-mozilla:mozilla
+        // c-http.d-x
+        // www.c-
+        // 3-3.3
+        // www.c-c.-
+        //
+        // There are some examples of non-URLs according to this pattern:
+        // -://x.com
+        // -x.com
+        // http://www-.com
+        // www.c-c-
+        // 3-3
+        Pattern.compile("^\\s*(\\w+-)*\\w+(://[/]*|:|\\.)(\\w+-)*\\w+([\\S&&[^\\w-]]\\S*)?\\s*$", flags)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
