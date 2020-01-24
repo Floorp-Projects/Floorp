@@ -284,38 +284,37 @@ async function doTest() {
   document.removeEventListener("drop", onDrop);
 
   // -------- Test dragging regular text of text/html to readonly <input>
-  // XXX Oddly, dropping in <input readonly> causes trying to load another page.
-  // description = "dragging text in non-editable <span> to <input readonly>";
-  // container.innerHTML = "<span>Static</span><input readonly>";
-  // span = document.querySelector("div#container > span");
-  // input = document.querySelector("div#container > input");
-  // selection.setBaseAndExtent(span.firstChild, 2, span.firstChild, 5);
-  // beforeinputEvents = [];
-  // inputEvents = [];
-  // dragEvents = [];
-  // onDrop = aEvent => {
-  //   dragEvents.push(aEvent);
-  //   comparePlainText(aEvent.dataTransfer.getData("text/plain"),
-  //                    span.textContent.substring(2, 5),
-  //                    `${description}: dataTransfer should have selected text as "text/plain"`);
-  //   compareHTML(aEvent.dataTransfer.getData("text/html"),
-  //               span.outerHTML.replace(/>.+</, `>${span.textContent.substring(2, 5)}<`),
-  //               `${description}: dataTransfer should have selected nodes as "text/html"`);
-  // };
-  // document.addEventListener("drop", onDrop);
-  // await synthesizePlainDragAndDrop({
-  //   srcSelection: selection,
-  //   destElement: input,
-  // });
-  // is(input.value, "",
-  //    `${description}: <input readonly>.value should not be modified`);
-  // is(beforeinputEvents.length, 0,
-  //    `${description}: no "beforeinput" event should be fired on <input readonly>`);
-  // is(inputEvents.length, 0,
-  //    `${description}: no "input" event should be fired on <input readonly>`);
-  // is(dragEvents.length, 0,
-  //    `${description}: no "drop" event should be fired on <input readonly>`);
-  // document.removeEventListener("drop", onDrop);
+  description = "dragging text in non-editable <span> to <input readonly>";
+  container.innerHTML = "<span>Static</span><input readonly>";
+  span = document.querySelector("div#container > span");
+  input = document.querySelector("div#container > input");
+  selection.setBaseAndExtent(span.firstChild, 2, span.firstChild, 5);
+  beforeinputEvents = [];
+  inputEvents = [];
+  dragEvents = [];
+  onDrop = aEvent => {
+    dragEvents.push(aEvent);
+    comparePlainText(aEvent.dataTransfer.getData("text/plain"),
+                     span.textContent.substring(2, 5),
+                     `${description}: dataTransfer should have selected text as "text/plain"`);
+    compareHTML(aEvent.dataTransfer.getData("text/html"),
+                span.outerHTML.replace(/>.+</, `>${span.textContent.substring(2, 5)}<`),
+                `${description}: dataTransfer should have selected nodes as "text/html"`);
+  };
+  document.addEventListener("drop", onDrop);
+  await synthesizePlainDragAndDrop({
+    srcSelection: selection,
+    destElement: input,
+  });
+  is(input.value, "",
+     `${description}: <input readonly>.value should not be modified`);
+  is(beforeinputEvents.length, 0,
+     `${description}: no "beforeinput" event should be fired on <input readonly>`);
+  is(inputEvents.length, 0,
+     `${description}: no "input" event should be fired on <input readonly>`);
+  is(dragEvents.length, 0,
+     `${description}: no "drop" event should be fired on <input readonly>`);
+  document.removeEventListener("drop", onDrop);
 
   // -------- Test dragging regular text of text/plain to <textarea>
   description = "dragging text in non-editable <span> to <textarea>";
