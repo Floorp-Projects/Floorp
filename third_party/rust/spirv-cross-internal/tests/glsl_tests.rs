@@ -1,4 +1,4 @@
-use spirv_cross::{glsl, spirv};
+use spirv_cross_internal::{glsl, spirv};
 
 mod common;
 use crate::common::words_from_bytes;
@@ -49,7 +49,7 @@ void main()
 
 #[test]
 fn ast_compiles_all_versions_to_glsl() {
-    use spirv_cross::glsl::Version::*;
+    use spirv_cross_internal::glsl::Version::*;
 
     let module =
         spirv::Module::from_words(words_from_bytes(include_bytes!("shaders/simple.vert.spv")));

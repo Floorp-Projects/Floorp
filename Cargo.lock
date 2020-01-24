@@ -3553,11 +3553,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "spirv_cross"
-version = "0.16.0"
-source = "git+https://github.com/kvark/spirv_cross?branch=wgpu#636677bad724797789239c16e6d332e9b4d97b86"
+name = "spirv-cross-internal"
+version = "0.1.0"
+source = "git+https://github.com/kvark/spirv_cross?branch=wgpu#9cb4de489bf80b2b23efffe5a79afb7db6247ba4"
 dependencies = [
  "cc 1.0.47 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "spirv_cross"
+version = "0.16.0"
+source = "git+https://github.com/kvark/spirv_cross?branch=wgpu#9cb4de489bf80b2b23efffe5a79afb7db6247ba4"
+dependencies = [
+ "spirv-cross-internal 0.1.0 (git+https://github.com/kvark/spirv_cross?branch=wgpu)",
 ]
 
 [[package]]
@@ -4905,6 +4913,7 @@ dependencies = [
 "checksum smallvec 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)" = "ab606a9c5e214920bb66c458cd7be8ef094f813f20fe77a54cc7dbfff220d4b7"
 "checksum smallvec 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4ecf3b85f68e8abaa7555aa5abdb1153079387e60b718283d732f03897fcfc86"
 "checksum socket2 0.3.10 (registry+https://github.com/rust-lang/crates.io-index)" = "df028e0e632c2a1823d920ad74895e7f9128e6438cbc4bc6fd1f180e644767b9"
+"checksum spirv-cross-internal 0.1.0 (git+https://github.com/kvark/spirv_cross?branch=wgpu)" = "<none>"
 "checksum spirv_cross 0.16.0 (git+https://github.com/kvark/spirv_cross?branch=wgpu)" = "<none>"
 "checksum stable_deref_trait 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "15132e0e364248108c5e2c02e3ab539be8d6f5d52a01ca9bbf27ed657316f02b"
 "checksum storage-map 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fd0a4829a5c591dc24a944a736d6b1e4053e51339a79fd5d4702c4c999a9c45e"
