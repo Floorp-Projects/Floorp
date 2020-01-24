@@ -70,7 +70,7 @@ class WebExtensionBrowserMenu internal constructor(
         ): List<BrowserMenuItem> {
             val menuItems = ArrayList<BrowserMenuItem>()
             val extensions = state.extensions.values.toList()
-            extensions.filter { it.enabled }
+            extensions.filter { it.enabled }.sortedBy { it.name }
                 .forEach { extension ->
                     extension.browserAction?.let { browserAction ->
                         addOrUpdateAction(

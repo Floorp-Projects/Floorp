@@ -31,6 +31,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -281,6 +282,48 @@ class WebExtensionToolbarFeatureTest {
         verify(toolbar).removeBrowserAction(pageActionCaptor.capture())
         assertEquals(browserAction, browserActionCaptor.value.action)
         assertEquals(browserAction, pageActionCaptor.value.action)
+    }
+
+    @Test
+    fun `actions can are sorted per extension name`() {
+        val toolbar: Toolbar = mock()
+        val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar)
+
+        val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
+
+        val actionExt1 = Action(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val actionExt2 = Action(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val browserExtensions = HashMap<String, WebExtensionState>()
+        browserExtensions["1"] = WebExtensionState(id = "1", name = "extensionA", browserAction = actionExt1)
+        browserExtensions["2"] = WebExtensionState(id = "2", name = "extensionB", pageAction = actionExt2)
+
+        val browserState = BrowserState(extensions = browserExtensions)
+        webExtToolbarFeature.renderWebExtensionActions(browserState, mock())
+
+        val inOrder = inOrder(toolbar)
+        val browserActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        inOrder.verify(toolbar).addBrowserAction(browserActionCaptor.capture())
+        assertEquals(actionExt1, browserActionCaptor.value.action)
+
+        val pageActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        inOrder.verify(toolbar).addPageAction(pageActionCaptor.capture())
+        assertEquals(actionExt2, pageActionCaptor.value.action)
     }
 
     private fun getWebExtensionToolbarFeature(
