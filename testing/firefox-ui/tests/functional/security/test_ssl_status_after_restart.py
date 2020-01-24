@@ -111,7 +111,7 @@ class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
         if identity != '':
             owner = cert['organization']
         else:
-            owner = page_info.localize_property('securityNoOwner')
+            owner = 'This website does not supply ownership information.'
 
         self.assertEqual(page_info.deck.security.owner.get_property('value'), owner,
                          'Expected owner label found for ' + url)

@@ -19,9 +19,6 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
         """Test correct retrieval of elements."""
         page_info = self.browser.open_page_info_window()
 
-        self.assertNotEqual(page_info.dtds, [])
-        self.assertNotEqual(page_info.properties, [])
-
         self.assertEqual(page_info.deck.element.get_property('localName'), 'deck')
 
         # general panel
@@ -38,9 +35,9 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
 
         self.assertEqual(panel.element.get_property('localName'), 'vbox')
 
-        self.assertEqual(panel.domain.get_property('localName'), 'textbox')
-        self.assertEqual(panel.owner.get_property('localName'), 'textbox')
-        self.assertEqual(panel.verifier.get_property('localName'), 'textbox')
+        self.assertEqual(panel.domain.get_property('localName'), 'input')
+        self.assertEqual(panel.owner.get_property('localName'), 'input')
+        self.assertEqual(panel.verifier.get_property('localName'), 'input')
 
         self.assertEqual(panel.view_certificate.get_property('localName'), 'button')
         self.assertEqual(panel.view_passwords.get_property('localName'), 'button')
@@ -80,8 +77,7 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
     def test_close_window(self):
         """Test various closing strategies."""
         def closer(win):
-            win.send_shortcut(win.localize_entity('closeWindow.key'),
-                              accel=True)
+            win.send_shortcut('w', accel=True)
 
         # Close a tab by each trigger method
         close_strategies = ('menu',

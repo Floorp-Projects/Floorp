@@ -131,9 +131,7 @@ class TabBar(UIBaseLib):
         elif trigger == 'menu':
             self.window.menubar.select_by_id('file-menu', 'menu_newNavigatorTab')
         elif trigger == 'shortcut':
-            self.window.send_shortcut(
-                self.window.localize_entity('tabCmd.commandkey'),
-                accel=True)
+            self.window.send_shortcut('t', accel=True)
         # elif - need to add other cases
         else:
             raise ValueError('Unknown opening method: "%s"' % trigger)
@@ -319,8 +317,7 @@ class Tab(UIBaseLib):
         elif trigger == 'menu':
             self.window.menubar.select_by_id('file-menu', 'menu_close')
         elif trigger == 'shortcut':
-            self.window.send_shortcut(self.window.localize_entity('closeCmd.key'),
-                                      accel=True)
+            self.window.send_shortcut('w', accel=True)
         else:
             raise ValueError('Unknown closing method: "%s"' % trigger)
 
