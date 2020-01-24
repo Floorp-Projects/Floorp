@@ -36,12 +36,14 @@ void nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(
                  type == StyleShapeSourceType::Path,
              "This is used with basic-shape, geometry-box, and path() only");
 #endif
-
   nsCSSClipPathInstance instance(aFrame, clipPathStyle);
 
   aContext.NewPath();
   RefPtr<Path> path =
       instance.CreateClipPath(aContext.GetDrawTarget(), aTransform);
+  if (!path) {
+    return;
+  }
   aContext.SetPath(path);
   aContext.Clip();
 }
@@ -66,11 +68,11 @@ bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
       drawTarget, nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame));
   float pixelRatio = float(AppUnitsPerCSSPixel()) /
                      aFrame->PresContext()->AppUnitsPerDevPixel();
-  return path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
+  return path && path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
 }
 
 /* static */
-Rect nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
+Maybe<Rect> nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
     nsIFrame* aFrame, const StyleShapeSource& aClipPathStyle) {
   MOZ_ASSERT(aClipPathStyle.GetType() == StyleShapeSourceType::Shape ||
              aClipPathStyle.GetType() == StyleShapeSourceType::Box ||
@@ -82,7 +84,7 @@ Rect nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   RefPtr<Path> path = instance.CreateClipPath(
       drawTarget, nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame));
-  return path->GetBounds();
+  return path ? Some(path->GetBounds()) : Nothing();
 }
 
 already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPath(

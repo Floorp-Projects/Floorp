@@ -30,7 +30,7 @@ class nsCSSClipPathInstance {
   static bool HitTestBasicShapeOrPathClip(nsIFrame* aFrame,
                                           const gfxPoint& aPoint);
 
-  static Rect GetBoundingRectForBasicShapeOrPathClip(
+  static Maybe<Rect> GetBoundingRectForBasicShapeOrPathClip(
       nsIFrame* aFrame, const StyleShapeSource& aClipPathStyle);
 
  private:

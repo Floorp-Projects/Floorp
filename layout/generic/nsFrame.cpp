@@ -1353,8 +1353,16 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
           gfxPlatform::GetPlatform()
               ->ScreenReferenceDrawTarget()
               ->CreatePathBuilder(gfx::FillRule::FILL_WINDING);
-      SetProperty(nsIFrame::OffsetPathCache(),
-                  MotionPathUtils::BuildPath(newPath.AsPath(), builder).take());
+      RefPtr<gfx::Path> path =
+          MotionPathUtils::BuildPath(newPath.AsPath(), builder);
+      if (path) {
+        // The newPath could be path('') (i.e. empty path), so its gfx path
+        // could be nullptr, and so we only set property for a non-empty path.
+        SetProperty(nsIFrame::OffsetPathCache(), path.forget().take());
+      } else {
+        // May have an old cached path, so we have to delete it.
+        DeleteProperty(nsIFrame::OffsetPathCache());
+      }
     } else if (oldPath) {
       DeleteProperty(nsIFrame::OffsetPathCache());
     }
@@ -2890,9 +2898,12 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
 
   Maybe<gfxRect> combinedClip;
   if (maskUsage.shouldApplyBasicShapeOrPath) {
-    Rect result = nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
-        aMaskedFrame, svgReset->mClipPath);
-    combinedClip = Some(ThebesRect(result));
+    Maybe<Rect> result =
+        nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
+            aMaskedFrame, svgReset->mClipPath);
+    if (result) {
+      combinedClip = Some(ThebesRect(*result));
+    }
   } else if (maskUsage.shouldApplyClipPath) {
     gfxRect result = nsSVGUtils::GetBBox(
         aMaskedFrame,
