@@ -188,6 +188,11 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   Element* GetEmbedderElement() const { return mEmbedderElement; }
   void SetEmbedderElement(Element* aEmbedder);
 
+  // Called after the BrowingContext has been embedded in a FrameLoader. This
+  // happens after `SetEmbedderElement` is called on the BrowsingContext and
+  // after the BrowsingContext has been set on the FrameLoader.
+  void Embed();
+
   // Get the outer window object for this BrowsingContext if it is in-process
   // and still has a docshell, or null otherwise.
   nsPIDOMWindowOuter* GetDOMWindow() const {

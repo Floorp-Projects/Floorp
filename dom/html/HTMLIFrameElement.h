@@ -34,7 +34,6 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
   }
 
   // nsIContent
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
@@ -44,6 +43,8 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
       const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+
+  void BindToBrowsingContext(BrowsingContext* aBrowsingContext);
 
   uint32_t GetSandboxFlags() const;
 
