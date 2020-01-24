@@ -124,7 +124,7 @@ web-platform-tests-wdspec:
     chunks:
         by-test-platform:
             .*-ccov/.*: 4
-            default: 2
+            default: 3
     mozharness:
         extra-options:
             - --test-type=wdspec
