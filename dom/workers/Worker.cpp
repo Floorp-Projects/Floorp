@@ -106,12 +106,12 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   if (NS_IsMainThread()) {
     nsGlobalWindowInner* win = nsContentUtils::CallerInnerWindow();
     if (win && win->IsSharedMemoryAllowed()) {
-      clonePolicy.allowIntraClusterClonableSharedObjects();
+      clonePolicy.allowSharedMemory();
     }
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     if (worker && worker->IsSharedMemoryAllowed()) {
-      clonePolicy.allowIntraClusterClonableSharedObjects();
+      clonePolicy.allowSharedMemory();
     }
   }
 

@@ -772,8 +772,7 @@ void PromiseWorkerProxy::CleanUp() {
 }
 
 JSObject* PromiseWorkerProxy::CustomReadHandler(
-    JSContext* aCx, JSStructuredCloneReader* aReader,
-    const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag,
+    JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
     uint32_t aIndex) {
   if (NS_WARN_IF(!mCallbacks)) {
     return nullptr;

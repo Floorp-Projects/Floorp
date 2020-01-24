@@ -205,29 +205,24 @@ enum TransferableOwnership {
 };
 
 class CloneDataPolicy {
-  bool allowIntraClusterClonableSharedObjects_;
+  bool sharedArrayBuffer_;
 
  public:
   // The default is to deny all policy-controlled aspects.
 
-  CloneDataPolicy() : allowIntraClusterClonableSharedObjects_(false) {}
+  CloneDataPolicy() : sharedArrayBuffer_(false) {}
 
-  // In the JS engine, SharedArrayBuffers and WASM modules can only be cloned
-  // intra-process because the shared memory areas are allocated in
-  // process-private memory.  Clients should therefore deny SharedArrayBuffers
-  // when cloning data that are to be transmitted inter-process.
+  // In the JS engine, SharedArrayBuffers can only be cloned intra-process
+  // because the shared memory areas are allocated in process-private memory.
+  // Clients should therefore deny SharedArrayBuffers when cloning data that
+  // are to be transmitted inter-process.
   //
-  // Clients should also deny SharedArrayBuffers and WASM modules when cloning
-  // data that are to be transmitted intra-process if policy needs dictate such
-  // denial.
+  // Clients should also deny SharedArrayBuffers when cloning data that are to
+  // be transmitted intra-process if policy needs dictate such denial.
 
-  void allowIntraClusterClonableSharedObjects() {
-    allowIntraClusterClonableSharedObjects_ = true;
-  }
+  void allowSharedMemory() { sharedArrayBuffer_ = true; }
 
-  bool areIntraClusterClonableSharedObjectsAllowed() const {
-    return allowIntraClusterClonableSharedObjects_;
-  }
+  bool isSharedArrayBufferAllowed() const { return sharedArrayBuffer_; }
 };
 
 } /* namespace JS */
@@ -241,10 +236,10 @@ class CloneDataPolicy {
  * from the reader r. closure is any value passed to the JS_ReadStructuredClone
  * function. Return the new object on success, nullptr on error/exception.
  */
-typedef JSObject* (*ReadStructuredCloneOp)(
-    JSContext* cx, JSStructuredCloneReader* r,
-    const JS::CloneDataPolicy& cloneDataPolicy, uint32_t tag, uint32_t data,
-    void* closure);
+typedef JSObject* (*ReadStructuredCloneOp)(JSContext* cx,
+                                           JSStructuredCloneReader* r,
+                                           uint32_t tag, uint32_t data,
+                                           void* closure);
 
 /**
  * Structured data serialization hook. The engine can write primitive values,
