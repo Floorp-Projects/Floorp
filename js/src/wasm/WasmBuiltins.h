@@ -67,6 +67,7 @@ extern const SymbolicAddressSignature SASigTableInit;
 extern const SymbolicAddressSignature SASigTableSet;
 extern const SymbolicAddressSignature SASigTableSize;
 extern const SymbolicAddressSignature SASigFuncRef;
+extern const SymbolicAddressSignature SASigPreBarrierFiltering;
 extern const SymbolicAddressSignature SASigPostBarrier;
 extern const SymbolicAddressSignature SASigPostBarrierFiltering;
 extern const SymbolicAddressSignature SASigStructNew;
