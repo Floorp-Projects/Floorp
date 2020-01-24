@@ -27,8 +27,6 @@ class TestAboutWindow(PuppeteerMixin, MarionetteTestCase):
 
     def test_elements(self):
         """Test correct retrieval of elements."""
-        self.assertNotEqual(self.about_window.dtds, [])
-
         self.assertEqual(self.deck.element.get_property('localName'), 'deck')
 
         # apply panel
