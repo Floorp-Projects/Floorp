@@ -136,41 +136,62 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
   );
   await inspectorPanelSelectedPromise;
 
+  function expectedSourceSelected(sourceFilename, sourceLine) {
+    return () => {
+      const dbg = toolbox.getPanel("jsdebugger");
+      const selectedLocation = dbg._selectors.getSelectedLocation(
+        dbg._getState()
+      );
+
+      if (!selectedLocation) {
+        return false;
+      }
+
+      return (
+        selectedLocation.sourceId.includes(sourceFilename) &&
+        selectedLocation.line == sourceLine
+      );
+    };
+  }
+
   info("Test inspectedWindow.eval inspect() binding called for a function");
+
   const debuggerPanelSelectedPromise = (async () => {
     const toolId = await toolbox.once("select");
 
     if (toolId === "jsdebugger") {
       info("Toolbox has been switched to the jsdebugger as expected");
-      const dbg = toolbox.getPanel("jsdebugger");
-
-      await BrowserTestUtils.waitForCondition(() => {
-        const selectedLocation = dbg._selectors.getSelectedLocation(
-          dbg._getState()
-        );
-
-        if (!selectedLocation) {
-          return false;
-        }
-
-        return (
-          selectedLocation.sourceId.includes(
-            "file_inspectedwindow_eval.html"
-          ) && selectedLocation.line == 9
-        );
-      }, "Wait the expected function to be selected in the jsdebugger panel");
     } else {
       throw new Error(
         `jsdebugger panel expected, ${toolId} has been selected instead`
       );
     }
   })();
+
   extension.sendMessage(
     `inspectedWindow-eval-request`,
     "inspect(test_inspect_function)"
   );
   await extension.awaitMessage(`inspectedWindow-eval-result`);
   await debuggerPanelSelectedPromise;
+
+  await BrowserTestUtils.waitForCondition(
+    expectedSourceSelected("file_inspectedwindow_eval.html", 9),
+    "Wait the expected function to be selected in the jsdebugger panel"
+  );
+
+  info("Test inspectedWindow.eval inspect() bound function");
+
+  extension.sendMessage(
+    `inspectedWindow-eval-request`,
+    "inspect(test_bound_function)"
+  );
+  await extension.awaitMessage(`inspectedWindow-eval-result`);
+
+  await BrowserTestUtils.waitForCondition(
+    expectedSourceSelected("file_inspectedwindow_eval.html", 15),
+    "Wait the expected function to be selected in the jsdebugger panel"
+  );
 
   info("Test inspectedWindow.eval inspect() binding called for a JS object");
 
