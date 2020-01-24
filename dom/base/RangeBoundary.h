@@ -263,6 +263,15 @@ class RangeBoundaryBase {
     return *this;
   }
 
+  bool Equals(const nsINode* aNode, uint32_t aOffset) const {
+    if (mParent != aNode) {
+      return false;
+    }
+
+    const Maybe<uint32_t> offset = Offset(OffsetFilter::kValidOffsets);
+    return offset && (*offset == aOffset);
+  }
+
   template <typename A, typename B>
   bool operator==(const RangeBoundaryBase<A, B>& aOther) const {
     return mParent == aOther.mParent &&
