@@ -66,17 +66,11 @@ HTMLIFrameElement::~HTMLIFrameElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLIFrameElement)
 
-nsresult HTMLIFrameElement::BindToTree(BindContext& aContext,
-                                       nsINode& aParent) {
-  nsresult rv = nsGenericHTMLFrameElement::BindToTree(aContext, aParent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+void HTMLIFrameElement::BindToBrowsingContext(
+    BrowsingContext* aBrowsingContext) {
   if (StaticPrefs::dom_security_featurePolicy_enabled()) {
     RefreshFeaturePolicy(true /* parse the feature policy attribute */);
   }
-  return NS_OK;
 }
 
 bool HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
