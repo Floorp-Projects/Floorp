@@ -116,7 +116,7 @@ GeckoViewPermission.prototype = {
     })
       .then(devices => {
         if (win.closed) {
-          return;
+          return Promise.resolve();
         }
 
         let sources = devices.map(device => {
