@@ -51,10 +51,7 @@ Buffer::~Buffer() {
 
 void Buffer::Cleanup() {
   if (mParent) {
-    WebGPUChild* bridge = mParent->mBridge;
-    if (bridge && bridge->IsOpen()) {
-      bridge->DestroyBuffer(mId);
-    }
+    mParent->DestroyBuffer(mId);
   }
   mMapping.reset();
 }

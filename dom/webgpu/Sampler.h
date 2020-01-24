@@ -19,8 +19,6 @@ class Sampler final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(Sampler)
   GPU_DECL_JS_WRAP(Sampler)
 
-  const RawId mId;
-
  private:
   Sampler() = delete;
   virtual ~Sampler();
