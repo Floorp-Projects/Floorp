@@ -45,14 +45,15 @@ namespace dom {
 
 namespace {
 
-JSObject* StructuredCloneCallbacksRead(JSContext* aCx,
-                                       JSStructuredCloneReader* aReader,
-                                       uint32_t aTag, uint32_t aIndex,
-                                       void* aClosure) {
+JSObject* StructuredCloneCallbacksRead(
+    JSContext* aCx, JSStructuredCloneReader* aReader,
+    const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag, uint32_t aIndex,
+    void* aClosure) {
   StructuredCloneHolderBase* holder =
       static_cast<StructuredCloneHolderBase*>(aClosure);
   MOZ_ASSERT(holder);
-  return holder->CustomReadHandler(aCx, aReader, aTag, aIndex);
+  return holder->CustomReadHandler(aCx, aReader, aCloneDataPolicy, aTag,
+                                   aIndex);
 }
 
 bool StructuredCloneCallbacksWrite(JSContext* aCx,
@@ -311,25 +312,23 @@ void StructuredCloneHolder::ReadFromBuffer(nsIGlobalObject* aGlobal,
                                            JSContext* aCx,
                                            JSStructuredCloneData& aBuffer,
                                            JS::MutableHandle<JS::Value> aValue,
+                                           JS::CloneDataPolicy aCloneDataPolicy,
                                            ErrorResult& aRv) {
   ReadFromBuffer(aGlobal, aCx, aBuffer, JS_STRUCTURED_CLONE_VERSION, aValue,
-                 aRv);
+                 aCloneDataPolicy, aRv);
 }
 
-void StructuredCloneHolder::ReadFromBuffer(nsIGlobalObject* aGlobal,
-                                           JSContext* aCx,
-                                           JSStructuredCloneData& aBuffer,
-                                           uint32_t aAlgorithmVersion,
-                                           JS::MutableHandle<JS::Value> aValue,
-                                           ErrorResult& aRv) {
+void StructuredCloneHolder::ReadFromBuffer(
+    nsIGlobalObject* aGlobal, JSContext* aCx, JSStructuredCloneData& aBuffer,
+    uint32_t aAlgorithmVersion, JS::MutableHandle<JS::Value> aValue,
+    JS::CloneDataPolicy aCloneDataPolicy, ErrorResult& aRv) {
   MOZ_ASSERT(!mBuffer, "ReadFromBuffer() must be called without a Write().");
 
   mozilla::AutoRestore<nsIGlobalObject*> guard(mGlobal);
   mGlobal = aGlobal;
 
   if (!JS_ReadStructuredClone(aCx, aBuffer, aAlgorithmVersion, CloneScope(),
-                              aValue, JS::CloneDataPolicy(), &sCallbacks,
-                              this)) {
+                              aValue, aCloneDataPolicy, &sCallbacks, this)) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
   }
@@ -817,7 +816,7 @@ bool WriteWasmModule(JSStructuredCloneWriter* aWriter,
              StructuredCloneHolder::StructuredCloneScope::SameProcess);
 
   // We store the position of the wasmModule in the array as index.
-  if (JS_WriteUint32Pair(aWriter, SCTAG_DOM_WASM,
+  if (JS_WriteUint32Pair(aWriter, SCTAG_DOM_WASM_MODULE,
                          aHolder->WasmModules().Length())) {
     aHolder->WasmModules().AppendElement(aWasmModule);
     return true;
@@ -869,7 +868,8 @@ bool WriteInputStream(JSStructuredCloneWriter* aWriter,
 }  // anonymous namespace
 
 JSObject* StructuredCloneHolder::CustomReadHandler(
-    JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
+    JSContext* aCx, JSStructuredCloneReader* aReader,
+    const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag,
     uint32_t aIndex) {
   MOZ_ASSERT(mSupportsCloning);
 
@@ -906,8 +906,9 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     return StructuredCloneBlob::ReadStructuredClone(aCx, aReader, this);
   }
 
-  if (aTag == SCTAG_DOM_WASM &&
-      CloneScope() == StructuredCloneScope::SameProcess) {
+  if (aTag == SCTAG_DOM_WASM_MODULE &&
+      CloneScope() == StructuredCloneScope::SameProcess &&
+      aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     return ReadWasmModule(aCx, aIndex, this);
   }
 

@@ -102,12 +102,19 @@ bool StructuredCloneData::Copy(const StructuredCloneData& aData) {
 void StructuredCloneData::Read(JSContext* aCx,
                                JS::MutableHandle<JS::Value> aValue,
                                ErrorResult& aRv) {
+  Read(aCx, aValue, JS::CloneDataPolicy(), aRv);
+}
+
+void StructuredCloneData::Read(JSContext* aCx,
+                               JS::MutableHandle<JS::Value> aValue,
+                               JS::CloneDataPolicy aCloneDataPolicy,
+                               ErrorResult& aRv) {
   MOZ_ASSERT(mInitialized);
 
   nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
   MOZ_ASSERT(global);
 
-  ReadFromBuffer(global, aCx, Data(), aValue, aRv);
+  ReadFromBuffer(global, aCx, Data(), aValue, aCloneDataPolicy, aRv);
 }
 
 void StructuredCloneData::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
