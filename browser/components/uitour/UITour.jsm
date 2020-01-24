@@ -768,12 +768,9 @@ var UITour = {
 
           for (let browser of tourBrowsers) {
             let messageManager = browser.messageManager;
-            if (aSubject != messageManager) {
-              continue;
+            if (!messageManager || aSubject == messageManager) {
+              this.teardownTourForBrowser(window, browser, true);
             }
-
-            this.teardownTourForBrowser(window, browser, true);
-            return;
           }
         }
         break;
