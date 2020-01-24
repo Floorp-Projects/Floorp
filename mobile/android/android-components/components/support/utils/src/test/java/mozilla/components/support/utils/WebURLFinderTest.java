@@ -48,11 +48,16 @@ public class WebURLFinderTest {
         assertEquals("http://t-example:8080/appversion-1.0.0/f/action.xhtml", find("test.com http://t-example:8080/appversion-1.0.0/f/action.xhtml"));
         assertEquals("http://t-example:8080/appversion-1.0.0/f/action.xhtml", find("http://t-example:8080/appversion-1.0.0/f/action.xhtml"));
         assertEquals("http://ß.de/", find("http://ß.de/ çnn.çơḿ"));
+        assertEquals("htt-p://ß.de/", find("çnn.çơḿ htt-p://ß.de/"));
     }
 
     @Test
     public void testNoScheme() {
         assertEquals("noscheme.com", find("noscheme.com example.com"));
+        assertEquals("noscheme.com", find("-noscheme.com example.com"));
+        assertEquals("n-oscheme.com", find("n-oscheme.com example.com"));
+        assertEquals("n-oscheme.com", find("----------n-oscheme.com "));
+        assertEquals("n-oscheme.ç", find("----------n-oscheme.ç-----------------------"));
     }
 
     @Test

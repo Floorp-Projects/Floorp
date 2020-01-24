@@ -84,20 +84,35 @@ class URLStringUtilsTest {
         assertTrue(isURLLike("file://////////////home//user/myfile.html"))
         assertTrue(isURLLike("file://C:\\Users\\user\\myfile.html"))
         assertTrue(isURLLike("http://192.168.255.255"))
-
         assertTrue(isURLLike("link.unknown"))
-
         // Per https://bugs.chromium.org/p/chromium/issues/detail?id=31405, ICANN will accept
         // purely numeric gTLDs.
         assertTrue(isURLLike("3.14.2019"))
+        assertTrue(isURLLike("3-four.14.2019"))
         assertTrue(isURLLike(" cnn.com "))
         assertTrue(isURLLike(" cnn.com"))
         assertTrue(isURLLike("cnn.com "))
         assertTrue(isURLLike("mozilla.com/~userdir"))
-
+        assertTrue(isURLLike("my-domain.com"))
         assertTrue(isURLLike("http://faß.de//"))
         assertTrue(isURLLike("cnn.cơḿ"))
         assertTrue(isURLLike("cnn.çơḿ"))
+
+        // Examples from the code comments:
+        assertTrue(isURLLike("c-c.com"))
+        assertTrue(isURLLike("c-c-c-c.c-c-c"))
+        assertTrue(isURLLike("c-http://c.com"))
+        assertTrue(isURLLike("about-mozilla:mozilla"))
+        assertTrue(isURLLike("c-http.d-x"))
+        assertTrue(isURLLike("www.c.-"))
+        assertTrue(isURLLike("3-3.3"))
+        assertTrue(isURLLike("www.c-c.-"))
+
+        assertFalse(isURLLike(" -://x.com "))
+        assertFalse(isURLLike("  -x.com"))
+        assertFalse(isURLLike("http://www-.com"))
+        assertFalse(isURLLike("www.c-c-  "))
+        assertFalse(isURLLike("3-3 "))
     }
 
     @Test
@@ -113,15 +128,36 @@ class URLStringUtilsTest {
         assertFalse(isSearchTerm("file://////////////home//user/myfile.html"))
         assertFalse(isSearchTerm("file://C:\\Users\\user\\myfile.html"))
         assertFalse(isSearchTerm("http://192.168.255.255"))
+        assertFalse(isSearchTerm("link.unknown"))
         // Per https://bugs.chromium.org/p/chromium/issues/detail?id=31405, ICANN will accept
         // purely numeric gTLDs.
         assertFalse(isSearchTerm("3.14.2019"))
+        assertFalse(isSearchTerm("3-four.14.2019"))
         assertFalse(isSearchTerm(" cnn.com "))
         assertFalse(isSearchTerm(" cnn.com"))
         assertFalse(isSearchTerm("cnn.com "))
+        assertFalse(isSearchTerm("my-domain.com"))
+        assertFalse(isSearchTerm("camp-firefox.de"))
+        assertFalse(isSearchTerm("http://my-domain.com"))
         assertFalse(isSearchTerm("mozilla.com/~userdir"))
         assertFalse(isSearchTerm("http://faß.de//"))
         assertFalse(isSearchTerm("cnn.cơḿ"))
         assertFalse(isSearchTerm("cnn.çơḿ"))
+
+        // Examples from the code comments:
+        assertFalse(isSearchTerm("c-c.com"))
+        assertFalse(isSearchTerm("c-c-c-c.c-c-c"))
+        assertFalse(isSearchTerm("c-http://c.com"))
+        assertFalse(isSearchTerm("about-mozilla:mozilla"))
+        assertFalse(isSearchTerm("c-http.d-x"))
+        assertFalse(isSearchTerm("www.c.-"))
+        assertFalse(isSearchTerm("3-3.3"))
+        assertFalse(isSearchTerm("www.c-c.-"))
+
+        assertTrue(isSearchTerm(" -://x.com "))
+        assertTrue(isSearchTerm("  -x.com"))
+        assertTrue(isSearchTerm("http://www-.com"))
+        assertTrue(isSearchTerm("www.c-c-  "))
+        assertTrue(isSearchTerm("3-3 "))
     }
 }
