@@ -2821,7 +2821,8 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
     MOZ_ASSERT_IF(directives.asmJS(), newDirectives.asmJS());
     directives = newDirectives;
 
-    tokenStream.seek(start);
+    // Rewind to retry parsing with new directives applied.
+    tokenStream.rewind(start);
 
     // functionFormalParametersAndBody may have already set body before
     // failing.
@@ -2829,6 +2830,22 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   }
 
   return funNode;
+}
+
+template <typename Unit>
+bool Parser<FullParseHandler, Unit>::advancePastSyntaxParsedFunction(
+    AutoKeepAtoms& keepAtoms, SyntaxParser* syntaxParser) {
+  MOZ_ASSERT(getSyntaxParser() == syntaxParser);
+
+  // Advance this parser over tokens processed by the syntax parser.
+  Position currentSyntaxPosition(keepAtoms_, syntaxParser->tokenStream);
+  if (!tokenStream.fastForward(currentSyntaxPosition, syntaxParser->anyChars)) {
+    return false;
+  }
+
+  anyChars.adoptState(syntaxParser->anyChars);
+  tokenStream.adoptState(syntaxParser->tokenStream);
+  return true;
 }
 
 template <typename Unit>
@@ -2857,9 +2874,17 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
 
     UsedNameTracker::RewindToken token = usedNames_.getRewindToken();
 
-    // Move the syntax parser to the current position in the stream.
+    // Move the syntax parser to the current position in the stream.  In the
+    // common case this seeks forward, but it'll also seek backward *at least*
+    // when arrow functions appear inside arrow function argument defaults
+    // (because we rewind to reparse arrow functions once we're certain they're
+    // arrow functions):
+    //
+    //   var x = (y = z => 2) => q;
+    //   //           ^ we first seek to here to syntax-parse this function
+    //   //      ^ then we seek back to here to syntax-parse the outer function
     Position currentPosition(keepAtoms_, tokenStream);
-    if (!syntaxParser->tokenStream.seek(currentPosition, anyChars)) {
+    if (!syntaxParser->tokenStream.seekTo(currentPosition, anyChars)) {
       return false;
     }
 
@@ -2892,9 +2917,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
       return false;
     }
 
-    // Advance this parser over tokens processed by the syntax parser.
-    Position currentSyntaxPosition(keepAtoms_, syntaxParser->tokenStream);
-    if (!tokenStream.seek(currentSyntaxPosition, syntaxParser->anyChars)) {
+    if (!advancePastSyntaxParsedFunction(keepAtoms_, syntaxParser)) {
       return false;
     }
 
@@ -8657,7 +8680,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
   }
 
   if (isArrow) {
-    tokenStream.seek(start);
+    // Rewind to reparse as an arrow function.
+    tokenStream.rewind(start);
 
     TokenKind next;
     if (!tokenStream.getToken(&next, TokenStream::SlashIsRegExp)) {
