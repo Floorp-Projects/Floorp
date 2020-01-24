@@ -349,8 +349,18 @@ void BroadcastChannel::PostMessage(JSContext* aCx,
     return;
   }
 
-  RefPtr<SharedMessageBody> data =
-      new SharedMessageBody(StructuredCloneHolder::TransferringNotSupported);
+  Maybe<nsID> agentClusterId;
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  MOZ_ASSERT(global);
+  if (global) {
+    Maybe<ClientInfo> clientInfo = global->GetClientInfo();
+    if (clientInfo) {
+      agentClusterId = clientInfo->AgentClusterId();
+    }
+  }
+
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(
+      StructuredCloneHolder::TransferringNotSupported, agentClusterId);
 
   data->Write(aCx, aMessage, JS::UndefinedHandleValue, mPortUUID,
               mRefMessageBodyService, aRv);
