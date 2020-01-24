@@ -1155,7 +1155,6 @@ static void* base_pages;
 static void* base_next_addr;
 static void* base_next_decommitted;
 static void* base_past_addr;  // Addr immediately past base_pages.
-static extent_node_t* base_nodes;
 static Mutex base_mtx;
 static size_t base_mapped;
 static size_t base_committed;
@@ -1406,33 +1405,46 @@ static void* base_calloc(size_t aNumber, size_t aSize) {
   return ret;
 }
 
-static extent_node_t* base_node_alloc(void) {
-  extent_node_t* ret;
+// A specialization of the base allocator with a free list.
+template <typename T>
+struct TypedBaseAlloc {
+  static T* sFirstFree;
 
-  base_mtx.Lock();
-  if (base_nodes) {
-    ret = base_nodes;
-    base_nodes = *(extent_node_t**)ret;
-    base_mtx.Unlock();
-  } else {
-    base_mtx.Unlock();
-    ret = (extent_node_t*)base_alloc(sizeof(extent_node_t));
+  static T* alloc() {
+    T* ret;
+
+    base_mtx.Lock();
+    if (sFirstFree) {
+      ret = sFirstFree;
+      sFirstFree = *(T**)ret;
+      base_mtx.Unlock();
+    } else {
+      base_mtx.Unlock();
+      ret = (T*)base_alloc(sizeof(T));
+    }
+
+    return ret;
   }
 
-  return ret;
-}
-
-static void base_node_dealloc(extent_node_t* aNode) {
-  MutexAutoLock lock(base_mtx);
-  *(extent_node_t**)aNode = base_nodes;
-  base_nodes = aNode;
-}
-
-struct BaseNodeFreePolicy {
-  void operator()(extent_node_t* aPtr) { base_node_dealloc(aPtr); }
+  static void dealloc(T* aNode) {
+    MutexAutoLock lock(base_mtx);
+    *(T**)aNode = sFirstFree;
+    sFirstFree = aNode;
+  }
 };
 
-using UniqueBaseNode = UniquePtr<extent_node_t, BaseNodeFreePolicy>;
+using ExtentAlloc = TypedBaseAlloc<extent_node_t>;
+
+template <>
+extent_node_t* ExtentAlloc::sFirstFree = nullptr;
+
+template <typename T>
+struct BaseAllocFreePolicy {
+  void operator()(T* aPtr) { TypedBaseAlloc<T>::dealloc(aPtr); }
+};
+
+using UniqueBaseNode =
+    UniquePtr<extent_node_t, BaseAllocFreePolicy<extent_node_t>>;
 
 // End Utility functions/macros.
 // ***************************************************************************
@@ -1794,12 +1806,12 @@ static void* chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed) {
     // Insert the trailing space as a smaller chunk.
     if (!node) {
       // An additional node is required, but
-      // base_node_alloc() can cause a new base chunk to be
+      // TypedBaseAlloc::alloc() can cause a new base chunk to be
       // allocated.  Drop chunks_mtx in order to avoid
       // deadlock, and if node allocation fails, deallocate
       // the result before returning an error.
       chunks_mtx.Unlock();
-      node = base_node_alloc();
+      node = ExtentAlloc::alloc();
       if (!node) {
         chunk_dealloc(ret, aSize, chunk_type);
         return nullptr;
@@ -1819,7 +1831,7 @@ static void* chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed) {
   chunks_mtx.Unlock();
 
   if (node) {
-    base_node_dealloc(node);
+    ExtentAlloc::dealloc(node);
   }
   if (!pages_commit(ret, aSize)) {
     return nullptr;
@@ -1905,10 +1917,10 @@ static void chunk_record(void* aChunk, size_t aSize, ChunkType aType) {
   }
 
   // Allocate a node before acquiring chunks_mtx even though it might not
-  // be needed, because base_node_alloc() may cause a new base chunk to
+  // be needed, because TypedBaseAlloc::alloc() may cause a new base chunk to
   // be allocated, which could cause deadlock if chunks_mtx were already
   // held.
-  UniqueBaseNode xnode(base_node_alloc());
+  UniqueBaseNode xnode(ExtentAlloc::alloc());
   // Use xprev to implement conditional deferred deallocation of prev.
   UniqueBaseNode xprev;
 
@@ -1932,7 +1944,7 @@ static void chunk_record(void* aChunk, size_t aSize, ChunkType aType) {
   } else {
     // Coalescing forward failed, so insert a new node.
     if (!xnode) {
-      // base_node_alloc() failed, which is an exceedingly
+      // TypedBaseAlloc::alloc() failed, which is an exceedingly
       // unlikely failure.  Leak chunk; its pages have
       // already been purged, so this is only a virtual
       // memory leak.
@@ -3591,7 +3603,7 @@ void* arena_t::PallocHuge(size_t aSize, size_t aAlignment, bool aZero) {
   }
 
   // Allocate an extent node with which to track the chunk.
-  node = base_node_alloc();
+  node = ExtentAlloc::alloc();
   if (!node) {
     return nullptr;
   }
@@ -3599,7 +3611,7 @@ void* arena_t::PallocHuge(size_t aSize, size_t aAlignment, bool aZero) {
   // Allocate one or more contiguous chunks for this request.
   ret = chunk_alloc(csize, aAlignment, false, &zeroed);
   if (!ret) {
-    base_node_dealloc(node);
+    ExtentAlloc::dealloc(node);
     return nullptr;
   }
   psize = PAGE_CEILING(aSize);
@@ -3747,7 +3759,7 @@ static void huge_dalloc(void* aPtr, arena_t* aArena) {
   // Unmap chunk.
   chunk_dealloc(node->mAddr, mapped, HUGE_CHUNK);
 
-  base_node_dealloc(node);
+  ExtentAlloc::dealloc(node);
 }
 
 static size_t GetKernelPageSize() {
@@ -3889,7 +3901,6 @@ static bool malloc_init_hard() {
   // Initialize base allocation data structures.
   base_mapped = 0;
   base_committed = 0;
-  base_nodes = nullptr;
   base_mtx.Init();
 
   // Initialize arenas collection here.
