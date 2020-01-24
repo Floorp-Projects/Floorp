@@ -15,6 +15,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/PopupBlocker.h"
@@ -320,6 +321,12 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
   }
 
   mEmbedderElement = aEmbedder;
+}
+
+void BrowsingContext::Embed() {
+  if (auto* frame = HTMLIFrameElement::FromNode(mEmbedderElement)) {
+    frame->BindToBrowsingContext(this);
+  }
 }
 
 void BrowsingContext::Attach(bool aFromIPC) {
