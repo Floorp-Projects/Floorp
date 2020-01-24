@@ -474,6 +474,7 @@ void BroadcastChannel::MessageReceived(const MessageData& aData) {
   data->Read(cx, &value, mRefMessageBodyService,
              SharedMessageBody::ReadMethod::KeepRefMessageBody, rv);
   if (NS_WARN_IF(rv.Failed())) {
+    JS_ClearPendingException(cx);
     DispatchError(cx);
     return;
   }
