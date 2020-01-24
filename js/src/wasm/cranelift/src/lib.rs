@@ -91,7 +91,7 @@ pub unsafe extern "C" fn cranelift_compile_function(
         return false;
     };
 
-    if let Err(e) = compiler.compile() {
+    if let Err(e) = compiler.compile(data.stackmaps()) {
         error!("Cranelift compilation error: {}\n", e);
         info!("Compiled function: {}", compiler);
         return false;
