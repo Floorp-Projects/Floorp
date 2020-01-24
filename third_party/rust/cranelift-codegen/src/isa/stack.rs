@@ -36,9 +36,8 @@ impl StackRef {
     /// Get a reference to `ss` using the stack pointer as a base.
     pub fn sp(ss: StackSlot, frame: &StackSlots) -> Self {
         let size = frame
-            .layout_info
-            .expect("Stack layout must be computed before referencing stack slots")
-            .frame_size;
+            .frame_size
+            .expect("Stack layout must be computed before referencing stack slots");
         let slot = &frame[ss];
         let offset = if slot.kind == StackSlotKind::OutgoingArg {
             // Outgoing argument slots have offsets relative to our stack pointer.

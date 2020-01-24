@@ -1,11 +1,9 @@
 use crate::cdsl::cpu_modes::CpuMode;
 use crate::cdsl::isa::TargetIsa;
-use crate::cdsl::types::ReferenceType;
 
 use crate::shared::types::Bool::B1;
 use crate::shared::types::Float::{F32, F64};
 use crate::shared::types::Int::{I16, I32, I64, I8};
-use crate::shared::types::Reference::{R32, R64};
 use crate::shared::Definitions as SharedDefinitions;
 
 mod encodings;
@@ -43,7 +41,6 @@ pub(crate) fn define(shared_defs: &mut SharedDefinitions) -> TargetIsa {
     x86_32.legalize_type(I8, widen);
     x86_32.legalize_type(I16, widen);
     x86_32.legalize_type(I32, x86_expand);
-    x86_32.legalize_value_type(ReferenceType(R32), x86_expand);
     x86_32.legalize_type(F32, x86_expand);
     x86_32.legalize_type(F64, x86_expand);
 
@@ -54,7 +51,6 @@ pub(crate) fn define(shared_defs: &mut SharedDefinitions) -> TargetIsa {
     x86_64.legalize_type(I16, widen);
     x86_64.legalize_type(I32, x86_expand);
     x86_64.legalize_type(I64, x86_expand);
-    x86_64.legalize_value_type(ReferenceType(R64), x86_expand);
     x86_64.legalize_type(F32, x86_expand);
     x86_64.legalize_type(F64, x86_expand);
 

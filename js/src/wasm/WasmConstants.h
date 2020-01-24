@@ -62,13 +62,10 @@ enum class TypeCode {
   FuncRef = 0x70,  // SLEB128(-0x10)
 
   // A reference to any type.
-  AnyRef = 0x6f,  // SLEB128(-0x11)
-
-  // A null reference.
-  NullRef = 0x6e,  // SLEB128(-0x12)
+  AnyRef = 0x6f,
 
   // Type constructor for reference types.
-  Ref = 0x6d,
+  Ref = 0x6e,
 
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
@@ -78,6 +75,9 @@ enum class TypeCode {
 
   // The 'empty' case of blocktype.
   BlockVoid = 0x40,  // SLEB128(-0x40)
+
+  // Type designator for null - unofficial, will not appear in the binary format
+  NullRef = 0x39,
 
   Limit = 0x80
 };
