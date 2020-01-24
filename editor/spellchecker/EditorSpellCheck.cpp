@@ -41,7 +41,6 @@
 #include "nsStringFwd.h"            // for nsAFlatString
 #include "nsStyleUtil.h"            // for nsStyleUtil
 #include "nsXULAppAPI.h"            // for XRE_GetProcessType
-#include "nsIPlaintextEditor.h"     // for editor flags
 
 namespace mozilla {
 
@@ -536,7 +535,7 @@ EditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary) {
 
     uint32_t flags = 0;
     mEditor->GetFlags(&flags);
-    if (!(flags & nsIPlaintextEditor::eEditorMailMask)) {
+    if (!(flags & nsIEditor::eEditorMailMask)) {
       if (!aDictionary.IsEmpty() &&
           (mPreferredLang.IsEmpty() ||
            !mPreferredLang.Equals(aDictionary,
@@ -623,7 +622,7 @@ EditorSpellCheck::UpdateCurrentDictionary(
   nsCOMPtr<nsIContent> rootContent;
   HTMLEditor* htmlEditor = mEditor->AsHTMLEditor();
   if (htmlEditor) {
-    if (flags & nsIPlaintextEditor::eEditorMailMask) {
+    if (flags & nsIEditor::eEditorMailMask) {
       // Always determine the root content for a mail editor,
       // even if not focused, to enable further processing below.
       rootContent = htmlEditor->GetActiveEditingHost();
@@ -639,7 +638,7 @@ EditorSpellCheck::UpdateCurrentDictionary(
   }
 
   // Try to get topmost document's document element for embedded mail editor.
-  if (flags & nsIPlaintextEditor::eEditorMailMask) {
+  if (flags & nsIEditor::eEditorMailMask) {
     RefPtr<Document> ownerDoc = rootContent->OwnerDoc();
     Document* parentDoc = ownerDoc->GetInProcessParentDocument();
     if (parentDoc) {
@@ -773,7 +772,7 @@ nsresult EditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher) {
   nsAutoString dictName;
   uint32_t flags;
   mEditor->GetFlags(&flags);
-  if (!(flags & nsIPlaintextEditor::eEditorMailMask)) {
+  if (!(flags & nsIEditor::eEditorMailMask)) {
     dictName.Assign(aFetcher->mDictionary);
     if (!dictName.IsEmpty()) {
       AutoTArray<nsString, 1> tryDictList;

@@ -227,8 +227,8 @@ class UrlbarInput {
     this._compositionState = UrlbarUtils.COMPOSITION.NONE;
     this._compositionClosedPopup = false;
 
-    this.editor.QueryInterface(Ci.nsIPlaintextEditor).newlineHandling =
-      Ci.nsIPlaintextEditor.eNewlinesStripSurroundingWhitespace;
+    this.editor.newlineHandling =
+      Ci.nsIEditor.eNewlinesStripSurroundingWhitespace;
 
     this._setOpenViewOnFocus();
     Services.prefs.addObserver("browser.urlbar.openViewOnFocus", this);

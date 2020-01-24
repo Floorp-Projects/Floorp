@@ -74,18 +74,15 @@ nsresult SetDocumentStateCommand::DoCommandParam(
     case Command::SetDocumentReadOnly: {
       ErrorResult error;
       if (aBoolParam.value()) {
-        nsresult rv =
-            aTextEditor.AddFlags(nsIPlaintextEditor::eEditorReadonlyMask);
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "AddFlags(nsIPlaintextEditor::eEditorReadonlyMask) failed");
+        nsresult rv = aTextEditor.AddFlags(nsIEditor::eEditorReadonlyMask);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "AddFlags(nsIEditor::eEditorReadonlyMask) failed");
         return rv;
       }
-      nsresult rv =
-          aTextEditor.RemoveFlags(nsIPlaintextEditor::eEditorReadonlyMask);
+      nsresult rv = aTextEditor.RemoveFlags(nsIEditor::eEditorReadonlyMask);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "RemoveFlags(nsIPlaintextEditor::eEditorReadonlyMask) failed");
+          "RemoveFlags(nsIEditor::eEditorReadonlyMask) failed");
       return rv;
     }
     case Command::SetDocumentUseCSS: {

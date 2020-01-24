@@ -87,7 +87,6 @@
 #include "nsIInlineSpellChecker.h"     // for nsIInlineSpellChecker, etc.
 #include "nsNameSpaceManager.h"        // for kNameSpaceID_None, etc.
 #include "nsINode.h"                   // for nsINode, etc.
-#include "nsIPlaintextEditor.h"        // for nsIPlaintextEditor, etc.
 #include "nsISelectionController.h"    // for nsISelectionController, etc.
 #include "nsISelectionDisplay.h"       // for nsISelectionDisplay, etc.
 #include "nsISupportsBase.h"           // for nsISupports
@@ -136,6 +135,8 @@ EditorBase::EditorBase()
       mFlags(0),
       mUpdateCount(0),
       mPlaceholderBatch(0),
+      mWrapColumn(0),
+      mNewlineHandling(nsIEditor::eNewlinesPasteToFirst),
       mDocDirtyState(-1),
       mSpellcheckCheckboxState(eTriUnset),
       mInitSucceeded(false),
@@ -215,6 +216,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditorBase)
   NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditor)
 NS_INTERFACE_MAP_END
 
@@ -539,8 +541,7 @@ EditorBase::SetFlags(uint32_t aFlags) {
   }
 
   DebugOnly<bool> changingPasswordEditorFlagDynamically =
-      mFlags != ~aFlags &&
-      ((mFlags ^ aFlags) & nsIPlaintextEditor::eEditorPasswordMask);
+      mFlags != ~aFlags && ((mFlags ^ aFlags) & nsIEditor::eEditorPasswordMask);
   MOZ_ASSERT(
       !changingPasswordEditorFlagDynamically,
       "TextEditor does not support dynamic eEditorPasswordMask flag change");
@@ -4909,9 +4910,9 @@ nsresult EditorBase::DetermineCurrentDirection() {
     // Set the flag here, to enable us to use the same code path below.
     // It will be flipped before returning from the function.
     if (frame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-      mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
+      mFlags |= nsIEditor::eEditorRightToLeft;
     } else {
-      mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
+      mFlags |= nsIEditor::eEditorLeftToRight;
     }
   }
 
@@ -5003,8 +5004,8 @@ nsresult EditorBase::SetTextDirectionTo(TextDirection aTextDirection) {
 
   if (aTextDirection == TextDirection::eLTR) {
     NS_ASSERTION(!IsLeftToRight(), "Unexpected mutually exclusive flag");
-    mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
-    mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
+    mFlags &= ~nsIEditor::eEditorRightToLeft;
+    mFlags |= nsIEditor::eEditorLeftToRight;
     nsresult rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
                                        NS_LITERAL_STRING("ltr"), true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5015,8 +5016,8 @@ nsresult EditorBase::SetTextDirectionTo(TextDirection aTextDirection) {
 
   if (aTextDirection == TextDirection::eRTL) {
     NS_ASSERTION(!IsRightToLeft(), "Unexpected mutually exclusive flag");
-    mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
-    mFlags &= ~nsIPlaintextEditor::eEditorLeftToRight;
+    mFlags |= nsIEditor::eEditorRightToLeft;
+    mFlags &= ~nsIEditor::eEditorLeftToRight;
     nsresult rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
                                        NS_LITERAL_STRING("rtl"), true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5327,6 +5328,232 @@ void EditorBase::UndefineCaretBidiLevel() const {
   if (frameSelection) {
     frameSelection->UndefineCaretBidiLevel();
   }
+}
+
+NS_IMETHODIMP EditorBase::GetTextLength(int32_t* aCount) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP EditorBase::GetWrapWidth(int32_t* aWrapColumn) {
+  if (NS_WARN_IF(!aWrapColumn)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aWrapColumn = WrapWidth();
+  return NS_OK;
+}
+
+//
+// See if the style value includes this attribute, and if it does,
+// cut out everything from the attribute to the next semicolon.
+//
+static void CutStyle(const char* stylename, nsString& styleValue) {
+  // Find the current wrapping type:
+  int32_t styleStart = styleValue.Find(stylename, true);
+  if (styleStart >= 0) {
+    int32_t styleEnd = styleValue.Find(";", false, styleStart);
+    if (styleEnd > styleStart) {
+      styleValue.Cut(styleStart, styleEnd - styleStart + 1);
+    } else {
+      styleValue.Cut(styleStart, styleValue.Length() - styleStart);
+    }
+  }
+}
+
+NS_IMETHODIMP EditorBase::SetWrapWidth(int32_t aWrapColumn) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eSetWrapWidth);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  SetWrapColumn(aWrapColumn);
+
+  // Make sure we're a plaintext editor, otherwise we shouldn't
+  // do the rest of this.
+  if (!IsPlaintextEditor()) {
+    return NS_OK;
+  }
+
+  // Ought to set a style sheet here ...
+  // Probably should keep around an mPlaintextStyleSheet for this purpose.
+  RefPtr<Element> rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // Get the current style for this root element:
+  nsAutoString styleValue;
+  rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::style, styleValue);
+
+  // We'll replace styles for these values:
+  CutStyle("white-space", styleValue);
+  CutStyle("width", styleValue);
+  CutStyle("font-family", styleValue);
+
+  // If we have other style left, trim off any existing semicolons
+  // or whitespace, then add a known semicolon-space:
+  if (!styleValue.IsEmpty()) {
+    styleValue.Trim("; \t", false, true);
+    styleValue.AppendLiteral("; ");
+  }
+
+  // Make sure we have fixed-width font.  This should be done for us,
+  // but it isn't, see bug 22502, so we have to add "font: -moz-fixed;".
+  // Only do this if we're wrapping.
+  if (IsWrapHackEnabled() && aWrapColumn >= 0) {
+    styleValue.AppendLiteral("font-family: -moz-fixed; ");
+  }
+
+  // and now we're ready to set the new whitespace/wrapping style.
+  if (aWrapColumn > 0) {
+    // Wrap to a fixed column.
+    styleValue.AppendLiteral("white-space: pre-wrap; width: ");
+    styleValue.AppendInt(aWrapColumn);
+    styleValue.AppendLiteral("ch;");
+  } else if (!aWrapColumn) {
+    styleValue.AppendLiteral("white-space: pre-wrap;");
+  } else {
+    styleValue.AppendLiteral("white-space: pre;");
+  }
+
+  return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleValue,
+                              true);
+}
+
+NS_IMETHODIMP EditorBase::GetNewlineHandling(int32_t* aNewlineHandling) {
+  if (NS_WARN_IF(!aNewlineHandling)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aNewlineHandling = mNewlineHandling;
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditorBase::SetNewlineHandling(int32_t aNewlineHandling) {
+  switch (aNewlineHandling) {
+    case nsIEditor::eNewlinesPasteIntact:
+    case nsIEditor::eNewlinesPasteToFirst:
+    case nsIEditor::eNewlinesReplaceWithSpaces:
+    case nsIEditor::eNewlinesStrip:
+    case nsIEditor::eNewlinesReplaceWithCommas:
+    case nsIEditor::eNewlinesStripSurroundingWhitespace:
+      mNewlineHandling = aNewlineHandling;
+      return NS_OK;
+    default:
+      NS_ERROR("SetNewlineHandling() is called with wrong value");
+      return NS_ERROR_INVALID_ARG;
+  }
+}
+
+NS_IMETHODIMP EditorBase::InsertText(const nsAString& aStringToInsert) {
+  nsresult rv = InsertTextAsAction(aStringToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert text");
+  return rv;
+}
+
+nsresult EditorBase::InsertTextAsAction(const nsAString& aStringToInsert,
+                                        nsIPrincipal* aPrincipal) {
+  // Showing this assertion is fine if this method is called by outside via
+  // mutation event listener or something.  Otherwise, this is called by
+  // wrong method.
+  NS_ASSERTION(!mPlaceholderBatch,
+               "Should be called only when this is the only edit action of the "
+               "operation "
+               "unless mutation event listener nests some operations");
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText,
+                                          aPrincipal);
+  // Note that we don't need to replace native line breaks with XP line breaks
+  // here because Chrome does not do it.
+  MOZ_ASSERT(!aStringToInsert.IsVoid());
+  editActionData.SetData(aStringToInsert);
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  nsString stringToInsert(aStringToInsert);
+  if (!AsHTMLEditor()) {
+    nsContentUtils::PlatformToDOMLineBreaks(stringToInsert);
+  }
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  rv = InsertTextAsSubAction(stringToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertTextAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(rv);
+}
+
+nsresult EditorBase::InsertTextAsSubAction(const nsAString& aStringToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(mPlaceholderBatch);
+  MOZ_ASSERT(AsHTMLEditor() ||
+             aStringToInsert.FindChar(nsCRT::CR) == kNotFound);
+
+  if (NS_WARN_IF(!mInitSucceeded)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  EditSubAction editSubAction = ShouldHandleIMEComposition()
+                                    ? EditSubAction::eInsertTextComingFromIME
+                                    : EditSubAction::eInsertText;
+
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, editSubAction, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
+  EditActionResult result =
+      MOZ_KnownLive(AsTextEditor())
+          ->HandleInsertText(editSubAction, aStringToInsert);
+  NS_WARNING_ASSERTION(result.Succeeded(), "HandleInsertText() failed");
+  return result.Rv();
+}
+
+NS_IMETHODIMP EditorBase::InsertLineBreak() {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  if (NS_WARN_IF(IsSingleLineEditor())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  rv = InsertLineBreakAsSubAction();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertLineBreakAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(rv);
+}
+
+nsresult EditorBase::InsertLineBreakAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!mInitSucceeded)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eInsertLineBreak, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
+  EditActionResult result =
+      MOZ_KnownLive(AsTextEditor())->InsertLineFeedCharacterAtSelection();
+  if (result.EditorDestroyed()) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(
+      result.Succeeded(),
+      "InsertLineFeedCharacterAtSelection() failed, but ignored");
+  return result.Rv();
 }
 
 /******************************************************************************

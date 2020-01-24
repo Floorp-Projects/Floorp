@@ -10,7 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsFontMetrics.h"
 #include "nsTextControlFrame.h"
-#include "nsIPlaintextEditor.h"
+#include "nsIEditor.h"
 #include "nsCaret.h"
 #include "nsCSSPseudoElements.h"
 #include "nsGenericHTMLElement.h"
@@ -1099,13 +1099,13 @@ nsresult nsTextControlFrame::AttributeChanged(int32_t aNameSpaceID,
       if (nsContentUtils::IsFocusedContent(mContent)) {
         selCon->SetCaretEnabled(false);
       }
-      textEditor->AddFlags(nsIPlaintextEditor::eEditorReadonlyMask);
+      textEditor->AddFlags(nsIEditor::eEditorReadonlyMask);
     } else {  // unset readonly
       if (!textEditor->IsDisabled() &&
           nsContentUtils::IsFocusedContent(mContent)) {
         selCon->SetCaretEnabled(true);
       }
-      textEditor->RemoveFlags(nsIPlaintextEditor::eEditorReadonlyMask);
+      textEditor->RemoveFlags(nsIEditor::eEditorReadonlyMask);
     }
     return NS_OK;
   }
@@ -1127,9 +1127,9 @@ nsresult nsTextControlFrame::AttributeChanged(int32_t aNameSpaceID,
       selCon->SetCaretEnabled(!hasAttr);
     }
     if (disable) {
-      textEditor->AddFlags(nsIPlaintextEditor::eEditorDisabledMask);
+      textEditor->AddFlags(nsIEditor::eEditorDisabledMask);
     } else {
-      textEditor->RemoveFlags(nsIPlaintextEditor::eEditorDisabledMask);
+      textEditor->RemoveFlags(nsIEditor::eEditorDisabledMask);
     }
     return NS_OK;
   }

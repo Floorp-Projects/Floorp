@@ -735,8 +735,8 @@ async function runTests() {
     ok(!inputEvent, `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
 
     body.setAttribute("dir", "rtl");
-    htmlEditor.flags &= ~SpecialPowers.Ci.nsIPlaintextEditor.eEditorLeftToRight;
-    htmlEditor.flags |= SpecialPowers.Ci.nsIPlaintextEditor.eEditorRightToLeft; // XXX flags update is required, must be a bug.
+    htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorLeftToRight;
+    htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorRightToLeft; // XXX flags update is required, must be a bug.
     aDocument.documentElement.scrollTop; // XXX Update the body frame
     editTarget.focus();
     cancelBeforeInput = true;
@@ -756,8 +756,8 @@ async function runTests() {
     ok(!inputEvent, `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
 
     body.removeAttribute("dir");
-    htmlEditor.flags &= ~SpecialPowers.Ci.nsIPlaintextEditor.eEditorRightToLeft;
-    htmlEditor.flags |= SpecialPowers.Ci.nsIPlaintextEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
+    htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorRightToLeft;
+    htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
     aDocument.documentElement.scrollTop; // XXX Update the body frame
     editTarget.focus();
     cancelBeforeInput = false;

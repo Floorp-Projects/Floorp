@@ -5343,7 +5343,7 @@ nsresult Document::EditingStateChanged() {
     // if this is actually the case.
     uint32_t flags = 0;
     htmlEditor->GetFlags(&flags);
-    if (flags & nsIPlaintextEditor::eEditorMailMask) {
+    if (flags & nsIEditor::eEditorMailMask) {
       // We already have a mail editor, then we should not attempt to create
       // another one.
       return NS_OK;
