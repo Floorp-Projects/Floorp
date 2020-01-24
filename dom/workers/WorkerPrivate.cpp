@@ -4033,7 +4033,7 @@ void WorkerPrivate::PostMessageToParent(
 
   JS::CloneDataPolicy clonePolicy;
   if (IsSharedMemoryAllowed()) {
-    clonePolicy.allowIntraClusterClonableSharedObjects();
+    clonePolicy.allowSharedMemory();
   }
   runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
 

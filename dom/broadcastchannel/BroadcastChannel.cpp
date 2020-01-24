@@ -349,18 +349,8 @@ void BroadcastChannel::PostMessage(JSContext* aCx,
     return;
   }
 
-  Maybe<nsID> agentClusterId;
-  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
-  MOZ_ASSERT(global);
-  if (global) {
-    Maybe<ClientInfo> clientInfo = global->GetClientInfo();
-    if (clientInfo) {
-      agentClusterId = clientInfo->AgentClusterId();
-    }
-  }
-
-  RefPtr<SharedMessageBody> data = new SharedMessageBody(
-      StructuredCloneHolder::TransferringNotSupported, agentClusterId);
+  RefPtr<SharedMessageBody> data =
+      new SharedMessageBody(StructuredCloneHolder::TransferringNotSupported);
 
   data->Write(aCx, aMessage, JS::UndefinedHandleValue, mPortUUID,
               mRefMessageBodyService, aRv);
@@ -484,7 +474,6 @@ void BroadcastChannel::MessageReceived(const MessageData& aData) {
   data->Read(cx, &value, mRefMessageBodyService,
              SharedMessageBody::ReadMethod::KeepRefMessageBody, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    JS_ClearPendingException(cx);
     DispatchError(cx);
     return;
   }

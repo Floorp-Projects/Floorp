@@ -19,11 +19,8 @@ using namespace ipc;
 namespace dom {
 
 SharedMessageBody::SharedMessageBody(
-    StructuredCloneHolder::TransferringSupport aSupportsTransferring,
-    const Maybe<nsID>& aAgentClusterId)
-    : mRefDataId(Nothing()),
-      mSupportsTransferring(aSupportsTransferring),
-      mAgentClusterId(aAgentClusterId) {}
+    StructuredCloneHolder::TransferringSupport aSupportsTransferring)
+    : mRefDataId({}), mSupportsTransferring(aSupportsTransferring) {}
 
 void SharedMessageBody::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
                               JS::Handle<JS::Value> aTransfers, nsID& aPortID,
@@ -47,7 +44,7 @@ void SharedMessageBody::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
   RefPtr<RefMessageBody> refData =
       new RefMessageBody(aPortID, std::move(mCloneData));
 
-  mRefDataId.emplace(aRefMessageBodyService->Register(refData.forget(), aRv));
+  mRefDataId = aRefMessageBodyService->Register(refData.forget(), aRv);
 }
 
 void SharedMessageBody::Read(JSContext* aCx,
@@ -58,37 +55,16 @@ void SharedMessageBody::Read(JSContext* aCx,
   MOZ_ASSERT(aRefMessageBodyService);
 
   if (mCloneData) {
-    // Use a default cloneDataPolicy here, because SharedArrayBuffers and WASM
-    // are not supported.
-    return mCloneData->Read(aCx, aValue, JS::CloneDataPolicy(), aRv);
-  }
-
-  JS::CloneDataPolicy cloneDataPolicy;
-
-  // Clones within the same agent cluster are allowed to use shared array
-  // buffers and WASM modules.
-  if (mAgentClusterId.isSome()) {
-    nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-    MOZ_ASSERT(global);
-
-    Maybe<ClientInfo> clientInfo = global->GetClientInfo();
-    if (clientInfo) {
-      Maybe<nsID> agentClusterId = clientInfo->AgentClusterId();
-      if (agentClusterId.isSome() &&
-          mAgentClusterId.value().Equals(agentClusterId.value())) {
-        cloneDataPolicy.allowIntraClusterClonableSharedObjects();
-      }
-    }
+    return mCloneData->Read(aCx, aValue, aRv);
   }
 
   MOZ_ASSERT(!mRefData);
-  MOZ_ASSERT(mRefDataId.isSome());
 
   if (aReadMethod == SharedMessageBody::StealRefMessageBody) {
-    mRefData = aRefMessageBodyService->Steal(mRefDataId.value());
+    mRefData = aRefMessageBodyService->Steal(mRefDataId);
   } else {
     MOZ_ASSERT(aReadMethod == SharedMessageBody::KeepRefMessageBody);
-    mRefData = aRefMessageBodyService->GetAndCount(mRefDataId.value());
+    mRefData = aRefMessageBodyService->GetAndCount(mRefDataId);
   }
 
   if (!mRefData) {
@@ -96,7 +72,7 @@ void SharedMessageBody::Read(JSContext* aCx,
     return;
   }
 
-  mRefData->CloneData()->Read(aCx, aValue, cloneDataPolicy, aRv);
+  mRefData->CloneData()->Read(aCx, aValue, aRv);
 }
 
 bool SharedMessageBody::TakeTransferredPortsAsSequence(
@@ -116,18 +92,15 @@ void SharedMessageBody::FromSharedToMessageChild(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aData);
 
-  aMessage.agentClusterId() = aData->mAgentClusterId;
-
   if (aData->mCloneData) {
     ClonedMessageData clonedData;
     aData->mCloneData->BuildClonedMessageDataForBackgroundChild(aManager,
                                                                 clonedData);
-    aMessage.data() = clonedData;
+    aMessage = clonedData;
     return;
   }
 
-  MOZ_ASSERT(aData->mRefDataId.isSome());
-  aMessage.data() = RefMessageData(aData->mRefDataId.value());
+  aMessage = RefMessageData(aData->mRefDataId);
 }
 
 /* static */
@@ -149,17 +122,16 @@ void SharedMessageBody::FromSharedToMessagesChild(
 already_AddRefed<SharedMessageBody> SharedMessageBody::FromMessageToSharedChild(
     MessageData& aMessage,
     StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
-  RefPtr<SharedMessageBody> data =
-      new SharedMessageBody(aSupportsTransferring, aMessage.agentClusterId());
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(aSupportsTransferring);
 
-  if (aMessage.data().type() == MessageDataType::TClonedMessageData) {
+  if (aMessage.type() == MessageData::TClonedMessageData) {
     data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
         JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
     data->mCloneData->StealFromClonedMessageDataForBackgroundChild(
-        aMessage.data().get_ClonedMessageData());
+        aMessage.get_ClonedMessageData());
   } else {
-    MOZ_ASSERT(aMessage.data().type() == MessageDataType::TRefMessageData);
-    data->mRefDataId.emplace(aMessage.data().get_RefMessageData().uuid());
+    MOZ_ASSERT(aMessage.type() == MessageData::TRefMessageData);
+    data->mRefDataId = aMessage.get_RefMessageData().uuid();
   }
 
   return data.forget();
@@ -169,17 +141,15 @@ already_AddRefed<SharedMessageBody> SharedMessageBody::FromMessageToSharedChild(
 already_AddRefed<SharedMessageBody> SharedMessageBody::FromMessageToSharedChild(
     const MessageData& aMessage,
     StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
-  RefPtr<SharedMessageBody> data =
-      new SharedMessageBody(aSupportsTransferring, aMessage.agentClusterId());
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(aSupportsTransferring);
 
-  if (aMessage.data().type() == MessageDataType::TClonedMessageData) {
+  if (aMessage.type() == MessageData::TClonedMessageData) {
     data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
         JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
-    data->mCloneData->BorrowFromClonedMessageDataForBackgroundChild(
-        aMessage.data().get_ClonedMessageData());
+    data->mCloneData->BorrowFromClonedMessageDataForBackgroundChild(aMessage);
   } else {
-    MOZ_ASSERT(aMessage.data().type() == MessageDataType::TRefMessageData);
-    data->mRefDataId.emplace(aMessage.data().get_RefMessageData().uuid());
+    MOZ_ASSERT(aMessage.type() == MessageData::TRefMessageData);
+    data->mRefDataId = aMessage.get_RefMessageData().uuid();
   }
 
   return data.forget();
@@ -221,18 +191,16 @@ bool SharedMessageBody::FromSharedToMessagesParent(
 
   for (auto& data : aData) {
     MessageData* message = aArray.AppendElement(mozilla::fallible);
-    message->agentClusterId() = data->mAgentClusterId;
 
     if (data->mCloneData) {
       ClonedMessageData clonedData;
       data->mCloneData->BuildClonedMessageDataForBackgroundParent(aManager,
                                                                   clonedData);
-      message->data() = clonedData;
+      *message = clonedData;
       continue;
     }
 
-    MOZ_ASSERT(data->mRefDataId.isSome());
-    message->data() = RefMessageData(data->mRefDataId.value());
+    *message = RefMessageData(data->mRefDataId);
   }
 
   return true;
@@ -243,17 +211,15 @@ already_AddRefed<SharedMessageBody>
 SharedMessageBody::FromMessageToSharedParent(
     MessageData& aMessage,
     StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
-  RefPtr<SharedMessageBody> data =
-      new SharedMessageBody(aSupportsTransferring, aMessage.agentClusterId());
+  RefPtr<SharedMessageBody> data = new SharedMessageBody(aSupportsTransferring);
 
-  if (aMessage.data().type() == MessageDataType::TClonedMessageData) {
+  if (aMessage.type() == MessageData::TClonedMessageData) {
     data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
         JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
-    data->mCloneData->StealFromClonedMessageDataForBackgroundParent(
-        aMessage.data().get_ClonedMessageData());
+    data->mCloneData->StealFromClonedMessageDataForBackgroundParent(aMessage);
   } else {
-    MOZ_ASSERT(aMessage.data().type() == MessageDataType::TRefMessageData);
-    data->mRefDataId.emplace(aMessage.data().get_RefMessageData().uuid());
+    MOZ_ASSERT(aMessage.type() == MessageData::TRefMessageData);
+    data->mRefDataId = aMessage.get_RefMessageData().uuid();
   }
 
   return data.forget();
