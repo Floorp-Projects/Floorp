@@ -75,7 +75,7 @@ class PostMessageRunnable final : public CancelableRunnable {
 
     MOZ_ASSERT(mPort->mPostMessageRunnable == this);
 
-    nsresult rv = DispatchMessage();
+    DispatchMessage();
 
     // We must check if we were waiting for this message in order to shutdown
     // the port.
@@ -84,7 +84,7 @@ class PostMessageRunnable final : public CancelableRunnable {
     mPort->mPostMessageRunnable = nullptr;
     mPort->Dispatch();
 
-    return rv;
+    return NS_OK;
   }
 
   nsresult Cancel() override {
@@ -96,7 +96,7 @@ class PostMessageRunnable final : public CancelableRunnable {
   }
 
  private:
-  nsresult DispatchMessage() const {
+  void DispatchMessage() const {
     NS_ASSERT_OWNINGTHREAD(Runnable);
 
     nsCOMPtr<nsIGlobalObject> globalObject = mPort->GetParentObject();
@@ -104,12 +104,12 @@ class PostMessageRunnable final : public CancelableRunnable {
     AutoJSAPI jsapi;
     if (!globalObject || !jsapi.Init(globalObject)) {
       NS_WARNING("Failed to initialize AutoJSAPI object.");
-      return NS_ERROR_FAILURE;
+      return;
     }
 
     JSContext* cx = jsapi.cx();
 
-    ErrorResult rv;
+    IgnoredErrorResult rv;
     JS::Rooted<JS::Value> value(cx);
 
     UniquePtr<AbstractTimelineMarker> start;
@@ -135,8 +135,9 @@ class PostMessageRunnable final : public CancelableRunnable {
     }
 
     if (NS_WARN_IF(rv.Failed())) {
+      JS_ClearPendingException(cx);
       mPort->DispatchError();
-      return rv.StealNSResult();
+      return;
     }
 
     // Create the event
@@ -148,7 +149,7 @@ class PostMessageRunnable final : public CancelableRunnable {
     Sequence<OwningNonNull<MessagePort>> ports;
     if (!mData->TakeTransferredPortsAsSequence(ports)) {
       mPort->DispatchError();
-      return NS_ERROR_OUT_OF_MEMORY;
+      return;
     }
 
     event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
@@ -157,8 +158,6 @@ class PostMessageRunnable final : public CancelableRunnable {
     event->SetTrusted(true);
 
     mPort->DispatchEvent(*event);
-
-    return NS_OK;
   }
 
  private:
