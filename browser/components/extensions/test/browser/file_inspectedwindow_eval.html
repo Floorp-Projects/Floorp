@@ -11,6 +11,12 @@
         // the related test case asserts that it is defined at line 9
         // of this file.
       }
+
+      function test_bound_target() {
+        // Another function to inspect, expected to be located at line 15.
+      }
+
+      window.test_bound_function = test_bound_target.bind(window);
     </script>
   </head>
   <body>

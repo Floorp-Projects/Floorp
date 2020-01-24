@@ -632,10 +632,33 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   },
 
   /**
+   * Preprocess a debugger object (e.g. return the `boundTargetFunction`
+   * debugger object if the given debugger object is a bound function).
+   *
+   * This method is called by both the `inspect` binding implemented
+   * for the webconsole and the one implemented for the devtools API
+   * `browser.devtools.inspectedWindow.eval`.
+   */
+  preprocessDebuggerObject(dbgObj) {
+    // Returns the bound target function on a bound function.
+    if (dbgObj && dbgObj.isBoundFunction && dbgObj.boundTargetFunction) {
+      return dbgObj.boundTargetFunction;
+    }
+
+    return dbgObj;
+  },
+
+  /**
    * This helper is used by the WebExtensionInspectedWindowActor to
    * inspect an object in the developer toolbox.
+   *
+   * NOTE: shared parts related to preprocess the debugger object (between
+   * this function and the `inspect` webconsole command defined in
+   * "devtools/server/actor/webconsole/utils.js") should be added to
+   * the webconsole actors' `preprocessDebuggerObject` method.
    */
   inspectObject(dbgObj, inspectFromAnnotation) {
+    dbgObj = this.preprocessDebuggerObject(dbgObj);
     this.emit("inspectObject", {
       objectActor: this.createValueGrip(dbgObj),
       inspectFromAnnotation,
@@ -1568,6 +1591,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       chromeWindow: this.chromeWindow.bind(this),
       makeDebuggeeValue: debuggerGlobal.makeDebuggeeValue.bind(debuggerGlobal),
       createValueGrip: this.createValueGrip.bind(this),
+      preprocessDebuggerObject: this.preprocessDebuggerObject.bind(this),
       sandbox: Object.create(null),
       helperResult: null,
       consoleActor: this,
