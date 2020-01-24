@@ -5,6 +5,7 @@ const browserTestConfig = require("eslint-plugin-mozilla/lib/configs/browser-tes
 const mochitestTestConfig = require("eslint-plugin-mozilla/lib/configs/mochitest-test.js");
 const chromeTestConfig = require("eslint-plugin-mozilla/lib/configs/chrome-test.js");
 const fs = require("fs");
+const path = require("path");
 
 /**
  * Some configurations have overrides, which can't be specified within overrides,
@@ -34,10 +35,14 @@ const chromeTestPaths = [
 ];
 
 const ignorePatterns = [
-  ...fs.readFileSync("tools/rewriting/ThirdPartyPaths.txt")
+  ...fs.readFileSync(
+      path.join(__dirname, "tools", "rewriting", "ThirdPartyPaths.txt")
+    )
     .toString("utf-8")
     .split("\n"),
-  ...fs.readFileSync("devtools/client/debugger/.eslintignore")
+  ...fs.readFileSync(
+      path.join(__dirname, "devtools", "client", "debugger", ".eslintignore")
+    )
     .toString("utf-8")
     .split("\n")
     .filter(p => p && !p.startsWith("#"))
