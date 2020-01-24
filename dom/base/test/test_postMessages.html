@@ -345,7 +345,8 @@ function test_windowToIframe() {
 // PostMessage to cross-origin iframe
 function test_windowToCrossOriginIframe() {
   info("Testing window to cross-origin iframe");
-  test_windowToIframeURL('http://example.com/tests/dom/base/test/iframe_postMessages.html', false);
+  test_windowToIframeURL('http://example.com/tests/dom/base/test/iframe_postMessages.html',
+                         !SpecialPowers.useRemoteSubframes);
 }
 
 // iframe helper class

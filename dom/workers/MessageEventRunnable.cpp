@@ -66,7 +66,7 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
       parent->GetClientInfo()->AgentClusterId().isSome() &&
       parent->GetClientInfo()->AgentClusterId()->Equals(
           aWorkerPrivate->AgentClusterId())) {
-    cloneDataPolicy.allowIntraClusterClonableSharedObjects();
+    cloneDataPolicy.allowSharedMemory();
   }
 
   Read(parent, aCx, &messageData, cloneDataPolicy, rv);

@@ -39,7 +39,7 @@ enum StructuredCloneTags {
   SCTAG_DOM_FILE,
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  SCTAG_DOM_WASM_MODULE,
+  SCTAG_DOM_WASM,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.

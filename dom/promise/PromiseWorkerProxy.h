@@ -157,7 +157,6 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
   // StructuredCloneHolderBase
 
   JSObject* CustomReadHandler(JSContext* aCx, JSStructuredCloneReader* aReader,
-                              const JS::CloneDataPolicy& aCloneDataPolicy,
                               uint32_t aTag, uint32_t aIndex) override;
 
   bool CustomWriteHandler(JSContext* aCx, JSStructuredCloneWriter* aWriter,
