@@ -1,4 +1,4 @@
-use spirv_cross::{hlsl, spirv};
+use spirv_cross_internal::{hlsl, spirv};
 
 mod common;
 use crate::common::words_from_bytes;

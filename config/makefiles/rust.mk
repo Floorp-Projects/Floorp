@@ -47,26 +47,16 @@ ifeq (1,$(MOZ_PARALLEL_BUILD))
 cargo_build_flags += -j1
 endif
 
-rustflags_lto = -Clto
-# Disable LTO when linking gkrust_gtest.
-ifneq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
-rustflags_lto =
-endif
-# Disable LTO when linking for macOS with fuzzing for now,
-# see https://github.com/rust-lang/rust/issues/66285
-ifdef FUZZING_INTERFACES
-ifeq ($(OS_ARCH), Darwin)
-rustflags_lto =
-endif
-endif
-
 # These flags are passed via `cargo rustc` and only apply to the final rustc
 # invocation (i.e., only the top-level crate, not its dependencies).
 cargo_rustc_flags = $(CARGO_RUSTCFLAGS)
 ifndef DEVELOPER_OPTIONS
 ifndef MOZ_DEBUG_RUST
-# Enable link-time optimization for release builds
-cargo_rustc_flags += $(rustflags_lto)
+# Enable link-time optimization for release builds, but not when linking
+# gkrust_gtest.
+ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
+cargo_rustc_flags += -Clto
+endif
 endif
 endif
 
