@@ -589,7 +589,7 @@ class UrlbarView {
 
       // Align the panel with the parent toolbar.
       this.panel.style.top = px(
-        getBoundsWithoutFlushing(this.input.textbox.closest("toolbar")).bottom
+        getBoundsWithoutFlushing(this.input._toolbar).bottom
       );
 
       this._mainContainer.style.maxWidth = px(width);
