@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionPageAction
  * @property id The unique identifier for this web extension.
  * @property url The url pointing to a resources path for locating the extension
  * within the APK file e.g. resource://android/assets/extensions/my_web_ext.
+ * @property name The name of this web extension.
  * @property enabled Whether or not this web extension is enabled, defaults to true.
  * @property browserAction The browser action state of this extension.
  * @property pageAction The page action state of this extension.
@@ -24,6 +25,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 data class WebExtensionState(
     val id: String,
     val url: String? = null,
+    val name: String? = null,
     val enabled: Boolean = true,
     val browserAction: WebExtensionBrowserAction? = null,
     val pageAction: WebExtensionPageAction? = null,

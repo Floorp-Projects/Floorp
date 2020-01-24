@@ -76,6 +76,8 @@ object WebExtensionSupport {
      *
      * @param engine the browser [Engine] to use.
      * @param store the application's [BrowserStore].
+     * @param openPopupInTab (optional) flag to determine whether a browser or page action would
+     * display a web extension popup in a tab or not. Defaults to false.
      * @param onNewTabOverride (optional) override of behaviour that should
      * be triggered when web extensions open a new tab e.g. when dispatching
      * to the store isn't sufficient while migrating from browser-session
@@ -91,9 +93,6 @@ object WebExtensionSupport {
      * be triggered when a tab is selected to display a web extension popup.
      * This is a lambda accepting the [WebExtension] and the session/tab ID to
      * select.
-     * @param onActionPopupToggleOverride (optional) override of behaviour that should
-     * be triggered when a browser or page action is toggled to display a web extension popup.
-     * This is a lambda accepting the [WebExtension].
      * @param onUpdatePermissionRequest (optional) Invoked when a web extension has changed its
      * permissions while trying to update to a new version. This requires user interaction as
      * the updated extension will not be installed, until the user grants the new permissions.
@@ -102,10 +101,10 @@ object WebExtensionSupport {
     fun initialize(
         engine: Engine,
         store: BrowserStore,
+        openPopupInTab: Boolean = false,
         onNewTabOverride: ((WebExtension?, EngineSession, String) -> String)? = null,
         onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null,
         onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null,
-        onActionPopupToggleOverride: ((WebExtension) -> Unit)? = null,
         onUpdatePermissionRequest: ((current: WebExtension, updated: WebExtension, newPermissions: List<String>, onPermissionsGranted: ((Boolean) -> Unit)) -> Unit)? = { _, _, _, _ -> }
     ) {
         this.onUpdatePermissionRequest = onUpdatePermissionRequest
@@ -144,9 +143,8 @@ object WebExtensionSupport {
                 engineSession: EngineSession,
                 action: Action
             ): EngineSession? {
-                return if (onActionPopupToggleOverride != null) {
+                return if (!openPopupInTab) {
                     store.dispatch(WebExtensionAction.UpdatePopupSessionAction(webExtension.id, popupSession = engineSession))
-                    onActionPopupToggleOverride.invoke(webExtension)
                     engineSession
                 } else {
                     val popupSessionId = store.state.extensions[webExtension.id]?.popupSessionId
@@ -321,5 +319,5 @@ object WebExtensionSupport {
         onCloseTabOverride?.invoke(webExtension, id) ?: store.dispatch(TabListAction.RemoveTabAction(id))
     }
 
-    private fun WebExtension.toState() = WebExtensionState(id, url)
+    private fun WebExtension.toState() = WebExtensionState(id, url, getMetadata()?.name)
 }

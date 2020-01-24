@@ -5,7 +5,6 @@
 package org.mozilla.samples.browser
 
 import android.app.Application
-import android.content.Intent
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.service.glean.Glean
@@ -16,7 +15,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.webextensions.WebExtensionSupport
-import org.mozilla.samples.browser.addons.WebExtensionActionPopupActivity
 
 class SampleApplication : Application() {
     val components by lazy { Components(this) }
@@ -61,17 +59,7 @@ class SampleApplication : Application() {
                         val selected = components.sessionManager.findSessionById(sessionId)
                         selected?.let { components.tabsUseCases.selectTab(it) }
                 },
-                onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest,
-                onActionPopupToggleOverride = {
-                    webExtension ->
-                        val intent = Intent(this, WebExtensionActionPopupActivity::class.java)
-                        intent.putExtra("web_extension_id", webExtension.id)
-                        webExtension.getMetadata()?.let {
-                            intent.putExtra("web_extension_name", it.name)
-                        }
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        startActivity(intent)
-                }
+                onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest
             )
         } catch (e: UnsupportedOperationException) {
             // Web extension support is only available for engine gecko

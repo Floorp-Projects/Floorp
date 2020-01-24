@@ -29,6 +29,7 @@
         android:textAlignment="viewStart"
         android:paddingEnd="16dp"
         android:paddingStart="16dp"
+        android:clickable="false"
         tools:ignore="RtlCompat"
         tools:text="uBlock Origin" />
 

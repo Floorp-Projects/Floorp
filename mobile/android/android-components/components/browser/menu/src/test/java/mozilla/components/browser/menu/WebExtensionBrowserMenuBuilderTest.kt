@@ -33,6 +33,7 @@ class WebExtensionBrowserMenuBuilderTest {
             "id" to WebExtensionState(
                 "id",
                 "url",
+                "name",
                 true,
                 browserAction = browserAction,
                 pageAction = pageAction
@@ -81,6 +82,7 @@ class WebExtensionBrowserMenuBuilderTest {
             "id" to WebExtensionState(
                 "id",
                 "url",
+                "name",
                 true,
                 browserAction = browserAction,
                 pageAction = pageAction
