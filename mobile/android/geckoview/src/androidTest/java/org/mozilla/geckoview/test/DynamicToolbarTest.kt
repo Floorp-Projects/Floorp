@@ -284,4 +284,24 @@ class DynamicToolbarTest : BaseSessionTest() {
         assertThat("window.innerHeight should be changed when the dynamc toolbar is completely hidden",
                    promise.value as Double, closeTo(SCREEN_HEIGHT / pixelRatio, .01))
     }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun notCrashOnResizeEvent() {
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(BaseSessionTest.FIXED_VH)
+        mainSession.waitForPageStop()
+
+        // Do some setVerticalClipping calls that we might try to queue two window resize events.
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight + 1) }
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
+
+        mainSession.waitForJS("new Promise(resolve => { window.addEventListener('resize', resolve) })")
+    }
 }
