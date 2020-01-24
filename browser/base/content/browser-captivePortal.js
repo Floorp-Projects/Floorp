@@ -282,6 +282,7 @@ var CaptivePortalWatcher = {
             userContextId: gBrowser.contentPrincipal.userContextId,
           }
         ),
+        disableTRR: true,
       });
       this._captivePortalTab = Cu.getWeakReference(tab);
     }
