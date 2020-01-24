@@ -298,6 +298,7 @@ class SecondaryPanes extends Component<Props, State> {
             type="checkbox"
             checked={logEventBreakpoints ? "checked" : ""}
             onChange={e => this.props.toggleEventLogging()}
+            onKeyDown={e => e.stopPropagation()}
           />
           {L10N.getStr("eventlisteners.log")}
         </label>
