@@ -65,7 +65,6 @@ struct ServiceWorkerFetchEventOpArgs {
   IPCInternalRequest internalRequest;
   nsString clientId;
   nsString resultingClientId;
-  bool isReload;
   bool isNonSubresourceRequest;
 };
 
