@@ -21,6 +21,7 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/dom/RefMessageBodyService.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/MessagePortTimelineMarker.h"
 #include "mozilla/ScopeExit.h"
@@ -31,7 +32,6 @@
 #include "nsGlobalWindow.h"
 #include "nsPresContext.h"
 #include "SharedMessagePortMessage.h"
-#include "RefMessageBodyService.h"
 
 #include "nsIBFCacheEntry.h"
 #include "mozilla/dom/Document.h"

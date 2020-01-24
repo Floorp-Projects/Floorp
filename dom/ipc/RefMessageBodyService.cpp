@@ -11,7 +11,7 @@ namespace dom {
 
 StaticMutex sRefMessageBodyServiceMutex;
 
-// Raw pointer because the service is kept alive by MessagePorts.
+// Raw pointer because the service is kept alive by other objects.
 // See the CTOR and the DTOR of this object.
 RefMessageBodyService* sService;
 
