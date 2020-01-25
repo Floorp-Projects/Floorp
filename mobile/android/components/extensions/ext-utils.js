@@ -89,6 +89,13 @@ class BrowserProgressListener {
   }
 
   onLocationChange(webProgress, request, locationURI, flags) {
+    const window = this.browser.ownerGlobal;
+    // GeckoView windows can become popups at any moment, so we need to check
+    // here
+    if (!windowTracker.isBrowserWindow(window)) {
+      return;
+    }
+
     this.delegate("onLocationChange", webProgress, request, locationURI, flags);
   }
   onStateChange(webProgress, request, stateFlags, status) {
