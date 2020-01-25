@@ -370,12 +370,6 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
     }
     DCHECK(bytes_read);
 
-    if (client_pipe_ != -1) {
-      PipeMap::instance().Remove(pipe_name_);
-      IGNORE_EINTR(close(client_pipe_));
-      client_pipe_ = -1;
-    }
-
     // a pointer to an array of |num_wire_fds| file descriptors from the read
     const int* wire_fds = NULL;
     unsigned num_wire_fds = 0;
