@@ -6,12 +6,14 @@ from __future__ import absolute_import, print_function
 
 import os
 import subprocess
+import six
 import sys
 
 import psutil
 
 from distutils.util import strtobool
 from distutils.version import LooseVersion
+
 import mozpack.path as mozpath
 
 # Minimum recommended logical processors in system.
@@ -84,7 +86,7 @@ class Doctor(object):
         valid = False
         while not valid and limit > 0:
             try:
-                choice = strtobool(raw_input(prompt + '[Y/N]\n'))
+                choice = strtobool(six.moves.input(prompt + '[Y/N]\n'))
                 valid = True
             except ValueError:
                 print("ERROR! Please enter a valid option!")
@@ -104,11 +106,12 @@ class Doctor(object):
             if status == 'SKIPPED':
                 continue
             self.results.append(result)
-            print('%s...\t%s\n' % (
-                   result.get('desc', ''),
-                   status
-                )
-            ).expandtabs(40)
+            print(
+                '{}...\t{}\n'.format(
+                    result.get('desc', ''),
+                    status
+                ).expandtabs(40)
+            )
 
     @property
     def platform(self):
