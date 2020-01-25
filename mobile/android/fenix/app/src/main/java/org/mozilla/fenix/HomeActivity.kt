@@ -129,7 +129,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 // If we're authenticated, kick-off a sync and a device state refresh.
                 accountManager.authenticatedAccount()?.let {
                     accountManager.syncNowAsync(SyncReason.Startup, debounce = true)
-                    it.deviceConstellation().pollForEventsAsync().await()
                 }
             }
         }
