@@ -8,7 +8,6 @@
 #define mozilla_dom_DeprecationReportBody_h
 
 #include "mozilla/dom/ReportBody.h"
-#include "mozilla/dom/Date.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,8 +15,8 @@ namespace dom {
 class DeprecationReportBody final : public ReportBody {
  public:
   DeprecationReportBody(nsPIDOMWindowInner* aWindow, const nsAString& aId,
-                        const Nullable<Date>& aDate, const nsAString& aMessage,
-                        const nsAString& aSourceFile,
+                        const Nullable<uint64_t>& aDate,
+                        const nsAString& aMessage, const nsAString& aSourceFile,
                         const Nullable<uint32_t>& aLineNumber,
                         const Nullable<uint32_t>& aColumnNumber);
 
@@ -26,7 +25,7 @@ class DeprecationReportBody final : public ReportBody {
 
   void GetId(nsAString& aId) const;
 
-  Nullable<Date> GetAnticipatedRemoval() const;
+  Nullable<uint64_t> GetAnticipatedRemoval() const;
 
   void GetMessage(nsAString& aMessage) const;
 
@@ -43,7 +42,7 @@ class DeprecationReportBody final : public ReportBody {
   ~DeprecationReportBody();
 
   const nsString mId;
-  const Nullable<Date> mDate;
+  const Nullable<uint64_t> mDate;
   const nsString mMessage;
   const nsString mSourceFile;
   const Nullable<uint32_t> mLineNumber;

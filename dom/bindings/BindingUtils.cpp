@@ -3937,8 +3937,8 @@ void ReportDeprecation(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
   }
 
   RefPtr<DeprecationReportBody> body =
-      new DeprecationReportBody(aWindow, type, Nullable<Date>(), msg, aFileName,
-                                aLineNumber, aColumnNumber);
+      new DeprecationReportBody(aWindow, type, nullptr /* date */, msg,
+                                aFileName, aLineNumber, aColumnNumber);
 
   ReportingUtils::Report(aWindow, nsGkAtoms::deprecation,
                          NS_LITERAL_STRING("default"),
