@@ -5,13 +5,13 @@ cp -p $1/README.md .
 cp -p $1/Cargo.toml .
 
 for crate in audioipc client server; do
-    test -d $crate/src || mkdir -p $crate/src
-    rm -fr $crate/*
-    cp -pr $1/$crate/Cargo.toml $crate/
-    cp -pr $1/$crate/src/ $crate/src/
+    rm -fr $crate
+    mkdir $crate
+    cp -pr $1/$crate/Cargo.toml $crate
+    cp -pr $1/$crate/src $crate
 done
 
-rm audioipc/src/cmsghdr.c
+rm -f audioipc/src/cmsghdr.c
 
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)
@@ -26,7 +26,7 @@ if [ -n "$rev" ]; then
     echo "WARNING: updating from a dirty git repository."
   fi
   sed -i.bak -e "/The git commit ID used was/ s/[0-9a-f]\{40\}\(-dirty\)\{0,1\} .\{1,100\}/$version ($date)/" README_MOZILLA
-  rm README_MOZILLA.bak
+  rm -f README_MOZILLA.bak
 else
   echo "Remember to update README_MOZILLA with the version details."
 fi
