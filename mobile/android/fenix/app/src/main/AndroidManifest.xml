@@ -31,16 +31,14 @@
 
         <!--
           We inherited this entry (${applicationId}.App) from Fennec. We need to keep this as our
-          main launcher to avoid launcher icons on the home screen disappearing for all our users
-          on a Fennec build.
+          main launcher to avoid launcher icons on the home screen disappearing for all our users.
 
-          !!HERE BE DRAGONS!!
-          We need the targetActivity to be IntentReceiverActivity so that we can check if we have
-          a migration in progress. If not, the HomeActivity is invoked.
+          Note that `fennec*` build types override the targetActivity property in the Manifest
+          inside their source set.
         -->
         <activity-alias
             android:name="${applicationId}.App"
-            android:targetActivity=".IntentReceiverActivity">
+            android:targetActivity=".HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

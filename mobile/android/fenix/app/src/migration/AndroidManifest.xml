@@ -12,7 +12,19 @@
     <application
         android:name="org.mozilla.fenix.MigratingFenixApplication"
         tools:replace="android:name">
+
+        <!-- Overriding the alias of the main manifest to route app launches through our
+             MigrationDecisionActivity which will show the migration screen before launching
+             into the app if needed. -->
+        <activity-alias
+            android:name="${applicationId}.App"
+            android:targetActivity="org.mozilla.fenix.MigrationDecisionActivity"
+            tools:replace="android:targetActivity"/>
+
+        <activity
+            android:name="org.mozilla.fenix.MigrationDecisionActivity"
+            android:exported="false" />
+
         <service android:name="org.mozilla.fenix.MigrationService" />
     </application>
 </manifest>
-
