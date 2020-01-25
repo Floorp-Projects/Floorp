@@ -10,7 +10,6 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/dom/Date.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/HTMLFormSubmission.h"
@@ -1645,10 +1644,15 @@ void HTMLInputElement::SetValue(Decimal aValue, CallerType aCallerType) {
   SetValue(value, aCallerType, IgnoreErrors());
 }
 
-Nullable<Date> HTMLInputElement::GetValueAsDate(ErrorResult& aRv) {
+void HTMLInputElement::GetValueAsDate(JSContext* aCx,
+                                      JS::MutableHandle<JSObject*> aObject,
+                                      ErrorResult& aRv) {
+  aObject.set(nullptr);
   if (!IsDateTimeInputType(mType)) {
-    return Nullable<Date>();
+    return;
   }
+
+  Maybe<JS::ClippedTime> time;
 
   switch (mType) {
     case NS_FORM_INPUT_DATE: {
@@ -1656,85 +1660,114 @@ Nullable<Date> HTMLInputElement::GetValueAsDate(ErrorResult& aRv) {
       nsAutoString value;
       GetNonFileValueInternal(value);
       if (!ParseDate(value, &year, &month, &day)) {
-        return Nullable<Date>();
+        return;
       }
 
-      JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, day));
-      return Nullable<Date>(Date(time));
+      time.emplace(JS::TimeClip(JS::MakeDate(year, month - 1, day)));
+      break;
     }
     case NS_FORM_INPUT_TIME: {
       uint32_t millisecond;
       nsAutoString value;
       GetNonFileValueInternal(value);
       if (!ParseTime(value, &millisecond)) {
-        return Nullable<Date>();
+        return;
       }
 
-      JS::ClippedTime time = JS::TimeClip(millisecond);
-      MOZ_ASSERT(time.toDouble() == millisecond,
+      time.emplace(JS::TimeClip(millisecond));
+      MOZ_ASSERT(time->toDouble() == millisecond,
                  "HTML times are restricted to the day after the epoch and "
                  "never clip");
-      return Nullable<Date>(Date(time));
+      break;
     }
     case NS_FORM_INPUT_MONTH: {
       uint32_t year, month;
       nsAutoString value;
       GetNonFileValueInternal(value);
       if (!ParseMonth(value, &year, &month)) {
-        return Nullable<Date>();
+        return;
       }
 
-      JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, 1));
-      return Nullable<Date>(Date(time));
+      time.emplace(JS::TimeClip(JS::MakeDate(year, month - 1, 1)));
+      break;
     }
     case NS_FORM_INPUT_WEEK: {
       uint32_t year, week;
       nsAutoString value;
       GetNonFileValueInternal(value);
       if (!ParseWeek(value, &year, &week)) {
-        return Nullable<Date>();
+        return;
       }
 
       double days = DaysSinceEpochFromWeek(year, week);
-      JS::ClippedTime time = JS::TimeClip(days * kMsPerDay);
+      time.emplace(JS::TimeClip(days * kMsPerDay));
 
-      return Nullable<Date>(Date(time));
+      break;
     }
     case NS_FORM_INPUT_DATETIME_LOCAL: {
       uint32_t year, month, day, timeInMs;
       nsAutoString value;
       GetNonFileValueInternal(value);
       if (!ParseDateTimeLocal(value, &year, &month, &day, &timeInMs)) {
-        return Nullable<Date>();
+        return;
       }
 
-      JS::ClippedTime time =
-          JS::TimeClip(JS::MakeDate(year, month - 1, day, timeInMs));
-      return Nullable<Date>(Date(time));
+      time.emplace(JS::TimeClip(JS::MakeDate(year, month - 1, day, timeInMs)));
+      break;
     }
+  }
+
+  if (time) {
+    aObject.set(JS::NewDateObject(aCx, *time));
+    if (!aObject) {
+      aRv.NoteJSContextException(aCx);
+    }
+    return;
   }
 
   MOZ_ASSERT(false, "Unrecognized input type");
   aRv.Throw(NS_ERROR_UNEXPECTED);
-  return Nullable<Date>();
 }
 
-void HTMLInputElement::SetValueAsDate(const Nullable<Date>& aDate,
+void HTMLInputElement::SetValueAsDate(JSContext* aCx,
+                                      JS::Handle<JSObject*> aObj,
                                       ErrorResult& aRv) {
   if (!IsDateTimeInputType(mType)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
+  if (aObj) {
+    bool isDate;
+    if (!JS::ObjectIsDate(aCx, aObj, &isDate)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+    if (!isDate) {
+      aRv.ThrowTypeError(
+          u"Value being assigned to HTMLInputElement.valueAsDate is not a "
+          u"date.");
+      return;
+    }
+  }
+
+  double milliseconds;
+  if (aObj) {
+    if (!js::DateGetMsecSinceEpoch(aCx, aObj, &milliseconds)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+  } else {
+    milliseconds = UnspecifiedNaN<double>();
+  }
+
   // At this point we know we're not a file input, so we can just pass "not
   // system" as the caller type, since the caller type only matters in the file
   // input case.
-  if (aDate.IsNull() || aDate.Value().IsUndefined()) {
+  if (IsNaN(milliseconds)) {
     SetValue(EmptyString(), CallerType::NonSystem, aRv);
     return;
   }
-
-  double milliseconds = aDate.Value().TimeStamp().toDouble();
 
   if (mType != NS_FORM_INPUT_MONTH) {
     SetValue(Decimal::fromDouble(milliseconds), CallerType::NonSystem);

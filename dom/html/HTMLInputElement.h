@@ -639,9 +639,11 @@ class HTMLInputElement final : public TextControlElement,
                 ErrorResult& aRv);
   void GetValue(nsAString& aValue, CallerType aCallerType);
 
-  Nullable<Date> GetValueAsDate(ErrorResult& aRv);
+  void GetValueAsDate(JSContext* aCx, JS::MutableHandle<JSObject*> aObj,
+                      ErrorResult& aRv);
 
-  void SetValueAsDate(const Nullable<Date>& aDate, ErrorResult& aRv);
+  void SetValueAsDate(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                      ErrorResult& aRv);
 
   double ValueAsNumber() const {
     return DoesValueAsNumberApply() ? GetValueAsDecimal().toDouble()
