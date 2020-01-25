@@ -461,13 +461,6 @@ void gfxFontShaper::MergeFontFeatures(
 
   nsDataHashtable<nsUint32HashKey, uint32_t> mergedFeatures;
 
-  // Ligature features are enabled by default in the generic shaper,
-  // so we explicitly turn them off if necessary (for letter-spacing)
-  if (aDisableLigatures) {
-    mergedFeatures.Put(HB_TAG('l', 'i', 'g', 'a'), 0);
-    mergedFeatures.Put(HB_TAG('c', 'l', 'i', 'g'), 0);
-  }
-
   // add feature values from font
   for (const gfxFontFeature& feature : aFontFeatures) {
     mergedFeatures.Put(feature.mTag, feature.mValue);
@@ -545,9 +538,30 @@ void gfxFontShaper::MergeFontFeatures(
     }
   }
 
-  // add feature values from style rules
-  for (const gfxFontFeature& feature : styleRuleFeatures) {
-    mergedFeatures.Put(feature.mTag, feature.mValue);
+  // Add features that are already resolved to tags & values in the style.
+  if (styleRuleFeatures.IsEmpty()) {
+    // Disable common ligatures if non-zero letter-spacing is in effect.
+    if (aDisableLigatures) {
+      mergedFeatures.Put(HB_TAG('l', 'i', 'g', 'a'), 0);
+      mergedFeatures.Put(HB_TAG('c', 'l', 'i', 'g'), 0);
+    }
+  } else {
+    for (const gfxFontFeature& feature : styleRuleFeatures) {
+      // A dummy feature (0,0) is used as a sentinel to separate features
+      // originating from font-variant-* or other high-level properties from
+      // those directly specified as font-feature-settings. The high-level
+      // features may be overridden by aDisableLigatures, while low-level
+      // features specified directly as tags will come last and therefore
+      // take precedence over everything else.
+      if (feature.mTag) {
+        mergedFeatures.Put(feature.mTag, feature.mValue);
+      } else if (aDisableLigatures) {
+        // Handle ligature-disabling setting at the boundary between high-
+        // and low-level features.
+        mergedFeatures.Put(HB_TAG('l', 'i', 'g', 'a'), 0);
+        mergedFeatures.Put(HB_TAG('c', 'l', 'i', 'g'), 0);
+      }
+    }
   }
 
   if (mergedFeatures.Count() != 0) {
