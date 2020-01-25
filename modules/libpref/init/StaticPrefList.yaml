@@ -5877,8 +5877,6 @@
   mirror: always
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   value: true
-#elif defined(XP_WIN) && !defined(_ARM64_)
-  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif

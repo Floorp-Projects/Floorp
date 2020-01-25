@@ -153,10 +153,3 @@ where
         !self.in_flight.is_empty()
     }
 }
-
-impl<C: Client> Drop for ClientHandler<C> {
-    fn drop(&mut self) {
-        let _ = self.transport.close();
-        self.in_flight.clear();
-    }
-}
