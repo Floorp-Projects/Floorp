@@ -1916,18 +1916,16 @@ class ContinueDispatchFetchEventRunnable : public Runnable {
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   nsCOMPtr<nsIInterceptedChannel> mChannel;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
-  bool mIsReload;
 
  public:
   ContinueDispatchFetchEventRunnable(
       ServiceWorkerPrivate* aServiceWorkerPrivate,
-      nsIInterceptedChannel* aChannel, nsILoadGroup* aLoadGroup, bool aIsReload)
+      nsIInterceptedChannel* aChannel, nsILoadGroup* aLoadGroup)
       : Runnable(
             "dom::ServiceWorkerManager::ContinueDispatchFetchEventRunnable"),
         mServiceWorkerPrivate(aServiceWorkerPrivate),
         mChannel(aChannel),
-        mLoadGroup(aLoadGroup),
-        mIsReload(aIsReload) {
+        mLoadGroup(aLoadGroup) {
     MOZ_ASSERT(aServiceWorkerPrivate);
     MOZ_ASSERT(aChannel);
   }
@@ -1998,7 +1996,7 @@ class ContinueDispatchFetchEventRunnable : public Runnable {
     }
 
     rv = mServiceWorkerPrivate->SendFetchEvent(mChannel, mLoadGroup, clientId,
-                                               resultingClientId, mIsReload);
+                                               resultingClientId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       HandleError();
     }
@@ -2164,8 +2162,7 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
 
   RefPtr<ContinueDispatchFetchEventRunnable> continueRunnable =
       new ContinueDispatchFetchEventRunnable(serviceWorker->WorkerPrivate(),
-                                             aChannel, loadGroup,
-                                             loadInfo->GetIsDocshellReload());
+                                             aChannel, loadGroup);
 
   // When this service worker was registered, we also sent down the permissions
   // for the runnable. They should have arrived by now, but we still need to

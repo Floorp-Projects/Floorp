@@ -1202,7 +1202,6 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
   nsCString mMethod;
   nsString mClientId;
   nsString mResultingClientId;
-  bool mIsReload;
   bool mMarkLaunchServiceWorkerEnd;
   RequestCache mCacheMode;
   RequestMode mRequestMode;
@@ -1225,15 +1224,13 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
       const nsACString& aScriptSpec,
       nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
       const nsAString& aClientId, const nsAString& aResultingClientId,
-      bool aIsReload, bool aMarkLaunchServiceWorkerEnd,
-      bool aIsNonSubresourceRequest)
+      bool aMarkLaunchServiceWorkerEnd, bool aIsNonSubresourceRequest)
       : ExtendableFunctionalEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken,
                                                 aRegistration),
         mInterceptedChannel(aChannel),
         mScriptSpec(aScriptSpec),
         mClientId(aClientId),
         mResultingClientId(aResultingClientId),
-        mIsReload(aIsReload),
         mMarkLaunchServiceWorkerEnd(aMarkLaunchServiceWorkerEnd),
         mCacheMode(RequestCache::Default),
         mRequestMode(RequestMode::No_cors),
@@ -1481,7 +1478,6 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
       init.mResultingClientId = mResultingClientId;
     }
 
-    init.mIsReload = mIsReload;
     RefPtr<FetchEvent> event =
         FetchEvent::Constructor(globalObj, NS_LITERAL_STRING("fetch"), init);
 
@@ -1520,8 +1516,7 @@ NS_IMPL_ISUPPORTS_INHERITED(FetchEventRunnable, WorkerRunnable,
 
 nsresult ServiceWorkerPrivate::SendFetchEvent(
     nsIInterceptedChannel* aChannel, nsILoadGroup* aLoadGroup,
-    const nsAString& aClientId, const nsAString& aResultingClientId,
-    bool aIsReload) {
+    const nsAString& aClientId, const nsAString& aResultingClientId) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -1579,7 +1574,7 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
 
   if (mInner) {
     return mInner->SendFetchEvent(std::move(registration), aChannel, aClientId,
-                                  aResultingClientId, aIsReload);
+                                  aResultingClientId);
   }
 
   aChannel->SetLaunchServiceWorkerStart(TimeStamp::Now());
@@ -1605,7 +1600,7 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
 
   RefPtr<FetchEventRunnable> r = new FetchEventRunnable(
       mWorkerPrivate, token, handle, mInfo->ScriptSpec(), regInfo, aClientId,
-      aResultingClientId, aIsReload, newWorkerCreated, isNonSubresourceRequest);
+      aResultingClientId, newWorkerCreated, isNonSubresourceRequest);
   rv = r->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

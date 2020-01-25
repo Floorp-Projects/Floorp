@@ -36,19 +36,13 @@
 
   function testController() {
     var p = new Promise(function(resolve, reject) {
-      var reloaded = false;
       window.onmessage = function(e) {
         if (e.data.status == "ok") {
           ok(e.data.result, e.data.message);
         } else if (e.data.status == "done") {
-          if (reloaded) {
-            window.onmessage = null;
-            w.close();
-            resolve();
-          } else {
-            w.location.reload();
-            reloaded = true;
-          }
+          window.onmessage = null;
+          w.close();
+          resolve();
         }
       }
     });

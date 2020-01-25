@@ -573,7 +573,7 @@ ServiceWorkerPrivateImpl::PendingFetchEvent::~PendingFetchEvent() {
 nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
     RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
     nsCOMPtr<nsIInterceptedChannel> aChannel, const nsAString& aClientId,
-    const nsAString& aResultingClientId, bool aIsReload) {
+    const nsAString& aResultingClientId) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mOuter);
   MOZ_ASSERT(aRegistration);
@@ -598,7 +598,7 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
   // FetchEventOpChild will fill in the IPCInternalRequest.
   ServiceWorkerFetchEventOpArgs args(
       mOuter->mInfo->ScriptSpec(), IPCInternalRequest(), nsString(aClientId),
-      nsString(aResultingClientId), aIsReload,
+      nsString(aResultingClientId),
       nsContentUtils::IsNonSubresourceRequest(channel));
 
   if (mOuter->mInfo->State() == ServiceWorkerState::Activating) {
