@@ -567,14 +567,6 @@ html #webconsole-notificationbox {
   line-height: 1.25em;
 }
 
-/* Do not mirror the twisty because container force to ltr
- * (theme-twisty still used in network request details)
- */
-.message .theme-twisty:dir(rtl),
-.message .theme-twisty:-moz-locale-dir(rtl) {
-  transform: none;
-}
-
 .cm-s-mozilla a[class] {
   font-style: italic;
   text-decoration: none;
@@ -799,13 +791,16 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .network.message .network-info {
   display: none;
-  margin-block-start: 6px;
-  margin-block-end: 2px;
+  margin-block: 6px 2px;
   border: solid 1px var(--theme-splitter-color);
 }
 
 .network.message.open .network-info {
   display: block;
+}
+
+:root:dir(rtl) .network.message.open .network-info {
+  direction: rtl;
 }
 
 .network.message .network-info .panels {
