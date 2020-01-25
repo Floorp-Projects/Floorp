@@ -7,6 +7,10 @@ use winapi::shared::ntdef::HANDLE;
 use winapi::shared::minwindef::DWORD;
 use winapi::um::errhandlingapi::GetLastError;
 
+use crate::AudioThreadPriorityError;
+
+use log::info;
+
 #[derive(Debug)]
 pub struct RtPriorityHandleInternal {
   mmcss_task_index: DWORD,
@@ -23,12 +27,11 @@ impl RtPriorityHandleInternal {
 }
 
 pub fn demote_current_thread_from_real_time_internal(rt_priority_handle: RtPriorityHandleInternal)
-                                            -> Result<(), ()> {
+                                            -> Result<(), AudioThreadPriorityError> {
     unsafe {
         let rv = AvRevertMmThreadCharacteristics(rt_priority_handle.task_handle);
         if rv == 0 {
-            warn!("Unable to restore the thread priority ({})", GetLastError());
-            return Err(())
+            return Err(AudioThreadPriorityError::new(&format!("Unable to restore the thread priority ({})", GetLastError())));
         }
     }
 
@@ -39,15 +42,14 @@ pub fn demote_current_thread_from_real_time_internal(rt_priority_handle: RtPrior
 
 pub fn promote_current_thread_to_real_time_internal(_audio_buffer_frames: u32,
                                            _audio_samplerate_hz: u32)
-                                           -> Result<RtPriorityHandleInternal, ()> {
+                                           -> Result<RtPriorityHandleInternal, AudioThreadPriorityError> {
     let mut handle = RtPriorityHandleInternal::new();
 
     unsafe {
         handle.task_handle = AvSetMmThreadCharacteristicsA("Audio\0".as_ptr() as _, &mut handle.mmcss_task_index);
 
         if handle.task_handle.is_null() {
-            warn!("Unable to use mmcss to bump the thread priority ({})", GetLastError());
-            return Err(())
+            return Err(AudioThreadPriorityError::new(&format!("Unable to restore the thread priority ({})", GetLastError())));
         }
     }
 

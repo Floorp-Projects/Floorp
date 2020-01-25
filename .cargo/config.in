@@ -67,11 +67,6 @@ git = "https://github.com/PLSysSec/lucet_sandbox_compiler"
 replace-with = "vendored-sources"
 rev = "58498599272e23ef797bb4304d0f181d7455ca57"
 
-[source."https://github.com/NikVolf/tokio-named-pipes"]
-branch = "stable"
-git = "https://github.com/NikVolf/tokio-named-pipes"
-replace-with = "vendored-sources"
-
 [source."https://github.com/ChunMinChang/cubeb-coreaudio-rs"]
 git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs"
 replace-with = "vendored-sources"
