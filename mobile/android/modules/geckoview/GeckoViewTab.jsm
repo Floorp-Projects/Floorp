@@ -16,6 +16,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
 });
 
 // Based on the "Tab" prototype from mobile/android/chrome/content/browser.js
@@ -205,6 +206,20 @@ const GeckoViewTabBridge = {
 class GeckoViewTab extends GeckoViewModule {
   onInit() {
     BrowserAppShim.getBrowserApp(this.window);
+
+    this.registerListener(["GeckoView:WebExtension:SetTabActive"]);
+  }
+
+  onEvent(aEvent, aData, aCallback) {
+    debug`onEvent: event=${aEvent}, data=${aData}`;
+
+    switch (aEvent) {
+      case "GeckoView:WebExtension:SetTabActive": {
+        const { active } = aData;
+        mobileWindowTracker.setTabActive(this.window, active);
+        break;
+      }
+    }
   }
 }
 
