@@ -14,12 +14,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/GeckoViewTab.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "mobileWindowTracker",
-  "resource://gre/modules/GeckoViewWebExtension.jsm"
-);
-
 const getBrowserWindow = window => {
   return window.docShell.rootTreeItem.domWindow;
 };
@@ -120,24 +114,20 @@ this.tabs = class extends ExtensionAPI {
 
     let self = {
       tabs: {
-        onActivated: new EventManager({
+        onActivated: makeGlobalEvent(
           context,
-          name: "tabs.onActivated",
-          register: fire => {
-            let listener = (eventName, event) => {
-              fire.async({
-                windowId: event.windowId,
-                tabId: event.tabId,
-                // In GeckoView each window has only one tab, so previousTabId is omitted.
-              });
-            };
+          "tabs.onActivated",
+          "Tab:Selected",
+          (fire, data) => {
+            let tab = tabManager.get(data.id);
 
-            mobileWindowTracker.on("tab-activated", listener);
-            return () => {
-              mobileWindowTracker.off("tab-activated", listener);
-            };
-          },
-        }).api(),
+            fire.async({
+              tabId: tab.id,
+              previousTabId: data.previousTabId,
+              windowId: tab.windowId,
+            });
+          }
+        ),
 
         onCreated: new EventManager({
           context,

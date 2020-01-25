@@ -40,8 +40,6 @@ class ExtensionActionTest : BaseSessionTest() {
 
     @Before
     fun setup() {
-        sessionRule.runtime.webExtensionController.setTabActive(mainSession, true)
-
         // This method installs the extension, opens up ports with the background script and the
         // content script and captures the default action definition from the manifest
         val browserActionDefaultResult = GeckoResult<WebExtension.Action>()
