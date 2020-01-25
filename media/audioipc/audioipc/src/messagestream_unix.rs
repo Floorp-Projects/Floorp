@@ -39,6 +39,12 @@ impl MessageStream {
     }
 }
 
+impl IntoRawFd for MessageStream {
+    fn into_raw_fd(self) -> RawFd {
+        self.0.into_raw_fd()
+    }
+}
+
 impl AsyncMessageStream {
     fn new(stream: tokio_uds::UnixStream) -> AsyncMessageStream {
         AsyncMessageStream(stream)
@@ -95,11 +101,5 @@ impl AsyncWrite for AsyncMessageStream {
 impl AsRawFd for AsyncMessageStream {
     fn as_raw_fd(&self) -> RawFd {
         self.0.as_raw_fd()
-    }
-}
-
-impl IntoRawFd for MessageStream {
-    fn into_raw_fd(self) -> RawFd {
-        self.0.into_raw_fd()
     }
 }
