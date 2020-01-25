@@ -3248,30 +3248,41 @@ static void CopyUsedTrackSizes(nsTArray<TrackSize>& aResult,
     SubgridComputeMarginBorderPadding(info, pmPercentageBasis);
   }
   const LogicalMargin& mbp = aSubgrid->mMarginBorderPadding;
+  nscoord startMBP;
+  nscoord endMBP;
   if (MOZ_LIKELY(cbwm.ParallelAxisStartsOnSameSide(parentAxis, wm))) {
+    startMBP = mbp.Start(parentAxis, cbwm);
+    endMBP = mbp.End(parentAxis, cbwm);
     uint32_t i = range.mStart;
-    nscoord startMBP = mbp.Start(parentAxis, cbwm);
     nscoord startPos = parentSizes[i].mPosition + startMBP;
     for (auto& sz : aResult) {
       sz = parentSizes[i++];
       sz.mPosition -= startPos;
     }
-    aResult[0].mPosition = 0;
-    aResult[0].mBase -= startMBP;
-    aResult.LastElement().mBase -= mbp.End(parentAxis, cbwm);
   } else {
-    const uint32_t first = range.mEnd - 1;
-    uint32_t i = first;
-    const auto& parentEnd = parentSizes[first];
-    nscoord startMBP = mbp.End(parentAxis, cbwm);
+    startMBP = mbp.End(parentAxis, cbwm);
+    endMBP = mbp.Start(parentAxis, cbwm);
+    uint32_t i = range.mEnd - 1;
+    const auto& parentEnd = parentSizes[i];
     nscoord parentEndPos = parentEnd.mPosition + parentEnd.mBase - startMBP;
     for (auto& sz : aResult) {
       sz = parentSizes[i--];
       sz.mPosition = parentEndPos - (sz.mPosition + sz.mBase);
     }
-    aResult[0].mPosition = 0;
-    aResult[0].mBase -= startMBP;
-    aResult.LastElement().mBase -= mbp.Start(parentAxis, cbwm);
+  }
+  auto& startTrack = aResult[0];
+  startTrack.mPosition = 0;
+  startTrack.mBase -= startMBP;
+  if (MOZ_UNLIKELY(startTrack.mBase < nscoord(0))) {
+    // Our MBP doesn't fit in the start track.  Adjust the track position
+    // to maintain track alignment with our parent.
+    startTrack.mPosition = startTrack.mBase;
+    startTrack.mBase = nscoord(0);
+  }
+  auto& endTrack = aResult.LastElement();
+  endTrack.mBase -= endMBP;
+  if (MOZ_UNLIKELY(endTrack.mBase < nscoord(0))) {
+    endTrack.mBase = nscoord(0);
   }
 }
 
@@ -7453,7 +7464,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       if (computedBSize == NS_UNCONSTRAINEDSIZE) {
         bSize = gridReflowInput.mRows.GridLineEdge(rowSizes.Length(),
                                                    GridLineSide::BeforeGridGap);
-        contentArea.BSize(wm) = bSize;
+        contentArea.BSize(wm) = std::max(bSize, nscoord(0));
       }
     }
     // Save the final row sizes for use by subgrids, if needed.
