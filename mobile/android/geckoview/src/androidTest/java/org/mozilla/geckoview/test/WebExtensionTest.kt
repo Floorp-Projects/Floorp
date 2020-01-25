@@ -34,6 +34,8 @@ class WebExtensionTest : BaseSessionTest() {
                 "resource://android/assets/web_extensions/tabs-create/"
         private const val TABS_CREATE_REMOVE_BACKGROUND: String =
                 "resource://android/assets/web_extensions/tabs-create-remove/"
+        private const val TABS_ACTIVATE_REMOVE_BACKGROUND: String =
+                "resource://android/assets/web_extensions/tabs-activate-remove/"
         private const val TABS_REMOVE_BACKGROUND: String =
                 "resource://android/assets/web_extensions/tabs-remove/"
         private const val MESSAGING_BACKGROUND: String =
@@ -54,6 +56,7 @@ class WebExtensionTest : BaseSessionTest() {
                 object : WebExtensionController.PromptDelegate {}
         )
         sessionRule.setPrefsUntilTestEnd(mapOf("extensions.isembedded" to true))
+        sessionRule.runtime.webExtensionController.setTabActive(mainSession, true)
     }
 
     @Test
@@ -447,6 +450,51 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(onCloseRequestResult)
 
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(tabsExtension))
+    }
+
+    // This test
+    // - Create and assign WebExtension TabDelegate to handle creation and closing of tabs
+    // - Create and opens a new GeckoSession
+    // - Set the main session as active tab
+    // - Registers a WebExtension
+    // - Extension listens for activated tab changes
+    // - Set the main session as inactive tab
+    // - Set the newly created GeckoSession as active tab
+    // - Extension requests removal of newly created tab if tabs.query({active: true})
+    //     contains only the newly activated tab
+    // - TabDelegate handles closing of newly created tab
+    // - Verify that close request came from right extension and targeted session
+    @Test
+    fun testBrowserTabsActivateBrowserTabsRemove() {
+        val onCloseRequestResult = GeckoResult<Void>()
+        var tabsExtension : WebExtension? = null
+        val newTabSession = GeckoSession(sessionRule.session.settings)
+
+        newTabSession.open(sessionRule.runtime)
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtensionController.TabDelegate::class,
+                controller::setTabDelegate,
+                { controller.tabDelegate = null },
+                object : WebExtensionController.TabDelegate {
+
+            override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
+                assertEquals(tabsExtension, source)
+                assertEquals(newTabSession, session)
+                onCloseRequestResult.complete(null)
+                return GeckoResult.ALLOW
+            }
+        })
+
+        tabsExtension = WebExtension(TABS_ACTIVATE_REMOVE_BACKGROUND, controller)
+
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
+
+        controller.setTabActive(sessionRule.session, false)
+        controller.setTabActive(newTabSession, true)
+
+        sessionRule.waitForResult(onCloseRequestResult)
         sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(tabsExtension))
     }
 
