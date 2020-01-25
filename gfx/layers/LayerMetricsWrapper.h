@@ -411,6 +411,7 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
   ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
     MOZ_ASSERT(IsValid());
 
+    // TODO: Restrict this only for AtBottomLayer.
     return mLayer->GetFixedPositionScrollContainerId();
   }
 
@@ -418,6 +419,30 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
     MOZ_ASSERT(IsValid());
 
     return mLayer->GetFixedPositionSides();
+  }
+
+  bool GetIsStickyPosition() const {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetIsStickyPosition();
+  }
+
+  ScrollableLayerGuid::ViewID GetStickyScrollContainerId() const {
+    MOZ_ASSERT(IsValid());
+
+    // TODO: Restrict this only for AtBottomLayer.
+    return mLayer->GetStickyScrollContainerId();
+  }
+
+  const LayerRectAbsolute& GetStickyScrollRangeOuter() const {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetStickyScrollRangeOuter();
+  }
+  const LayerRectAbsolute& GetStickyScrollRangeInner() const {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetStickyScrollRangeInner();
   }
 
   Maybe<uint64_t> GetZoomAnimationId() const {
