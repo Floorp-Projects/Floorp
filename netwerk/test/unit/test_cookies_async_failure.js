@@ -95,10 +95,10 @@ function do_get_rebuild_backup_file(profile) {
 }
 
 function do_corrupt_db(file) {
-  // Sanity check: the database size should be larger than 450k, since we've
+  // Sanity check: the database size should be larger than 320k, since we've
   // written about 460k of data. If it's not, let's make it obvious now.
   let size = file.fileSize;
-  Assert.ok(size > 450e3);
+  Assert.ok(size > 320e3);
 
   // Corrupt the database by writing bad data to the end of the file. We
   // assume that the important metadata -- table structure etc -- is stored
@@ -113,7 +113,7 @@ function do_corrupt_db(file) {
   );
   ostream.init(file, 2, -1, 0);
   let sstream = ostream.QueryInterface(Ci.nsISeekableStream);
-  let n = size - 450e3 + 20e3;
+  let n = size - 320e3 + 20e3;
   sstream.seek(Ci.nsISeekableStream.NS_SEEK_SET, size - n);
   for (let i = 0; i < n; ++i) {
     ostream.write("a", 1);
@@ -135,28 +135,13 @@ function* run_test_1(generator) {
   yield;
 
   // Open a database connection now, before we load the profile and begin
-  // asynchronous write operations. In order to tell when the async delete
-  // statement has completed, we do something tricky: open a schema 2 connection
-  // and add a cookie with null baseDomain. We can then wait until we see it
-  // deleted in the new database.
-  let db2 = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
-  db2.db.executeSimpleSQL("INSERT INTO moz_cookies (baseDomain) VALUES (NULL)");
-  db2.close();
-  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 4);
-  Assert.equal(do_count_cookies_in_db(db.db), 2);
+  // asynchronous write operations.
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
+  Assert.equal(do_count_cookies_in_db(db.db), 1);
 
   // Load the profile, and wait for async read completion...
   do_load_profile(sub_generator);
   yield;
-
-  // ... and the DELETE statement to finish.
-  while (do_count_cookies_in_db(db.db) == 2) {
-    executeSoon(function() {
-      do_run_generator(sub_generator);
-    });
-    yield;
-  }
-  Assert.equal(do_count_cookies_in_db(db.db), 1);
 
   // Insert a row.
   db.insertCookie(cookie);
@@ -490,7 +475,7 @@ function* run_test_5(generator) {
 
   // Open a database connection, and write a row that will trigger a constraint
   // violation.
-  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 4);
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
   db.insertCookie(cookie);
   Assert.equal(do_count_cookies_in_db(db.db, "bar.com"), 1);
   Assert.equal(do_count_cookies_in_db(db.db), 1);
