@@ -654,6 +654,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   already_AddRefed<AsyncPanZoomController> CommonAncestor(
       AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
   bool IsFixedToRootContent(const HitTestingTreeNode* aNode) const;
+  // Returns true that |aNode| is stuck to the root content at bottom.
+  bool IsStuckToRootContentAtBottom(const HitTestingTreeNode* aNode) const;
   /**
    * Perform hit testing for a touch-start event.
    *
