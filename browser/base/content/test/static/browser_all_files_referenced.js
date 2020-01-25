@@ -224,6 +224,9 @@ var whitelist = [
 
   // Bug 1559554
   { file: "chrome://browser/content/aboutlogins/aboutLoginsUtils.js" },
+
+  // Referenced from the screenshots webextension
+  { file: "resource://app/localization/en-US/browser/screenshots.ftl" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
