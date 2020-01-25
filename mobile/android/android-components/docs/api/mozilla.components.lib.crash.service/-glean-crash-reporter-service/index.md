@@ -33,7 +33,8 @@ crash reporter is to collect crash count metrics by capturing [Crash.UncaughtExc
 |---|---|
 | [CAUGHT_EXCEPTION_KEY](-c-a-u-g-h-t_-e-x-c-e-p-t-i-o-n_-k-e-y.md) | `const val CAUGHT_EXCEPTION_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [CRASH_FILE_NAME](-c-r-a-s-h_-f-i-l-e_-n-a-m-e.md) | `const val CRASH_FILE_NAME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [NATIVE_CODE_CRASH_KEY](-n-a-t-i-v-e_-c-o-d-e_-c-r-a-s-h_-k-e-y.md) | `const val NATIVE_CODE_CRASH_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [FATAL_NATIVE_CODE_CRASH_KEY](-f-a-t-a-l_-n-a-t-i-v-e_-c-o-d-e_-c-r-a-s-h_-k-e-y.md) | `const val FATAL_NATIVE_CODE_CRASH_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [NONFATAL_NATIVE_CODE_CRASH_KEY](-n-o-n-f-a-t-a-l_-n-a-t-i-v-e_-c-o-d-e_-c-r-a-s-h_-k-e-y.md) | `const val NONFATAL_NATIVE_CODE_CRASH_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [UNCAUGHT_EXCEPTION_KEY](-u-n-c-a-u-g-h-t_-e-x-c-e-p-t-i-o-n_-k-e-y.md) | `const val UNCAUGHT_EXCEPTION_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Extension Functions

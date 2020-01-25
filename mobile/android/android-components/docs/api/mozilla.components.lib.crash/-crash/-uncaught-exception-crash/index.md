@@ -2,7 +2,7 @@
 
 # UncaughtExceptionCrash
 
-`data class UncaughtExceptionCrash : `[`Crash`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L35)
+`data class UncaughtExceptionCrash : `[`Crash`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L36)
 
 A crash caused by an uncaught exception.
 
@@ -16,5 +16,5 @@ A crash caused by an uncaught exception.
 
 | Name | Summary |
 |---|---|
-| [breadcrumbs](breadcrumbs.md) | `val breadcrumbs: `[`ArrayList`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-array-list/index.html)`<`[`Breadcrumb`](../../-breadcrumb/index.md)`>` |
+| [breadcrumbs](breadcrumbs.md) | `val breadcrumbs: `[`ArrayList`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-array-list/index.html)`<`[`Breadcrumb`](../../-breadcrumb/index.md)`>`<br>List of breadcrumbs to send with the crash report. |
 | [throwable](throwable.md) | `val throwable: `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)<br>The [Throwable](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html) that caused the crash. |
