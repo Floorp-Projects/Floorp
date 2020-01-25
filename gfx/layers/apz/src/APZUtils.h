@@ -8,6 +8,7 @@
 #define mozilla_layers_APZUtils_h
 
 #include <stdint.h>  // for uint32_t
+#include "gfxTypes.h"
 #include "FrameMetrics.h"
 #include "LayersTypes.h"
 #include "UnitTransforms.h"
@@ -157,6 +158,16 @@ bool IsCloseToHorizontal(float aAngle, float aThreshold);
 
 // As above, but for the vertical axis.
 bool IsCloseToVertical(float aAngle, float aThreshold);
+
+// Determine the amount of overlap between the 1D vector |aTranslation|
+// and the interval [aMin, aMax].
+gfxFloat IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin, gfxFloat aMax);
+
+// Returns true is the given inner/outer scroll range is stuck at bottom with
+// the given |aTranslation|.
+bool IsStuckAtBottom(gfxFloat aTranslation,
+                     const LayerRectAbsolute& aInnerRange,
+                     const LayerRectAbsolute& aOuterRange);
 
 }  // namespace apz
 
