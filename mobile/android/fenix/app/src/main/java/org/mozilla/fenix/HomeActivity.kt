@@ -61,6 +61,7 @@ import org.mozilla.fenix.settings.DefaultBrowserSettingsFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.settings.about.AboutFragmentDirections
+import org.mozilla.fenix.settings.logins.SavedLoginsFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
@@ -306,6 +307,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             )
         BrowserDirection.FromDefaultBrowserSettingsFragment ->
             DefaultBrowserSettingsFragmentDirections.actionDefaultBrowserSettingsFragmentToBrowserFragment(
+                customTabSessionId
+            )
+        BrowserDirection.FromSavedLoginsFragment ->
+            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToBrowserFragment(
                 customTabSessionId
             )
     }

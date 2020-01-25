@@ -4,6 +4,9 @@
 
 package org.mozilla.fenix.settings.logins
 
+import android.text.SpannableString
+import android.text.method.LinkMovementMethod
+import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -22,6 +25,8 @@ interface SavedLoginsViewInteractor {
      * Called whenever one item is clicked
      */
     fun itemClicked(item: SavedLoginsItem)
+
+    fun onLearnMore()
 }
 
 /**
@@ -43,10 +48,21 @@ class SavedLoginsView(
             adapter = loginsAdapter
             layoutManager = LinearLayoutManager(containerView.context)
         }
+
+        val learnMoreText = view.saved_passwords_empty_learn_more.text.toString()
+        val textWithLink = SpannableString(learnMoreText).apply {
+            setSpan(UnderlineSpan(), 0, learnMoreText.length, 0)
+        }
+        with(view.saved_passwords_empty_learn_more) {
+            movementMethod = LinkMovementMethod.getInstance()
+            text = textWithLink
+            setOnClickListener { interactor.onLearnMore() }
+        }
     }
 
     fun update(state: SavedLoginsFragmentState) {
         view.saved_logins_list.isVisible = state.items.isNotEmpty()
+        view.saved_passwords_empty_view.isVisible = state.items.isEmpty()
         loginsAdapter.submitList(state.items)
     }
 }

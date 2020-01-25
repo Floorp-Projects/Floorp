@@ -20,11 +20,14 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.lib.state.ext.consumeFrom
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.settings.SupportUtils
 
 class SavedLoginsFragment : Fragment() {
     private lateinit var savedLoginsStore: SavedLoginsFragmentStore
@@ -53,7 +56,7 @@ class SavedLoginsFragment : Fragment() {
                 )
             )
         }
-        savedLoginsInteractor = SavedLoginsInteractor(::itemClicked)
+        savedLoginsInteractor = SavedLoginsInteractor(::itemClicked, ::openLearnMore)
         savedLoginsView = SavedLoginsView(view.savedLoginsLayout, savedLoginsInteractor)
         lifecycleScope.launch(Main) { loadAndMapLogins() }
         return view
@@ -84,6 +87,15 @@ class SavedLoginsFragment : Fragment() {
         val directions =
             SavedLoginsFragmentDirections.actionSavedLoginsFragmentToSavedLoginSiteInfoFragment(item)
         findNavController().navigate(directions)
+    }
+
+    private fun openLearnMore() {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
+                (SupportUtils.SumoTopic.SYNC_SETUP),
+            newTab = true,
+            from = BrowserDirection.FromSavedLoginsFragment
+        )
     }
 
     private suspend fun loadAndMapLogins() {

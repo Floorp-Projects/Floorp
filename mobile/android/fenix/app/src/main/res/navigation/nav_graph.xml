@@ -662,6 +662,11 @@
         <action
             android:id="@+id/action_savedLoginsFragment_to_savedLoginSiteInfoFragment"
             app:destination="@id/savedLoginSiteInfoFragment" />
+        <action
+            android:id="@+id/action_savedLoginsFragment_to_browserFragment"
+            app:destination="@id/browserFragment"
+            app:popUpTo="@id/settingsFragment"
+            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/savedLoginSiteInfoFragment"

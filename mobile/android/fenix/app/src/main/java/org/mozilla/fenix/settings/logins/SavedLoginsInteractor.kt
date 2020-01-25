@@ -9,9 +9,13 @@ package org.mozilla.fenix.settings.logins
  * Provides implementations for the SavedLoginsViewInteractor
  */
 class SavedLoginsInteractor(
-    private val itemClicked: (SavedLoginsItem) -> Unit
+    private val itemClicked: (SavedLoginsItem) -> Unit,
+    private val learnMore: () -> Unit
 ) : SavedLoginsViewInteractor {
     override fun itemClicked(item: SavedLoginsItem) {
         itemClicked.invoke(item)
+    }
+    override fun onLearnMore() {
+        learnMore.invoke()
     }
 }

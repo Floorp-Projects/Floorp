@@ -34,7 +34,8 @@ object SupportUtils {
         SET_AS_DEFAULT_BROWSER("set-firefox-preview-default"),
         SEARCH_SUGGESTION("how-search-firefox-preview"),
         CUSTOM_SEARCH_ENGINES("custom-search-engines"),
-        UPGRADE_FAQ("firefox-preview-upgrade-faqs")
+        UPGRADE_FAQ("firefox-preview-upgrade-faqs"),
+        SYNC_SETUP("how-set-firefox-sync-firefox-preview")
     }
 
     /**

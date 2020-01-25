@@ -13,8 +13,10 @@ class SavedLoginsInteractorTest {
     @Test
     fun itemClicked() {
         val savedLoginClicked: (SavedLoginsItem) -> Unit = mockk(relaxed = true)
+        val learnMore: () -> Unit = mockk(relaxed = true)
         val interactor = SavedLoginsInteractor(
-            savedLoginClicked
+            savedLoginClicked,
+            learnMore
         )
 
         val item = SavedLoginsItem("mozilla.org", "username", "password")
