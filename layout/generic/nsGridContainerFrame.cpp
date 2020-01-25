@@ -7875,16 +7875,67 @@ nsFrameState nsGridContainerFrame::ComputeSelfSubgridBits() const {
     parent = parent->GetParent();
   }
   nsFrameState bits = nsFrameState(0);
-  if (parent && parent->IsGridContainerFrame()) {
+  const nsGridContainerFrame* gridParent = do_QueryFrame(parent);
+  if (gridParent) {
+    // NOTE: our NS_FRAME_OUT_OF_FLOW isn't set yet so we check our style.
+    bool isOutOfFlow = StyleDisplay()->IsAbsolutelyPositionedStyle();
     const auto* pos = StylePosition();
-    if (pos->mGridTemplateColumns.IsSubgrid()) {
+    bool isColSubgrid = pos->mGridTemplateColumns.IsSubgrid();
+    // OOF subgrids don't create tracks in the parent, so we need to check that
+    // it has one anyway. Otherwise we refuse to subgrid that axis since we
+    // can't place grid items inside a subgrid without at least one track.
+    if (isColSubgrid && isOutOfFlow) {
+      bool isOrthogonal =
+          GetWritingMode().IsOrthogonalTo(parent->GetWritingMode());
+      auto parentAxis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
+      if (!gridParent->WillHaveAtLeastOneTrackInAxis(parentAxis)) {
+        isColSubgrid = false;
+      }
+    }
+    if (isColSubgrid) {
       bits |= NS_STATE_GRID_IS_COL_SUBGRID;
     }
-    if (pos->mGridTemplateRows.IsSubgrid()) {
+
+    bool isRowSubgrid = pos->mGridTemplateRows.IsSubgrid();
+    if (isRowSubgrid && isOutOfFlow) {
+      bool isOrthogonal =
+          GetWritingMode().IsOrthogonalTo(parent->GetWritingMode());
+      auto parentAxis = isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock;
+      if (!gridParent->WillHaveAtLeastOneTrackInAxis(parentAxis)) {
+        isRowSubgrid = false;
+      }
+    }
+    if (isRowSubgrid) {
       bits |= NS_STATE_GRID_IS_ROW_SUBGRID;
     }
   }
   return bits;
+}
+
+bool nsGridContainerFrame::WillHaveAtLeastOneTrackInAxis(
+    LogicalAxis aAxis) const {
+  if (IsSubgrid(aAxis)) {
+    // This is enforced by refusing to be a subgrid unless our parent has
+    // at least one track in aAxis by ComputeSelfSubgridBits above.
+    return true;
+  }
+  const auto* pos = StylePosition();
+  const auto& gridTemplate = aAxis == eLogicalAxisBlock
+                                 ? pos->mGridTemplateRows
+                                 : pos->mGridTemplateColumns;
+  if (!gridTemplate.IsNone()) {
+    return true;
+  }
+  for (nsIFrame* child : PrincipalChildList()) {
+    if (!child->IsPlaceholderFrame()) {
+      // A grid item triggers at least one implicit track in each axis.
+      return true;
+    }
+  }
+  if (!pos->mGridTemplateAreas.IsNone()) {
+    return true;
+  }
+  return false;
 }
 
 void nsGridContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
