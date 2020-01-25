@@ -36,7 +36,7 @@
 #  include "mozilla/mscom/EnsureMTA.h"
 #endif
 
-#define AUDIOIPC_POOL_SIZE_DEFAULT 2
+#define AUDIOIPC_POOL_SIZE_DEFAULT 1
 #define AUDIOIPC_STACK_SIZE_DEFAULT (64 * 4096)
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
