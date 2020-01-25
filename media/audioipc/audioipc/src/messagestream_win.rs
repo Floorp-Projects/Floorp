@@ -8,7 +8,7 @@ use std::os::windows::fs::*;
 use std::os::windows::io::{AsRawHandle, FromRawHandle, IntoRawHandle, RawHandle};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio_io::{AsyncRead, AsyncWrite};
-use super::tokio_named_pipes;
+use tokio_named_pipes;
 use winapi::um::winbase::FILE_FLAG_OVERLAPPED;
 
 #[derive(Debug)]
@@ -23,8 +23,8 @@ impl MessageStream {
     pub fn anonymous_ipc_pair(
     ) -> std::result::Result<(MessageStream, MessageStream), std::io::Error> {
         let pipe_name = get_pipe_name();
-        let pipe_server = miow::pipe::NamedPipe::new(&pipe_name)?;
-        let pipe_client = {
+        let pipe1 = miow::pipe::NamedPipe::new(&pipe_name)?;
+        let pipe2 = {
             let mut opts = std::fs::OpenOptions::new();
             opts.read(true)
                 .write(true)
@@ -32,7 +32,7 @@ impl MessageStream {
             let file = opts.open(&pipe_name)?;
             unsafe { miow::pipe::NamedPipe::from_raw_handle(file.into_raw_handle()) }
         };
-        Ok((MessageStream::new(pipe_server), MessageStream::new(pipe_client)))
+        Ok((MessageStream::new(pipe1), MessageStream::new(pipe2)))
     }
 
     pub unsafe fn from_raw_fd(raw: super::PlatformHandleType) -> MessageStream {
@@ -47,12 +47,6 @@ impl MessageStream {
         Ok(AsyncMessageStream::new(
             tokio_named_pipes::NamedPipe::from_pipe(pipe, handle)?,
         ))
-    }
-}
-
-impl IntoRawHandle for MessageStream {
-    fn into_raw_handle(self) -> RawHandle {
-        self.0.into_raw_handle()
     }
 }
 
@@ -96,6 +90,12 @@ impl AsyncWrite for AsyncMessageStream {
 impl AsRawHandle for AsyncMessageStream {
     fn as_raw_handle(&self) -> RawHandle {
         self.0.as_raw_handle()
+    }
+}
+
+impl IntoRawHandle for MessageStream {
+    fn into_raw_handle(self) -> RawHandle {
+        self.0.into_raw_handle()
     }
 }
 

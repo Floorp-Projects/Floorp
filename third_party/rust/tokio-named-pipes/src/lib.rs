@@ -1,8 +1,10 @@
-// Copied from tokio-named-pipes/src/lib.rs revision 49ec1ba8bbc94ab6fc9636af2a00dfb3204080c8 (tokio-named-pipes 0.2.0)
-// This file is dual licensed under the MIT and Apache-2.0 per upstream: https://github.com/NikVolf/tokio-named-pipes/blob/stable/LICENSE-MIT and https://github.com/NikVolf/tokio-named-pipes/blob/stable/LICENSE-APACHE
-// - Implement AsyncWrite::shutdown
-
 #![cfg(windows)]
+
+extern crate tokio;
+extern crate bytes;
+extern crate mio;
+extern crate mio_named_pipes;
+extern crate futures;
 
 use std::ffi::OsStr;
 use std::fmt;
@@ -25,7 +27,7 @@ impl NamedPipe {
     }
 
     fn _new(p: &OsStr, handle: &Handle) -> std::io::Result<NamedPipe> {
-        let inner = mio_named_pipes::NamedPipe::new(p)?;
+        let inner = try!(mio_named_pipes::NamedPipe::new(p));
         NamedPipe::from_pipe(inner, handle)
     }
 
@@ -101,7 +103,7 @@ impl AsyncRead for NamedPipe {
         let mut stack_buf = [0u8; 1024];
         let bytes_read = self.io_mut().read(&mut stack_buf);
         match bytes_read {
-            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => { 
                 self.io_mut().clear_read_ready(Ready::readable())?;
                 return Ok(Async::NotReady);
             },
@@ -116,8 +118,7 @@ impl AsyncRead for NamedPipe {
 
 impl AsyncWrite for NamedPipe {
     fn shutdown(&mut self) -> Poll<(), std::io::Error> {
-        let _ = self.disconnect();
-        Ok(().into())
+         Ok(().into())
     }
 
     fn write_buf<B: Buf>(&mut self, buf: &mut B) -> Poll<usize, std::io::Error> {
@@ -127,7 +128,7 @@ impl AsyncWrite for NamedPipe {
 
         let bytes_wrt = self.io_mut().write(buf.bytes());
         match bytes_wrt {
-            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => { 
                 self.io_mut().clear_write_ready()?;
                 return Ok(Async::NotReady);
             },

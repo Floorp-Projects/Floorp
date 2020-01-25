@@ -292,26 +292,24 @@ impl AssocRawPlatformHandle for ServerMessage {}
 
 impl AssocRawPlatformHandle for ClientMessage {
     fn platform_handles(&self) -> Option<([PlatformHandleType; 3], u32)> {
-        unsafe {
-            match *self {
-                ClientMessage::StreamCreated(ref data) => Some((
-                    [
-                        data.platform_handles[0].into_raw(),
-                        data.platform_handles[1].into_raw(),
-                        data.platform_handles[2].into_raw(),
-                    ],
-                    data.target_pid,
-                )),
-                ClientMessage::ContextSetupDeviceCollectionCallback(ref data) => Some((
-                    [
-                        data.platform_handles[0].into_raw(),
-                        data.platform_handles[1].into_raw(),
-                        data.platform_handles[2].into_raw(),
-                    ],
-                    data.target_pid,
-                )),
-                _ => None,
-            }
+        match *self {
+            ClientMessage::StreamCreated(ref data) => Some((
+                [
+                    data.platform_handles[0].as_raw(),
+                    data.platform_handles[1].as_raw(),
+                    data.platform_handles[2].as_raw(),
+                ],
+                data.target_pid,
+            )),
+            ClientMessage::ContextSetupDeviceCollectionCallback(ref data) => Some((
+                [
+                    data.platform_handles[0].as_raw(),
+                    data.platform_handles[1].as_raw(),
+                    data.platform_handles[2].as_raw(),
+                ],
+                data.target_pid,
+            )),
+            _ => None,
         }
     }
 
@@ -319,23 +317,22 @@ impl AssocRawPlatformHandle for ClientMessage {
     where
         F: FnOnce() -> Option<[PlatformHandleType; 3]>,
     {
-        let owned = cfg!(unix);
         match *self {
             ClientMessage::StreamCreated(ref mut data) => {
                 let handles =
                     f().expect("platform_handles must be available when processing StreamCreated");
                 data.platform_handles = [
-                    PlatformHandle::new(handles[0], owned),
-                    PlatformHandle::new(handles[1], owned),
-                    PlatformHandle::new(handles[2], owned),
+                    PlatformHandle::new(handles[0]),
+                    PlatformHandle::new(handles[1]),
+                    PlatformHandle::new(handles[2]),
                 ]
             }
             ClientMessage::ContextSetupDeviceCollectionCallback(ref mut data) => {
                 let handles = f().expect("platform_handles must be available when processing ContextSetupDeviceCollectionCallback");
                 data.platform_handles = [
-                    PlatformHandle::new(handles[0], owned),
-                    PlatformHandle::new(handles[1], owned),
-                    PlatformHandle::new(handles[2], owned),
+                    PlatformHandle::new(handles[0]),
+                    PlatformHandle::new(handles[1]),
+                    PlatformHandle::new(handles[2]),
                 ]
             }
             _ => {}
