@@ -14,6 +14,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/GeckoViewTab.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "mobileWindowTracker",
+  "resource://gre/modules/GeckoViewWebExtension.jsm"
+);
+
 const getBrowserWindow = window => {
   return window.docShell.rootTreeItem.domWindow;
 };
@@ -126,9 +132,9 @@ this.tabs = class extends ExtensionAPI {
               });
             };
 
-            windowTracker.on("tab-activated", listener);
+            mobileWindowTracker.on("tab-activated", listener);
             return () => {
-              windowTracker.off("tab-activated", listener);
+              mobileWindowTracker.off("tab-activated", listener);
             };
           },
         }).api(),
