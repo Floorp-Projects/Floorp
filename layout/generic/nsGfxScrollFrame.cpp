@@ -4151,20 +4151,16 @@ nsPoint ScrollFrameHelper::GetVisualViewportOffset() const {
 
 nsRect ScrollFrameHelper::GetVisualOptimalViewingRect() const {
   PresShell* presShell = mOuter->PresShell();
+  nsRect rect = mScrollPort;
   if (mIsRoot && presShell->IsVisualViewportSizeSet() &&
       presShell->IsVisualViewportOffsetSet()) {
-    // FIXME(emilio): Account for scroll-padding here? If so we should probably
-    // resolve scroll-padding percentages against it rather than the scrollport.
-    //
-    // It's unclear whether we should use the scrollport here or the visual
-    // viewport, see:
-    //
-    // https://github.com/w3c/csswg-drafts/issues/4393
-    return nsRect(mScrollPort.TopLeft() - GetScrollPosition() +
+    rect = nsRect(mScrollPort.TopLeft() - GetScrollPosition() +
                       presShell->GetVisualViewportOffset(),
                   presShell->GetVisualViewportSize());
   }
-  nsRect rect = mScrollPort;
+  // NOTE: We intentionally resolve scroll-padding percentages against the
+  // scrollport even when the visual viewport is set, see
+  // https://github.com/w3c/csswg-drafts/issues/4393.
   rect.Deflate(GetScrollPadding());
   return rect;
 }
