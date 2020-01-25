@@ -34,7 +34,7 @@ function* do_run_test() {
   // completed. We may not be able to open one later once asynchronous writing
   // begins.
   Assert.ok(do_get_cookie_file(profile).exists());
-  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 4);
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
 
   for (let i = 0; i < CMAX; ++i) {
     let uri = NetUtil.newURI("http://" + i + ".com/");
