@@ -41,6 +41,9 @@ pub mod shm;
 #[cfg(unix)]
 mod tokio_uds_stream;
 
+#[cfg(windows)]
+mod tokio_named_pipes;
+
 pub use crate::messages::{ClientMessage, ServerMessage};
 use std::env::temp_dir;
 use std::path::PathBuf;
@@ -53,6 +56,8 @@ use std::os::unix::io::{FromRawFd, IntoRawFd};
 #[cfg(windows)]
 use std::os::windows::io::{FromRawHandle, IntoRawHandle};
 
+use std::cell::RefCell;
+
 // This must match the definition of
 // ipc::FileDescriptor::PlatformHandleType in Gecko.
 #[cfg(windows)]
@@ -61,10 +66,18 @@ pub type PlatformHandleType = std::os::windows::raw::HANDLE;
 pub type PlatformHandleType = libc::c_int;
 
 // This stands in for RawFd/RawHandle.
-#[derive(Copy, Clone, Debug)]
-pub struct PlatformHandle(PlatformHandleType);
+#[derive(Clone, Debug)]
+pub struct PlatformHandle(RefCell<Inner>);
+
+#[derive(Clone, Debug)]
+struct Inner {
+    handle: PlatformHandleType,
+    owned: bool,
+}
 
 unsafe impl Send for PlatformHandle {}
+
+pub const INVALID_HANDLE_VALUE: PlatformHandleType = -1isize as PlatformHandleType;
 
 // Custom serialization to treat HANDLEs as i64.  This is not valid in
 // general, but after sending the HANDLE value to a remote process we
@@ -76,7 +89,8 @@ impl serde::Serialize for PlatformHandle {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_i64(self.0 as i64)
+        let h = self.0.borrow();
+        serializer.serialize_i64(h.handle as i64)
     }
 }
 
@@ -92,7 +106,8 @@ impl<'de> serde::de::Visitor<'de> for PlatformHandleVisitor {
     where
         E: serde::de::Error,
     {
-        Ok(PlatformHandle::new(value as PlatformHandleType))
+        let owned = cfg!(windows);
+        Ok(PlatformHandle::new(value as PlatformHandleType, owned))
     }
 }
 
@@ -112,49 +127,54 @@ fn valid_handle(handle: PlatformHandleType) -> bool {
 
 #[cfg(windows)]
 fn valid_handle(handle: PlatformHandleType) -> bool {
-    const INVALID_HANDLE_VALUE: PlatformHandleType = -1isize as PlatformHandleType;
     const NULL_HANDLE_VALUE: PlatformHandleType = 0isize as PlatformHandleType;
     handle != INVALID_HANDLE_VALUE && handle != NULL_HANDLE_VALUE
 }
 
 impl PlatformHandle {
-    pub fn new(raw: PlatformHandleType) -> PlatformHandle {
-        PlatformHandle(raw)
-    }
-
-    pub fn try_new(raw: PlatformHandleType) -> Option<PlatformHandle> {
-        if !valid_handle(raw) {
-            return None;
-        }
-        Some(PlatformHandle::new(raw))
+    pub fn new(raw: PlatformHandleType, owned: bool) -> PlatformHandle {
+        assert!(valid_handle(raw));
+        let inner = Inner {
+            handle: raw,
+            owned: owned,
+        };
+        PlatformHandle(RefCell::new(inner))
     }
 
     #[cfg(windows)]
     pub fn from<T: IntoRawHandle>(from: T) -> PlatformHandle {
-        PlatformHandle::new(from.into_raw_handle())
+        PlatformHandle::new(from.into_raw_handle(), true)
     }
 
     #[cfg(unix)]
     pub fn from<T: IntoRawFd>(from: T) -> PlatformHandle {
-        PlatformHandle::new(from.into_raw_fd())
+        PlatformHandle::new(from.into_raw_fd(), true)
     }
 
     #[cfg(windows)]
-    pub unsafe fn into_file(self) -> std::fs::File {
-        std::fs::File::from_raw_handle(self.0)
+    pub unsafe fn into_file(&self) -> std::fs::File {
+        std::fs::File::from_raw_handle(self.into_raw())
     }
 
     #[cfg(unix)]
-    pub unsafe fn into_file(self) -> std::fs::File {
-        std::fs::File::from_raw_fd(self.0)
+    pub unsafe fn into_file(&self) -> std::fs::File {
+        std::fs::File::from_raw_fd(self.into_raw())
     }
 
-    pub fn as_raw(self) -> PlatformHandleType {
-        self.0
+    pub unsafe fn into_raw(&self) -> PlatformHandleType {
+        let mut h = self.0.borrow_mut();
+        assert!(h.owned);
+        h.owned = false;
+        h.handle
     }
+}
 
-    pub unsafe fn close(self) {
-        close_platformhandle(self.0);
+impl Drop for PlatformHandle {
+    fn drop(&mut self) {
+        let inner = self.0.borrow();
+        if inner.owned {
+            unsafe { close_platformhandle(inner.handle) }
+        }
     }
 }
 

@@ -465,8 +465,8 @@ impl CubebServer {
                 .unwrap_or_else(error),
 
             ServerMessage::ContextSetupDeviceCollectionCallback => {
-                if let Ok((stm1, stm2)) = MessageStream::anonymous_ipc_pair() {
-                    debug!("Created device collection RPC pair: {:?}-{:?}", stm1, stm2);
+                if let Ok((ipc_server, ipc_client)) = MessageStream::anonymous_ipc_pair() {
+                    debug!("Created device collection RPC pair: {:?}-{:?}", ipc_server, ipc_client);
 
                     // This code is currently running on the Client/Server RPC
                     // handling thread.  We need to move the registration of the
@@ -477,7 +477,7 @@ impl CubebServer {
                     self.handle
                         .spawn(futures::future::lazy(move || {
                             let handle = reactor::Handle::default();
-                            let stream = stm2.into_tokio_ipc(&handle).unwrap();
+                            let stream = ipc_server.into_tokio_ipc(&handle).unwrap();
                             let transport = framed(stream, Default::default());
                             let rpc = rpc::bind_client::<DeviceCollectionClient>(transport);
                             drop(tx.send(rpc));
@@ -496,7 +496,7 @@ impl CubebServer {
                         })));
                         let fds = RegisterDeviceCollectionChanged {
                             platform_handles: [
-                                PlatformHandle::from(stm1),
+                                PlatformHandle::from(ipc_client),
                                 PlatformHandle::from(dummy1),
                                 PlatformHandle::from(dummy2),
                             ],
@@ -595,8 +595,8 @@ impl CubebServer {
         let input_frame_size = frame_size_in_bytes(params.input_stream_params.as_ref());
         let output_frame_size = frame_size_in_bytes(params.output_stream_params.as_ref());
 
-        let (stm1, stm2) = MessageStream::anonymous_ipc_pair()?;
-        debug!("Created callback pair: {:?}-{:?}", stm1, stm2);
+        let (ipc_server, ipc_client) = MessageStream::anonymous_ipc_pair()?;
+        debug!("Created callback pair: {:?}-{:?}", ipc_server, ipc_client);
         let mut shm_path = audioipc::get_shm_path();
         shm_path.set_extension("input");
         let (input_shm, input_file) = SharedMemWriter::new(&shm_path, audioipc::SHM_AREA_SIZE)?;
@@ -612,7 +612,7 @@ impl CubebServer {
         self.handle
             .spawn(futures::future::lazy(move || {
                 let handle = reactor::Handle::default();
-                let stream = stm2.into_tokio_ipc(&handle).unwrap();
+                let stream = ipc_server.into_tokio_ipc(&handle).unwrap();
                 let transport = framed(stream, Default::default());
                 let rpc = rpc::bind_client::<CallbackClient>(transport);
                 drop(tx.send(rpc));
@@ -687,7 +687,7 @@ impl CubebServer {
                     Ok(ClientMessage::StreamCreated(StreamCreate {
                         token: key,
                         platform_handles: [
-                            PlatformHandle::from(stm1),
+                            PlatformHandle::from(ipc_client),
                             PlatformHandle::from(input_file),
                             PlatformHandle::from(output_file),
                         ],

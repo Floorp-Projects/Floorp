@@ -372,7 +372,7 @@ impl ContextOps for ClientContext {
                                  ContextSetupDeviceCollectionCallback())?;
 
             let stream =
-                unsafe { audioipc::MessageStream::from_raw_fd(fds.platform_handles[0].as_raw()) };
+                unsafe { audioipc::MessageStream::from_raw_fd(fds.platform_handles[0].into_raw()) };
 
             // TODO: The lowest comms layer expects exactly 3 PlatformHandles, but we only
             // need one here.  Drop the dummy handles the other side sent us to discard.
