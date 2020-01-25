@@ -716,6 +716,19 @@ public class WebExtensionController {
         });
     }
 
+    /**
+     * Notifies extensions about a active tab change over the `tabs.onActivated` event.
+     *
+     * @param session The {@link GeckoSession} of the newly selected session/tab.
+     * @param active true if the tab became active, false if the tab became inactive.
+     */
+    @AnyThread
+    public void setTabActive(@NonNull final GeckoSession session, final boolean active) {
+        final GeckoBundle bundle = new GeckoBundle(1);
+        bundle.putString("sessionId", session.getId());
+        bundle.putBoolean("active", active);
+        EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:SetTabActive", bundle);
+    }
 
     /* package */ void unregisterWebExtension(final WebExtension webExtension) {
         mExtensions.remove(webExtension.id);
