@@ -404,8 +404,6 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["background"] += [
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["build"] += [
   'build/buildSettings.js',
   'build/inlineSelectionCss.js',
-  'build/onboardingCss.js',
-  'build/onboardingHtml.js',
   'build/raven.js',
   'build/selection.js',
   'build/shot.js',
@@ -418,13 +416,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["experiments"]["screensho
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["icons"] += [
-  'icons/back-highlight.svg',
-  'icons/back.svg',
   'icons/cancel.svg',
   'icons/cloud.svg',
   'icons/copied-notification.svg',
   'icons/copy.svg',
-  'icons/done.svg',
   'icons/download-white.svg',
   'icons/download.svg',
   'icons/help-16.svg',
@@ -435,15 +430,6 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["icons"] += [
   'icons/menu-myshot-white.svg',
   'icons/menu-myshot.svg',
   'icons/menu-visible.svg',
-  'icons/onboarding-1.png',
-  'icons/onboarding-2.png',
-  'icons/onboarding-3.png',
-  'icons/onboarding-4.png'
-]
-
-FINAL_TARGET_FILES.features['screenshots@mozilla.org']["onboarding"] += [
-  'onboarding/slides.html',
-  'onboarding/slides.js'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["selector"] += [
