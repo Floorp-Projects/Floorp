@@ -132,6 +132,14 @@ class HitTestingTreeNode {
   SideBits GetFixedPosSides() const;
   Maybe<uint64_t> GetFixedPositionAnimationId() const;
 
+  /* Sticky pos info */
+  void SetStickyPosData(ScrollableLayerGuid::ViewID aStickyPosTarget,
+                        const LayerRectAbsolute& aScrollRangeOuter,
+                        const LayerRectAbsolute& aScrollRangeInner);
+  ScrollableLayerGuid::ViewID GetStickyPosTarget() const;
+  const LayerRectAbsolute& GetStickyScrollRangeOuter() const;
+  const LayerRectAbsolute& GetStickyScrollRangeInner() const;
+
   /* Convert |aPoint| into the LayerPixel space for the layer corresponding to
    * this node. |aTransform| is the complete (content + async) transform for
    * this node. */
@@ -192,6 +200,10 @@ class HitTestingTreeNode {
 
   ScrollableLayerGuid::ViewID mFixedPosTarget;
   SideBits mFixedPosSides;
+
+  ScrollableLayerGuid::ViewID mStickyPosTarget;
+  LayerRectAbsolute mStickyScrollRangeOuter;
+  LayerRectAbsolute mStickyScrollRangeInner;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
    * corresponds to in the layer tree. mEventRegions contains the event regions

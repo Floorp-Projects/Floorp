@@ -30,6 +30,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
       mLockCount(0),
       mLayersId(aLayersId),
       mFixedPosTarget(ScrollableLayerGuid::NULL_SCROLL_ID),
+      mStickyPosTarget(ScrollableLayerGuid::NULL_SCROLL_ID),
       mIsBackfaceHidden(false),
       mIsAsyncZoomContainer(false),
       mOverride(EventRegionsOverride::NoOverride) {
@@ -161,6 +162,27 @@ void HitTestingTreeNode::SetPrevSibling(HitTestingTreeNode* aSibling) {
       aSibling->SetApzcParent(parent);
     }
   }
+}
+
+void HitTestingTreeNode::SetStickyPosData(
+    ScrollableLayerGuid::ViewID aStickyPosTarget,
+    const LayerRectAbsolute& aScrollRangeOuter,
+    const LayerRectAbsolute& aScrollRangeInner) {
+  mStickyPosTarget = aStickyPosTarget;
+  mStickyScrollRangeOuter = aScrollRangeOuter;
+  mStickyScrollRangeInner = aScrollRangeInner;
+}
+
+ScrollableLayerGuid::ViewID HitTestingTreeNode::GetStickyPosTarget() const {
+  return mStickyPosTarget;
+}
+
+const LayerRectAbsolute& HitTestingTreeNode::GetStickyScrollRangeOuter() const {
+  return mStickyScrollRangeOuter;
+}
+
+const LayerRectAbsolute& HitTestingTreeNode::GetStickyScrollRangeInner() const {
+  return mStickyScrollRangeInner;
 }
 
 void HitTestingTreeNode::MakeRoot() {
