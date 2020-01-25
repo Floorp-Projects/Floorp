@@ -31,6 +31,28 @@ namespace apz {
   return (fabs(aAngle - (M_PI / 2)) < aThreshold);
 }
 
+/* static */ gfxFloat IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin,
+                                      gfxFloat aMax) {
+  if (aTranslation > 0) {
+    return std::max(0.0, std::min(aMax, aTranslation) - std::max(aMin, 0.0));
+  }
+
+  return std::min(0.0, std::max(aMin, aTranslation) - std::min(aMax, 0.0));
+}
+
+/* static */ bool IsStuckAtBottom(gfxFloat aTranslation,
+                                  const LayerRectAbsolute& aInnerRange,
+                                  const LayerRectAbsolute& aOuterRange) {
+  gfxFloat diff =
+      (IntervalOverlap(aTranslation, aOuterRange.Y(), aOuterRange.YMost()) -
+       IntervalOverlap(aTranslation, aInnerRange.Y(), aInnerRange.YMost())) -
+      aTranslation;
+
+  // `inner.YMost() < 0` means the sticky layer is stuck at top of the target
+  // scroll layer?
+  return diff == 0.0f && aInnerRange.YMost() >= 0;
+}
+
 }  // namespace apz
 }  // namespace layers
 }  // namespace mozilla
