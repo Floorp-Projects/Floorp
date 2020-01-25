@@ -8,6 +8,7 @@ var EXPORTED_SYMBOLS = [
   "ExtensionActionHelper",
   "GeckoViewConnection",
   "GeckoViewWebExtension",
+  "mobileWindowTracker",
 ];
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -15,6 +16,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
+);
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -363,6 +367,35 @@ class ExtensionPromptObserver {
 }
 
 new ExtensionPromptObserver();
+
+class MobileWindowTracker extends EventEmitter {
+  constructor() {
+    super();
+    this._topWindow = null;
+  }
+
+  get topWindow() {
+    if (this._topWindow) {
+      return this._topWindow.get();
+    }
+    return null;
+  }
+
+  setTabActive(aWindow, aActive) {
+    const tab = aWindow.BrowserApp.selectedTab;
+    tab.active = aActive;
+
+    if (aActive) {
+      this._topWindow = Cu.getWeakReference(aWindow);
+      this.emit("tab-activated", {
+        windowId: aWindow.windowUtils.outerWindowID,
+        tabId: tab.id,
+      });
+    }
+  }
+}
+
+var mobileWindowTracker = new MobileWindowTracker();
 
 var GeckoViewWebExtension = {
   async registerWebExtension(aId, aUri, allowContentMessaging, aCallback) {
