@@ -494,6 +494,7 @@ public class GeckoViewActivity
                 session.open(sGeckoRuntime);
                 mTabSessionManager.setCurrentSession(session);
                 mGeckoView.setSession(session);
+                sGeckoRuntime.getWebExtensionController().setTabActive(session, true);
             }
             loadFromIntent(getIntent());
         }
@@ -649,6 +650,7 @@ public class GeckoViewActivity
         session.open(sGeckoRuntime);
         mTabSessionManager.setCurrentSession(session);
         mGeckoView.setSession(session);
+        sGeckoRuntime.getWebExtensionController().setTabActive(session, true);
         if (mCurrentUri != null) {
             session.loadUri(mCurrentUri);
         }
@@ -658,7 +660,8 @@ public class GeckoViewActivity
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         if(savedInstanceState != null) {
-            mTabSessionManager.setCurrentSession((TabSession)mGeckoView.getSession());
+            mTabSessionManager.setCurrentSession((TabSession) mGeckoView.getSession());
+            sGeckoRuntime.getWebExtensionController().setTabActive(mGeckoView.getSession(), true);
         } else {
             recreateSession();
         }
@@ -838,11 +841,16 @@ public class GeckoViewActivity
     }
 
     private void setGeckoViewSession(TabSession session) {
-        mGeckoView.releaseSession();
-        if(!session.isOpen()) {
+        final WebExtensionController controller = sGeckoRuntime.getWebExtensionController();
+        final GeckoSession previousSession = mGeckoView.releaseSession();
+        if (previousSession != null) {
+            controller.setTabActive(previousSession, false);
+        }
+        if (!session.isOpen()) {
             session.open(sGeckoRuntime);
         }
         mGeckoView.setSession(session);
+        controller.setTabActive(session, true);
         mTabSessionManager.setCurrentSession(session);
     }
 
