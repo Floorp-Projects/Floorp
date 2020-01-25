@@ -265,9 +265,19 @@ class TabTracker extends TabTrackerBase {
         windowId: -1,
       };
     }
+
+    const windowId = windowTracker.getId(window);
+
+    if (!windowTracker.isBrowserWindow(window)) {
+      return {
+        windowId,
+        tabId: -1,
+      };
+    }
+
     return {
+      windowId,
       tabId: this.getId(window.BrowserApp.selectedTab),
-      windowId: windowTracker.getId(window),
     };
   }
 
