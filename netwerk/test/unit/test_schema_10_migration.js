@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test cookie database migration from version 3 (prerelease Gecko 2.0) to the
-// current version, presently 4 (Gecko 2.0).
+// Test cookie database migration from version 10 (prerelease Gecko 2.0) to the
+// current version, presently 11.
 
 var test_generator = do_run_test();
 
@@ -33,8 +33,11 @@ function* do_run_test() {
   // Remove the cookie file in order to create another database file.
   do_get_cookie_file(profile).remove(false);
 
-  // Create a schema 3 database.
-  let schema3db = new CookieDatabaseConnection(do_get_cookie_file(profile), 3);
+  // Create a schema 10 database.
+  let schema10db = new CookieDatabaseConnection(
+    do_get_cookie_file(profile),
+    10
+  );
 
   let now = Date.now() * 1000;
   let futureExpiry = Math.round(now / 1e6 + 1000);
@@ -56,7 +59,7 @@ function* do_run_test() {
       false
     );
 
-    schema3db.insertCookie(cookie);
+    schema10db.insertCookie(cookie);
   }
 
   // 2) Expired, unique cookies.
@@ -74,7 +77,7 @@ function* do_run_test() {
       false
     );
 
-    schema3db.insertCookie(cookie);
+    schema10db.insertCookie(cookie);
   }
 
   // 3) Many copies of the same cookie, some of which have expired and
@@ -93,7 +96,9 @@ function* do_run_test() {
       false
     );
 
-    schema3db.insertCookie(cookie);
+    try {
+      schema10db.insertCookie(cookie);
+    } catch (e) {}
   }
   for (let i = 45; i < 50; ++i) {
     let cookie = new Cookie(
@@ -109,7 +114,9 @@ function* do_run_test() {
       false
     );
 
-    schema3db.insertCookie(cookie);
+    try {
+      schema10db.insertCookie(cookie);
+    } catch (e) {}
   }
   for (let i = 50; i < 55; ++i) {
     let cookie = new Cookie(
@@ -125,7 +132,9 @@ function* do_run_test() {
       false
     );
 
-    schema3db.insertCookie(cookie);
+    try {
+      schema10db.insertCookie(cookie);
+    } catch (e) {}
   }
   for (let i = 55; i < 60; ++i) {
     let cookie = new Cookie(
@@ -141,12 +150,14 @@ function* do_run_test() {
       false
     );
 
-    schema3db.insertCookie(cookie);
+    try {
+      schema10db.insertCookie(cookie);
+    } catch (e) {}
   }
 
   // Close it.
-  schema3db.close();
-  schema3db = null;
+  schema10db.close();
+  schema10db = null;
 
   // Load the database, forcing migration to the current schema version. Then
   // test the expected set of cookies:
@@ -163,7 +174,7 @@ function* do_run_test() {
   Assert.equal(Services.cookiemgr.countCookiesFromHost("baz.com"), 1);
   let cookies = Services.cookiemgr.getCookiesFromHost("baz.com", {});
   let cookie = cookies[0];
-  Assert.equal(cookie.expiry, futureExpiry + 44);
+  Assert.equal(cookie.expiry, futureExpiry + 40);
 
   finish_test();
 }

@@ -243,7 +243,6 @@ class nsCookieService final : public nsICookieService,
   void InitDBConn();
   nsresult InitDBConnInternal();
   nsresult CreateTableWorker(const char* aName);
-  nsresult CreateIndex();
   nsresult CreateTable();
   nsresult CreateTableForSchemaVersion6();
   nsresult CreateTableForSchemaVersion5();

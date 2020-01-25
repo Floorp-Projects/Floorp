@@ -61,7 +61,7 @@ conn.executeSimpleSQL(
 // Get sessionCookies to wait for the initialization in cookie thread
 const cookies = Services.cookies.sessionCookies;
 
-Assert.equal(conn.schemaVersion, 10);
+Assert.equal(conn.schemaVersion, 11);
 let stmt = conn.createStatement(
   "SELECT sql FROM sqlite_master " +
     "WHERE type = 'table' AND " +
@@ -77,8 +77,7 @@ try {
 
 stmt = conn.createStatement(
   "SELECT * FROM moz_cookies " +
-    "WHERE baseDomain = 'foo.com' AND " +
-    "      host = '.foo.com' AND " +
+    "WHERE host = '.foo.com' AND " +
     "      name = 'foo' AND " +
     "      value = 'bar=baz' AND " +
     "      path = '/' AND " +
