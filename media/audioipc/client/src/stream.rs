@@ -178,16 +178,19 @@ impl<'ctx> ClientStream<'ctx> {
             data.token, data.platform_handles
         );
 
-        let stream = unsafe { audioipc::MessageStream::from_raw_fd(data.platform_handles[0].into_raw()) };
+        let stm = data.platform_handles[0];
+        let stream = unsafe { audioipc::MessageStream::from_raw_fd(stm.as_raw()) };
 
-        let input_file = unsafe { data.platform_handles[1].into_file() };
+        let input = data.platform_handles[1];
+        let input_file = unsafe { input.into_file() };
         let input_shm = if has_input {
             Some(SharedMemSlice::from(&input_file, audioipc::SHM_AREA_SIZE).unwrap())
         } else {
             None
         };
 
-        let output_file = unsafe { data.platform_handles[2].into_file() };
+        let output = data.platform_handles[2];
+        let output_file = unsafe { output.into_file() };
         let output_shm = if has_output {
             Some(SharedMemMutSlice::from(&output_file, audioipc::SHM_AREA_SIZE).unwrap())
         } else {
