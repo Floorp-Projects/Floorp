@@ -29,9 +29,9 @@ mio-uds = "0.6.7"
 tokio-reactor = "0.1"
 
 [target.'cfg(windows)'.dependencies]
+mio = "0.6.19"
 miow = "0.3.3"
 mio-named-pipes = { git = "https://github.com/alexcrichton/mio-named-pipes" }
-tokio-named-pipes = { git = "https://github.com/NikVolf/tokio-named-pipes", branch = "stable" }
 winapi = { version = "0.3.6", features = ["combaseapi", "objbase"] }
 
 [dependencies.error-chain]

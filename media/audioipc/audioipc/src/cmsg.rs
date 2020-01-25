@@ -5,6 +5,7 @@
 
 use bytes::{BufMut, Bytes, BytesMut};
 use libc::{self, cmsghdr};
+use std::convert::TryInto;
 use std::os::unix::io::RawFd;
 use std::{convert, mem, ops, slice};
 
@@ -40,12 +41,10 @@ pub fn iterator(c: Bytes) -> ControlMsgIter {
 impl Iterator for ControlMsgIter {
     type Item = Fds;
 
-    // This follows the logic in __cmsg_nxthdr from glibc
-    // /usr/include/bits/socket.h
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let control = self.control.clone();
-            let cmsghdr_len = align(mem::size_of::<cmsghdr>());
+            let cmsghdr_len = len(0);
 
             if control.len() < cmsghdr_len {
                 // No more entries---not enough data in `control` for a
@@ -57,14 +56,14 @@ impl Iterator for ControlMsgIter {
             // The offset to the next cmsghdr in control.  This must be
             // aligned to a boundary that matches the type used to
             // represent the length of the message.
-            let cmsg_len = cmsg.cmsg_len;
-            let next_cmsghdr = align(cmsg_len as _);
-            self.control = if next_cmsghdr > control.len() {
+            let cmsg_len = cmsg.cmsg_len as usize;
+            let cmsg_space = space(cmsg_len - cmsghdr_len);
+            self.control = if cmsg_space > control.len() {
                 // No more entries---not enough data in `control` for a
                 // complete message.
                 Bytes::new()
             } else {
-                control.slice_from(next_cmsghdr)
+                control.slice_from(cmsg_space)
             };
 
             match (cmsg.cmsg_level, cmsg.cmsg_type) {
@@ -100,9 +99,9 @@ pub fn builder(buf: &mut BytesMut) -> ControlMsgBuilder {
 
 impl ControlMsgBuilder {
     fn msg(mut self, level: libc::c_int, kind: libc::c_int, msg: &[u8]) -> Self {
-        self.result = self.result.and_then(align_buf).and_then(|mut cmsg| {
-            let cmsg_len = len(msg.len());
-            if cmsg.remaining_mut() < cmsg_len {
+        self.result = self.result.and_then(|mut cmsg| {
+            let cmsg_space = space(msg.len());
+            if cmsg.remaining_mut() < cmsg_space {
                 return Err(Error::NoSpace);
             }
 
@@ -113,18 +112,19 @@ impl ControlMsgBuilder {
             let zeroed = unsafe { mem::zeroed() };
             #[allow(clippy::needless_update)]
             let cmsghdr = cmsghdr {
-                cmsg_len: cmsg_len as _,
+                cmsg_len: len(msg.len()).try_into().unwrap(),
                 cmsg_level: level,
                 cmsg_type: kind,
                 ..zeroed
             };
 
-            let cmsghdr = unsafe {
-                slice::from_raw_parts(&cmsghdr as *const _ as *const _, mem::size_of::<cmsghdr>())
-            };
-            cmsg.put_slice(cmsghdr);
-            let mut cmsg = align_buf(cmsg)?;
-            cmsg.put_slice(msg);
+            unsafe {
+                let cmsghdr_ptr = cmsg.bytes_mut().as_mut_ptr();
+                std::ptr::copy_nonoverlapping(&cmsghdr as *const _ as *const _, cmsghdr_ptr, mem::size_of::<cmsghdr>());
+                let cmsg_data_ptr = libc::CMSG_DATA(cmsghdr_ptr as _);
+                std::ptr::copy_nonoverlapping(msg.as_ptr(), cmsg_data_ptr, msg.len());
+                cmsg.advance_mut(cmsg_space);
+            }
 
             Ok(cmsg)
         });
@@ -141,7 +141,7 @@ impl ControlMsgBuilder {
     }
 }
 
-pub trait AsBytes {
+trait AsBytes {
     fn as_bytes(&self) -> &[u8];
 }
 
@@ -165,28 +165,14 @@ fn aligned(buf: &BytesMut) -> BytesMut {
     aligned_buf
 }
 
-fn align_buf(mut cmsg: BytesMut) -> Result<BytesMut, Error> {
-    let offset = unsafe { cmsg.bytes_mut().as_ptr() } as usize;
-    let adjust = align(offset) - offset;
-    if cmsg.remaining_mut() < adjust {
-        return Err(Error::NoSpace);
+fn len(len: usize) -> usize {
+    unsafe {
+        libc::CMSG_LEN(len.try_into().unwrap()) as usize
     }
-
-    for _ in 0..adjust {
-        cmsg.put_u8(0);
-    }
-    Ok(cmsg)
-}
-
-fn align(len: usize) -> usize {
-    let cmsghdr_align = mem::align_of::<cmsghdr>();
-    (len + cmsghdr_align - 1) & !(cmsghdr_align - 1)
-}
-
-pub fn len(len: usize) -> usize {
-    align(mem::size_of::<cmsghdr>()) + len
 }
 
 pub fn space(len: usize) -> usize {
-    align(mem::size_of::<cmsghdr>()) + align(len)
+    unsafe {
+        libc::CMSG_SPACE(len.try_into().unwrap()) as usize
+    }
 }
