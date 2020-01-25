@@ -115,6 +115,7 @@ rusty-enums = [
     "mozilla::StyleBorderImageRepeat",
     "mozilla::StyleBoxPack",
     "mozilla::StyleWindowShadow",
+    "mozilla::StyleDominantBaseline",
     "mozilla::StyleBoxOrient",
     "mozilla::StyleBoxAlign",
     "mozilla::StyleUserFocus",
