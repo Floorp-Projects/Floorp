@@ -192,9 +192,11 @@
             android:exported="false" />
 
         <activity android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
+            android:exported="false"
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
 
         <activity android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
+            android:exported="false"
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
 
         <service
