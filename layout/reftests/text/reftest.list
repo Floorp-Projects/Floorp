@@ -62,6 +62,7 @@ fuzzy-if(Android,0-231,0-653) == subpixel-lineheight-1a.html subpixel-lineheight
 == swash-1.html swash-1-ref.html
 != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
+== synthetic-bold-zero-width-01.html synthetic-bold-zero-width-01-ref.html
 # Tests for text-align-last
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-start.html text-align-last-start-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-end.html text-align-last-end-ref.html # Bug 1392106
