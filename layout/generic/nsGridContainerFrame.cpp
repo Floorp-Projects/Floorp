@@ -6450,8 +6450,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
   if (isConstrainedBSize && !wm.IsOrthogonalTo(childWM)) {
     bool stretch = false;
     if (!childRI.mStyleMargin->HasBlockAxisAuto(childWM) &&
-        (childRI.mStylePosition->BSize(childWM).IsAuto() ||
-         childRI.mStylePosition->BSize(childWM).IsExtremumLength())) {
+        childRI.mStylePosition->BSize(childWM).IsAuto()) {
       auto blockAxisAlignment = childRI.mStylePosition->UsedAlignSelf(Style());
       if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
           blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
