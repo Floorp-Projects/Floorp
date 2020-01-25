@@ -140,6 +140,7 @@
     --in-content-link-color: var(--blue-40);
     --in-content-link-color-hover: var(--blue-50);
     --in-content-link-color-active: var(--blue-60);
+    --in-content-link-color-visited: var(--blue-40);
 
     --in-content-tab-color: var(--in-content-page-color);
 
