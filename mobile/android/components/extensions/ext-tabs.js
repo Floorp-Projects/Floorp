@@ -114,20 +114,24 @@ this.tabs = class extends ExtensionAPI {
 
     let self = {
       tabs: {
-        onActivated: makeGlobalEvent(
+        onActivated: new EventManager({
           context,
-          "tabs.onActivated",
-          "Tab:Selected",
-          (fire, data) => {
-            let tab = tabManager.get(data.id);
+          name: "tabs.onActivated",
+          register: fire => {
+            let listener = (eventName, event) => {
+              fire.async({
+                windowId: event.windowId,
+                tabId: event.tabId,
+                // In GeckoView each window has only one tab, so previousTabId is omitted.
+              });
+            };
 
-            fire.async({
-              tabId: tab.id,
-              previousTabId: data.previousTabId,
-              windowId: tab.windowId,
-            });
-          }
-        ),
+            windowTracker.on("tab-activated", listener);
+            return () => {
+              windowTracker.off("tab-activated", listener);
+            };
+          },
+        }).api(),
 
         onCreated: new EventManager({
           context,

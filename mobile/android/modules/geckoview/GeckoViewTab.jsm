@@ -23,10 +23,11 @@ class Tab {
   constructor(id, browser) {
     this.id = id;
     this.browser = browser;
+    this.active = false;
   }
 
   getActive() {
-    return this.browser.docShellIsActive;
+    return this.active;
   }
 }
 

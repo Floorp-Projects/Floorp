@@ -125,9 +125,34 @@ class WindowTracker extends WindowTrackerBase {
     super(...args);
 
     this.progressListeners = new DefaultWeakMap(() => new WeakMap());
+
+    const self = this;
+    this._topWindowRef = null;
+    const listener = {
+      onEvent(event, data, callback) {
+        const { sessionId, active } = data;
+        const window = Services.ww.getWindowByName(sessionId, null);
+        const windowId = window.windowUtils.outerWindowID;
+        const tab = window.BrowserApp.selectedTab;
+        tab.active = active;
+        if (active) {
+          self._topWindowRef = Cu.getWeakReference(window);
+          self.emit("tab-activated", {
+            windowId,
+            tabId: tab.id,
+          });
+        }
+      },
+    };
+    GlobalEventDispatcher.registerListener(listener, [
+      "GeckoView:WebExtension:SetTabActive",
+    ]);
   }
 
   get topWindow() {
+    if (this._topWindowRef) {
+      return this._topWindowRef.get();
+    }
     return Services.wm.getMostRecentWindow(WINDOW_TYPE);
   }
 
