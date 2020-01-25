@@ -351,32 +351,6 @@ static bool AsyncTransformShouldBeUnapplied(
   return false;
 }
 
-/**
- * Given a fixed-position layer, check if it's fixed with respect to the
- * zoomed APZC.
- */
-static bool IsFixedToZoomContainer(Layer* aFixedLayer) {
-  ScrollableLayerGuid::ViewID targetId =
-      aFixedLayer->GetFixedPositionScrollContainerId();
-  MOZ_ASSERT(targetId != ScrollableLayerGuid::NULL_SCROLL_ID);
-  LayerMetricsWrapper result(aFixedLayer, LayerMetricsWrapper::StartAt::BOTTOM);
-  while (result) {
-    if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
-            result.IsAsyncZoomContainer()) {
-      return *zoomedScrollId == targetId;
-    }
-    // Don't ascend into another layer tree. Scroll IDs are not unique
-    // across layer trees, and in any case position:fixed doesn't reach
-    // across documents.
-    if (result.AsRefLayer() != nullptr) {
-      break;
-    }
-
-    result = result.GetParent();
-  }
-  return false;
-}
-
 // If |aLayer| is fixed or sticky, returns the scroll id of the scroll frame
 // that it's fixed or sticky to. Otherwise, returns Nothing().
 static Maybe<ScrollableLayerGuid::ViewID> IsFixedOrSticky(Layer* aLayer) {
@@ -953,6 +927,8 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
         Maybe<ParentLayerIntRect> clipDeferredFromChildren =
             stackDeferredClips.top();
         stackDeferredClips.pop();
+        MOZ_ASSERT(!layersIds.empty());
+        LayersId currentLayersId = layersIds.top();
         LayerToParentLayerMatrix4x4 oldTransform =
             layer->GetTransformTyped() * AsyncTransformMatrix();
 
@@ -1224,6 +1200,18 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
               // scroll metadata for zoomedScrollId appears in the layer tree.
             }
           }
+
+          auto IsFixedToZoomContainer = [&](Layer* aFixedLayer) {
+            if (!zoomedMetrics) {
+              return false;
+            }
+            ScrollableLayerGuid::ViewID targetId =
+                aFixedLayer->GetFixedPositionScrollContainerId();
+            MOZ_ASSERT(targetId != ScrollableLayerGuid::NULL_SCROLL_ID);
+            ScrollableLayerGuid rootContent = sampler->GetGuid(*zoomedMetrics);
+            return rootContent.mScrollId == targetId &&
+            rootContent.mLayersId == currentLayersId;
+          };
 
           // Layers fixed to the RCD-RSF no longer need
           // AdjustFixedOrStickyLayer() to scroll them by the eVisual transform,
