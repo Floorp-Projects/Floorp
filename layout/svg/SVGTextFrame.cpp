@@ -275,7 +275,7 @@ static bool IsGlyphPositioningAttribute(nsAtom* aAttribute) {
  * @param aDominantBaseline The dominant-baseline value to use.
  */
 static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
-                                   uint8_t aDominantBaseline,
+                                   StyleDominantBaseline aDominantBaseline,
                                    float aFontSizeScaleFactor) {
   WritingMode writingMode = aFrame->GetWritingMode();
   // We pass in null for the PropertyProvider since letter-spacing and
@@ -284,30 +284,30 @@ static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
       aTextRun->MeasureText(gfxFont::LOOSE_INK_EXTENTS, nullptr);
 
   switch (aDominantBaseline) {
-    case NS_STYLE_DOMINANT_BASELINE_HANGING:
-    case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
+    case StyleDominantBaseline::Hanging:
+    case StyleDominantBaseline::TextBeforeEdge:
       return writingMode.IsVerticalRL() ? metrics.mAscent + metrics.mDescent
                                         : 0;
 
-    case NS_STYLE_DOMINANT_BASELINE_AUTO:
-    case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
+    case StyleDominantBaseline::Auto:
+    case StyleDominantBaseline::Alphabetic:
       return writingMode.IsVerticalRL()
                  ? metrics.mAscent + metrics.mDescent -
                        aFrame->GetLogicalBaseline(writingMode)
                  : aFrame->GetLogicalBaseline(writingMode);
 
-    case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
+    case StyleDominantBaseline::Middle:
       return aFrame->GetLogicalBaseline(writingMode) -
              SVGContentUtils::GetFontXHeight(aFrame) / 2.0 *
                  AppUnitsPerCSSPixel() * aFontSizeScaleFactor;
 
-    case NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE:
-    case NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC:
+    case StyleDominantBaseline::TextAfterEdge:
+    case StyleDominantBaseline::Ideographic:
       return writingMode.IsVerticalLR() ? 0
                                         : metrics.mAscent + metrics.mDescent;
 
-    case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
-    case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
+    case StyleDominantBaseline::Central:
+    case StyleDominantBaseline::Mathematical:
       return (metrics.mAscent + metrics.mDescent) / 2.0;
   }
 
@@ -1506,7 +1506,7 @@ class TextFrameIterator {
   /**
    * Returns the current frame's computed dominant-baseline value.
    */
-  uint8_t DominantBaseline() const {
+  StyleDominantBaseline DominantBaseline() const {
     return mBaselines.ElementAt(mBaselines.Length() - 1);
   }
 
@@ -1570,7 +1570,7 @@ class TextFrameIterator {
    * Stack of dominant-baseline values to record as we traverse through the
    * frame tree.
    */
-  AutoTArray<uint8_t, 8> mBaselines;
+  AutoTArray<StyleDominantBaseline, 8> mBaselines;
 
   /**
    * The iterator's current position relative to mSubtree.
@@ -1667,7 +1667,7 @@ nsTextFrame* TextFrameIterator::Next() {
 }
 
 void TextFrameIterator::PushBaseline(nsIFrame* aNextFrame) {
-  uint8_t baseline = aNextFrame->StyleSVG()->mDominantBaseline;
+  StyleDominantBaseline baseline = aNextFrame->StyleSVG()->mDominantBaseline;
   mBaselines.AppendElement(baseline);
 }
 

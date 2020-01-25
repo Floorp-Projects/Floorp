@@ -10113,21 +10113,21 @@ bool nsIFrame::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
 bool nsIFrame::HasSignificantTerminalNewline() const { return false; }
 
 static StyleVerticalAlignKeyword ConvertSVGDominantBaselineToVerticalAlign(
-    uint8_t aDominantBaseline) {
+    StyleDominantBaseline aDominantBaseline) {
   // Most of these are approximate mappings.
   switch (aDominantBaseline) {
-    case NS_STYLE_DOMINANT_BASELINE_HANGING:
-    case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
+    case StyleDominantBaseline::Hanging:
+    case StyleDominantBaseline::TextBeforeEdge:
       return StyleVerticalAlignKeyword::TextTop;
-    case NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE:
-    case NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC:
+    case StyleDominantBaseline::TextAfterEdge:
+    case StyleDominantBaseline::Ideographic:
       return StyleVerticalAlignKeyword::TextBottom;
-    case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
-    case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
-    case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
+    case StyleDominantBaseline::Central:
+    case StyleDominantBaseline::Middle:
+    case StyleDominantBaseline::Mathematical:
       return StyleVerticalAlignKeyword::Middle;
-    case NS_STYLE_DOMINANT_BASELINE_AUTO:
-    case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
+    case StyleDominantBaseline::Auto:
+    case StyleDominantBaseline::Alphabetic:
       return StyleVerticalAlignKeyword::Baseline;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected aDominantBaseline value");
@@ -10137,7 +10137,7 @@ static StyleVerticalAlignKeyword ConvertSVGDominantBaselineToVerticalAlign(
 
 Maybe<StyleVerticalAlignKeyword> nsIFrame::VerticalAlignEnum() const {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
-    uint8_t dominantBaseline = StyleSVG()->mDominantBaseline;
+    StyleDominantBaseline dominantBaseline = StyleSVG()->mDominantBaseline;
     return Some(ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline));
   }
 

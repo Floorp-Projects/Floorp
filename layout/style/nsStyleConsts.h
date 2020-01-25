@@ -732,15 +732,17 @@ enum class StyleWindowShadow : uint8_t {
 };
 
 // dominant-baseline
-#define NS_STYLE_DOMINANT_BASELINE_AUTO 0
-#define NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC 1
-#define NS_STYLE_DOMINANT_BASELINE_ALPHABETIC 2
-#define NS_STYLE_DOMINANT_BASELINE_HANGING 3
-#define NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL 4
-#define NS_STYLE_DOMINANT_BASELINE_CENTRAL 5
-#define NS_STYLE_DOMINANT_BASELINE_MIDDLE 6
-#define NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE 7
-#define NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE 8
+enum class StyleDominantBaseline : uint8_t {
+  Auto,
+  Ideographic,
+  Alphabetic,
+  Hanging,
+  Mathematical,
+  Central,
+  Middle,
+  TextAfterEdge,
+  TextBeforeEdge,
+};
 
 // image-rendering
 #define NS_STYLE_IMAGE_RENDERING_AUTO 0
