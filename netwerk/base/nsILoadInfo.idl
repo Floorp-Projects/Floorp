@@ -512,15 +512,6 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean loadErrorPage;
 
   /**
-   * Returns true if this is a non-subresource request that was triggered
-   * by docshell with the LOAD_CMD_RELOAD flag set.  Note, this is more
-   * specific than looking at the load flags which indicate whether to
-   * bypass the http cache.  The load flags can be set for other reasons,
-   * so they can't be used to infer this value.
-   */
-  [infallible] attribute boolean isDocshellReload;
-
-  /**
    * True if the load was initiated by a form request.
    * This is important to know to handle the CSP directive navigate-to.
    */

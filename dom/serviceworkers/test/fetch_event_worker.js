@@ -1,5 +1,3 @@
-var seenIndex = false;
-
 // eslint-disable-next-line complexity
 onfetch = function(ev) {
   if (ev.request.url.includes("ignore")) {
@@ -276,23 +274,6 @@ onfetch = function(ev) {
     ev.respondWith(fetch(url));
   } else if (ev.request.url.includes("example.com")) {
     ev.respondWith(fetch(ev.request));
-  } else if (ev.request.url.includes("index.html")) {
-    if (seenIndex) {
-      let body =
-        "<script>" +
-        "opener.postMessage({status: 'ok', result: " +
-        ev.isReload +
-        "," +
-        "message: 'reload status should be indicated'}, '*');" +
-        "opener.postMessage({status: 'done'}, '*');" +
-        "</script>";
-      ev.respondWith(
-        new Response(body, { headers: { "Content-Type": "text/html" } })
-      );
-    } else {
-      seenIndex = true;
-      ev.respondWith(fetch(ev.request.url));
-    }
   } else if (ev.request.url.includes("body-")) {
     ev.respondWith(
       ev.request.text().then(function(body) {

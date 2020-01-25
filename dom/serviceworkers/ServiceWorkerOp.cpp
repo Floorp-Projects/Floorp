@@ -1530,7 +1530,6 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
   fetchEventInit.mRequest = request;
   fetchEventInit.mBubbles = false;
   fetchEventInit.mCancelable = true;
-  fetchEventInit.mIsReload = args.isReload();
 
   /**
    * TODO: only expose the FetchEvent.clientId on subresource requests for
