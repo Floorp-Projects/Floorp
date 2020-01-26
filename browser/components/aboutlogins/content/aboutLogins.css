@@ -71,7 +71,7 @@ login-item {
 }
 
 :root:not(.official-branding) #branding-logo {
-  display: none;
+  visibility: hidden;
 }
 
 :root:not(.master-password-auth-required) #master-password-required-overlay {
