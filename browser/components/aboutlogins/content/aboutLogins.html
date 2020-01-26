@@ -152,99 +152,101 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
       <div class="container">
-        <div class="error-message">
-          <span class="error-message-text" data-l10n-id="about-logins-error-message-default"></span>
-          <span class="error-message-link">
-            <a data-l10n-name="duplicate-link" href=""></a>
-          </span>
-        </div>
-        <div class="breach-alert">
-          <img class="breach-icon" src="chrome://global/skin/icons/warning.svg"/>
-          <span class="breach-alert-text" data-l10n-id="breach-alert-text"></span>
-          <a class="breach-alert-link" data-l10n-id="breach-alert-link" href="#" rel="noreferrer" target="_blank"></a>
-          <button class="dismiss-breach-alert" data-l10n-id="breach-alert-dismiss">
-            <img class="dismiss-breach-alert-icon" src="chrome://global/skin/icons/close.svg"/>
-          </button>
-        </div>
-        <div class="header">
-          <div class="login-item-favicon-wrapper">
-            <img class="login-item-favicon" src=""/>
+        <div class="column">
+          <div class="error-message">
+            <span class="error-message-text" data-l10n-id="about-logins-error-message-default"></span>
+            <span class="error-message-link">
+              <a data-l10n-name="duplicate-link" href=""></a>
+            </span>
           </div>
-          <h2 class="title">
-            <span class="login-item-title"></span>
-            <span class="new-login-title" data-l10n-id="login-item-new-login-title"></span>
-          </h2>
-          <button class="edit-button ghost-button" data-l10n-id="login-item-edit-button"></button>
-          <button class="delete-button ghost-button" data-l10n-id="about-logins-login-item-remove-button"></button>
-        </div>
-        <form>
-          <div class="detail-row">
-            <label class="detail-cell">
-              <span class="origin-label field-label" data-l10n-id="login-item-origin-label"></span>
-              <!-- Default text inputs to readonly to reduce jumping of the field
-                  size on page load since it always starts readonly. -->
-              <input type="url"
-                    name="origin"
-                    class="origin-input"
-                    required
-                    data-l10n-id="login-item-origin"
-                    dir="auto"
-                    readonly/>
-            </label>
+          <div class="breach-alert">
+            <img class="breach-icon" src="chrome://global/skin/icons/warning.svg"/>
+            <span class="breach-alert-text" data-l10n-id="breach-alert-text"></span>
+            <a class="breach-alert-link" data-l10n-id="breach-alert-link" href="#" rel="noreferrer" target="_blank"></a>
+            <button class="dismiss-breach-alert" data-l10n-id="breach-alert-dismiss">
+              <img class="dismiss-breach-alert-icon" src="chrome://global/skin/icons/close.svg"/>
+            </button>
           </div>
-          <div class="detail-row">
-            <div class="detail-row-contents">
-              <label class="detail-cell">
-                <span class="username-label field-label" data-l10n-id="login-item-username-label"></span>
-                <input type="text"
-                      name="username"
-                      data-l10n-id="login-item-username"
-                      dir="ltr"
-                      readonly/>
-              </label>
-              <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username" type="button">
-                <span class="copied-button-text" data-l10n-id="login-item-copied-username-button-text"></span>
-                <span class="copy-button-text" data-l10n-id="login-item-copy-username-button-text"></span>
-              </button>
+          <div class="header">
+            <div class="login-item-favicon-wrapper">
+              <img class="login-item-favicon" src=""/>
             </div>
+            <h2 class="title">
+              <span class="login-item-title"></span>
+              <span class="new-login-title" data-l10n-id="login-item-new-login-title"></span>
+            </h2>
+            <button class="edit-button ghost-button" data-l10n-id="login-item-edit-button"></button>
+            <button class="delete-button ghost-button" data-l10n-id="about-logins-login-item-remove-button"></button>
           </div>
-          <div class="detail-row">
-            <div class="detail-row-contents">
+          <form>
+            <div class="detail-row">
               <label class="detail-cell">
-                <span class="password-label field-label" data-l10n-id="login-item-password-label"></span>
-                <div class="reveal-password-wrapper">
-                  <input type="password"
-                        name="password"
-                        autocomplete="off"
-                        dir="ltr"
-                        required
-                        readonly/>
-                  <input class="password-display"
-                         type="password"
-                         autocomplete="off"
+                <span class="origin-label field-label" data-l10n-id="login-item-origin-label"></span>
+                <!-- Default text inputs to readonly to reduce jumping of the field
+                    size on page load since it always starts readonly. -->
+                <input type="url"
+                       name="origin"
+                       class="origin-input"
+                       required
+                       data-l10n-id="login-item-origin"
+                       dir="auto"
+                       readonly/>
+              </label>
+            </div>
+            <div class="detail-row">
+              <div class="detail-row-contents">
+                <label class="detail-cell">
+                  <span class="username-label field-label" data-l10n-id="login-item-username-label"></span>
+                  <input type="text"
+                         name="username"
+                         data-l10n-id="login-item-username"
                          dir="ltr"
-                         tabindex="-1"
                          readonly/>
-                  <input type="checkbox"
-                        class="reveal-password-checkbox"
-                        data-l10n-id="login-item-password-reveal-checkbox"/>
-                </div>
-              </label>
-              <button class="copy-button copy-password-button" data-copy-login-property="password" data-telemetry-object="password" type="button">
-                <span class="copied-button-text" data-l10n-id="login-item-copied-password-button-text"></span>
-                <span class="copy-button-text" data-l10n-id="login-item-copy-password-button-text"></span>
-              </button>
+                </label>
+                <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username" type="button">
+                  <span class="copied-button-text" data-l10n-id="login-item-copied-username-button-text"></span>
+                  <span class="copy-button-text" data-l10n-id="login-item-copy-username-button-text"></span>
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="form-actions-row">
-            <button class="save-changes-button" type="submit"></button>
-            <button class="cancel-button" data-l10n-id="login-item-cancel-button" type="button"></button>
-          </div>
-          <p class="time-created meta-info" data-l10n-id="login-item-time-created" data-l10n-args='{"timeCreated": 0}'></p>
-          <p class="time-changed meta-info" data-l10n-id="login-item-time-changed" data-l10n-args='{"timeChanged": 0}'></p>
-          <p class="time-used meta-info" data-l10n-id="login-item-time-used" data-l10n-args='{"timeUsed": 0}'></p>
-        </form>
-        <login-footer hidden></login-footer>
+            <div class="detail-row">
+              <div class="detail-row-contents">
+                <label class="detail-cell">
+                  <span class="password-label field-label" data-l10n-id="login-item-password-label"></span>
+                  <div class="reveal-password-wrapper">
+                    <input type="password"
+                           name="password"
+                           autocomplete="off"
+                           dir="ltr"
+                           required
+                           readonly/>
+                    <input class="password-display"
+                           type="password"
+                           autocomplete="off"
+                           dir="ltr"
+                           tabindex="-1"
+                           readonly/>
+                    <input type="checkbox"
+                           class="reveal-password-checkbox"
+                           data-l10n-id="login-item-password-reveal-checkbox"/>
+                  </div>
+                </label>
+                <button class="copy-button copy-password-button" data-copy-login-property="password" data-telemetry-object="password" type="button">
+                  <span class="copied-button-text" data-l10n-id="login-item-copied-password-button-text"></span>
+                  <span class="copy-button-text" data-l10n-id="login-item-copy-password-button-text"></span>
+                </button>
+              </div>
+            </div>
+            <div class="form-actions-row">
+              <button class="save-changes-button" type="submit"></button>
+              <button class="cancel-button" data-l10n-id="login-item-cancel-button" type="button"></button>
+            </div>
+            <p class="time-created meta-info" data-l10n-id="login-item-time-created" data-l10n-args='{"timeCreated": 0}'></p>
+            <p class="time-changed meta-info" data-l10n-id="login-item-time-changed" data-l10n-args='{"timeChanged": 0}'></p>
+            <p class="time-used meta-info" data-l10n-id="login-item-time-used" data-l10n-args='{"timeUsed": 0}'></p>
+          </form>
+          <login-footer hidden></login-footer>
+        </div>
       </div>
     </template>
 

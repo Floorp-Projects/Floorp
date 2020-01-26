@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:host {
-  overflow: auto;
-  padding: 40px;
+ :host {
+  overflow: hidden;
 
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
@@ -26,8 +25,14 @@
 }
 
 .container {
+  overflow: auto;
+  padding: 40px;
   box-sizing: border-box;
   height: 100%;
+  display: flex;
+}
+
+.column {
   max-width: 700px;
   display: flex;
   flex-direction: column;
