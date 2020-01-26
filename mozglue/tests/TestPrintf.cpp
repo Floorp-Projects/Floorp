@@ -96,7 +96,6 @@ static void TestPrintfFormats() {
   MOZ_RELEASE_ASSERT(print_one("27270", "%zu", (size_t)27270));
   MOZ_RELEASE_ASSERT(print_one("27270", "%zu", (size_t)27270));
   MOZ_RELEASE_ASSERT(print_one("hello", "he%so", "ll"));
-  MOZ_RELEASE_ASSERT(print_one("(null)", "%s", zero()));
   MOZ_RELEASE_ASSERT(print_one("hello   ", "%-8s", "hello"));
   MOZ_RELEASE_ASSERT(print_one("   hello", "%8s", "hello"));
   MOZ_RELEASE_ASSERT(print_one("hello   ", "%*s", -8, "hello"));
