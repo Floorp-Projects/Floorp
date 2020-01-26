@@ -580,6 +580,7 @@ pub(crate) fn define(
             .ints(Interval::All)
             .floats(Interval::All)
             .simd_lanes(Interval::All)
+            .refs(Interval::All)
             .build(),
     );
 
@@ -3183,6 +3184,24 @@ pub(crate) fn define(
 
         The condition code determines if the reference type in question is
         null or not.
+        "#,
+            &formats.unary,
+        )
+        .operands_in(vec![x])
+        .operands_out(vec![a]),
+    );
+
+    let a = &Operand::new("a", b1);
+    let x = &Operand::new("x", Ref);
+
+    ig.push(
+        Inst::new(
+            "is_invalid",
+            r#"
+        Reference verification.
+
+        The condition code determines if the reference type in question is
+        invalid or not.
         "#,
             &formats.unary,
         )
