@@ -18,6 +18,8 @@
 //! The code here deals with adapting the `cranelift_wasm` module to the specifics of BaldrMonkey's
 //! internal data structures.
 
+use crate::bindings::GlobalDesc;
+use cranelift_codegen::ir::immediates::Offset32;
 use std::collections::HashMap;
 
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
@@ -243,6 +245,18 @@ const FN_REF_FUNC: InstanceCall = InstanceCall {
     arguments: &[ir::types::I32],
     ret: Some(REF_TYPE),
     failure_mode: FailureMode::InvalidRef,
+};
+const FN_PRE_BARRIER: InstanceCall = InstanceCall {
+    address: SymbolicAddress::PreBarrier,
+    arguments: &[POINTER_TYPE],
+    ret: None,
+    failure_mode: FailureMode::Infallible,
+};
+const FN_POST_BARRIER: InstanceCall = InstanceCall {
+    address: SymbolicAddress::PostBarrier,
+    arguments: &[POINTER_TYPE],
+    ret: None,
+    failure_mode: FailureMode::Infallible,
 };
 
 // Custom trap codes specific to this embedding
@@ -602,6 +616,34 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
             }
         }
     }
+
+    fn global_address(
+        &mut self,
+        func: &mut ir::Function,
+        global: &GlobalDesc,
+    ) -> (ir::GlobalValue, Offset32) {
+        assert!(!global.is_constant());
+
+        // This is a global variable. Here we don't care if it is mutable or not.
+        let vmctx_gv = self.get_vmctx_gv(func);
+        let offset = global.tls_offset();
+
+        // Some globals are represented as a pointer to the actual data, in which case we
+        // must do an extra dereference to get to them.  Also, in that case, the pointer
+        // itself is immutable, so we mark it `readonly` here to assist Cranelift in commoning
+        // up what would otherwise be multiple adjacent reads of the value.
+        if global.is_indirect() {
+            let gv = func.create_global_value(ir::GlobalValueData::Load {
+                base: vmctx_gv,
+                offset: offset32(offset),
+                global_type: POINTER_TYPE,
+                readonly: true,
+            });
+            (gv, 0.into())
+        } else {
+            (vmctx_gv, offset32(offset))
+        }
+    }
 }
 
 impl<'a, 'b, 'c> TargetEnvironment for TransEnv<'a, 'b, 'c> {
@@ -630,33 +672,21 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             return Ok(GlobalVariable::Const(global.emit_constant(&mut pos)?));
         }
 
-        // This is a global variable. Here we don't care if it is mutable or not.
-        let vmctx_gv = self.get_vmctx_gv(func);
-        let offset = global.tls_offset();
+        match global.value_type()? {
+            ir::types::R32 | ir::types::R64 => {
+                return Ok(GlobalVariable::Custom);
+            }
+            _ => {
+                let (base_gv, offset) = self.global_address(func, &global);
+                let mem_ty = global.value_type()?;
 
-        // Some globals are represented as a pointer to the actual data, in which case we
-        // must do an extra dereference to get to them.  Also, in that case, the pointer
-        // itself is immutable, so we mark it `readonly` here to assist Cranelift in commoning
-        // up what would otherwise be multiple adjacent reads of the value.
-        let (base_gv, offset) = if global.is_indirect() {
-            let gv = func.create_global_value(ir::GlobalValueData::Load {
-                base: vmctx_gv,
-                offset: offset32(offset),
-                global_type: POINTER_TYPE,
-                readonly: true,
-            });
-            (gv, 0.into())
-        } else {
-            (vmctx_gv, offset32(offset))
-        };
-
-        let mem_ty = global.value_type()?;
-
-        Ok(GlobalVariable::Memory {
-            gv: base_gv,
-            ty: mem_ty,
-            offset,
-        })
+                Ok(GlobalVariable::Memory {
+                    gv: base_gv,
+                    ty: mem_ty,
+                    offset,
+                })
+            }
+        }
     }
 
     fn make_heap(&mut self, func: &mut ir::Function, index: MemoryIndex) -> WasmResult<ir::Heap> {
@@ -1144,6 +1174,50 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         Ok(self
             .instance_call(&mut pos, &FN_REF_FUNC, &[func_index])
             .unwrap())
+    }
+
+    fn translate_custom_global_get(
+        &mut self,
+        mut pos: FuncCursor,
+        global_index: GlobalIndex,
+    ) -> WasmResult<ir::Value> {
+        let global = self.env.global(global_index);
+        let ty = global.value_type()?;
+        debug_assert!(ty == ir::types::R32 || ty == ir::types::R64);
+
+        let (base_gv, offset) = self.global_address(pos.func, &global);
+        let addr = pos.ins().global_value(POINTER_TYPE, base_gv);
+        let flags = ir::MemFlags::trusted();
+        Ok(pos.ins().load(ty, flags, addr, offset))
+    }
+
+    fn translate_custom_global_set(
+        &mut self,
+        mut pos: FuncCursor,
+        global_index: GlobalIndex,
+        val: ir::Value,
+    ) -> WasmResult<()> {
+        let global = self.env.global(global_index);
+        let ty = global.value_type()?;
+        debug_assert!(ty == ir::types::R32 || ty == ir::types::R64);
+
+        let (global_addr_gv, global_addr_offset) = self.global_address(pos.func, &global);
+        let global_addr = pos.ins().global_value(POINTER_TYPE, global_addr_gv);
+        let abs_global_addr = pos.ins().iadd_imm(
+            global_addr,
+            ir::immediates::Imm64::new(global_addr_offset.into()),
+        );
+
+        let res = self.instance_call(&mut pos, &FN_PRE_BARRIER, &[abs_global_addr]);
+        debug_assert!(res.is_none());
+
+        let flags = ir::MemFlags::trusted();
+        pos.ins().store(flags, val, abs_global_addr, offset32(0));
+
+        let res = self.instance_call(&mut pos, &FN_POST_BARRIER, &[abs_global_addr]);
+        debug_assert!(res.is_none());
+
+        Ok(())
     }
 
     fn translate_loop_header(&mut self, mut pos: FuncCursor) -> WasmResult<()> {
