@@ -46,51 +46,66 @@
     <string name="mozac_feature_addons_permissions_top_sites_description">גישה להיסטוריית הגלישה</string>
     <!-- Description for devtools permission. -->
     <string name="mozac_feature_addons_permissions_devtools_description">הרחבת כלי הפיתוח לקבלת גישה לנתונים שלך בלשוניות פתוחות</string>
-    <!-- The version on an addon. -->
+    <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">גרסה</string>
-    <!-- The authors of an addon. -->
+    <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">יוצרים</string>
-    <!-- The developer website (Homepage) of the addon. -->
+    <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">דף הבית</string>
-    <!-- A link where users can find more information about addons permissions. -->
+    <!-- A link where users can find more information about add-ons permissions. -->
     <string name="mozac_feature_addons_learn_more">מידע נוסף על הרשאות</string>
-    <!-- The rating of the addon. -->
+    <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">דירוג</string>
-    <!-- The settings of the addon. -->
+    <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">הגדרות</string>
-    <!-- Displays a page with all the details of an addon. -->
+    <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">פרטים</string>
-    <!-- Displays a page with all the permissions of an addon. -->
+    <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">הרשאות</string>
-    <!-- This is button that remove (uninstall an addon). -->
+    <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">הסרה</string>
-    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">להוסיף את %1$s?</string>
-    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">ההרשאות הבאות נדרשות:</string>
-    <!-- This a button to add (installs) an addon . -->
+    <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">הוספה</string>
-    <!-- This a button to cancel the addon installation . -->
+    <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">ביטול</string>
-    <!-- Accessibility content description to install addon button. -->
+    <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">התקנת תוספת</string>
-    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
     <string name="mozac_feature_addons_user_rating_count">משתמשים: %1$s</string>
-    <!-- Accessibility content description for the amount of stars that addon has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">תוספות</string>
-    <!-- The label of the allow button, this will be shown to the user when an addons needs new permissions, with the button the user will indicate that wants to accept the new permissions and update the addon-->
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">לאפשר</string>
-    <!-- The label of the deny button on a notification, this will be shown to the user when an addons needs new permissions. Indicates the user denies the new permissions and prevent the addon from be updated-->
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">לדחות</string>
-    <!-- The tile of the notification, this will be shown to the user when an addons needs new permissions, to be updated. %1$s is the name of the addons-->
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
     <string name="mozac_feature_addons_updater_notification_title">לתוספת %1$s יש עדכון חדש</string>
-    <!-- The content of the notification, this will be shown when an addons needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d הרשאות חדשות נדרשות</string>
-    <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">עדכוני תוספות</string>
-    <!-- This is the caption for the addon installation progress overlay -->
+    <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">בתהליך הורדה ואימות תוספת…</string>
-
-</resources>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">התוספת %1$s הותקנה בהצלחה</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">התקנת התוספת %1$s נכשלה</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">התוספת %1$s הופעלה בהצלחה</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">הפעלת התוספת %1$s נכשלה</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">התוספת %1$s הושבתה בהצלחה</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">השבתת התוספת %1$s נכשלה</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">הסרת ההתקנה של התוספת %1$s נכשלה</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">הסרת התוספת %1$s נכשלה</string>
+    </resources>

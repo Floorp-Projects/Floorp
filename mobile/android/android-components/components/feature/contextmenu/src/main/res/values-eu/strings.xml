@@ -22,4 +22,5 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Lotura arbelean kopiatuta</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Aldatu</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Ireki lotura kanpoko aplikazioan</string>
 </resources>
