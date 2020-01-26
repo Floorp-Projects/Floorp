@@ -238,6 +238,10 @@ impl FuncCompileInput {
     pub fn bytecode(&self) -> &[u8] {
         unsafe { slice::from_raw_parts(self.bytecode, self.bytecodeSize) }
     }
+
+    pub fn stackmaps(&self) -> Stackmaps {
+        Stackmaps(self.stackmaps)
+    }
 }
 
 impl CompiledFunc {
@@ -313,6 +317,28 @@ impl StaticEnvironment {
             isa::CallConv::BaldrdashWindows
         } else {
             isa::CallConv::BaldrdashSystemV
+        }
+    }
+}
+
+pub struct Stackmaps(*mut self::low_level::BD_Stackmaps);
+
+impl Stackmaps {
+    pub fn add_stackmap(
+        &mut self,
+        stack_slots: &ir::StackSlots,
+        offset: CodeOffset,
+        map: cranelift_codegen::binemit::Stackmap,
+    ) {
+        unsafe {
+            let bitslice = map.as_slice();
+            low_level::stackmaps_add(
+                self.0,
+                std::mem::transmute(bitslice.as_ptr()),
+                map.mapped_words() as usize,
+                stack_slots.layout_info.unwrap().inbound_args_size as usize,
+                offset as usize,
+            );
         }
     }
 }
