@@ -94,6 +94,10 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
       return SymbolicAddress::TruncF;
     case BD_SymbolicAddress::TruncF64:
       return SymbolicAddress::TruncD;
+    case BD_SymbolicAddress::PreBarrier:
+      return SymbolicAddress::PreBarrierFiltering;
+    case BD_SymbolicAddress::PostBarrier:
+      return SymbolicAddress::PostBarrierFiltering;
     case BD_SymbolicAddress::Limit:
       break;
   }
@@ -536,6 +540,9 @@ BD_ConstantValue global_constantValue(const GlobalDesc* global) {
       break;
     case TypeCode::F64:
       v.u.f64 = value.f64();
+      break;
+    case TypeCode::Ref:
+      v.u.r = value.ref().forCompiledCode();
       break;
     default:
       MOZ_CRASH("Bad type");
