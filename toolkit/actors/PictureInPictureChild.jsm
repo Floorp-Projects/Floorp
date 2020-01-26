@@ -1108,6 +1108,10 @@ class PictureInPictureChild extends JSWindowActorChild {
         this.unmute();
         break;
       }
+      case "PictureInPicture:KeyDown": {
+        this.keyDown(message.data);
+        break;
+      }
       case "PictureInPicture:KeyToggle": {
         this.keyToggle();
         break;
@@ -1244,6 +1248,138 @@ class PictureInPictureChild extends JSWindowActorChild {
     let video = this.getWeakVideo();
     if (video) {
       video.muted = false;
+    }
+  }
+
+  /**
+   * This reuses the keyHandler logic in the VideoControlsWidget
+   * https://searchfox.org/mozilla-central/rev/cfd1cc461f1efe0d66c2fdc17c024a203d5a2fd8/toolkit/content/widgets/videocontrols.js#1687-1810.
+   * There are future plans to eventually combine the two implementations.
+   */
+  keyDown({ altKey, shiftKey, metaKey, ctrlKey, keyCode }) {
+    let video = this.getWeakVideo();
+    if (!video) {
+      return;
+    }
+
+    var keystroke = "";
+    if (altKey) {
+      keystroke += "alt-";
+    }
+    if (shiftKey) {
+      keystroke += "shift-";
+    }
+    if (this.contentWindow.navigator.platform.startsWith("Mac")) {
+      if (metaKey) {
+        keystroke += "accel-";
+      }
+      if (ctrlKey) {
+        keystroke += "control-";
+      }
+    } else {
+      if (metaKey) {
+        keystroke += "meta-";
+      }
+      if (ctrlKey) {
+        keystroke += "accel-";
+      }
+    }
+
+    switch (keyCode) {
+      case this.contentWindow.KeyEvent.DOM_VK_UP:
+        keystroke += "upArrow";
+        break;
+      case this.contentWindow.KeyEvent.DOM_VK_DOWN:
+        keystroke += "downArrow";
+        break;
+      case this.contentWindow.KeyEvent.DOM_VK_LEFT:
+        keystroke += "leftArrow";
+        break;
+      case this.contentWindow.KeyEvent.DOM_VK_RIGHT:
+        keystroke += "rightArrow";
+        break;
+      case this.contentWindow.KeyEvent.DOM_VK_HOME:
+        keystroke += "home";
+        break;
+      case this.contentWindow.KeyEvent.DOM_VK_END:
+        keystroke += "end";
+        break;
+      case this.contentWindow.KeyEvent.DOM_VK_SPACE:
+        keystroke += "space";
+        break;
+    }
+
+    const isVideoStreaming = video.duration == +Infinity;
+    var oldval, newval;
+
+    try {
+      switch (keystroke) {
+        case "space" /* Toggle Play / Pause */:
+          if (video.paused || video.ended) {
+            video.play();
+          } else {
+            video.pause();
+          }
+          break;
+        case "downArrow" /* Volume decrease */:
+          oldval = video.volume;
+          video.volume = oldval < 0.1 ? 0 : oldval - 0.1;
+          video.muted = false;
+          break;
+        case "upArrow" /* Volume increase */:
+          oldval = video.volume;
+          video.volume = oldval > 0.9 ? 1 : oldval + 0.1;
+          video.muted = false;
+          break;
+        case "accel-downArrow" /* Mute */:
+          video.muted = true;
+          break;
+        case "accel-upArrow" /* Unmute */:
+          video.muted = false;
+          break;
+        case "leftArrow": /* Seek back 15 seconds */
+        case "accel-leftArrow" /* Seek back 10% */:
+          if (isVideoStreaming) {
+            return;
+          }
+
+          oldval = video.currentTime;
+          if (keystroke == "leftArrow") {
+            newval = oldval - 15;
+          } else {
+            newval = oldval - video.duration / 10;
+          }
+          video.currentTime = newval >= 0 ? newval : 0;
+          break;
+        case "rightArrow": /* Seek forward 15 seconds */
+        case "accel-rightArrow" /* Seek forward 10% */:
+          if (isVideoStreaming) {
+            return;
+          }
+
+          oldval = video.currentTime;
+          var maxtime = video.duration;
+          if (keystroke == "rightArrow") {
+            newval = oldval + 15;
+          } else {
+            newval = oldval + maxtime / 10;
+          }
+          video.currentTime = newval <= maxtime ? newval : maxtime;
+          break;
+        case "home" /* Seek to beginning */:
+          if (!isVideoStreaming) {
+            video.currentTime = 0;
+          }
+          break;
+        case "end" /* Seek to end */:
+          if (!isVideoStreaming && video.currentTime != video.duration) {
+            video.currentTime = video.duration;
+          }
+          break;
+        default:
+      }
+    } catch (e) {
+      /* ignore any exception from setting video.currentTime */
     }
   }
 
