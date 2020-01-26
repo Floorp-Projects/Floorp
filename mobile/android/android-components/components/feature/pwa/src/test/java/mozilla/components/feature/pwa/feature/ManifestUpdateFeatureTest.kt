@@ -124,4 +124,14 @@ class ManifestUpdateFeatureTest {
         verify(storage).updateManifest(manifest)
         verify(shortcutManager).updateShortcuts(testContext, listOf(manifest))
     }
+
+    @Test
+    fun `start updates last web app usage`() = runBlockingTest {
+        val initialManifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org", scope = "https://mozilla.org")
+        val feature = ManifestUpdateFeature(testContext, sessionManager, shortcutManager, storage, sessionId, initialManifest)
+
+        feature.start()
+
+        verify(storage).updateManifestUsedAt(initialManifest)
+    }
 }

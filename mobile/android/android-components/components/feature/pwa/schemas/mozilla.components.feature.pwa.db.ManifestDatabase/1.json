@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "dd9b306a96bcf751f6cfdc739f38f2b4",
+    "identityHash": "2dbe6c2ed8111e6d63f6bb78035424aa",
     "entities": [
       {
         "tableName": "manifests",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`manifest` TEXT NOT NULL, `start_url` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`start_url`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`manifest` TEXT NOT NULL, `start_url` TEXT NOT NULL, `scope` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `used_at` INTEGER NOT NULL, PRIMARY KEY(`start_url`))",
         "fields": [
           {
             "fieldPath": "manifest",
@@ -21,6 +21,12 @@
             "notNull": true
           },
           {
+            "fieldPath": "scope",
+            "columnName": "scope",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
             "fieldPath": "createdAt",
             "columnName": "created_at",
             "affinity": "INTEGER",
@@ -31,6 +37,12 @@
             "columnName": "updated_at",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "usedAt",
+            "columnName": "used_at",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -39,13 +51,23 @@
           ],
           "autoGenerate": false
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_manifests_scope",
+            "unique": false,
+            "columnNames": [
+              "scope"
+            ],
+            "createSql": "CREATE  INDEX `index_manifests_scope` ON `${TABLE_NAME}` (`scope`)"
+          }
+        ],
         "foreignKeys": []
       }
     ],
+    "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"dd9b306a96bcf751f6cfdc739f38f2b4\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2dbe6c2ed8111e6d63f6bb78035424aa')"
     ]
   }
 }

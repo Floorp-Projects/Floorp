@@ -22,6 +22,11 @@ permalink: /changelog/
 
 * **lib-crash**
   * Glean reports now distinguishes between fatal and non-fatal native code crashes.
+  
+* **feature-pwa**
+  * Added ability to query install state of an url.
+  * Added ability load all manifests that apply to a certain url.
+  * Added ability to track if an PWA is actively used.
 
 # 28.0.0
 

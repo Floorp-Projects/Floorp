@@ -76,4 +76,31 @@ class WebAppUseCases(
     val addToHomescreen by lazy {
         AddToHomescreenUseCase(applicationContext, sessionManager, shortcutManager)
     }
+
+    /**
+     * Checks the current install state of a Web App.
+     *
+     * Returns WebAppShortcutManager.InstallState.Installed if the user has installed
+     * or used the web app in the past 30 days.
+     *
+     * Otherwise, WebAppShortcutManager.InstallState.NotInstalled is returned.
+     */
+    class GetInstallStateUseCase internal constructor(
+        private val sessionManager: SessionManager,
+        private val shortcutManager: WebAppShortcutManager
+    ) {
+        /**
+         * @param currentTime the current time against which manifest usage timeouts will be validated
+         */
+        suspend operator fun invoke(
+            currentTime: Long = System.currentTimeMillis()
+        ): WebAppShortcutManager.WebAppInstallState? {
+            val session = sessionManager.selectedSession ?: return null
+            return shortcutManager.getWebAppInstallState(session.url, currentTime)
+        }
+    }
+
+    val getInstallState by lazy {
+        GetInstallStateUseCase(sessionManager, shortcutManager)
+    }
 }

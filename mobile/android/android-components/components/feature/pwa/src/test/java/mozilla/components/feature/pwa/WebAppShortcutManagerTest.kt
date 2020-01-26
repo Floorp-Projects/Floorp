@@ -24,6 +24,7 @@ import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PW
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -298,6 +299,36 @@ class WebAppShortcutManagerTest {
         WebAppShortcutManager(context, httpClient, storage).uninstallShortcuts(context, domains, message)
 
         verify(shortcutManager).disableShortcuts(domains, message)
+    }
+
+    @Test
+    fun `checking unknown url returns uninstalled state`() = runBlockingTest {
+        setSdkInt(Build.VERSION_CODES.N_MR1)
+
+        val url = "https://mozilla.org"
+        val currentTime = System.currentTimeMillis()
+
+        whenever(storage.hasRecentManifest(url, currentTime))
+                .thenReturn(false)
+
+        val installState = manager.getWebAppInstallState(url, currentTime)
+
+        assertEquals(WebAppShortcutManager.WebAppInstallState.NotInstalled, installState)
+    }
+
+    @Test
+    fun `checking a known url returns installed state`() = runBlockingTest {
+        setSdkInt(Build.VERSION_CODES.N_MR1)
+
+        val url = "https://mozilla.org/pwa/"
+        val currentTime = System.currentTimeMillis()
+
+        whenever(storage.hasRecentManifest(url, currentTime))
+                .thenReturn(true)
+
+        val installState = manager.getWebAppInstallState(url, currentTime)
+
+        assertEquals(WebAppShortcutManager.WebAppInstallState.Installed, installState)
     }
 
     private fun setSdkInt(sdkVersion: Int) {
