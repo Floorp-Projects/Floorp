@@ -30,7 +30,6 @@ cp $1/src/cubeb-jni.h src
 cp $1/src/android/cubeb-output-latency.h src/android
 cp $1/src/android/cubeb_media_library.h src/android
 cp $1/src/cubeb_osx_run_loop.h src
-cp $1/src/cubeb_pulse.c src
 cp $1/src/cubeb_resampler.cpp src
 cp $1/src/cubeb_resampler.h src
 cp $1/src/cubeb_resampler_internal.h src
