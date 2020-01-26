@@ -166,57 +166,11 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
 
 /***************************************************************************/
 
-const KTableEntry nsCSSProps::kCursorKTable[] = {
-    // CSS 2.0
-    {eCSSKeyword_auto, StyleCursorKind::Auto},
-    {eCSSKeyword_crosshair, StyleCursorKind::Crosshair},
-    {eCSSKeyword_default, StyleCursorKind::Default},
-    {eCSSKeyword_pointer, StyleCursorKind::Pointer},
-    {eCSSKeyword_move, StyleCursorKind::Move},
-    {eCSSKeyword_e_resize, StyleCursorKind::EResize},
-    {eCSSKeyword_ne_resize, StyleCursorKind::NeResize},
-    {eCSSKeyword_nw_resize, StyleCursorKind::NwResize},
-    {eCSSKeyword_n_resize, StyleCursorKind::NResize},
-    {eCSSKeyword_se_resize, StyleCursorKind::SeResize},
-    {eCSSKeyword_sw_resize, StyleCursorKind::SwResize},
-    {eCSSKeyword_s_resize, StyleCursorKind::SResize},
-    {eCSSKeyword_w_resize, StyleCursorKind::WResize},
-    {eCSSKeyword_text, StyleCursorKind::Text},
-    {eCSSKeyword_wait, StyleCursorKind::Wait},
-    {eCSSKeyword_help, StyleCursorKind::Help},
-    // CSS 2.1
-    {eCSSKeyword_progress, StyleCursorKind::Progress},
-    // CSS3 basic user interface module
-    {eCSSKeyword_copy, StyleCursorKind::Copy},
-    {eCSSKeyword_alias, StyleCursorKind::Alias},
-    {eCSSKeyword_context_menu, StyleCursorKind::ContextMenu},
-    {eCSSKeyword_cell, StyleCursorKind::Cell},
-    {eCSSKeyword_not_allowed, StyleCursorKind::NotAllowed},
-    {eCSSKeyword_col_resize, StyleCursorKind::ColResize},
-    {eCSSKeyword_row_resize, StyleCursorKind::RowResize},
-    {eCSSKeyword_no_drop, StyleCursorKind::NoDrop},
-    {eCSSKeyword_vertical_text, StyleCursorKind::VerticalText},
-    {eCSSKeyword_all_scroll, StyleCursorKind::AllScroll},
-    {eCSSKeyword_nesw_resize, StyleCursorKind::NeswResize},
-    {eCSSKeyword_nwse_resize, StyleCursorKind::NwseResize},
-    {eCSSKeyword_ns_resize, StyleCursorKind::NsResize},
-    {eCSSKeyword_ew_resize, StyleCursorKind::EwResize},
-    {eCSSKeyword_none, StyleCursorKind::None},
-    {eCSSKeyword_grab, StyleCursorKind::Grab},
-    {eCSSKeyword_grabbing, StyleCursorKind::Grabbing},
-    {eCSSKeyword_zoom_in, StyleCursorKind::ZoomIn},
-    {eCSSKeyword_zoom_out, StyleCursorKind::ZoomOut},
-    // -moz- prefixed vendor specific
-    {eCSSKeyword__moz_grab, StyleCursorKind::Grab},
-    {eCSSKeyword__moz_grabbing, StyleCursorKind::Grabbing},
-    {eCSSKeyword__moz_zoom_in, StyleCursorKind::ZoomIn},
-    {eCSSKeyword__moz_zoom_out, StyleCursorKind::ZoomOut},
-    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
-
 const KTableEntry nsCSSProps::kFontSmoothingKTable[] = {
     {eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO},
     {eCSSKeyword_grayscale, NS_FONT_SMOOTHING_GRAYSCALE},
-    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
+    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE},
+};
 
 const KTableEntry nsCSSProps::kTextAlignKTable[] = {
     {eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT},
@@ -228,7 +182,8 @@ const KTableEntry nsCSSProps::kTextAlignKTable[] = {
     {eCSSKeyword__moz_left, NS_STYLE_TEXT_ALIGN_MOZ_LEFT},
     {eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_START},
     {eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END},
-    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
+    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE},
+};
 
 const KTableEntry nsCSSProps::kTextDecorationStyleKTable[] = {
     {eCSSKeyword__moz_none, NS_STYLE_TEXT_DECORATION_STYLE_NONE},
@@ -237,7 +192,8 @@ const KTableEntry nsCSSProps::kTextDecorationStyleKTable[] = {
     {eCSSKeyword_dotted, NS_STYLE_TEXT_DECORATION_STYLE_DOTTED},
     {eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED},
     {eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY},
-    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
+    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE},
+};
 
 int32_t nsCSSProps::FindIndexOfKeyword(nsCSSKeyword aKeyword,
                                        const KTableEntry aTable[]) {

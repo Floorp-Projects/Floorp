@@ -6718,7 +6718,7 @@ already_AddRefed<nsWindowRoot> nsGlobalWindowInner::GetWindowRoot(
   FORWARD_TO_OUTER_OR_THROW(GetWindowRootOuter, (), aError, nullptr);
 }
 
-void nsGlobalWindowInner::SetCursor(const nsAString& aCursor,
+void nsGlobalWindowInner::SetCursor(const nsACString& aCursor,
                                     ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(SetCursorOuter, (aCursor, aError), aError, );
 }

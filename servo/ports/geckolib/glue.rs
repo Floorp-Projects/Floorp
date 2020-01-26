@@ -6860,3 +6860,17 @@ pub extern "C" fn Servo_LengthPercentage_ToCss(
 ) {
     lp.to_css(&mut CssWriter::new(result)).unwrap();
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CursorKind_Parse(
+    cursor: &nsACString,
+    result: &mut computed::ui::CursorKind,
+) -> bool {
+    match computed::ui::CursorKind::from_ident(cursor.as_str_unchecked()) {
+        Ok(c) => {
+            *result = c;
+            true
+        }
+        Err(..) => false,
+    }
+}
