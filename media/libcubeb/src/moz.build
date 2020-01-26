@@ -29,10 +29,6 @@ if CONFIG['MOZ_PULSEAUDIO'] or CONFIG['MOZ_JACK']:
     ]
 
 if CONFIG['MOZ_PULSEAUDIO']:
-    SOURCES += [
-        'cubeb_pulse.c',
-    ]
-    DEFINES['USE_PULSE'] = True
     DEFINES['USE_PULSE_RUST'] = True
 
 if CONFIG['MOZ_JACK']:
