@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch, FontRenderMode};
+use api::{BuiltDisplayList, DisplayItemCache, ColorF, DynamicProperties, Epoch, FontRenderMode};
 use api::{PipelineId, PropertyBinding, PropertyBindingId, MixBlendMode, StackingContext};
 use api::units::*;
 use crate::composite::CompositorKind;
@@ -134,6 +134,7 @@ pub struct ScenePipeline {
     pub content_size: LayoutSize,
     pub background_color: Option<ColorF>,
     pub display_list: BuiltDisplayList,
+    pub display_list_cache: DisplayItemCache,
 }
 
 /// A complete representation of the layout bundling visible pipelines together.
@@ -168,12 +169,20 @@ impl Scene {
         viewport_size: LayoutSize,
         content_size: LayoutSize,
     ) {
+        let pipeline = self.pipelines.remove(&pipeline_id);
+        let mut display_list_cache = pipeline.map_or(Default::default(), |p| {
+            p.display_list_cache
+        });
+
+        display_list_cache.update(&display_list);
+
         let new_pipeline = ScenePipeline {
             pipeline_id,
             viewport_size,
             content_size,
             background_color,
             display_list,
+            display_list_cache,
         };
 
         self.pipelines.insert(pipeline_id, new_pipeline);
