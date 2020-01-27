@@ -5325,6 +5325,175 @@ void nsGlobalWindowOuter::FirePopupBlockedEvent(
   aDoc->DispatchEvent(*event);
 }
 
+void nsGlobalWindowOuter::NotifyContentBlockingEvent(
+    unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
+    nsIChannel* aTrackingChannel,
+    const mozilla::Maybe<AntiTrackingCommon::StorageAccessGrantedReason>&
+        aReason) {
+  MOZ_ASSERT(aURIHint);
+  DebugOnly<bool> isCookiesBlockedTracker =
+      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
+  MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
+  MOZ_ASSERT_IF(!isCookiesBlockedTracker, aReason.isNothing());
+  MOZ_ASSERT_IF(isCookiesBlockedTracker && !aBlocked, aReason.isSome());
+
+  nsCOMPtr<nsIDocShell> docShell = GetDocShell();
+  if (!docShell) {
+    return;
+  }
+  nsCOMPtr<Document> doc = GetExtantDoc();
+  NS_ENSURE_TRUE_VOID(doc);
+
+  nsCOMPtr<nsIURI> uri(aURIHint);
+  nsCOMPtr<nsIChannel> channel(aChannel);
+  nsCOMPtr<nsIClassifiedChannel> trackingChannel =
+      do_QueryInterface(aTrackingChannel);
+
+  nsCOMPtr<nsIRunnable> func = NS_NewRunnableFunction(
+      "NotifyContentBlockingEventDelayed",
+      [doc, docShell, uri, channel, aEvent, aBlocked, aReason,
+       trackingChannel]() {
+        // This event might come after the user has navigated to another
+        // page. To prevent showing the TrackingProtection UI on the wrong
+        // page, we need to check that the loading URI for the channel is
+        // the same as the URI currently loaded in the document.
+        if (!SameLoadingURI(doc, channel) &&
+            aEvent == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
+          return;
+        }
+
+        // Notify nsIWebProgressListeners of this content blocking event.
+        // Can be used to change the UI state.
+        uint32_t event = 0;
+        nsCOMPtr<nsISecureBrowserUI> securityUI;
+        docShell->GetSecurityUI(getter_AddRefs(securityUI));
+        if (!securityUI) {
+          return;
+        }
+        securityUI->GetContentBlockingEvent(&event);
+        nsAutoCString origin;
+        nsContentUtils::GetASCIIOrigin(uri, origin);
+
+        bool blockedValue = aBlocked;
+        if (aEvent == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
+          doc->SetHasTrackingContentBlocked(aBlocked, origin);
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_LOADED_LEVEL_1_TRACKING_CONTENT) {
+          doc->SetHasLevel1TrackingContentLoaded(aBlocked, origin);
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_LOADED_LEVEL_2_TRACKING_CONTENT) {
+          doc->SetHasLevel2TrackingContentLoaded(aBlocked, origin);
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_BLOCKED_FINGERPRINTING_CONTENT) {
+          doc->SetHasFingerprintingContentBlocked(aBlocked, origin);
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_LOADED_FINGERPRINTING_CONTENT) {
+          doc->SetHasFingerprintingContentLoaded(aBlocked, origin);
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT) {
+          doc->SetHasCryptominingContentBlocked(aBlocked, origin);
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT) {
+          doc->SetHasCryptominingContentLoaded(aBlocked, origin);
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_BLOCKED_SOCIALTRACKING_CONTENT) {
+          doc->SetHasSocialTrackingContentBlocked(aBlocked, origin);
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_LOADED_SOCIALTRACKING_CONTENT) {
+          doc->SetHasSocialTrackingContentLoaded(aBlocked, origin);
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_COOKIES_BLOCKED_BY_PERMISSION) {
+          doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
+          nsTArray<nsCString> trackingFullHashes;
+          if (trackingChannel) {
+            Unused << trackingChannel->GetMatchedTrackingFullHashes(
+                trackingFullHashes);
+          }
+          doc->SetHasTrackingCookiesBlocked(aBlocked, origin, aReason,
+                                            trackingFullHashes);
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_COOKIES_BLOCKED_SOCIALTRACKER) {
+          nsTArray<nsCString> trackingFullHashes;
+          if (trackingChannel) {
+            Unused << trackingChannel->GetMatchedTrackingFullHashes(
+                trackingFullHashes);
+          }
+          doc->SetHasSocialTrackingCookiesBlocked(aBlocked, origin, aReason,
+                                                  trackingFullHashes);
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {
+          doc->SetHasAllCookiesBlocked(aBlocked, origin);
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
+          doc->SetHasForeignCookiesBlocked(aBlocked, origin);
+        } else if (aEvent == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+          MOZ_ASSERT(!aBlocked,
+                     "We don't expected to see blocked STATE_COOKIES_LOADED");
+          // Note that the logic in this branch is the logical negation of
+          // the logic in other branches, since the Document API we have is
+          // phrased in "loaded" terms as opposed to "blocked" terms.
+          blockedValue = !aBlocked;
+          doc->SetHasCookiesLoaded(blockedValue, origin);
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER) {
+          MOZ_ASSERT(
+              !aBlocked,
+              "We don't expected to see blocked STATE_COOKIES_LOADED_TRACKER");
+          // Note that the logic in this branch is the logical negation of the
+          // logic in other branches, since the Document API we have is phrased
+          // in "loaded" terms as opposed to "blocked" terms.
+          blockedValue = !aBlocked;
+          doc->SetHasTrackerCookiesLoaded(blockedValue, origin);
+        } else if (aEvent ==
+                   nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER) {
+          MOZ_ASSERT(!aBlocked,
+                     "We don't expected to see blocked "
+                     "STATE_COOKIES_LOADED_SOCIALTRACKER");
+          // Note that the logic in this branch is the logical negation of
+          // the logic in other branches, since the Document API we have is
+          // phrased in "loaded" terms as opposed to "blocked" terms.
+          blockedValue = !aBlocked;
+          doc->SetHasSocialTrackerCookiesLoaded(blockedValue, origin);
+        } else {
+          // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
+        }
+      });
+  nsresult rv;
+  if (StaticPrefs::dom_testing_sync_content_blocking_notifications()) {
+    rv = func->Run();
+  } else {
+    rv = NS_DispatchToCurrentThreadQueue(func.forget(), 100,
+                                         EventQueuePriority::Idle);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+}
+
+// static
+bool nsGlobalWindowOuter::SameLoadingURI(Document* aDoc, nsIChannel* aChannel) {
+  nsCOMPtr<nsIURI> docURI = aDoc->GetDocumentURI();
+  if (!docURI) {
+    return false;
+  }
+  nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->LoadInfo();
+  nsCOMPtr<nsIPrincipal> channelLoadingPrincipal =
+      channelLoadInfo->LoadingPrincipal();
+  if (!channelLoadingPrincipal) {
+    // TYPE_DOCUMENT loads will not have a channelLoadingPrincipal. But top
+    // level loads should not be blocked by Tracking Protection, so we will
+    // return false
+    return false;
+  }
+  bool equals = false;
+  nsresult rv = channelLoadingPrincipal->EqualsURI(docURI, &equals);
+
+  return NS_SUCCEEDED(rv) && equals;
+}
+
 // static
 bool nsGlobalWindowOuter::CanSetProperty(const char* aPrefName) {
   // Chrome can set any property.

@@ -33,6 +33,9 @@ class UrlClassifierCommon final {
 
   static bool AddonMayLoad(nsIChannel* aChannel, nsIURI* aURI);
 
+  static void NotifyChannelClassifierProtectionDisabled(
+      nsIChannel* aChannel, uint32_t aAcceptedReason);
+
   static bool ShouldEnableClassifier(nsIChannel* aChannel);
 
   static nsresult SetBlockedContent(nsIChannel* channel, nsresult aErrorCode,
@@ -78,6 +81,11 @@ class UrlClassifierCommon final {
       const std::vector<ClassificationData>& aData, uint32_t aDefaultFlag);
 
  private:
+  // aBlockedReason must be one of the nsIWebProgressListener state.
+  static void NotifyChannelBlocked(nsIChannel* aChannel,
+                                   nsIURI* aURIBeingLoaded,
+                                   unsigned aBlockedReason);
+
   static uint32_t TableToClassificationFlag(
       const nsACString& aTable, const std::vector<ClassificationData>& aData);
 };
