@@ -31,7 +31,9 @@ class MouseCursorMonitorTest : public testing::Test,
     cursor_image_.reset(cursor_image);
   }
 
-  void OnMouseCursorPosition(const DesktopVector& position) override {
+  void OnMouseCursorPosition(MouseCursorMonitor::CursorState state,
+                             const DesktopVector& position) override {
+    state_ = state;
     position_ = position;
     position_received_ = true;
   }
