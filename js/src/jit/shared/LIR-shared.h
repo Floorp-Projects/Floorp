@@ -7225,20 +7225,36 @@ class LGetPrototypeOf : public LInstructionHelper<BOX_PIECES, 1, 0> {
   const LAllocation* target() { return getOperand(0); }
 };
 
-class LIonToWasmCall : public LVariadicInstruction<0, 2> {
- public:
-  LIR_HEADER(IonToWasmCall);
+template <size_t NumDefs>
+class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
+  using Base = LVariadicInstruction<NumDefs, 2>;
 
-  explicit LIonToWasmCall(uint32_t numOperands, const LDefinition& temp,
-                          const LDefinition& fp)
-      : LVariadicInstruction(classOpcode, numOperands) {
+ public:
+  explicit LIonToWasmCallBase(LNode::Opcode classOpcode, uint32_t numOperands,
+                              const LDefinition& temp, const LDefinition& fp)
+      : Base(classOpcode, numOperands) {
     this->setIsCall();
     this->setTemp(0, temp);
     this->setTemp(1, fp);
   }
-
   MIonToWasmCall* mir() const { return this->mir_->toIonToWasmCall(); }
   const LDefinition* temp() { return this->getTemp(0); }
+};
+
+class LIonToWasmCall : public LIonToWasmCallBase<1> {
+ public:
+  LIR_HEADER(IonToWasmCall);
+  LIonToWasmCall(uint32_t numOperands, const LDefinition& temp,
+                 const LDefinition& fp)
+      : LIonToWasmCallBase<1>(classOpcode, numOperands, temp, fp) {}
+};
+
+class LIonToWasmCallV : public LIonToWasmCallBase<BOX_PIECES> {
+ public:
+  LIR_HEADER(IonToWasmCallV);
+  LIonToWasmCallV(uint32_t numOperands, const LDefinition& temp,
+                  const LDefinition& fp)
+      : LIonToWasmCallBase<BOX_PIECES>(classOpcode, numOperands, temp, fp) {}
 };
 
 class LWasmBoxValue : public LInstructionHelper<1, BOX_PIECES, 0> {
