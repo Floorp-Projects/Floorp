@@ -4490,9 +4490,6 @@ void LIRGenerator::visitWasmRegisterResult(MWasmRegisterResult* ins) {
   lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ins->loc())));
   ins->setVirtualRegister(vreg);
   add(lir, ins);
-  if (ins->resumePoint()) {
-    assignSafepoint(lir, ins);
-  }
 }
 
 void LIRGenerator::visitWasmFloatRegisterResult(MWasmFloatRegisterResult* ins) {
@@ -4502,37 +4499,6 @@ void LIRGenerator::visitWasmFloatRegisterResult(MWasmFloatRegisterResult* ins) {
   lir->setDef(0, LDefinition(vreg, type, LFloatReg(ins->loc())));
   ins->setVirtualRegister(vreg);
   add(lir, ins);
-  if (ins->resumePoint()) {
-    assignSafepoint(lir, ins);
-  }
-}
-
-void LIRGenerator::visitWasmValueOperandResult(MWasmValueOperandResult* ins) {
-  MOZ_ASSERT(ins->type() == MIRType::Value);
-  uint32_t vreg = getVirtualRegister();
-
-#if defined(JS_NUNBOX32)
-  auto* lir = new (alloc()) LWasmRegisterPairResult();
-  lir->setDef(TYPE_INDEX,
-              LDefinition(vreg + VREG_TYPE_OFFSET, LDefinition::TYPE,
-                          LGeneralReg(ins->loc().typeReg())));
-  lir->setDef(PAYLOAD_INDEX,
-              LDefinition(vreg + VREG_DATA_OFFSET, LDefinition::PAYLOAD,
-                          LGeneralReg(ins->loc().payloadReg())));
-  getVirtualRegister();
-#elif defined(JS_PUNBOX64)
-  auto* lir = new (alloc()) LWasmRegisterResult();
-  lir->setDef(0, LDefinition(vreg, LDefinition::BOX,
-                             LGeneralReg(ins->loc().valueReg())));
-#else
-#  error expected either JS_NUNBOX32 or JS_PUNBOX64
-#endif
-
-  ins->setVirtualRegister(vreg);
-  add(lir, ins);
-  if (ins->resumePoint()) {
-    assignSafepoint(lir, ins);
-  }
 }
 
 void LIRGenerator::visitWasmRegister64Result(MWasmRegister64Result* ins) {
@@ -4558,9 +4524,6 @@ void LIRGenerator::visitWasmRegister64Result(MWasmRegister64Result* ins) {
 
   ins->setVirtualRegister(vreg);
   add(lir, ins);
-  if (ins->resumePoint()) {
-    assignSafepoint(lir, ins);
-  }
 }
 
 void LIRGenerator::visitWasmCall(MWasmCall* ins) {
@@ -5114,7 +5077,12 @@ void LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins) {
   // Note that since this is a LIR call instruction, regalloc will prevent
   // the use*AtStart below from reusing any of the temporaries.
 
-  auto* lir = allocateVariadic<LIonToWasmCall>(ins->numOperands(), scratch, fp);
+  LInstruction* lir;
+  if (ins->type() == MIRType::Value) {
+    lir = allocateVariadic<LIonToWasmCallV>(ins->numOperands(), scratch, fp);
+  } else {
+    lir = allocateVariadic<LIonToWasmCall>(ins->numOperands(), scratch, fp);
+  }
   if (!lir) {
     abort(AbortReason::Alloc, "OOM: LIRGenerator::visitIonToWasmCall");
     return;
@@ -5142,7 +5110,7 @@ void LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins) {
     }
   }
 
-  add(lir, ins);
+  defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
 

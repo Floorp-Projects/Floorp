@@ -1488,48 +1488,38 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   masm.branchPtr(Assembler::Equal, FramePointer, Imm32(wasm::FailFP),
                  masm.exceptionLabel());
 
-  // Store the return values in the appropriate place.
-  GenPrintf(DebugChannel::Function, masm, "wasm-function[%d]; returns: [",
+  // Store the return value in the appropriate place.
+  GenPrintf(DebugChannel::Function, masm, "wasm-function[%d]; returns ",
             fe.funcIndex());
-  ResultType results = ResultType::Vector(fe.funcType().results());
+  const ValTypeVector& results = fe.funcType().results();
   if (results.length() == 0) {
+    masm.moveValue(UndefinedValue(), JSReturnOperand);
     GenPrintf(DebugChannel::Function, masm, "void");
-  }
-  for (ABIResultIter i(results); !i.done(); i.next()) {
-    if (i.index()) {
-      GenPrintf(DebugChannel::Function, masm, ", ");
-    }
-    MOZ_ASSERT(i.index() == 0, "multi-value return to JS unimplemented");
-    const ABIResult& result = i.cur();
-    MOZ_ASSERT(result.inRegister(), "stack return to JS unimplemented");
-    switch (result.type().kind()) {
+  } else {
+    MOZ_ASSERT(results.length() == 1, "multi-value return to JS unimplemented");
+    switch (results[0].kind()) {
       case wasm::ValType::I32:
-        MOZ_ASSERT(!result.type().isEncodedAsJSValueOnEscape());
         // The return value is in ReturnReg, which is what Ion expects.
-        GenPrintIsize(DebugChannel::Function, masm, result.gpr());
+        GenPrintIsize(DebugChannel::Function, masm, ReturnReg);
         break;
       case wasm::ValType::F32:
-        MOZ_ASSERT(!result.type().isEncodedAsJSValueOnEscape());
-        masm.canonicalizeFloat(result.fpr());
-        GenPrintF32(DebugChannel::Function, masm, result.fpr());
+        masm.canonicalizeFloat(ReturnFloat32Reg);
+        GenPrintF32(DebugChannel::Function, masm, ReturnFloat32Reg);
         break;
       case wasm::ValType::F64:
-        MOZ_ASSERT(!result.type().isEncodedAsJSValueOnEscape());
-        masm.canonicalizeDouble(result.fpr());
-        GenPrintF64(DebugChannel::Function, masm, result.fpr());
+        masm.canonicalizeDouble(ReturnDoubleReg);
+        GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         break;
       case wasm::ValType::Ref:
-        MOZ_ASSERT(result.type().isEncodedAsJSValueOnEscape());
-        switch (result.type().refTypeKind()) {
+        switch (results[0].refTypeKind()) {
           case wasm::RefType::Func:
             // For FuncRef, use the AnyRef path for now, since that will work.
           case wasm::RefType::Null:
             // For NullRef, ditto.
           case wasm::RefType::Any:
-            MOZ_ASSERT(i.index() == 0, "multiple results as values NYI");
             // The call to wasm above preserves the WasmTlsReg, we don't need to
             // reload it here.
-            UnboxAnyrefIntoValueReg(masm, WasmTlsReg, result.gpr(),
+            UnboxAnyrefIntoValueReg(masm, WasmTlsReg, ReturnReg,
                                     JSReturnOperand, WasmJitEntryReturnScratch);
             break;
           case wasm::RefType::TypeIndex:
@@ -1537,12 +1527,11 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         }
         break;
       case wasm::ValType::I64:
-        MOZ_ASSERT(!result.type().isEncodedAsJSValueOnEscape());
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
     }
   }
 
-  GenPrintf(DebugChannel::Function, masm, "]\n");
+  GenPrintf(DebugChannel::Function, masm, "\n");
 
   // Free args + frame descriptor.
   masm.leaveExitFrame(bytesNeeded + ExitFrameLayout::Size());
