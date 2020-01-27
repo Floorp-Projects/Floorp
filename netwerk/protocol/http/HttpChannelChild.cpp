@@ -1805,52 +1805,6 @@ void HttpChannelChild::ProcessFlushedForDiversion() {
                         true);
 }
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvNotifyChannelClassifierProtectionDisabled(
-    const uint32_t& aAcceptedReason) {
-  LOG(
-      ("HttpChannelChild::RecvNotifyChannelClassifierProtectionDisabled "
-       "[this=%p aAcceptedReason=%" PRIu32 "]\n",
-       this, aAcceptedReason));
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aAcceptedReason] {
-        UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
-            self, aAcceptedReason);
-      }));
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyCookieAllowed() {
-  LOG(("HttpChannelChild::RecvNotifyCookieAllowed [this=%p]\n", this));
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this)] {
-        AntiTrackingCommon::NotifyBlockingDecision(
-            self, AntiTrackingCommon::BlockingDecision::eAllow, 0);
-      }));
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyCookieBlocked(
-    const uint32_t& aRejectedReason) {
-  LOG(("HttpChannelChild::RecvNotifyCookieBlocked [this=%p]\n", this));
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aRejectedReason] {
-        AntiTrackingCommon::NotifyBlockingDecision(
-            self, AntiTrackingCommon::BlockingDecision::eBlock,
-            aRejectedReason);
-      }));
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyClassificationFlags(
     const uint32_t& aClassificationFlags, const bool& aIsThirdParty) {
   LOG(
