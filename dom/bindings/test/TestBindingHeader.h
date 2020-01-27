@@ -9,7 +9,6 @@
 #define TestBindingHeader_h
 
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/Date.h"
 #include "mozilla/dom/Record.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/ErrorResult.h"
@@ -112,8 +111,6 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
                                                      uint32_t, TestInterface&);
 
-  static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
-                                                     Date&);
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
                                                      const ArrayBuffer&);
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
@@ -847,18 +844,6 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void GetWritableNullableUnion(Nullable<OwningCanvasPatternOrCanvasGradient>&);
   void SetWritableNullableUnion(const Nullable<CanvasPatternOrCanvasGradient>&);
 
-  // Date types
-  void PassDate(Date);
-  void PassNullableDate(const Nullable<Date>&);
-  void PassOptionalDate(const Optional<Date>&);
-  void PassOptionalNullableDate(const Optional<Nullable<Date>>&);
-  void PassOptionalNullableDateWithDefaultValue(const Nullable<Date>&);
-  void PassDateSequence(const Sequence<Date>&);
-  void PassDateRecord(const Record<nsString, Date>&);
-  void PassNullableDateSequence(const Sequence<Nullable<Date>>&);
-  Date ReceiveDate();
-  Nullable<Date> ReceiveNullableDate();
-
   // Promise types
   void PassPromise(Promise&);
   void PassOptionalPromise(const Optional<OwningNonNull<Promise>>&);
@@ -929,7 +914,6 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void Overload2(JSContext*, const Dict&);
   void Overload2(bool);
   void Overload2(const nsAString&);
-  void Overload2(Date);
   void Overload3(TestInterface&);
   void Overload3(const TestCallback&);
   void Overload3(bool);
@@ -1307,14 +1291,6 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void PassOptionalNullableUnionWithDefaultValue(
       JSContext*, Nullable<ObjectOrLong>&) = delete;
 
-  // Make sure various date stuff is const as needed
-  void PassNullableDate(Nullable<Date>&) = delete;
-  void PassOptionalDate(Optional<Date>&) = delete;
-  void PassOptionalNullableDate(Optional<Nullable<Date>>&) = delete;
-  void PassOptionalNullableDateWithDefaultValue(Nullable<Date>&) = delete;
-  void PassDateSequence(Sequence<Date>&) = delete;
-  void PassNullableDateSequence(Sequence<Nullable<Date>>&) = delete;
-
   // Make sure variadics are const as needed
   void PassVariadicAny(JSContext*, Sequence<JS::Value>&) = delete;
   void PassVariadicObject(JSContext*, Sequence<JSObject*>&) = delete;
@@ -1590,8 +1566,6 @@ class TestThrowingConstructorInterface : public nsISupports,
   static already_AddRefed<TestThrowingConstructorInterface> Constructor(
       const GlobalObject&, uint32_t, TestInterface&, ErrorResult&);
 
-  static already_AddRefed<TestThrowingConstructorInterface> Constructor(
-      const GlobalObject&, Date&, ErrorResult&);
   static already_AddRefed<TestThrowingConstructorInterface> Constructor(
       const GlobalObject&, const ArrayBuffer&, ErrorResult&);
   static already_AddRefed<TestThrowingConstructorInterface> Constructor(

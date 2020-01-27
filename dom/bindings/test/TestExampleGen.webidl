@@ -17,7 +17,6 @@ interface TestExampleInterface {
   constructor(unsigned long num, boolean? boolArg);
   constructor(TestInterface? iface);
   constructor(unsigned long arg1, TestInterface iface);
-  constructor(Date arg1);
   constructor(ArrayBuffer arrayBuf);
   constructor(Uint8Array typedArr);
   // constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3);
@@ -586,18 +585,6 @@ interface TestExampleInterface {
   attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
   attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
 
-  // Date types
-  void passDate(Date arg);
-  void passNullableDate(Date? arg);
-  void passOptionalDate(optional Date arg);
-  void passOptionalNullableDate(optional Date? arg);
-  void passOptionalNullableDateWithDefaultValue(optional Date? arg = null);
-  void passDateSequence(sequence<Date> arg);
-  void passNullableDateSequence(sequence<Date?> arg);
-  void passDateRecord(record<DOMString, Date> arg);
-  Date receiveDate();
-  Date? receiveNullableDate();
-
   // Promise types
   void passPromise(Promise<any> arg);
   void passOptionalPromise(optional Promise<any> arg);
@@ -690,7 +677,6 @@ interface TestExampleInterface {
   void overload2(optional Dict arg = {});
   void overload2(boolean arg);
   void overload2(DOMString arg);
-  void overload2(Date arg);
   void overload3(TestInterface arg);
   void overload3(TestCallback arg);
   void overload3(boolean arg);
@@ -897,8 +883,6 @@ interface TestExampleThrowingConstructorInterface {
   constructor(TestInterface? iface);
   [Throws]
   constructor(unsigned long arg1, TestInterface iface);
-  [Throws]
-  constructor(Date arg1);
   [Throws]
   constructor(ArrayBuffer arrayBuf);
   [Throws]

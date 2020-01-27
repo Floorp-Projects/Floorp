@@ -2088,7 +2088,6 @@ class IDLType(IDLObject):
         'utf8string',
         'jsstring',
         'object',
-        'date',
         'void',
         # Funny stuff
         'interface',
@@ -2207,9 +2206,6 @@ class IDLType(IDLObject):
 
     def isAny(self):
         return self.tag() == IDLType.Tags.any
-
-    def isDate(self):
-        return self.tag() == IDLType.Tags.date
 
     def isObject(self):
         return self.tag() == IDLType.Tags.object
@@ -2573,8 +2569,7 @@ class IDLSequenceType(IDLParametrizedType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDate() or other.isInterface() or
-                other.isDictionary() or
+                other.isInterface() or other.isDictionary() or
                 other.isCallback() or other.isRecord())
 
 
@@ -2625,7 +2620,7 @@ class IDLRecordType(IDLParametrizedType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDate() or other.isNonCallbackInterface() or other.isSequence())
+                other.isNonCallbackInterface() or other.isSequence())
 
     def isExposedInAllOf(self, exposureSet):
         return self.inner.unroll().isExposedInAllOf(exposureSet)
@@ -3007,11 +3002,11 @@ class IDLWrapperType(IDLType):
         if self.isEnum():
             return (other.isPrimitive() or other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isRecord() or other.isDate())
+                    other.isSequence() or other.isRecord())
         if self.isDictionary() and other.nullable():
             return False
         if (other.isPrimitive() or other.isString() or other.isEnum() or
-            other.isDate() or other.isSequence()):
+            other.isSequence()):
             return True
         if self.isDictionary():
             return other.isNonCallbackInterface()
@@ -3138,7 +3133,6 @@ class IDLBuiltinType(IDLType):
         'utf8string',
         'jsstring',
         'object',
-        'date',
         'void',
         # Funny stuff
         'ArrayBuffer',
@@ -3176,7 +3170,6 @@ class IDLBuiltinType(IDLType):
         Types.utf8string: IDLType.Tags.utf8string,
         Types.jsstring: IDLType.Tags.jsstring,
         Types.object: IDLType.Tags.object,
-        Types.date: IDLType.Tags.date,
         Types.void: IDLType.Tags.void,
         Types.ArrayBuffer: IDLType.Tags.interface,
         Types.ArrayBufferView: IDLType.Tags.interface,
@@ -3357,27 +3350,22 @@ class IDLBuiltinType(IDLType):
             return (other.isNumeric() or other.isString() or other.isEnum() or
                     other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isRecord() or other.isDate())
+                    other.isSequence() or other.isRecord())
         if self.isNumeric():
             return (other.isBoolean() or other.isString() or other.isEnum() or
                     other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isRecord() or other.isDate())
+                    other.isSequence() or other.isRecord())
         if self.isString():
             return (other.isPrimitive() or other.isInterface() or
                     other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isRecord() or other.isDate())
+                    other.isSequence() or other.isRecord())
         if self.isAny():
             # Can't tell "any" apart from anything
             return False
         if self.isObject():
             return other.isPrimitive() or other.isString() or other.isEnum()
-        if self.isDate():
-            return (other.isPrimitive() or other.isString() or other.isEnum() or
-                    other.isInterface() or other.isCallback() or
-                    other.isDictionary() or other.isSequence() or
-                    other.isRecord())
         if self.isVoid():
             return not other.isVoid()
         # Not much else we could be!
@@ -3385,7 +3373,7 @@ class IDLBuiltinType(IDLType):
         # Like interfaces, but we know we're not a callback
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isCallback() or other.isDictionary() or
-                other.isSequence() or other.isRecord() or other.isDate() or
+                other.isSequence() or other.isRecord() or
                 (other.isInterface() and (
                  # ArrayBuffer is distinguishable from everything
                  # that's not an ArrayBuffer or a callback interface
@@ -3513,9 +3501,6 @@ BuiltinTypes = {
     IDLBuiltinType.Types.object:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Object",
                        IDLBuiltinType.Types.object),
-    IDLBuiltinType.Types.date:
-        IDLBuiltinType(BuiltinLocation("<builtin type>"), "Date",
-                       IDLBuiltinType.Types.date),
     IDLBuiltinType.Types.void:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Void",
                        IDLBuiltinType.Types.void),
@@ -4941,8 +4926,7 @@ class IDLCallbackType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isNonCallbackInterface() or other.isDate() or
-                other.isSequence())
+                other.isNonCallbackInterface() or other.isSequence())
 
     def _getDependentObjects(self):
         return self.callback._getDependentObjects()
@@ -5739,7 +5723,6 @@ class Tokenizer(object):
         "optional": "OPTIONAL",
         "...": "ELLIPSIS",
         "::": "SCOPE",
-        "Date": "DATE",
         "DOMString": "DOMSTRING",
         "ByteString": "BYTESTRING",
         "USVString": "USVSTRING",
@@ -7003,7 +6986,6 @@ class Parser(Tokenizer):
                   | EQUALS
                   | GT
                   | QUESTIONMARK
-                  | DATE
                   | DOMSTRING
                   | BYTESTRING
                   | USVSTRING
@@ -7183,13 +7165,6 @@ class Parser(Tokenizer):
 
         type = IDLUnresolvedType(self.getLocation(p, 1), p[1])
         p[0] = self.handleNullable(type, p[2])
-
-    def p_DistinguishableTypeDate(self, p):
-        """
-            DistinguishableType : DATE Null
-        """
-        p[0] = self.handleNullable(BuiltinTypes[IDLBuiltinType.Types.date],
-                                   p[2])
 
     def p_ConstType(self, p):
         """
