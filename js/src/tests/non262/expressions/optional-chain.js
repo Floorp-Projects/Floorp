@@ -45,7 +45,7 @@ function shouldThrowTypeError(func, messagePrefix) {
     if (!(error instanceof TypeError))
         throw new Error('Expected TypeError!');
 
-    if (!error.message.startsWith(messagePrefix))
+    if (!error.message.includes(messagePrefix))
         throw new Error(`TypeError has wrong message!, expected ${messagePrefix} but got ${error.message}`);
 }
 function testBasicSuccessCases() {
@@ -104,10 +104,10 @@ shouldThrowTypeError(() => ({})?.['i'](), '(intermediate value)["i"] is not a fu
 shouldBe(({})['i']?.(), undefined);
 shouldBe(({})?.['i']?.(), undefined);
 
-shouldThrowTypeError(() => ({})?.a['b'], 'can\'t access property "b", (intermediate value).a is undefined');
+shouldThrowTypeError(() => ({})?.a['b'], '(intermediate value).a is undefined');
 shouldBe(({})?.a?.['b'], undefined);
 shouldBe(null?.a['b']().c, undefined);
-shouldThrowTypeError(() => ({})?.['a'].b, 'can\'t access property "b", (intermediate value)["a"] is undefined');
+shouldThrowTypeError(() => ({})?.['a'].b, '(intermediate value)["a"] is undefined');
 shouldBe(({})?.['a']?.b, undefined);
 shouldBe(null?.['a'].b()['c'], undefined);
 shouldBe(null?.()().a['b'], undefined);
@@ -216,7 +216,7 @@ testSideEffectCountGetters();
 shouldBe(({a : {b: undefined}}).a.b?.()()(), undefined);
 shouldBe(({a : {b: undefined}}).a.b?.()?.()(), undefined);
 shouldBe(({a : {b: () => undefined}}).a.b?.()?.(), undefined);
-shouldThrowTypeError(() => delete ({a : {b: undefined}}).a?.b.b.c, 'can\'t access property "b", (intermediate value).a.b is undefined');
+shouldThrowTypeError(() => delete ({a : {b: undefined}}).a?.b.b.c, '(intermediate value).a.b is undefined');
 shouldBe(delete ({a : {b: undefined}}).a?.["b"]?.["b"], true);
 shouldThrowTypeError(() => (({a : {b: () => undefined}}).a.b?.())(), 'undefined is not a function');
 
