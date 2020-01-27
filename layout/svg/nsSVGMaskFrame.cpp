@@ -24,19 +24,6 @@ using namespace mozilla::dom::SVGUnitTypes_Binding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-static LuminanceType GetLuminanceType(uint8_t aNSMaskType) {
-  switch (aNSMaskType) {
-    case NS_STYLE_MASK_TYPE_LUMINANCE:
-      return LuminanceType::LUMINANCE;
-    case NS_STYLE_COLOR_INTERPOLATION_LINEARRGB:
-      return LuminanceType::LINEARRGB;
-    default: {
-      NS_WARNING("Unknown SVG mask type, defaulting to luminance");
-      return LuminanceType::LUMINANCE;
-    }
-  }
-}
-
 nsIFrame* NS_NewSVGMaskFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSVGMaskFrame(aStyle, aPresShell->GetPresContext());
 }
@@ -66,17 +53,17 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
   Rect maskSurfaceRect = ToRect(maskSurfaceRectDouble);
   maskSurfaceRect.RoundOut();
 
-  uint8_t maskType;
+  StyleMaskType maskType;
   if (aParams.maskMode == StyleMaskMode::MatchSource) {
     maskType = StyleSVGReset()->mMaskType;
   } else {
     maskType = aParams.maskMode == StyleMaskMode::Luminance
-                   ? NS_STYLE_MASK_TYPE_LUMINANCE
-                   : NS_STYLE_MASK_TYPE_ALPHA;
+                   ? StyleMaskType::Luminance
+                   : StyleMaskType::Alpha;
   }
 
   RefPtr<DrawTarget> maskDT;
-  if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
+  if (maskType == StyleMaskType::Luminance) {
     maskDT = context->GetDrawTarget()->CreateClippedDrawTarget(
         maskSurfaceRect, SurfaceFormat::B8G8R8A8);
   } else {
@@ -109,14 +96,15 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
   }
 
   RefPtr<SourceSurface> surface;
-  if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
+  if (maskType == StyleMaskType::Luminance) {
+    auto luminanceType = LuminanceType::LUMINANCE;
     if (StyleSVG()->mColorInterpolation ==
         NS_STYLE_COLOR_INTERPOLATION_LINEARRGB) {
-      maskType = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
+      luminanceType = LuminanceType::LINEARRGB;
     }
 
-    RefPtr<SourceSurface> maskSnapshot = maskDT->IntoLuminanceSource(
-        GetLuminanceType(maskType), aParams.opacity);
+    RefPtr<SourceSurface> maskSnapshot =
+        maskDT->IntoLuminanceSource(luminanceType, aParams.opacity);
     if (!maskSnapshot) {
       return nullptr;
     }

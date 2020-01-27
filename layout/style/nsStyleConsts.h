@@ -751,8 +751,10 @@ enum class StyleDominantBaseline : uint8_t {
 #define NS_STYLE_IMAGE_RENDERING_CRISP_EDGES 3
 
 // mask-type
-#define NS_STYLE_MASK_TYPE_LUMINANCE 0
-#define NS_STYLE_MASK_TYPE_ALPHA 1
+enum class StyleMaskType : uint8_t {
+  Luminance,
+  Alpha,
+};
 
 // shape-rendering
 enum class StyleShapeRendering : uint8_t {
