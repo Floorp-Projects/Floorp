@@ -163,6 +163,8 @@ pub enum DisplayItem {
     PopReferenceFrame,
     PopStackingContext,
     PopAllShadows,
+
+    ReuseItem(ItemKey),
 }
 
 /// This is a "complete" version of the DisplayItem, with all implicit trailing
@@ -203,6 +205,8 @@ pub enum DebugDisplayItem {
     PopReferenceFrame,
     PopStackingContext,
     PopAllShadows,
+
+    ReuseItem(ItemKey),
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
@@ -1476,6 +1480,7 @@ impl DisplayItem {
             DisplayItem::Rectangle(..) => "rectangle",
             DisplayItem::ScrollFrame(..) => "scroll_frame",
             DisplayItem::SetGradientStops => "set_gradient_stops",
+            DisplayItem::ReuseItem(..) => "reuse_item",
             DisplayItem::StickyFrame(..) => "sticky_frame",
             DisplayItem::Text(..) => "text",
             DisplayItem::YuvImage(..) => "yuv_image",
