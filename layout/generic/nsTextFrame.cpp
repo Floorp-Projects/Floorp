@@ -7388,8 +7388,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
 bool nsTextFrame::IsFrameSelected() const {
   NS_ASSERTION(!GetContent() || GetContent()->IsSelectionDescendant(),
                "use the public IsSelected() instead");
-  return nsRange::IsNodeSelected(GetContent(), GetContentOffset(),
-                                 GetContentEnd());
+  return GetContent()->IsSelected(GetContentOffset(), GetContentEnd());
 }
 
 void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,

@@ -1365,6 +1365,19 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   /**
+   * Return true if any part of (this, aStartOffset) .. (this, aEndOffset)
+   * overlaps any nsRange in
+   * GetClosestCommonInclusiveAncestorForRangeInSelection ranges (i.e.
+   * where this is a descendant of a range's common inclusive ancestor node).
+   * If a nsRange starts in (this, aEndOffset) or if it ends in
+   * (this, aStartOffset) then it is non-overlapping and the result is false
+   * for that nsRange.  Collapsed ranges always counts as non-overlapping.
+   *
+   * @param aStartOffset has to be less or equal to aEndOffset.
+   */
+  bool IsSelected(uint32_t aStartOffset, uint32_t aEndOffset) const;
+
+  /**
    * Get the root content of an editor. So, this node must be a descendant of
    * an editor. Note that this should be only used for getting input or textarea
    * editor's root content. This method doesn't support HTML editors.
