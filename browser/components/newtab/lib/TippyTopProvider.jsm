@@ -8,10 +8,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "URL"]);
 
-const TIPPYTOP_JSON_PATH =
-  "resource://activity-stream/data/content/tippytop/top_sites.json";
-const TIPPYTOP_URL_PREFIX =
-  "resource://activity-stream/data/content/tippytop/images/";
+const TIPPYTOP_PATH = "resource://activity-stream/data/content/tippytop/";
+const TIPPYTOP_JSON_PATH = `${TIPPYTOP_PATH}top_sites.json`;
 
 function getDomain(url) {
   let domain;
@@ -51,7 +49,8 @@ this.TippyTopProvider = class TippyTopProvider {
   processSite(site) {
     const tippyTop = this._sitesByDomain.get(getDomain(site.url));
     if (tippyTop) {
-      site.tippyTopIcon = TIPPYTOP_URL_PREFIX + tippyTop.image_url;
+      site.tippyTopIcon = TIPPYTOP_PATH + tippyTop.image_url;
+      site.favicon = TIPPYTOP_PATH + tippyTop.favicon_url;
       site.backgroundColor = tippyTop.background_color;
     }
     return site;
