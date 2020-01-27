@@ -183,8 +183,9 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
     def run_test_teardown(self, test):
         # browser should be closed by now but this is a backup-shutdown (if not in debug-mode)
         if not self.debug_mode:
-            if self.runner.is_running():
-                self.runner.stop()
+            # If the runner was not started in the first place, stop() will silently
+            # catch RunnerNotStartedError
+            self.runner.stop()
         else:
             # in debug mode, and running locally, leave the browser running
             if self.config["run_local"]:
