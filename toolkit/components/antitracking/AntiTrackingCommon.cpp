@@ -378,9 +378,10 @@ void RunConsoleReportingRunnable(already_AddRefed<nsIRunnable>&& aRunnable) {
   }
 }
 
-void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
+void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
                              uint32_t aRejectedReason) {
-  MOZ_ASSERT(aWindow && aURI);
+  MOZ_ASSERT(aWindowID);
+  MOZ_ASSERT(aURI);
   MOZ_ASSERT(
       aRejectedReason == 0 ||
       aRejectedReason ==
@@ -394,11 +395,6 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
 
-  RefPtr<Document> doc = aWindow->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return;
-  }
-
   nsAutoString sourceLine;
   uint32_t lineNumber = 0, columnNumber = 0;
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
@@ -409,8 +405,8 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
   nsCOMPtr<nsIURI> uri(aURI);
 
   RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "ReportBlockingToConsoleDelayed",
-      [doc, sourceLine, lineNumber, columnNumber, uri, aRejectedReason]() {
+      "ReportBlockingToConsoleDelayed", [aWindowID, sourceLine, lineNumber,
+                                         columnNumber, uri, aRejectedReason]() {
         const char* message = nullptr;
         nsAutoCString category;
         // When changing this list, please make sure to update the corresponding
@@ -455,13 +451,58 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
         CopyUTF8toUTF16(exposableURI->GetSpecOrDefault(),
                         *params.AppendElement());
 
-        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, category,
-                                        doc, nsContentUtils::eNECKO_PROPERTIES,
-                                        message, params, nullptr, sourceLine,
-                                        lineNumber, columnNumber);
+        nsAutoString errorText;
+        rv = nsContentUtils::FormatLocalizedString(
+            nsContentUtils::eNECKO_PROPERTIES, message, params, errorText);
+        NS_ENSURE_SUCCESS_VOID(rv);
+
+        nsContentUtils::ReportToConsoleByWindowID(
+            errorText, nsIScriptError::warningFlag, category, aWindowID,
+            nullptr, sourceLine, lineNumber, columnNumber);
       });
 
   RunConsoleReportingRunnable(runnable.forget());
+}
+
+void ReportBlockingToConsole(nsIChannel* aChannel, nsIURI* aURI,
+                             uint32_t aRejectedReason) {
+  MOZ_ASSERT(aChannel && aURI);
+
+  uint64_t windowID;
+
+  if (XRE_IsParentProcess()) {
+    // Get the top-level window ID from the top-level BrowsingContext
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    RefPtr<dom::BrowsingContext> bc;
+    loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+
+    if (!bc || bc->IsDiscarded()) {
+      return;
+    }
+
+    bc = bc->Top();
+    RefPtr<dom::WindowGlobalParent> wgp =
+        bc->Canonical()->GetCurrentWindowGlobal();
+    if (!wgp) {
+      return;
+    }
+
+    windowID = wgp->InnerWindowId();
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel, &rv);
+
+    if (!httpChannel) {
+      return;
+    }
+
+    rv = httpChannel->GetTopLevelContentWindowId(&windowID);
+    if (NS_FAILED(rv) || !windowID) {
+      windowID = nsContentUtils::GetInnerWindowID(httpChannel);
+    }
+  }
+
+  ReportBlockingToConsole(windowID, aURI, aRejectedReason);
 }
 
 void ReportUnblockingToConsole(
@@ -902,7 +943,7 @@ void NotifyBlockingDecisionInternal(
                                                    aTrackingChannel, true,
                                                    aRejectedReason, aURI);
 
-    ReportBlockingToConsole(aWindow, aURI, aRejectedReason);
+    ReportBlockingToConsole(aReportingChannel, aURI, aRejectedReason);
   }
 
   NotifyAllowDecisionInternal(aReportingChannel, aTrackingChannel, aURI,
@@ -920,6 +961,8 @@ void NotifyBlockingDecisionInternal(
     AntiTrackingCommon::NotifyContentBlockingEvent(nullptr, aReportingChannel,
                                                    aTrackingChannel, true,
                                                    aRejectedReason, aURI);
+
+    ReportBlockingToConsole(aReportingChannel, aURI, aRejectedReason);
   }
 
   NotifyAllowDecisionInternal(aReportingChannel, aTrackingChannel, aURI,
