@@ -18,6 +18,7 @@ from abc import ABCMeta, abstractmethod
 import mozinfo
 import mozprocess
 import mozversion
+import mozproxy.utils as mpu
 from mozprofile import create_profile
 from mozproxy import get_playback
 
@@ -43,6 +44,9 @@ from gecko_profile import GeckoProfile
 from results import RaptorResultsHandler
 
 LOG = RaptorLogger(component="raptor-perftest")
+
+# - mozproxy.utils LOG displayed INFO messages even when LOG.error() was used in mitm.py
+mpu.LOG = RaptorLogger(component='raptor-mitmproxy')
 
 try:
     from mozbuild.base import MozbuildObject
