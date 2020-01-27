@@ -20,6 +20,7 @@
 #ifndef mozilla_EnumeratedRange_h
 #define mozilla_EnumeratedRange_h
 
+#include <limits>
 #include <type_traits>
 
 #include "mozilla/ReverseIterator.h"
@@ -174,6 +175,18 @@ constexpr detail::EnumeratedRange<EnumType> MakeEnumeratedRange(EnumType aBegin,
 template <typename EnumType>
 constexpr detail::EnumeratedRange<EnumType> MakeEnumeratedRange(EnumType aEnd) {
   return MakeEnumeratedRange(EnumType(0), aEnd);
+}
+
+// Create a range to iterate from aBegin to aEnd, inclusive.
+template <typename EnumType>
+constexpr detail::EnumeratedRange<EnumType> MakeInclusiveEnumeratedRange(
+    EnumType aBegin, EnumType aEnd) {
+  using EnumUnderlyingType = typename std::underlying_type_t<EnumType>;
+  const auto end = static_cast<EnumUnderlyingType>(aEnd);
+
+  MOZ_ASSERT(end != std::numeric_limits<EnumUnderlyingType>::max(),
+             "aEnd shouldn't overflow!");
+  return MakeEnumeratedRange(aBegin, static_cast<EnumType>(end + 1));
 }
 
 #ifdef __GNUC__
