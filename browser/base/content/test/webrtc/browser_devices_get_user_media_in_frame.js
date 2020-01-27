@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["dom.security.featurePolicy.enabled", true],
+    ["permissions.delegation.enabled", true],
+  ],
+});
+
 let gShouldObserveSubframes;
 
 var gTests = [
