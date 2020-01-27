@@ -18,11 +18,6 @@ RemoteSecurityUI.prototype = {
   get state() {
     return this._state;
   },
-  // TODO: This API will be removed when we remove contentBlockingEvent
-  // from nsISecureBrowserUI.idl
-  get contentBlockingEvent() {
-    return 0;
-  },
   get secInfo() {
     return this._secInfo;
   },

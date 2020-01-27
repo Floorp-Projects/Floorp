@@ -14135,8 +14135,6 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
         mql->SizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
   }
 
-  mContentBlockingLog.AddSizeOfExcludingThis(aWindowSizes);
-
   DocumentOrShadowRoot::AddSizeOfExcludingThis(aWindowSizes);
 
   for (auto& sheetArray : mAdditionalSheets) {
