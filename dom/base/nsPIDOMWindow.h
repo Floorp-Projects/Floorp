@@ -987,6 +987,13 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
                                      const nsAString& aPopupWindowName,
                                      const nsAString& aPopupWindowFeatures) = 0;
 
+  virtual void NotifyContentBlockingEvent(
+      unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
+      nsIChannel* aTrackingChannel,
+      const mozilla::Maybe<
+          mozilla::AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
+          mozilla::Nothing()) = 0;
+
   // WebIDL-ish APIs
   void MarkUncollectableForCCGeneration(uint32_t aGeneration) {
     mMarkedCCGeneration = aGeneration;
