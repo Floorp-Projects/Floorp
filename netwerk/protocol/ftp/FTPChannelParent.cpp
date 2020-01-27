@@ -500,25 +500,6 @@ FTPChannelParent::SetParentListener(ParentChannelListener* aListener) {
 }
 
 NS_IMETHODIMP
-FTPChannelParent::NotifyChannelClassifierProtectionDisabled(
-    uint32_t aAcceptedReason) {
-  // One day, this should probably be filled in.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::NotifyCookieAllowed() {
-  // One day, this should probably be filled in.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FTPChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
-  // One day, this should probably be filled in.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 FTPChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
                                             bool aIsThirdParty) {
   // One day, this should probably be filled in.

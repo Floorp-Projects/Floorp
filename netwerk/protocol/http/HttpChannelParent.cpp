@@ -1901,37 +1901,6 @@ HttpChannelParent::SetParentListener(ParentChannelListener* aListener) {
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyChannelClassifierProtectionDisabled(
-    uint32_t aAcceptedReason) {
-  LOG(
-      ("HttpChannelParent::NotifyChannelClassifierProtectionDisabled [this=%p "
-       "aAcceptedReason=%" PRIu32 "]\n",
-       this, aAcceptedReason));
-  if (!mIPCClosed) {
-    Unused << SendNotifyChannelClassifierProtectionDisabled(aAcceptedReason);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpChannelParent::NotifyCookieAllowed() {
-  LOG(("HttpChannelParent::NotifyCookieAllowed [this=%p]\n", this));
-  if (!mIPCClosed) {
-    Unused << SendNotifyCookieAllowed();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
-  LOG(("HttpChannelParent::NotifyCookieBlocked [this=%p]\n", this));
-  if (!mIPCClosed) {
-    Unused << SendNotifyCookieBlocked(aRejectedReason);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aProvider,
                                             const nsACString& aFullHash) {
