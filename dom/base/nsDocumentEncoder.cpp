@@ -176,23 +176,30 @@ class EncodingScope {
 
 bool EncodingScope::IsLimited() const { return mSelection || mRange || mNode; }
 
-struct RangeBoundaryPathsAndOffsets {
-  using ContainerPath = AutoTArray<nsIContent*, 8>;
-  using ContainerOffsets = AutoTArray<int32_t, 8>;
+struct RangeBoundariesInclusiveAncestorsAndOffsets {
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
+   */
+  using InclusiveAncestors = AutoTArray<nsIContent*, 8>;
+
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
+   */
+  using InclusiveAncestorsOffsets = AutoTArray<int32_t, 8>;
 
   // The first node is the range's boundary node, the following ones the
   // ancestors.
-  ContainerPath mStartContainerPath;
+  InclusiveAncestors mInclusiveAncestorsOfStart;
   // The first offset represents where at the boundary node the range starts.
   // Each other offset is the index of the child relative to its parent.
-  ContainerOffsets mStartContainerOffsets;
+  InclusiveAncestorsOffsets mInclusiveAncestorsOffsetsOfStart;
 
   // The first node is the range's boundary node, the following one the
   // ancestors.
-  ContainerPath mEndContainerPath;
+  InclusiveAncestors mInclusiveAncestorsOfEnd;
   // The first offset represents where at the boundary node the range ends.
   // Each other offset is the index of the child relative to its parent.
-  ContainerOffsets mEndContainerOffsets;
+  InclusiveAncestorsOffsets mInclusiveAncestorsOffsetsOfEnd;
 };
 
 struct ContextInfoDepth {
@@ -239,7 +246,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   // This serializes the content of aNode.
   nsresult SerializeToStringIterative(nsINode* aNode);
   nsresult SerializeRangeToString(nsRange* aRange);
-  nsresult SerializeRangeNodes(nsRange* aRange, nsINode* aNode, int32_t aDepth);
+  nsresult SerializeRangeNodes(const nsRange* aRange, nsINode* aNode,
+                               int32_t aDepth);
   nsresult SerializeRangeContextStart(const nsTArray<nsINode*>& aAncestorArray);
   nsresult SerializeRangeContextEnd();
 
@@ -314,7 +322,10 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   EncodingScope mEncodingScope;
   nsCOMPtr<nsIContentSerializer> mSerializer;
   Maybe<TextStreamer> mTextStreamer;
-  nsCOMPtr<nsINode> mCommonAncestorOfRange;
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
+   */
+  nsCOMPtr<nsINode> mClosestCommonInclusiveAncestorOfRange;
   nsCOMPtr<nsIDocumentEncoderNodeFixup> mNodeFixup;
 
   nsString mMimeType;
@@ -324,8 +335,12 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   ContextInfoDepth mContextInfoDepth;
   int32_t mStartRootIndex;
   int32_t mEndRootIndex;
-  AutoTArray<nsINode*, 8> mCommonAncestors;
-  RangeBoundaryPathsAndOffsets mRangeBoundaryPathsAndOffsets;
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
+   */
+  AutoTArray<nsINode*, 8> mCommonInclusiveAncestors;
+  RangeBoundariesInclusiveAncestorsAndOffsets
+      mRangeBoundariesInclusiveAncestorsAndOffsets;
   AutoTArray<AutoTArray<nsINode*, 8>, 8> mRangeContexts;
   // Whether the serializer cares about being notified to scan elements to
   // keep track of whether they are preformatted.  This stores the out
@@ -351,7 +366,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION(nsDocumentEncoder, mDocument,
                          mEncodingScope.mSelection, mEncodingScope.mRange,
                          mEncodingScope.mNode, mSerializer,
-                         mCommonAncestorOfRange)
+                         mClosestCommonInclusiveAncestorOfRange)
 
 nsDocumentEncoder::nsDocumentEncoder()
     : mEncoding(nullptr), mIsCopying(false), mCachedBuffer(nullptr) {
@@ -369,9 +384,9 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer) {
   mHaltRangeHint = false;
   mDisableContextSerialize = false;
   mEncodingScope = {};
-  mCommonAncestorOfRange = nullptr;
+  mClosestCommonInclusiveAncestorOfRange = nullptr;
   mNodeFixup = nullptr;
-  mRangeBoundaryPathsAndOffsets = {};
+  mRangeBoundariesInclusiveAncestorsAndOffsets = {};
   if (aClearCachedSerializer) {
     mSerializer = nullptr;
   }
@@ -434,9 +449,10 @@ nsresult nsDocumentEncoder::SerializeSelection() {
           !ParentIsTR(content)) {
         if (!prevNode) {
           // Went from a non-<tr> to a <tr>
-          mCommonAncestors.Clear();
-          nsContentUtils::GetAncestors(node->GetParentNode(), mCommonAncestors);
-          rv = SerializeRangeContextStart(mCommonAncestors);
+          mCommonInclusiveAncestors.Clear();
+          nsContentUtils::GetInclusiveAncestors(node->GetParentNode(),
+                                                mCommonInclusiveAncestors);
+          rv = SerializeRangeContextStart(mCommonInclusiveAncestors);
           NS_ENSURE_SUCCESS(rv, rv);
           // Don't let SerializeRangeToString serialize the context again
           mDisableContextSerialize = true;
@@ -815,7 +831,7 @@ nsresult nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode) {
 
 static bool IsTextNode(nsINode* aNode) { return aNode && aNode->IsText(); }
 
-nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
+nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
                                                 nsINode* const aNode,
                                                 const int32_t aDepth) {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
@@ -830,17 +846,18 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
   // get start and end nodes for this recursion level
   nsCOMPtr<nsIContent> startNode, endNode;
   {
-    auto& startContainerPath =
-        mRangeBoundaryPathsAndOffsets.mStartContainerPath;
-    auto& endContainerPath = mRangeBoundaryPathsAndOffsets.mEndContainerPath;
+    auto& inclusiveAncestorsOfStart =
+        mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfStart;
+    auto& inclusiveAncestorsOfEnd =
+        mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfEnd;
     int32_t start = mStartRootIndex - aDepth;
-    if (start >= 0 && (uint32_t)start <= startContainerPath.Length()) {
-      startNode = startContainerPath[start];
+    if (start >= 0 && (uint32_t)start <= inclusiveAncestorsOfStart.Length()) {
+      startNode = inclusiveAncestorsOfStart[start];
     }
 
     int32_t end = mEndRootIndex - aDepth;
-    if (end >= 0 && (uint32_t)end <= endContainerPath.Length()) {
-      endNode = endContainerPath[end];
+    if (end >= 0 && (uint32_t)end <= inclusiveAncestorsOfEnd.Length()) {
+      endNode = inclusiveAncestorsOfEnd[end];
     }
   }
 
@@ -866,7 +883,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
       rv = SerializeNodeEnd(*aNode);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      if (aNode != mCommonAncestorOfRange) {
+      if (aNode != mClosestCommonInclusiveAncestorOfRange) {
         if (IncludeInContext(aNode)) {
           // halt the incrementing of mContextInfoDepth.  This is
           // so paste client will include this node in paste.
@@ -884,18 +901,21 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      const auto& startContainerOffsets =
-          mRangeBoundaryPathsAndOffsets.mStartContainerOffsets;
-      const auto& endContainerOffsets =
-          mRangeBoundaryPathsAndOffsets.mEndContainerOffsets;
+      const auto& inclusiveAncestorsOffsetsOfStart =
+          mRangeBoundariesInclusiveAncestorsAndOffsets
+              .mInclusiveAncestorsOffsetsOfStart;
+      const auto& inclusiveAncestorsOffsetsOfEnd =
+          mRangeBoundariesInclusiveAncestorsAndOffsets
+              .mInclusiveAncestorsOffsetsOfEnd;
       // do some calculations that will tell us which children of this
       // node are in the range.
       int32_t startOffset = 0, endOffset = -1;
       if (startNode == content && mStartRootIndex >= aDepth) {
-        startOffset = startContainerOffsets[mStartRootIndex - aDepth];
+        startOffset =
+            inclusiveAncestorsOffsetsOfStart[mStartRootIndex - aDepth];
       }
       if (endNode == content && mEndRootIndex >= aDepth) {
-        endOffset = endContainerOffsets[mEndRootIndex - aDepth];
+        endOffset = inclusiveAncestorsOffsetsOfEnd[mEndRootIndex - aDepth];
       }
       // generated content will cause offset values of -1 to be returned.
       uint32_t childCount = content->GetChildCount();
@@ -906,7 +926,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
       else {
         // if we are at the "tip" of the selection, endOffset is fine.
         // otherwise, we need to add one.  This is because of the semantics
-        // of the offset list created by GetAncestorsAndOffsets().  The
+        // of the offset list created by GetInclusiveAncestorsAndOffsets().  The
         // intermediate points on the list use the endOffset of the
         // location of the ancestor, rather than just past it.  So we need
         // to add one here in order to include it in the children we serialize.
@@ -939,7 +959,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
       }
 
       // serialize the end of this node
-      if (aNode != mCommonAncestorOfRange) {
+      if (aNode != mClosestCommonInclusiveAncestorOfRange) {
         rv = SerializeNodeEnd(*aNode);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -1001,9 +1021,10 @@ nsresult nsDocumentEncoder::SerializeRangeContextEnd() {
 nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange) {
   if (!aRange || aRange->Collapsed()) return NS_OK;
 
-  mCommonAncestorOfRange = aRange->GetClosestCommonInclusiveAncestor();
+  mClosestCommonInclusiveAncestorOfRange =
+      aRange->GetClosestCommonInclusiveAncestor();
 
-  if (!mCommonAncestorOfRange) {
+  if (!mClosestCommonInclusiveAncestorOfRange) {
     return NS_OK;
   }
 
@@ -1016,30 +1037,37 @@ nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange) {
   int32_t endOffset = aRange->EndOffset();
 
   mContextInfoDepth = {};
-  mCommonAncestors.Clear();
+  mCommonInclusiveAncestors.Clear();
 
-  mRangeBoundaryPathsAndOffsets = {};
-  auto& startContainerPath = mRangeBoundaryPathsAndOffsets.mStartContainerPath;
-  auto& startContainerOffsets =
-      mRangeBoundaryPathsAndOffsets.mStartContainerOffsets;
-  auto& endContainerPath = mRangeBoundaryPathsAndOffsets.mEndContainerPath;
-  auto& endContainerOffsets =
-      mRangeBoundaryPathsAndOffsets.mEndContainerOffsets;
+  mRangeBoundariesInclusiveAncestorsAndOffsets = {};
+  auto& inclusiveAncestorsOfStart =
+      mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfStart;
+  auto& inclusiveAncestorsOffsetsOfStart =
+      mRangeBoundariesInclusiveAncestorsAndOffsets
+          .mInclusiveAncestorsOffsetsOfStart;
+  auto& inclusiveAncestorsOfEnd =
+      mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfEnd;
+  auto& inclusiveAncestorsOffsetsOfEnd =
+      mRangeBoundariesInclusiveAncestorsAndOffsets
+          .mInclusiveAncestorsOffsetsOfEnd;
 
-  nsContentUtils::GetAncestors(mCommonAncestorOfRange, mCommonAncestors);
-  nsContentUtils::GetAncestorsAndOffsets(
-      startContainer, startOffset, &startContainerPath, &startContainerOffsets);
-  nsContentUtils::GetAncestorsAndOffsets(
-      endContainer, endOffset, &endContainerPath, &endContainerOffsets);
+  nsContentUtils::GetInclusiveAncestors(mClosestCommonInclusiveAncestorOfRange,
+                                        mCommonInclusiveAncestors);
+  nsContentUtils::GetInclusiveAncestorsAndOffsets(
+      startContainer, startOffset, &inclusiveAncestorsOfStart,
+      &inclusiveAncestorsOffsetsOfStart);
+  nsContentUtils::GetInclusiveAncestorsAndOffsets(
+      endContainer, endOffset, &inclusiveAncestorsOfEnd,
+      &inclusiveAncestorsOffsetsOfEnd);
 
   nsCOMPtr<nsIContent> commonContent =
-      do_QueryInterface(mCommonAncestorOfRange);
-  mStartRootIndex = startContainerPath.IndexOf(commonContent);
-  mEndRootIndex = endContainerPath.IndexOf(commonContent);
+      do_QueryInterface(mClosestCommonInclusiveAncestorOfRange);
+  mStartRootIndex = inclusiveAncestorsOfStart.IndexOf(commonContent);
+  mEndRootIndex = inclusiveAncestorsOfEnd.IndexOf(commonContent);
 
   nsresult rv = NS_OK;
 
-  rv = SerializeRangeContextStart(mCommonAncestors);
+  rv = SerializeRangeContextStart(mCommonInclusiveAncestors);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (startContainer == endContainer && IsTextNode(startContainer)) {
@@ -1059,7 +1087,7 @@ nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange) {
     rv = SerializeNodeEnd(*startContainer);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    rv = SerializeRangeNodes(aRange, mCommonAncestorOfRange, 0);
+    rv = SerializeRangeNodes(aRange, mClosestCommonInclusiveAncestorOfRange, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   rv = SerializeRangeContextEnd();
@@ -1406,13 +1434,15 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
                     &mNeedsPreformatScanning, aContextString);
 
   // leaf of ancestors might be text node.  If so discard it.
-  int32_t count = mCommonAncestors.Length();
+  int32_t count = mCommonInclusiveAncestors.Length();
   int32_t i;
   nsCOMPtr<nsINode> node;
-  if (count > 0) node = mCommonAncestors.ElementAt(0);
+  if (count > 0) {
+    node = mCommonInclusiveAncestors.ElementAt(0);
+  }
 
   if (node && IsTextNode(node)) {
-    mCommonAncestors.RemoveElementAt(0);
+    mCommonInclusiveAncestors.RemoveElementAt(0);
     if (mContextInfoDepth.mStart) {
       --mContextInfoDepth.mStart;
     }
@@ -1424,13 +1454,13 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
 
   i = count;
   while (i > 0) {
-    node = mCommonAncestors.ElementAt(--i);
+    node = mCommonInclusiveAncestors.ElementAt(--i);
     rv = SerializeNodeStart(*node, 0, -1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   // i = 0; guaranteed by above
   while (i < count) {
-    node = mCommonAncestors.ElementAt(i++);
+    node = mCommonInclusiveAncestors.ElementAt(i++);
     rv = SerializeNodeEnd(*node);
     NS_ENSURE_SUCCESS(rv, rv);
   }
