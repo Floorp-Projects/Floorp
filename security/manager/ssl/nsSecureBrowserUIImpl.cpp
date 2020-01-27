@@ -85,23 +85,6 @@ nsSecureBrowserUIImpl::GetIsSecureContext(bool* aIsSecureContext) {
 }
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::GetContentBlockingEvent(uint32_t* aEvent) {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG(aEvent);
-
-  MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-          ("GetContentBlockingEvent %p", this));
-  // With respect to mixed content and tracking protection, we won't know when
-  // the state of our document (or a subdocument) has changed, so we ask the
-  // docShell.
-  CheckForContentBlockingEvents();
-  MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  mEvent: %x", mEvent));
-
-  *aEvent = mEvent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetSecInfo(nsITransportSecurityInfo** result) {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(result);
@@ -169,88 +152,6 @@ void nsSecureBrowserUIImpl::CheckForMixedContent() {
     if (doc->GetHasMixedDisplayContentBlocked()) {
       mState |= STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
     }
-  }
-}
-
-// Ask the docShell if we have any content blocking events.
-void nsSecureBrowserUIImpl::CheckForContentBlockingEvents() {
-  RefPtr<dom::Document> doc = PrepareForContentChecks();
-  if (!doc) {
-    // If the docshell has no document, then there is no need to update mState.
-    return;
-  }
-
-  // Has tracking content been blocked or loaded?
-  if (doc->GetHasTrackingContentBlocked()) {
-    mEvent |= STATE_BLOCKED_TRACKING_CONTENT;
-  }
-
-  if (doc->GetHasLevel1TrackingContentLoaded()) {
-    mEvent |= STATE_LOADED_LEVEL_1_TRACKING_CONTENT;
-  }
-
-  if (doc->GetHasLevel2TrackingContentLoaded()) {
-    mEvent |= STATE_LOADED_LEVEL_2_TRACKING_CONTENT;
-  }
-
-  // Has fingerprinting content been blocked or loaded?
-  if (doc->GetHasFingerprintingContentBlocked()) {
-    mEvent |= STATE_BLOCKED_FINGERPRINTING_CONTENT;
-  }
-
-  if (doc->GetHasFingerprintingContentLoaded()) {
-    mEvent |= STATE_LOADED_FINGERPRINTING_CONTENT;
-  }
-
-  // Has cryptomining content been blocked or loaded?
-  if (doc->GetHasCryptominingContentBlocked()) {
-    mEvent |= STATE_BLOCKED_CRYPTOMINING_CONTENT;
-  }
-
-  if (doc->GetHasCryptominingContentLoaded()) {
-    mEvent |= STATE_LOADED_CRYPTOMINING_CONTENT;
-  }
-
-  // Has socialtracking content been blocked or loaded?
-  if (doc->GetHasSocialTrackingContentBlocked()) {
-    mEvent |= STATE_BLOCKED_SOCIALTRACKING_CONTENT;
-  }
-
-  if (doc->GetHasSocialTrackingContentLoaded()) {
-    mEvent |= STATE_LOADED_SOCIALTRACKING_CONTENT;
-  }
-
-  // Other block types.
-  if (doc->GetHasCookiesBlockedByPermission()) {
-    mEvent |= STATE_COOKIES_BLOCKED_BY_PERMISSION;
-  }
-
-  if (doc->GetHasTrackingCookiesBlocked()) {
-    mEvent |= STATE_COOKIES_BLOCKED_TRACKER;
-  }
-
-  if (doc->GetHasSocialTrackingCookiesBlocked()) {
-    mEvent |= STATE_COOKIES_BLOCKED_SOCIALTRACKER;
-  }
-
-  if (doc->GetHasForeignCookiesBlocked()) {
-    mEvent |= STATE_COOKIES_BLOCKED_FOREIGN;
-  }
-
-  if (doc->GetHasAllCookiesBlocked()) {
-    mEvent |= STATE_COOKIES_BLOCKED_ALL;
-  }
-
-  if (doc->GetHasCookiesLoaded()) {
-    mEvent |= STATE_COOKIES_LOADED;
-  }
-
-  if (doc->GetHasTrackerCookiesLoaded()) {
-    mEvent |= STATE_COOKIES_LOADED_TRACKER;
-  }
-
-  if (doc->GetHasSocialTrackerCookiesLoaded()) {
-    mEvent |= STATE_COOKIES_LOADED_SOCIALTRACKER;
   }
 }
 
