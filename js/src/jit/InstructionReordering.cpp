@@ -134,6 +134,7 @@ bool jit::ReorderInstructions(MIRGraph& graph) {
       }
 
       MInstruction* target = ins;
+      MInstruction* postCallTarget = nullptr;
       for (MInstructionReverseIterator riter = ++block->rbegin(ins);
            riter != rtop; riter++) {
         MInstruction* prev = *riter;
@@ -182,8 +183,26 @@ bool jit::ReorderInstructions(MIRGraph& graph) {
           break;
         }
 
+        // If we see a captured call result, either move the instruction before
+        // the corresponding call or don't move it at all.
+        if (prev->isCallResultCapture()) {
+          if (!postCallTarget) {
+            postCallTarget = target;
+          }
+        } else if (postCallTarget) {
+          MOZ_ASSERT(prev->isWasmCall() || prev->isIonToWasmCall());
+          postCallTarget = nullptr;
+        }
+
         // We can move the instruction before this one.
         target = prev;
+      }
+
+      if (postCallTarget) {
+        // We would have plonked this instruction between a call and its
+        // captured return value.  Instead put it after the last corresponding
+        // return value.
+        target = postCallTarget;
       }
 
       iter++;
