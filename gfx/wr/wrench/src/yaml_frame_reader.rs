@@ -475,6 +475,7 @@ impl YamlFrameReader {
             spatial_id: SpatialId::new(0, PipelineId::dummy()),
             flags: PrimitiveFlags::default(),
             hit_info: None,
+            item_key: None,
         };
         self.add_stacking_context_from_yaml(&mut builder, wrench, yaml, true, &mut info);
         self.display_lists.push(builder.finalize());
@@ -1679,6 +1680,7 @@ impl YamlFrameReader {
                 clip_id: space_and_clip.clip_id,
                 spatial_id: space_and_clip.spatial_id,
                 hit_info: self.to_hit_testing_tag(&item["hit-testing-tag"]),
+                item_key: None,
                 flags,
             };
 
