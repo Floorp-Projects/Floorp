@@ -11,6 +11,7 @@ const TEST_URI =
 const MINIMUM_MESSAGE_HEIGHT = 19;
 
 add_task(async function() {
+  await pushPref("devtools.webconsole.input.eagerEvaluation", true);
   const hud = await openNewTabAndConsole(TEST_URI);
   const { ui } = hud;
   const { document } = ui;
