@@ -205,12 +205,16 @@ function decodeRequestPayload(request) {
     payload = JSON.parse(new TextDecoder().decode(bytes));
   }
 
-  // Check for canary value
-  Assert.notEqual(
-    TelemetryUtils.knownClientID,
-    payload.clientId,
-    `Known clientId shouldn't appear in a "${payload.type}" ping on the server.`
-  );
+  if (payload && "clientId" in payload) {
+    // Check for canary value
+    Assert.notEqual(
+      TelemetryUtils.knownClientID,
+      payload.clientId,
+      `Known clientId shouldn't appear in a "${
+        payload.type
+      }" ping on the server.`
+    );
+  }
 
   return payload;
 }
