@@ -5325,14 +5325,6 @@ void nsGlobalWindowOuter::FirePopupBlockedEvent(
   aDoc->DispatchEvent(*event);
 }
 
-void nsGlobalWindowOuter::NotifyContentBlockingEvent(
-    unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
-    nsIChannel* aTrackingChannel,
-    const mozilla::Maybe<AntiTrackingCommon::StorageAccessGrantedReason>&
-        aReason) {
-  // TODO: This function will be removed in the next patch
-}
-
 // static
 bool nsGlobalWindowOuter::CanSetProperty(const char* aPrefName) {
   // Chrome can set any property.
