@@ -2292,6 +2292,7 @@ pub struct WrState {
     pipeline_id: WrPipelineId,
     frame_builder: WebRenderFrameBuilder,
     current_tag: Option<ItemTag>,
+    current_item_key: Option<ItemKey>,
 }
 
 #[no_mangle]
@@ -2306,6 +2307,7 @@ pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId,
                                                                                  content_size,
                                                                                  capacity),
                              current_tag: None,
+                             current_item_key: None,
                          });
 
     Box::into_raw(state)
@@ -2676,6 +2678,7 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_rect(
@@ -2706,6 +2709,7 @@ pub extern "C" fn wr_dp_push_rect_with_parent_clip(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_rect(
@@ -2758,6 +2762,7 @@ pub extern "C" fn wr_dp_push_backdrop_filter_with_parent_clip(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_backdrop_filter(
@@ -2786,6 +2791,7 @@ pub extern "C" fn wr_dp_push_clear_rect(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(true),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_clear_rect(
@@ -2812,6 +2818,7 @@ pub extern "C" fn wr_dp_push_hit_test(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_hit_test(
@@ -2839,6 +2846,7 @@ pub extern "C" fn wr_dp_push_clear_rect_with_parent_clip(
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(true),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_clear_rect(
@@ -2866,6 +2874,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     let alpha_type = if premultiplied_alpha {
@@ -2906,6 +2915,7 @@ pub extern "C" fn wr_dp_push_repeating_image(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     let alpha_type = if premultiplied_alpha {
@@ -2950,6 +2960,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder
@@ -2986,6 +2997,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder
@@ -3021,6 +3033,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder
@@ -3056,7 +3069,8 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         clip_id: space_and_clip.clip_id,
         flags: prim_flags(is_backface_visible),
-        hit_info: state.current_tag
+        hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder
@@ -3113,6 +3127,7 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder
@@ -3158,6 +3173,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder
@@ -3207,6 +3223,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_border(
@@ -3265,6 +3282,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_border(
@@ -3327,6 +3345,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_border(
@@ -3370,6 +3389,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_gradient(
@@ -3414,6 +3434,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder.dl_builder.push_radial_gradient(
@@ -3447,6 +3468,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible),
         hit_info: state.current_tag,
+        item_key: state.current_item_key,
     };
 
     state.frame_builder
