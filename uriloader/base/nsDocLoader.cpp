@@ -1525,25 +1525,6 @@ void nsDocLoader::OnSecurityChange(nsISupports* aContext, uint32_t aState) {
   }
 }
 
-void nsDocLoader::OnContentBlockingEvent(nsISupports* aContext,
-                                         uint32_t aEvent) {
-  //
-  // Fire progress notifications out to any registered nsIWebProgressListeners.
-  //
-
-  nsCOMPtr<nsIRequest> request = do_QueryInterface(aContext);
-  nsIWebProgress* webProgress = static_cast<nsIWebProgress*>(this);
-
-  NOTIFY_LISTENERS(
-      nsIWebProgress::NOTIFY_CONTENT_BLOCKING,
-      listener->OnContentBlockingEvent(webProgress, request, aEvent););
-
-  // Pass the notification up to the parent...
-  if (mParent) {
-    mParent->OnContentBlockingEvent(aContext, aEvent);
-  }
-}
-
 /*
  * Implementation of nsISupportsPriority methods...
  *
