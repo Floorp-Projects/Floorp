@@ -528,7 +528,8 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
   const IntID kIdsToCache[] = {eIntID_PrefersReducedMotion};
 
   for (IntID id : kIdsToCache) {
-    lookAndFeelIntCache.AppendElement(LookAndFeelInt{id, .value = GetInt(id)});
+    lookAndFeelIntCache.AppendElement(
+        LookAndFeelInt{.id = id, .value = GetInt(id)});
   }
 
   return lookAndFeelIntCache;
