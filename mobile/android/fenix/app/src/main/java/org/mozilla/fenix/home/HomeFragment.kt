@@ -340,8 +340,7 @@ class HomeFragment : Fragment() {
         }, owner = this)
 
         if (context.settings().showPrivateModeContextualFeatureRecommender &&
-            browsingModeManager.mode.isPrivate &&
-            !PrivateShortcutCreateManager.doesPrivateBrowsingPinnedShortcutExist(context)) {
+            browsingModeManager.mode.isPrivate) {
             recommendPrivateBrowsingShortcut()
         }
 

@@ -173,11 +173,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        findPreference<Preference>(getPreferenceKey(pref_key_add_private_browsing_shortcut))?.apply {
-            isVisible =
-                !PrivateShortcutCreateManager.doesPrivateBrowsingPinnedShortcutExist(context)
-        }
-
         setupPreferences()
 
         updateAccountUIState(
