@@ -155,6 +155,8 @@
     <string name="settings">Settings</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Basics</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">General</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">About</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -184,8 +186,12 @@
     <string name="preferences_category_advanced">Advanced</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Privacy</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Privacy and security</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Site permissions</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Private browsing</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Open links in a private tab</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -200,6 +206,8 @@
     <string name="preferences_toolbar">Toolbar</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Theme</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Customize</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Sync bookmarks, history, and more with your Firefox Account</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
