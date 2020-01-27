@@ -218,16 +218,6 @@ child:
 
   async OnStatus(nsresult status);
 
-  // Tell the child that channel classifier protection was disabled for this
-  // load.
-  async NotifyChannelClassifierProtectionDisabled(uint32_t aAcceptedReason);
-
-  // Tell the child that cookies are allowed for this load.
-  async NotifyCookieAllowed();
-
-  // Tell the child that tracking cookies are blocked for this load.
-  async NotifyCookieBlocked(uint32_t aRejectedReason);
-
   // Tell the child that the resource being loaded has been classified.
   async NotifyClassificationFlags(uint32_t aClassificationFlags, bool aIsThirdParty);
 

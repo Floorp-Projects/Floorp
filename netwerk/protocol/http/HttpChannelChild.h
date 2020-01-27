@@ -195,14 +195,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvOverrideReferrerInfoDuringBeginConnect(
       nsIReferrerInfo* aReferrerInfo) override;
 
-  mozilla::ipc::IPCResult RecvNotifyChannelClassifierProtectionDisabled(
-      const uint32_t& aAcceptedReason) override;
-
-  mozilla::ipc::IPCResult RecvNotifyCookieAllowed() override;
-
-  mozilla::ipc::IPCResult RecvNotifyCookieBlocked(
-      const uint32_t& aRejectedReason) override;
-
   mozilla::ipc::IPCResult RecvNotifyClassificationFlags(
       const uint32_t& aClassificationFlags, const bool& aIsThirdParty) override;
 
