@@ -2299,8 +2299,8 @@ nsINode* nsContentUtils::Retarget(nsINode* aTargetA, nsINode* aTargetB) {
 }
 
 // static
-nsresult nsContentUtils::GetAncestors(nsINode* aNode,
-                                      nsTArray<nsINode*>& aArray) {
+nsresult nsContentUtils::GetInclusiveAncestors(nsINode* aNode,
+                                               nsTArray<nsINode*>& aArray) {
   while (aNode) {
     aArray.AppendElement(aNode);
     aNode = aNode->GetParentNode();
@@ -2309,7 +2309,7 @@ nsresult nsContentUtils::GetAncestors(nsINode* aNode,
 }
 
 // static
-nsresult nsContentUtils::GetAncestorsAndOffsets(
+nsresult nsContentUtils::GetInclusiveAncestorsAndOffsets(
     nsINode* aNode, int32_t aOffset, nsTArray<nsIContent*>* aAncestorNodes,
     nsTArray<int32_t>* aAncestorOffsets) {
   NS_ENSURE_ARG_POINTER(aNode);
