@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozcontainer.h"
+#include <glib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #ifdef MOZ_WAYLAND
