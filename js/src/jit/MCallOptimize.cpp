@@ -36,6 +36,7 @@
 #include "vm/SharedArrayObject.h"
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmStubs.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/JSScript-inl.h"
@@ -4281,10 +4282,58 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
     call->initArg(i, conversion);
   }
 
-  current->push(call);
   current->add(call);
 
   MOZ_TRY(resumeAfter(call));
+
+  wasm::ABIResultIter results(wasm::ResultType::Vector(sig.results()));
+  MInstruction* def = nullptr;
+  if (results.done()) {
+    // The JS translation of a void return is `undefined'.
+    def = MConstant::New(alloc(), UndefinedValue());
+  } else {
+    const wasm::ABIResult& result = results.cur();
+    switch (result.type().kind()) {
+      case wasm::ValType::I32:
+        MOZ_ASSERT(!result.type().isEncodedAsJSValueOnEscape());
+        def = MWasmRegisterResult::New(alloc(), MIRType::Int32, result.gpr());
+        break;
+      case wasm::ValType::I64:
+        MOZ_ASSERT(!result.type().isEncodedAsJSValueOnEscape());
+        // Note that this code is currently unreachable, as i64-returning
+        // wasm functions are not inlined.
+        def = MWasmRegister64Result::New(alloc(), result.gpr64());
+        break;
+      case wasm::ValType::F32:
+        MOZ_ASSERT(!result.type().isEncodedAsJSValueOnEscape());
+        def = MWasmFloatRegisterResult::New(alloc(), MIRType::Float32,
+                                            result.fpr());
+        break;
+      case wasm::ValType::F64:
+        MOZ_ASSERT(!result.type().isEncodedAsJSValueOnEscape());
+        def = MWasmFloatRegisterResult::New(alloc(), MIRType::Double,
+                                            result.fpr());
+        break;
+      case wasm::ValType::Ref:
+        MOZ_ASSERT(result.type().isEncodedAsJSValueOnEscape());
+        MOZ_ASSERT(results.index() == 0, "multibox return to JS unimplemented");
+        // See the UnboxAnyrefIntoValue call in GenerateDirectCallFromJIT.
+        def = MWasmValueOperandResult::New(alloc(), JSReturnOperand);
+        break;
+    }
+    results.next();
+    MOZ_ASSERT(results.done(), "multi-value return to JS unimplemented");
+  }
+
+  if (!def) {
+    return abort(AbortReason::Alloc);
+  }
+  current->add(def);
+  current->push(def);
+
+  if (!def->isConstant()) {
+    MOZ_TRY(resumeAfter(def));
+  }
 
   callInfo.setImplicitlyUsedUnchecked();
 
