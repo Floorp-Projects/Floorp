@@ -505,6 +505,7 @@ html #webconsole-notificationbox {
 }
 
 .eager-evaluation-result {
+  direction: ltr;
   display: flex;
   background-color: var(--console-input-background);
   line-height: 20px;
