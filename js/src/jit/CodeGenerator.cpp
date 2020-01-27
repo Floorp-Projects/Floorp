@@ -13747,8 +13747,7 @@ void CodeGenerator::visitGetPrototypeOf(LGetPrototypeOf* lir) {
   masm.bind(ool->rejoin());
 }
 
-template <size_t NumDefs>
-void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
+void CodeGenerator::visitIonToWasmCall(LIonToWasmCall* lir) {
   wasm::JitCallStackArgVector stackArgs;
   masm.propagateOOM(stackArgs.reserve(lir->numOperands()));
   if (masm.oom()) {
@@ -13816,44 +13815,6 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
     }
   }
 
-  const wasm::ValTypeVector& results = sig.results();
-  if (results.length() == 0) {
-    MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
-  } else {
-    MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
-    switch (results[0].kind()) {
-      case wasm::ValType::I32:
-        MOZ_ASSERT(lir->mir()->type() == MIRType::Int32);
-        MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
-        break;
-      case wasm::ValType::F32:
-        MOZ_ASSERT(lir->mir()->type() == MIRType::Float32);
-        MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnFloat32Reg);
-        break;
-      case wasm::ValType::F64:
-        MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
-        MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
-        break;
-      case wasm::ValType::I64:
-        MOZ_CRASH("unexpected return type when calling from ion to wasm");
-      case wasm::ValType::Ref:
-        switch (results[0].refTypeKind()) {
-          case wasm::RefType::Any:
-          case wasm::RefType::Func:
-          case wasm::RefType::Null:
-            // The wasm stubs layer unboxes anything that needs to be unboxed
-            // and leaves it in a Value.  A FuncRef we could in principle leave
-            // as a raw object pointer but for now it complicates the API to do
-            // so.
-            MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
-            break;
-          case wasm::RefType::TypeIndex:
-            MOZ_CRASH("unexpected return type when calling from ion to wasm");
-        }
-        break;
-    }
-  }
-
   bool profilingEnabled = isProfilerInstrumentationEnabled();
   WasmInstanceObject* instObj = lir->mir()->instanceObject();
 
@@ -13871,13 +13832,6 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   masm.propagateOOM(graph.addConstantToPool(ObjectValue(*instObj), &unused));
 
   markSafepointAt(callOffset, lir);
-}
-
-void CodeGenerator::visitIonToWasmCall(LIonToWasmCall* lir) {
-  emitIonToWasmCallBase(lir);
-}
-void CodeGenerator::visitIonToWasmCallV(LIonToWasmCallV* lir) {
-  emitIonToWasmCallBase(lir);
 }
 
 void CodeGenerator::visitWasmNullConstant(LWasmNullConstant* lir) {
