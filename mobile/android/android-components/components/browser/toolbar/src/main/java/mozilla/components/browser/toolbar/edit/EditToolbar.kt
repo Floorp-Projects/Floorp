@@ -182,7 +182,7 @@ class EditToolbar internal constructor(
     /**
      * Sets a listener to be invoked when focus of the URL input view (in edit mode) changed.
      */
-    internal fun setOnEditFocusChangeListener(listener: (Boolean) -> Unit) {
+    fun setOnEditFocusChangeListener(listener: (Boolean) -> Unit) {
         views.url.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             listener.invoke(hasFocus)
         }
