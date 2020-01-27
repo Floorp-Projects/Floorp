@@ -470,6 +470,13 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
       Document* aDoc, nsIURI* aPopupURI, const nsAString& aPopupWindowName,
       const nsAString& aPopupWindowFeatures) override;
 
+  virtual void NotifyContentBlockingEvent(
+      unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
+      nsIChannel* aTrackingChannel,
+      const mozilla::Maybe<
+          mozilla::AntiTrackingCommon::StorageAccessGrantedReason>& aReason)
+      override;
+
   void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
 
   void AllowScriptsToClose() { mAllowScriptsToClose = true; }
@@ -808,6 +815,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                         nsISupports* aExtraArgument,
                         nsDocShellLoadState* aLoadState, bool aForceNoOpener,
                         mozilla::dom::BrowsingContext** aReturn);
+
+  // Checks that the channel was loaded by the URI currently loaded in aDoc
+  static bool SameLoadingURI(Document* aDoc, nsIChannel* aChannel);
 
  public:
   // Helper Functions

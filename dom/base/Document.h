@@ -1121,6 +1121,327 @@ class Document : public nsINode,
   GetContentBlockingEvents();
 
   /**
+   * Get tracking content blocked flag for this document.
+   */
+  bool GetHasTrackingContentBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT);
+  }
+
+  /**
+   * Get fingerprinting content blocked flag for this document.
+   */
+  bool GetHasFingerprintingContentBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_FINGERPRINTING_CONTENT);
+  }
+
+  /**
+   * Get cryptomining content blocked flag for this document.
+   */
+  bool GetHasCryptominingContentBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT);
+  }
+
+  /**
+   * Get socialtracking content blocked flag for this document.
+   */
+  bool GetHasSocialTrackingContentBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_SOCIALTRACKING_CONTENT);
+  }
+
+  /**
+   * Get all cookies blocked flag for this document.
+   */
+  bool GetHasAllCookiesBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL);
+  }
+
+  /**
+   * Get tracking cookies blocked flag for this document.
+   */
+  bool GetHasTrackingCookiesBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER);
+  }
+
+  /**
+   * Get social tracking cookies blocked flag for this document.
+   */
+  bool GetHasSocialTrackingCookiesBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER);
+  }
+
+  /**
+   * Get third-party cookies blocked flag for this document.
+   */
+  bool GetHasForeignCookiesBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
+  }
+
+  /**
+   * Get cookies blocked by site permission flag for this document.
+   */
+  bool GetHasCookiesBlockedByPermission() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION);
+  }
+
+  /**
+   * Set the tracking content blocked flag for this document.
+   */
+  void SetHasTrackingContentBlocked(bool aHasTrackingContentBlocked,
+                                    const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked, nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT,
+        aHasTrackingContentBlocked);
+  }
+
+  /**
+   * Set the fingerprinting content blocked flag for this document.
+   */
+  void SetHasFingerprintingContentBlocked(bool aHasFingerprintingContentBlocked,
+                                          const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_BLOCKED_FINGERPRINTING_CONTENT,
+        aHasFingerprintingContentBlocked);
+  }
+
+  /**
+   * Set the cryptomining content blocked flag for this document.
+   */
+  void SetHasCryptominingContentBlocked(bool aHasCryptominingContentBlocked,
+                                        const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT,
+        aHasCryptominingContentBlocked);
+  }
+
+  /**
+   * Set the socialtracking content blocked flag for this document.
+   */
+  void SetHasSocialTrackingContentBlocked(bool aHasSocialTrackingContentBlocked,
+                                          const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_BLOCKED_SOCIALTRACKING_CONTENT,
+        aHasSocialTrackingContentBlocked);
+  }
+
+  /**
+   * Set the all cookies blocked flag for this document.
+   */
+  void SetHasAllCookiesBlocked(bool aHasAllCookiesBlocked,
+                               const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(aOriginBlocked,
+                             nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL,
+                             aHasAllCookiesBlocked);
+  }
+
+  /**
+   * Set the tracking cookies blocked flag for this document.
+   */
+  void SetHasTrackingCookiesBlocked(
+      bool aHasTrackingCookiesBlocked, const nsACString& aOriginBlocked,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
+      const nsTArray<nsCString>& aTrackingFullHashes) {
+    RecordContentBlockingLog(
+        aOriginBlocked, nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
+        aHasTrackingCookiesBlocked, aReason, aTrackingFullHashes);
+  }
+
+  /**
+   * Set the social tracking cookies blocked flag for this document.
+   */
+  void SetHasSocialTrackingCookiesBlocked(
+      bool aHasSocialTrackingCookiesBlocked, const nsACString& aOriginBlocked,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
+      const nsTArray<nsCString>& aTrackingFullHashes) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER,
+        aHasSocialTrackingCookiesBlocked, aReason, aTrackingFullHashes);
+  }
+
+  /**
+   * Set the third-party cookies blocked flag for this document.
+   */
+  void SetHasForeignCookiesBlocked(bool aHasForeignCookiesBlocked,
+                                   const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked, nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN,
+        aHasForeignCookiesBlocked);
+  }
+
+  /**
+   * Set the cookies blocked by site permission flag for this document.
+   */
+  void SetHasCookiesBlockedByPermission(bool aHasCookiesBlockedByPermission,
+                                        const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
+        aHasCookiesBlockedByPermission);
+  }
+
+  /**
+   * Set the cookies loaded flag for this document.
+   */
+  void SetHasCookiesLoaded(bool aHasCookiesLoaded,
+                           const nsACString& aOriginLoaded) {
+    RecordContentBlockingLog(aOriginLoaded,
+                             nsIWebProgressListener::STATE_COOKIES_LOADED,
+                             aHasCookiesLoaded);
+  }
+
+  /**
+   * Get the cookies loaded flag for this document.
+   */
+  bool GetHasCookiesLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_LOADED);
+  }
+
+  /**
+   * Set the tracker cookies loaded flag for this document.
+   */
+  void SetHasTrackerCookiesLoaded(bool aHasTrackerCookiesLoaded,
+                                  const nsACString& aOriginLoaded) {
+    RecordContentBlockingLog(
+        aOriginLoaded, nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER,
+        aHasTrackerCookiesLoaded);
+  }
+
+  /**
+   * Get the tracker cookies loaded flag for this document.
+   */
+  bool GetHasTrackerCookiesLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER);
+  }
+
+  /**
+   * Set the social tracker cookies loaded flag for this document.
+   */
+  void SetHasSocialTrackerCookiesLoaded(bool aHasSocialTrackerCookiesLoaded,
+                                        const nsACString& aOriginLoaded) {
+    RecordContentBlockingLog(
+        aOriginLoaded,
+        nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER,
+        aHasSocialTrackerCookiesLoaded);
+  }
+
+  /**
+   * Get the social tracker cookies loaded flag for this document.
+   */
+  bool GetHasSocialTrackerCookiesLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER);
+  }
+
+  /**
+   * Get level 1 tracking content loaded flag for this document.
+   */
+  bool GetHasLevel1TrackingContentLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT);
+  }
+
+  /**
+   * Set the level 1 tracking content loaded flag for this document.
+   */
+  void SetHasLevel1TrackingContentLoaded(bool aHasTrackingContentLoaded,
+                                         const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT,
+        aHasTrackingContentLoaded);
+  }
+
+  /**
+   * Get level 2 tracking content loaded flag for this document.
+   */
+  bool GetHasLevel2TrackingContentLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT);
+  }
+
+  /**
+   * Set the level 2 tracking content loaded flag for this document.
+   */
+  void SetHasLevel2TrackingContentLoaded(bool aHasTrackingContentLoaded,
+                                         const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT,
+        aHasTrackingContentLoaded);
+  }
+
+  /**
+   * Get fingerprinting content loaded flag for this document.
+   */
+  bool GetHasFingerprintingContentLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT);
+  }
+
+  /**
+   * Set the fingerprinting content loaded flag for this document.
+   */
+  void SetHasFingerprintingContentLoaded(bool aHasFingerprintingContentLoaded,
+                                         const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT,
+        aHasFingerprintingContentLoaded);
+  }
+
+  /**
+   * Get cryptomining content loaded flag for this document.
+   */
+  bool GetHasCryptominingContentLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT);
+  }
+
+  /**
+   * Set the cryptomining content loaded flag for this document.
+   */
+  void SetHasCryptominingContentLoaded(bool aHasCryptominingContentLoaded,
+                                       const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT,
+        aHasCryptominingContentLoaded);
+  }
+
+  /**
+   * Get socialtracking content loaded flag for this document.
+   */
+  bool GetHasSocialTrackingContentLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_SOCIALTRACKING_CONTENT);
+  }
+
+  /**
+   * Set the socialtracking content loaded flag for this document.
+   */
+  void SetHasSocialTrackingContentLoaded(bool aHasSocialTrackingContentLoaded,
+                                         const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_LOADED_SOCIALTRACKING_CONTENT,
+        aHasSocialTrackingContentLoaded);
+  }
+
+  /**
    * Get the sandbox flags for this document.
    * @see nsSandboxFlags.h for the possible flags
    */
@@ -4062,6 +4383,15 @@ class Document : public nsINode,
       InternalCommandDataHashtable;
   static InternalCommandDataHashtable* sInternalCommandDataHashtable;
 
+  void RecordContentBlockingLog(
+      const nsACString& aOrigin, uint32_t aType, bool aBlocked,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
+          Nothing(),
+      const nsTArray<nsCString>& aTrackingFullHashes = nsTArray<nsCString>()) {
+    mContentBlockingLog.RecordLog(aOrigin, aType, aBlocked, aReason,
+                                  aTrackingFullHashes);
+  }
+
   mutable std::bitset<eDeprecatedOperationCount> mDeprecationWarnedAbout;
   mutable std::bitset<eDocumentWarningCount> mDocWarningWarnedAbout;
 
@@ -4797,6 +5127,11 @@ class Document : public nsINode,
   // calling NoteScriptTrackingStatus().  Currently we assume that a URL not
   // existing in the set means the corresponding script isn't a tracking script.
   nsTHashtable<nsCStringHashKey> mTrackingScripts;
+
+  // The log of all content blocking actions taken on this document.  This is
+  // only stored on top-level documents and includes the activity log for all of
+  // the nested subdocuments as well.
+  ContentBlockingLog mContentBlockingLog;
 
   // List of ancestor principals.  This is set at the point a document
   // is connected to a docshell and not mutated thereafter.
