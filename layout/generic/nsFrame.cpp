@@ -8056,8 +8056,7 @@ const nsFrameSelection* nsIFrame::GetConstFrameSelection() const {
 bool nsIFrame::IsFrameSelected() const {
   NS_ASSERTION(!GetContent() || GetContent()->IsSelectionDescendant(),
                "use the public IsSelected() instead");
-  return nsRange::IsNodeSelected(GetContent(), 0,
-                                 GetContent()->GetChildCount());
+  return GetContent()->IsSelected(0, GetContent()->GetChildCount());
 }
 
 nsresult nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {

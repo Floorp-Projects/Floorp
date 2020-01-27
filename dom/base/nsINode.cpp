@@ -37,6 +37,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/MutationObservers.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -80,6 +81,7 @@
 #include "nsObjectLoadingContent.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
+#include "nsRange.h"
 #include "nsString.h"
 #include "nsStyleConsts.h"
 #include "nsSVGUtils.h"
@@ -227,6 +229,145 @@ nsIContentSecurityPolicy* nsINode::GetCsp() const {
 }
 
 nsINode::nsSlots* nsINode::CreateSlots() { return new nsSlots(); }
+
+static const nsINode* GetClosestCommonInclusiveAncestorForRangeInSelection(
+    const nsINode* aNode) {
+  while (aNode &&
+         !aNode->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
+    if (!aNode
+             ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
+      return nullptr;
+    }
+    aNode = aNode->GetParentNode();
+  }
+  return aNode;
+}
+
+/**
+ * A Comparator suitable for mozilla::BinarySearchIf for searching a collection
+ * of nsRange* for an overlap of (mNode, mStartOffset) .. (mNode, mEndOffset).
+ */
+class IsItemInRangeComparator {
+ public:
+  // @param aStartOffset has to be less or equal to aEndOffset.
+  IsItemInRangeComparator(const nsINode& aNode, const uint32_t aStartOffset,
+                          const uint32_t aEndOffset,
+                          nsContentUtils::ComparePointsCache* aCache)
+      : mNode(aNode),
+        mStartOffset(aStartOffset),
+        mEndOffset(aEndOffset),
+        mCache(aCache) {
+    MOZ_ASSERT(aStartOffset <= aEndOffset);
+  }
+
+  int operator()(const nsRange* const aRange) const {
+    int32_t cmp = nsContentUtils::ComparePoints_Deprecated(
+        &mNode, static_cast<int32_t>(mEndOffset), aRange->GetStartContainer(),
+        static_cast<int32_t>(aRange->StartOffset()), nullptr, mCache);
+    if (cmp == 1) {
+      cmp = nsContentUtils::ComparePoints_Deprecated(
+          &mNode, static_cast<int32_t>(mStartOffset), aRange->GetEndContainer(),
+          static_cast<int32_t>(aRange->EndOffset()), nullptr, mCache);
+      if (cmp == -1) {
+        return 0;
+      }
+      return 1;
+    }
+    return -1;
+  }
+
+ private:
+  const nsINode& mNode;
+  const uint32_t mStartOffset;
+  const uint32_t mEndOffset;
+  nsContentUtils::ComparePointsCache* mCache;
+};
+
+bool nsINode::IsSelected(const uint32_t aStartOffset,
+                         const uint32_t aEndOffset) const {
+  MOZ_ASSERT(aStartOffset <= aEndOffset);
+
+  const nsINode* n = GetClosestCommonInclusiveAncestorForRangeInSelection(this);
+  NS_ASSERTION(n || !IsSelectionDescendant(), "orphan selection descendant");
+
+  // Collect the selection objects for potential ranges.
+  nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;
+  Selection* prevSelection = nullptr;
+  for (; n; n = GetClosestCommonInclusiveAncestorForRangeInSelection(
+                n->GetParentNode())) {
+    const LinkedList<nsRange>* ranges =
+        n->GetExistingClosestCommonInclusiveAncestorRanges();
+    if (!ranges) {
+      continue;
+    }
+    for (const nsRange* range : *ranges) {
+      MOZ_ASSERT(range->IsInSelection(),
+                 "Why is this range registeed with a node?");
+      // Looks like that IsInSelection() assert fails sometimes...
+      if (range->IsInSelection()) {
+        Selection* selection = range->GetSelection();
+        if (prevSelection != selection) {
+          prevSelection = selection;
+          ancestorSelections.PutEntry(selection);
+        }
+      }
+    }
+  }
+
+  nsContentUtils::ComparePointsCache cache;
+  IsItemInRangeComparator comparator{*this, aStartOffset, aEndOffset, &cache};
+  for (auto iter = ancestorSelections.ConstIter(); !iter.Done(); iter.Next()) {
+    Selection* selection = iter.Get()->GetKey();
+    // Binary search the sorted ranges in this selection.
+    // (Selection::GetRangeAt returns its ranges ordered).
+    size_t low = 0;
+    size_t high = selection->RangeCount();
+
+    while (high != low) {
+      size_t middle = low + (high - low) / 2;
+
+      const nsRange* const range = selection->GetRangeAt(middle);
+      int result = comparator(range);
+      if (result == 0) {
+        if (!range->Collapsed()) {
+          return true;
+        }
+
+        const nsRange* middlePlus1;
+        const nsRange* middleMinus1;
+        // if node end > start of middle+1, result = 1
+        if (middle + 1 < high &&
+            (middlePlus1 = selection->GetRangeAt(middle + 1)) &&
+            nsContentUtils::ComparePoints_Deprecated(
+                this, static_cast<int32_t>(aEndOffset),
+                middlePlus1->GetStartContainer(),
+                static_cast<int32_t>(middlePlus1->StartOffset()), nullptr,
+                &cache) > 0) {
+          result = 1;
+          // if node start < end of middle - 1, result = -1
+        } else if (middle >= 1 &&
+                   (middleMinus1 = selection->GetRangeAt(middle - 1)) &&
+                   nsContentUtils::ComparePoints_Deprecated(
+                       this, static_cast<int32_t>(aStartOffset),
+                       middleMinus1->GetEndContainer(),
+                       static_cast<int32_t>(middleMinus1->EndOffset()), nullptr,
+                       &cache) < 0) {
+          result = -1;
+        } else {
+          break;
+        }
+      }
+
+      if (result < 0) {
+        high = middle;
+      } else {
+        low = middle + 1;
+      }
+    }
+  }
+
+  return false;
+}
 
 nsIContent* nsINode::GetTextEditorRootContent(TextEditor** aTextEditor) {
   if (aTextEditor) {
