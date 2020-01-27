@@ -15,7 +15,6 @@ interface nsISecureBrowserUI : nsISupports
     void init(in nsIDocShell docShell);
 
     readonly attribute unsigned long state;
-    readonly attribute unsigned long contentBlockingEvent;
     readonly attribute bool isSecureContext;
     readonly attribute nsITransportSecurityInfo secInfo;
 };
