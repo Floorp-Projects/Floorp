@@ -320,8 +320,8 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
     nsITextControlFrame::SelectionDirection mDirection;
   };
 
-  bool IsSelectionCached() const;
-  SelectionProperties& GetSelectionProperties();
+  bool IsSelectionCached() const { return mSelectionCached; }
+  SelectionProperties& GetSelectionProperties() { return mSelectionProperties; }
   MOZ_CAN_RUN_SCRIPT void SetSelectionProperties(SelectionProperties& aProps);
   void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
@@ -421,8 +421,6 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   nsresult InitializeRootNode();
 
   void FinishedRestoringSelection();
-
-  HTMLInputElement* GetParentNumberControl(nsFrame* aFrame) const;
 
   bool EditorHasComposition();
 

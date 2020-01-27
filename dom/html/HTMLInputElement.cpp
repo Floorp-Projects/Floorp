@@ -964,7 +964,6 @@ HTMLInputElement::HTMLInputElement(
       mNumberControlSpinnerIsSpinning(false),
       mNumberControlSpinnerSpinsUp(false),
       mPickerRunning(false),
-      mSelectionCached(true),
       mIsPreviewEnabled(false),
       mHasBeenTypePassword(false),
       mHasPatternAttribute(false) {

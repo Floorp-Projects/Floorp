@@ -1949,8 +1949,7 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
   }
 
   // Restore our selection after being bound to a new frame
-  HTMLInputElement* number = GetParentNumberControl(mBoundFrame);
-  if (number ? number->IsSelectionCached() : mSelectionCached) {
+  if (mSelectionCached) {
     if (mRestoringSelection) {  // paranoia
       mRestoringSelection->Revoke();
     }
@@ -1967,11 +1966,7 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
   // happens before our RestoreSelectionState runs, it looks like we'll lose our
   // selection info, because we will think we don't have it cached and try to
   // read it from the selection controller, which will not have it yet.
-  if (number) {
-    number->ClearSelectionCached();
-  } else {
-    mSelectionCached = false;
-  }
+  mSelectionCached = false;
 
   return preparingEditor.IsTextControlStateDestroyed()
              ? NS_ERROR_NOT_INITIALIZED
@@ -1980,27 +1975,6 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
 
 void TextControlState::FinishedRestoringSelection() {
   mRestoringSelection = nullptr;
-}
-
-bool TextControlState::IsSelectionCached() const {
-  if (mBoundFrame) {
-    HTMLInputElement* number = GetParentNumberControl(mBoundFrame);
-    if (number) {
-      return number->IsSelectionCached();
-    }
-  }
-  return mSelectionCached;
-}
-
-TextControlState::SelectionProperties&
-TextControlState::GetSelectionProperties() {
-  if (mBoundFrame) {
-    HTMLInputElement* number = GetParentNumberControl(mBoundFrame);
-    if (number) {
-      return number->GetSelectionProperties();
-    }
-  }
-  return mSelectionProperties;
 }
 
 void TextControlState::SyncUpSelectionPropertiesBeforeDestruction() {
@@ -2370,31 +2344,6 @@ void TextControlState::SetRangeText(const nsAString& aReplacement,
   // The instance may have already been deleted here.
 }
 
-HTMLInputElement* TextControlState::GetParentNumberControl(
-    nsFrame* aFrame) const {
-  MOZ_ASSERT(aFrame);
-  nsIContent* content = aFrame->GetContent();
-  MOZ_ASSERT(content);
-  nsIContent* parent = content->GetParent();
-  if (!parent) {
-    return nullptr;
-  }
-  nsIContent* parentOfParent = parent->GetParent();
-  if (!parentOfParent) {
-    return nullptr;
-  }
-  HTMLInputElement* input = HTMLInputElement::FromNode(parentOfParent);
-  if (!input) {
-    return nullptr;
-  }
-  // This function might be called during frame reconstruction as a result
-  // of changing the input control's type from number to something else. In
-  // that situation, the type of the control has changed, but its frame has
-  // not been reconstructed yet.  So we need to check the type of the input
-  // control in addition to the type of the frame.
-  return (input->ControlType() == NS_FORM_INPUT_NUMBER) ? input : nullptr;
-}
-
 void TextControlState::DestroyEditor() {
   // notify the editor that we are going away
   if (mEditorInitialized) {
@@ -2449,15 +2398,7 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
     props.SetStart(start);
     props.SetEnd(end);
     props.SetDirection(direction);
-    HTMLInputElement* number = GetParentNumberControl(aFrame);
-    if (number) {
-      // If we are inside a number control, cache the selection on the
-      // parent control, because this text editor state will be destroyed
-      // together with the native anonymous text control.
-      number->SetSelectionCached();
-    } else {
-      mSelectionCached = true;
-    }
+    mSelectionCached = true;
   }
 
   // Destroy our editor
