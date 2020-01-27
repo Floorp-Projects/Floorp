@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use time::precise_time_ns;
 // local imports
 use crate::display_item as di;
+use crate::display_item_cache::*;
 use crate::api::{PipelineId, PropertyBinding};
 use crate::gradient_builder::GradientBuilder;
 use crate::color::ColorF;
@@ -130,11 +131,18 @@ pub struct BuiltDisplayListDescriptor {
     total_clip_nodes: usize,
     /// The amount of spatial nodes created while building this display list.
     total_spatial_nodes: usize,
+    /// The size of the cache for this display list.
+    cache_size: usize,
+    /// The offset for additional display list data.
+    extra_data_offset: usize,
 }
+
+impl BuiltDisplayListDescriptor {}
 
 pub struct BuiltDisplayListIter<'a> {
     list: &'a BuiltDisplayList,
     data: &'a [u8],
+    cache: Option<&'a DisplayItemCache>,
     cur_item: di::DisplayItem,
     cur_stops: ItemRange<'a, di::GradientStop>,
     cur_glyphs: ItemRange<'a, GlyphInstance>,
@@ -232,8 +240,6 @@ pub struct AuxIter<'a, T> {
 //    _boo: PhantomData<T>,
 }
 
-impl BuiltDisplayListDescriptor {}
-
 impl BuiltDisplayList {
     pub fn from_data(data: Vec<u8>, descriptor: BuiltDisplayListDescriptor) -> Self {
         BuiltDisplayList { data, descriptor }
@@ -248,9 +254,12 @@ impl BuiltDisplayList {
         &self.data[..]
     }
 
-    // Currently redundant with data, but may be useful if we add extra data to dl
     pub fn item_slice(&self) -> &[u8] {
-        &self.data[..]
+        &self.data[..self.descriptor.extra_data_offset]
+    }
+
+    pub fn extra_slice(&self) -> &[u8] {
+        &self.data[self.descriptor.extra_data_offset..]
     }
 
     pub fn descriptor(&self) -> &BuiltDisplayListDescriptor {
@@ -274,7 +283,22 @@ impl BuiltDisplayList {
     }
 
     pub fn iter(&self) -> BuiltDisplayListIter {
-        BuiltDisplayListIter::new(self)
+        BuiltDisplayListIter::new(self, self.item_slice(), None)
+    }
+
+    pub fn extra_data_iter(&self) -> BuiltDisplayListIter {
+        BuiltDisplayListIter::new(self, self.extra_slice(), None)
+    }
+
+    pub fn iter_with_cache<'a>(
+        &'a self,
+        cache: &'a DisplayItemCache
+    ) -> BuiltDisplayListIter<'a> {
+        BuiltDisplayListIter::new(self, self.item_slice(), Some(cache))
+    }
+
+    pub fn cache_size(&self) -> usize {
+        self.descriptor.cache_size
     }
 }
 
@@ -294,14 +318,15 @@ fn skip_slice<'a, T: peek_poke::Peek>(data: &mut &'a [u8]) -> ItemRange<'a, T> {
 }
 
 impl<'a> BuiltDisplayListIter<'a> {
-    pub fn new(list: &'a BuiltDisplayList) -> Self {
-        Self::new_with_list_and_data(list, list.item_slice())
-    }
-
-    pub fn new_with_list_and_data(list: &'a BuiltDisplayList, data: &'a [u8]) -> Self {
-        BuiltDisplayListIter {
+    pub fn new(
+        list: &'a BuiltDisplayList,
+        data: &'a [u8],
+        cache: Option<&'a DisplayItemCache>,
+    ) -> Self {
+        Self {
             list,
             data,
+            cache,
             cur_item: di::DisplayItem::PopStackingContext,
             cur_stops: ItemRange::default(),
             cur_glyphs: ItemRange::default(),
@@ -762,6 +787,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
         // so there is at least this amount available in the display list during
         // serialization.
         ensure_red_zone::<di::DisplayItem>(&mut data);
+        let extra_data_offset = data.len();
 
         Ok(BuiltDisplayList {
             data,
@@ -771,6 +797,8 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 send_start_time: 0,
                 total_clip_nodes,
                 total_spatial_nodes,
+                extra_data_offset,
+                cache_size: 0,
             },
         })
     }
@@ -788,6 +816,11 @@ pub struct SaveState {
 pub struct DisplayListBuilder {
     pub data: Vec<u8>,
     pub pipeline_id: PipelineId,
+
+    extra_data: Vec<u8>,
+    extra_data_chunk_len: usize,
+    writing_extra_data_chunk: bool,
+
     next_clip_index: usize,
     next_spatial_index: usize,
     next_clip_chain_id: u64,
@@ -797,6 +830,8 @@ pub struct DisplayListBuilder {
     /// outside the bounds of the display list items themselves.
     content_size: LayoutSize,
     save_state: Option<SaveState>,
+
+    cache_size: usize,
 }
 
 impl DisplayListBuilder {
@@ -814,12 +849,18 @@ impl DisplayListBuilder {
         DisplayListBuilder {
             data: Vec::with_capacity(capacity),
             pipeline_id,
+
+            extra_data: Vec::new(),
+            extra_data_chunk_len: 0,
+            writing_extra_data_chunk: false,
+
             next_clip_index: FIRST_CLIP_NODE_INDEX,
             next_spatial_index: FIRST_SPATIAL_NODE_INDEX,
             next_clip_chain_id: 0,
             builder_start_time: start_time,
             content_size,
             save_state: None,
+            cache_size: 0,
         }
     }
 
@@ -891,7 +932,7 @@ impl DisplayListBuilder {
 
         let mut index: usize = 0;
         {
-            let mut iter = BuiltDisplayListIter::new(&temp);
+            let mut iter = temp.iter();
             while let Some(item) = iter.next_raw() {
                 if index >= range.start.unwrap_or(0) && range.end.map_or(true, |e| index < e) {
                     writeln!(sink, "{}{:?}", "  ".repeat(indent), item.item()).unwrap();
@@ -904,6 +945,14 @@ impl DisplayListBuilder {
         index
     }
 
+    fn active_buffer(&mut self) -> &mut Vec<u8> {
+        if self.writing_extra_data_chunk {
+            &mut self.extra_data
+        } else {
+            &mut self.data
+        }
+    }
+
     /// Add an item to the display list.
     ///
     /// NOTE: It is usually preferable to use the specialized methods to push
@@ -911,7 +960,7 @@ impl DisplayListBuilder {
     /// result in WebRender panicking or behaving in unexpected ways.
     #[inline]
     pub fn push_item(&mut self, item: &di::DisplayItem) {
-        poke_into_vec(item, &mut self.data);
+        poke_into_vec(item, self.active_buffer());
     }
 
     fn push_iter_impl<I>(data: &mut Vec<u8>, iter_source: I)
@@ -957,7 +1006,7 @@ impl DisplayListBuilder {
         I::IntoIter: ExactSizeIterator,
         I::Item: Poke,
     {
-        Self::push_iter_impl(&mut self.data, iter);
+        Self::push_iter_impl(self.active_buffer(), iter);
     }
 
     pub fn push_rect(
@@ -1546,6 +1595,32 @@ impl DisplayListBuilder {
         self.push_item(&di::DisplayItem::PopAllShadows);
     }
 
+    pub fn start_extra_data_chunk(&mut self) {
+        self.writing_extra_data_chunk = true;
+        self.extra_data_chunk_len = self.extra_data.len();
+    }
+
+    // Returns the amount of bytes written to extra data buffer.
+    pub fn end_extra_data_chunk(&mut self) -> usize {
+        self.writing_extra_data_chunk = false;
+        self.extra_data.len() - self.extra_data_chunk_len
+    }
+
+    pub fn push_reuse_item(
+        &mut self,
+        key: di::ItemKey,
+    ) {
+        let item = di::DisplayItem::ReuseItem(key);
+        self.push_item(&item);
+    }
+
+    pub fn set_cache_size(
+        &mut self,
+        cache_size: usize,
+    ) {
+        self.cache_size = cache_size;
+    }
+
     pub fn finalize(mut self) -> (PipelineId, LayoutSize, BuiltDisplayList) {
         assert!(self.save_state.is_none(), "Finalized DisplayListBuilder with a pending save");
 
@@ -1554,8 +1629,14 @@ impl DisplayListBuilder {
         // serialization.
         ensure_red_zone::<di::DisplayItem>(&mut self.data);
 
-        let end_time = precise_time_ns();
+        let extra_data_offset = self.data.len();
 
+        if self.extra_data.len() > 0 {
+            ensure_red_zone::<di::DisplayItem>(&mut self.extra_data);
+            self.data.extend(self.extra_data);
+        }
+
+        let end_time = precise_time_ns();
         (
             self.pipeline_id,
             self.content_size,
@@ -1566,6 +1647,8 @@ impl DisplayListBuilder {
                     send_start_time: 0,
                     total_clip_nodes: self.next_clip_index,
                     total_spatial_nodes: self.next_spatial_index,
+                    cache_size: self.cache_size,
+                    extra_data_offset,
                 },
                 data: self.data,
             },
