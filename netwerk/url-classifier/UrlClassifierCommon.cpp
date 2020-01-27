@@ -215,6 +215,11 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
     return NS_OK;
   }
 
+  // TODO: ReportToConsole is called in the child process,
+  // If nsContentUtils::ReportToConsole is not fission compatiable(cannot report
+  // to correct top-level window), we need to do this in the parent process
+  // instead (find the top-level window in the parent and send an IPC to child
+  // processes to report console).
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
   if (NS_WARN_IF(!thirdPartyUtil)) {
     return NS_OK;
