@@ -21,9 +21,7 @@ struct ServiceWorkerUpdateStateOpArgs {
   ServiceWorkerState state;
 };
 
-struct ServiceWorkerTerminateWorkerOpArgs {
-  uint32_t shutdownStateId;
-};
+struct ServiceWorkerTerminateWorkerOpArgs {};
 
 struct ServiceWorkerLifeCycleEventOpArgs {
   nsString eventName;
