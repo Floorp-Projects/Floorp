@@ -44,8 +44,6 @@ class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
   already_AddRefed<mozilla::dom::Document> PrepareForContentChecks();
   // Do mixed content checks. May update mState.
   void CheckForMixedContent();
-  // Do Content Blocking checks. May update mEvent.
-  void CheckForContentBlockingEvents();
   // Given some information about a request from an OnLocationChange event,
   // update mState and mTopLevelSecurityInfo.
   nsresult UpdateStateAndSecurityInfo(nsIChannel* channel, nsIURI* uri);

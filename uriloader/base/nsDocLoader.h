@@ -120,14 +120,6 @@ class nsDocLoader : public nsIDocumentLoader,
    * changed. State flags are in nsIWebProgressListener.idl
    */
   void OnSecurityChange(nsISupports* aContext, uint32_t aState);
-  /**
-   * Fired when a content blocking event occurs during the time
-   * when a document is alive.  This interface should be called
-   * by Gecko to notify nsIWebProgressListeners that there is a
-   * new content blocking event.  Content blocking events are in
-   * nsIWebProgressListeners.idl.
-   */
-  void OnContentBlockingEvent(nsISupports* aContext, uint32_t aEvent);
 
   void SetDocumentOpenedButNotLoaded() { mDocumentOpenedButNotLoaded = true; }
 
