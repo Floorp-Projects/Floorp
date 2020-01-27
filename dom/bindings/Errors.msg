@@ -42,7 +42,6 @@ MSG_DEF(MSG_DOM_DECODING_FAILED, 0, JSEXN_TYPEERR, "Decoding failed.")
 MSG_DEF(MSG_NOT_FINITE, 1, JSEXN_TYPEERR, "{0} is not a finite floating-point value.")
 MSG_DEF(MSG_INVALID_BYTESTRING, 2, JSEXN_TYPEERR, "Cannot convert string to ByteString because the character"
         " at index {0} has value {1} which is greater than 255.")
-MSG_DEF(MSG_NOT_DATE, 1, JSEXN_TYPEERR, "{0} is not a date.")
 MSG_DEF(MSG_INVALID_URL, 1, JSEXN_TYPEERR, "{0} is not a valid URL.")
 MSG_DEF(MSG_URL_HAS_CREDENTIALS, 1, JSEXN_TYPEERR, "{0} is an url with embedded credentials.")
 MSG_DEF(MSG_INVALID_HEADER_NAME, 1, JSEXN_TYPEERR, "{0} is an invalid header name.")

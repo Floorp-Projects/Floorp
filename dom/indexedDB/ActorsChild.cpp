@@ -19,6 +19,7 @@
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
 #include "js/Array.h"  // JS::NewArrayObject, JS::SetArrayLength
+#include "js/Date.h"   // JS::NewDateObject, JS::TimeClip
 #include <mozIIPCBlobInputStream.h>
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CycleCollectedJSRuntime.h"

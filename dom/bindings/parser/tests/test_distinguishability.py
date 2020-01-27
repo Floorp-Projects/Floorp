@@ -159,14 +159,11 @@ def WebIDLTest(parser, harness):
                  "record<USVString, Dict>",
                  "record<ByteString, long>",
                  "record<UTF8String, long>",
-                 "Date", "Date?", "any",
-                 "Promise<any>", "Promise<any>?",
+                 "any", "Promise<any>", "Promise<any>?",
                  "USVString", "JSString", "ArrayBuffer", "ArrayBufferView",
                  "Uint8Array", "Uint16Array",
                  "(long or Callback)", "(long or Dict)",
     ]
-    # When we can parse Date, we need to add it here.
-    # XXXbz we can, and should really do that...
 
     # Try to categorize things a bit to keep list lengths down
     def allBut(list1, list2):
@@ -189,12 +186,11 @@ def WebIDLTest(parser, harness):
                   "CallbackInterface?", "Dict", "Dict2",
                   "Date?", "any", "Promise<any>?"] +
                  allBut(unions, [ "(long or Callback)" ]))
-    dates = [ "Date", "Date?" ]
     sequences = [ "sequence<long>", "sequence<short>" ]
-    nonUserObjects = nonObjects + interfaces + dates + sequences
+    nonUserObjects = nonObjects + interfaces + sequences
     otherObjects = allBut(argTypes, nonUserObjects + ["object"])
     notRelatedInterfaces = (nonObjects + ["UnrelatedInterface"] +
-                            otherObjects + dates + sequences + bufferSourceTypes)
+                            otherObjects + sequences + bufferSourceTypes)
     records = [ "record<DOMString, object>", "record<USVString, Dict>",
                 "record<ByteString, long>", "record<UTF8String, long>" ] # JSString not supported in records
 
@@ -242,8 +238,6 @@ def WebIDLTest(parser, harness):
     # JSString not supported in records
     setDistinguishable("record<ByteString, long>", nonUserObjects)
     setDistinguishable("record<UTF8String, long>", nonUserObjects)
-    setDistinguishable("Date", allBut(argTypes, dates + ["object"]))
-    setDistinguishable("Date?", allBut(argTypes, dates + nullables + ["object"]))
     setDistinguishable("any", [])
     setDistinguishable("Promise<any>", [])
     setDistinguishable("Promise<any>?", [])

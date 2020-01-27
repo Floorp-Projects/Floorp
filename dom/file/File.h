@@ -8,7 +8,6 @@
 #define mozilla_dom_File_h
 
 #include "mozilla/dom/Blob.h"
-#include "mozilla/dom/Date.h"
 
 class nsIFile;
 
