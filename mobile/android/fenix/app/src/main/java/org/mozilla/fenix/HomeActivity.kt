@@ -6,6 +6,7 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
@@ -21,7 +22,7 @@ import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import kotlinx.android.synthetic.main.activity_home.*
+import kotlinx.android.synthetic.main.activity_home.navigationToolbarStub
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -89,6 +90,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             DeepLinkIntentProcessor(this),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId)
         )
+    }
+
+    override fun applyOverrideConfiguration(overrideConfiguration: Configuration?) {
+        if (overrideConfiguration != null) {
+            val uiMode = overrideConfiguration.uiMode
+            overrideConfiguration.setTo(baseContext.resources.configuration)
+            overrideConfiguration.uiMode = uiMode
+        }
+        super.applyOverrideConfiguration(overrideConfiguration)
     }
 
     final override fun onCreate(savedInstanceState: Bundle?) {
