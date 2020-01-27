@@ -21,17 +21,23 @@ class DefaultLocaleSettingsController(
 ) : LocaleSettingsController {
 
     override fun handleLocaleSelected(locale: Locale) {
-        if (localeSettingsStore.state.selectedLocale == locale) {
+        if (localeSettingsStore.state.selectedLocale == locale &&
+            !LocaleManager.isDefaultLocaleSelected(context)) {
             return
         }
         localeSettingsStore.dispatch(LocaleSettingsAction.Select(locale))
         LocaleManager.setNewLocale(context, locale.toLanguageTag())
+        LocaleManager.updateBaseConfiguration(context, locale)
         (context as Activity).recreate()
     }
 
     override fun handleDefaultLocaleSelected() {
+        if (LocaleManager.isDefaultLocaleSelected(context)) {
+            return
+        }
         localeSettingsStore.dispatch(LocaleSettingsAction.Select(localeSettingsStore.state.localeList[0]))
         LocaleManager.resetToSystemDefault(context)
+        LocaleManager.updateBaseConfiguration(context, localeSettingsStore.state.localeList[0])
         (context as Activity).recreate()
     }
 

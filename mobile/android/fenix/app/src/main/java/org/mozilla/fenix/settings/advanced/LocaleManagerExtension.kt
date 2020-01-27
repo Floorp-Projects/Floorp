@@ -51,3 +51,15 @@ fun LocaleManager.getSelectedLocale(
 fun LocaleManager.isDefaultLocaleSelected(context: Context): Boolean {
     return getCurrentLocale(context) == null
 }
+
+/**
+ * Update the locale for the configuration of the app context's resources
+ */
+@Suppress("DEPRECATION")
+fun LocaleManager.updateBaseConfiguration(context: Context, locale: Locale) {
+    val resources = context.applicationContext.resources
+    val config = resources.configuration
+    config.setLocale(locale)
+    config.setLayoutDirection(locale)
+    resources.updateConfiguration(config, resources.displayMetrics)
+}
