@@ -11970,9 +11970,6 @@ class MWasmResultBase : public MNullaryInstruction {
   MWasmResultBase(Opcode op, MIRType type, Location loc)
       : MNullaryInstruction(op), loc_(loc) {
     setResultType(type);
-    // Prevent reordering.  Although there's no problem eliding call result
-    // definitions, there's also no need, as they cause no codegen.
-    setGuard();
   }
 
  public:
@@ -12003,6 +12000,15 @@ class MWasmRegister64Result : public MWasmResultBase<Register64> {
 
  public:
   INSTRUCTION_HEADER(WasmRegister64Result)
+  TRIVIAL_NEW_WRAPPERS
+};
+
+class MWasmValueOperandResult : public MWasmResultBase<ValueOperand> {
+  explicit MWasmValueOperandResult(ValueOperand reg)
+      : MWasmResultBase(classOpcode, MIRType::Value, reg) {}
+
+ public:
+  INSTRUCTION_HEADER(WasmValueOperandResult)
   TRIVIAL_NEW_WRAPPERS
 };
 
@@ -12165,13 +12171,11 @@ class MIonToWasmCall final : public MVariadicInstruction,
   CompilerGCPointer<WasmInstanceObject*> instanceObj_;
   const wasm::FuncExport& funcExport_;
 
-  MIonToWasmCall(WasmInstanceObject* instanceObj, MIRType resultType,
+  MIonToWasmCall(WasmInstanceObject* instanceObj,
                  const wasm::FuncExport& funcExport)
       : MVariadicInstruction(classOpcode),
         instanceObj_(instanceObj),
-        funcExport_(funcExport) {
-    setResultType(resultType);
-  }
+        funcExport_(funcExport) {}
 
  public:
   INSTRUCTION_HEADER(IonToWasmCall);
