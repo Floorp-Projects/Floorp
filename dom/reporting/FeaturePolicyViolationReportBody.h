@@ -8,7 +8,6 @@
 #define mozilla_dom_FeaturePolicyViolationReportBody_h
 
 #include "mozilla/dom/ReportBody.h"
-#include "mozilla/dom/Date.h"
 
 namespace mozilla {
 namespace dom {
