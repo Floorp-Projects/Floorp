@@ -1448,6 +1448,10 @@ impl YamlFrameWriter {
                 DisplayItem::PopAllShadows => {
                     str_node(&mut v, "type", "pop-all-shadows");
                 }
+                DisplayItem::ReuseItem(key) => {
+                    str_node(&mut v, "type", "reuse-item");
+                    usize_node(&mut v, "key", key as usize);
+                }
             }
             if !v.is_empty() {
                 list.push(Yaml::Hash(v));

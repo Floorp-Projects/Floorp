@@ -223,6 +223,58 @@ pub struct ItemStats {
 
 pub struct DisplayItemRef<'a: 'b, 'b> {
     iter: &'b BuiltDisplayListIter<'a>,
+    cached_item: Option<&'a CachedDisplayItem>,
+}
+
+// Some of these might just become ItemRanges
+impl<'a, 'b> DisplayItemRef<'a, 'b> {
+    fn cached_or_iter_data<T>(
+        &self,
+        data: ItemRange<'a, T>
+    ) -> ItemRange<'a, T> {
+        self.cached_item.map_or(data, |i| i.data_as_item_range())
+    }
+
+    pub fn display_list(&self) -> &BuiltDisplayList {
+        self.iter.display_list()
+    }
+
+    // Creates a new iterator where this element's iterator is, to hack around borrowck.
+    pub fn sub_iter(&self) -> BuiltDisplayListIter<'a> {
+        BuiltDisplayListIter::new(self.iter.list, self.iter.data, self.iter.cache)
+    }
+
+    pub fn item(&self) -> &di::DisplayItem {
+        self.cached_item.map_or(&self.iter.cur_item, |i| i.item())
+    }
+
+    pub fn clip_chain_items(&self) -> ItemRange<di::ClipId> {
+        self.iter.cur_clip_chain_items
+    }
+
+    pub fn complex_clip(&self) -> ItemRange<di::ComplexClipRegion> {
+        self.iter.cur_complex_clip
+    }
+
+    pub fn glyphs(&self) -> ItemRange<GlyphInstance> {
+        self.cached_or_iter_data(self.iter.cur_glyphs)
+    }
+
+    pub fn gradient_stops(&self) -> ItemRange<di::GradientStop> {
+        self.cached_or_iter_data(self.iter.cur_stops)
+    }
+
+    pub fn filters(&self) -> ItemRange<di::FilterOp> {
+        self.iter.cur_filters
+    }
+
+    pub fn filter_datas(&self) -> &Vec<TempFilterData> {
+        &self.iter.cur_filter_data
+    }
+
+    pub fn filter_primitives(&self) -> ItemRange<di::FilterPrimitive> {
+        self.iter.cur_filter_primitives
+    }
 }
 
 #[derive(PartialEq)]
@@ -457,7 +509,18 @@ impl<'a> BuiltDisplayListIter<'a> {
     }
 
     pub fn as_ref<'b>(&'b self) -> DisplayItemRef<'a, 'b> {
-        DisplayItemRef { iter: self }
+        let cached_item = match self.cur_item {
+            di::DisplayItem::ReuseItem(key) => {
+                debug_assert!(self.cache.is_some(), "Cache marker without cache!");
+                self.cache.and_then(|c| c.get_item(key))
+            }
+            _ => None
+        };
+
+        DisplayItemRef {
+            iter: self,
+            cached_item
+        }
     }
 
     pub fn skip_current_stacking_context(&mut self) {
@@ -515,50 +578,6 @@ impl<'a> BuiltDisplayListIter<'a> {
 
     #[cfg(not(feature = "display_list_stats"))]
     fn log_item_stats(&mut self) { /* no-op */ }
-}
-
-// Some of these might just become ItemRanges
-impl<'a, 'b> DisplayItemRef<'a, 'b> {
-    pub fn item(&self) -> &di::DisplayItem {
-        &self.iter.cur_item
-    }
-
-    pub fn complex_clip(&self) -> ItemRange<di::ComplexClipRegion> {
-        self.iter.cur_complex_clip
-    }
-
-    pub fn gradient_stops(&self) -> ItemRange<di::GradientStop> {
-        self.iter.cur_stops
-    }
-
-    pub fn glyphs(&self) -> ItemRange<GlyphInstance> {
-        self.iter.cur_glyphs
-    }
-
-    pub fn filters(&self) -> ItemRange<di::FilterOp> {
-        self.iter.cur_filters
-    }
-
-    pub fn filter_datas(&self) -> &Vec<TempFilterData> {
-        &self.iter.cur_filter_data
-    }
-
-    pub fn filter_primitives(&self) -> ItemRange<di::FilterPrimitive> {
-        self.iter.cur_filter_primitives
-    }
-
-    pub fn clip_chain_items(&self) -> ItemRange<di::ClipId> {
-        self.iter.cur_clip_chain_items
-    }
-
-    pub fn display_list(&self) -> &BuiltDisplayList {
-        self.iter.display_list()
-    }
-
-    // Creates a new iterator where this element's iterator is, to hack around borrowck.
-    pub fn sub_iter(&self) -> BuiltDisplayListIter<'a> {
-        BuiltDisplayListIter::new_with_list_and_data(self.iter.list, self.iter.data)
-    }
 }
 
 impl<'a, T> AuxIter<'a, T> {
@@ -674,6 +693,7 @@ impl Serialize for BuiltDisplayList {
                 Real::PopReferenceFrame => Debug::PopReferenceFrame,
                 Real::PopStackingContext => Debug::PopStackingContext,
                 Real::PopAllShadows => Debug::PopAllShadows,
+                Real::ReuseItem(k) => Debug::ReuseItem(k),
             };
             seq.serialize_element(&serial_di)?
         }
@@ -777,6 +797,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 Debug::PopStackingContext => Real::PopStackingContext,
                 Debug::PopReferenceFrame => Real::PopReferenceFrame,
                 Debug::PopAllShadows => Real::PopAllShadows,
+                Debug::ReuseItem(k) => Real::ReuseItem(k),
             };
             poke_into_vec(&item, &mut data);
             // the aux data is serialized after the item, hence the temporary
