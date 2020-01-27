@@ -181,6 +181,9 @@ class AntiTrackingCommon final {
   static already_AddRefed<nsIURI> MaybeGetDocumentURIBeingLoaded(
       nsIChannel* aChannel);
 
+  static void NotifyContentBlockingEvent(nsIChannel* aChannel,
+                                         uint32_t aRejectedReason);
+
   static void NotifyContentBlockingEvent(
       nsPIDOMWindowOuter* aWindow, nsIChannel* aReportingChannel,
       nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
