@@ -123,8 +123,7 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
 
   void Shutdown();
 
-  RefPtr<GenericNonExclusivePromise> ShutdownInternal(
-      uint32_t aShutdownStateId);
+  RefPtr<GenericNonExclusivePromise> ShutdownInternal();
 
   nsresult ExecServiceWorkerOp(
       ServiceWorkerOpArgs&& aArgs,

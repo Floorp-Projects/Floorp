@@ -376,15 +376,12 @@ nsresult ServiceWorkerPrivateImpl::CheckScriptEvaluation(
           return;
         }
 
+        RefPtr<GenericNonExclusivePromise> promise = self->ShutdownInternal();
+
         RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
         MOZ_ASSERT(swm);
 
-        auto shutdownStateId = swm->MaybeInitServiceWorkerShutdownProgress();
-
-        RefPtr<GenericNonExclusivePromise> promise =
-            self->ShutdownInternal(shutdownStateId);
-
-        swm->BlockShutdownOn(promise, shutdownStateId);
+        swm->BlockShutdownOn(promise);
 
         promise->Then(
             GetCurrentThreadSerialEventTarget(), __func__,
@@ -677,18 +674,15 @@ void ServiceWorkerPrivateImpl::Shutdown() {
                "All Service Workers should start shutting down before the "
                "ServiceWorkerManager does!");
 
-    auto shutdownStateId = swm->MaybeInitServiceWorkerShutdownProgress();
-
-    RefPtr<GenericNonExclusivePromise> promise =
-        ShutdownInternal(shutdownStateId);
-    swm->BlockShutdownOn(promise, shutdownStateId);
+    RefPtr<GenericNonExclusivePromise> promise = ShutdownInternal();
+    swm->BlockShutdownOn(promise);
   }
 
   MOZ_ASSERT(WorkerIsDead());
 }
 
-RefPtr<GenericNonExclusivePromise> ServiceWorkerPrivateImpl::ShutdownInternal(
-    uint32_t aShutdownStateId) {
+RefPtr<GenericNonExclusivePromise>
+ServiceWorkerPrivateImpl::ShutdownInternal() {
   AssertIsOnMainThread();
   MOZ_ASSERT(mControllerChild);
 
@@ -707,7 +701,7 @@ RefPtr<GenericNonExclusivePromise> ServiceWorkerPrivateImpl::ShutdownInternal(
       new GenericNonExclusivePromise::Private(__func__);
 
   Unused << ExecServiceWorkerOp(
-      ServiceWorkerTerminateWorkerOpArgs(aShutdownStateId),
+      ServiceWorkerTerminateWorkerOpArgs(),
       [promise](ServiceWorkerOpResult&& aResult) {
         MOZ_ASSERT(aResult.type() == ServiceWorkerOpResult::Tnsresult);
         promise->Resolve(true, __func__);

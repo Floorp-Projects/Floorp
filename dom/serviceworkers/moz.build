@@ -31,7 +31,6 @@ EXPORTS.mozilla.dom += [
     'ServiceWorkerRegistration.h',
     'ServiceWorkerRegistrationDescriptor.h',
     'ServiceWorkerRegistrationInfo.h',
-    'ServiceWorkerShutdownState.h',
     'ServiceWorkerUtils.h',
 ]
 
@@ -79,7 +78,6 @@ UNIFIED_SOURCES += [
     'ServiceWorkerRegistrationProxy.cpp',
     'ServiceWorkerScriptCache.cpp',
     'ServiceWorkerShutdownBlocker.cpp',
-    'ServiceWorkerShutdownState.cpp',
     'ServiceWorkerUnregisterCallback.cpp',
     'ServiceWorkerUnregisterJob.cpp',
     'ServiceWorkerUpdateJob.cpp',

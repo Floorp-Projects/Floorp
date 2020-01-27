@@ -17,7 +17,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpParent.h"
 #include "mozilla/dom/ServiceWorkerOpPromise.h"
-#include "mozilla/dom/ServiceWorkerShutdownState.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla {
@@ -101,8 +100,6 @@ IPCResult RemoteWorkerControllerParent::RecvExecServiceWorkerOp(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mIPCActive);
   MOZ_ASSERT(mRemoteWorkerController);
-
-  MaybeReportServiceWorkerShutdownProgress(aArgs);
 
   mRemoteWorkerController->ExecServiceWorkerOp(std::move(aArgs))
       ->Then(GetCurrentThreadSerialEventTarget(), __func__,

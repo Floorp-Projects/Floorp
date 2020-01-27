@@ -107,7 +107,6 @@
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/SHEntryParent.h"
 #include "mozilla/dom/SHistoryParent.h"
-#include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/StorageIPC.h"
@@ -6378,16 +6377,6 @@ PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
     const FileDescriptor& aFD) {
   MOZ_ASSERT(NS_IsMainThread());
   return PContentParent::SendPFileDescriptorSetConstructor(aFD);
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvReportServiceWorkerShutdownProgress(
-    uint32_t aShutdownStateId, ServiceWorkerShutdownState::Progress aProgress) {
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_RELEASE_ASSERT(swm, "ServiceWorkers should shutdown before SWM.");
-
-  swm->ReportServiceWorkerShutdownProgress(aShutdownStateId, aProgress);
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
