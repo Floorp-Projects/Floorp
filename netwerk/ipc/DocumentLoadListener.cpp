@@ -500,17 +500,6 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
         [redirectChannel](const ClassificationFlagsParams& aParams) {
           redirectChannel->NotifyClassificationFlags(
               aParams.mClassificationFlags, aParams.mIsThirdParty);
-        },
-        [redirectChannel](
-            const NotifyChannelClassifierProtectionDisabledParams& aParams) {
-          redirectChannel->NotifyChannelClassifierProtectionDisabled(
-              aParams.mAcceptedReason);
-        },
-        [redirectChannel](const NotifyCookieAllowedParams&) {
-          redirectChannel->NotifyCookieAllowed();
-        },
-        [redirectChannel](const NotifyCookieBlockedParams& aParams) {
-          redirectChannel->NotifyCookieBlocked(aParams.mRejectedReason);
         });
   }
 
@@ -1071,29 +1060,6 @@ DocumentLoadListener::NotifyClassificationFlags(uint32_t aClassificationFlags,
   mIParentChannelFunctions.AppendElement(IParentChannelFunction{
       VariantIndex<3>{},
       ClassificationFlagsParams{aClassificationFlags, aIsThirdParty}});
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentLoadListener::NotifyChannelClassifierProtectionDisabled(
-    uint32_t aAcceptedReason) {
-  mIParentChannelFunctions.AppendElement(IParentChannelFunction{
-      VariantIndex<4>{},
-      NotifyChannelClassifierProtectionDisabledParams{aAcceptedReason}});
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentLoadListener::NotifyCookieAllowed() {
-  mIParentChannelFunctions.AppendElement(
-      IParentChannelFunction{VariantIndex<5>{}, NotifyCookieAllowedParams()});
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentLoadListener::NotifyCookieBlocked(uint32_t aRejectedReason) {
-  mIParentChannelFunctions.AppendElement(IParentChannelFunction{
-      VariantIndex<6>{}, NotifyCookieBlockedParams{aRejectedReason}});
   return NS_OK;
 }
 
