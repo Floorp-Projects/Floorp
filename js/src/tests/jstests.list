@@ -451,6 +451,30 @@ skip script test262/intl402/Locale/proto-from-ctor-realm.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
 skip script test262/built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1610512
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-en-US.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-zh-TW.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-ja-JP.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-ko-KR.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-de-DE.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-en-US.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-zh-TW.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-ja-JP.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-ko-KR.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-de-DE.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-rounding.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1610514
+skip script test262/intl402/NumberFormat/prototype/formatToParts/percent-en-US.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1610513
+skip script test262/intl402/RelativeTimeFormat/constructor/constructor/options-throwing-getters.js
+skip script test262/intl402/RelativeTimeFormat/constructor/constructor/options-order.js
+skip script test262/intl402/RelativeTimeFormat/constructor/constructor/options-numberingSystem-invalid.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1608809
+skip script test262/language/expressions/class/super-evaluation-order.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -482,6 +506,9 @@ skip script test262/built-ins/AggregateError/newtarget-proto-fallback.js
 # But InitializeDateTimeFormat defaults for hour12=false and hcDefault="h12" the
 # hour-cycle to "h24", which isn't allowed per the above CLDR data.
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
+
+# Tests expects RangeError, but should instead expect TypeError.
+skip script test262/intl402/NumberFormat/constructor-order.js
 
 
 ####################################################
@@ -555,6 +582,9 @@ shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/Fina
 shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/Symbol.toStringTag.js
 shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/proto.js
 shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/next-not-object-throws.js
+shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/prototype/cleanupSome/cleanup-throws-in-callback.js
+shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/prototype/unregister/unregister-cleaned-up-cell.js
+
 
 ####################################################
 # Enable WeakRef tests in the shell #
