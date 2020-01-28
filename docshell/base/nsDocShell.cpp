@@ -10471,10 +10471,12 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
    * if this page has any frame children, it also will be handled
    * properly. see bug 83684
    *
-   * NB: If mOSHE is null but we have a current URI, then it means
-   * that we must be at the transient about:blank content viewer
-   * (asserted above) and we should let the normal load continue,
-   * since there's nothing to replace.
+   * NB: If mOSHE is null but we have a current URI, then it probably
+   * means that we must be at the transient about:blank content viewer;
+   * we should let the normal load continue, since there's nothing to
+   * replace. Sometimes this happens after a session restore (eg process
+   * switch) and mCurrentURI is not about:blank; we assume we can let the load
+   * continue (Bug 1301399). 
    *
    * XXX Hopefully changing the loadType at this time will not hurt
    *  anywhere. The other way to take care of sequentially repeating
