@@ -591,7 +591,7 @@ class FunctionScope : public Scope {
 
   static bool isSpecialName(JSContext* cx, JSAtom* name);
 
-  static Shape* getEmptyEnvironmentShape(JSContext* cx, bool hasParameterExprs);
+  static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
 //
