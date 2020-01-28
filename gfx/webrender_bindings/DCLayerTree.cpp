@@ -10,6 +10,7 @@
 #include "GLContextEGL.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/webrender/RenderThread.h"
 
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_WINBLUE
@@ -555,6 +556,7 @@ GLuint DCLayerTree::CreateEGLSurfaceForCompositionSurface(
   if (FAILED(hr)) {
     gfxCriticalNote << "DCompositionSurface::BeginDraw failed: "
                     << gfx::hexa(hr);
+    RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
     return false;
   }
 
