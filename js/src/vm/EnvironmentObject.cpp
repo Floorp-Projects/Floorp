@@ -245,8 +245,7 @@ CallObject* CallObject::createHollowForDebug(JSContext* cx,
 
   RootedScript script(cx, callee->nonLazyScript());
   Rooted<FunctionScope*> scope(cx, &script->bodyScope()->as<FunctionScope>());
-  RootedShape shape(cx, FunctionScope::getEmptyEnvironmentShape(
-                            cx, scope->hasParameterExprs()));
+  RootedShape shape(cx, FunctionScope::getEmptyEnvironmentShape(cx));
   if (!shape) {
     return nullptr;
   }
