@@ -26,5 +26,8 @@ let AVAILABLE_PIP_OVERRIDES;
     "https://*.twitch.tv/*": TOGGLE_POLICIES.ONE_QUARTER,
     "https://*.twitch.tech/*": TOGGLE_POLICIES.ONE_QUARTER,
     "https://*.twitch.a2z.com/*": TOGGLE_POLICIES.ONE_QUARTER,
+
+    // Udemy
+    "https://www.udemy.com/*": TOGGLE_POLICIES.ONE_QUARTER,
   };
 }
