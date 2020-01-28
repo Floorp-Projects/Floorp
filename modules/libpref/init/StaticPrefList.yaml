@@ -2143,6 +2143,11 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+- name: dom.reporting.crash.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.reporting.header.enabled
   type: RelaxedAtomicBool
   value: false
