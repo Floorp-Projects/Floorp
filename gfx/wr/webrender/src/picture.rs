@@ -80,7 +80,7 @@ use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
 };
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTileId};
 use crate::debug_colors;
-use euclid::{vec3, Point2D, Scale, Size2D, Vector2D, Rect};
+use euclid::{vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
@@ -112,8 +112,23 @@ use ron;
 #[cfg(feature = "capture")]
 use crate::scene_builder_thread::InternerUpdates;
 #[cfg(any(feature = "capture", feature = "replay"))]
-use crate::intern::Update;
-
+use crate::intern::{Internable, UpdateList};
+#[cfg(any(feature = "capture", feature = "replay"))]
+use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::prim_store::backdrop::Backdrop;
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::prim_store::gradient::{LinearGradient, RadialGradient};
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::prim_store::image::{Image, YuvImage};
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::prim_store::line_dec::LineDecoration;
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::prim_store::picture::Picture;
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::prim_store::text_run::TextRun;
 
 #[cfg(feature = "capture")]
 use std::fs::File;
@@ -1493,7 +1508,7 @@ impl BackdropInfo {
 #[derive(Clone)]
 pub struct TileCacheLoggerSlice {
     pub serialized_slice: String,
-    pub local_to_world_transform: DeviceRect
+    pub local_to_world_transform: Transform3D<f32, PicturePixel, WorldPixel>,
 }
 
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -1514,7 +1529,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
                 /// the updates is the list of DataStore updates (avoid UpdateList
                 /// due to Default() requirements on the Keys) reconstructed at
                 /// load time.
-                pub $name: (String, Vec<Update>),
+                pub $name: (String, UpdateList<<$ty as Internable>::Key>),
             )+
         }
 
@@ -1522,7 +1537,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
             pub fn new() -> Self {
                 TileCacheLoggerUpdateLists {
                     $(
-                        $name : ( String::new(), Vec::<Update>::new() ),
+                        $name : ( String::new(), UpdateList{ updates: Vec::new(), data: Vec::new()} ),
                     )+
                 }
             }
@@ -1534,7 +1549,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
                 updates: &InternerUpdates
             ) {
                 $(
-                    self.$name.0 = ron::ser::to_string_pretty(&updates.$name.updates, Default::default()).unwrap();
+                    self.$name.0 = ron::ser::to_string_pretty(&updates.$name, Default::default()).unwrap();
                 )+
             }
 
@@ -1552,7 +1567,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
                 $(
                     serializer.ron_string.push(
                         if self.$name.0.is_empty() {
-                            "[]".to_string()
+                            "( updates: [], data: [] )".to_string()
                         } else {
                             self.$name.0.clone()
                         });
@@ -1562,7 +1577,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
 
             #[cfg(feature = "replay")]
             pub fn from_ron(&mut self, text: &str) {
-                let serializer : TileCacheLoggerUpdateListsSerializer = 
+                let serializer : TileCacheLoggerUpdateListsSerializer =
                     match ron::de::from_str(&text) {
                         Ok(data) => { data }
                         Err(e) => {
@@ -1646,7 +1661,11 @@ impl TileCacheLogger {
     }
 
     #[cfg(feature = "capture")]
-    pub fn add(&mut self, serialized_slice: String, local_to_world_transform: DeviceRect) {
+    pub fn add(
+            &mut self,
+            serialized_slice: String,
+            local_to_world_transform: Transform3D<f32, PicturePixel, WorldPixel>
+    ) {
         if !self.is_enabled() {
             return;
         }
@@ -1709,11 +1728,12 @@ impl TileCacheLogger {
             output.write_all(b"// slice data\n").unwrap();
             output.write_all(b"[\n").unwrap();
             for item in &self.frames[index].slices {
-                output.write_all(format!("( x: {}, y: {},\n",
-                                         item.local_to_world_transform.origin.x,
-                                         item.local_to_world_transform.origin.y)
-                                 .as_bytes()).unwrap();
-                output.write_all(b"tile_cache:\n").unwrap();
+                output.write_all(b"( transform:\n").unwrap();
+                let transform =
+                    ron::ser::to_string_pretty(
+                        &item.local_to_world_transform, Default::default()).unwrap();
+                output.write_all(transform.as_bytes()).unwrap();
+                output.write_all(b",\n tile_cache:\n").unwrap();
                 output.write_all(item.serialized_slice.as_bytes()).unwrap();
                 output.write_all(b"\n),\n").unwrap();
             }
@@ -3706,7 +3726,6 @@ impl PicturePrimitive {
             }
         };
 
-        let unclipped =
         match self.raster_config {
             Some(ref raster_config) => {
                 let pic_rect = PictureRect::from_untyped(&self.precise_local_rect.to_untyped());
@@ -4297,10 +4316,8 @@ impl PicturePrimitive {
                         root,
                     );
                 }
-
-                unclipped
             }
-            None => DeviceRect::zero()
+            None => {}
         };
 
         #[cfg(feature = "capture")]
@@ -4327,14 +4344,13 @@ impl PicturePrimitive {
                         });
                     }
                     let text = ron::ser::to_string_pretty(&tile_cache_tiny, Default::default()).unwrap();
-                    tile_cache_logger.add(text, unclipped);
+                    tile_cache_logger.add(text, map_pic_to_world.get_transform());
                 }
             }
         }
         #[cfg(not(feature = "capture"))]
         {
             let _tile_cache_logger = tile_cache_logger;   // unused variable fix
-            let _unclipped = unclipped;
         }
 
         let state = PictureState {
