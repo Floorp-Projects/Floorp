@@ -99,8 +99,6 @@ void nsFilterInstance::PaintFilteredFrame(
 
 static mozilla::wr::ComponentTransferFuncType FuncTypeToWr(uint8_t aFuncType) {
   switch (aFuncType) {
-    case SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY:
-      return mozilla::wr::ComponentTransferFuncType::Identity;
     case SVG_FECOMPONENTTRANSFER_TYPE_TABLE:
       return mozilla::wr::ComponentTransferFuncType::Table;
     case SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE:
@@ -109,10 +107,12 @@ static mozilla::wr::ComponentTransferFuncType FuncTypeToWr(uint8_t aFuncType) {
       return mozilla::wr::ComponentTransferFuncType::Linear;
     case SVG_FECOMPONENTTRANSFER_TYPE_GAMMA:
       return mozilla::wr::ComponentTransferFuncType::Gamma;
+    case SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY:
     default:
-      MOZ_ASSERT(false, "unknown func type?");
+      return mozilla::wr::ComponentTransferFuncType::Identity;
+
   }
-  MOZ_ASSERT(false, "unknown func type?");
+  MOZ_ASSERT_UNREACHABLE("all func types not handled?");
   return mozilla::wr::ComponentTransferFuncType::Identity;
 }
 
