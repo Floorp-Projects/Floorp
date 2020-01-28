@@ -778,7 +778,9 @@ $(OBJDIR)/$(PROG_PREFIX)gcm-aarch64$(OBJ_SUFFIX): CFLAGS += -march=armv8-a+crypt
 endif
 
 ifeq ($(CPU_ARCH),ppc)
-$(OBJDIR)/$(PROG_PREFIX)gcm-ppc$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec
+$(OBJDIR)/$(PROG_PREFIX)gcm-ppc$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
+$(OBJDIR)/$(PROG_PREFIX)gcm$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
+$(OBJDIR)/$(PROG_PREFIX)rijndael$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
 endif
 
 $(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4 -mavx -maes 

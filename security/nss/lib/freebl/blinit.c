@@ -122,6 +122,22 @@ extern unsigned long getauxval(unsigned long type) __attribute__((weak));
 static unsigned long (*getauxval)(unsigned long) = NULL;
 #endif /* defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)*/
 
+#if defined(__FreeBSD__) && !defined(__aarch64__) && __has_include(<sys/auxv.h>)
+/* Avoid conflict with static declaration above */
+#define getauxval freebl_getauxval
+static unsigned long getauxval(unsigned long type)
+{
+    /* Only AT_HWCAP* return unsigned long */
+    if (type != AT_HWCAP && type != AT_HWCAP2) {
+        return 0;
+    }
+
+    unsigned long ret = 0;
+    elf_aux_info(type, &ret, sizeof(ret));
+    return ret;
+}
+#endif
+
 #ifndef AT_HWCAP2
 #define AT_HWCAP2 26
 #endif
@@ -415,7 +431,11 @@ ppc_crypto_support()
 
 #if defined(__powerpc__)
 
+#if defined(__linux__) || (defined(__FreeBSD__) && __FreeBSD__ >= 12)
 #include <sys/auxv.h>
+#elif (defined(__FreeBSD__) && __FreeBSD__ < 12)
+#include <sys/sysctl.h>
+#endif
 
 // Defines from cputable.h in Linux kernel - PPC, letting us build on older kernels
 #ifndef PPC_FEATURE2_VEC_CRYPTO
@@ -427,7 +447,17 @@ CheckPPCSupport()
 {
     char *disable_hw_crypto = PR_GetEnvSecure("NSS_DISABLE_PPC_GHASH");
 
-    long hwcaps = getauxval(AT_HWCAP2);
+    unsigned long hwcaps = 0;
+#if defined(__linux__)
+    hwcaps = getauxval(AT_HWCAP2);
+#elif defined(__FreeBSD__)
+#if __FreeBSD__ >= 12
+    elf_aux_info(AT_HWCAP2, &hwcaps, sizeof(hwcaps));
+#else
+    size_t len = sizeof(hwcaps);
+    sysctlbyname("hw.cpu_features2", &hwcaps, &len, NULL, 0);
+#endif
+#endif
 
     ppc_crypto_support_ = hwcaps & PPC_FEATURE2_VEC_CRYPTO && disable_hw_crypto == NULL;
 }
