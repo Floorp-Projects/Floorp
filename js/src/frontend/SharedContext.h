@@ -345,8 +345,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool hasDestructuringArgs : 1; /* parameter list contains destructuring
                                     expression */
   bool hasParameterExprs : 1;    /* parameter list contains expressions */
-  bool hasDirectEvalInParameterExpr : 1; /* parameter list contains direct eval
-                                          */
   bool hasDuplicateParameters : 1; /* parameter list contains duplicate names */
   bool useAsm : 1;                 /* see useAsmOrInsideUseAsm */
   bool isAnnexB : 1;   /* need to emit a synthesized Annex B assignment */
