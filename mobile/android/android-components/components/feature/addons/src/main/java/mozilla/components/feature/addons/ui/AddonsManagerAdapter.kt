@@ -79,8 +79,9 @@ class AddonsManagerAdapter(
             false
         )
         val titleView = view.findViewById<TextView>(R.id.title)
+        val descriptionView = view.findViewById<TextView>(R.id.description)
 
-        return UnsupportedSectionViewHolder(view, titleView)
+        return UnsupportedSectionViewHolder(view, titleView, descriptionView)
     }
 
     private fun createAddonViewHolder(parent: ViewGroup): AddonViewHolder {
@@ -136,7 +137,18 @@ class AddonsManagerAdapter(
         holder: UnsupportedSectionViewHolder,
         section: NotYetSupportedSection
     ) {
+        val context = holder.titleView.context
         holder.titleView.setText(section.title)
+        holder.descriptionView.text =
+            if (unsupportedAddons.size == 1) {
+                context.getString(R.string.mozac_feature_addons_unsupported_caption)
+            } else {
+                context.getString(
+                    R.string.mozac_feature_addons_unsupported_caption_plural,
+                    unsupportedAddons.size.toString()
+                )
+            }
+
         holder.itemView.setOnClickListener {
             addonsManagerDelegate.onNotYetSupportedSectionClicked(unsupportedAddons)
         }

@@ -27,7 +27,8 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
      */
     class UnsupportedSectionViewHolder(
         view: View,
-        val titleView: TextView
+        val titleView: TextView,
+        val descriptionView: TextView
     ) : CustomViewHolder(view)
 
     /**
