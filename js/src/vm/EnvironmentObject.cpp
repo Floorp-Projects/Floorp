@@ -3662,10 +3662,8 @@ static bool CheckVarNameConflictsInEnv(JSContext* cx, HandleScript script,
 
   if (env->isSyntactic() && !env->isGlobal() &&
       env->scope().kind() == ScopeKind::SimpleCatch) {
-    // Annex B.3.5 allows redeclaring simple (non-destructured) catch
-    // parameters with var declarations, except when it appears in a
-    // for-of. The for-of allowance is computed in
-    // Parser::isVarRedeclaredInEval.
+    // Annex B.3.5 allows redeclaring simple (non-destructured) catch parameters
+    // with var declarations.
     return true;
   }
 
