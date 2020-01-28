@@ -100,6 +100,7 @@
 #include "gfxUtils.h"
 #include "nsILoginManagerAuthPrompter.h"
 #include "nsPIWindowRoot.h"
+#include "nsReadableUtils.h"
 #include "nsIAuthPrompt2.h"
 #include "gfxDrawable.h"
 #include "ImageOps.h"
@@ -114,6 +115,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "MMPrinter.h"
 #include "SessionStoreFunctions.h"
+#include "mozilla/dom/CrashReport.h"
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetParent.h"
@@ -704,6 +706,32 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   // Even though BrowserParent::Destroy calls this, we need to do it here too in
   // case of a crash.
   BrowserParent::PopFocus(this);
+
+  if (why == AbnormalShutdown) {
+    // dom_reporting_header must also be enabled for the report to be sent.
+    if (StaticPrefs::dom_reporting_crash_enabled()) {
+      nsCOMPtr<nsIPrincipal> principal = GetContentPrincipal();
+
+      if (principal) {
+        nsAutoCString crash_reason;
+        CrashReporter::GetAnnotation(OtherPid(),
+                                     CrashReporter::Annotation::MozCrashReason,
+                                     crash_reason);
+        // FIXME(arenevier): Find a less fragile way to identify that a crash
+        // was caused by OOM
+        bool is_oom = false;
+        if (crash_reason == "OOM" || crash_reason == "OOM!" ||
+            StringBeginsWith(crash_reason,
+                             NS_LITERAL_CSTRING("[unhandlable oom]")) ||
+            StringBeginsWith(crash_reason,
+                             NS_LITERAL_CSTRING("Unhandlable OOM"))) {
+          is_oom = true;
+        }
+
+        CrashReport::Deliver(principal, is_oom);
+      }
+    }
+  }
 
   // Prevent executing ContentParent::NotifyTabDestroying in
   // BrowserParent::Destroy() called by frameLoader->DestroyComplete() below
