@@ -12,7 +12,6 @@
 #include <stdint.h>  // uint16_t, uint32_t
 
 #include "frontend/DefaultEmitter.h"       // DefaultEmitter
-#include "frontend/DestructuringFlavor.h"  // DestructuringFlavor
 #include "frontend/EmitterScope.h"         // EmitterScope
 #include "frontend/SharedContext.h"        // FunctionBox
 #include "frontend/TDZCheckCache.h"        // TDZCheckCache
@@ -435,8 +434,6 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
 
   MOZ_MUST_USE bool prepareForDestructuringRest();
   MOZ_MUST_USE bool emitDestructuringRestEnd();
-
-  MOZ_MUST_USE DestructuringFlavor getDestructuringFlavor();
 
  private:
   MOZ_MUST_USE bool prepareForInitializer();
