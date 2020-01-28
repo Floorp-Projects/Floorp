@@ -35,8 +35,7 @@ Scope* ScopeCreationData::createScope(JSContext* cx) {
       scope = createSpecificScope<LexicalScope>(cx);
       break;
     }
-    case ScopeKind::FunctionBodyVar:
-    case ScopeKind::ParameterExpressionVar: {
+    case ScopeKind::FunctionBodyVar: {
       scope = createSpecificScope<VarScope>(cx);
       break;
     }
@@ -95,8 +94,7 @@ void ScopeCreationData::trace(JSTracer* trc) {
         data<LexicalScope>().trace(trc);
         break;
       }
-      case ScopeKind::FunctionBodyVar:
-      case ScopeKind::ParameterExpressionVar: {
+      case ScopeKind::FunctionBodyVar: {
         data<VarScope>().trace(trc);
         break;
       }
@@ -126,7 +124,6 @@ uint32_t ScopeCreationData::nextFrameSlot() const {
     case ScopeKind::Function:
       return nextFrameSlot<FunctionScope>();
     case ScopeKind::FunctionBodyVar:
-    case ScopeKind::ParameterExpressionVar:
       return nextFrameSlot<VarScope>();
     case ScopeKind::Lexical:
     case ScopeKind::SimpleCatch:

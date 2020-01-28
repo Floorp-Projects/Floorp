@@ -206,7 +206,6 @@ NameLocation EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope,
         break;
 
       case ScopeKind::FunctionBodyVar:
-      case ScopeKind::ParameterExpressionVar:
       case ScopeKind::Lexical:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
@@ -1011,13 +1010,6 @@ bool EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal) {
 
     case ScopeKind::With:
       if (!bce->emit1(JSOp::LeaveWith)) {
-        return false;
-      }
-      break;
-
-    case ScopeKind::ParameterExpressionVar:
-      MOZ_ASSERT(hasEnvironment());
-      if (!bce->emit1(JSOp::PopVarEnv)) {
         return false;
       }
       break;

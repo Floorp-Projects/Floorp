@@ -1007,7 +1007,6 @@ static void PopEnvironment(JSContext* cx, EnvironmentIter& ei) {
       }
       break;
     case ScopeKind::FunctionBodyVar:
-    case ScopeKind::ParameterExpressionVar:
     case ScopeKind::StrictEval:
       if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
         DebugEnvironments::onPopVar(cx, ei);
