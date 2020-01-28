@@ -12014,15 +12014,6 @@ class MWasmRegister64Result : public MWasmResultBase<Register64> {
   TRIVIAL_NEW_WRAPPERS
 };
 
-class MWasmValueOperandResult : public MWasmResultBase<ValueOperand> {
-  explicit MWasmValueOperandResult(ValueOperand reg)
-      : MWasmResultBase(classOpcode, MIRType::Value, reg) {}
-
- public:
-  INSTRUCTION_HEADER(WasmValueOperandResult)
-  TRIVIAL_NEW_WRAPPERS
-};
-
 class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   wasm::CallSiteDesc desc_;
   wasm::CalleeDesc callee_;
@@ -12185,11 +12176,13 @@ class MIonToWasmCall final : public MVariadicInstruction,
   CompilerGCPointer<WasmInstanceObject*> instanceObj_;
   const wasm::FuncExport& funcExport_;
 
-  MIonToWasmCall(WasmInstanceObject* instanceObj,
+  MIonToWasmCall(WasmInstanceObject* instanceObj, MIRType resultType,
                  const wasm::FuncExport& funcExport)
       : MVariadicInstruction(classOpcode),
         instanceObj_(instanceObj),
-        funcExport_(funcExport) {}
+        funcExport_(funcExport) {
+    setResultType(resultType);
+  }
 
  public:
   INSTRUCTION_HEADER(IonToWasmCall);
