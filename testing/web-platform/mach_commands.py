@@ -47,7 +47,8 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
             # Note that this import may fail in non-firefox-for-android trees
             from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
-            verify_android_device(self, install=InstallIntent.PROMPT, verbose=False, xre=True, app=package_name)
+            install = InstallIntent.NO if kwargs.pop('no_install') else InstallIntent.PROMPT
+            verify_android_device(self, install=install, verbose=False, xre=True, app=package_name)
 
             if kwargs["certutil_binary"] is None:
                 kwargs["certutil_binary"] = os.path.join(os.environ.get('MOZ_HOST_BIN'), "certutil")
