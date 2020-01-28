@@ -3494,7 +3494,16 @@ nsresult nsFocusManager::GetNextTabbableContent(
         }
         // There is no next tabbable content in currentTopLevelScopeOwner's
         // scope. We should continue the loop in order to skip all contents that
-        // is in currentTopLevelScopeOwner's scope.
+        // is in currentTopLevelScopeOwner's scope. Unless we've wrapped around
+        // already.
+        if (aOriginalStartContent &&
+            currentTopLevelScopeOwner ==
+                GetTopLevelScopeOwner(aOriginalStartContent)) {
+          // FIXME: Shouldn't this return null instead?  aOriginalStartContent
+          // isn't focusable after all.
+          NS_ADDREF(*aResultContent = aOriginalStartContent);
+          return NS_OK;
+        }
         continue;
       }
 
@@ -3601,6 +3610,9 @@ nsresult nsFocusManager::GetNextTabbableContent(
         // not focusable, so return if we have wrapped around to the original
         // content. This is necessary in case the original starting content was
         // not focusable.
+        //
+        // FIXME: Shouldn't this return null instead? currentContent isn't
+        // focusable after all.
         NS_ADDREF(*aResultContent = currentContent);
         return NS_OK;
       }
