@@ -63,6 +63,10 @@ class ReportingHeader final : public nsIObserver, public nsITimerCallback {
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
       nsACString& aEndpointURI);
 
+  static void GetEndpointForReport(const nsAString& aGroupName,
+                                   nsIPrincipal* aPrincipal,
+                                   nsACString& aEndpointURI);
+
   static void RemoveEndpoint(const nsAString& aGroupName,
                              const nsACString& aEndpointURL,
                              const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
