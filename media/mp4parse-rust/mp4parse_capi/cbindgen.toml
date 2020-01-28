@@ -1,0 +1,19 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"""
+autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen. See RunCbindgen.py */
+#ifndef mozilla_media_mp4parse_rust_mp4parse_h
+#error "Don't include this file directly, instead include mp4parse.h"
+#endif
+"""
+include_version = true
+braces = "SameLine"
+line_length = 100
+tab_width = 2
+language = "C"
+
+# If we change the language to C++, it would be nice to namespace it
+# namespaces = ["mozilla", "media", "ffi"]
+
+[enum]
+rename_variants = "QualifiedScreamingSnakeCase"
