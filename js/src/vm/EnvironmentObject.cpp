@@ -3678,6 +3678,17 @@ static bool CheckVarNameConflictsInEnv(JSContext* cx, HandleScript script,
   return true;
 }
 
+static bool CheckArgumentsRedeclaration(JSContext* cx, HandleScript script) {
+  for (BindingIter bi(script); bi; bi++) {
+    if (bi.name() == cx->names().arguments) {
+      ReportRuntimeRedeclaration(cx, cx->names().arguments, "let");
+      return false;
+    }
+  }
+
+  return true;
+}
+
 static bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
                                           HandleObject scopeChain,
                                           HandleObject varObj) {
@@ -3698,6 +3709,30 @@ static bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
       return false;
     }
     obj = obj->enclosingEnvironment();
+  }
+
+  // Check for redeclared "arguments" in function parameter expressions.
+  //
+  // Direct eval in function parameter expressions isn't allowed to redeclare
+  // the implicit "arguments" bindings:
+  //   function f(a = eval("var arguments;")) {}
+  //
+  // |varObj| isn't a CallObject when the direct eval occurs in the function
+  // body and the extra function body var scope is present. The extra var scope
+  // is present iff the function has parameter expressions. So when we test
+  // that |varObj| is a CallObject and function parameter expressions are
+  // present, we can pinpoint the direct eval location to be in a function
+  // parameter expression. Additionally we must ensure the function isn't an
+  // arrow function, because arrow functions don't have an implicit "arguments"
+  // binding.
+  if (script->isDirectEvalInFunction() && varObj->is<CallObject>()) {
+    JSFunction* fun = &varObj->as<CallObject>().callee();
+    JSScript* funScript = fun->nonLazyScript();
+    if (funScript->functionHasParameterExprs() && !fun->isArrow()) {
+      if (!CheckArgumentsRedeclaration(cx, script)) {
+        return false;
+      }
+    }
   }
 
   // Step 8.
