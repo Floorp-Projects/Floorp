@@ -90,8 +90,8 @@ class nsSystemInfo final : public nsISystemInfo, public nsHashPropertyBag {
   RefPtr<CountryCodePromise> mCountryCodePromise;
   RefPtr<OSInfoPromise> mOSInfoPromise;
   RefPtr<ProcessInfoPromise> mProcessInfoPromise;
-  RefPtr<mozilla::LazyIdleThread> mLazyHelperThread;
-  RefPtr<mozilla::LazyIdleThread> GetHelperThread();
+  RefPtr<nsISerialEventTarget> mBackgroundET;
+  RefPtr<nsISerialEventTarget> GetBackgroundTarget();
 };
 
 #define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"
