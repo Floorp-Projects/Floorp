@@ -65,7 +65,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "caba8a6f9578"
+        "revision": "954f2b278ad5"
     },
     "ast": {
         "platforms": [
@@ -201,7 +201,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "d43d71f5fc07"
+        "revision": "e448de377758"
     },
     "ca-valencia": {
         "platforms": [
@@ -1158,7 +1158,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ff1d5c2fad28"
+        "revision": "c84c2b5223dc"
     },
     "pa-IN": {
         "platforms": [
