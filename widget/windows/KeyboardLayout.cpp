@@ -1306,7 +1306,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget, const MSG& aMessage,
 
   MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
           ("%p   NativeKey::NativeKey(), mKeyboardLayout=0x%08X, "
-           "mFocusedWndBeforeDispatch=0x%p, mDOMKeyCode=0x%04X, "
+           "mFocusedWndBeforeDispatch=0x%p, mDOMKeyCode=%s, "
            "mKeyNameIndex=%s, mCodeNameIndex=%s, mModKeyState=%s, "
            "mVirtualKeyCode=%s, mOriginalVirtualKeyCode=%s, "
            "mCommittedCharsAndModifiers=%s, mInputtingStringAndModifiers=%s, "
@@ -3489,6 +3489,21 @@ void NativeKey::ComputeInputtingStringWithKeyboardLayout() {
     return;
   }
 
+  // If user is inputting a Unicode character with typing Alt + Numpad
+  // keys, we shouldn't set alternative key codes because the key event
+  // shouldn't match with a mnemonic.  However, we should set only
+  // mUnshiftedString for keeping traditional behavior at WM_SYSKEYDOWN.
+  // FYI: I guess that it's okay that mUnshiftedString stays empty.  So,
+  //      if its value breaks something, you must be able to just return here.
+  if (IsTypingUnicodeScalarValue()) {
+    MOZ_ASSERT(mMsg.message == WM_SYSKEYDOWN);
+    MOZ_ASSERT(!mCommittedCharsAndModifiers.IsEmpty());
+    char16_t num = mCommittedCharsAndModifiers.CharAt(0);
+    MOZ_ASSERT(num >= '0' && num <= '9');
+    mUnshiftedString.Append(num, MODIFIER_NONE);
+    return;
+  }
+
   ModifierKeyState capsLockState(mModKeyState.GetModifiers() &
                                  MODIFIER_CAPSLOCK);
 
@@ -3962,6 +3977,69 @@ void KeyboardLayout::InitNativeKey(NativeKey& aNativeKey) {
       aNativeKey.mCommittedCharsAndModifiers.Append(ch, modifiers);
       return;
     }
+  }
+
+  // If the aNativeKey is in a sequence to input a Unicode character with
+  // Alt + numpad keys, we should just set the number as the inputting charcter.
+  // Note that we should compute the key value from the virtual key code
+  // because they may be mapped to alphabets, but they should be treated as
+  // Alt + [0-9] even by web apps.
+  if (aNativeKey.IsTypingUnicodeScalarValue()) {
+    // If the key code value is mapped to a Numpad key, let's compute the key
+    // value with it.  This is same behavior as Chrome.  In strictly speaking,
+    // I think that the else block's computation is better because it seems
+    // that Windows does not refer virtual key code value, but we should avoid
+    // web-compat issues.
+    char16_t num = '0';
+    if (aNativeKey.mVirtualKeyCode >= VK_NUMPAD0 &&
+        aNativeKey.mVirtualKeyCode <= VK_NUMPAD9) {
+      num = '0' + aNativeKey.mVirtualKeyCode - VK_NUMPAD0;
+    }
+    // Otherwise, let's use fake key value for making never match with
+    // mnemonic.
+    else {
+      switch (aNativeKey.mScanCode) {
+        case 0x0052:  // Numpad0
+          num = '0';
+          break;
+        case 0x004F:  // Numpad1
+          num = '1';
+          break;
+        case 0x0050:  // Numpad2
+          num = '2';
+          break;
+        case 0x0051:  // Numpad3
+          num = '3';
+          break;
+        case 0x004B:  // Numpad4
+          num = '4';
+          break;
+        case 0x004C:  // Numpad5
+          num = '5';
+          break;
+        case 0x004D:  // Numpad6
+          num = '6';
+          break;
+        case 0x0047:  // Numpad7
+          num = '7';
+          break;
+        case 0x0048:  // Numpad8
+          num = '8';
+          break;
+        case 0x0049:  // Numpad9
+          num = '9';
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE(
+              "IsTypingUnicodeScalarValue() must have returned true for wrong "
+              "scancode");
+          break;
+      }
+    }
+    aNativeKey.mCommittedCharsAndModifiers.Append(num,
+                                                  aNativeKey.GetModifiers());
+    aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
+    return;
   }
 
   // When it's followed by non-dead char message(s) for printable character(s),
