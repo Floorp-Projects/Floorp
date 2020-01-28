@@ -1,5 +1,99 @@
 # GENERATED, DO NOT EDIT
 
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/Symbol.toStringTag.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')||!this.hasOwnProperty('WeakRef')) async script built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/next-job-not-active-throws.js # FinalizationGroup,WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/next-length.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')||!this.hasOwnProperty('WeakRef')) async script built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/next-missing-internal-throws.js # FinalizationGroup,WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/next-name.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/next-not-object-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/next-prop-desc.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/proto.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/constructor.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/gc-has-one-chance-to-call-cleanupCallback.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/instance-extensible.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/length.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/name.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/newtarget-prototype-is-not-object.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prop-desc.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/proto-from-ctor-realm.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/proto.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype-from-newtarget-abrupt.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype-from-newtarget-custom.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype-from-newtarget.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/Symbol.toStringTag.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/cleanupSome/callback-iterator-proto.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/cleanupSome/callback-not-callable-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/cleanupSome/cleanup-prevented-with-reference.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/cleanupSome/cleanup-prevented-with-unregister.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/cleanupSome/cleanup-throws-in-callback.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/cleanupSome/cleanupcallback-iterator-proto.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/cleanupSome/custom-this.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/cleanupSome/iterator-holdings-multiple-values.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/cleanupSome/length.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/cleanupSome/name.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/cleanupSome/poisoned-callback-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/cleanupSome/prop-desc.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/cleanupSome/return-undefined-with-gc.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/cleanupSome/return-undefined.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')||!this.hasOwnProperty('WeakRef')) script built-ins/FinalizationGroup/prototype/cleanupSome/this-does-not-have-internal-cells-throws.js # FinalizationGroup,WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/cleanupSome/this-not-object-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/constructor.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/prop-desc.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/proto.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/custom-this.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/holdings-any-value-type.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/holdings-same-as-target.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/length.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/name.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/prop-desc.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/return-undefined-register-itself.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/return-undefined.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/target-not-object-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')||!this.hasOwnProperty('WeakRef')) script built-ins/FinalizationGroup/prototype/register/this-does-not-have-internal-target-throws.js # FinalizationGroup,WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/this-not-object-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/unregisterToken-not-object-or-undefined-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/unregisterToken-same-as-holdings-and-target.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/unregisterToken-same-as-holdings.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/register/unregisterToken-same-as-target.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/unregister/custom-this.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/unregister/length.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/unregister/name.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/unregister/prop-desc.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')||!this.hasOwnProperty('WeakRef')) script built-ins/FinalizationGroup/prototype/unregister/this-does-not-have-internal-cells-throws.js # FinalizationGroup,WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/unregister/this-not-object-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) async script built-ins/FinalizationGroup/prototype/unregister/unregister-cleaned-up-cell.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/unregister/unregister.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/prototype/unregister/unregisterToken-not-object-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/returns-new-object-from-constructor.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')||!this.hasOwnProperty('WeakRef')) script built-ins/FinalizationGroup/target-not-callable-throws.js # FinalizationGroup,WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/undefined-newtarget-throws.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('FinalizationGroup')) script built-ins/FinalizationGroup/unnaffected-by-poisoned-cleanupCallback.js # FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/constructor.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/instance-extensible.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/length.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/name.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/newtarget-prototype-is-not-object.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prop-desc.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/proto-from-ctor-realm.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/proto.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype-from-newtarget-abrupt.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype-from-newtarget-custom.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype-from-newtarget.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/Symbol.toStringTag.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/constructor.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/deref/custom-this.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) async script built-ins/WeakRef/prototype/deref/gc-cleanup-not-prevented-with-wr-deref.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/deref/length.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/deref/name.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/deref/prop-desc.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/deref/return-target.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')||!this.hasOwnProperty('FinalizationGroup')) script built-ins/WeakRef/prototype/deref/this-does-not-have-internal-target-throws.js # WeakRef,FinalizationGroup is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/deref/this-not-object-throws.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/prop-desc.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/prototype/proto.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/returns-new-object-from-constructor.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/target-not-object-throws.js # WeakRef is not enabled unconditionally
+shell-option(--enable-weak-refs) skip-if(!this.hasOwnProperty('WeakRef')) script built-ins/WeakRef/undefined-newtarget-throws.js # WeakRef is not enabled unconditionally
 error:SyntaxError script language/comments/hashbang/escaped-bang-041.js
 error:SyntaxError script language/comments/hashbang/escaped-bang-u0021.js
 error:SyntaxError script language/comments/hashbang/escaped-bang-u21.js
