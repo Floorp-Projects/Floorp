@@ -643,9 +643,6 @@ template
                       HandleScope enclosing, MutableHandleScope scope);
 
 static inline uint32_t FunctionScopeEnvShapeFlags(bool hasParameterExprs) {
-  if (hasParameterExprs) {
-    return BaseShape::DELEGATE;
-  }
   return BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
 }
 
@@ -1077,8 +1074,8 @@ bool EvalScope::prepareForScopeCreation(JSContext* cx, ScopeKind scopeKind,
     }
   }
 
-  // Strict eval and direct eval in parameter expressions always get their own
-  // var environment even if there are no bindings.
+  // Strict eval always gets its own var environment even if there are no
+  // bindings.
   if (!envShape && scopeKind == ScopeKind::StrictEval) {
     envShape.set(getEmptyEnvironmentShape(cx));
     if (!envShape) {
