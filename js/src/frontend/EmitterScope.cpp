@@ -628,10 +628,9 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
   }
 
   // If the function's scope may be extended at runtime due to sloppy direct
-  // eval and there is no extra var scope, any names beyond the function
-  // scope must be accessed dynamically as we don't know if the name will
-  // become a 'var' binding due to direct eval.
-  if (!funbox->hasParameterExprs && funbox->hasExtensibleScope()) {
+  // eval, any names beyond the function scope must be accessed dynamically as
+  // we don't know if the name will become a 'var' binding due to direct eval.
+  if (funbox->hasExtensibleScope()) {
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
   }
 
@@ -900,7 +899,7 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
     }
   } else {
     // Resolve binding names and emit DefVar prologue ops if we don't have
-    // an environment (i.e., a sloppy eval not in a parameter expression).
+    // an environment (i.e., a sloppy eval).
     // Eval scripts always have their own lexical scope, but non-strict
     // scopes may introduce 'var' bindings to the nearest var scope.
     //
