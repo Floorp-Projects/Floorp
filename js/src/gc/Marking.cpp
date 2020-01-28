@@ -1426,8 +1426,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
         break;
       }
 
-      case ScopeKind::FunctionBodyVar:
-      case ScopeKind::ParameterExpressionVar: {
+      case ScopeKind::FunctionBodyVar: {
         VarScope::Data& data = scope->as<VarScope>().data();
         names = &data.trailingNames;
         length = data.length;

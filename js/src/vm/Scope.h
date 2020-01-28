@@ -59,8 +59,7 @@ static inline bool ScopeKindIsInBody(ScopeKind kind) {
   return kind == ScopeKind::Lexical || kind == ScopeKind::SimpleCatch ||
          kind == ScopeKind::Catch || kind == ScopeKind::With ||
          kind == ScopeKind::FunctionLexical ||
-         kind == ScopeKind::FunctionBodyVar ||
-         kind == ScopeKind::ParameterExpressionVar;
+         kind == ScopeKind::FunctionBodyVar;
 }
 
 const char* BindingKindString(BindingKind kind);
@@ -596,21 +595,11 @@ class FunctionScope : public Scope {
 };
 
 //
-// Scope holding only vars. There are 2 kinds of VarScopes.
+// Scope holding only vars. There is a single kind of VarScopes.
 //
 // FunctionBodyVar
 //   Corresponds to the extra var scope present in functions with parameter
 //   expressions. See examples in comment above FunctionScope.
-//
-// ParameterExpressionVar
-//   Each parameter expression is evaluated in its own var environment. For
-//   example, f() below will print 'fml', then 'global'. That's right.
-//
-//     var a = 'global';
-//     function f(x = (eval(`var a = 'fml'`), a), y = a) {
-//       print(x);
-//       print(y);
-//     };
 //
 // Corresponds to VarEnvironmentObject on environment chain.
 //
@@ -672,8 +661,7 @@ class VarScope : public Scope {
 
 template <>
 inline bool Scope::is<VarScope>() const {
-  return kind_ == ScopeKind::FunctionBodyVar ||
-         kind_ == ScopeKind::ParameterExpressionVar;
+  return kind_ == ScopeKind::FunctionBodyVar;
 }
 
 //
@@ -1035,7 +1023,6 @@ void Scope::applyScopeDataTyped(F&& f) {
       f(&as<FunctionScope>().data());
       break;
       case ScopeKind::FunctionBodyVar:
-      case ScopeKind::ParameterExpressionVar:
         f(&as<VarScope>().data());
         break;
       case ScopeKind::Lexical:

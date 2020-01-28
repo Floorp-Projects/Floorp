@@ -54,8 +54,6 @@ const char* js::ScopeKindString(ScopeKind kind) {
       return "function";
     case ScopeKind::FunctionBodyVar:
       return "function body var";
-    case ScopeKind::ParameterExpressionVar:
-      return "parameter expression var";
     case ScopeKind::Lexical:
       return "lexical";
     case ScopeKind::SimpleCatch:
@@ -407,8 +405,7 @@ Scope* Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing) {
       break;
     }
 
-    case ScopeKind::FunctionBodyVar:
-    case ScopeKind::ParameterExpressionVar: {
+    case ScopeKind::FunctionBodyVar: {
       Rooted<UniquePtr<VarScope::Data>> dataClone(cx);
       dataClone = CopyScopeData<VarScope>(cx, &scope->as<VarScope>().data());
       if (!dataClone) {
@@ -518,7 +515,6 @@ uint32_t LexicalScope::nextFrameSlot(const AbstractScope& scope) {
         continue;
       case ScopeKind::Function:
       case ScopeKind::FunctionBodyVar:
-      case ScopeKind::ParameterExpressionVar:
       case ScopeKind::Lexical:
       case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
@@ -1105,7 +1101,6 @@ Scope* EvalScope::nearestVarScopeForDirectEval(Scope* scope) {
     switch (si.kind()) {
       case ScopeKind::Function:
       case ScopeKind::FunctionBodyVar:
-      case ScopeKind::ParameterExpressionVar:
       case ScopeKind::Global:
       case ScopeKind::NonSyntactic:
         return scope;
@@ -1454,7 +1449,6 @@ BindingIter::BindingIter(Scope* scope) {
       break;
     }
     case ScopeKind::FunctionBodyVar:
-    case ScopeKind::ParameterExpressionVar:
       init(scope->as<VarScope>().data(),
            scope->as<VarScope>().firstFrameSlot());
       break;
