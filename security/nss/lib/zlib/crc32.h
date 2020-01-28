@@ -1,12 +1,8 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 /* crc32.h -- tables for rapid CRC calculation
  * Generated automatically by crc32.c
  */
 
-local const unsigned long FAR crc_table[TBLS][256] =
+local const z_crc_t FAR crc_table[TBLS][256] =
 {
   {
     0x00000000UL, 0x77073096UL, 0xee0e612cUL, 0x990951baUL, 0x076dc419UL,
