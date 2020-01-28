@@ -39,7 +39,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DisplayNames",
     "Intl.Segmenter",
     "optional-chaining",
-    "WeakRef",
     "top-level-await",
 ])
 FEATURE_CHECK_NEEDED = {
@@ -99,7 +98,7 @@ def tryParseTestFile(test262parser, source, testName):
         return None
 
 
-def createRefTestEntry(skip, skipIf, error, isModule, isAsync):
+def createRefTestEntry(options, skip, skipIf, error, isModule, isAsync):
     """
     Returns the |reftest| tuple (terms, comments) from the input arguments. Or a
     tuple of empty strings if no reftest entry is required.
@@ -107,6 +106,9 @@ def createRefTestEntry(skip, skipIf, error, isModule, isAsync):
 
     terms = []
     comments = []
+
+    if options:
+        terms.extend(options)
 
     if skip:
         terms.append("skip")
@@ -244,6 +246,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     testRec = tryParseTestFile(test262parser, testSource.decode("utf-8"), testName)
 
     # jsreftest meta data
+    refTestOptions = []
     refTestSkip = []
     refTestSkipIf = []
 
@@ -317,6 +320,9 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
                                       "&&getBuildConfiguration()['arm64-simulator'])",
                                       "ARM64 Simulator cannot emulate atomics"))
 
+            if "WeakRef" in testRec["features"] or "FinalizationGroup" in testRec["features"]:
+                refTestOptions.append("shell-option(--enable-weak-refs)")
+
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
     # test harness files to the top level shell.js file.
@@ -330,9 +336,9 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     else:
         testEpilogue = ""
 
-    (terms, comments) = createRefTestEntry(refTestSkip, refTestSkipIf, errorType, isModule,
-                                           isAsync)
-    if raw:
+    (terms, comments) = createRefTestEntry(refTestOptions, refTestSkip, refTestSkipIf, errorType,
+                                           isModule, isAsync)
+    if raw or refTestOptions:
         refTest = ""
         externRefTest = (terms, comments)
     else:
@@ -367,14 +373,15 @@ def convertFixtureFile(fixtureSource, fixtureName):
     """
 
     # jsreftest meta data
+    refTestOptions = []
     refTestSkip = ["not a test file"]
     refTestSkipIf = []
     errorType = None
     isModule = False
     isAsync = False
 
-    (terms, comments) = createRefTestEntry(refTestSkip, refTestSkipIf, errorType, isModule,
-                                           isAsync)
+    (terms, comments) = createRefTestEntry(refTestOptions, refTestSkip, refTestSkipIf, errorType,
+                                           isModule, isAsync)
     refTest = createRefTestLine(terms, comments)
 
     source = createSource(fixtureSource, refTest, "", "")
