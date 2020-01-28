@@ -10476,7 +10476,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
    * we should let the normal load continue, since there's nothing to
    * replace. Sometimes this happens after a session restore (eg process
    * switch) and mCurrentURI is not about:blank; we assume we can let the load
-   * continue (Bug 1301399). 
+   * continue (Bug 1301399).
    *
    * XXX Hopefully changing the loadType at this time will not hurt
    *  anywhere. The other way to take care of sequentially repeating
