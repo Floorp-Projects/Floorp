@@ -8,7 +8,7 @@
 %filter substitution
 %define identityBoxPaddingInline 6px
 %define identityBoxMarginInlineEnd 2px
-%define lwtPopupBrighttextLinkColor #45a1ff
+%define lwtPopupBrighttextLinkColor #74c0ff
 %define themeTransition background-color 0.1s cubic-bezier(.17,.67,.83,.67)
 %define urlbarBreakoutExtend 2px
 
