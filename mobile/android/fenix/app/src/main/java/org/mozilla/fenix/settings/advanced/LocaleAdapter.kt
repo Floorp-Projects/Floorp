@@ -7,12 +7,14 @@ package org.mozilla.fenix.settings.advanced
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.locale_settings_item.view.locale_selected_icon
 import kotlinx.android.synthetic.main.locale_settings_item.view.locale_subtitle_text
 import kotlinx.android.synthetic.main.locale_settings_item.view.locale_title_text
+import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.R
 import java.util.Locale
 
@@ -30,13 +32,13 @@ class LocaleAdapter(private val interactor: LocaleSettingsViewInteractor) :
         return when (viewType) {
             ItemType.DEFAULT.ordinal -> SystemLocaleViewHolder(
                 view,
-                interactor,
-                selectedLocale
+                selectedLocale,
+                interactor
             )
             ItemType.LOCALE.ordinal -> LocaleViewHolder(
                 view,
-                interactor,
-                selectedLocale
+                selectedLocale,
+                interactor
             )
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
         }
@@ -99,9 +101,9 @@ class LocaleAdapter(private val interactor: LocaleSettingsViewInteractor) :
 
 class LocaleViewHolder(
     view: View,
-    private val interactor: LocaleSettingsViewInteractor,
-    private val selectedLocale: Locale
-) : BaseLocaleViewHolder(view) {
+    selectedLocale: Locale,
+    private val interactor: LocaleSettingsViewInteractor
+) : BaseLocaleViewHolder(view, selectedLocale) {
     private val icon = view.locale_selected_icon
     private val title = view.locale_title_text
     private val subtitle = view.locale_subtitle_text
@@ -110,7 +112,7 @@ class LocaleViewHolder(
         // capitalisation is done using the rules of the appropriate locale (endonym and exonym)
         title.text = locale.getDisplayName(locale).capitalize(locale)
         subtitle.text = locale.displayName.capitalize(Locale.getDefault())
-        icon.isVisible = locale === selectedLocale
+        icon.isVisible = isCurrentLocaleSelected(locale, isDefault = false)
 
         itemView.setOnClickListener {
             interactor.onLocaleSelected(locale)
@@ -120,9 +122,9 @@ class LocaleViewHolder(
 
 class SystemLocaleViewHolder(
     view: View,
-    private val interactor: LocaleSettingsViewInteractor,
-    private val selectedLocale: Locale
-) : BaseLocaleViewHolder(view) {
+    selectedLocale: Locale,
+    private val interactor: LocaleSettingsViewInteractor
+) : BaseLocaleViewHolder(view, selectedLocale) {
     private val icon = view.locale_selected_icon
     private val title = view.locale_title_text
     private val subtitle = view.locale_subtitle_text
@@ -130,15 +132,27 @@ class SystemLocaleViewHolder(
     override fun bind(locale: Locale) {
         title.text = itemView.context.getString(R.string.default_locale_text)
         subtitle.visibility = View.GONE
-        icon.isVisible = locale === selectedLocale
-
+        icon.isVisible = isCurrentLocaleSelected(locale, isDefault = true)
         itemView.setOnClickListener {
             interactor.onDefaultLocaleSelected()
         }
     }
 }
 
-abstract class BaseLocaleViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+abstract class BaseLocaleViewHolder(
+    view: View,
+    private val selectedLocale: Locale
+) : RecyclerView.ViewHolder(view) {
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    internal fun isCurrentLocaleSelected(locale: Locale, isDefault: Boolean): Boolean {
+        return if (isDefault) {
+            locale == selectedLocale && LocaleManager.isDefaultLocaleSelected(itemView.context)
+        } else {
+            locale == selectedLocale && !LocaleManager.isDefaultLocaleSelected(itemView.context)
+        }
+    }
+
     abstract fun bind(locale: Locale)
 }
 

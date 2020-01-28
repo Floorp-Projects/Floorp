@@ -47,3 +47,7 @@ fun LocaleManager.getSelectedLocale(
         supportedMatch ?: defaultLocale
     }
 }
+
+fun LocaleManager.isDefaultLocaleSelected(context: Context): Boolean {
+    return getCurrentLocale(context) == null
+}

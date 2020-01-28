@@ -11,6 +11,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import mozilla.components.support.locale.LocaleManager
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -40,6 +41,27 @@ class LocaleManagerExtensionTest {
 
         assertEquals(expectedSize, list.size)
         assertTrue(list.isNotEmpty())
+    }
+
+    @Test
+    @Config(qualifiers = "en-rUS")
+    fun `default locale selected`() {
+        val context: Context = mockk()
+        mockkObject(LocaleManager)
+        every { LocaleManager.getCurrentLocale(context) } returns null
+
+        assertTrue(LocaleManager.isDefaultLocaleSelected(context))
+    }
+
+    @Test
+    @Config(qualifiers = "en-rUS")
+    fun `custom locale selected`() {
+        val context: Context = mockk()
+        mockkObject(LocaleManager)
+        val selectedLocale = Locale("en", "UK")
+        every { LocaleManager.getCurrentLocale(context) } returns selectedLocale
+
+        assertFalse(LocaleManager.isDefaultLocaleSelected(context))
     }
 
     @Test
