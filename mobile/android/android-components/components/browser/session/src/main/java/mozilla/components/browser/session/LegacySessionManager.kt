@@ -287,9 +287,14 @@ class LegacySessionManager(
             this.getEngineSession(it)
         }
         engineSessionLinker.link(session, engineSession, parent)
+
+        if (session == selectedSession) {
+            engineSession.markActiveForWebExtensions(true)
+        }
     }
 
     private fun unlink(session: Session) {
+        getEngineSession(session)?.markActiveForWebExtensions(false)
         engineSessionLinker.unlink(session)
     }
 
@@ -324,6 +329,7 @@ class LegacySessionManager(
         notifyObservers { onSessionRemoved(session) }
 
         if (selectedBeforeRemove != selectedSession && selectedIndex != NO_SELECTION) {
+            getEngineSession(selectedSessionOrThrow)?.markActiveForWebExtensions(true)
             notifyObservers { onSessionSelected(selectedSessionOrThrow) }
         }
     }
@@ -491,8 +497,13 @@ class LegacySessionManager(
             "Value to select is not in list"
         }
 
+        selectedSession?.let {
+            getEngineSession(it)?.markActiveForWebExtensions(false)
+        }
+
         selectedIndex = index
 
+        getEngineSession(session)?.markActiveForWebExtensions(true)
         notifyObservers { onSessionSelected(session) }
     }
 

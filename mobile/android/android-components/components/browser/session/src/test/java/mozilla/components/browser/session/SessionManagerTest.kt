@@ -17,6 +17,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 
 import org.mockito.Mockito.`when`
@@ -105,6 +106,46 @@ class SessionManagerTest {
         manager.add(Session("http://www.mozilla.org"))
 
         manager.select(Session("https://getpocket.com"))
+    }
+
+    @Test
+    fun `selected session is marked as active for web extensions`() {
+        val engine = mock(Engine::class.java)
+        val engineSession1 = mock(EngineSession::class.java)
+        val engineSession2 = mock(EngineSession::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+        `when`(engine.createSession(anyBoolean())).thenReturn(engineSession1)
+
+        val session1 = Session("http://www.mozilla.org")
+        val session2 = Session("http://www.firefox.com")
+
+        val manager = SessionManager(engine)
+        manager.add(session1)
+        manager.add(session2)
+        assertEquals("http://www.mozilla.org", manager.selectedSessionOrThrow.url)
+
+        // Session1 was selected but never linked to an engine session so we have never marked it as active
+        verify(engineSession1, never()).markActiveForWebExtensions(true)
+
+        // Creating an engine session and linking to session1 should mark it as active
+        manager.getOrCreateEngineSession(session1)
+        verify(engineSession1).markActiveForWebExtensions(true)
+
+        // Selecting a new session should mark the new session as active and the previous one as inactive
+        `when`(engine.createSession(anyBoolean())).thenReturn(engineSession2)
+        verify(engineSession2, never()).markActiveForWebExtensions(true)
+        manager.getOrCreateEngineSession(session2)
+        manager.select(session2)
+        assertEquals("http://www.firefox.com", manager.selectedSessionOrThrow.url)
+        verify(engineSession1).markActiveForWebExtensions(false)
+        verify(engineSession2).markActiveForWebExtensions(true)
+
+        // Removing the selected session should mark it as inactive and the new selection as active
+        `when`(engine.createSession(anyBoolean())).thenReturn(engineSession1)
+        manager.remove(session2)
+        assertEquals("http://www.mozilla.org", manager.selectedSessionOrThrow.url)
+        verify(engineSession2).markActiveForWebExtensions(false)
+        verify(engineSession1, times(2)).markActiveForWebExtensions(true)
     }
 
     @Test

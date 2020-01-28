@@ -523,6 +523,14 @@ abstract class EngineSession(
     abstract fun recoverFromCrash(): Boolean
 
     /**
+     * Marks this session active/inactive for web extensions to support
+     * tabs.query({active: true}).
+     *
+     * @param active whether this session should be marked as active or inactive.
+     */
+    open fun markActiveForWebExtensions(active: Boolean) = Unit
+
+    /**
      * Close the session. This may free underlying objects. Call this when you are finished using
      * this session.
      */
