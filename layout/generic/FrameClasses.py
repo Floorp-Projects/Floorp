@@ -76,7 +76,7 @@ FRAME_CLASSES = [
     Frame("nsMenuFrame", "Menu", NOT_LEAF),
     Frame("nsMenuPopupFrame", "MenuPopup", DYNAMIC_LEAF),
     Frame("nsMeterFrame", "Meter", LEAF),
-    Frame("nsNumberControlFrame", "NumberControl", LEAF),
+    Frame("nsNumberControlFrame", "TextInput", LEAF),
     Frame("nsPluginFrame", "Object", LEAF),
     Frame("nsPageBreakFrame", "PageBreak", LEAF),
     Frame("nsPageContentFrame", "PageContent", NOT_LEAF),

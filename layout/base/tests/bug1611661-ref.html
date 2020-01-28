@@ -1,0 +1,18 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Test reference</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div>
+  <input type="number" value="33">
+</div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('input').focus();
+  requestAnimationFrame(function() {
+    // Move after the 3
+    synthesizeKey("KEY_ArrowRight");
+    document.documentElement.className = "";
+  });
+});
+</script>
