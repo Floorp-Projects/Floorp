@@ -13,8 +13,7 @@ addLoadEvent(test);
 // docShell should include those flags.
 const TEST_FLAGS = Ci.nsIRequest.LOAD_ANONYMOUS |
                    Ci.nsIRequest.LOAD_BYPASS_CACHE |
-                   Ci.nsIRequest.INHIBIT_CACHING |
-                   Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+                   Ci.nsIRequest.INHIBIT_CACHING;
 
 var TEST_URL = "http://mochi.test:8888/chrome/docshell/test/chrome/bug909218.html";
 
