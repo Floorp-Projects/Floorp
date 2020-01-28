@@ -385,6 +385,8 @@ if (navigator.platform.includes("Linux")) {
     [ 'bug1524266-3.html' , 'bug1524266-2-ref.html' ] ,
     // Tries to select and delete non-editable content in a user-select subtree.
     [ 'bug1524266-4.html' , 'bug1524266-2-ref.html' ] ,
+    // Tries to edit an <input type="number"> with arrows inside a user-select: none element.
+    [ 'bug1611661.html' , 'bug1611661-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
   ]);
 }
