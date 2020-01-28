@@ -8,13 +8,14 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-TARGETS        = $(LIBRARY) $(PROGRAMS)
+TARGETS        = $(LIBRARY)
 SHARED_LIBRARY =
 IMPORT_LIBRARY =
 PROGRAM        =
 
 EXTRA_LIBS     = $(LIBRARY)
 
-ifeq ($(OS_TARGET),Linux)
+ifneq ($(OS_ARCH),WINNT)
 DEFINES += -DHAVE_UNISTD_H
 endif
+DEFINES += -DHAVE_STDARG_H
