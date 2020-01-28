@@ -111,7 +111,6 @@ class EmitterScope : public Nestable<EmitterScope> {
   MOZ_MUST_USE bool enterFunction(BytecodeEmitter* bce, FunctionBox* funbox);
   MOZ_MUST_USE bool enterFunctionExtraBodyVar(BytecodeEmitter* bce,
                                               FunctionBox* funbox);
-  MOZ_MUST_USE bool enterParameterExpressionVar(BytecodeEmitter* bce);
   MOZ_MUST_USE bool enterGlobal(BytecodeEmitter* bce,
                                 GlobalSharedContext* globalsc);
   MOZ_MUST_USE bool enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc);

@@ -957,35 +957,6 @@ bool FunctionParamsEmitter::emitDestructuringRestEnd() {
   return true;
 }
 
-bool FunctionParamsEmitter::enterParameterExpressionVarScope() {
-  if (!funbox_->hasDirectEvalInParameterExpr) {
-    return true;
-  }
-
-  // ES 14.1.19 says if BindingElement contains an expression in the
-  // production FormalParameter : BindingElement, it is evaluated in a
-  // new var environment. This is needed to prevent vars from escaping
-  // direct eval in parameter expressions.
-  paramExprVarEmitterScope_.emplace(bce_);
-  if (!paramExprVarEmitterScope_->enterParameterExpressionVar(bce_)) {
-    return false;
-  }
-  return true;
-}
-
-bool FunctionParamsEmitter::leaveParameterExpressionVarScope() {
-  if (!paramExprVarEmitterScope_) {
-    return true;
-  }
-
-  if (!paramExprVarEmitterScope_->leave(bce_)) {
-    return false;
-  }
-  paramExprVarEmitterScope_.reset();
-
-  return true;
-}
-
 bool FunctionParamsEmitter::prepareForInitializer() {
   //                [stack]
 
