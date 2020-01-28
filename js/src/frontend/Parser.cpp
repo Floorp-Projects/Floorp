@@ -2574,10 +2574,6 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
       funbox->length = positionalFormals.length() - hasRest;
     }
 
-    if (funbox->hasParameterExprs && funbox->hasDirectEval()) {
-      funbox->hasDirectEvalInParameterExpr = true;
-    }
-
     funbox->setArgCount(positionalFormals.length());
   } else if (kind == FunctionSyntaxKind::Setter) {
     error(JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
