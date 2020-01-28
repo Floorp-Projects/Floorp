@@ -4,21 +4,28 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-add_task(async function() {
-  let rootDir = do_get_file("chromefiles/", true);
+let rootDir = do_get_file("chromefiles/", true);
+
+add_task(async function setup_fakePaths() {
   let pathId;
-  let subDirs = ["Google", "Chrome"];
   if (AppConstants.platform == "macosx") {
-    subDirs.unshift("Application Support");
     pathId = "ULibDir";
   } else if (AppConstants.platform == "win") {
-    subDirs.push("User Data");
     pathId = "LocalAppData";
   } else {
-    subDirs = [".config", "google-chrome"];
     pathId = "Home";
   }
   registerFakePath(pathId, rootDir);
+});
+
+async function testBookmarks(migratorKey, subDirs, folderName) {
+  if (AppConstants.platform == "macosx") {
+    subDirs.unshift("Application Support");
+  } else if (AppConstants.platform == "win") {
+    subDirs.push("User Data");
+  } else {
+    subDirs.unshift(".config");
+  }
 
   let target = rootDir.clone();
   // Pretend this is the default profile
@@ -81,14 +88,20 @@ add_task(async function() {
     encoding: "utf-8",
   });
 
-  let migrator = await MigrationUtils.getMigrator("chrome");
+  let migrator = await MigrationUtils.getMigrator(migratorKey);
   // Sanity check for the source.
   Assert.ok(await migrator.isSourceAvailable());
 
   let itemsSeen = { bookmarks: 0, folders: 0 };
   let listener = events => {
     for (let event of events) {
-      if (!event.title.includes("Chrome")) {
+      // "From " comes from the string `importedBookmarksFolder`
+      if (
+        event.title.startsWith("From ") &&
+        event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER
+      ) {
+        Assert.equal(event.title, folderName, "Bookmark folder name");
+      } else {
         itemsSeen[
           event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER
             ? "folders"
@@ -117,4 +130,22 @@ add_task(async function() {
     itemsSeen.bookmarks + itemsSeen.folders,
     "Telemetry reporting correct."
   );
+}
+
+add_task(async function test_Chrome() {
+  let subDirs =
+    AppConstants.platform == "linux" ? ["google-chrome"] : ["Google", "Chrome"];
+  await testBookmarks("chrome", subDirs, "From Google Chrome");
+});
+
+add_task(async function test_ChromiumEdge() {
+  if (AppConstants.platform == "linux") {
+    // Edge isn't available on Linux.
+    return;
+  }
+  let subDirs =
+    AppConstants.platform == "macosx"
+      ? ["Microsoft Edge"]
+      : ["Microsoft", "Edge"];
+  await testBookmarks("chromium-edge", subDirs, "From Microsoft Edge");
 });
