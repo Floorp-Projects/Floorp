@@ -2685,7 +2685,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mIsolation(StyleIsolation::Auto),
       mTopLayer(StyleTopLayer::None),
       mTouchAction(StyleTouchAction::AUTO),
-      mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
+      mScrollBehavior(StyleScrollBehavior::Auto),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
       mOverflowAnchor(StyleOverflowAnchor::Auto),
