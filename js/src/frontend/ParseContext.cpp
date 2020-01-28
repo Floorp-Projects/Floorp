@@ -352,10 +352,6 @@ Maybe<DeclarationKind> ParseContext::isVarRedeclaredInEval(
 
   // In the case of eval, we also need to check enclosing VM scopes to see
   // if the var declaration is allowed in the context.
-  //
-  // This check is necessary in addition to
-  // js::CheckEvalDeclarationConflicts because we only know during parsing
-  // if a var is bound by for-of.
   js::Scope* enclosingScope = sc()->compilationEnclosingScope();
   js::Scope* varScope = EvalScope::nearestVarScopeForDirectEval(enclosingScope);
   MOZ_ASSERT(varScope);
