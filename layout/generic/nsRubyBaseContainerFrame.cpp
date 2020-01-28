@@ -409,6 +409,17 @@ void nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     textContainer->SetISize(rtcISize);
     lineLayout->EndLineReflow();
   }
+
+  // If this ruby base container is empty, size it as if there were
+  // an empty inline child inside.
+  if (mFrames.IsEmpty()) {
+    // Border and padding are suppressed on ruby base container, so we
+    // create a dummy zero-sized borderPadding for setting BSize.
+    WritingMode frameWM = aReflowInput.GetWritingMode();
+    LogicalMargin borderPadding(frameWM);
+    nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, borderPadding,
+                                           lineWM, frameWM);
+  }
 }
 
 /**
