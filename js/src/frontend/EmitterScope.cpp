@@ -742,44 +742,6 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
   return checkEnvironmentChainLength(bce);
 }
 
-bool EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce) {
-  MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
-
-  if (!ensureCache(bce)) {
-    return false;
-  }
-
-  // Parameter expressions var scopes have no pre-set bindings and are
-  // always extensible, as they are needed for eval.
-  fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
-
-  // Create and intern the scope.
-  uint32_t firstFrameSlot = frameSlotStart();
-  auto createScope = [firstFrameSlot, bce](JSContext* cx,
-                                           Handle<AbstractScope> enclosing,
-                                           ScopeIndex* index) {
-    return ScopeCreationData::create(
-        cx, bce->parseInfo, ScopeKind::ParameterExpressionVar,
-        /* dataArg = */ nullptr, firstFrameSlot,
-        /* needsEnvironment = */ true, enclosing, index);
-  };
-  if (!internScopeCreationData(bce, createScope)) {
-    return false;
-  }
-
-  MOZ_ASSERT(hasEnvironment());
-  if (!bce->emitInternedScopeOp(index(), JSOp::PushVarEnv)) {
-    return false;
-  }
-
-  // The extra var scope needs a note to be mapped from a pc.
-  if (!appendScopeNote(bce)) {
-    return false;
-  }
-
-  return checkEnvironmentChainLength(bce);
-}
-
 class DynamicBindingIter : public BindingIter {
  public:
   explicit DynamicBindingIter(GlobalSharedContext* sc)
