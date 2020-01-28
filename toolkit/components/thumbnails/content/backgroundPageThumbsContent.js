@@ -48,8 +48,7 @@ const backgroundPageThumbsContent = {
     let defaultFlags =
       Ci.nsIRequest.LOAD_ANONYMOUS |
       Ci.nsIRequest.LOAD_BYPASS_CACHE |
-      Ci.nsIRequest.INHIBIT_CACHING |
-      Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+      Ci.nsIRequest.INHIBIT_CACHING;
     docShell.defaultLoadFlags = defaultFlags;
     BrowsingContext.getFromWindow(
       content
