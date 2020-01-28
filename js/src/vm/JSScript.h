@@ -2396,7 +2396,7 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
   IMMUTABLE_FLAG_GETTER(isAsync, IsAsync)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasRest, HasRest)
-  // See ContextFlags::funArgumentsHasLocalBinding comment.
+  // See FunctionBox::argumentsHasLocalBinding_ comment.
   // N.B.: no setter -- custom logic in JSScript.
   IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
   // IsForEval: custom logic below.
