@@ -186,6 +186,8 @@ class WebExtension(Perftest):
         if self.config["app"] in chrome_apps:
             self.profile.addons.remove(self.raptor_webext)
 
+        self.raptor_webext = None
+
     def clean_up(self):
         super(WebExtension, self).clean_up()
 
