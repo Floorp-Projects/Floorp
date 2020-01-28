@@ -1521,7 +1521,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleTopLayer mTopLayer;
 
   mozilla::StyleTouchAction mTouchAction;
-  uint8_t mScrollBehavior;  // NS_STYLE_SCROLL_BEHAVIOR_*
+  mozilla::StyleScrollBehavior mScrollBehavior;
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
   mozilla::StyleOverflowAnchor mOverflowAnchor;
