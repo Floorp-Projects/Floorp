@@ -63,7 +63,8 @@ const INTERVAL_PREF = "devtools.performance.recording.interval";
 const FEATURES_PREF = "devtools.performance.recording.features";
 /** @type {PerformancePref["Threads"]} */
 const THREADS_PREF = "devtools.performance.recording.threads";
-
+/** @type {PerformancePref["Preset"]} */
+const PRESET_PREF = "devtools.performance.recording.preset";
 /** @type {PerformancePref["ObjDirs"]} */
 const OBJDIRS_PREF = "devtools.performance.recording.objdirs";
 /** @type {PerformancePref["UIBaseUrl"]} */
@@ -231,6 +232,23 @@ async function _getIntPref(preferenceFront, prefName, defaultValue) {
 }
 
 /**
+ * Attempt to get a char preference value from the debuggee.
+ *
+ * @param {PreferenceFront} preferenceFront
+ * @param {string} prefName
+ * @param {string} defaultValue Default value of the preference. We don't need
+ *   this value since Firefox 72, but we keep it to support older Firefox versions.
+ * @returns Promise<string>
+ */
+async function _getCharPref(preferenceFront, prefName, defaultValue) {
+  try {
+    return await preferenceFront.getCharPref(prefName);
+  } catch (error) {
+    return defaultValue;
+  }
+}
+
+/**
  * Get the recording settings from the preferences. These settings are stored once
  * for local debug targets, and another set of settings for remote targets. This
  * is helpful for configuring for remote targets like Android phones that may require
@@ -240,12 +258,21 @@ async function _getIntPref(preferenceFront, prefName, defaultValue) {
  * @param {RecordingStateFromPreferences} defaultPrefs Default preference values.
  *   We don't need this value since Firefox 72, but we keep it to support older
  *   Firefox versions.
+ * @returns {Promise<RecordingStateFromPreferences>}
  */
 async function getRecordingPreferencesFromDebuggee(
   preferenceFront,
   defaultPrefs
 ) {
-  const [entries, interval, features, threads, objdirs] = await Promise.all([
+  const [
+    presetName,
+    entries,
+    interval,
+    features,
+    threads,
+    objdirs,
+  ] = await Promise.all([
+    _getCharPref(preferenceFront, PRESET_PREF, defaultPrefs.presetName),
     _getIntPref(preferenceFront, ENTRIES_PREF, defaultPrefs.entries),
     _getIntPref(preferenceFront, INTERVAL_PREF, defaultPrefs.interval),
     _getArrayOfStringsPref(
@@ -257,7 +284,7 @@ async function getRecordingPreferencesFromDebuggee(
     _getArrayOfStringsHostPref(OBJDIRS_PREF, defaultPrefs.objdirs),
   ]);
 
-  return { entries, interval, features, threads, objdirs };
+  return { presetName, entries, interval, features, threads, objdirs };
 }
 
 /**
