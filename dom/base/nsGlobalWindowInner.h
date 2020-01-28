@@ -1236,6 +1236,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   void SetActiveLoadingState(bool aIsLoading) override;
 
+  // Hint to the JS engine whether we are currently loading.
+  void HintIsLoading(bool aIsLoading);
+
  protected:
   // Window offline status. Checked to see if we need to fire offline event
   bool mWasOffline : 1;
@@ -1300,6 +1303,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool WasCurrentInnerWindow() const override { return mWasCurrentInnerWindow; }
 
   bool mHasSeenGamepadInput : 1;
+
+  // Whether we told the JS engine that we were in pageload.
+  bool mHintedWasLoading : 1;
 
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
