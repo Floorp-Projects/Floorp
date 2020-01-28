@@ -22,6 +22,9 @@ let AVAILABLE_PIP_OVERRIDES;
     // "https://*.youtube.com/*": TOGGLE_POLICIES.THREE_QUARTERS,
     // "https://*.twitch.tv/mikeconley_dot_ca/*": TOGGLE_POLICIES.TOP,
 
+    // Instagram
+    "https://www.instagram.com/*": TOGGLE_POLICIES.ONE_QUARTER,
+
     // Twitch
     "https://*.twitch.tv/*": TOGGLE_POLICIES.ONE_QUARTER,
     "https://*.twitch.tech/*": TOGGLE_POLICIES.ONE_QUARTER,
