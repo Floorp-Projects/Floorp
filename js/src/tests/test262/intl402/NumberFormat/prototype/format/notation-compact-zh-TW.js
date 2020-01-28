@@ -23,6 +23,9 @@ assert.sameValue(nfShort.format(1.59), "1.6");
 assert.sameValue(nfShort.format(0.159), "0.16");
 assert.sameValue(nfShort.format(0.0159), "0.016");
 assert.sameValue(nfShort.format(0.00159), "0.0016");
+assert.sameValue(nfShort.format(-Infinity), "-∞");
+assert.sameValue(nfShort.format(Infinity), "∞");
+assert.sameValue(nfShort.format(NaN), "非數值");
 
 const nfLong = new Intl.NumberFormat("zh-TW", {
   notation: "compact",
@@ -38,5 +41,8 @@ assert.sameValue(nfLong.format(1.59), "1.6");
 assert.sameValue(nfLong.format(0.159), "0.16");
 assert.sameValue(nfLong.format(0.0159), "0.016");
 assert.sameValue(nfLong.format(0.00159), "0.0016");
+assert.sameValue(nfLong.format(-Infinity), "-∞");
+assert.sameValue(nfLong.format(Infinity), "∞");
+assert.sameValue(nfLong.format(NaN), "非數值");
 
 reportCompare(0, 0);

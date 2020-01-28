@@ -36,8 +36,8 @@ info: |
     %DisplayNames%.[[RelevantExtensionKeys]]).
   11. Let style be ? GetOption(options, "style", "string", « "narrow", "short", "long" », "long").
   ...
-  13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency",
-    "weekday", "month", "quarter", "dayPeriod", "dateTimeField" », "language").
+  13. Let type be ? GetOption(options, "type", "string", « "language", "region", "script", "currency"»,
+      "language").
   ...
   15. Let fallback be ? GetOption(options, "fallback", "string", « "code", "none" », "code").
   ...
@@ -55,7 +55,7 @@ features: [Intl.DisplayNames]
 includes: [propertyHelper.js]
 ---*/
 
-var types = ['language', 'region', 'script', 'currency', 'weekday', 'month', 'quarter', 'dayPeriod', 'dateTimeField'];
+var types = ['language', 'region', 'script', 'currency'];
 
 types.forEach(type => {
   var dn = new Intl.DisplayNames('en-US', { type });

@@ -1,11 +1,11 @@
-commit 09380a4ae412e986ea39eb7163f5a6b3e5b04bbc
-Author: Ross Kirsling <rkirsling@gmail.com>
-Date:   Tue Dec 3 13:28:15 2019 -0800
+commit 4383f2c6bacbc4f3fb11dcec6afebdf1a98786a4
+Author: Alexey Shvayka <shvaikalesh@gmail.com>
+Date:   Tue Jan 14 18:31:45 2020 +0200
 
-    Add test verifying that optional call preserves `this`. (#2436)
+    Add Object.{freeze,preventExtensions,seal} abrupt completion tests (#2468)
     
-    * Add test verifying that optional call preserves `this`.
+    * Add Object.freeze test
     
-    * Update test/language/expressions/optional-chaining/optional-call-preserves-this.js
+    * Add Object.preventExtensions test
     
-    Co-Authored-By: Leo Balter <leonardo.balter@gmail.com>
+    * Add Object.seal test

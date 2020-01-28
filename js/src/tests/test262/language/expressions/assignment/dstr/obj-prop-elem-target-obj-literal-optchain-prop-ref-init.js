@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| skip error:SyntaxError -- optional-chaining is not supported
 // This file was procedurally generated from the following sources:
 // - src/dstr-assignment/obj-prop-elem-target-obj-literal-optchain-prop-ref-init.case
 // - src/dstr-assignment/syntax/assignment-expr.template
