@@ -239,8 +239,16 @@
 
 %include ../shared/urlbar-searchbar.inc.css
 
-:root {
-  --toolbar-field-focus-border-color: -moz-mac-focusring;
+@supports not -moz-bool-pref("browser.urlbar.update1") {
+  :root {
+    --toolbar-field-focus-border-color: -moz-mac-focusring;
+  }
+
+  #searchbar:focus-within,
+  #urlbar:not(.megabar)[focused="true"] {
+    box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
+                0 0 0 1px var(--toolbar-field-focus-border-color);
+  }
 }
 
 #urlbar,
@@ -252,13 +260,6 @@
  * even in non-Latin scripts. */
 #urlbar-input {
   line-height: 1.745em;
-}
-
-/* Focus ring. */
-#urlbar:not(.megabar)[focused="true"],
-#searchbar:focus-within {
-  box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
-              0 0 0 1px var(--toolbar-field-focus-border-color);
 }
 
 %include ../shared/identity-block/identity-block.inc.css
