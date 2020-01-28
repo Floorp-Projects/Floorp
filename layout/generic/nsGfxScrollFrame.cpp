@@ -7186,5 +7186,5 @@ bool ScrollFrameHelper::IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
   }
   return (aBehavior == dom::ScrollBehavior::Auto &&
           styleFrame->StyleDisplay()->mScrollBehavior ==
-              NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
+              StyleScrollBehavior::Smooth);
 }
