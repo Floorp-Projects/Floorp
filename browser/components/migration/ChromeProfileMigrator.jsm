@@ -102,8 +102,11 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
   if (chromeUserDataPath) {
     let profileFolder = OS.Path.join(chromeUserDataPath, aProfile.id);
     if (await OS.File.exists(profileFolder)) {
+      let localePropertySuffix = MigrationUtils._getLocalePropertyForBrowser(
+        this.getBrowserKey()
+      ).replace(/^sourceName/, "");
       let possibleResourcePromises = [
-        GetBookmarksResource(profileFolder),
+        GetBookmarksResource(profileFolder, localePropertySuffix),
         GetHistoryResource(profileFolder),
         GetCookiesResource(profileFolder),
       ];
@@ -201,7 +204,7 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
   },
 });
 
-async function GetBookmarksResource(aProfileFolder) {
+async function GetBookmarksResource(aProfileFolder, aLocalePropertySuffix) {
   let bookmarksPath = OS.Path.join(aProfileFolder, "Bookmarks");
   if (!(await OS.File.exists(bookmarksPath))) {
     return null;
@@ -232,7 +235,7 @@ async function GetBookmarksResource(aProfileFolder) {
           );
           if (!MigrationUtils.isStartupMigration) {
             parentGuid = await MigrationUtils.createImportedBookmarksFolder(
-              "Chrome", // TODO: Bug 1216186
+              aLocalePropertySuffix,
               parentGuid
             );
           }
@@ -249,7 +252,7 @@ async function GetBookmarksResource(aProfileFolder) {
           let bookmarks = convertBookmarks(roots.other.children, errorGatherer);
           if (!MigrationUtils.isStartupMigration) {
             parentGuid = await MigrationUtils.createImportedBookmarksFolder(
-              "Chrome", // TODO: Bug 1216186
+              aLocalePropertySuffix,
               parentGuid
             );
           }
