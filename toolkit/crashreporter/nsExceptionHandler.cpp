@@ -3634,22 +3634,6 @@ bool SetRemoteExceptionHandler(const nsACString& crashPipe) {
 }
 #endif  // XP_WIN
 
-void GetAnnotation(uint32_t childPid, Annotation annotation,
-                   nsACString& outStr) {
-  if (!GetEnabled()) {
-    return;
-  }
-
-  MutexAutoLock lock(*dumpMapLock);
-
-  ChildProcessData* pd = pidToMinidump->GetEntry(childPid);
-  if (!pd) {
-    return;
-  }
-
-  outStr = (*pd->annotations)[annotation];
-}
-
 bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations, uint32_t* aSequence) {
   if (!GetEnabled()) return false;
