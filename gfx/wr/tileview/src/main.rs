@@ -12,15 +12,11 @@ use std::path::Path;
 use std::ffi::OsString;
 use webrender::api::enumerate_interners;
 use webrender::UpdateKind;
-use euclid::{Rect, Transform3D};
-use webrender_api::units::{PicturePoint, PictureSize, PicturePixel, WorldPixel};
-
-static RES_JAVASCRIPT: &'static str = include_str!("tilecache.js");
-static RES_BASE_CSS: &'static str   = include_str!("tilecache_base.css");
 
 #[derive(Deserialize)]
 pub struct Slice {
-    pub transform: Transform3D<f32, PicturePixel, WorldPixel>,
+    pub x: f32,
+    pub y: f32,
     pub tile_cache: TileCacheInstanceSerializer
 }
 
@@ -34,19 +30,17 @@ static CSS_PRIM_COUNT: &str              = "fill:#40f0f0;fill-opacity:0.1;";
 static CSS_CONTENT: &str                 = "fill:#f04040;fill-opacity:0.1;";
 static CSS_COMPOSITOR_KIND_CHANGED: &str = "fill:#f0c070;fill-opacity:0.1;";
 
-fn tile_node_to_svg(node: &TileNode, transform: &Transform3D<f32, PicturePixel, WorldPixel>) -> String
+fn tile_node_to_svg(node: &TileNode, x: f32, y: f32) -> String
 {
     match &node.kind {
         TileNodeKind::Leaf { .. } => {
-            let rect_world = transform.transform_rect(&node.rect).unwrap();
-            format!("<rect x=\"{:.2}\" y=\"{:.2}\" width=\"{:.2}\" height=\"{:.2}\" />\n",
-                    rect_world.origin.x,
-                    rect_world.origin.y,
-                    rect_world.size.width,
-                    rect_world.size.height)
+            format!("<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" />\n",
+                    (node.rect.origin.x + x) as i32,
+                    (node.rect.origin.y + y) as i32,
+                    node.rect.size.width, node.rect.size.height)
         },
         TileNodeKind::Node { children } => {
-            children.iter().fold(String::new(), |acc, child| acc + &tile_node_to_svg(child, transform) )
+            children.iter().fold(String::new(), |acc, child| acc + &tile_node_to_svg(child, x, y) )
         }
     }
 }
@@ -60,7 +54,7 @@ fn tile_to_svg(key: TileOffset,
                invalidation_report: &mut String,
                svg_width: &mut i32, svg_height: &mut i32 ) -> String
 {
-    let mut svg = format!("\n<!-- tile key {},{} ; -->\n", key.x, key.y);
+    let mut svg = format!("\n<!-- tile key {},{} ; slice x {} y {}-->\n", key.x, key.y, slice.x, slice.y);
 
 
     let tile_fill =
@@ -111,6 +105,7 @@ fn tile_to_svg(key: TileOffset,
 
     svg = format!(r#"{}<rect x="{}" y="{}" width="{}" height="{}" style="{}" ></rect>"#,
             svg,
+            //TODO --bpe are these in local space or screen space?
             tile.rect.origin.x,
             tile.rect.origin.y,
             tile.rect.size.width,
@@ -119,7 +114,8 @@ fn tile_to_svg(key: TileOffset,
 
     svg = format!("{}\n\n<g class=\"svg_quadtree\">\n{}</g>\n",
                    svg,
-                   tile_node_to_svg(&tile.root, &slice.transform));
+                   //tile_node_to_svg(&tile.root, tile.rect.origin.x, tile.rect.origin.y));
+                   tile_node_to_svg(&tile.root, 0.0, 0.0));
 
     let right  = (tile.rect.origin.x + tile.rect.size.width) as i32;
     let bottom = (tile.rect.origin.y + tile.rect.size.height) as i32;
@@ -135,14 +131,16 @@ fn tile_to_svg(key: TileOffset,
 
     for prim in &tile.current_descriptor.prims {
         let rect = prim.prim_clip_rect;
-
-        // the transform could also be part of the CSS, let the browser do it;
-        // might be a bit faster and also enable actual 3D transforms.
-        let rect_pixel = Rect {
-            origin: PicturePoint::new(rect.x, rect.y),
-            size: PictureSize::new(rect.w, rect.h),
-        };
-        let rect_world = slice.transform.transform_rect(&rect_pixel).unwrap();
+        //TODO proper positioning of prims, especially when scrolling
+        // this version seems closest, but introduces gaps (eg in about:config)
+        let x = (rect.x + slice.x) as i32;
+        let y = (rect.y + slice.y) as i32;
+        // this version is .. interesting: when scrolling, nothing moves in about:config,
+        // instead the searchbox shifts down.. hmm..
+        //let x = rect.x as i32;
+        //let y = rect.y as i32;
+        let w = rect.w as i32;
+        let h = rect.h as i32;
 
         let style =
             if let Some(prev_tile) = prev_tile {
@@ -156,13 +154,10 @@ fn tile_to_svg(key: TileOffset,
                 "class=\"svg_changed_prim\" "
             };
 
-        svg += &format!("<rect x=\"{:.2}\" y=\"{:.2}\" width=\"{:.2}\" height=\"{:.2}\" {}/>",
-                        svg,
-                        rect_world.origin.x,
-                        rect_world.origin.y,
-                        rect_world.size.width,
-                        rect_world.size.height,
-                        style);
+        svg = format!(r#"{}<rect x="{}" y="{}" width="{}" height="{}" {}/>"#,
+            svg,
+            x, y, w, h,
+            style);
 
         svg += "\n\t";
     }
@@ -187,8 +182,7 @@ fn slices_to_svg(slices: &[Slice], prev_slices: Option<Vec<Slice>>,
                  svg_width: &mut i32, svg_height: &mut i32,
                  max_slice_index: &mut usize) -> String
 {
-    let svg_begin = "<?xml\u{2d}stylesheet type\u{3d}\"text/css\" href\u{3d}\"tilecache_base.css\" ?>\n\
-                     <?xml\u{2d}stylesheet type\u{3d}\"text/css\" href\u{3d}\"tilecache.css\" ?>\n";
+    let svg_begin = "<?xml\u{2d}stylesheet type\u{3d}\"text/css\" href\u{3d}\"tilecache.css\" ?>\n";
 
     let mut svg = String::new();
     let mut invalidation_report = String::new();
@@ -247,7 +241,6 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
                      <html>\n\
                      <head>\n\
                      <meta charset=\"UTF-8\">\n\
-                     <link rel=\"stylesheet\" type=\"text/css\" href=\"tilecache_base.css\"></link>\n\
                      <link rel=\"stylesheet\" type=\"text/css\" href=\"tilecache.css\"></link>\n\
                      </head>\n"
                      .to_string();
@@ -312,7 +305,61 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
 }
 
 fn write_css(output_dir: &Path, max_slice_index: usize) {
-    let mut css = String::new();
+    let mut css = ".tile_svg {\n\
+                    float: left;\n\
+                   }\n\
+                   \n\
+                   .split {\n\
+                      position: fixed;\n\
+                      z-index: 1;\n\
+                      top: 0;\n\
+                      padding-top: 20px;\n\
+                   }\n\
+                   \n\
+                   .left {\n\
+                      left: 0;\n\
+                   }\n\
+                   \n\
+                   .right {\n\
+                      right: 0;\n\
+                      width: 20%;\n\
+                      height: 100%;\n\
+                      opacity: 90%;\n\
+                   }\n\
+                   \n\
+                   #intern {\n\
+                    position:relative;\n\
+                    top:60px;\n\
+                    width: 100%;\n\
+                    height: 100%;\n\
+                    color: orange;\n\
+                    background-color:white;\n\
+                   }\n\
+                   .svg_invalidated {\n\
+                       fill: white;\n\
+                       font-family:monospace;\n\
+                   }\n\n\n\
+                   #svg_ui_overlay {\n\
+                       position:absolute;\n\
+                       right:0; \n\
+                       top:0; \n\
+                       z-index:70; \n\
+                       color: rgb(255,255,100);\n\
+                       font-family:monospace;\n\
+                       background-color: #404040a0;\n\
+                   }\n\n\n\
+                   .svg_quadtree {\n\
+                       fill: none;\n\
+                       stroke-width: 1;\n\
+                       stroke: orange;\n\
+                   }\n\n\n\
+                   .svg_changed_prim {\n\
+                       stroke: red;\n\
+                       stroke-width: 2.0;\n\
+                   }\n\n\n\
+                   #svg_ui_slider {\n\
+                       width:90%;\n\
+                   }\n\n".to_string();
 
     for ix in 0..max_slice_index + 1 {
         let color = ( ix % 7 ) + 1;
@@ -323,16 +370,18 @@ fn write_css(output_dir: &Path, max_slice_index: usize) {
 
         let prim_class = format!("tile_slice{}", ix);
 
-        css += &format!("#{} {{\n\
+        css = format!("{}\n\
+                       #{} {{\n\
                            fill: {};\n\
                            fill-opacity: 0.03;\n\
                            stroke-width: 0.8;\n\
                            stroke: {};\n\
-                        }}\n\n",
-                        prim_class,
-                        //rgb,
-                        "none",
-                        rgb);
+                       }}\n\n",
+                       css,
+                       prim_class,
+                       //rgb,
+                       "none",
+                       rgb);
     }
 
     let output_file = output_dir.join("tilecache.css");
@@ -343,34 +392,23 @@ fn write_css(output_dir: &Path, max_slice_index: usize) {
 macro_rules! updatelist_to_html_macro {
     ( $( $name:ident: $ty:ty, )+ ) => {
         fn updatelist_to_html(update_lists: &TileCacheLoggerUpdateLists) -> String {
-            let mut html = "\
-                <!DOCTYPE html>\n\
-                <html> <head> <meta charset=\"UTF-8\">\n\
-                <link rel=\"stylesheet\" type=\"text/css\" href=\"tilecache_base.css\"></link>\n\
-                <link rel=\"stylesheet\" type=\"text/css\" href=\"tilecache.css\"></link>\n\
-                </head> <body>\n".to_string();
-
+            let mut html = String::new();
             $(
-                html += &format!("<div class=\"intern_header\">{}</div>\n<div class=\"intern_data\">\n",
-                                 stringify!($name));
-                let mut insert_count = 0;
-                for update in &update_lists.$name.1.updates {
-                    match update.kind {
-                        UpdateKind::Insert => {
-                            html += &format!("<div class=\"insert\">{} {}</div>\n",
-                                             update.index,
-                                             format!("({:?})", update_lists.$name.1.data[insert_count]));
-                            insert_count = insert_count + 1;
-                        }
-                        _ => {
-                            html += &format!("<div class=\"remove\">{}</div>\n",
-                                             update.index);
-                        }
+                html += &format!("<h4 style=\"margin:5px;\">{}</h4>\n<font color=\"green\">\n", stringify!($name));
+                let mut was_insert = true;
+                for update in &update_lists.$name.1 {
+                    let is_insert = match update.kind {
+                        UpdateKind::Insert => true,
+                        _ => false
                     };
+                    if was_insert != is_insert {
+                        html += &format!("</font><font color=\"{}\">", if is_insert { "green" } else { "red" });
+                    }
+                    html += &format!("{}, \n", update.index);
+                    was_insert = is_insert;
                 }
-                html += "</div><br/>\n";
+                html += &"</font><hr/>\n";
             )+
-            html += "</body> </html>\n";
             html
         }
     }
@@ -471,8 +509,5 @@ fn main() {
     write_html(output_dir, &svg_files, &intern_files);
     write_css(output_dir, max_slice_index);
 
-    std::fs::write(output_dir.join("tilecache.js"), RES_JAVASCRIPT).unwrap();
-    std::fs::write(output_dir.join("tilecache_base.css"), RES_BASE_CSS).unwrap();
-
-    println!("\n");
+    println!("OK. For now, manually copy tilecache.js to the output folder please.                           ");
 }

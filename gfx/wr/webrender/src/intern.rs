@@ -50,13 +50,11 @@ struct Epoch(u64);
 
 /// A list of updates to be applied to the data store,
 /// provided by the interning structure.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct UpdateList<S> {
     /// The additions and removals to apply.
     pub updates: Vec<Update>,
     /// Actual new data to insert.
-    pub data: Vec<S>,
+    data: Vec<S>,
 }
 
 lazy_static! {
