@@ -1203,7 +1203,7 @@ pref("javascript.options.mem.gc_max_empty_chunk_count", 30);
 
 pref("javascript.options.showInConsole", false);
 
-#if defined(NIGHTLY_BUILD)
+#ifdef EARLY_BETA_OR_EARLIER
 pref("javascript.options.shared_memory", true);
 #else
 pref("javascript.options.shared_memory", false);

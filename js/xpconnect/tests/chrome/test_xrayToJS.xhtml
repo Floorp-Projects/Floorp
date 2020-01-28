@@ -35,6 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
   var isNightlyBuild = AppConstants.NIGHTLY_BUILD;
   var isReleaseOrBeta = AppConstants.RELEASE_OR_BETA;
+  var isEarlyBetaOrEarlier = AppConstants.EARLY_BETA_OR_EARLIER;
 
   typedArrayClasses = ['Uint8Array', 'Int8Array', 'Uint16Array', 'Int16Array',
                        'Uint32Array', 'Int32Array', 'Float32Array', 'Float64Array',
@@ -287,8 +288,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gConstructorProperties['ArrayBuffer'] =
     constructorProps(["isView", Symbol.species]);
 
-  // The perf for SAB is truned on by default on Nightly.
-  if (isNightlyBuild) {
+  // The pref for SAB is turned on by default on Nightly and early Beta.
+  if (isEarlyBetaOrEarlier) {
     gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "slice", "byteLength", Symbol.toStringTag];
     gConstructorProperties['SharedArrayBuffer'] = constructorProps([Symbol.species]);
   } else {
