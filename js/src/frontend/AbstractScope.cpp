@@ -111,7 +111,6 @@ uint32_t AbstractScope::nextFrameSlot() const {
     case ScopeKind::Function:
       return scope()->as<FunctionScope>().nextFrameSlot();
     case ScopeKind::FunctionBodyVar:
-    case ScopeKind::ParameterExpressionVar:
       return scope()->as<VarScope>().nextFrameSlot();
     case ScopeKind::Lexical:
     case ScopeKind::SimpleCatch:

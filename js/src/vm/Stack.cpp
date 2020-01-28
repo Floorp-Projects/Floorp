@@ -117,7 +117,6 @@ static inline void AssertScopeMatchesEnvironment(Scope* scope,
           break;
 
         case ScopeKind::FunctionBodyVar:
-        case ScopeKind::ParameterExpressionVar:
           MOZ_ASSERT(&env->as<VarEnvironmentObject>().scope() == si.scope());
           env = &env->as<VarEnvironmentObject>().enclosingEnvironment();
           break;
