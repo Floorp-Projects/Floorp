@@ -16,15 +16,46 @@
         android:layout_height="1dp"
         android:background="@color/photonGrey30" />
 
-    <TextView
-        android:id="@+id/title"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:textSize="18sp"
-        tools:text="Not yet supported" />
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/mozac_feature_addons_remove"
+            android:layout_gravity="center_vertical"
+            android:tint="@android:color/darker_gray"
+            android:src="@drawable/mozac_ic_close"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:textSize="18sp"
+                tools:text="Not yet supported" />
+
+            <TextView
+                android:id="@+id/description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="2 add-ons"/>
+        </LinearLayout>
+    </LinearLayout>
+
 
 </LinearLayout>
 
