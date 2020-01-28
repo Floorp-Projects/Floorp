@@ -246,24 +246,11 @@
     "webExtension": {
       "type": "object",
       "title": "WebExtension",
-      "dependencies": {
-        "id": [
-          "version"
-        ],
-        "version": [
-          "id"
-        ]
-      },
       "properties": {
         "id": {
           "type": "string",
           "title": "WebExtension Id",
           "description": "The identifier (local part) of the associated WebExtension"
-        },
-        "version": {
-          "type": "string",
-          "title": "WebExtension Version",
-          "description": "The version of the WebExtension to use"
         },
         "locale": {
           "type": "string",

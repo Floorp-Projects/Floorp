@@ -2,8 +2,7 @@
   "data": [
     {
       "webExtension": {
-        "id": "plainengine@search.mozilla.org",
-        "version": "1.0"
+        "id": "plainengine@search.mozilla.org"
       },
       "orderHint": 10000,
       "appliesTo": [{
@@ -13,8 +12,7 @@
     },
     {
       "webExtension": {
-        "id": "special-engine@search.mozilla.org",
-        "version": "1.0"
+        "id": "special-engine@search.mozilla.org"
       },
       "orderHint": 7000,
       "appliesTo": [{
@@ -24,7 +22,6 @@
     {
       "webExtension": {
         "id": "multilocale@search.mozilla.org",
-        "version": "1.0",
         "locales": ["an"]
       },
       "orderHint": 6000,
@@ -35,7 +32,6 @@
     {
       "webExtension": {
         "id": "multilocale@search.mozilla.org",
-        "version": "1.0",
         "locales": ["af", "an"]
       },
       "orderHint": 6500,
