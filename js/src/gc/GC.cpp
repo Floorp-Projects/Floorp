@@ -1274,6 +1274,8 @@ void GCRuntime::freezeSelfHostingZone() {
 }
 
 void GCRuntime::finish() {
+  MOZ_ASSERT(inPageLoadCount == 0);
+
   // Wait for nursery background free to end and disable it to release memory.
   if (nursery().isEnabled()) {
     nursery().disable();
@@ -8688,4 +8690,34 @@ JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,
 
   const JSClass* jsClass = js::GetObjectClass(obj);
   jsClass->doFinalize(cx->defaultFreeOp(), obj);
+}
+
+JS_FRIEND_API void js::gc::SetPerformanceHint(JSContext* cx,
+                                              PerformanceHint hint) {
+  CHECK_THREAD(cx);
+  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
+
+  cx->runtime()->gc.setPerformanceHint(hint);
+}
+
+void GCRuntime::setPerformanceHint(PerformanceHint hint) {
+  bool wasInPageLoad = inPageLoadCount != 0;
+
+  if (hint == PerformanceHint::InPageLoad) {
+    inPageLoadCount++;
+  } else {
+    MOZ_ASSERT(inPageLoadCount);
+    inPageLoadCount--;
+  }
+
+  bool inPageLoad = inPageLoadCount != 0;
+  if (inPageLoad == wasInPageLoad) {
+    return;
+  }
+
+  schedulingState.inPageLoad = inPageLoad;
+
+  AutoLockGC lock(this);
+  atomsZone->updateGCThresholds(*this, invocationKind, lock);
+  maybeAllocTriggerZoneGC(atomsZone);
 }

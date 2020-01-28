@@ -2686,6 +2686,20 @@ extern JS_FRIEND_API void RemapRemoteWindowProxies(
     JSContext* cx, CompartmentTransplantCallback* callback,
     JS::MutableHandleObject newTarget);
 
+namespace gc {
+
+// API to let the DOM tell us whether we're currently in pageload, so we can
+// change the GC triggers to discourage collection of the atoms zone.
+//
+// This is a temporary measure; bug 1544117 will make this unnecessary.
+
+enum class PerformanceHint { Normal, InPageLoad };
+
+extern JS_FRIEND_API void SetPerformanceHint(JSContext* cx,
+                                             PerformanceHint hint);
+
+} /* namespace gc */
+
 } /* namespace js */
 
 #endif /* jsfriendapi_h */
