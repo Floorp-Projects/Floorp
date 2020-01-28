@@ -399,6 +399,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
       return;
     }
 
+    if (!e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
+      if (e.key == "Delete" || e.key == "Backspace") {
+        // Avoid triggering back-navigation.
+        e.preventDefault();
+        assignShortcutToInput(input, "");
+        return;
+      }
+    }
+
     e.preventDefault();
     e.stopPropagation();
 
@@ -426,33 +435,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
           break;
         }
 
-        let addonId = input.closest(".card").getAttribute("addon-id");
-        let extension = extensionForAddonId(addonId);
-
         // Check if shortcut is already assigned.
         if (shortcutKeyMap.has(shortcutString)) {
           setError(input, "shortcuts-exists", {
             addon: getAddonName(shortcutString),
           });
-          break;
         } else {
           // Update the shortcut if it isn't reserved or assigned.
-          let oldShortcut = input.getAttribute("shortcut");
-          let addonName = input.closest(".card").getAttribute("addon-name");
-          let commandName = input.getAttribute("name");
-
-          removeShortcut(oldShortcut, addonName, commandName);
-          recordShortcut(shortcutString, addonName, commandName);
+          assignShortcutToInput(input, shortcutString);
         }
-
-        // This is async, but we're not awaiting it to keep the handler sync.
-        extension.shortcuts.updateCommand({
-          name: input.getAttribute("name"),
-          shortcut: shortcutString,
-        });
-        input.setAttribute("shortcut", shortcutString);
-        input.blur();
-        setDuplicateWarnings();
         break;
       case ShortcutUtils.MODIFIER_REQUIRED:
         if (AppConstants.platform == "macosx") {
@@ -468,6 +459,27 @@ XPCOMUtils.defineLazyModuleGetters(this, {
         setError(input, "shortcuts-letter");
         break;
     }
+  }
+
+  function assignShortcutToInput(input, shortcutString) {
+    let addonId = input.closest(".card").getAttribute("addon-id");
+    let extension = extensionForAddonId(addonId);
+
+    let oldShortcut = input.getAttribute("shortcut");
+    let addonName = input.closest(".card").getAttribute("addon-name");
+    let commandName = input.getAttribute("name");
+
+    removeShortcut(oldShortcut, addonName, commandName);
+    recordShortcut(shortcutString, addonName, commandName);
+
+    // This is async, but we're not awaiting it to keep the handler sync.
+    extension.shortcuts.updateCommand({
+      name: commandName,
+      shortcut: shortcutString,
+    });
+    input.setAttribute("shortcut", shortcutString);
+    input.blur();
+    setDuplicateWarnings();
   }
 
   function renderNoShortcutAddons(addons) {
