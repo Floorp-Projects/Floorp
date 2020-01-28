@@ -3729,16 +3729,12 @@ bool js::CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
   RootedObject varObj(cx, &GetVariablesObject(envChain));
 
   if (script->isForEval()) {
-    // Strict eval and eval in parameter default expressions have their
-    // own call objects.
+    // Strict eval has its own call objects.
     //
     // Non-strict eval may introduce 'var' bindings that conflict with
     // lexical bindings in an enclosing lexical scope.
     if (!script->bodyScope()->hasEnvironment()) {
-      MOZ_ASSERT(
-          !script->strict() &&
-          (!script->enclosingScope()->is<FunctionScope>() ||
-           !script->enclosingScope()->as<FunctionScope>().hasParameterExprs()));
+      MOZ_ASSERT(!script->strict());
       if (!CheckEvalDeclarationConflicts(cx, script, envChain, varObj)) {
         return false;
       }

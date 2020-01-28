@@ -9290,14 +9290,11 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
       return true;
     };
 
-    auto emitDestructuring = [this, &fpe, &bindingElement]() {
+    auto emitDestructuring = [this, &bindingElement]() {
       //            [stack] ARG
 
-      // If there's an parameter expression var scope, the destructuring
-      // declaration needs to initialize the name in the function scope,
-      // which is not the innermost scope.
       if (!this->emitDestructuringOps(&bindingElement->as<ListNode>(),
-                                      fpe.getDestructuringFlavor())) {
+                                      DestructuringFlavor::Declaration)) {
         //          [stack] ARG
         return false;
       }
