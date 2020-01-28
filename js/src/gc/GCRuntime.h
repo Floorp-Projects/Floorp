@@ -282,6 +282,8 @@ class GCRuntime {
   uint32_t getParameter(JSGCParamKey key);
   uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
+  void setPerformanceHint(PerformanceHint hint);
+
   MOZ_MUST_USE bool triggerGC(JS::GCReason reason);
   // Check whether to trigger a zone GC after allocating GC cells. During an
   // incremental GC, optionally count |nbytes| towards the threshold for
@@ -1102,6 +1104,9 @@ class GCRuntime {
 
   /* Always preserve JIT code during GCs, for testing. */
   MainThreadData<bool> alwaysPreserveCode;
+
+  /* Count of the number of zones that are currently in page load. */
+  MainThreadData<size_t> inPageLoadCount;
 
   MainThreadData<bool> lowMemoryState;
 
