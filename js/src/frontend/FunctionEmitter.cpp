@@ -1026,13 +1026,3 @@ bool FunctionParamsEmitter::emitAssignment(JS::Handle<JSAtom*> paramName) {
 
   return true;
 }
-
-DestructuringFlavor FunctionParamsEmitter::getDestructuringFlavor() {
-  MOZ_ASSERT(state_ == State::Destructuring ||
-             state_ == State::DestructuringDefault ||
-             state_ == State::DestructuringRest);
-
-  return funbox_->hasDirectEvalInParameterExpr
-             ? DestructuringFlavor::FormalParameterInVarScope
-             : DestructuringFlavor::Declaration;
-}

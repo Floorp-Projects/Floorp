@@ -2676,27 +2676,14 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
     switch (target->getKind()) {
       case ParseNodeKind::Name: {
         RootedAtom name(cx, target->as<NameNode>().name());
-        NameLocation loc;
+        NameLocation loc = lookupName(name);
         NameOpEmitter::Kind kind;
         switch (flav) {
           case DestructuringFlavor::Declaration:
-            loc = lookupName(name);
             kind = NameOpEmitter::Kind::Initialize;
             break;
-          case DestructuringFlavor::FormalParameterInVarScope: {
-            // If there's an parameter expression var scope, the
-            // destructuring declaration needs to initialize the name in
-            // the function scope. The innermost scope is the var scope,
-            // and its enclosing scope is the function scope.
-            EmitterScope* funScope =
-                innermostEmitterScope()->enclosingInFrame();
-            loc = *locationOfNameBoundInScope(name, funScope);
-            kind = NameOpEmitter::Kind::Initialize;
-            break;
-          }
 
           case DestructuringFlavor::Assignment:
-            loc = lookupName(name);
             kind = NameOpEmitter::Kind::SimpleAssignment;
             break;
         }
