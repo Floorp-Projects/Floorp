@@ -1147,12 +1147,12 @@ JSObject* GetJSObjForProcessInfo(JSContext* aCx, const ProcessInfo& info) {
   return jsInfo;
 }
 
-RefPtr<mozilla::LazyIdleThread> nsSystemInfo::GetHelperThread() {
-  if (!mLazyHelperThread) {
-    mLazyHelperThread =
-        new LazyIdleThread(3000, NS_LITERAL_CSTRING("SystemInfoIdleThread"));
+RefPtr<nsISerialEventTarget> nsSystemInfo::GetBackgroundTarget() {
+  if (!mBackgroundET) {
+    MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
+        "SystemInfoThread", getter_AddRefs(mBackgroundET)));
   }
-  return mLazyHelperThread;
+  return mBackgroundET;
 }
 
 NS_IMETHODIMP
@@ -1175,9 +1175,9 @@ nsSystemInfo::GetOsInfo(JSContext* aCx, Promise** aResult) {
   }
 
   if (!mOSInfoPromise) {
-    RefPtr<mozilla::LazyIdleThread> lazyIOThread = GetHelperThread();
+    RefPtr<nsISerialEventTarget> backgroundET = GetBackgroundTarget();
 
-    mOSInfoPromise = InvokeAsync(lazyIOThread, __func__, []() {
+    mOSInfoPromise = InvokeAsync(backgroundET, __func__, []() {
       OSInfo info;
       nsresult rv = CollectOSInfo(info);
       if (NS_SUCCEEDED(rv)) {
@@ -1231,7 +1231,7 @@ nsSystemInfo::GetDiskInfo(JSContext* aCx, Promise** aResult) {
   }
 
   if (!mDiskInfoPromise) {
-    RefPtr<mozilla::LazyIdleThread> lazyIOThread = GetHelperThread();
+    RefPtr<nsISerialEventTarget> backgroundET = GetBackgroundTarget();
     nsCOMPtr<nsIFile> greDir;
     nsCOMPtr<nsIFile> winDir;
     nsCOMPtr<nsIFile> profDir;
@@ -1250,7 +1250,7 @@ nsSystemInfo::GetDiskInfo(JSContext* aCx, Promise** aResult) {
     }
 
     mDiskInfoPromise =
-        InvokeAsync(lazyIOThread, __func__, [greDir, winDir, profDir]() {
+        InvokeAsync(backgroundET, __func__, [greDir, winDir, profDir]() {
           DiskInfo info;
           nsresult rv = CollectDiskInfo(greDir, winDir, profDir, info);
           if (NS_SUCCEEDED(rv)) {
@@ -1319,9 +1319,9 @@ nsSystemInfo::GetCountryCode(JSContext* aCx, Promise** aResult) {
   }
 
   if (!mCountryCodePromise) {
-    RefPtr<mozilla::LazyIdleThread> lazyIOThread = GetHelperThread();
+    RefPtr<nsISerialEventTarget> backgroundET = GetBackgroundTarget();
 
-    mCountryCodePromise = InvokeAsync(lazyIOThread, __func__, []() {
+    mCountryCodePromise = InvokeAsync(backgroundET, __func__, []() {
       nsAutoString countryCode;
 #  ifdef XP_MACOSX
       nsresult rv = GetSelectedCityInfo(countryCode);
@@ -1384,9 +1384,9 @@ nsSystemInfo::GetProcessInfo(JSContext* aCx, Promise** aResult) {
   }
 
   if (!mProcessInfoPromise) {
-    RefPtr<mozilla::LazyIdleThread> lazyIOThread = GetHelperThread();
+    RefPtr<nsISerialEventTarget> backgroundET = GetBackgroundTarget();
 
-    mProcessInfoPromise = InvokeAsync(lazyIOThread, __func__, []() {
+    mProcessInfoPromise = InvokeAsync(backgroundET, __func__, []() {
       ProcessInfo info;
       nsresult rv = CollectProcessInfo(info);
       if (NS_SUCCEEDED(rv)) {
