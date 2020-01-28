@@ -167,9 +167,11 @@ CustomElementData::CustomElementData(nsAtom* aType, State aState)
 
 void CustomElementData::SetCustomElementDefinition(
     CustomElementDefinition* aDefinition) {
-  MOZ_ASSERT(mState == State::eCustom);
-  MOZ_ASSERT(!mCustomElementDefinition);
-  MOZ_ASSERT(aDefinition->mType == mType);
+  // Only allow reset definition to nullptr if the custom element state is
+  // "failed".
+  MOZ_ASSERT(aDefinition ? !mCustomElementDefinition
+                         : mState == State::eFailed);
+  MOZ_ASSERT_IF(aDefinition, aDefinition->mType == mType);
 
   mCustomElementDefinition = aDefinition;
 }
@@ -181,8 +183,9 @@ void CustomElementData::AttachedInternals() {
 }
 
 CustomElementDefinition* CustomElementData::GetCustomElementDefinition() {
-  MOZ_ASSERT(mCustomElementDefinition ? mState == State::eCustom
-                                      : mState != State::eCustom);
+  // Per spec, if there is a definition, the custom element state should be
+  // either "failed" (during upgrade) or "customized".
+  MOZ_ASSERT_IF(mCustomElementDefinition, mState != State::eUndefined);
 
   return mCustomElementDefinition;
 }
@@ -1128,7 +1131,7 @@ static void DoUpgrade(Element* aElement, CustomElementDefinition* aDefinition,
 
 }  // anonymous namespace
 
-// https://html.spec.whatwg.org/multipage/scripting.html#upgrades
+// https://html.spec.whatwg.org/commit-snapshots/2793ee4a461c6c39896395f1a45c269ea820c47e/#upgrades
 /* static */
 void CustomElementRegistry::Upgrade(Element* aElement,
                                     CustomElementDefinition* aDefinition,
@@ -1136,13 +1139,18 @@ void CustomElementRegistry::Upgrade(Element* aElement,
   RefPtr<CustomElementData> data = aElement->GetCustomElementData();
   MOZ_ASSERT(data, "CustomElementData should exist");
 
-  // Step 1 and step 2.
-  if (data->mState == CustomElementData::State::eCustom ||
-      data->mState == CustomElementData::State::eFailed) {
+  // Step 1.
+  if (data->mState != CustomElementData::State::eUndefined) {
     return;
   }
 
+  // Step 2.
+  aElement->SetCustomElementDefinition(aDefinition);
+
   // Step 3.
+  data->mState = CustomElementData::State::eFailed;
+
+  // Step 4.
   if (!aDefinition->mObservedAttributes.IsEmpty()) {
     uint32_t count = aElement->GetAttrCount();
     for (uint32_t i = 0; i < count; i++) {
@@ -1167,31 +1175,29 @@ void CustomElementRegistry::Upgrade(Element* aElement,
     }
   }
 
-  // Step 4.
+  // Step 5.
   if (aElement->IsInComposedDoc()) {
     nsContentUtils::EnqueueLifecycleCallback(Document::eConnected, aElement,
                                              nullptr, nullptr, aDefinition);
   }
 
-  // Step 5.
+  // Step 6.
   AutoConstructionStackEntry acs(aDefinition->mConstructionStack, aElement);
 
-  // Step 6 and step 7.
+  // Step 7 and step 8.
   DoUpgrade(aElement, aDefinition, MOZ_KnownLive(aDefinition->mConstructor),
             aRv);
   if (aRv.Failed()) {
-    data->mState = CustomElementData::State::eFailed;
+    MOZ_ASSERT(data->mState == CustomElementData::State::eFailed);
+    aElement->SetCustomElementDefinition(nullptr);
     // Empty element's custom element reaction queue.
     data->mReactionQueue.Clear();
     return;
   }
 
-  // Step 8.
+  // Step 10.
   data->mState = CustomElementData::State::eCustom;
   aElement->SetDefined(true);
-
-  // Step 9.
-  aElement->SetCustomElementDefinition(aDefinition);
 }
 
 already_AddRefed<nsISupports> CustomElementRegistry::CallGetCustomInterface(
