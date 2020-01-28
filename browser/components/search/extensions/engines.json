@@ -3,8 +3,7 @@
     {
       "orderHint": 1000,
       "webExtension": {
-        "id": "google@search.mozilla.org",
-        "version": "1.0"
+        "id": "google@search.mozilla.org"
       },
       "params": {
         "searchUrlGetParams": [
@@ -122,8 +121,7 @@
     },
     {
       "webExtension": {
-        "id": "bing@search.mozilla.org",
-        "version": "1.1"
+        "id": "bing@search.mozilla.org"
       },
       "params": {
         "searchUrlGetParams": [
@@ -178,8 +176,7 @@
     },
     {
       "webExtension": {
-        "id": "baidu@search.mozilla.org",
-        "version": "1.1"
+        "id": "baidu@search.mozilla.org"
       },
       "telemetryId": "baidu",
       "params": {
@@ -208,8 +205,7 @@
     {
       "orderHint": 500,
       "webExtension": {
-        "id": "amazondotcom@search.mozilla.org",
-        "version": "1.1"
+        "id": "amazondotcom@search.mozilla.org"
       },
       "telemetryId": "amazondotcom",
       "params": {
@@ -246,7 +242,6 @@
         },
         "webExtension": {
           "id": "amazon@search.mozilla.org",
-          "version": "1.1",
           "locales": ["au"]
         },
         "telemetryId": "amazon-au"
@@ -264,7 +259,6 @@
         },
         "webExtension": {
           "id": "amazon@search.mozilla.org",
-          "version": "1.1",
           "locales": ["ca"]
         },
         "telemetryId": "amazon-ca"
@@ -282,7 +276,6 @@
         },
         "webExtension": {
           "id": "amazon@search.mozilla.org",
-          "version": "1.1",
           "locales": ["france"]
         },
         "telemetryId": "amazon-france",
@@ -309,7 +302,6 @@
         },
         "webExtension": {
           "id": "amazon@search.mozilla.org",
-          "version": "1.1",
           "locales": ["en-GB"]
         },
         "telemetryId": "amazon-en-GB",
@@ -327,8 +319,7 @@
     {
       "orderHint": 500,
       "webExtension": {
-        "id": "amazon@search.mozilla.org",
-        "version": "1.1"
+        "id": "amazon@search.mozilla.org"
       },
       "params": {
         "searchUrlGetParams": [
@@ -465,8 +456,7 @@
     {
       "orderHint": 500,
       "webExtension": {
-        "id": "amazondotcn@search.mozilla.org",
-        "version": "1.0"
+        "id": "amazondotcn@search.mozilla.org"
       },
       "telemetryId": "amazondotcn",
       "params": {
@@ -487,8 +477,7 @@
     {
       "orderHint": 500,
       "webExtension": {
-        "id": "ebay@search.mozilla.org",
-        "version": "1.0"
+        "id": "ebay@search.mozilla.org"
       },
       "params": {
         "searchUrlGetParams": [
@@ -860,8 +849,7 @@
     {
       "orderHint": 500,
       "webExtension": {
-        "id": "ddg@search.mozilla.org",
-        "version": "1.0"
+        "id": "ddg@search.mozilla.org"
       },
       "telemetryId": "ddg",
       "extraParams": [{
@@ -896,8 +884,7 @@
     },
     {
       "webExtension": {
-        "id": "yandex@search.mozilla.org",
-        "version": "1.0"
+        "id": "yandex@search.mozilla.org"
       },
       "extraParams": [{
         "name": "clid",
@@ -972,50 +959,43 @@
     },
     {
       "webExtension": {
-        "id": "allaannonser-sv-SE@search.mozilla.org",
-        "version": "1.2"
+        "id": "allaannonser-sv-SE@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sv-SE"]}}}]
     },
     {
       "webExtension": {
-        "id": "allegro-pl@search.mozilla.org",
-        "version": "1.0"
+        "id": "allegro-pl@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["pl"]}}}]
     },
     {
       "webExtension": {
-        "id": "atlas-sk@search.mozilla.org",
-        "version": "1.0"
+        "id": "atlas-sk@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sk"]}}}]
     },
     {
       "webExtension": {
-        "id": "azerdict@search.mozilla.org",
-        "version": "1.0"
+        "id": "azerdict@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["az"]}}}]
     },
     {
       "webExtension": {
-        "id": "azet-sk@search.mozilla.org",
-        "version": "1.0"
+        "id": "azet-sk@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sk"]}}}]
     },
     {
       "webExtension": {
-        "id": "bbc-alba@search.mozilla.org",
-        "version": "1.0"
+        "id": "bbc-alba@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["gd"]}}}]
     },
     {
       "webExtension": {
-        "id": "bok-NO@search.mozilla.org",
-        "version": "1.0"
+        "id": "bok-NO@search.mozilla.org"
       },
       "appliesTo": [{ "included": {
         "locales": { "matches": ["nb-NO", "nn-NO"]}
@@ -1023,8 +1003,7 @@
     },
     {
       "webExtension": {
-        "id": "bolcom@search.mozilla.org",
-        "version": "1.0"
+        "id": "bolcom@search.mozilla.org"
       },
       "appliesTo": [{
         "included": { "locales": { "matches": ["fy-NL"]}},
@@ -1040,44 +1019,38 @@
     },
     {
       "webExtension": {
-        "id": "ceneji@search.mozilla.org",
-        "version": "1.0"
+        "id": "ceneji@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sl"]}}}]
     },
     {
       "webExtension": {
-        "id": "chambers-en-GB@search.mozilla.org",
-        "version": "1.0"
+        "id": "chambers-en-GB@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["en-GB"]}}}]
     },
     {
       "webExtension": {
-        "id": "coccoc@search.mozilla.org",
-        "version": "1.0"
+        "id": "coccoc@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["vi"]}}}]
     },
     {
       "webExtension": {
-        "id": "daum-kr@search.mozilla.org",
-        "version": "1.0"
+        "id": "daum-kr@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ko"]}}}]
     },
     {
       "webExtension": {
-        "id": "diec2@search.mozilla.org",
-        "version": "1.2"
+        "id": "diec2@search.mozilla.org"
       },
       "appliesTo": [{
         "included": { "locales": { "matches": ["ca", "ca-valencia"]}}}]
     },
     {
       "webExtension": {
-        "id": "drae@search.mozilla.org",
-        "version": "1.0"
+        "id": "drae@search.mozilla.org"
       },
       "appliesTo": [{
         "included": { "locales": { "matches": ["es-AR", "es-CL", "es-ES"]}}
@@ -1085,113 +1058,97 @@
     },
     {
       "webExtension": {
-        "id": "ecosia@search.mozilla.org",
-        "version": "1.0"
+        "id": "ecosia@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["de"]}}}]
     },
     {
       "webExtension": {
-        "id": "eki-ee@search.mozilla.org",
-        "version": "1.0"
+        "id": "eki-ee@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["et"]}}}]
     },
     {
       "webExtension": {
-        "id": "eudict@search.mozilla.org",
-        "version": "1.0"
+        "id": "eudict@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["hr"]}}}]
     },
     {
       "webExtension": {
-        "id": "faclair-beag@search.mozilla.org",
-        "version": "1.0"
+        "id": "faclair-beag@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["gd"]}}}]
     },
     {
       "webExtension": {
-        "id": "flip@search.mozilla.org",
-        "version": "1.0"
+        "id": "flip@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["kk"]}}}]
     },
     {
       "webExtension": {
-        "id": "freelang@search.mozilla.org",
-        "version": "1.0"
+        "id": "freelang@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["br"]}}}]
     },
     {
       "webExtension": {
-        "id": "gulesider-NO@search.mozilla.org",
-        "version": "1.0"
+        "id": "gulesider-NO@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["nn-NO", "nb-NO"]}}}]
     },
     {
       "webExtension": {
-        "id": "heureka-cz@search.mozilla.org",
-        "version": "1.0"
+        "id": "heureka-cz@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["cs"]}}}]
     },
     {
       "webExtension": {
-        "id": "hotline-ua@search.mozilla.org",
-        "version": "1.0"
+        "id": "hotline-ua@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["uk"]}}}]
     },
     {
       "webExtension": {
-        "id": "kannadastore@search.mozilla.org",
-        "version": "1.2"
+        "id": "kannadastore@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["kn"]}}}]
     },
     {
       "webExtension": {
-        "id": "leo_ende_de@search.mozilla.org",
-        "version": "1.0"
+        "id": "leo_ende_de@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["de", "dsb", "hsb" , "rm"]}}}]
     },
     {
       "webExtension": {
-        "id": "list-am@search.mozilla.org",
-        "version": "1.0"
+        "id": "list-am@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["hy-AM"]}}}]
     },
     {
       "webExtension": {
-        "id": "longdo@search.mozilla.org",
-        "version": "1.0"
+        "id": "longdo@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["th"]}}}]
     },
     {
       "webExtension": {
-        "id": "mailru@search.mozilla.org",
-        "version": "1.0"
+        "id": "mailru@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ru"]}}}]
     },
     {
       "webExtension": {
-        "id": "mapy-cz@search.mozilla.org",
-        "version": "1.0"
+        "id": "mapy-cz@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["cs"]}}}]
     },
     {
       "webExtension": {
-        "id": "marktplaats@search.mozilla.org",
-        "version": "1.0"
+        "id": "marktplaats@search.mozilla.org"
       },
       "appliesTo": [{
         "included": { "locales": { "matches": ["fy-NL"]}},
@@ -1207,8 +1164,7 @@
     },
     {
       "webExtension": {
-        "id": "mercadolibre@search.mozilla.org",
-        "version": "1.0"
+        "id": "mercadolibre@search.mozilla.org"
       },
       "appliesTo": [{
         "included": { "locales": { "matches": ["es-AR"]}},
@@ -1229,183 +1185,157 @@
     },
     {
       "webExtension": {
-        "id": "mercadolivre@search.mozilla.org",
-        "version": "1.0"
+        "id": "mercadolivre@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["pt-BR"]}}}]
     },
     {
       "webExtension": {
-        "id": "morfix-dic@search.mozilla.org",
-        "version": "1.1"
+        "id": "morfix-dic@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["he"]}}}]
     },
     {
       "webExtension": {
-        "id": "najdi-si@search.mozilla.org",
-        "version": "1.0"
+        "id": "najdi-si@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sl"]}}}]
     },
     {
       "webExtension": {
-        "id": "naver-kr@search.mozilla.org",
-        "version": "1.0"
+        "id": "naver-kr@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ko"]}}}]
     },
     {
       "webExtension": {
-        "id": "neti-ee@search.mozilla.org",
-        "version": "1.0"
+        "id": "neti-ee@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["et"]}}}]
     },
     {
       "webExtension": {
-        "id": "odpiralni@search.mozilla.org",
-        "version": "1.0"
+        "id": "odpiralni@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sl"]}}}]
     },
     {
       "webExtension": {
-        "id": "olx@search.mozilla.org",
-        "version": "1.0"
+        "id": "olx@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["bs"]}}}]
     },
     {
       "webExtension": {
-        "id": "oshiete-goo@search.mozilla.org",
-        "version": "1.0"
+        "id": "oshiete-goo@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-macos", "jp"]}}}]
     },
     {
       "webExtension": {
-        "id": "osta-ee@search.mozilla.org",
-        "version": "1.0"
+        "id": "osta-ee@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["et"]}}}]
     },
     {
       "webExtension": {
-        "id": "ozonru@search.mozilla.org",
-        "version": "1.2"
+        "id": "ozonru@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ru"]}}}]
     },
     {
       "webExtension": {
-        "id": "palasprint@search.mozilla.org",
-        "version": "1.0"
+        "id": "palasprint@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["cy"]}}}]
     },
     {
       "webExtension": {
-        "id": "pazaruvaj@search.mozilla.org",
-        "version": "1.0"
+        "id": "pazaruvaj@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["bg"]}}}]
     },
     {
       "webExtension": {
-        "id": "pogodak@search.mozilla.org",
-        "version": "1.0"
+        "id": "pogodak@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sr"]}}}]
     },
     {
       "webExtension": {
-        "id": "priberam@search.mozilla.org",
-        "version": "1.2"
+        "id": "priberam@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["pt-PT"]}}}]
     },
     {
       "webExtension": {
-        "id": "priceru@search.mozilla.org",
-        "version": "1.0"
+        "id": "priceru@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ru"]}}}]
     },
     {
       "webExtension": {
-        "id": "prisjakt-sv-SE@search.mozilla.org",
-        "version": "1.0"
+        "id": "prisjakt-sv-SE@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sv-SE"]}}}]
     },
     {
       "webExtension": {
-        "id": "pwn-pl@search.mozilla.org",
-        "version": "1.0"
+        "id": "pwn-pl@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["pl"]}}}]
     },
     {
       "webExtension": {
-        "id": "qwant@search.mozilla.org",
-        "version": "1.0"
+        "id": "qwant@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["fr"]}}}]
     },
     {
       "webExtension": {
-        "id": "qxl-NO@search.mozilla.org",
-        "version": "1.0"
+        "id": "qxl-NO@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["nb-NO", "nn-NO"]}}}]
     },
     {
       "webExtension": {
-        "id": "rakuten@search.mozilla.org",
-        "version": "1.2"
+        "id": "rakuten@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-macos", "jp"]}}}]
     },
     {
       "webExtension": {
-        "id": "readmoo@search.mozilla.org",
-        "version": "1.0"
+        "id": "readmoo@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["zh-TW"]}}}]
     },
     {
       "webExtension": {
-        "id": "salidzinilv@search.mozilla.org",
-        "version": "1.0"
+        "id": "salidzinilv@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ltg", "lv"]}}}]
     },
     {
       "webExtension": {
-        "id": "seznam-cz@search.mozilla.org",
-        "version": "1.0"
+        "id": "seznam-cz@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["cs"]}}}]
     },
     {
       "webExtension": {
-        "id": "sslv@search.mozilla.org",
-        "version": "1.0"
+        "id": "sslv@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ltg", "lv"]}}}]
     },
     {
       "webExtension": {
-        "id": "tearma@search.mozilla.org",
-        "version": "1.0"
+        "id": "tearma@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ga-IE"]}}}]
     },
     {
       "webExtension": {
-        "id": "twitter@search.mozilla.org",
-        "version": "1.0"
+        "id": "twitter@search.mozilla.org"
       },
       "appliesTo": [{
         "included": { "locales": { "matches": [
@@ -1423,22 +1353,19 @@
     },
     {
       "webExtension": {
-        "id": "tyda-sv-SE@search.mozilla.org",
-        "version": "1.0"
+        "id": "tyda-sv-SE@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sv-SE"]}}}]
     },
     {
       "webExtension": {
-        "id": "vatera@search.mozilla.org",
-        "version": "1.2"
+        "id": "vatera@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["hu"]}}}]
     },
     {
       "webExtension": {
-        "id": "wiktionary@search.mozilla.org",
-        "version": "1.0"
+        "id": "wiktionary@search.mozilla.org"
       },
       "appliesTo": [{
         "included": { "locales": { "matches": ["te"]}},
@@ -1454,36 +1381,31 @@
     },
     {
       "webExtension": {
-        "id": "wolnelektury-pl@search.mozilla.org",
-        "version": "1.0"
+        "id": "wolnelektury-pl@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["pl"]}}}]
     },
     {
       "webExtension": {
-        "id": "yahoo-jp@search.mozilla.org",
-        "version": "1.0"
+        "id": "yahoo-jp@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-macos", "ja"]}}}]
     },
     {
       "webExtension": {
-        "id": "yahoo-jp-auctions@search.mozilla.org",
-        "version": "1.2"
+        "id": "yahoo-jp-auctions@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-macos", "ja"]}}}]
     },
     {
       "webExtension": {
-        "id": "zoznam-sk@search.mozilla.org",
-        "version": "1.2"
+        "id": "zoznam-sk@search.mozilla.org"
       },
       "appliesTo": [{ "included": { "locales": { "matches": ["sk"]}}}]
     },
     {
       "webExtension": {
-        "id": "wikipedia@search.mozilla.org",
-        "version": "1.0"
+        "id": "wikipedia@search.mozilla.org"
       },
       "appliesTo": [ {
         "included": { "everywhere": true }

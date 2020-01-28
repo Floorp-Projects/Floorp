@@ -19,6 +19,8 @@ static dump, or they may be served via remote servers.
 The mechanism of delivering the settings dumps to the Search Service is
 `Remote Settings`_
 
+Search Engine WebExtension updates will be delivered by Normandy.
+
 Remote settings
 ---------------
 
