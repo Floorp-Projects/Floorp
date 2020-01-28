@@ -11,7 +11,6 @@ const CONFIG = {
     {
       webExtension: {
         id: "engine@search.mozilla.org",
-        version: "1.0",
       },
       orderHint: 30,
       appliesTo: [
@@ -26,7 +25,6 @@ const CONFIG = {
     {
       webExtension: {
         id: "engine-pref@search.mozilla.org",
-        version: "1.0",
       },
       orderHint: 20,
       appliesTo: [

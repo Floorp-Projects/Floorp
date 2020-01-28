@@ -2,8 +2,7 @@
   "data": [
     {
       "webExtension": {
-        "id": "engine@search.mozilla.org",
-        "version": "1.0"
+        "id": "engine@search.mozilla.org"
       },
       "orderHint": 10000,
       "appliesTo": [{
@@ -13,8 +12,7 @@
     },
     {
       "webExtension": {
-        "id": "engine-pref@search.mozilla.org",
-        "version": "1.0"
+        "id": "engine-pref@search.mozilla.org"
       },
       "orderHint": 7000,
       "appliesTo": [{
@@ -26,8 +24,7 @@
     },
     {
       "webExtension": {
-        "id": "engine-rel-searchform-purpose@search.mozilla.org",
-        "version": "1.0"
+        "id": "engine-rel-searchform-purpose@search.mozilla.org"
       },
       "orderHint": 6000,
       "appliesTo": [{
@@ -38,8 +35,7 @@
     },
     {
       "webExtension": {
-        "id": "engine-chromeicon@search.mozilla.org",
-        "version": "1.0"
+        "id": "engine-chromeicon@search.mozilla.org"
       },
       "orderHint": 8000,
       "appliesTo": [{
@@ -53,8 +49,7 @@
     },
     {
       "webExtension": {
-        "id": "engine-resourceicon@search.mozilla.org",
-        "version": "1.0"
+        "id": "engine-resourceicon@search.mozilla.org"
       },
       "orderHint": 9000,
       "appliesTo": [{
@@ -67,8 +62,7 @@
     },
     {
       "webExtension": {
-        "id": "engine-reordered@search.mozilla.org",
-        "version": "1.0"
+        "id": "engine-reordered@search.mozilla.org"
       },
       "orderHint": 5000,
       "appliesTo": [{

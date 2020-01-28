@@ -2,8 +2,7 @@
   "data": [
     {
       "webExtension": {
-        "id":"basic@search.mozilla.org",
-        "version": "1.0"
+        "id":"basic@search.mozilla.org"
       },
       "telemetryId": "telemetry",
       "appliesTo": [{
@@ -13,8 +12,7 @@
     },
     {
       "webExtension": {
-        "id":"simple@search.mozilla.org",
-        "version": "1.0"
+        "id":"simple@search.mozilla.org"
       },
       "appliesTo": [{
         "included": { "everywhere": true },
