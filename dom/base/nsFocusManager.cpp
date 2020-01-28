@@ -1126,7 +1126,7 @@ void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
   nsContentUtils::CallOnAllRemoteChildren(
       aWindow, [&aActive](BrowserParent* aBrowserParent) -> CallState {
         Unused << aBrowserParent->SendParentActivated(aActive);
-        return CallState::Stop;
+        return CallState::Continue;
       });
 }
 
