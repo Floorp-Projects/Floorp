@@ -51,22 +51,34 @@ updateAppInfo();
 /**
  * Migrates the requested resource and waits for the migration to be complete.
  */
-async function promiseMigration(migrator, resourceType, aProfile = null) {
+async function promiseMigration(
+  migrator,
+  resourceType,
+  aProfile = null,
+  succeeds = null
+) {
   // Ensure resource migration is available.
   let availableSources = await migrator.getMigrateData(aProfile, false);
   Assert.ok(
     (availableSources & resourceType) > 0,
     "Resource supported by migrator"
   );
+  let promises = [TestUtils.topicObserved("Migration:Ended")];
 
-  return new Promise(resolve => {
-    Services.obs.addObserver(function onMigrationEnded() {
-      Services.obs.removeObserver(onMigrationEnded, "Migration:Ended");
-      resolve();
-    }, "Migration:Ended");
+  if (succeeds !== null) {
+    // Check that the specific resource type succeeded
+    promises.push(
+      TestUtils.topicObserved(
+        succeeds ? "Migration:ItemAfterMigrate" : "Migration:ItemError",
+        (_, data) => data == resourceType
+      )
+    );
+  }
 
-    migrator.migrate(resourceType, null, aProfile);
-  });
+  // Start the migration.
+  migrator.migrate(resourceType, null, aProfile);
+
+  return Promise.all(promises);
 }
 
 /**
