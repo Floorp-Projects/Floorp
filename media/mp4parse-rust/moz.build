@@ -8,4 +8,20 @@ EXPORTS += [
     'mp4parse.h',
 ]
 
+if CONFIG['COMPILE_ENVIRONMENT']:
+
+    GENERATED_FILES += [
+        'mp4parse_ffi_generated.h',
+    ]
+
+    EXPORTS += [ # Should this be namespaced? EXPORTS.mozilla.media
+        '!mp4parse_ffi_generated.h',
+    ]
+
+    ffi_generated = GENERATED_FILES['mp4parse_ffi_generated.h']
+    ffi_generated.script = '/layout/style/RunCbindgen.py:generate'
+    ffi_generated.inputs = [
+        '/media/mp4parse-rust/mp4parse_capi',
+    ]
+
 FINAL_LIBRARY = 'xul'
