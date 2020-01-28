@@ -468,6 +468,13 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
         return;
       }
 
+      // If there are no relevant rows, return before initializing crypto and
+      // thus prompting for Keychain access on macOS.
+      if (!rows.length) {
+        aCallback(true);
+        return;
+      }
+
       let crypto;
       try {
         if (AppConstants.platform == "win") {

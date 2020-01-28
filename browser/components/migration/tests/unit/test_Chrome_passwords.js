@@ -281,7 +281,8 @@ add_task(async function test_importIntoEmptyDB() {
   await promiseMigration(
     migrator,
     MigrationUtils.resourceTypes.PASSWORDS,
-    PROFILE
+    PROFILE,
+    true
   );
 
   logins = Services.logins.getAllLogins();
@@ -339,7 +340,8 @@ add_task(async function test_importExistingLogins() {
   await promiseMigration(
     migrator,
     MigrationUtils.resourceTypes.PASSWORDS,
-    PROFILE
+    PROFILE,
+    true
   );
 
   logins = Services.logins.getAllLogins();
