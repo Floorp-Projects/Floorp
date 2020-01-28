@@ -153,9 +153,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun updatePreferenceVisibilityForFeatureFlags() {
-        findPreference<Preference>(getPreferenceKey(R.string.pref_key_passwords))?.apply {
-            isVisible = FeatureFlags.logins
-        }
         findPreference<Preference>(getPreferenceKey(R.string.pref_key_language))?.apply {
             isVisible = FeatureFlags.fenixLanguagePicker
         }

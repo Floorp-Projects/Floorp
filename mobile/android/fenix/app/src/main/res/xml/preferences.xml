@@ -42,7 +42,6 @@
             android:title="@string/preferences_customize" />
 
         <androidx.preference.Preference
-            app:isPreferenceVisible="false"
             android:icon="@drawable/ic_login"
             android:key="@string/pref_key_passwords"
             android:title="@string/preferences_passwords_logins_and_passwords" />

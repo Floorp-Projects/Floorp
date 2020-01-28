@@ -29,8 +29,7 @@
         <androidx.preference.CheckBoxPreference
             android:defaultValue="false"
             android:key="@string/pref_key_sync_logins"
-            android:title="@string/preferences_sync_logins"
-            app:isPreferenceVisible="false" />
+            android:title="@string/preferences_sync_logins" />
 
         <androidx.preference.EditTextPreference
             android:key="@string/pref_key_sync_device_name"
