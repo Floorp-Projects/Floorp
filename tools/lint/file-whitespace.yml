@@ -53,9 +53,8 @@ file-whitespace:
         - testing/talos/talos/cmanager_base.py
         - testing/talos/talos/profiler/profiling.py
         - testing/talos/talos/unittests/conftest.py
-        - testing/talos/talos/unittests/test_ffsetup.py
         - testing/talos/talos/unittests/test_test.py
-        - testing/talos/talos/unittests/test_xtalos/test_etlparser.py
+        - testing/talos/talos/unittests/test_xtalos.py
         - testing/web-platform/tests/content-security-policy/embedded-enforcement/support/echo-allow-csp-from.py
         - testing/web-platform/tests/content-security-policy/embedded-enforcement/support/echo-policy-multiple.py
         - testing/web-platform/tests/css/tools/apiclient/apiclient/__init__.py
