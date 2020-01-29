@@ -7756,25 +7756,35 @@ bool BytecodeEmitter::emitOptionalTree(ParseNode* pn, OptionalEmitter& oe) {
     // For example, a taggedTemplateExpr node might occur if we have
     // `test`?.b, with `test` as the taggedTemplateExpr ParseNode.
     default:
-      MOZ_ASSERT(
-          (kind == ParseNodeKind::ArrayExpr ||
-           kind == ParseNodeKind::ObjectExpr ||
-           kind == ParseNodeKind::TrueExpr ||
-           kind == ParseNodeKind::FalseExpr ||
-           kind == ParseNodeKind::StringExpr ||
-           kind == ParseNodeKind::NumberExpr ||
-           kind == ParseNodeKind::RawUndefinedExpr ||
-           kind == ParseNodeKind::NullExpr || kind == ParseNodeKind::Name ||
-           kind == ParseNodeKind::Function || kind == ParseNodeKind::ThisExpr ||
-           kind == ParseNodeKind::TaggedTemplateExpr ||
-           kind == ParseNodeKind::TemplateStringExpr ||
-           kind == ParseNodeKind::AwaitExpr ||
-           kind == ParseNodeKind::RegExpExpr ||
-           kind == ParseNodeKind::ClassDecl ||
-           kind == ParseNodeKind::CommaExpr || kind == ParseNodeKind::NewExpr ||
-           kind == ParseNodeKind::SetThis ||
-           kind == ParseNodeKind::NewTargetExpr),
-          "Unknown ParseNodeKind for OptionalChain");
+#ifdef DEBUG
+      // https://tc39.es/ecma262/#sec-primary-expression
+      bool isPrimaryExpression =
+          kind == ParseNodeKind::ThisExpr || kind == ParseNodeKind::Name ||
+          kind == ParseNodeKind::NullExpr || kind == ParseNodeKind::TrueExpr ||
+          kind == ParseNodeKind::FalseExpr ||
+          kind == ParseNodeKind::NumberExpr ||
+          kind == ParseNodeKind::BigIntExpr ||
+          kind == ParseNodeKind::StringExpr ||
+          kind == ParseNodeKind::ArrayExpr ||
+          kind == ParseNodeKind::ObjectExpr ||
+          kind == ParseNodeKind::Function || kind == ParseNodeKind::ClassDecl ||
+          kind == ParseNodeKind::RegExpExpr ||
+          kind == ParseNodeKind::TemplateStringExpr ||
+          kind == ParseNodeKind::RawUndefinedExpr || pn->isInParens();
+
+      // https://tc39.es/ecma262/#sec-left-hand-side-expressions
+      bool isMemberExpression = isPrimaryExpression ||
+                                kind == ParseNodeKind::TaggedTemplateExpr ||
+                                kind == ParseNodeKind::NewExpr ||
+                                kind == ParseNodeKind::NewTargetExpr ||
+                                kind == ParseNodeKind::ImportMetaExpr;
+
+      bool isCallExpression = kind == ParseNodeKind::SetThis ||
+                              kind == ParseNodeKind::CallImportExpr;
+
+      MOZ_ASSERT(isMemberExpression || isCallExpression,
+                 "Unknown ParseNodeKind for OptionalChain");
+#endif
       return emitTree(pn);
   }
   return true;
