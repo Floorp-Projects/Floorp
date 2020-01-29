@@ -8922,7 +8922,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
     return null();
   }
 
-  if (tt == TokenKind::Eof || tt != TokenKind::OptionalChain) {
+  if (tt != TokenKind::OptionalChain) {
     return lhs;
   }
 
@@ -8997,8 +8997,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
     lhs = nextMember;
   }
 
-  UnaryNodeType optionalChain = handler_.newOptionalChain(begin, lhs);
-  return optionalChain;
+  return handler_.newOptionalChain(begin, lhs);
 }
 
 template <class ParseHandler, typename Unit>

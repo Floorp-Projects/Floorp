@@ -77,7 +77,7 @@ bool OptionalEmitter::emitJumpShortCircuitForCall() {
   }
 
   if (!bce_->emit1(JSOp::Pop)) {
-    //              [stack] VAL
+    //              [stack] THIS
     return false;
   }
 
