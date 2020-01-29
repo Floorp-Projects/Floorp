@@ -128,8 +128,48 @@ Application Scoping
 
 An engine configuration may be scoped to a particular application.
 
+Name
+----
+
+One or more application names may be specified. Currently the only application
+type supported is ``firefox``. If an application name is specified, then it
+must be matched for the section to apply. If there are no application names
+specified, then the section will match any consumer of the configuration.
+
+In the following example, ``web@ext`` would be included on any consumer
+of the configuration, but ``web1@ext`` would only be included on Firefox desktop.
+
+.. code-block:: js
+
+    {
+      "webExtension": {
+        "id": "web@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+          "application": {
+            "name": []
+          }
+        }
+      ]}
+    },
+    {
+      "webExtension": {
+        "id": "web1@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+          "application": {
+            "name": ["firefox"]
+          }
+        }
+      ]}
+    }
+
 Channel
-=======
+-------
 
 One or more channels may be specified in an array to restrict a configuration
 to just those channels. The current known channels are:
@@ -173,6 +213,51 @@ channels.
           "default": "yes",
           "application": {
             "channel": ["release", "esr"]
+          }
+        }
+      ]}
+    }
+
+Version
+-------
+
+Minimum and Maximum versions may be specified to restrict a configuration to
+specific ranges. These may be open-ended. Version comparison is performed
+using `the version comparator`_.
+
+Note: comparison against ``maxVersion`` is a less-than comparison. The
+``maxVersion`` won't be matched directly.
+
+In the following example, ``web@ext`` would be included for any version after
+72.0a1, whereas ``web1@ext`` would be included only between 68.0a1 and 71.x
+version.
+
+.. code-block:: js
+
+    {
+      "webExtension": {
+        "id": "web@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+          "application": {
+            "minVersion": "72.0a1"
+          }
+        }
+      ]}
+    },
+    {
+      "webExtension": {
+        "id": "web1@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+          "default": "yes",
+          "application": {
+            "minVersion": "68.0a1"
+            "maxVersion": "72.0a1"
           }
         }
       ]}
@@ -338,3 +423,4 @@ This would result in the order: ``engine2@ext, engine1@ext, engine3@ext``.
 
 .. _Bug 1542235: https://bugzilla.mozilla.org/show_bug.cgi?id=1542235
 .. _schema itself: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
+.. _the version comparator: https://developer.mozilla.org/en-US/docs/Mozilla/Toolkit_version_format
