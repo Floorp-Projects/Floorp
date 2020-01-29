@@ -9053,7 +9053,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       }
 
       uint32_t operandOffset = pos().begin;
-      Node operand = memberExpr(yieldHandling, TripledotProhibited, tt2);
+      Node operand = optionalExpr(yieldHandling, TripledotProhibited, tt2);
       if (!operand || !checkIncDecOperand(operand, operandOffset)) {
         return null();
       }
