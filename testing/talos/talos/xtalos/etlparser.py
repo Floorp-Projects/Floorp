@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import sys
 
-import xtalos
+from talos.xtalos import xtalos
 
 EVENTNAME_INDEX = 0
 PROCESS_INDEX = 2
