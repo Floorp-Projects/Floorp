@@ -22,7 +22,22 @@ namespace dom {
 struct MediaImage;
 struct MediaMetadataInit;
 
-class MediaMetadata final : public nsISupports, public nsWrapperCache {
+class MediaMetadataBase {
+ public:
+  MediaMetadataBase() = default;
+  MediaMetadataBase(const nsString& aTitle, const nsString& aArtist,
+                    const nsString& aAlbum)
+      : mTitle(aTitle), mArtist(aArtist), mAlbum(aAlbum) {}
+
+  nsString mTitle;
+  nsString mArtist;
+  nsString mAlbum;
+  nsTArray<MediaImage> mArtwork;
+};
+
+class MediaMetadata final : public nsISupports,
+                            public nsWrapperCache,
+                            private MediaMetadataBase {
  public:
   // Ref counting and cycle collection
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -68,11 +83,6 @@ class MediaMetadata final : public nsISupports, public nsWrapperCache {
                           ErrorResult& aRv);
 
   nsCOMPtr<nsIGlobalObject> mParent;
-
-  nsString mTitle;
-  nsString mArtist;
-  nsString mAlbum;
-  nsTArray<MediaImage> mArtwork;
 };
 
 }  // namespace dom
