@@ -224,6 +224,19 @@ elif platform.system() == 'Windows':
 else:
     compiler = 'gcc'
 
+# Need a platform name to use as a key in variant files.
+if args.platform:
+    variant_platform = args.platform.split("-")[0]
+elif platform.system() == 'Windows':
+    variant_platform = 'win64' if word_bits == 64 else 'win32'
+elif platform.system() == 'Linux':
+    variant_platform = 'linux64' if word_bits == 64 else 'linux'
+elif platform.system() == 'Darwin':
+    variant_platform = 'macosx64'
+else:
+    variant_platform = 'other'
+
+
 info("using compiler '{}'".format(compiler))
 
 cxx = {'clang': 'clang++', 'gcc': 'g++', 'cl': 'cl'}.get(compiler)
@@ -293,6 +306,12 @@ else:
 
 if platform.system() == 'Linux' and AUTOMATION:
     CONFIGURE_ARGS = '--enable-stdcxx-compat --disable-gold ' + CONFIGURE_ARGS
+
+# Override environment variant settings conditionally.
+CONFIGURE_ARGS = "{} {}".format(
+    variant.get('conditional-configure-args', {}).get(variant_platform, ''),
+    CONFIGURE_ARGS
+)
 
 # Timeouts.
 ACTIVE_PROCESSES = set()
@@ -447,18 +466,6 @@ def normalize_tests(tests):
         return default_test_suites
     return tests
 
-
-# Need a platform name to use as a key in variant files.
-if args.platform:
-    variant_platform = args.platform.split("-")[0]
-elif platform.system() == 'Windows':
-    variant_platform = 'win64' if word_bits == 64 else 'win32'
-elif platform.system() == 'Linux':
-    variant_platform = 'linux64' if word_bits == 64 else 'linux'
-elif platform.system() == 'Darwin':
-    variant_platform = 'macosx64'
-else:
-    variant_platform = 'other'
 
 # Override environment variant settings conditionally.
 for k, v in variant.get('conditional-env', {}).get(variant_platform, {}).items():
