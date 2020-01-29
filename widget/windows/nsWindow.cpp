@@ -58,6 +58,7 @@
 #include "gfxEnv.h"
 #include "gfxPlatform.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
@@ -4963,22 +4964,6 @@ bool nsWindow::ExternalHandlerProcessMessage(UINT aMessage, WPARAM& aWParam,
   return false;
 }
 
-/**
- * the _exit() call is not a safe way to terminate your own process on
- * Windows, because _exit runs DLL detach callbacks which run static
- * destructors for xul.dll.
- *
- * This method terminates the current process without those issues.
- */
-static void ExitThisProcessSafely() {
-  HANDLE process = GetCurrentProcess();
-  if (TerminateProcess(GetCurrentProcess(), 0)) {
-    // TerminateProcess is asynchronous, so we wait on our own process handle
-    WaitForSingleObject(process, INFINITE);
-  }
-  MOZ_CRASH("Just in case extremis crash in ExitThisProcessSafely.");
-}
-
 // The main windows message processing method.
 bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
                               LRESULT* aRetValue) {
@@ -5066,7 +5051,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         obsServ->NotifyObservers(nullptr, "profile-before-change-qm", context);
         obsServ->NotifyObservers(nullptr, "profile-before-change-telemetry",
                                  context);
-        ExitThisProcessSafely();
+        mozilla::AppShutdown::DoImmediateExit();
       }
       sCanQuit = TRI_UNKNOWN;
       result = true;

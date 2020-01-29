@@ -10,6 +10,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Array.h"
+#include "ShutdownPhase.h"
 #include "MainThreadUtils.h"
 
 #include <functional>
@@ -52,20 +53,6 @@
  */
 
 namespace mozilla {
-
-// Must be contiguous starting at 0
-enum class ShutdownPhase {
-  NotInShutdown = 0,
-  WillShutdown,
-  Shutdown,
-  ShutdownThreads,
-  ShutdownLoaders,
-  ShutdownFinal,
-  ShutdownPostLastCycleCollection,
-  ShutdownPhase_Length,  // never pass this value
-  First = WillShutdown,  // for iteration
-  Last = ShutdownFinal
-};
 
 namespace ClearOnShutdown_Internal {
 
