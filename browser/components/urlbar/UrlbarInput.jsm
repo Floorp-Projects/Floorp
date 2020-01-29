@@ -457,7 +457,7 @@ class UrlbarInput {
 
     let selIndex = this.view.selectedRowIndex;
     if (!result.payload.keywordOffer) {
-      this.view.close();
+      this.view.close(/* elementPicked */ true);
     }
 
     this.controller.recordSelectedResult(event, result);
