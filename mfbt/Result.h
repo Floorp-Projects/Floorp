@@ -56,7 +56,8 @@ class ResultImplementation<V, E, PackingStrategy::Variant> {
   explicit ResultImplementation(V&& aValue)
       : mStorage(std::forward<V>(aValue)) {}
   explicit ResultImplementation(const V& aValue) : mStorage(aValue) {}
-  explicit ResultImplementation(E aErrorValue)
+  explicit ResultImplementation(const E& aErrorValue) : mStorage(aErrorValue) {}
+  explicit ResultImplementation(E&& aErrorValue)
       : mStorage(std::forward<E>(aErrorValue)) {}
 
   bool isOk() const { return mStorage.template is<V>(); }
@@ -517,7 +518,7 @@ class MOZ_MUST_USE_TYPE GenericErrorResult {
   friend class Result;
 
  public:
-  explicit GenericErrorResult(E aErrorValue)
+  explicit GenericErrorResult(E&& aErrorValue)
       : mErrorValue(std::forward<E>(aErrorValue)) {}
 };
 
