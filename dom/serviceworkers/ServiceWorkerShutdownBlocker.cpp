@@ -64,6 +64,20 @@ NS_IMETHODIMP ServiceWorkerShutdownBlocker::GetState(nsIPropertyBag** aBagOut) {
     return rv;
   }
 
+  nsAutoCString shutdownStates;
+
+  for (auto iter = mShutdownStates.iter(); !iter.done(); iter.next()) {
+    shutdownStates.Append(iter.get().value().GetProgressString());
+    shutdownStates.Append(", ");
+  }
+
+  rv = propertyBag->SetPropertyAsACString(NS_LITERAL_STRING("shutdownStates"),
+                                          shutdownStates);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   propertyBag.forget(aBagOut);
 
   return NS_OK;
@@ -90,18 +104,22 @@ ServiceWorkerShutdownBlocker::CreateAndRegisterOn(
 }
 
 void ServiceWorkerShutdownBlocker::WaitOnPromise(
-    GenericNonExclusivePromise* aPromise) {
+    GenericNonExclusivePromise* aPromise, uint32_t aShutdownStateId) {
   AssertIsOnMainThread();
   MOZ_DIAGNOSTIC_ASSERT(IsAcceptingPromises());
   MOZ_ASSERT(aPromise);
+  MOZ_ASSERT(mShutdownStates.has(aShutdownStateId));
 
   ++mState.as<AcceptingPromises>().mPendingPromises;
 
   RefPtr<ServiceWorkerShutdownBlocker> self = this;
 
   aPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                 [self = std::move(self)](
+                 [self = std::move(self), shutdownStateId = aShutdownStateId](
                      const GenericNonExclusivePromise::ResolveOrRejectValue&) {
+                   // Progress reporting might race with aPromise settling.
+                   self->mShutdownStates.remove(shutdownStateId);
+
                    if (!self->PromiseSettled()) {
                      self->MaybeUnblockShutdown();
                    }
@@ -113,6 +131,38 @@ void ServiceWorkerShutdownBlocker::StopAcceptingPromises() {
   MOZ_ASSERT(IsAcceptingPromises());
 
   mState = AsVariant(NotAcceptingPromises(mState.as<AcceptingPromises>()));
+}
+
+uint32_t ServiceWorkerShutdownBlocker::CreateShutdownState() {
+  AssertIsOnMainThread();
+
+  static uint32_t nextShutdownStateId = 1;
+
+  MOZ_ALWAYS_TRUE(mShutdownStates.putNew(nextShutdownStateId,
+                                         ServiceWorkerShutdownState()));
+
+  return nextShutdownStateId++;
+}
+
+void ServiceWorkerShutdownBlocker::ReportShutdownProgress(
+    uint32_t aShutdownStateId, Progress aProgress) {
+  AssertIsOnMainThread();
+  MOZ_RELEASE_ASSERT(aShutdownStateId != kInvalidShutdownStateId);
+
+  auto lookup = mShutdownStates.lookup(aShutdownStateId);
+
+  // Progress reporting might race with the promise that WaitOnPromise is called
+  // with settling.
+  if (!lookup) {
+    return;
+  }
+
+  // This will check for a valid progress transition with assertions.
+  lookup->value().SetProgress(aProgress);
+
+  if (aProgress == Progress::ShutdownCompleted) {
+    mShutdownStates.remove(lookup);
+  }
 }
 
 ServiceWorkerShutdownBlocker::ServiceWorkerShutdownBlocker()
