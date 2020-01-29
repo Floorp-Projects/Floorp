@@ -226,7 +226,8 @@ class CrashInfo(object):
            file in self.dump_directory. The extra files may not exist."""
         if self._dump_files is None:
             self._dump_files = [(path, os.path.splitext(path)[0] + '.extra') for path in
-                                glob.glob(os.path.join(self.dump_directory, '*.dmp'))]
+                                reversed(sorted(glob.glob(os.path.join(self.dump_directory,
+                                                                       '*.dmp'))))]
             max_dumps = 10
             if len(self._dump_files) > max_dumps:
                 self.logger.warning("Found %d dump files -- limited to %d!" %
