@@ -155,9 +155,9 @@ test(t => {
       throw error;
     }
   };
-  assert_throws(error,
-                () => ReadableStream.prototype.pipeThrough.call(rs, throwingWritable, {}),
-                'pipeThrough should rethrow the error thrown by the writable getter');
+  assert_throws_exactly(error,
+                        () => ReadableStream.prototype.pipeThrough.call(rs, throwingWritable, {}),
+                        'pipeThrough should rethrow the error thrown by the writable getter');
 
   const throwingReadable = {
     get readable() {
@@ -165,9 +165,9 @@ test(t => {
     },
     writable: {}
   };
-  assert_throws(error,
-                () => ReadableStream.prototype.pipeThrough.call(rs, throwingReadable, {}),
-                'pipeThrough should rethrow the error thrown by the readable getter');
+  assert_throws_exactly(error,
+                        () => ReadableStream.prototype.pipeThrough.call(rs, throwingReadable, {}),
+                        'pipeThrough should rethrow the error thrown by the readable getter');
 
 }, 'pipeThrough should rethrow errors from accessing readable or writable');
 
