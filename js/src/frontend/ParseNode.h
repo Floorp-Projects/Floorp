@@ -1944,11 +1944,6 @@ class PropertyAccessBase : public BinaryNode {
   PropertyName& name() const {
     return *right()->as<NameNode>().atom()->asPropertyName();
   }
-
-  bool isSuper() const {
-    // ParseNodeKind::SuperBase cannot result from any expression syntax.
-    return expression().isKind(ParseNodeKind::SuperBase);
-  }
 };
 
 class PropertyAccess : public PropertyAccessBase {
@@ -1963,6 +1958,11 @@ class PropertyAccess : public PropertyAccessBase {
     bool match = node.isKind(ParseNodeKind::DotExpr);
     MOZ_ASSERT_IF(match, node.is<PropertyAccessBase>());
     return match;
+  }
+
+  bool isSuper() const {
+    // ParseNodeKind::SuperBase cannot result from any expression syntax.
+    return expression().isKind(ParseNodeKind::SuperBase);
   }
 };
 
@@ -1999,8 +1999,6 @@ class PropertyByValueBase : public BinaryNode {
   ParseNode& expression() const { return *left(); }
 
   ParseNode& key() const { return *right(); }
-
-  bool isSuper() const { return left()->isKind(ParseNodeKind::SuperBase); }
 };
 
 class PropertyByValue : public PropertyByValueBase {
@@ -2015,6 +2013,8 @@ class PropertyByValue : public PropertyByValueBase {
     MOZ_ASSERT_IF(match, node.is<PropertyByValueBase>());
     return match;
   }
+
+  bool isSuper() const { return left()->isKind(ParseNodeKind::SuperBase); }
 };
 
 class OptionalPropertyByValue : public PropertyByValueBase {

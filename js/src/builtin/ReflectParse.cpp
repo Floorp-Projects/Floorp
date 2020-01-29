@@ -2883,11 +2883,14 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
       PropertyAccessBase* prop = &pn->as<PropertyAccessBase>();
       MOZ_ASSERT(prop->pn_pos.encloses(prop->expression().pn_pos));
 
+      bool isSuper =
+          prop->is<PropertyAccess>() && prop->as<PropertyAccess>().isSuper();
+
       RootedValue expr(cx);
       RootedValue propname(cx);
       RootedAtom pnAtom(cx, prop->key().atom());
 
-      if (prop->isSuper()) {
+      if (isSuper) {
         if (!builder.super(&prop->expression().pn_pos, &expr)) {
           return false;
         }
@@ -2910,9 +2913,12 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
       MOZ_ASSERT(elem->pn_pos.encloses(elem->expression().pn_pos));
       MOZ_ASSERT(elem->pn_pos.encloses(elem->key().pn_pos));
 
+      bool isSuper =
+          elem->is<PropertyByValue>() && elem->as<PropertyByValue>().isSuper();
+
       RootedValue expr(cx), key(cx);
 
-      if (elem->isSuper()) {
+      if (isSuper) {
         if (!builder.super(&elem->expression().pn_pos, &expr)) {
           return false;
         }
