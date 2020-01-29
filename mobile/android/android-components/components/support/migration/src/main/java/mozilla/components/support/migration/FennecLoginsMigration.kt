@@ -515,7 +515,7 @@ internal object FennecLoginsMigration {
             1 -> this[offset + 2].toInt() and 0xFF
             2 -> this[offset + 2].toInt() shl 8 or this[offset + 3].toInt()
             3 -> (this[offset + 2].toInt() shl 8 or this[offset + 3].toInt()) shl 8 or this[offset + 4].toInt()
-            else -> throw NotImplementedError()
+            else -> throw IllegalStateException("Unsupported number of octets: $numOctets")
         }
     }
 
@@ -530,7 +530,7 @@ internal object FennecLoginsMigration {
             in 256..65535 -> 3
             in 65536..16777215 -> 4
             // We don't need to deal with larger values.
-            else -> throw NotImplementedError("Octet length not supported: $length")
+            else -> throw IllegalStateException("Octet length not supported: $length")
         }
     }
 
