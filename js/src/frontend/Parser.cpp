@@ -8992,9 +8992,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
       break;
     }
 
-    if (nextMember) {
-      lhs = nextMember;
-    }
+    MOZ_ASSERT(nextMember);
+    lhs = nextMember;
   }
 
   UnaryNodeType optionalChain = handler_.newOptionalChain(begin, lhs);
