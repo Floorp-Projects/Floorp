@@ -9505,7 +9505,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberCall(
     TokenKind tt, Node lhs, YieldHandling yieldHandling,
     PossibleError* possibleError /* = nullptr */,
     OptionalKind optionalKind /* = OptionalKind::NonOptional */) {
-  if (options().selfHostingMode && handler_.isPropertyAccess(lhs)) {
+  if (options().selfHostingMode && (handler_.isPropertyAccess(lhs) ||
+                                    handler_.isOptionalPropertyAccess(lhs))) {
     error(JSMSG_SELFHOSTED_METHOD_CALL);
     return null();
   }
