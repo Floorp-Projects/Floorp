@@ -7176,7 +7176,7 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
     return false;
   }
 
-  switch (callee->getKind()) {
+  switch (ParseNodeKind kind = callee->getKind()) {
     case ParseNodeKind::Name: {
       RootedAtom nameAtom(cx, callee->as<NameNode>().name());
       if (!cone.emitNameCallee(nameAtom)) {
@@ -7243,14 +7243,6 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
         return false;
       }
       break;
-    case ParseNodeKind::SuperBase:
-      MOZ_ASSERT(call->isKind(ParseNodeKind::SuperCallExpr));
-      MOZ_ASSERT(parser->astGenerator().isSuperBase(callee));
-      if (!cone.emitSuperCallee()) {
-        //          [stack] CALLEE THIS
-        return false;
-      }
-      break;
 
     case ParseNodeKind::OptionalChain: {
       return emitCalleeAndThisForOptionalChain(&callee->as<UnaryNode>(), call,
@@ -7258,6 +7250,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
     }
 
     default:
+      MOZ_RELEASE_ASSERT(kind != ParseNodeKind::SuperBase);
+
       if (!cone.prepareForOtherCallee()) {
         return false;
       }
