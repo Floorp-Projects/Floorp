@@ -7185,7 +7185,7 @@ bool BytecodeEmitter::isRestParameter(ParseNode* expr) {
  * See emitCallOrNew and emitOptionalCall for more context.
  */
 bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
-                                                ParseNode* call,
+                                                CallNode* call,
                                                 CallOrNewEmitter& cone,
                                                 OptionalEmitter& oe) {
   if (!CheckRecursionLimit(cx)) {
@@ -7267,8 +7267,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
       break;
 
     case ParseNodeKind::OptionalChain: {
-      return emitCalleeAndThisForOptionalChain(&callee->as<UnaryNode>(),
-                                               &call->as<CallNode>(), cone);
+      return emitCalleeAndThisForOptionalChain(&callee->as<UnaryNode>(), call,
+                                               cone);
     }
 
     default:
