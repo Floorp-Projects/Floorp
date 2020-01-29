@@ -10,10 +10,11 @@ A view holder for displaying Not yet supported section items.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `UnsupportedSectionViewHolder(view: <ERROR CLASS>, titleView: <ERROR CLASS>)`<br>A view holder for displaying Not yet supported section items. |
+| [&lt;init&gt;](-init-.md) | `UnsupportedSectionViewHolder(view: <ERROR CLASS>, titleView: <ERROR CLASS>, descriptionView: <ERROR CLASS>)`<br>A view holder for displaying Not yet supported section items. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [descriptionView](description-view.md) | `val descriptionView: <ERROR CLASS>` |
 | [titleView](title-view.md) | `val titleView: <ERROR CLASS>` |

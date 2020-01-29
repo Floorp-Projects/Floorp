@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`UnsupportedSectionViewHolder(view: <ERROR CLASS>, titleView: <ERROR CLASS>)`
+`UnsupportedSectionViewHolder(view: <ERROR CLASS>, titleView: <ERROR CLASS>, descriptionView: <ERROR CLASS>)`
 
 A view holder for displaying Not yet supported section items.
 

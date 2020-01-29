@@ -2,7 +2,7 @@
 
 # AddonViewHolder
 
-`class AddonViewHolder : `[`CustomViewHolder`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/CustomViewHolder.kt#L36)
+`class AddonViewHolder : `[`CustomViewHolder`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/CustomViewHolder.kt#L37)
 
 A view holder for displaying add-on items.
 
