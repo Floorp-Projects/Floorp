@@ -30,7 +30,6 @@ import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -98,13 +97,12 @@ class AutoPushFeatureTest {
         val connection: PushConnection = mock()
         whenever(connection.isInitialized()).thenReturn(true)
 
-        val feature = spy(AutoPushFeature(testContext, service, mock(), coroutineContext, connection)).also {
+        AutoPushFeature(testContext, service, mock(), coroutineContext, connection).also {
             it.shutdown()
         }
 
         verify(service).stop()
         verify(connection).unsubscribeAll()
-        assertTrue(feature.job.isCancelled)
     }
 
     @Test
