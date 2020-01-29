@@ -8902,8 +8902,7 @@ GeneralParser<ParseHandler, Unit>::unaryOpExpr(YieldHandling yieldHandling,
 template <class ParseHandler, typename Unit>
 typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-    TokenKind tt, bool allowCallSyntax /* = true */,
-    PossibleError* possibleError /* = nullptr */,
+    TokenKind tt, PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
   if (!CheckRecursionLimit(cx_)) {
     return null();
@@ -8978,7 +8977,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
       if (!nextMember) {
         return null();
       }
-    } else if (allowCallSyntax && tt == TokenKind::LeftParen) {
+    } else if (tt == TokenKind::LeftParen) {
       nextMember = memberCall(tt, lhs, yieldHandling, possibleError);
       if (!nextMember) {
         return null();
@@ -9107,9 +9106,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       [[fallthrough]];
 
     default: {
-      Node expr =
-          optionalExpr(yieldHandling, tripledotHandling, tt,
-                       /* allowCallSyntax = */ true, possibleError, invoked);
+      Node expr = optionalExpr(yieldHandling, tripledotHandling, tt,
+                               possibleError, invoked);
       if (!expr) {
         return null();
       }
