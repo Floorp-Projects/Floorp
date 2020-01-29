@@ -5,7 +5,7 @@ test(() => {
 
   const theError = new Error('a unique string');
 
-  assert_throws(theError, () => {
+  assert_throws_exactly(theError, () => {
     new ReadableStream({}, {
       get size() {
         throw theError;
@@ -37,7 +37,7 @@ promise_test(t => {
     }
   );
 
-  assert_throws(thrownError, () => controller.enqueue('a'), 'enqueue should re-throw the error');
+  assert_throws_exactly(thrownError, () => controller.enqueue('a'), 'enqueue should re-throw the error');
 
   return promise_rejects(t, controllerError, rs.getReader().closed);
 
@@ -75,7 +75,7 @@ promise_test(() => {
   const rs = new ReadableStream(
     {
       start(c) {
-        assert_throws(theError, () => c.enqueue('a'), 'enqueue should throw the error');
+        assert_throws_exactly(theError, () => c.enqueue('a'), 'enqueue should throw the error');
       }
     },
     {
@@ -96,7 +96,7 @@ test(() => {
 
   const theError = new Error('a unique string');
 
-  assert_throws(theError, () => {
+  assert_throws_exactly(theError, () => {
     new ReadableStream({}, {
       size() {
         return 1;

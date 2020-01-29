@@ -32,8 +32,8 @@ test(() => {
     'constructor should throw when the type is empty string');
   assert_throws_js(RangeError, () => new ReadableStream({ type: 'asdf' }),
     'constructor should throw when the type is asdf');
-  assert_throws(error1, () => new ReadableStream({ type: { get toString() {throw error1;} } }), 'constructor should throw when ToString() throws');
-  assert_throws(error1, () => new ReadableStream({ type: { toString() {throw error1;} } }), 'constructor should throw when ToString() throws');
+  assert_throws_exactly(error1, () => new ReadableStream({ type: { get toString() {throw error1;} } }), 'constructor should throw when ToString() throws');
+  assert_throws_exactly(error1, () => new ReadableStream({ type: { toString() {throw error1;} } }), 'constructor should throw when ToString() throws');
 
 }, 'ReadableStream can\'t be constructed with an invalid type');
 
