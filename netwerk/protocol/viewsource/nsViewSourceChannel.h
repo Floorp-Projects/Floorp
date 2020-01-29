@@ -29,7 +29,9 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIApplicationCacheChannel,
                                   public nsIFormPOSTActionChannel,
                                   public nsIChildChannel,
-                                  public nsIWrapperChannel {
+                                  public nsIWrapperChannel,
+                                  public nsIInterfaceRequestor,
+                                  public nsIChannelEventSink {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
@@ -41,6 +43,8 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   NS_DECL_NSIHTTPCHANNEL
   NS_DECL_NSICHILDCHANNEL
   NS_DECL_NSIWRAPPERCHANNEL
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSICHANNELEVENTSINK
   NS_FORWARD_SAFE_NSICACHEINFOCHANNEL(mCacheInfoChannel)
   NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
   NS_FORWARD_SAFE_NSIAPPLICATIONCACHECHANNEL(mApplicationCacheChannel)
@@ -73,6 +77,7 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   // Clones aURI and prefixes it with "view-source:" schema,
   nsresult BuildViewSourceURI(nsIURI* aURI, nsIURI** aResult);
 
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
   nsCOMPtr<nsIHttpChannelInternal> mHttpChannelInternal;
