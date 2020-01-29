@@ -11,7 +11,7 @@ test(function() {
 })
 test(function() {
   var test_error = { name: "test" }
-  assert_throws(test_error, function() {
+  assert_throws_exactly(test_error, function() {
     new Event({ toString: function() { throw test_error; } })
   })
 })
