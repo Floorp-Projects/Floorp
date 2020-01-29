@@ -93,6 +93,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 
 !insertmacro AddDisabledDDEHandlerValues
 !insertmacro ChangeMUIHeaderImage
+!insertmacro ChangeMUISidebarImage
 !insertmacro CheckForFilesInUse
 !insertmacro CleanUpdateDirectories
 !insertmacro CopyFilesFromDir
@@ -1179,6 +1180,10 @@ Function showWelcome
   SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
   ReadINIStr $0 "$PLUGINSDIR\ioSpecial.ini" "Field 3" "HWND"
   SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
+
+  ; We need to overwrite the sidebar image so that we get it drawn with proper
+  ; scaling if the display is scaled at anything above 100%.
+  ${ChangeMUISidebarImage} "$PLUGINSDIR\modern-wizard.bmp"
 FunctionEnd
 
 Function leaveWelcome
@@ -1200,11 +1205,10 @@ Function preOptions
 
   StrCpy $PageName "Options"
   ${If} ${FileExists} "$EXEDIR\core\distribution\modern-header.bmp"
-  ${AndIf} $hHeaderBitmap == ""
     Delete "$PLUGINSDIR\modern-header.bmp"
     CopyFiles /SILENT "$EXEDIR\core\distribution\modern-header.bmp" "$PLUGINSDIR\modern-header.bmp"
-    ${ChangeMUIHeaderImage} "$PLUGINSDIR\modern-header.bmp"
   ${EndIf}
+  ${ChangeMUIHeaderImage} "$PLUGINSDIR\modern-header.bmp"
   !insertmacro MUI_HEADER_TEXT "$(OPTIONS_PAGE_TITLE)" "$(OPTIONS_PAGE_SUBTITLE)"
   !insertmacro MUI_INSTALLOPTIONS_DISPLAY "options.ini"
 FunctionEnd
@@ -1562,6 +1566,10 @@ Function showFinish
 
   ReadINIStr $0 "$PLUGINSDIR\ioSpecial.ini" "Field 3" "HWND"
   SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
+
+  ; We need to overwrite the sidebar image so that we get it drawn with proper
+  ; scaling if the display is scaled at anything above 100%.
+  ${ChangeMUISidebarImage} "$PLUGINSDIR\modern-wizard.bmp"
 
   ; Field 4 is the launch checkbox. Since it's a checkbox, we need to
   ; clear the theme from it before we can set its background color.

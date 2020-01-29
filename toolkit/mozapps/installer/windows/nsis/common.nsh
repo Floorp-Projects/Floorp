@@ -5251,9 +5251,7 @@ end:
       Push $R8
 
       GetDlgItem $R8 $HWNDPARENT 1046
-      System::Call 'user32::LoadImageW(i 0, w "$R9", i 0, i 0, i 0, i 0x0010|0x2000) i.s'
-      Pop $hHeaderBitmap
-      SendMessage $R8 ${STM_SETIMAGE} 0 $hHeaderBitmap
+      ${SetStretchedImageOLE} $R8 "$R9" $hHeaderBitmap
       ; There is no way to specify a show function for a custom page so hide
       ; and then show the control to force the bitmap to redraw.
       ShowWindow $R8 ${SW_HIDE}
@@ -5298,6 +5296,77 @@ end:
   !endif
 !macroend
 
+/**
+ * Replaces the sidebar image on the wizard's welcome and finish pages.
+ *
+ * @param   _PATH_TO_IMAGE
+ *          Fully qualified path to the bitmap to use for the header image.
+ *
+ * $R8 = hwnd for the bitmap control
+ * $R9 = _PATH_TO_IMAGE
+ */
+!macro ChangeMUISidebarImage
+
+  !ifndef ${_MOZFUNC_UN}ChangeMUISidebarImage
+    Var hSidebarBitmap
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}ChangeMUISidebarImage "!insertmacro ${_MOZFUNC_UN}ChangeMUISidebarImageCall"
+
+    Function ${_MOZFUNC_UN}ChangeMUISidebarImage
+      Exch $R9
+      Push $R8
+
+      ; Make sure we're not about to leak an existing handle.
+      ${If} $hSidebarBitmap <> 0
+        System::Call "gdi32::DeleteObject(p $hSidebarBitmap)"
+        StrCpy $hSidebarBitmap 0
+      ${EndIf}
+      ; The controls on the welcome and finish pages aren't in the dialog
+      ; template, they're always created manually from the INI file, so we need
+      ; to query it to find the right HWND.
+      ReadINIStr $R8 "$PLUGINSDIR\ioSpecial.ini" "Field 1" "HWND"
+      ${SetStretchedImageOLE} $R8 "$R9" $hSidebarBitmap
+
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro ChangeMUISidebarImageCall _PATH_TO_IMAGE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_IMAGE}"
+  Call ChangeMUISidebarImage
+  !verbose pop
+!macroend
+
+!macro un.ChangeMUISidebarImageCall _PATH_TO_IMAGE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_IMAGE}"
+  Call un.ChangeMUISidebarImage
+  !verbose pop
+!macroend
+
+!macro un.ChangeMUISidebarImage
+  !ifndef un.ChangeMUISidebarImage
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro ChangeMUISidebarImage
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
 
 ################################################################################
 # User interface callback helper defines and macros
@@ -5364,6 +5433,13 @@ end:
       StrCmp $hHeaderBitmap "" +3 +1
       System::Call "gdi32::DeleteObject(i s)" $hHeaderBitmap
       StrCpy $hHeaderBitmap ""
+      ; If ChangeMUISidebarImage was called, then we also need to clean up the
+      ; GDI bitmap handle that it would have created.
+      !ifdef ${_MOZFUNC_UN}ChangeMUISidebarImage
+        StrCmp $hSidebarBitmap "" +3 +1
+        System::Call "gdi32::DeleteObject(i s)" $hSidebarBitmap
+        StrCpy $hSidebarBitmap ""
+      !endif
 
       System::Free 0
 
@@ -7995,6 +8071,9 @@ end:
   !endif
   !ifndef HALFTONE
     !define HALFTONE 4
+  !endif
+  !ifndef IMAGE_BITMAP
+    !define IMAGE_BITMAP 0
   !endif
 
   Push $0 ; HANDLE
