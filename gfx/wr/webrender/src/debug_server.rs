@@ -82,7 +82,7 @@ impl ws::Handler for Server {
                         "fetch_passes" => DebugCommand::FetchPasses,
                         "fetch_screenshot" => DebugCommand::FetchScreenshot,
                         "fetch_documents" => DebugCommand::FetchDocuments,
-                        "fetch_clip_scroll_tree" => DebugCommand::FetchClipScrollTree,
+                        "fetch_spatial_tree" => DebugCommand::FetchClipScrollTree,
                         "fetch_render_tasks" => DebugCommand::FetchRenderTasks,
                         msg => {
                             error!("unknown msg {}", msg);
@@ -322,19 +322,19 @@ impl Screenshot {
     }
 }
 
-// A serializable list of debug information about clip-scroll trees
+// A serializable list of debug information about spatial trees
 // that can be sent to the client
 
 #[derive(Serialize)]
-pub struct ClipScrollTreeList {
+pub struct SpatialTreeList {
     kind: &'static str,
     root: TreeNode,
 }
 
-impl ClipScrollTreeList {
+impl SpatialTreeList {
     pub fn new() -> Self {
-        ClipScrollTreeList {
-            kind: "clip_scroll_tree",
+        SpatialTreeList {
+            kind: "spatial_tree",
             root: TreeNode::new("root"),
         }
     }

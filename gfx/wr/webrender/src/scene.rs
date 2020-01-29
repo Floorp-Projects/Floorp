@@ -7,7 +7,7 @@ use api::{PipelineId, PropertyBinding, PropertyBindingId, MixBlendMode, Stacking
 use api::units::*;
 use crate::composite::CompositorKind;
 use crate::clip::{ClipStore, ClipDataStore};
-use crate::clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
 use crate::internal_types::{FastHashMap, FastHashSet};
@@ -234,7 +234,7 @@ pub struct BuiltScene {
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub config: FrameBuilderConfig,
-    pub clip_scroll_tree: ClipScrollTree,
+    pub spatial_tree: SpatialTree,
     pub hit_testing_scene: Arc<HitTestingScene>,
     pub content_slice_count: usize,
     pub picture_cache_spatial_nodes: FastHashSet<SpatialNodeIndex>,
@@ -250,7 +250,7 @@ impl BuiltScene {
             root_pic_index: PictureIndex(0),
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
             clip_store: ClipStore::new(),
-            clip_scroll_tree: ClipScrollTree::new(),
+            spatial_tree: SpatialTree::new(),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             content_slice_count: 0,
             picture_cache_spatial_nodes: FastHashSet::default(),
@@ -286,7 +286,7 @@ impl BuiltScene {
     ) -> HitTester {
         HitTester::new(
             Arc::clone(&self.hit_testing_scene),
-            &self.clip_scroll_tree,
+            &self.spatial_tree,
             &self.clip_store,
             clip_data_store,
         )

@@ -18,7 +18,7 @@ use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ResourceCache};
 use crate::util::{MatrixHelpers};
 use crate::prim_store::{InternablePrimitive, PrimitiveInstanceKind, SpaceSnapper};
-use crate::clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
+use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use std::ops;
 use std::sync::Arc;
 use crate::storage;
@@ -228,7 +228,7 @@ impl TextRunPrimitive {
         transform: &LayoutToWorldTransform,
         subpixel_mode: SubpixelMode,
         raster_space: RasterSpace,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) -> bool {
         // If local raster space is specified, include that in the scale
         // of the glyphs that get rasterized.
@@ -292,7 +292,7 @@ impl TextRunPrimitive {
                 surface.raster_spatial_node_index,
                 spatial_node_index,
                 surface.device_pixel_scale,
-                clip_scroll_tree,
+                spatial_tree,
             );
             snap_to_device.snap_vector(&self.reference_frame_relative_offset)
         };
@@ -345,7 +345,7 @@ impl TextRunPrimitive {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskGraph,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         scratch: &mut PrimitiveScratchBuffer,
     ) {
         let cache_dirty = self.update_font_instance(
@@ -355,7 +355,7 @@ impl TextRunPrimitive {
             transform,
             subpixel_mode,
             raster_space,
-            clip_scroll_tree,
+            spatial_tree,
         );
 
         if self.glyph_keys_range.is_empty() || cache_dirty {
