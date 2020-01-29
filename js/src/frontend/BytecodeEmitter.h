@@ -820,8 +820,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitCalleeAndThis(ParseNode* callee, ParseNode* call,
                                       CallOrNewEmitter& cone);
 
-  MOZ_MUST_USE bool emitOptionalCalleeAndThis(ParseNode* callee,
-                                              ParseNode* call,
+  MOZ_MUST_USE bool emitOptionalCalleeAndThis(ParseNode* callee, CallNode* call,
                                               CallOrNewEmitter& cone,
                                               OptionalEmitter& oe);
 
