@@ -776,7 +776,7 @@ class FennecMigrator private constructor(
 
         logger.debug("Migrating session...")
         val result = try {
-            FennecSessionMigration.migrate(File(profile.path))
+            FennecSessionMigration.migrate(File(profile.path), crashReporter)
         } catch (e: Exception) {
             MigrationOpenTabs.failureReason.add(FailureReasonTelemetryCodes.OPEN_TABS_MIGRATE_EXCEPTION.code)
             crashReporter.submitCaughtException(

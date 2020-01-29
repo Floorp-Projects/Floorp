@@ -5,6 +5,7 @@
 package mozilla.components.support.migration
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -17,13 +18,13 @@ class FennecSessionMigrationTest {
     @Test
     fun `Migrate multiple open tabs`() {
         val profilePath = File(getTestPath("sessions"), "test-case1")
-        val result = FennecSessionMigration.migrate(profilePath)
+        val result = FennecSessionMigration.migrate(profilePath, mock())
 
         assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
 
         assertEquals(6, snapshot.sessions.size)
-        assertEquals(5, snapshot.selectedSessionIndex)
+            assertEquals(5, snapshot.selectedSessionIndex)
 
         snapshot.sessions[0].also {
             assertEquals("https://en.m.wikipedia.org/wiki/James_Park_Woods",
@@ -77,7 +78,7 @@ class FennecSessionMigrationTest {
     @Test
     fun `profile not existing`() {
         val profilePath = File(getTestPath("sessions"), "not-existing")
-        val result = FennecSessionMigration.migrate(profilePath)
+        val result = FennecSessionMigration.migrate(profilePath, mock())
 
         assertTrue(result is Result.Failure)
 
@@ -89,7 +90,7 @@ class FennecSessionMigrationTest {
     @Test
     fun `broken JSON with fallback`() {
         val profilePath = File(getTestPath("sessions"), "broken-json")
-        val result = FennecSessionMigration.migrate(profilePath)
+        val result = FennecSessionMigration.migrate(profilePath, mock())
 
         assertTrue(result is Result.Success)
 
@@ -110,7 +111,7 @@ class FennecSessionMigrationTest {
     @Test
     fun `no windows in session store`() {
         val profilePath = File(getTestPath("sessions"), "no-windows")
-        val result = FennecSessionMigration.migrate(profilePath)
+        val result = FennecSessionMigration.migrate(profilePath, mock())
 
         assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
@@ -121,7 +122,7 @@ class FennecSessionMigrationTest {
     @Test
     fun `with empty tab entries and unneeded backup`() {
         val profilePath = File(getTestPath("sessions"), "test-case2")
-        val result = FennecSessionMigration.migrate(profilePath)
+        val result = FennecSessionMigration.migrate(profilePath, mock())
 
         assertTrue(result is Result.Success)
 
@@ -145,5 +146,19 @@ class FennecSessionMigrationTest {
             assertEquals("There is a way to protect your privacy. Join Firefox.",
                 it.session.title)
         }
+    }
+
+    @Test
+    fun `large session store`() {
+        val profilePath = File(getTestPath("sessions"), "large")
+
+        val result = FennecSessionMigration.migrate(profilePath, mock())
+
+        assertTrue(result is Result.Success)
+
+        assertTrue(result is Result.Success)
+        val snapshot = (result as Result.Success).value
+        assertEquals(21, snapshot.sessions.size)
+        assertEquals(12, snapshot.selectedSessionIndex)
     }
 }
