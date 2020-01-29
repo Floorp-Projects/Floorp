@@ -1438,7 +1438,7 @@ impl SpatialId {
 /// every pipeline, which always has an external id.
 ///
 /// When setting display lists with the `preserve_frame_state` this id is used to preserve scroll
-/// offsets between different sets of ClipScrollNodes which are ScrollFrames.
+/// offsets between different sets of SpatialNodes which are ScrollFrames.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize, PeekPoke)]
 #[repr(C)]
 pub struct ExternalScrollId(pub u64, pub PipelineId);

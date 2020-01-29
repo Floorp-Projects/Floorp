@@ -6,7 +6,7 @@ use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering};
 use api::{YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
-use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
+use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use crate::composite::{CompositeState};
 use crate::glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuCacheAddress};
@@ -718,7 +718,7 @@ impl BatchBuilder {
             .get_id(
                 prim_spatial_node_index,
                 root_spatial_node_index,
-                ctx.clip_scroll_tree,
+                ctx.spatial_tree,
             );
 
         // TODO(gw): Calculating this for every primitive is a bit
@@ -1137,7 +1137,7 @@ impl BatchBuilder {
                                     .get_id(
                                         child.spatial_node_index,
                                         root_spatial_node_index,
-                                        ctx.clip_scroll_tree,
+                                        ctx.spatial_tree,
                                     ),
                             };
 
@@ -1210,7 +1210,7 @@ impl BatchBuilder {
                                     ROOT_SPATIAL_NODE_INDEX,
                                     tile_cache.spatial_node_index,
                                     ctx.screen_world_rect,
-                                    ctx.clip_scroll_tree,
+                                    ctx.spatial_tree,
                                 );
                                 let local_tile_clip_rect = LayoutRect::from_untyped(&tile_cache.local_rect.to_untyped());
                                 let local_tile_clip_rect = match local_tile_clip_rect.intersection(&prim_info.combined_local_clip_rect) {
@@ -2833,7 +2833,7 @@ impl ClipBatcher {
         mask_screen_rect: DeviceIntRect,
         local_clip_rect: LayoutRect,
         clip_spatial_node_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         world_rect: &WorldRect,
         device_pixel_scale: DevicePixelScale,
         gpu_address: GpuCacheAddress,
@@ -2845,7 +2845,7 @@ impl ClipBatcher {
             return false;
         }
 
-        let clip_spatial_node = &clip_scroll_tree
+        let clip_spatial_node = &spatial_tree
             .spatial_nodes[clip_spatial_node_index.0 as usize];
 
         // Only support clips that are axis-aligned to the root coordinate space,
@@ -2857,7 +2857,7 @@ impl ClipBatcher {
 
         // Get the world rect of the clip rectangle. If we can't transform it due
         // to the matrix, just fall back to drawing the entire clip mask.
-        let transform = clip_scroll_tree.get_world_transform(
+        let transform = spatial_tree.get_world_transform(
             clip_spatial_node_index,
         );
         let world_clip_rect = match project_rect(
@@ -2937,7 +2937,7 @@ impl ClipBatcher {
         resource_cache: &ResourceCache,
         gpu_cache: &GpuCache,
         clip_store: &ClipStore,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         transforms: &mut TransformPalette,
         clip_data_store: &ClipDataStore,
         actual_rect: DeviceIntRect,
@@ -2955,13 +2955,13 @@ impl ClipBatcher {
             let clip_transform_id = transforms.get_id(
                 clip_node.item.spatial_node_index,
                 ROOT_SPATIAL_NODE_INDEX,
-                clip_scroll_tree,
+                spatial_tree,
             );
 
             let prim_transform_id = transforms.get_id(
                 root_spatial_node_index,
                 ROOT_SPATIAL_NODE_INDEX,
-                clip_scroll_tree,
+                spatial_tree,
             );
 
             let instance = ClipMaskInstance {
@@ -3078,7 +3078,7 @@ impl ClipBatcher {
                             actual_rect,
                             rect,
                             clip_node.item.spatial_node_index,
-                            clip_scroll_tree,
+                            spatial_tree,
                             world_rect,
                             device_pixel_scale,
                             gpu_address,

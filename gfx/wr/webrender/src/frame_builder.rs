@@ -6,7 +6,7 @@ use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack};
-use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
+use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use crate::composite::{CompositorKind, CompositeState};
 use crate::debug_render::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
@@ -112,7 +112,7 @@ pub struct FrameBuilder {
 }
 
 pub struct FrameVisibilityContext<'a> {
-    pub clip_scroll_tree: &'a ClipScrollTree,
+    pub spatial_tree: &'a SpatialTree,
     pub global_screen_world_rect: WorldRect,
     pub global_device_pixel_scale: DevicePixelScale,
     pub surfaces: &'a [SurfaceInfo],
@@ -138,7 +138,7 @@ pub struct FrameBuildingContext<'a> {
     pub global_device_pixel_scale: DevicePixelScale,
     pub scene_properties: &'a SceneProperties,
     pub global_screen_world_rect: WorldRect,
-    pub clip_scroll_tree: &'a ClipScrollTree,
+    pub spatial_tree: &'a SpatialTree,
     pub max_local_clip: LayoutRect,
     pub debug_flags: DebugFlags,
     pub fb_config: &'a FrameBuilderConfig,
@@ -253,7 +253,7 @@ impl FrameBuilder {
 
         scratch.begin_frame();
 
-        let root_spatial_node_index = scene.clip_scroll_tree.root_reference_frame_index();
+        let root_spatial_node_index = scene.spatial_tree.root_reference_frame_index();
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
 
@@ -261,7 +261,7 @@ impl FrameBuilder {
             global_device_pixel_scale,
             scene_properties,
             global_screen_world_rect,
-            clip_scroll_tree: &scene.clip_scroll_tree,
+            spatial_tree: &scene.spatial_tree,
             max_local_clip: LayoutRect::new(
                 LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
                 LayoutSize::new(2.0 * MAX_CLIP_COORD, 2.0 * MAX_CLIP_COORD),
@@ -291,7 +291,7 @@ impl FrameBuilder {
             ROOT_SPATIAL_NODE_INDEX,
             0.0,
             global_screen_world_rect,
-            &scene.clip_scroll_tree,
+            &scene.spatial_tree,
             global_device_pixel_scale,
         );
         surfaces.push(root_surface);
@@ -324,7 +324,7 @@ impl FrameBuilder {
 
             let visibility_context = FrameVisibilityContext {
                 global_device_pixel_scale,
-                clip_scroll_tree: &scene.clip_scroll_tree,
+                spatial_tree: &scene.spatial_tree,
                 global_screen_world_rect,
                 surfaces,
                 debug_flags,
@@ -490,12 +490,12 @@ impl FrameBuilder {
 
         self.globals.update(gpu_cache);
 
-        scene.clip_scroll_tree.update_tree(
+        scene.spatial_tree.update_tree(
             pan,
             global_device_pixel_scale,
             scene_properties,
         );
-        let mut transform_palette = scene.clip_scroll_tree.build_transform_palette();
+        let mut transform_palette = scene.spatial_tree.build_transform_palette();
         scene.clip_store.clear_old_instances();
 
         let mut render_tasks = RenderTaskGraph::new(
@@ -517,7 +517,7 @@ impl FrameBuilder {
             !debug_flags.contains(DebugFlags::DISABLE_PICTURE_CACHING) &&
             !scene.picture_cache_spatial_nodes.iter().any(|spatial_node_index| {
                 let spatial_node = &scene
-                    .clip_scroll_tree
+                    .spatial_tree
                     .spatial_nodes[spatial_node_index.0 as usize];
                 spatial_node.coordinate_system_id != CoordinateSystemId::root() ||
                     spatial_node.is_ancestor_or_self_zooming
@@ -577,7 +577,7 @@ impl FrameBuilder {
                     use_advanced_blending: scene.config.gpu_supports_advanced_blend,
                     break_advanced_blend_batches: !scene.config.advanced_blend_is_coherent,
                     batch_lookback_count: scene.config.batch_lookback_count,
-                    clip_scroll_tree: &scene.clip_scroll_tree,
+                    spatial_tree: &scene.spatial_tree,
                     data_stores,
                     surfaces: &surfaces,
                     scratch,

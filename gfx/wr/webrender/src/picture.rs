@@ -75,8 +75,8 @@ use api::{DebugFlags, RasterSpace, ImageKey, ColorF, PrimitiveFlags};
 use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
 use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
-use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
-    ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace
+use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX,
+    SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace
 };
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTileId};
 use crate::debug_colors;
@@ -386,7 +386,7 @@ impl From<PropertyBinding<f32>> for OpacityBinding {
 /// Information about the state of a spatial node value
 #[derive(Debug)]
 pub struct SpatialNodeDependency {
-    /// The current value retrieved from the clip-scroll tree.
+    /// The current value retrieved from the spatial tree.
     value: TransformKey,
     /// True if it was changed (or is new) since the last frame build.
     changed: bool,
@@ -1962,7 +1962,7 @@ impl TileCacheInstance {
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
             frame_context.global_screen_world_rect,
-            frame_context.clip_scroll_tree,
+            frame_context.spatial_tree,
         );
 
         // If there is a valid set of shared clips, build a clip chain instance for this,
@@ -1981,7 +1981,7 @@ impl TileCacheInstance {
                 LayoutRect::max_rect(),
                 self.spatial_node_index,
                 &shared_clips,
-                frame_context.clip_scroll_tree,
+                frame_context.spatial_tree,
                 &mut frame_state.data_stores.clip,
             );
 
@@ -1989,7 +1989,7 @@ impl TileCacheInstance {
                 LayoutRect::from_untyped(&pic_rect.to_untyped()),
                 &self.map_local_to_surface,
                 &pic_to_world_mapper,
-                frame_context.clip_scroll_tree,
+                frame_context.spatial_tree,
                 frame_state.gpu_cache,
                 frame_state.resource_cache,
                 frame_context.global_device_pixel_scale,
@@ -2299,7 +2299,7 @@ impl TileCacheInstance {
         prim_spatial_node_index: SpatialNodeIndex,
         prim_clip_chain: Option<&ClipChainInstance>,
         local_prim_rect: LayoutRect,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         data_stores: &DataStores,
         clip_store: &ClipStore,
         pictures: &[PicturePrimitive],
@@ -2318,7 +2318,7 @@ impl TileCacheInstance {
 
         self.map_local_to_surface.set_target_spatial_node(
             prim_spatial_node_index,
-            clip_scroll_tree,
+            spatial_tree,
         );
 
         // Map the primitive local rect into picture space.
@@ -2341,7 +2341,7 @@ impl TileCacheInstance {
         } else {
             self.map_child_pic_to_surface.set_target_spatial_node(
                 surface_spatial_node_index,
-                clip_scroll_tree,
+                spatial_tree,
             );
             self.map_child_pic_to_surface
                 .map(&prim_clip_chain.pic_clip_rect)
@@ -2531,9 +2531,9 @@ impl TileCacheInstance {
                     //  - Same coord system as picture cache (ensures rects are axis-aligned).
                     //  - No clip masks exist.
                     let same_coord_system = {
-                        let prim_spatial_node = &clip_scroll_tree
+                        let prim_spatial_node = &spatial_tree
                             .spatial_nodes[prim_spatial_node_index.0 as usize];
-                        let surface_spatial_node = &clip_scroll_tree
+                        let surface_spatial_node = &spatial_tree
                             .spatial_nodes[self.spatial_node_index.0 as usize];
 
                         prim_spatial_node.coordinate_system_id == surface_spatial_node.coordinate_system_id
@@ -2628,7 +2628,7 @@ impl TileCacheInstance {
                     ROOT_SPATIAL_NODE_INDEX,
                     self.spatial_node_index,
                     frame_context.global_screen_world_rect,
-                    frame_context.clip_scroll_tree,
+                    frame_context.spatial_tree,
                 );
 
                 let world_backdrop_rect = map_pic_to_world
@@ -2646,7 +2646,7 @@ impl TileCacheInstance {
         // the device space dirty rects aren't applicable (until we properly
         // integrate with OS compositors that can handle scrolling slices).
         let root_transform = frame_context
-            .clip_scroll_tree
+            .spatial_tree
             .get_relative_transform(
                 self.spatial_node_index,
                 ROOT_SPATIAL_NODE_INDEX,
@@ -2669,7 +2669,7 @@ impl TileCacheInstance {
             let mut value = get_transform_key(
                 spatial_node_index,
                 self.spatial_node_index,
-                frame_context.clip_scroll_tree,
+                frame_context.spatial_tree,
             );
 
             // Check if the transform has changed from last frame
@@ -2978,14 +2978,14 @@ impl SurfaceInfo {
         raster_spatial_node_index: SpatialNodeIndex,
         inflation_factor: f32,
         world_rect: WorldRect,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         device_pixel_scale: DevicePixelScale,
     ) -> Self {
         let map_surface_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             surface_spatial_node_index,
             world_rect,
-            clip_scroll_tree,
+            spatial_tree,
         );
 
         let pic_bounds = map_surface_to_world
@@ -3631,10 +3631,10 @@ impl PicturePrimitive {
     /// picture's spatial node or one of its ancestors is being pinch zoomed
     /// then we round it. This prevents us rasterizing glyphs for every minor
     /// change in zoom level, as that would be too expensive.
-    pub fn get_raster_space(&self, clip_scroll_tree: &ClipScrollTree) -> RasterSpace {
-        let spatial_node = &clip_scroll_tree.spatial_nodes[self.spatial_node_index.0 as usize];
+    pub fn get_raster_space(&self, spatial_tree: &SpatialTree) -> RasterSpace {
+        let spatial_node = &spatial_tree.spatial_nodes[self.spatial_node_index.0 as usize];
         if spatial_node.is_ancestor_or_self_zooming {
-            let scale_factors = clip_scroll_tree
+            let scale_factors = spatial_tree
                 .get_relative_transform(self.spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
                 .scale_factors();
 
@@ -3696,7 +3696,7 @@ impl PicturePrimitive {
             ROOT_SPATIAL_NODE_INDEX,
             surface_spatial_node_index,
             frame_context.global_screen_world_rect,
-            frame_context.clip_scroll_tree,
+            frame_context.spatial_tree,
         );
 
         let pic_bounds = map_pic_to_world.unmap(&map_pic_to_world.bounds)
@@ -3711,7 +3711,7 @@ impl PicturePrimitive {
             surface_spatial_node_index,
             raster_spatial_node_index,
             frame_context.global_screen_world_rect,
-            frame_context.clip_scroll_tree,
+            frame_context.spatial_tree,
         );
 
         let plane_splitter = match self.context_3d {
@@ -4457,14 +4457,14 @@ impl PicturePrimitive {
     /// given plane splitter.
     pub fn add_split_plane(
         splitter: &mut PlaneSplitter,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         prim_spatial_node_index: SpatialNodeIndex,
         original_local_rect: LayoutRect,
         combined_local_clip_rect: &LayoutRect,
         world_rect: WorldRect,
         plane_split_anchor: PlaneSplitAnchor,
     ) -> bool {
-        let transform = clip_scroll_tree
+        let transform = spatial_tree
             .get_world_transform(prim_spatial_node_index);
         let matrix = transform.clone().into_transform().cast();
 
@@ -4526,7 +4526,7 @@ impl PicturePrimitive {
         &mut self,
         splitter: &mut PlaneSplitter,
         gpu_cache: &mut GpuCache,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) {
         let ordered = match self.context_3d {
             Picture3DContext::In { root_data: Some(ref mut list), .. } => list,
@@ -4539,7 +4539,7 @@ impl PicturePrimitive {
         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
             let cluster = &self.prim_list.clusters[poly.anchor.cluster_index];
             let spatial_node_index = cluster.spatial_node_index;
-            let transform = match clip_scroll_tree
+            let transform = match spatial_tree
                 .get_world_transform(spatial_node_index)
                 .inverse()
             {
@@ -4592,7 +4592,7 @@ impl PicturePrimitive {
         // since picture tree can be more dense than the corresponding spatial tree.
         if !self.is_backface_visible {
             if let Picture3DContext::Out = self.context_3d {
-                match frame_context.clip_scroll_tree.get_local_visible_face(self.spatial_node_index) {
+                match frame_context.spatial_tree.get_local_visible_face(self.spatial_node_index) {
                     VisibleFace::Front => {}
                     VisibleFace::Back => return None,
                 }
@@ -4660,7 +4660,7 @@ impl PicturePrimitive {
 
             // Check if there is perspective or if an SVG filter is applied, and thus whether a new
             // rasterization root should be established.
-            let establishes_raster_root = has_svg_filter || frame_context.clip_scroll_tree
+            let establishes_raster_root = has_svg_filter || frame_context.spatial_tree
                 .get_relative_transform(surface_spatial_node_index, parent_raster_node_index)
                 .is_perspective();
 
@@ -4673,7 +4673,7 @@ impl PicturePrimitive {
                 },
                 inflation_factor,
                 frame_context.global_screen_world_rect,
-                &frame_context.clip_scroll_tree,
+                &frame_context.spatial_tree,
                 frame_context.global_device_pixel_scale,
             );
 
@@ -4710,7 +4710,7 @@ impl PicturePrimitive {
                 // For in-preserve-3d primitives and pictures, the backface visibility is
                 // evaluated relative to the containing block.
                 if let Picture3DContext::In { ancestor_index, .. } = self.context_3d {
-                    match frame_context.clip_scroll_tree
+                    match frame_context.spatial_tree
                         .get_relative_transform(cluster.spatial_node_index, ancestor_index)
                         .visible_face()
                     {
@@ -4722,7 +4722,7 @@ impl PicturePrimitive {
 
             // No point including this cluster if it can't be transformed
             let spatial_node = &frame_context
-                .clip_scroll_tree
+                .spatial_tree
                 .spatial_nodes[cluster.spatial_node_index.0 as usize];
             if !spatial_node.invertible {
                 continue;
@@ -4735,7 +4735,7 @@ impl PicturePrimitive {
                     ROOT_SPATIAL_NODE_INDEX,
                     cluster.spatial_node_index,
                     LayoutRect::max_rect(),
-                    frame_context.clip_scroll_tree,
+                    frame_context.spatial_tree,
                 );
 
                 for prim_instance in &mut cluster.prim_instances {
@@ -4756,7 +4756,7 @@ impl PicturePrimitive {
                                 ROOT_SPATIAL_NODE_INDEX,
                                 spatial_node_index,
                                 LayoutRect::max_rect(),
-                                frame_context.clip_scroll_tree,
+                                frame_context.spatial_tree,
                             );
 
                             // First map to the screen and get a flattened rect
@@ -4786,7 +4786,7 @@ impl PicturePrimitive {
             let surface = state.current_surface_mut();
             surface.map_local_to_surface.set_target_spatial_node(
                 cluster.spatial_node_index,
-                frame_context.clip_scroll_tree,
+                frame_context.spatial_tree,
             );
 
             // Mark the cluster visible, since it passed the invertible and
@@ -4818,7 +4818,7 @@ impl PicturePrimitive {
                     surface.raster_spatial_node_index,
                     self.spatial_node_index,
                     surface.device_pixel_scale,
-                    frame_context.clip_scroll_tree,
+                    frame_context.spatial_tree,
                 );
 
                 surface.rect = snap_surface_to_raster.snap_rect(&surface.rect);
@@ -4859,7 +4859,7 @@ impl PicturePrimitive {
             let parent_surface = state.current_surface_mut();
             parent_surface.map_local_to_surface.set_target_spatial_node(
                 self.spatial_node_index,
-                frame_context.clip_scroll_tree,
+                frame_context.spatial_tree,
             );
             if let Some(parent_surface_rect) = parent_surface
                 .map_local_to_surface
@@ -4882,7 +4882,7 @@ impl PicturePrimitive {
             self.resolve_split_planes(
                 splitter,
                 &mut frame_state.gpu_cache,
-                &frame_context.clip_scroll_tree,
+                &frame_context.spatial_tree,
             );
         }
 
@@ -5055,13 +5055,13 @@ fn create_raster_mappers(
     surface_spatial_node_index: SpatialNodeIndex,
     raster_spatial_node_index: SpatialNodeIndex,
     world_rect: WorldRect,
-    clip_scroll_tree: &ClipScrollTree,
+    spatial_tree: &SpatialTree,
 ) -> (SpaceMapper<RasterPixel, WorldPixel>, SpaceMapper<PicturePixel, RasterPixel>) {
     let map_raster_to_world = SpaceMapper::new_with_target(
         ROOT_SPATIAL_NODE_INDEX,
         raster_spatial_node_index,
         world_rect,
-        clip_scroll_tree,
+        spatial_tree,
     );
 
     let raster_bounds = map_raster_to_world.unmap(&world_rect)
@@ -5071,7 +5071,7 @@ fn create_raster_mappers(
         raster_spatial_node_index,
         surface_spatial_node_index,
         raster_bounds,
-        clip_scroll_tree,
+        spatial_tree,
     );
 
     (map_raster_to_world, map_pic_to_raster)
@@ -5080,18 +5080,18 @@ fn create_raster_mappers(
 fn get_transform_key(
     spatial_node_index: SpatialNodeIndex,
     cache_spatial_node_index: SpatialNodeIndex,
-    clip_scroll_tree: &ClipScrollTree,
+    spatial_tree: &SpatialTree,
 ) -> TransformKey {
     // Note: this is the only place where we don't know beforehand if the tile-affecting
     // spatial node is below or above the current picture.
     let transform = if cache_spatial_node_index >= spatial_node_index {
-        clip_scroll_tree
+        spatial_tree
             .get_relative_transform(
                 cache_spatial_node_index,
                 spatial_node_index,
             )
     } else {
-        clip_scroll_tree
+        spatial_tree
             .get_relative_transform(
                 spatial_node_index,
                 cache_spatial_node_index,

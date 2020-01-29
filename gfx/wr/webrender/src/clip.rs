@@ -97,7 +97,7 @@ use api::{BoxShadowClipMode, ImageKey, ImageRendering};
 use api::units::*;
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
 use crate::box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
+use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};
 use crate::ellipse::Ellipse;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use crate::gpu_types::{BoxShadowStretchMode};
@@ -289,14 +289,14 @@ impl ClipSpaceConversion {
     fn new(
         prim_spatial_node_index: SpatialNodeIndex,
         clip_spatial_node_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) -> Self {
         //Note: this code is different from `get_relative_transform` in a way that we only try
         // getting the relative transform if it's Local or ScaleOffset,
         // falling back to the world transform otherwise.
-        let clip_spatial_node = &clip_scroll_tree
+        let clip_spatial_node = &spatial_tree
             .spatial_nodes[clip_spatial_node_index.0 as usize];
-        let prim_spatial_node = &clip_scroll_tree
+        let prim_spatial_node = &spatial_tree
             .spatial_nodes[prim_spatial_node_index.0 as usize];
 
         if prim_spatial_node_index == clip_spatial_node_index {
@@ -308,7 +308,7 @@ impl ClipSpaceConversion {
             ClipSpaceConversion::ScaleOffset(scale_offset)
         } else {
             ClipSpaceConversion::Transform(
-                clip_scroll_tree
+                spatial_tree
                     .get_world_transform(clip_spatial_node_index)
                     .into_transform()
             )
@@ -346,7 +346,7 @@ impl ClipNodeInfo {
         clipped_rect: &LayoutRect,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         request_resources: bool,
     ) -> Option<ClipNodeInstance> {
         // Calculate some flags that are required for the segment
@@ -358,7 +358,7 @@ impl ClipNodeInfo {
         //           the mask for a single corner at a time then, so can always consider radii uniform.
         let is_raster_2d =
             flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) ||
-            clip_scroll_tree
+            spatial_tree
                 .get_world_viewport_transform(node.item.spatial_node_index)
                 .is_2d_axis_aligned();
         if is_raster_2d && node.item.kind.supports_fast_path_rendering() {
@@ -752,7 +752,7 @@ impl ClipStore {
         local_prim_clip_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
         clip_chains: &[ClipChainId],
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         clip_data_store: &mut ClipDataStore,
     ) {
         self.active_clip_node_info.clear();
@@ -769,7 +769,7 @@ impl ClipStore {
                 &mut local_clip_rect,
                 &mut self.active_clip_node_info,
                 clip_data_store,
-                clip_scroll_tree,
+                spatial_tree,
             ) {
                 return;
             }
@@ -783,7 +783,7 @@ impl ClipStore {
         &mut self,
         prim_clip_chain: &ClipChainInstance,
         prim_spatial_node_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         clip_data_store: &ClipDataStore,
     ) {
         // TODO(gw): Although this does less work than set_active_clips(), it does
@@ -800,7 +800,7 @@ impl ClipStore {
             let conversion = ClipSpaceConversion::new(
                 prim_spatial_node_index,
                 clip_node.item.spatial_node_index,
-                clip_scroll_tree,
+                spatial_tree,
             );
             self.active_clip_node_info.push(ClipNodeInfo {
                 handle: clip_instance.handle,
@@ -816,7 +816,7 @@ impl ClipStore {
         local_prim_rect: LayoutRect,
         prim_to_pic_mapper: &SpaceMapper<LayoutPixel, PicturePixel>,
         pic_to_world_mapper: &SpaceMapper<PicturePixel, WorldPixel>,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
         device_pixel_scale: DevicePixelScale,
@@ -897,7 +897,7 @@ impl ClipStore {
                         &local_bounding_rect,
                         gpu_cache,
                         resource_cache,
-                        clip_scroll_tree,
+                        spatial_tree,
                         request_resources,
                     ) {
                         // As a special case, a partial accept of a clip rect that is
@@ -1588,7 +1588,7 @@ fn add_clip_node_to_current_chain(
     local_clip_rect: &mut LayoutRect,
     clip_node_info: &mut Vec<ClipNodeInfo>,
     clip_data_store: &ClipDataStore,
-    clip_scroll_tree: &ClipScrollTree,
+    spatial_tree: &SpatialTree,
 ) -> bool {
     let clip_node = &clip_data_store[node.handle];
 
@@ -1597,7 +1597,7 @@ fn add_clip_node_to_current_chain(
     let conversion = ClipSpaceConversion::new(
         spatial_node_index,
         clip_node.item.spatial_node_index,
-        clip_scroll_tree,
+        spatial_tree,
     );
 
     // If we can convert spaces, try to reduce the size of the region

@@ -4,7 +4,7 @@
 
 use api::PrimitiveFlags;
 use api::units::*;
-use crate::clip_scroll_tree::SpatialNodeIndex;
+use crate::spatial_tree::SpatialNodeIndex;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
