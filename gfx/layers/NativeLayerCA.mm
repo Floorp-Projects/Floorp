@@ -339,6 +339,24 @@ bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
   if (needToRedrawEverything) {
     [mRenderer addUpdateRect:bounds];
   }
+  if (!CGRectIsEmpty([mRenderer updateBounds])) {
+    // CARenderer assumes the layer tree is opaque. It only ever paints over existing content, it
+    // never erases anything. However, our layer tree is not necessarily opaque. So we manually
+    // erase the area that's going to be redrawn. This ensures correct rendering in the transparent
+    // areas.
+    //
+    // Since we erase the bounds of the update area, this will erase more than necessary if the
+    // update area is not a single rectangle. Unfortunately we cannot get the precise update region
+    // from CARenderer, we can only get the bounds.
+    CGRect updateBounds = [mRenderer updateBounds];
+    gl::ScopedGLState scopedScissorTestState(mGL, LOCAL_GL_SCISSOR_TEST, true);
+    gl::ScopedScissorRect scissor(mGL, updateBounds.origin.x, updateBounds.origin.y,
+                                  updateBounds.size.width, updateBounds.size.height);
+    mGL->fClearColor(0.0, 0.0, 0.0, 0.0);
+    mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
+    // We erased the update region's bounds. Make sure the entire update bounds get repainted.
+    [mRenderer addUpdateRect:updateBounds];
+  }
   [mRenderer render];
   [mRenderer endFrame];
 
