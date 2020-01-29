@@ -7295,7 +7295,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       if (!tokenStream.getToken(&tt)) {
         return null();
       }
-      classHeritage = memberExpr(yieldHandling, TripledotProhibited, tt);
+      classHeritage = optionalExpr(yieldHandling, TripledotProhibited, tt);
       if (!classHeritage) {
         return null();
       }
