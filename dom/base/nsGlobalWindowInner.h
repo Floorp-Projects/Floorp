@@ -1180,6 +1180,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   mozilla::dom::TabGroup* TabGroupInner();
 
+  // Like TabGroupInner, but it is more tolerant of being called at peculiar
+  // times, and it can return null.
+  mozilla::dom::TabGroup* MaybeTabGroupInner();
+
   bool IsBackgroundInternal() const;
 
   // NOTE: Chrome Only

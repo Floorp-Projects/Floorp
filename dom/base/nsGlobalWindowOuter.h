@@ -1046,6 +1046,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   mozilla::dom::TabGroup* TabGroupOuter();
 
+  // Like TabGroupOuter, but it is more tolerant of being called at peculiar
+  // times, and it can return null.
+  mozilla::dom::TabGroup* MaybeTabGroupOuter();
+
   void SetIsBackgroundInternal(bool aIsBackground);
 
   nsresult GetInterfaceInternal(const nsIID& aIID, void** aSink);
