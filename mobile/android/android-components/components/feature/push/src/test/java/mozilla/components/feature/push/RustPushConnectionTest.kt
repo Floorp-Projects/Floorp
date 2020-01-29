@@ -6,6 +6,7 @@ package mozilla.components.feature.push
 
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.push.PushAPI
+import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertFalse
@@ -16,6 +17,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mockito.anyString
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class RustPushConnectionTest {
@@ -44,6 +46,7 @@ class RustPushConnectionTest {
             connection.updateToken("123")
         }
 
+        verify(api, never()).subscribe(any(), any(), any())
         verify(api).update(anyString())
     }
 
