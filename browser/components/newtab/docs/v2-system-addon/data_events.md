@@ -1024,7 +1024,8 @@ CFR impression ping has two forms, in which the message_id could be of different
   "addon_version": "20180710100040",
   "locale": "en-US",
   "message_id": "EXTENDED_TRIPLETS_1",
-  "event": "IMPRESSION"
+  "event": "IMPRESSION",
+  "event_context": { "page": ["about:welcome" | "about:home" | "about:newtab"] }
 }
 ```
 
@@ -1056,7 +1057,8 @@ This reports the user's interaction with Activity Stream Router.
   "locale": "en-US",
   "source": "ONBOARDING",
   "message_id": "onboarding_message_1",
-  "event": ["IMPRESSION" | "CLICK_BUTTION" | "INSTALL" | "BLOCK"]
+  "event": ["IMPRESSION" | "CLICK_BUTTION" | "INSTALL" | "BLOCK"],
+  "event_context": { "page": ["about:welcome" | "about:home" | "about:newtab"] }
 }
 ```
 
