@@ -2639,15 +2639,45 @@
         userContextId = openerTab.getAttribute("usercontextid") || 0;
       }
 
-      this._setTabAttributes(t, {
-        animate,
-        noInitialLabel,
-        aURI,
-        userContextId,
-        skipBackgroundNotify,
-        pinned,
-        skipAnimation,
-      });
+      if (!noInitialLabel) {
+        if (isBlankPageURL(aURI)) {
+          t.setAttribute("label", this.tabContainer.emptyTabTitle);
+        } else {
+          // Set URL as label so that the tab isn't empty initially.
+          this.setInitialTabTitle(t, aURI, { beforeTabOpen: true });
+        }
+      }
+
+      if (userContextId) {
+        t.setAttribute("usercontextid", userContextId);
+        ContextualIdentityService.setTabStyle(t);
+      }
+
+      if (skipBackgroundNotify) {
+        t.setAttribute("skipbackgroundnotify", true);
+      }
+
+      if (pinned) {
+        t.setAttribute("pinned", "true");
+      }
+
+      t.classList.add("tabbrowser-tab");
+
+      this.tabContainer._unlockTabSizing();
+
+      if (!animate) {
+        t.setAttribute("fadein", "true");
+
+        // Call _handleNewTab asynchronously as it needs to know if the
+        // new tab is selected.
+        setTimeout(
+          function(tabContainer) {
+            tabContainer._handleNewTab(t);
+          },
+          0,
+          this.tabContainer
+        );
+      }
 
       let usingPreloadedContent = false;
       let b;
@@ -3106,59 +3136,6 @@
       }
 
       return reallyClose;
-    },
-
-    _setTabAttributes(
-      tab,
-      {
-        animate,
-        noInitialLabel,
-        aURI,
-        userContextId,
-        skipBackgroundNotify,
-        pinned,
-        skipAnimation,
-      } = {}
-    ) {
-      if (!noInitialLabel) {
-        if (isBlankPageURL(aURI)) {
-          tab.setAttribute("label", this.tabContainer.emptyTabTitle);
-        } else {
-          // Set URL as label so that the tab isn't empty initially.
-          this.setInitialTabTitle(tab, aURI, { beforeTabOpen: true });
-        }
-      }
-
-      if (userContextId) {
-        tab.setAttribute("usercontextid", userContextId);
-        ContextualIdentityService.setTabStyle(tab);
-      }
-
-      if (skipBackgroundNotify) {
-        tab.setAttribute("skipbackgroundnotify", true);
-      }
-
-      if (pinned) {
-        tab.setAttribute("pinned", "true");
-      }
-
-      tab.classList.add("tabbrowser-tab");
-
-      this.tabContainer._unlockTabSizing();
-
-      if (!animate) {
-        tab.setAttribute("fadein", "true");
-
-        // Call _handleNewTab asynchronously as it needs to know if the
-        // new tab is selected.
-        setTimeout(
-          function(tabContainer) {
-            tabContainer._handleNewTab(tab);
-          },
-          0,
-          this.tabContainer
-        );
-      }
     },
 
     /**
