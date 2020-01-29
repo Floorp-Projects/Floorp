@@ -157,7 +157,6 @@ fn tile_to_svg(key: TileOffset,
             };
 
         svg += &format!("<rect x=\"{:.2}\" y=\"{:.2}\" width=\"{:.2}\" height=\"{:.2}\" {}/>",
-                        svg,
                         rect_world.origin.x,
                         rect_world.origin.y,
                         rect_world.size.width,
