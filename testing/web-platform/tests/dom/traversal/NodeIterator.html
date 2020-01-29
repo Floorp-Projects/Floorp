@@ -47,9 +47,10 @@ test(function() {
 }, "createNodeIterator() with undefined as arguments");
 
 test(function() {
+  var err = {name: "failed"};
   var iter = document.createNodeIterator(document, NodeFilter.SHOW_ALL,
-                                        function() { throw {name: "failed"} });
-  assert_throws({name: "failed"}, function() { iter.nextNode() });
+                                         function() { throw err; });
+  assert_throws_exactly(err, function() { iter.nextNode() });
 }, "Propagate exception from filter function");
 
 test(function() {
