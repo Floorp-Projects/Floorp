@@ -53,7 +53,6 @@ ProfileUnlockerWin::ProfileUnlockerWin(const nsAString& aFileName)
       mRmRegisterResources(nullptr),
       mRmGetList(nullptr),
       mRmEndSession(nullptr),
-      mQueryFullProcessImageName(nullptr),
       mFileName(aFileName) {}
 
 ProfileUnlockerWin::~ProfileUnlockerWin() {}
@@ -89,13 +88,6 @@ nsresult ProfileUnlockerWin::Init() {
       reinterpret_cast<RMENDSESSION>(::GetProcAddress(module, "RmEndSession"));
   if (!mRmEndSession) {
     return NS_ERROR_UNEXPECTED;
-  }
-
-  mQueryFullProcessImageName =
-      reinterpret_cast<QUERYFULLPROCESSIMAGENAME>(::GetProcAddress(
-          ::GetModuleHandleW(L"kernel32.dll"), "QueryFullProcessImageNameW"));
-  if (!mQueryFullProcessImageName) {
-    return NS_ERROR_NOT_AVAILABLE;
   }
 
   mRestartMgrModule.steal(module);
@@ -190,7 +182,8 @@ nsresult ProfileUnlockerWin::TryToTerminate(RM_UNIQUE_PROCESS& aProcess) {
 
   WCHAR imageName[MAX_PATH];
   DWORD imageNameLen = MAX_PATH;
-  if (!mQueryFullProcessImageName(otherProcess, 0, imageName, &imageNameLen)) {
+  if (!::QueryFullProcessImageNameW(otherProcess, 0, imageName,
+                                    &imageNameLen)) {
     // The error codes for this function are not very descriptive. There are
     // actually two failure cases here: Either the call failed because the
     // process is no longer running, or it failed for some other reason. We
@@ -217,8 +210,8 @@ nsresult ProfileUnlockerWin::TryToTerminate(RM_UNIQUE_PROCESS& aProcess) {
   }
 
   imageNameLen = MAX_PATH;
-  if (!mQueryFullProcessImageName(::GetCurrentProcess(), 0, imageName,
-                                  &imageNameLen)) {
+  if (!::QueryFullProcessImageNameW(::GetCurrentProcess(), 0, imageName,
+                                    &imageNameLen)) {
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsIFile> thisProcessImageName;
