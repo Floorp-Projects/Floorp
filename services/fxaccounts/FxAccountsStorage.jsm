@@ -55,7 +55,7 @@ var FxAccountsStorageManager = function(options = {}) {
   this._promiseStorageComplete = Promise.resolve();
 };
 
-this.FxAccountsStorageManager.prototype = {
+FxAccountsStorageManager.prototype = {
   _initialized: false,
   _needToReadSecure: true,
 

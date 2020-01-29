@@ -27,7 +27,7 @@ var TranslationDocument = function(document) {
   this._init(document);
 };
 
-this.TranslationDocument.prototype = {
+TranslationDocument.prototype = {
   translatedFrom: "",
   translatedTo: "",
   translationError: false,

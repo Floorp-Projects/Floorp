@@ -79,7 +79,7 @@ var EnableDelayHelper = function({ enableDialog, disableDialog, focusTarget }) {
   this.startOnFocusDelay();
 };
 
-this.EnableDelayHelper.prototype = {
+EnableDelayHelper.prototype = {
   get delayTime() {
     return Services.prefs.getIntPref("security.dialog_enable_delay");
   },

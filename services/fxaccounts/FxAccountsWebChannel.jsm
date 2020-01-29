@@ -166,7 +166,7 @@ this.FxAccountsWebChannel = function(options) {
   this._setupChannel();
 };
 
-this.FxAccountsWebChannel.prototype = {
+FxAccountsWebChannel.prototype = {
   /**
    * WebChannel that is used to communicate with content page
    */
@@ -400,7 +400,7 @@ this.FxAccountsWebChannelHelpers = function(options) {
     options.privateBrowsingUtils || PrivateBrowsingUtils;
 };
 
-this.FxAccountsWebChannelHelpers.prototype = {
+FxAccountsWebChannelHelpers.prototype = {
   // If the last fxa account used for sync isn't this account, we display
   // a modal dialog checking they really really want to do this...
   // (This is sync-specific, so ideally would be in sync's identity module,
@@ -738,7 +738,7 @@ var EnsureFxAccountsWebChannel = () => {
       if (contentUri) {
         // The FxAccountsWebChannel listens for events and updates
         // the state machine accordingly.
-        singleton = new this.FxAccountsWebChannel({
+        singleton = new FxAccountsWebChannel({
           content_uri: contentUri,
           channel_id: WEBCHANNEL_ID,
         });

@@ -92,7 +92,7 @@ var DownloadPrompter = function(aParent) {
   this._prompter = Services.ww.getNewPrompter(aParent);
 };
 
-this.DownloadPrompter.prototype = {
+DownloadPrompter.prototype = {
   /**
    * Constants with the different type of prompts.
    */

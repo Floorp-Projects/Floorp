@@ -235,7 +235,7 @@ this.InsecurePasswordUtils = {
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this.InsecurePasswordUtils,
+  InsecurePasswordUtils,
   "_ignoreLocalIPAddress",
   "security.insecure_field_warning.ignore_local_ip_address",
   true

@@ -159,7 +159,7 @@ var CrashManager = function(options) {
   this._storeProtectedCount = 0;
 };
 
-this.CrashManager.prototype = Object.freeze({
+CrashManager.prototype = Object.freeze({
   // A crash in the main process.
   PROCESS_TYPE_MAIN: "main",
 
@@ -1523,7 +1523,7 @@ CrashRecord.prototype = Object.freeze({
  * CrashManager is likely only ever instantiated once per application lifetime.
  * The main reason it's implemented as a reusable type is to facilitate testing.
  */
-XPCOMUtils.defineLazyGetter(this.CrashManager, "Singleton", function() {
+XPCOMUtils.defineLazyGetter(CrashManager, "Singleton", function() {
   if (gCrashManager) {
     return gCrashManager;
   }
