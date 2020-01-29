@@ -37,6 +37,7 @@ class ManifestUpdateFeature(
 
     private var scope: CoroutineScope? = null
     private var updateJob: Job? = null
+    private var updateUsageJob: Job? = null
 
     /**
      * When the manifest is changed, compare it to the existing manifest.
@@ -46,6 +47,8 @@ class ManifestUpdateFeature(
     override fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) {
         if (manifest?.startUrl == initialManifest.startUrl && manifest != initialManifest) {
             updateJob?.cancel()
+            updateUsageJob?.cancel()
+
             updateJob = scope?.launch { updateStoredManifest(manifest) }
         }
     }
@@ -63,6 +66,11 @@ class ManifestUpdateFeature(
     override fun start() {
         scope = MainScope()
         sessionManager.findSessionById(sessionId)?.register(this)
+        updateUsageJob?.cancel()
+
+        updateUsageJob = scope?.launch {
+            storage.updateManifestUsedAt(initialManifest)
+        }
     }
 
     override fun stop() {

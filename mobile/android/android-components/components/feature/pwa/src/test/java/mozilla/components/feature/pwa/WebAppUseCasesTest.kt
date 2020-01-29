@@ -5,18 +5,23 @@
 package mozilla.components.feature.pwa
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.concept.fetch.Client
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class WebAppUseCasesTest {
 
@@ -84,5 +89,22 @@ class WebAppUseCasesTest {
 
         assertFalse(WebAppUseCases(testContext, sessionManager, shortcutManager).isInstallable())
         assertFalse(WebAppUseCases(testContext, sessionManager, mock(), supportWebApps = false).isInstallable())
+    }
+
+    @Test
+    fun `getInstallState returns Installed if manifest exists`() = runBlockingTest {
+        val url = "https://mozilla.org"
+        val sessionManager: SessionManager = mock()
+        val httpClient: Client = mock()
+        val storage: ManifestStorage = mock()
+        val shortcutManager = WebAppShortcutManager(testContext, httpClient, storage)
+        val session: Session = mock()
+        val currentTime = System.currentTimeMillis()
+
+        `when`(session.url).thenReturn(url)
+        `when`(sessionManager.selectedSession).thenReturn(session)
+        `when`(storage.hasRecentManifest(url, currentTime)).thenReturn(true)
+
+        assertEquals(WebAppShortcutManager.WebAppInstallState.Installed, WebAppUseCases(testContext, sessionManager, shortcutManager).getInstallState(currentTime))
     }
 }

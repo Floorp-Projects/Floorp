@@ -198,6 +198,37 @@ class WebAppShortcutManager(
         }
         storage.removeManifests(startUrls)
     }
+
+    /**
+     * Checks if there is a currently installed web app to which this URL belongs.
+     *
+     * @param url url that is covered by the scope of a web app installed by the user
+     * @param currentTime the curent time in milliseconds
+     */
+    suspend fun getWebAppInstallState(url: String, currentTime: Long = System.currentTimeMillis()): WebAppInstallState {
+        if (storage.hasRecentManifest(url, currentTime = currentTime)) {
+            return WebAppInstallState.Installed
+        }
+
+        return WebAppInstallState.NotInstalled
+    }
+
+    /**
+     * Updates the usedAt timestamp of the web app this url is associated with.
+     *
+     * @param manifest the manifest to update
+     */
+    suspend fun reportWebAppUsed(manifest: WebAppManifest): Unit? {
+        return storage.updateManifestUsedAt(manifest)
+    }
+
+    /**
+     * Possible install states of a Web App.
+     */
+    enum class WebAppInstallState {
+        NotInstalled,
+        Installed
+    }
 }
 
 /**

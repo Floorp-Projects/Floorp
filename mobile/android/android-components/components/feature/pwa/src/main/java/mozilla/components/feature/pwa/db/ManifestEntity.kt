@@ -20,9 +20,15 @@ internal data class ManifestEntity(
     @ColumnInfo(name = "start_url")
     val startUrl: String = manifest.startUrl,
 
+    @ColumnInfo(name = "scope", index = true)
+    var scope: String? = manifest.scope,
+
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "used_at")
+    val usedAt: Long = System.currentTimeMillis()
 )
