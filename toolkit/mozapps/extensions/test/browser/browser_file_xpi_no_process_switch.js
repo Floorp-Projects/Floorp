@@ -9,10 +9,6 @@ let fileurl2 = get_addon_file_url("browser_dragdrop2.xpi");
 function promiseInstallNotification(aBrowser) {
   return new Promise(resolve => {
     function popupshown(event) {
-      if (event.target.getAttribute("popupid") != ADDON_INSTALL_ID) {
-        return;
-      }
-
       let notification = PopupNotifications.getNotification(
         ADDON_INSTALL_ID,
         aBrowser
@@ -58,7 +54,7 @@ async function testOpenedAndDraggedXPI(aBrowser) {
 
   // No process switch for XPI file:// URI in the urlbar.
   let promiseNotification = promiseInstallNotification(aBrowser);
-  let urlbar = document.getElementById("urlbar");
+  let urlbar = gURLBar;
   urlbar.value = fileurl1.spec;
   urlbar.focus();
   EventUtils.synthesizeKey("KEY_Enter");
@@ -100,11 +96,28 @@ async function testOpenedAndDraggedXPI(aBrowser) {
   );
   is(effect, "move", "Drag should be accepted");
   let [newTab, newTabInstallNotification] = await promiseTabAndNotification;
-  await promiseNotification;
+  await new Promise(resolve => {
+    let observer = {
+      observe(subject, topic, data) {
+        Services.obs.removeObserver(observer, topic);
+        let browser = subject.wrappedJSObject.target;
+        if (browser == newTab.linkedBrowser) {
+          BrowserTestUtils.switchTab(gBrowser, newTab).then(resolve);
+          return;
+        }
+        promiseNotification.then(resolve);
+      },
+    };
+    Services.obs.addObserver(observer, "webextension-permission-prompt");
+  });
   if (gBrowser.selectedTab != newTab) {
     await BrowserTestUtils.switchTab(gBrowser, newTab);
   }
   await newTabInstallNotification;
+  if (gBrowser.selectedTab != tab) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
+  await promiseNotification;
   BrowserTestUtils.removeTab(newTab);
   await CheckBrowserInPid(
     aBrowser,
