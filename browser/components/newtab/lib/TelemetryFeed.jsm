@@ -108,6 +108,14 @@ const STRUCTURED_INGESTION_NAMESPACE_MS = "messaging-system";
 // Used as the missing value for timestamps in the session ping
 const TIMESTAMP_MISSING_VALUE = -1;
 
+// Page filter for onboarding telemetry, any value other than these will
+// be set as "other"
+const ONBOARDING_ALLOWED_PAGE_VALUES = [
+  "about:welcome",
+  "about:home",
+  "about:newtab",
+];
+
 this.TelemetryFeed = class TelemetryFeed {
   constructor(options) {
     this.sessions = new Map();
@@ -589,6 +597,7 @@ this.TelemetryFeed = class TelemetryFeed {
       addon_version: Services.appinfo.appBuildID,
       locale: Services.locale.appLocaleAsBCP47,
     };
+    const session = this.sessions.get(au.getPortIdOfSender(action));
     if (event.event_context && typeof event.event_context === "object") {
       event.event_context = JSON.stringify(event.event_context);
     }
@@ -603,7 +612,7 @@ this.TelemetryFeed = class TelemetryFeed {
       // Bug 1594125 added a new onboarding-like provider called `whats-new-panel`.
       case "whats-new-panel_user_event":
       case "onboarding_user_event":
-        event = await this.applyOnboardingPolicy(event);
+        event = await this.applyOnboardingPolicy(event, session);
         break;
       case "asrouter_undesired_event":
         event = this.applyUndesiredEventPolicy(event);
@@ -649,8 +658,29 @@ this.TelemetryFeed = class TelemetryFeed {
    * Per Bug 1482134, all the metrics for Onboarding in AS router use client_id in
    * all the release channels
    */
-  async applyOnboardingPolicy(ping) {
+  async applyOnboardingPolicy(ping, session) {
     ping.client_id = await this.telemetryClientId;
+    // Attach page info to `event_context` if there is a session associated with this ping
+    if (ping.action === "onboarding_user_event" && session && session.page) {
+      let event_context;
+
+      try {
+        event_context = ping.event_context
+          ? JSON.parse(ping.event_context)
+          : {};
+      } catch (e) {
+        // If `ping.event_context` is not a JSON serialized string, then we create a `value`
+        // key for it
+        event_context = { value: ping.event_context };
+      }
+
+      if (ONBOARDING_ALLOWED_PAGE_VALUES.includes(session.page)) {
+        event_context.page = session.page;
+      } else {
+        Cu.reportError(`Invalid 'page' for Onboarding event: ${session.page}`);
+      }
+      ping.event_context = JSON.stringify(event_context);
+    }
     delete ping.action;
     return { ping, pingType: "onboarding" };
   }
