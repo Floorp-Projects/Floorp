@@ -31,28 +31,28 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
 
     var RelativeTimeFormat = relativeTimeFormatInternalProperties;
 
-    // Steps 7-8.
+    // Steps 10-11.
     const r = ResolveLocale("RelativeTimeFormat",
                             lazyRelativeTimeFormatData.requestedLocales,
                             lazyRelativeTimeFormatData.opt,
                             RelativeTimeFormat.relevantExtensionKeys,
                             RelativeTimeFormat.localeData);
 
-    // Steps 9-10.
+    // Steps 12-13.
     internalProps.locale = r.locale;
 
-    // Step 11.
+    // Step 14.
     internalProps.numberingSystem = r.nu;
 
-    // Step 12 (Not relevant in our implementation).
+    // Step 15 (Not relevant in our implementation).
 
-    // Step 14.
+    // Step 17.
     internalProps.style = lazyRelativeTimeFormatData.style;
 
-    // Step 16.
+    // Step 19.
     internalProps.numeric = lazyRelativeTimeFormatData.numeric;
 
-    // Steps 17-21 (Not relevant in our implementation).
+    // Steps 20-24 (Not relevant in our implementation).
 
     return internalProps;
 }
@@ -128,13 +128,24 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     let matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
     opt.localeMatcher = matcher;
 
+    // RelativeTimeFormat equivalent to https://github.com/tc39/ecma402/pull/175
+#ifdef NIGHTLY_BUILD
+    // Steps 7-9.
+    let numberingSystem = GetOption(options, "numberingSystem", "string", undefined, undefined);
+    if (numberingSystem !== undefined) {
+        numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(numberingSystem,
+                                                                           "numberingSystem");
+    }
+    opt.nu = numberingSystem;
+#endif
+
     lazyRelativeTimeFormatData.opt = opt;
 
-    // Steps 13-14.
+    // Steps 16-17.
     const style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
     lazyRelativeTimeFormatData.style = style;
 
-    // Steps 15-16.
+    // Steps 18-19.
     const numeric = GetOption(options, "numeric", "string", ["always", "auto"], "always");
     lazyRelativeTimeFormatData.numeric = numeric;
 
