@@ -92,11 +92,12 @@ promise_test(testCase => {
         database.close();
     }).then(() => migrateDatabase(testCase, 2, (database, transaction) => {
         const store = transaction.objectStore('books');
-        assert_throws(
-            { name: 'Custom stringifying error' },
+        var exception = { name: 'Custom stringifying error' }
+        assert_throws_exactly(
+            exception,
             () => {
               store.name = {
-                toString: () => { throw { name: 'Custom stringifying error'}; }
+                toString: () => { throw exception; }
               };
             }, 'IDBObjectStore rename should re-raise toString() exception');
         assert_array_equals(
