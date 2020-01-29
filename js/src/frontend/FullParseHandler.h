@@ -1066,8 +1066,8 @@ class FullParseHandler {
   }
 
   PropertyName* maybeDottedProperty(Node pn) {
-    return pn->is<PropertyAccess>() ? &pn->as<PropertyAccess>().name()
-                                    : nullptr;
+    return pn->is<PropertyAccessBase>() ? &pn->as<PropertyAccessBase>().name()
+                                        : nullptr;
   }
   JSAtom* isStringExprStatement(Node pn, TokenPos* pos) {
     if (pn->is<UnaryNode>()) {
