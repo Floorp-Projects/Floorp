@@ -103,5 +103,7 @@
     <dimen name="locale_item_title_size">16sp</dimen>
     <dimen name="locale_item_subtitle_size">12sp</dimen>
 
+    <!--Migration Activity-->
+    <dimen name="migration_button_padding">32dp</dimen>
 
 </resources>

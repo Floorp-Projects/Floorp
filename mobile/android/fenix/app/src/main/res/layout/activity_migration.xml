@@ -77,6 +77,8 @@
                 android:enabled="false"
                 android:minWidth="200dp"
                 android:text="@string/migration_updating_app_button_text"
+                android:paddingStart="@dimen/migration_button_padding"
+                android:paddingEnd="@dimen/migration_button_padding"
                 android:textColor="@color/button_text_color"
                 android:textAllCaps="false"
                 android:background="@color/grey_button_color"
@@ -84,6 +86,19 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:text="Updating Firefox…" />
+
+        <ProgressBar
+                android:id="@+id/migration_button_progress_bar"
+                style="@style/Widget.AppCompat.ProgressBar"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toBottomOf="@+id/migration_button"
+                app:layout_constraintDimensionRatio="h,1:1"
+                app:layout_constraintStart_toStartOf="@+id/migration_button"
+                app:layout_constraintTop_toTopOf="@+id/migration_button" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
