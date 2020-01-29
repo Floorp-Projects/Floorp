@@ -1282,7 +1282,6 @@ pref("browser.newtabpage.activity-stream.asrouter.providers.message-groups", "{\
 // this page over http opens us up to a man-in-the-middle attack that we'd rather not face. If you are a downstream
 // repackager of this code using an alternate snippet url, please keep your users safe
 pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":true,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
-pref("browser.newtabpage.activity-stream.asrouter.providers.snippets-preview", "{\"id\":\"snippets-preview\",\"enabled\":true,\"type\":\"remote\",\"url\":\"\",\"updateCycleInMs\":0}");
 #ifdef NIGHTLY_BUILD
   pref("browser.newtabpage.activity-stream.asrouter.useReleaseSnippets", true);
 #endif
