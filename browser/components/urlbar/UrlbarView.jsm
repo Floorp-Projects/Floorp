@@ -338,8 +338,10 @@ class UrlbarView {
 
   /**
    * Closes the view, cancelling the query if necessary.
+   * @param {boolean} [elementPicked]
+   *   True if the view is being closed because a result was picked.
    */
-  close() {
+  close(elementPicked = false) {
     this.controller.cancelQuery();
 
     if (!this.isOpen) {
@@ -355,6 +357,15 @@ class UrlbarView {
 
     if (!this.input.megabar && this.input._toolbar) {
       this.input._toolbar.removeAttribute("urlbar-exceeds-toolbar-bounds");
+    }
+
+    // Search Tips can open the view without the Urlbar being focused. If the
+    // tip is ignored (e.g. the page content is clicked or the window loses
+    // focus) we should discard the telemetry event created when the view was
+    // opened.
+    if (!this.input.focused && !elementPicked) {
+      this.input.controller.engagementEvent.discard();
+      this.input.controller.engagementEvent.record(null, {});
     }
 
     this.window.removeEventListener("resize", this);

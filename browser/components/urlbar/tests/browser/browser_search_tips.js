@@ -73,10 +73,15 @@ add_task(async function init() {
     activeUpdateFile.remove(false);
   } catch (e) {}
 
+  let defaultEngine = await Services.search.getDefault();
+  let defaultEngineName = defaultEngine.name;
+  Assert.equal(defaultEngineName, "Google", "Default engine should be Google.");
+
   registerCleanupFunction(async () => {
     let age2 = await ProfileAge();
     age2._times = originalTimes;
     await age2.writeTimes();
+    await setDefaultEngine(defaultEngineName);
   });
 });
 
@@ -252,9 +257,15 @@ add_task(async function oncePerSession() {
 });
 
 // Picking the tip's button should cause the Urlbar to blank out and the tip to
-// be not to be shown again in any session.
+// be not to be shown again in any session. An engagement event should be
+// recorded.
 add_task(async function pickButton() {
   UrlbarProviderSearchTips.showedTipInCurrentSession = false;
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.eventTelemetry.enabled", true]],
+  });
+
+  Services.telemetry.clearEvents();
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:newtab",
@@ -262,12 +273,24 @@ add_task(async function pickButton() {
   });
   await checkTip(window, TIPS.ONBOARD, false);
 
-  // Click the tip button.  The extension should send the engaged message.
+  // Click the tip button.
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   let button = result.element.row._elements.get("tipButton");
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeMouseAtCenter(button, {});
   });
+  gURLBar.blur();
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        category: "urlbar",
+        method: "engagement",
+        object: "click",
+        value: "typed",
+      },
+    ],
+    { category: "urlbar" }
+  );
 
   Assert.equal(
     UrlbarPrefs.get("searchTips.shownCount"),
@@ -278,6 +301,7 @@ add_task(async function pickButton() {
   resetProvider();
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 // When a tip is shown and the user engages with the urlbar, the tip should not
@@ -345,6 +369,30 @@ add_task(async function tabSwitch() {
   await checkTip(window, TIPS.ONBOARD);
   BrowserTestUtils.removeTab(tab);
   resetProvider();
+});
+
+// The engagement event should be ended if the user ignores a tip.
+// See bug 1610024.
+add_task(async function ignoreEndsEngagement() {
+  await setDefaultEngine("Google");
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    await withDNSRedirect("www.google.com", "/", async url => {
+      await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+      await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      await checkTip(window, TIPS.REDIRECT, /* closeView */ false);
+      // We're just looking for any target outside the Urlbar.
+      let spring = gURLBar.inputField
+        .closest("#nav-bar")
+        .querySelector("toolbarspring");
+      await UrlbarTestUtils.promisePopupClose(window, async () => {
+        await EventUtils.synthesizeMouseAtCenter(spring, {});
+      });
+      Assert.ok(
+        !UrlbarProviderSearchTips.showedTipInCurrentEngagement,
+        "The engagement should have ended after the tip was ignored."
+      );
+    });
+  });
 });
 
 async function checkTip(win, expectedTip, closeView = true) {
