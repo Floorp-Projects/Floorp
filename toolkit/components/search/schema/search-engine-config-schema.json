@@ -47,8 +47,7 @@
           "description": "The application this applies to (default/not specified is everywhere)",
           "enum": [
             "",
-            "desktop",
-            "android"
+            "firefox"
           ]
         },
         "channel": {
@@ -68,15 +67,15 @@
           },
           "uniqueItems": true
         },
-        "minversion": {
+        "minVersion": {
           "type": "string",
           "title": "Minimum Version",
           "description": "The minimum version this applies to"
         },
-        "maxversion": {
+        "maxVersion": {
           "type": "string",
           "title": "Maxium Version",
-          "description": "The maximum version this applies to"
+          "description": "The maximum version this applies to (less-than comparison)"
         }
       }
     },
