@@ -38,7 +38,7 @@ test(function() {
 
 test(function() {
     CSS.registerProperty({name: '--re-register', syntax: '<length>', initialValue: '0px', inherits: false});
-    assert_throws({name: 'InvalidModificationError'},
+    assert_throws_dom('InvalidModificationError',
         () => CSS.registerProperty({name: '--re-register', syntax: '<percentage>', initialValue: '0%', inherits: false}));
 }, "registerProperty fails for an already registered property");
 
