@@ -55,7 +55,7 @@ var GoogleTranslator = function(
   this._translatedCharacterCount = 0;
 };
 
-this.GoogleTranslator.prototype = {
+GoogleTranslator.prototype = {
   /**
    * Performs the translation, splitting the document into several chunks
    * respecting the data limits of the API.

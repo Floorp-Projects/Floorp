@@ -49,7 +49,7 @@ var FxAccountsProfile = function(options = {}) {
   }
 };
 
-this.FxAccountsProfile.prototype = {
+FxAccountsProfile.prototype = {
   // If we get subsequent requests for a profile within this period, don't bother
   // making another request to determine if it is fresh or not.
   PROFILE_FRESHNESS_THRESHOLD: 120000, // 2 minutes

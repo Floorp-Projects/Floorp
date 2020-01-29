@@ -662,10 +662,10 @@ var DownloadsCommon = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this.DownloadsCommon, "log", () => {
+XPCOMUtils.defineLazyGetter(DownloadsCommon, "log", () => {
   return DownloadsLogger.log.bind(DownloadsLogger);
 });
-XPCOMUtils.defineLazyGetter(this.DownloadsCommon, "error", () => {
+XPCOMUtils.defineLazyGetter(DownloadsCommon, "error", () => {
   return DownloadsLogger.error.bind(DownloadsLogger);
 });
 

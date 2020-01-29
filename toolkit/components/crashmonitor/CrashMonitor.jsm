@@ -223,4 +223,4 @@ var CrashMonitor = {
     }
   },
 };
-Object.freeze(this.CrashMonitor);
+Object.freeze(CrashMonitor);

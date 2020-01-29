@@ -43,7 +43,7 @@ this.LoginImport = function(aStore, aPath) {
   this.path = aPath;
 };
 
-this.LoginImport.prototype = {
+LoginImport.prototype = {
   /**
    * LoginStore object where imported data will be added.
    */

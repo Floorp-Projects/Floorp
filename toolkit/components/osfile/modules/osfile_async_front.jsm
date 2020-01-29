@@ -1575,9 +1575,9 @@ File.Error = OSError;
 File.DirectoryIterator = DirectoryIterator;
 
 var OS = {};
-this.OS.File = File;
-this.OS.Constants = SharedAll.Constants;
-this.OS.Shared = {
+OS.File = File;
+OS.Constants = SharedAll.Constants;
+OS.Shared = {
   LOG: SharedAll.LOG,
   Type: SysAll.Type,
   get DEBUG() {
@@ -1587,8 +1587,8 @@ this.OS.Shared = {
     return (SharedAll.Config.DEBUG = x);
   },
 };
-Object.freeze(this.OS.Shared);
-this.OS.Path = Path;
+Object.freeze(OS.Shared);
+OS.Path = Path;
 
 // Returns a resolved promise when all the queued operation have been completed.
 Object.defineProperty(OS.File, "queue", {

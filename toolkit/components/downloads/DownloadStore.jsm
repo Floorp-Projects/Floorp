@@ -63,7 +63,7 @@ var DownloadStore = function(aList, aPath) {
   this.path = aPath;
 };
 
-this.DownloadStore.prototype = {
+DownloadStore.prototype = {
   /**
    * DownloadList object to be populated or serialized.
    */

@@ -269,7 +269,7 @@ LoginManagerAuthPromptFactory.prototype = {
 }; // end of LoginManagerAuthPromptFactory implementation
 
 XPCOMUtils.defineLazyGetter(
-  this.LoginManagerAuthPromptFactory.prototype,
+  LoginManagerAuthPromptFactory.prototype,
   "log",
   () => {
     let logger = LoginHelper.createLogger("LoginManagerAuthPromptFactory");
@@ -1379,14 +1379,10 @@ LoginManagerAuthPrompter.prototype = {
   },
 }; // end of LoginManagerAuthPrompter implementation
 
-XPCOMUtils.defineLazyGetter(
-  this.LoginManagerAuthPrompter.prototype,
-  "log",
-  () => {
-    let logger = LoginHelper.createLogger("LoginManagerAuthPrompter");
-    return logger.log.bind(logger);
-  }
-);
+XPCOMUtils.defineLazyGetter(LoginManagerAuthPrompter.prototype, "log", () => {
+  let logger = LoginHelper.createLogger("LoginManagerAuthPrompter");
+  return logger.log.bind(logger);
+});
 
 const EXPORTED_SYMBOLS = [
   "LoginManagerAuthPromptFactory",

@@ -73,7 +73,7 @@ var YandexTranslator = function(
   this._translatedCharacterCount = 0;
 };
 
-this.YandexTranslator.prototype = {
+YandexTranslator.prototype = {
   /**
    * Performs the translation, splitting the document into several chunks
    * respecting the data limits of the API.

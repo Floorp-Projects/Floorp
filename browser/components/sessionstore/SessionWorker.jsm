@@ -18,4 +18,4 @@ var SessionWorker = new BasePromiseWorker(
 );
 // As the Session Worker performs I/O, we can receive instances of
 // OS.File.Error, so we need to install a decoder.
-this.SessionWorker.ExceptionHandlers["OS.File.Error"] = OS.File.Error.fromMsg;
+SessionWorker.ExceptionHandlers["OS.File.Error"] = OS.File.Error.fromMsg;

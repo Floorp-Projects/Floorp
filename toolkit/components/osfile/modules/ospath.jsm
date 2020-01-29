@@ -44,7 +44,7 @@ if (typeof Components == "undefined") {
 
   this.EXPORTED_SYMBOLS = [];
   for (let k in Path) {
-    this.EXPORTED_SYMBOLS.push(k);
+    EXPORTED_SYMBOLS.push(k);
     this[k] = Path[k];
   }
 }

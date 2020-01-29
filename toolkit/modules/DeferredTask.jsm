@@ -120,7 +120,7 @@ var DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
   this._timeoutMs = aIdleTimeoutMs;
 };
 
-this.DeferredTask.prototype = {
+DeferredTask.prototype = {
   /**
    * Function to execute.
    */

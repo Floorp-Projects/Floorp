@@ -143,7 +143,7 @@ var Download = function() {
   this._deferSucceeded = PromiseUtils.defer();
 };
 
-this.Download.prototype = {
+Download.prototype = {
   /**
    * DownloadSource object associated with this download.
    */
@@ -1293,7 +1293,7 @@ Download.fromSerializable = function(aSerializable) {
  */
 var DownloadSource = function() {};
 
-this.DownloadSource.prototype = {
+DownloadSource.prototype = {
   /**
    * String containing the URI for the download source.
    */
@@ -1412,7 +1412,7 @@ this.DownloadSource.prototype = {
  *
  * @return The newly created DownloadSource object.
  */
-this.DownloadSource.fromSerializable = function(aSerializable) {
+DownloadSource.fromSerializable = function(aSerializable) {
   let source = new DownloadSource();
   if (isString(aSerializable)) {
     // Convert String objects to primitive strings at this point.
@@ -1469,7 +1469,7 @@ this.DownloadSource.fromSerializable = function(aSerializable) {
  */
 var DownloadTarget = function() {};
 
-this.DownloadTarget.prototype = {
+DownloadTarget.prototype = {
   /**
    * String containing the path of the target file.
    */
@@ -1565,7 +1565,7 @@ this.DownloadTarget.prototype = {
  *
  * @return The newly created DownloadTarget object.
  */
-this.DownloadTarget.fromSerializable = function(aSerializable) {
+DownloadTarget.fromSerializable = function(aSerializable) {
   let target = new DownloadTarget();
   if (isString(aSerializable)) {
     // Convert String objects to primitive strings at this point.
@@ -1670,11 +1670,11 @@ var DownloadError = function(aProperties) {
  *
  * @note These values should not be changed because they can be serialized.
  */
-this.DownloadError.BLOCK_VERDICT_MALWARE = "Malware";
-this.DownloadError.BLOCK_VERDICT_POTENTIALLY_UNWANTED = "PotentiallyUnwanted";
-this.DownloadError.BLOCK_VERDICT_UNCOMMON = "Uncommon";
+DownloadError.BLOCK_VERDICT_MALWARE = "Malware";
+DownloadError.BLOCK_VERDICT_POTENTIALLY_UNWANTED = "PotentiallyUnwanted";
+DownloadError.BLOCK_VERDICT_UNCOMMON = "Uncommon";
 
-this.DownloadError.prototype = {
+DownloadError.prototype = {
   __proto__: Error.prototype,
 
   /**
@@ -1767,7 +1767,7 @@ this.DownloadError.prototype = {
  *
  * @return The newly created DownloadError object.
  */
-this.DownloadError.fromSerializable = function(aSerializable) {
+DownloadError.fromSerializable = function(aSerializable) {
   let e = new DownloadError(aSerializable);
   deserializeUnknownProperties(
     e,
@@ -1792,7 +1792,7 @@ this.DownloadError.fromSerializable = function(aSerializable) {
  */
 var DownloadSaver = function() {};
 
-this.DownloadSaver.prototype = {
+DownloadSaver.prototype = {
   /**
    * Download object for raising notifications and reading properties.
    *
@@ -1892,7 +1892,7 @@ this.DownloadSaver.prototype = {
  *
  * @return The newly created DownloadSaver object.
  */
-this.DownloadSaver.fromSerializable = function(aSerializable) {
+DownloadSaver.fromSerializable = function(aSerializable) {
   let serializable = isString(aSerializable)
     ? { type: aSerializable }
     : aSerializable;
@@ -1918,7 +1918,7 @@ this.DownloadSaver.fromSerializable = function(aSerializable) {
  */
 var DownloadCopySaver = function() {};
 
-this.DownloadCopySaver.prototype = {
+DownloadCopySaver.prototype = {
   __proto__: DownloadSaver.prototype,
 
   /**
@@ -2434,7 +2434,7 @@ this.DownloadCopySaver.prototype = {
  *
  * @return The newly created DownloadCopySaver object.
  */
-this.DownloadCopySaver.fromSerializable = function(aSerializable) {
+DownloadCopySaver.fromSerializable = function(aSerializable) {
   let saver = new DownloadCopySaver();
   if ("entityID" in aSerializable) {
     saver.entityID = aSerializable.entityID;
@@ -2459,7 +2459,7 @@ var DownloadLegacySaver = function() {
   this.deferCanceled = PromiseUtils.defer();
 };
 
-this.DownloadLegacySaver.prototype = {
+DownloadLegacySaver.prototype = {
   __proto__: DownloadSaver.prototype,
 
   /**
@@ -2801,7 +2801,7 @@ this.DownloadLegacySaver.prototype = {
  * deserializable form only when creating a new object in memory, because it
  * cannot be serialized to disk.
  */
-this.DownloadLegacySaver.fromSerializable = function() {
+DownloadLegacySaver.fromSerializable = function() {
   return new DownloadLegacySaver();
 };
 
@@ -2818,7 +2818,7 @@ this.DownloadLegacySaver.fromSerializable = function() {
  */
 var DownloadPDFSaver = function() {};
 
-this.DownloadPDFSaver.prototype = {
+DownloadPDFSaver.prototype = {
   __proto__: DownloadSaver.prototype,
 
   /**
@@ -2951,6 +2951,6 @@ this.DownloadPDFSaver.prototype = {
  *
  * @return The newly created DownloadPDFSaver object.
  */
-this.DownloadPDFSaver.fromSerializable = function(aSerializable) {
+DownloadPDFSaver.fromSerializable = function(aSerializable) {
   return new DownloadPDFSaver();
 };

@@ -65,7 +65,7 @@ Object.defineProperty(SelectContentHelper, "open", {
   },
 });
 
-this.SelectContentHelper.prototype = {
+SelectContentHelper.prototype = {
   init() {
     let win = this.element.ownerGlobal;
     win.addEventListener("pagehide", this, { mozSystemGroup: true });

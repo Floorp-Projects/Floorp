@@ -79,6 +79,6 @@ function CrashReports_submittedDir() {
   return submittedDir;
 }
 
-this.CrashReports.pendingDir = CrashReports_pendingDir();
-this.CrashReports.reportsDir = CrashReports_reportsDir();
-this.CrashReports.submittedDir = CrashReports_submittedDir();
+CrashReports.pendingDir = CrashReports_pendingDir();
+CrashReports.reportsDir = CrashReports_reportsDir();
+CrashReports.submittedDir = CrashReports_submittedDir();
