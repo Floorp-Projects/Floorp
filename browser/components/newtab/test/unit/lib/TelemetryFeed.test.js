@@ -877,6 +877,85 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
       assert.propertyVal(ping, "message_id", "onboarding_message_01");
     });
+    it("should include page to event_context if there is a session", async () => {
+      const data = {
+        action: "onboarding_user_event",
+        event: "CLICK_BUTTION",
+        message_id: "onboarding_message_01",
+      };
+      const session = { page: "about:welcome" };
+      const { ping, pingType } = await instance.applyOnboardingPolicy(
+        data,
+        session
+      );
+
+      assert.equal(pingType, "onboarding");
+      assert.propertyVal(
+        ping,
+        "event_context",
+        JSON.stringify({ page: "about:welcome" })
+      );
+      assert.propertyVal(ping, "message_id", "onboarding_message_01");
+    });
+    it("should not set page if it is not in ONBOARDING_ALLOWED_PAGE_VALUES", async () => {
+      const data = {
+        action: "onboarding_user_event",
+        event: "CLICK_BUTTION",
+        message_id: "onboarding_message_01",
+      };
+      const session = { page: "foo" };
+      const { ping, pingType } = await instance.applyOnboardingPolicy(
+        data,
+        session
+      );
+
+      assert.calledOnce(global.Cu.reportError);
+      assert.equal(pingType, "onboarding");
+      assert.propertyVal(ping, "event_context", JSON.stringify({}));
+      assert.propertyVal(ping, "message_id", "onboarding_message_01");
+    });
+    it("should append page to event_context if it is not empty", async () => {
+      const data = {
+        action: "onboarding_user_event",
+        event: "CLICK_BUTTION",
+        message_id: "onboarding_message_01",
+        event_context: JSON.stringify({ foo: "bar" }),
+      };
+      const session = { page: "about:welcome" };
+      const { ping, pingType } = await instance.applyOnboardingPolicy(
+        data,
+        session
+      );
+
+      assert.equal(pingType, "onboarding");
+      assert.propertyVal(
+        ping,
+        "event_context",
+        JSON.stringify({ foo: "bar", page: "about:welcome" })
+      );
+      assert.propertyVal(ping, "message_id", "onboarding_message_01");
+    });
+    it("should append page to event_context if it is not a JSON serialized string", async () => {
+      const data = {
+        action: "onboarding_user_event",
+        event: "CLICK_BUTTION",
+        message_id: "onboarding_message_01",
+        event_context: "foo",
+      };
+      const session = { page: "about:welcome" };
+      const { ping, pingType } = await instance.applyOnboardingPolicy(
+        data,
+        session
+      );
+
+      assert.equal(pingType, "onboarding");
+      assert.propertyVal(
+        ping,
+        "event_context",
+        JSON.stringify({ value: "foo", page: "about:welcome" })
+      );
+      assert.propertyVal(ping, "message_id", "onboarding_message_01");
+    });
   });
   describe("#applyUndesiredEventPolicy", () => {
     it("should exclude client_id and use impression_id", () => {
