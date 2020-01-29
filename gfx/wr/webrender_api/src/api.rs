@@ -955,7 +955,10 @@ pub enum DebugCommand {
     FetchDocuments,
     /// Fetch current passes and batches.
     FetchPasses,
-    /// Fetch clip-scroll tree.
+    // TODO: This should be called FetchClipScrollTree. However, that requires making
+    // changes to webrender's web debugger ui, touching a 4Mb minified file that
+    // is too big to submit through the conventional means.
+    /// Fetch the spatial tree.
     FetchClipScrollTree,
     /// Fetch render tasks.
     FetchRenderTasks,

@@ -4,7 +4,7 @@
 
 use api::{DocumentLayer, PremultipliedColorF};
 use api::units::*;
-use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use crate::internal_types::FastHashMap;
 use crate::prim_store::EdgeAaSegmentMask;
@@ -562,7 +562,7 @@ impl TransformPalette {
         &mut self,
         child_index: SpatialNodeIndex,
         parent_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) -> usize {
         if parent_index == ROOT_SPATIAL_NODE_INDEX {
             child_index.0 as usize
@@ -580,7 +580,7 @@ impl TransformPalette {
             *self.map
                 .entry(key)
                 .or_insert_with(|| {
-                    let transform = clip_scroll_tree.get_relative_transform(
+                    let transform = spatial_tree.get_relative_transform(
                         child_index,
                         parent_index,
                     )
@@ -606,12 +606,12 @@ impl TransformPalette {
         &mut self,
         from_index: SpatialNodeIndex,
         to_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) -> TransformPaletteId {
         let index = self.get_index(
             from_index,
             to_index,
-            clip_scroll_tree,
+            spatial_tree,
         );
         let transform_kind = self.metadata[index].transform_kind as u32;
         TransformPaletteId(

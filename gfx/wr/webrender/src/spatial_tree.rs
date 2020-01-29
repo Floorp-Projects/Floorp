@@ -16,7 +16,7 @@ use crate::util::{FastTransform, LayoutToWorldFastTransform, MatrixHelpers, Scal
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 
-/// An id that identifies coordinate systems in the ClipScrollTree. Each
+/// An id that identifies coordinate systems in the SpatialTree. Each
 /// coordinate system has an id and those ids will be shared when the coordinates
 /// system are the same or are in the same axis-aligned space. This allows
 /// for optimizing mask generation.
@@ -94,7 +94,7 @@ impl ops::Not for VisibleFace {
     }
 }
 
-pub struct ClipScrollTree {
+pub struct SpatialTree {
     /// Nodes which determine the positions (offsets and transforms) for primitives
     /// and clips.
     pub spatial_nodes: Vec<SpatialNode>,
@@ -140,7 +140,7 @@ pub struct TransformUpdateState {
 }
 
 
-/// Transformation between two nodes in the clip-scroll tree that can sometimes be
+/// Transformation between two nodes in the spatial tree that can sometimes be
 /// encoded more efficiently than with a full matrix.
 #[derive(Debug, Clone)]
 pub enum CoordinateSpaceMapping<Src, Dst> {
@@ -218,9 +218,9 @@ enum TransformScroll {
     Unscrolled,
 }
 
-impl ClipScrollTree {
+impl SpatialTree {
     pub fn new() -> Self {
-        ClipScrollTree {
+        SpatialTree {
             spatial_nodes: Vec::new(),
             coord_systems: Vec::new(),
             pending_scroll_offsets: FastHashMap::default(),
@@ -351,7 +351,7 @@ impl ClipScrollTree {
         self.get_world_transform_impl(index, TransformScroll::Unscrolled)
     }
 
-    /// The root reference frame, which is the true root of the ClipScrollTree. Initially
+    /// The root reference frame, which is the true root of the SpatialTree. Initially
     /// this ID is not valid, which is indicated by ```spatial_nodes``` being empty.
     pub fn root_reference_frame_index(&self) -> SpatialNodeIndex {
         // TODO(mrobinson): We should eventually make this impossible to misuse.
@@ -685,13 +685,13 @@ impl ClipScrollTree {
     #[allow(dead_code)]
     pub fn print(&self) {
         if !self.spatial_nodes.is_empty() {
-            let mut pt = PrintTree::new("clip_scroll tree");
+            let mut pt = PrintTree::new("spatial tree");
             self.print_with(&mut pt);
         }
     }
 }
 
-impl PrintableTree for ClipScrollTree {
+impl PrintableTree for SpatialTree {
     fn print_with<T: PrintTreePrinter>(&self, pt: &mut T) {
         if !self.spatial_nodes.is_empty() {
             self.print_node(self.root_reference_frame_index(), pt);
@@ -701,7 +701,7 @@ impl PrintableTree for ClipScrollTree {
 
 #[cfg(test)]
 fn add_reference_frame(
-    cst: &mut ClipScrollTree,
+    cst: &mut SpatialTree,
     parent: Option<SpatialNodeIndex>,
     transform: LayoutTransform,
     origin_in_parent_reference_frame: LayoutVector2D,
@@ -720,7 +720,7 @@ fn add_reference_frame(
 fn test_pt(
     px: f32,
     py: f32,
-    cst: &ClipScrollTree,
+    cst: &SpatialTree,
     child: SpatialNodeIndex,
     parent: SpatialNodeIndex,
     expected_x: f32,
@@ -743,7 +743,7 @@ fn test_pt(
 fn test_cst_simple_translation() {
     // Basic translations only
 
-    let mut cst = ClipScrollTree::new();
+    let mut cst = SpatialTree::new();
 
     let root = add_reference_frame(
         &mut cst,
@@ -785,7 +785,7 @@ fn test_cst_simple_translation() {
 fn test_cst_simple_scale() {
     // Basic scale only
 
-    let mut cst = ClipScrollTree::new();
+    let mut cst = SpatialTree::new();
 
     let root = add_reference_frame(
         &mut cst,
@@ -828,7 +828,7 @@ fn test_cst_simple_scale() {
 fn test_cst_scale_translation() {
     // Scale + translation
 
-    let mut cst = ClipScrollTree::new();
+    let mut cst = SpatialTree::new();
 
     let root = add_reference_frame(
         &mut cst,
@@ -883,7 +883,7 @@ fn test_cst_translation_rotate() {
     // Rotation + translation
     use euclid::Angle;
 
-    let mut cst = ClipScrollTree::new();
+    let mut cst = SpatialTree::new();
 
     let root = add_reference_frame(
         &mut cst,

@@ -84,7 +84,7 @@ mod box_shadow;
 #[cfg(any(feature = "capture", feature = "replay"))]
 mod capture;
 mod clip;
-mod clip_scroll_tree;
+mod spatial_tree;
 mod composite;
 mod debug_colors;
 mod debug_font_data;

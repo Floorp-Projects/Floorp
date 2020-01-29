@@ -116,7 +116,7 @@ impl<T> VecHelper<T> for Vec<T> {
 // scaling is applied first, followed by the translation.
 // TODO(gw): We should try and incorporate F <-> T units here,
 //           but it's a bit tricky to do that now with the
-//           way the current clip-scroll tree works.
+//           way the current spatial tree works.
 #[derive(Debug, Clone, Copy, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ScaleOffset {

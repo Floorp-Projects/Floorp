@@ -11,7 +11,7 @@ use api::units::*;
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::border::BorderSegmentCacheKey;
 use crate::clip::{ClipStore};
-use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
+use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItemKind};
 use crate::debug_colors;
 use crate::debug_render::DebugItem;
@@ -157,7 +157,7 @@ impl SpaceSnapper {
         ref_spatial_node_index: SpatialNodeIndex,
         target_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) -> Self {
         let mut snapper = SpaceSnapper {
             ref_spatial_node_index,
@@ -166,21 +166,21 @@ impl SpaceSnapper {
             device_pixel_scale,
         };
 
-        snapper.set_target_spatial_node(target_node_index, clip_scroll_tree);
+        snapper.set_target_spatial_node(target_node_index, spatial_tree);
         snapper
     }
 
     pub fn set_target_spatial_node(
         &mut self,
         target_node_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) {
         if target_node_index == self.current_target_spatial_node_index {
             return
         }
 
-        let ref_spatial_node = &clip_scroll_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
-        let target_spatial_node = &clip_scroll_tree.spatial_nodes[target_node_index.0 as usize];
+        let ref_spatial_node = &spatial_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
+        let target_spatial_node = &spatial_tree.spatial_nodes[target_node_index.0 as usize];
 
         self.current_target_spatial_node_index = target_node_index;
         self.snapping_transform = match (ref_spatial_node.snapping_transform, target_spatial_node.snapping_transform) {
@@ -256,24 +256,24 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         ref_spatial_node_index: SpatialNodeIndex,
         target_node_index: SpatialNodeIndex,
         bounds: Rect<f32, T>,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) -> Self {
         let mut mapper = Self::new(ref_spatial_node_index, bounds);
-        mapper.set_target_spatial_node(target_node_index, clip_scroll_tree);
+        mapper.set_target_spatial_node(target_node_index, spatial_tree);
         mapper
     }
 
     pub fn set_target_spatial_node(
         &mut self,
         target_node_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
+        spatial_tree: &SpatialTree,
     ) {
         if target_node_index == self.current_target_spatial_node_index {
             return
         }
 
-        let ref_spatial_node = &clip_scroll_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
-        let target_spatial_node = &clip_scroll_tree.spatial_nodes[target_node_index.0 as usize];
+        let ref_spatial_node = &spatial_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
+        let target_spatial_node = &spatial_tree.spatial_nodes[target_node_index.0 as usize];
 
         self.kind = if self.ref_spatial_node_index == target_node_index {
             CoordinateSpaceMapping::Local
@@ -283,7 +283,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
                 .accumulate(&target_spatial_node.content_transform);
             CoordinateSpaceMapping::ScaleOffset(scale_offset)
         } else {
-            let transform = clip_scroll_tree
+            let transform = spatial_tree
                 .get_relative_transform(target_node_index, self.ref_spatial_node_index)
                 .into_transform()
                 .with_source::<F>()
@@ -1932,7 +1932,7 @@ impl PrimitiveStore {
             ROOT_SPATIAL_NODE_INDEX,
             surface.surface_spatial_node_index,
             frame_context.global_screen_world_rect,
-            frame_context.clip_scroll_tree,
+            frame_context.spatial_tree,
         );
 
         let mut surface_rect = PictureRect::zero();
@@ -1960,7 +1960,7 @@ impl PrimitiveStore {
 
             map_local_to_surface.set_target_spatial_node(
                 cluster.spatial_node_index,
-                frame_context.clip_scroll_tree,
+                frame_context.spatial_tree,
             );
 
             for prim_instance in &mut cluster.prim_instances {
@@ -2107,7 +2107,7 @@ impl PrimitiveStore {
                         prim_instance.local_clip_rect,
                         cluster.spatial_node_index,
                         frame_state.clip_chain_stack.current_clips_array(),
-                        &frame_context.clip_scroll_tree,
+                        &frame_context.spatial_tree,
                         &mut frame_state.data_stores.clip,
                     );
 
@@ -2117,7 +2117,7 @@ impl PrimitiveStore {
                             local_rect,
                             &map_local_to_surface,
                             &map_surface_to_world,
-                            &frame_context.clip_scroll_tree,
+                            &frame_context.spatial_tree,
                             frame_state.gpu_cache,
                             frame_state.resource_cache,
                             surface.device_pixel_scale,
@@ -2133,7 +2133,7 @@ impl PrimitiveStore {
                             cluster.spatial_node_index,
                             clip_chain.as_ref(),
                             prim_local_rect,
-                            frame_context.clip_scroll_tree,
+                            frame_context.spatial_tree,
                             frame_state.data_stores,
                             frame_state.clip_store,
                             &self.pictures,
@@ -2318,7 +2318,7 @@ impl PrimitiveStore {
                     surface.raster_spatial_node_index,
                     pic.spatial_node_index,
                     surface.device_pixel_scale,
-                    frame_context.clip_scroll_tree,
+                    frame_context.spatial_tree,
                 );
                 surface_rect = rc.composite_mode.inflate_picture_rect(surface_rect, surface.inflation_factor);
                 surface_rect = snap_pic_to_raster.snap_rect(&surface_rect);
@@ -2361,7 +2361,7 @@ impl PrimitiveStore {
                 parent_surface.surface_spatial_node_index,
                 surface.surface_spatial_node_index,
                 PictureRect::max_rect(),
-                frame_context.clip_scroll_tree,
+                frame_context.spatial_tree,
             );
             map_surface_to_parent_surface.map(&surface_rect)
         }
@@ -2431,7 +2431,7 @@ impl PrimitiveStore {
                             ROOT_SPATIAL_NODE_INDEX,
                             prim_spatial_node_index,
                             frame_context.global_screen_world_rect,
-                            frame_context.clip_scroll_tree,
+                            frame_context.spatial_tree,
                         );
 
                         let visible_rect = compute_conservative_visible_rect(
@@ -2796,7 +2796,7 @@ impl PrimitiveStore {
         for (cluster_index, cluster) in prim_list.clusters.iter_mut().enumerate() {
             pic_state.map_local_to_pic.set_target_spatial_node(
                 cluster.spatial_node_index,
-                frame_context.clip_scroll_tree,
+                frame_context.spatial_tree,
             );
 
             for (prim_instance_index, prim_instance) in cluster.prim_instances.iter_mut().enumerate() {
@@ -2920,7 +2920,7 @@ impl PrimitiveStore {
 
                 // The glyph transform has to match `glyph_transform` in "ps_text_run" shader.
                 // It's relative to the rasterizing space of a glyph.
-                let transform = frame_context.clip_scroll_tree
+                let transform = frame_context.spatial_tree
                     .get_relative_transform(
                         prim_spatial_node_index,
                         pic_context.raster_spatial_node_index,
@@ -2929,7 +2929,7 @@ impl PrimitiveStore {
                 let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
 
                 let pic = &self.pictures[pic_context.pic_index.0];
-                let raster_space = pic.get_raster_space(frame_context.clip_scroll_tree);
+                let raster_space = pic.get_raster_space(frame_context.spatial_tree);
                 let surface = &frame_state.surfaces[pic_context.surface_index.0];
 
                 run.request_resources(
@@ -2944,7 +2944,7 @@ impl PrimitiveStore {
                     frame_state.resource_cache,
                     frame_state.gpu_cache,
                     frame_state.render_tasks,
-                    frame_context.clip_scroll_tree,
+                    frame_context.spatial_tree,
                     scratch,
                 );
 
@@ -2982,7 +2982,7 @@ impl PrimitiveStore {
                 //           raster roots with local scale are supported in future,
                 //           that will need to be accounted for here.
                 let scale = frame_context
-                    .clip_scroll_tree
+                    .spatial_tree
                     .get_world_transform(prim_spatial_node_index)
                     .scale_factors();
 
@@ -3228,7 +3228,7 @@ impl PrimitiveStore {
                         ROOT_SPATIAL_NODE_INDEX,
                         prim_spatial_node_index,
                         frame_context.global_screen_world_rect,
-                        frame_context.clip_scroll_tree,
+                        frame_context.spatial_tree,
                     );
 
                     gradient.visible_tiles_range = decompose_repeated_primitive(
@@ -3290,7 +3290,7 @@ impl PrimitiveStore {
                         ROOT_SPATIAL_NODE_INDEX,
                         prim_spatial_node_index,
                         frame_context.global_screen_world_rect,
-                        frame_context.clip_scroll_tree,
+                        frame_context.spatial_tree,
                     );
 
                     prim_data.common.may_need_repetition = false;
@@ -3342,7 +3342,7 @@ impl PrimitiveStore {
                     if let Some(ref mut splitter) = pic_state.plane_splitter {
                         PicturePrimitive::add_split_plane(
                             splitter,
-                            frame_context.clip_scroll_tree,
+                            frame_context.spatial_tree,
                             prim_spatial_node_index,
                             pic.precise_local_rect,
                             &prim_info.combined_local_clip_rect,
@@ -3907,7 +3907,7 @@ impl PrimitiveInstance {
                 frame_state.clip_store.set_active_clips_from_clip_chain(
                     &prim_info.clip_chain,
                     prim_spatial_node_index,
-                    &frame_context.clip_scroll_tree,
+                    &frame_context.spatial_tree,
                     &data_stores.clip,
                 );
 
@@ -3917,7 +3917,7 @@ impl PrimitiveInstance {
                         segment.local_rect.translate(self.prim_origin.to_vector()),
                         &pic_state.map_local_to_pic,
                         &pic_state.map_pic_to_world,
-                        &frame_context.clip_scroll_tree,
+                        &frame_context.spatial_tree,
                         frame_state.gpu_cache,
                         frame_state.resource_cache,
                         device_pixel_scale,
