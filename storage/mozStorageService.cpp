@@ -737,24 +737,22 @@ Service::Observe(nsISupports*, const char* aTopic, const char16_t*) {
       return true;
     });
 
-    if (gShutdownChecks == SCM_CRASH) {
-      nsTArray<RefPtr<Connection>> connections;
-      getConnections(connections);
-      for (uint32_t i = 0, n = connections.Length(); i < n; i++) {
-        if (!connections[i]->isClosed()) {
-          // getFilename is only the leaf name for the database file,
-          // so it shouldn't contain privacy-sensitive information.
-          CrashReporter::AnnotateCrashReport(
-              CrashReporter::Annotation::StorageConnectionNotClosed,
-              connections[i]->getFilename());
 #ifdef DEBUG
-          printf_stderr("Storage connection not closed: %s",
-                        connections[i]->getFilename().get());
-#endif
-          MOZ_CRASH();
-        }
+    nsTArray<RefPtr<Connection>> connections;
+    getConnections(connections);
+    for (uint32_t i = 0, n = connections.Length(); i < n; i++) {
+      if (!connections[i]->isClosed()) {
+        // getFilename is only the leaf name for the database file,
+        // so it shouldn't contain privacy-sensitive information.
+        CrashReporter::AnnotateCrashReport(
+            CrashReporter::Annotation::StorageConnectionNotClosed,
+            connections[i]->getFilename());
+        printf_stderr("Storage connection not closed: %s",
+                      connections[i]->getFilename().get());
+        MOZ_CRASH();
       }
     }
+#endif
   }
 
   return NS_OK;

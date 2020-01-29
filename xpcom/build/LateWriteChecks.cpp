@@ -103,14 +103,12 @@ class LateWriteObserver final : public mozilla::IOInterposeObserver {
 
 void LateWriteObserver::Observe(
     mozilla::IOInterposeObserver::Observation& aOb) {
-  // Crash if that is the shutdown check mode
-  if (mozilla::gShutdownChecks == mozilla::SCM_CRASH) {
-    MOZ_CRASH();
-  }
+#ifdef DEBUG
+  MOZ_CRASH();
+#endif
 
-  // If we have shutdown mode mozilla::SCM_NOTHING or we can't record then abort
-  if (mozilla::gShutdownChecks == mozilla::SCM_NOTHING ||
-      !mozilla::Telemetry::CanRecordExtended()) {
+  // If we can't record then abort
+  if (!mozilla::Telemetry::CanRecordExtended()) {
     return;
   }
 
