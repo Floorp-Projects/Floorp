@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_theme_picker.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
@@ -57,6 +58,11 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         }
 
         radioDarkTheme.onClickListener {
+            view.context.components.analytics.metrics.track(
+                Event.DarkThemeSelected(
+                    Event.DarkThemeSelected.Source.ONBOARDING
+                )
+            )
             setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)
         }
 

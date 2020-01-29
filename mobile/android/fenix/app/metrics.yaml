@@ -1760,3 +1760,19 @@ about_page:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+
+app_theme:
+  dark_theme_selected:
+    type: event
+    description: >
+      A user selected Dark Theme
+    extra_keys:
+      source:
+        description: "The source from where dark theme was selected. The source can be 'SETTINGS' or 'ONBOARDING'"
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/7289
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/7968
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"

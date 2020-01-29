@@ -11,6 +11,8 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
@@ -81,6 +83,11 @@ class ThemeFragment : PreferenceFragmentCompat() {
         val keyDarkTheme = getPreferenceKey(R.string.pref_key_dark_theme)
         radioDarkTheme = requireNotNull(findPreference(keyDarkTheme))
         radioDarkTheme.onClickListener {
+            requireContext().components.analytics.metrics.track(
+                Event.DarkThemeSelected(
+                    Event.DarkThemeSelected.Source.SETTINGS
+                )
+            )
             setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)
         }
     }

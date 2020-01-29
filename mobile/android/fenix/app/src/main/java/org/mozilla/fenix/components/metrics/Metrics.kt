@@ -20,6 +20,7 @@ import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
@@ -314,6 +315,12 @@ sealed class Event {
         private val engineName = if (isCustom) "custom" else engine.name
         override val extras: Map<SearchShortcuts.selectedKeys, String>?
             get() = mapOf(SearchShortcuts.selectedKeys.engine to engineName)
+    }
+
+    data class DarkThemeSelected(val source: Source) : Event() {
+        enum class Source { SETTINGS, ONBOARDING }
+        override val extras: Map<AppTheme.darkThemeSelectedKeys, String>?
+            get() = mapOf(AppTheme.darkThemeSelectedKeys.source to source.name)
     }
 
     class ContextMenuItemTapped private constructor(val item: String) : Event() {
