@@ -7608,9 +7608,12 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   TokenPos wholeInitializerPos;
   if (hasInitializer) {
     // Parse the expression for the field initializer.
-    initializerExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-    if (!initializerExpr) {
-      return null();
+    {
+      AutoAwaitIsKeyword awaitHandling(this, AwaitIsName);
+      initializerExpr = assignExpr(InAllowed, YieldIsName, TripledotProhibited);
+      if (!initializerExpr) {
+        return null();
+      }
     }
 
     handler_.checkAndSetIsDirectRHSAnonFunction(initializerExpr);
