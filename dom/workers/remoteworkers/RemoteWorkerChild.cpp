@@ -36,6 +36,7 @@
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/ServiceWorkerOp.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
+#include "mozilla/dom/ServiceWorkerShutdownState.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
 #include "mozilla/dom/WorkerError.h"
@@ -993,6 +994,8 @@ IPCResult RemoteWorkerChild::RecvExecServiceWorkerOp(
   MOZ_ASSERT(
       aArgs.type() != ServiceWorkerOpArgs::TServiceWorkerFetchEventOpArgs,
       "FetchEvent operations should be sent via PFetchEventOp(Proxy) actors!");
+
+  MaybeReportServiceWorkerShutdownProgress(aArgs);
 
   MaybeStartOp(ServiceWorkerOp::Create(aArgs, std::move(aResolve)));
 
