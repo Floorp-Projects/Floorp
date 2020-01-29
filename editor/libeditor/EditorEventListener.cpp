@@ -748,6 +748,9 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
   int32_t dropOffset = -1;
   nsCOMPtr<nsIContent> dropParentContent =
       aDragEvent->GetRangeParentContentAndOffset(&dropOffset);
+  if (NS_WARN_IF(!dropParentContent)) {
+    return NS_ERROR_FAILURE;
+  }
   if (DetachedFromEditor()) {
     RefuseToDropAndHideCaret(aDragEvent);
     return NS_OK;
