@@ -7342,7 +7342,7 @@ void nsGlobalWindowOuter::CheckForDPIChange() {
   }
 }
 
-mozilla::dom::TabGroup* nsGlobalWindowOuter::TabGroupOuter() {
+mozilla::dom::TabGroup* nsGlobalWindowOuter::MaybeTabGroupOuter() {
   // Outer windows lazily join TabGroups when requested. This is usually done
   // because a document is getting its NodePrincipal, and asking for the
   // TabGroup to determine its DocGroup.
@@ -7350,6 +7350,9 @@ mozilla::dom::TabGroup* nsGlobalWindowOuter::TabGroupOuter() {
     // Get the opener ourselves, instead of relying on GetOpenerWindowOuter,
     // because that way we dodge the LegacyIsCallerChromeOrNativeCode() call
     // which we want to return false.
+    if (!GetBrowsingContext()) {
+      return nullptr;
+    }
     RefPtr<BrowsingContext> openerBC = GetBrowsingContext()->GetOpener();
     nsPIDOMWindowOuter* opener = openerBC ? openerBC->GetDOMWindow() : nullptr;
     nsPIDOMWindowOuter* parent = GetInProcessScriptableParentOrNull();
@@ -7357,6 +7360,9 @@ mozilla::dom::TabGroup* nsGlobalWindowOuter::TabGroupOuter() {
                "Only one of parent and opener may be provided");
 
     mozilla::dom::TabGroup* toJoin = nullptr;
+    if (!GetDocShell()) {
+      return nullptr;
+    }
     if (GetDocShell()->ItemType() == nsIDocShellTreeItem::typeChrome) {
       toJoin = TabGroup::GetChromeTabGroup();
     } else if (opener) {
@@ -7407,6 +7413,12 @@ mozilla::dom::TabGroup* nsGlobalWindowOuter::TabGroupOuter() {
 #endif
 
   return mTabGroup;
+}
+
+mozilla::dom::TabGroup* nsGlobalWindowOuter::TabGroupOuter() {
+  mozilla::dom::TabGroup* tabGroup = MaybeTabGroupOuter();
+  MOZ_RELEASE_ASSERT(tabGroup);
+  return tabGroup;
 }
 
 nsresult nsGlobalWindowOuter::Dispatch(
@@ -7469,6 +7481,10 @@ nsGlobalWindowOuter::TemporarilyDisableDialogs::~TemporarilyDisableDialogs() {
 
 mozilla::dom::TabGroup* nsPIDOMWindowOuter::TabGroup() {
   return nsGlobalWindowOuter::Cast(this)->TabGroupOuter();
+}
+
+mozilla::dom::TabGroup* nsPIDOMWindowOuter::MaybeTabGroup() {
+  return nsGlobalWindowOuter::Cast(this)->MaybeTabGroupOuter();
 }
 
 /* static */
