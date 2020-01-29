@@ -20,6 +20,8 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.Glean
@@ -89,7 +91,7 @@ sealed class Migration(val currentVersion: Int) {
     /**
      * Migrates / Disables all currently unsupported Add-ons.
      */
-    object Addons : Migration(currentVersion = 1)
+    object Addons : Migration(currentVersion = 2)
 
     /**
      * Migrates Fennec's telemetry identifiers.
@@ -188,6 +190,8 @@ class FennecMigrator private constructor(
     private val sessionManager: SessionManager?,
     private val accountManager: FxaAccountManager?,
     private val engine: Engine?,
+    private val addonCollectionProvider: AddonCollectionProvider?,
+    private val addonUpdater: AddonUpdater?,
     private val profile: FennecProfile?,
     private val fxaState: File?,
     private val browserDbPath: String?,
@@ -207,6 +211,8 @@ class FennecMigrator private constructor(
         private var sessionManager: SessionManager? = null
         private var accountManager: FxaAccountManager? = null
         private var engine: Engine? = null
+        private var addonCollectionProvider: AddonCollectionProvider? = null
+        private var addonUpdater: AddonUpdater? = null
 
         private val migrations: MutableList<VersionedMigration> = mutableListOf()
 
@@ -331,10 +337,18 @@ class FennecMigrator private constructor(
          * Enables Add-on migration.
          *
          * @param engine an instance of [Engine] use to query installed add-ons.
+         * @param addonCollectionProvider an instace of [AddonCollectionProvider] to query supported add-ons.
          * @param version Version of the migration; defaults to the current version.
          */
-        fun migrateAddons(engine: Engine, version: Int = Migration.Settings.currentVersion): Builder {
+        fun migrateAddons(
+            engine: Engine,
+            addonCollectionProvider: AddonCollectionProvider,
+            addonUpdater: AddonUpdater,
+            version: Int = Migration.Addons.currentVersion
+        ): Builder {
             this.engine = engine
+            this.addonCollectionProvider = addonCollectionProvider
+            this.addonUpdater = addonUpdater
             migrations.add(VersionedMigration(Migration.Addons, version))
             return this
         }
@@ -354,6 +368,8 @@ class FennecMigrator private constructor(
                 sessionManager,
                 accountManager,
                 engine,
+                addonCollectionProvider,
+                addonUpdater,
                 fennecProfile,
                 fxaState,
                 browserDbPath ?: fennecProfile?.let { "${it.path}/browser.db" },
@@ -941,7 +957,7 @@ class FennecMigrator private constructor(
     private suspend fun migrateAddons(): Result<AddonMigrationResult> {
         return try {
             logger.debug("Migrating add-ons...")
-            val result = AddonMigration.migrate(engine!!)
+            val result = AddonMigration.migrate(engine!!, addonCollectionProvider!!, addonUpdater!!)
             if (result is Result.Failure<AddonMigrationResult>) {
                 val migrationFailureWrapper = result.throwables.first() as AddonMigrationException
                 return when (val failure = migrationFailureWrapper.failure) {

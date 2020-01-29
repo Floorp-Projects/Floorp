@@ -32,6 +32,8 @@ import kotlinx.coroutines.CompletableDeferred
 import mozilla.appservices.logins.MismatchedLockException
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
@@ -835,6 +837,8 @@ class FennecMigratorTest {
 
     @Test
     fun `addon migration - no addons installed`() = runBlocking {
+        val addonUpdater: AddonUpdater = mock()
+        val addonCollectionProvider: AddonCollectionProvider = mock()
         val engine: Engine = mock()
         val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
         whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
@@ -843,7 +847,7 @@ class FennecMigratorTest {
 
         val crashReporter: CrashReporter = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
-            .migrateAddons(engine)
+            .migrateAddons(engine, addonCollectionProvider, addonUpdater)
             .setCoroutineContext(this.coroutineContext)
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
@@ -861,6 +865,8 @@ class FennecMigratorTest {
         val addon1: WebExtension = mock()
         val addon2: WebExtension = mock()
 
+        val addonUpdater: AddonUpdater = mock()
+        val addonCollectionProvider: AddonCollectionProvider = mock()
         val engine: Engine = mock()
         val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()
         whenever(engine.listInstalledWebExtensions(listSuccessCallback.capture(), any())).thenAnswer {
@@ -874,7 +880,7 @@ class FennecMigratorTest {
 
         val crashReporter: CrashReporter = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
-            .migrateAddons(engine)
+            .migrateAddons(engine, addonCollectionProvider, addonUpdater)
             .setCoroutineContext(this.coroutineContext)
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
@@ -889,6 +895,8 @@ class FennecMigratorTest {
 
     @Test
     fun `addon migration - failed to query installed addons`() = runBlocking {
+        val addonUpdater: AddonUpdater = mock()
+        val addonCollectionProvider: AddonCollectionProvider = mock()
         val engine: Engine = mock()
         val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
         whenever(engine.listInstalledWebExtensions(any(), errorCallback.capture())).thenAnswer {
@@ -897,7 +905,7 @@ class FennecMigratorTest {
 
         val crashReporter: CrashReporter = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
-            .migrateAddons(engine)
+            .migrateAddons(engine, addonCollectionProvider, addonUpdater)
             .setCoroutineContext(this.coroutineContext)
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
@@ -922,6 +930,8 @@ class FennecMigratorTest {
         val addon3: WebExtension = mock()
         val addon4: WebExtension = mock()
 
+        val addonUpdater: AddonUpdater = mock()
+        val addonCollectionProvider: AddonCollectionProvider = mock()
         val engine: Engine = mock()
         val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()
         whenever(engine.listInstalledWebExtensions(listSuccessCallback.capture(), any())).thenAnswer {
@@ -947,7 +957,7 @@ class FennecMigratorTest {
 
         val crashReporter: CrashReporter = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
-            .migrateAddons(engine)
+            .migrateAddons(engine, addonCollectionProvider, addonUpdater)
             .setCoroutineContext(this.coroutineContext)
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
