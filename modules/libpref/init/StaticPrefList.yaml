@@ -7898,6 +7898,27 @@
   value: 3
   mirror: always
 
+# The lateWriteChecksStage and fastShutdownStage below represent the stage
+# of shutdown after which we (for lateWriteChecksStage) crash / gather
+# telemetry data on file writes, or (for fastShutdownStage) we call _exit(0).
+# Higher values are earlier during shutdown, and the full enumeration can
+# be found in AppShutdown.h in the AppShutdownPhase enum.
+- name: toolkit.shutdown.lateWriteChecksStage
+  type: int32_t
+#if defined(NIGHTLY_BUILD) && !defined(MOZ_CODE_COVERAGE)
+  value: 1
+#else
+  value: 0
+#endif
+  mirror: always
+
+# See the comment above toolkit.shutdown.lateWriteChecksStage. A higher value
+# for this pref means we call _exit(0) earlier during shutdown.
+- name: toolkit.shutdown.fastShutdownStage
+  type: int32_t
+  value: 0
+  mirror: always
+
 # Sending each remote accumulation immediately places undue strain on the IPC
 # subsystem. Batch the remote accumulations for a period of time before sending
 # them all at once. This value was chosen as a balance between data timeliness

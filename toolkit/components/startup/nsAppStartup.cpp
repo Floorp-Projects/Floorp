@@ -23,6 +23,7 @@
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
@@ -154,7 +155,6 @@ nsAppStartup::nsAppStartup()
       mShuttingDown(false),
       mStartingUp(true),
       mAttemptingQuit(false),
-      mRestart(false),
       mInterrupted(false),
       mIsSafeModeNecessary(false),
       mStartupCrashTrackingEnded(false) {}
@@ -279,7 +279,7 @@ nsAppStartup::Run(void) {
   Quit(eForceQuit);
 
   nsresult retval = NS_OK;
-  if (mRestart) {
+  if (mozilla::AppShutdown::IsRestarting()) {
     retval = NS_SUCCESS_RESTART_APP;
   }
 
@@ -359,12 +359,14 @@ nsAppStartup::Quit(uint32_t aMode) {
 
     PROFILER_ADD_MARKER("Shutdown start", OTHER);
     mozilla::RecordShutdownStartTimeStamp();
-    mShuttingDown = true;
-    if (!mRestart) {
-      mRestart = (aMode & eRestart) != 0;
-    }
 
-    if (mRestart) {
+    mShuttingDown = true;
+    auto shutdownMode = ((aMode & eRestart) != 0)
+                            ? mozilla::AppShutdownMode::Restart
+                            : mozilla::AppShutdownMode::Normal;
+    mozilla::AppShutdown::Init(shutdownMode);
+
+    if (mozilla::AppShutdown::IsRestarting()) {
       // Mark the next startup as a restart.
       PR_SetEnv("MOZ_APP_RESTART=1");
 
@@ -427,12 +429,14 @@ nsAppStartup::Quit(uint32_t aMode) {
 
   if (ferocity == eForceQuit) {
     // do it!
+    mozilla::AppShutdown::OnShutdownConfirmed();
 
     // No chance of the shutdown being cancelled from here on; tell people
     // we're shutting down for sure while all services are still available.
     if (obsService) {
+      bool isRestarting = mozilla::AppShutdown::IsRestarting();
       obsService->NotifyObservers(nullptr, "quit-application",
-                                  mRestart ? u"restart" : u"shutdown");
+                                  isRestarting ? u"restart" : u"shutdown");
     }
 
     if (!mRunning) {
@@ -453,7 +457,9 @@ nsAppStartup::Quit(uint32_t aMode) {
 
   // turn off the reentrancy check flag, but not if we have
   // more asynchronous work to do still.
-  if (!postedExitEvent) mShuttingDown = false;
+  if (!postedExitEvent) {
+    mShuttingDown = false;
+  }
   return rv;
 }
 
@@ -523,7 +529,7 @@ nsAppStartup::DoneStartingUp() {
 
 NS_IMETHODIMP
 nsAppStartup::GetRestarting(bool* aResult) {
-  *aResult = mRestart;
+  *aResult = mozilla::AppShutdown::IsRestarting();
   return NS_OK;
 }
 
