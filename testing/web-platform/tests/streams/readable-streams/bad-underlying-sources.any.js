@@ -6,7 +6,7 @@ test(() => {
 
   const theError = new Error('a unique string');
 
-  assert_throws(theError, () => {
+  assert_throws_exactly(theError, () => {
     new ReadableStream({
       get start() {
         throw theError;
@@ -21,7 +21,7 @@ test(() => {
 
   const theError = new Error('a unique string');
 
-  assert_throws(theError, () => {
+  assert_throws_exactly(theError, () => {
     new ReadableStream({
       start() {
         throw theError;
@@ -35,7 +35,7 @@ test(() => {
 test(() => {
 
   const theError = new Error('a unique string');
-  assert_throws(theError, () => new ReadableStream({
+  assert_throws_exactly(theError, () => new ReadableStream({
     get pull() {
       throw theError;
     }
@@ -117,7 +117,7 @@ promise_test(t => {
 test(() => {
 
   const theError = new Error('a unique string');
-  assert_throws(theError, () => new ReadableStream({
+  assert_throws_exactly(theError, () => new ReadableStream({
     get cancel() {
       throw theError;
     }

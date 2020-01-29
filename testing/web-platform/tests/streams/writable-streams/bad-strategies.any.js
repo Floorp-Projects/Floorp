@@ -5,7 +5,7 @@ const error1 = new Error('a unique string');
 error1.name = 'error1';
 
 test(() => {
-  assert_throws(error1, () => {
+  assert_throws_exactly(error1, () => {
     new WritableStream({}, {
       get size() {
         throw error1;
@@ -22,7 +22,7 @@ test(() => {
 }, 'reject any non-function value for strategy.size');
 
 test(() => {
-  assert_throws(error1, () => {
+  assert_throws_exactly(error1, () => {
     new WritableStream({}, {
       size() {
         return 1;
