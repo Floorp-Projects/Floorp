@@ -31,7 +31,7 @@ function PushDB(dbName, dbVersion, dbStoreName, keyPath, model) {
   this.initDBHelper(dbName, dbVersion, [dbStoreName]);
 }
 
-this.PushDB.prototype = {
+PushDB.prototype = {
   __proto__: IndexedDBHelper.prototype,
 
   toPushRecord(record) {

@@ -64,17 +64,17 @@ Management.on("uninstall", async (type, { id }) => {
   // Ensure managed preferences are cleared if they were
   // not cleared at the module level.
   await Management.asyncLoadSettingsModules();
-  return this.ExtensionPreferencesManager.removeAll(id);
+  return ExtensionPreferencesManager.removeAll(id);
 });
 
 Management.on("disable", async (type, id) => {
   await Management.asyncLoadSettingsModules();
-  return this.ExtensionPreferencesManager.disableAll(id);
+  return ExtensionPreferencesManager.disableAll(id);
 });
 
 Management.on("enabling", async (type, id) => {
   await Management.asyncLoadSettingsModules();
-  return this.ExtensionPreferencesManager.enableAll(id);
+  return ExtensionPreferencesManager.enableAll(id);
 });
 /* eslint-enable mozilla/balanced-listeners */
 

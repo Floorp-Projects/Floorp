@@ -505,4 +505,4 @@ var TranslationTelemetry = {
   },
 };
 
-this.TranslationTelemetry.init();
+TranslationTelemetry.init();

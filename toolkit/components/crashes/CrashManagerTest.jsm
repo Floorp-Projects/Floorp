@@ -48,7 +48,7 @@ var TestingCrashManager = function(options) {
   CrashManager.call(this, options);
 };
 
-this.TestingCrashManager.prototype = {
+TestingCrashManager.prototype = {
   __proto__: CrashManager.prototype,
 
   createDummyDump(submitted = false, date = new Date(), hr = false) {

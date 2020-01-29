@@ -125,7 +125,7 @@ var WebChannel = function(id, originOrPermission) {
   this._originOrPermission = originOrPermission;
 };
 
-this.WebChannel.prototype = {
+WebChannel.prototype = {
   /**
    * WebChannel id
    */

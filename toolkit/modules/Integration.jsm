@@ -157,7 +157,7 @@ var IntegrationPoint = function() {
   };
 };
 
-this.IntegrationPoint.prototype = {
+IntegrationPoint.prototype = {
   /**
    * Ordered set of registered functions defining integration overrides.
    */

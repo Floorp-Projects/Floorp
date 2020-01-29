@@ -163,5 +163,5 @@ for (let [key, val] of Object.entries({
   }
 })) {
   this[key] = val;
-  this.EXPORTED_SYMBOLS.push(key);
+  EXPORTED_SYMBOLS.push(key);
 }

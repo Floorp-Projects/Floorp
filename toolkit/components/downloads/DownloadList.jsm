@@ -23,7 +23,7 @@ var DownloadList = function() {
   this._views = new Set();
 };
 
-this.DownloadList.prototype = {
+DownloadList.prototype = {
   /**
    * Array of Download objects currently in the list.
    */
@@ -252,7 +252,7 @@ var DownloadCombinedList = function(aPublicList, aPrivateList) {
   aPrivateList.addView(this).catch(Cu.reportError);
 };
 
-this.DownloadCombinedList.prototype = {
+DownloadCombinedList.prototype = {
   __proto__: DownloadList.prototype,
 
   /**
@@ -340,7 +340,7 @@ var DownloadSummary = function() {
   this._views = new Set();
 };
 
-this.DownloadSummary.prototype = {
+DownloadSummary.prototype = {
   /**
    * Array of Download objects that are currently part of the summary.
    */

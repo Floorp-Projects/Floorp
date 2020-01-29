@@ -72,7 +72,7 @@ var FxAccountsOAuthGrantClient = function(options = {}) {
   log.debug("FxAccountsOAuthGrantClient Initialized");
 };
 
-this.FxAccountsOAuthGrantClient.prototype = {
+FxAccountsOAuthGrantClient.prototype = {
   /**
    * Retrieves an OAuth access token for the signed in user
    *

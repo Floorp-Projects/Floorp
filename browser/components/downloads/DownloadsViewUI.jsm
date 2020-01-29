@@ -112,7 +112,7 @@ var DownloadsViewUI = {
   },
 };
 
-this.DownloadsViewUI.BaseView = class {
+DownloadsViewUI.BaseView = class {
   canClearDownloads(nodeContainer) {
     // Downloads can be cleared if there's at least one removable download in
     // the list (either a history download or a completed session download).
@@ -142,9 +142,9 @@ this.DownloadsViewUI.BaseView = class {
  * HistoryDownloadElementShell and the DownloadsViewItem for the panel. The
  * history view may use a HistoryDownload object in place of a Download object.
  */
-this.DownloadsViewUI.DownloadElementShell = function() {};
+DownloadsViewUI.DownloadElementShell = function() {};
 
-this.DownloadsViewUI.DownloadElementShell.prototype = {
+DownloadsViewUI.DownloadElementShell.prototype = {
   /**
    * The richlistitem for the download, initialized by the derived object.
    */

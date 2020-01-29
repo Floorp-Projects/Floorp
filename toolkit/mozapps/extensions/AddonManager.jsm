@@ -4758,10 +4758,10 @@ AMTelemetry = {
   },
 };
 
-this.AddonManager.init();
+AddonManager.init();
 
 // Setup the AMTelemetry once the AddonManager has been started.
-this.AddonManager.addManagerListener(AMTelemetry);
+AddonManager.addManagerListener(AMTelemetry);
 
 // load the timestamps module into AddonManagerInternal
 ChromeUtils.import(

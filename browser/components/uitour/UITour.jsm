@@ -2039,7 +2039,7 @@ var UITour = {
   },
 };
 
-this.UITour.init();
+UITour.init();
 
 /**
  * UITour Health Report

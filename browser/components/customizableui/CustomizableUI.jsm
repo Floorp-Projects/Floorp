@@ -4444,8 +4444,8 @@ var CustomizableUI = {
     return CustomizableUIInternal.getCustomizationTarget(aElement);
   },
 };
-Object.freeze(this.CustomizableUI);
-Object.freeze(this.CustomizableUI.windows);
+Object.freeze(CustomizableUI);
+Object.freeze(CustomizableUI.windows);
 
 /**
  * All external consumers of widgets are really interacting with these wrappers

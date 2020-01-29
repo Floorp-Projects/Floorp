@@ -169,7 +169,7 @@ var BasePromiseWorker = function(url) {
    */
   this.workerTimeStamps = null;
 };
-this.BasePromiseWorker.prototype = {
+BasePromiseWorker.prototype = {
   log() {
     // By Default, ignore all logs.
   },
@@ -440,7 +440,7 @@ function WorkerError(data) {
  *
  * @constructor
  */
-this.BasePromiseWorker.Meta = function(data, meta) {
+BasePromiseWorker.Meta = function(data, meta) {
   this.data = data;
   this.meta = meta;
 };

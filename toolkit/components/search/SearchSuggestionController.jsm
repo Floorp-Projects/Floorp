@@ -64,7 +64,7 @@ function SearchSuggestionController(callback = null) {
   this._callback = callback;
 }
 
-this.SearchSuggestionController.prototype = {
+SearchSuggestionController.prototype = {
   /**
    * The maximum number of local form history results to return. This limit is
    * only enforced if remote results are also returned.
@@ -500,7 +500,7 @@ this.SearchSuggestionController.prototype = {
  * @param {nsISearchEngine} engine - The search engine
  * @returns {boolean} True if the engine offers suggestions and false otherwise.
  */
-this.SearchSuggestionController.engineOffersSuggestions = function(engine) {
+SearchSuggestionController.engineOffersSuggestions = function(engine) {
   return engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON);
 };
 
@@ -508,7 +508,7 @@ this.SearchSuggestionController.engineOffersSuggestions = function(engine) {
  * The maximum time (ms) to wait before giving up on a remote suggestions.
  */
 XPCOMUtils.defineLazyPreferenceGetter(
-  this.SearchSuggestionController.prototype,
+  SearchSuggestionController.prototype,
   "remoteTimeout",
   REMOTE_TIMEOUT_PREF,
   REMOTE_TIMEOUT_DEFAULT
@@ -518,7 +518,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * Whether or not remote suggestions are turned on.
  */
 XPCOMUtils.defineLazyPreferenceGetter(
-  this.SearchSuggestionController.prototype,
+  SearchSuggestionController.prototype,
   "suggestionsEnabled",
   BROWSER_SUGGEST_PREF,
   true
@@ -528,7 +528,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * Whether or not remote suggestions are turned on in private browsing mode.
  */
 XPCOMUtils.defineLazyPreferenceGetter(
-  this.SearchSuggestionController.prototype,
+  SearchSuggestionController.prototype,
   "suggestionsInPrivateBrowsingEnabled",
   BROWSER_SUGGEST_PRIVATE_PREF,
   false

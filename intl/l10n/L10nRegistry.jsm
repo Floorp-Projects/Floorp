@@ -732,7 +732,7 @@ this.L10nRegistry = new L10nRegistryService();
  *
  * @returns {Promise<string>}
  */
-this.L10nRegistry.load = function(url) {
+L10nRegistry.load = function(url) {
   return fetch(url).then(response => {
     if (!response.ok) {
       return Promise.reject(response.statusText);
@@ -753,7 +753,7 @@ this.L10nRegistry.load = function(url) {
  *
  * @returns {string}
  */
-this.L10nRegistry.loadSync = function(uri) {
+L10nRegistry.loadSync = function(uri) {
   try {
     let url = Services.io.newURI(uri);
     let data = Cu.readUTF8URI(url);
