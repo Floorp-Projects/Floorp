@@ -336,3 +336,16 @@ condprof:
         files-changed:
             - 'testing/condprofile/condprof**'
             - 'testing/condprofile/setup.py'
+
+talos:
+    description: testing/talos unit tests
+    platform: windows10-64/opt
+    python-version: [2]
+    treeherder:
+        symbol: tal
+    run:
+        using: python-test
+        subsuite: talos
+    when:
+        files-changed:
+            - 'testing/talos/**'
