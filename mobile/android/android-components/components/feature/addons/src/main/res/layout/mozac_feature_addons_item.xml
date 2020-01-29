@@ -38,8 +38,13 @@
             android:id="@+id/details_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:padding="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:layout_toStartOf="@+id/add_button"
             android:layout_toEndOf="@+id/icon_container"
             android:orientation="vertical">
@@ -87,11 +92,13 @@
 
     <ImageView
             android:id="@+id/add_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:contentDescription="@string/mozac_feature_addons_install_addon_content_description"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:tint="?android:attr/textColorPrimary"
             android:src="@drawable/mozac_ic_new" />
 </RelativeLayout>
