@@ -467,11 +467,6 @@ skip script test262/intl402/NumberFormat/prototype/format/signDisplay-rounding.j
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1610514
 skip script test262/intl402/NumberFormat/prototype/formatToParts/percent-en-US.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1610513
-skip script test262/intl402/RelativeTimeFormat/constructor/constructor/options-throwing-getters.js
-skip script test262/intl402/RelativeTimeFormat/constructor/constructor/options-order.js
-skip script test262/intl402/RelativeTimeFormat/constructor/constructor/options-numberingSystem-invalid.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1608809
 skip script test262/language/expressions/class/super-evaluation-order.js
 
