@@ -6806,11 +6806,13 @@ bool BytecodeEmitter::emitDeleteOptionalChain(UnaryNode* deleteNode) {
 
 bool BytecodeEmitter::emitDeletePropertyInOptChain(PropertyAccessBase* propExpr,
                                                    OptionalEmitter& oe) {
-  PropOpEmitter poe(this, PropOpEmitter::Kind::Delete,
-                    propExpr->isSuper() ? PropOpEmitter::ObjKind::Super
-                                        : PropOpEmitter::ObjKind::Other);
+  bool isSuper = propExpr->is<PropertyAccess>() &&
+                 propExpr->as<PropertyAccess>().isSuper();
+  PropOpEmitter poe(
+      this, PropOpEmitter::Kind::Delete,
+      isSuper ? PropOpEmitter::ObjKind::Super : PropOpEmitter::ObjKind::Other);
 
-  if (propExpr->isSuper()) {
+  if (isSuper) {
     // The expression |delete super.foo;| has to evaluate |super.foo|,
     // which could throw if |this| hasn't yet been set by a |super(...)|
     // call or the super-base is not an object, before throwing a
@@ -6853,9 +6855,11 @@ bool BytecodeEmitter::emitDeletePropertyInOptChain(PropertyAccessBase* propExpr,
 
 bool BytecodeEmitter::emitDeleteElementInOptChain(PropertyByValueBase* elemExpr,
                                                   OptionalEmitter& oe) {
-  ElemOpEmitter eoe(this, ElemOpEmitter::Kind::Delete,
-                    elemExpr->isSuper() ? ElemOpEmitter::ObjKind::Super
-                                        : ElemOpEmitter::ObjKind::Other);
+  bool isSuper = elemExpr->is<PropertyByValue>() &&
+                 elemExpr->as<PropertyByValue>().isSuper();
+  ElemOpEmitter eoe(
+      this, ElemOpEmitter::Kind::Delete,
+      isSuper ? ElemOpEmitter::ObjKind::Super : ElemOpEmitter::ObjKind::Other);
 
   if (!eoe.prepareForObj()) {
     //              [stack]
@@ -7205,7 +7209,7 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
     case ParseNodeKind::OptionalDotExpr: {
       MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
       OptionalPropertyAccess* prop = &callee->as<OptionalPropertyAccess>();
-      bool isSuper = prop->isSuper();
+      bool isSuper = false;
 
       PropOpEmitter& poe = cone.prepareForPropCallee(isSuper);
       if (!emitOptionalDotExpression(prop, poe, isSuper, oe)) {
@@ -7229,7 +7233,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
 
     case ParseNodeKind::OptionalElemExpr: {
       OptionalPropertyByValue* elem = &callee->as<OptionalPropertyByValue>();
-      bool isSuper = elem->isSuper();
+      bool isSuper = false;
+
       ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper);
       if (!emitOptionalElemExpression(elem, eoe, isSuper, oe)) {
         //          [stack] CALLEE THIS
@@ -7240,6 +7245,7 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
     case ParseNodeKind::ElemExpr: {
       PropertyByValue* elem = &callee->as<PropertyByValue>();
       bool isSuper = elem->isSuper();
+
       ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper);
       if (!emitOptionalElemExpression(elem, eoe, isSuper, oe)) {
         //          [stack] CALLEE THIS
@@ -7722,10 +7728,9 @@ bool BytecodeEmitter::emitOptionalTree(ParseNode* pn, OptionalEmitter& oe) {
   switch (kind) {
     case ParseNodeKind::OptionalDotExpr: {
       OptionalPropertyAccess* prop = &pn->as<OptionalPropertyAccess>();
-      bool isSuper = prop->isSuper();
+      bool isSuper = false;
       PropOpEmitter poe(this, PropOpEmitter::Kind::Get,
-                        isSuper ? PropOpEmitter::ObjKind::Super
-                                : PropOpEmitter::ObjKind::Other);
+                        PropOpEmitter::ObjKind::Other);
       if (!emitOptionalDotExpression(prop, poe, isSuper, oe)) {
         return false;
       }
@@ -7745,10 +7750,9 @@ bool BytecodeEmitter::emitOptionalTree(ParseNode* pn, OptionalEmitter& oe) {
 
     case ParseNodeKind::OptionalElemExpr: {
       OptionalPropertyByValue* elem = &pn->as<OptionalPropertyByValue>();
-      bool isSuper = elem->isSuper();
+      bool isSuper = false;
       ElemOpEmitter eoe(this, ElemOpEmitter::Kind::Get,
-                        isSuper ? ElemOpEmitter::ObjKind::Super
-                                : ElemOpEmitter::ObjKind::Other);
+                        ElemOpEmitter::ObjKind::Other);
 
       if (!emitOptionalElemExpression(elem, eoe, isSuper, oe)) {
         return false;
