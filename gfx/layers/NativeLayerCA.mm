@@ -13,6 +13,7 @@
 #include <utility>
 #include <algorithm>
 
+#include "gfxUtils.h"
 #include "GLBlitHelper.h"
 #include "GLContextCGL.h"
 #include "GLContextProvider.h"
@@ -295,13 +296,18 @@ bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
     return false;
   }
 
-  float scale = mLayerRoot->BackingScale();
-  CGSize size = {aReadbackSize.width / scale, aReadbackSize.height / scale};
-  CGRect bounds = {CGPointZero, size};
+  CGRect bounds = CGRectMake(0, 0, aReadbackSize.width, aReadbackSize.height);
 
   {
+    // Set the correct bounds and scale on the renderer and its root layer. CARenderer always
+    // renders at unit scale, i.e. the coordinates on the root layer must map 1:1 to render target
+    // pixels. But the coordinates on our content layers are in "points", where 1 point maps to 2
+    // device pixels on HiDPI. So in order to render at the full device pixel resolution, we set a
+    // scale transform on the root offscreen layer.
     AutoCATransaction transaction;
     mRenderer.layer.bounds = bounds;
+    float scale = mLayerRoot->BackingScale();
+    mRenderer.layer.sublayerTransform = CATransform3DMakeScale(scale, scale, 1);
     mRenderer.bounds = bounds;
   }
 
@@ -321,9 +327,11 @@ bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
   mGL->fViewport(0.0, 0.0, aReadbackSize.width, aReadbackSize.height);
 
   // These legacy OpenGL function calls are part of CARenderer's API contract, see CARenderer.h.
+  // The size passed to glOrtho must be the device pixel size of the render target, otherwise
+  // CARenderer will produce incorrect results.
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(0.0, size.width, 0.0, size.height, -1, 1);
+  glOrtho(0.0, aReadbackSize.width, 0.0, aReadbackSize.height, -1, 1);
 
   float mediaTime = CACurrentMediaTime();
   [mRenderer beginFrameAtTime:mediaTime timeStamp:nullptr];
