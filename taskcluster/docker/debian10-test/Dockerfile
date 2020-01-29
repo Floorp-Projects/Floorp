@@ -45,9 +45,6 @@ ADD topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
 # %include taskcluster/scripts/misc/fetch-content
 ADD topsrcdir/taskcluster/scripts/misc/fetch-content /builds/worker/bin/fetch-content
 
-# %include taskcluster/scripts/tester/test-linux.sh
-ADD topsrcdir/taskcluster/scripts/tester/test-linux.sh /builds/worker/bin/test-linux.sh
-
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/worker/scripts/tooltool.py
 
 # Locale related setup for debian:buster
