@@ -315,12 +315,13 @@ bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
 
   mGL->MakeCurrent();
 
+  bool needToRedrawEverything = false;
   if (!mFB || mFB->mSize != aReadbackSize) {
     mFB = gl::MozFramebuffer::Create(mGL, aReadbackSize, 0, false);
     if (!mFB) {
       return false;
     }
-    [mRenderer addUpdateRect:bounds];  // fresh framebuffer, draw everything
+    needToRedrawEverything = true;
   }
 
   const gl::ScopedBindFramebuffer bindFB(mGL, mFB->mFB);
@@ -335,6 +336,9 @@ bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
 
   float mediaTime = CACurrentMediaTime();
   [mRenderer beginFrameAtTime:mediaTime timeStamp:nullptr];
+  if (needToRedrawEverything) {
+    [mRenderer addUpdateRect:bounds];
+  }
   [mRenderer render];
   [mRenderer endFrame];
 
