@@ -8,10 +8,12 @@ import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import mozilla.appservices.push.BridgeType
 import mozilla.appservices.push.PushAPI
+import mozilla.appservices.push.PushError
 import mozilla.appservices.push.PushManager
 import mozilla.appservices.push.SubscriptionResponse
 import java.io.Closeable
 import java.util.Locale
+import java.util.UUID
 
 /**
  * An interface that wraps the [PushAPI].
@@ -81,7 +83,23 @@ internal class RustPushConnection(
             )
             return true
         }
-        return pushApi.update(token)
+        // This call will fail if we haven't 'subscribed' yet.
+        return try {
+            pushApi.update(token)
+        } catch (e: PushError) {
+            // Once we get GeneralError, let's catch that instead:
+            // https://github.com/mozilla/application-services/issues/2541
+            val fakeChannelId = UUID.nameUUIDFromBytes("fake".toByteArray()).toString().replace("-", "")
+            // It's possible that we have a race (on a first run) between 'subscribing' and setting a token.
+            // 'update' expects that we've called 'subscribe' (which would obtain a 'uaid' from an autopush
+            // server), which we need to have in order to call 'update' on the library.
+            // In https://github.com/mozilla/application-services/issues/2490 this will be fixed, and we
+            // can clean up this work-around.
+            pushApi.subscribe(fakeChannelId)
+
+            // If this fails again, give up - it seems like a legit failure that we should re-throw.
+            pushApi.update(token)
+        }
     }
 
     @GuardedBy("this")

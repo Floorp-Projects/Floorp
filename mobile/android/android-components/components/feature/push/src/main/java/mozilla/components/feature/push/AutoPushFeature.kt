@@ -99,8 +99,7 @@ class AutoPushFeature(
         get() = preferences(context).getLong(LAST_VERIFIED, System.currentTimeMillis())
         set(value) = preferences(context).edit().putLong(LAST_VERIFIED, value).apply()
 
-    internal var job: Job = SupervisorJob()
-    private val scope = CoroutineScope(coroutineContext) + job
+    private val scope = CoroutineScope(coroutineContext) + SupervisorJob()
 
     init {
         // If we have a token, initialize the rust component first.
@@ -132,9 +131,8 @@ class AutoPushFeature(
         service.stop()
 
         DeliveryManager.with(connection) {
-            job = scope.launch {
+            scope.launch {
                 unsubscribeAll()
-                job.cancel()
             }
         }
 
@@ -147,7 +145,7 @@ class AutoPushFeature(
      * each push type and notifies the subscribers.
      */
     override fun onNewToken(newToken: String) {
-        job = scope.launchAndTry {
+        scope.launchAndTry {
             logger.info("Received a new registration token from push service.")
 
             connection.updateToken(newToken)
@@ -173,7 +171,7 @@ class AutoPushFeature(
             logger.error("Unknown channelID: ${message.channelId}")
             return
         }
-        job = scope.launchAndTry {
+        scope.launchAndTry {
             DeliveryManager.with(connection) {
                 logger.info("New push message decrypted.")
                 val decrypted = decrypt(
@@ -229,7 +227,7 @@ class AutoPushFeature(
      */
     fun subscribeForType(type: PushType) {
         DeliveryManager.with(connection) {
-            job = scope.launchAndTry {
+            scope.launchAndTry {
                 val sub = subscribe(type.toChannelId()).toPushSubscription()
                 subscriptionObservers.notifyObservers { onSubscriptionAvailable(sub) }
             }
@@ -246,7 +244,7 @@ class AutoPushFeature(
      */
     fun unsubscribeForType(type: PushType) {
         DeliveryManager.with(connection) {
-            job = scope.launchAndTry {
+            scope.launchAndTry {
                 unsubscribe(type.toChannelId())
             }
         }
@@ -257,7 +255,7 @@ class AutoPushFeature(
      */
     fun subscribeAll() {
         DeliveryManager.with(connection) {
-            job = scope.launchAndTry {
+            scope.launchAndTry {
                 PushType.values().forEach { type ->
                     val sub = subscribe(type.toChannelId()).toPushSubscription()
                     subscriptionObservers.notifyObservers { onSubscriptionAvailable(sub) }
@@ -290,7 +288,7 @@ class AutoPushFeature(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun verifyActiveSubscriptions() {
         DeliveryManager.with(connection) {
-            job = scope.launchAndTry {
+            scope.launchAndTry {
                 val notifyObservers = verifyConnection()
 
                 if (notifyObservers) {
