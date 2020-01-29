@@ -39,7 +39,7 @@ function checkModification(e, funcName, args, expectedRes, before, after,
       obs.observe(e, { attributes: true });
     }
     if (shouldThrow) {
-      assert_throws(expectedException, function() {
+      assert_throws_dom(expectedException, function() {
         var list = e.classList;
         var res = list[funcName].apply(list, args);
       });
