@@ -29,6 +29,8 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIWrapperChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIdentChannel, mHttpChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannelInternal,
@@ -329,6 +331,13 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener* aListener) {
                              rv);
 
   if (NS_SUCCEEDED(rv)) {
+    // We do this here to make sure all notification callbacks changes have been
+    // made first before we inject this view-source channel.
+    mChannel->GetNotificationCallbacks(getter_AddRefs(mCallbacks));
+    mChannel->SetNotificationCallbacks(this);
+
+    MOZ_ASSERT(mCallbacks != this, "We have a cycle");
+
     mOpened = true;
   }
 
@@ -1079,6 +1088,8 @@ nsViewSourceChannel::CompleteRedirectSetup(nsIStreamListener* aListener,
   return rv;
 }
 
+// nsIWrapperChannel
+
 NS_IMETHODIMP
 nsViewSourceChannel::GetInnerChannel(nsIChannel** aChannel) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
@@ -1086,4 +1097,56 @@ nsViewSourceChannel::GetInnerChannel(nsIChannel** aChannel) {
   nsCOMPtr<nsIChannel> chan = mChannel;
   chan.forget(aChannel);
   return NS_OK;
+}
+
+// nsIChannelEventSink
+
+NS_IMETHODIMP
+nsViewSourceChannel::AsyncOnChannelRedirect(
+    nsIChannel* oldChannel, nsIChannel* newChannel, uint32_t flags,
+    nsIAsyncVerifyRedirectCallback* callback) {
+  nsresult rv;
+
+  // We want consumers of the new inner channel be able to recognize it's
+  // actually used for view-source.  Hence we modify its original URI here.
+  // This will not affect security checks because those have already been
+  // synchronously done before our event sink is called.  Note that result
+  // principal URI is still modified at the OnStartRequest notification.
+  nsCOMPtr<nsIURI> newChannelOrigURI;
+  rv = newChannel->GetOriginalURI(getter_AddRefs(newChannelOrigURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> newChannelUpdatedOrigURI;
+  rv = BuildViewSourceURI(newChannelOrigURI,
+                          getter_AddRefs(newChannelUpdatedOrigURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = newChannel->SetOriginalURI(newChannelUpdatedOrigURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannelEventSink> sink(do_QueryInterface(mCallbacks));
+  if (sink) {
+    return sink->AsyncOnChannelRedirect(oldChannel, newChannel, flags,
+                                        callback);
+  }
+
+  callback->OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
+}
+
+// nsIInterfaceRequestor
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetInterface(const nsIID& aIID, void** aResult) {
+  if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    nsCOMPtr<nsIChannelEventSink> self(this);
+    self.forget(aResult);
+    return NS_OK;
+  }
+
+  if (mCallbacks) {
+    return mCallbacks->GetInterface(aIID, aResult);
+  }
+
+  return NS_ERROR_NO_INTERFACE;
 }
