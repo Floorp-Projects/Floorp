@@ -9445,6 +9445,7 @@ GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
   }
 
   if (optionalKind == OptionalKind::Optional) {
+    MOZ_ASSERT(!handler_.isSuperBase(lhs));
     return handler_.newOptionalPropertyAccess(lhs, name);
   }
   return handler_.newPropertyAccess(lhs, name);
@@ -9469,6 +9470,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberElemAccess(
     return null();
   }
   if (optionalKind == OptionalKind::Optional) {
+    MOZ_ASSERT(!handler_.isSuperBase(lhs));
     return handler_.newOptionalPropertyByValue(lhs, propExpr, pos().end);
   }
   return handler_.newPropertyByValue(lhs, propExpr, pos().end);
