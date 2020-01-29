@@ -1252,7 +1252,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                  InvokedPrediction invoked = PredictUninvoked);
   Node optionalExpr(YieldHandling yieldHandling,
                     TripledotHandling tripledotHandling, TokenKind tt,
-                    bool allowCallSyntax = true,
                     PossibleError* possibleError = nullptr,
                     InvokedPrediction invoked = PredictUninvoked);
   Node memberExpr(YieldHandling yieldHandling,
