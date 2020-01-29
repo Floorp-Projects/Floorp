@@ -77,6 +77,11 @@ class FullParseHandler {
            node->isKind(ParseNodeKind::ElemExpr);
   }
 
+  bool isOptionalPropertyAccess(Node node) {
+    return node->isKind(ParseNodeKind::OptionalDotExpr) ||
+           node->isKind(ParseNodeKind::OptionalElemExpr);
+  }
+
   bool isFunctionCall(Node node) {
     // Note: super() is a special form, *not* a function call.
     return node->isKind(ParseNodeKind::CallExpr);

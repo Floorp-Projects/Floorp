@@ -155,6 +155,10 @@ class SyntaxParseHandler {
     return node == NodeDottedProperty || node == NodeElement;
   }
 
+  bool isOptionalPropertyAccess(Node node) {
+    return node == NodeOptionalDottedProperty || node == NodeOptionalElement;
+  }
+
   bool isFunctionCall(Node node) {
     // Note: super() is a special form, *not* a function call.
     return node == NodeFunctionCall;
