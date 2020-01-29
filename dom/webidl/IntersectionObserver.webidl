@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://wicg.github.io/IntersectionObserver/
+ * https://w3c.github.io/IntersectionObserver/
  */
 
 [ProbablyShortLivingWrapper, Pref="dom.IntersectionObserver.enabled",
