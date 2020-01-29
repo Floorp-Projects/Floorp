@@ -6764,20 +6764,9 @@ bool BytecodeEmitter::emitDeleteOptionalChain(UnaryNode* deleteNode) {
 
   ParseNode* kid = deleteNode->kid();
   switch (kid->getKind()) {
-    case ParseNodeKind::ElemExpr: {
-      PropertyByValue* elemExpr = &kid->as<PropertyByValue>();
-      if (!emitDeleteElementInOptChain(elemExpr, oe)) {
-        //              [stack] # If shortcircuit
-        //              [stack] UNDEFINED-OR-NULL
-        //              [stack] # otherwise
-        //              [stack] TRUE
-        return false;
-      }
-
-      break;
-    }
+    case ParseNodeKind::ElemExpr:
     case ParseNodeKind::OptionalElemExpr: {
-      OptionalPropertyByValue* elemExpr = &kid->as<OptionalPropertyByValue>();
+      auto* elemExpr = &kid->as<PropertyByValueBase>();
       if (!emitDeleteElementInOptChain(elemExpr, oe)) {
         //              [stack] # If shortcircuit
         //              [stack] UNDEFINED-OR-NULL
@@ -6788,19 +6777,9 @@ bool BytecodeEmitter::emitDeleteOptionalChain(UnaryNode* deleteNode) {
 
       break;
     }
-    case ParseNodeKind::DotExpr: {
-      PropertyAccess* propExpr = &kid->as<PropertyAccess>();
-      if (!emitDeletePropertyInOptChain(propExpr, oe)) {
-        //              [stack] # If shortcircuit
-        //              [stack] UNDEFINED-OR-NULL
-        //              [stack] # otherwise
-        //              [stack] TRUE
-        return false;
-      }
-      break;
-    }
+    case ParseNodeKind::DotExpr:
     case ParseNodeKind::OptionalDotExpr: {
-      OptionalPropertyAccess* propExpr = &kid->as<OptionalPropertyAccess>();
+      auto* propExpr = &kid->as<PropertyAccessBase>();
       if (!emitDeletePropertyInOptChain(propExpr, oe)) {
         //              [stack] # If shortcircuit
         //              [stack] UNDEFINED-OR-NULL
