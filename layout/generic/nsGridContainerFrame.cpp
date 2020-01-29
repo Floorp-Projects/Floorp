@@ -3062,7 +3062,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid {
    */
   struct CellMap {
     struct Cell {
-      Cell() : mIsOccupied(false) {}
+      constexpr Cell() : mIsOccupied(false) {}
       bool mIsOccupied : 1;
     };
 
