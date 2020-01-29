@@ -344,7 +344,7 @@
   }, 'NDEFRecord constructor with record type string being treated as case sensitive');
 
   test(() => {
-    assert_throws(new TypeError, () => new NDEFRecord(createRecord(
+    assert_throws_js(TypeError, () => new NDEFRecord(createRecord(
         'example.com:hellö', test_buffer_data)),
         'The external type must be an ASCII string.');
 
