@@ -7846,22 +7846,25 @@ bool BytecodeEmitter::emitOptionalDotExpression(PropertyAccessBase* prop,
                                                 bool isSuper,
                                                 OptionalEmitter& oe) {
   if (!poe.prepareForObj()) {
+    //              [stack]
     return false;
   }
+
   if (isSuper) {
     UnaryNode* base = &prop->expression().as<UnaryNode>();
     if (!emitGetThisForSuperBase(base)) {
-      //        [stack] THIS
+      //            [stack] OBJ
       return false;
     }
   } else {
     if (!emitOptionalTree(&prop->expression(), oe)) {
-      //        [stack] OBJ
+      //            [stack] OBJ
       return false;
     }
   }
 
   if (prop->isKind(ParseNodeKind::OptionalDotExpr)) {
+    MOZ_ASSERT(!isSuper);
     if (!oe.emitJumpShortCircuit()) {
       //            [stack] # if Jump
       //            [stack] UNDEFINED-OR-NULL
@@ -7872,7 +7875,7 @@ bool BytecodeEmitter::emitOptionalDotExpression(PropertyAccessBase* prop,
   }
 
   if (!poe.emitGet(prop->key().atom())) {
-    //          [stack] PROP
+    //              [stack] PROP
     return false;
   }
 
@@ -7883,38 +7886,26 @@ bool BytecodeEmitter::emitOptionalElemExpression(PropertyByValueBase* elem,
                                                  ElemOpEmitter& eoe,
                                                  bool isSuper,
                                                  OptionalEmitter& oe) {
-  if (isSuper) {
-    if (!eoe.prepareForObj()) {
-      //            [stack]
-      return false;
-    }
-    UnaryNode* base = &elem->expression().as<UnaryNode>();
-    if (!emitGetThisForSuperBase(base)) {
-      //            [stack] THIS
-      return false;
-    }
-    if (!eoe.prepareForKey()) {
-      //            [stack] THIS
-      return false;
-    }
-    if (!emitTree(&elem->key())) {
-      //            [stack] THIS KEY
-      return false;
-    }
-
-    return true;
-  }
-
   if (!eoe.prepareForObj()) {
     //              [stack]
     return false;
   }
-  if (!emitOptionalTree(&elem->expression(), oe)) {
-    //              [stack] OBJ
-    return false;
+
+  if (isSuper) {
+    UnaryNode* base = &elem->expression().as<UnaryNode>();
+    if (!emitGetThisForSuperBase(base)) {
+      //            [stack] OBJ
+      return false;
+    }
+  } else {
+    if (!emitOptionalTree(&elem->expression(), oe)) {
+      //            [stack] OBJ
+      return false;
+    }
   }
 
   if (elem->isKind(ParseNodeKind::OptionalElemExpr)) {
+    MOZ_ASSERT(!isSuper);
     if (!oe.emitJumpShortCircuit()) {
       //            [stack] # if Jump
       //            [stack] UNDEFINED-OR-NULL
@@ -7938,6 +7929,7 @@ bool BytecodeEmitter::emitOptionalElemExpression(PropertyByValueBase* elem,
     //              [stack] ELEM
     return false;
   }
+
   return true;
 }
 
