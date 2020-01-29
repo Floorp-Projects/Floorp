@@ -9,18 +9,18 @@ def main(request, response):
     response.headers.append("Access-Control-Expose-Headers", "*")
 
     if "device-memory" in request.headers:
-            response.headers.set("device-memory-received", request.headers.get("device-memory"))
+        response.headers.set("device-memory-received", request.headers.get("device-memory"))
     if "dpr" in request.headers:
-            response.headers.set("dpr-received", request.headers.get("dpr"))
+        response.headers.set("dpr-received", request.headers.get("dpr"))
     if "viewport-width" in request.headers:
-            response.headers.set("viewport-width-received", request.headers.get("viewport-width"))
+        response.headers.set("viewport-width-received", request.headers.get("viewport-width"))
     if "rtt" in request.headers:
-            response.headers.set("rtt-received", request.headers.get("rtt"))
+        response.headers.set("rtt-received", request.headers.get("rtt"))
     if "downlink" in request.headers:
-            response.headers.set("downlink-received", request.headers.get("downlink"))
+        response.headers.set("downlink-received", request.headers.get("downlink"))
     if "ect" in request.headers:
-            response.headers.set("ect-received", request.headers.get("ect"))
+        response.headers.set("ect-received", request.headers.get("ect"))
     if "Sec-CH-Lang" in request.headers:
-            response.headers.set("lang-received", request.headers.get("Sec-CH-Lang"))
+        response.headers.set("lang-received", request.headers.get("Sec-CH-Lang"))
     if "sec-ch-ua-mobile" in request.headers:
         response.headers.set("mobile-received", request.headers.get("sec-ch-ua-mobile"))

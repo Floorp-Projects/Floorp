@@ -6,7 +6,7 @@
 <script>
 
 promise_test(t => {
-  return fetch("/client-hints/echo_client_hints_received.py").then(r => {
+  return fetch("/client-hints/resources/echo-client-hints-received.py").then(r => {
     assert_equals(r.status, 200)
     // Verify that the browser does not include client hints in the headers
     // since Accept-CH is malformed (includes whitespace between attributes
