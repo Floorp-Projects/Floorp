@@ -135,9 +135,9 @@
   }, 'NDEFRecord constructor with text record type and arrayBufferView data');
 
   test(() => {
-    assert_throws(new TypeError, () => new NDEFRecord(createTextRecord(
+    assert_throws_js(TypeError, () => new NDEFRecord(createTextRecord(
             test_text_data, 'random-encoding')));
-    assert_throws(new TypeError, () => new NDEFRecord(createTextRecord(
+    assert_throws_js(TypeError, () => new NDEFRecord(createTextRecord(
             test_text_data, 'utf-16')));
     // Only 'utf-8' is OK for a DOMString data source.
     const record = new NDEFRecord(createTextRecord(test_text_data, 'utf-8', 'fr'));
@@ -148,7 +148,7 @@
     assert_equals(decoder.decode(record.data), test_text_data,
         'data has the same content with the original text');
 
-    assert_throws(new TypeError, () => new NDEFRecord(createTextRecord(
+    assert_throws_js(TypeError, () => new NDEFRecord(createTextRecord(
             encodeTextToArrayBuffer(test_text_data, 'utf-8'), 'random-encoding')));
     // The encoding list valid for a BufferSource data source.
     const encodings = ['utf-8', 'utf-16', 'utf-16be', 'utf-16le'];
