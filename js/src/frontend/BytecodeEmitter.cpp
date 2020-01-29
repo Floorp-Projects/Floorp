@@ -6768,10 +6768,10 @@ bool BytecodeEmitter::emitDeleteOptionalChain(UnaryNode* deleteNode) {
     case ParseNodeKind::OptionalElemExpr: {
       auto* elemExpr = &kid->as<PropertyByValueBase>();
       if (!emitDeleteElementInOptChain(elemExpr, oe)) {
-        //              [stack] # If shortcircuit
-        //              [stack] UNDEFINED-OR-NULL
-        //              [stack] # otherwise
-        //              [stack] TRUE
+        //          [stack] # If shortcircuit
+        //          [stack] UNDEFINED-OR-NULL
+        //          [stack] # otherwise
+        //          [stack] SUCCEEDED
         return false;
       }
 
@@ -6781,10 +6781,10 @@ bool BytecodeEmitter::emitDeleteOptionalChain(UnaryNode* deleteNode) {
     case ParseNodeKind::OptionalDotExpr: {
       auto* propExpr = &kid->as<PropertyAccessBase>();
       if (!emitDeletePropertyInOptChain(propExpr, oe)) {
-        //              [stack] # If shortcircuit
-        //              [stack] UNDEFINED-OR-NULL
-        //              [stack] # otherwise
-        //              [stack] TRUE
+        //          [stack] # If shortcircuit
+        //          [stack] UNDEFINED-OR-NULL
+        //          [stack] # otherwise
+        //          [stack] SUCCEEDED
         return false;
       }
       break;
@@ -6806,46 +6806,30 @@ bool BytecodeEmitter::emitDeleteOptionalChain(UnaryNode* deleteNode) {
 
 bool BytecodeEmitter::emitDeletePropertyInOptChain(PropertyAccessBase* propExpr,
                                                    OptionalEmitter& oe) {
-  bool isSuper = propExpr->is<PropertyAccess>() &&
-                 propExpr->as<PropertyAccess>().isSuper();
-  PropOpEmitter poe(
-      this, PropOpEmitter::Kind::Delete,
-      isSuper ? PropOpEmitter::ObjKind::Super : PropOpEmitter::ObjKind::Other);
+  MOZ_ASSERT_IF(propExpr->is<PropertyAccess>(),
+                !propExpr->as<PropertyAccess>().isSuper());
+  PropOpEmitter poe(this, PropOpEmitter::Kind::Delete,
+                    PropOpEmitter::ObjKind::Other);
 
-  if (isSuper) {
-    // The expression |delete super.foo;| has to evaluate |super.foo|,
-    // which could throw if |this| hasn't yet been set by a |super(...)|
-    // call or the super-base is not an object, before throwing a
-    // ReferenceError for attempting to delete a super-reference.
-    UnaryNode* base = &propExpr->expression().as<UnaryNode>();
-    if (!emitGetThisForSuperBase(base)) {
-      //            [stack] THIS
-      return false;
-    }
-  } else {
-    if (!poe.prepareForObj()) {
-      //            [stack]
-      return false;
-    }
-    if (!emitOptionalTree(&propExpr->expression(), oe)) {
+  if (!poe.prepareForObj()) {
+    //              [stack]
+    return false;
+  }
+  if (!emitOptionalTree(&propExpr->expression(), oe)) {
+    //              [stack] OBJ
+    return false;
+  }
+  if (propExpr->isKind(ParseNodeKind::OptionalDotExpr)) {
+    if (!oe.emitJumpShortCircuit()) {
+      //            [stack] # if Jump
+      //            [stack] UNDEFINED-OR-NULL
+      //            [stack] # otherwise
       //            [stack] OBJ
       return false;
-    }
-    if (propExpr->isKind(ParseNodeKind::OptionalDotExpr)) {
-      if (!oe.emitJumpShortCircuit()) {
-        //            [stack] # if Jump
-        //            [stack] UNDEFINED-OR-NULL
-        //            [stack] # otherwise
-        //            [stack] OBJ
-        return false;
-      }
     }
   }
 
   if (!poe.emitDelete(propExpr->key().atom())) {
-    //              [stack] # if Super
-    //              [stack] THIS
-    //              [stack] # otherwise
     //              [stack] SUCCEEDED
     return false;
   }
@@ -6855,11 +6839,10 @@ bool BytecodeEmitter::emitDeletePropertyInOptChain(PropertyAccessBase* propExpr,
 
 bool BytecodeEmitter::emitDeleteElementInOptChain(PropertyByValueBase* elemExpr,
                                                   OptionalEmitter& oe) {
-  bool isSuper = elemExpr->is<PropertyByValue>() &&
-                 elemExpr->as<PropertyByValue>().isSuper();
-  ElemOpEmitter eoe(
-      this, ElemOpEmitter::Kind::Delete,
-      isSuper ? ElemOpEmitter::ObjKind::Super : ElemOpEmitter::ObjKind::Other);
+  MOZ_ASSERT_IF(elemExpr->is<PropertyByValue>(),
+                !elemExpr->as<PropertyByValue>().isSuper());
+  ElemOpEmitter eoe(this, ElemOpEmitter::Kind::Delete,
+                    ElemOpEmitter::ObjKind::Other);
 
   if (!eoe.prepareForObj()) {
     //              [stack]
@@ -6892,9 +6875,6 @@ bool BytecodeEmitter::emitDeleteElementInOptChain(PropertyByValueBase* elemExpr,
   }
 
   if (!eoe.emitDelete()) {
-    //              [stack] # if Super
-    //              [stack] THIS
-    //              [stack] # otherwise
     //              [stack] SUCCEEDED
     return false;
   }

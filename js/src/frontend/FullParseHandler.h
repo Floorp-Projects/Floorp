@@ -258,7 +258,7 @@ class FullParseHandler {
 
     if (expr->isKind(ParseNodeKind::OptionalChain)) {
       Node kid = expr->as<UnaryNode>().kid();
-      // Handle property deletion explictly. OptionalCall is handled
+      // Handle property deletion explicitly. OptionalCall is handled
       // via DeleteExpr.
       if (kid->isKind(ParseNodeKind::DotExpr) ||
           kid->isKind(ParseNodeKind::OptionalDotExpr) ||
