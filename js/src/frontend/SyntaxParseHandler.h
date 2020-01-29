@@ -694,7 +694,7 @@ class SyntaxParseHandler {
     // |this|.  It's not really eligible for the funapply/funcall
     // optimizations as they're currently implemented (assuming a single
     // value is used for both retrieval and |this|).
-    if (node != NodeDottedProperty) {
+    if (node != NodeDottedProperty && node != NodeOptionalDottedProperty) {
       return nullptr;
     }
     return lastAtom->asPropertyName();
