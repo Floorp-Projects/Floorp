@@ -8373,10 +8373,11 @@ enum class EnforcedParentheses : uint8_t { CoalesceExpr, AndOrExpr, None };
 
 template <class ParseHandler, typename Unit>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
-GeneralParser<ParseHandler, Unit>::orExpr(
-    InHandling inHandling, YieldHandling yieldHandling,
-    TripledotHandling tripledotHandling, PossibleError* possibleError,
-    InvokedPrediction invoked /* = PredictUninvoked */) {
+GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
+                                          YieldHandling yieldHandling,
+                                          TripledotHandling tripledotHandling,
+                                          PossibleError* possibleError,
+                                          InvokedPrediction invoked) {
   // Shift-reduce parser for the binary operator part of the JS expression
   // syntax.
 
@@ -8495,10 +8496,11 @@ GeneralParser<ParseHandler, Unit>::orExpr(
 
 template <class ParseHandler, typename Unit>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
-GeneralParser<ParseHandler, Unit>::condExpr(
-    InHandling inHandling, YieldHandling yieldHandling,
-    TripledotHandling tripledotHandling, PossibleError* possibleError,
-    InvokedPrediction invoked /* = PredictUninvoked */) {
+GeneralParser<ParseHandler, Unit>::condExpr(InHandling inHandling,
+                                            YieldHandling yieldHandling,
+                                            TripledotHandling tripledotHandling,
+                                            PossibleError* possibleError,
+                                            InvokedPrediction invoked) {
   Node condition = orExpr(inHandling, yieldHandling, tripledotHandling,
                           possibleError, invoked);
   if (!condition) {
@@ -9248,9 +9250,8 @@ bool GeneralParser<ParseHandler, Unit>::computeErrorMetadata(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-    TokenKind tt, bool allowCallSyntax /* = true */,
-    PossibleError* possibleError /* = nullptr */,
-    InvokedPrediction invoked /* = PredictUninvoked */) {
+    TokenKind tt, bool allowCallSyntax, PossibleError* possibleError,
+    InvokedPrediction invoked) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
 
   Node lhs;
@@ -10799,8 +10800,7 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
 template <class ParseHandler, typename Unit>
 typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-    TokenKind tt, PossibleError* possibleError,
-    InvokedPrediction invoked /* = PredictUninvoked */) {
+    TokenKind tt, PossibleError* possibleError, InvokedPrediction invoked) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
   if (!CheckRecursionLimit(cx_)) {
     return null();
