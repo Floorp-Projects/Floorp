@@ -702,8 +702,8 @@
     <string name="snackbar_tab_closed">Tab closed</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Tabs closed</string>
-    <!-- Text shown in snackbar when user adds a site to Firefox home fragment -->
-    <string name="snackbar_added_to_firefox_home">Added to Firefox home!</string>
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">Added to %s home!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Private tab closed</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1046,8 +1046,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sign in to Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Saved logins</string>
-    <!-- Description of empty list of saved passwords  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">The logins you save or sync to Firefox will show up here.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">The logins you save or sync to %s will show up here.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Learn more about Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1156,17 +1156,15 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Deleted %s</string>
 
-    <!-- Description text for the Firefox brand logo -->
-    <string name="firefox_logo_description">Firefox logo</string>
-    <!-- Title text shown for the migration screen to the new browser -->
-    <string name="migration_title">Welcome to an all-new Firefox</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History) -->
-    <string name="migration_description">A completely redesigned browser awaits, with improved performance and features to help you do more online.\n\nPlease wait while we update Firefox with your</string>
-    <!-- Text on the disabled button while in progress -->
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Welcome to an all-new %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">A completely redesigned browser awaits, with improved performance and features to help you do more online.\n\nPlease wait while we update %s with your</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Updating %s…</string>
-    <!-- Text on the enabled button -->
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Start %s</string>
-    <!-- Accessibility description text for completed migration item (e.g. Bookmarks, History) -->
+    <!-- Accessibility description text for completed migration item (e.g. Bookmarks, History). Placeholder replaced with app name -->
     <string name="migration_icon_description">Migration status: %s</string>
 
     <!-- Site Permissions Preferences -->
@@ -1191,7 +1189,7 @@
     <string name="preference_category_phone_feature">Phone Feature</string>
     <!--Label that indicates that a user hasn't select a value for a site permission-->
     <string name="phone_feature_no_decision">No Decision</string>
-    <!-- Alternative explanation label that is shown when a permissions like (camera,location and microphone) is required, this indicate to the user how to enable the permission via Android settings %1$s indicate the name of the permission (camera,location and microphone)  -->
+    <!-- Explanation that is shown when a permissions like (camera,location and microphone) is required. Informs the user to enable the permission via Android settings. %1$s indicates the name of the permission (camera,location and microphone)  -->
     <string name="phone_feature_blocked_by_android_explanation"><![CDATA[
         To allow it: <br/><br/> 1. Go to Android Settings <br/><br/>2. Tap <b>Permissions</b> <br/><br/> 3. Toggle <b>%1$s</b> to ON
         ]]></string>

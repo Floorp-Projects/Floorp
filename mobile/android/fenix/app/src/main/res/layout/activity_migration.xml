@@ -21,7 +21,7 @@
                 android:id="@+id/migration_firefox_logo"
                 android:layout_width="67dp"
                 android:layout_height="67dp"
-                android:contentDescription="@string/firefox_logo_description"
+                android:importantForAccessibility="no"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_firefox" />

@@ -40,9 +40,19 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
     }
 
     fun init() {
+        val appName = migration_description.context.getString(R.string.app_name)
+
+        migration_description.apply {
+            text = context.getString(R.string.migration_description, appName)
+        }
+
         migration_status_list.apply {
             layoutManager = LinearLayoutManager(this@MigrationProgressActivity)
             adapter = statusAdapter
+        }
+
+        migration_welcome_title.apply {
+            text = context.getString(R.string.migration_title, appName)
         }
 
         migration_button.apply {
@@ -56,10 +66,7 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
                     startActivity(intent)
                 }
             }
-            text = getString(
-                R.string.migration_updating_app_button_text,
-                getString(R.string.app_name)
-            )
+            text = getString(R.string.migration_updating_app_button_text, appName)
         }
     }
 

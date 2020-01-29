@@ -148,8 +148,13 @@ class DefaultBrowserToolbarController(
                     }
 
                     activity.getRootView()?.let {
+
+                        val appName = it.context.getString(R.string.app_name)
                         FenixSnackbar.makeWithToolbarPadding(it, Snackbar.LENGTH_SHORT)
-                            .setText(it.context.getString(R.string.snackbar_added_to_firefox_home))
+                            .setText(it.context.getString(
+                                R.string.snackbar_added_to_firefox_home,
+                                appName
+                            ))
                             .show()
                     }
                 }
