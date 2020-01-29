@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html><head>
-        <title> scheduler: stylesheets blocking scripts</title>
+        <title> scheduler: stylesheets blocking external module scripts</title>
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
         <!-- this stylesheet blocks scripts -->
@@ -10,10 +10,5 @@
         <div id="log">FAILED (This TC requires JavaScript enabled)</div>
         <div id="test">Test</div>
 
-        <script>
-          test(function() {
-            assert_equals(getComputedStyle(document.getElementById("test")).position,
-                          "fixed");
-          });
-        </script>
+        <script src="scripts/check-style-sheet.js" type="module"></script>
 </body></html>
