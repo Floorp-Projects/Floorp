@@ -108,6 +108,32 @@
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox-tilleggsteknologi moderniseres. Disse tilleggene bruker rammeverk som ikke er kompatible med Firefox 75 og nyere.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Laster ned og verifiserer utvidelse…</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">Forespørsel om tilleggsprogrammer mislyktes!</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s ble installert</string>
-    </resources>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">Kunne ikke installere %1$s</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">%1$s ble aktivert</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">Kunne ikke aktivere %1$s</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">%1$s ble deaktivert</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">Kunne ikke deaktivere %1$s</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s ble avinstallert</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">Kunne ikke avinstallere %1$s</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s ble fjernet</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Kunne ikke fjerne %1$s</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Dette tillegget ble overført fra en tidligere versjon av %1$s</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 tillegg</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s tillegg</string>
+</resources>

@@ -48,65 +48,92 @@
     <string name="mozac_feature_addons_permissions_top_sites_description">Acceder al historial de navegación</string>
     <!-- Description for devtools permission. -->
     <string name="mozac_feature_addons_permissions_devtools_description">Ampliar las herramientas para desarrolladores para acceder a tus datos en las pestañas abiertas</string>
-    <!-- The version on an addon. -->
+    <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versión</string>
-    <!-- The authors of an addon. -->
+    <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">Autores</string>
-    <!-- The last date that the addon was updated. -->
+    <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Última actualización</string>
-    <!-- The developer website (Homepage) of the addon. -->
+    <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Página de inicio</string>
-    <!-- A link where users can find more information about addons permissions. -->
+    <!-- A link where users can find more information about add-ons permissions. -->
     <string name="mozac_feature_addons_learn_more">Conocer más sobre permisos</string>
-    <!-- The rating of the addon. -->
+    <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Clasificación</string>
-    <!-- The settings of the addon. -->
+    <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Configuración</string>
-    <!-- Indicates the addon is enable. -->
+    <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Activado</string>
-    <!-- Indicates the addon is disable. -->
+    <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Desactivado</string>
-    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the installed section. -->
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Instalado</string>
-    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Recomendado</string>
-    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the not yet supported section. -->
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Todavía no es compatible</string>
-    <!-- Displays a page with all the details of an addon. -->
+    <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">Detalles</string>
-    <!-- Displays a page with all the permissions of an addon. -->
+    <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Permisos</string>
-    <!-- This is button that remove (uninstall an addon). -->
+    <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">Eliminar</string>
-    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">¿Agregar %1$s?</string>
-    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">Se necesita permiso para:</string>
-    <!-- This a button to add (installs) an addon . -->
+    <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Agregar</string>
-    <!-- This a button to cancel the addon installation . -->
+    <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Cancelar</string>
-    <!-- Accessibility content description to install addon button. -->
+    <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">Instalar complemento</string>
-    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
     <string name="mozac_feature_addons_user_rating_count">Usuarios: %1$s</string>
-    <!-- Accessibility content description for the amount of stars that addon has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Complementos</string>
-    <!-- The label of the allow button, this will be shown to the user when an addons needs new permissions, with the button the user will indicate that wants to accept the new permissions and update the addon-->
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Permitir</string>
-    <!-- The label of the deny button on a notification, this will be shown to the user when an addons needs new permissions. Indicates the user denies the new permissions and prevent the addon from be updated-->
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">Denegar</string>
-    <!-- The tile of the notification, this will be shown to the user when an addons needs new permissions, to be updated. %1$s is the name of the addons-->
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
     <string name="mozac_feature_addons_updater_notification_title">%1$s tiene una nueva actualización</string>
-    <!-- The content of the notification, this will be shown when an addons needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">Se necesitan %1$d nuevos permisos</string>
-    <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Actualizaciones de complementos</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">La tecnología de los complementos de Firefox se está modernizando. Estos complementos usan marcos que no son compatibles con Firefox 75 y posteriores.</string>
-    <!-- This is the caption for the addon installation progress overlay -->
+    <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Descargando e instalando complemento…</string>
-
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">¡Error al solicitar complementos!</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">%1$s instalado correctamente</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">Falló la instalación de %1$s</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">%1$s habilitado exitosamente</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">Falló la habilitación de %1$s</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">%1$s deshabilitado exitosamente</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">Falló la deshabilitación de %1$s</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s desinstalado exitosamente</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">Falló la desinstalación de %1$s</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s eliminado exitosamente</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Falló la eliminación de %1$s</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Este complemento fue migrado desde una versión anterior de %1$s</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 complemento</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s complementos</string>
 </resources>

@@ -132,4 +132,8 @@
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s njeda so wotstronić</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Tutón přidatk je so wot přechadneje wersije %1$s přenjesł</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">Přidatk: 1</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">Přidatki: %1$s</string>
 </resources>
