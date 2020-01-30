@@ -213,9 +213,14 @@ nsFormFillController::AttachToDocument(Document* aDocument,
 
   mPopups.Put(aDocument, aPopup);
 
+  // If the focus is within the newly attached document (and not in a frame),
+  // perform any necessary focusing steps that open autocomplete popups.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
+    if (!focusedContent || focusedContent->GetComposedDoc() != aDocument)
+      return NS_OK;
+
     HandleFocus(
         MOZ_KnownLive(HTMLInputElement::FromNodeOrNull(focusedContent)));
   }
