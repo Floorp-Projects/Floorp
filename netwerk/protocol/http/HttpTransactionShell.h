@@ -46,6 +46,8 @@ class HttpTransactionShell : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTPTRANSACTIONSHELL_IID)
 
   using TransactionObserverFunc = std::function<void()>;
+  using OnPushCallback =
+      std::function<nsresult(uint32_t, const nsACString&, const nsACString&)>;
 
   //
   // called to initialize the transaction
@@ -76,7 +78,10 @@ class HttpTransactionShell : public nsISupports {
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,
       uint32_t classOfService, uint32_t initialRwin,
       bool responseTimeoutEnabled, uint64_t channelId,
-      TransactionObserverFunc&& transactionObserver) = 0;
+      TransactionObserverFunc&& transactionObserver,
+      OnPushCallback&& aOnPushCallback,
+      HttpTransactionShell* aTransWithPushedStream,
+      uint32_t aPushedStreamId) = 0;
 
   // @param aListener
   //        receives notifications.
@@ -134,7 +139,6 @@ class HttpTransactionShell : public nsISupports {
   virtual bool HasStickyConnection() const = 0;
 
   virtual void SetH2WSConnRefTaken() = 0;
-  virtual void SetPushedStream(Http2PushedStreamWrapper* push) = 0;
 
   virtual bool ProxyConnectFailed() = 0;
   virtual int32_t GetProxyConnectResponseCode() = 0;
@@ -162,7 +166,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,  \
       uint32_t classOfService, uint32_t initialRwin,                           \
       bool responseTimeoutEnabled, uint64_t channelId,                         \
-      TransactionObserverFunc&& transactionObserver) override;                 \
+      TransactionObserverFunc&& transactionObserver,                           \
+      OnPushCallback&& aOnPushCallback,                                        \
+      HttpTransactionShell* aTransWithPushedStream, uint32_t aPushedStreamId)  \
+      override;                                                                \
   virtual nsresult AsyncRead(nsIStreamListener* listener, nsIRequest** pump)   \
       override;                                                                \
   virtual void SetClassOfService(uint32_t classOfService) override;            \
@@ -194,7 +201,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual void DontReuseConnection() override;                                 \
   virtual bool HasStickyConnection() const override;                           \
   virtual void SetH2WSConnRefTaken() override;                                 \
-  virtual void SetPushedStream(Http2PushedStreamWrapper* push) override;       \
   virtual bool ProxyConnectFailed() override;                                  \
   virtual int32_t GetProxyConnectResponseCode() override;                      \
   virtual nsresult SetSniffedTypeToChannel(                                    \

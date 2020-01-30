@@ -59,6 +59,10 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                                               const bool& aResolvedByTRR);
   mozilla::ipc::IPCResult RecvOnInitFailed(const nsresult& aStatus);
 
+  mozilla::ipc::IPCResult RecvOnH2PushStream(const uint32_t& aPushedStreamId,
+                                             const nsCString& aResourceUrl,
+                                             const nsCString& aRequestString);
+
   already_AddRefed<nsIEventTarget> GetNeckoTarget();
 
  private:
@@ -115,6 +119,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   TimeStamp mDomainLookupEnd;
   TransactionObserverFunc mTransactionObserver;
   TransactionObserverResult mTransactionObserverResult;
+  OnPushCallback mOnPushCallback;
 };
 
 }  // namespace net

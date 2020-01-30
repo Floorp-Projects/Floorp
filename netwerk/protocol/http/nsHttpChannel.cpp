@@ -337,7 +337,7 @@ nsHttpChannel::nsHttpChannel()
       mIsIsolated(0),
       mTopWindowOriginComputed(0),
       mHasCrossOriginOpenerPolicyMismatch(0),
-      mPushedStream(nullptr),
+      mPushedStreamId(0),
       mLocalBlocklist(false),
       mOnTailUnblock(nullptr),
       mWarningReporter(nullptr),
@@ -1318,17 +1318,24 @@ nsresult nsHttpChannel::SetupTransaction() {
     mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
   }
 
-  if (mPushedStream) {
-    mTransaction->SetPushedStream(mPushedStream);
-    mPushedStream = nullptr;
-  }
-
   nsCOMPtr<nsIHttpPushListener> pushListener;
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
                                 NS_GET_IID(nsIHttpPushListener),
                                 getter_AddRefs(pushListener));
+  HttpTransactionShell::OnPushCallback pushCallback = nullptr;
   if (pushListener) {
     mCaps |= NS_HTTP_ONPUSH_LISTENER;
+    nsWeakPtr weakPtrThis(
+        do_GetWeakReference(static_cast<nsIHttpChannel*>(this)));
+    pushCallback = [weakPtrThis](uint32_t aPushedStreamId,
+                                 const nsACString& aUrl,
+                                 const nsACString& aRequestString) {
+      if (nsCOMPtr<nsIHttpChannel> channel = do_QueryReferent(weakPtrThis)) {
+        return static_cast<nsHttpChannel*>(channel.get())
+            ->OnPush(aPushedStreamId, aUrl, aRequestString);
+      }
+      return NS_ERROR_NOT_AVAILABLE;
+    };
   }
 
   EnsureTopLevelOuterContentWindowId();
@@ -1350,7 +1357,8 @@ nsresult nsHttpChannel::SetupTransaction() {
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       mUploadStreamHasHeaders, GetCurrentThreadEventTarget(), callbacks, this,
       mTopLevelOuterContentWindowId, category, mRequestContext, mClassOfService,
-      mInitialRwin, mResponseTimeoutEnabled, mChannelId, std::move(observer));
+      mInitialRwin, mResponseTimeoutEnabled, mChannelId, std::move(observer),
+      std::move(pushCallback), mTransWithPushedStream, mPushedStreamId);
   if (NS_FAILED(rv)) {
     mTransaction = nullptr;
     return rv;
@@ -9480,16 +9488,22 @@ bool nsHttpChannel::AwaitingCacheCallbacks() {
   return mCacheEntriesToWaitFor != 0;
 }
 
-void nsHttpChannel::SetPushedStream(Http2PushedStreamWrapper* stream) {
-  MOZ_ASSERT(stream);
-  MOZ_ASSERT(!mPushedStream);
-  mPushedStream = stream;
+void nsHttpChannel::SetPushedStreamTransactionAndId(
+    HttpTransactionShell* aTransWithPushedStream, uint32_t aPushedStreamId) {
+  MOZ_ASSERT(!mTransWithPushedStream);
+  LOG(("nsHttpChannel::SetPushedStreamTransaction [this=%p] trans=%p", this,
+       aTransWithPushedStream));
+
+  mTransWithPushedStream = aTransWithPushedStream;
+  mPushedStreamId = aPushedStreamId;
 }
 
-nsresult nsHttpChannel::OnPush(const nsACString& url,
-                               Http2PushedStreamWrapper* pushedStream) {
+nsresult nsHttpChannel::OnPush(uint32_t aPushedStreamId, const nsACString& aUrl,
+                               const nsACString& aRequestString) {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG(("nsHttpChannel::OnPush [this=%p]\n", this));
+  MOZ_ASSERT(mTransaction);
+  LOG(("nsHttpChannel::OnPush [this=%p, trans=%p]\n", this,
+       mTransaction.get()));
 
   MOZ_ASSERT(mCaps & NS_HTTP_ONPUSH_LISTENER);
   nsCOMPtr<nsIHttpPushListener> pushListener;
@@ -9509,7 +9523,7 @@ nsresult nsHttpChannel::OnPush(const nsACString& url,
   nsresult rv;
 
   // Create a Channel for the Push Resource
-  rv = NS_NewURI(getter_AddRefs(pushResource), url);
+  rv = NS_NewURI(getter_AddRefs(pushResource), aUrl);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -9541,15 +9555,13 @@ nsresult nsHttpChannel::OnPush(const nsACString& url,
   }
 
   // new channel needs mrqeuesthead and headers from pushedStream
-  channel->mRequestHead.ParseHeaderSet(
-      pushedStream->GetRequestString().BeginWriting());
-
+  channel->mRequestHead.ParseHeaderSet(aRequestString.BeginReading());
   channel->mLoadGroup = mLoadGroup;
   channel->mLoadInfo = mLoadInfo;
   channel->mCallbacks = mCallbacks;
 
-  // Link the pushed stream with the new channel and call listener
-  channel->SetPushedStream(pushedStream);
+  // Link the trans with pushed stream and the new channel and call listener
+  channel->SetPushedStreamTransactionAndId(mTransaction, aPushedStreamId);
   rv = pushListener->OnPush(this, pushHttpChannel);
   return rv;
 }

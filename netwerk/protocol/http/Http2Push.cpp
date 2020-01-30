@@ -16,43 +16,11 @@
 #include <algorithm>
 
 #include "Http2Push.h"
-#include "nsHttpChannel.h"
 #include "nsIHttpPushListener.h"
 #include "nsString.h"
 
 namespace mozilla {
 namespace net {
-
-class CallChannelOnPush final : public Runnable {
- public:
-  CallChannelOnPush(nsIHttpChannelInternal* associatedChannel,
-                    const nsACString& pushedURI, Http2PushedStream* pushStream)
-      : Runnable("net::CallChannelOnPush"),
-        mAssociatedChannel(associatedChannel),
-        mPushedURI(pushedURI) {
-    mPushedStreamWrapper = new Http2PushedStreamWrapper(pushStream);
-  }
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-    RefPtr<nsHttpChannel> channel;
-    CallQueryInterface(mAssociatedChannel, channel.StartAssignment());
-    MOZ_ASSERT(channel);
-    if (channel &&
-        NS_SUCCEEDED(channel->OnPush(mPushedURI, mPushedStreamWrapper))) {
-      return NS_OK;
-    }
-
-    LOG3(("Http2PushedStream Orphan %p failed OnPush\n", this));
-    mPushedStreamWrapper->OnPushFailed();
-    return NS_OK;
-  }
-
- private:
-  nsCOMPtr<nsIHttpChannelInternal> mAssociatedChannel;
-  const nsCString mPushedURI;
-  RefPtr<Http2PushedStreamWrapper> mPushedStreamWrapper;
-};
 
 // Because WeakPtr isn't thread-safe we must ensure that the object is destroyed
 // on the socket thread, so any Release() called on a different thread is
@@ -100,6 +68,8 @@ Http2PushedStreamWrapper::Http2PushedStreamWrapper(
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mStream = aPushStream;
   mRequestString = aPushStream->GetRequestString();
+  mResourceUrl = aPushStream->GetResourceUrl();
+  mStreamID = aPushStream->StreamID();
 }
 
 Http2PushedStreamWrapper::~Http2PushedStreamWrapper() {
@@ -217,19 +187,17 @@ bool Http2PushedStream::TryOnPush() {
     return false;
   }
 
-  nsCOMPtr<nsIHttpChannelInternal> associatedChannel =
-      do_QueryInterface(trans->HttpChannel());
-  if (!associatedChannel) {
-    return false;
-  }
-
   if (!(trans->Caps() & NS_HTTP_ONPUSH_LISTENER)) {
     return false;
   }
 
   mDeferCleanupOnPush = true;
-  nsCString uri = Origin() + Path();
-  NS_DispatchToMainThread(new CallChannelOnPush(associatedChannel, uri, this));
+  mResourceUrl = Origin() + Path();
+  RefPtr<Http2PushedStreamWrapper> stream = new Http2PushedStreamWrapper(this);
+  RefPtr<nsHttpTransaction> transaction = trans;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "net::nsHttpTransaction::OnPush",
+      [transaction, stream]() { transaction->OnPush(stream); }));
   return true;
 }
 
@@ -247,12 +215,7 @@ bool Http2PushedStream::TestOnPush(Http2Stream* stream) {
   if (!trans) {
     return false;
   }
-  nsCOMPtr<nsIHttpChannelInternal> associatedChannel =
-      do_QueryInterface(trans->HttpChannel());
-  if (!associatedChannel) {
-    return false;
-  }
-  return (trans->Caps() & NS_HTTP_ONPUSH_LISTENER);
+  return trans->Caps() & NS_HTTP_ONPUSH_LISTENER;
 }
 
 nsresult Http2PushedStream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t,
