@@ -1082,17 +1082,8 @@ class nsLayoutUtils {
    * @param aFactor The number of app units per graphics unit.
    * @return The smallest rectangle in app space that contains aRect.
    */
-  static nsRect RoundGfxRectToAppRect(const Rect& aRect, float aFactor);
-
-  /**
-   * Given a graphics rectangle in graphics space, return a rectangle in
-   * app space that contains the graphics rectangle, rounding out as necessary.
-   *
-   * @param aRect The graphics rect to round outward.
-   * @param aFactor The number of app units per graphics unit.
-   * @return The smallest rectangle in app space that contains aRect.
-   */
-  static nsRect RoundGfxRectToAppRect(const gfxRect& aRect, float aFactor);
+  template <typename T>
+  static nsRect RoundGfxRectToAppRect(const T& aRect, const float aFactor);
 
   /**
    * Returns a subrectangle of aContainedRect that is entirely inside the
@@ -3043,6 +3034,9 @@ class nsLayoutUtils {
                                     const std::string& aValue);
 
   static bool IsAPZTestLoggingEnabled();
+
+  static void ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize);
+  static void ConstrainToCoordValues(float& aStart, float& aSize);
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsLayoutUtils::PaintFrameFlags)
@@ -3101,6 +3095,31 @@ template <typename SizeType>
              NSCoordSaturatingNonnegativeMultiply(aSize.width, ratio));
   return SizeType(aSize.width,
                   NSCoordSaturatingNonnegativeMultiply(aSize.width, ratio));
+}
+
+template <typename T>
+nsRect nsLayoutUtils::RoundGfxRectToAppRect(const T& aRect,
+                                            const float aFactor) {
+  // Get a new Rect whose units are app units by scaling by the specified
+  // factor.
+  T scaledRect = aRect;
+  scaledRect.ScaleRoundOut(aFactor);
+
+  // We now need to constrain our results to the max and min values for coords.
+  ConstrainToCoordValues(scaledRect.x, scaledRect.width);
+  ConstrainToCoordValues(scaledRect.y, scaledRect.height);
+
+  if (!aRect.Width()) {
+    scaledRect.SetWidth(0);
+  }
+
+  if (!aRect.Height()) {
+    scaledRect.SetHeight(0);
+  }
+
+  // Now typecast everything back.  This is guaranteed to be safe.
+  return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
+                nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
 }
 
 namespace mozilla {
