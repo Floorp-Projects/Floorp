@@ -11,6 +11,8 @@ const categoryName = "net-content-sniffers";
 
 var sniffing_enabled = true;
 
+var isNosniff = false;
+
 /**
  * This object is both a factory and an nsIContentSniffer implementation (so, it
  * is de-facto a service)
@@ -39,7 +41,11 @@ var listener = {
       if (chan.contentType == unknownType) {
         do_throw("Type should not be unknown!");
       }
-      if (
+      if (isNosniff) {
+        if (chan.contentType == sniffedType) {
+          do_throw("Sniffer called for X-Content-Type-Options:nosniff");
+        }
+      } else if (
         sniffing_enabled &&
         this._iteration > 2 &&
         chan.contentType != sniffedType
@@ -90,6 +96,7 @@ var urls = null;
 
 function run_test() {
   httpserv = new HttpServer();
+  httpserv.registerPathHandler("/nosniff", nosniffHandler);
   httpserv.start(-1);
 
   urls = [
@@ -99,6 +106,7 @@ function run_test() {
     // used the unknown content sniffer too
     "data:text/plain, Some more text",
     "http://localhost:" + httpserv.identity.primaryPort,
+    "http://localhost:" + httpserv.identity.primaryPort + "/nosniff",
   ];
 
   Components.manager.nsIComponentRegistrar.registerFactory(
@@ -109,6 +117,10 @@ function run_test() {
   );
 
   run_test_iteration(1);
+}
+
+function nosniffHandler(request, response) {
+  response.setHeader("X-Content-Type-Options", "nosniff");
 }
 
 function run_test_iteration(index) {
@@ -136,6 +148,8 @@ function run_test_iteration(index) {
       false,
       true
     );
+  } else if (sniffing_enabled && index == 5) {
+    isNosniff = true;
   }
 
   var chan = makeChan(urls[index - 1]);

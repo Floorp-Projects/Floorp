@@ -18,8 +18,12 @@ namespace mozilla {
 namespace net {
 
 NS_IMPL_ADDREF(HttpTransactionParent)
-NS_IMPL_QUERY_INTERFACE(HttpTransactionParent, nsIRequest,
-                        nsIThreadRetargetableRequest)
+NS_INTERFACE_MAP_BEGIN(HttpTransactionParent)
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpTransactionParent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequest)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP_(MozExternalRefCountType) HttpTransactionParent::Release(void) {
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
@@ -230,11 +234,12 @@ nsHttpHeaderArray* HttpTransactionParent::TakeResponseTrailers() {
   return mResponseTrailers.forget();
 }
 
-nsresult HttpTransactionParent::SetSniffedTypeToChannel(
-    nsIRequest* aPump, nsIChannel* aChannel,
-    nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) {
-  // TODO: will be implemented later in bug 1600254.
-  return NS_ERROR_NOT_IMPLEMENTED;
+void HttpTransactionParent::SetSniffedTypeToChannel(
+    nsInputStreamPump::PeekSegmentFun aCallTypeSniffers, nsIChannel* aChannel) {
+  if (!mDataForSniffer.IsEmpty()) {
+    aCallTypeSniffers(aChannel, mDataForSniffer.Elements(),
+                      mDataForSniffer.Length());
+  }
 }
 
 NS_IMETHODIMP
@@ -369,14 +374,17 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
     const nsCString& aSecurityInfoSerialization,
     const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
-    const int32_t& aProxyConnectResponseCode) {
+    const int32_t& aProxyConnectResponseCode,
+    nsTArray<uint8_t>&& aDataForSniffer) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
              aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
-             aTimings, aProxyConnectResponseCode]() {
+             aTimings, aProxyConnectResponseCode,
+             aDataForSniffer{std::move(aDataForSniffer)}]() mutable {
         self->DoOnStartRequest(aStatus, aResponseHead,
                                aSecurityInfoSerialization, aProxyConnectFailed,
-                               aTimings, aProxyConnectResponseCode);
+                               aTimings, aProxyConnectResponseCode,
+                               std::move(aDataForSniffer));
       }));
   return IPC_OK();
 }
@@ -403,7 +411,8 @@ void HttpTransactionParent::DoOnStartRequest(
     const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
     const nsCString& aSecurityInfoSerialization,
     const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
-    const int32_t& aProxyConnectResponseCode) {
+    const int32_t& aProxyConnectResponseCode,
+    nsTArray<uint8_t>&& aDataForSniffer) {
   LOG(("HttpTransactionParent::DoOnStartRequest [this=%p aStatus=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -428,6 +437,7 @@ void HttpTransactionParent::DoOnStartRequest(
   TimingStructArgsToTimingsStruct(aTimings, mTimings);
 
   mProxyConnectResponseCode = aProxyConnectResponseCode;
+  mDataForSniffer = std::move(aDataForSniffer);
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
   nsresult rv = mChannel->OnStartRequest(this);

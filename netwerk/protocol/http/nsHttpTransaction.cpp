@@ -515,13 +515,6 @@ nsHttpHeaderArray* nsHttpTransaction::TakeResponseTrailers() {
   return mForTakeResponseTrailers.forget();
 }
 
-nsresult nsHttpTransaction::SetSniffedTypeToChannel(
-    nsIRequest* aPump, nsIChannel* aChannel,
-    nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) {
-  // TODO: will be implemented later in bug 1600254.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void nsHttpTransaction::SetProxyConnectFailed() { mProxyConnectFailed = true; }
 
 nsHttpRequestHead* nsHttpTransaction::RequestHead() { return mRequestHead; }

@@ -155,6 +155,7 @@ class nsHttpResponseHead {
 
   bool HasContentType();
   bool HasContentCharset();
+  bool GetContentTypeOptionsHeader(nsACString& aOutput);
 
  private:
   MOZ_MUST_USE nsresult SetHeader_locked(nsHttpAtom atom, const nsACString& h,
