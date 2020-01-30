@@ -226,6 +226,29 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
+    fun optionsPageMetadata() {
+        // dummy.xpi is not signed, but it could be
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false
+        ))
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled(count=1)
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val dummy = sessionRule.waitForResult(
+                controller.install("resource://android/assets/web_extensions/dummy.xpi"))
+
+        assertTrue((dummy.metaData!!.optionsPageUrl ?: "").matches("^moz-extension://.*/options.html$".toRegex()));
+        assertEquals(dummy.metaData!!.openOptionsPageInTab, true);
+
+        sessionRule.waitForResult(controller.uninstall(dummy))
+    }
+
+    @Test
     fun installMultiple() {
         // dummy.xpi is not signed, but it could be
         sessionRule.setPrefsUntilTestEnd(mapOf(

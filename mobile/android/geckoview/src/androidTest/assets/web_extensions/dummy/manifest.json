@@ -8,6 +8,10 @@
     }
   },
   "description": "Doesn't do anything.",
+  "options_ui": {
+    "open_in_tab": true,
+    "page": "options.html"
+  },
   "content_scripts": [
     {
       "matches": ["*://*.example.com/*"],

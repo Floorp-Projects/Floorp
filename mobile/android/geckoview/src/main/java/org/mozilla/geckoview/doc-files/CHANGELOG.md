@@ -40,6 +40,9 @@ exclude: true
 - Added ['WebExtensionController#setTabActive'][74.13], which is used to notify extensions about
   tab changes
   ([bug 1597793]({{bugzilla}}1597793))
+- Added ['WebExtension.metaData.optionsUrl'][74.14] and ['WebExtension.metaData.openOptionsPageInTab'][74.15],
+  which is the addon metadata necessary to show their option pages.
+  ([bug 1598792]({{bugzilla}}1598792))
 
 [74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
 [74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
@@ -54,6 +57,8 @@ exclude: true
 [74.11]: {{javadoc_uri}}/LoginStorage.Delegate.html
 [74.12]: {{javadoc_uri}}/LoginStorage.Delegate.html#onLoginUsed-org.mozilla.geckoview.LoginStorage.LoginEntry-int-
 [74.13]: {{javadoc_uri}}/WebExtensionController.html#setTabActive
+[74.14]: {{javadoc_uri}}/WebExtension.MetaData.html#optionsUrl
+[74.15]: {{javadoc_uri}}/WebExtension.MetaData.html#openOptionsPageInTab
 
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
@@ -564,4 +569,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 3557370c2de982c70c9de1336a1606053fa427d5
+[api-version]: e9de8b39fbe7f7542db5ea472731a696bba5c95c
