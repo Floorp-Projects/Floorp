@@ -20,7 +20,9 @@ add_task(async function suggestedIndex() {
   );
   result2.suggestedIndex = 6;
 
-  let provider = new TestProvider([result1, result2]);
+  let provider = new UrlbarTestUtils.TestProvider({
+    results: [result1, result2],
+  });
   UrlbarProvidersManager.registerProvider(provider);
   async function clean() {
     UrlbarProvidersManager.unregisterProvider(provider);
@@ -75,7 +77,7 @@ add_task(async function suggestedIndex_append() {
   );
   result.suggestedIndex = 4;
 
-  let provider = new TestProvider([result]);
+  let provider = new UrlbarTestUtils.TestProvider({ results: [result] });
   UrlbarProvidersManager.registerProvider(provider);
   async function clean() {
     UrlbarProvidersManager.unregisterProvider(provider);
@@ -110,30 +112,3 @@ add_task(async function suggestedIndex_append() {
   await clean();
   await UrlbarTestUtils.promisePopupClose(window);
 });
-
-/**
- * A test provider.
- */
-class TestProvider extends UrlbarProvider {
-  constructor(matches) {
-    super();
-    this._matches = matches;
-  }
-  get name() {
-    return "SuggestedIndexTestProvider";
-  }
-  get type() {
-    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-  }
-  isActive(context) {
-    return true;
-  }
-  async startQuery(context, addCallback) {
-    this._context = context;
-    for (const match of this._matches) {
-      addCallback(this, match);
-    }
-  }
-  cancelQuery(context) {}
-  pickResult(result) {}
-}

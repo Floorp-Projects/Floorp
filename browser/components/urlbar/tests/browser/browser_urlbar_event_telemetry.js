@@ -1052,43 +1052,16 @@ async function addTopSite(site) {
 }
 
 function registerTipProvider() {
-  let provider = new TipTestProvider(tipMatches);
+  let provider = new UrlbarTestUtils.TestProvider({
+    results: tipMatches,
+    priority: 1,
+  });
   UrlbarProvidersManager.registerProvider(provider);
   return provider;
 }
 
 function unregisterTipProvider(provider) {
   UrlbarProvidersManager.unregisterProvider(provider);
-}
-
-/**
- * A test tip provider. See browser_tip_selection.js.
- */
-class TipTestProvider extends UrlbarProvider {
-  constructor(matches) {
-    super();
-    this._matches = matches;
-  }
-  get name() {
-    return "TipTestProvider";
-  }
-  get type() {
-    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-  }
-  isActive(context) {
-    return true;
-  }
-  getPriority(context) {
-    return 1;
-  }
-  async startQuery(context, addCallback) {
-    this._context = context;
-    for (const match of this._matches) {
-      addCallback(this, match);
-    }
-  }
-  cancelQuery(context) {}
-  pickResult(result) {}
 }
 
 let tipMatches = [
