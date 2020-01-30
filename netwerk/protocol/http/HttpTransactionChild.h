@@ -43,7 +43,9 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       const Maybe<IPCStream>& aRequestBody, const uint64_t& aReqContentLength,
       const bool& aReqBodyIncludesHeaders,
       const uint64_t& aTopLevelOuterContentWindowId,
-      const uint8_t& aHttpTrafficCategory);
+      const uint8_t& aHttpTrafficCategory, const uint64_t& aRequestContextID,
+      const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
+      const bool& aResponseTimeoutEnabled);
   mozilla::ipc::IPCResult RecvUpdateClassOfService(
       const uint32_t& classOfService);
   mozilla::ipc::IPCResult RecvCancelPump(const nsresult& aStatus);
@@ -70,7 +72,9 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       nsHttpRequestHead* reqHeaders,
       nsIInputStream* reqBody,  // use the trick in bug 1277681
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,
-      uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory);
+      uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory,
+      uint64_t requestContextID, uint32_t classOfService, uint32_t initialRwin,
+      bool responseTimeoutEnabled);
 
   bool mCanceled;
   nsresult mStatus;

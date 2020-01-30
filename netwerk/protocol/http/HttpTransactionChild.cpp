@@ -92,22 +92,43 @@ HttpTransactionChild::DeserializeHttpConnectionInfoCloneArgs(
   return cinfo.forget();
 }
 
+static already_AddRefed<nsIRequestContext> CreateRequestContext(
+    uint64_t aRequestContextID) {
+  if (!aRequestContextID) {
+    return nullptr;
+  }
+
+  nsIRequestContextService* rcsvc = gHttpHandler->GetRequestContextService();
+  if (!rcsvc) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIRequestContext> requestContext;
+  rcsvc->GetRequestContext(aRequestContextID, getter_AddRefs(requestContext));
+
+  return requestContext.forget();
+}
+
 nsresult HttpTransactionChild::InitInternal(
     uint32_t caps, const HttpConnectionInfoCloneArgs& infoArgs,
     nsHttpRequestHead* requestHead, nsIInputStream* requestBody,
     uint64_t requestContentLength, bool requestBodyHasHeaders,
-    uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory) {
+    uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory,
+    uint64_t requestContextID, uint32_t classOfService, uint32_t initialRwin,
+    bool responseTimeoutEnabled) {
   LOG(("HttpTransactionChild::InitInternal [this=%p caps=%x]\n", this, caps));
 
   RefPtr<nsHttpConnectionInfo> cinfo =
       DeserializeHttpConnectionInfoCloneArgs(infoArgs);
+  nsCOMPtr<nsIRequestContext> rc = CreateRequestContext(requestContextID);
 
   nsresult rv = mTransaction->Init(
       caps, cinfo, requestHead, requestBody, requestContentLength,
       requestBodyHasHeaders, GetCurrentThreadEventTarget(),
       nullptr,  // TODO: security callback, fix in bug 1512479.
       this, topLevelOuterContentWindowId,
-      static_cast<HttpTrafficCategory>(httpTrafficCategory));
+      static_cast<HttpTrafficCategory>(httpTrafficCategory), rc, classOfService,
+      initialRwin, responseTimeoutEnabled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mTransaction = nullptr;
     return rv;
@@ -154,17 +175,20 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
     const nsHttpRequestHead& aReqHeaders, const Maybe<IPCStream>& aRequestBody,
     const uint64_t& aReqContentLength, const bool& aReqBodyIncludesHeaders,
     const uint64_t& aTopLevelOuterContentWindowId,
-    const uint8_t& aHttpTrafficCategory) {
+    const uint8_t& aHttpTrafficCategory, const uint64_t& aRequestContextID,
+    const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
+    const bool& aResponseTimeoutEnabled) {
   mRequestHead = aReqHeaders;
   if (aRequestBody) {
     mUploadStream = mozilla::ipc::DeserializeIPCStream(aRequestBody);
   }
 
   mTransaction = new nsHttpTransaction();
-  nsresult rv =
-      InitInternal(aCaps, aArgs, &mRequestHead, mUploadStream,
-                   aReqContentLength, aReqBodyIncludesHeaders,
-                   aTopLevelOuterContentWindowId, aHttpTrafficCategory);
+  nsresult rv = InitInternal(
+      aCaps, aArgs, &mRequestHead, mUploadStream, aReqContentLength,
+      aReqBodyIncludesHeaders, aTopLevelOuterContentWindowId,
+      aHttpTrafficCategory, aRequestContextID, aClassOfService, aInitialRwin,
+      aResponseTimeoutEnabled);
   if (NS_FAILED(rv)) {
     LOG(("HttpTransactionChild::RecvInit: [this=%p] InitInternal failed!\n",
          this));

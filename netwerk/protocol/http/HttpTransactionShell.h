@@ -70,7 +70,9 @@ class HttpTransactionShell : public nsISupports {
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,
       nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId,
-      HttpTrafficCategory trafficCategory) = 0;
+      HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,
+      uint32_t classOfService, uint32_t initialRwin,
+      bool responseTimeoutEnabled) = 0;
 
   // @param aListener
   //        receives notifications.
@@ -129,7 +131,6 @@ class HttpTransactionShell : public nsISupports {
 
   virtual void SetH2WSConnRefTaken() = 0;
   virtual void SetTransactionObserver(TransactionObserver* arg) = 0;
-  virtual void SetRequestContext(nsIRequestContext* aRequestContext) = 0;
   virtual void SetPushedStream(Http2PushedStreamWrapper* push) = 0;
 
   virtual bool ProxyConnectFailed() = 0;
@@ -152,7 +153,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,                  \
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,        \
       nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId, \
-      HttpTrafficCategory trafficCategory) override;                           \
+      HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,  \
+      uint32_t classOfService, uint32_t initialRwin,                           \
+      bool responseTimeoutEnabled) override;                                   \
   virtual nsresult AsyncRead(nsIStreamListener* listener, nsIRequest** pump)   \
       override;                                                                \
   virtual void SetClassOfService(uint32_t classOfService) override;            \
@@ -185,7 +188,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual bool HasStickyConnection() const override;                           \
   virtual void SetH2WSConnRefTaken() override;                                 \
   virtual void SetTransactionObserver(TransactionObserver* arg) override;      \
-  virtual void SetRequestContext(nsIRequestContext* aRequestContext) override; \
   virtual void SetPushedStream(Http2PushedStreamWrapper* push) override;       \
   virtual bool ProxyConnectFailed() override;                                  \
   virtual int32_t GetProxyConnectResponseCode() override;                      \
