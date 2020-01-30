@@ -105,5 +105,12 @@
 
     <!--Migration Activity-->
     <dimen name="migration_button_padding">32dp</dimen>
+    <dimen name="migration_margin_horizontal_large">24dp</dimen>
+    <dimen name="migration_margin_vertical">16dp</dimen>
+    <dimen name="migration_margin_vertical_small">8dp</dimen>
+    <dimen name="migration_firefox_logo_size">48dp</dimen>
+    <dimen name="migration_description_text_size">16sp</dimen>
+    <dimen name="migration_welcome_title_text_size">20sp</dimen>
+    <dimen name="migration_progress_size">24dp</dimen>
 
 </resources>

@@ -1,105 +1,115 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:background="@color/white_color">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:background="@color/white_color"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="20dp"
-            android:paddingTop="55dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="67dp">
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/migration_firefox_logo"
+        android:layout_width="@dimen/migration_firefox_logo_size"
+        android:layout_height="@dimen/migration_firefox_logo_size"
+        android:layout_marginStart="@dimen/migration_margin_horizontal_large"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="@+id/migration_welcome_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/migration_welcome_title"
+        app:srcCompat="@drawable/ic_firefox" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/migration_firefox_logo"
-                android:layout_width="67dp"
-                android:layout_height="67dp"
-                android:importantForAccessibility="no"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_firefox" />
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/migration_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/migration_margin_horizontal_large"
+        android:layout_marginTop="@dimen/migration_margin_vertical"
+        android:layout_marginEnd="@dimen/migration_margin_horizontal_large"
+        android:fontFamily="sans-serif-light"
+        android:text="@string/migration_description"
+        android:textColor="@color/text_scale_example_text_color"
+        android:textSize="@dimen/migration_description_text_size"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/guideline_vertical_center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/migration_welcome_title" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/migration_welcome_title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:maxLines="2"
-                android:text="@string/migration_title"
-                android:fontFamily="sans-serif-medium"
-                android:textColor="@color/button_text_color"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                app:layout_constraintBottom_toTopOf="@+id/migration_description"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/migration_firefox_logo"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Welcome to the all-new Firefox Preview" />
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/migration_welcome_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="@dimen/migration_margin_vertical_small"
+        android:layout_marginEnd="@dimen/migration_margin_horizontal_large"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="2"
+        android:text="@string/migration_title"
+        android:textColor="@color/button_text_color"
+        android:textSize="@dimen/migration_welcome_title_text_size"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/migration_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/migration_firefox_logo"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Welcome to the all-new Firefox Preview" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/migration_description"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/migration_description"
-                android:textColor="@color/text_scale_example_text_color"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-light"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/migration_firefox_logo" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/migration_status_list"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/migration_margin_horizontal_large"
+        android:layout_marginTop="@dimen/migration_margin_vertical_small"
+        android:layout_marginEnd="@dimen/migration_margin_horizontal_large"
+        android:layout_marginBottom="@dimen/migration_margin_vertical_small"
+        app:layout_constraintBottom_toTopOf="@+id/migration_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline_vertical_center"
+        tools:itemCount="5"
+        tools:listitem="@layout/migration_list_item" />
 
-        <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/migration_status_list"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                app:layout_constraintBottom_toTopOf="@+id/migration_button"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/migration_description"
-                tools:itemCount="5"
-                tools:listitem="@layout/migration_list_item" />
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/migration_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/migration_margin_horizontal_large"
+        android:layout_marginEnd="@dimen/migration_margin_horizontal_large"
+        android:layout_marginBottom="@dimen/migration_margin_vertical"
+        android:background="@drawable/button_background_grey"
+        android:enabled="false"
+        android:minWidth="200dp"
+        android:paddingStart="@dimen/migration_button_padding"
+        android:paddingEnd="@dimen/migration_button_padding"
+        android:text="@string/migration_updating_app_button_text"
+        android:textAllCaps="false"
+        android:textColor="@color/button_text_color"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Updating Firefox…" />
 
-        <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/migration_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:minWidth="200dp"
-                android:text="@string/migration_updating_app_button_text"
-                android:paddingStart="@dimen/migration_button_padding"
-                android:paddingEnd="@dimen/migration_button_padding"
-                android:textColor="@color/button_text_color"
-                android:textAllCaps="false"
-                android:background="@color/grey_button_color"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:text="Updating Firefox…" />
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_vertical_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
 
-        <ProgressBar
-                android:id="@+id/migration_button_progress_bar"
-                style="@style/Widget.AppCompat.ProgressBar"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                app:layout_constraintBottom_toBottomOf="@+id/migration_button"
-                app:layout_constraintDimensionRatio="h,1:1"
-                app:layout_constraintStart_toStartOf="@+id/migration_button"
-                app:layout_constraintTop_toTopOf="@+id/migration_button" />
+    <ProgressBar
+        android:id="@+id/migration_button_progress_bar"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="@dimen/migration_progress_size"
+        android:layout_height="@dimen/migration_progress_size"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/migration_button"
+        app:layout_constraintStart_toStartOf="@+id/migration_button"
+        app:layout_constraintTop_toTopOf="@+id/migration_button" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
 
-</ScrollView>
