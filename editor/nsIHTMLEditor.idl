@@ -81,14 +81,6 @@ interface nsIHTMLEditor : nsISupports
                                          out boolean aAll);
 
   /**
-   * removeAllInlineProperties() deletes all the inline properties from all
-   * text in the current selection.
-   */
-  [can_run_script]
-  void removeAllInlineProperties();
-
-
-  /**
    * removeInlineProperty() removes a property which changes inline style of
    * text.  E.g., bold, italic, super and sub.
    *
@@ -103,22 +95,6 @@ interface nsIHTMLEditor : nsISupports
    */
   [can_run_script]
   void removeInlineProperty(in AString aProperty, in AString aAttribute);
-
-  /**
-   *  Increase font size for text in selection by 1 HTML unit
-   *  All existing text is scanned for existing <FONT SIZE> attributes
-   *  so they will be incremented instead of inserting new <FONT> tag
-   */
-  [can_run_script]
-  void increaseFontSize();
-
-  /**
-   *  Decrease font size for text in selection by 1 HTML unit
-   *  All existing text is scanned for existing <FONT SIZE> attributes
-   *  so they will be decreased instead of inserting new <FONT> tag
-   */
-  [can_run_script]
-  void decreaseFontSize();
 
   /* ------------ HTML content methods -------------- */
 
@@ -207,13 +183,6 @@ interface nsIHTMLEditor : nsISupports
   void setCaretAfterElement(in Element aElement);
 
   /**
-   * SetParagraphFormat       Insert a block paragraph tag around selection
-   * @param aParagraphFormat  "p", "h1" to "h6", "address", "pre", or "blockquote"
-   */
-  [can_run_script]
-  void setParagraphFormat(in AString aParagraphFormat);
-
-  /**
    * getParagraphState returns what block tag paragraph format is in
    * the selection.
    * @param aMixed     True if there is more than one format
@@ -228,13 +197,6 @@ interface nsIHTMLEditor : nsISupports
    *                  tt tag.  "" is returned for none.
    */
   AString getFontFaceState(out boolean aMixed);
-
-  /**
-   * getBackgroundColorState returns what the background color of the selection.
-   * @param aMixed     True if there is more than one font color
-   * @return           Color string. "" is returned for none.
-   */
-  AString getBackgroundColorState(out boolean aMixed);
 
   /**
    * getHighlightColorState returns what the highlight color of the selection.
@@ -293,20 +255,6 @@ interface nsIHTMLEditor : nsISupports
    */
   [can_run_script]
   void removeList(in AString aListType);
-
-  /**
-   * Document me!
-   *
-   */
-  [can_run_script]
-  void indent(in AString aIndent);
-
-  /**
-   * Document me!
-   *
-   */
-  [can_run_script]
-  void  align(in AString aAlign);
 
   /**
    * GetElementOrParentByTagName() looks for an element node whose name matches

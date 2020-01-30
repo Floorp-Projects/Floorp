@@ -306,10 +306,6 @@ enum class EditAction {
   // eRemoveOverrideStyleSheet indicates to remove override style sheet.
   eRemoveOverrideStyleSheet,
 
-  // eReplaceOverrideStyleSheet indicates to replace added override style
-  // sheet with new override style sheet.
-  eReplaceOverrideStyleSheet,
-
   // eEnableStyleSheet indicates to apply a style sheet.
   eEnableStyleSheet,
 

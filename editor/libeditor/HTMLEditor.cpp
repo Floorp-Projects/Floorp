@@ -1824,13 +1824,6 @@ nsresult HTMLEditor::CollapseSelectionAfter(Element& aElement) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat) {
-  nsresult rv = SetParagraphFormatAsAction(aParagraphFormat);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to set paragraph format");
-  return rv;
-}
-
 nsresult HTMLEditor::SetParagraphFormatAsAction(
     const nsAString& aParagraphFormat, nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
@@ -1882,8 +1875,8 @@ HTMLEditor::GetParagraphState(bool* aMixed, nsAString& aFirstParagraphState) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditor::GetBackgroundColorState(bool* aMixed, nsAString& aOutColor) {
+nsresult HTMLEditor::GetBackgroundColorState(bool* aMixed,
+                                             nsAString& aOutColor) {
   if (NS_WARN_IF(!aMixed)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -2278,21 +2271,6 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
   return rv;
 }
 
-NS_IMETHODIMP
-HTMLEditor::Indent(const nsAString& aIndent) {
-  if (aIndent.LowerCaseEqualsLiteral("indent")) {
-    nsresult rv = IndentAsAction();
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to indent");
-    return rv;
-  }
-  if (aIndent.LowerCaseEqualsLiteral("outdent")) {
-    nsresult rv = OutdentAsAction();
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to outdent");
-    return rv;
-  }
-  return NS_ERROR_INVALID_ARG;
-}
-
 nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
   if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -2328,13 +2306,6 @@ nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
 }
 
 // TODO: IMPLEMENT ALIGNMENT!
-
-NS_IMETHODIMP
-HTMLEditor::Align(const nsAString& aAlignType) {
-  nsresult rv = AlignAsAction(aAlignType);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to align content");
-  return EditorBase::ToGenericNSResult(rv);
-}
 
 nsresult HTMLEditor::AlignAsAction(const nsAString& aAlignType,
                                    nsIPrincipal* aPrincipal) {
@@ -2918,42 +2889,8 @@ nsresult HTMLEditor::AddOverrideStyleSheetInternal(const nsAString& aURL) {
   presShell->AddOverrideStyleSheet(sheet);
   presShell->GetDocument()->ApplicableStylesChanged();
 
-  // Save as the last-loaded sheet
-  mLastOverrideStyleSheetURL = aURL;
-
   // Add URL and style sheet to our lists
   rv = AddNewStyleSheetToList(aURL, sheet);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditor::ReplaceOverrideStyleSheet(const nsAString& aURL) {
-  AutoEditActionDataSetter editActionData(
-      *this, EditAction::eReplaceOverrideStyleSheet);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  // Enable existing sheet if already loaded.
-  if (EnableExistingStyleSheet(aURL)) {
-    // Disable last sheet if not the same as new one
-    if (!mLastOverrideStyleSheetURL.IsEmpty() &&
-        !mLastOverrideStyleSheetURL.Equals(aURL)) {
-      EnableStyleSheetInternal(mLastOverrideStyleSheetURL, false);
-    }
-    return NS_OK;
-  }
-  // Remove the previous sheet
-  if (!mLastOverrideStyleSheetURL.IsEmpty()) {
-    DebugOnly<nsresult> rv =
-        RemoveOverrideStyleSheetInternal(mLastOverrideStyleSheetURL);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to remove the last override style sheet");
-  }
-  nsresult rv = AddOverrideStyleSheetInternal(aURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

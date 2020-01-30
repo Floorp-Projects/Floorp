@@ -1420,13 +1420,6 @@ nsresult HTMLEditor::GetInlinePropertyWithAttrValue(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditor::RemoveAllInlineProperties() {
-  nsresult rv = RemoveAllInlinePropertiesAsAction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove all inline styles");
-  return rv;
-}
-
 nsresult HTMLEditor::RemoveAllInlinePropertiesAsAction(
     nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
@@ -1850,13 +1843,6 @@ void HTMLEditor::CollectEditableLeafTextNodes(
   }
 }
 
-NS_IMETHODIMP
-HTMLEditor::IncreaseFontSize() {
-  nsresult rv = IncreaseFontSizeAsAction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to increase font size");
-  return rv;
-}
-
 nsresult HTMLEditor::IncreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eIncrementFontSize,
                                           aPrincipal);
@@ -1869,13 +1855,6 @@ nsresult HTMLEditor::IncreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "RelativeFontChange(FontSize::incr) failed");
   return EditorBase::ToGenericNSResult(rv);
-}
-
-NS_IMETHODIMP
-HTMLEditor::DecreaseFontSize() {
-  nsresult rv = DecreaseFontSizeAsAction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to decrease font size");
-  return rv;
 }
 
 nsresult HTMLEditor::DecreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {

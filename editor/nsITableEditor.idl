@@ -158,18 +158,6 @@ interface nsITableEditor : nsISupports
   [can_run_script]
   void selectTableCell();
 
-  /** Select a rectangular block of cells:
-    *  all cells falling within the row/column index of aStartCell
-    *  to through the row/column index of the aEndCell
-    *  aStartCell can be any location relative to aEndCell,
-    *   as long as they are in the same table
-    *  @param aStartCell  starting cell in block
-    *  @param aEndCell    ending cell in block
-    */
-  [can_run_script]
-  void selectBlockOfCells(in Element aStartCell,
-                          in Element aEndCell);
-
   [can_run_script]
   void selectTableRow();
   [can_run_script]
