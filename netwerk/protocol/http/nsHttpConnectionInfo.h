@@ -33,7 +33,7 @@ namespace mozilla {
 namespace net {
 
 extern LazyLogModule gHttpLog;
-class HttpTransactionChild;
+class HttpConnectionInfoCloneArgs;
 
 class nsHttpConnectionInfo final : public ARefBase {
  public:
@@ -54,6 +54,12 @@ class nsHttpConnectionInfo final : public ARefBase {
                        const OriginAttributes& originAttributes,
                        const nsACString& routedHost, int32_t routedPort,
                        bool aIsHttp3);
+
+  static void SerializeHttpConnectionInfo(nsHttpConnectionInfo* aInfo,
+                                          HttpConnectionInfoCloneArgs& aArgs);
+  static already_AddRefed<nsHttpConnectionInfo>
+  DeserializeHttpConnectionInfoCloneArgs(
+      const HttpConnectionInfoCloneArgs& aInfoArgs);
 
  private:
   virtual ~nsHttpConnectionInfo() {
@@ -196,9 +202,8 @@ class nsHttpConnectionInfo final : public ARefBase {
   bool IsHttp3() const { return mIsHttp3; }
 
  private:
-  friend class HttpTransactionChild;
   // These constructor versions are intended to be used from Clone() and
-  // HttpTransactionChild::DeserializeHttpConnectionInfoCloneArgs().
+  // DeserializeHttpConnectionInfoCloneArgs().
   nsHttpConnectionInfo(const nsACString& originHost, int32_t originPort,
                        const nsACString& npnToken, const nsACString& username,
                        const nsACString& topWindowOrigin,

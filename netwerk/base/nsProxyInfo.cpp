@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsProxyInfo.h"
+
+#include "mozilla/net/NeckoChannelParams.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
@@ -148,6 +150,46 @@ bool nsProxyInfo::IsHTTPS() { return mType == kProxyType_HTTPS; }
 bool nsProxyInfo::IsSOCKS() {
   return mType == kProxyType_SOCKS || mType == kProxyType_SOCKS4 ||
          mType == kProxyType_SOCKS5;
+}
+
+/* static */
+void nsProxyInfo::SerializeProxyInfo(nsProxyInfo* aProxyInfo,
+                                     nsTArray<ProxyInfoCloneArgs>& aResult) {
+  for (nsProxyInfo* iter = aProxyInfo; iter; iter = iter->mNext) {
+    ProxyInfoCloneArgs* arg = aResult.AppendElement();
+    arg->type() = nsCString(iter->Type());
+    arg->host() = iter->Host();
+    arg->port() = iter->Port();
+    arg->username() = iter->Username();
+    arg->password() = iter->Password();
+    arg->proxyAuthorizationHeader() = iter->ProxyAuthorizationHeader();
+    arg->connectionIsolationKey() = iter->ConnectionIsolationKey();
+    arg->flags() = iter->Flags();
+    arg->timeout() = iter->Timeout();
+    arg->resolveFlags() = iter->ResolveFlags();
+  }
+}
+
+/* static */
+nsProxyInfo* nsProxyInfo::DeserializeProxyInfo(
+    const nsTArray<ProxyInfoCloneArgs>& aArgs) {
+  nsProxyInfo *pi = nullptr, *first = nullptr, *last = nullptr;
+  for (const ProxyInfoCloneArgs& info : aArgs) {
+    pi = new nsProxyInfo(info.type(), info.host(), info.port(), info.username(),
+                         info.password(), info.flags(), info.timeout(),
+                         info.resolveFlags(), info.proxyAuthorizationHeader(),
+                         info.connectionIsolationKey());
+    if (last) {
+      last->mNext = pi;
+      // |mNext| will be released in |last|'s destructor.
+      NS_IF_ADDREF(last->mNext);
+    } else {
+      first = pi;
+    }
+    last = pi;
+  }
+
+  return first;
 }
 
 }  // namespace net

@@ -36,63 +36,6 @@ HttpTransactionChild::~HttpTransactionChild() {
   LOG(("Destroying HttpTransactionChild @%p\n", this));
 }
 
-nsProxyInfo* HttpTransactionChild::ProxyInfoCloneArgsToProxyInfo(
-    const nsTArray<ProxyInfoCloneArgs>& aArgs) {
-  nsProxyInfo *pi = nullptr, *first = nullptr, *last = nullptr;
-  for (const ProxyInfoCloneArgs& info : aArgs) {
-    pi = new nsProxyInfo(info.type(), info.host(), info.port(), info.username(),
-                         info.password(), info.flags(), info.timeout(),
-                         info.resolveFlags(), info.proxyAuthorizationHeader(),
-                         info.connectionIsolationKey());
-    if (last) {
-      last->mNext = pi;
-      // |mNext| will be released in |last|'s destructor.
-      NS_IF_ADDREF(last->mNext);
-    } else {
-      first = pi;
-    }
-    last = pi;
-  }
-
-  return first;
-}
-
-// This function needs to be synced with nsHttpConnectionInfo::Clone.
-already_AddRefed<nsHttpConnectionInfo>
-HttpTransactionChild::DeserializeHttpConnectionInfoCloneArgs(
-    const HttpConnectionInfoCloneArgs& aInfoArgs) {
-  nsProxyInfo* pi = ProxyInfoCloneArgsToProxyInfo(aInfoArgs.proxyInfo());
-  RefPtr<nsHttpConnectionInfo> cinfo;
-  if (aInfoArgs.routedHost().IsEmpty()) {
-    cinfo = new nsHttpConnectionInfo(
-        aInfoArgs.host(), aInfoArgs.port(), aInfoArgs.npnToken(),
-        aInfoArgs.username(), aInfoArgs.topWindowOrigin(), pi,
-        aInfoArgs.originAttributes(), aInfoArgs.endToEndSSL(),
-        aInfoArgs.isolated(), aInfoArgs.isHttp3());
-  } else {
-    MOZ_ASSERT(aInfoArgs.endToEndSSL());
-    cinfo = new nsHttpConnectionInfo(
-        aInfoArgs.host(), aInfoArgs.port(), aInfoArgs.npnToken(),
-        aInfoArgs.username(), aInfoArgs.topWindowOrigin(), pi,
-        aInfoArgs.originAttributes(), aInfoArgs.routedHost(),
-        aInfoArgs.routedPort(), aInfoArgs.isolated(), aInfoArgs.isHttp3());
-  }
-
-  // Make sure the anonymous, insecure-scheme, and private flags are transferred
-  cinfo->SetAnonymous(aInfoArgs.anonymous());
-  cinfo->SetPrivate(aInfoArgs.aPrivate());
-  cinfo->SetInsecureScheme(aInfoArgs.insecureScheme());
-  cinfo->SetNoSpdy(aInfoArgs.noSpdy());
-  cinfo->SetBeConservative(aInfoArgs.beConservative());
-  cinfo->SetTlsFlags(aInfoArgs.tlsFlags());
-  cinfo->SetIsTrrServiceChannel(aInfoArgs.isTrrServiceChannel());
-  cinfo->SetTRRMode(static_cast<nsIRequest::TRRMode>(aInfoArgs.trrMode()));
-  cinfo->SetIPv4Disabled(aInfoArgs.isIPv4Disabled());
-  cinfo->SetIPv6Disabled(aInfoArgs.isIPv6Disabled());
-
-  return cinfo.forget();
-}
-
 static already_AddRefed<nsIRequestContext> CreateRequestContext(
     uint64_t aRequestContextID) {
   if (!aRequestContextID) {
@@ -121,7 +64,7 @@ nsresult HttpTransactionChild::InitInternal(
   LOG(("HttpTransactionChild::InitInternal [this=%p caps=%x]\n", this, caps));
 
   RefPtr<nsHttpConnectionInfo> cinfo =
-      DeserializeHttpConnectionInfoCloneArgs(infoArgs);
+      nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(infoArgs);
   nsCOMPtr<nsIRequestContext> rc = CreateRequestContext(requestContextID);
 
   HttpTransactionShell::OnPushCallback pushCallback = nullptr;

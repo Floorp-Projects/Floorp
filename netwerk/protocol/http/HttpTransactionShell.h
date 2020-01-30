@@ -28,6 +28,7 @@ class nsHttpHeaderArray;
 class nsHttpRequestHead;
 class nsHttpTransaction;
 class TransactionObserverResult;
+union NetAddr;
 
 //----------------------------------------------------------------------------
 // Abstract base class for a HTTP transaction in the chrome process
