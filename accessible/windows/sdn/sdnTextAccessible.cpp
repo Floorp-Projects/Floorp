@@ -117,7 +117,7 @@ sdnTextAccessible::scrollToSubstring(unsigned int aStartIndex,
                                      unsigned int aEndIndex) {
   if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  RefPtr<nsRange> range = new nsRange(mAccessible->GetContent());
+  RefPtr<nsRange> range = nsRange::Create(mAccessible->GetContent());
   if (NS_FAILED(range->SetStart(mAccessible->GetContent(), aStartIndex)))
     return E_FAIL;
 

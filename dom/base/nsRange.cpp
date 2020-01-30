@@ -146,7 +146,7 @@ already_AddRefed<nsRange> nsRange::Create(
     const RangeBoundaryBase<EPT, ERT>& aEndBoundary, ErrorResult& aRv) {
   // If we fail to initialize the range a lot, nsRange should have a static
   // initializer since the allocation cost is not cheap in hot path.
-  RefPtr<nsRange> range = new nsRange(aStartBoundary.Container());
+  RefPtr<nsRange> range = nsRange::Create(aStartBoundary.Container());
   aRv = range->SetStartAndEnd(aStartBoundary, aEndBoundary);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -2202,10 +2202,8 @@ already_AddRefed<DocumentFragment> nsRange::CloneContents(ErrorResult& aRv) {
 }
 
 already_AddRefed<nsRange> nsRange::CloneRange() const {
-  RefPtr<nsRange> range = new nsRange(mOwner);
-
+  RefPtr<nsRange> range = nsRange::Create(mOwner);
   range->DoSetRange(mStart, mEnd, mRoot);
-
   return range.forget();
 }
 

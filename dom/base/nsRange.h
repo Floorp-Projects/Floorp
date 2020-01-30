@@ -48,13 +48,20 @@ class nsRange final : public mozilla::dom::AbstractRange,
   typedef mozilla::RawRangeBoundary RawRangeBoundary;
 
   virtual ~nsRange();
-
- public:
   explicit nsRange(nsINode* aNode);
 
+ public:
   /**
-   * Create() may return `nsRange` instance which is initialized with
-   * given range or points.  If it fails initializing new range with the
+   * The following Create() returns `nsRange` instance which is initialized
+   * only with aNode.  The result is never positioned.
+   */
+  static already_AddRefed<nsRange> Create(nsINode* aNode) {
+    return do_AddRef(new nsRange(aNode));
+  }
+
+  /**
+   * The following Create() may return `nsRange` instance which is initialized
+   * with given range or points.  If it fails initializing new range with the
    * arguments, returns `nullptr`.  `ErrorResult` is set to an error only
    * when this returns `nullptr`.  The error code indicates the reason why
    * it couldn't initialize the instance.

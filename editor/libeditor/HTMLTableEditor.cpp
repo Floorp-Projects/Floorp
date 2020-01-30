@@ -824,7 +824,7 @@ nsresult HTMLEditor::DeleteTableElementAndChildrenWithTransaction(
       }
     }
 
-    RefPtr<nsRange> range = new nsRange(&aTableElement);
+    RefPtr<nsRange> range = nsRange::Create(&aTableElement);
     ErrorResult error;
     range->SelectNode(aTableElement, error);
     if (NS_WARN_IF(error.Failed())) {

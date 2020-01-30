@@ -818,7 +818,6 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
           }
         }
 
-        RefPtr<nsRange> range = new nsRange(current);
 
         int32_t matchStartOffset;
         int32_t matchEndOffset;
@@ -838,6 +837,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
           matchEndOffset = findex + 1;
         }
 
+        RefPtr<nsRange> range = nsRange::Create(current);
         if (startParent && endParent && IsVisibleNode(startParent) &&
             IsVisibleNode(endParent)) {
           IgnoredErrorResult rv;
