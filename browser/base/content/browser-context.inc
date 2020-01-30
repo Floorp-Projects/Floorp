@@ -27,7 +27,7 @@
                   command="Browser:Stop"/>
         <menuitem id="context-bookmarkpage"
                   class="menuitem-iconic"
-                  data-l10n-id="main-context-menu-bookmark-add"
+                  data-l10n-id="main-context-menu-bookmark-page"
                   oncommand="gContextMenu.bookmarkThisPage();"/>
       </menugroup>
       <menuseparator id="context-sep-navigation"/>
