@@ -37,6 +37,7 @@
 #include "nsIPipe.h"
 #include "nsIRequestContext.h"
 #include "nsISeekableStream.h"
+#include "nsISSLSocketControl.h"
 #include "nsIThrottledInputChannel.h"
 #include "nsITransport.h"
 #include "nsMultiplexInputStream.h"
@@ -216,9 +217,7 @@ class ReleaseH2WSTrans final : public Runnable {
 
 nsHttpTransaction::~nsHttpTransaction() {
   LOG(("Destroying nsHttpTransaction @%p\n", this));
-  if (mTransactionObserver) {
-    mTransactionObserver->Complete(this, NS_OK);
-  }
+
   if (mPushedStream) {
     mPushedStream->OnPushFailed();
     mPushedStream = nullptr;
@@ -251,7 +250,8 @@ nsresult nsHttpTransaction::Init(
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
     uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
     nsIRequestContext* requestContext, uint32_t classOfService,
-    uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId) {
+    uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
+    TransactionObserverFunc&& transactionObserver) {
   nsresult rv;
 
   LOG1(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
@@ -262,6 +262,7 @@ nsresult nsHttpTransaction::Init(
   MOZ_ASSERT(NS_IsMainThread());
 
   mChannelId = channelId;
+  mTransactionObserver = std::move(transactionObserver);
   mTopLevelOuterContentWindowId = topLevelOuterContentWindowId;
   LOG(("  window-id = %" PRIx64, mTopLevelOuterContentWindowId));
 
@@ -1013,10 +1014,6 @@ int64_t nsHttpTransaction::GetTransferSize() { return mTransferSize; }
 
 int64_t nsHttpTransaction::GetRequestSize() { return mRequestSize; }
 
-void nsHttpTransaction::SetTransactionObserver(TransactionObserver* arg) {
-  mTransactionObserver = arg;
-}
-
 void nsHttpTransaction::SetPushedStream(Http2PushedStreamWrapper* push) {
   mPushedStream = push;
 }
@@ -1047,10 +1044,7 @@ void nsHttpTransaction::Close(nsresult reason) {
     return;
   }
 
-  if (mTransactionObserver) {
-    mTransactionObserver->Complete(this, reason);
-    mTransactionObserver = nullptr;
-  }
+  NotifyTransactionObserver(reason);
 
   if (mTokenBucketCancel) {
     mTokenBucketCancel->Cancel(reason);
@@ -2506,6 +2500,56 @@ void nsHttpTransaction::OnProxyConnectComplete(int32_t aResponseCode) {
 int32_t nsHttpTransaction::GetProxyConnectResponseCode() {
   MutexAutoLock lock(mLock);
   return mProxyConnectResponseCode;
+}
+
+void nsHttpTransaction::GetTransactionObserverResult(
+    TransactionObserverResult& aResult) {
+  MutexAutoLock lock(mLock);
+  aResult = mTransactionObserverResult;
+}
+
+void nsHttpTransaction::NotifyTransactionObserver(nsresult reason) {
+  MOZ_ASSERT(OnSocketThread());
+
+  if (!mTransactionObserver) {
+    return;
+  }
+
+  bool versionOk = false;
+  bool authOk = false;
+
+  LOG(("nsHttpTransaction::NotifyTransactionObserver %p reason %" PRIx32
+       " conn %p\n",
+       this, static_cast<uint32_t>(reason), mConnection.get()));
+
+  if (mConnection) {
+    HttpVersion version = mConnection->Version();
+    versionOk = (((reason == NS_BASE_STREAM_CLOSED) || (reason == NS_OK)) &&
+                 ((mConnection->Version() == HttpVersion::v2_0) ||
+                  (mConnection->Version() == HttpVersion::v3_0)));
+
+    nsCOMPtr<nsISupports> secInfo;
+    mConnection->GetSecurityInfo(getter_AddRefs(secInfo));
+    nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(secInfo);
+    LOG(
+        ("nsHttpTransaction::NotifyTransactionObserver"
+         " version %u socketControl %p\n",
+         static_cast<int32_t>(version), socketControl.get()));
+    if (socketControl) {
+      authOk = !socketControl->GetFailedVerification();
+    }
+  }
+
+  {
+    MutexAutoLock lock(mLock);
+    mTransactionObserverResult.versionOk() = versionOk;
+    mTransactionObserverResult.authOk() = authOk;
+    mTransactionObserverResult.closeReason() = reason;
+  }
+
+  TransactionObserverFunc obs = nullptr;
+  std::swap(obs, mTransactionObserver);
+  obs();
 }
 
 }  // namespace net

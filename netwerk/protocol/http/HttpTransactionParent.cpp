@@ -150,7 +150,8 @@ nsresult HttpTransactionParent::Init(
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
     uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
     nsIRequestContext* requestContext, uint32_t classOfService,
-    uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId) {
+    uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
+    TransactionObserverFunc&& transactionObserver) {
   LOG(("HttpTransactionParent::Init [this=%p caps=%x]\n", this, caps));
 
   if (!CanSend()) {
@@ -160,6 +161,7 @@ nsresult HttpTransactionParent::Init(
   mEventsink = eventsink;
   mTargetThread = GetCurrentThreadEventTarget();
   mChannelId = channelId;
+  mTransactionObserver = std::move(transactionObserver);
 
   HttpConnectionInfoCloneArgs infoArgs;
   GetStructFromInfo(cinfo, infoArgs);
@@ -179,8 +181,8 @@ nsresult HttpTransactionParent::Init(
                 requestContentLength, requestBodyHasHeaders,
                 topLevelOuterContentWindowId,
                 static_cast<uint8_t>(trafficCategory), requestContextID,
-                classOfService, initialRwin, responseTimeoutEnabled,
-                mChannelId)) {
+                classOfService, initialRwin, responseTimeoutEnabled, mChannelId,
+                !!mTransactionObserver)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -301,10 +303,6 @@ nsISupports* HttpTransactionParent::SecurityInfo() { return mSecurityInfo; }
 
 bool HttpTransactionParent::ProxyConnectFailed() { return mProxyConnectFailed; }
 
-void HttpTransactionParent::SetTransactionObserver(TransactionObserver* arg) {
-  // TODO: will be implemented later in bug 1600254.
-}
-
 void HttpTransactionParent::DontReuseConnection() {
   MOZ_ASSERT(NS_IsMainThread());
   Unused << SendDontReuseConnection();
@@ -334,6 +332,12 @@ void HttpTransactionParent::SetDomainLookupEnd(mozilla::TimeStamp timeStamp,
                                                bool onlyIfNull) {
   mDomainLookupEnd = timeStamp;
   mTimings.domainLookupEnd = mDomainLookupEnd;
+}
+
+void HttpTransactionParent::GetTransactionObserverResult(
+    TransactionObserverResult& aResult) {
+  MOZ_ASSERT(NS_IsMainThread());
+  aResult = mTransactionObserverResult;
 }
 
 nsHttpTransaction* HttpTransactionParent::AsHttpTransaction() {
@@ -489,16 +493,18 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStopRequest(
     const nsresult& aStatus, const bool& aResponseIsComplete,
     const int64_t& aTransferSize, const TimingStructArgs& aTimings,
     const Maybe<nsHttpHeaderArray>& aResponseTrailers,
-    const bool& aHasStickyConn) {
+    const bool& aHasStickyConn,
+    const Maybe<TransactionObserverResult>& aTransactionObserverResult) {
   LOG(("HttpTransactionParent::RecvOnStopRequest [this=%p status=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
              aResponseIsComplete, aTransferSize, aTimings, aResponseTrailers,
-             aHasStickyConn]() {
+             aHasStickyConn, aTransactionObserverResult]() {
         self->DoOnStopRequest(aStatus, aResponseIsComplete, aTransferSize,
-                              aTimings, aResponseTrailers, aHasStickyConn);
+                              aTimings, aResponseTrailers, aHasStickyConn,
+                              aTransactionObserverResult);
       }));
   return IPC_OK();
 }
@@ -507,7 +513,8 @@ void HttpTransactionParent::DoOnStopRequest(
     const nsresult& aStatus, const bool& aResponseIsComplete,
     const int64_t& aTransferSize, const TimingStructArgs& aTimings,
     const Maybe<nsHttpHeaderArray>& aResponseTrailers,
-    const bool& aHasStickyConn) {
+    const bool& aHasStickyConn,
+    const Maybe<TransactionObserverResult>& aTransactionObserverResult) {
   LOG(("HttpTransactionParent::DoOnStopRequest [this=%p]\n", this));
   if (mCanceled) {
     return;
@@ -527,6 +534,10 @@ void HttpTransactionParent::DoOnStopRequest(
     mResponseTrailers = new nsHttpHeaderArray(aResponseTrailers.ref());
   }
   mHasStickyConnection = aHasStickyConn;
+  if (aTransactionObserverResult.isSome()) {
+    mTransactionObserverResult = aTransactionObserverResult.value();
+    mTransactionObserver();
+  }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
   Unused << mChannel->OnStopRequest(this, mStatus);

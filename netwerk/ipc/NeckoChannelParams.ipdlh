@@ -499,5 +499,12 @@ union HttpActivityArgs
   HttpActivity;
 };
 
+struct TransactionObserverResult
+{
+  bool versionOk;
+  bool authOk;
+  nsresult closeReason;
+};
+
 } // namespace net
 } // namespace mozilla

@@ -45,7 +45,8 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       const uint64_t& aTopLevelOuterContentWindowId,
       const uint8_t& aHttpTrafficCategory, const uint64_t& aRequestContextID,
       const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
-      const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId);
+      const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId,
+      const bool& aHasTransactionObserver);
   mozilla::ipc::IPCResult RecvUpdateClassOfService(
       const uint32_t& classOfService);
   mozilla::ipc::IPCResult RecvCancelPump(const nsresult& aStatus);
@@ -84,6 +85,8 @@ class HttpTransactionChild final : public PHttpTransactionChild,
   nsCOMPtr<nsIInputStream> mUploadStream;
   RefPtr<nsHttpTransaction> mTransaction;
   nsCOMPtr<nsIRequest> mTransactionPump;
+  std::function<void()> mTransactionObserver;
+  Maybe<TransactionObserverResult> mTransactionObserverResult;
 };
 
 }  // namespace net

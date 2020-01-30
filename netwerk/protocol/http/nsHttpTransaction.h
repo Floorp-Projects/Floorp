@@ -19,7 +19,6 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "ARefBase.h"
-#include "AlternateServices.h"
 
 //-----------------------------------------------------------------------------
 
@@ -183,6 +182,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // reading the content.  When this returns true, WriteSegments returns
   // WOULD_BLOCK.
   bool ShouldThrottle();
+
+  void NotifyTransactionObserver(nsresult reason);
 
  private:
   class UpdateSecurityCallbacks : public Runnable {
@@ -391,7 +392,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
  private:
   RefPtr<ASpdySession> mTunnelProvider;
-  RefPtr<TransactionObserver> mTransactionObserver;
+  TransactionObserverFunc mTransactionObserver;
+  TransactionObserverResult mTransactionObserverResult;
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
   bool mResolvedByTRR;

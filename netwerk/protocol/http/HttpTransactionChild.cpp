@@ -128,7 +128,8 @@ nsresult HttpTransactionChild::InitInternal(
       nullptr,  // TODO: security callback, fix in bug 1512479.
       this, topLevelOuterContentWindowId,
       static_cast<HttpTrafficCategory>(httpTrafficCategory), rc, classOfService,
-      initialRwin, responseTimeoutEnabled, channelId);
+      initialRwin, responseTimeoutEnabled, channelId,
+      std::move(mTransactionObserver));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mTransaction = nullptr;
     return rv;
@@ -177,7 +178,8 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
     const uint64_t& aTopLevelOuterContentWindowId,
     const uint8_t& aHttpTrafficCategory, const uint64_t& aRequestContextID,
     const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
-    const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId) {
+    const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId,
+    const bool& aHasTransactionObserver) {
   mRequestHead = aReqHeaders;
   if (aRequestBody) {
     mUploadStream = mozilla::ipc::DeserializeIPCStream(aRequestBody);
@@ -185,6 +187,19 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
 
   mTransaction = new nsHttpTransaction();
   mChannelId = aChannelId;
+
+  if (aHasTransactionObserver) {
+    nsMainThreadPtrHandle<HttpTransactionChild> handle(
+        new nsMainThreadPtrHolder<HttpTransactionChild>(
+            "HttpTransactionChildProxy", this, false));
+    mTransactionObserver = [handle]() {
+      if (handle->mTransaction) {
+        handle->mTransactionObserverResult.emplace();
+        handle->mTransaction->GetTransactionObserverResult(
+            handle->mTransactionObserverResult.ref());
+      }
+    };
+  }
 
   nsresult rv = InitInternal(
       aCaps, aArgs, &mRequestHead, mUploadStream, aReqContentLength,
@@ -357,11 +372,11 @@ HttpTransactionChild::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     responseTrailers.emplace(*headerArray);
   }
 
-  Unused << SendOnStopRequest(aStatus, mTransaction->ResponseIsComplete(),
-                              mTransaction->GetTransferSize(),
-                              ToTimingStructArgs(mTransaction->Timings()),
-                              responseTrailers,
-                              mTransaction->HasStickyConnection());
+  Unused << SendOnStopRequest(
+      aStatus, mTransaction->ResponseIsComplete(),
+      mTransaction->GetTransferSize(),
+      ToTimingStructArgs(mTransaction->Timings()), responseTrailers,
+      mTransaction->HasStickyConnection(), mTransactionObserverResult);
 
   return NS_OK;
 }
