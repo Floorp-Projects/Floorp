@@ -466,7 +466,7 @@ add_task(async function() {
         label: "test",
         tooltiptext: "" + i,
         onCreated(node) {
-          node.style.minWidth = "100px";
+          node.style.minWidth = "200px";
         },
       };
       info("Creating: " + id);
