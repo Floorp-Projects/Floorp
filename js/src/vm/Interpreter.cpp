@@ -4121,12 +4121,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       MOZ_ASSERT(REGS.stackDepth() >= 2);
 
       /* Load the function to be initialized */
-      ReservedRooted<JSFunction*> func(
-          &rootFunction0, &REGS.sp[-2].toObject().as<JSFunction>());
+      JSFunction* func = &REGS.sp[-2].toObject().as<JSFunction>();
       MOZ_ASSERT(func->allowSuperProperty());
 
       /* Load the home object */
-      ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
+      JSObject* obj = &REGS.sp[-1].toObject();
       MOZ_ASSERT(obj->is<PlainObject>() || obj->is<JSFunction>());
 
       func->setExtendedSlot(FunctionExtended::METHOD_HOMEOBJECT_SLOT,
