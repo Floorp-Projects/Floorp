@@ -7,6 +7,7 @@
 #define _mozilla_dom_ClientHandleParent_h
 
 #include "mozilla/dom/PClientHandleParent.h"
+#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
 namespace dom {
@@ -14,7 +15,8 @@ namespace dom {
 class ClientManagerService;
 class ClientSourceParent;
 
-typedef MozPromise<ClientSourceParent*, nsresult, /* IsExclusive = */ false>
+typedef MozPromise<ClientSourceParent*, CopyableErrorResult,
+                   /* IsExclusive = */ false>
     SourcePromise;
 
 class ClientHandleParent final : public PClientHandleParent {
