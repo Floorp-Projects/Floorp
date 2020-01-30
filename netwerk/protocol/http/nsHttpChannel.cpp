@@ -1306,6 +1306,10 @@ nsresult nsHttpChannel::SetupTransaction() {
   // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
   if (mLoadFlags & LOAD_ANONYMOUS) mCaps |= NS_HTTP_LOAD_ANONYMOUS;
 
+  if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
+    mCaps |= NS_HTTP_CALL_CONTENT_SNIFFER;
+  }
+
   if (mTimingEnabled) mCaps |= NS_HTTP_TIMING_ENABLED;
 
   if (mUpgradeProtocolCallback) {
@@ -1441,26 +1445,14 @@ nsresult ProcessXCTO(nsHttpChannel* aChannel, nsIURI* aURI,
 
   // 1) Query the XCTO header and check if 'nosniff' is the first value.
   nsAutoCString contentTypeOptionsHeader;
-  Unused << aResponseHead->GetHeader(nsHttp::X_Content_Type_Options,
-                                     contentTypeOptionsHeader);
-  if (contentTypeOptionsHeader.IsEmpty()) {
-    // if there is no XCTO header, then there is nothing to do.
+  if (!aResponseHead->GetContentTypeOptionsHeader(contentTypeOptionsHeader)) {
+    // if failed to get XCTO header, then there is nothing to do.
     return NS_OK;
   }
-  // XCTO header might contain multiple values which are comma separated, so:
-  // a) let's skip all subsequent values
-  //     e.g. "   NoSniFF   , foo " will be "   NoSniFF   "
-  int32_t idx = contentTypeOptionsHeader.Find(",");
-  if (idx > 0) {
-    contentTypeOptionsHeader = Substring(contentTypeOptionsHeader, 0, idx);
-  }
-  // b) let's trim all surrounding whitespace
-  //    e.g. "   NoSniFF   " -> "NoSniFF"
-  nsHttp::TrimHTTPWhitespace(contentTypeOptionsHeader,
-                             contentTypeOptionsHeader);
-  // c) let's compare the header (ignoring case)
-  //    e.g. "NoSniFF" -> "nosniff"
-  //    if it's not 'nosniff' then there is nothing to do here
+
+  // let's compare the header (ignoring case)
+  // e.g. "NoSniFF" -> "nosniff"
+  // if it's not 'nosniff' then there is nothing to do here
   if (!contentTypeOptionsHeader.EqualsIgnoreCase("nosniff")) {
     // since we are getting here, the XCTO header was sent;
     // a non matching value most likely means a mistake happenend;
@@ -1853,6 +1845,11 @@ nsresult nsHttpChannel::CallOnStartRequest() {
       RefPtr<nsInputStreamPump> pump = do_QueryObject(mTransactionPump);
       if (pump) {
         pump->PeekStream(CallTypeSniffers, thisChannel);
+      } else {
+        MOZ_ASSERT(gIOService->UseSocketProcess());
+        RefPtr<HttpTransactionParent> trans = do_QueryObject(mTransactionPump);
+        MOZ_ASSERT(trans);
+        trans->SetSniffedTypeToChannel(CallTypeSniffers, thisChannel);
       }
     }
   }

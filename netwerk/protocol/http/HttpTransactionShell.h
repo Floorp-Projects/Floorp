@@ -143,10 +143,6 @@ class HttpTransactionShell : public nsISupports {
   virtual bool ProxyConnectFailed() = 0;
   virtual int32_t GetProxyConnectResponseCode() = 0;
 
-  virtual nsresult SetSniffedTypeToChannel(
-      nsIRequest* aPump, nsIChannel* aChannel,
-      nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) = 0;
-
   virtual void GetTransactionObserverResult(
       TransactionObserverResult& aResult) = 0;
 
@@ -203,9 +199,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual void SetH2WSConnRefTaken() override;                                 \
   virtual bool ProxyConnectFailed() override;                                  \
   virtual int32_t GetProxyConnectResponseCode() override;                      \
-  virtual nsresult SetSniffedTypeToChannel(                                    \
-      nsIRequest* aPump, nsIChannel* aChannel,                                 \
-      nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) override;           \
   virtual void GetTransactionObserverResult(                                   \
       TransactionObserverResult& aResult) override;                            \
   virtual nsHttpTransaction* AsHttpTransaction() override;                     \

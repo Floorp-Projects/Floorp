@@ -332,6 +332,16 @@ static TimingStructArgs ToTimingStructArgs(TimingStruct aTiming) {
   return args;
 }
 
+// The maximum number of bytes to consider when attempting to sniff.
+// See https://mimesniff.spec.whatwg.org/#reading-the-resource-header.
+static const uint32_t MAX_BYTES_SNIFFED = 1445;
+
+static void GetDataForSniffer(void* aClosure, const uint8_t* aData,
+                              uint32_t aCount) {
+  nsTArray<uint8_t>* outData = static_cast<nsTArray<uint8_t>*>(aClosure);
+  outData->AppendElements(aData, std::min(aCount, MAX_BYTES_SNIFFED));
+}
+
 NS_IMETHODIMP
 HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
   LOG(("HttpTransactionChild::OnStartRequest start [this=%p] mTransaction=%p\n",
@@ -362,8 +372,17 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
 
   nsAutoPtr<nsHttpResponseHead> head(mTransaction->TakeResponseHead());
   Maybe<nsHttpResponseHead> optionalHead;
+  nsTArray<uint8_t> dataForSniffer;
   if (head) {
     optionalHead = Some(*head);
+    if (mTransaction->Caps() & NS_HTTP_CALL_CONTENT_SNIFFER) {
+      nsAutoCString contentTypeOptionsHeader;
+      if (head->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
+          contentTypeOptionsHeader.EqualsIgnoreCase("nosniff")) {
+        RefPtr<nsInputStreamPump> pump = do_QueryObject(mTransactionPump);
+        pump->PeekStream(GetDataForSniffer, &dataForSniffer);
+      }
+    }
   }
 
   int32_t proxyConnectResponseCode =
@@ -372,7 +391,7 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
   Unused << SendOnStartRequest(status, optionalHead, serializedSecurityInfoOut,
                                mTransaction->ProxyConnectFailed(),
                                ToTimingStructArgs(mTransaction->Timings()),
-                               proxyConnectResponseCode);
+                               proxyConnectResponseCode, dataForSniffer);
   LOG(("HttpTransactionChild::OnStartRequest end [this=%p]\n", this));
   return NS_OK;
 }

@@ -130,6 +130,9 @@ const char kHttp3VersionHEX[] = "ff00000018";  // this is draft 24.
 // Encodes the TRR mode.
 #define NS_HTTP_TRR_MODE_MASK ((1 << 19) | (1 << 20))
 
+// The connection could bring the peeked data for sniffing
+#define NS_HTTP_CALL_CONTENT_SNIFFER (1 << 21)
+
 #define NS_HTTP_TRR_FLAGS_FROM_MODE(x) ((static_cast<uint32_t>(x) & 3) << 19)
 
 #define NS_HTTP_TRR_MODE_FROM_FLAGS(x) \
