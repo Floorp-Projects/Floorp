@@ -506,10 +506,30 @@ bool GLContextEGL::SwapBuffers() {
   EGLSurface surface =
       mSurfaceOverride != EGL_NO_SURFACE ? mSurfaceOverride : mSurface;
   if (surface) {
+    if ((mEgl->IsExtensionSupported(
+             GLLibraryEGL::EXT_swap_buffers_with_damage) ||
+         mEgl->IsExtensionSupported(
+             GLLibraryEGL::KHR_swap_buffers_with_damage))) {
+      std::vector<EGLint> rects;
+      for (auto iter = mDamageRegion.RectIter(); !iter.Done(); iter.Next()) {
+        const IntRect& r = iter.Get();
+        rects.push_back(r.X());
+        rects.push_back(r.Y());
+        rects.push_back(r.Width());
+        rects.push_back(r.Height());
+      }
+      mDamageRegion.SetEmpty();
+      return mEgl->fSwapBuffersWithDamage(mEgl->Display(), surface,
+                                          rects.data(), rects.size() / 4);
+    }
     return mEgl->fSwapBuffers(mEgl->Display(), surface);
   } else {
     return false;
   }
+}
+
+void GLContextEGL::SetDamage(const nsIntRegion& aDamageRegion) {
+  mDamageRegion = aDamageRegion;
 }
 
 void GLContextEGL::GetWSIInfo(nsCString* const out) const {

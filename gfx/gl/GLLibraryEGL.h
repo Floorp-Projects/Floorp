@@ -85,6 +85,8 @@ class GLLibraryEGL final {
     KHR_surfaceless_context,
     KHR_create_context_no_error,
     MOZ_create_context_provoking_vertex_dont_care,
+    EXT_swap_buffers_with_damage,
+    KHR_swap_buffers_with_damage,
     Extensions_Max
   };
 
@@ -349,6 +351,11 @@ class GLLibraryEGL final {
 
           EGLBoolean fReleaseDeviceANGLE(EGLDeviceEXT device)
               WRAP(fReleaseDeviceANGLE(device))
+
+      // EGL_EXT_swap_buffers_with_damage / EGL_KHR_swap_buffers_with_damage
+      EGLBoolean fSwapBuffersWithDamage(EGLDisplay dpy, EGLSurface surface,
+                                        const EGLint* rects, EGLint n_rects)
+          WRAP(fSwapBuffersWithDamage(dpy, surface, rects, n_rects))
 #undef WRAP
 #undef VOID_WRAP
 #undef PROFILE_CALL
@@ -520,7 +527,11 @@ class GLLibraryEGL final {
                                                  void* native_device,
                                                  const EGLAttrib* attrib_list);
     EGLBoolean(GLAPIENTRY* fReleaseDeviceANGLE)(EGLDeviceEXT device);
-
+    // EGL_EXT_swap_buffers_with_damage / EGL_KHR_swap_buffers_with_damage
+    EGLBoolean(GLAPIENTRY* fSwapBuffersWithDamage)(EGLDisplay dpy,
+                                                   EGLSurface surface,
+                                                   const EGLint* rects,
+                                                   EGLint n_rects);
   } mSymbols = {};
 
  private:
