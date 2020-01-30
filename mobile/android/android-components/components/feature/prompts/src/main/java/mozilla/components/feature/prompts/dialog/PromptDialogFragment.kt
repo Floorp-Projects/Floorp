@@ -10,11 +10,17 @@ import mozilla.components.concept.storage.LoginValidationDelegate
 internal const val KEY_SESSION_ID = "KEY_SESSION_ID"
 internal const val KEY_TITLE = "KEY_TITLE"
 internal const val KEY_MESSAGE = "KEY_MESSAGE"
+
 /**
  * An abstract representation for all different types of prompt dialogs.
  * for handling [PromptFeature] dialogs.
  */
 internal abstract class PromptDialogFragment : DialogFragment() {
+
+    /**
+     * Whether or not the dialog should automatically be dismissed when a new page is loaded.
+     */
+    open fun shouldDismissOnLoad(): Boolean = true
 
     var feature: Prompter? = null
 

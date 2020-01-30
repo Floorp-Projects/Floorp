@@ -38,7 +38,9 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.concept.storage.Login
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
+import mozilla.components.feature.prompts.dialog.LoginDialogFragment
 import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
@@ -866,6 +868,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, shareRequest)).joinBlocking()
 
         val fragment = mock<PromptDialogFragment>()
+        whenever(fragment.shouldDismissOnLoad()).thenReturn(true)
         feature.activePrompt = WeakReference(fragment)
 
         store.dispatch(ContentAction.UpdateProgressAction(tabId, 0)).joinBlocking()
@@ -895,6 +898,7 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, shareRequest)).joinBlocking()
 
         val fragment = mock<PromptDialogFragment>()
+        whenever(fragment.shouldDismissOnLoad()).thenReturn(true)
         feature.activePrompt = WeakReference(fragment)
 
         store.dispatch(ContentAction.UpdateProgressAction(tabId, 0)).joinBlocking()
@@ -902,6 +906,33 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdateProgressAction(tabId, 100)).joinBlocking()
 
         verify(fragment, times(1)).dismiss()
+    }
+
+    @Test
+    fun `save login dialog will not be dismissed on page load`() {
+        val feature = spy(PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager, shareDelegate = mock()) { })
+        feature.start()
+
+        val shareRequest = PromptRequest.Share(
+            ShareData("Title", "Text", null),
+            onSuccess = {},
+            onFailure = {},
+            onDismiss = {}
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, shareRequest)).joinBlocking()
+
+        val fragment = spy(LoginDialogFragment.newInstance(
+            tabId,
+            0,
+            Login(origin = "https://www.mozilla.org", username = "username", password = "password")
+        ))
+        feature.activePrompt = WeakReference(fragment)
+
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 0)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 10)).joinBlocking()
+        store.dispatch(ContentAction.UpdateProgressAction(tabId, 100)).joinBlocking()
+
+        verify(fragment, times(0)).dismiss()
     }
 
     private fun mockFragmentManager(): FragmentManager {
