@@ -7,79 +7,18 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/net/NeckoChannelParams.h"  // For HttpActivityArgs.
 #include "nsHttp.h"
 #include "NullHttpTransaction.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
 #include "nsIHttpActivityObserver.h"
-#include "NullHttpChannel.h"
 #include "nsQueryObject.h"
 #include "nsNetUtil.h"
 #include "TCPFastOpenLayer.h"
 
 namespace mozilla {
 namespace net {
-
-class CallObserveActivity final : public nsIRunnable {
-  ~CallObserveActivity() = default;
-
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  CallObserveActivity(nsIHttpActivityObserver* aActivityDistributor,
-                      const nsCString& aHost, int32_t aPort, bool aEndToEndSSL,
-                      uint32_t aActivityType, uint32_t aActivitySubtype,
-                      PRTime aTimestamp, uint64_t aExtraSizeData,
-                      const nsACString& aExtraStringData)
-      : mActivityDistributor(aActivityDistributor),
-        mHost(aHost),
-        mPort(aPort),
-        mEndToEndSSL(aEndToEndSSL),
-        mActivityType(aActivityType),
-        mActivitySubtype(aActivitySubtype),
-        mTimestamp(aTimestamp),
-        mExtraSizeData(aExtraSizeData),
-        mExtraStringData(aExtraStringData) {}
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIURI> uri;
-    nsAutoCString port(NS_LITERAL_CSTRING(""));
-    if (mPort != -1 &&
-        ((mEndToEndSSL && mPort != 443) || (!mEndToEndSSL && mPort != 80))) {
-      port.AppendInt(mPort);
-    }
-
-    nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                            (mEndToEndSSL ? NS_LITERAL_CSTRING("https://")
-                                          : NS_LITERAL_CSTRING("http://")) +
-                                mHost + port);
-    if (NS_FAILED(rv)) {
-      return NS_OK;
-    }
-
-    RefPtr<NullHttpChannel> channel = new NullHttpChannel();
-    rv = channel->Init(uri, 0, nullptr, 0, nullptr);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = mActivityDistributor->ObserveActivity(
-        nsCOMPtr<nsISupports>(do_QueryObject(channel)), mActivityType,
-        mActivitySubtype, mTimestamp, mExtraSizeData, mExtraStringData);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
-  }
-
- private:
-  nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
-  nsCString mHost;
-  int32_t mPort;
-  bool mEndToEndSSL;
-  uint32_t mActivityType;
-  uint32_t mActivitySubtype;
-  PRTime mTimestamp;
-  uint64_t mExtraSizeData;
-  nsCString mExtraStringData;
-};
-
-NS_IMPL_ISUPPORTS(CallObserveActivity, nsIRunnable)
 
 NS_IMPL_ISUPPORTS(NullHttpTransaction, NullHttpTransaction,
                   nsISupportsWeakReference)
@@ -183,11 +122,12 @@ void NullHttpTransaction::OnTransportStatus(nsITransport* transport,
   }
 
   if (mActivityDistributor) {
-    NS_DispatchToMainThread(new CallObserveActivity(
-        mActivityDistributor, mConnectionInfo->GetOrigin(),
-        mConnectionInfo->OriginPort(), mConnectionInfo->EndToEndSSL(),
+    Unused << mActivityDistributor->ObserveActivityWithArgs(
+        HttpActivity(mConnectionInfo->GetOrigin(),
+                     mConnectionInfo->OriginPort(),
+                     mConnectionInfo->EndToEndSSL()),
         NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT, static_cast<uint32_t>(status),
-        PR_Now(), progress, EmptyCString()));
+        PR_Now(), progress, EmptyCString());
   }
 }
 
@@ -232,12 +172,12 @@ nsHttpRequestHead* NullHttpTransaction::RequestHead() {
         // Report request headers.
         nsCString reqHeaderBuf;
         mRequestHead->Flatten(reqHeaderBuf, false);
-        NS_DispatchToMainThread(new CallObserveActivity(
-            mActivityDistributor, mConnectionInfo->GetOrigin(),
-            mConnectionInfo->OriginPort(), mConnectionInfo->EndToEndSSL(),
+        Unused << mActivityDistributor->ObserveActivityWithArgs(
+            HttpActivity(mConnectionInfo->GetOrigin(),
+                         mConnectionInfo->OriginPort(),
+                         mConnectionInfo->EndToEndSSL()),
             NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
-            NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER, PR_Now(), 0,
-            reqHeaderBuf));
+            NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER, PR_Now(), 0, reqHeaderBuf);
       }
     }
 
@@ -263,12 +203,13 @@ void NullHttpTransaction::Close(nsresult reason) {
   mIsDone = true;
   if (mActivityDistributor) {
     // Report that this transaction is closing.
-    NS_DispatchToMainThread(new CallObserveActivity(
-        mActivityDistributor, mConnectionInfo->GetOrigin(),
-        mConnectionInfo->OriginPort(), mConnectionInfo->EndToEndSSL(),
+    Unused << mActivityDistributor->ObserveActivityWithArgs(
+        HttpActivity(mConnectionInfo->GetOrigin(),
+                     mConnectionInfo->OriginPort(),
+                     mConnectionInfo->EndToEndSSL()),
         NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
         NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE, PR_Now(), 0,
-        EmptyCString()));
+        EmptyCString());
   }
 }
 

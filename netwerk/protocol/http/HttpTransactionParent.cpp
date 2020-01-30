@@ -69,7 +69,8 @@ HttpTransactionParent::HttpTransactionParent()
       mOnStartRequestCalled(false),
       mOnStopRequestCalled(false),
       mResolvedByTRR(false),
-      mProxyConnectResponseCode(0) {
+      mProxyConnectResponseCode(0),
+      mChannelId(0) {
   LOG(("Creating HttpTransactionParent @%p\n", this));
 
   this->mSelfAddr.inet = {};
@@ -149,7 +150,7 @@ nsresult HttpTransactionParent::Init(
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
     uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
     nsIRequestContext* requestContext, uint32_t classOfService,
-    uint32_t initialRwin, bool responseTimeoutEnabled) {
+    uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId) {
   LOG(("HttpTransactionParent::Init [this=%p caps=%x]\n", this, caps));
 
   if (!CanSend()) {
@@ -158,6 +159,7 @@ nsresult HttpTransactionParent::Init(
 
   mEventsink = eventsink;
   mTargetThread = GetCurrentThreadEventTarget();
+  mChannelId = channelId;
 
   HttpConnectionInfoCloneArgs infoArgs;
   GetStructFromInfo(cinfo, infoArgs);
@@ -169,6 +171,7 @@ nsresult HttpTransactionParent::Init(
   }
 
   uint64_t requestContextID = requestContext ? requestContext->GetID() : 0;
+
   // TODO: Figure out if we have to implement nsIThreadRetargetableRequest in
   // bug 1544378.
   if (!SendInit(caps, infoArgs, *requestHead,
@@ -176,7 +179,8 @@ nsresult HttpTransactionParent::Init(
                 requestContentLength, requestBodyHasHeaders,
                 topLevelOuterContentWindowId,
                 static_cast<uint8_t>(trafficCategory), requestContextID,
-                classOfService, initialRwin, responseTimeoutEnabled)) {
+                classOfService, initialRwin, responseTimeoutEnabled,
+                mChannelId)) {
     return NS_ERROR_FAILURE;
   }
 

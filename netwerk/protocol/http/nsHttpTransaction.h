@@ -17,6 +17,7 @@
 #include "TimingStruct.h"
 #include "Http2Push.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "ARefBase.h"
 #include "AlternateServices.h"
 
@@ -214,6 +215,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
   nsCOMPtr<nsISupports> mChannel;
+  uint64_t mChannelId;
   nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
 
   nsCString mReqHeaderBuf;  // flattened request headers

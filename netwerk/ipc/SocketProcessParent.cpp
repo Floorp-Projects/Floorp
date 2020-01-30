@@ -11,6 +11,7 @@
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
+#include "nsIHttpActivityObserver.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/dom/ContentProcessManager.h"
 #  include "mozilla/dom/BrowserParent.h"
@@ -203,6 +204,20 @@ SocketProcessParent::SendPFileDescriptorSetConstructor(
     const FileDescriptor& aFD) {
   MOZ_ASSERT(NS_IsMainThread());
   return PSocketProcessParent::SendPFileDescriptorSetConstructor(aFD);
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
+    const HttpActivityArgs& aArgs, const uint32_t& aActivityType,
+    const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
+    const uint64_t& aExtraSizeData, const nsCString& aExtraStringData) {
+  nsCOMPtr<nsIHttpActivityDistributor> activityDistributor =
+      services::GetActivityDistributor();
+  MOZ_ASSERT(activityDistributor);
+
+  Unused << activityDistributor->ObserveActivityWithArgs(
+      aArgs, aActivityType, aActivitySubtype, aTimestamp, aExtraSizeData,
+      aExtraStringData);
+  return IPC_OK();
 }
 
 // To ensure that IPDL is finished before SocketParent gets deleted.

@@ -59,7 +59,8 @@ child:
              uint64_t requestContextID,
              uint32_t classOfService,
              uint32_t initialRwin,
-             bool responseTimeoutEnabled);
+             bool responseTimeoutEnabled,
+             uint64_t channelId);
 
   async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);
