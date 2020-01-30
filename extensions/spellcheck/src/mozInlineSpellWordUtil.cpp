@@ -369,27 +369,25 @@ nsresult mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  RefPtr<nsRange> range = new nsRange(aBegin.mNode);
-  nsresult rv = range->SetStartAndEnd(aBegin.mNode, aBegin.mOffset, aEnd.mNode,
-                                      aEnd.mOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ErrorResult error;
+  RefPtr<nsRange> range = nsRange::Create(aBegin.mNode, aBegin.mOffset,
+                                          aEnd.mNode, aEnd.mOffset, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
+  MOZ_ASSERT(range);
   range.forget(aRange);
-
   return NS_OK;
 }
 
 // static
 already_AddRefed<nsRange> mozInlineSpellWordUtil::MakeRange(
     const NodeOffsetRange& aRange) {
-  RefPtr<nsRange> range = new nsRange(aRange.Begin().Node());
-  nsresult rv =
-      range->SetStartAndEnd(aRange.Begin().Node(), aRange.Begin().Offset(),
-                            aRange.End().Node(), aRange.End().Offset());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  IgnoredErrorResult ignoredError;
+  RefPtr<nsRange> range =
+      nsRange::Create(aRange.Begin().Node(), aRange.Begin().Offset(),
+                      aRange.End().Node(), aRange.End().Offset(), ignoredError);
+  NS_WARNING_ASSERTION(!ignoredError.Failed(), "Creating a range failed");
   return range.forget();
 }
 

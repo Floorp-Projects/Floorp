@@ -48,7 +48,7 @@ nsresult FilteredContentIterator::Init(nsINode* aRoot) {
   mDirection = eForward;
   mCurrentIterator = &mPreIterator;
 
-  mRange = new nsRange(aRoot);
+  mRange = nsRange::Create(aRoot);
   mRange->SelectNode(*aRoot, IgnoreErrors());
 
   nsresult rv = mPreIterator.Init(mRange);

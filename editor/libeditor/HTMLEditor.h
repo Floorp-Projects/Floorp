@@ -4350,7 +4350,7 @@ class HTMLEditor final : public TextEditor,
    */
   already_AddRefed<nsRange> GetChangedRangeForTopLevelEditSubAction() const {
     if (!mChangedRangeForTopLevelEditSubAction) {
-      mChangedRangeForTopLevelEditSubAction = new nsRange(GetDocument());
+      mChangedRangeForTopLevelEditSubAction = nsRange::Create(GetDocument());
     }
     return do_AddRef(mChangedRangeForTopLevelEditSubAction);
   }

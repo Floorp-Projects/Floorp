@@ -3401,7 +3401,7 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
 
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
-      RefPtr<nsRange> range = new nsRange(aChild);
+      RefPtr<nsRange> range = nsRange::Create(aChild);
       nsIContent* endContent = aChild;
       if (aInsertedOrAppended == eAppended) {
         // Maybe more than 1 child was appended.

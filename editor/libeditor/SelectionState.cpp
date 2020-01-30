@@ -596,11 +596,10 @@ void RangeItem::StoreRange(nsRange* aRange) {
 }
 
 already_AddRefed<nsRange> RangeItem::GetRange() {
-  RefPtr<nsRange> range = new nsRange(mStartContainer);
-  if (NS_FAILED(range->SetStartAndEnd(mStartContainer, mStartOffset,
-                                      mEndContainer, mEndOffset))) {
-    return nullptr;
-  }
+  IgnoredErrorResult ignoredError;
+  RefPtr<nsRange> range = nsRange::Create(
+      mStartContainer, mStartOffset, mEndContainer, mEndOffset, ignoredError);
+  NS_WARNING_ASSERTION(!ignoredError.Failed(), "Failed to create a range");
   return range.forget();
 }
 
