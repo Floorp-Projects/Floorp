@@ -94,7 +94,8 @@ extern MOZ_MUST_USE bool intl_numberingSystem(JSContext* cx, unsigned argc,
  *
  * Spec: ECMAScript Internationalization API Specification, 11.3.2.
  *
- * Usage: formatted = intl_FormatNumber(numberFormat, x, formatToParts)
+ * Usage: formatted = intl_FormatNumber(numberFormat, x, formatToParts,
+ *                                      unitStyle)
  */
 extern MOZ_MUST_USE bool intl_FormatNumber(JSContext* cx, unsigned argc,
                                            Value* vp);
