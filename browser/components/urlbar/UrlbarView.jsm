@@ -455,7 +455,11 @@ class UrlbarView {
       this.input.maybeClearAutofillPlaceholder(firstResult);
     }
 
-    if (firstResult.heuristic) {
+    if (
+      firstResult.heuristic &&
+      !this.selectedElement &&
+      !this.oneOffSearchButtons.selectedButton
+    ) {
       // Select the heuristic result.  The heuristic may not be the first result
       // added, which is why we do this check here when each result is added and
       // not above.
