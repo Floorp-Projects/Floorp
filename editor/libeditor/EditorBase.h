@@ -1062,7 +1062,6 @@ class EditorBase : public nsIPlaintextEditor,
         // We don't need to let web apps know changing UA stylesheet.
         case EditAction::eAddOverrideStyleSheet:
         case EditAction::eRemoveOverrideStyleSheet:
-        case EditAction::eReplaceOverrideStyleSheet:
         // We don't need to let web apps know the mode change.
         case EditAction::eEnableStyleSheet:
         case EditAction::eEnableOrDisableCSS:

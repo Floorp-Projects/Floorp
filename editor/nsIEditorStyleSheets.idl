@@ -8,23 +8,14 @@
 [scriptable, builtinclass, uuid(4805e682-49b9-11d3-9ce4-ed60bd6cb5bc)]
 interface nsIEditorStyleSheets : nsISupports
 {
-  /** Load and apply the override style sheet, specified by aURL, to the
-    * editor's document, replacing the last override style sheet added (if any).
+  /** Load and apply an override style sheet, specified by aURL, to
+    * the editor's document, on top of any that are already there.
     * This is always synchronous, so aURL should be a local file with only
     * local @imports. This action is not undoable. It is not intended for
     * "user" style sheets, only for editor developers to add sheets to change
     * display behavior for editing (like showing special cursors) that will
     * not be affected by loading "document" style sheets with addStyleSheet or
     * especially replaceStyleSheet.
-    *
-    * @param aURL The style sheet to be loaded and applied.
-    */
-  void replaceOverrideStyleSheet(in AString aURL);
-
-  /** Load and apply an override style sheet, specified by aURL, to
-    * the editor's document, on top of any that are already there.
-    * This is always synchronous, so the same caveats about local files and no
-    * non-local @import as replaceOverrideStyleSheet apply here, too.
     *
     * @param aURL The style sheet to be loaded and applied.
     */
