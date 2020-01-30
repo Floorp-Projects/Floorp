@@ -35,7 +35,7 @@ var { synthesizeDrop, synthesizeMouseAtCenter } = EventUtils;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const kForceOverflowWidthPx = 300;
+const kForceOverflowWidthPx = 450;
 
 function createDummyXULButton(id, label, win = window) {
   let btn = win.document.createElementNS(kNSXUL, "toolbarbutton");

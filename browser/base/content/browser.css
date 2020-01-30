@@ -52,6 +52,20 @@ body {
   background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
 }
 
+:root:not([chromehidden~="toolbar"]) {
+  min-width: 450px;
+}
+
+:root[customizing] {
+  min-width: -moz-fit-content;
+}
+
+/* Prevent shrinking the page content to 0 height and width */
+.browserStack > browser {
+  min-height: 25px;
+  min-width: 25px;
+}
+
 body {
   display: -moz-box;
   -moz-box-orient: vertical;
@@ -66,27 +80,9 @@ body {
   background-repeat: var(--lwt-background-tiling);
 }
 
-:root:not([chromehidden~="toolbar"]) {
-%ifdef XP_MACOSX
-  min-width: 335px;
-%else
-  min-width: 300px;
-%endif
-}
-
-:root[customizing] {
-  min-width: -moz-fit-content;
-}
-
 .search-one-offs[compact=true] .search-setting-button,
 .search-one-offs:not([compact=true]) .search-setting-button-compact {
   display: none;
-}
-
-/* Prevent shrinking the page content to 0 height and width */
-.browserStack > browser {
-  min-height: 25px;
-  min-width: 25px;
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
@@ -752,26 +748,18 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
     max-width: 50px;
   }
 }
-@media (max-width: 500px) {
+@media (max-width: 550px) {
   #urlbar-container {
-    min-width: calc(180px + 24px + 2 * var(--toolbarbutton-inner-padding));
+    min-width: calc(225px + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
   #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 180px;
+    min-width: 225px;
   }
   #identity-icon-labels {
     max-width: 40px;
   }
-}
-@media (max-width: 400px) {
-  #urlbar-container {
-    min-width: calc(75px + 24px + 2 * var(--toolbarbutton-inner-padding));
-  }
-  #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 75px;
-  }
-  #identity-icon-labels {
-    max-width: 30px;
+  #urlbar-zoom-button {
+    display: none;
   }
 }
 
