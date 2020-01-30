@@ -464,9 +464,6 @@ skip script test262/intl402/NumberFormat/prototype/format/signDisplay-ko-KR.js
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-de-DE.js
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-rounding.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1610514
-skip script test262/intl402/NumberFormat/prototype/formatToParts/percent-en-US.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1608809
 skip script test262/language/expressions/class/super-evaluation-order.js
 

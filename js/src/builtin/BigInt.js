@@ -31,6 +31,6 @@ function BigInt_toLocaleString() {
     }
 
     // Step 3.
-    return intl_FormatNumber(numberFormat, x, /* formatToParts = */ false);
+    return intl_FormatNumber(numberFormat, x, /* formatToParts = */ false, /* unitStyle = */ false);
 }
 #endif  // JS_HAS_INTL_API
