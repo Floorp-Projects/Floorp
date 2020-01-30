@@ -207,14 +207,17 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   rv = NS_NewURI(getter_AddRefs(url), aArgs.url(), nullptr,
                  shouldUseBaseURL ? baseURL.get() : nullptr);
   if (NS_FAILED(rv)) {
+    // Per https://w3c.github.io/ServiceWorker/#dom-windowclient-navigate step
+    // 2, if the URL fails to parse, we reject with a TypeError.
+    nsPrintfCString err("Invalid URL \"%s\"", aArgs.url().get());
     CopyableErrorResult result;
-    result.Throw(rv);
+    result.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
     return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
   if (url->GetSpecOrDefault().EqualsLiteral("about:blank")) {
     CopyableErrorResult result;
-    result.Throw(NS_ERROR_FAILURE);
+    result.ThrowTypeError(u"Client.navigate to \"about:blank\" is not allowed");
     return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
@@ -249,8 +252,14 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   loadState->SetFirstParty(true);
   rv = docShell->LoadURI(loadState, false);
   if (NS_FAILED(rv)) {
+    /// There are tests that try sending file:/// and mixed-content URLs
+    /// in here and expect them to reject with a TypeError.  This does not match
+    /// the spec, but does match the current behavior of both us and Chrome.
+    /// https://github.com/w3c/ServiceWorker/issues/1500 tracks sorting that
+    /// out.
+    nsPrintfCString err("Invalid URL \"%s\"", aArgs.url().get());
     CopyableErrorResult result;
-    result.Throw(rv);
+    result.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
     return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
