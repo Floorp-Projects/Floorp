@@ -2834,10 +2834,10 @@ bool TextControlState::SetValueWithTextEditor(
   if (selection) {
     // Since we don't use undo transaction, we don't need to store
     // selection state.  SetText will set selection to tail.
-    // Note that textEditor will collapse selection to the end.
-    // Therefore, it's safe to use RemoveAllRangesTemporarily()
-    // here.
-    selection->RemoveAllRangesTemporarily();
+    IgnoredErrorResult ignoredError;
+    selection->RemoveAllRanges(ignoredError);
+    NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                         "Selection::RemoveAllRanges() failed, but ignored");
   }
 
   // In this case, we makes the editor stop dispatching "input"

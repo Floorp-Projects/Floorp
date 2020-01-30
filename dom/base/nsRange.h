@@ -132,16 +132,6 @@ class nsRange final : public mozilla::dom::AbstractRange,
   void Reset();
 
   /**
-   * ResetTemporarily() is called when Selection starts to cache the instance
-   * to reuse later.  This method clears mStart, mEnd and mIsPositioned but
-   * does not clear mRoot for reducing the cost to register this as a mutation
-   * observer again.
-   */
-  void ResetTemporarily() {
-    DoSetRange(RawRangeBoundary(), RawRangeBoundary(), mRoot);
-  }
-
-  /**
    * SetStart() and SetEnd() sets start point or end point separately.
    * However, this is expensive especially when it's a range of Selection.
    * When you set both start and end of a range, you should use

@@ -987,11 +987,11 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
 
   // Select the range but as far as possible, we should not create new range
   // even if it's part of special Selection.
-  rv = SelectionRefPtr()->RemoveAllRangesTemporarily();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
   ErrorResult error;
+  SelectionRefPtr()->RemoveAllRanges(error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
   SelectionRefPtr()->AddRangeAndSelectFramesAndNotifyListeners(*aReplaceRange,
                                                                error);
   if (NS_WARN_IF(error.Failed())) {

@@ -314,14 +314,6 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void RemoveAllRanges(mozilla::ErrorResult& aRv);
 
   /**
-   * RemoveAllRangesTemporarily() is useful if the caller will add one or more
-   * ranges later.  This tries to cache a removing range if it's possible.
-   * If a range is not referred by anything else this selection, the range
-   * can be reused later.  Otherwise, this works as same as RemoveAllRanges().
-   */
-  nsresult RemoveAllRangesTemporarily();
-
-  /**
    * Whether Stringify should flush layout or not.
    */
   enum class FlushFrames { No, Yes };
@@ -846,18 +838,6 @@ class Selection final : public nsSupportsWeakReference,
   AutoTArray<RangeData, 1> mRanges;
 
   RefPtr<nsRange> mAnchorFocusRange;
-  // mCachedRange is set by RemoveAllRangesTemporarily() and used by
-  // Collapse() and SetBaseAndExtent().  If there is a range which will be
-  // released by Clear(), RemoveAllRangesTemporarily() stores it with this.
-  // If Collapse() is called without existing ranges, it'll reuse this range
-  // for saving the creation cost.
-  // Note that while the range is cached by this, we keep the range being
-  // a mutation observer because it is not so cheap to register the range
-  // as a mutation observer again.  On the other hand, we make it not
-  // positioned because it is not so cheap to keep valid DOM point against
-  // mutations.  This does not cause any problems because we will set new
-  // DOM point when we treat it as a range of Selection again.
-  RefPtr<nsRange> mCachedRange;
   RefPtr<nsFrameSelection> mFrameSelection;
   RefPtr<AccessibleCaretEventHub> mAccessibleCaretEventHub;
   RefPtr<SelectionChangeEventDispatcher> mSelectionChangeEventDispatcher;
