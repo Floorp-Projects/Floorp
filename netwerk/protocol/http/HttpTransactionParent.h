@@ -40,7 +40,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   mozilla::ipc::IPCResult RecvOnStartRequest(
       const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
       const nsCString& aSecurityInfoSerialization,
-      const bool& aProxyConnectFailed, const TimingStructArgs& aTimings);
+      const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
+      const int32_t& aProxyConnectResponseCode);
   mozilla::ipc::IPCResult RecvOnTransportStatus(const nsresult& aStatus,
                                                 const int64_t& aProgress,
                                                 const int64_t& aProgressMax);
@@ -53,7 +54,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       const bool& aHasStickyConn);
   mozilla::ipc::IPCResult RecvOnNetAddrUpdate(const NetAddr& aSelfAddr,
-                                              const NetAddr& aPeerAddr);
+                                              const NetAddr& aPeerAddr,
+                                              const bool& aResolvedByTRR);
   mozilla::ipc::IPCResult RecvOnInitFailed(const nsresult& aStatus);
 
   already_AddRefed<nsIEventTarget> GetNeckoTarget();
@@ -67,7 +69,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                         const Maybe<nsHttpResponseHead>& aResponseHead,
                         const nsCString& aSecurityInfoSerialization,
                         const bool& aProxyConnectFailed,
-                        const TimingStructArgs& aTimings);
+                        const TimingStructArgs& aTimings,
+                        const int32_t& aProxyConnectResponseCode);
   void DoOnTransportStatus(const nsresult& aStatus, const int64_t& aProgress,
                            const int64_t& aProgressMax);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
@@ -99,6 +102,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   bool mHasStickyConnection;
   bool mOnStartRequestCalled;
   bool mOnStopRequestCalled;
+  bool mResolvedByTRR;
+  int32_t mProxyConnectResponseCode;
 
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
