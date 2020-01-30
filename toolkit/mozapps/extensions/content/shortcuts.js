@@ -461,6 +461,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     }
   }
 
+  function onShortcutRemove(e) {
+    let removeButton = e.target;
+    let input = removeButton.parentNode.querySelector(".shortcut-input");
+    if (input.getAttribute("shortcut")) {
+      input.value = "";
+      assignShortcutToInput(input, "");
+    }
+  }
+
   function assignShortcutToInput(input, shortcutString) {
     let addonId = input.closest(".card").getAttribute("addon-id");
     let extension = extensionForAddonId(addonId);
@@ -581,6 +590,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
           input.addEventListener("keyup", onShortcutChange);
           input.addEventListener("blur", inputBlurred);
           input.addEventListener("focus", onFocus);
+
+          let removeButton = row.querySelector(".shortcut-remove-button");
+          removeButton.addEventListener("click", onShortcutRemove);
 
           if (willHideCommands && i == limit) {
             firstHiddenInput = input;
