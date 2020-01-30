@@ -17,8 +17,18 @@
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:paddingTop="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:text="@string/mozac_feature_addons_not_yet_supported_caption" />
+
+    <TextView
+        android:id="@+id/learn_more_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="?attr/selectableItemBackground"
+        android:text="@string/mozac_feature_addons_unsupported_learn_more" />
 
     <View
         android:layout_width="match_parent"
