@@ -1000,35 +1000,32 @@ TransportSecurityInfo::GetCertificateTransparencyStatus(
   return NS_OK;
 }
 
-void TransportSecurityInfo::SetCertificateTransparencyInfo(
+// static
+uint16_t TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
     const mozilla::psm::CertificateTransparencyInfo& info) {
   using mozilla::ct::CTPolicyCompliance;
 
-  mCertificateTransparencyStatus =
-      nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
-
   if (!info.enabled) {
     // CT disabled.
-    return;
+    return nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
   }
 
   switch (info.policyCompliance) {
     case CTPolicyCompliance::Compliant:
-      mCertificateTransparencyStatus =
-          nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT;
-      break;
+      return nsITransportSecurityInfo::
+          CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT;
     case CTPolicyCompliance::NotEnoughScts:
-      mCertificateTransparencyStatus = nsITransportSecurityInfo ::
+      return nsITransportSecurityInfo ::
           CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS;
-      break;
     case CTPolicyCompliance::NotDiverseScts:
-      mCertificateTransparencyStatus = nsITransportSecurityInfo ::
+      return nsITransportSecurityInfo ::
           CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS;
-      break;
     case CTPolicyCompliance::Unknown:
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected CTPolicyCompliance type");
   }
+
+  return nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
 }
 
 NS_IMETHODIMP

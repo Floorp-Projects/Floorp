@@ -1118,7 +1118,6 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
 
   RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(cert.get()));
   if (rv == Success && evOidPolicy != SEC_OID_UNKNOWN) {
-    infoObject->SetCertificateTransparencyInfo(certificateTransparencyInfo);
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback using NEW cert %p (is EV)", nssc.get()));
     infoObject->SetServerCert(nssc, EVStatus::EV);
@@ -1129,7 +1128,10 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   }
 
   if (rv == Success) {
-    infoObject->SetCertificateTransparencyInfo(certificateTransparencyInfo);
+    uint16_t status =
+        TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
+            certificateTransparencyInfo);
+    infoObject->SetCertificateTransparencyStatus(status);
     infoObject->SetSucceededCertChain(std::move(builtChain));
   }
 }
