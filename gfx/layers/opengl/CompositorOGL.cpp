@@ -1045,6 +1045,12 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 #endif  // defined(MOZ_WIDGET_ANDROID)
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
+  for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const IntRect& r = iter.Get();
+    mCurrentFrameInvalidRegion.OrWith(
+        IntRect(r.X(), FlipY(r.YMost()), r.Width(), r.Height()));
+  }
+
   return Some(rect);
 }
 
@@ -2033,6 +2039,7 @@ void CompositorOGL::EndFrame() {
 
   InsertFrameDoneSync();
 
+  mGLContext->SetDamage(mCurrentFrameInvalidRegion);
   mGLContext->SwapBuffers();
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 
@@ -2044,6 +2051,8 @@ void CompositorOGL::EndFrame() {
       mGLContext->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
     }
   }
+
+  mCurrentFrameInvalidRegion.SetEmpty();
 
   Compositor::EndFrame();
 }
