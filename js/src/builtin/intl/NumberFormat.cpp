@@ -1102,26 +1102,22 @@ class NumberFormatFields {
   using FieldsVector = Vector<Field, 16>;
 
   FieldsVector fields_;
-  HandleValue number_;
 
  public:
-  NumberFormatFields(JSContext* cx, HandleValue number)
-      : fields_(cx), number_(number) {}
+  explicit NumberFormatFields(JSContext* cx) : fields_(cx) {}
 
-  MOZ_MUST_USE bool append(int32_t field, int32_t begin, int32_t end);
+  MOZ_MUST_USE bool append(FieldType type, int32_t begin, int32_t end);
 
   MOZ_MUST_USE ArrayObject* toArray(JSContext* cx,
                                     JS::HandleString overallResult,
                                     FieldType unitType);
 };
 
-bool NumberFormatFields::append(int32_t field, int32_t begin, int32_t end) {
+bool NumberFormatFields::append(FieldType type, int32_t begin, int32_t end) {
   MOZ_ASSERT(begin >= 0);
   MOZ_ASSERT(end >= 0);
   MOZ_ASSERT(begin < end, "erm, aren't fields always non-empty?");
 
-  FieldType type =
-      GetFieldTypeForNumberField(UNumberFormatFields(field), number_);
   return fields_.emplaceBack(uint32_t(begin), uint32_t(end), type);
 }
 
@@ -1447,7 +1443,7 @@ static bool FormattedNumberToParts(JSContext* cx,
 
   // Vacuum up fields in the overall formatted string.
 
-  NumberFormatFields fields(cx, number);
+  NumberFormatFields fields(cx);
 
   while (true) {
     bool hasMore = ufmtval_nextPosition(formattedValue, fpos, &status);
@@ -1472,7 +1468,10 @@ static bool FormattedNumberToParts(JSContext* cx,
       return false;
     }
 
-    if (!fields.append(field, beginIndex, endIndex)) {
+    FieldType type =
+        GetFieldTypeForNumberField(UNumberFormatFields(field), number);
+
+    if (!fields.append(type, beginIndex, endIndex)) {
       return false;
     }
   }
