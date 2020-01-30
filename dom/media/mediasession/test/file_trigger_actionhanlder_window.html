@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test window for triggering media session's action handler</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="MediaSessionTestUtils.js"></script>
+  </head>
+<body>
+<video id="testVideo" src="gizmo.mp4" loop></video>
+<iframe id="childFrame"></iframe>
+<script>
+
+var triggeredActionNums = 0;
+
+nextWindowMessage().then(
+  async (event) => {
+    const testInfo = event.data;
+    // Media session would only become active if there is any media currently
+    // playing. Non-active media session won't receive any actions. Therefore,
+    // we start media playback before testing media session.
+    await startMediaPlayback();
+    await createSession(testInfo);
+    for (const action of gMediaSessionActions) {
+      await waitUntilActionHandlerTriggered(action, testInfo);
+    }
+    endTestAndReportResult();
+  });
+
+/**
+ * The following are helper functions
+ */
+function startMediaPlayback() {
+  info(`wait until media starts playing`);
+  const video = document.getElementById("testVideo");
+  video.play();
+  return new Promise(r => video.onplaying = r);
+}
+
+async function createSession({shouldCreateFrom, origin}) {
+  info(`create media session in ${shouldCreateFrom}`);
+  if (shouldCreateFrom == "main-frame") {
+    // Simply referencing media session will create media session.
+    navigator.mediaSession;
+    return;
+  };
+  const frame = document.getElementById("childFrame");
+  const originURL = origin == "same-origin"
+    ? "http://mochi.test:8888" : "http://example.org";
+  frame.src = originURL + "/tests/dom/media/mediasession/test/file_trigger_actionhanlder_frame.html";
+  await new Promise(r => frame.onload = r);
+}
+
+async function waitUntilActionHandlerTriggered(action, {shouldCreateFrom}) {
+  info(`wait until '${action}' handler of media session created in ` +
+       `${shouldCreateFrom} is triggered`);
+  if (shouldCreateFrom == "main-frame") {
+    let promise = new Promise(resolve => {
+      navigator.mediaSession.setActionHandler(action, () => {
+        ok(true, `Triggered ${action} handler`);
+        triggeredActionNums++;
+        resolve();
+      });
+    });
+    SpecialPowers.generateMediaControlKeyTestEvent(action);
+    await promise;
+    return;
+  }
+  SpecialPowers.generateMediaControlKeyTestEvent(action);
+  if ((await nextWindowMessage()).data == action) {
+    info(`Triggered ${action} handler in child-frame`);
+    triggeredActionNums++;
+  }
+}
+
+function endTestAndReportResult() {
+  const w = window.opener || window.parent;
+  if (triggeredActionNums == gMediaSessionActions.length) {
+    w.postMessage("success", "*");
+  } else {
+    w.postMessage("fail", "*");
+  }
+}
+
+</script>
+</body>
+</html>

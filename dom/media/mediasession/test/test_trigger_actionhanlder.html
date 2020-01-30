@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test of triggering media session's action handlers</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script src="MediaSessionTestUtils.js"></script>
+  </head>
+<body>
+<script>
+/**
+ * This test is used to test if pressing media control keys can trigger media
+ * session's corresponding action handler under different situations.
+ */
+const testCases = [
+  {
+    name: "Triggering action handlers for session created in [main-frame]",
+    shouldCreateFrom: "main-frame",
+  },
+  {
+    name: "Triggering action handlers for session created in [same-origin] [child-frame]",
+    shouldCreateFrom: "child-frame",
+    origin: "same-origin",
+  },
+  {
+    name: "Triggering action handlers for session created in [cross-origin] [child-frame]",
+    shouldCreateFrom: "child-frame",
+    origin: "cross-origin",
+  },
+];
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.media.mediasession.enabled", true],
+  ["media.mediacontrol.testingevents.enabled", true],
+]}, startTest());
+
+async function startTest() {
+  for (const testCase of testCases) {
+    info(`- loading test '${testCase.name}' in a new window -`);
+    const testURL = "file_trigger_actionhanlder_window.html";
+    const testWindow = window.open(testURL, "", "width=500,height=500");
+    await new Promise(r => testWindow.onload = r);
+
+    info("- start running test -");
+    testWindow.postMessage(testCase, window.origin);
+    is((await nextWindowMessage()).data, "success",
+       `- finished test '${testCase.name}' -`);
+    testWindow.close();
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
