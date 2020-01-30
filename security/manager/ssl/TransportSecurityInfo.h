@@ -81,7 +81,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   bool HasServerCert() { return mServerCert != nullptr; }
 
-  void SetCertificateTransparencyInfo(
+  static uint16_t ConvertCertificateTransparencyInfoToStatus(
       const mozilla::psm::CertificateTransparencyInfo& info);
 
   // Use errorCode == 0 to indicate success;
