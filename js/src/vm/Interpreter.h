@@ -659,8 +659,6 @@ JSFunction* MakeDefaultConstructor(JSContext* cx, HandleScript script,
 
 JSObject* HomeObjectSuperBase(JSContext* cx, HandleObject homeObj);
 
-JSObject* SuperFunOperation(JSContext* cx, HandleObject callee);
-
 bool SetPropertySuper(JSContext* cx, HandleObject obj, HandleValue receiver,
                       HandlePropertyName id, HandleValue rval, bool strict);
 
