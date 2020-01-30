@@ -82,15 +82,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // called to close active connections with no registered "traffic"
   MOZ_MUST_USE nsresult PruneNoTraffic();
 
-  // called by the main thread to execute the taketransport() logic on the
-  // socket thread after a 101 response has been received and the socket
-  // needs to be transferred to an expectant upgrade listener such as
-  // websockets.
-  // @param aTrans: a transaction that contains a sticky connection. We'll
-  //                take the transport of this connection.
-  MOZ_MUST_USE nsresult CompleteUpgrade(
-      HttpTransactionShell* aTrans, nsIHttpUpgradeListener* aUpgradeListener);
-
   void ReportFailedToProcess(nsIURI* uri);
 
   //-------------------------------------------------------------------------

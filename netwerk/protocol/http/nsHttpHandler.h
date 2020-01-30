@@ -26,8 +26,12 @@
 #include "nsIObserver.h"
 #include "nsISpeculativeConnect.h"
 #include "nsDataHashtable.h"
+#ifdef DEBUG
+#  include "nsIOService.h"
+#endif
 
 class nsIHttpChannel;
+class nsIHttpUpgradeListener;
 class nsIPrefBranch;
 class nsICancelable;
 class nsICookieService;
@@ -247,7 +251,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsHttpAuthCache* AuthCache(bool aPrivate) {
     return aPrivate ? &mPrivateAuthCache : &mAuthCache;
   }
-  nsHttpConnectionMgr* ConnMgr() { return mConnMgr->AsHttpConnectionMgr(); }
+  nsHttpConnectionMgr* ConnMgr() {
+    MOZ_ASSERT_IF(gIOService->UseSocketProcess(), XRE_IsSocketProcess());
+    return mConnMgr->AsHttpConnectionMgr();
+  }
+
   AltSvcCache* AltServiceCache() const {
     MOZ_ASSERT(XRE_IsParentProcess());
     return mAltSvcCache.get();
@@ -459,6 +467,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   HttpTrafficAnalyzer* GetHttpTrafficAnalyzer();
 
   bool GetThroughCaptivePortal() { return mThroughCaptivePortal; }
+
+  nsresult CompleteUpgrade(HttpTransactionShell* aTrans,
+                           nsIHttpUpgradeListener* aUpgradeListener);
+
+  nsresult DoShiftReloadConnectionCleanup(nsHttpConnectionInfo* aCI = nullptr);
 
  private:
   nsHttpHandler();

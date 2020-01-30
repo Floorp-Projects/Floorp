@@ -95,54 +95,6 @@ HttpTransactionParent::~HttpTransactionParent() {
   LOG(("Destroying HttpTransactionParent @%p\n", this));
 }
 
-void HttpTransactionParent::GetStructFromInfo(
-    nsHttpConnectionInfo* aInfo, HttpConnectionInfoCloneArgs& aArgs) {
-  aArgs.host() = aInfo->GetOrigin();
-  aArgs.port() = aInfo->OriginPort();
-  aArgs.npnToken() = aInfo->GetNPNToken();
-  aArgs.username() = aInfo->GetUsername();
-  aArgs.originAttributes() = aInfo->GetOriginAttributes();
-  aArgs.endToEndSSL() = aInfo->EndToEndSSL();
-  aArgs.routedHost() = aInfo->GetRoutedHost();
-  aArgs.routedPort() = aInfo->RoutedPort();
-  aArgs.anonymous() = aInfo->GetAnonymous();
-  aArgs.aPrivate() = aInfo->GetPrivate();
-  aArgs.insecureScheme() = aInfo->GetInsecureScheme();
-  aArgs.noSpdy() = aInfo->GetNoSpdy();
-  aArgs.beConservative() = aInfo->GetBeConservative();
-  aArgs.tlsFlags() = aInfo->GetTlsFlags();
-  aArgs.isolated() = aInfo->GetIsolated();
-  aArgs.isTrrServiceChannel() = aInfo->GetIsTrrServiceChannel();
-  aArgs.trrMode() = static_cast<uint8_t>(aInfo->GetTRRMode());
-  aArgs.isIPv4Disabled() = aInfo->GetIPv4Disabled();
-  aArgs.isIPv6Disabled() = aInfo->GetIPv6Disabled();
-  aArgs.topWindowOrigin() = aInfo->GetTopWindowOrigin();
-  aArgs.isHttp3() = aInfo->IsHttp3();
-
-  if (!aInfo->ProxyInfo()) {
-    return;
-  }
-
-  nsTArray<ProxyInfoCloneArgs> proxyInfoArray;
-  nsProxyInfo* head = aInfo->ProxyInfo();
-  for (nsProxyInfo* iter = head; iter; iter = iter->mNext) {
-    ProxyInfoCloneArgs* arg = proxyInfoArray.AppendElement();
-    arg->type() = nsCString(iter->Type());
-    arg->host() = aInfo->ProxyInfo()->Host();
-    arg->port() = aInfo->ProxyInfo()->Port();
-    arg->username() = aInfo->ProxyInfo()->Username();
-    arg->password() = aInfo->ProxyInfo()->Password();
-    arg->proxyAuthorizationHeader() =
-        aInfo->ProxyInfo()->ProxyAuthorizationHeader();
-    arg->connectionIsolationKey() =
-        aInfo->ProxyInfo()->ConnectionIsolationKey();
-    arg->flags() = aInfo->ProxyInfo()->Flags();
-    arg->timeout() = aInfo->ProxyInfo()->Timeout();
-    arg->resolveFlags() = aInfo->ProxyInfo()->ResolveFlags();
-  }
-  aArgs.proxyInfo() = proxyInfoArray;
-}
-
 //-----------------------------------------------------------------------------
 // HttpTransactionParent <nsAHttpTransactionShell>
 //-----------------------------------------------------------------------------
@@ -172,7 +124,7 @@ nsresult HttpTransactionParent::Init(
   mOnPushCallback = std::move(aOnPushCallback);
 
   HttpConnectionInfoCloneArgs infoArgs;
-  GetStructFromInfo(cinfo, infoArgs);
+  nsHttpConnectionInfo::SerializeHttpConnectionInfo(cinfo, infoArgs);
 
   mozilla::ipc::AutoIPCStream autoStream;
   if (requestBody &&

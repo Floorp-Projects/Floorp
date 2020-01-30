@@ -21,7 +21,8 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
   explicit HttpConnectionMgrChild();
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvDoShiftReloadConnectionCleanup();
+  mozilla::ipc::IPCResult RecvDoShiftReloadConnectionCleanup(
+      const Maybe<HttpConnectionInfoCloneArgs>& aArgs);
   mozilla::ipc::IPCResult RecvPruneDeadConnections();
   mozilla::ipc::IPCResult RecvAbortAndCloseAllConnections();
   mozilla::ipc::IPCResult RecvUpdateCurrentTopLevelOuterContentWindowId(

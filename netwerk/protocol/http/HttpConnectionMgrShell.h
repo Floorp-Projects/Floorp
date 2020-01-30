@@ -8,6 +8,7 @@
 #include "nsISupports.h"
 
 class nsIEventTarget;
+class nsIHttpUpgradeListener;
 class nsIInterfaceRequestor;
 
 namespace mozilla {
@@ -152,6 +153,16 @@ class HttpConnectionMgrShell : public nsISupports {
   // clears the connection history mCT
   MOZ_MUST_USE virtual nsresult ClearConnectionHistory() = 0;
 
+  // called by the main thread to execute the taketransport() logic on the
+  // socket thread after a 101 response has been received and the socket
+  // needs to be transferred to an expectant upgrade listener such as
+  // websockets.
+  // @param aTrans: a transaction that contains a sticky connection. We'll
+  //                take the transport of this connection.
+  MOZ_MUST_USE virtual nsresult CompleteUpgrade(
+      HttpTransactionShell* aTrans,
+      nsIHttpUpgradeListener* aUpgradeListener) = 0;
+
   virtual nsHttpConnectionMgr* AsHttpConnectionMgr() = 0;
 };
 
@@ -200,6 +211,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
   virtual nsresult VerifyTraffic() override;                                 \
   virtual void BlacklistSpdy(const nsHttpConnectionInfo* ci) override;       \
   virtual nsresult ClearConnectionHistory() override;                        \
+  virtual nsresult CompleteUpgrade(HttpTransactionShell* aTrans,             \
+                                   nsIHttpUpgradeListener* aUpgradeListener) \
+      override;                                                              \
   nsHttpConnectionMgr* AsHttpConnectionMgr() override;
 
 }  // namespace net

@@ -10,6 +10,7 @@
 #include "HttpConnectionMgrChild.h"
 #include "HttpTransactionChild.h"
 #include "EventTokenBucket.h"
+#include "nsHttpConnectionInfo.h"
 #include "nsHttpConnectionMgr.h"
 #include "nsHttpHandler.h"
 
@@ -30,8 +31,17 @@ void HttpConnectionMgrChild::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult
-HttpConnectionMgrChild::RecvDoShiftReloadConnectionCleanup() {
-  nsresult rv = mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
+HttpConnectionMgrChild::RecvDoShiftReloadConnectionCleanup(
+    const Maybe<HttpConnectionInfoCloneArgs>& aArgs) {
+  nsresult rv;
+  if (aArgs) {
+    RefPtr<nsHttpConnectionInfo> cinfo =
+        nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(
+            aArgs.ref());
+    rv = mConnMgr->DoShiftReloadConnectionCleanup(cinfo);
+  } else {
+    rv = mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
+  }
   if (NS_FAILED(rv)) {
     LOG(
         ("HttpConnectionMgrChild::RecvDoShiftReloadConnectionCleanup failed "
@@ -42,7 +52,7 @@ HttpConnectionMgrChild::RecvDoShiftReloadConnectionCleanup() {
 }
 
 mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvPruneDeadConnections() {
-  nsresult rv = mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
+  nsresult rv = mConnMgr->PruneDeadConnections();
   if (NS_FAILED(rv)) {
     LOG(("HttpConnectionMgrChild::RecvPruneDeadConnections failed (%08x)\n",
          static_cast<uint32_t>(rv)));
