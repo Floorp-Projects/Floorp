@@ -326,6 +326,14 @@ JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
   return ctor;
 }
 
+static JSObject* SuperFunOperation(JSObject* callee) {
+  MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
+  MOZ_ASSERT(
+      callee->as<JSFunction>().baseScript()->isDerivedClassConstructor());
+
+  return callee->as<JSFunction>().staticPrototype();
+}
+
 bool js::ReportIsNotFunction(JSContext* cx, HandleValue v, int numToSkip,
                              MaybeConstruct construct) {
   unsigned error = construct ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
@@ -4182,14 +4190,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(EnvCallee)
 
     CASE(SuperFun) {
-      ReservedRooted<JSObject*> superEnvFunc(&rootObject0,
-                                             &REGS.sp[-1].toObject());
-      JSObject* superFun = SuperFunOperation(cx, superEnvFunc);
-      if (!superFun) {
-        goto error;
-      }
-
-      REGS.sp[-1].setObject(*superFun);
+      JSObject* superEnvFunc = &REGS.sp[-1].toObject();
+      JSObject* superFun = SuperFunOperation(superEnvFunc);
+      REGS.sp[-1].setObjectOrNull(superFun);
     }
     END_CASE(SuperFun)
 
@@ -5355,26 +5358,6 @@ JSObject* js::HomeObjectSuperBase(JSContext* cx, HandleObject homeObj) {
   }
 
   return superBase;
-}
-
-JSObject* js::SuperFunOperation(JSContext* cx, HandleObject callee) {
-  MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
-  MOZ_ASSERT(
-      callee->as<JSFunction>().baseScript()->isDerivedClassConstructor());
-
-  RootedObject superFun(cx);
-
-  if (!GetPrototype(cx, callee, &superFun)) {
-    return nullptr;
-  }
-
-  if (!superFun || !superFun->isConstructor()) {
-    RootedValue superFunVal(cx, ObjectOrNullValue(superFun));
-    ReportIsNotFunction(cx, superFunVal, JSDVG_IGNORE_STACK, CONSTRUCT);
-    return nullptr;
-  }
-
-  return superFun;
 }
 
 bool js::ThrowInitializedThis(JSContext* cx) {

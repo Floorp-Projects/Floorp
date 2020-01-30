@@ -1932,7 +1932,6 @@
     MACRO(SpreadSuperCall, spread_super_call, NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
     /*
      * Push the prototype of `callee` in preparation for calling `super()`.
-     * Throw a TypeError if that value is not a constructor.
      *
      * `callee` must be a derived class constructor.
      *

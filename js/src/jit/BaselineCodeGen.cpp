@@ -5706,46 +5706,46 @@ bool BaselineCodeGen<Handler>::emit_SuperFun() {
 
   Register callee = R0.scratchReg();
   Register proto = R1.scratchReg();
+#ifdef DEBUG
   Register scratch = R2.scratchReg();
+#endif
 
   // Unbox callee.
   masm.unboxObject(R0, callee);
 
+#ifdef DEBUG
+  Label classCheckDone;
+  masm.branchTestObjClass(Assembler::Equal, callee, &JSFunction::class_,
+                          scratch, callee, &classCheckDone);
+  masm.assumeUnreachable("Unexpected non-JSFunction callee in JSOp::SuperFun");
+  masm.bind(&classCheckDone);
+#endif
+
   // Load prototype of callee
   masm.loadObjProto(callee, proto);
 
-  // Use VMCall for missing or lazy proto
-  Label needVMCall;
+#ifdef DEBUG
+  // We won't encounter a lazy proto, because |callee| is guaranteed to be a
+  // JSFunction and only proxy objects can have a lazy proto.
   MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
-  masm.branchPtr(Assembler::BelowOrEqual, proto, ImmWord(1), &needVMCall);
 
-  // Use VMCall for non-JSFunction objects (eg. Proxy)
-  masm.branchTestObjClass(Assembler::NotEqual, proto, &JSFunction::class_,
-                          scratch, proto, &needVMCall);
+  Label proxyCheckDone;
+  masm.branchPtr(Assembler::NotEqual, proto, ImmWord(1), &proxyCheckDone);
+  masm.assumeUnreachable("Unexpected lazy proto in JSOp::SuperFun");
+  masm.bind(&proxyCheckDone);
+#endif
 
-  // Use VMCall if not constructor
-  masm.load16ZeroExtend(Address(proto, JSFunction::offsetOfFlags()), scratch);
-  masm.branchTest32(Assembler::Zero, scratch, Imm32(FunctionFlags::CONSTRUCTOR),
-                    &needVMCall);
-
-  // Valid constructor
-  Label hasSuperFun;
-  masm.jump(&hasSuperFun);
-
-  // Slow path VM Call
-  masm.bind(&needVMCall);
-  prepareVMCall();
-  pushArg(callee);
-
-  using Fn = JSObject* (*)(JSContext*, HandleObject);
-  if (!callVM<Fn, js::SuperFunOperation>()) {
-    return false;
-  }
-  masm.movePtr(ReturnReg, proto);
+  Label nullProto, done;
+  masm.branchPtr(Assembler::Equal, proto, ImmWord(0), &nullProto);
 
   // Box prototype and return
-  masm.bind(&hasSuperFun);
   masm.tagValue(JSVAL_TYPE_OBJECT, proto, R1);
+  masm.jump(&done);
+
+  masm.bind(&nullProto);
+  masm.moveValue(NullValue(), R1);
+
+  masm.bind(&done);
   frame.push(R1);
   return true;
 }

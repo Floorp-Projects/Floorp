@@ -469,9 +469,6 @@ skip script test262/intl402/NumberFormat/prototype/format/signDisplay-ko-KR.js
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-de-DE.js
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-rounding.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1608809
-skip script test262/language/expressions/class/super-evaluation-order.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -503,6 +500,11 @@ skip script test262/built-ins/AggregateError/newtarget-proto-fallback.js
 # But InitializeDateTimeFormat defaults for hour12=false and hcDefault="h12" the
 # hour-cycle to "h24", which isn't allowed per the above CLDR data.
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
+
+# https://github.com/tc39/test262/pull/2464 only added a new test, but didn't
+# update the existing tests.
+skip script test262/language/statements/class/subclass/class-definition-null-proto-super.js
+skip script test262/language/expressions/super/call-proto-not-ctor.js
 
 # Tests expects RangeError, but should instead expect TypeError.
 skip script test262/intl402/NumberFormat/constructor-order.js
