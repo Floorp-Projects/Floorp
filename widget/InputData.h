@@ -7,10 +7,10 @@
 #define InputData_h__
 
 #include "nsDebug.h"
-#include "nsIScrollableFrame.h"
 #include "nsPoint.h"
 #include "nsTArray.h"
 #include "Units.h"
+#include "mozilla/ScrollTypes.h"
 #include "mozilla/DefineEnum.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
@@ -586,8 +586,7 @@ class ScrollWheelInput : public InputData {
 
   static ScrollDeltaType DeltaTypeForDeltaMode(uint32_t aDeltaMode);
   static uint32_t DeltaModeForDeltaType(ScrollDeltaType aDeltaType);
-  static nsIScrollableFrame::ScrollUnit ScrollUnitForDeltaType(
-      ScrollDeltaType aDeltaType);
+  static mozilla::ScrollUnit ScrollUnitForDeltaType(ScrollDeltaType aDeltaType);
 
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
