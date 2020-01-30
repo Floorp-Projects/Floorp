@@ -21,16 +21,6 @@ transforms = TransformSequence()
 transforms.add(apply_partner_priority)
 
 
-used_repack_ids_by_platform = {}
-
-
-def _check_repack_ids_by_platform(platform, repack_id):
-    """avoid dup chunks, since mac signing and repackages both chunk"""
-    if used_repack_ids_by_platform.get(platform, {}).get(repack_id):
-        return True
-    used_repack_ids_by_platform.setdefault(platform, {})['repack_id'] = True
-
-
 def _get_repack_ids_by_platform(partner_configs, build_platform):
     combinations = []
     for partner, partner_config in partner_configs.items():
@@ -72,8 +62,6 @@ def chunk_partners(config, jobs):
             # linux and windows we fan out immediately to one task per partner-sub_partner-locale
             else:
                 for repack_id in platform_repack_ids:
-                    if _check_repack_ids_by_platform(build_platform, repack_id):
-                        continue
                     partner_job = copy.deepcopy(job)  # don't overwrite dict values here
                     partner_job.setdefault('extra', {})
                     partner_job['extra']['repack_id'] = repack_id
@@ -81,15 +69,11 @@ def chunk_partners(config, jobs):
         # fan out chunked mac signing for repackage
         elif repack_ids:
             for repack_id in repack_ids:
-                if _check_repack_ids_by_platform(build_platform, repack_id):
-                    continue
                 partner_job = copy.deepcopy(job)
                 partner_job.setdefault('extra', {}).setdefault('repack_id', repack_id)
                 yield partner_job
         # otherwise we've fully fanned out already, continue by passing repack_id on
         else:
-            if _check_repack_ids_by_platform(build_platform, repack_id):
-                continue
             partner_job = copy.deepcopy(job)
             partner_job.setdefault('extra', {}).setdefault('repack_id', repack_id)
             yield partner_job
