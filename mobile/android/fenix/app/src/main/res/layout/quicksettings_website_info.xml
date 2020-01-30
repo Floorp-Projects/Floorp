@@ -13,14 +13,20 @@
     android:orientation="vertical">
 
     <TextView
+        android:id="@+id/title"
+        style="@style/QuickSettingsText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:textStyle="bold"
+        tools:text="Wikipedia" />
+
+    <TextView
         android:id="@+id/url"
         style="@style/QuickSettingsText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         tools:text="https://wikipedia.org" />
 
     <TextView
@@ -28,9 +34,6 @@
         style="@style/QuickSettingsText.Icon"
         android:layout_width="match_parent"
         android:layout_height="@dimen/quicksettings_item_height"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/url"
         tools:drawableStart="@drawable/mozac_ic_lock"
         tools:drawableTint="@color/photonGreen50"
         tools:text="Secure connection" />

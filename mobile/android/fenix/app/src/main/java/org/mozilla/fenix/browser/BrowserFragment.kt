@@ -155,6 +155,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
                 sessionId = session.id,
                 url = session.url,
+                title = session.title,
                 isSecured = session.securityInfo.secure,
                 sitePermissions = sitePermissions,
                 gravity = getAppropriateLayoutGravity()

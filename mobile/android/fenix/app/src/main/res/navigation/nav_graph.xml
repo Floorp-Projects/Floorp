@@ -583,6 +583,9 @@
             android:name="sessionId"
             app:argType="string" />
         <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
             android:name="url"
             app:argType="string" />
         <argument

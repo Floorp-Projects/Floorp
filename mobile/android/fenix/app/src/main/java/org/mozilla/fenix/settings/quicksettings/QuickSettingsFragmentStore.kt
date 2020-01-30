@@ -67,6 +67,7 @@ class QuickSettingsFragmentStore(
          *
          * @param context [Context] used for access to various Android resources.
          * @param websiteUrl [String] the URL of the current web page.
+         * @param websiteTitle [String] the title of the current web page.
          * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
          * @param permissions [SitePermissions]? list of website permissions and their status.
          * @param settings [Settings] application settings.
@@ -75,12 +76,13 @@ class QuickSettingsFragmentStore(
         fun createStore(
             context: Context,
             websiteUrl: String,
+            websiteTitle: String,
             isSecured: Boolean,
             permissions: SitePermissions?,
             settings: Settings
         ) = QuickSettingsFragmentStore(
             QuickSettingsFragmentState(
-                webInfoState = createWebsiteInfoState(websiteUrl, isSecured),
+                webInfoState = createWebsiteInfoState(websiteUrl, websiteTitle, isSecured),
                 websitePermissionsState = createWebsitePermissionState(
                     context,
                     permissions,
@@ -101,13 +103,14 @@ class QuickSettingsFragmentStore(
         @VisibleForTesting
         fun createWebsiteInfoState(
             websiteUrl: String,
+            websiteTitle: String,
             isSecured: Boolean
         ): WebsiteInfoState {
             val (stringRes, iconRes, colorRes) = when (isSecured) {
                 true -> getSecuredWebsiteUiValues
                 false -> getInsecureWebsiteUiValues
             }
-            return WebsiteInfoState(websiteUrl, stringRes, iconRes, colorRes)
+            return WebsiteInfoState(websiteUrl, websiteTitle, stringRes, iconRes, colorRes)
         }
 
         /**
@@ -217,12 +220,14 @@ data class QuickSettingsFragmentState(
  * [State] to be rendered by [WebsiteInfoView] indicating whether the connection is secure or not.
  *
  * @param websiteUrl [String] the URL of the current web page.
+ * @param websiteTitle [String] the title of the current web page.
  * @param securityInfoRes [StringRes] for the connection description.
  * @param iconRes [DrawableRes] image indicating the connection status.
  * @param iconTintRes [ColorRes] icon color.
  */
 data class WebsiteInfoState(
     val websiteUrl: String,
+    val websiteTitle: String,
     @StringRes val securityInfoRes: Int,
     @DrawableRes val iconRes: Int,
     @ColorRes val iconTintRes: Int

@@ -37,11 +37,16 @@ class WebsiteInfoView(
      */
     fun update(state: WebsiteInfoState) {
         bindUrl(state.websiteUrl)
+        bindTitle(state.websiteTitle)
         bindSecurityInfo(state.securityInfoRes, state.iconRes, state.iconTintRes)
     }
 
     private fun bindUrl(url: String) {
         view.url.text = url
+    }
+
+    private fun bindTitle(title: String) {
+        view.title.text = title
     }
 
     private fun bindSecurityInfo(

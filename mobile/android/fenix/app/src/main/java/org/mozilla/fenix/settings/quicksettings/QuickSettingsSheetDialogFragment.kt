@@ -67,6 +67,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         quickSettingsStore = QuickSettingsFragmentStore.createStore(
             context = context,
             websiteUrl = args.url,
+            websiteTitle = args.title,
             isSecured = args.isSecured,
             permissions = args.sitePermissions,
             settings = Settings.getInstance(context)

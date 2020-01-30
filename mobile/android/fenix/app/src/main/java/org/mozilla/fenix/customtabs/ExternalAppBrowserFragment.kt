@@ -161,6 +161,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
             .actionExternalAppBrowserFragmentToQuickSettingsSheetDialogFragment(
                 sessionId = session.id,
                 url = session.url,
+                title = session.title,
                 isSecured = session.securityInfo.secure,
                 sitePermissions = sitePermissions,
                 gravity = getAppropriateLayoutGravity()
