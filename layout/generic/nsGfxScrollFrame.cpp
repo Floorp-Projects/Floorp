@@ -1448,15 +1448,15 @@ static nsRect GetOnePixelRangeAroundPoint(const nsPoint& aPoint,
 void ScrollFrameHelper::ScrollByPage(
     nsScrollbarFrame* aScrollbar, int32_t aDirection,
     nsIScrollbarMediator::ScrollSnapMode aSnap) {
-  ScrollByUnit(aScrollbar, ScrollMode::Smooth, aDirection,
-               nsIScrollableFrame::PAGES, aSnap);
+  ScrollByUnit(aScrollbar, ScrollMode::Smooth, aDirection, ScrollUnit::PAGES,
+               aSnap);
 }
 
 void ScrollFrameHelper::ScrollByWhole(
     nsScrollbarFrame* aScrollbar, int32_t aDirection,
     nsIScrollbarMediator::ScrollSnapMode aSnap) {
-  ScrollByUnit(aScrollbar, ScrollMode::Instant, aDirection,
-               nsIScrollableFrame::WHOLE, aSnap);
+  ScrollByUnit(aScrollbar, ScrollMode::Instant, aDirection, ScrollUnit::WHOLE,
+               aSnap);
 }
 
 void ScrollFrameHelper::ScrollByLine(
@@ -1491,7 +1491,7 @@ void ScrollFrameHelper::ScrollByLine(
   }
 
   nsIntPoint overflow;
-  ScrollBy(delta, nsIScrollableFrame::LINES, ScrollMode::Smooth, &overflow,
+  ScrollBy(delta, ScrollUnit::LINES, ScrollMode::Smooth, &overflow,
            nsGkAtoms::other, nsIScrollableFrame::NOT_MOMENTUM, aSnap);
 }
 
@@ -1534,8 +1534,7 @@ void ScrollFrameHelper::ScrollbarReleased(nsScrollbarFrame* aScrollbar) {
 
 void ScrollFrameHelper::ScrollByUnit(
     nsScrollbarFrame* aScrollbar, ScrollMode aMode, int32_t aDirection,
-    nsIScrollableFrame::ScrollUnit aUnit,
-    nsIScrollbarMediator::ScrollSnapMode aSnap) {
+    ScrollUnit aUnit, nsIScrollbarMediator::ScrollSnapMode aSnap) {
   MOZ_ASSERT(aScrollbar != nullptr);
   bool isHorizontal = aScrollbar->IsXULHorizontal();
   nsIntPoint delta;
@@ -2289,7 +2288,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(
 
   bool willSnap = false;
   if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
-    willSnap = GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS,
+    willSnap = GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS,
                                           mDestination, aScrollPosition);
   }
 
@@ -4195,8 +4194,7 @@ static void CalcRangeForScrollBy(int32_t aDelta, nscoord aPos,
                                   (aDelta > 0 ? aPosTolerance : aNegTolerance));
 }
 
-void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
-                                 nsIScrollableFrame::ScrollUnit aUnit,
+void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
                                  ScrollMode aMode, nsIntPoint* aOverflow,
                                  nsAtom* aOrigin,
                                  nsIScrollableFrame::ScrollMomentum aMomentum,
@@ -4232,7 +4230,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
   }
   bool isGenericOrigin = (aOrigin == nsGkAtoms::other);
   switch (aUnit) {
-    case nsIScrollableFrame::DEVICE_PIXELS: {
+    case ScrollUnit::DEVICE_PIXELS: {
       nscoord appUnitsPerDevPixel =
           mOuter->PresContext()->AppUnitsPerDevPixel();
       deltaMultiplier = nsSize(appUnitsPerDevPixel, appUnitsPerDevPixel);
@@ -4242,7 +4240,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
       negativeTolerance = positiveTolerance = 0.5f;
       break;
     }
-    case nsIScrollableFrame::LINES: {
+    case ScrollUnit::LINES: {
       deltaMultiplier = GetLineScrollAmount();
       if (isGenericOrigin) {
         aOrigin = nsGkAtoms::lines;
@@ -4250,7 +4248,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
       negativeTolerance = positiveTolerance = 0.1f;
       break;
     }
-    case nsIScrollableFrame::PAGES: {
+    case ScrollUnit::PAGES: {
       deltaMultiplier = GetPageScrollAmount();
       if (isGenericOrigin) {
         aOrigin = nsGkAtoms::pages;
@@ -4259,7 +4257,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
       positiveTolerance = 0;
       break;
     }
-    case nsIScrollableFrame::WHOLE: {
+    case ScrollUnit::WHOLE: {
       nsPoint pos = GetScrollPosition();
       AdjustForWholeDelta(aDelta.x, &pos.x);
       AdjustForWholeDelta(aDelta.y, &pos.y);
@@ -4288,12 +4286,12 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
       deltaMultiplier = nsSize(appUnitsPerDevPixel, appUnitsPerDevPixel);
       negativeTolerance = 0.1f;
       positiveTolerance = 0;
-      nsIScrollableFrame::ScrollUnit snapUnit = aUnit;
+      ScrollUnit snapUnit = aUnit;
       if (aOrigin == nsGkAtoms::mouseWheel) {
         // When using a clicky scroll wheel, snap point selection works the same
         // as keyboard up/down/left/right navigation, but with varying amounts
         // of scroll delta.
-        snapUnit = nsIScrollableFrame::LINES;
+        snapUnit = ScrollUnit::LINES;
       }
       GetSnapPointForDestination(snapUnit, mDestination, newPos);
     }
@@ -4321,7 +4319,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
                    NSAppUnitsToIntPixels(clampAmount.y, appUnitsPerDevPixel));
   }
 
-  if (aUnit == nsIScrollableFrame::DEVICE_PIXELS &&
+  if (aUnit == ScrollUnit::DEVICE_PIXELS &&
       !nsLayoutUtils::AsyncPanZoomEnabled(mOuter)) {
     // When APZ is disabled, we must track the velocity
     // on the main thread; otherwise, the APZC will manage this.
@@ -4395,7 +4393,7 @@ void ScrollFrameHelper::ScrollSnap(const nsPoint& aDestination,
   nsRect scrollRange = GetLayoutScrollRange();
   nsPoint pos = GetScrollPosition();
   nsPoint snapDestination = scrollRange.ClampPoint(aDestination);
-  if (GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS, pos,
+  if (GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS, pos,
                                  snapDestination)) {
     ScrollTo(snapDestination, aMode, nsGkAtoms::other);
   }
@@ -6977,9 +6975,9 @@ layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo(
   return ComputeScrollSnapInfo(aDestination);
 }
 
-bool ScrollFrameHelper::GetSnapPointForDestination(
-    nsIScrollableFrame::ScrollUnit aUnit, nsPoint aStartPos,
-    nsPoint& aDestination) {
+bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
+                                                   nsPoint aStartPos,
+                                                   nsPoint& aDestination) {
   Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
       GetScrollSnapInfo(Some(aDestination)), aUnit, GetLayoutScrollRange(),
       aStartPos, aDestination);
