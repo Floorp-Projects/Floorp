@@ -685,19 +685,19 @@ uint32_t ScrollWheelInput::DeltaModeForDeltaType(ScrollDeltaType aDeltaType) {
   }
 }
 
-ScrollUnit ScrollWheelInput::ScrollUnitForDeltaType(
+nsIScrollableFrame::ScrollUnit ScrollWheelInput::ScrollUnitForDeltaType(
     ScrollDeltaType aDeltaType) {
   switch (aDeltaType) {
     case SCROLLDELTA_LINE:
-      return ScrollUnit::LINES;
+      return nsIScrollableFrame::LINES;
     case SCROLLDELTA_PAGE:
-      return ScrollUnit::PAGES;
+      return nsIScrollableFrame::PAGES;
     case SCROLLDELTA_PIXEL:
-      return ScrollUnit::DEVICE_PIXELS;
+      return nsIScrollableFrame::DEVICE_PIXELS;
     default:
       MOZ_CRASH();
   }
-  return ScrollUnit::LINES;
+  return nsIScrollableFrame::LINES;
 }
 
 WidgetWheelEvent ScrollWheelInput::ToWidgetWheelEvent(

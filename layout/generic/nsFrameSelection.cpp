@@ -16,7 +16,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollTypes.h"
 #include "mozilla/StaticPrefs_dom.h"
 
 #include "nsCOMPtr.h"
@@ -1766,7 +1765,7 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
                                 ? ScrollMode::Instant
                                 : ScrollMode::Smooth;
     scrollableFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                              ScrollUnit::PAGES, scrollMode);
+                              nsIScrollableFrame::PAGES, scrollMode);
   }
 
   // Finally, scroll selection into view if requested.

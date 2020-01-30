@@ -9,21 +9,21 @@
 namespace mozilla {
 namespace layers {
 
-/* static */ ScrollUnit KeyboardScrollAction::GetScrollUnit(
+/* static */ nsIScrollableFrame::ScrollUnit KeyboardScrollAction::GetScrollUnit(
     KeyboardScrollAction::KeyboardScrollActionType aDeltaType) {
   switch (aDeltaType) {
     case KeyboardScrollAction::eScrollCharacter:
-      return ScrollUnit::LINES;
+      return nsIScrollableFrame::LINES;
     case KeyboardScrollAction::eScrollLine:
-      return ScrollUnit::LINES;
+      return nsIScrollableFrame::LINES;
     case KeyboardScrollAction::eScrollPage:
-      return ScrollUnit::PAGES;
+      return nsIScrollableFrame::PAGES;
     case KeyboardScrollAction::eScrollComplete:
-      return ScrollUnit::WHOLE;
+      return nsIScrollableFrame::WHOLE;
   }
 
   // Silence an overzealous warning
-  return ScrollUnit::WHOLE;
+  return nsIScrollableFrame::WHOLE;
 }
 
 KeyboardScrollAction::KeyboardScrollAction()

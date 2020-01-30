@@ -3659,7 +3659,8 @@ void nsGlobalWindowInner::ScrollByLines(int32_t numLines,
                                 ? ScrollMode::SmoothMsd
                                 : ScrollMode::Instant;
 
-    sf->ScrollBy(nsIntPoint(0, numLines), ScrollUnit::LINES, scrollMode);
+    sf->ScrollBy(nsIntPoint(0, numLines), nsIScrollableFrame::LINES,
+                 scrollMode);
   }
 }
 
@@ -3675,7 +3676,8 @@ void nsGlobalWindowInner::ScrollByPages(int32_t numPages,
                                 ? ScrollMode::SmoothMsd
                                 : ScrollMode::Instant;
 
-    sf->ScrollBy(nsIntPoint(0, numPages), ScrollUnit::PAGES, scrollMode);
+    sf->ScrollBy(nsIntPoint(0, numPages), nsIScrollableFrame::PAGES,
+                 scrollMode);
   }
 }
 
