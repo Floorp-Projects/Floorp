@@ -201,9 +201,8 @@ already_AddRefed<Promise> Client::Navigate(const nsAString& aURL,
         outerPromise->MaybeResolve(newClient);
       },
       [self, outerPromise](const CopyableErrorResult& aResult) {
-        // TODO: Improve this error in bug 1412856.  Ideally we should throw
-        //       the TypeError in the child process and pass it back to here.
-        outerPromise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+        CopyableErrorResult result(aResult);
+        outerPromise->MaybeReject(result);
       });
 
   return outerPromise.forget();
