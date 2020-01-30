@@ -1261,7 +1261,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
   mozilla::StyleImageOrientation mImageOrientation;
   mozilla::StyleDirection mDirection;
   mozilla::StyleVisibility mVisible;
-  uint8_t mImageRendering;  // NS_STYLE_IMAGE_RENDERING_*
+  mozilla::StyleImageRendering mImageRendering;
   uint8_t mWritingMode;     // NS_STYLE_WRITING_MODE_*
   mozilla::StyleTextOrientation mTextOrientation;
   mozilla::StyleColorAdjust mColorAdjust;
