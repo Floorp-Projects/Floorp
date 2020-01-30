@@ -1303,9 +1303,6 @@ nsresult nsHttpChannel::SetupTransaction() {
   // nsIHttpActivityObserver.
   gHttpHandler->AddHttpChannel(mChannelId, ToSupports(this));
 
-  mTransaction->SetTransactionObserver(mTransactionObserver);
-  mTransactionObserver = nullptr;
-
   // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
   if (mLoadFlags & LOAD_ANONYMOUS) mCaps |= NS_HTTP_LOAD_ANONYMOUS;
 
@@ -1338,12 +1335,22 @@ nsresult nsHttpChannel::SetupTransaction() {
   EnsureRequestContext();
 
   HttpTrafficCategory category = CreateTrafficCategory();
-
+  std::function<void()> observer;
+  if (mTransactionObserver) {
+    RefPtr<HttpTransactionShell> transaction = mTransaction;
+    observer = [transactionObserver{std::move(mTransactionObserver)},
+                transaction]() {
+      TransactionObserverResult result;
+      transaction->GetTransactionObserverResult(result);
+      transactionObserver->Complete(result.versionOk(), result.authOk(),
+                                    result.closeReason());
+    };
+  }
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       mUploadStreamHasHeaders, GetCurrentThreadEventTarget(), callbacks, this,
       mTopLevelOuterContentWindowId, category, mRequestContext, mClassOfService,
-      mInitialRwin, mResponseTimeoutEnabled, mChannelId);
+      mInitialRwin, mResponseTimeoutEnabled, mChannelId, std::move(observer));
   if (NS_FAILED(rv)) {
     mTransaction = nullptr;
     return rv;
