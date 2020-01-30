@@ -21,6 +21,13 @@ namespace net {
 class ChannelEventQueue;
 class nsHttpConnectionInfo;
 
+#define HTTP_TRANSACTION_PARENT_IID                  \
+  {                                                  \
+    0xb83695cb, 0xc24b, 0x4c53, {                    \
+      0x85, 0x9b, 0x77, 0x77, 0x3e, 0xc5, 0x44, 0xe5 \
+    }                                                \
+  }
+
 // HttpTransactionParent plays the role of nsHttpTransaction and delegates the
 // work to the nsHttpTransaction in socket process.
 class HttpTransactionParent final : public PHttpTransactionParent,
@@ -32,6 +39,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   NS_DECL_HTTPTRANSACTIONSHELL
   NS_DECL_NSIREQUEST
   NS_DECL_NSITHREADRETARGETABLEREQUEST
+  NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_TRANSACTION_PARENT_IID)
 
   explicit HttpTransactionParent();
 
@@ -41,7 +49,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
       const nsCString& aSecurityInfoSerialization,
       const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
-      const int32_t& aProxyConnectResponseCode);
+      const int32_t& aProxyConnectResponseCode,
+      nsTArray<uint8_t>&& aDataForSniffer);
   mozilla::ipc::IPCResult RecvOnTransportStatus(const nsresult& aStatus,
                                                 const int64_t& aProgress,
                                                 const int64_t& aProgressMax);
@@ -65,6 +74,10 @@ class HttpTransactionParent final : public PHttpTransactionParent,
 
   already_AddRefed<nsIEventTarget> GetNeckoTarget();
 
+  void SetSniffedTypeToChannel(
+      nsInputStreamPump::PeekSegmentFun aCallTypeSniffers,
+      nsIChannel* aChannel);
+
  private:
   virtual ~HttpTransactionParent();
 
@@ -75,7 +88,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                         const nsCString& aSecurityInfoSerialization,
                         const bool& aProxyConnectFailed,
                         const TimingStructArgs& aTimings,
-                        const int32_t& aProxyConnectResponseCode);
+                        const int32_t& aProxyConnectResponseCode,
+                        nsTArray<uint8_t>&& aDataForSniffer);
   void DoOnTransportStatus(const nsresult& aStatus, const int64_t& aProgress,
                            const int64_t& aProgressMax);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
@@ -120,7 +134,11 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   TransactionObserverFunc mTransactionObserver;
   TransactionObserverResult mTransactionObserverResult;
   OnPushCallback mOnPushCallback;
+  nsTArray<uint8_t> mDataForSniffer;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionParent,
+                              HTTP_TRANSACTION_PARENT_IID)
 
 }  // namespace net
 }  // namespace mozilla
