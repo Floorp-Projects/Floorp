@@ -1328,21 +1328,18 @@ nsresult nsHttpChannel::SetupTransaction() {
   }
 
   EnsureTopLevelOuterContentWindowId();
+  EnsureRequestContext();
 
   HttpTrafficCategory category = CreateTrafficCategory();
 
-  rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead, mUploadStream,
-                          mReqContentLength, mUploadStreamHasHeaders,
-                          GetCurrentThreadEventTarget(), callbacks, this,
-                          mTopLevelOuterContentWindowId, category);
+  rv = mTransaction->Init(
+      mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
+      mUploadStreamHasHeaders, GetCurrentThreadEventTarget(), callbacks, this,
+      mTopLevelOuterContentWindowId, category, mRequestContext, mClassOfService,
+      mInitialRwin, mResponseTimeoutEnabled);
   if (NS_FAILED(rv)) {
     mTransaction = nullptr;
     return rv;
-  }
-
-  mTransaction->SetClassOfService(mClassOfService);
-  if (EnsureRequestContext()) {
-    mTransaction->SetRequestContext(mRequestContext);
   }
 
   return rv;

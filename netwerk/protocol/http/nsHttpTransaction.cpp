@@ -31,7 +31,6 @@
 #include "nsIEventTarget.h"
 #include "nsIHttpActivityObserver.h"
 #include "nsIHttpAuthenticator.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsIInputStream.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsIOService.h"
@@ -249,8 +248,9 @@ nsresult nsHttpTransaction::Init(
     nsIInputStream* requestBody, uint64_t requestContentLength,
     bool requestBodyHasHeaders, nsIEventTarget* target,
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
-    uint64_t topLevelOuterContentWindowId,
-    HttpTrafficCategory trafficCategory) {
+    uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
+    nsIRequestContext* requestContext, uint32_t classOfService,
+    uint32_t initialRwin, bool responseTimeoutEnabled) {
   nsresult rv;
 
   LOG1(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
@@ -287,17 +287,12 @@ nsresult nsHttpTransaction::Init(
   }
   mChannel = do_QueryInterface(eventsink);
 
-  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-      do_QueryInterface(eventsink);
-  if (httpChannelInternal) {
-    rv = httpChannelInternal->GetResponseTimeoutEnabled(
-        &mResponseTimeoutEnabled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    rv = httpChannelInternal->GetInitialRwin(&mInitialRwin);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
+  LOG1(("nsHttpTransaction %p SetRequestContext %p\n", this, requestContext));
+  mRequestContext = requestContext;
+
+  SetClassOfService(classOfService);
+  mResponseTimeoutEnabled = responseTimeoutEnabled;
+  mInitialRwin = initialRwin;
 
   // create transport event sink proxy. it coalesces consecutive
   // events of the same status type.
@@ -1964,11 +1959,6 @@ nsresult nsHttpTransaction::ProcessData(char* buf, uint32_t count,
   }
 
   return NS_OK;
-}
-
-void nsHttpTransaction::SetRequestContext(nsIRequestContext* aRequestContext) {
-  LOG1(("nsHttpTransaction %p SetRequestContext %p\n", this, aRequestContext));
-  mRequestContext = aRequestContext;
 }
 
 // Called when the transaction marked for blocking is associated with a
