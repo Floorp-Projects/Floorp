@@ -52,7 +52,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
-      const bool& aHasStickyConn);
+      const bool& aHasStickyConn,
+      const Maybe<TransactionObserverResult>& aTransactionObserverResult);
   mozilla::ipc::IPCResult RecvOnNetAddrUpdate(const NetAddr& aSelfAddr,
                                               const NetAddr& aPeerAddr,
                                               const bool& aResolvedByTRR);
@@ -75,11 +76,12 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                            const int64_t& aProgressMax);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
                          const uint32_t& aCount);
-  void DoOnStopRequest(const nsresult& aStatus, const bool& aResponseIsComplete,
-                       const int64_t& aTransferSize,
-                       const TimingStructArgs& aTimings,
-                       const Maybe<nsHttpHeaderArray>& responseTrailers,
-                       const bool& aHasStickyConn);
+  void DoOnStopRequest(
+      const nsresult& aStatus, const bool& aResponseIsComplete,
+      const int64_t& aTransferSize, const TimingStructArgs& aTimings,
+      const Maybe<nsHttpHeaderArray>& responseTrailers,
+      const bool& aHasStickyConn,
+      const Maybe<TransactionObserverResult>& aTransactionObserverResult);
   void DoNotifyListener();
 
   nsCOMPtr<nsITransportEventSink> mEventsink;
@@ -111,6 +113,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   TimingStruct mTimings;
   TimeStamp mDomainLookupStart;
   TimeStamp mDomainLookupEnd;
+  TransactionObserverFunc mTransactionObserver;
+  TransactionObserverResult mTransactionObserverResult;
 };
 
 }  // namespace net

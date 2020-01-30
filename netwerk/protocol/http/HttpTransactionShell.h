@@ -5,6 +5,7 @@
 #ifndef HttpTransactionShell_h__
 #define HttpTransactionShell_h__
 
+#include <functional>
 #include "nsISupports.h"
 #include "TimingStruct.h"
 #include "nsInputStreamPump.h"
@@ -26,7 +27,7 @@ class nsHttpConnectionInfo;
 class nsHttpHeaderArray;
 class nsHttpRequestHead;
 class nsHttpTransaction;
-class TransactionObserver;
+class TransactionObserverResult;
 
 //----------------------------------------------------------------------------
 // Abstract base class for a HTTP transaction in the chrome process
@@ -43,6 +44,8 @@ class TransactionObserver;
 class HttpTransactionShell : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTPTRANSACTIONSHELL_IID)
+
+  using TransactionObserverFunc = std::function<void()>;
 
   //
   // called to initialize the transaction
@@ -72,7 +75,8 @@ class HttpTransactionShell : public nsISupports {
       nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId,
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,
       uint32_t classOfService, uint32_t initialRwin,
-      bool responseTimeoutEnabled, uint64_t channelId) = 0;
+      bool responseTimeoutEnabled, uint64_t channelId,
+      TransactionObserverFunc&& transactionObserver) = 0;
 
   // @param aListener
   //        receives notifications.
@@ -130,7 +134,6 @@ class HttpTransactionShell : public nsISupports {
   virtual bool HasStickyConnection() const = 0;
 
   virtual void SetH2WSConnRefTaken() = 0;
-  virtual void SetTransactionObserver(TransactionObserver* arg) = 0;
   virtual void SetPushedStream(Http2PushedStreamWrapper* push) = 0;
 
   virtual bool ProxyConnectFailed() = 0;
@@ -139,6 +142,9 @@ class HttpTransactionShell : public nsISupports {
   virtual nsresult SetSniffedTypeToChannel(
       nsIRequest* aPump, nsIChannel* aChannel,
       nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) = 0;
+
+  virtual void GetTransactionObserverResult(
+      TransactionObserverResult& aResult) = 0;
 
   virtual nsHttpTransaction* AsHttpTransaction() = 0;
   virtual HttpTransactionParent* AsHttpTransactionParent() = 0;
@@ -155,7 +161,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId, \
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,  \
       uint32_t classOfService, uint32_t initialRwin,                           \
-      bool responseTimeoutEnabled, uint64_t channelId) override;               \
+      bool responseTimeoutEnabled, uint64_t channelId,                         \
+      TransactionObserverFunc&& transactionObserver) override;                 \
   virtual nsresult AsyncRead(nsIStreamListener* listener, nsIRequest** pump)   \
       override;                                                                \
   virtual void SetClassOfService(uint32_t classOfService) override;            \
@@ -187,13 +194,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual void DontReuseConnection() override;                                 \
   virtual bool HasStickyConnection() const override;                           \
   virtual void SetH2WSConnRefTaken() override;                                 \
-  virtual void SetTransactionObserver(TransactionObserver* arg) override;      \
   virtual void SetPushedStream(Http2PushedStreamWrapper* push) override;       \
   virtual bool ProxyConnectFailed() override;                                  \
   virtual int32_t GetProxyConnectResponseCode() override;                      \
   virtual nsresult SetSniffedTypeToChannel(                                    \
       nsIRequest* aPump, nsIChannel* aChannel,                                 \
       nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) override;           \
+  virtual void GetTransactionObserverResult(                                   \
+      TransactionObserverResult& aResult) override;                            \
   virtual nsHttpTransaction* AsHttpTransaction() override;                     \
   virtual HttpTransactionParent* AsHttpTransactionParent() override;
 }  // namespace net

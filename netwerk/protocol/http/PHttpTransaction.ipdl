@@ -42,7 +42,8 @@ parent:
                       int64_t transferSize,
                       TimingStructArgs timings,
                       nsHttpHeaderArray? responseTrailers,
-                      bool hasStickyConn);
+                      bool hasStickyConn,
+                      TransactionObserverResult? transactionObserverResult);
   async OnNetAddrUpdate(NetAddr selfAddr, NetAddr peerAddr, bool resolvedByTRR);
   async OnInitFailed(nsresult status);
 
@@ -60,7 +61,8 @@ child:
              uint32_t classOfService,
              uint32_t initialRwin,
              bool responseTimeoutEnabled,
-             uint64_t channelId);
+             uint64_t channelId,
+             bool hasTransactionObserver);
 
   async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);
