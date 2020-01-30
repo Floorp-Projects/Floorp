@@ -119,6 +119,16 @@ urlbar-midi-blocked =
 urlbar-install-blocked =
     .tooltiptext = You have blocked add-on installation for this website.
 
+# Variables
+#   $shortcut (String) - A keyboard shortcut for the edit bookmark command.
+urlbar-star-edit-bookmark =
+    .tooltiptext = Edit this bookmark ({ $shortcut })
+
+# Variables
+#   $shortcut (String) - A keyboard shortcut for the add bookmark command.
+urlbar-star-add-bookmark =
+    .tooltiptext = Bookmark this page ({ $shortcut })
+
 ## Page Action Context Menu
 
 page-action-add-to-urlbar =
