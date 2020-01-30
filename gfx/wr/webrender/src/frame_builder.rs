@@ -5,7 +5,7 @@
 use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
-use crate::clip::{ClipStore, ClipChainStack};
+use crate::clip::{ClipStore, ClipChainStack, ClipDataHandle};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use crate::composite::{CompositorKind, CompositeState};
 use crate::debug_render::DebugItem;
@@ -132,6 +132,25 @@ pub struct FrameVisibilityState<'a> {
     pub clip_chain_stack: ClipChainStack,
     pub render_tasks: &'a mut RenderTaskGraph,
     pub composite_state: &'a mut CompositeState,
+    /// A stack of currently active off-screen surfaces during the
+    /// visibility frame traversal.
+    pub surface_stack: Vec<SurfaceIndex>,
+}
+
+impl<'a> FrameVisibilityState<'a> {
+    pub fn push_surface(
+        &mut self,
+        surface_index: SurfaceIndex,
+        shared_clips: &[ClipDataHandle]
+    ) {
+        self.surface_stack.push(surface_index);
+        self.clip_chain_stack.push_surface(shared_clips);
+    }
+
+    pub fn pop_surface(&mut self) {
+        self.surface_stack.pop().unwrap();
+        self.clip_chain_stack.pop_surface();
+    }
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -343,6 +362,9 @@ impl FrameBuilder {
                 clip_chain_stack: ClipChainStack::new(),
                 render_tasks,
                 composite_state,
+                /// Try to avoid allocating during frame traversal - it's unlikely to have a
+                /// surface stack depth of > 16 in most cases.
+                surface_stack: Vec::with_capacity(16),
             };
 
             scene.prim_store.update_visibility(
