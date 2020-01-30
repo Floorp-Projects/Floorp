@@ -9,6 +9,7 @@
 
 #include "HttpTransactionParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/net/InputChannelThrottleQueueParent.h"
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "nsHttpHandler.h"
@@ -190,6 +191,21 @@ nsresult HttpTransactionParent::Init(
     pushedStreamArg.ref().pushedStreamId() = aPushedStreamId;
   }
 
+  nsCOMPtr<nsIThrottledInputChannel> throttled = do_QueryInterface(mEventsink);
+  Maybe<PInputChannelThrottleQueueParent*> throttleQueue;
+  if (throttled) {
+    nsCOMPtr<nsIInputChannelThrottleQueue> queue;
+    nsresult rv = throttled->GetThrottleQueue(getter_AddRefs(queue));
+    // In case of failure, just carry on without throttling.
+    if (NS_SUCCEEDED(rv) && queue) {
+      LOG1(("HttpTransactionParent::Init %p using throttle queue %p\n", this,
+            queue.get()));
+      RefPtr<InputChannelThrottleQueueParent> tqParent = do_QueryObject(queue);
+      MOZ_ASSERT(tqParent);
+      throttleQueue.emplace(tqParent.get());
+    }
+  }
+
   // TODO: Figure out if we have to implement nsIThreadRetargetableRequest in
   // bug 1544378.
   if (!SendInit(caps, infoArgs, *requestHead,
@@ -198,7 +214,7 @@ nsresult HttpTransactionParent::Init(
                 topLevelOuterContentWindowId,
                 static_cast<uint8_t>(trafficCategory), requestContextID,
                 classOfService, initialRwin, responseTimeoutEnabled, mChannelId,
-                !!mTransactionObserver, pushedStreamArg)) {
+                !!mTransactionObserver, pushedStreamArg, throttleQueue)) {
     return NS_ERROR_FAILURE;
   }
 
