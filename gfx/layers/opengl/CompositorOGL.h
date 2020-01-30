@@ -523,6 +523,8 @@ class CompositorOGL final : public Compositor {
    */
   gfx::IntSize mViewportSize;
 
+  gfx::IntRegion mCurrentFrameInvalidRegion;
+
   ShaderProgramOGL* mCurrentProgram;
 };
 

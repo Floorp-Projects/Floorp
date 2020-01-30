@@ -72,7 +72,9 @@ static const char* sEGLExtensionNames[] = {
     "EGL_ANGLE_device_creation_d3d11",
     "EGL_KHR_surfaceless_context",
     "EGL_KHR_create_context_no_error",
-    "EGL_MOZ_create_context_provoking_vertex_dont_care"};
+    "EGL_MOZ_create_context_provoking_vertex_dont_care",
+    "EGL_EXT_swap_buffers_with_damage",
+    "EGL_KHR_swap_buffers_with_damage"};
 
 PRLibrary* LoadApitraceLibrary() {
   const char* path = nullptr;
@@ -700,6 +702,32 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
     // extension on all Mali devices.
     if (strcmp((const char*)vendor, "ARM") == 0) {
       MarkExtensionUnsupported(KHR_surfaceless_context);
+    }
+  }
+
+  if (IsExtensionSupported(EXT_swap_buffers_with_damage)) {
+    const SymLoadStruct symbols[] = {
+        {(PRFuncPtr*)&mSymbols.fSwapBuffersWithDamage,
+         {{"eglSwapBuffersWithDamageEXT"}}},
+        END_OF_SYMBOLS};
+    if (!fnLoadSymbols(symbols)) {
+      NS_ERROR(
+          "EGL supports EXT_swap_buffers_with_damage without exposing its "
+          "functions!");
+      MarkExtensionUnsupported(EXT_swap_buffers_with_damage);
+    }
+  }
+
+  if (IsExtensionSupported(KHR_swap_buffers_with_damage)) {
+    const SymLoadStruct symbols[] = {
+        {(PRFuncPtr*)&mSymbols.fSwapBuffersWithDamage,
+         {{"eglSwapBuffersWithDamageKHR"}}},
+        END_OF_SYMBOLS};
+    if (!fnLoadSymbols(symbols)) {
+      NS_ERROR(
+          "EGL supports KHR_swap_buffers_with_damage without exposing its "
+          "functions!");
+      MarkExtensionUnsupported(KHR_swap_buffers_with_damage);
     }
   }
 
