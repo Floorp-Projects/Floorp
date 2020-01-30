@@ -10,11 +10,12 @@
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.util', _import='ensure_unicode')
 @imports(_from='mozbuild.util', _import='system_encoding')
+@imports(_from='six', _import='itervalues')
 @imports('__sandbox__')
 def all_configure_options():
     result = []
     previous = None
-    for option in __sandbox__._options.itervalues():
+    for option in itervalues(__sandbox__._options):
         # __sandbox__._options contains items for both option.name and
         # option.env. But it's also an OrderedDict, meaning both are
         # consecutive.
