@@ -24,17 +24,19 @@ add_task(async function urlToTip() {
   ]);
 
   // Add a provider that returns a tip result when the search string is "testx".
-  let provider = new TestProvider([
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.TIP,
-      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
-        text: "This is a test tip.",
-        buttonText: "OK",
-        helpUrl: "http://example.com/",
-      }
-    ),
-  ]);
+  let provider = new UrlbarTestUtils.TestProvider({
+    results: [
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.TIP,
+        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          text: "This is a test tip.",
+          buttonText: "OK",
+          helpUrl: "http://example.com/",
+        }
+      ),
+    ],
+  });
   provider.isActive = context => context.searchString == "testx";
   UrlbarProvidersManager.registerProvider(provider);
 
@@ -123,17 +125,19 @@ add_task(async function tipToURL() {
 
   // Add a provider that returns a tip result when the search string is "test"
   // or "testxx".
-  let provider = new TestProvider([
-    new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.TIP,
-      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
-        text: "This is a test tip.",
-        buttonText: "OK",
-        helpUrl: "http://example.com/",
-      }
-    ),
-  ]);
+  let provider = new UrlbarTestUtils.TestProvider({
+    results: [
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.TIP,
+        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          text: "This is a test tip.",
+          buttonText: "OK",
+          helpUrl: "http://example.com/",
+        }
+      ),
+    ],
+  });
   provider.isActive = context =>
     ["test", "testxx"].includes(context.searchString);
   UrlbarProvidersManager.registerProvider(provider);
@@ -236,30 +240,4 @@ async function checkResult(index, type, presentElements, absentElements) {
     let element = result.element.row._elements.get(name);
     Assert.ok(!element, `${name} should be absent`);
   }
-}
-
-/**
- * A test provider.
- */
-class TestProvider extends UrlbarProvider {
-  constructor(results) {
-    super();
-    this._results = results;
-  }
-  get name() {
-    return "TestProvider";
-  }
-  get type() {
-    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-  }
-  isActive(context) {
-    return true;
-  }
-  async startQuery(context, addCallback) {
-    for (const result of this._results) {
-      addCallback(this, result);
-    }
-  }
-  cancelQuery(context) {}
-  pickResult(result) {}
 }
