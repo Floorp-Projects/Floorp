@@ -27,7 +27,7 @@ NS_IMPL_ISUPPORTS(HttpTransactionChild, nsIRequestObserver, nsIStreamListener,
 //-----------------------------------------------------------------------------
 
 HttpTransactionChild::HttpTransactionChild()
-    : mCanceled(false), mStatus(NS_OK) {
+    : mCanceled(false), mStatus(NS_OK), mChannelId(0) {
   LOG(("Creating HttpTransactionChild @%p\n", this));
 }
 
@@ -115,7 +115,7 @@ nsresult HttpTransactionChild::InitInternal(
     uint64_t requestContentLength, bool requestBodyHasHeaders,
     uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory,
     uint64_t requestContextID, uint32_t classOfService, uint32_t initialRwin,
-    bool responseTimeoutEnabled) {
+    bool responseTimeoutEnabled, uint64_t channelId) {
   LOG(("HttpTransactionChild::InitInternal [this=%p caps=%x]\n", this, caps));
 
   RefPtr<nsHttpConnectionInfo> cinfo =
@@ -128,7 +128,7 @@ nsresult HttpTransactionChild::InitInternal(
       nullptr,  // TODO: security callback, fix in bug 1512479.
       this, topLevelOuterContentWindowId,
       static_cast<HttpTrafficCategory>(httpTrafficCategory), rc, classOfService,
-      initialRwin, responseTimeoutEnabled);
+      initialRwin, responseTimeoutEnabled, channelId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mTransaction = nullptr;
     return rv;
@@ -177,18 +177,20 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
     const uint64_t& aTopLevelOuterContentWindowId,
     const uint8_t& aHttpTrafficCategory, const uint64_t& aRequestContextID,
     const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
-    const bool& aResponseTimeoutEnabled) {
+    const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId) {
   mRequestHead = aReqHeaders;
   if (aRequestBody) {
     mUploadStream = mozilla::ipc::DeserializeIPCStream(aRequestBody);
   }
 
   mTransaction = new nsHttpTransaction();
+  mChannelId = aChannelId;
+
   nsresult rv = InitInternal(
       aCaps, aArgs, &mRequestHead, mUploadStream, aReqContentLength,
       aReqBodyIncludesHeaders, aTopLevelOuterContentWindowId,
       aHttpTrafficCategory, aRequestContextID, aClassOfService, aInitialRwin,
-      aResponseTimeoutEnabled);
+      aResponseTimeoutEnabled, aChannelId);
   if (NS_FAILED(rv)) {
     LOG(("HttpTransactionChild::RecvInit: [this=%p] InitInternal failed!\n",
          this));

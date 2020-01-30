@@ -363,6 +363,9 @@ nsHttpChannel::~nsHttpChannel() {
   }
 
   ReleaseMainThreadOnlyReferences();
+  if (gHttpHandler) {
+    gHttpHandler->RemoveHttpChannel(mChannelId);
+  }
 }
 
 void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
@@ -1296,6 +1299,10 @@ nsresult nsHttpChannel::SetupTransaction() {
           mTransaction.get()));
   }
 
+  // Save the mapping of channel id and the channel. We need this mapping for
+  // nsIHttpActivityObserver.
+  gHttpHandler->AddHttpChannel(mChannelId, ToSupports(this));
+
   mTransaction->SetTransactionObserver(mTransactionObserver);
   mTransactionObserver = nullptr;
 
@@ -1336,7 +1343,7 @@ nsresult nsHttpChannel::SetupTransaction() {
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       mUploadStreamHasHeaders, GetCurrentThreadEventTarget(), callbacks, this,
       mTopLevelOuterContentWindowId, category, mRequestContext, mClassOfService,
-      mInitialRwin, mResponseTimeoutEnabled);
+      mInitialRwin, mResponseTimeoutEnabled, mChannelId);
   if (NS_FAILED(rv)) {
     mTransaction = nullptr;
     return rv;

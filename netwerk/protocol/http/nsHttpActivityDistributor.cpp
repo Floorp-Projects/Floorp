@@ -5,61 +5,26 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/net/SocketProcessChild.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "nsHttpActivityDistributor.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsIOService.h"
 #include "nsThreadUtils.h"
+#include "NullHttpChannel.h"
 
 namespace mozilla {
 namespace net {
 
 typedef nsMainThreadPtrHolder<nsIHttpActivityObserver> ObserverHolder;
 typedef nsMainThreadPtrHandle<nsIHttpActivityObserver> ObserverHandle;
-typedef nsTArray<ObserverHandle> ObserverArray;
-
-class nsHttpActivityEvent : public Runnable {
- public:
-  nsHttpActivityEvent(nsISupports* aHttpChannel, uint32_t aActivityType,
-                      uint32_t aActivitySubtype, PRTime aTimestamp,
-                      uint64_t aExtraSizeData,
-                      const nsACString& aExtraStringData,
-                      ObserverArray* aObservers)
-      : Runnable("net::nsHttpActivityEvent"),
-        mHttpChannel(aHttpChannel),
-        mActivityType(aActivityType),
-        mActivitySubtype(aActivitySubtype),
-        mTimestamp(aTimestamp),
-        mExtraSizeData(aExtraSizeData),
-        mExtraStringData(aExtraStringData),
-        mObservers(*aObservers) {}
-
-  NS_IMETHOD Run() override {
-    for (size_t i = 0; i < mObservers.Length(); i++) {
-      Unused << mObservers[i]->ObserveActivity(
-          mHttpChannel, mActivityType, mActivitySubtype, mTimestamp,
-          mExtraSizeData, mExtraStringData);
-    }
-    return NS_OK;
-  }
-
- private:
-  virtual ~nsHttpActivityEvent() = default;
-
-  nsCOMPtr<nsISupports> mHttpChannel;
-  uint32_t mActivityType;
-  uint32_t mActivitySubtype;
-  PRTime mTimestamp;
-  uint64_t mExtraSizeData;
-  nsCString mExtraStringData;
-
-  ObserverArray mObservers;
-};
 
 NS_IMPL_ISUPPORTS(nsHttpActivityDistributor, nsIHttpActivityDistributor,
                   nsIHttpActivityObserver)
 
 nsHttpActivityDistributor::nsHttpActivityDistributor()
-    : mLock("nsHttpActivityDistributor.mLock") {}
+    : mLock("nsHttpActivityDistributor.mLock"), mActivated(false) {}
 
 NS_IMETHODIMP
 nsHttpActivityDistributor::ObserveActivity(nsISupports* aHttpChannel,
@@ -68,47 +33,154 @@ nsHttpActivityDistributor::ObserveActivity(nsISupports* aHttpChannel,
                                            PRTime aTimestamp,
                                            uint64_t aExtraSizeData,
                                            const nsACString& aExtraStringData) {
-  nsCOMPtr<nsIRunnable> event;
-  {
-    MutexAutoLock lock(mLock);
+  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-    if (!mObservers.Length()) return NS_OK;
-
-    event = new nsHttpActivityEvent(
-        aHttpChannel, aActivityType, aActivitySubtype, aTimestamp,
-        aExtraSizeData, aExtraStringData, &mObservers);
+  for (size_t i = 0; i < mObservers.Length(); i++) {
+    Unused << mObservers[i]->ObserveActivity(aHttpChannel, aActivityType,
+                                             aActivitySubtype, aTimestamp,
+                                             aExtraSizeData, aExtraStringData);
   }
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-  return NS_DispatchToMainThread(event);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpActivityDistributor::ObserveActivityWithArgs(
+    const HttpActivityArgs& aArgs, uint32_t aActivityType,
+    uint32_t aActivitySubtype, PRTime aTimestamp, uint64_t aExtraSizeData,
+    const nsACString& aExtraStringData) {
+  HttpActivityArgs args(aArgs);
+  nsCString extraStringData(aExtraStringData);
+  if (XRE_IsSocketProcess()) {
+    auto task = [args{std::move(args)}, aActivityType, aActivitySubtype,
+                 aTimestamp, aExtraSizeData,
+                 extraStringData{std::move(extraStringData)}]() {
+      SocketProcessChild::GetSingleton()->SendObserveHttpActivity(
+          args, aActivityType, aActivitySubtype, aTimestamp, aExtraSizeData,
+          extraStringData);
+    };
+
+    if (!NS_IsMainThread()) {
+      return NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "net::nsHttpActivityDistributor::ObserveActivityWithArgs", task));
+    }
+
+    task();
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  RefPtr<nsHttpActivityDistributor> self = this;
+  auto task = [args{std::move(args)}, aActivityType, aActivitySubtype,
+               aTimestamp, aExtraSizeData,
+               extraStringData{std::move(extraStringData)},
+               self{std::move(self)}]() {
+    if (args.type() == HttpActivityArgs::Tuint64_t) {
+      nsWeakPtr weakPtr = gHttpHandler->GetWeakHttpChannel(args.get_uint64_t());
+      if (nsCOMPtr<nsIHttpChannel> channel = do_QueryReferent(weakPtr)) {
+        Unused << self->ObserveActivity(channel, aActivityType,
+                                        aActivitySubtype, aTimestamp,
+                                        aExtraSizeData, extraStringData);
+      }
+    } else if (args.type() == HttpActivityArgs::THttpActivity) {
+      nsCOMPtr<nsIURI> uri;
+      nsAutoCString portStr(NS_LITERAL_CSTRING(""));
+      int32_t port = args.get_HttpActivity().port();
+      bool endToEndSSL = args.get_HttpActivity().endToEndSSL();
+      if (port != -1 &&
+          ((endToEndSSL && port != 443) || (!endToEndSSL && port != 80))) {
+        portStr.AppendInt(port);
+      }
+
+      nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                              (endToEndSSL ? NS_LITERAL_CSTRING("https://")
+                                           : NS_LITERAL_CSTRING("http://")) +
+                                  args.get_HttpActivity().host() + portStr);
+      if (NS_FAILED(rv)) {
+        return;
+      }
+
+      RefPtr<NullHttpChannel> channel = new NullHttpChannel();
+      rv = channel->Init(uri, 0, nullptr, 0, nullptr);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+      Unused << self->ObserveActivity(
+          nsCOMPtr<nsISupports>(do_QueryObject(channel)), aActivityType,
+          aActivitySubtype, aTimestamp, aExtraSizeData, extraStringData);
+    }
+  };
+
+  return NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "net::nsHttpActivityDistributor::ObserveActivityWithArgs", task));
 }
 
 NS_IMETHODIMP
 nsHttpActivityDistributor::GetIsActive(bool* isActive) {
   NS_ENSURE_ARG_POINTER(isActive);
   MutexAutoLock lock(mLock);
+  if (XRE_IsSocketProcess()) {
+    *isActive = mActivated;
+    return NS_OK;
+  }
+
   *isActive = !!mObservers.Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHttpActivityDistributor::SetIsActive(bool aActived) {
+  MOZ_RELEASE_ASSERT(XRE_IsSocketProcess());
+
+  mActivated = aActived;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
-  MutexAutoLock lock(mLock);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   ObserverHandle observer(
       new ObserverHolder("nsIHttpActivityObserver", aObserver));
-  if (!mObservers.AppendElement(observer)) return NS_ERROR_OUT_OF_MEMORY;
 
+  bool wasEmpty = false;
+  {
+    MutexAutoLock lock(mLock);
+    wasEmpty = mObservers.IsEmpty();
+    if (!mObservers.AppendElement(observer)) return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (gIOService->UseSocketProcess() && wasEmpty) {
+    SocketProcessParent* parent = SocketProcessParent::GetSingleton();
+    if (parent && parent->CanSend()) {
+      Unused << parent->SendOnHttpActivityDistributorActivated(true);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver* aObserver) {
-  MutexAutoLock lock(mLock);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   ObserverHandle observer(
       new ObserverHolder("nsIHttpActivityObserver", aObserver));
-  if (!mObservers.RemoveElement(observer)) return NS_ERROR_FAILURE;
 
+  bool isEmpty = false;
+  {
+    MutexAutoLock lock(mLock);
+    if (!mObservers.RemoveElement(observer)) return NS_ERROR_FAILURE;
+    isEmpty = mObservers.IsEmpty();
+  }
+
+  if (gIOService->UseSocketProcess() && isEmpty) {
+    SocketProcessParent* parent = SocketProcessParent::GetSingleton();
+    if (parent && parent->CanSend()) {
+      Unused << parent->SendOnHttpActivityDistributorActivated(false);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  }
   return NS_OK;
 }
 

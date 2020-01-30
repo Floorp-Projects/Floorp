@@ -2745,4 +2745,37 @@ nsresult nsHttpHandler::CancelTransaction(HttpTransactionShell* trans,
   return mConnMgr->CancelTransaction(trans, reason);
 }
 
+void nsHttpHandler::AddHttpChannel(uint64_t aId, nsISupports* aChannel) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsWeakPtr channel(do_GetWeakReference(aChannel));
+  mIDToHttpChannelMap.Put(aId, std::move(channel));
+}
+
+void nsHttpHandler::RemoveHttpChannel(uint64_t aId) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> idleRunnable(NewCancelableRunnableMethod<uint64_t>(
+        "nsHttpHandler::RemoveHttpChannel", this,
+        &nsHttpHandler::RemoveHttpChannel, aId));
+
+    NS_DispatchToMainThreadQueue(do_AddRef(idleRunnable),
+                                 EventQueuePriority::Idle);
+    return;
+  }
+
+  auto entry = mIDToHttpChannelMap.Lookup(aId);
+  if (entry) {
+    entry.Remove();
+  }
+}
+
+nsWeakPtr nsHttpHandler::GetWeakHttpChannel(uint64_t aId) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return mIDToHttpChannelMap.Get(aId);
+}
+
 }  // namespace mozilla::net

@@ -72,7 +72,7 @@ class HttpTransactionShell : public nsISupports {
       nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId,
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,
       uint32_t classOfService, uint32_t initialRwin,
-      bool responseTimeoutEnabled) = 0;
+      bool responseTimeoutEnabled, uint64_t channelId) = 0;
 
   // @param aListener
   //        receives notifications.
@@ -155,7 +155,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId, \
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,  \
       uint32_t classOfService, uint32_t initialRwin,                           \
-      bool responseTimeoutEnabled) override;                                   \
+      bool responseTimeoutEnabled, uint64_t channelId) override;               \
   virtual nsresult AsyncRead(nsIStreamListener* listener, nsIRequest** pump)   \
       override;                                                                \
   virtual void SetClassOfService(uint32_t classOfService) override;            \

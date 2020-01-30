@@ -28,6 +28,7 @@ class nsHttpActivityDistributor : public nsIHttpActivityDistributor {
 
   ObserverArray mObservers;
   Mutex mLock;
+  bool mActivated;
 };
 
 }  // namespace net

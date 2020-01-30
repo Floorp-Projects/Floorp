@@ -45,7 +45,7 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       const uint64_t& aTopLevelOuterContentWindowId,
       const uint8_t& aHttpTrafficCategory, const uint64_t& aRequestContextID,
       const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
-      const bool& aResponseTimeoutEnabled);
+      const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId);
   mozilla::ipc::IPCResult RecvUpdateClassOfService(
       const uint32_t& classOfService);
   mozilla::ipc::IPCResult RecvCancelPump(const nsresult& aStatus);
@@ -74,10 +74,11 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,
       uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory,
       uint64_t requestContextID, uint32_t classOfService, uint32_t initialRwin,
-      bool responseTimeoutEnabled);
+      bool responseTimeoutEnabled, uint64_t channelId);
 
   bool mCanceled;
   nsresult mStatus;
+  uint64_t mChannelId;
   nsHttpRequestHead mRequestHead;
 
   nsCOMPtr<nsIInputStream> mUploadStream;

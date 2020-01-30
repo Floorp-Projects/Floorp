@@ -25,6 +25,7 @@
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserver.h"
 #include "nsISpeculativeConnect.h"
+#include "nsDataHashtable.h"
 
 class nsIHttpChannel;
 class nsIPrefBranch;
@@ -777,6 +778,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
  public:
   MOZ_MUST_USE nsresult NewChannelId(uint64_t& channelId);
+  void AddHttpChannel(uint64_t aId, nsISupports* aChannel);
+  void RemoveHttpChannel(uint64_t aId);
+  nsWeakPtr GetWeakHttpChannel(uint64_t aId);
 
   void BlacklistSpdy(const nsHttpConnectionInfo* ci);
   MOZ_MUST_USE bool IsSpdyBlacklisted(const nsHttpConnectionInfo* ci);
@@ -785,6 +789,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsTHashtable<nsCStringHashKey> mBlacklistedSpdyOrigins;
 
   bool mThroughCaptivePortal;
+
+  // The mapping of channel id and the weak pointer of nsHttpChannel.
+  nsDataHashtable<nsUint64HashKey, nsWeakPtr> mIDToHttpChannelMap;
 };
 
 extern StaticRefPtr<nsHttpHandler> gHttpHandler;

@@ -14,6 +14,7 @@ include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 
 include MemoryReportTypes;
+include NeckoChannelParams;
 include PBrowserOrId;
 include PrefsTypes;
 
@@ -26,6 +27,7 @@ using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using base::ProcessId from "base/process.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using PRTime from "prtime.h";
 
 namespace mozilla {
 namespace net {
@@ -57,6 +59,12 @@ parent:
   async PDNSRequest(nsCString hostName, OriginAttributes originAttributes,
                     uint32_t flags);
   async PChildToParentStream();
+  async ObserveHttpActivity(HttpActivityArgs aActivityArgs,
+                            uint32_t aActivityType,
+                            uint32_t aActivitySubtype,
+                            PRTime   aTimestamp,
+                            uint64_t aExtraSizeData,
+                            nsCString aExtraStringData);
 
 child:
   async PreferenceUpdate(Pref pref);
@@ -72,6 +80,8 @@ child:
   async PHttpTransaction();
   async PParentToChildStream();
   async PHttpConnectionMgr();
+
+  async OnHttpActivityDistributorActivated(bool aIsActivated);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
