@@ -79,11 +79,9 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
                  })
                 ->Track(mPromiseRequestHolder);
           },
-          [=](nsresult failure) {
+          [=](const CopyableErrorResult& failure) {
             mSourcePromiseRequestHolder.Complete();
-            CopyableErrorResult rv;
-            rv.Throw(NS_ERROR_DOM_ABORT_ERR);
-            Unused << PClientHandleOpParent::Send__delete__(this, rv);
+            Unused << PClientHandleOpParent::Send__delete__(this, failure);
             return;
           })
       ->Track(mSourcePromiseRequestHolder);
