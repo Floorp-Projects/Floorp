@@ -68,7 +68,20 @@ bool SourceSurfaceCapture::IsValid() const {
   // We must either be able to source a command list, or we must have a cached
   // and rasterized surface.
   MutexAutoLock lock(mLock);
-  return (mOwner || mHasCommandList || mSurfToOptimize) || mResolved;
+
+  if (mSurfToOptimize) {
+    // We were given a surface, but we haven't tried to optimize it yet
+    // with the reference draw target.
+    return mSurfToOptimize->IsValid();
+  }
+  if (mResolved) {
+    // We were given a surface, and we already optimized it with the
+    // reference draw target.
+    return mResolved->IsValid();
+  }
+
+  // We have no underlying surface, so it must be a set of drawing commands.
+  return mOwner || mHasCommandList;
 }
 
 RefPtr<SourceSurface> SourceSurfaceCapture::Resolve(BackendType aBackendType) {
