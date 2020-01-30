@@ -54,7 +54,11 @@ child:
              uint64_t reqContentLength,
              bool reqBodyIncludesHeaders,
              uint64_t topLevelOuterContentWindowId,
-             uint8_t httpTrafficCategory);
+             uint8_t httpTrafficCategory,
+             uint64_t requestContextID,
+             uint32_t classOfService,
+             uint32_t initialRwin,
+             bool responseTimeoutEnabled);
 
   async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);
