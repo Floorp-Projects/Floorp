@@ -85,6 +85,15 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
       const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
       const RangeBoundaryBase<EPT, ERT>& aEndBoundary, RangeType* aRange);
 
+  void ClearForReuse() {
+    mOwner = nullptr;
+    mStart = RangeBoundary();
+    mEnd = RangeBoundary();
+    mIsPositioned = false;
+    mIsGenerated = false;
+    mCalledByJS = false;
+  }
+
   RefPtr<Document> mOwner;
   RangeBoundary mStart;
   RangeBoundary mEnd;
