@@ -369,7 +369,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                              EmitLineNumberNote emitLineNote = EMIT_LINENOTE,
                              bool isInner = false);
 
-  MOZ_MUST_USE bool emitOptionalTree(ParseNode* pn, OptionalEmitter& oe);
+  MOZ_MUST_USE bool emitOptionalTree(
+      ParseNode* pn, OptionalEmitter& oe,
+      ValueUsage valueUsage = ValueUsage::WantValue);
 
   // Emit global, eval, or module code for tree rooted at body. Always
   // encompasses the entire source.
@@ -712,7 +714,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitDeleteExpression(UnaryNode* deleteNode);
 
   // Optional methods which emit Optional Jump Target
-  MOZ_MUST_USE bool emitOptionalChain(UnaryNode* expr);
+  MOZ_MUST_USE bool emitOptionalChain(UnaryNode* expr, ValueUsage valueUsage);
   MOZ_MUST_USE bool emitCalleeAndThisForOptionalChain(UnaryNode* expr,
                                                       CallNode* callNode,
                                                       CallOrNewEmitter& cone);
@@ -726,7 +728,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitOptionalElemExpression(PropertyByValueBase* elem,
                                                ElemOpEmitter& poe, bool isSuper,
                                                OptionalEmitter& oe);
-  MOZ_MUST_USE bool emitOptionalCall(CallNode* callNode, OptionalEmitter& oe);
+  MOZ_MUST_USE bool emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
+                                     ValueUsage valueUsage);
   MOZ_MUST_USE bool emitDeletePropertyInOptChain(PropertyAccessBase* propExpr,
                                                  OptionalEmitter& oe);
   MOZ_MUST_USE bool emitDeleteElementInOptChain(PropertyByValueBase* elemExpr,

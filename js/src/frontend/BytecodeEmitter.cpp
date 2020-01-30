@@ -7487,8 +7487,8 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
   return true;
 }
 
-bool BytecodeEmitter::emitOptionalCall(CallNode* callNode,
-                                       OptionalEmitter& oe) {
+bool BytecodeEmitter::emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
+                                       ValueUsage valueUsage) {
   /*
    * A modified version of emitCallOrNew that handles optional calls.
    *
@@ -7512,7 +7512,7 @@ bool BytecodeEmitter::emitOptionalCall(CallNode* callNode,
               isRestParameter(argsList->head()->as<UnaryNode>().kid())
           ? CallOrNewEmitter::ArgumentsKind::SingleSpreadRest
           : CallOrNewEmitter::ArgumentsKind::Other,
-      ValueUsage::WantValue);
+      valueUsage);
 
   ParseNode* coordNode = getCoordNode(callNode, calleeNode, op, argsList);
 
@@ -7694,7 +7694,9 @@ bool BytecodeEmitter::emitLeftAssociative(ListNode* node) {
  * Examples of this are `emitOptionalChain`, `emitDeleteOptionalChain` and
  * `emitCalleeAndThisForOptionalChain`.
  */
-bool BytecodeEmitter::emitOptionalTree(ParseNode* pn, OptionalEmitter& oe) {
+bool BytecodeEmitter::emitOptionalTree(
+    ParseNode* pn, OptionalEmitter& oe,
+    ValueUsage valueUsage /* = ValueUsage::WantValue */) {
   if (!CheckRecursionLimit(cx)) {
     return false;
   }
@@ -7747,7 +7749,7 @@ bool BytecodeEmitter::emitOptionalTree(ParseNode* pn, OptionalEmitter& oe) {
     }
     case ParseNodeKind::CallExpr:
     case ParseNodeKind::OptionalCallExpr:
-      if (!emitOptionalCall(&pn->as<CallNode>(), oe)) {
+      if (!emitOptionalCall(&pn->as<CallNode>(), oe, valueUsage)) {
         return false;
       }
       break;
@@ -7820,12 +7822,13 @@ bool BytecodeEmitter::emitCalleeAndThisForOptionalChain(
   return true;
 }
 
-bool BytecodeEmitter::emitOptionalChain(UnaryNode* optionalChain) {
+bool BytecodeEmitter::emitOptionalChain(UnaryNode* optionalChain,
+                                        ValueUsage valueUsage) {
   ParseNode* expr = optionalChain->kid();
 
   OptionalEmitter oe(this, bytecodeSection().stackDepth());
 
-  if (!emitOptionalTree(expr, oe)) {
+  if (!emitOptionalTree(expr, oe, valueUsage)) {
     //              [stack] VAL
     return false;
   }
@@ -10076,7 +10079,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::OptionalChain:
-      if (!emitOptionalChain(&pn->as<UnaryNode>())) {
+      if (!emitOptionalChain(&pn->as<UnaryNode>(), valueUsage)) {
         return false;
       }
       break;
