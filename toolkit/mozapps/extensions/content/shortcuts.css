@@ -33,13 +33,29 @@
 
 .shortcut-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-top: 10px;
 }
 
 .shortcut.card:not([expanded]) > .shortcut-row[hide-before-expand] {
   display: none;
+}
+
+.shortcut-label {
+  flex-grow: 1;
+}
+
+.shortcut-remove-button {
+  background-image: url("chrome://global/skin/icons/delete.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  min-width: 32px;
+}
+
+.shortcut-input[shortcut=""] + .shortcut-remove-button {
+  visibility: hidden;
 }
 
 .expand-row {
