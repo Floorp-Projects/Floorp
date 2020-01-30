@@ -108,4 +108,8 @@
     <string name="mozac_feature_addons_failed_to_uninstall">הסרת ההתקנה של התוספת %1$s נכשלה</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">הסרת התוספת %1$s נכשלה</string>
-    </resources>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">תוספת אחת</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s תוספות</string>
+</resources>
