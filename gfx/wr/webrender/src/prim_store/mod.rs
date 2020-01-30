@@ -1909,12 +1909,12 @@ impl PrimitiveStore {
 
                     // Push a new surface, supplying the list of clips that should be
                     // ignored, since they are handled by clipping when drawing this surface.
-                    frame_state.clip_chain_stack.push_surface(&tile_cache.shared_clips);
+                    frame_state.push_surface(surface_index, &tile_cache.shared_clips);
                     frame_state.tile_cache = Some(tile_cache);
                 }
                 _ => {
                     if is_composite {
-                        frame_state.clip_chain_stack.push_surface(&[]);
+                        frame_state.push_surface(surface_index, &[]);
                     }
                 }
             }
@@ -2133,15 +2133,14 @@ impl PrimitiveStore {
                             cluster.spatial_node_index,
                             clip_chain.as_ref(),
                             prim_local_rect,
-                            frame_context.spatial_tree,
+                            frame_context,
                             frame_state.data_stores,
                             frame_state.clip_store,
                             &self.pictures,
                             frame_state.resource_cache,
                             &self.opacity_bindings,
                             &self.images,
-                            surface_index,
-                            surface.surface_spatial_node_index,
+                            &frame_state.surface_stack,
                         ) {
                             prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                             // Ensure the primitive clip is popped - perhaps we can use
@@ -2292,7 +2291,7 @@ impl PrimitiveStore {
 
         // Similar to above, pop either the clip chain or root entry off the current clip stack.
         if is_composite {
-            frame_state.clip_chain_stack.pop_surface();
+            frame_state.pop_surface();
         }
 
         let pic = &mut self.pictures[pic_index.0];
