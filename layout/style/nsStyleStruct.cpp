@@ -3130,7 +3130,7 @@ nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
                      ? StyleDirection::Rtl
                      : StyleDirection::Ltr),
       mVisible(StyleVisibility::Visible),
-      mImageRendering(NS_STYLE_IMAGE_RENDERING_AUTO),
+      mImageRendering(StyleImageRendering::Auto),
       mWritingMode(NS_STYLE_WRITING_MODE_HORIZONTAL_TB),
       mTextOrientation(StyleTextOrientation::Mixed),
       mColorAdjust(StyleColorAdjust::Economy) {
