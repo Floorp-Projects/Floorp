@@ -70,6 +70,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AbstractRange)
 
+// NOTE: If you need to change default value of members of AbstractRange,
+//       update nsRange::Create(nsINode* aNode) too.
 AbstractRange::AbstractRange(nsINode* aNode)
     : mIsPositioned(false), mIsGenerated(false), mCalledByJS(false) {
   MOZ_ASSERT(aNode, "range isn't in a document!");

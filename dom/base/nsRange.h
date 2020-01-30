@@ -50,14 +50,19 @@ class nsRange final : public mozilla::dom::AbstractRange,
   virtual ~nsRange();
   explicit nsRange(nsINode* aNode);
 
+  bool MaybeCacheToReuse();
+
  public:
+  /**
+   * Called when the process is shutting down.
+   */
+  static void Shutdown();
+
   /**
    * The following Create() returns `nsRange` instance which is initialized
    * only with aNode.  The result is never positioned.
    */
-  static already_AddRefed<nsRange> Create(nsINode* aNode) {
-    return do_AddRef(new nsRange(aNode));
-  }
+  static already_AddRefed<nsRange> Create(nsINode* aNode);
 
   /**
    * The following Create() may return `nsRange` instance which is initialized
@@ -451,6 +456,9 @@ class nsRange final : public mozilla::dom::AbstractRange,
   // notifications while holding a strong reference to the new child.
   nsIContent* MOZ_NON_OWNING_REF mNextStartRef;
   nsIContent* MOZ_NON_OWNING_REF mNextEndRef;
+
+  static nsTArray<RefPtr<nsRange>>* sCachedRanges;
+  static bool sHasShutDown;
 
   friend class mozilla::dom::AbstractRange;
 };
