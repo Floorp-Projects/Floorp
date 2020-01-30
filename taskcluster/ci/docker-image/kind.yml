@@ -248,7 +248,7 @@ jobs:
         parent: debian9-base
     condprof:
         symbol: I(condprof)
-        parent: debian10-test
+        parent: ubuntu1804-test
     visual-metrics:
         symbol: I(visual-metrics)
         parent: debian9-base
