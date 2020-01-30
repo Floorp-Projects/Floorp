@@ -99,7 +99,8 @@ Examples:
 ``else`` should only ever be followed by ``{`` or ``if``; i.e., other
 control keywords are not allowed and should be placed inside braces.
 
-.. note:
+.. note::
+
    For this rule, clang-tidy provides the ``google-readability-braces-around-statements``
    check with autofixes.
 
@@ -120,7 +121,8 @@ No ``using`` directives are allowed in header files, except inside class
 definitions or functions. (We don't want to pollute the global scope of
 compilation units that use the header file.)
 
-.. note:
+.. note::
+
    For parts of this rule, clang-tidy provides the ``google-global-names-in-headers``
    check. It only detects ``using namespace`` directives in the global namespace.
 
@@ -200,7 +202,8 @@ C++ classes
 
 Define classes using the style given above.
 
-.. note:
+.. note::
+
    For the rule on ``= default``, clang-tidy provides the ``modernize-use-default``
    check with autofixes.
 
@@ -243,7 +246,8 @@ but can NOT be further overridden in the derived classes. This should
 help the person reading the code fully understand what the declaration
 is doing, without needing to further examine base classes.
 
-.. note:
+.. note::
+
    For the rule on ``virtual/override/final``, clang-tidy provides the
    ``modernize-use-override`` check with autofixes.
 
@@ -314,7 +318,8 @@ C/C++ practices
 -  In C++ code, use ``nullptr`` for pointers. In C code, using ``NULL``
    or ``0`` is allowed.
 
-.. note:
+.. note::
+
    For the C++ rule, clang-tidy provides the ``modernize-use-nullptr`` check
    with autofixes.
 
@@ -328,7 +333,8 @@ C/C++ practices
    ``(!x)`` instead. ``if (x == true)`` may have semantics different from
    ``if (x)``!
 
-.. note:
+.. note::
+
    clang-tidy provides the ``readability-simplify-boolean-expr`` check
    with autofixes that checks for these and some other boolean expressions
    that can be simplified.
