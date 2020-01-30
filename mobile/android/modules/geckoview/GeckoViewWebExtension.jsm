@@ -27,6 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.jsm",
+  Management: "resource://gre/modules/Extension.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -239,7 +240,7 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
     icons,
     version,
     optionsURL,
-    optionsBrowserStyle,
+    optionsType,
     isRecommended,
     blocklistState,
     userDisabled,
@@ -255,8 +256,7 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
     creatorName = name;
     creatorURL = url;
   }
-  const openOptionsPageInTab =
-    optionsBrowserStyle === AddonManager.OPTIONS_TYPE_TAB;
+  const openOptionsPageInTab = optionsType === AddonManager.OPTIONS_TYPE_TAB;
   const disabledFlags = [];
   if (userDisabled) {
     disabledFlags.push("userDisabled");
@@ -322,12 +322,21 @@ class ExtensionInstallListener {
   }
 
   onInstallEnded(aInstall, aAddon) {
-    const extension = exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      aInstall.sourceURI
-    );
-    this.resolve({ extension });
+    const addonId = aAddon.id;
+    const { sourceURI } = aInstall;
+    const onReady = (name, { id }) => {
+      if (id != addonId) {
+        return;
+      }
+      Management.off("ready", onReady);
+      const extension = exportExtension(
+        aAddon,
+        aAddon.userPermissions,
+        sourceURI
+      );
+      this.resolve({ extension });
+    };
+    Management.on("ready", onReady);
   }
 }
 

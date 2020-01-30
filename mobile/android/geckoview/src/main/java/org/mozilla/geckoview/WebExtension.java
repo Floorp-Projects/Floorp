@@ -1343,16 +1343,14 @@ public class WebExtension {
           *   manifest.json/options_ui
           * </a>
           */
-        // TODO: Bug 1598792
-        final @Nullable String optionsPageUrl;
+        public final @Nullable String optionsPageUrl;
         /** Whether the options page should be open in a Tab or not.
           *
           * See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/options_ui#Syntax">
           *   manifest.json/options_ui#Syntax
           * </a>
           */
-        // TODO: Bug 1598792
-        final boolean openOptionsPageInTab;
+        public final boolean openOptionsPageInTab;
         /** Whether or not this is a recommended extension.
           *
           * See <a href="https://blog.mozilla.org/firefox/firefox-recommended-extensions/">
@@ -1425,7 +1423,7 @@ public class WebExtension {
             creatorUrl = bundle.getString("creatorURL");
             homepageUrl = bundle.getString("homepageURL");
             name = bundle.getString("name");
-            optionsPageUrl = bundle.getString("optionsPageUrl");
+            optionsPageUrl = bundle.getString("optionsPageURL");
             openOptionsPageInTab = bundle.getBoolean("openOptionsPageInTab");
             isRecommended = bundle.getBoolean("isRecommended");
             blocklistState = bundle.getInt("blocklistState", BlocklistStateFlags.NOT_BLOCKED);
