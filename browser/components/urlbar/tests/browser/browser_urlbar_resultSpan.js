@@ -52,7 +52,7 @@ add_task(async function oneTip() {
     MAX_RESULTS - TIP_SPAN + 1
   );
 
-  let provider = new TestProvider({ results });
+  let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
   UrlbarProvidersManager.registerProvider(provider);
 
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -99,7 +99,7 @@ add_task(async function threeTips() {
     MAX_RESULTS - 3 * (TIP_SPAN - 1)
   );
 
-  let provider = new TestProvider({ results });
+  let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
   UrlbarProvidersManager.registerProvider(provider);
 
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -141,7 +141,7 @@ add_task(async function oneTip_nonRestricting() {
 
   expectedResults = expectedResults.slice(0, MAX_RESULTS - TIP_SPAN + 1);
 
-  let provider = new TestProvider({ results, isRestricting: false });
+  let provider = new UrlbarTestUtils.TestProvider({ results });
   UrlbarProvidersManager.registerProvider(provider);
 
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -197,7 +197,7 @@ add_task(async function threeTips_nonRestricting() {
 
   expectedResults = expectedResults.slice(0, MAX_RESULTS - 3 * (TIP_SPAN - 1));
 
-  let provider = new TestProvider({ results, isRestricting: false });
+  let provider = new UrlbarTestUtils.TestProvider({ results });
   UrlbarProvidersManager.registerProvider(provider);
 
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -234,35 +234,4 @@ function collectExpectedProperties(actualObj, expectedObj) {
     }
   }
   return newActualObj;
-}
-
-/**
- * A test provider.
- */
-class TestProvider extends UrlbarProvider {
-  constructor({ results, isRestricting = true } = {}) {
-    super();
-    this._results = results;
-    this._isRestricting = isRestricting;
-  }
-  get name() {
-    return "TestProvider";
-  }
-  get type() {
-    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-  }
-  isActive(context) {
-    return true;
-  }
-  getPriority(context) {
-    return this._isRestricting ? 1 : 0;
-  }
-  async startQuery(context, addCallback) {
-    Assert.ok(true, "Tip provider was invoked");
-    for (const result of this._results) {
-      addCallback(this, result);
-    }
-  }
-  cancelQuery(context) {}
-  pickResult(result) {}
 }

@@ -9,39 +9,8 @@
 const HELP_URL = "about:mozilla";
 const TIP_URL = "about:about";
 
-/**
- * A test provider.
- */
-class TipTestProvider extends UrlbarProvider {
-  constructor(matches) {
-    super();
-    this._matches = matches;
-  }
-  get name() {
-    return "TipTestProvider";
-  }
-  get type() {
-    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
-  }
-  isActive(context) {
-    return true;
-  }
-  getPriority(context) {
-    return 1;
-  }
-  async startQuery(context, addCallback) {
-    Assert.ok(true, "Tip provider was invoked");
-    this._context = context;
-    for (const match of this._matches) {
-      addCallback(this, match);
-    }
-  }
-  cancelQuery(context) {}
-  pickResult(result) {}
-}
-
 add_task(async function tipIsSecondResult() {
-  let matches = [
+  let results = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.HISTORY,
@@ -61,7 +30,7 @@ add_task(async function tipIsSecondResult() {
     ),
   ];
 
-  let provider = new TipTestProvider(matches);
+  let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
   UrlbarProvidersManager.registerProvider(provider);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -155,7 +124,7 @@ add_task(async function tipIsSecondResult() {
 });
 
 add_task(async function tipIsOnlyResult() {
-  let matches = [
+  let results = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
@@ -170,7 +139,7 @@ add_task(async function tipIsOnlyResult() {
     ),
   ];
 
-  let provider = new TipTestProvider(matches);
+  let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
   UrlbarProvidersManager.registerProvider(provider);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -237,7 +206,7 @@ add_task(async function tipIsOnlyResult() {
 });
 
 add_task(async function tipHasNoHelpButton() {
-  let matches = [
+  let results = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.HISTORY,
@@ -255,7 +224,7 @@ add_task(async function tipHasNoHelpButton() {
     ),
   ];
 
-  let provider = new TipTestProvider(matches);
+  let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
   UrlbarProvidersManager.registerProvider(provider);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -324,7 +293,7 @@ add_task(async function mouseSelection() {
     window.windowUtils.disableNonTestMouseEvents(false);
   });
 
-  let matches = [
+  let results = [
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
@@ -339,7 +308,7 @@ add_task(async function mouseSelection() {
     ),
   ];
 
-  let provider = new TipTestProvider(matches);
+  let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
   UrlbarProvidersManager.registerProvider(provider);
 
   // Click the help button.
@@ -383,7 +352,7 @@ add_task(async function mouseSelection() {
   // Click inside the tip but outside the buttons.  Nothing should happen.  Make
   // the result the heuristic to check that the selection on the main button
   // isn't lost.
-  matches[0].heuristic = true;
+  results[0].heuristic = true;
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
     window,

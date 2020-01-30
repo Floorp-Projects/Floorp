@@ -389,22 +389,26 @@ class TestProvider extends UrlbarProvider {
    *
    * @param {array} results
    *   An array of UrlbarResult objects that will be the provider's results.
-   * @param {string} name
+   * @param {string} [name]
    *   The provider's name.  Provider names should be unique.
-   * @param {UrlbarUtils.PROVIDER_TYPE} type
+   * @param {UrlbarUtils.PROVIDER_TYPE} [type]
    *   The provider's type.
-   * @param {number} priority
+   * @param {number} [priority]
    *   The provider's priority.  Built-in providers have a priority of zero.
-   * @param {number} addTimeout
+   * @param {number} [addTimeout]
    *   If non-zero, each result will be added on this timeout.  If zero, all
    *   results will be added immediately and synchronously.
+   * @param {function} [onCancel]
+   *   If given, a function that will be called when the provider's cancelQuery
+   *   method is called.
    */
   constructor({
     results,
-    name = "TestProvider",
+    name = "TestProvider" + Math.floor(Math.random() * 100000),
     type = UrlbarUtils.PROVIDER_TYPE.PROFILE,
     priority = 0,
     addTimeout = 0,
+    onCancel = null,
   } = {}) {
     super();
     this._results = results;
@@ -412,6 +416,7 @@ class TestProvider extends UrlbarProvider {
     this._type = type;
     this._priority = priority;
     this._addTimeout = addTimeout;
+    this._onCancel = onCancel;
   }
   get name() {
     return this._name;
@@ -439,7 +444,11 @@ class TestProvider extends UrlbarProvider {
       }
     }
   }
-  cancelQuery(context) {}
+  cancelQuery(context) {
+    if (this._onCancel) {
+      this._onCancel();
+    }
+  }
   pickResult(result) {}
 }
 
