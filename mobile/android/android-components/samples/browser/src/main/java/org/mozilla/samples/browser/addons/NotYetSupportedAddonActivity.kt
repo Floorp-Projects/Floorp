@@ -4,6 +4,8 @@
 
 package org.mozilla.samples.browser.addons
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +20,9 @@ import mozilla.components.feature.addons.ui.UnsupportedAddonsAdapter
 import mozilla.components.feature.addons.ui.UnsupportedAddonsAdapterDelegate
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
+
+private const val LEARN_MORE_URL =
+        "https://support.mozilla.org/kb/add-compatibility-firefox-preview"
 
 /**
  * Activity for managing unsupported add-ons.
@@ -61,6 +66,11 @@ class NotYetSupportedAddonActivity : AppCompatActivity() {
                 unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
                 unsupportedAddons = addons
             )
+
+            view.findViewById<View>(R.id.learn_more_label).setOnClickListener {
+                val intent = Intent(Intent.ACTION_VIEW).setData(Uri.parse(LEARN_MORE_URL))
+                startActivity(intent)
+            }
         }
 
         override fun onUninstallError(addonId: String, throwable: Throwable) {
