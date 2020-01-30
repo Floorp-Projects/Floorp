@@ -273,8 +273,8 @@ class BaseConfigureTest(unittest.TestCase):
             target = []
 
         if mozconfig:
-            fh, mozconfig_path = tempfile.mkstemp()
-            os.write(fh, mozconfig)
+            fh, mozconfig_path = tempfile.mkstemp(text=True)
+            os.write(fh, six.ensure_binary(mozconfig))
             os.close(fh)
         else:
             mozconfig_path = os.path.join(os.path.dirname(__file__), 'data',
