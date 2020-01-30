@@ -75,6 +75,7 @@ class FenixSnackbar private constructor(
     companion object {
         const val LENGTH_LONG = Snackbar.LENGTH_LONG
         const val LENGTH_SHORT = Snackbar.LENGTH_SHORT
+        const val LENGTH_ACCESSIBLE = 15000 /* 15 seconds in ms */
         const val LENGTH_INDEFINITE = Snackbar.LENGTH_INDEFINITE
 
         private const val minTextSize = 12
@@ -82,6 +83,10 @@ class FenixSnackbar private constructor(
         private const val actionButtonIncreaseDps = 16
         private const val stepGranularity = 1
 
+        /**
+         * Display a snackbar in the given view with duration and proper normal/error styling.
+         * Note: Duration is overriden for users with accessibility settings enabled
+         */
         fun make(view: View, duration: Int, isError: Boolean = false): FenixSnackbar {
             val parent = findSuitableParent(view) ?: run {
                 throw IllegalArgumentException(
@@ -92,9 +97,15 @@ class FenixSnackbar private constructor(
             val inflater = LayoutInflater.from(parent.context)
             val content = inflater.inflate(R.layout.fenix_snackbar, parent, false)
 
+            val durationOrAccessibleDuration = if (parent.context.settings().accessibilityServicesEnabled) {
+                LENGTH_ACCESSIBLE
+            } else {
+                duration
+            }
+
             val callback = FenixSnackbarCallback(content)
             return FenixSnackbar(parent, content, callback, isError).also {
-                it.duration = duration
+                it.duration = durationOrAccessibleDuration
             }
         }
 

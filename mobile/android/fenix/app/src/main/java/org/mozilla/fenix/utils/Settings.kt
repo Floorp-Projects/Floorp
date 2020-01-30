@@ -274,6 +274,9 @@ class Settings private constructor(
             return accessibilityManager?.isTouchExplorationEnabled ?: false
         }
 
+    val accessibilityServicesEnabled: Boolean
+        get() { return touchExplorationIsEnabled || switchServiceIsEnabled }
+
     val toolbarSettingString: String
         get() = when {
             shouldUseBottomToolbar -> appContext.getString(R.string.preference_bottom_toolbar)

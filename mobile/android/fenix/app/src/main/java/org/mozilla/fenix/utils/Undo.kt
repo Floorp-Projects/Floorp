@@ -10,13 +10,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.components.FenixSnackbar
-import android.app.AlertDialog
-import org.mozilla.fenix.R
-import android.content.Context
-import android.view.accessibility.AccessibilityManager
+import org.mozilla.fenix.ext.settings
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal const val UNDO_DELAY = 3000L
+internal const val ACCESSIBLE_UNDO_DELAY = 15000L
 
 /**
  * Runs [operation] after giving user time (see [UNDO_DELAY]) to cancel it.
@@ -44,22 +42,6 @@ fun CoroutineScope.allowUndo(
     // writing a volatile variable.
     val requestedUndo = AtomicBoolean(false)
 
-    fun showUndoDialog() {
-        val dialogBuilder = AlertDialog.Builder(view.context)
-        dialogBuilder.setMessage(message).setCancelable(false)
-            .setPositiveButton(R.string.a11y_dialog_deleted_confirm) { _, _ ->
-            launch {
-                operation.invoke()
-            }
-        }.setNegativeButton(R.string.a11y_dialog_deleted_undo) { _, _ ->
-            launch {
-                onCancel.invoke()
-            }
-        }
-        val alert = dialogBuilder.create()
-        alert.show()
-    }
-
     fun showUndoSnackbar() {
         val snackbar = FenixSnackbar
             .make(view, FenixSnackbar.LENGTH_INDEFINITE)
@@ -77,7 +59,13 @@ fun CoroutineScope.allowUndo(
         // Wait a bit, and if user didn't request cancellation, proceed with
         // requested operation and hide the snackbar.
         launch {
-            delay(UNDO_DELAY)
+            val lengthToDelay = if (view.context.settings().accessibilityServicesEnabled) {
+                ACCESSIBLE_UNDO_DELAY
+            } else {
+                UNDO_DELAY
+            }
+
+            delay(lengthToDelay)
 
             if (!requestedUndo.get()) {
                 snackbar.dismiss()
@@ -86,16 +74,5 @@ fun CoroutineScope.allowUndo(
         }
     }
 
-    //  It is difficult to use our Snackbars quickly enough with
-    //  Talkback enabled, so in that case we show a dialog instead
-    if (touchExplorationEnabled(view)) {
-        showUndoDialog()
-    } else {
-        showUndoSnackbar()
-    }
-}
-
-fun touchExplorationEnabled(view: View): Boolean {
-    val am = view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-    return am.isTouchExplorationEnabled
+    showUndoSnackbar()
 }
