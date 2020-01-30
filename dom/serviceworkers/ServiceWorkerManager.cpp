@@ -377,13 +377,13 @@ void ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar) {
   mActor = static_cast<ServiceWorkerManagerChild*>(actor);
 }
 
-RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
+RefPtr<GenericErrorResultPromise> ServiceWorkerManager::StartControllingClient(
     const ClientInfo& aClientInfo,
     ServiceWorkerRegistrationInfo* aRegistrationInfo,
     bool aControlClientHandle) {
   MOZ_DIAGNOSTIC_ASSERT(aRegistrationInfo->GetActive());
 
-  RefPtr<GenericPromise> promise;
+  RefPtr<GenericErrorResultPromise> promise;
   RefPtr<ServiceWorkerManager> self(this);
 
   const ServiceWorkerDescriptor& active =
@@ -397,7 +397,7 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
     if (aControlClientHandle) {
       promise = entry.Data()->mClientHandle->Control(active);
     } else {
-      promise = GenericPromise::CreateAndResolve(false, __func__);
+      promise = GenericErrorResultPromise::CreateAndResolve(false, __func__);
     }
 
     entry.Data()->mRegistrationInfo = aRegistrationInfo;
@@ -415,12 +415,12 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
         SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
         [](bool) {
           // do nothing on success
-          return GenericPromise::CreateAndResolve(true, __func__);
+          return GenericErrorResultPromise::CreateAndResolve(true, __func__);
         },
-        [self, aClientInfo](nsresult aRv) {
+        [self, aClientInfo](const CopyableErrorResult& aRv) {
           // failed to control, forget about this client
           self->StopControllingClient(aClientInfo);
-          return GenericPromise::CreateAndReject(aRv, __func__);
+          return GenericErrorResultPromise::CreateAndReject(aRv, __func__);
         });
   }
 
@@ -430,7 +430,7 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
   if (aControlClientHandle) {
     promise = clientHandle->Control(active);
   } else {
-    promise = GenericPromise::CreateAndResolve(false, __func__);
+    promise = GenericErrorResultPromise::CreateAndResolve(false, __func__);
   }
 
   aRegistrationInfo->StartControllingClient();
@@ -451,12 +451,12 @@ RefPtr<GenericPromise> ServiceWorkerManager::StartControllingClient(
       SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
       [](bool) {
         // do nothing on success
-        return GenericPromise::CreateAndResolve(true, __func__);
+        return GenericErrorResultPromise::CreateAndResolve(true, __func__);
       },
-      [self, aClientInfo](nsresult aRv) {
+      [self, aClientInfo](const CopyableErrorResult& aRv) {
         // failed to control, forget about this client
         self->StopControllingClient(aClientInfo);
-        return GenericPromise::CreateAndReject(aRv, __func__);
+        return GenericErrorResultPromise::CreateAndReject(aRv, __func__);
       });
 }
 
@@ -2241,7 +2241,7 @@ void ServiceWorkerManager::UpdateControlledClient(
 
   RefPtr<ServiceWorkerManager> self = this;
 
-  RefPtr<GenericPromise> p =
+  RefPtr<GenericErrorResultPromise> p =
       StartControllingClient(aNewClientInfo, registration);
   p->Then(
       SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
@@ -2251,7 +2251,7 @@ void ServiceWorkerManager::UpdateControlledClient(
       },
       // Controlling the new ClientInfo fail, do nothing.
       // Probably need to call LoadInfo::ClearController
-      [](nsresult aRv) {});
+      [](const CopyableErrorResult& aRv) {});
 }
 
 void ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
@@ -2467,20 +2467,23 @@ void ServiceWorkerManager::UpdateInternal(
   queue->ScheduleJob(job);
 }
 
-RefPtr<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
+RefPtr<GenericErrorResultPromise> ServiceWorkerManager::MaybeClaimClient(
     const ClientInfo& aClientInfo,
     ServiceWorkerRegistrationInfo* aWorkerRegistration) {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerRegistration);
 
   if (!aWorkerRegistration->GetActive()) {
-    return GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                           __func__);
+    CopyableErrorResult rv;
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return GenericErrorResultPromise::CreateAndReject(rv, __func__);
   }
 
   // Same origin check
   nsCOMPtr<nsIPrincipal> principal(aClientInfo.GetPrincipal());
   if (!aWorkerRegistration->Principal()->Equals(principal)) {
-    return GenericPromise::CreateAndReject(NS_ERROR_DOM_SECURITY_ERR, __func__);
+    CopyableErrorResult rv;
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return GenericErrorResultPromise::CreateAndReject(rv, __func__);
   }
 
   // The registration that should be controlling the client
@@ -2493,18 +2496,18 @@ RefPtr<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
 
   if (aWorkerRegistration != matchingRegistration ||
       aWorkerRegistration == controllingRegistration) {
-    return GenericPromise::CreateAndResolve(true, __func__);
+    return GenericErrorResultPromise::CreateAndResolve(true, __func__);
   }
 
   return StartControllingClient(aClientInfo, aWorkerRegistration);
 }
 
-RefPtr<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
+RefPtr<GenericErrorResultPromise> ServiceWorkerManager::MaybeClaimClient(
     const ClientInfo& aClientInfo,
     const ServiceWorkerDescriptor& aServiceWorker) {
   nsCOMPtr<nsIPrincipal> principal = aServiceWorker.GetPrincipal();
   if (!principal) {
-    return GenericPromise::CreateAndResolve(false, __func__);
+    return GenericErrorResultPromise::CreateAndResolve(false, __func__);
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
@@ -2516,7 +2519,7 @@ RefPtr<GenericPromise> ServiceWorkerManager::MaybeClaimClient(
   // are done.  The fix for this is to move the SWM to the parent process
   // so there are no consistency errors.
   if (NS_WARN_IF(!registration) || NS_WARN_IF(!registration->GetActive())) {
-    return GenericPromise::CreateAndResolve(false, __func__);
+    return GenericErrorResultPromise::CreateAndResolve(false, __func__);
   }
 
   return MaybeClaimClient(aClientInfo, registration);
@@ -2564,7 +2567,8 @@ void ServiceWorkerManager::UpdateClientControllers(
   // Fire event after iterating mControlledClients is done to prevent
   // modification by reentering from the event handlers during iteration.
   for (auto& handle : handleList) {
-    RefPtr<GenericPromise> p = handle->Control(activeWorker->Descriptor());
+    RefPtr<GenericErrorResultPromise> p =
+        handle->Control(activeWorker->Descriptor());
 
     RefPtr<ServiceWorkerManager> self = this;
 
@@ -2575,7 +2579,7 @@ void ServiceWorkerManager::UpdateClientControllers(
         [](bool) {
           // do nothing on success
         },
-        [self, clientInfo = handle->Info()](nsresult aRv) {
+        [self, clientInfo = handle->Info()](const CopyableErrorResult& aRv) {
           // failed to control, forget about this client
           self->StopControllingClient(clientInfo);
         });

@@ -14,6 +14,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/SourceText.h"
 #include "MessageEventRunnable.h"
+#include "mozilla/Result.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
@@ -3079,9 +3080,15 @@ Maybe<ClientInfo> WorkerPrivate::GetClientInfo() const {
 const ClientState WorkerPrivate::GetClientState() const {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
   MOZ_DIAGNOSTIC_ASSERT(data->mClientSource);
-  ClientState state;
-  data->mClientSource->SnapshotState(&state);
-  return state;
+  Result<ClientState, ErrorResult> res = data->mClientSource->SnapshotState();
+  if (res.isOk()) {
+    return res.unwrap();
+  }
+
+  // XXXbz Why is it OK to just ignore errors and return a default-initialized
+  // state here?
+  res.unwrapErr().SuppressException();
+  return ClientState();
 }
 
 const Maybe<ServiceWorkerDescriptor> WorkerPrivate::GetController() {

@@ -10,6 +10,7 @@
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/ErrorResult.h"
 
 class nsIGlobalObject;
 
@@ -37,7 +38,7 @@ void StartClientManagerOp(Func aFunc, const Arg& aArg, nsIGlobalObject* aGlobal,
             holder->Complete();
             aResolve(aResult);
           },
-          [aReject, holder](nsresult aResult) {
+          [aReject, holder](const CopyableErrorResult& aResult) {
             holder->Complete();
             aReject(aResult);
           })

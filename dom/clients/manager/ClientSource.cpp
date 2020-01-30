@@ -72,35 +72,32 @@ void ClientSource::ExecutionReady(const ClientSourceExecutionReadyArgs& aArgs) {
   });
 }
 
-nsresult ClientSource::SnapshotWindowState(ClientState* aStateOut) {
+Result<ClientState, ErrorResult> ClientSource::SnapshotWindowState() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsPIDOMWindowInner* window = GetInnerWindow();
   if (!window || !window->IsCurrentInnerWindow() ||
       !window->HasActiveDocument()) {
-    *aStateOut = ClientState(ClientWindowState(
-        VisibilityState::Hidden, TimeStamp(), StorageAccess::eDeny, false));
-    return NS_OK;
+    return ClientState(ClientWindowState(VisibilityState::Hidden, TimeStamp(),
+                                         StorageAccess::eDeny, false));
   }
 
   Document* doc = window->GetExtantDoc();
+  ErrorResult rv;
   if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_UNEXPECTED;
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return Err(std::move(rv));
   }
 
-  ErrorResult rv;
   bool focused = doc->HasFocus(rv);
   if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
-    return rv.StealNSResult();
+    return Err(std::move(rv));
   }
 
   StorageAccess storage = StorageAllowedForDocument(doc);
 
-  *aStateOut = ClientState(ClientWindowState(
-      doc->VisibilityState(), doc->LastFocusTime(), storage, focused));
-
-  return NS_OK;
+  return ClientState(ClientWindowState(doc->VisibilityState(),
+                                       doc->LastFocusTime(), storage, focused));
 }
 
 WorkerPrivate* ClientSource::GetWorkerPrivate() const {
@@ -448,13 +445,14 @@ RefPtr<ClientOpPromise> ClientSource::Control(
   }
 
   if (NS_WARN_IF(!controlAllowed)) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                            __func__);
+    CopyableErrorResult rv;
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   SetController(ServiceWorkerDescriptor(aArgs.serviceWorker()));
 
-  return ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+  return ClientOpPromise::CreateAndResolve(CopyableErrorResult(), __func__);
 }
 
 void ClientSource::InheritController(
@@ -534,8 +532,9 @@ RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
 
   if (mClientInfo.Type() != ClientType::Window) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                            __func__);
+    CopyableErrorResult rv;
+    rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
   nsPIDOMWindowOuter* outer = nullptr;
 
@@ -550,20 +549,21 @@ RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
   }
 
   if (!outer) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                            __func__);
+    CopyableErrorResult rv;
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   MOZ_ASSERT(NS_IsMainThread());
   nsFocusManager::FocusWindow(outer, aArgs.callerType());
 
-  ClientState state;
-  nsresult rv = SnapshotState(&state);
-  if (NS_FAILED(rv)) {
-    return ClientOpPromise::CreateAndReject(rv, __func__);
+  Result<ClientState, ErrorResult> state = SnapshotState();
+  if (state.isErr()) {
+    return ClientOpPromise::CreateAndReject(
+        CopyableErrorResult(state.unwrapErr()), __func__);
   }
 
-  return ClientOpPromise::CreateAndResolve(state.ToIPC(), __func__);
+  return ClientOpPromise::CreateAndResolve(state.inspect().ToIPC(), __func__);
 }
 
 RefPtr<ClientOpPromise> ClientSource::PostMessage(
@@ -577,10 +577,12 @@ RefPtr<ClientOpPromise> ClientSource::PostMessage(
     const RefPtr<ServiceWorkerContainer> container =
         window->Navigator()->ServiceWorker();
     container->ReceiveMessage(aArgs);
-    return ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+    return ClientOpPromise::CreateAndResolve(CopyableErrorResult(), __func__);
   }
 
-  return ClientOpPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  CopyableErrorResult rv;
+  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return ClientOpPromise::CreateAndReject(rv, __func__);
 }
 
 RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
@@ -591,8 +593,9 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
 
   nsIGlobalObject* global = GetGlobal();
   if (NS_WARN_IF(!global)) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                            __func__);
+    CopyableErrorResult rv;
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   // Note, we cannot just mark the ClientSource controlled.  We must go through
@@ -601,8 +604,8 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
   // mode.  In parent-process service worker mode the SWM is notified in the
   // parent-process in ClientManagerService::Claim().
 
-  RefPtr<GenericPromise::Private> innerPromise =
-      new GenericPromise::Private(__func__);
+  RefPtr<GenericErrorResultPromise::Private> innerPromise =
+      new GenericErrorResultPromise::Private(__func__);
   ServiceWorkerDescriptor swd(aArgs.serviceWorker());
 
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
@@ -614,7 +617,8 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
           return;
         }
 
-        RefPtr<GenericPromise> p = swm->MaybeClaimClient(clientInfo, swd);
+        RefPtr<GenericErrorResultPromise> p =
+            swm->MaybeClaimClient(clientInfo, swd);
         p->ChainTo(innerPromise.forget(), __func__);
       });
 
@@ -627,16 +631,17 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
   RefPtr<ClientOpPromise::Private> outerPromise =
       new ClientOpPromise::Private(__func__);
 
-  auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<GenericPromise>>(global);
+  auto holder =
+      MakeRefPtr<DOMMozPromiseRequestHolder<GenericErrorResultPromise>>(global);
 
   innerPromise
       ->Then(
           mEventTarget, __func__,
           [outerPromise, holder](bool aResult) {
             holder->Complete();
-            outerPromise->Resolve(NS_OK, __func__);
+            outerPromise->Resolve(CopyableErrorResult(), __func__);
           },
-          [outerPromise, holder](nsresult aResult) {
+          [outerPromise, holder](const CopyableErrorResult& aResult) {
             holder->Complete();
             outerPromise->Reject(aResult, __func__);
           })
@@ -647,36 +652,33 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
 
 RefPtr<ClientOpPromise> ClientSource::GetInfoAndState(
     const ClientGetInfoAndStateArgs& aArgs) {
-  ClientState state;
-  nsresult rv = SnapshotState(&state);
-  if (NS_FAILED(rv)) {
-    return ClientOpPromise::CreateAndReject(rv, __func__);
+  Result<ClientState, ErrorResult> state = SnapshotState();
+  if (state.isErr()) {
+    return ClientOpPromise::CreateAndReject(
+        CopyableErrorResult(state.unwrapErr()), __func__);
   }
 
   return ClientOpPromise::CreateAndResolve(
-      ClientInfoAndState(mClientInfo.ToIPC(), state.ToIPC()), __func__);
+      ClientInfoAndState(mClientInfo.ToIPC(), state.inspect().ToIPC()),
+      __func__);
 }
 
-nsresult ClientSource::SnapshotState(ClientState* aStateOut) {
+Result<ClientState, ErrorResult> ClientSource::SnapshotState() {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
-  MOZ_DIAGNOSTIC_ASSERT(aStateOut);
 
   if (mClientInfo.Type() == ClientType::Window) {
     MaybeCreateInitialDocument();
-    nsresult rv = SnapshotWindowState(aStateOut);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    return NS_OK;
+    return SnapshotWindowState();
   }
 
   WorkerPrivate* workerPrivate = GetWorkerPrivate();
   if (!workerPrivate) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    ErrorResult rv;
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return Err(std::move(rv));
   }
 
-  *aStateOut = ClientState(ClientWorkerState(workerPrivate->StorageAccess()));
-  return NS_OK;
+  return ClientState(ClientWorkerState(workerPrivate->StorageAccess()));
 }
 
 nsISerialEventTarget* ClientSource::EventTarget() const { return mEventTarget; }

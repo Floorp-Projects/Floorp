@@ -724,6 +724,27 @@ class CopyableErrorResult
   CopyableErrorResult(CopyableErrorResult&& aRHS)
       : BaseErrorResult(std::move(aRHS)) {}
 
+  explicit CopyableErrorResult(ErrorResult&& aRHS) : BaseErrorResult() {
+    // We must not copy JS exceptions since it can too easily lead to
+    // off-thread use.  Assert this and fall back to a generic error
+    // in release builds.
+    MOZ_DIAGNOSTIC_ASSERT(
+        !aRHS.IsJSException(),
+        "Attempt to copy from ErrorResult with a JS exception value.");
+    if (aRHS.IsJSException()) {
+      aRHS.SuppressException();
+      Throw(NS_ERROR_FAILURE);
+    } else {
+      // We could avoid the cast here if we had a move constructor on
+      // TErrorResult templated on the cleanup policy type, but then we'd have
+      // to either inline the impl or force all possible instantiations or
+      // something.  This is a bit simpler, and not that different from our copy
+      // constructor.
+      auto val = reinterpret_cast<CopyableErrorResult&&>(aRHS);
+      operator=(val);
+    }
+  }
+
   explicit CopyableErrorResult(nsresult aRv) : BaseErrorResult(aRv) {}
 
   // This operator is deprecated and ideally shouldn't be used.

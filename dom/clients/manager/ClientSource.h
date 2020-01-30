@@ -10,6 +10,7 @@
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/ClientThing.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
+#include "mozilla/Result.h"
 #include "mozilla/Variant.h"
 
 #ifdef XP_WIN
@@ -78,7 +79,7 @@ class ClientSource final : public ClientThing<ClientSourceChild> {
 
   void MaybeCreateInitialDocument();
 
-  nsresult SnapshotWindowState(ClientState* aStateOut);
+  Result<ClientState, ErrorResult> SnapshotWindowState();
 
   // Private methods called by ClientManager
   ClientSource(ClientManager* aManager, nsISerialEventTarget* aEventTarget,
@@ -145,7 +146,7 @@ class ClientSource final : public ClientThing<ClientSourceChild> {
   RefPtr<ClientOpPromise> GetInfoAndState(
       const ClientGetInfoAndStateArgs& aArgs);
 
-  nsresult SnapshotState(ClientState* aStateOut);
+  Result<ClientState, ErrorResult> SnapshotState();
 
   nsISerialEventTarget* EventTarget() const;
 

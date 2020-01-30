@@ -30,7 +30,7 @@ void ClientManagerOpParent::DoServiceOp(Method aMethod, Args&&... aArgs) {
          mPromiseRequestHolder.Complete();
          Unused << PClientManagerOpParent::Send__delete__(this, aResult);
        },
-       [this](nsresult aRv) {
+       [this](const CopyableErrorResult& aRv) {
          mPromiseRequestHolder.Complete();
          Unused << PClientManagerOpParent::Send__delete__(this, aRv);
        })
