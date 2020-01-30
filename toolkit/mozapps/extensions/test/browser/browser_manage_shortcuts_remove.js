@@ -29,6 +29,23 @@ async function waitForShortcutSet(input, expected) {
     `Shortcut should be set to ${JSON.stringify(expected)}`
   );
   ok(doc.activeElement != input, "The input is no longer focused");
+  checkHasRemoveButton(input, expected !== "");
+}
+
+function removeButtonForInput(input) {
+  let removeButton = input.parentNode.querySelector(".shortcut-remove-button");
+  ok(removeButton, "has remove button");
+  return removeButton;
+}
+
+function checkHasRemoveButton(input, expected) {
+  let removeButton = removeButtonForInput(input);
+  let visibility = input.ownerGlobal.getComputedStyle(removeButton).visibility;
+  if (expected) {
+    is(visibility, "visible", "Remove button should be visible");
+  } else {
+    is(visibility, "hidden", "Remove button should be hidden");
+  }
 }
 
 add_task(async function test_remove_shortcut() {
@@ -58,6 +75,8 @@ add_task(async function test_remove_shortcut() {
 
   let input = getShortcutByName(doc, extension, "commandOne");
 
+  checkHasRemoveButton(input, true);
+
   // First: Verify that Shift-Del is not valid, but doesn't do anything.
   input.focus();
   EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
@@ -71,6 +90,7 @@ add_task(async function test_remove_shortcut() {
   } else {
     is(errorId, "shortcuts-modifier-other", "Shift-Del isn't a valid shortcut");
   }
+  checkHasRemoveButton(input, true);
 
   // Now, verify that the original shortcut still works.
   EventUtils.synthesizeKey("KEY_Escape");
@@ -105,6 +125,7 @@ add_task(async function test_remove_shortcut() {
   // Set a shortcut where the default was not set.
   let inputEmpty = getShortcutByName(doc, extension, "commandEmpty");
   is(inputEmpty.getAttribute("shortcut"), "", "Empty shortcut by default");
+  checkHasRemoveButton(input, false);
   inputEmpty.focus();
   EventUtils.synthesizeKey("3", { altKey: true, shiftKey: true });
   await waitForShortcutSet(inputEmpty, "Alt+Shift+3");
@@ -136,6 +157,15 @@ add_task(async function test_remove_shortcut() {
     "commandTwo",
     "commandEmpty should be disabled again by Backspace"
   );
+
+  // Check that the remove button works as expected.
+  let inputTwo = getShortcutByName(doc, extension, "commandTwo");
+  is(inputTwo.getAttribute("shortcut"), "Shift+Alt+2", "initial shortcut");
+  checkHasRemoveButton(inputTwo, true);
+  removeButtonForInput(inputTwo).click();
+  is(inputTwo.getAttribute("shortcut"), "", "cleared shortcut");
+  checkHasRemoveButton(inputTwo, false);
+  ok(doc.activeElement != inputTwo, "input of removed shortcut is not focused");
 
   await closeShortcutsView(doc);
 
