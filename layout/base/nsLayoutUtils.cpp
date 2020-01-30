@@ -6550,11 +6550,11 @@ SamplingFilter nsLayoutUtils::GetSamplingFilterForFrame(nsIFrame* aForFrame) {
   }
 
   switch (sc->StyleVisibility()->mImageRendering) {
-    case NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED:
+    case StyleImageRendering::Optimizespeed:
       return SamplingFilter::POINT;
-    case NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY:
+    case StyleImageRendering::Optimizequality:
       return SamplingFilter::LINEAR;
-    case NS_STYLE_IMAGE_RENDERING_CRISP_EDGES:
+    case StyleImageRendering::CrispEdges:
       return SamplingFilter::POINT;
     default:
       return defaultFilter;

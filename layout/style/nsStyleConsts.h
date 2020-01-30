@@ -745,10 +745,12 @@ enum class StyleDominantBaseline : uint8_t {
 };
 
 // image-rendering
-#define NS_STYLE_IMAGE_RENDERING_AUTO 0
-#define NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED 1
-#define NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY 2
-#define NS_STYLE_IMAGE_RENDERING_CRISP_EDGES 3
+enum class StyleImageRendering : uint8_t {
+  Auto,
+  Optimizespeed,
+  Optimizequality,
+  CrispEdges,
+};
 
 // mask-type
 enum class StyleMaskType : uint8_t {
