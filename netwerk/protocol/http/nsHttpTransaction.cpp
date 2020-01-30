@@ -251,7 +251,9 @@ nsresult nsHttpTransaction::Init(
     uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
     nsIRequestContext* requestContext, uint32_t classOfService,
     uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
-    TransactionObserverFunc&& transactionObserver) {
+    TransactionObserverFunc&& transactionObserver,
+    OnPushCallback&& aOnPushCallback,
+    HttpTransactionShell* transWithPushedStream, uint32_t aPushedStreamId) {
   nsresult rv;
 
   LOG1(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
@@ -263,6 +265,7 @@ nsresult nsHttpTransaction::Init(
 
   mChannelId = channelId;
   mTransactionObserver = std::move(transactionObserver);
+  mOnPushCallback = std::move(aOnPushCallback);
   mTopLevelOuterContentWindowId = topLevelOuterContentWindowId;
   LOG(("  window-id = %" PRIx64, mTopLevelOuterContentWindowId));
 
@@ -435,6 +438,12 @@ nsresult nsHttpTransaction::Init(
                    nsIOService::gDefaultSegmentCount);
   if (NS_FAILED(rv)) return rv;
 
+  if (transWithPushedStream && aPushedStreamId) {
+    RefPtr<nsHttpTransaction> trans =
+        transWithPushedStream->AsHttpTransaction();
+    MOZ_ASSERT(trans);
+    mPushedStream = trans->TakePushedStreamById(aPushedStreamId);
+  }
   return NS_OK;
 }
 
@@ -1014,8 +1023,39 @@ int64_t nsHttpTransaction::GetTransferSize() { return mTransferSize; }
 
 int64_t nsHttpTransaction::GetRequestSize() { return mRequestSize; }
 
-void nsHttpTransaction::SetPushedStream(Http2PushedStreamWrapper* push) {
-  mPushedStream = push;
+already_AddRefed<Http2PushedStreamWrapper>
+nsHttpTransaction::TakePushedStreamById(uint32_t aStreamId) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aStreamId);
+
+  auto entry = mIDToStreamMap.Lookup(aStreamId);
+  if (entry) {
+    RefPtr<Http2PushedStreamWrapper> stream = entry.Data();
+    entry.Remove();
+    return stream.forget();
+  }
+
+  return nullptr;
+}
+
+void nsHttpTransaction::OnPush(Http2PushedStreamWrapper* aStream) {
+  LOG(("nsHttpTransaction::OnPush %p aStream=%p", this, aStream));
+  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mOnPushCallback);
+
+  RefPtr<Http2PushedStreamWrapper> stream = aStream;
+  auto entry = mIDToStreamMap.LookupForAdd(stream->StreamID());
+  MOZ_ASSERT(!entry);
+  if (!entry) {
+    entry.OrInsert([&stream]() { return stream; });
+  }
+
+  if (NS_FAILED(mOnPushCallback(stream->StreamID(), stream->GetResourceUrl(),
+                                stream->GetRequestString()))) {
+    stream->OnPushFailed();
+    mIDToStreamMap.Remove(stream->StreamID());
+  }
 }
 
 nsHttpTransaction* nsHttpTransaction::AsHttpTransaction() { return this; }
