@@ -1711,11 +1711,10 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
     // then this is an error.  This can happen for internal reasons, like
     // storage was probably wiped without removing the service worker
     // registration.  It can also happen for exposed reasons like the
-    // service worker script calling importScripts() after install. Right now
-    // we don't enforce the restriction on imported scripts due to breakage on
-    // on a certain website (see bug 1603484), but once the website is fixed we
-    // should start enforcing it again.
-    if (NS_WARN_IF(mIsWorkerScript)) {
+    // service worker script calling importScripts() after install.
+    if (NS_WARN_IF(mIsWorkerScript ||
+                   (mState != ServiceWorkerState::Parsed &&
+                    mState != ServiceWorkerState::Installing))) {
       Fail(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
