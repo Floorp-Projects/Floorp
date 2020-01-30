@@ -25,6 +25,7 @@
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/LanguageTag.h"
+#include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
@@ -1417,10 +1418,13 @@ ArrayObject* NumberFormatFields::toArray(JSContext* cx,
 }
 
 #ifndef U_HIDE_DRAFT_API
-bool js::intl::FormattedNumberToParts(JSContext* cx,
-                                      const UFormattedValue* formattedValue,
-                                      HandleValue number, FieldType unitType,
-                                      MutableHandleValue result) {
+static bool FormattedNumberToParts(JSContext* cx,
+                                   const UFormattedValue* formattedValue,
+                                   HandleValue number,
+                                   FieldType relativeTimeUnit,
+                                   MutableHandleValue result) {
+  MOZ_ASSERT(number.isNumeric());
+
   RootedString overallResult(cx, FormattedNumberToString(cx, formattedValue));
   if (!overallResult) {
     return false;
@@ -1473,13 +1477,22 @@ bool js::intl::FormattedNumberToParts(JSContext* cx,
     }
   }
 
-  ArrayObject* array = fields.toArray(cx, overallResult, unitType);
+  ArrayObject* array = fields.toArray(cx, overallResult, relativeTimeUnit);
   if (!array) {
     return false;
   }
 
   result.setObject(*array);
   return true;
+}
+
+bool js::intl::FormattedRelativeTimeToParts(
+    JSContext* cx, const UFormattedValue* formattedValue, double timeValue,
+    FieldType relativeTimeUnit, MutableHandleValue result) {
+  Value tval = DoubleValue(timeValue);
+  return FormattedNumberToParts(cx, formattedValue,
+                                HandleValue::fromMarkedLocation(&tval),
+                                relativeTimeUnit, result);
 }
 #else
 static ArrayObject* LegacyFormattedNumberToParts(
@@ -1538,7 +1551,7 @@ static bool FormatNumericToParts(JSContext* cx, const UNumberFormatter* nf,
   }
 
 #ifndef U_HIDE_DRAFT_API
-  return intl::FormattedNumberToParts(cx, formattedValue, x, nullptr, result);
+  return FormattedNumberToParts(cx, formattedValue, x, nullptr, result);
 #else
   return LegacyFormattedNumberToParts(cx, formattedValue, x, result);
 #endif

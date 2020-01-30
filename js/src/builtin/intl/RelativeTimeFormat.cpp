@@ -13,7 +13,6 @@
 
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/LanguageTag.h"
-#include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
@@ -339,10 +338,8 @@ static bool intl_FormatToPartsRelativeTime(JSContext* cx,
       MOZ_CRASH("unexpected relative time unit");
   }
 
-  Value tval = DoubleValue(t);
-  return intl::FormattedNumberToParts(cx, formattedValue,
-                                      HandleValue::fromMarkedLocation(&tval),
-                                      unitType, result);
+  return intl::FormattedRelativeTimeToParts(cx, formattedValue, t, unitType,
+                                            result);
 }
 #endif
 
