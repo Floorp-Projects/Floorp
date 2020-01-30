@@ -141,6 +141,10 @@ extern "C" const char* __lsan_default_suppressions() {
          // mochitest suites.
          "leak:nss_ClearErrorStack\n"
 
+         // Bug 1602689 - leak at mozilla::NotNull, RacyRegisteredThread,
+         // RegisteredThread::RegisteredThread, mozilla::detail::UniqueSelector
+         "leak:RegisteredThread::RegisteredThread\n"
+
          //
          // Leaks with system libraries in their stacks. These show up across a
          // number of tests. Better symbols and disabling fast stackwalking may
