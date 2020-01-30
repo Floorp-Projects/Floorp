@@ -2856,8 +2856,8 @@ void EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
 
   nsIntPoint overflow;
   aScrollableFrame->ScrollBy(actualDevPixelScrollAmount,
-                             nsIScrollableFrame::DEVICE_PIXELS, mode, &overflow,
-                             origin, momentum, snapMode);
+                             ScrollUnit::DEVICE_PIXELS, mode, &overflow, origin,
+                             momentum, snapMode);
 
   if (!scrollFrameWeak.IsAlive()) {
     // If the scroll causes changing the layout, we can think that the event
@@ -5874,16 +5874,16 @@ nsresult EventStateManager::DoContentCommandScrollEvent(
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(aEvent->mScroll.mAmount != 0, NS_ERROR_INVALID_ARG);
 
-  nsIScrollableFrame::ScrollUnit scrollUnit;
+  ScrollUnit scrollUnit;
   switch (aEvent->mScroll.mUnit) {
     case WidgetContentCommandEvent::eCmdScrollUnit_Line:
-      scrollUnit = nsIScrollableFrame::LINES;
+      scrollUnit = ScrollUnit::LINES;
       break;
     case WidgetContentCommandEvent::eCmdScrollUnit_Page:
-      scrollUnit = nsIScrollableFrame::PAGES;
+      scrollUnit = ScrollUnit::PAGES;
       break;
     case WidgetContentCommandEvent::eCmdScrollUnit_Whole:
-      scrollUnit = nsIScrollableFrame::WHOLE;
+      scrollUnit = ScrollUnit::WHOLE;
       break;
     default:
       return NS_ERROR_INVALID_ARG;
