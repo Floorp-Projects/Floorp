@@ -44,7 +44,6 @@
 
   <linkset>
     <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
-    <html:link rel="localization" href="browser/browserSets.ftl"/>
   </linkset>
 
   <script src="chrome://browser/content/places/places.js"/>
@@ -130,11 +129,11 @@
 #endif
 #ifdef XP_UNIX
     <key id="placesKey_goBackKb2"
-         data-l10n-id="nav-back-shortcut-alt"
+         key="&goBackCmd.commandKey;"
          command="OrganizerCommand:Back"
          modifiers="accel"/>
     <key id="placesKey_goForwardKb2"
-         data-l10n-id="nav-fwd-shortcut-alt"
+         key="&goForwardCmd.commandKey;"
          command="OrganizerCommand:Forward"
          modifiers="accel"/>
 #endif
