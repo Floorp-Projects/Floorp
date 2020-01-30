@@ -165,10 +165,21 @@ Some things to note:
 WebRender In Detail
 -------------------
 
-Picture-, Spatial- and Clip Tree
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Converting a display list into GPU commands is broken down into a
 number of steps and intermediate data structures.
+
+
+.. image:: RenderingOverviewTrees.png
+   :width: 75%
+   :align: center
+
+..
+
+    *Each element in the picture tree points to exactly one node in the spatial
+    tree. Only a few of these links are shown for clarity (the dashed lines).*
+
+The Picture Tree
+~~~~~~~~~~~~~~~~
 
 The incoming display list uses "stacking contexts".  For example, to
 render some text with a drop shadow, a display list will contain three
@@ -191,22 +202,84 @@ Thus, the stack-based display list gets converted into a list of pictures
 -- or more generally, a hierarchy of pictures, since items are nested
 as per the original HTML.
 
-Meanwhile, we also build a Spatial Tree -- a hierarchy of Spatial
-Nodes.  This tree is a representation of how frames and divs are
-nested in the original DOM, or more precisely:
+Example visual elements are a TextRun, a LineDecoration, or an Image
+(like a .png file).
 
-- a Reference Frame corresponds to a <div>
-- a Scrolling Frame corresponds to a scrollable part
-- a Sticky Frame corresponds to some fixed position CSS style
+Compared to 3D rendering, the picture tree is similar to a scenegraph: it's a
+parent/child hierarchy of all the drawable elements that make up the "scene", in
+this case the webpage.  One important difference is that the transformations are
+stored in a separate tree, the spatial tree.
 
-Each picture then points to a spatial node inside this tree, so by
-walking up and down the tree we can find the absolute position of
-where each picture should render (traversing down) and how large each
-element needs to be (traversing up).
+The Spatial Tree
+~~~~~~~~~~~~~~~~
 
-And finally, we also have a Clip Tree, which contains Clip Shapes. For
+The nodes in the spatial tree represent coordinate transforms.  Every time the
+DOM hierarchy needs child elements to be transformed relative to their parent,
+we add a new Spatial Node to the tree. All those child elements will then point
+to this node as their "local space" reference (aka coordinate frame).  In
+traditional 3D terms, it's a scenegraph but only containing transform nodes.
+
+The nodes are called frames, as in "coordinate frame":
+
+- a Reference Frame corresponds to a ``<div>``;
+- a Scrolling Frame corresponds to a scrollable part of the page;
+- a Sticky Frame corresponds to some fixed position CSS style.
+
+Each element in the picture tree then points to a spatial node inside this tree,
+so by walking up and down the tree we can find the absolute position of where
+each element should render (traversing down) and how large each element needs to
+be (traversing up).  Originally the transform information was part of the
+picture tree, as in a traditional scenegraph, but visual elements and their
+transforms were split apart for technical reasons.
+
+Some of these nodes are dynamic.  A scroll-frame can obviously scroll, but a
+Reference Frame might also use a property binding to enable a live link with
+JavaScript, for dynamic updates of (currently) the transform and opacity.
+
+Axis-aligned transformations (scales and translations) are considered "simple",
+and are conceptually combined into a single "CoordinateSystem".  When we
+encounter a non-axis-aligned transform, we start a new CoordinateSystem.  We
+start in CoordinateSystem 0 at the root, and would bump this to CoordinateSystem
+1 when we encounter a Reference Frame with a rotation or 3D transform, for
+example.  This would then be the CoordinateSystem index for all its children,
+until we run into another (nested) non-simple transform, and so on.  Roughly
+speaking, as long as we're in the same CoordinateSystem, the transform stack is
+simple enough that we have a reasonable chance of being able to flatten it. That
+lets us directly rasterize text at its final scale for example, optimizing
+away some of the intermediate pictures (offscreen textures).
+
+The layout code positions elements relative to their parent.  Thus to position
+the element on the actual page, we need to walk the Spatial Tree all the way to
+the root and apply each transform; the result is a ``LayoutToWorldTransform``.
+
+One final step transforms from World to Device coordinates, which deals with
+DPI scaling and such.
+
+.. csv-table::
+    :header: "WebRender term", "Rough analogy"
+
+      Spatial Tree, Scenegraph -- transforms only
+      Picture Tree, Scenegraph -- drawables only (grouping)
+      Spatial Tree Rootnode, World Space
+      Layout space, Local/Object Space
+      Picture, RenderTarget (sort of; see RenderTask below)
+      Layout-To-World transform, Local-To-World transform
+      World-To-Device transform, World-To-Clipspace transform
+
+
+The Clip Tree
+~~~~~~~~~~~~~
+
+Finally, we also have a Clip Tree, which contains Clip Shapes. For
 example, a rounded corner div will produce a clip shape, and since
-divs can be nested, you end up with another tree.
+divs can be nested, you end up with another tree.  By pointing at a Clip Shape,
+visual elements will be clipped against this shape plus all parent shapes above it
+in the Clip Tree.
+
+As with CoordinateSystems, a chain of simple 2D clip shapes can be collapsed
+into something that can be handled in the vertex shader, at very little extra
+cost.  More complex clips must be rasterized into a mask first, which we then
+sample from to ``discard`` in the pixel shader as needed.
 
 In summary, at the end of scene building the display list turned into
 a picture tree, plus a spatial tree that tells us what goes where
@@ -214,11 +287,13 @@ relative to what, plus a clip tree.
 
 RenderTask Tree
 ~~~~~~~~~~~~~~~
-Now in a perfect world we could simply traverse the picture tree and
-start drawing things.  However, recall that the first picture in our
-example is a "text shadow" that needs to be blurred.  We can't just
-rasterize blurry text directly, so we need a number of steps or
-"render passes" to get the intended effect:
+
+Now in a perfect world we could simply traverse the picture tree and start
+drawing things: one drawcall per picture to render its contents, plus one
+drawcall to draw the picture into its parent.  However, recall that the first
+picture in our example is a "text shadow" that needs to be blurred.  We can't
+just rasterize blurry text directly, so we need a number of steps or "render
+passes" to get the intended effect:
 
 .. image:: RenderingOverviewBlurTask.png
    :align: right
@@ -259,22 +334,46 @@ copying is necessary.
 Once we've figured out the passes and allocated storage for anything
 we wish to persist in the texture cache, we finally start rendering.
 
+When rasterizing the elements into the Picture's offscreen texture, we'd
+position them by walking the transform hierarchy as far up as the picture's
+transform node, resulting in a ``Layout To Picture`` transform.  The picture
+would then go onto the page using a ``Picture To World`` coordinate transform.
+
 Caching
 ```````
 
-Just as with layers in the software rasterizer, it is not always
-necessary to redraw absolutely everything when parts of a document
-change.  The webrender equivalent of layers is Slices -- a grouping of
-pictures that are expected to render and update together.  If a slice
-isn't expected to change much, we give it a TileCacheInstance. It is
-itself made up of Tiles, where each tile will track what's
-in it, what's changing, and if it needs to be invalidated and redrawn
-or not as a result.  Thus the "damage" from changes can be localized
-to single tiles, while we salvage the rest of the cache.  If tiles
-keep seeing a lot of invalidations, they will recursively divide
-themselves in a quad-tree like structure to try and localize the
-invalidations.  (And conversely, they'll recombine children if nothing is
-invalidating them "for a while").
+Just as with layers in the software rasterizer, it is not always necessary to
+redraw absolutely everything when parts of a document change.  The webrender
+equivalent of layers is Slices -- a grouping of pictures that are expected to
+render and update together.  Slices are automatically created based on
+heuristics and layout hints/flags.
+
+Implementation wise, slices re-use a lot of the existing machinery for Pictures;
+in fact they're implemented as a "Virtual picture" of sorts.  The similarities
+make sense: both need to allocate offscreen textures in a cache, both will
+position and render all their children into it, and both then draw themselves
+into their parent as part of the parent's draw.
+
+If a slice isn't expected to change much, we give it a TileCacheInstance. It is
+itself made up of Tiles, where each tile will track what's in it, what's
+changing, and if it needs to be invalidated and redrawn or not as a result.
+Thus the "damage" from changes can be localized to single tiles, while we
+salvage the rest of the cache.  If tiles keep seeing a lot of invalidations,
+they will recursively divide themselves in a quad-tree like structure to try and
+localize the invalidations.  (And conversely, they'll recombine children if
+nothing is invalidating them "for a while").
+
+Interning
+`````````
+
+To spot invalidated tiles, we need a fast way to compare its contents from the
+previous frame with the current frame.  To speed this up, we use interning;
+similar to string-interning, this means that each ``TextRun``, ``Decoration``,
+``Image`` and so on is registered in a repository (a ``DataStore``) and
+consequently referred to by its unique ID. Cache contents can then be encoded as a
+list of IDs (one such list per internable element type).  Diffing is then just a
+fast list comparison.
+
 
 Callbacks
 `````````
