@@ -103,6 +103,7 @@ class BookmarksTest {
             verifyKeyboardVisible()
             addNewFolderName(bookmarksFolderName)
             saveNewFolder()
+            getInstrumentation().waitForIdleSync()
             verifyFolderTitle(bookmarksFolderName)
             verifyKeyboardHidden()
         }
