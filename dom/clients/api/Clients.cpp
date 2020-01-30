@@ -211,8 +211,10 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
   }
 
   if (aURL.EqualsLiteral("about:blank")) {
-    // TODO: Improve this error in bug 1412856.
-    outerPromise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+    CopyableErrorResult rv;
+    rv.ThrowTypeError(
+        u"Passing \"about:blank\" to Clients.openWindow is not allowed");
+    outerPromise->MaybeReject(rv);
     return outerPromise.forget();
   }
 
@@ -242,9 +244,9 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
         outerPromise->MaybeResolve(client);
       },
       [outerPromise](const CopyableErrorResult& aResult) {
-        // TODO: Improve this error in bug 1412856.  Ideally we should throw
-        //       the TypeError in the child process and pass it back to here.
-        outerPromise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+        // MaybeReject needs a non-const result, so make a copy.
+        CopyableErrorResult result(aResult);
+        outerPromise->MaybeReject(result);
       });
 
   return outerPromise.forget();
