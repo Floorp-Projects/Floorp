@@ -1098,6 +1098,7 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
         // widget for duplicated events is initially nullptr.
         event->mWidget = widget;
 
+        status = nsEventStatus_eIgnore;
         if (event->mMessage != eKeyPress) {
           mDispatcher->DispatchKeyboardEvent(event->mMessage, *event, status);
         } else {
