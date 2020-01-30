@@ -179,6 +179,7 @@ EXPORTS.mozilla.net += [
     'SimpleChannelParent.h',
     'SSLTokensCache.h',
     'TCPFastOpen.h',
+    'ThrottleQueue.h',
 ]
 
 UNIFIED_SOURCES += [

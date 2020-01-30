@@ -15,6 +15,7 @@
 namespace mozilla {
 namespace dom {
 
+class PSHEntryOrSharedID;
 class SHistoryParent;
 class SHEntryParent;
 

@@ -10,6 +10,7 @@
 #include "HttpTransactionChild.h"
 
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/net/InputChannelThrottleQueueChild.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "nsInputStreamPump.h"
 #include "nsHttpHandler.h"
@@ -20,7 +21,7 @@ namespace mozilla {
 namespace net {
 
 NS_IMPL_ISUPPORTS(HttpTransactionChild, nsIRequestObserver, nsIStreamListener,
-                  nsITransportEventSink);
+                  nsITransportEventSink, nsIThrottledInputChannel);
 
 //-----------------------------------------------------------------------------
 // HttpTransactionChild <public>
@@ -206,7 +207,8 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
     const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
     const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId,
     const bool& aHasTransactionObserver,
-    const Maybe<H2PushedStreamArg>& aPushedStreamArg) {
+    const Maybe<H2PushedStreamArg>& aPushedStreamArg,
+    const mozilla::Maybe<PInputChannelThrottleQueueChild*>& aThrottleQueue) {
   mRequestHead = aReqHeaders;
   if (aRequestBody) {
     mUploadStream = mozilla::ipc::DeserializeIPCStream(aRequestBody);
@@ -226,6 +228,11 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
             handle->mTransactionObserverResult.ref());
       }
     };
+  }
+
+  if (aThrottleQueue.isSome()) {
+    mThrottleQueue =
+        static_cast<InputChannelThrottleQueueChild*>(aThrottleQueue.ref());
   }
 
   nsresult rv = InitInternal(
@@ -463,6 +470,23 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
   }
 
   Unused << SendOnTransportStatus(aStatus, aProgress, aProgressMax);
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpBaseChannel::nsIThrottledInputChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpTransactionChild::SetThrottleQueue(nsIInputChannelThrottleQueue* aQueue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+HttpTransactionChild::GetThrottleQueue(nsIInputChannelThrottleQueue** aQueue) {
+  nsCOMPtr<nsIInputChannelThrottleQueue> queue =
+      static_cast<nsIInputChannelThrottleQueue*>(mThrottleQueue.get());
+  queue.forget(aQueue);
   return NS_OK;
 }
 

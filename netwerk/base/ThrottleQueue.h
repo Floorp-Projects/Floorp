@@ -26,11 +26,11 @@ class ThrottleInputStream;
  * may be a bit choppy.
  */
 
-class ThrottleQueue final : public nsIInputChannelThrottleQueue,
-                            public nsITimerCallback,
-                            public nsINamed {
+class ThrottleQueue : public nsIInputChannelThrottleQueue,
+                      public nsITimerCallback,
+                      public nsINamed {
  public:
-  ThrottleQueue();
+  static already_AddRefed<nsIInputChannelThrottleQueue> Create();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTCHANNELTHROTTLEQUEUE
@@ -40,8 +40,9 @@ class ThrottleQueue final : public nsIInputChannelThrottleQueue,
   void QueueStream(ThrottleInputStream* aStream);
   void DequeueStream(ThrottleInputStream* aStream);
 
- private:
-  ~ThrottleQueue();
+ protected:
+  ThrottleQueue();
+  virtual ~ThrottleQueue();
 
   struct ThrottleEntry {
     TimeStamp mTime;

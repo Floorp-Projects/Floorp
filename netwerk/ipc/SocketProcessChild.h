@@ -74,6 +74,10 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvOnHttpActivityDistributorActivated(
       const bool& aIsActivated);
 
+  already_AddRefed<PInputChannelThrottleQueueChild>
+  AllocPInputChannelThrottleQueueChild(const uint32_t& aMeanBytesPerSecond,
+                                       const uint32_t& aMaxBytesPerSecond);
+
  private:
   // Mapping of content process id and the SocketProcessBridgeParent.
   // This table keeps SocketProcessBridgeParent alive in socket process.

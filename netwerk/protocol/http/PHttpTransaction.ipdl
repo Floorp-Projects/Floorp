@@ -7,6 +7,7 @@
 
 include protocol PSocketProcess;
 include protocol PFileDescriptorSet; // FIXME: bug #792908
+include protocol PInputChannelThrottleQueue;
 
 include IPCStream;
 include NeckoChannelParams;
@@ -72,7 +73,8 @@ child:
              bool responseTimeoutEnabled,
              uint64_t channelId,
              bool hasTransactionObserver,
-             H2PushedStreamArg? pushedStreamArg);
+             H2PushedStreamArg? pushedStreamArg,
+             PInputChannelThrottleQueue? throttleQueue);
 
   async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);

@@ -11,6 +11,7 @@
 #include "nsHttpRequestHead.h"
 #include "nsIRequest.h"
 #include "nsIStreamListener.h"
+#include "nsIThrottledInputChannel.h"
 #include "nsITransport.h"
 
 class nsInputStreamPump;
@@ -18,6 +19,7 @@ class nsInputStreamPump;
 namespace mozilla {
 namespace net {
 
+class InputChannelThrottleQueueChild;
 class nsHttpConnectionInfo;
 class nsHttpTransaction;
 class nsProxyInfo;
@@ -28,12 +30,14 @@ class nsProxyInfo;
 //-----------------------------------------------------------------------------
 class HttpTransactionChild final : public PHttpTransactionChild,
                                    public nsIStreamListener,
-                                   public nsITransportEventSink {
+                                   public nsITransportEventSink,
+                                   public nsIThrottledInputChannel {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITRANSPORTEVENTSINK
+  NS_DECL_NSITHROTTLEDINPUTCHANNEL
 
   explicit HttpTransactionChild();
 
@@ -47,7 +51,8 @@ class HttpTransactionChild final : public PHttpTransactionChild,
       const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
       const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId,
       const bool& aHasTransactionObserver,
-      const Maybe<H2PushedStreamArg>& aPushedStreamArg);
+      const Maybe<H2PushedStreamArg>& aPushedStreamArg,
+      const mozilla::Maybe<PInputChannelThrottleQueueChild*>& aThrottleQueue);
   mozilla::ipc::IPCResult RecvUpdateClassOfService(
       const uint32_t& classOfService);
   mozilla::ipc::IPCResult RecvCancelPump(const nsresult& aStatus);
@@ -89,6 +94,7 @@ class HttpTransactionChild final : public PHttpTransactionChild,
   nsCOMPtr<nsIRequest> mTransactionPump;
   std::function<void()> mTransactionObserver;
   Maybe<TransactionObserverResult> mTransactionObserverResult;
+  RefPtr<InputChannelThrottleQueueChild> mThrottleQueue;
 };
 
 }  // namespace net

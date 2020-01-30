@@ -12,6 +12,7 @@ include protocol PHttpConnectionMgr;
 include protocol PFileDescriptorSet;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
+include protocol PInputChannelThrottleQueue;
 
 include MemoryReportTypes;
 include NeckoChannelParams;
@@ -41,6 +42,7 @@ protocol PSocketProcess
   manages PHttpConnectionMgr;
   manages PChildToParentStream;
   manages PParentToChildStream;
+  manages PInputChannelThrottleQueue;
 
 parent:
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
@@ -77,11 +79,14 @@ child:
   async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
   // test-only
   async SocketProcessTelemetryPing();
+
   async PHttpTransaction();
   async PParentToChildStream();
   async PHttpConnectionMgr();
 
   async OnHttpActivityDistributorActivated(bool aIsActivated);
+  async PInputChannelThrottleQueue(uint32_t meanBytesPerSecond,
+                                   uint32_t maxBytesPerSecond);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
