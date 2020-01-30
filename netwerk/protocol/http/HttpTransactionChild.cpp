@@ -322,9 +322,13 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
     optionalHead = Some(*head);
   }
 
+  int32_t proxyConnectResponseCode =
+      mTransaction->GetProxyConnectResponseCode();
+
   Unused << SendOnStartRequest(status, optionalHead, serializedSecurityInfoOut,
                                mTransaction->ProxyConnectFailed(),
-                               ToTimingStructArgs(mTransaction->Timings()));
+                               ToTimingStructArgs(mTransaction->Timings()),
+                               proxyConnectResponseCode);
   LOG(("HttpTransactionChild::OnStartRequest end [this=%p]\n", this));
   return NS_OK;
 }
@@ -389,9 +393,10 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
       if (socketTransport) {
         socketTransport->GetSelfAddr(&selfAddr);
         socketTransport->GetPeerAddr(&peerAddr);
+        socketTransport->ResolvedByTRR(&isTrr);
       }
     }
-    Unused << SendOnNetAddrUpdate(selfAddr, peerAddr);
+    Unused << SendOnNetAddrUpdate(selfAddr, peerAddr, isTrr);
   }
 
   Unused << SendOnTransportStatus(aStatus, aProgress, aProgressMax);
