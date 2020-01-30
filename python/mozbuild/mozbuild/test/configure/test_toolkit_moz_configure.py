@@ -6,9 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
-from StringIO import StringIO
 from buildconfig import topsrcdir
 from common import BaseConfigureTest
+from six import StringIO
 from mozunit import MockedOpen, main
 from mozbuild.configure.options import InvalidOptionError
 from mozbuild.configure.util import Version
@@ -115,6 +115,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         func(Version('1.5'), Version('1.1'), Version('1.0'), False)
 
         out.truncate(0)
+        out.seek(0)
         with self.assertRaises(SystemExit):
             func(None, Version('1.0'), False, False)
 
@@ -125,6 +126,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         )
 
         out.truncate(0)
+        out.seek(0)
         with self.assertRaises(SystemExit):
             func(None, Version('1.0'), Version('1.0'), False)
 
@@ -135,6 +137,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         )
 
         out.truncate(0)
+        out.seek(0)
         with self.assertRaises(SystemExit):
             func(None, Version('1.0'), Version('1.0'), Version('1.0'))
 
@@ -145,6 +148,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         )
 
         out.truncate(0)
+        out.seek(0)
         with self.assertRaises(SystemExit):
             func(Version('1.0'), Version('1.1'), Version('1.0'), False)
 
@@ -154,6 +158,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         )
 
         out.truncate(0)
+        out.seek(0)
         with self.assertRaises(SystemExit):
             func(Version('1.0'), True, Version('1.0.1'), False)
 
