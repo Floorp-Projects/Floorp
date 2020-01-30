@@ -486,5 +486,18 @@ struct ResourceTimingStructArgs {
   TimeStamp cacheReadEnd;
 };
 
+struct HttpActivity
+{
+  nsCString host;
+  int32_t port;
+  bool endToEndSSL;
+};
+
+union HttpActivityArgs
+{
+  uint64_t;
+  HttpActivity;
+};
+
 } // namespace net
 } // namespace mozilla

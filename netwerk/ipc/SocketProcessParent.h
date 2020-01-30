@@ -86,6 +86,11 @@ class SocketProcessParent final
   PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 
+  mozilla::ipc::IPCResult RecvObserveHttpActivity(
+      const HttpActivityArgs& aArgs, const uint32_t& aActivityType,
+      const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
+      const uint64_t& aExtraSizeData, const nsCString& aExtraStringData);
+
  private:
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;
