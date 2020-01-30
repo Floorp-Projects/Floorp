@@ -31,7 +31,9 @@ void ClientHandleParent::ActorDestroy(ActorDestroyReason aReason) {
   }
 
   if (mSourcePromise) {
-    mSourcePromise->Reject(NS_ERROR_FAILURE, __func__);
+    CopyableErrorResult rv;
+    rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "Client aborted");
+    mSourcePromise->Reject(rv, __func__);
   }
 }
 
@@ -88,7 +90,9 @@ void ClientHandleParent::FoundSource(ClientSourceParent* aSource) {
   if (!ClientMatchPrincipalInfo(aSource->Info().PrincipalInfo(),
                                 mPrincipalInfo)) {
     if (mSourcePromise) {
-      mSourcePromise->Reject(NS_ERROR_FAILURE, __func__);
+      CopyableErrorResult rv;
+      rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "Client aborted");
+      mSourcePromise->Reject(rv, __func__);
     }
     Unused << Send__delete__(this);
     return;
