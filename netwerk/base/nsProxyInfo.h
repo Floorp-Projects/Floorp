@@ -22,6 +22,8 @@
 namespace mozilla {
 namespace net {
 
+class ProxyInfoCloneArgs;
+
 // This class is exposed to other classes inside Necko for fast access
 // to the nsIProxyInfo attributes.
 class nsProxyInfo final : public nsIProxyInfo {
@@ -52,6 +54,11 @@ class nsProxyInfo final : public nsIProxyInfo {
   bool IsHTTPS();
   bool IsSOCKS();
 
+  static void SerializeProxyInfo(nsProxyInfo* aProxyInfo,
+                                 nsTArray<ProxyInfoCloneArgs>& aResult);
+  static nsProxyInfo* DeserializeProxyInfo(
+      const nsTArray<ProxyInfoCloneArgs>& aArgs);
+
  private:
   friend class nsProtocolProxyService;
 
@@ -63,10 +70,6 @@ class nsProxyInfo final : public nsIProxyInfo {
         mTimeout(UINT32_MAX),
         mNext(nullptr) {}
 
-  // For accessing mNext.
-  friend class HttpTransactionParent;
-  // For the CTOR below.
-  friend class HttpTransactionChild;
   nsProxyInfo(const nsACString& aType, const nsACString& aHost, int32_t aPort,
               const nsACString& aUsername, const nsACString& aPassword,
               uint32_t aFlags, uint32_t aTimeout, uint32_t aResolveFlags,

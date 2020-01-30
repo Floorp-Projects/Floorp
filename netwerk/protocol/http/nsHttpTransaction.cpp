@@ -291,7 +291,6 @@ nsresult nsHttpTransaction::Init(
     activityDistributorActive = false;
     mActivityDistributor = nullptr;
   }
-  mChannel = do_QueryInterface(eventsink);
 
   LOG1(("nsHttpTransaction %p SetRequestContext %p\n", this, requestContext));
   mRequestContext = requestContext;
@@ -406,7 +405,7 @@ nsresult nsHttpTransaction::Init(
     mRequestStream = headers;
   }
 
-  nsCOMPtr<nsIThrottledInputChannel> throttled = do_QueryInterface(mChannel);
+  nsCOMPtr<nsIThrottledInputChannel> throttled = do_QueryInterface(eventsink);
   if (throttled) {
     nsCOMPtr<nsIInputChannelThrottleQueue> queue;
     rv = throttled->GetThrottleQueue(getter_AddRefs(queue));

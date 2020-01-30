@@ -2778,4 +2778,14 @@ nsWeakPtr nsHttpHandler::GetWeakHttpChannel(uint64_t aId) {
   return mIDToHttpChannelMap.Get(aId);
 }
 
+nsresult nsHttpHandler::CompleteUpgrade(
+    HttpTransactionShell* aTrans, nsIHttpUpgradeListener* aUpgradeListener) {
+  return mConnMgr->CompleteUpgrade(aTrans, aUpgradeListener);
+}
+
+nsresult nsHttpHandler::DoShiftReloadConnectionCleanup(
+    nsHttpConnectionInfo* aCi) {
+  return mConnMgr->DoShiftReloadConnectionCleanup(aCi);
+}
+
 }  // namespace mozilla::net
