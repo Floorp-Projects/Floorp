@@ -5,15 +5,13 @@
 // Bug 624734 - Star UI has no tooltip until bookmarked page is visited
 
 function finishTest() {
-  is(
-    document.getElementById("context-bookmarkpage").getAttribute("tooltiptext"),
-    BookmarkingUI._unstarredTooltip,
-    "Context menu should have the unstarred tooltip text"
-  );
-  is(
-    BookmarkingUI.star.getAttribute("tooltiptext"),
-    BookmarkingUI._unstarredTooltip,
-    "Star icon should have the unstarred tooltip text"
+  let elem = document.getElementById("context-bookmarkpage");
+  let l10n = document.l10n.getAttributes(elem);
+  ok(
+    [
+      "main-context-menu-bookmark-add",
+      "main-context-menu-bookmark-add-with-shortcut",
+    ].includes(l10n.id)
   );
 
   gBrowser.removeCurrentTab();
