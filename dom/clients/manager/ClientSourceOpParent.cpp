@@ -21,8 +21,8 @@ void ClientSourceOpParent::ActorDestroy(ActorDestroyReason aReason) {
 }
 
 IPCResult ClientSourceOpParent::Recv__delete__(const ClientOpResult& aResult) {
-  if (aResult.type() == ClientOpResult::Tnsresult &&
-      NS_FAILED(aResult.get_nsresult())) {
+  if (aResult.type() == ClientOpResult::TCopyableErrorResult &&
+      aResult.get_CopyableErrorResult().Failed()) {
     // If a control message fails then clear the controller from
     // the ClientSourceParent.  We eagerly marked it controlled at
     // the start of the operation.
@@ -33,7 +33,7 @@ IPCResult ClientSourceOpParent::Recv__delete__(const ClientOpResult& aResult) {
       }
     }
 
-    mPromise->Reject(aResult.get_nsresult(), __func__);
+    mPromise->Reject(aResult.get_CopyableErrorResult(), __func__);
     mPromise = nullptr;
     return IPC_OK();
   }

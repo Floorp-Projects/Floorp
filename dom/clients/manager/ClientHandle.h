@@ -71,7 +71,8 @@ class ClientHandle final : public ClientThing<ClientHandleChild> {
   // Mark the ClientSource attached to this handle as controlled by the
   // given service worker.  The promise will resolve true if the ClientSource
   // is successfully marked or reject if the operation could not be completed.
-  RefPtr<GenericPromise> Control(const ServiceWorkerDescriptor& aServiceWorker);
+  RefPtr<GenericErrorResultPromise> Control(
+      const ServiceWorkerDescriptor& aServiceWorker);
 
   // Focus the Client if possible.  If successful the promise will resolve with
   // a new ClientState snapshot after focus has completed.  If focusing fails
@@ -84,8 +85,8 @@ class ClientHandle final : public ClientThing<ClientHandleChild> {
   // returned promise will resolve if the MessageEvent is dispatched or if
   // it triggers an error handled in the Client's context.  Other errors
   // will result in the promise rejecting.
-  RefPtr<GenericPromise> PostMessage(ipc::StructuredCloneData& aData,
-                                     const ServiceWorkerDescriptor& aSource);
+  RefPtr<GenericErrorResultPromise> PostMessage(
+      ipc::StructuredCloneData& aData, const ServiceWorkerDescriptor& aSource);
 
   // Return a Promise that resolves when the ClientHandle object is detached
   // from its remote actors.  This will happen if the ClientSource is destroyed

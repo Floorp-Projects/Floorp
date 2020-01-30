@@ -49,8 +49,9 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
                   orig.clonedData());
               if (!data.BuildClonedMessageDataForBackgroundParent(
                       source->Manager()->Manager(), rebuild.clonedData())) {
-                Unused << PClientHandleOpParent::Send__delete__(
-                    this, NS_ERROR_DOM_ABORT_ERR);
+                CopyableErrorResult rv;
+                rv.Throw(NS_ERROR_DOM_ABORT_ERR);
+                Unused << PClientHandleOpParent::Send__delete__(this, rv);
                 return;
               }
 
@@ -72,7 +73,7 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
                    Unused << PClientHandleOpParent::Send__delete__(this,
                                                                    aResult);
                  },
-                 [this](nsresult aRv) {
+                 [this](const CopyableErrorResult& aRv) {
                    mPromiseRequestHolder.Complete();
                    Unused << PClientHandleOpParent::Send__delete__(this, aRv);
                  })
@@ -80,8 +81,9 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
           },
           [=](nsresult failure) {
             mSourcePromiseRequestHolder.Complete();
-            Unused << PClientHandleOpParent::Send__delete__(
-                this, NS_ERROR_DOM_ABORT_ERR);
+            CopyableErrorResult rv;
+            rv.Throw(NS_ERROR_DOM_ABORT_ERR);
+            Unused << PClientHandleOpParent::Send__delete__(this, rv);
             return;
           })
       ->Track(mSourcePromiseRequestHolder);

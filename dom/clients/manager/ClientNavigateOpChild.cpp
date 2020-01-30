@@ -73,7 +73,7 @@ class NavigateLoadListener final : public nsIWebProgressListener,
     // console you also need to update the 'aFromPrivateWindow' argument.
     rv = ssm->CheckSameOriginURI(mBaseURL, channelURL, false, false);
     if (NS_FAILED(rv)) {
-      mPromise->Resolve(NS_OK, __func__);
+      mPromise->Resolve(CopyableErrorResult(), __func__);
       return NS_OK;
     }
 
@@ -158,14 +158,16 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
 
     ClientSource* target = targetActor->GetSource();
     if (!target) {
-      return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                              __func__);
+      CopyableErrorResult rv;
+      rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return ClientOpPromise::CreateAndReject(rv, __func__);
     }
 
     window = target->GetInnerWindow();
     if (!window) {
-      return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                              __func__);
+      CopyableErrorResult rv;
+      rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return ClientOpPromise::CreateAndReject(rv, __func__);
     }
   }
 
@@ -180,7 +182,11 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   nsCOMPtr<nsIURI> baseURL;
   nsresult rv = NS_NewURI(getter_AddRefs(baseURL), aArgs.baseURL());
   if (NS_FAILED(rv)) {
-    return ClientOpPromise::CreateAndReject(rv, __func__);
+    // This is rather unexpected: This is the worker URL we passed from the
+    // parent, so we expect this to parse fine!
+    CopyableErrorResult result;
+    result.Throw(rv);
+    return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
   // There is an edge case for view-source url here. According to the wpt test
@@ -201,29 +207,32 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   rv = NS_NewURI(getter_AddRefs(url), aArgs.url(), nullptr,
                  shouldUseBaseURL ? baseURL.get() : nullptr);
   if (NS_FAILED(rv)) {
-    return ClientOpPromise::CreateAndReject(rv, __func__);
+    CopyableErrorResult result;
+    result.Throw(rv);
+    return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
   if (url->GetSpecOrDefault().EqualsLiteral("about:blank")) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    CopyableErrorResult result;
+    result.Throw(NS_ERROR_FAILURE);
+    return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
   RefPtr<Document> doc = window->GetExtantDoc();
   if (!doc || !doc->IsActive()) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                            __func__);
+    CopyableErrorResult result;
+    result.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  if (!principal) {
-    return ClientOpPromise::CreateAndReject(rv, __func__);
-  }
 
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
   if (!docShell || !webProgress) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                            __func__);
+    CopyableErrorResult result;
+    result.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(url);
@@ -240,7 +249,9 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   loadState->SetFirstParty(true);
   rv = docShell->LoadURI(loadState, false);
   if (NS_FAILED(rv)) {
-    return ClientOpPromise::CreateAndReject(rv, __func__);
+    CopyableErrorResult result;
+    result.Throw(rv);
+    return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
   RefPtr<ClientOpPromise::Private> promise =
@@ -286,7 +297,7 @@ void ClientNavigateOpChild::Init(const ClientNavigateOpConstructorArgs& aArgs) {
             mPromiseRequestHolder.Complete();
             PClientNavigateOpChild::Send__delete__(this, aResult);
           },
-          [this](nsresult aResult) {
+          [this](const CopyableErrorResult& aResult) {
             mPromiseRequestHolder.Complete();
             PClientNavigateOpChild::Send__delete__(this, aResult);
           })
