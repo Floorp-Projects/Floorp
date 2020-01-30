@@ -1635,6 +1635,8 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   uint32_t mGLMinProgramTexelOffset = 0;
   uint32_t mGLMaxProgramTexelOffset = 0;
 
+  uint32_t mGLUniformBufferOffsetAlignment = 1;
+
   uint32_t mGLMaxViewportDims[2];
 
  public:

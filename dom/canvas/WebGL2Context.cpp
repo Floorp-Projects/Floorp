@@ -146,6 +146,8 @@ bool WebGLContext::InitWebGL2(FailureReason* const out_failReason) {
       gl->GetIntAs<uint32_t>(LOCAL_GL_MIN_PROGRAM_TEXEL_OFFSET);
   mGLMaxProgramTexelOffset =
       gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_PROGRAM_TEXEL_OFFSET);
+  mGLUniformBufferOffsetAlignment =
+      gl->GetIntAs<uint32_t>(LOCAL_GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT);
 
   mIndexedUniformBufferBindings.resize(mGLMaxUniformBufferBindings);
 
