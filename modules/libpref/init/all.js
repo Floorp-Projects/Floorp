@@ -505,9 +505,13 @@ pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
   pref("media.peerconnection.turn.disable", false);
   pref("media.peerconnection.mute_on_bye_or_timeout", false);
 
-  // 770 = DTLS 1.0, 771 = DTLS 1.2
+  // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
   pref("media.peerconnection.dtls.version.min", 770);
+#if defined(NIGHTLY_BUILD)
+  pref("media.peerconnection.dtls.version.max", 772);
+#else
   pref("media.peerconnection.dtls.version.max", 771);
+#endif
 
   // These values (aec, agc, and noise) are from:
   // media/webrtc/trunk/webrtc/modules/audio_processing/include/audio_processing.h
