@@ -24,6 +24,7 @@
 #include "nsExpirationTracker.h"
 #include "TextOverflow.h"
 #include "ScrollVelocityQueue.h"
+#include "mozilla/ScrollTypes.h"
 #include "mozilla/PresState.h"
 #include "mozilla/layout/ScrollAnchorContainer.h"
 
@@ -249,9 +250,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollBy(nsIntPoint aDelta, nsIScrollableFrame::ScrollUnit aUnit,
-                ScrollMode aMode, nsIntPoint* aOverflow,
-                nsAtom* aOrigin = nullptr,
+  void ScrollBy(nsIntPoint aDelta, mozilla::ScrollUnit aUnit, ScrollMode aMode,
+                nsIntPoint* aOverflow, nsAtom* aOrigin = nullptr,
                 nsIScrollableFrame::ScrollMomentum aMomentum =
                     nsIScrollableFrame::NOT_MOMENTUM,
                 nsIScrollbarMediator::ScrollSnapMode aSnap =
@@ -278,8 +278,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
    * Returns true if a suitable snap point could be found and aDestination has
    * been updated to a valid snapping position.
    */
-  bool GetSnapPointForDestination(nsIScrollableFrame::ScrollUnit aUnit,
-                                  nsPoint aStartPos, nsPoint& aDestination);
+  bool GetSnapPointForDestination(mozilla::ScrollUnit aUnit, nsPoint aStartPos,
+                                  nsPoint& aDestination);
 
   nsMargin GetScrollPadding() const;
 
@@ -485,7 +485,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
                   nscoord aNewPos);
   void ScrollbarReleased(nsScrollbarFrame* aScrollbar);
   void ScrollByUnit(nsScrollbarFrame* aScrollbar, ScrollMode aMode,
-                    int32_t aDirection, nsIScrollableFrame::ScrollUnit aUnit,
+                    int32_t aDirection, mozilla::ScrollUnit aUnit,
                     nsIScrollbarMediator::ScrollSnapMode aSnap =
                         nsIScrollbarMediator::DISABLE_SNAP);
   bool ShouldSuppressScrollbarRepaints() const {
@@ -952,7 +952,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
+  void ScrollBy(nsIntPoint aDelta, mozilla::ScrollUnit aUnit, ScrollMode aMode,
                 nsIntPoint* aOverflow, nsAtom* aOrigin = nullptr,
                 nsIScrollableFrame::ScrollMomentum aMomentum =
                     nsIScrollableFrame::NOT_MOMENTUM,
@@ -1416,7 +1416,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
+  void ScrollBy(nsIntPoint aDelta, mozilla::ScrollUnit aUnit, ScrollMode aMode,
                 nsIntPoint* aOverflow, nsAtom* aOrigin = nullptr,
                 nsIScrollableFrame::ScrollMomentum aMomentum =
                     nsIScrollableFrame::NOT_MOMENTUM,
