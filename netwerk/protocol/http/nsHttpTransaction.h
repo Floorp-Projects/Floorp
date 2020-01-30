@@ -139,6 +139,11 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   void OnProxyConnectComplete(int32_t aResponseCode) override;
 
+  // This is only called by Http2PushedStream::TryOnPush when a new pushed
+  // stream is available. The newly added stream will be taken by another
+  // transaction.
+  void OnPush(Http2PushedStreamWrapper* aStream);
+
  private:
   friend class DeleteHttpTransaction;
   virtual ~nsHttpTransaction();
@@ -184,6 +189,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool ShouldThrottle();
 
   void NotifyTransactionObserver(nsresult reason);
+
+  already_AddRefed<Http2PushedStreamWrapper> TakePushedStreamById(
+      uint32_t aStreamId);
 
  private:
   class UpdateSecurityCallbacks : public Runnable {
@@ -415,6 +423,10 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   HttpTrafficCategory mTrafficCategory;
   bool mThroughCaptivePortal;
   int32_t mProxyConnectResponseCode;
+
+  OnPushCallback mOnPushCallback;
+  nsDataHashtable<nsUint32HashKey, RefPtr<Http2PushedStreamWrapper>>
+      mIDToStreamMap;
 };
 
 }  // namespace net

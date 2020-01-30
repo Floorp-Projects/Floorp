@@ -20,6 +20,11 @@ using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 namespace mozilla {
 namespace net {
 
+struct H2PushedStreamArg {
+  PHttpTransaction transWithPushedStream;
+  uint32_t pushedStreamId;
+};
+
 refcounted protocol PHttpTransaction
 {
   manager PSocketProcess;
@@ -46,6 +51,9 @@ parent:
                       TransactionObserverResult? transactionObserverResult);
   async OnNetAddrUpdate(NetAddr selfAddr, NetAddr peerAddr, bool resolvedByTRR);
   async OnInitFailed(nsresult status);
+  async OnH2PushStream(uint32_t pushedStreamId,
+                       nsCString resourceUrl,
+                       nsCString requestString);
 
 child:
   async __delete__();
@@ -62,7 +70,8 @@ child:
              uint32_t initialRwin,
              bool responseTimeoutEnabled,
              uint64_t channelId,
-             bool hasTransactionObserver);
+             bool hasTransactionObserver,
+             H2PushedStreamArg? pushedStreamArg);
 
   async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);
