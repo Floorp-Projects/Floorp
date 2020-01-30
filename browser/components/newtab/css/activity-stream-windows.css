@@ -3315,7 +3315,8 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   display: none; }
   .modalOverlayOuter.active {
     display: block;
-    position: absolute; }
+    position: absolute;
+    z-index: 1100; }
 
 .modal-scroll {
   position: absolute;
