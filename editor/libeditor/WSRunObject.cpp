@@ -1403,11 +1403,11 @@ nsresult WSRunObject::DeleteRange(const EditorDOMPoint& aStartPoint,
       break;
     } else {
       if (!range) {
-        range = new nsRange(aStartPoint.GetContainer());
-        nsresult rv = range->SetStartAndEnd(aStartPoint.ToRawRangeBoundary(),
-                                            aEndPoint.ToRawRangeBoundary());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+        ErrorResult error;
+        range = nsRange::Create(aStartPoint.ToRawRangeBoundary(),
+                                aEndPoint.ToRawRangeBoundary(), error);
+        if (NS_WARN_IF(!range)) {
+          return error.StealNSResult();
         }
       }
       bool nodeBefore, nodeAfter;

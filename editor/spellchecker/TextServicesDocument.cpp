@@ -1445,14 +1445,10 @@ already_AddRefed<nsRange> TextServicesDocument::CreateDocumentContentRange() {
     return nullptr;
   }
 
-  RefPtr<nsRange> range = new nsRange(node);
-  ErrorResult errorResult;
-  range->SelectNodeContents(*node, errorResult);
-  if (NS_WARN_IF(errorResult.Failed())) {
-    errorResult.SuppressException();
-    return nullptr;
-  }
-
+  RefPtr<nsRange> range = nsRange::Create(node);
+  IgnoredErrorResult ignoredError;
+  range->SelectNodeContents(*node, ignoredError);
+  NS_WARNING_ASSERTION(!ignoredError.Failed(), "SelectNodeContents() failed");
   return range.forget();
 }
 

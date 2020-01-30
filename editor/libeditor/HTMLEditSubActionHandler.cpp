@@ -7534,12 +7534,11 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     return nullptr;
   }
 
-  RefPtr<nsRange> range = new nsRange(GetDocument());
-  nsresult rv = range->SetStartAndEnd(startPoint.ToRawRangeBoundary(),
-                                      endPoint.ToRawRangeBoundary());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  IgnoredErrorResult ignoredError;
+  RefPtr<nsRange> range =
+      nsRange::Create(startPoint.ToRawRangeBoundary(),
+                      endPoint.ToRawRangeBoundary(), ignoredError);
+  NS_WARNING_ASSERTION(!ignoredError.Failed(), "Failed to create a range");
   return range.forget();
 }
 
@@ -7593,12 +7592,11 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     return nullptr;
   }
 
-  RefPtr<nsRange> range = new nsRange(GetDocument());
-  nsresult rv = range->SetStartAndEnd(startPoint.ToRawRangeBoundary(),
-                                      endPoint.ToRawRangeBoundary());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  IgnoredErrorResult ignoredError;
+  RefPtr<nsRange> range =
+      nsRange::Create(startPoint.ToRawRangeBoundary(),
+                      endPoint.ToRawRangeBoundary(), ignoredError);
+  NS_WARNING_ASSERTION(!ignoredError.Failed(), "Failed to create a range");
   return range.forget();
 }
 

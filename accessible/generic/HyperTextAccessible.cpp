@@ -1580,10 +1580,11 @@ bool HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
 
   RefPtr<nsRange> range;
   uint32_t rangeCount = domSel->RangeCount();
-  if (aSelectionNum == static_cast<int32_t>(rangeCount))
-    range = new nsRange(mContent);
-  else
+  if (aSelectionNum == static_cast<int32_t>(rangeCount)) {
+    range = nsRange::Create(mContent);
+  } else {
     range = domSel->GetRangeAt(aSelectionNum);
+  }
 
   if (!range) return false;
 
@@ -1627,7 +1628,7 @@ bool HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum) {
 void HyperTextAccessible::ScrollSubstringTo(int32_t aStartOffset,
                                             int32_t aEndOffset,
                                             uint32_t aScrollType) {
-  RefPtr<nsRange> range = new nsRange(mContent);
+  RefPtr<nsRange> range = nsRange::Create(mContent);
   if (OffsetsToDOMRange(aStartOffset, aEndOffset, range))
     nsCoreUtils::ScrollSubstringTo(GetFrame(), range, aScrollType);
 }
@@ -1642,7 +1643,7 @@ void HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
   nsIntPoint coords =
       nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType, this);
 
-  RefPtr<nsRange> range = new nsRange(mContent);
+  RefPtr<nsRange> range = nsRange::Create(mContent);
   if (!OffsetsToDOMRange(aStartOffset, aEndOffset, range)) return;
 
   nsPresContext* presContext = frame->PresContext();

@@ -648,10 +648,9 @@ nsresult nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow,
   RefPtr<Selection> sel = GetFrameSelection(aWindow);
   NS_ENSURE_ARG_POINTER(sel);
 
-  RefPtr<nsRange> searchRange = new nsRange(theDoc);
-  RefPtr<nsRange> startPt = new nsRange(theDoc);
-  RefPtr<nsRange> endPt = new nsRange(theDoc);
-  NS_ENSURE_ARG_POINTER(endPt);
+  RefPtr<nsRange> searchRange = nsRange::Create(theDoc);
+  RefPtr<nsRange> startPt = nsRange::Create(theDoc);
+  RefPtr<nsRange> endPt = nsRange::Create(theDoc);
 
   RefPtr<nsRange> foundRange;
 

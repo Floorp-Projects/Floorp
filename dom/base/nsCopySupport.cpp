@@ -407,7 +407,7 @@ nsresult nsCopySupport::GetTransferableForNode(
   // XXX We should try to get rid of the Selection object here.
   // XXX bug 1245883
   RefPtr<Selection> selection = new Selection();
-  RefPtr<nsRange> range = new nsRange(aNode);
+  RefPtr<nsRange> range = nsRange::Create(aNode);
   ErrorResult result;
   range->SelectNode(*aNode, result);
   if (NS_WARN_IF(result.Failed())) {

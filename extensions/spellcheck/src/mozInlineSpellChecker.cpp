@@ -134,7 +134,7 @@ nsresult mozInlineSpellStatus::InitForEditorChange(
   mOp = eOpChange;
 
   // range to check
-  mRange = new nsRange(aPreviousNode);
+  mRange = nsRange::Create(aPreviousNode);
 
   // ...we need to put the start and end in the correct order
   ErrorResult errorResult;
@@ -419,18 +419,14 @@ Document* mozInlineSpellStatus::GetDocument() const {
 
 already_AddRefed<nsRange> mozInlineSpellStatus::PositionToCollapsedRange(
     nsINode* aNode, uint32_t aOffset) {
-  RefPtr<Document> document = GetDocument();
-  if (NS_WARN_IF(!document)) {
+  if (NS_WARN_IF(!aNode) || NS_WARN_IF(!GetDocument())) {
     return nullptr;
   }
-
-  RefPtr<nsRange> range = new nsRange(document);
-
-  nsresult rv = range->CollapseTo(aNode, aOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
+  IgnoredErrorResult ignoredError;
+  RefPtr<nsRange> range =
+      nsRange::Create(aNode, aOffset, aNode, aOffset, ignoredError);
+  NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                       "Creating collapsed range failed");
   return range.forget();
 }
 
@@ -979,7 +975,7 @@ nsresult mozInlineSpellChecker::MakeSpellCheckRange(nsINode* aStartNode,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsRange> range = new nsRange(doc);
+  RefPtr<nsRange> range = nsRange::Create(doc);
 
   // possibly use full range of the editor
   if (!aStartNode || !aEndNode) {
