@@ -1102,11 +1102,12 @@ static void CollectCertTelemetry(
   }
 }
 
-static void AuthCertificateSetResults(
-    TransportSecurityInfo* aInfoObject, const UniqueCERTCertificate& aCert,
-    UniqueCERTCertList& aBuiltCertChain, UniqueCERTCertList& aPeerCertChain,
-    const CertificateTransparencyInfo& aCertificateTransparencyInfo,
-    SECOidTag aEvOidPolicy, bool aSucceeded) {
+static void AuthCertificateSetResults(TransportSecurityInfo* aInfoObject,
+                                      const UniqueCERTCertificate& aCert,
+                                      UniqueCERTCertList& aBuiltCertChain,
+                                      UniqueCERTCertList& aPeerCertChain,
+                                      uint16_t aCertificateTransparencyStatus,
+                                      SECOidTag aEvOidPolicy, bool aSucceeded) {
   MOZ_ASSERT(aInfoObject);
 
   if (aSucceeded) {
@@ -1129,7 +1130,8 @@ static void AuthCertificateSetResults(
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("AuthCertificate setting NEW cert %p", nsc.get()));
 
-    aInfoObject->SetCertificateTransparencyInfo(aCertificateTransparencyInfo);
+    aInfoObject->SetCertificateTransparencyStatus(
+        aCertificateTransparencyStatus);
   } else {
     // Certificate validation failed; store the peer certificate chain on
     // infoObject so it can be used for error reporting.
@@ -1189,8 +1191,14 @@ Result AuthCertificate(CertVerifier& certVerifier,
                        sha1ModeResult, pinningTelemetryInfo, builtCertChain,
                        certificateTransparencyInfo, crliteTelemetryInfo);
 
-  AuthCertificateSetResults(infoObject, cert, builtCertChain, peerCertChain,
-                            certificateTransparencyInfo, evOidPolicy,
+  uint16_t status =
+      rv == Success
+          ? TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
+                certificateTransparencyInfo)
+          : static_cast<uint16_t>(nsITransportSecurityInfo::
+                                      CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE);
+  AuthCertificateSetResults(infoObject, cert, builtCertChain,
+                            std::move(peerCertChain), status, evOidPolicy,
                             rv == Success);
   return rv;
 }
