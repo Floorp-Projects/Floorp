@@ -1005,8 +1005,11 @@ static bool FormatNumeric(JSContext* cx, const UNumberFormatter* nf,
   return true;
 }
 
+enum class FormattingType { ForUnit, NotForUnit };
+
 static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
-                                            HandleValue x) {
+                                            HandleValue x,
+                                            FormattingType formattingType) {
   // See intl/icu/source/i18n/unicode/unum.h for a detailed field list.  This
   // list is deliberately exhaustive: cases might have to be added/removed if
   // this code is compiled with a different ICU with more UNumberFormatFields
@@ -1044,6 +1047,11 @@ static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
     }
 
     case UNUM_PERCENT_FIELD:
+      // Percent fields are returned as "unit" elements when the number
+      // formatter's style is "unit".
+      if (formattingType == FormattingType::ForUnit) {
+        return &JSAtomState::unit;
+      }
       return &JSAtomState::percentSign;
 
     case UNUM_CURRENCY_FIELD:
@@ -1418,6 +1426,7 @@ static bool FormattedNumberToParts(JSContext* cx,
                                    const UFormattedValue* formattedValue,
                                    HandleValue number,
                                    FieldType relativeTimeUnit,
+                                   FormattingType formattingType,
                                    MutableHandleValue result) {
   MOZ_ASSERT(number.isNumeric());
 
@@ -1468,8 +1477,8 @@ static bool FormattedNumberToParts(JSContext* cx,
       return false;
     }
 
-    FieldType type =
-        GetFieldTypeForNumberField(UNumberFormatFields(field), number);
+    FieldType type = GetFieldTypeForNumberField(UNumberFormatFields(field),
+                                                number, formattingType);
 
     if (!fields.append(type, beginIndex, endIndex)) {
       return false;
@@ -1489,9 +1498,9 @@ bool js::intl::FormattedRelativeTimeToParts(
     JSContext* cx, const UFormattedValue* formattedValue, double timeValue,
     FieldType relativeTimeUnit, MutableHandleValue result) {
   Value tval = DoubleValue(timeValue);
-  return FormattedNumberToParts(cx, formattedValue,
-                                HandleValue::fromMarkedLocation(&tval),
-                                relativeTimeUnit, result);
+  return FormattedNumberToParts(
+      cx, formattedValue, HandleValue::fromMarkedLocation(&tval),
+      relativeTimeUnit, FormattingType::NotForUnit, result);
 }
 #else
 static ArrayObject* LegacyFormattedNumberToParts(
@@ -1542,6 +1551,7 @@ static ArrayObject* LegacyFormattedNumberToParts(
 
 static bool FormatNumericToParts(JSContext* cx, const UNumberFormatter* nf,
                                  UFormattedNumber* formatted, HandleValue x,
+                                 FormattingType formattingType,
                                  MutableHandleValue result) {
   PartitionNumberPatternResult formattedValue =
       PartitionNumberPattern(cx, nf, formatted, x);
@@ -1550,7 +1560,8 @@ static bool FormatNumericToParts(JSContext* cx, const UNumberFormatter* nf,
   }
 
 #ifndef U_HIDE_DRAFT_API
-  return FormattedNumberToParts(cx, formattedValue, x, nullptr, result);
+  return FormattedNumberToParts(cx, formattedValue, x, nullptr, formattingType,
+                                result);
 #else
   return LegacyFormattedNumberToParts(cx, formattedValue, x, result);
 #endif
@@ -1558,10 +1569,11 @@ static bool FormatNumericToParts(JSContext* cx, const UNumberFormatter* nf,
 
 bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
+  MOZ_ASSERT(args.length() == 4);
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[1].isNumeric());
   MOZ_ASSERT(args[2].isBoolean());
+  MOZ_ASSERT(args[3].isBoolean());
 
   Rooted<NumberFormatObject*> numberFormat(
       cx, &args[0].toObject().as<NumberFormatObject>());
@@ -1593,7 +1605,11 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
 
   // Use the UNumberFormatter to actually format the number.
   if (args[2].toBoolean()) {
-    return FormatNumericToParts(cx, nf, formatted, args[1], args.rval());
+    FormattingType formattingType = args[3].toBoolean()
+                                        ? FormattingType::ForUnit
+                                        : FormattingType::NotForUnit;
+    return FormatNumericToParts(cx, nf, formatted, args[1], formattingType,
+                                args.rval());
   }
 
   return FormatNumeric(cx, nf, formatted, args[1], args.rval());
