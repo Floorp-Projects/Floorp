@@ -29,7 +29,8 @@ parent:
                        nsHttpResponseHead?        responseHead,
                        nsCString                  securityInfoSerialization,
                        bool                       proxyConnectFailed,
-                       TimingStructArgs           timings);
+                       TimingStructArgs           timings,
+                       int32_t                    proxyConnectResponseCode);
   async OnTransportStatus(nsresult status,
                           int64_t progress,
                           int64_t progressMax);
@@ -42,7 +43,7 @@ parent:
                       TimingStructArgs timings,
                       nsHttpHeaderArray? responseTrailers,
                       bool hasStickyConn);
-  async OnNetAddrUpdate(NetAddr selfAddr, NetAddr peerAddr);
+  async OnNetAddrUpdate(NetAddr selfAddr, NetAddr peerAddr, bool resolvedByTRR);
   async OnInitFailed(nsresult status);
 
 child:

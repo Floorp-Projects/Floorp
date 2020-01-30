@@ -67,7 +67,9 @@ HttpTransactionParent::HttpTransactionParent()
       mResponseTrailersTaken(false),
       mHasStickyConnection(false),
       mOnStartRequestCalled(false),
-      mOnStopRequestCalled(false) {
+      mOnStopRequestCalled(false),
+      mResolvedByTRR(false),
+      mProxyConnectResponseCode(0) {
   LOG(("Creating HttpTransactionParent @%p\n", this));
 
   this->mSelfAddr.inet = {};
@@ -339,8 +341,7 @@ HttpTransactionParent* HttpTransactionParent::AsHttpTransactionParent() {
 }
 
 int32_t HttpTransactionParent::GetProxyConnectResponseCode() {
-  // TODO: will be implemented later in bug 1600254.
-  return 0;
+  return mProxyConnectResponseCode;
 }
 
 already_AddRefed<nsIEventTarget> HttpTransactionParent::GetNeckoTarget() {
@@ -351,14 +352,15 @@ already_AddRefed<nsIEventTarget> HttpTransactionParent::GetNeckoTarget() {
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
     const nsCString& aSecurityInfoSerialization,
-    const bool& aProxyConnectFailed, const TimingStructArgs& aTimings) {
+    const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
+    const int32_t& aProxyConnectResponseCode) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this,
-      [self = UnsafePtr<HttpTransactionParent>(this), aStatus, aResponseHead,
-       aSecurityInfoSerialization, aProxyConnectFailed, aTimings]() {
+      this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
+             aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
+             aTimings, aProxyConnectResponseCode]() {
         self->DoOnStartRequest(aStatus, aResponseHead,
                                aSecurityInfoSerialization, aProxyConnectFailed,
-                               aTimings);
+                               aTimings, aProxyConnectResponseCode);
       }));
   return IPC_OK();
 }
@@ -384,7 +386,8 @@ static void TimingStructArgsToTimingsStruct(const TimingStructArgs& aArgs,
 void HttpTransactionParent::DoOnStartRequest(
     const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
     const nsCString& aSecurityInfoSerialization,
-    const bool& aProxyConnectFailed, const TimingStructArgs& aTimings) {
+    const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
+    const int32_t& aProxyConnectResponseCode) {
   LOG(("HttpTransactionParent::DoOnStartRequest [this=%p aStatus=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -407,6 +410,8 @@ void HttpTransactionParent::DoOnStartRequest(
   }
   mProxyConnectFailed = aProxyConnectFailed;
   TimingStructArgsToTimingsStruct(aTimings, mTimings);
+
+  mProxyConnectResponseCode = aProxyConnectResponseCode;
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
   nsresult rv = mChannel->OnStartRequest(this);
@@ -525,9 +530,11 @@ void HttpTransactionParent::DoOnStopRequest(
 }
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnNetAddrUpdate(
-    const NetAddr& aSelfAddr, const NetAddr& aPeerAddr) {
+    const NetAddr& aSelfAddr, const NetAddr& aPeerAddr,
+    const bool& aResolvedByTRR) {
   mSelfAddr = aSelfAddr;
   mPeerAddr = aPeerAddr;
+  mResolvedByTRR = aResolvedByTRR;
   return IPC_OK();
 }
 
