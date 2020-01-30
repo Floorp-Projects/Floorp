@@ -41,6 +41,11 @@ namespace mozilla {
  */
 enum class ScrollMode { Instant, Smooth, SmoothMsd, Normal };
 
+/**
+ * When scrolling by a relative amount, we can choose various units.
+ */
+enum class ScrollUnit { DEVICE_PIXELS, LINES, PAGES, WHOLE };
+
 }  // namespace mozilla
 
 #endif  // mozilla_ScrollTypes_h
