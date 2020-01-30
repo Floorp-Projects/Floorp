@@ -9,9 +9,7 @@
 #endif
 #endif
 
-  <stringbundleset id="stringbundleset"
-                   string-bookmarkthispage="&bookmarkThisPageCmd.label;"
-                   string-editthisbookmark="&editThisBookmarkCmd.label;">
+  <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
   </stringbundleset>
