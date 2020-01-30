@@ -427,6 +427,7 @@ def target_tasks_fennec_v68(full_task_graph, parameters, graph_config):
     """
     def filter(task):
         platform = task.attributes.get('build_platform')
+        test_platform = task.attributes.get('test_platform')
         attributes = task.attributes
 
         if platform and 'android' not in platform:
@@ -434,6 +435,8 @@ def target_tasks_fennec_v68(full_task_graph, parameters, graph_config):
         if attributes.get('unittest_suite') != 'raptor':
             return False
         if '-fennec68-' in attributes.get('raptor_try_name'):
+            if '-p2' in test_platform and '-arm7' in test_platform:
+                return False
             return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
