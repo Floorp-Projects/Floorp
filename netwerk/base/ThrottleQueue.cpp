@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ThrottleQueue.h"
+#include "mozilla/net/InputChannelThrottleQueueParent.h"
 #include "nsISeekableStream.h"
 #include "nsIAsyncInputStream.h"
+#include "nsIOService.h"
 #include "nsStreamUtils.h"
 #include "nsNetUtil.h"
 
@@ -214,6 +216,20 @@ void ThrottleInputStream::AllowInput() {
 
 //-----------------------------------------------------------------------------
 
+// static
+already_AddRefed<nsIInputChannelThrottleQueue> ThrottleQueue::Create() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsIInputChannelThrottleQueue> tq;
+  if (gIOService->UseSocketProcess()) {
+    tq = new InputChannelThrottleQueueParent();
+  } else {
+    tq = new ThrottleQueue();
+  }
+
+  return tq.forget();
+}
+
 NS_IMPL_ISUPPORTS(ThrottleQueue, nsIInputChannelThrottleQueue, nsITimerCallback,
                   nsINamed)
 
@@ -362,6 +378,22 @@ void ThrottleQueue::QueueStream(ThrottleInputStream* aStream) {
 void ThrottleQueue::DequeueStream(ThrottleInputStream* aStream) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mAsyncEvents.RemoveElement(aStream);
+}
+
+NS_IMETHODIMP
+ThrottleQueue::GetMeanBytesPerSecond(uint32_t* aMeanBytesPerSecond) {
+  NS_ENSURE_ARG(aMeanBytesPerSecond);
+
+  *aMeanBytesPerSecond = mMeanBytesPerSecond;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ThrottleQueue::GetMaxBytesPerSecond(uint32_t* aMaxBytesPerSecond) {
+  NS_ENSURE_ARG(aMaxBytesPerSecond);
+
+  *aMaxBytesPerSecond = mMaxBytesPerSecond;
+  return NS_OK;
 }
 
 }  // namespace net

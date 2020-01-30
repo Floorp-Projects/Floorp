@@ -407,9 +407,9 @@ nsresult nsHttpTransaction::Init(
   }
 
   nsCOMPtr<nsIThrottledInputChannel> throttled = do_QueryInterface(mChannel);
-  nsIInputChannelThrottleQueue* queue;
   if (throttled) {
-    rv = throttled->GetThrottleQueue(&queue);
+    nsCOMPtr<nsIInputChannelThrottleQueue> queue;
+    rv = throttled->GetThrottleQueue(getter_AddRefs(queue));
     // In case of failure, just carry on without throttling.
     if (NS_SUCCEEDED(rv) && queue) {
       nsCOMPtr<nsIAsyncInputStream> wrappedStream;
@@ -421,7 +421,7 @@ nsresult nsHttpTransaction::Init(
         LOG(
             ("nsHttpTransaction::Init %p wrapping input stream using throttle "
              "queue %p\n",
-             this, queue));
+             this, queue.get()));
         mRequestStream = wrappedStream;
       }
     }

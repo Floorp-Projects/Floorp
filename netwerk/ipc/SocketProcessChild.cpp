@@ -7,6 +7,7 @@
 #include "SocketProcessLogging.h"
 
 #include "base/task.h"
+#include "InputChannelThrottleQueueChild.h"
 #include "HttpTransactionChild.h"
 #include "HttpConnectionMgrChild.h"
 #include "mozilla/Assertions.h"
@@ -310,6 +311,14 @@ SocketProcessChild::RecvOnHttpActivityDistributorActivated(
     distributor->SetIsActive(aIsActivated);
   }
   return IPC_OK();
+}
+already_AddRefed<PInputChannelThrottleQueueChild>
+SocketProcessChild::AllocPInputChannelThrottleQueueChild(
+    const uint32_t& aMeanBytesPerSecond, const uint32_t& aMaxBytesPerSecond) {
+  RefPtr<InputChannelThrottleQueueChild> p =
+      new InputChannelThrottleQueueChild();
+  p->Init(aMeanBytesPerSecond, aMaxBytesPerSecond);
+  return p.forget();
 }
 
 }  // namespace net

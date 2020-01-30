@@ -28,6 +28,13 @@ interface nsIInputChannelThrottleQueue : nsISupports
     void init(in unsigned long aMeanBytesPerSecond, in unsigned long aMaxBytesPerSecond);
 
     /**
+     * Internal use only. Get the values set by init method.
+     */
+    [noscript] readonly attribute unsigned long meanBytesPerSecond;
+    [noscript] readonly attribute unsigned long maxBytesPerSecond;
+
+
+    /**
      * Return the number of bytes that are available to the caller in
      * this time slice.
      *
