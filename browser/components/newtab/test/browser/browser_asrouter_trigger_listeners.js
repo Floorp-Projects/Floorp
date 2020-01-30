@@ -160,7 +160,7 @@ add_task(async function check_openURL_listener() {
     thirdNormalWindow,
   ];
   await Promise.all(windows.map(win => BrowserTestUtils.closeWindow(win)));
-});
+}).skip();
 
 add_task(async function check_newSavedLogin_listener() {
   const TEST_URL =
