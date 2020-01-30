@@ -34,7 +34,7 @@ add_task(async function() {
 
   const tab = gBrowser.selectedTab;
   testNumberOfLinks(editor);
-  await testMediaLink(editor, tab, ui, 2, "width", 400);
+  await testMediaLink(editor, tab, ui, 2, "width", 550);
   await testMediaLink(editor, tab, ui, 3, "height", 300);
 
   await closeRDM(tab, ui);

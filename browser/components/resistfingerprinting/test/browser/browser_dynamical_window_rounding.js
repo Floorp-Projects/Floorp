@@ -24,7 +24,6 @@ const TEST_CASES = [
   { width: 800, height: 600 },
   { width: 640, height: 400 },
   { width: 500, height: 350 },
-  { width: 300, height: 170 },
 ];
 
 function getPlatform() {

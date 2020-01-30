@@ -7,16 +7,17 @@
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const MEDIA_PREF = "devtools.styleeditor.showMediaSidebar";
 
-const RESIZE = 300;
+const RESIZE_W = 300;
+const RESIZE_H = 450;
 const LABELS = [
   "not all",
   "all",
-  "(max-width: 400px)",
+  "(max-width: 550px)",
   "(min-height: 300px) and (max-height: 320px)",
-  "(max-width: 600px)",
+  "(max-width: 750px)",
 ];
 const LINE_NOS = [1, 7, 19, 25, 31];
-const NEW_RULE = "\n@media (max-width: 600px) { div { color: blue; } }";
+const NEW_RULE = "\n@media (max-width: 750px) { div { color: blue; } }";
 
 waitForExplicitFinish();
 
@@ -46,7 +47,7 @@ add_task(async function() {
   const originalHeight = window.outerHeight;
 
   const onMatchesChange = listenForMediaChange(ui);
-  window.resizeTo(RESIZE, RESIZE);
+  window.resizeTo(RESIZE_W, RESIZE_H);
   await onMatchesChange;
 
   testMediaMatchChanged(mediaEditor);
@@ -78,7 +79,7 @@ function testMediaMatchChanged(editor) {
   const cond = sidebar.querySelectorAll(".media-rule-condition")[2];
   is(
     cond.textContent,
-    "(max-width: 400px)",
+    "(max-width: 550px)",
     "third rule condition text is correct"
   );
   ok(
