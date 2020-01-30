@@ -37,6 +37,7 @@ Structure:
 |---|---|
 | [focus](focus.md) | `fun focus(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Focuses the url input field and shows the virtual keyboard if needed. |
 | [setIcon](set-icon.md) | `fun setIcon(icon: <ERROR CLASS>, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets an icon that will be drawn in front of the URL. |
+| [setOnEditFocusChangeListener](set-on-edit-focus-change-listener.md) | `fun setOnEditFocusChangeListener(listener: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets a listener to be invoked when focus of the URL input view (in edit mode) changed. |
 | [setUrlBackground](set-url-background.md) | `fun setUrlBackground(background: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the background that will be drawn behind the URL, icon and edit actions. |
 
 ### Extension Functions

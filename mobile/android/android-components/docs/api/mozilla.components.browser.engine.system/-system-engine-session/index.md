@@ -48,6 +48,12 @@ WebView-based EngineSession implementation.
 | [stopLoading](stop-loading.md) | `fun stopLoading(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.stopLoading](../../mozilla.components.concept.engine/-engine-session/stop-loading.md) |
 | [toggleDesktopMode](toggle-desktop-mode.md) | `fun toggleDesktopMode(enable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, reload: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.toggleDesktopMode](../../mozilla.components.concept.engine/-engine-session/toggle-desktop-mode.md) |
 
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [markActiveForWebExtensions](../../mozilla.components.concept.engine/-engine-session/mark-active-for-web-extensions.md) | `open fun markActiveForWebExtensions(active: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Marks this session active/inactive for web extensions to support tabs.query({active: true}). |
+
 ### Extension Functions
 
 | Name | Summary |
