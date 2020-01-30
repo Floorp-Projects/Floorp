@@ -25,7 +25,6 @@ import mozilla.components.browser.icons.loader.DataUriIconLoader
 import mozilla.components.browser.icons.loader.HttpIconLoader
 import mozilla.components.browser.icons.loader.MemoryIconLoader
 import mozilla.components.browser.icons.preparer.MemoryIconPreparer
-import mozilla.components.browser.icons.preparer.TippyTopIconPreparer
 import mozilla.components.browser.icons.processor.AdaptiveIconProcessor
 import mozilla.components.browser.icons.processor.ColorProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
@@ -35,8 +34,8 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PWA_LAUNCHER
-import mozilla.components.feature.pwa.ext.installableManifest
 import mozilla.components.feature.pwa.ext.hasLargeIcons
+import mozilla.components.feature.pwa.ext.installableManifest
 
 private val pwaIconMemoryCache = IconMemoryCache()
 
@@ -244,7 +243,6 @@ private fun webAppIcons(
     httpClient = httpClient,
     generator = DefaultIconGenerator(cornerRadiusDimen = null),
     preparers = listOf(
-        TippyTopIconPreparer(context.assets),
         MemoryIconPreparer(pwaIconMemoryCache)
     ),
     loaders = listOf(
