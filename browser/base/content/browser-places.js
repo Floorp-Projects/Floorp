@@ -1396,29 +1396,6 @@ var BookmarkingUI = {
       : this.STATUS_UNSTARRED;
   },
 
-  get _starredTooltip() {
-    delete this._starredTooltip;
-    return (this._starredTooltip = this._getFormattedTooltip(
-      "starButtonOn.tooltip2"
-    ));
-  },
-
-  get _unstarredTooltip() {
-    delete this._unstarredTooltip;
-    return (this._unstarredTooltip = this._getFormattedTooltip(
-      "starButtonOff.tooltip2"
-    ));
-  },
-
-  _getFormattedTooltip(strId) {
-    let args = [];
-    let shortcut = document.getElementById(this.BOOKMARK_BUTTON_SHORTCUT);
-    if (shortcut) {
-      args.push(ShortcutUtils.prettifyShortcut(shortcut));
-    }
-    return gNavigatorBundle.getFormattedString(strId, args);
-  },
-
   onPopupShowing: function BUI_onPopupShowing(event) {
     // Don't handle events for submenus.
     if (event.target != event.currentTarget) {
@@ -1692,16 +1669,22 @@ var BookmarkingUI = {
       }
     }
 
-    // Update the tooltip for elements that require it.
-    for (let element of [
-      this.star,
-      document.getElementById("context-bookmarkpage"),
-    ]) {
-      element.setAttribute(
-        "tooltiptext",
-        starred ? this._starredTooltip : this._unstarredTooltip
-      );
+    if (!this.star) {
+      // The BOOKMARK_BUTTON_SHORTCUT exists only in browser.xhtml.
+      // If we're not in this context, let's return early.
+      return;
     }
+
+    // Update the tooltip for elements that require it.
+    let shortcut = document.getElementById(this.BOOKMARK_BUTTON_SHORTCUT);
+    let l10nArgs = {
+      shortcut: ShortcutUtils.prettifyShortcut(shortcut),
+    };
+    document.l10n.setAttributes(
+      this.star,
+      starred ? "urlbar-star-edit-bookmark" : "urlbar-star-add-bookmark",
+      l10nArgs
+    );
 
     Services.obs.notifyObservers(
       null,
@@ -1717,40 +1700,84 @@ var BookmarkingUI = {
   updateBookmarkPageMenuItem: function BUI_updateBookmarkPageMenuItem(
     forceReset
   ) {
-    if (!this.stringbundleset) {
-      // We are loaded in a non-browser context, like the sidebar.
+    let menuItem = document.getElementById("menu_bookmarkThisPage");
+    // Check if the menu item exists.
+    if (!menuItem) {
+      // If not, we are loaded in a non-browser context, like the sidebar.
       return;
     }
+
+    // Check if we're loaded in browser.xhtml.
+    if (!document.location.href.includes("browser.xhtml")) {
+      // If not, set the (disabled) item to the default value and exit.
+      document.l10n.setAttributes(menuItem, "menu-bookmark-this-page");
+      return;
+    }
+
     let isStarred = !forceReset && this._itemGuids.size > 0;
-    let label = this.stringbundleset.getAttribute(
-      isStarred ? "string-editthisbookmark" : "string-bookmarkthispage"
-    );
+
+    // Define the l10n id which will be used to localize elements
+    // that only require a label using the menubar.ftl messages.
+    let menuItemL10nId = isStarred
+      ? "menu-bookmark-edit"
+      : "menu-bookmark-this-page";
+
+    // Localize the menubar item.
+    document.l10n.setAttributes(menuItem, menuItemL10nId);
 
     let panelMenuToolbarButton = document.getElementById(
       "panelMenuBookmarkThisPage"
     );
+
+    // If we don't have the panelMenuToolbarButton, we can exit early.
     if (!panelMenuToolbarButton) {
-      // We don't have the star UI or context menu (e.g. we're the hidden
-      // window). So we just set the bookmarks menu item label and exit.
-      document
-        .getElementById("menu_bookmarkThisPage")
-        .setAttribute("label", label);
       return;
     }
 
-    for (let element of [
-      document.getElementById("menu_bookmarkThisPage"),
-      document.getElementById("context-bookmarkpage"),
-      panelMenuToolbarButton,
-    ]) {
-      element.setAttribute("label", label);
+    // Localize the item in the bookmarks panel view using the l10n id from menubar.ftl.
+    document.l10n.setAttributes(panelMenuToolbarButton, menuItemL10nId);
+
+    // Localize the context menu item element.
+    let contextItem = document.getElementById("context-bookmarkpage");
+    let shortcutElem = document.getElementById(this.BOOKMARK_BUTTON_SHORTCUT);
+
+    if (shortcutElem) {
+      let shortcut = ShortcutUtils.prettifyShortcut(shortcutElem);
+      let contextItemL10nId = isStarred
+        ? "main-context-menu-bookmark-change-with-shortcut"
+        : "main-context-menu-bookmark-add-with-shortcut";
+      let l10nArgs = { shortcut };
+      document.l10n.setAttributes(contextItem, contextItemL10nId, l10nArgs);
+    } else {
+      let contextItemL10nId = isStarred
+        ? "main-context-menu-bookmark-change"
+        : "main-context-menu-bookmark-add";
+      document.l10n.setAttributes(contextItem, contextItemL10nId);
     }
 
-    // Update the title and the starred state for the page action panel.
-    PageActions.actionForID(PageActions.ACTION_ID_BOOKMARK).setTitle(
-      label,
-      window
-    );
+    // Fetch the label attribute value of the message and
+    // apply it on the star title.
+    //
+    // Note: This should be updated once bug 1608198 is fixed.
+    this._latestMenuItemL10nId = menuItemL10nId;
+    document.l10n.formatMessages([{ id: menuItemL10nId }]).then(l10n => {
+      // It's possible for this promise to be scheduled multiple times.
+      // In such a case, we'd like to avoid setting the title if there's
+      // a newer l10n id pending to be set.
+      if (this._latestMenuItemL10nId != menuItemL10nId) {
+        return;
+      }
+
+      // We assume that menuItemL10nId has a single attribute.
+      let label = l10n[0].attributes[0].value;
+
+      // Update the title and the starred state for the page action panel.
+      PageActions.actionForID(PageActions.ACTION_ID_BOOKMARK).setTitle(
+        label,
+        window
+      );
+    });
+
     this._updateStar();
   },
 
