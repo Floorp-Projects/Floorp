@@ -2299,16 +2299,18 @@ impl TileCacheInstance {
         prim_spatial_node_index: SpatialNodeIndex,
         prim_clip_chain: Option<&ClipChainInstance>,
         local_prim_rect: LayoutRect,
-        spatial_tree: &SpatialTree,
+        frame_context: &FrameVisibilityContext,
         data_stores: &DataStores,
         clip_store: &ClipStore,
         pictures: &[PicturePrimitive],
         resource_cache: &ResourceCache,
         opacity_binding_store: &OpacityBindingStorage,
         image_instances: &ImageInstanceStorage,
-        surface_index: SurfaceIndex,
-        surface_spatial_node_index: SpatialNodeIndex,
+        surface_stack: &[SurfaceIndex],
     ) -> bool {
+        // This primitive exists on the last element on the current surface stack.
+        let prim_surface_index = *surface_stack.last().unwrap();
+
         // If the primitive is completely clipped out by the clip chain, there
         // is no need to add it to any primitive dependencies.
         let prim_clip_chain = match prim_clip_chain {
@@ -2318,7 +2320,7 @@ impl TileCacheInstance {
 
         self.map_local_to_surface.set_target_spatial_node(
             prim_spatial_node_index,
-            spatial_tree,
+            frame_context.spatial_tree,
         );
 
         // Map the primitive local rect into picture space.
@@ -2335,17 +2337,41 @@ impl TileCacheInstance {
         // If the primitive is directly drawn onto this picture cache surface, then
         // the pic_clip_rect is in the same space. If not, we need to map it from
         // the surface space into the picture cache space.
-        let on_picture_surface = surface_index == self.surface_index;
+        let on_picture_surface = prim_surface_index == self.surface_index;
         let pic_clip_rect = if on_picture_surface {
             prim_clip_chain.pic_clip_rect
         } else {
-            self.map_child_pic_to_surface.set_target_spatial_node(
-                surface_spatial_node_index,
-                spatial_tree,
-            );
-            self.map_child_pic_to_surface
-                .map(&prim_clip_chain.pic_clip_rect)
-                .expect("bug: unable to map clip rect to picture cache space")
+            // We want to get the rect in the tile cache surface space that this primitive
+            // occupies, in order to enable correct invalidation regions. Each surface
+            // that exists in the chain between this primitive and the tile cache surface
+            // may have an arbitrary inflation factor (for example, in the case of a series
+            // of nested blur elements). To account for this, step through the current
+            // surface stack, mapping the primitive rect into each surface space, including
+            // the inflation factor from each intermediate surface.
+            let mut current_pic_clip_rect = prim_clip_chain.pic_clip_rect;
+            let mut current_spatial_node_index = frame_context
+                .surfaces[prim_surface_index.0]
+                .surface_spatial_node_index;
+
+            for surface_index in surface_stack.iter().rev() {
+                let surface = &frame_context.surfaces[surface_index.0];
+
+                let map_local_to_surface = SpaceMapper::new_with_target(
+                    surface.surface_spatial_node_index,
+                    current_spatial_node_index,
+                    surface.rect,
+                    frame_context.spatial_tree,
+                );
+
+                current_pic_clip_rect = map_local_to_surface
+                    .map(&current_pic_clip_rect)
+                    .expect("bug: unable to map")
+                    .inflate(surface.inflation_factor, surface.inflation_factor);
+
+                current_spatial_node_index = surface.surface_spatial_node_index;
+            }
+
+            current_pic_clip_rect
         };
 
         // Get the tile coordinates in the picture space.
@@ -2531,9 +2557,9 @@ impl TileCacheInstance {
                     //  - Same coord system as picture cache (ensures rects are axis-aligned).
                     //  - No clip masks exist.
                     let same_coord_system = {
-                        let prim_spatial_node = &spatial_tree
+                        let prim_spatial_node = &frame_context.spatial_tree
                             .spatial_nodes[prim_spatial_node_index.0 as usize];
-                        let surface_spatial_node = &spatial_tree
+                        let surface_spatial_node = &frame_context.spatial_tree
                             .spatial_nodes[self.spatial_node_index.0 as usize];
 
                         prim_spatial_node.coordinate_system_id == surface_spatial_node.coordinate_system_id
