@@ -193,10 +193,7 @@ void WebGLContext::BindBufferRangeImpl(GLenum target, GLuint index,
       break;
 
     case LOCAL_GL_UNIFORM_BUFFER: {
-      GLuint offsetAlignment = 0;
-      gl->GetUIntegerv(LOCAL_GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT,
-                       &offsetAlignment);
-      if (offset % offsetAlignment != 0) {
+      if (offset % mGLUniformBufferOffsetAlignment != 0) {
         ErrorInvalidValue("For %s, `offset` must be a multiple of %s.",
                           "UNIFORM_BUFFER", "UNIFORM_BUFFER_OFFSET_ALIGNMENT");
         return;
