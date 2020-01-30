@@ -45,6 +45,7 @@
 #include "mozilla/ShortcutKeys.h"
 #include "mozilla/KeyEventHandler.h"
 #include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/ScrollTypes.h"
 
 namespace mozilla {
 
@@ -685,8 +686,8 @@ TextInputSelectionController::CompleteScroll(bool aForward) {
   if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                         nsIScrollableFrame::WHOLE, ScrollMode::Instant);
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE,
+                         ScrollMode::Instant);
   return NS_OK;
 }
 
@@ -733,8 +734,8 @@ TextInputSelectionController::ScrollPage(bool aForward) {
   if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                         nsIScrollableFrame::PAGES, ScrollMode::Smooth);
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES,
+                         ScrollMode::Smooth);
   return NS_OK;
 }
 
@@ -743,8 +744,8 @@ TextInputSelectionController::ScrollLine(bool aForward) {
   if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                         nsIScrollableFrame::LINES, ScrollMode::Smooth);
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::LINES,
+                         ScrollMode::Smooth);
   return NS_OK;
 }
 
@@ -753,8 +754,8 @@ TextInputSelectionController::ScrollCharacter(bool aRight) {
   if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  mScrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0),
-                         nsIScrollableFrame::LINES, ScrollMode::Smooth);
+  mScrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0), ScrollUnit::LINES,
+                         ScrollMode::Smooth);
   return NS_OK;
 }
 
