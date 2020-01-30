@@ -60,6 +60,11 @@ skip-if(!this.hasOwnProperty('addIntlExtras')) include test262/intl402/ListForma
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1611782
+skip-if(release_or_beta) script test262/intl402/RelativeTimeFormat/constructor/constructor/options-throwing-getters.js
+skip-if(release_or_beta) script test262/intl402/RelativeTimeFormat/constructor/constructor/options-order.js
+skip-if(release_or_beta) script test262/intl402/RelativeTimeFormat/constructor/constructor/options-numberingSystem-invalid.js
+
 
 #####################################
 # Test262 tests disabled on browser #
