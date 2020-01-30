@@ -86,13 +86,6 @@ class mozJSComponentLoader final {
 
   friend class XPCJSRuntime;
 
-  JSObject* CompilationScope(JSContext* aCx) {
-    if (mLoaderGlobal) {
-      return mLoaderGlobal;
-    }
-    return GetSharedGlobal(aCx);
-  }
-
  private:
   static mozilla::StaticRefPtr<mozJSComponentLoader> sSelf;
 
