@@ -45,7 +45,6 @@
 #include "mozilla/Preferences.h"             // for Preferences
 #include "mozilla/RecursiveMutex.h"          // for RecursiveMutexAutoLock, etc
 #include "mozilla/RefPtr.h"                  // for RefPtr
-#include "mozilla/ScrollTypes.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -5291,7 +5290,7 @@ void AsyncPanZoomController::SetTestAsyncZoom(
 }
 
 Maybe<CSSPoint> AsyncPanZoomController::FindSnapPointNear(
-    const CSSPoint& aDestination, ScrollUnit aUnit) {
+    const CSSPoint& aDestination, nsIScrollableFrame::ScrollUnit aUnit) {
   mRecursiveMutex.AssertCurrentThreadIn();
   APZC_LOG("%p scroll snapping near %s\n", this,
            Stringify(aDestination).c_str());
@@ -5313,7 +5312,7 @@ Maybe<CSSPoint> AsyncPanZoomController::FindSnapPointNear(
 
 void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination) {
   if (Maybe<CSSPoint> snapPoint =
-          FindSnapPointNear(aDestination, ScrollUnit::DEVICE_PIXELS)) {
+          FindSnapPointNear(aDestination, nsIScrollableFrame::DEVICE_PIXELS)) {
     if (*snapPoint != Metrics().GetScrollOffset()) {
       APZC_LOG("%p smooth scrolling to snap point %s\n", this,
                Stringify(*snapPoint).c_str());
@@ -5352,8 +5351,8 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
   }
 
   CSSPoint startPosition = Metrics().GetScrollOffset();
-  if (MaybeAdjustDeltaForScrollSnapping(ScrollUnit::LINES, predictedDelta,
-                                        startPosition)) {
+  if (MaybeAdjustDeltaForScrollSnapping(nsIScrollableFrame::LINES,
+                                        predictedDelta, startPosition)) {
     APZC_LOG(
         "%p fling snapping.  friction: %f velocity: %f, %f "
         "predictedDelta: %f, %f position: %f, %f "
@@ -5368,7 +5367,8 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
 }
 
 bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnapping(
-    ScrollUnit aUnit, ParentLayerPoint& aDelta, CSSPoint& aStartPosition) {
+    nsIScrollableFrame::ScrollUnit aUnit, ParentLayerPoint& aDelta,
+    CSSPoint& aStartPosition) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   CSSToParentLayerScale2D zoom = Metrics().GetZoom();
   CSSPoint destination = Metrics().CalculateScrollRange().ClampPoint(
@@ -5399,7 +5399,8 @@ bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnappingOnWheelInput(
 bool AsyncPanZoomController::MaybeAdjustDestinationForScrollSnapping(
     const KeyboardInput& aEvent, CSSPoint& aDestination) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  ScrollUnit unit = KeyboardScrollAction::GetScrollUnit(aEvent.mAction.mType);
+  nsIScrollableFrame::ScrollUnit unit =
+      KeyboardScrollAction::GetScrollUnit(aEvent.mAction.mType);
 
   if (Maybe<CSSPoint> snapPoint = FindSnapPointNear(aDestination, unit)) {
     aDestination = *snapPoint;

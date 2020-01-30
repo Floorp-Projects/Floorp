@@ -23,8 +23,8 @@ using layers::ScrollSnapInfo;
  */
 class CalcSnapPoints final {
  public:
-  CalcSnapPoints(ScrollUnit aUnit, const nsPoint& aDestination,
-                 const nsPoint& aStartPos);
+  CalcSnapPoints(nsIScrollableFrame::ScrollUnit aUnit,
+                 const nsPoint& aDestination, const nsPoint& aStartPos);
   void AddHorizontalEdge(nscoord aEdge);
   void AddVerticalEdge(nscoord aEdge);
   void AddEdge(nscoord aEdge, nscoord aDestination, nscoord aStartPos,
@@ -43,7 +43,7 @@ class CalcSnapPoints final {
   }
 
  protected:
-  ScrollUnit mUnit;
+  nsIScrollableFrame::ScrollUnit mUnit;
   nsPoint mDestination;  // gives the position after scrolling but before
                          // snapping
   nsPoint mStartPos;     // gives the position before scrolling
@@ -57,7 +57,8 @@ class CalcSnapPoints final {
                               // edge
 };
 
-CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, const nsPoint& aDestination,
+CalcSnapPoints::CalcSnapPoints(nsIScrollableFrame::ScrollUnit aUnit,
+                               const nsPoint& aDestination,
                                const nsPoint& aStartPos) {
   mUnit = aUnit;
   mDestination = aDestination;
@@ -102,24 +103,24 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
                              nscoord aStartPos, nscoord aScrollingDirection,
                              nscoord* aBestEdge, nscoord* aSecondBestEdge,
                              bool* aEdgeFound) {
-  // ScrollUnit::DEVICE_PIXELS indicates that we are releasing a drag
+  // nsIScrollableFrame::DEVICE_PIXELS indicates that we are releasing a drag
   // gesture or any other user input event that sets an absolute scroll
   // position.  In this case, scroll snapping is expected to travel in any
   // direction.  Otherwise, we will restrict the direction of the scroll
   // snapping movement based on aScrollingDirection.
-  if (mUnit != ScrollUnit::DEVICE_PIXELS) {
+  if (mUnit != nsIScrollableFrame::DEVICE_PIXELS) {
     // Unless DEVICE_PIXELS, we only want to snap to points ahead of the
     // direction we are scrolling
     if (aScrollingDirection == 0) {
       // The scroll direction is neutral - will not hit a snap point.
       return;
     }
-    // ScrollUnit::WHOLE indicates that we are navigating to "home" or
+    // nsIScrollableFrame::WHOLE indicates that we are navigating to "home" or
     // "end".  In this case, we will always select the first or last snap point
     // regardless of the direction of the scroll.  Otherwise, we will select
     // scroll snapping points only in the direction specified by
     // aScrollingDirection.
-    if (mUnit != ScrollUnit::WHOLE) {
+    if (mUnit != nsIScrollableFrame::WHOLE) {
       // Direction of the edge from the current position (before scrolling) in
       // the direction of scrolling
       nscoord direction = (aEdge - aStartPos) * aScrollingDirection;
@@ -150,11 +151,12 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
     }
   };
 
-  if (mUnit == ScrollUnit::DEVICE_PIXELS || mUnit == ScrollUnit::LINES) {
+  if (mUnit == nsIScrollableFrame::DEVICE_PIXELS ||
+      mUnit == nsIScrollableFrame::LINES) {
     nscoord distance = std::abs(aEdge - aDestination);
     updateBestEdges(distance < std::abs(*aBestEdge - aDestination),
                     distance < std::abs(*aSecondBestEdge - aDestination));
-  } else if (mUnit == ScrollUnit::PAGES) {
+  } else if (mUnit == nsIScrollableFrame::PAGES) {
     // distance to the edge from the scrolling destination in the direction of
     // scrolling
     nscoord overshoot = (aEdge - aDestination) * aScrollingDirection;
@@ -176,7 +178,7 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
     if (overshoot > 0) {
       updateBestEdges(overshoot < curOvershoot, overshoot < secondOvershoot);
     }
-  } else if (mUnit == ScrollUnit::WHOLE) {
+  } else if (mUnit == nsIScrollableFrame::WHOLE) {
     // the edge closest to the top/bottom/left/right is used, depending on
     // scrolling direction
     if (aScrollingDirection > 0) {
@@ -238,7 +240,7 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
 }
 
 Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
-    const ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
+    const ScrollSnapInfo& aSnapInfo, nsIScrollableFrame::ScrollUnit aUnit,
     const nsRect& aScrollRange, const nsPoint& aStartPos,
     const nsPoint& aDestination) {
   if (aSnapInfo.mScrollSnapStrictnessY == StyleScrollSnapStrictness::None &&
