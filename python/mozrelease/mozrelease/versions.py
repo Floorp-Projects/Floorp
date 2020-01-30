@@ -6,10 +6,25 @@ from __future__ import absolute_import
 
 from distutils.version import StrictVersion, LooseVersion
 import re
+from six import PY2
+
+
+def _cmp(cls, first, other):
+    # Because the __cmp__ metamethod was removed in the switch to Python 3, the
+    # interface of the distutils.version.*Version classes changed in a
+    # backwards-incompatible way. Call this instead of first.__cmp__(other) or
+    # first._cmp(other) to handle both possibilities.
+    if PY2:
+        return cls.__cmp__(first, other)
+    return cls._cmp(first, other)
 
 
 class MozillaVersionCompareMixin():
     def __cmp__(self, other):
+        # We expect this function to never be called.
+        raise AssertionError()
+
+    def _cmp(self, other):
         has_esr = set()
         if isinstance(other, LooseModernMozillaVersion) and str(other).endswith('esr'):
             # If other version ends with esr, coerce through MozillaVersion ending up with
@@ -25,15 +40,15 @@ class MozillaVersionCompareMixin():
                 isinstance(self, LooseModernMozillaVersion):
             # If we're still LooseVersion for self or other, run LooseVersion compare
             # Being sure to pass through Loose Version type first
-            val = LooseVersion.__cmp__(
-                    LooseModernMozillaVersion(str(self)),
-                    LooseModernMozillaVersion(str(other)))
+            val = _cmp(LooseVersion,
+                       LooseModernMozillaVersion(str(self)),
+                       LooseModernMozillaVersion(str(other)))
         else:
             # No versions are loose, therefore we can use StrictVersion
-            val = StrictVersion.__cmp__(self, other)
+            val = _cmp(StrictVersion, self, other)
         if has_esr.isdisjoint(set(['other', 'self'])) or \
                 has_esr.issuperset(set(['other', 'self'])):
-            #  If both had esr string or neither, then cmp() was accurate
+            #  If both had esr string or neither, then _cmp() was accurate
             return val
         elif val != 0:
             # cmp is accurate here even if esr is present in only 1 compare, since
@@ -42,6 +57,22 @@ class MozillaVersionCompareMixin():
         elif 'other' in has_esr:
             return -1  # esr is not greater than non esr
         return 1  # non esr is greater than esr
+
+    # These method definitions can be deleted when we drop support for Python 2.
+    def __eq__(self, other):
+        return self._cmp(other) == 0
+
+    def __lt__(self, other):
+        return self._cmp(other) < 0
+
+    def __le__(self, other):
+        return self._cmp(other) <= 0
+
+    def __gt__(self, other):
+        return self._cmp(other) > 0
+
+    def __ge__(self, other):
+        return self._cmp(other) >= 0
 
 
 class ModernMozillaVersion(MozillaVersionCompareMixin, StrictVersion):

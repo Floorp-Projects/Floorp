@@ -704,29 +704,39 @@ class Path(ContextDerivedValue, six.text_type):
         return Path(self.context, mozpath.join(self, *p))
 
     def __cmp__(self, other):
-        if isinstance(other, Path) and self.srcdir != other.srcdir:
-            return cmp(self.full_path, other.full_path)
-        return cmp(six.text_type(self), other)
+        # We expect this function to never be called to avoid issues in the
+        # switch from Python 2 to 3.
+        raise AssertionError()
 
-    # __cmp__ is not enough because unicode has __eq__, __ne__, etc. defined
-    # and __cmp__ is only used for those when they don't exist.
     def __eq__(self, other):
-        return self.__cmp__(other) == 0
+        if isinstance(other, Path) and self.srcdir != other.srcdir:
+            return self.full_path == other.full_path
+        return six.text_type(self) == other
 
     def __ne__(self, other):
-        return self.__cmp__(other) != 0
+        if isinstance(other, Path) and self.srcdir != other.srcdir:
+            return self.full_path != other.full_path
+        return six.text_type(self) != other
 
     def __lt__(self, other):
-        return self.__cmp__(other) < 0
+        if isinstance(other, Path) and self.srcdir != other.srcdir:
+            return self.full_path < other.full_path
+        return six.text_type(self) < other
 
     def __gt__(self, other):
-        return self.__cmp__(other) > 0
+        if isinstance(other, Path) and self.srcdir != other.srcdir:
+            return self.full_path > other.full_path
+        return six.text_type(self) > other
 
     def __le__(self, other):
-        return self.__cmp__(other) <= 0
+        if isinstance(other, Path) and self.srcdir != other.srcdir:
+            return self.full_path <= other.full_path
+        return six.text_type(self) <= other
 
     def __ge__(self, other):
-        return self.__cmp__(other) >= 0
+        if isinstance(other, Path) and self.srcdir != other.srcdir:
+            return self.full_path >= other.full_path
+        return six.text_type(self) >= other
 
     def __repr__(self):
         return '<%s (%s)%s>' % (self.__class__.__name__, self.srcdir, self)
