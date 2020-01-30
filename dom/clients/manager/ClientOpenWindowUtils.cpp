@@ -75,7 +75,7 @@ class WebProgressListener final : public nsIWebProgressListener,
     nsresult rv = securityManager->CheckSameOriginURI(
         doc->GetOriginalURI(), mBaseURI, false, isPrivateWin);
     if (NS_FAILED(rv)) {
-      mPromise->Resolve(NS_OK, __func__);
+      mPromise->Resolve(CopyableErrorResult(), __func__);
       mPromise = nullptr;
       return NS_OK;
     }
@@ -295,7 +295,7 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
   ref->Then(
       aOuterWindow->EventTargetFor(TaskCategory::Other), __func__,
       [listener](const ClientOpResult& aResult) {},
-      [listener](nsresult aResult) {});
+      [listener](const CopyableErrorResult& aResult) {});
 }
 
 #ifdef MOZ_WIDGET_ANDROID

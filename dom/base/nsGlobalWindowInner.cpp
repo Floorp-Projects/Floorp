@@ -44,6 +44,7 @@
 #include "mozilla/dom/VisualViewport.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Result.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/dom/WindowOrientationObserver.h"
 #endif
@@ -5439,10 +5440,11 @@ Maybe<ClientState> nsGlobalWindowInner::GetClientState() const {
   MOZ_ASSERT(NS_IsMainThread());
   Maybe<ClientState> clientState;
   if (mClientSource) {
-    ClientState state;
-    nsresult rv = mClientSource->SnapshotState(&state);
-    if (NS_SUCCEEDED(rv)) {
-      clientState.emplace(state);
+    Result<ClientState, ErrorResult> res = mClientSource->SnapshotState();
+    if (res.isOk()) {
+      clientState.emplace(res.unwrap());
+    } else {
+      res.unwrapErr().SuppressException();
     }
   }
   return clientState;

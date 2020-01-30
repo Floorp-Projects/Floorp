@@ -280,7 +280,9 @@ RefPtr<ClientOpPromise> ClientManagerService::Navigate(
   ClientSourceParent* source =
       FindSource(aArgs.target().id(), aArgs.target().principalInfo());
   if (!source) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    CopyableErrorResult rv;
+    rv.Throw(NS_ERROR_FAILURE);
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   PClientManagerParent* manager = source->Manager();
@@ -362,7 +364,9 @@ class PromiseListHolder final {
             self->ProcessCompletion();
           }
         },
-        [self](nsresult aResult) { self->ProcessCompletion(); });
+        [self](const CopyableErrorResult& aResult) {
+          self->ProcessCompletion();
+        });
   }
 
   void MaybeFinish() {
@@ -442,11 +446,16 @@ RefPtr<ClientOpPromise> ClaimOnMainThread(
         RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
         NS_ENSURE_TRUE_VOID(swm);
 
-        RefPtr<GenericPromise> inner = swm->MaybeClaimClient(clientInfo, desc);
+        RefPtr<GenericErrorResultPromise> inner =
+            swm->MaybeClaimClient(clientInfo, desc);
         inner->Then(
             SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-            [promise](bool aResult) { promise->Resolve(NS_OK, __func__); },
-            [promise](nsresult aRv) { promise->Reject(aRv, __func__); });
+            [promise](bool aResult) {
+              promise->Resolve(CopyableErrorResult(), __func__);
+            },
+            [promise](const CopyableErrorResult& aRv) {
+              promise->Reject(aRv, __func__);
+            });
 
         scopeExit.release();
       });
@@ -516,7 +525,9 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
   ClientSourceParent* source = FindSource(aArgs.id(), aArgs.principalInfo());
 
   if (!source) {
-    return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    CopyableErrorResult rv;
+    rv.Throw(NS_ERROR_FAILURE);
+    return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
   if (!source->ExecutionReady()) {
@@ -530,7 +541,9 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
               self->FindSource(aArgs.id(), aArgs.principalInfo());
 
           if (!source) {
-            return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+            CopyableErrorResult rv;
+            rv.Throw(NS_ERROR_FAILURE);
+            return ClientOpPromise::CreateAndReject(rv, __func__);
           }
 
           return source->StartOp(aArgs);

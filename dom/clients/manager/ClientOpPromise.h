@@ -6,6 +6,7 @@
 #ifndef _mozilla_dom_ClientOpPromise_h
 #define _mozilla_dom_ClientOpPromise_h
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
 
 namespace mozilla {
@@ -14,9 +15,12 @@ namespace dom {
 class ClientOpResult;
 class ClientState;
 
-typedef MozPromise<ClientOpResult, nsresult, false> ClientOpPromise;
+typedef MozPromise<ClientOpResult, CopyableErrorResult, false> ClientOpPromise;
 
-typedef MozPromise<ClientState, nsresult, false> ClientStatePromise;
+typedef MozPromise<ClientState, CopyableErrorResult, false> ClientStatePromise;
+
+typedef MozPromise<bool, CopyableErrorResult, /* IsExclusive = */ true>
+    GenericErrorResultPromise;
 
 typedef std::function<void(const ClientOpResult&)> ClientOpCallback;
 

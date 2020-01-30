@@ -30,8 +30,9 @@ void ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs) {
   {
     ClientSource* source = GetSource();
     if (!source) {
-      Unused << PClientSourceOpChild::Send__delete__(this,
-                                                     NS_ERROR_DOM_ABORT_ERR);
+      CopyableErrorResult rv;
+      rv.Throw(NS_ERROR_DOM_ABORT_ERR);
+      Unused << PClientSourceOpChild::Send__delete__(this, rv);
       return;
     }
 
@@ -62,7 +63,7 @@ void ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs) {
             mPromiseRequestHolder.Complete();
             Unused << PClientSourceOpChild::Send__delete__(this, aResult);
           },
-          [this, promise](nsresult aRv) {
+          [this, promise](const CopyableErrorResult& aRv) {
             mPromiseRequestHolder.Complete();
             Unused << PClientSourceOpChild::Send__delete__(this, aRv);
           })

@@ -28,7 +28,7 @@ void ClientOpenWindowOpChild::Init(const ClientOpenWindowArgs& aArgs) {
             mPromiseRequestHolder.Complete();
             PClientOpenWindowOpChild::Send__delete__(this, aResult);
           },
-          [this](nsresult aResult) {
+          [this](const CopyableErrorResult& aResult) {
             mPromiseRequestHolder.Complete();
             PClientOpenWindowOpChild::Send__delete__(this, aResult);
           })
