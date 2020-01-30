@@ -103,6 +103,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
   TimingStruct mTimings;
+  TimeStamp mDomainLookupStart;
+  TimeStamp mDomainLookupEnd;
 };
 
 }  // namespace net

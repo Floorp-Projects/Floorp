@@ -321,11 +321,13 @@ void HttpTransactionParent::SetPushedStream(Http2PushedStreamWrapper* push) {
 
 void HttpTransactionParent::SetDomainLookupStart(mozilla::TimeStamp timeStamp,
                                                  bool onlyIfNull) {
-  // TODO: will be implemented later in bug 1600254.
+  mDomainLookupStart = timeStamp;
+  mTimings.domainLookupStart = mDomainLookupStart;
 }
 void HttpTransactionParent::SetDomainLookupEnd(mozilla::TimeStamp timeStamp,
                                                bool onlyIfNull) {
-  // TODO: will be implemented later in bug 1600254.
+  mDomainLookupEnd = timeStamp;
+  mTimings.domainLookupEnd = mDomainLookupEnd;
 }
 
 nsHttpTransaction* HttpTransactionParent::AsHttpTransaction() {
@@ -363,8 +365,13 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
 
 static void TimingStructArgsToTimingsStruct(const TimingStructArgs& aArgs,
                                             TimingStruct& aTimings) {
-  aTimings.domainLookupStart = aArgs.domainLookupStart();
-  aTimings.domainLookupEnd = aArgs.domainLookupEnd();
+  // If domainLookupStart/End was set by the channel before, we use these
+  // timestamps instead the ones from the transaction.
+  if (aTimings.domainLookupStart.IsNull() &&
+      aTimings.domainLookupEnd.IsNull()) {
+    aTimings.domainLookupStart = aArgs.domainLookupStart();
+    aTimings.domainLookupEnd = aArgs.domainLookupEnd();
+  }
   aTimings.connectStart = aArgs.connectStart();
   aTimings.tcpConnectEnd = aArgs.tcpConnectEnd();
   aTimings.secureConnectionStart = aArgs.secureConnectionStart();
