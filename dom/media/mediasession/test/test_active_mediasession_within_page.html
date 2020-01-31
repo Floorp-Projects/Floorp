@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test active media session within a page</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script src="MediaSessionTestUtils.js"></script>
+  </head>
+<body>
+<script>
+/**
+ * This test is used to check if the active media session is selected correctly
+ * when there are multiple media sessions existing within a same page.
+ *
+ * `testCases` contains all test cases we're going to execute in this test, and
+ * each test would be run in a new window. For each test case, we have several
+ * test commands which we would send to window, and the test running in window
+ * would do different operations depending on what command we send. After the
+ * window finishes running all those commands, it would post a message to tell
+ * us its testing result, which can represent if where active media session is
+ * created and if the active media session has been changed during testing.
+ */
+const testCases = [
+  {
+    name: "Session created in main-frame is always active session",
+    testCommands: [
+      gCommands.createMainFrameSession,
+      gCommands.createChildFrameSession,
+    ],
+    expectedResult: gResults.mainFrameSession,
+  },
+  {
+    name: "Session created in child-frame will be overwrited by main-frame's session",
+    testCommands: [
+      gCommands.createChildFrameSession,
+      gCommands.createMainFrameSession,
+    ],
+    expectedResult: gResults.mainFrameSession,
+  },
+  {
+    name: "Session created in child-frame won't be overwrited by other child-frame's session",
+    testCommands: [
+      gCommands.createChildFrameSession,
+      gCommands.createChildFrameSession,
+    ],
+    expectedResult: gResults.childFrameSession,
+  },
+  {
+    name: "Session created in main-frame won't be affected by creation and destruction of child-frame session",
+    testCommands: [
+      gCommands.createMainFrameSession,
+      gCommands.createChildFrameSession,
+      gCommands.destroyChildFrameSessions,
+    ],
+    expectedResult: gResults.mainFrameSession,
+  },
+  {
+    name: "Session created in child-frame won't be affected by creation and destruction of non active child-frame session",
+    testCommands: [
+      gCommands.createChildFrameSession,
+      gCommands.createChildFrameSession,
+      gCommands.destroyInactiveChildFrameSession,
+    ],
+    expectedResult: gResults.childFrameSession,
+  },
+  {
+    name: "Inactive session would become active after active session is destroyed",
+    testCommands: [
+      gCommands.createChildFrameSession,
+      gCommands.createChildFrameSession,
+      gCommands.destroyActiveChildFrameSession,
+    ],
+    expectedResult: gResults.childFrameSessionUpdated,
+  },
+];
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.media.mediasession.enabled", true],
+  ["media.mediacontrol.testingevents.enabled", true],
+]}, startTest());
+
+async function startTest() {
+  for (const testCase of testCases) {
+    info(`- loading test '${testCase.name}' in a new window -`);
+    const testURL = "file_active_mediasession_within_page_window.html";
+    const testWindow = window.open(testURL, "", "width=500,height=500");
+    await new Promise(r => testWindow.onload = r);
+
+    info("- start running test -");
+    testWindow.postMessage(testCase, window.origin);
+    is((await nextWindowMessage()).data, testCase.expectedResult,
+       `- finished test '${testCase.name}' -`);
+    testWindow.close();
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
