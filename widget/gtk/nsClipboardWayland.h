@@ -43,7 +43,7 @@ class WaylandDataOffer : public DataOffer {
   explicit WaylandDataOffer(wl_data_offer* aWaylandDataOffer);
 
   void DragOfferAccept(const char* aMimeType, uint32_t aTime);
-  void SetDragStatus(GdkDragAction aAction, uint32_t aTime);
+  void SetDragStatus(GdkDragAction aPreferredAction, uint32_t aTime);
 
   GdkDragAction GetSelectedDragAction();
   void SetSelectedDragAction(uint32_t aWaylandAction);
@@ -51,14 +51,18 @@ class WaylandDataOffer : public DataOffer {
   void SetAvailableDragActions(uint32_t aWaylandActions);
   GdkDragAction GetAvailableDragActions();
 
+  void SetWaylandDragContext(nsWaylandDragContext* aDragContext);
+  nsWaylandDragContext* GetWaylandDragContext();
+
   virtual ~WaylandDataOffer();
 
  private:
   bool RequestDataTransfer(const char* aMimeType, int fd) override;
 
   wl_data_offer* mWaylandDataOffer;
+  RefPtr<nsWaylandDragContext> mDragContext;
   uint32_t mSelectedDragAction;
-  uint32_t mAvailableDragAction;
+  uint32_t mAvailableDragActions;
 };
 
 class PrimaryDataOffer : public DataOffer {
@@ -86,8 +90,8 @@ class nsWaylandDragContext : public nsISupports {
   void DropMotion(uint32_t aTime, nscoord aX, nscoord aY);
   void GetLastDropInfo(uint32_t* aTime, nscoord* aX, nscoord* aY);
 
-  void SetDragStatus(GdkDragAction action);
-  GdkDragAction GetSelectedDragAction();
+  void SetDragStatus(GdkDragAction aPreferredAction);
+  GdkDragAction GetAvailableDragActions();
 
   GtkWidget* GetWidget() { return mGtkWidget; }
   GList* GetTargets();
