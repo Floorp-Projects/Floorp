@@ -459,7 +459,7 @@ class SSLServerCertVerificationJob : public Runnable {
                             const void* fdForLogging,
                             TransportSecurityInfo* infoObject,
                             const UniqueCERTCertificate& serverCert,
-                            UniqueCERTCertList& peerCertChain,
+                            nsTArray<nsTArray<uint8_t>>&& peerCertChain,
                             Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                             Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
                             Maybe<DelegatedCredentialInfo>& dcInfo,
@@ -474,7 +474,7 @@ class SSLServerCertVerificationJob : public Runnable {
                                const void* fdForLogging,
                                TransportSecurityInfo* infoObject,
                                const UniqueCERTCertificate& cert,
-                               UniqueCERTCertList peerCertChain,
+                               nsTArray<nsTArray<uint8_t>>&& peerCertChain,
                                Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                                Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
                                Maybe<DelegatedCredentialInfo>& dcInfo,
@@ -484,7 +484,7 @@ class SSLServerCertVerificationJob : public Runnable {
   const void* const mFdForLogging;
   const RefPtr<TransportSecurityInfo> mInfoObject;
   const UniqueCERTCertificate mCert;
-  UniqueCERTCertList mPeerCertChain;
+  nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   const uint32_t mProviderFlags;
   const uint32_t mCertVerifierFlags;
   const Time mTime;
@@ -497,7 +497,7 @@ class SSLServerCertVerificationJob : public Runnable {
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
     const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
     TransportSecurityInfo* infoObject, const UniqueCERTCertificate& cert,
-    UniqueCERTCertList peerCertChain,
+    nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
@@ -1102,12 +1102,12 @@ static void CollectCertTelemetry(
   }
 }
 
-static void AuthCertificateSetResults(TransportSecurityInfo* aInfoObject,
-                                      const UniqueCERTCertificate& aCert,
-                                      UniqueCERTCertList& aBuiltCertChain,
-                                      UniqueCERTCertList& aPeerCertChain,
-                                      uint16_t aCertificateTransparencyStatus,
-                                      SECOidTag aEvOidPolicy, bool aSucceeded) {
+static void AuthCertificateSetResults(
+    TransportSecurityInfo* aInfoObject, const UniqueCERTCertificate& aCert,
+    UniqueCERTCertList& aBuiltCertChain,
+    nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
+    uint16_t aCertificateTransparencyStatus, SECOidTag aEvOidPolicy,
+    bool aSucceeded) {
   MOZ_ASSERT(aInfoObject);
 
   if (aSucceeded) {
@@ -1139,11 +1139,10 @@ static void AuthCertificateSetResults(TransportSecurityInfo* aInfoObject,
   }
 }
 
-// Note: Takes ownership of |peerCertChain| if SECSuccess is not returned.
 Result AuthCertificate(CertVerifier& certVerifier,
                        TransportSecurityInfo* infoObject,
                        const UniqueCERTCertificate& cert,
-                       UniqueCERTCertList& peerCertChain,
+                       nsTArray<nsTArray<uint8_t>>&& peerCertChain,
                        const Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                        const Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
                        const Maybe<DelegatedCredentialInfo>& dcInfo,
@@ -1168,15 +1167,10 @@ Result AuthCertificate(CertVerifier& certVerifier,
   CRLiteTelemetryInfo crliteTelemetryInfo;
 
   nsTArray<nsTArray<uint8_t>> peerCertsBytes;
-  for (CERTCertListNode* n = CERT_LIST_HEAD(peerCertChain);
-       !CERT_LIST_END(n, peerCertChain); n = CERT_LIST_NEXT(n)) {
-    // Don't include the end-entity certificate.
-    if (n == CERT_LIST_HEAD(peerCertChain)) {
-      continue;
-    }
-    nsTArray<uint8_t> certBytes;
-    certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
-    peerCertsBytes.AppendElement(std::move(certBytes));
+  // Don't include the end-entity certificate.
+  if (!peerCertChain.IsEmpty()) {
+    peerCertsBytes.AppendElements(peerCertChain.Elements() + 1,
+                                  peerCertChain.Length() - 1);
   }
 
   Result rv = certVerifier.VerifySSLServerCert(
@@ -1207,7 +1201,7 @@ Result AuthCertificate(CertVerifier& certVerifier,
 SECStatus SSLServerCertVerificationJob::Dispatch(
     const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
     TransportSecurityInfo* infoObject, const UniqueCERTCertificate& serverCert,
-    UniqueCERTCertList& peerCertChain,
+    nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
@@ -1224,11 +1218,9 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
     return SECFailure;
   }
 
-  UniqueCERTCertList peerCertChainCopy = std::move(peerCertChain);
-
   RefPtr<SSLServerCertVerificationJob> job(new SSLServerCertVerificationJob(
       certVerifier, fdForLogging, infoObject, serverCert,
-      std::move(peerCertChainCopy), stapledOCSPResponse, sctsFromTLSExtension,
+      std::move(peerCertChain), stapledOCSPResponse, sctsFromTLSExtension,
       dcInfo, providerFlags, time, prtime, certVerifierFlags));
 
   nsresult nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
@@ -1373,13 +1365,10 @@ SSLServerCertVerificationJob::Run() {
           ("[%p] SSLServerCertVerificationJob::Run\n", mInfoObject.get()));
 
   TimeStamp jobStartTime = TimeStamp::Now();
-  Result rv =
-      AuthCertificate(*mCertVerifier, mInfoObject, mCert, mPeerCertChain,
-                      mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
-                      mProviderFlags, mTime, mCertVerifierFlags);
-  MOZ_ASSERT(
-      (mPeerCertChain && rv == Success) || (!mPeerCertChain && rv != Success),
-      "AuthCertificate() should take ownership of chain on failure");
+  Result rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert,
+                              std::move(mPeerCertChain), mStapledOCSPResponse,
+                              mSCTsFromTLSExtension, mDCInfo, mProviderFlags,
+                              mTime, mCertVerifierFlags);
 
   if (rv == Success) {
     Telemetry::AccumulateTimeDelta(
@@ -1422,7 +1411,8 @@ SSLServerCertVerificationJob::Run() {
 //  checks and calls SSLServerCertVerificationJob::Dispatch.
 SECStatus AuthCertificateHookInternal(
     TransportSecurityInfo* infoObject, const void* aPtrForLogging,
-    const UniqueCERTCertificate& serverCert, UniqueCERTCertList& peerCertChain,
+    const UniqueCERTCertificate& serverCert,
+    nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags,
@@ -1469,9 +1459,9 @@ SECStatus AuthCertificateHookInternal(
   // and we *want* to do certificate verification on a background thread
   // because of the performance benefits of doing so.
   return SSLServerCertVerificationJob::Dispatch(
-      certVerifier, aPtrForLogging, infoObject, serverCert, peerCertChain,
-      stapledOCSPResponse, sctsFromTLSExtension, dcInfo, providerFlags, Now(),
-      PR_Now(), certVerifierFlags);
+      certVerifier, aPtrForLogging, infoObject, serverCert,
+      std::move(peerCertChain), stapledOCSPResponse, sctsFromTLSExtension,
+      dcInfo, providerFlags, Now(), PR_Now(), certVerifierFlags);
 }
 
 // Extracts whatever information we need out of fd (using SSL_*) and passes it
@@ -1509,6 +1499,14 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
   if (!peerCertChain) {
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
     return SECFailure;
+  }
+
+  nsTArray<nsTArray<uint8_t>> peerCertsBytes;
+  for (CERTCertListNode* n = CERT_LIST_HEAD(peerCertChain);
+       !CERT_LIST_END(n, peerCertChain); n = CERT_LIST_NEXT(n)) {
+    nsTArray<uint8_t> certBytes;
+    certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
+    peerCertsBytes.AppendElement(std::move(certBytes));
   }
 
   // SSL_PeerStapledOCSPResponses will never return a non-empty response if
@@ -1558,48 +1556,9 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
 
   socketInfo->SetCertVerificationWaiting();
   return AuthCertificateHookInternal(socketInfo, static_cast<const void*>(fd),
-                                     serverCert, peerCertChain,
+                                     serverCert, std::move(peerCertsBytes),
                                      stapledOCSPResponse, sctsFromTLSExtension,
                                      dcInfo, providerFlags, certVerifierFlags);
-}
-
-// Make a cert chain from an array of ders.
-SECStatus MakeCertChain(nsTArray<nsTArray<uint8_t>>& inPeerCertChain,
-                        UniqueCERTCertificate& outCert,
-                        UniqueCERTCertList& outCertChain) {
-  for (auto& certDer : inPeerCertChain) {
-    if (certDer.Length() > UINT32_MAX) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-              ("MakeCertChain: certDer too long."));
-      return SECFailure;
-    }
-    SECItem der = {SECItemType::siBuffer, certDer.Elements(),
-                   (uint32_t)certDer.Length()};
-
-    if (!outCert) {
-      outCert.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &der,
-                                            nullptr, false, true));
-      if (!outCert) {
-        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("MakeCertChain: cert failed"));
-        return SECFailure;
-      }
-    }
-
-    UniqueCERTCertificate tmpCert(CERT_NewTempCertificate(
-        CERT_GetDefaultCertDB(), &der, nullptr, false, true));
-    if (!tmpCert) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("MakeCertChain: cert failed"));
-      return SECFailure;
-    }
-    if (CERT_AddCertToListTail(outCertChain.get(), tmpCert.get()) !=
-        SECSuccess) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-              ("MakeCertChain: getting cert chain failed"));
-      return SECFailure;
-    }
-    Unused << tmpCert.release();
-  }
-  return SECSuccess;
 }
 
 // Takes information needed for cert verification, does some consistency
@@ -1607,15 +1566,21 @@ SECStatus MakeCertChain(nsTArray<nsTArray<uint8_t>>& inPeerCertChain,
 // This function is used for Quic.
 SECStatus AuthCertificateHookWithInfo(
     TransportSecurityInfo* infoObject, const void* aPtrForLogging,
-    nsTArray<nsTArray<uint8_t>>& peerCertChain,
+    nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<nsTArray<uint8_t>>>& stapledOCSPResponses,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags) {
-  UniqueCERTCertificate cert;
-  UniqueCERTCertList certChain(CERT_NewCertList());
-  if (!certChain) {
+  if (peerCertChain.IsEmpty()) {
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
     return SECFailure;
   }
-  if (MakeCertChain(peerCertChain, cert, certChain) != SECSuccess) {
+
+  SECItem der = {SECItemType::siBuffer, peerCertChain[0].Elements(),
+                 (uint32_t)peerCertChain[0].Length()};
+  UniqueCERTCertificate cert(CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), &der, nullptr, false, true));
+  if (!cert) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("AuthCertificateHookWithInfo: cert failed"));
     return SECFailure;
   }
 
@@ -1638,9 +1603,10 @@ SECStatus AuthCertificateHookWithInfo(
   // for Delegated Credentials.
   Maybe<DelegatedCredentialInfo> dcInfo;
 
-  return AuthCertificateHookInternal(
-      infoObject, aPtrForLogging, cert, certChain, stapledOCSPResponse,
-      sctsFromTLSExtension, dcInfo, providerFlags, certVerifierFlags);
+  return AuthCertificateHookInternal(infoObject, aPtrForLogging, cert,
+                                     std::move(peerCertChain),
+                                     stapledOCSPResponse, sctsFromTLSExtension,
+                                     dcInfo, providerFlags, certVerifierFlags);
 }
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(
