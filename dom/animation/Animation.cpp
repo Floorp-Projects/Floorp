@@ -389,12 +389,9 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
     //   moving. Once we get a start time etc. we'll update the playback rate
     //   then.
     //
-    // All we need to do is update observers so that, e.g. DevTools, report the
-    // right information.
-    //
-    // First we need to update the relevance however since we might have become
-    // current or stopped being current.
-    UpdateRelevance();
+    // However we still need to update the relevance and effect set as well as
+    // notifying observers.
+    UpdateEffect(PostRestyleMode::Never);
     if (IsRelevant()) {
       MutationObservers::NotifyAnimationChanged(this);
     }

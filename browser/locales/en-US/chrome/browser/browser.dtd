@@ -26,11 +26,8 @@ in "Search through tabs". -->
 <!ENTITY  allTabsMenu.searchTabs.label       "Search Tabs">
 
 <!ENTITY tabCmd.label "New Tab">
-<!ENTITY tabCmd.commandkey "t">
 <!ENTITY openFileCmd.label "Open File…">
-<!ENTITY openFileCmd.commandkey "o">
 <!ENTITY printCmd.label "Print…">
-<!ENTITY printCmd.commandkey "p">
 
 <!ENTITY taskManagerCmd.label "Task Manager">
 
@@ -48,22 +45,7 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY personalbar.accessibleLabel "Bookmarks">
 <!ENTITY bookmarksToolbarItem.label "Bookmarks Toolbar Items">
 
-<!ENTITY pageSourceCmd.commandkey "u">
-<!-- LOCALIZATION NOTE (pageSourceCmd.SafariCommandKey should match the
-Option+Command keyboard shortcut letter that Safari and Chrome use for "View
-Source" on macOS. pageSourceCmd.commandkey above is Firefox's official keyboard
-shortcut shown in the GUI. SafariCommandKey is an alias provided for the
-convenience of Safari and Chrome users on macOS. See bug 1398988. -->
-<!ENTITY pageSourceCmd.SafariCommandKey "u">
-
-<!ENTITY pageInfoCmd.commandkey "i">
 <!ENTITY fullScreenCmd.label "Full Screen">
-<!ENTITY fullScreenCmd.macCommandKey "f">
-<!ENTITY toggleReaderMode.key "R">
-<!ENTITY toggleReaderMode.win.keycode "VK_F9">
-
-<!ENTITY togglePictureInPicture.key2 "}">
-<!ENTITY togglePictureInPicture.key "]"> <!-- } is above this key on many keyboards -->
 
 <!ENTITY fullScreenMinimize.tooltip "Minimize">
 <!ENTITY fullScreenRestore.tooltip "Restore">
@@ -116,15 +98,10 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY pointerlockWarning.afterDomain.label "has control of your pointer. Press Esc to take back control.">
 <!ENTITY pointerlockWarning.generic.label "This document has control of your pointer. Press Esc to take back control.">
 
-<!ENTITY bookmarkThisPageCmd.label "Bookmark This Page">
-<!ENTITY editThisBookmarkCmd.label "Edit This Bookmark">
-<!ENTITY bookmarkThisPageCmd.commandkey "d">
-
 <!ENTITY showAllBookmarks2.label "Show All Bookmarks">
 <!ENTITY recentBookmarks.label "Recently Bookmarked">
 <!ENTITY bookmarksToolbarChevron.tooltip "Show more bookmarks">
 
-<!ENTITY stopCmd.macCommandKey        ".">
 <!ENTITY goEndCap.tooltip             "Go to the address in the Location Bar">
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
@@ -143,7 +120,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY homeButton.defaultPage.tooltip "&brandShortName; Home Page">
 
 <!ENTITY bookmarksButton.label          "Bookmarks">
-<!ENTITY bookmarksCmd.commandkey "b">
 
 <!ENTITY bookmarksSubview.label             "Bookmarks">
 <!ENTITY bookmarksMenuButton2.label         "Bookmarks Menu">
@@ -158,22 +134,13 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY addBookmarksMenu.label             "Add Bookmarks Menu to Toolbar">
 <!ENTITY removeBookmarksMenu.label          "Remove Bookmarks Menu from Toolbar">
 
-<!-- LOCALIZATION NOTE (bookmarksGtkCmd.commandkey): This command
-  -  key should not contain the letters A-F, since these are reserved
-  -  shortcut keys on Linux. -->
-<!ENTITY bookmarksGtkCmd.commandkey "o">
-
 <!ENTITY historyButton.label            "History">
-<!ENTITY historySidebarCmd.commandKey   "h">
 
 <!ENTITY downloads.label              "Downloads">
 <!-- LOCALIZATION NOTE (libraryDownloads.label): This label is similar to
   -  downloads.label, but used in the Library panel. -->
 <!ENTITY libraryDownloads.label       "Downloads">
-<!ENTITY downloads.commandkey         "j">
-<!ENTITY downloadsUnix.commandkey     "y">
 <!ENTITY addons.label                 "Add-ons">
-<!ENTITY addons.commandkey            "A">
 
 <!ENTITY webDeveloperMenu.label       "Web Developer">
 
@@ -181,15 +148,12 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY manageUserContext.label          "Manage Containers">
 <!ENTITY manageUserContext.accesskey      "O">
 <!ENTITY newNavigatorCmd.label        "New Window">
-<!ENTITY newNavigatorCmd.key        "N">
 <!ENTITY newPrivateWindow.label     "New Private Window">
 
 <!ENTITY editMenu.label         "Edit">
 <!ENTITY preferencesCmd2.label       "Options">
 <!ENTITY preferencesCmdUnix.label       "Preferences">
 <!ENTITY logins.label                           "Logins and Passwords">
-
-<!ENTITY privateBrowsingCmd.commandkey          "P">
 
 <!ENTITY viewCustomizeToolbar.label       "Customize…">
 <!ENTITY viewCustomizeToolbar.accesskey     "C">
@@ -200,8 +164,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY historyUndoMenu.label "Recently Closed Tabs">
 <!-- LOCALIZATION NOTE (historyUndoWindowMenu): see bug 394759 -->
 <!ENTITY historyUndoWindowMenu.label "Recently Closed Windows">
-
-<!ENTITY showAllHistoryCmd.commandkey "H">
 
 <!ENTITY appMenuHistory.showAll.label "Show All History">
 <!ENTITY appMenuHistory.clearRecent.label "Clear Recent History…">
@@ -278,36 +240,10 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
     secondary commands. -->
 <!ENTITY moreMenu.label "More">
 
-<!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.placeholder2          "Search or enter address">
-<!ENTITY urlbar.accesskey             "d">
 <!-- LOCALIZATION NOTE (urlbar.extension.label): Used to indicate that a selected autocomplete entry is provided by an extension. -->
 <!ENTITY urlbar.extension.label       "Extension:">
 <!ENTITY urlbar.switchToTab.label     "Switch to tab:">
-
-<!--
-  Comment duplicated from browser-sets.inc:
-
-  Search Command Key Logic works like this:
-
-  Unix: Ctrl+J (0.8, 0.9 support)
-        Ctrl+K (cross platform binding)
-  Mac:  Cmd+K (cross platform binding)
-        Cmd+Opt+F (platform convention)
-  Win:  Ctrl+K (cross platform binding)
-        Ctrl+E (IE compat)
-
-  We support Ctrl+K on all platforms now and advertise it in the menu since it is
-  our standard - it is a "safe" choice since it is near no harmful keys like "W" as
-  "E" is. People mourning the loss of Ctrl+K for emacs compat can switch their GTK
-  system setting to use emacs emulation, and we should respect it. Focus-Search-Box
-  is a fundamental keybinding and we are maintaining a XP binding so that it is easy
-  for people to switch to Linux.
-
- -->
-<!ENTITY searchFocus.commandkey       "k">
-<!ENTITY searchFocus.commandkey2      "e">
-<!ENTITY searchFocusUnix.commandkey   "j">
 
 <!ENTITY contentSearchSubmit.tooltip  "Submit search">
 
@@ -318,7 +254,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 
 <!ENTITY openLinkCmdInTab.accesskey   "T">
 
-<!ENTITY reloadCmd.commandkey         "r">
 <!ENTITY pageAction.copyLink.label    "Copy Link">
 
 <!-- LOCALIZATION NOTE(pocket-button.tooltiptext, saveToPocketCmd.label, saveLinkToPocketCmd.label, pocketMenuitem.label):
@@ -328,24 +263,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY pocketMenuitem.label         "View Pocket List">
 
 <!ENTITY emailPageCmd.label           "Email Link…">
-<!-- alternate for content area context menu -->
-<!ENTITY savePageCmd.commandkey       "s">
-
-<!-- LOCALIZATION NOTE :
-fullZoomEnlargeCmd.commandkey3, fullZoomReduceCmd.commandkey2 and
-fullZoomResetCmd.commandkey2 are alternative acceleration keys for zoom.
-If shift key is needed with your locale popular keyboard for them,
-you can use these alternative items. Otherwise, their values should be empty.  -->
-
-<!ENTITY fullZoomEnlargeCmd.commandkey  "+">
-<!ENTITY fullZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
-<!ENTITY fullZoomEnlargeCmd.commandkey3 "">
-
-<!ENTITY fullZoomReduceCmd.commandkey   "-">
-<!ENTITY fullZoomReduceCmd.commandkey2  "">
-
-<!ENTITY fullZoomResetCmd.commandkey    "0">
-<!ENTITY fullZoomResetCmd.commandkey2   "">
 
 <!ENTITY fullZoom.label                 "Zoom">
 
@@ -355,16 +272,9 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY quitApplicationCmdWin2.label       "Exit">
 <!ENTITY quitApplicationCmdWin2.accesskey   "x">
 <!ENTITY quitApplicationCmdWin2.tooltip     "Exit &brandShorterName;">
-<!ENTITY goBackCmd.commandKey "[">
-<!ENTITY goForwardCmd.commandKey "]">
 <!ENTITY quitApplicationCmd.label       "Quit">
 <!ENTITY quitApplicationCmd.accesskey   "Q">
 <!ENTITY quitApplicationCmdMac2.label   "Quit &brandShorterName;">
-<!ENTITY quitApplicationCmd.key         "Q">
-
-<!ENTITY closeCmd.key                   "W">
-
-<!ENTITY toggleMuteCmd.key              "M">
 
 <!ENTITY allowPopups.accesskey "p">
 <!-- On Windows we use the term "Options" to describe settings, but
@@ -375,13 +285,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY editPopupSettings.accesskey "E">
 <!ENTITY dontShowMessage.accesskey "D">
 
-<!ENTITY bidiSwitchTextDirectionItem.commandkey   "X">
-
 <!ENTITY findOnCmd.label     "Find in This Page…">
-<!ENTITY findOnCmd.commandkey "f">
-<!ENTITY findAgainCmd.commandkey "g">
-<!ENTITY findAgainCmd.commandkey2 "VK_F3">
-<!ENTITY findSelectionCmd.commandkey "e">
 
 <!ENTITY spellAddDictionaries.label "Add Dictionaries…">
 <!ENTITY spellAddDictionaries.accesskey "A">

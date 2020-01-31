@@ -17,28 +17,25 @@
 <select id="select"><option></option></select>
 <script>
 
-  function testControl(id) {
-    return new Promise(function(resolve) {
-      var initialZoom = SpecialPowers.getFullZoom(window);
-      var element = document.getElementById(id);
-      element.onwheel = function() {
-        window.requestAnimationFrame(function() {
-          setTimeout(function() {
-            isnot(SpecialPowers.getFullZoom(window), initialZoom,
-                  "Should have zoomed");
-            SpecialPowers.setFullZoom(window, initialZoom);
-            setTimeout(resolve);
-          });
-        });
-      }
+  async function testControl(id) {
+    var initialZoom = SpecialPowers.getFullZoom(window);
+    var element = document.getElementById(id);
 
-      let event = {
-        deltaMode: WheelEvent.DOM_DELTA_LINE,
-        deltaY: 3,
-        ctrlKey: true
-      };
-      synthesizeWheel(element, 5, 5, event);
-    });
+    const zoomHasHappened = SimpleTest.promiseWaitForCondition(() => {
+      const zoom = SpecialPowers.getFullZoom(window);
+      return (zoom != initialZoom);
+    }, id + ": wheel event changed the zoom.");
+
+    let event = {
+      deltaMode: WheelEvent.DOM_DELTA_LINE,
+      deltaY: 3,
+      ctrlKey: true
+    };
+    synthesizeWheel(element, 5, 5, event);
+
+    await zoomHasHappened;
+    isnot(SpecialPowers.getFullZoom(window), initialZoom, id + ": should have zoomed");
+    SpecialPowers.setFullZoom(window, initialZoom);
   }
 
   async function test() {
