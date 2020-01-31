@@ -66,6 +66,11 @@
   display: none;
 }
 
+:host(:not(.initialized)) .count,
+:host(:not(.initialized)) .empty-search-message {
+  visibility: hidden;
+}
+
 .empty-search-message,
 .intro {
   text-align: center;
