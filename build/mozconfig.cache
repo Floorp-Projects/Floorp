@@ -4,6 +4,9 @@
 
 # Setup for build cache
 
+# Thunderbird builds will have this set prior to including this file
+aws_prefix=${aws_prefix:-taskcluster}
+
 # builds where buildprops didn't have the data (eg: taskcluster) and without sccache disabled:
 if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
 
@@ -42,7 +45,7 @@ if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
                 bucket=sccache-l${MOZ_SCM_LEVEL}-${region}
                 ;;
             aws)
-                bucket=taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${region}
+                bucket=${aws_prefix}-level-${MOZ_SCM_LEVEL}-sccache-${region}
                 ;;
             esac
         elif [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
@@ -50,13 +53,13 @@ if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
             if test -z "$region"; then
                 region=${availability_zone::${#availability_zone}-2}
             fi
-            bucket=taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${region}
+            bucket=${aws_prefix}-level-${MOZ_SCM_LEVEL}-sccache-${region}
         else
             # ec2 region is az with last letter trimmed
             if test -z "$region"; then
                 region=${availability_zone%?}
             fi
-            bucket=taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${region}
+            bucket=${aws_prefix}-level-${MOZ_SCM_LEVEL}-sccache-${region}
         fi
     fi
 fi
