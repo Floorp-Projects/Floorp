@@ -28,6 +28,7 @@ dav1d_input_sources = files(
     'input/input.c',
     'input/annexb.c',
     'input/ivf.c',
+    'input/section5.c',
 )
 
 dav1d_output_sources = files(
@@ -67,21 +68,6 @@ endif
 
 # Configuratin data for cli_config.h
 cli_cdata = configuration_data()
-
-rt_dependency = []
-if host_machine.system() != 'windows'
-    if cc.has_function('clock_gettime', prefix : '#include <time.h>', args : test_args)
-        cli_cdata.set('HAVE_CLOCK_GETTIME', 1)
-    elif host_machine.system() == 'darwin'
-        cli_cdata.set('HAVE_MACH_ABSOLUTE_TIME', 1)
-    else
-        rt_dependency = cc.find_library('rt', required: false)
-        if not cc.has_function('clock_gettime', prefix : '#include <time.h>', args : test_args, dependencies : rt_dependency)
-            error('clock_gettime not found')
-        endif
-        cli_cdata.set('HAVE_CLOCK_GETTIME', 1)
-    endif
-endif
 
 cli_config_h_target = configure_file(output: 'cli_config.h', configuration: cli_cdata)
 

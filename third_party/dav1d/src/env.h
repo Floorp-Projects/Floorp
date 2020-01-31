@@ -431,19 +431,10 @@ static inline int av1_get_uni_p1_ctx(const BlockContext *const a,
 static inline int get_drl_context(const candidate_mv *const ref_mv_stack,
                                   const int ref_idx)
 {
-    if (ref_mv_stack[ref_idx].weight >= 640 &&
-        ref_mv_stack[ref_idx + 1].weight >= 640)
-        return 0;
+    if (ref_mv_stack[ref_idx].weight >= 640)
+        return ref_mv_stack[ref_idx + 1].weight < 640;
 
-    if (ref_mv_stack[ref_idx].weight >= 640 &&
-        ref_mv_stack[ref_idx + 1].weight < 640)
-        return 1;
-
-    if (ref_mv_stack[ref_idx].weight < 640 &&
-        ref_mv_stack[ref_idx + 1].weight < 640)
-        return 2;
-
-    return 0;
+    return ref_mv_stack[ref_idx + 1].weight < 640 ? 2 : 0;
 }
 
 static inline unsigned get_cur_frame_segid(const int by, const int bx,

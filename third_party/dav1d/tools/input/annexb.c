@@ -1,6 +1,7 @@
 /*
  * Copyright © 2018, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2019, James Almer <jamrial@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,36 +28,102 @@
 
 #include "config.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "common/intops.h"
+
+#include "dav1d/headers.h"
+
 #include "input/demuxer.h"
+#include "input/parse.h"
+
+// these functions are based on an implementation from FFmpeg, and relicensed
+// with author's permission
+
+#define PROBE_SIZE 1024
+
+static int annexb_probe(const uint8_t *data) {
+    int ret, cnt = 0;
+
+    size_t temporal_unit_size;
+    ret = leb(data + cnt, PROBE_SIZE - cnt, &temporal_unit_size);
+    if (ret < 0)
+        return 0;
+    cnt += ret;
+
+    size_t frame_unit_size;
+    ret = leb(data + cnt, PROBE_SIZE - cnt, &frame_unit_size);
+    if (ret < 0 || ((uint64_t)frame_unit_size + ret) > temporal_unit_size)
+        return 0;
+    cnt += ret;
+
+    temporal_unit_size -= ret;
+
+    size_t obu_unit_size;
+    ret = leb(data + cnt, PROBE_SIZE - cnt, &obu_unit_size);
+    if (ret < 0 || ((uint64_t)obu_unit_size + ret) >= frame_unit_size)
+        return 0;
+    cnt += ret;
+
+    temporal_unit_size -= obu_unit_size + ret;
+    frame_unit_size -= obu_unit_size + ret;
+
+    // Check that the first OBU is a Temporal Delimiter.
+    size_t obu_size;
+    enum Dav1dObuType type;
+    ret = parse_obu_header(data + cnt, imin(PROBE_SIZE - cnt, (int) obu_unit_size),
+                           &obu_size, &type, 1);
+    if (ret < 0 || type != DAV1D_OBU_TD || obu_size > 0)
+        return 0;
+    cnt += (int)obu_unit_size;
+
+    // look for first frame and accompanying sequence header
+    int seq = 0;
+    while (cnt < PROBE_SIZE) {
+        ret = leb(data + cnt, PROBE_SIZE - cnt, &obu_unit_size);
+        if (ret < 0 || ((uint64_t)obu_unit_size + ret) > frame_unit_size)
+            return 0;
+        cnt += ret;
+        temporal_unit_size -= ret;
+        frame_unit_size -= ret;
+
+        ret = parse_obu_header(data + cnt, imin(PROBE_SIZE - cnt, (int) obu_unit_size),
+                               &obu_size, &type, 1);
+        if (ret < 0)
+            return 0;
+        cnt += (int)obu_unit_size;
+
+        switch (type) {
+        case DAV1D_OBU_SEQ_HDR:
+            seq = 1;
+            break;
+        case DAV1D_OBU_FRAME:
+        case DAV1D_OBU_FRAME_HDR:
+            return seq;
+        case DAV1D_OBU_TD:
+        case DAV1D_OBU_TILE_GRP:
+            return 0;
+        default:
+            break;
+        }
+
+        temporal_unit_size -= obu_unit_size;
+        frame_unit_size -= obu_unit_size;
+        if (frame_unit_size <= 0)
+            break;
+    }
+
+    return 0;
+}
 
 typedef struct DemuxerPriv {
     FILE *f;
     size_t temporal_unit_size;
     size_t frame_unit_size;
 } AnnexbInputContext;
-
-static int leb128(AnnexbInputContext *const c, size_t *const len) {
-    unsigned more, i = 0;
-    uint8_t byte;
-    *len = 0;
-    do {
-        if (fread(&byte, 1, 1, c->f) < 1)
-            return -1;
-        more = byte & 0x80;
-        unsigned bits = byte & 0x7f;
-        if (i <= 3 || (i == 4 && bits < (1 << 4)))
-            *len |= bits << (i * 7);
-        else if (bits) return -1;
-        if (++i == 8 && more) return -1;
-    } while (more);
-    return i;
-}
 
 static int annexb_open(AnnexbInputContext *const c, const char *const file,
                        unsigned fps[2], unsigned *const num_frames, unsigned timebase[2])
@@ -75,7 +142,7 @@ static int annexb_open(AnnexbInputContext *const c, const char *const file,
     timebase[0] = 25;
     timebase[1] = 1;
     for (*num_frames = 0;; (*num_frames)++) {
-        res = leb128(c, &len);
+        res = leb128(c->f, &len);
         if (res < 0)
             break;
         fseeko(c->f, len, SEEK_CUR);
@@ -90,15 +157,15 @@ static int annexb_read(AnnexbInputContext *const c, Dav1dData *const data) {
     int res;
 
     if (!c->temporal_unit_size) {
-        res = leb128(c, &c->temporal_unit_size);
+        res = leb128(c->f, &c->temporal_unit_size);
         if (res < 0) return -1;
     }
     if (!c->frame_unit_size) {
-        res = leb128(c, &c->frame_unit_size);
+        res = leb128(c->f, &c->frame_unit_size);
         if (res < 0 || (c->frame_unit_size + res) > c->temporal_unit_size) return -1;
         c->temporal_unit_size -= res;
     }
-    res = leb128(c, &len);
+    res = leb128(c->f, &len);
     if (res < 0 || (len + res) > c->frame_unit_size) return -1;
     uint8_t *ptr = dav1d_data_create(data, len);
     if (!ptr) return -1;
@@ -120,7 +187,8 @@ static void annexb_close(AnnexbInputContext *const c) {
 const Demuxer annexb_demuxer = {
     .priv_data_size = sizeof(AnnexbInputContext),
     .name = "annexb",
-    .extension = "obu",
+    .probe = annexb_probe,
+    .probe_sz = PROBE_SIZE,
     .open = annexb_open,
     .read = annexb_read,
     .close = annexb_close,

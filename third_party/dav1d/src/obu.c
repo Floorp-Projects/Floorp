@@ -1178,7 +1178,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
 
     // obu header
     dav1d_get_bits(&gb, 1); // obu_forbidden_bit
-    const enum ObuType type = dav1d_get_bits(&gb, 4);
+    const enum Dav1dObuType type = dav1d_get_bits(&gb, 4);
     const int has_extension = dav1d_get_bits(&gb, 1);
     const int has_length_field = dav1d_get_bits(&gb, 1);
     dav1d_get_bits(&gb, 1); // reserved
@@ -1217,7 +1217,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
     if (len > in->sz - init_byte_pos) goto error;
 
     // skip obu not belonging to the selected temporal/spatial layer
-    if (type != OBU_SEQ_HDR && type != OBU_TD &&
+    if (type != DAV1D_OBU_SEQ_HDR && type != DAV1D_OBU_TD &&
         has_extension && c->operating_point_idc != 0)
     {
         const int in_temporal_layer = (c->operating_point_idc >> temporal_id) & 1;
@@ -1227,7 +1227,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
     }
 
     switch (type) {
-    case OBU_SEQ_HDR: {
+    case DAV1D_OBU_SEQ_HDR: {
         Dav1dRef *ref = dav1d_ref_create(sizeof(Dav1dSequenceHeader));
         if (!ref) return DAV1D_ERR(ENOMEM);
         Dav1dSequenceHeader *seq_hdr = ref->data;
@@ -1266,11 +1266,11 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         c->seq_hdr = seq_hdr;
         break;
     }
-    case OBU_REDUNDANT_FRAME_HDR:
+    case DAV1D_OBU_REDUNDANT_FRAME_HDR:
         if (c->frame_hdr) break;
         // fall-through
-    case OBU_FRAME:
-    case OBU_FRAME_HDR:
+    case DAV1D_OBU_FRAME:
+    case DAV1D_OBU_FRAME_HDR:
         if (global) break;
         if (!c->seq_hdr) goto error;
         if (!c->frame_hdr_ref) {
@@ -1293,7 +1293,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
             dav1d_data_unref_internal(&c->tile[n].data);
         c->n_tile_data = 0;
         c->n_tiles = 0;
-        if (type != OBU_FRAME) {
+        if (type != DAV1D_OBU_FRAME) {
             // This is actually a frame header OBU so read the
             // trailing bit and check for overrun.
             dav1d_get_bits(&gb, 1);
@@ -1312,7 +1312,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
             return DAV1D_ERR(ERANGE);
         }
 
-        if (type != OBU_FRAME)
+        if (type != DAV1D_OBU_FRAME)
             break;
         // OBU_FRAMEs shouldn't be signaled with show_existing_frame
         if (c->frame_hdr->show_existing_frame) {
@@ -1325,7 +1325,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         // to align to the next byte.
         dav1d_bytealign_get_bits(&gb);
         // fall-through
-    case OBU_TILE_GRP: {
+    case DAV1D_OBU_TILE_GRP: {
         if (global) break;
         if (!c->frame_hdr) goto error;
         if (c->n_tile_data_alloc < c->n_tile_data + 1) {
@@ -1365,7 +1365,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         c->n_tile_data++;
         break;
     }
-    case OBU_METADATA: {
+    case DAV1D_OBU_METADATA: {
         // obu metadta type field
         const enum ObuMetaType meta_type = dav1d_get_uleb128(&gb);
         const int meta_type_len = (dav1d_get_bits_pos(&gb) - init_bit_pos) >> 3;
@@ -1479,8 +1479,8 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
 
         break;
     }
-    case OBU_PADDING:
-    case OBU_TD:
+    case DAV1D_OBU_PADDING:
+    case DAV1D_OBU_TD:
         // ignore OBUs we don't care about
         break;
     default:

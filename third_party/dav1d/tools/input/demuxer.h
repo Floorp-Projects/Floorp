@@ -34,7 +34,8 @@ typedef struct DemuxerPriv DemuxerPriv;
 typedef struct Demuxer {
     int priv_data_size;
     const char *name;
-    const char *extension;
+    int probe_sz;
+    int (*probe)(const uint8_t *data);
     int (*open)(DemuxerPriv *ctx, const char *filename,
                 unsigned fps[2], unsigned *num_frames, unsigned timebase[2]);
     int (*read)(DemuxerPriv *ctx, Dav1dData *data);

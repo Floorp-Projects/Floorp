@@ -90,7 +90,7 @@ if is_asm_enabled
         include_directories: dav1d_inc_dirs,
         c_args: [stackalign_flag, stackrealign_flag],
         build_by_default: false,
-        dependencies : [thread_dependency, m_lib],
+        dependencies : [thread_dependency, rt_dependency, m_lib],
         )
 
     test('checkasm', checkasm, is_parallel: false)

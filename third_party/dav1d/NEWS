@@ -1,5 +1,27 @@
+Changes for 0.5.2 'Asiatic Cheetah':
+------------------------------------
+
+0.5.2 is a small release improving speed for ARM32 and adding minor features:
+ - ARM32 optimizations for loopfilter, ipred_dc|h|v
+ - Add section-5 raw OBU demuxer
+ - Improve the speed by reducing the L2 cache collisions
+ - Fix minor issues
+
+
+Changes for 0.5.1 'Asiatic Cheetah':
+------------------------------------
+
+0.5.1 is a small release improving speeds and fixing minor issues
+compared to 0.5.0:
+ - SSE2 optimizations for CDEF, wiener and warp_affine
+ - NEON optimizations for SGR on ARM32
+ - Fix mismatch issue in x86 asm in inverse identity transforms
+ - Fix build issue in ARM64 assembly if debug info was enabled
+ - Add a workaround for Xcode 11 -fstack-check bug
+
+
 Changes for 0.5.0 'Asiatic Cheetah':
-----------------------------
+------------------------------------
 
 0.5.0 is a medium release fixing regressions and minor issues,
 and improving speed significantly:

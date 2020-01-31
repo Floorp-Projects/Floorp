@@ -45,15 +45,22 @@ static unsigned get_seed(void) {
 #else
 #include <unistd.h>
 #include <signal.h>
-#include <sys/time.h>
+#include <time.h>
+#ifdef __APPLE__
+#include <mach/mach_time.h>
+#endif
 #define COLOR_RED    1
 #define COLOR_GREEN  2
 #define COLOR_YELLOW 3
 
 static unsigned get_seed(void) {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (unsigned) (tv.tv_usec + tv.tv_sec * 1000000);
+#ifdef __APPLE__
+    return (unsigned) mach_absolute_time();
+#elif defined(HAVE_CLOCK_GETTIME)
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (unsigned) (1000000000ULL * ts.tv_sec + ts.tv_nsec);
+#endif
 }
 #endif
 

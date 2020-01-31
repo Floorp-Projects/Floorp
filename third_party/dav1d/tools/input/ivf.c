@@ -39,6 +39,16 @@ typedef struct DemuxerPriv {
     FILE *f;
 } IvfInputContext;
 
+static const uint8_t probe_data[] = {
+    'D', 'K', 'I', 'F',
+    0, 0, 0x20, 0,
+    'A', 'V', '0', '1',
+};
+
+static int ivf_probe(const uint8_t *const data) {
+    return !memcmp(data, probe_data, sizeof(probe_data));
+}
+
 static unsigned rl32(const uint8_t *const p) {
     return ((uint32_t)p[3] << 24U) | (p[2] << 16U) | (p[1] << 8U) | p[0];
 }
@@ -121,7 +131,8 @@ static void ivf_close(IvfInputContext *const c) {
 const Demuxer ivf_demuxer = {
     .priv_data_size = sizeof(IvfInputContext),
     .name = "ivf",
-    .extension = "ivf",
+    .probe = ivf_probe,
+    .probe_sz = sizeof(probe_data),
     .open = ivf_open,
     .read = ivf_read,
     .close = ivf_close,

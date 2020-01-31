@@ -31,15 +31,16 @@ The plan is the folllowing:
 2. Provide a usable API,
 3. Port to most platforms,
 4. Make it fast on desktop, by writing asm for AVX-2 chips.
+5. Make it fast on mobile, by writing asm for ARMv8 chips,
+6. Make it fast on older desktop, by writing asm for SSSE3+ chips.
 
 ### On-going
-5. Make it fast on mobile, by writing asm for ARMv8 chips,
-6. Make it fast on older desktop, by writing asm for SSE chips.
+7. Make it fast on older mobiles, by writing asm for ARMv7 chips,
+8. Improve C code base with [various tweaks](https://code.videolan.org/videolan/dav1d/wikis/task-list),
+9. Accelerate for less common architectures, like PPC, SSE2 or AVX-512.
 
 ### After
-7. Improve C code base with [various tweaks](https://code.videolan.org/videolan/dav1d/wikis/task-list),
-8. Accelerate for less common architectures,
-9. Use more GPU, when possible.
+10. Use more GPU, when possible.
 
 # Contribute
 
