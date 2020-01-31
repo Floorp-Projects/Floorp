@@ -4548,13 +4548,28 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   RepaintUpdateType contentRepaintType = RepaintUpdateType::eNone;
   bool viewportUpdated = false;
 
-  if (Metrics().GetLayoutViewport().Size() !=
-      aLayerMetrics.GetLayoutViewport().Size()) {
-    needContentRepaint = true;
-    viewportUpdated = true;
-  }
-  if (viewportUpdated || scrollOffsetUpdated) {
-    Metrics().SetLayoutViewport(aLayerMetrics.GetLayoutViewport());
+  // We usually don't entertain viewport updates on the same transaction as
+  // a composition bounds update, but we make an exception for Android
+  // to avoid the composition bounds and the viewport diverging during
+  // orientation changes and dynamic toolbar transitions.
+  // TODO: Do this on all platforms.
+  bool entertainViewportUpdates =
+      FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Width(),
+                          Metrics().GetCompositionBounds().Width()) &&
+      FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Height(),
+                          Metrics().GetCompositionBounds().Height());
+#if defined(MOZ_WIDGET_ANDROID)
+  entertainViewportUpdates = true;
+#endif
+  if (entertainViewportUpdates) {
+    if (Metrics().GetLayoutViewport().Size() !=
+        aLayerMetrics.GetLayoutViewport().Size()) {
+      needContentRepaint = true;
+      viewportUpdated = true;
+    }
+    if (viewportUpdated || scrollOffsetUpdated) {
+      Metrics().SetLayoutViewport(aLayerMetrics.GetLayoutViewport());
+    }
   }
 
 #if defined(MOZ_WIDGET_ANDROID)

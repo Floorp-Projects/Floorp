@@ -871,7 +871,7 @@ function promiseRDMZoom(ui, browser, zoom) {
 
     const zoomComplete = BrowserTestUtils.waitForEvent(
       browser,
-      "PostFullZoomChange"
+      "FullZoomResolutionStable"
     );
     ZoomManager.setZoomForBrowser(browser, zoom);
 
