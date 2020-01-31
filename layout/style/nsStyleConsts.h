@@ -619,8 +619,10 @@ enum class StyleTextOrientation : uint8_t {
 #define NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE 0x6
 #define NS_STYLE_UNICODE_BIDI_PLAINTEXT 0x8
 
-#define NS_STYLE_TABLE_LAYOUT_AUTO 0
-#define NS_STYLE_TABLE_LAYOUT_FIXED 1
+enum class StyleTableLayout : uint8_t {
+  Auto,
+  Fixed,
+};
 
 #define NS_STYLE_TABLE_EMPTY_CELLS_HIDE 0
 #define NS_STYLE_TABLE_EMPTY_CELLS_SHOW 1

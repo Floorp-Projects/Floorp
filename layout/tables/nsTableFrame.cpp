@@ -3703,7 +3703,7 @@ nscoord nsTableFrame::CalcBorderBoxBSize(const ReflowInput& aReflowInput) {
 }
 
 bool nsTableFrame::IsAutoLayout() {
-  if (StyleTable()->mLayoutStrategy == NS_STYLE_TABLE_LAYOUT_AUTO) return true;
+  if (StyleTable()->mLayoutStrategy == StyleTableLayout::Auto) return true;
   // a fixed-layout inline-table must have a inline size
   // and tables with inline size set to 'max-content' must be
   // auto-layout (at least as long as
