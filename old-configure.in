@@ -636,6 +636,7 @@ case "$target" in
 
         # Silence problematic clang warnings
         CXXFLAGS="$CXXFLAGS -Wno-incompatible-ms-struct"
+        LDFLAGS="$LDFLAGS -Wl,--no-insert-timestamp"
     else
         TARGET_COMPILER_ABI=msvc
         RANLIB='echo not_ranlib'
