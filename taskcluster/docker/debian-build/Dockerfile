@@ -7,7 +7,6 @@ VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 
 ENV XZ_OPT=-T0
-ENV LANG=C.UTF-8
 
 # %ARG TASKCLUSTER_ROOT_URL
 # %ARG DOCKER_IMAGE_PACKAGES
