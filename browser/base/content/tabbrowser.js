@@ -1224,6 +1224,7 @@
         if (!gMultiProcessBrowser) {
           this._adjustFocusBeforeTabSwitch(oldTab, newTab);
           this._adjustFocusAfterTabSwitch(newTab);
+          gURLBar.afterTabSwitchFocusChange();
         }
       }
 

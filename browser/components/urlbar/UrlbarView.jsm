@@ -52,8 +52,6 @@ class UrlbarView {
     this._rows.addEventListener("overflow", this);
     this._rows.addEventListener("underflow", this);
 
-    this.window.gBrowser.tabContainer.addEventListener("TabSelect", this);
-
     this.controller.setView(this);
     this.controller.addQueryListener(this);
     // This is used by autoOpen to avoid flickering results when reopening
@@ -413,13 +411,8 @@ class UrlbarView {
       return false;
     }
 
-    let urlbarFocused = this.input.focused;
-    if (queryOptions.event.type == "TabSelect") {
-      urlbarFocused = queryOptions.event.target.linkedBrowser._urlbarFocused;
-    }
-
     // Reopen abandoned searches only if the input is focused.
-    if (!urlbarFocused) {
+    if (!this.input.focused) {
       return false;
     }
 
@@ -437,12 +430,13 @@ class UrlbarView {
       }
     }
 
-    this._openPanel();
-
     this.controller.engagementEvent.discard();
     queryOptions.searchString = this.input.value;
     queryOptions.autofillIgnoresSelection = true;
     queryOptions.event.interactionType = "returned";
+
+    this._openPanel();
+
     // If we had cached results, this will just refresh them, avoiding results
     // flicker, otherwise there may be some noise.
     this.input.startQuery(queryOptions);
@@ -1525,17 +1519,6 @@ class UrlbarView {
 
     // Close the popup as it would be wrongly sized. This can
     // happen when using special OS resize functions like Win+Arrow.
-    this.close();
-  }
-
-  _on_TabSelect(event) {
-    // Switching tabs doesn't always change urlbar focus, so we must try to
-    // reopen here too, not just on focus.
-    if (this.autoOpen({ event })) {
-      return;
-    }
-    // The input may retain focus when switching tabs in which case we
-    // need to close the view explicitly.
     this.close();
   }
 }
