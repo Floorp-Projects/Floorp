@@ -10,6 +10,7 @@ import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -96,6 +97,15 @@ import kotlin.math.min
 @ExperimentalCoroutinesApi
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment() {
+    private val snackbarAnchorView: View?
+        get() {
+            return if (requireContext().settings().shouldUseBottomToolbar) {
+                toolbarLayout
+            } else {
+                null
+            }
+        }
+
     private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
 
     private val singleSessionObserver = object : Session.Observer {
@@ -210,24 +220,23 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateLayout(view: View) {
-        var shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
+        val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
 
         ConstraintSet().apply {
             clone(view.homeLayout)
 
+
             if (shouldUseBottomToolbar) {
                 connect(sessionControlView.view.id, TOP, view.wordmark.id, BOTTOM)
-                connect(sessionControlView.view.id, BOTTOM, view.bottom_bar.id, TOP)
+                connect(sessionControlView.view.id, BOTTOM, view.toolbarLayout.id, TOP)
 
-                connect(view.bottom_bar.id, BOTTOM, PARENT_ID, BOTTOM)
-                connect(view.bottomBarShadow.id, BOTTOM, view.bottom_bar.id, TOP)
+                connect(view.toolbarLayout.id, BOTTOM, PARENT_ID, BOTTOM)
                 connect(view.privateBrowsingButton.id, TOP, PARENT_ID, TOP)
             } else {
                 connect(sessionControlView.view.id, TOP, view.wordmark.id, TOP)
                 connect(sessionControlView.view.id, BOTTOM, PARENT_ID, BOTTOM)
 
-                connect(view.bottomBarShadow.id, BOTTOM, view.bottom_bar.id, BOTTOM)
-                connect(view.privateBrowsingButton.id, TOP, view.bottomBarShadow.id, TOP)
+                connect(view.privateBrowsingButton.id, TOP, view.toolbarLayout.id, BOTTOM)
             }
             connect(sessionControlView.view.id, START, PARENT_ID, START)
             connect(sessionControlView.view.id, END, PARENT_ID, END)
@@ -235,8 +244,8 @@ class HomeFragment : Fragment() {
             applyTo(view.homeLayout)
         }
 
-        var headingsTopMargins = if (shouldUseBottomToolbar) { HEADER_MARGIN } else { TOP_TOOLBAR_HEADER_MARGIN }
-        var sessionControlViewTopMargin = if (shouldUseBottomToolbar) {
+        val headingsTopMargins = if (shouldUseBottomToolbar) { HEADER_MARGIN } else { TOP_TOOLBAR_HEADER_MARGIN }
+        val sessionControlViewTopMargin = if (shouldUseBottomToolbar) {
             SESSION_CONTROL_VIEW_TOP_MARGIN
         } else {
             SESSION_CONTROL_VIEW_TOP_TOOLBAR_MARGIN
@@ -341,9 +350,6 @@ class HomeFragment : Fragment() {
                     HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode)))
             }
         }
-
-        // We need the shadow to be above the components.
-        bottomBarShadow.bringToFront()
     }
 
     override fun onStart() {
@@ -368,7 +374,7 @@ class HomeFragment : Fragment() {
                     view?.let {
                         FenixSnackbar.make(it, Snackbar.LENGTH_SHORT)
                             .setText(it.context.getString(R.string.onboarding_firefox_account_sync_is_on))
-                            .setAnchorView(bottom_bar)
+                            .setAnchorView(toolbarLayout)
                             .show()
                     }
                 }
@@ -648,7 +654,7 @@ class HomeFragment : Fragment() {
                 emitSessionChanges()
             },
             operation = deleteOperation,
-            anchorView = bottom_bar
+            anchorView = snackbarAnchorView
         )
     }
 
@@ -678,7 +684,7 @@ class HomeFragment : Fragment() {
                 emitSessionChanges()
             },
             operation = deleteOperation,
-            anchorView = bottom_bar
+            anchorView = snackbarAnchorView
         )
 
         // Update the UI with the tab removed, but don't remove it from storage yet
