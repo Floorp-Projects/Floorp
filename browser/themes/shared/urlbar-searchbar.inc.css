@@ -887,7 +887,7 @@
 /* Search bar */
 
 #search-container {
-  min-width: calc(54px + 11ch);
+  min-width: 125px;
 }
 
 .searchbar-search-button {
