@@ -91,7 +91,7 @@ static void generate_scaling(const int bitdepth,
 #ifndef UNIT_TEST
 void bitfn(dav1d_apply_grain)(const Dav1dFilmGrainDSPContext *const dsp,
                               Dav1dPicture *const out,
-                              const Dav1dPicture *const in)
+                              Dav1dPicture *const in)
 {
     const Dav1dFilmGrainData *const data = &out->frame_hdr->film_grain.data;
 
@@ -143,7 +143,7 @@ void bitfn(dav1d_apply_grain)(const Dav1dFilmGrainDSPContext *const dsp,
     const int cpw = (out->p.w + ss_x) >> ss_x;
     const int is_id = out->seq_hdr->mtrx == DAV1D_MC_IDENTITY;
     for (int row = 0; row < rows; row++) {
-        const pixel *const luma_src =
+        pixel *const luma_src =
             ((pixel *) in->data[0]) + row * BLOCK_SIZE * PXSTRIDE(in->stride[0]);
 
         if (data->num_y_points) {
@@ -153,7 +153,23 @@ void bitfn(dav1d_apply_grain)(const Dav1dFilmGrainDSPContext *const dsp,
                              out->p.w, scaling[0], grain_lut[0], bh, row HIGHBD_TAIL_SUFFIX);
         }
 
+        if (!data->num_uv_points[0] && !data->num_uv_points[1] &&
+            !data->chroma_scaling_from_luma)
+        {
+            continue;
+        }
+
         const int bh = (imin(out->p.h - row * BLOCK_SIZE, BLOCK_SIZE) + ss_y) >> ss_y;
+
+        // extend padding pixels
+        if (out->p.w & ss_x) {
+            pixel *ptr = luma_src;
+            for (int y = 0; y < bh; y++) {
+                ptr[out->p.w] = ptr[out->p.w - 1];
+                ptr += PXSTRIDE(in->stride[0]) << ss_y;
+            }
+        }
+
         const ptrdiff_t uv_off = row * BLOCK_SIZE * PXSTRIDE(out->stride[1]) >> ss_y;
         if (data->chroma_scaling_from_luma) {
             for (int pl = 0; pl < 2; pl++)

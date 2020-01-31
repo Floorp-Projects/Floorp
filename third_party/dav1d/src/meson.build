@@ -112,6 +112,8 @@ if is_asm_enabled
         elif host_machine.cpu_family().startswith('arm')
             libdav1d_sources += files(
                 'arm/32/cdef.S',
+                'arm/32/ipred.S',
+                'arm/32/loopfilter.S',
                 'arm/32/looprestoration.S',
                 'arm/32/mc.S',
             )

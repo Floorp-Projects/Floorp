@@ -73,6 +73,8 @@ pw_m2048:       times 8 dw -2048
 pw_4096:        times 8 dw  4096
 pw_16384:       times 8 dw  16384
 pw_m16384:      times 8 dw  -16384
+pw_1697x16:     times 8 dw  1697*16
+pw_1697x8:      times 8 dw  1697*8
 pw_2896x8:      times 8 dw  2896*8
 pw_3344x8:      times 8 dw  3344*8
 pw_5793x4:      times 8 dw  5793*4
@@ -273,8 +275,8 @@ ALIGN function_align
 %ifidn %1_%2, dct_identity
     mova                 m0, [o(pw_2896x8)]
     pmulhrsw             m0, [coeffq]
-    paddw                m0, m0
-    pmulhrsw             m0, [o(pw_5793x4)]
+    pmulhrsw             m1, m0, [o(pw_1697x8)]
+    paddw                m0, m1
     punpcklwd            m0, m0
     punpckhdq            m1, m0, m0
     punpckldq            m0, m0
@@ -286,8 +288,8 @@ ALIGN function_align
     punpckhwd            m1, m2
     punpcklwd            m0, m1
     punpcklqdq           m0, m0
-    paddw                m0, m0
-    pmulhrsw             m0, [o(pw_5793x4)]
+    pmulhrsw             m1, m0, [o(pw_1697x8)]
+    paddw                m0, m1
     pmulhrsw             m0, [o(pw_2896x8)]
     mova                 m1, m0
     TAIL_CALL m(iadst_4x4_internal).end
@@ -434,12 +436,11 @@ INV_TXFM_4X4_FN identity, identity
 cglobal iidentity_4x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mova                 m0, [coeffq+16*0]
     mova                 m1, [coeffq+16*1]
-    mova                 m2, [o(pw_5793x4)]
-    paddw                m0, m0
-    paddw                m1, m1
-    pmulhrsw             m0, m2
-    pmulhrsw             m1, m2
-
+    mova                 m3, [o(pw_1697x8)]
+    pmulhrsw             m2, m0, m3
+    pmulhrsw             m3, m1
+    paddw                m0, m2
+    paddw                m1, m3
     punpckhwd            m2, m0, m1
     punpcklwd            m0, m1
     punpckhwd            m1, m0, m2            ;high: in3 ;low :in2
@@ -447,11 +448,11 @@ cglobal iidentity_4x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     jmp                tx2q
 
 .pass2:
-    mova                 m2, [o(pw_5793x4)]
-    paddw                m0, m0
-    paddw                m1, m1
-    pmulhrsw             m0, m2
-    pmulhrsw             m1, m2
+    mova                 m3, [o(pw_1697x8)]
+    pmulhrsw             m2, m3, m0
+    pmulhrsw             m3, m1
+    paddw                m0, m2
+    paddw                m1, m3
     jmp m(iadst_4x4_internal).end
 
 %macro IWHT4_1D_PACKED 0
@@ -609,8 +610,8 @@ cglobal inv_txfm_add_wht_wht_4x4, 3, 3, 4, dst, stride, coeff
     mova                 m2, [o(pw_2896x8)]
     punpckldq            m0, m1
     pmulhrsw             m0, m2
-    paddw                m0, m0
-    pmulhrsw             m0, [o(pw_5793x4)]
+    pmulhrsw             m1, m0, [o(pw_1697x8)]
+    paddw                m0, m1
     pmulhrsw             m0, m2
     pmulhrsw             m0, [o(pw_2048)]
     punpcklqdq           m0, m0
@@ -828,16 +829,15 @@ cglobal iidentity_4x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     pmulhrsw             m3,     [coeffq+16*3]
 
 .pass1:
-    mova                 m5, [o(pw_5793x4)]
-    paddw                m0, m0
-    paddw                m1, m1
-    paddw                m2, m2
-    paddw                m3, m3
-    pmulhrsw             m0, m5
-    pmulhrsw             m1, m5
-    pmulhrsw             m2, m5
-    pmulhrsw             m3, m5
-
+    mova                 m7, [o(pw_1697x8)]
+    pmulhrsw             m4, m7, m0
+    pmulhrsw             m5, m7, m1
+    pmulhrsw             m6, m7, m2
+    pmulhrsw             m7, m3
+    paddw                m0, m4
+    paddw                m1, m5
+    paddw                m2, m6
+    paddw                m3, m7
     jmp m(iadst_4x8_internal).pass1_end
 
 .pass2:
@@ -880,8 +880,8 @@ cglobal iidentity_4x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mova                 m0, [o(pw_2896x8)]
     pmulhrsw             m1, m0, [coeffq]
     pmulhrsw             m1, m0
-    paddw                m1, m1
-    pmulhrsw             m1, [o(pw_5793x4)]
+    pmulhrsw             m0, m1, [o(pw_1697x8)]
+    paddw                m1, m0
     pmulhrsw             m1, [o(pw_2048)]
     punpcklwd            m1, m1
     punpckhdq            m2, m1, m1
@@ -1180,15 +1180,15 @@ cglobal iidentity_8x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     jmp                tx2q
 
 .pass2:
-    mova                 m4, [o(pw_5793x4)]
-    paddw                m0, m0
-    paddw                m1, m1
-    paddw                m2, m2
-    paddw                m3, m3
-    pmulhrsw             m0, m4
-    pmulhrsw             m1, m4
-    pmulhrsw             m2, m4
-    pmulhrsw             m3, m4
+    mova                 m7, [o(pw_1697x8)]
+    pmulhrsw             m4, m7, m0
+    pmulhrsw             m5, m7, m1
+    pmulhrsw             m6, m7, m2
+    pmulhrsw             m7, m3
+    paddw                m0, m4
+    paddw                m1, m5
+    paddw                m2, m6
+    paddw                m3, m7
     jmp m(iadst_8x4_internal).end
 
 %macro INV_TXFM_8X8_FN 2-3 -1 ; type1, type2, fast_thresh
@@ -1635,14 +1635,16 @@ ALIGN function_align
     pmulhrsw             m0, [coeffq+16*0]
     pmulhrsw             m1, [coeffq+16*1]
     mova                 m2, [o(pw_16384)]
-    mova                 m3, [o(pw_5793x4)]
+    mova                 m3, [o(pw_1697x16)]
     mova                 m4, [o(pw_2048)]
     pmulhrsw             m0, m2
     pmulhrsw             m1, m2
-    psllw                m0, 2
-    psllw                m1, 2
-    pmulhrsw             m0, m3
-    pmulhrsw             m1, m3
+    pmulhrsw             m2, m3, m0
+    pmulhrsw             m3, m1
+    paddw                m0, m0
+    paddw                m1, m1
+    paddw                m0, m2
+    paddw                m1, m3
     pmulhrsw             m0, m4
     pmulhrsw             m4, m1
     punpckhwd            m2, m0, m0
@@ -1664,12 +1666,11 @@ ALIGN function_align
     punpcklwd             m0, [coeffq+32*1]
     movd                  m1, [coeffq+32*2]
     punpcklwd             m1, [coeffq+32*3]
-    mova                  m2, [o(pw_5793x4)]
     mova                  m3, [o(pw_16384)]
-    mova                  m4, [o(pw_2896x8)]
     punpckldq             m0, m1
-    paddw                 m0, m0
-    pmulhrsw              m0, m2
+    pmulhrsw              m1, m0, [o(pw_1697x8)]
+    mova                  m4, [o(pw_2896x8)]
+    paddw                 m0, m1
     pmulhrsw              m0, m3
     psrlw                 m3, 3                ; pw_2048
     pmulhrsw              m0, m4
@@ -1885,17 +1886,27 @@ INV_TXFM_4X16_FN identity, adst
 INV_TXFM_4X16_FN identity, flipadst
 INV_TXFM_4X16_FN identity, identity
 
+%macro IDTX16 3 ; src/dst, tmp, pw_1697x16
+    pmulhrsw             m%2, m%3, m%1
+    paddw                m%1, m%1
+    paddw                m%1, m%2
+%endmacro
+
 cglobal iidentity_4x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     lea                   r3, [o(m(iidentity_4x8_internal).pass1)]
     jmp   m(idct_4x16_internal).pass1
 
 .pass2:
-    mova                  m7, [o(pw_5793x4)]
-    REPX    {psllw    x, 2 }, m0, m1, m2, m3, m4, m5, m6
-    REPX    {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
-    psllw                 m7, [coeffq+16*7], 2
-    pmulhrsw              m7, [o(pw_5793x4)]
-    mova       [coeffq+16*7], m7
+    mova                  m7, [o(pw_1697x16)]
+    mova       [coeffq+16*6], m6
+    REPX    {IDTX16 x, 6, 7}, 0, 1, 2, 3, 4, 5
+    mova                  m6, [coeffq+16*7]
+    IDTX16                 6, 7, 7
+    mova       [coeffq+16*7], m6
+    mova                  m6, [coeffq+16*6]
+    pmulhrsw              m7, m6, [o(pw_1697x16)]
+    paddw                 m6, m6
+    paddw                 m6, m7
 
     mova                  m7, [o(pw_2048)]
     REPX    {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
@@ -1913,8 +1924,8 @@ cglobal iidentity_4x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mova                 m0, [o(pw_16384)]
     pmulhrsw             m3, m0
     psrlw                m0, 3                ; pw_2048
-    paddw                m3, m3
-    pmulhrsw             m3, [o(pw_5793x4)]
+    pmulhrsw             m1, m3, [o(pw_1697x8)]
+    paddw                m3, m1
     pmulhrsw             m3, m0
     punpcklwd            m3, m3
     pshufd               m0, m3, q0000
@@ -1927,28 +1938,28 @@ cglobal iidentity_4x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mov                dstq, tx2q
     TAIL_CALL m(iadst_8x4_internal).end2
 %elifidn %1_%2, identity_dct
+    mova                 m4, [o(pw_1697x16)]
     mova                 m5, [o(pw_16384)]
-    mova                 m6, [o(pw_5793x4)]
-    mova                 m7, [o(pw_2896x8)]
+    mova                 m6, [o(pw_2896x8)]
     mov                 r3d, 2
+    psrlw                m7, m5, 3 ; pw_2048
 .main_loop:
     mova                 m0, [coeffq+16*0]
     mova                 m1, [coeffq+16*1]
-    mova                 m2, [coeffq+16*2]
-    mova                 m3, [coeffq+16*3]
-    punpckhwd            m4, m0, m1
+    punpckhwd            m2, m0, m1
     punpcklwd            m0, m1
-    punpckhwd            m1, m2, m3
-    punpcklwd            m2, m3
-    punpcklwd            m0, m4
-    punpcklwd            m2, m1
-    punpcklqdq           m0, m2
-    psllw                m0, 2
+    punpcklwd            m0, m2
+    mova                 m1, [coeffq+16*2]
+    mova                 m2, [coeffq+16*3]
+    punpckhwd            m3, m1, m2
+    punpcklwd            m1, m2
+    punpcklwd            m1, m3
+    punpcklqdq           m0, m1
+    pmulhrsw             m1, m4, m0
+    pmulhrsw             m1, m5
+    paddw                m0, m1
     pmulhrsw             m0, m6
-    pmulhrsw             m0, m5
-    psrlw                m1, m5, 3               ; pw_2048
     pmulhrsw             m0, m7
-    pmulhrsw             m0, m1
 .end:
     pxor                 m3, m3
     mova      [coeffq+16*0], m3
@@ -2412,22 +2423,56 @@ INV_TXFM_16X4_FN identity, flipadst
 INV_TXFM_16X4_FN identity, identity
 
 cglobal iidentity_16x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
-    LOAD_7ROWS        coeffq, 16
-    mova                  m7, [o(pw_5793x4)]
-    REPX    {psllw    x, 2 }, m0, m1, m2, m3, m4, m5, m6
-    REPX    {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
+    mova                  m1, [coeffq+16*6]
+    mova                  m0, [coeffq+16*5]
+    mova                  m2, [coeffq+16*7]
+    mova                  m6, [o(pw_1697x16)]
+    mova                  m7, [o(pw_16384)]
+    pmulhrsw              m4, m6, m1
+    pmulhrsw              m3, m6, m0
+    pmulhrsw              m5, m6, m2
+    pmulhrsw              m4, m7
+    pmulhrsw              m3, m7
+    pmulhrsw              m5, m7
+    paddw                 m1, m4
+    paddw                 m0, m3
+    paddw                 m5, m2
+    mova                  m2, [coeffq+16*2]
+    mova                  m3, [coeffq+16*3]
+    mova                  m4, [coeffq+16*4]
+    mova       [coeffq+16*6], m1
+    mova       [coeffq+16*5], m0
+    mova       [coeffq+16*7], m5
+    pmulhrsw              m0, m6, m2
+    pmulhrsw              m1, m6, m3
+    pmulhrsw              m5, m6, m4
+    pmulhrsw              m0, m7
+    pmulhrsw              m1, m7
+    pmulhrsw              m5, m7
+    paddw                 m2, m0
+    paddw                 m3, m1
+    paddw                 m4, m5
+    mova                  m0, [coeffq+16*0]
+    mova                  m1, [coeffq+16*1]
+    pmulhrsw              m5, m6, m0
+    pmulhrsw              m6, m1
+    pmulhrsw              m5, m7
+    pmulhrsw              m6, m7
+    paddw                 m0, m5
+    paddw                 m1, m6
+    mova                  m6, [coeffq+16*6]
+    mova                  m5, [coeffq+16*5]
     punpckhwd             m7, m0, m2                 ;packed out1,  out5
     punpcklwd             m0, m2                     ;packed out0,  out4
     punpckhwd             m2, m1, m3                 ;packed out3,  out7
     punpcklwd             m1, m3                     ;packed out2,  out6
     mova       [coeffq+16*6], m7
-    psllw                 m7, [coeffq+16*7], 2
-    pmulhrsw              m7, [o(pw_5793x4)]
+    mova                  m7, [coeffq+16*7]
     punpckhwd             m3, m4, m6                 ;packed out9,  out13
     punpcklwd             m4, m6                     ;packed out8,  out12
     punpckhwd             m6, m5, m7                 ;packed out11, out15
     punpcklwd             m5, m7                     ;packed out10, out14
-    jmp   m(idct_16x4_internal).pass1_end2
+    jmp   m(idct_16x4_internal).pass1_end3
 
 .pass2:
     lea                 tx2q, [o(m(iidentity_8x4_internal).pass2)]
@@ -2475,8 +2520,9 @@ cglobal iidentity_16x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     pmulhrsw             m7, m0
     pmulhrsw             m7, m1
     psrlw                m1, 3          ; pw_2048
-    psllw                m7, 2
-    pmulhrsw             m7, [o(pw_5793x4)]
+    pmulhrsw             m0, m7, [o(pw_1697x16)]
+    paddw                m7, m7
+    paddw                m7, m0
     pmulhrsw             m7, m1
     punpcklwd            m0, m7, m7
     punpckhwd            m7, m7
@@ -2720,16 +2766,21 @@ cglobal iidentity_8x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     lea                  tx2q, [o(m(iidentity_8x16_internal).end1)]
 
 .end:
-    REPX     {psllw    x, 2 }, m0, m1, m2, m3, m4, m5, m6, m7
-    pmulhrsw               m7, [o(pw_5793x4)]
-    pmulhrsw               m7, [o(pw_2048)]
     mova   [rsp+gprsize+16*0], m7
-    mova                   m7, [o(pw_5793x4)]
-    REPX     {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
+    mova   [rsp+gprsize+16*1], m6
+    mova                   m7, [o(pw_1697x16)]
+    REPX     {IDTX16 x, 6, 7}, 0, 1, 2, 3, 4, 5
+    mova                   m6, [rsp+gprsize+16*1]
+    mova   [rsp+gprsize+16*2], m5
+    IDTX16                  6, 5, 7
+    mova                   m5, [rsp+gprsize+16*0]
+    IDTX16                  5, 7, 7
     mova                   m7, [o(pw_2048)]
     REPX     {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
+    pmulhrsw               m7, [rsp+gprsize+16*2]
+    mova   [rsp+gprsize+16*0], m5
     mova   [rsp+gprsize+16*1], m6
-    mova   [rsp+gprsize+16*2], m5
+    mova   [rsp+gprsize+16*2], m7
     jmp  m(idct_8x8_internal).end3
 
 .end1:
@@ -2787,32 +2838,32 @@ cglobal iidentity_8x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     mov                dstq, tx2q
     TAIL_CALL m(iadst_8x4_internal).end2
 %elifidn %1_%2, identity_dct
-    mova                 m5, [o(pw_16384)]
-    mova                 m6, [o(pw_5793x4)]
-    mova                 m7, [o(pw_2896x8)]
-    pxor                 m4, m4
+    mova                 m4, [o(pw_2896x8)]
+    mova                 m5, [o(pw_1697x16)]
+    mova                 m6, [o(pw_16384)]
+    psrlw                m7, m6, 3 ; pw_2048
     mov                 r3d, 2
 .main_loop:
     mova                 m0, [coeffq+16*0]
     punpcklwd            m0, [coeffq+16*1]
     mova                 m1, [coeffq+16*2]
     punpcklwd            m1, [coeffq+16*3]
-    mova                 m2, [coeffq+16*4]
-    punpcklwd            m2, [coeffq+16*5]
-    mova                 m3, [coeffq+16*6]
-    punpcklwd            m3, [coeffq+16*7]
     punpckldq            m0, m1
-    punpckldq            m2, m3
-    punpcklqdq           m0, m2
+    mova                 m1, [coeffq+16*4]
+    punpcklwd            m1, [coeffq+16*5]
+    mova                 m2, [coeffq+16*6]
+    punpcklwd            m2, [coeffq+16*7]
+    punpckldq            m1, m2
+    punpcklqdq           m0, m1
+    pmulhrsw             m0, m4
+    pmulhrsw             m1, m5, m0
+    pmulhrsw             m1, m6
+    paddw                m0, m1
+    pmulhrsw             m0, m4
     pmulhrsw             m0, m7
-    psllw                m0, 2
-    pmulhrsw             m0, m6
-    pmulhrsw             m0, m5
-    psrlw                m1, m5, 3               ; pw_2048
-    pmulhrsw             m0, m7
-    pmulhrsw             m0, m1
 .end:
-    REPX  {mova [coeffq+16*x], m4},  0,  1,  2,  3,  4,  5,  6,  7
+    pxor                 m1, m1
+    REPX {mova [coeffq+16*x], m1}, 0, 1, 2, 3, 4, 5, 6, 7
     add              coeffq, 16*8
     lea                tx2q, [dstq+8]
     WRITE_8X4             0, 0, 0, 0, 1, 2, 3
@@ -3292,40 +3343,66 @@ INV_TXFM_16X8_FN identity, flipadst
 INV_TXFM_16X8_FN identity, identity
 
 cglobal iidentity_16x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
-    LOAD_8ROWS    coeffq+16*8, 16, 1
-
+    add                coeffq, 16*16
+    mova                   m4, [coeffq-16*7]
+    mova                   m5, [coeffq-16*5]
+    mova                   m6, [coeffq-16*3]
+    mova                   m7, [coeffq-16*1]
     mov                    r3, tx2q
     lea                  tx2q, [o(m(iidentity_16x8_internal).pass1_end)]
 
 .pass1:
-    REPX     {psllw    x, 2 }, m0, m1, m2, m3, m4, m5, m6, m7
-    pmulhrsw               m7, [o(pw_5793x4)]
-    mova   [rsp+gprsize+16*0], m7
-
-    mova                   m7, [o(pw_5793x4)]
-    REPX     {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
-
-    jmp   m(idct_8x8_internal).pass1_end
+    mova                   m0, [o(pw_2896x8)]
+    mova                   m2, [o(pw_1697x16)]
+    mova                   m3, [o(pw_16384)]
+    sub                coeffq, 8*16
+    REPX     {pmulhrsw x, m0}, m4, m5, m6, m7
+    pmulhrsw               m1, m2, m4
+    pmulhrsw               m1, m3
+    paddw                  m1, m4 ; 1
+    pmulhrsw               m4, m2, m5
+    pmulhrsw               m4, m3
+    paddw                  m4, m5 ; 3
+    pmulhrsw               m5, m2, m6
+    pmulhrsw               m5, m3
+    paddw                  m5, m6 ; 5
+    pmulhrsw               m6, m2, m7
+    pmulhrsw               m6, m3
+    paddw                  m7, m6 ; 7
+    pmulhrsw               m6, m0, [coeffq+16*6]
+    mova   [rsp+gprsize+16*0], m4
+    pmulhrsw               m4, m2, m6
+    pmulhrsw               m4, m3
+    paddw                  m6, m4 ; 6
+    pmulhrsw               m4, m0, [coeffq+16*4]
+    mova   [rsp+gprsize+16*1], m6
+    pmulhrsw               m6, m2, m4
+    pmulhrsw               m6, m3
+    paddw                  m4, m6 ; 4
+    pmulhrsw               m6, m0, [coeffq+16*2]
+    pmulhrsw               m0,     [coeffq+16*0]
+    pmulhrsw               m2, m6
+    pmulhrsw               m2, m3
+    paddw                  m2, m6 ; 2
+    pmulhrsw               m6, m0, [o(pw_1697x16)]
+    pmulhrsw               m6, m3
+    mova                   m3, [rsp+gprsize+16*0]
+    paddw                  m0, m6
+    jmp   m(idct_8x8_internal).pass1_end3
 
 .pass1_end:
-    mova       [coeffq+16*9 ], m4
-    mova       [coeffq+16*11], m5
-    mova       [coeffq+16*13], m6
-    mova       [coeffq+16*15], m7
-    mova                   m4, [o(pw_2896x8)]
-    pmulhrsw               m5, m4, [coeffq+16*5]
-    pmulhrsw               m6, m4, [coeffq+16*6]
-    pmulhrsw               m7, m4, [coeffq+16*7]
-    mova       [coeffq+16*5 ], m2
-    mova       [coeffq+16*7 ], m3
-    pmulhrsw               m2, m4, [coeffq+16*2]
-    pmulhrsw               m3, m4, [coeffq+16*3]
-    mova       [coeffq+16*3 ], m1
-    pmulhrsw               m1, m4, [coeffq+16*1]
-    mova       [coeffq+16*1 ], m0
-    pmulhrsw               m0, m4, [coeffq+16*0]
-    pmulhrsw               m4, [coeffq+16*4]
-
+    mova        [coeffq+16*1], m4
+    mova        [coeffq+16*3], m5
+    mova        [coeffq+16*5], m6
+    mova        [coeffq+16*7], m7
+    mova                   m4, [coeffq-16*7]
+    mova                   m5, [coeffq-16*5]
+    mova                   m6, [coeffq-16*3]
+    mova                   m7, [coeffq-16*1]
+    mova        [coeffq-16*7], m0
+    mova        [coeffq-16*5], m1
+    mova        [coeffq-16*3], m2
+    mova        [coeffq-16*1], m3
     mov                  tx2q, r3
     jmp .pass1
 
@@ -3399,7 +3476,7 @@ cglobal iidentity_16x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     jg .loop
     RET
 %elifidn %1_%2, identity_dct
-    mova                   m4, [o(pw_5793x4)]
+    mova                   m4, [o(pw_1697x16)]
     mova                   m5, [o(pw_8192)]
     mova                   m6, [o(pw_2896x8)]
     psrlw                  m7, m5, 2                 ;pw_2048
@@ -3410,23 +3487,24 @@ cglobal iidentity_16x8_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 .main:
     movd                   m0, [coeffq+32*0]
     punpcklwd              m0, [coeffq+32*1]
-    movd                   m2, [coeffq+32*2]
-    punpcklwd              m2, [coeffq+32*3]
+    movd                   m1, [coeffq+32*2]
+    punpcklwd              m1, [coeffq+32*3]
     add                coeffq, 32*4
+    punpckldq              m0, m1
     movd                   m1, [coeffq+32*0]
     punpcklwd              m1, [coeffq+32*1]
-    movd                   m3, [coeffq+32*2]
-    punpcklwd              m3, [coeffq+32*3]
+    movd                   m2, [coeffq+32*2]
+    punpcklwd              m2, [coeffq+32*3]
     xor                  eobd, eobd
     mov         [coeffq-32*4], eobd
     mov         [coeffq-32*3], eobd
     mov         [coeffq-32*2], eobd
     mov         [coeffq-32*1], eobd
-    punpckldq              m0, m2
-    punpckldq              m1, m3
+    punpckldq              m1, m2
     punpcklqdq             m0, m1
-    psllw                  m0, 2
-    pmulhrsw               m0, m4
+    pmulhrsw               m1, m4, m0
+    paddw                  m0, m0
+    paddw                  m0, m1
     pmulhrsw               m0, m5
     pmulhrsw               m0, m6
     pmulhrsw               m0, m7
@@ -3740,36 +3818,42 @@ INV_TXFM_16X16_FN identity, dct,      15
 INV_TXFM_16X16_FN identity, identity
 
 cglobal iidentity_16x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
-    LOAD_8ROWS    coeffq+16*17, 32
+    add                 coeffq, 16*17
     mov                     r3, tx2q
     lea                   tx2q, [o(m(iidentity_16x16_internal).pass1_end)]
 
 .pass1:
-    REPX      {psllw    x, 2 }, m0, m1, m2, m3, m4, m5, m6, m7
-    pmulhrsw                m7, [o(pw_5793x4)]
-    mova    [rsp+gprsize+16*0], m7
-
-    mova                    m7, [o(pw_5793x4)]
-    REPX      {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
-
+    mova                    m7, [o(pw_1697x16)]
+    mova                    m6, [coeffq+32*7]
+    mova                    m0, [coeffq+32*0]
+    mova                    m1, [coeffq+32*1]
+    mova                    m2, [coeffq+32*2]
+    mova                    m3, [coeffq+32*3]
+    mova                    m4, [coeffq+32*4]
+    REPX      {IDTX16 x, 5, 7}, 6, 0, 1, 2, 3, 4
+    mova                    m5, [coeffq+32*5]
+    mova    [rsp+gprsize+16*0], m6
+    IDTX16                   5, 6, 7
+    mova                    m6, [coeffq+32*6]
+    IDTX16                   6, 7, 7
     mova                    m7, [o(pw_8192)]
     jmp   m(idct_8x8_internal).pass1_end1
 
 .pass1_end:
-    SAVE_8ROWS    coeffq+16*17, 32
-    LOAD_8ROWS    coeffq+16* 1, 32
+    SAVE_8ROWS          coeffq, 32
+    sub                 coeffq, 16
     lea                   tx2q, [o(m(iidentity_16x16_internal).pass1_end1)]
     jmp .pass1
 
 .pass1_end1:
-    SAVE_8ROWS    coeffq+16* 1, 32
-    LOAD_8ROWS    coeffq+16*16, 32
+    SAVE_8ROWS          coeffq, 32
+    sub                 coeffq, 15*16
     lea                   tx2q, [o(m(iidentity_16x16_internal).pass1_end2)]
     jmp .pass1
 
 .pass1_end2:
-    SAVE_8ROWS    coeffq+16*16, 32
-    LOAD_8ROWS    coeffq+16* 0, 32
+    SAVE_8ROWS          coeffq, 32
+    sub                 coeffq, 16
     mov                   tx2q, r3
     jmp .pass1
 
@@ -3778,16 +3862,22 @@ cglobal iidentity_16x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     lea                   tx2q, [o(m(iidentity_16x16_internal).end1)]
 
 .end:
-    REPX      {psllw    x, 2 }, m0, m1, m2, m3, m4, m5, m6, m7
-    pmulhrsw                m7, [o(pw_5793x4)]
-    pmulhrsw                m7, [o(pw_2048)]
     mova    [rsp+gprsize+16*0], m7
-    mova                    m7, [o(pw_5793x4)]
-    REPX      {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
-    mova                    m7, [o(pw_2048)]
-    REPX      {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
-    mova    [rsp+gprsize+16*1], m6
+    mova    [rsp+gprsize+16*1], m4
+    mova                    m7, [o(pw_1697x16)]
+    REPX      {IDTX16 x, 4, 7}, 5, 6, 0, 1, 2, 3
+    mova                    m4, [o(pw_2048)]
+    pmulhrsw                m5, m4
+    pmulhrsw                m6, m4
     mova    [rsp+gprsize+16*2], m5
+    mova                    m5, [rsp+gprsize+16*1]
+    mova    [rsp+gprsize+16*1], m6
+    IDTX16                   5, 6, 7
+    mova                    m6, [rsp+gprsize+16*0]
+    IDTX16                   6, 7, 7
+    REPX      {pmulhrsw x, m4}, m0, m1, m2, m3, m6
+    pmulhrsw                m4, m5
+    mova    [rsp+gprsize+16*0], m6
     jmp   m(idct_8x8_internal).end3
 
 .end1:
@@ -4991,15 +5081,33 @@ cglobal inv_txfm_add_identity_identity_32x16, 4, 6, 8, 16*4, dst, stride, coeff,
 
 .loop:
     LOAD_8ROWS          coeffq, 32, 1
-    REPX         {psllw  x, 3}, m0, m1, m2, m3, m4, m5, m6, m7
+    REPX          {psllw x, 2}, m0, m1, m2, m3, m4, m5, m6, m7
     mova            [rsp+16*1], m6
     lea                   tx2q, [o(m(idct_32x16_internal).end)]
     call  m(idct_8x8_internal).pass1_end3
-    pmulhrsw                m7, [o(pw_5793x4)]
+    mova            [rsp+16*2], m5
+    mova            [rsp+16*1], m6
+    mova                    m5, [o(pw_1697x8)]
+    pmulhrsw                m6, m5, m7
+    paddw                   m7, m6
+    pmulhrsw                m6, m5, m0
+    paddw                   m0, m6
+    pmulhrsw                m6, m5, m1
+    paddw                   m1, m6
+    pmulhrsw                m6, m5, m2
+    paddw                   m2, m6
+    pmulhrsw                m6, m5, m3
+    paddw                   m3, m6
+    pmulhrsw                m6, m5, m4
     pmulhrsw                m7, [o(pw_2048)]
+    paddw                   m4, m6
+    mova                    m6, [rsp+16*1]
     mova            [rsp+16*0], m7
-    mova                    m7, [o(pw_5793x4)]
-    REPX      {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
+    pmulhrsw                m7, m5, m6
+    paddw                   m6, m7
+    mova                    m7, [rsp+16*2]
+    pmulhrsw                m5, m7
+    paddw                   m5, m7
     mova                    m7, [o(pw_2048)]
     REPX      {pmulhrsw x, m7}, m0, m1, m2, m3, m4, m5, m6
     mova            [rsp+16*2], m5
@@ -5008,7 +5116,7 @@ cglobal inv_txfm_add_identity_identity_32x16, 4, 6, 8, 16*4, dst, stride, coeff,
     lea                   dstq, [dstq+strideq*2]
 
     pxor                    m7, m7
-    REPX   {mova [coeffq+32*x], m7}, 0,  1,  2,  3,  4,  5,  6,  7
+    REPX {mova [coeffq+32*x], m7}, 0, 1, 2, 3, 4, 5, 6, 7
 
 .loop_end:
     add                 coeffq, 16

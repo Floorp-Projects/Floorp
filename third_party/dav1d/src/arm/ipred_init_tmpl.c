@@ -54,13 +54,14 @@ COLD void bitfn(dav1d_intra_pred_dsp_init_arm)(Dav1dIntraPredDSPContext *const c
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-#if BITDEPTH == 8 && ARCH_AARCH64
+#if BITDEPTH == 8
     c->intra_pred[DC_PRED]       = dav1d_ipred_dc_neon;
     c->intra_pred[DC_128_PRED]   = dav1d_ipred_dc_128_neon;
     c->intra_pred[TOP_DC_PRED]   = dav1d_ipred_dc_top_neon;
     c->intra_pred[LEFT_DC_PRED]  = dav1d_ipred_dc_left_neon;
     c->intra_pred[HOR_PRED]      = dav1d_ipred_h_neon;
     c->intra_pred[VERT_PRED]     = dav1d_ipred_v_neon;
+#if ARCH_AARCH64
     c->intra_pred[PAETH_PRED]    = dav1d_ipred_paeth_neon;
     c->intra_pred[SMOOTH_PRED]   = dav1d_ipred_smooth_neon;
     c->intra_pred[SMOOTH_V_PRED] = dav1d_ipred_smooth_v_neon;
@@ -76,5 +77,6 @@ COLD void bitfn(dav1d_intra_pred_dsp_init_arm)(Dav1dIntraPredDSPContext *const c
     c->cfl_ac[DAV1D_PIXEL_LAYOUT_I422 - 1] = dav1d_ipred_cfl_ac_422_neon;
 
     c->pal_pred                  = dav1d_pal_pred_neon;
+#endif
 #endif
 }

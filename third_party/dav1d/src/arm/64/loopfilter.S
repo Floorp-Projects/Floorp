@@ -37,10 +37,10 @@ function lpf_16_wd\wd\()_neon
 .if \wd >= 6
         uabd            v4.16b,  v21.16b, v22.16b // abs(p2 - p1)
         uabd            v5.16b,  v26.16b, v25.16b // abs(q2 - q1)
+.endif
 .if \wd >= 8
         uabd            v6.16b,  v20.16b, v21.16b // abs(p3 - p2)
         uabd            v7.16b,  v27.16b, v26.16b // abs(q3 - q3)
-.endif
 .endif
 .if \wd >= 6
         umax            v4.16b,  v4.16b,  v5.16b
@@ -70,7 +70,7 @@ function lpf_16_wd\wd\()_neon
 .if \wd >= 6
         and             v14.16b, v14.16b, v1.16b  // fm && wd > 4
 .endif
-.if \wd >= 6
+.if \wd >= 16
         and             v15.16b, v15.16b, v1.16b  // fm && wd == 16
 .endif
 
@@ -303,7 +303,6 @@ function lpf_16_wd\wd\()_neon
         rshrn           v13.8b,  v8.8h,   #3      // out q0
         rshrn2          v13.16b, v9.8h,   #3
 
-
         add             v8.8h,   v8.8h,   v6.8h
         add             v9.8h,   v9.8h,   v7.8h
         sub             v2.8h,   v2.8h,   v0.8h   // q2 + q3 - p1 - q1
@@ -420,6 +419,7 @@ function lpf_16_wd\wd\()_neon
         sub             v7.8h,   v7.8h,   v11.8h
         uaddl           v8.8h,   v26.8b,  v30.8b  // q2 + q6
         uaddl2          v9.8h,   v26.16b, v30.16b
+        bif             v0.16b,  v18.16b, v15.16b // out p5
         uaddl           v10.8h,  v18.8b,  v23.8b  // p5 + p0
         uaddl2          v11.8h,  v18.16b, v23.16b
         rshrn           v5.8b,   v12.8h,  #4      // out p0
@@ -430,56 +430,55 @@ function lpf_16_wd\wd\()_neon
         sub             v9.8h,   v9.8h,   v11.8h
         uaddl           v10.8h,  v27.8b,  v30.8b  // q3 + q6
         uaddl2          v11.8h,  v27.16b, v30.16b
-        bif             v0.16b,  v18.16b, v15.16b // out p5
-        uaddl           v14.8h,  v19.8b,  v24.8b  // p4 + q0
-        uaddl2          v18.8h,  v19.16b, v24.16b
+        bif             v1.16b,  v19.16b, v15.16b // out p4
+        uaddl           v18.8h,  v19.8b,  v24.8b  // p4 + q0
+        uaddl2          v19.8h,  v19.16b, v24.16b
         rshrn           v6.8b,   v12.8h,  #4      // out q0
         rshrn2          v6.16b,  v13.8h,  #4
         add             v12.8h,  v12.8h,  v8.8h   // - (p5 + p0) + (q2 + q6)
         add             v13.8h,  v13.8h,  v9.8h
-        sub             v10.8h,  v10.8h,  v14.8h
-        sub             v11.8h,  v11.8h,  v18.8h
-        uaddl           v14.8h,  v28.8b,  v30.8b  // q4 + q6
-        uaddl2          v18.8h,  v28.16b, v30.16b
-        bif             v1.16b,  v19.16b, v15.16b // out p4
-        uaddl           v8.8h,   v20.8b,  v25.8b  // p3 + q1
-        uaddl2          v9.8h,   v20.16b, v25.16b
+        sub             v10.8h,  v10.8h,  v18.8h
+        sub             v11.8h,  v11.8h,  v19.8h
+        uaddl           v8.8h,   v28.8b,  v30.8b  // q4 + q6
+        uaddl2          v9.8h,   v28.16b, v30.16b
+        bif             v2.16b,  v20.16b, v15.16b // out p3
+        uaddl           v18.8h,  v20.8b,  v25.8b  // p3 + q1
+        uaddl2          v19.8h,  v20.16b, v25.16b
         rshrn           v7.8b,   v12.8h,  #4      // out q1
         rshrn2          v7.16b,  v13.8h,  #4
         add             v12.8h,  v12.8h,  v10.8h  // - (p4 + q0) + (q3 + q6)
         add             v13.8h,  v13.8h,  v11.8h
-        sub             v14.8h,  v14.8h,  v8.8h
-        sub             v18.8h,  v18.8h,  v9.8h
+        sub             v18.8h,  v8.8h,   v18.8h
+        sub             v19.8h,  v9.8h,   v19.8h
         uaddl           v10.8h,  v29.8b,  v30.8b  // q5 + q6
         uaddl2          v11.8h,  v29.16b, v30.16b
-        bif             v2.16b,  v20.16b, v15.16b // out p3
-        uaddl           v19.8h,  v21.8b,  v26.8b  // p2 + q2
-        uaddl2          v20.8h,  v21.16b, v26.16b
+        bif             v3.16b,  v21.16b, v15.16b // out p2
+        uaddl           v20.8h,  v21.8b,  v26.8b  // p2 + q2
+        uaddl2          v21.8h,  v21.16b, v26.16b
         rshrn           v8.8b,   v12.8h,  #4      // out q2
         rshrn2          v8.16b,  v13.8h,  #4
-        add             v12.8h,  v12.8h,  v14.8h  // - (p3 + q1) + (q4 + q6)
-        add             v13.8h,  v13.8h,  v18.8h
-        sub             v10.8h,  v10.8h,  v19.8h
-        sub             v11.8h,  v11.8h,  v20.8h
-        uaddl           v14.8h,  v30.8b,  v30.8b  // q6 + q6
-        uaddl2          v18.8h,  v30.16b, v30.16b
-        bif             v3.16b,  v21.16b, v15.16b // out p2
-        uaddl           v19.8h,  v22.8b,  v27.8b  // p1 + q3
-        uaddl2          v20.8h,  v22.16b, v27.16b
+        add             v12.8h,  v12.8h,  v18.8h  // - (p3 + q1) + (q4 + q6)
+        add             v13.8h,  v13.8h,  v19.8h
+        sub             v10.8h,  v10.8h,  v20.8h
+        sub             v11.8h,  v11.8h,  v21.8h
+        uaddl           v18.8h,  v30.8b,  v30.8b  // q6 + q6
+        uaddl2          v19.8h,  v30.16b, v30.16b
+        bif             v4.16b,  v22.16b, v15.16b // out p1
+        uaddl           v20.8h,  v22.8b,  v27.8b  // p1 + q3
+        uaddl2          v21.8h,  v22.16b, v27.16b
         rshrn           v9.8b,   v12.8h,  #4      // out q3
         rshrn2          v9.16b,  v13.8h,  #4
         add             v12.8h,  v12.8h,  v10.8h  // - (p2 + q2) + (q5 + q6)
         add             v13.8h,  v13.8h,  v11.8h
-        sub             v14.8h,  v14.8h,  v19.8h
         sub             v18.8h,  v18.8h,  v20.8h
-        bif             v4.16b,  v22.16b, v15.16b // out p1
+        sub             v19.8h,  v19.8h,  v21.8h
+        bif             v5.16b,  v23.16b, v15.16b // out p0
         rshrn           v10.8b,  v12.8h,  #4      // out q4
         rshrn2          v10.16b, v13.8h,  #4
-        add             v12.8h,  v12.8h,  v14.8h  // - (p1 + q3) + (q6 + q6)
-        add             v13.8h,  v13.8h,  v18.8h
+        add             v12.8h,  v12.8h,  v18.8h  // - (p1 + q3) + (q6 + q6)
+        add             v13.8h,  v13.8h,  v19.8h
         rshrn           v11.8b,  v12.8h,  #4      // out q5
         rshrn2          v11.16b, v13.8h,  #4
-        bif             v5.16b,  v23.16b, v15.16b // out p0
         bif             v6.16b,  v24.16b, v15.16b // out q0
         bif             v7.16b,  v25.16b, v15.16b // out q1
         bif             v8.16b,  v26.16b, v15.16b // out q2
