@@ -9388,37 +9388,47 @@ nsresult HTMLEditor::CacheInlineStyles(nsINode& aNode) {
 nsresult HTMLEditor::GetInlineStyles(nsINode& aNode,
                                      AutoStyleCacheArray& aStyleCacheArray) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aStyleCacheArray.IsEmpty());
 
   bool useCSS = IsCSSEnabled();
 
-  for (StyleCache& styleCache : aStyleCacheArray) {
+  for (nsStaticAtom* property :
+       {nsGkAtoms::b, nsGkAtoms::i, nsGkAtoms::u, nsGkAtoms::face,
+        nsGkAtoms::size, nsGkAtoms::color, nsGkAtoms::tt, nsGkAtoms::em,
+        nsGkAtoms::strong, nsGkAtoms::dfn, nsGkAtoms::code, nsGkAtoms::samp,
+        nsGkAtoms::var, nsGkAtoms::cite, nsGkAtoms::abbr, nsGkAtoms::acronym,
+        nsGkAtoms::backgroundColor, nsGkAtoms::sub, nsGkAtoms::sup}) {
+    nsStaticAtom *tag, *attribute;
+    if (property == nsGkAtoms::face || property == nsGkAtoms::size ||
+        property == nsGkAtoms::color) {
+      tag = nsGkAtoms::font;
+      attribute = property;
+    } else {
+      tag = property;
+      attribute = nullptr;
+    }
     // If type-in state is set, don't intervene
     bool typeInSet, unused;
-    mTypeInState->GetTypingState(typeInSet, unused, styleCache.mTag,
-                                 styleCache.mAttr, nullptr);
+    mTypeInState->GetTypingState(typeInSet, unused, tag, attribute, nullptr);
     if (typeInSet) {
       continue;
     }
-
     bool isSet = false;
-    nsAutoString outValue;
-    // Don't use CSS for <font size>, we don't support it usefully (bug
-    // 780035)
-    if (!useCSS || (styleCache.mTag == nsGkAtoms::font &&
-                    styleCache.mAttr == nsGkAtoms::size)) {
-      isSet = IsTextPropertySetByContent(&aNode, styleCache.mTag,
-                                         styleCache.mAttr, nullptr, &outValue);
+    nsString value;  // Don't use nsAutoString here because it requires memcpy
+                     // at creating new StyleCache instance.
+    // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
+    if (!useCSS || (property == nsGkAtoms::size)) {
+      isSet =
+          IsTextPropertySetByContent(&aNode, tag, attribute, nullptr, &value);
     } else {
       isSet = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-          &aNode, styleCache.mTag, styleCache.mAttr, outValue,
-          CSSEditUtils::eComputed);
+          &aNode, tag, attribute, value, CSSEditUtils::eComputed);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
     }
     if (isSet) {
-      styleCache.mPresent = true;
-      styleCache.mValue.Assign(outValue);
+      aStyleCacheArray.AppendElement(StyleCache(tag, attribute, value));
     }
   }
   return NS_OK;
@@ -9431,13 +9441,14 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
   // been removed.  If so, add typeinstate for them, so that they will be
   // reinserted when new content is added.
 
+  if (TopLevelEditSubActionDataRef().mCachedInlineStyles->IsEmpty() ||
+      !SelectionRefPtr()->RangeCount()) {
+    return NS_OK;
+  }
+
   // remember if we are in css mode
   bool useCSS = IsCSSEnabled();
 
-  if (!SelectionRefPtr()->RangeCount()) {
-    // Nothing to do
-    return NS_OK;
-  }
   const RangeBoundary& atStartOfSelection =
       SelectionRefPtr()->GetRangeAt(0)->StartRef();
   nsCOMPtr<nsIContent> selNode =
@@ -9445,8 +9456,7 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
               atStartOfSelection.Container()->IsContent()
           ? atStartOfSelection.Container()->AsContent()
           : nullptr;
-  if (!selNode) {
-    // Nothing to do
+  if (NS_WARN_IF(!selNode)) {
     return NS_OK;
   }
 
@@ -9456,49 +9466,49 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     return rv == NS_ERROR_EDITOR_DESTROYED ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
   }
 
-  for (size_t i = 0; i < styleCacheArrayAtInsertionPoint.Length(); ++i) {
-    StyleCache& styleCacheAtInsertionPoint = styleCacheArrayAtInsertionPoint[i];
-    StyleCache& styleCacheBeforeEdit =
-        TopLevelEditSubActionDataRef().mCachedInlineStyles->ElementAt(i);
-    if (styleCacheBeforeEdit.mPresent) {
-      bool bFirst, bAny, bAll;
-      bFirst = bAny = bAll = false;
-
-      nsAutoString curValue;
-      if (useCSS) {
-        // check computed style first in css case
-        bAny = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-            selNode, styleCacheBeforeEdit.mTag, styleCacheBeforeEdit.mAttr,
-            curValue, CSSEditUtils::eComputed);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-      }
-      if (!bAny) {
-        // then check typeinstate and html style
-        nsresult rv = GetInlinePropertyBase(
-            *styleCacheBeforeEdit.mTag, styleCacheBeforeEdit.mAttr,
-            &styleCacheBeforeEdit.mValue, &bFirst, &bAny, &bAll, &curValue);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
-      // This style has disappeared through deletion.  Let's add the styles to
-      // mTypeInState when same style isn't applied to the node already.
-      if ((!bAny ||
-           IsStyleCachePreservingSubAction(GetTopLevelEditSubAction())) &&
-          (!styleCacheAtInsertionPoint.mPresent ||
-           styleCacheAtInsertionPoint.mValue != styleCacheBeforeEdit.mValue)) {
-        mTypeInState->SetProp(styleCacheBeforeEdit.mTag,
-                              styleCacheBeforeEdit.mAttr,
-                              styleCacheBeforeEdit.mValue);
+  for (StyleCache& styleCacheBeforeEdit :
+       *TopLevelEditSubActionDataRef().mCachedInlineStyles) {
+    bool isFirst = false, isAny = false, isAll = false;
+    nsAutoString currentValue;
+    if (useCSS) {
+      // check computed style first in css case
+      isAny = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
+          selNode, styleCacheBeforeEdit.Tag(),
+          styleCacheBeforeEdit.GetAttribute(), currentValue,
+          CSSEditUtils::eComputed);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
       }
     }
+    if (!isAny) {
+      // then check typeinstate and html style
+      nsresult rv = GetInlinePropertyBase(
+          *styleCacheBeforeEdit.Tag(), styleCacheBeforeEdit.GetAttribute(),
+          &styleCacheBeforeEdit.Value(), &isFirst, &isAny, &isAll,
+          &currentValue);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    // This style has disappeared through deletion.  Let's add the styles to
+    // mTypeInState when same style isn't applied to the node already.
+    if (isAny && !IsStyleCachePreservingSubAction(GetTopLevelEditSubAction())) {
+      continue;
+    }
+    AutoStyleCacheArray::index_type index =
+        styleCacheArrayAtInsertionPoint.IndexOf(
+            styleCacheBeforeEdit.Tag(), styleCacheBeforeEdit.GetAttribute());
+    if (index == AutoStyleCacheArray::NoIndex ||
+        styleCacheBeforeEdit.Value() !=
+            styleCacheArrayAtInsertionPoint.ElementAt(index).Value()) {
+      mTypeInState->SetProp(styleCacheBeforeEdit.Tag(),
+                            styleCacheBeforeEdit.GetAttribute(),
+                            styleCacheBeforeEdit.Value());
+    }
   }
-
   return NS_OK;
 }
 
