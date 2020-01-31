@@ -560,14 +560,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
     if (aFeature == FEATURE_WEBRENDER) {
       bool isUnblocked = false;
-#ifndef NIGHTLY_BUILD
-      // Only allow pixels on non nightly builds
-      NS_LossyConvertUTF16toASCII model(mModel);
-      isUnblocked |= model.Find("Pixel 2", /*ignoreCase*/ true) >=
-                         0 ||  // Find substring to include all Pixel 2 models
-                     model.Find("Pixel 3", /*ignoreCase*/ true) >=
-                         0;  // Find substring to include all Pixel 3 models
-#else
+#ifdef NIGHTLY_BUILD
       // On nightly enable all Adreno GPUs
       const nsCString& gpu = mGLStrings->Renderer();
       isUnblocked |= gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0 ||
