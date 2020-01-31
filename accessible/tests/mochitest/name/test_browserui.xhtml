@@ -7,82 +7,57 @@
         title="Accessibility Name Calculating Test.">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
-          src="../role.js"></script>
-  <script type="application/javascript"
-          src="../states.js"></script>
-  <script type="application/javascript"
-          src="../events.js"></script>
-  <script type="application/javascript"
-          src="../browser.js"></script>
+          src="../promisified-events.js"></script>
 
   <script type="application/javascript">
   <![CDATA[
-    function addTab(aURL)
-    {
-      this.eventSeq = [
-        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
-      ];
-
-      this.invoke = function addTab_invoke()
-      {
-        tabBrowser().addTrustedTab(aURL);
-      }
-
-      this.getID = function addTab_getID()
-      {
-        return "add tab: " + aURL;
-      }
-    }
-
-    function switchTab(aTabBrowser, aWindow)
-    {
-      this.invoke = function switchTab_invoke()
-      {
-        synthesizeKey("VK_TAB", { ctrlKey: true }, browserWindow());
-      }
-
-      this.eventSeq = [
-        new focusChecker(tabDocumentAt, 1)
-      ];
-
-      this.check = function switchTab_check(aEvent)
-      {
-        var title = getAccessible(browserDocument()).name;
-        isnot(title.indexOf(aEvent.accessible.name), -1,
-              "Window title contains the name of active tab document" +
-              " (Is '" + aEvent.accessible.name + "' in '" + title + "'?)");
-      }
-
-      this.getID = function switchTab_getID() { return "switch tab"; }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Tests
-
-    //gA11yEventDumpID = "eventdump"; // debug stuff
-    //gA11yEventDumpToConsole = true; // debug
-
-    var gQueue = null;
-    function doTests()
-    {
-      gQueue = new eventQueue();
-      gQueue.push(new addTab("about:mozilla"));
-      gQueue.push(new switchTab());
-      gQueue.onFinish = function()
-      {
-        closeBrowserWindow();
-      }
-
-      gQueue.invoke();
-    }
+    const { BrowserTestUtils } = ChromeUtils.import(
+      "resource://testing-common/BrowserTestUtils.jsm");
+    const ABOUT_MOZILLA_URL = "about:mozilla";
 
     SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTests, "about:license");
+
+    (async () => {
+      info("Opening a new browser window.");
+      const win = await BrowserTestUtils.openNewBrowserWindow({
+        remote: false,
+        fission: false,
+      });
+      const winFocused = SimpleTest.promiseFocus(win);
+      const loaded = BrowserTestUtils.browserLoaded(
+        win.gBrowser.selectedBrowser);
+      await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser,
+        "about:license");
+      await loaded;
+      await winFocused;
+
+      info(`Loading a new tab: ${ABOUT_MOZILLA_URL}.`);
+      const docLoaded = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event =>
+        event.DOMNode === win.gBrowser.getBrowserAtIndex(1).contentDocument,
+        `Added tab: ${ABOUT_MOZILLA_URL}`);
+      const tab = win.gBrowser.addTrustedTab(ABOUT_MOZILLA_URL);
+      await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+      await docLoaded;
+
+      info("Focusing on the newly opened tab.");
+      const focused = waitForEvent(EVENT_FOCUS, event =>
+        event.DOMNode === win.gBrowser.getBrowserAtIndex(1).contentDocument);
+      await BrowserTestUtils.synthesizeKey("VK_TAB", { ctrlKey: true },
+        win.gBrowser.selectedBrowser);
+      const focusEvent = await focused;
+
+      const title = getAccessible(win.document).name;
+      const accName = focusEvent.accessible.name;
+      isnot(title.indexOf(accName), -1,
+        `Window title contains the name of active tab document (Is "${accName}" in "${title}"?)`);
+
+      await BrowserTestUtils.closeWindow(win);
+      SimpleTest.finish();
+    })();
   ]]>
   </script>
 
@@ -91,7 +66,7 @@
     <a target="_blank"
        href="https://bugzilla.mozilla.org/show_bug.cgi?id=507382"
        title="focus is fired earlier than root accessible name is changed when switching between tabs">
-      Mozilla Bug 
+      Mozilla Bug
     </a>
     <p id="display"></p>
     <div id="content" style="display: none">
