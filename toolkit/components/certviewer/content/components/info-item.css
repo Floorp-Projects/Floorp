@@ -12,15 +12,11 @@
 }
 
 label {
-  text-align: right;
+  text-align: end;
   margin-inline-end: 0;
   color: var(--in-content-text-color);
   font-weight: 700;
   font-size: 1em;
-}
-
-label:dir(rtl) {
-  text-align: left;
 }
 
 .long-hex {
@@ -29,6 +25,7 @@ label:dir(rtl) {
   word-break: break-all;
   text-overflow: ellipsis;
   white-space: nowrap;
+  direction: ltr;
 }
 
 .download-link-chain {
@@ -36,8 +33,7 @@ label:dir(rtl) {
 }
 
 .long-hex:hover {
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-block: 1px solid rgba(0, 0, 0, 0.1);
   background-color: rgba(0, 0, 0, 0.06);
   padding: 0px;
 }
