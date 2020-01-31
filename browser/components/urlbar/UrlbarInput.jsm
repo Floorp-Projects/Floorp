@@ -1009,7 +1009,36 @@ class UrlbarInput {
     this._identityBox.setAttribute("pageproxystate", state);
   }
 
+  /**
+   * When switching tabs quickly, TabSelect sometimes happens before
+   * _adjustFocusAfterTabSwitch and due to the focus still being on the old
+   * tab, we end up flickering the results pane briefly.
+   */
+  afterTabSwitchFocusChange() {
+    this._gotFocusChange = true;
+    this._afterTabSelectAndFocusChange();
+  }
+
   // Private methods below.
+
+  _afterTabSelectAndFocusChange() {
+    // We must have seen both events to proceed safely.
+    if (!this._gotFocusChange || !this._gotTabSelect) {
+      return;
+    }
+    this._gotFocusChange = this._gotTabSelect = false;
+
+    this._resetSearchState();
+
+    // Switching tabs doesn't always change urlbar focus, so we must try to
+    // reopen here too, not just on focus.
+    if (this.view.autoOpen({ event: new CustomEvent("urlbar-reopen") })) {
+      return;
+    }
+    // The input may retain focus when switching tabs in which case we
+    // need to close the view explicitly.
+    this.view.close();
+  }
 
   async _updateLayoutBreakoutDimensions() {
     // When this method gets called a second time before the first call
@@ -2028,7 +2057,8 @@ class UrlbarInput {
   }
 
   _on_TabSelect(event) {
-    this._resetSearchState();
+    this._gotTabSelect = true;
+    this._afterTabSelectAndFocusChange();
   }
 
   _on_keydown(event) {

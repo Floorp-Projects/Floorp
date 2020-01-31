@@ -477,6 +477,7 @@ class AsyncTabSwitcher {
           }
 
           this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
+          this.window.gURLBar.afterTabSwitchFocusChange();
           this.maybeActivateDocShell(this.requestedTab);
         }
       }
