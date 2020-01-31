@@ -574,6 +574,9 @@ class FontInspector {
 
         case "slnt":
           // font-style in CSS Fonts Level 4 accepts an angle value.
+          // We have to invert the sign of the angle because CSS and OpenType measure
+          // in opposite directions.
+          value = -value;
           value = `oblique ${value}deg`;
           // Whether the page supports values of font-style from CSS Fonts Level 4.
           condition = this.pageStyle.supportsFontStyleLevel4;
