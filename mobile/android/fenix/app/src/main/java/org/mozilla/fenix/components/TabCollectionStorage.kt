@@ -104,5 +104,7 @@ fun TabCollection.description(context: Context): String {
             } else {
                 it
             }
-        }.joinToString(", ")
+        }
+        .distinct()
+        .joinToString(", ")
 }
