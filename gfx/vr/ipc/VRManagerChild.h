@@ -113,7 +113,7 @@ class VRManagerChild : public PVRManagerChild {
   explicit VRManagerChild();
   ~VRManagerChild();
   void Destroy();
-  static void DeferredDestroy(RefPtr<VRManagerChild> aVRManagerChild);
+  void AfterDestroy();
 
   PVRLayerChild* AllocPVRLayerChild(const uint32_t& aDisplayID,
                                     const uint32_t& aGroup);
