@@ -32,6 +32,7 @@ cd zlib-1.2.11
 make -f win32/Makefile.gcc PREFIX=i686-w64-mingw32-
 
 cd ../nsis-3.01-src
+patch -p1 < $GECKO_PATH/build/win32/nsis-no-insert-timestamp.patch
 # I don't know how to make the version work with the environment variables/config flags the way the author appears to
 sed -i "s/'VERSION', 'Version of NSIS', cvs_version/'VERSION', 'Version of NSIS', '3.01'/" SConstruct
 scons XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=../zlib-1.2.11 SKIPUTILS="NSIS Menu" PREFIX=$INSTALL_DIR/ install
