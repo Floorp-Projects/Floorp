@@ -30,9 +30,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  Deprecated: "resource://gre/modules/Deprecated.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   PageThumbUtils: "resource://gre/modules/PageThumbUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -687,16 +685,6 @@ var PageThumbsStorage = {
         throw err;
       }
     };
-  },
-
-  // Deprecated, please do not use
-  getFileForURL: function Storage_getFileForURL_DEPRECATED(aURL) {
-    Deprecated.warning(
-      "PageThumbs.getFileForURL is deprecated. Please use PageThumbs.getFilePathForURL and OS.File",
-      "https://developer.mozilla.org/docs/JavaScript_OS.File"
-    );
-    // Note: Once this method has been removed, we can get rid of the dependency towards FileUtils
-    return new FileUtils.File(PageThumbsStorageService.getFilePathForURL(aURL));
   },
 };
 

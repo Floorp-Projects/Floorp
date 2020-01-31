@@ -73,18 +73,6 @@ function* runTests() {
     "no-overwrite-plz",
     "existing thumbnail was not overwritten"
   );
-
-  // Sanity check: ensure that, until it is removed, deprecated
-  // function |getFileForURL| points to the same path as
-  // |getFilePathForURL|.
-  if ("getFileForURL" in PageThumbsStorage) {
-    file = PageThumbsStorage.getFileForURL(URL);
-    is(
-      file.path,
-      PageThumbsStorageService.getFilePathForURL(URL),
-      "Deprecated getFileForURL and getFilePathForURL return the same path"
-    );
-  }
 }
 
 function changeLocation(aLocation, aNewDir) {
