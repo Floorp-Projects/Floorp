@@ -1976,8 +1976,7 @@ void nsDragService::UpdateDragAction() {
   }
 #ifdef MOZ_WAYLAND
   else if (mTargetWaylandDragContext) {
-    // We got the selected D&D action from compositor on Wayland.
-    gdkAction = mTargetWaylandDragContext->GetSelectedDragAction();
+    gdkAction = mTargetWaylandDragContext->GetAvailableDragActions();
   }
 #endif
 
