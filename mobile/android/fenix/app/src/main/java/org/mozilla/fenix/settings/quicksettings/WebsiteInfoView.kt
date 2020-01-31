@@ -39,6 +39,7 @@ class WebsiteInfoView(
         bindUrl(state.websiteUrl)
         bindTitle(state.websiteTitle)
         bindSecurityInfo(state.securityInfoRes, state.iconRes, state.iconTintRes)
+        bindCertificateName(state.certificateName)
     }
 
     private fun bindUrl(url: String) {
@@ -47,6 +48,11 @@ class WebsiteInfoView(
 
     private fun bindTitle(title: String) {
         view.title.text = title
+    }
+
+    private fun bindCertificateName(cert: String) {
+        val certificateLabel = view.context.getString(R.string.verified_by) + " " + cert
+        view.certificateInfo.text = certificateLabel
     }
 
     private fun bindSecurityInfo(

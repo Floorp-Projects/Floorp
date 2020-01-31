@@ -34,7 +34,22 @@
         style="@style/QuickSettingsText.Icon"
         android:layout_width="match_parent"
         android:layout_height="@dimen/quicksettings_item_height"
+        android:paddingTop="8dp"
         tools:drawableStart="@drawable/mozac_ic_lock"
         tools:drawableTint="@color/photonGreen50"
         tools:text="Secure connection" />
+
+    <TextView
+        android:id="@+id/certificateInfo"
+        style="@style/QuickSettingsSmallText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:paddingTop="0dp"
+        android:paddingBottom="2dp"
+        tools:text="Verified By:" />
+
+
 </LinearLayout>

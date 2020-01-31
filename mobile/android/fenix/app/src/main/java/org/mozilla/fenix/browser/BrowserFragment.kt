@@ -158,7 +158,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 title = session.title,
                 isSecured = session.securityInfo.secure,
                 sitePermissions = sitePermissions,
-                gravity = getAppropriateLayoutGravity()
+                gravity = getAppropriateLayoutGravity(),
+                certificateName = session.securityInfo.issuer
             )
         nav(R.id.browserFragment, directions)
     }

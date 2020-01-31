@@ -65,7 +65,8 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             websiteTitle = args.title,
             isSecured = args.isSecured,
             permissions = args.sitePermissions,
-            settings = Settings.getInstance(context)
+            settings = Settings.getInstance(context),
+            certificateName = args.certificateName
         )
 
         quickSettingsController = DefaultQuickSettingsController(
