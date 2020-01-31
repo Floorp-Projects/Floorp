@@ -33,13 +33,17 @@ static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 // those can be shut down at any time, and in these cases, Cancel() is called
 // instead of Run().
 class nsInputStreamReadyEvent final : public CancelableRunnable,
-                                      public nsIInputStreamCallback {
+                                      public nsIInputStreamCallback,
+                                      public nsIRunnablePriority {
  public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsInputStreamReadyEvent(const char* aName, nsIInputStreamCallback* aCallback,
-                          nsIEventTarget* aTarget)
-      : CancelableRunnable(aName), mCallback(aCallback), mTarget(aTarget) {}
+                          nsIEventTarget* aTarget, uint32_t aPriority)
+      : CancelableRunnable(aName),
+        mCallback(aCallback),
+        mTarget(aTarget),
+        mPriority(aPriority) {}
 
  private:
   ~nsInputStreamReadyEvent() {
@@ -57,7 +61,7 @@ class nsInputStreamReadyEvent final : public CancelableRunnable,
     nsresult rv = mTarget->IsOnCurrentThread(&val);
     if (NS_FAILED(rv) || !val) {
       nsCOMPtr<nsIInputStreamCallback> event = NS_NewInputStreamReadyEvent(
-          "~nsInputStreamReadyEvent", mCallback, mTarget);
+          "~nsInputStreamReadyEvent", mCallback, mTarget, mPriority);
       mCallback = nullptr;
       if (event) {
         rv = event->OnInputStreamReady(nullptr);
@@ -98,14 +102,20 @@ class nsInputStreamReadyEvent final : public CancelableRunnable,
     return NS_OK;
   }
 
+  NS_IMETHOD GetPriority(uint32_t* aPriority) override {
+    *aPriority = mPriority;
+    return NS_OK;
+  }
+
  private:
   nsCOMPtr<nsIAsyncInputStream> mStream;
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mTarget;
+  uint32_t mPriority;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(nsInputStreamReadyEvent, CancelableRunnable,
-                            nsIInputStreamCallback)
+                            nsIInputStreamCallback, nsIRunnablePriority)
 
 //-----------------------------------------------------------------------------
 
@@ -193,11 +203,11 @@ NS_IMPL_ISUPPORTS_INHERITED(nsOutputStreamReadyEvent, CancelableRunnable,
 
 already_AddRefed<nsIInputStreamCallback> NS_NewInputStreamReadyEvent(
     const char* aName, nsIInputStreamCallback* aCallback,
-    nsIEventTarget* aTarget) {
+    nsIEventTarget* aTarget, uint32_t aPriority) {
   NS_ASSERTION(aCallback, "null callback");
   NS_ASSERTION(aTarget, "null target");
   RefPtr<nsInputStreamReadyEvent> ev =
-      new nsInputStreamReadyEvent(aName, aCallback, aTarget);
+      new nsInputStreamReadyEvent(aName, aCallback, aTarget, aPriority);
   return ev.forget();
 }
 
