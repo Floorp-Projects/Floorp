@@ -649,6 +649,11 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
 
   MOZ_ASSERT(mInitialOptions);
 
+  if (mLossStatus != webgl::LossStatus::Ready) {
+    // Attempted resize of a lost context.
+    return NS_OK;
+  }
+
   uvec2 size = {static_cast<uint32_t>(signedWidth),
                 static_cast<uint32_t>(signedHeight)};
   if (!size.x) {
@@ -668,11 +673,6 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
 
     MarkCanvasDirty();
     return NS_OK;
-  }
-
-  if (mLossStatus != webgl::LossStatus::Ready) {
-    MOZ_RELEASE_ASSERT(false);
-    return NS_ERROR_FAILURE;
   }
 
   // -
