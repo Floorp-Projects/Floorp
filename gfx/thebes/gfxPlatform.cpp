@@ -44,6 +44,7 @@
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
 #include "gfxConfig.h"
+#include "GfxDriverInfo.h"
 #include "VRProcessManager.h"
 #include "VRThread.h"
 
@@ -2771,6 +2772,7 @@ static void HardwareTooOldForWR(FeatureState& aFeature) {
 }
 
 static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
+                                           nsIGfxInfo* aGfxInfo,
                                            int32_t aDeviceId, bool aHasBattery,
                                            int64_t aScreenPixels,
                                            bool* aOutGuardedByQualifiedPref) {
@@ -2806,6 +2808,45 @@ static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
       // Battery and small screen, it should be on by default in early beta and
       // nightly.
       *aOutGuardedByQualifiedPref = false;
+#    else
+      // Battery and small screen, it should be only on for recent Windows 10
+      // builds and NVIDIA driver versions in late beta and release.
+
+      // Windows version is 10.0.<dwBuildNumber>
+      const uint32_t kMinOSBuildNumber = 18362;
+      OSVERSIONINFO vinfo;
+      vinfo.dwOSVersionInfoSize = sizeof(vinfo);
+#      ifdef _MSC_VER
+      // Disable warning about GetVersionEx being deprecated.
+#        pragma warning(push)
+#        pragma warning(disable : 4996)
+#      endif
+      if (!GetVersionEx(&vinfo) || vinfo.dwBuildNumber < kMinOSBuildNumber) {
+#      ifdef _MSC_VER
+#        pragma warning(pop)
+#      endif
+        aFeature.Disable(
+            FeatureStatus::BlockedHasBattery,
+            "Has battery and old Windows 10 build",
+            NS_LITERAL_CSTRING(
+                "FEATURE_FAILURE_WR_HAS_BATTERY_OLD_WINDOWS_10_BUILD"));
+      } else {
+        nsString driverVersionString;
+        aGfxInfo->GetAdapterDriverVersion(driverVersionString);
+
+        const uint64_t kMinDriverVersion = widget::V(26, 21, 14, 3200);
+        uint64_t driverVersion = 0;
+
+        if (!widget::ParseDriverVersion(driverVersionString, &driverVersion) ||
+            driverVersion < kMinDriverVersion) {
+          aFeature.Disable(
+              FeatureStatus::BlockedHasBattery, "Has battery and old driver",
+              NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY_OLD_DRIVER"));
+        } else {
+          // New Windows, new driver, enable by default.
+          *aOutGuardedByQualifiedPref = false;
+        }
+      }
 #    endif
     }
   } else {
@@ -2833,8 +2874,8 @@ static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
 }
 
 static void UpdateWRQualificationForAMD(FeatureState& aFeature,
-                                        int32_t aDeviceId, bool aHasBattery,
-                                        int64_t aScreenPixels,
+                                        nsIGfxInfo* aGfxInfo, int32_t aDeviceId,
+                                        bool aHasBattery, int64_t aScreenPixels,
                                         bool* aOutGuardedByQualifiedPref) {
   // AMD deviceIDs are not very well ordered. This
   // condition is based off the information in gpu-db
@@ -2905,6 +2946,7 @@ static void UpdateWRQualificationForAMD(FeatureState& aFeature,
 }
 
 static void UpdateWRQualificationForIntel(FeatureState& aFeature,
+                                          nsIGfxInfo* aGfxInfo,
                                           int32_t aDeviceId, bool aHasBattery,
                                           int64_t aScreenPixels,
                                           bool* aOutGuardedByQualifiedPref) {
@@ -3139,15 +3181,15 @@ static FeatureState& WebRenderHardwareQualificationStatus(
   }
 
   if (adapterVendorID == u"0x10de") {  // Nvidia
-    UpdateWRQualificationForNvidia(featureWebRenderQualified, deviceID,
+    UpdateWRQualificationForNvidia(featureWebRenderQualified, gfxInfo, deviceID,
                                    aHasBattery, aScreenPixels,
                                    aOutGuardedByQualifiedPref);
   } else if (adapterVendorID == u"0x1002") {  // AMD
-    UpdateWRQualificationForAMD(featureWebRenderQualified, deviceID,
+    UpdateWRQualificationForAMD(featureWebRenderQualified, gfxInfo, deviceID,
                                 aHasBattery, aScreenPixels,
                                 aOutGuardedByQualifiedPref);
   } else if (adapterVendorID == u"0x8086") {  // Intel
-    UpdateWRQualificationForIntel(featureWebRenderQualified, deviceID,
+    UpdateWRQualificationForIntel(featureWebRenderQualified, gfxInfo, deviceID,
                                   aHasBattery, aScreenPixels,
                                   aOutGuardedByQualifiedPref);
   } else {
