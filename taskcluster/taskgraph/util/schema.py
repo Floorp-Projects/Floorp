@@ -9,7 +9,7 @@ import pprint
 import collections
 import voluptuous
 
-from six import text_type
+from six import text_type, iteritems
 
 import taskgraph
 
@@ -160,7 +160,7 @@ def check_schema(schema):
                         type(k).__name__, path))
 
         if isinstance(sch, collections.Mapping):
-            for k, v in sch.iteritems():
+            for k, v in iteritems(sch):
                 child = "{}[{!r}]".format(path, k)
                 check_identifier(child, k)
                 iter(child, v)

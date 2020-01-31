@@ -12,8 +12,8 @@ import requests
 import requests_unixsocket
 import six
 import sys
-import urllib
-import urlparse
+
+from six.moves.urllib.parse import quote, urlencode, urlunparse
 
 from mozbuild.util import memoize
 from mozpack.files import GeneratedFile
@@ -30,12 +30,12 @@ IMAGE_DIR = os.path.join(GECKO, 'taskcluster', 'docker')
 
 def docker_url(path, **kwargs):
     docker_socket = os.environ.get('DOCKER_SOCKET', '/var/run/docker.sock')
-    return urlparse.urlunparse((
+    return urlunparse((
         'http+unix',
-        urllib.quote(docker_socket, safe=''),
+        quote(docker_socket, safe=''),
         path,
         '',
-        urllib.urlencode(kwargs),
+        urlencode(kwargs),
         ''))
 
 
