@@ -43,6 +43,7 @@ var advancedVisible = false;
  * Used to show or hide the "advanced" button based on the validity of the SSL certificate
  */
 function updateShowSSL(queryMap) {
+    /** @type {'true' | 'false'} */
     const showSSL = queryMap.showSSL;
     if (typeof document.addCertException === "undefined") {
         document.getElementById('advancedButton').style.display='none';
