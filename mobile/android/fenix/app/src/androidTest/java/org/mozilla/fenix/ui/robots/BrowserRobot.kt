@@ -38,14 +38,14 @@ class BrowserRobot {
             .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     }
 
-    fun verifyUrl(redirectUrl: String) {
+    fun verifyUrl(url: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(
             Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")),
             TestAssetHelper.waitingTime
         )
         onView(withId(R.id.mozac_browser_toolbar_url_view))
-            .check(matches(withText(containsString(redirectUrl))))
+            .check(matches(withText(containsString(url))))
     }
 
     fun verifyHelpUrl() {

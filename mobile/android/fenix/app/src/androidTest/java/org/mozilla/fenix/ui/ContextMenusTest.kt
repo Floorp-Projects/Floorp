@@ -112,7 +112,7 @@ class ContextMenusTest {
             clickContextCopyLink()
             verifySnackBarText("Link copied to clipboard")
         }.openNavigationToolbar {
-        }.visitLinkFromClipboard(genericURL.url) {
+        }.visitLinkFromClipboard {
             verifyUrl(genericURL.url.toString())
         }
     }
@@ -169,7 +169,7 @@ class ContextMenusTest {
             clickContextCopyImageLocation()
             verifySnackBarText("Link copied to clipboard")
         }.openNavigationToolbar {
-        }.visitLinkFromClipboard(imageResource.url) {
+        }.visitLinkFromClipboard {
             verifyUrl(imageResource.url.toString())
         }
     }

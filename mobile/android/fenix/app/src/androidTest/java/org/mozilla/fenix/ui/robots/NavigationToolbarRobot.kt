@@ -54,7 +54,7 @@ class NavigationToolbarRobot {
             return BrowserRobot.Transition()
         }
 
-        fun visitLinkFromClipboard(url: Uri, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun visitLinkFromClipboard(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(
                 Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_clear_view")),
                 waitingTime
@@ -62,11 +62,12 @@ class NavigationToolbarRobot {
             clearAddressBar().click()
 
             mDevice.waitNotNull(
-                Until.findObject(By.text(url.toString())), waitingTime
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/clipboard_title")),
+                waitingTime
             )
 
             mDevice.waitNotNull(
-                Until.findObject(By.res("org.mozilla.fenix.debug:id/fill_link_from_clipboard")),
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/clipboard_url")),
                 waitingTime
             )
             fillLinkButton().click()
@@ -87,5 +88,5 @@ private fun urlBar() = onView(ViewMatchers.withId(R.id.toolbar))
 private fun awesomeBar() = onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view))
 private fun threeDotButton() = onView(ViewMatchers.withContentDescription("Menu"))
 private fun newTab() = onView(ViewMatchers.withContentDescription("Add tab"))
-private fun fillLinkButton() = onView(ViewMatchers.withId(R.id.fill_link_from_clipboard))
+private fun fillLinkButton() = onView(ViewMatchers.withId(R.id.clipboard_url))
 private fun clearAddressBar() = onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_clear_view))
