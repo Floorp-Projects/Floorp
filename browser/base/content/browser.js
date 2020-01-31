@@ -2904,13 +2904,7 @@ function focusAndSelectUrlBar() {
 function openLocation(event) {
   if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
     focusAndSelectUrlBar();
-    // We don't want to reopen or requery if the view is open.
-    if (gURLBar.view.isOpen) {
-      return;
-    }
-    if (!gURLBar.view.maybeReopen() && gURLBar.openViewOnFocus) {
-      gURLBar.startQuery({ event });
-    }
+    gURLBar.view.autoOpen({ event });
     return;
   }
 

@@ -12,6 +12,12 @@
 const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 
 add_task(async function() {
+  // autofill may conflict with the test scope, by filling missing parts of
+  // the url due to openViewOnFocus.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.autoFill", false]],
+  });
+
   let charsToDelete,
     deletedURLTab,
     fullURLTab,

@@ -669,6 +669,8 @@ class TelemetryEvent {
       "input",
       "keydown",
       "mousedown",
+      "TabSelect",
+      "focus",
       "urlbar-reopen",
     ];
     if (!validEvents.includes(event.type)) {
@@ -677,12 +679,12 @@ class TelemetryEvent {
     }
 
     let interactionType = "topsites";
-    if (event.type == "input") {
+    if (event.interactionType) {
+      interactionType = event.interactionType;
+    } else if (event.type == "input") {
       interactionType = UrlbarUtils.isPasteEvent(event) ? "pasted" : "typed";
     } else if (event.type == "drop") {
       interactionType = "dropped";
-    } else if (event.type == "urlbar-reopen" && searchString) {
-      interactionType = "returned";
     } else if (searchString) {
       interactionType = "typed";
     }
