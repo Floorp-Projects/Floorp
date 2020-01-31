@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar
 
+import android.content.res.Resources
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.search.SearchEngine
@@ -21,6 +22,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -85,10 +87,12 @@ class AwesomeBarFeatureTest {
         val awesomeBar: AwesomeBar = mock()
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
+        val resources: Resources = mock()
+        `when`(resources.getString(Mockito.anyInt())).thenReturn("Switch to tab")
 
         verify(awesomeBar, never()).addProviders(any())
 
-        feature.addSessionProvider(mock(), mock())
+        feature.addSessionProvider(resources, mock(), mock())
 
         verify(awesomeBar).addProviders(any())
     }

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import android.content.res.Resources
 import kotlinx.coroutines.Deferred
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon
@@ -11,6 +12,7 @@ import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.tabs.TabsUseCases
 import java.util.UUID
 
@@ -19,6 +21,7 @@ import java.util.UUID
  * [SessionManager] (Open tabs).
  */
 class SessionSuggestionProvider(
+    private val resources: Resources,
     private val sessionManager: SessionManager,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
     private val icons: BrowserIcons? = null,
@@ -42,7 +45,7 @@ class SessionSuggestionProvider(
                             provider = this,
                             id = result.id,
                             title = result.title,
-                            description = result.url,
+                            description = resources.getString(R.string.switch_to_tab_description),
                             icon = icon?.await()?.bitmap,
                             onSuggestionClicked = { selectTabUseCase(result) }
                         )

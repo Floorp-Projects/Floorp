@@ -123,3 +123,7 @@ branches = [
 [[paths]]
   reference = "components/feature/addons/src/main/res/values/strings.xml"
   l10n = "components/feature/addons/src/main/res/values/values-{android_locale}/strings.xml"
+
+[[paths]]
+  reference = "components/feature/awesomebar/src/main/res/values/strings.xml"
+  l10n = "components/feature/awesomebar/src/main/res/values-{android_locale}/strings.xml"
