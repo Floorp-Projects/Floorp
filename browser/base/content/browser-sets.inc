@@ -9,9 +9,7 @@
 #endif
 #endif
 
-  <stringbundleset id="stringbundleset"
-                   string-bookmarkthispage="&bookmarkThisPageCmd.label;"
-                   string-editthisbookmark="&editThisBookmarkCmd.label;">
+  <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
   </stringbundleset>
@@ -110,10 +108,10 @@
 #endif
 #ifdef XP_MACOSX
     <command id="minimizeWindow"
-             label="&minimizeWindow.label;"
+             data-l10n-id="window-minimize-command"
              oncommand="window.minimize();" />
     <command id="zoomWindow"
-             label="&zoomWindow.label;"
+             data-l10n-id="window-zoom-command"
              oncommand="zoomWindow();" />
 #endif
   </commandset>
@@ -122,15 +120,15 @@
 
   <keyset id="mainKeyset">
     <key id="key_newNavigator"
-         key="&newNavigatorCmd.key;"
+         data-l10n-id="window-new-shortcut"
          command="cmd_newNavigator"
          modifiers="accel" reserved="true"/>
-    <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel"
+    <key id="key_newNavigatorTab" data-l10n-id="tab-new-shortcut" modifiers="accel"
          command="cmd_newNavigatorTabNoEvent" reserved="true"/>
-    <key id="focusURLBar" key="&openCmd.commandkey;" command="Browser:OpenLocation"
+    <key id="focusURLBar" data-l10n-id="location-open-shortcut" command="Browser:OpenLocation"
          modifiers="accel"/>
 #ifndef XP_MACOSX
-    <key id="focusURLBar2" key="&urlbar.accesskey;" command="Browser:OpenLocation"
+    <key id="focusURLBar2" data-l10n-id="location-open-shortcut-alt" command="Browser:OpenLocation"
          modifiers="alt"/>
 #endif
 
@@ -151,26 +149,31 @@
 # is a fundamental keybinding and we are maintaining a XP binding so that it is easy
 # for people to switch to Linux.
 #
-    <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
+    <key id="key_search" data-l10n-id="search-focus-shortcut" command="Tools:Search" modifiers="accel"/>
+    <key id="key_search2"
 #ifdef XP_MACOSX
-    <key id="key_search2" key="&findOnCmd.commandkey;" command="Tools:Search" modifiers="accel,alt"/>
-#endif
-#ifdef XP_WIN
-    <key id="key_search2" key="&searchFocus.commandkey2;" command="Tools:Search" modifiers="accel"/>
-#endif
-#ifdef XP_GNOME
-    <key id="key_search2" key="&searchFocusUnix.commandkey;" command="Tools:Search" modifiers="accel"/>
-    <key id="key_openDownloads" key="&downloadsUnix.commandkey;" command="Tools:Downloads" modifiers="accel,shift"/>
+         data-l10n-id="find-shortcut"
+         modifiers="accel,alt"
 #else
-    <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
+         data-l10n-id="search-focus-shortcut-alt"
+         modifiers="accel"
 #endif
-    <key id="key_openAddons" key="&addons.commandkey;" command="Tools:Addons" modifiers="accel,shift"/>
-    <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
-    <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
-    <key id="printKb" key="&printCmd.commandkey;" command="cmd_print"  modifiers="accel"/>
-    <key id="key_close" key="&closeCmd.key;" command="cmd_close" modifiers="accel" reserved="true"/>
-    <key id="key_closeWindow" key="&closeCmd.key;" command="cmd_closeWindow" modifiers="accel,shift" reserved="true"/>
-    <key id="key_toggleMute" key="&toggleMuteCmd.key;" command="cmd_toggleMute" modifiers="control"/>
+         command="Tools:Search"/>
+    <key id="key_openDownloads"
+         data-l10n-id="downloads-shortcut"
+#ifdef XP_GNOME
+         modifiers="accel,shift"
+#else
+         modifiers="accel"
+#endif
+         command="Tools:Downloads"/>
+    <key id="key_openAddons" data-l10n-id="addons-shortcut" command="Tools:Addons" modifiers="accel,shift"/>
+    <key id="openFileKb" data-l10n-id="file-open-shortcut" command="Browser:OpenFile"  modifiers="accel"/>
+    <key id="key_savePage" data-l10n-id="save-page-shortcut" command="Browser:SavePage" modifiers="accel"/>
+    <key id="printKb" data-l10n-id="print-shortcut" command="cmd_print"  modifiers="accel"/>
+    <key id="key_close" data-l10n-id="close-shortcut" command="cmd_close" modifiers="accel" reserved="true"/>
+    <key id="key_closeWindow" data-l10n-id="close-shortcut" command="cmd_closeWindow" modifiers="accel,shift" reserved="true"/>
+    <key id="key_toggleMute" data-l10n-id="mute-toggle-shortcut" command="cmd_toggleMute" modifiers="control"/>
     <key id="key_undo"
          data-l10n-id="text-action-undo-shortcut"
          modifiers="accel"/>
@@ -205,65 +208,65 @@
     <key id="goForwardKb" keycode="VK_RIGHT" command="Browser:Forward" modifiers="accel" />
 #endif
 #ifdef XP_UNIX
-    <key id="goBackKb2" key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
-    <key id="goForwardKb2" key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
+    <key id="goBackKb2" data-l10n-id="nav-back-shortcut-alt" command="Browser:Back" modifiers="accel"/>
+    <key id="goForwardKb2" data-l10n-id="nav-fwd-shortcut-alt" command="Browser:Forward" modifiers="accel"/>
 #endif
     <key id="goHome" keycode="VK_HOME" oncommand="BrowserHome();" modifiers="alt"/>
     <key keycode="VK_F5" command="Browser:Reload"/>
 #ifndef XP_MACOSX
-    <key id="showAllHistoryKb" key="&showAllHistoryCmd.commandkey;" command="Browser:ShowAllHistory" modifiers="accel,shift"/>
+    <key id="showAllHistoryKb" data-l10n-id="history-show-all-shortcut" command="Browser:ShowAllHistory" modifiers="accel,shift"/>
     <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
 #else
-    <key id="key_fullScreen" key="&fullScreenCmd.macCommandKey;" command="View:FullScreen" modifiers="accel,control"/>
-    <key id="key_fullScreen_old" key="&fullScreenCmd.macCommandKey;" command="View:FullScreen" modifiers="accel,shift"/>
+    <key id="key_fullScreen" data-l10n-id="full-screen-shortcut" command="View:FullScreen" modifiers="accel,control"/>
+    <key id="key_fullScreen_old" data-l10n-id="full-screen-shortcut" command="View:FullScreen" modifiers="accel,shift"/>
     <key keycode="VK_F11" command="View:FullScreen"/>
 #endif
+    <key id="key_toggleReaderMode"
+         data-l10n-id="reader-mode-toggle-shortcut"
+         command="View:ReaderView"
 #ifndef XP_WIN
-    <key id="key_toggleReaderMode" key="&toggleReaderMode.key;" command="View:ReaderView" modifiers="accel,alt" disabled="true"/>
-#else
-    <key id="key_toggleReaderMode" keycode="&toggleReaderMode.win.keycode;" command="View:ReaderView" disabled="true"/>
+         modifiers="accel,alt"
 #endif
+         disabled="true"/>
 
 #ifndef XP_MACOSX
-    <key id="key_togglePictureInPicture" key="&togglePictureInPicture.key;" command="View:PictureInPicture" modifiers="accel,shift"/>
-    <key                                 key="&togglePictureInPicture.key2;" command="View:PictureInPicture" modifiers="accel,shift"/>
+    <key id="key_togglePictureInPicture" data-l10n-id="picture-in-picture-toggle-shortcut" command="View:PictureInPicture" modifiers="accel,shift"/>
+    <key                                 data-l10n-id="picture-in-picture-toggle-shortcut-alt" command="View:PictureInPicture" modifiers="accel,shift"/>
 #endif
 
-    <key key="&reloadCmd.commandkey;" command="Browser:Reload" modifiers="accel" id="key_reload"/>
-    <key key="&reloadCmd.commandkey;" command="Browser:ReloadSkipCache" modifiers="accel,shift" id="key_reload_skip_cache"/>
-    <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
+    <key data-l10n-id="nav-reload-shortcut" command="Browser:Reload" modifiers="accel" id="key_reload"/>
+    <key data-l10n-id="nav-reload-shortcut" command="Browser:ReloadSkipCache" modifiers="accel,shift" id="key_reload_skip_cache"/>
+    <key id="key_viewSource" data-l10n-id="page-source-shortcut" command="View:PageSource" modifiers="accel"/>
 #ifdef XP_MACOSX
-    <key id="key_viewSourceSafari" key="&pageSourceCmd.SafariCommandKey;" command="View:PageSource" modifiers="accel,alt"/>
+    <key id="key_viewSourceSafari" data-l10n-id="page-source-shortcut-safari" command="View:PageSource" modifiers="accel,alt"/>
 #endif
-    <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
-    <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
-    <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
-    <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
+    <key id="key_viewInfo" data-l10n-id="page-info-shortcut" command="View:PageInfo"   modifiers="accel"/>
+    <key id="key_find" data-l10n-id="find-shortcut" command="cmd_find" modifiers="accel"/>
+    <key id="key_findAgain" data-l10n-id="search-find-again-shortcut" command="cmd_findAgain" modifiers="accel"/>
+    <key id="key_findPrevious" data-l10n-id="search-find-again-shortcut" command="cmd_findPrevious" modifiers="accel,shift"/>
 #ifdef XP_MACOSX
-    <key id="key_findSelection" key="&findSelectionCmd.commandkey;" command="cmd_findSelection" modifiers="accel"/>
+    <key id="key_findSelection" data-l10n-id="search-find-selection-shortcut" command="cmd_findSelection" modifiers="accel"/>
 #endif
-    <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
-    <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
+    <key data-l10n-id="search-find-again-shortcut-alt" command="cmd_findAgain"/>
+    <key data-l10n-id="search-find-again-shortcut-alt" command="cmd_findPrevious" modifiers="shift"/>
 
-    <key id="addBookmarkAsKb" key="&bookmarkThisPageCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
-    <key id="bookmarkAllTabsKb" key="&bookmarkThisPageCmd.commandkey;" oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueCurrentPages);" modifiers="accel,shift"/>
-# Accel+Shift+A-F are reserved on GTK
-#ifndef MOZ_WIDGET_GTK
-    <key id="manBookmarkKb" key="&bookmarksCmd.commandkey;" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
-#else
-    <key id="manBookmarkKb" key="&bookmarksGtkCmd.commandkey;" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
-#endif
-    <key id="viewBookmarksSidebarKb" key="&bookmarksCmd.commandkey;" oncommand="SidebarUI.toggle('viewBookmarksSidebar');" modifiers="accel"/>
+    <key id="addBookmarkAsKb" data-l10n-id="bookmark-this-page-shortcut" command="Browser:AddBookmarkAs" modifiers="accel"/>
+    <key id="bookmarkAllTabsKb" data-l10n-id="bookmark-this-page-shortcut" oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueCurrentPages);" modifiers="accel,shift"/>
+    <key id="manBookmarkKb" data-l10n-id="bookmark-show-all-shortcut" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
+    <key id="viewBookmarksSidebarKb"
+         data-l10n-id="bookmark-show-sidebar-shortcut"
+         modifiers="accel"
+         oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
 
 #ifdef XP_MACOSX
-    <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" command="Browser:Stop"/>
+    <key id="key_stop_mac" modifiers="accel" data-l10n-id="nav-stop-shortcut" command="Browser:Stop"/>
 #endif
 
     <key id="key_gotoHistory"
-         key="&historySidebarCmd.commandKey;"
+         data-l10n-id="history-sidebar-shortcut"
 #ifdef XP_MACOSX
          modifiers="accel,shift"
 #else
@@ -271,25 +274,25 @@
 #endif
          oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
-    <key id="key_fullZoomReduce"  key="&fullZoomReduceCmd.commandkey;"   command="cmd_fullZoomReduce"  modifiers="accel"/>
-    <key                          key="&fullZoomReduceCmd.commandkey2;"  command="cmd_fullZoomReduce"  modifiers="accel"/>
-    <key id="key_fullZoomEnlarge" key="&fullZoomEnlargeCmd.commandkey;"  command="cmd_fullZoomEnlarge" modifiers="accel"/>
-    <key                          key="&fullZoomEnlargeCmd.commandkey2;" command="cmd_fullZoomEnlarge" modifiers="accel"/>
-    <key                          key="&fullZoomEnlargeCmd.commandkey3;" command="cmd_fullZoomEnlarge" modifiers="accel"/>
-    <key id="key_fullZoomReset"   key="&fullZoomResetCmd.commandkey;"    command="cmd_fullZoomReset"   modifiers="accel"/>
-    <key                          key="&fullZoomResetCmd.commandkey2;"   command="cmd_fullZoomReset"   modifiers="accel"/>
+    <key id="key_fullZoomReduce" data-l10n-id="full-zoom-reduce-shortcut" command="cmd_fullZoomReduce"  modifiers="accel"/>
+    <key                         data-l10n-id="full-zoom-reduce-shortcut-alt" command="cmd_fullZoomReduce"  modifiers="accel"/>
+    <key id="key_fullZoomEnlarge" data-l10n-id="full-zoom-enlarge-shortcut" command="cmd_fullZoomEnlarge" modifiers="accel"/>
+    <key                          data-l10n-id="full-zoom-enlarge-shortcut-alt" command="cmd_fullZoomEnlarge" modifiers="accel"/>
+    <key                          data-l10n-id="full-zoom-enlarge-shortcut-alt2" command="cmd_fullZoomEnlarge" modifiers="accel"/>
+    <key id="key_fullZoomReset"   data-l10n-id="full-zoom-reset-shortcut"    command="cmd_fullZoomReset"   modifiers="accel"/>
+    <key                          data-l10n-id="full-zoom-reset-shortcut-alt"   command="cmd_fullZoomReset"   modifiers="accel"/>
 
     <key id="key_showAllTabs" keycode="VK_TAB" modifiers="control,shift"/>
 
-    <key id="key_switchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_switchTextDirection" modifiers="accel,shift" />
+    <key id="key_switchTextDirection" data-l10n-id="bidi-switch-direction-shortcut" command="cmd_switchTextDirection" modifiers="accel,shift" />
 
-    <key id="key_privatebrowsing" command="Tools:PrivateBrowsing" key="&privateBrowsingCmd.commandkey;"
+    <key id="key_privatebrowsing" command="Tools:PrivateBrowsing" data-l10n-id="private-browsing-shortcut"
          modifiers="accel,shift" reserved="true"/>
     <key id="key_sanitize" command="Tools:Sanitize" keycode="VK_DELETE" modifiers="accel,shift"/>
 #ifdef XP_MACOSX
     <key id="key_sanitize_mac" command="Tools:Sanitize" keycode="VK_BACK" modifiers="accel,shift"/>
 #endif
-    <key id="key_quitApplication" key="&quitApplicationCmd.key;"
+    <key id="key_quitApplication" data-l10n-id="quit-app-shortcut"
 #ifdef XP_WIN
          modifiers="accel,shift"
 #else
@@ -303,8 +306,8 @@
 #endif
          reserved="true"/>
 
-    <key id="key_undoCloseTab" command="History:UndoCloseTab" key="&tabCmd.commandkey;" modifiers="accel,shift"/>
-    <key id="key_undoCloseWindow" command="History:UndoCloseWindow" key="&newNavigatorCmd.key;" modifiers="accel,shift"/>
+    <key id="key_undoCloseTab" command="History:UndoCloseTab" data-l10n-id="tab-new-shortcut" modifiers="accel,shift"/>
+    <key id="key_undoCloseWindow" command="History:UndoCloseWindow" data-l10n-id="window-new-shortcut" modifiers="accel,shift"/>
 
 #ifdef XP_GNOME
 #define NUM_SELECT_TAB_MODIFIER alt
@@ -348,22 +351,22 @@
 #ifdef XP_MACOSX
     <key id="key_minimizeWindow"
          command="minimizeWindow"
-         key="&minimizeWindow.key;"
+         data-l10n-id="window-minimize-shortcut"
          modifiers="accel"/>
     <key id="key_openHelpMac"
          oncommand="openHelpLink('firefox-osxkey');"
-         key="&helpMac.commandkey;"
+         data-l10n-id="help-shortcut"
          modifiers="accel"/>
     <!-- These are used to build the Application menu -->
     <key id="key_preferencesCmdMac"
-         key="&preferencesCmdMac.commandkey;"
+         data-l10n-id="preferences-shortcut"
          reserved="true"
          modifiers="accel"/>
     <key id="key_hideThisAppCmdMac"
-         key="&hideThisAppCmdMac2.commandkey;"
+         data-l10n-id="hide-app-shortcut"
          modifiers="accel"/>
     <key id="key_hideOtherAppsCmdMac"
-         key="&hideOtherAppsCmdMac.commandkey;"
+         data-l10n-id="hide-other-apps-shortcut"
          modifiers="accel,alt"/>
 #endif
   </keyset>
