@@ -16,6 +16,10 @@
   background-position: left center;
 }
 
+:host(:dir(rtl)) {
+  background-position-x: right;
+}
+
 h1 {
   text-align: center;
   font-size: 2.5em;

@@ -11,14 +11,10 @@
 }
 
 .info-group-title {
-  text-align: right;
+  text-align: end;
   font-weight: 700;
   color: var(--in-content-deemphasized-text);
   font-size: 1em;
-}
-
-.info-group-title:dir(rtl) {
-  text-align: left;
 }
 
 .info-group-title-hr {
@@ -27,8 +23,5 @@
   width: calc(100% - 3.5em);
   position: relative;
   margin: auto 0;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
 }
