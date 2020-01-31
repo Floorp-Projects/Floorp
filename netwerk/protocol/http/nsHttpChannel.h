@@ -29,6 +29,7 @@
 #include "nsICorsPreflightCallback.h"
 #include "AlternateServices.h"
 #include "nsIRaceCacheWithNetwork.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/extensions/PStreamFilterParent.h"
 #include "mozilla/Mutex.h"
 #include "nsIProcessSwitchRequestor.h"
@@ -667,8 +668,9 @@ class nsHttpChannel final : public HttpBaseChannel,
   bool mCacheOpenWithPriority;
   uint32_t mCacheQueueSizeWhenOpen;
 
+  Atomic<bool, Relaxed> mCachedContentIsValid;
+
   // state flags
-  uint32_t mCachedContentIsValid : 1;
   uint32_t mCachedContentIsPartial : 1;
   uint32_t mCacheOnlyMetadata : 1;
   uint32_t mTransactionReplaced : 1;
