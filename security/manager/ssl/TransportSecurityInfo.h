@@ -73,7 +73,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   void SetStatusErrorBits(nsNSSCertificate* cert, uint32_t collected_errors);
 
-  nsresult SetFailedCertChain(UniqueCERTCertList certList);
+  nsresult SetFailedCertChain(nsTArray<nsTArray<uint8_t>>&& certList);
 
   void SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus);
 
