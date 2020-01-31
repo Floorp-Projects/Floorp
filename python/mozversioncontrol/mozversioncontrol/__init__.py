@@ -276,9 +276,6 @@ class HgRepository(Repository):
         self._client = hglib.client.hgclient(self.path, encoding=b'UTF-8',
                                              configs=None, connect=False)
 
-        # Work around py3 compat issues in python-hglib
-        self._client._env = ensure_subprocess_env(self._client._env)
-
     @property
     def name(self):
         return 'hg'
