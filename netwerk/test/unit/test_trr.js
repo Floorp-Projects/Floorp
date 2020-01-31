@@ -1377,3 +1377,26 @@ add_task(async function test_vpnDetection() {
     "changed"
   );
 });
+
+// confirmationNS set without confirmed NS yet
+// checks that we properly fall back to DNS is confirmation is not ready yet
+add_task(async function test_resolve_not_confirmed() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.clearUserPref("network.trr.useGET");
+  Services.prefs.clearUserPref("network.trr.disable-ECS");
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=1::ffff`
+  );
+  Services.prefs.setCharPref(
+    "network.trr.confirmationNS",
+    "confirm.example.com"
+  );
+
+  let [, , inStatus] = await new DNSListener("example.org", undefined, false);
+  Assert.ok(
+    Components.isSuccessCode(inStatus),
+    `${inStatus} should be a success code`
+  );
+});
