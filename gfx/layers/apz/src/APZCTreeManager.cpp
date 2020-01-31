@@ -711,12 +711,12 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
         apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
                                        asyncTransformComponents)
             .mTranslation;
-    LayoutDeviceToParentLayerScale zoom;
+    LayoutDeviceToParentLayerScale zoom =
+        apzc->GetCurrentPinchZoomScale(AsyncPanZoomController::eForCompositing);
+
     if (Maybe<uint64_t> zoomAnimationId = apzc->GetZoomAnimationId()) {
       // for now we only support zooming on root content APZCs
       MOZ_ASSERT(apzc->IsRootContent());
-      zoom = apzc->GetCurrentPinchZoomScale(
-          AsyncPanZoomController::eForCompositing);
 
       AsyncTransform asyncVisualTransform =
           apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
