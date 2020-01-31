@@ -964,6 +964,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   using StyleFlexBasis = mozilla::StyleFlexBasis;
   using WritingMode = mozilla::WritingMode;
   using StyleImplicitGridTracks = mozilla::StyleImplicitGridTracks;
+  using ComputedStyle = mozilla::ComputedStyle;
+  using StyleAlignSelf = mozilla::StyleAlignSelf;
+  using StyleJustifySelf = mozilla::StyleJustifySelf;
 
   explicit nsStylePosition(const mozilla::dom::Document&);
   nsStylePosition(const nsStylePosition& aOther);
@@ -985,15 +988,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
 
   /**
    * Return the used value for 'align-self' given our parent ComputedStyle
-   * aParent (or null for the root).
+   * (or null for the root).
    */
-  uint8_t UsedAlignSelf(mozilla::ComputedStyle* aParent) const;
+  StyleAlignSelf UsedAlignSelf(const ComputedStyle*) const;
 
   /**
    * Return the used value for 'justify-self' given our parent ComputedStyle
    * aParent (or null for the root).
    */
-  uint8_t UsedJustifySelf(mozilla::ComputedStyle* aParent) const;
+  StyleJustifySelf UsedJustifySelf(const ComputedStyle*) const;
 
   Position mObjectPosition;
   StyleRect<LengthPercentageOrAuto> mOffset;
@@ -1010,23 +1013,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   uint8_t mGridAutoFlow;  // NS_STYLE_GRID_AUTO_FLOW_*
   mozilla::StyleBoxSizing mBoxSizing;
 
-  // All align/justify properties here take NS_STYLE_ALIGN_* values.
-  uint16_t mAlignContent;  // fallback value in the high byte
-  uint8_t mAlignItems;
-  uint8_t mAlignSelf;
-  uint16_t mJustifyContent;  // fallback value in the high byte
-  // We cascade mSpecifiedJustifyItems, to handle the auto value, but store the
-  // computed value in mJustifyItems.
-  //
-  // They're effectively only different in this regard: mJustifyItems is set to
-  // mSpecifiedJustifyItems, except when the latter is AUTO -- in that case,
-  // mJustifyItems is set to NORMAL, or to the parent ComputedStyle's
-  // mJustifyItems if it has the legacy flag.
-  //
-  // This last part happens in ComputedStyle::ApplyStyleFixups.
-  uint8_t mSpecifiedJustifyItems;
-  uint8_t mJustifyItems;
-  uint8_t mJustifySelf;
+  mozilla::StyleAlignContent mAlignContent;
+  mozilla::StyleAlignItems mAlignItems;
+  mozilla::StyleAlignSelf mAlignSelf;
+  mozilla::StyleJustifyContent mJustifyContent;
+  mozilla::StyleComputedJustifyItems mJustifyItems;
+  mozilla::StyleJustifySelf mJustifySelf;
   mozilla::StyleFlexDirection mFlexDirection;
   mozilla::StyleFlexWrap mFlexWrap;
   mozilla::StyleObjectFit mObjectFit;

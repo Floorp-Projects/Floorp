@@ -1729,7 +1729,7 @@ bool nsContainerFrame::ResolvedOrientationIsVertical() {
   return false;
 }
 
-uint16_t nsContainerFrame::CSSAlignmentForAbsPosChild(
+StyleAlignFlags nsContainerFrame::CSSAlignmentForAbsPosChild(
     const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const {
   MOZ_ASSERT(aChildRI.mFrame->IsAbsolutelyPositioned(),
              "This method should only be called for abspos children");
@@ -1739,7 +1739,7 @@ uint16_t nsContainerFrame::CSSAlignmentForAbsPosChild(
 
   // In the unexpected/unlikely event that this implementation gets invoked,
   // just use "start" alignment.
-  return NS_STYLE_ALIGN_START;
+  return StyleAlignFlags::START;
 }
 
 #ifdef ACCESSIBILITY

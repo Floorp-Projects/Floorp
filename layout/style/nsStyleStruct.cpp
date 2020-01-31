@@ -1183,13 +1183,12 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mAspectRatio(0.0f),
       mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW),
       mBoxSizing(StyleBoxSizing::Content),
-      mAlignContent(NS_STYLE_ALIGN_NORMAL),
-      mAlignItems(NS_STYLE_ALIGN_NORMAL),
-      mAlignSelf(NS_STYLE_ALIGN_AUTO),
-      mJustifyContent(NS_STYLE_JUSTIFY_NORMAL),
-      mSpecifiedJustifyItems(NS_STYLE_JUSTIFY_LEGACY),
-      mJustifyItems(NS_STYLE_JUSTIFY_NORMAL),
-      mJustifySelf(NS_STYLE_JUSTIFY_AUTO),
+      mAlignContent({StyleAlignFlags::NORMAL}),
+      mAlignItems({StyleAlignFlags::NORMAL}),
+      mAlignSelf({StyleAlignFlags::AUTO}),
+      mJustifyContent({StyleAlignFlags::NORMAL}),
+      mJustifyItems({{StyleAlignFlags::LEGACY}, {StyleAlignFlags::NORMAL}}),
+      mJustifySelf({StyleAlignFlags::AUTO}),
       mFlexDirection(StyleFlexDirection::Row),
       mFlexWrap(StyleFlexWrap::Nowrap),
       mObjectFit(StyleObjectFit::Fill),
@@ -1234,7 +1233,6 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
       mAlignItems(aSource.mAlignItems),
       mAlignSelf(aSource.mAlignSelf),
       mJustifyContent(aSource.mJustifyContent),
-      mSpecifiedJustifyItems(aSource.mSpecifiedJustifyItems),
       mJustifyItems(aSource.mJustifyItems),
       mJustifySelf(aSource.mJustifySelf),
       mFlexDirection(aSource.mFlexDirection),
@@ -1344,14 +1342,14 @@ nsChangeHint nsStylePosition::CalcDifference(
   // Changing 'justify-content/items/self' might affect the positioning,
   // but it won't affect any sizing.
   if (mJustifyContent != aNewData.mJustifyContent ||
-      mJustifyItems != aNewData.mJustifyItems ||
+      mJustifyItems.computed != aNewData.mJustifyItems.computed ||
       mJustifySelf != aNewData.mJustifySelf) {
     hint |= nsChangeHint_NeedReflow;
   }
 
-  // No need to do anything if mSpecifiedJustifyItems changes, as long as
-  // mJustifyItems (tested above) is unchanged.
-  if (mSpecifiedJustifyItems != aNewData.mSpecifiedJustifyItems) {
+  // No need to do anything if specified justify-items changes, as long as the
+  // computed one (tested above) is unchanged.
+  if (mJustifyItems.specified != aNewData.mJustifyItems.specified) {
     hint |= nsChangeHint_NeutralChange;
   }
 
@@ -1405,28 +1403,31 @@ nsChangeHint nsStylePosition::CalcDifference(
   return hint;
 }
 
-uint8_t nsStylePosition::UsedAlignSelf(ComputedStyle* aParent) const {
-  if (mAlignSelf != NS_STYLE_ALIGN_AUTO) {
+StyleAlignSelf nsStylePosition::UsedAlignSelf(
+    const ComputedStyle* aParent) const {
+  if (mAlignSelf._0 != StyleAlignFlags::AUTO) {
     return mAlignSelf;
   }
   if (MOZ_LIKELY(aParent)) {
     auto parentAlignItems = aParent->StylePosition()->mAlignItems;
-    MOZ_ASSERT(!(parentAlignItems & NS_STYLE_ALIGN_LEGACY),
+    MOZ_ASSERT(!(parentAlignItems._0 & StyleAlignFlags::LEGACY),
                "align-items can't have 'legacy'");
-    return parentAlignItems;
+    return {parentAlignItems._0};
   }
-  return NS_STYLE_ALIGN_NORMAL;
+  return {StyleAlignFlags::NORMAL};
 }
 
-uint8_t nsStylePosition::UsedJustifySelf(ComputedStyle* aParent) const {
-  if (mJustifySelf != NS_STYLE_JUSTIFY_AUTO) {
+StyleJustifySelf nsStylePosition::UsedJustifySelf(
+    const ComputedStyle* aParent) const {
+  if (mJustifySelf._0 != StyleAlignFlags::AUTO) {
     return mJustifySelf;
   }
   if (MOZ_LIKELY(aParent)) {
-    auto inheritedJustifyItems = aParent->StylePosition()->mJustifyItems;
-    return inheritedJustifyItems & ~NS_STYLE_JUSTIFY_LEGACY;
+    const auto& inheritedJustifyItems =
+        aParent->StylePosition()->mJustifyItems.computed;
+    return {inheritedJustifyItems._0 & ~StyleAlignFlags::LEGACY};
   }
-  return NS_STYLE_JUSTIFY_NORMAL;
+  return {StyleAlignFlags::NORMAL};
 }
 
 // --------------------

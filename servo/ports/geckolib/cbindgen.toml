@@ -187,9 +187,14 @@ include = [
   "CounterSetOrReset",
   "CounterIncrement",
   "WritingMode",
-  "VecU8",
   "Content",
   "ContentItem",
+  "AlignSelf",
+  "JustifySelf",
+  "AlignItems",
+  "ComputedJustifyItems",
+  "AlignContent",
+  "JustifyContent",
 ]
 item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
