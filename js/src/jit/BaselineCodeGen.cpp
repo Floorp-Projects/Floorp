@@ -5679,19 +5679,28 @@ bool BaselineCodeGen<Handler>::emit_SuperBase() {
   // Load prototype from [[HomeObject]]
   masm.loadObjProto(scratch, proto);
 
-  Label hasProto;
+#ifdef DEBUG
+  // We won't encounter a lazy proto, because the prototype is guaranteed to
+  // either be a JSFunction or a PlainObject, and only proxy objects can have a
+  // lazy proto.
   MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
-  masm.branchPtr(Assembler::Above, proto, ImmWord(1), &hasProto);
 
-  // Use VMCall for missing or lazy proto
+  Label proxyCheckDone;
+  masm.branchPtr(Assembler::NotEqual, proto, ImmWord(1), &proxyCheckDone);
+  masm.assumeUnreachable("Unexpected lazy proto in JSOp::SuperBase");
+  masm.bind(&proxyCheckDone);
+#endif
+
+  Label hasProto;
+  masm.branchPtr(Assembler::NotEqual, proto, ImmWord(0), &hasProto);
+
+  // Throw an error if |proto| is null.
   prepareVMCall();
-  pushArg(scratch);  // [[HomeObject]]
 
-  using Fn = JSObject* (*)(JSContext*, HandleObject);
-  if (!callVM<Fn, HomeObjectSuperBase>()) {
+  using Fn = bool (*)(JSContext*);
+  if (!callVM<Fn, ThrowHomeObjectNotObject>()) {
     return false;
   }
-  masm.movePtr(ReturnReg, proto);
 
   // Box prototype and return
   masm.bind(&hasProto);

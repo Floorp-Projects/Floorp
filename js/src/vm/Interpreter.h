@@ -643,6 +643,8 @@ bool ThrowUninitializedThis(JSContext* cx);
 
 bool ThrowInitializedThis(JSContext* cx);
 
+bool ThrowHomeObjectNotObject(JSContext* cx);
+
 bool DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 bool Debug_CheckSelfHosted(JSContext* cx, HandleValue v);
@@ -656,8 +658,6 @@ JSObject* FunWithProtoOperation(JSContext* cx, HandleFunction fun,
 
 JSFunction* MakeDefaultConstructor(JSContext* cx, HandleScript script,
                                    jsbytecode* pc, HandleObject proto);
-
-JSObject* HomeObjectSuperBase(JSContext* cx, HandleObject homeObj);
 
 bool SetPropertySuper(JSContext* cx, HandleObject obj, HandleValue receiver,
                       HandlePropertyName id, HandleValue rval, bool strict);
