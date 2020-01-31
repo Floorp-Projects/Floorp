@@ -66,10 +66,12 @@ scripts:
 
   debugcoverage: open logs/coverage/index.html
 
-# lint: Run eslint and sass-lint
+# lint: Run various linters with mach or local dev dependencies
   lint:
-    eslint-check: eslint --cache --print-config AboutNewTabService.jsm | eslint-config-prettier-check
-    eslint: eslint --cache --ext=.js,.jsm,.jsx .
+    codespell: (cd $npm_package_config_mc_root && ./mach lint -l codespell $npm_package_config_newtab_path)
+    eslint: (cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_newtab_path)
+    l10n: (cd $npm_package_config_mc_root && ./mach lint -l l10n --warnings browser/locales/en-US/browser/newtab)
+    license: (cd $npm_package_config_mc_root && ./mach lint -l license $npm_package_config_newtab_path)
     sasslint: sass-lint -v -q
 
 # test: Run all tests once
