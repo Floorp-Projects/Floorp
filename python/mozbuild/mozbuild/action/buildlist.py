@@ -7,11 +7,10 @@ if the entry does not already exist.
 
 Usage: buildlist.py <filename> <entry> [<entry> ...]
 '''
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import sys
 import os
-import io
 
 from mozbuild.util import (
     ensureParentDir,
@@ -27,7 +26,7 @@ def addEntriesToListFile(listFile, entries):
     lock = lock_file(listFile + ".lck")
     try:
         if os.path.exists(listFile):
-            f = io.open(listFile)
+            f = open(listFile)
             existing = set(x.strip() for x in f.readlines())
             f.close()
         else:
@@ -35,10 +34,7 @@ def addEntriesToListFile(listFile, entries):
         for e in entries:
             if e not in existing:
                 existing.add(e)
-
-        # Manifest files are always generated with UNIX-style line-endings, even
-        # on Windows.
-        with io.open(listFile, 'w', newline='\n') as f:
+        with open(listFile, 'wb') as f:
             f.write("\n".join(sorted(existing))+"\n")
     finally:
         del lock  # Explicitly release the lock_file to free it
