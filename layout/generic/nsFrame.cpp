@@ -5960,10 +5960,10 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
         !StyleMargin()->HasInlineAxisAuto(aWM)) {
       auto inlineAxisAlignment =
           aWM.IsOrthogonalTo(alignCB->GetWritingMode())
-              ? StylePosition()->UsedAlignSelf(alignCB->Style())
-              : StylePosition()->UsedJustifySelf(alignCB->Style());
-      stretch = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-                inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+              ? StylePosition()->UsedAlignSelf(alignCB->Style())._0
+              : StylePosition()->UsedJustifySelf(alignCB->Style())._0;
+      stretch = inlineAxisAlignment == StyleAlignFlags::NORMAL ||
+                inlineAxisAlignment == StyleAlignFlags::STRETCH;
     }
     if (stretch || (aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize)) {
       auto iSizeToFillCB =
@@ -6041,10 +6041,10 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
         if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
           auto blockAxisAlignment =
               !aWM.IsOrthogonalTo(alignCB->GetWritingMode())
-                  ? StylePosition()->UsedAlignSelf(alignCB->Style())
-                  : StylePosition()->UsedJustifySelf(alignCB->Style());
-          stretch = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-                    blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+                  ? StylePosition()->UsedAlignSelf(alignCB->Style())._0
+                  : StylePosition()->UsedJustifySelf(alignCB->Style())._0;
+          stretch = blockAxisAlignment == StyleAlignFlags::NORMAL ||
+                    blockAxisAlignment == StyleAlignFlags::STRETCH;
         }
         if (stretch || (aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize)) {
           auto bSizeToFillCB =
@@ -6260,14 +6260,14 @@ LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
       if (!StyleMargin()->HasInlineAxisAuto(aWM)) {
         auto inlineAxisAlignment =
             aWM.IsOrthogonalTo(GetParent()->GetWritingMode())
-                ? stylePos->UsedAlignSelf(GetParent()->Style())
-                : stylePos->UsedJustifySelf(GetParent()->Style());
+                ? stylePos->UsedAlignSelf(GetParent()->Style())._0
+                : stylePos->UsedJustifySelf(GetParent()->Style())._0;
         // Note: 'normal' means 'start' for elements with an intrinsic size
         // or ratio in the relevant dimension, otherwise 'stretch'.
         // https://drafts.csswg.org/css-grid/#grid-item-sizing
-        if ((inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL &&
+        if ((inlineAxisAlignment == StyleAlignFlags::NORMAL &&
              !hasIntrinsicISize && !logicalRatio) ||
-            inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+            inlineAxisAlignment == StyleAlignFlags::STRETCH) {
           stretchI = eStretch;
         }
       }
@@ -6327,14 +6327,14 @@ LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
       if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
         auto blockAxisAlignment =
             !aWM.IsOrthogonalTo(GetParent()->GetWritingMode())
-                ? stylePos->UsedAlignSelf(GetParent()->Style())
-                : stylePos->UsedJustifySelf(GetParent()->Style());
+                ? stylePos->UsedAlignSelf(GetParent()->Style())._0
+                : stylePos->UsedJustifySelf(GetParent()->Style())._0;
         // Note: 'normal' means 'start' for elements with an intrinsic size
         // or ratio in the relevant dimension, otherwise 'stretch'.
         // https://drafts.csswg.org/css-grid/#grid-item-sizing
-        if ((blockAxisAlignment == NS_STYLE_ALIGN_NORMAL &&
+        if ((blockAxisAlignment == StyleAlignFlags::NORMAL &&
              !hasIntrinsicBSize && !logicalRatio) ||
-            blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+            blockAxisAlignment == StyleAlignFlags::STRETCH) {
           stretchB = eStretch;
         }
       }

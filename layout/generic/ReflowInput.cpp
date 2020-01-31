@@ -2428,10 +2428,10 @@ void ReflowInput::InitConstraints(
         // in its inline axis.
         auto inlineAxisAlignment =
             wm.IsOrthogonalTo(cbwm)
-                ? mStylePosition->UsedAlignSelf(alignCB->Style())
-                : mStylePosition->UsedJustifySelf(alignCB->Style());
-        if ((inlineAxisAlignment != NS_STYLE_ALIGN_STRETCH &&
-             inlineAxisAlignment != NS_STYLE_ALIGN_NORMAL) ||
+                ? mStylePosition->UsedAlignSelf(alignCB->Style())._0
+                : mStylePosition->UsedJustifySelf(alignCB->Style())._0;
+        if ((inlineAxisAlignment != StyleAlignFlags::STRETCH &&
+             inlineAxisAlignment != StyleAlignFlags::NORMAL) ||
             mStyleMargin->mMargin.GetIStart(wm).IsAuto() ||
             mStyleMargin->mMargin.GetIEnd(wm).IsAuto()) {
           computeSizeFlags = ComputeSizeFlags(computeSizeFlags |

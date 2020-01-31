@@ -386,10 +386,10 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
   if (MOZ_UNLIKELY(isGridItem) && !StyleMargin()->HasInlineAxisAuto(aWM)) {
     auto inlineAxisAlignment =
         aWM.IsOrthogonalTo(parent->GetWritingMode())
-            ? StylePosition()->UsedAlignSelf(parent->Style())
-            : StylePosition()->UsedJustifySelf(parent->Style());
-    if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-        inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+            ? StylePosition()->UsedAlignSelf(parent->Style())._0
+            : StylePosition()->UsedJustifySelf(parent->Style())._0;
+    if (inlineAxisAlignment == StyleAlignFlags::NORMAL ||
+        inlineAxisAlignment == StyleAlignFlags::STRETCH) {
       flags = nsIFrame::ComputeSizeFlags::eDefault;
     }
   }
