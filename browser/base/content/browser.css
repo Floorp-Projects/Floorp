@@ -699,6 +699,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 #urlbar-input-container[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
+#urlbar[usertyping] > #urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,
 #urlbar[usertyping] > #urlbar-input-container > .urlbar-history-dropmarker,
 #urlbar:not([usertyping]) > #urlbar-input-container > #urlbar-go-button,
 #urlbar:not([focused]) > #urlbar-input-container > #urlbar-go-button {
