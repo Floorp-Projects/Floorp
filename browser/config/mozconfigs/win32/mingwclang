@@ -33,6 +33,7 @@ ac_add_options --with-toolchain-prefix=i686-w64-mingw32-
 
 ac_add_options --disable-warnings-as-errors
 MOZ_COPY_PDBS=1
+mk_add_options "export WIDL_TIME_OVERRIDE=0"
 
 # This replicates Tor's configuration
 ac_add_options --enable-proxy-bypass-protection
