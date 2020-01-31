@@ -64,11 +64,11 @@ class Array {
 
   // Methods for range-based for loops.
   iterator begin() { return mArr; }
-  const_iterator begin() const { return mArr; }
-  const_iterator cbegin() const { return begin(); }
+  constexpr const_iterator begin() const { return mArr; }
+  constexpr const_iterator cbegin() const { return begin(); }
   iterator end() { return mArr + Length; }
-  const_iterator end() const { return mArr + Length; }
-  const_iterator cend() const { return end(); }
+  constexpr const_iterator end() const { return mArr + Length; }
+  constexpr const_iterator cend() const { return end(); }
 
   // Methods for reverse iterating.
   reverse_iterator rbegin() { return reverse_iterator(end()); }
