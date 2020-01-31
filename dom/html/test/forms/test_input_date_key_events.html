@@ -15,6 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1286182
 <p id="display"></p>
 <div id="content">
   <input id="input" type="date">
+  <div id="host"></div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -215,26 +216,30 @@ function sendKeys(aKeys) {
 }
 
 function test() {
-  var elem = document.getElementById("input");
-
-  for (let { keys, initialVal, expectedVal } of testData) {
-    elem.focus();
-    elem.value = initialVal;
-    sendKeys(keys);
-    is(elem.value, expectedVal,
-       "Test with " + keys + ", result should be " + expectedVal);
-    elem.value = "";
-    elem.blur();
-  }
+  document.querySelector("#host").attachShadow({ mode: "open" }).innerHTML = `
+    <input type="date">
+  `;
 
   function chromeListener(e) {
     ok(false, "Picker should not be opened when dispatching untrusted click.");
   }
-  SpecialPowers.addChromeEventListener("MozOpenDateTimePicker",
-    chromeListener);
-  input.click();
-  SpecialPowers.removeChromeEventListener("MozOpenDateTimePicker",
-    chromeListener);
+
+  for (const elem of [document.getElementById("input"), document.getElementById("host").shadowRoot.querySelector("input")]) {
+    for (let { keys, initialVal, expectedVal } of testData) {
+      elem.focus();
+      elem.value = initialVal;
+      sendKeys(keys);
+      is(elem.value, expectedVal,
+         "Test with " + keys + ", result should be " + expectedVal);
+      elem.value = "";
+      elem.blur();
+    }
+    SpecialPowers.addChromeEventListener("MozOpenDateTimePicker",
+      chromeListener);
+    elem.click();
+    SpecialPowers.removeChromeEventListener("MozOpenDateTimePicker",
+      chromeListener);
+  }
 }
 
 </script>
