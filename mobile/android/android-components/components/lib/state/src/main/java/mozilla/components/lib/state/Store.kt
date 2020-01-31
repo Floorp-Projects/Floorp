@@ -56,13 +56,12 @@ open class Store<S : State, A : Action>(
         scope.cancel()
     }
     private val dispatcherWithExceptionHandler = dispatcher + exceptionHandler
-    private var currentState = initialState
+    @Volatile private var currentState = initialState
 
     /**
      * The current [State].
      */
     val state: S
-        @Synchronized
         get() = currentState
 
     /**
@@ -151,6 +150,11 @@ open class Store<S : State, A : Action>(
             active = false
         }
 
+        /**
+         * Notifies this subscription's observer of a state change.
+         *
+         * @param state the updated state.
+         */
         @Synchronized
         internal fun dispatch(state: S) {
             if (active) {
