@@ -25,6 +25,7 @@
 #include "nsPipe.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsIInputStreamPriority.h"
 
 using namespace mozilla;
 
@@ -130,7 +131,8 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
                                 public nsISearchableInputStream,
                                 public nsICloneableInputStream,
                                 public nsIClassInfo,
-                                public nsIBufferedInputStream {
+                                public nsIBufferedInputStream,
+                                public nsIInputStreamPriority {
  public:
   // Pipe input streams preserve their refcount changes when record/replaying,
   // as otherwise the thread which destroys the stream may vary between
@@ -143,6 +145,7 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
   NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSICLASSINFO
   NS_DECL_NSIBUFFEREDINPUTSTREAM
+  NS_DECL_NSIINPUTSTREAMPRIORITY
 
   explicit nsPipeInputStream(nsPipe* aPipe)
       : mPipe(aPipe),
@@ -150,7 +153,8 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
         mInputStatus(NS_OK),
         mBlocking(true),
         mBlocked(false),
-        mCallbackFlags(0) {}
+        mCallbackFlags(0),
+        mPriority(nsIRunnablePriority::PRIORITY_NORMAL) {}
 
   explicit nsPipeInputStream(const nsPipeInputStream& aOther)
       : mPipe(aOther.mPipe),
@@ -159,7 +163,8 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
         mBlocking(aOther.mBlocking),
         mBlocked(false),
         mCallbackFlags(0),
-        mReadState(aOther.mReadState) {}
+        mReadState(aOther.mReadState),
+        mPriority(nsIRunnablePriority::PRIORITY_NORMAL) {}
 
   nsresult Fill();
   void SetNonBlocking(bool aNonBlocking) { mBlocking = !aNonBlocking; }
@@ -205,6 +210,7 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
 
   // requires pipe's monitor; usually treat as an opaque token to pass to nsPipe
   nsPipeReadState mReadState;
+  uint32_t mPriority;
 };
 
 //-----------------------------------------------------------------------------
@@ -1154,6 +1160,7 @@ NS_INTERFACE_TABLE_HEAD(nsPipeInputStream)
     NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsICloneableInputStream)
     NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsIBufferedInputStream)
     NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsIClassInfo)
+    NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsIInputStreamPriority)
     NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsPipeInputStream, nsIInputStream,
                                        nsIAsyncInputStream)
     NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsPipeInputStream, nsISupports,
@@ -1273,6 +1280,18 @@ nsPipeInputStream::CloseWithStatus(nsresult aReason) {
 }
 
 NS_IMETHODIMP
+nsPipeInputStream::SetPriority(uint32_t priority) {
+  mPriority = priority;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPipeInputStream::GetPriority(uint32_t* priority) {
+  *priority = mPriority;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPipeInputStream::Close() { return CloseWithStatus(NS_BASE_STREAM_CLOSED); }
 
 NS_IMETHODIMP
@@ -1384,7 +1403,7 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
     nsCOMPtr<nsIInputStreamCallback> proxy;
     if (aTarget) {
       proxy = NS_NewInputStreamReadyEvent("nsPipeInputStream::AsyncWait",
-                                          aCallback, aTarget);
+                                          aCallback, aTarget, mPriority);
       aCallback = proxy;
     }
 
