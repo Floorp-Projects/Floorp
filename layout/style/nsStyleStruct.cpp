@@ -1435,7 +1435,7 @@ StyleJustifySelf nsStylePosition::UsedJustifySelf(
 //
 
 nsStyleTable::nsStyleTable(const Document& aDocument)
-    : mLayoutStrategy(NS_STYLE_TABLE_LAYOUT_AUTO), mXSpan(1) {
+    : mLayoutStrategy(StyleTableLayout::Auto), mXSpan(1) {
   MOZ_COUNT_CTOR(nsStyleTable);
 }
 
