@@ -107,6 +107,9 @@ class TbplFormatter(BaseFormatter):
         signature = data["signature"] if data["signature"] else "unknown top frame"
         rv = ["PROCESS-CRASH | %s | application crashed [%s]" % (id, signature)]
 
+        if data.get("reason"):
+            rv.append("Mozilla crash reason: %s" % data["reason"])
+
         if data.get("minidump_path"):
             rv.append("Crash dump filename: %s" % data["minidump_path"])
 
