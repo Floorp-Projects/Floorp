@@ -444,7 +444,6 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
 #  endif
 
   if (!mEGLLibrary) {
-    printf_stderr("Attempting load of libEGL.so\n");
     mEGLLibrary = PR_LoadLibrary("libEGL.so");
   }
 #  if defined(XP_UNIX)
