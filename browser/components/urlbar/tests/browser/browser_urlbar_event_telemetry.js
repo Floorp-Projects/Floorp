@@ -492,10 +492,7 @@ const tests = [
       "With pageproxystate=valid, open the panel with openViewOnFocus, select with DOWN, Enter."
     );
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update1", true],
-        ["browser.urlbar.openViewOnFocus", true],
-      ],
+      set: [["browser.urlbar.openViewOnFocus", true]],
     });
     await addTopSite("http://example.org/");
     win.gURLBar.value = "";
@@ -530,10 +527,7 @@ const tests = [
     );
 
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update1", true],
-        ["browser.urlbar.openViewOnFocus", true],
-      ],
+      set: [["browser.urlbar.openViewOnFocus", true]],
     });
     await addTopSite("http://example.com/");
     win.gURLBar.value = "";
@@ -568,14 +562,11 @@ const tests = [
       "With pageproxystate=invalid, open the panel with openViewOnFocus, Enter."
     );
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update1", true],
-        ["browser.urlbar.openViewOnFocus", true],
-      ],
+      set: [["browser.urlbar.openViewOnFocus", true]],
     });
     await addTopSite("http://example.org/");
     win.gURLBar.value = "example.org";
-    win.gURLBar.setAttribute("pageproxystate", "invalid");
+    win.gURLBar.setPageProxyState("invalid");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
@@ -588,7 +579,7 @@ const tests = [
       category: "urlbar",
       method: "engagement",
       object: "enter",
-      value: "typed",
+      value: "returned",
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "11",
@@ -603,16 +594,12 @@ const tests = [
       "With pageproxystate=invalid, open the panel with openViewOnFocus, click on entry."
     );
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.urlbar.update1", true],
-        ["browser.urlbar.openViewOnFocus", true],
-      ],
+      set: [["browser.urlbar.openViewOnFocus", true]],
     });
-    // This value must be different from the previous test, or else the
-    // Megabar's "retained results" feature will interfere with openViewOnFocus.
-    // This issue will be addressed in bug 1601052.
+    // This value must be different from the previous test, to avoid reopening
+    // the view.
     win.gURLBar.value = "example.com";
-    win.gURLBar.setAttribute("pageproxystate", "invalid");
+    win.gURLBar.setPageProxyState("invalid");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
@@ -626,7 +613,7 @@ const tests = [
       category: "urlbar",
       method: "engagement",
       object: "click",
-      value: "typed",
+      value: "returned",
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "11",
@@ -637,9 +624,9 @@ const tests = [
   },
 
   async function(win) {
-    info("Retained result: type, blur, focus, confirm.");
+    info("Reopen the view: type, blur, focus, confirm.");
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.update1", true]],
+      set: [["browser.urlbar.openViewOnFocus", true]],
     });
     await promiseAutocompleteResultPopup("search", win, true);
     await UrlbarTestUtils.promisePopupClose(win, () => {
@@ -701,9 +688,9 @@ const tests = [
   },
 
   async function(win) {
-    info("Retained result: type, blur, focus, backspace, type, confirm.");
+    info("Reopen the view: type, blur, focus, backspace, type, confirm.");
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.update1", true]],
+      set: [["browser.urlbar.openViewOnFocus", true]],
     });
     await promiseAutocompleteResultPopup("search", win, true);
     await UrlbarTestUtils.promisePopupClose(win, () => {
@@ -747,9 +734,9 @@ const tests = [
   },
 
   async function(win) {
-    info("Retained result: type, blur, focus, type (overwrite), confirm.");
+    info("Reopen the view: type, blur, focus, type (overwrite), confirm.");
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.update1", true]],
+      set: [["browser.urlbar.openViewOnFocus", true]],
     });
     await promiseAutocompleteResultPopup("search", win, true);
     await UrlbarTestUtils.promisePopupClose(win, () => {
@@ -907,7 +894,7 @@ const tests = [
       "With pageproxystate=invalid, open the panel with openViewOnFocus, don't type, blur it."
     );
     win.gURLBar.value = "mochi.test";
-    win.gURLBar.setAttribute("pageproxystate", "invalid");
+    win.gURLBar.setPageProxyState("invalid");
     Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
@@ -918,7 +905,7 @@ const tests = [
       category: "urlbar",
       method: "abandonment",
       object: "blur",
-      value: "typed",
+      value: "returned",
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "10",
@@ -1016,15 +1003,12 @@ add_task(async function test() {
 
   for (let i = 0; i < tests.length; i++) {
     info(`Running test at index ${i}`);
-    // Some prefs only apply to new windows.
-    let win = await BrowserTestUtils.openNewBrowserWindow();
-    let events = await tests[i](win);
+    let events = await tests[i](window);
     if (!Array.isArray(events)) {
       events = [events];
     }
     // Always blur to ensure it's not accounted as an additional abandonment.
-    win.gURLBar.blur();
-    await BrowserTestUtils.closeWindow(win);
+    gURLBar.blur();
     TelemetryTestUtils.assertEvents(events, { category: "urlbar" });
   }
 
