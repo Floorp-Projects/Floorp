@@ -17,6 +17,7 @@ XPIDL_SOURCES += [
     'nsIFile.idl',
     'nsIInputStream.idl',
     'nsIInputStreamLength.idl',
+    'nsIInputStreamPriority.idl',
     'nsIInputStreamTee.idl',
     'nsIIOUtil.idl',
     'nsILineInputStream.idl',
