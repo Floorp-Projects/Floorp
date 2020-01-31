@@ -444,6 +444,7 @@ class StructuredLogger(object):
                 Int("stackwalk_retcode", default=None, optional=True),
                 Unicode("stackwalk_stdout", default=None, optional=True),
                 Unicode("stackwalk_stderr", default=None, optional=True),
+                Unicode("reason", default=None, optional=True),
                 List(Unicode, "stackwalk_errors", default=None))
     def crash(self, data):
         if data["stackwalk_errors"] is None:
