@@ -44,51 +44,37 @@ struct PropItem {
   ~PropItem() { MOZ_COUNT_DTOR(PropItem); }
 };
 
-struct MOZ_STACK_CLASS StyleCache final {
-  nsAtom* mTag;
-  nsAtom* mAttr;
-  nsString mValue;
-  bool mPresent;
-
-  StyleCache() : mTag(nullptr), mAttr(nullptr), mPresent(false) {}
-  StyleCache(nsAtom* aTag, nsAtom* aAttr)
-      : mTag(aTag), mAttr(aAttr), mPresent(false) {}
-
-  inline void Clear() {
-    mPresent = false;
-    mValue.Truncate();
+class StyleCache final {
+ public:
+  StyleCache() = delete;
+  StyleCache(nsStaticAtom* aTag, nsStaticAtom* aAttribute,
+             const nsAString& aValue)
+      : mTag(aTag), mAttribute(aAttribute), mValue(aValue) {
+    MOZ_ASSERT(mTag);
   }
+
+  nsStaticAtom* Tag() const { return mTag; }
+  nsStaticAtom* GetAttribute() const { return mAttribute; }
+  const nsString& Value() const { return mValue; }
+
+ private:
+  nsStaticAtom* mTag;
+  nsStaticAtom* mAttribute;
+  nsString mValue;
 };
 
 class MOZ_STACK_CLASS AutoStyleCacheArray final
     : public AutoTArray<StyleCache, 19> {
  public:
-  AutoStyleCacheArray()
-      : AutoTArray<StyleCache, 19>(
-            {StyleCache(nsGkAtoms::b, nullptr),
-             StyleCache(nsGkAtoms::i, nullptr),
-             StyleCache(nsGkAtoms::u, nullptr),
-             StyleCache(nsGkAtoms::font, nsGkAtoms::face),
-             StyleCache(nsGkAtoms::font, nsGkAtoms::size),
-             StyleCache(nsGkAtoms::font, nsGkAtoms::color),
-             StyleCache(nsGkAtoms::tt, nullptr),
-             StyleCache(nsGkAtoms::em, nullptr),
-             StyleCache(nsGkAtoms::strong, nullptr),
-             StyleCache(nsGkAtoms::dfn, nullptr),
-             StyleCache(nsGkAtoms::code, nullptr),
-             StyleCache(nsGkAtoms::samp, nullptr),
-             StyleCache(nsGkAtoms::var, nullptr),
-             StyleCache(nsGkAtoms::cite, nullptr),
-             StyleCache(nsGkAtoms::abbr, nullptr),
-             StyleCache(nsGkAtoms::acronym, nullptr),
-             StyleCache(nsGkAtoms::backgroundColor, nullptr),
-             StyleCache(nsGkAtoms::sub, nullptr),
-             StyleCache(nsGkAtoms::sup, nullptr)}) {}
-
-  void Clear() {
-    for (auto& styleCache : *this) {
-      styleCache.Clear();
+  index_type IndexOf(const nsStaticAtom* aTag,
+                     const nsStaticAtom* aAttribute) const {
+    for (index_type index = 0; index < Length(); ++index) {
+      const StyleCache& styleCache = ElementAt(index);
+      if (styleCache.Tag() == aTag && styleCache.GetAttribute() == aAttribute) {
+        return index;
+      }
     }
+    return NoIndex;
   }
 };
 
