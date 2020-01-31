@@ -38,7 +38,8 @@ StackInfo = namedtuple("StackInfo",
                         "stackwalk_stderr",
                         "stackwalk_retcode",
                         "stackwalk_errors",
-                        "extra"])
+                        "extra",
+                        "reason"])
 
 
 def get_logger():
@@ -97,6 +98,8 @@ def check_for_crashes(dump_directory,
         crash_count += 1
         if not quiet:
             stackwalk_output = [u"Crash dump filename: {}".format(info.minidump_path)]
+            if info.reason:
+                stackwalk_output.append("Mozilla crash reason: %s" % info.reason)
             if info.stackwalk_stderr:
                 stackwalk_output.append("stderr from minidump_stackwalk:")
                 stackwalk_output.append(info.stackwalk_stderr)
@@ -274,6 +277,7 @@ class CrashInfo(object):
         out = None
         err = None
         retcode = None
+        reason = None
         if (self.symbols_path and self.stackwalk_binary and
             os.path.exists(self.stackwalk_binary) and
                 os.access(self.stackwalk_binary, os.X_OK)):
@@ -335,6 +339,11 @@ class CrashInfo(object):
             elif not os.access(self.stackwalk_binary, os.X_OK):
                 errors.append('This user cannot execute the MINIDUMP_STACKWALK binary.')
 
+        if os.path.exists(extra):
+            crash_dict = self._parse_extra_file(extra)
+            if crash_dict.get("MozCrashReason"):
+                reason = crash_dict["MozCrashReason"]
+
         if self.dump_save_path:
             self._save_dump_file(path, extra)
 
@@ -349,7 +358,8 @@ class CrashInfo(object):
                          err if include_stderr else None,
                          retcode,
                          errors,
-                         extra)
+                         extra,
+                         reason)
 
     def _parse_extra_file(self, path):
         with open(path) as file:
