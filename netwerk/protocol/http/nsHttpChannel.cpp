@@ -8302,7 +8302,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
         rv = MaybeSetupByteRangeRequest(size, contentLength, true);
         if (NS_SUCCEEDED(rv) && mIsPartialRequest) {
           // Prevent read from cache again
-          mCachedContentIsValid = 0;
+          mCachedContentIsValid = false;
           mCachedContentIsPartial = 1;
 
           // Perform the range request
