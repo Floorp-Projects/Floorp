@@ -167,8 +167,15 @@ add_task(async function test_tabSwitch() {
   let tab1 = win.gBrowser.selectedTab;
 
   async function check_autofill() {
+    // The urlbar code waits for both TabSelect and the focus change, thus
+    // we can't just wait for search completion here, we have to poll for a
+    // value.
+    await TestUtils.waitForCondition(
+      () => win.gURLBar.value == "example.com/",
+      "wait for autofill value"
+    );
+    // Ensure stable results.
     await UrlbarTestUtils.promiseSearchComplete(win);
-    Assert.equal(win.gURLBar.value, "example.com/", "Check autofill value");
     Assert.equal(selectionStart, win.gURLBar.selectionStart);
     Assert.equal(selectionEnd, win.gURLBar.selectionEnd);
   }
