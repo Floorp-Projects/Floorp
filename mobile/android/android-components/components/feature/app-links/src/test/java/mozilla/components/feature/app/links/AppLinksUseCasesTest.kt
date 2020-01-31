@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
+import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -26,8 +27,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows.shadowOf
+import java.io.File
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -37,6 +41,8 @@ class AppLinksUseCasesTest {
     private val appPackage = "com.example.app"
     private val browserPackage = "com.browser"
     private val testBrowserPackage = "com.current.browser"
+    private val filePath = "file:///storage/abc/test.mp3"
+    private val fileType = "audio/mpeg"
 
     @Before
     fun setup() {
@@ -90,6 +96,16 @@ class AppLinksUseCasesTest {
         // We will redirect to it if browser option set to true.
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertTrue(redirect.isRedirect())
+    }
+
+    @Test
+    fun `A file is not an app link`() {
+        val context = createContext(filePath to appPackage)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
+
+        // We will redirect to it if browser option set to true.
+        val redirect = subject.interceptedAppLinkRedirect(filePath)
+        assertFalse(redirect.isRedirect())
     }
 
     @Test
@@ -254,5 +270,18 @@ class AppLinksUseCasesTest {
             assertTrue(redirect.isRedirect())
             assert(timestamp != AppLinksUseCases.redirectCache?.cacheTimeStamp)
         }
+    }
+
+    @Test
+    fun `OpenAppLinkRedirect should not try to open files`() {
+        val context = spy(createContext())
+        val uri = Uri.fromFile(File(filePath))
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(uri, fileType)
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = setOf(browserPackage))
+
+        subject.openAppLink(intent)
+
+        verify(context, never()).startActivity(any())
     }
 }

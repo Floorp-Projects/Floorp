@@ -42,7 +42,8 @@ class AppLinksUseCases(
     private val context: Context,
     private val launchInApp: () -> Boolean = { false },
     browserPackageNames: Set<String>? = null,
-    unguessableWebUrl: String = "https://${UUID.randomUUID()}.net"
+    unguessableWebUrl: String = "https://${UUID.randomUUID()}.net",
+    private val alwaysDeniedSchemes: Set<String> = setOf("file")
 ) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val browserPackageNames: Set<String>
@@ -175,8 +176,9 @@ class AppLinksUseCases(
                 }
             }
 
-            val appIntent = when (intent.data) {
-                null -> null
+            val appIntent = when {
+                intent.data == null -> null
+                alwaysDeniedSchemes.contains(intent?.data?.scheme) -> null
                 else -> intent
             }
 
@@ -189,12 +191,17 @@ class AppLinksUseCases(
      *
      * This does not do any additional UI other than the chooser that Android may provide the user.
      */
-    class OpenAppLinkRedirect internal constructor(
+    inner class OpenAppLinkRedirect internal constructor(
         private val context: Context
     ) {
         operator fun invoke(appIntent: Intent?, failedToLaunchAction: () -> Unit = {}) {
             appIntent?.let {
                 try {
+                    val scheme = appIntent.data?.scheme
+                    if (scheme != null && alwaysDeniedSchemes.contains(scheme)) {
+                        return
+                    }
+
                     context.startActivity(it)
                 } catch (e: ActivityNotFoundException) {
                     failedToLaunchAction()
