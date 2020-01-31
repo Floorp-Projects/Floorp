@@ -80,44 +80,46 @@ static CSSOrderAwareFrameIterator::OrderingProperty OrderingPropertyForIter(
 
 // Returns the "align-items" value that's equivalent to the legacy "box-align"
 // value in the given style struct.
-static uint8_t ConvertLegacyStyleToAlignItems(const nsStyleXUL* aStyleXUL) {
+static StyleAlignFlags ConvertLegacyStyleToAlignItems(
+    const nsStyleXUL* aStyleXUL) {
   // -[moz|webkit]-box-align corresponds to modern "align-items"
   switch (aStyleXUL->mBoxAlign) {
     case StyleBoxAlign::Stretch:
-      return NS_STYLE_ALIGN_STRETCH;
+      return StyleAlignFlags::STRETCH;
     case StyleBoxAlign::Start:
-      return NS_STYLE_ALIGN_FLEX_START;
+      return StyleAlignFlags::FLEX_START;
     case StyleBoxAlign::Center:
-      return NS_STYLE_ALIGN_CENTER;
+      return StyleAlignFlags::CENTER;
     case StyleBoxAlign::Baseline:
-      return NS_STYLE_ALIGN_BASELINE;
+      return StyleAlignFlags::BASELINE;
     case StyleBoxAlign::End:
-      return NS_STYLE_ALIGN_FLEX_END;
+      return StyleAlignFlags::FLEX_END;
   }
 
   MOZ_ASSERT_UNREACHABLE("Unrecognized mBoxAlign enum value");
   // Fall back to default value of "align-items" property:
-  return NS_STYLE_ALIGN_STRETCH;
+  return StyleAlignFlags::STRETCH;
 }
 
 // Returns the "justify-content" value that's equivalent to the legacy
 // "box-pack" value in the given style struct.
-static uint8_t ConvertLegacyStyleToJustifyContent(const nsStyleXUL* aStyleXUL) {
+static StyleContentDistribution ConvertLegacyStyleToJustifyContent(
+    const nsStyleXUL* aStyleXUL) {
   // -[moz|webkit]-box-pack corresponds to modern "justify-content"
   switch (aStyleXUL->mBoxPack) {
     case StyleBoxPack::Start:
-      return NS_STYLE_ALIGN_FLEX_START;
+      return {StyleAlignFlags::FLEX_START};
     case StyleBoxPack::Center:
-      return NS_STYLE_ALIGN_CENTER;
+      return {StyleAlignFlags::CENTER};
     case StyleBoxPack::End:
-      return NS_STYLE_ALIGN_FLEX_END;
+      return {StyleAlignFlags::FLEX_END};
     case StyleBoxPack::Justify:
-      return NS_STYLE_ALIGN_SPACE_BETWEEN;
+      return {StyleAlignFlags::SPACE_BETWEEN};
   }
 
   MOZ_ASSERT_UNREACHABLE("Unrecognized mBoxPack enum value");
   // Fall back to default value of "justify-content" property:
-  return NS_STYLE_ALIGN_FLEX_START;
+  return {StyleAlignFlags::FLEX_START};
 }
 
 // Helper-function to find the first non-anonymous-box descendent of aFrame.
@@ -543,8 +545,8 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   bool IsBlockAxisCrossAxis() const { return mIsInlineAxisMainAxis; }
 
   WritingMode GetWritingMode() const { return mWM; }
-  uint8_t AlignSelf() const { return mAlignSelf; }
-  uint8_t AlignSelfFlags() const { return mAlignSelfFlags; }
+  StyleAlignSelf AlignSelf() const { return mAlignSelf; }
+  StyleAlignFlags AlignSelfFlags() const { return mAlignSelfFlags; }
 
   // Returns the flex factor (flex-grow or flex-shrink), depending on
   // 'aIsUsingFlexGrow'.
@@ -888,10 +890,10 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
 
   // My "align-self" computed value (with "auto" swapped out for parent"s
   // "align-items" value, in our constructor).
-  uint8_t mAlignSelf = NS_STYLE_ALIGN_AUTO;
+  StyleAlignSelf mAlignSelf{StyleAlignFlags::AUTO};
 
   // Flags for 'align-self' (safe/unsafe/legacy).
-  uint8_t mAlignSelfFlags = 0;
+  StyleAlignFlags mAlignSelfFlags{0};
 };
 
 /**
@@ -1045,7 +1047,7 @@ class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine> {
   void ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
                               ComputedFlexLineInfo* aLineInfo);
 
-  void PositionItemsInMainAxis(uint8_t aJustifyContent,
+  void PositionItemsInMainAxis(const StyleContentDistribution& aJustifyContent,
                                nscoord aContentBoxMainSize,
                                const FlexboxAxisTracker& aAxisTracker);
 
@@ -1121,55 +1123,48 @@ static void BuildStrutInfoFromCollapsedItems(const FlexLine* aFirstLine,
   }
 }
 
-static uint8_t SimplifyAlignOrJustifyContentForOneItem(uint16_t aAlignmentVal,
-                                                       bool aIsAlign) {
+static mozilla::StyleAlignFlags SimplifyAlignOrJustifyContentForOneItem(
+    const StyleContentDistribution& aAlignmentVal, bool aIsAlign) {
   // Mask away any explicit fallback, to get the main (non-fallback) part of
   // the specified value:
-  uint16_t specified = aAlignmentVal & NS_STYLE_ALIGN_ALL_BITS;
+  StyleAlignFlags specified = aAlignmentVal.primary;
 
   // XXX strip off <overflow-position> bits until we implement it (bug 1311892)
-  specified &= ~NS_STYLE_ALIGN_FLAG_BITS;
+  specified &= ~StyleAlignFlags::FLAG_BITS;
 
   // FIRST: handle a special-case for "justify-content:stretch" (or equivalent),
   // which requires that we ignore any author-provided explicit fallback value.
-  if (specified == NS_STYLE_ALIGN_NORMAL) {
+  if (specified == StyleAlignFlags::NORMAL) {
     // In a flex container, *-content: "'normal' behaves as 'stretch'".
     // Do that conversion early, so it benefits from our 'stretch' special-case.
     // https://drafts.csswg.org/css-align-3/#distribution-flex
-    specified = NS_STYLE_ALIGN_STRETCH;
+    specified = StyleAlignFlags::STRETCH;
   }
-  if (!aIsAlign && specified == NS_STYLE_ALIGN_STRETCH) {
+  if (!aIsAlign && specified == StyleAlignFlags::STRETCH) {
     // In a flex container, in "justify-content Axis: [...] 'stretch' behaves
     // as 'flex-start' (ignoring the specified fallback alignment, if any)."
     // https://drafts.csswg.org/css-align-3/#distribution-flex
     // So, we just directly return 'flex-start', & ignore explicit fallback..
-    return NS_STYLE_ALIGN_FLEX_START;
+    return StyleAlignFlags::FLEX_START;
   }
 
-  // Now check for an explicit fallback value (and if it's present, use it).
-  uint16_t explicitFallback = aAlignmentVal >> NS_STYLE_ALIGN_ALL_SHIFT;
-  if (explicitFallback) {
-    // XXX strip off <overflow-position> bits until we implement it
-    // (bug 1311892)
-    explicitFallback &= ~NS_STYLE_ALIGN_FLAG_BITS;
-    return explicitFallback;
-  }
+  // TODO: Check for an explicit fallback value (and if it's present, use it)
+  // here once we parse it, see https://github.com/w3c/csswg-drafts/issues/1002.
 
-  // There's no explicit fallback. Use the implied fallback values for
+  // If there's no explicit fallback, use the implied fallback values for
   // space-{between,around,evenly} (since those values only make sense with
   // multiple alignment subjects), and otherwise just use the specified value:
-  switch (specified) {
-    case NS_STYLE_ALIGN_SPACE_BETWEEN:
-      return NS_STYLE_ALIGN_START;
-    case NS_STYLE_ALIGN_SPACE_AROUND:
-    case NS_STYLE_ALIGN_SPACE_EVENLY:
-      return NS_STYLE_ALIGN_CENTER;
-    default:
-      return specified;
+  if (specified == StyleAlignFlags::SPACE_BETWEEN) {
+    return StyleAlignFlags::START;
   }
+  if (specified == StyleAlignFlags::SPACE_AROUND ||
+      specified == StyleAlignFlags::SPACE_EVENLY) {
+    return StyleAlignFlags::CENTER;
+  }
+  return specified;
 }
 
-uint16_t nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
+StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const {
   WritingMode wm = GetWritingMode();
   const FlexboxAxisTracker axisTracker(
@@ -1185,59 +1180,60 @@ uint16_t nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
   const bool isAxisReversed = isMainAxis ? axisTracker.IsMainAxisReversed()
                                          : axisTracker.IsCrossAxisReversed();
 
-  uint8_t alignment;
-  uint8_t alignmentFlags = 0;
+  StyleAlignFlags alignment{0};
+  StyleAlignFlags alignmentFlags{0};
   if (isMainAxis) {
     alignment = SimplifyAlignOrJustifyContentForOneItem(
         containerStylePos->mJustifyContent,
         /*aIsAlign = */ false);
   } else {
-    const uint8_t alignContent = SimplifyAlignOrJustifyContentForOneItem(
-        containerStylePos->mAlignContent,
-        /*aIsAlign = */ true);
+    const StyleAlignFlags alignContent =
+        SimplifyAlignOrJustifyContentForOneItem(
+            containerStylePos->mAlignContent,
+            /*aIsAlign = */ true);
     if (StyleFlexWrap::Nowrap != containerStylePos->mFlexWrap &&
-        alignContent != NS_STYLE_ALIGN_STRETCH) {
+        alignContent != StyleAlignFlags::STRETCH) {
       // Multi-line, align-content isn't stretch --> align-content determines
       // this child's alignment in the cross axis.
       alignment = alignContent;
     } else {
       // Single-line, or multi-line but the (one) line stretches to fill
       // container. Respect align-self.
-      alignment = aChildRI.mStylePosition->UsedAlignSelf(Style());
+      alignment = aChildRI.mStylePosition->UsedAlignSelf(Style())._0;
       // Extract and strip align flag bits
-      alignmentFlags = alignment & NS_STYLE_ALIGN_FLAG_BITS;
-      alignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
+      alignmentFlags = alignment & StyleAlignFlags::FLAG_BITS;
+      alignment &= ~StyleAlignFlags::FLAG_BITS;
 
-      if (alignment == NS_STYLE_ALIGN_NORMAL) {
+      if (alignment == StyleAlignFlags::NORMAL) {
         // "the 'normal' keyword behaves as 'start' on replaced
         // absolutely-positioned boxes, and behaves as 'stretch' on all other
         // absolutely-positioned boxes."
         // https://drafts.csswg.org/css-align/#align-abspos
         alignment = aChildRI.mFrame->IsFrameOfType(nsIFrame::eReplaced)
-                        ? NS_STYLE_ALIGN_START
-                        : NS_STYLE_ALIGN_STRETCH;
+                        ? StyleAlignFlags::START
+                        : StyleAlignFlags::STRETCH;
       }
     }
   }
 
   // Resolve flex-start, flex-end, auto, left, right, baseline, last baseline;
-  if (alignment == NS_STYLE_ALIGN_FLEX_START) {
-    alignment = isAxisReversed ? NS_STYLE_ALIGN_END : NS_STYLE_ALIGN_START;
-  } else if (alignment == NS_STYLE_ALIGN_FLEX_END) {
-    alignment = isAxisReversed ? NS_STYLE_ALIGN_START : NS_STYLE_ALIGN_END;
-  } else if (alignment == NS_STYLE_ALIGN_LEFT ||
-             alignment == NS_STYLE_ALIGN_RIGHT) {
+  if (alignment == StyleAlignFlags::FLEX_START) {
+    alignment = isAxisReversed ? StyleAlignFlags::END : StyleAlignFlags::START;
+  } else if (alignment == StyleAlignFlags::FLEX_END) {
+    alignment = isAxisReversed ? StyleAlignFlags::START : StyleAlignFlags::END;
+  } else if (alignment == StyleAlignFlags::LEFT ||
+             alignment == StyleAlignFlags::RIGHT) {
     if (aLogicalAxis == eLogicalAxisInline) {
-      const bool isLeft = (alignment == NS_STYLE_ALIGN_LEFT);
-      alignment = (isLeft == wm.IsBidiLTR()) ? NS_STYLE_ALIGN_START
-                                             : NS_STYLE_ALIGN_END;
+      const bool isLeft = (alignment == StyleAlignFlags::LEFT);
+      alignment = (isLeft == wm.IsBidiLTR()) ? StyleAlignFlags::START
+                                             : StyleAlignFlags::END;
     } else {
-      alignment = NS_STYLE_ALIGN_START;
+      alignment = StyleAlignFlags::START;
     }
-  } else if (alignment == NS_STYLE_ALIGN_BASELINE) {
-    alignment = NS_STYLE_ALIGN_START;
-  } else if (alignment == NS_STYLE_ALIGN_LAST_BASELINE) {
-    alignment = NS_STYLE_ALIGN_END;
+  } else if (alignment == StyleAlignFlags::BASELINE) {
+    alignment = StyleAlignFlags::START;
+  } else if (alignment == StyleAlignFlags::LAST_BASELINE) {
+    alignment = StyleAlignFlags::END;
   }
 
   return (alignment | alignmentFlags);
@@ -1902,18 +1898,18 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
     // So, each FlexItem simply copies the container's converted "align-items"
     // value and disregards their own "align-self" property.
     const nsStyleXUL* containerStyleXUL = containerRS->mFrame->StyleXUL();
-    mAlignSelf = ConvertLegacyStyleToAlignItems(containerStyleXUL);
-    mAlignSelfFlags = 0;
+    mAlignSelf = {ConvertLegacyStyleToAlignItems(containerStyleXUL)};
+    mAlignSelfFlags = {0};
   } else {
     mAlignSelf = aFlexItemReflowInput.mStylePosition->UsedAlignSelf(
         containerRS->mFrame->Style());
-    if (MOZ_LIKELY(mAlignSelf == NS_STYLE_ALIGN_NORMAL)) {
-      mAlignSelf = NS_STYLE_ALIGN_STRETCH;
+    if (MOZ_LIKELY(mAlignSelf._0 == StyleAlignFlags::NORMAL)) {
+      mAlignSelf = {StyleAlignFlags::STRETCH};
     }
 
     // Store and strip off the <overflow-position> bits
-    mAlignSelfFlags = mAlignSelf & NS_STYLE_ALIGN_FLAG_BITS;
-    mAlignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+    mAlignSelfFlags = mAlignSelf._0 & StyleAlignFlags::FLAG_BITS;
+    mAlignSelf._0 &= ~StyleAlignFlags::FLAG_BITS;
   }
 
   // Our main-size is considered definite if any of these are true:
@@ -1996,10 +1992,10 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
   // We are treating this case as one where it is appropriate to use the
   // fallback values defined at https://www.w3.org/TR/css-align/#baseline-values
   if (!IsBlockAxisCrossAxis()) {
-    if (mAlignSelf == NS_STYLE_ALIGN_BASELINE) {
-      mAlignSelf = NS_STYLE_ALIGN_FLEX_START;
-    } else if (mAlignSelf == NS_STYLE_ALIGN_LAST_BASELINE) {
-      mAlignSelf = NS_STYLE_ALIGN_FLEX_END;
+    if (mAlignSelf._0 == StyleAlignFlags::BASELINE) {
+      mAlignSelf = {StyleAlignFlags::FLEX_START};
+    } else if (mAlignSelf._0 == StyleAlignFlags::LAST_BASELINE) {
+      mAlignSelf = {StyleAlignFlags::FLEX_END};
     }
   }
 }
@@ -2019,7 +2015,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
       // just share container's WM for simplicity:
       mIsFrozen(true),
       mIsStrut(true),  // (this is the constructor for making struts, after all)
-      mAlignSelf(NS_STYLE_ALIGN_FLEX_START) {
+      mAlignSelf({StyleAlignFlags::FLEX_START}) {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
   MOZ_ASSERT(StyleVisibility::Collapse == mFrame->StyleVisibility()->mVisible,
              "Should only make struts for children with 'visibility:collapse'");
@@ -2236,7 +2232,8 @@ class MOZ_STACK_CLASS PositionTracker {
 class MOZ_STACK_CLASS MainAxisPositionTracker : public PositionTracker {
  public:
   MainAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker,
-                          const FlexLine* aLine, uint8_t aJustifyContent,
+                          const FlexLine* aLine,
+                          const StyleContentDistribution& aJustifyContent,
                           nscoord aContentBoxMainSize);
 
   ~MainAxisPositionTracker() {
@@ -2260,8 +2257,7 @@ class MOZ_STACK_CLASS MainAxisPositionTracker : public PositionTracker {
   nscoord mPackingSpaceRemaining = 0;
   uint32_t mNumAutoMarginsInMainAxis = 0;
   uint32_t mNumPackingSpacesRemaining = 0;
-  // XXX this should be uint16_t when we add explicit fallback handling
-  uint8_t mJustifyContent = NS_STYLE_JUSTIFY_AUTO;
+  StyleContentDistribution mJustifyContent = {StyleAlignFlags::AUTO};
 };
 
 // Utility class for managing our position along the cross axis along
@@ -2300,8 +2296,7 @@ class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
  private:
   nscoord mPackingSpaceRemaining = 0;
   uint32_t mNumPackingSpacesRemaining = 0;
-  // XXX this should be uint16_t when we add explicit fallback handling
-  uint8_t mAlignContent = NS_STYLE_ALIGN_AUTO;
+  StyleContentDistribution mAlignContent = {StyleAlignFlags::AUTO};
 
   nscoord mCrossGapSize = 0;
 };
@@ -2903,7 +2898,8 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
 MainAxisPositionTracker::MainAxisPositionTracker(
     const FlexboxAxisTracker& aAxisTracker, const FlexLine* aLine,
-    uint8_t aJustifyContent, nscoord aContentBoxMainSize)
+    const StyleContentDistribution& aJustifyContent,
+    nscoord aContentBoxMainSize)
     : PositionTracker(aAxisTracker.GetWritingMode(), aAxisTracker.MainAxis(),
                       aAxisTracker.IsMainAxisReversed()),
       // we chip away at this below
@@ -2912,15 +2908,16 @@ MainAxisPositionTracker::MainAxisPositionTracker(
   // Extract the flag portion of mJustifyContent and strip off the flag bits
   // NOTE: This must happen before any assignment to mJustifyContent to
   // avoid overwriting the flag bits.
-  uint8_t justifyContentFlags = mJustifyContent & NS_STYLE_JUSTIFY_FLAG_BITS;
-  mJustifyContent &= ~NS_STYLE_JUSTIFY_FLAG_BITS;
+  StyleAlignFlags justifyContentFlags =
+      mJustifyContent.primary & StyleAlignFlags::FLAG_BITS;
+  mJustifyContent.primary &= ~StyleAlignFlags::FLAG_BITS;
 
   // 'normal' behaves as 'stretch', and 'stretch' behaves as 'flex-start',
   // in the main axis
   // https://drafts.csswg.org/css-align-3/#propdef-justify-content
-  if (mJustifyContent == NS_STYLE_JUSTIFY_NORMAL ||
-      mJustifyContent == NS_STYLE_JUSTIFY_STRETCH) {
-    mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
+  if (mJustifyContent.primary == StyleAlignFlags::NORMAL ||
+      mJustifyContent.primary == StyleAlignFlags::STRETCH) {
+    mJustifyContent.primary = StyleAlignFlags::FLEX_START;
   }
 
   // mPackingSpaceRemaining is initialized to the container's main size.  Now
@@ -2940,8 +2937,8 @@ MainAxisPositionTracker::MainAxisPositionTracker(
     mNumAutoMarginsInMainAxis = 0;
     // If packing space is negative and <overflow-position> is set to 'safe'
     // all justify options fall back to 'start'
-    if (justifyContentFlags & NS_STYLE_JUSTIFY_SAFE) {
-      mJustifyContent = NS_STYLE_JUSTIFY_START;
+    if (justifyContentFlags & StyleAlignFlags::SAFE) {
+      mJustifyContent.primary = StyleAlignFlags::START;
     }
   }
 
@@ -2950,11 +2947,11 @@ MainAxisPositionTracker::MainAxisPositionTracker(
   // to 'center'. In those cases, it's simplest to just pretend we have a
   // different 'justify-content' value and share code.
   if (mPackingSpaceRemaining < 0 || aLine->NumItems() == 1) {
-    if (mJustifyContent == NS_STYLE_JUSTIFY_SPACE_BETWEEN) {
-      mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
-    } else if (mJustifyContent == NS_STYLE_JUSTIFY_SPACE_AROUND ||
-               mJustifyContent == NS_STYLE_JUSTIFY_SPACE_EVENLY) {
-      mJustifyContent = NS_STYLE_JUSTIFY_CENTER;
+    if (mJustifyContent.primary == StyleAlignFlags::SPACE_BETWEEN) {
+      mJustifyContent.primary = StyleAlignFlags::FLEX_START;
+    } else if (mJustifyContent.primary == StyleAlignFlags::SPACE_AROUND ||
+               mJustifyContent.primary == StyleAlignFlags::SPACE_EVENLY) {
+      mJustifyContent.primary = StyleAlignFlags::CENTER;
     }
   }
 
@@ -2969,66 +2966,63 @@ MainAxisPositionTracker::MainAxisPositionTracker(
   //    flex-relative axis direction; e.g. for "start" which purely depends on
   //    writing-mode and isn't affected by reversedness of flex axes.
   if (aAxisTracker.AreAxesInternallyReversed()) {
-    if (mJustifyContent == NS_STYLE_JUSTIFY_FLEX_START) {
-      mJustifyContent = NS_STYLE_JUSTIFY_FLEX_END;
-    } else if (mJustifyContent == NS_STYLE_JUSTIFY_FLEX_END) {
-      mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
+    if (mJustifyContent.primary == StyleAlignFlags::FLEX_START) {
+      mJustifyContent.primary = StyleAlignFlags::FLEX_END;
+    } else if (mJustifyContent.primary == StyleAlignFlags::FLEX_END) {
+      mJustifyContent.primary = StyleAlignFlags::FLEX_START;
     }
   }
 
   // Map 'left'/'right' to 'start'/'end'
-  if (mJustifyContent == NS_STYLE_JUSTIFY_LEFT ||
-      mJustifyContent == NS_STYLE_JUSTIFY_RIGHT) {
+  if (mJustifyContent.primary == StyleAlignFlags::LEFT ||
+      mJustifyContent.primary == StyleAlignFlags::RIGHT) {
     if (aAxisTracker.IsColumnOriented()) {
       // Container's alignment axis is not parallel to the inline axis,
       // so we map both 'left' and 'right' to 'start'.
-      mJustifyContent = NS_STYLE_JUSTIFY_START;
+      mJustifyContent.primary = StyleAlignFlags::START;
     } else {
       // Row-oriented, so we map 'left' and 'right' to 'start' or 'end',
       // depending on left-to-right writing mode.
       const bool isLTR = aAxisTracker.GetWritingMode().IsBidiLTR();
-      const bool isJustifyLeft = (mJustifyContent == NS_STYLE_JUSTIFY_LEFT);
-      mJustifyContent = (isJustifyLeft == isLTR) ? NS_STYLE_JUSTIFY_START
-                                                 : NS_STYLE_JUSTIFY_END;
+      const bool isJustifyLeft =
+          (mJustifyContent.primary == StyleAlignFlags::LEFT);
+      mJustifyContent.primary = (isJustifyLeft == isLTR)
+                                    ? StyleAlignFlags::START
+                                    : StyleAlignFlags::END;
     }
   }
 
   // Map 'start'/'end' to 'flex-start'/'flex-end'.
-  if (mJustifyContent == NS_STYLE_JUSTIFY_START) {
-    mJustifyContent = aAxisTracker.IsMainAxisReversed()
-                          ? NS_STYLE_JUSTIFY_FLEX_END
-                          : NS_STYLE_JUSTIFY_FLEX_START;
-  } else if (mJustifyContent == NS_STYLE_JUSTIFY_END) {
-    mJustifyContent = aAxisTracker.IsMainAxisReversed()
-                          ? NS_STYLE_JUSTIFY_FLEX_START
-                          : NS_STYLE_JUSTIFY_FLEX_END;
+  if (mJustifyContent.primary == StyleAlignFlags::START) {
+    mJustifyContent.primary = aAxisTracker.IsMainAxisReversed()
+                                  ? StyleAlignFlags::FLEX_END
+                                  : StyleAlignFlags::FLEX_START;
+  } else if (mJustifyContent.primary == StyleAlignFlags::END) {
+    mJustifyContent.primary = aAxisTracker.IsMainAxisReversed()
+                                  ? StyleAlignFlags::FLEX_START
+                                  : StyleAlignFlags::FLEX_END;
   }
 
   // Figure out how much space we'll set aside for auto margins or
   // packing spaces, and advance past any leading packing-space.
   if (mNumAutoMarginsInMainAxis == 0 && mPackingSpaceRemaining != 0 &&
       !aLine->IsEmpty()) {
-    switch (mJustifyContent) {
-      case NS_STYLE_JUSTIFY_FLEX_START:
-        // All packing space should go at the end --> nothing to do here.
-        break;
-      case NS_STYLE_JUSTIFY_FLEX_END:
-        // All packing space goes at the beginning
-        mPosition += mPackingSpaceRemaining;
-        break;
-      case NS_STYLE_JUSTIFY_CENTER:
-        // Half the packing space goes at the beginning
-        mPosition += mPackingSpaceRemaining / 2;
-        break;
-      case NS_STYLE_JUSTIFY_SPACE_BETWEEN:
-      case NS_STYLE_JUSTIFY_SPACE_AROUND:
-      case NS_STYLE_JUSTIFY_SPACE_EVENLY:
-        nsFlexContainerFrame::CalculatePackingSpace(
-            aLine->NumItems(), mJustifyContent, &mPosition,
-            &mNumPackingSpacesRemaining, &mPackingSpaceRemaining);
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected justify-content value");
+    if (mJustifyContent.primary == StyleAlignFlags::FLEX_START) {
+      // All packing space should go at the end --> nothing to do here.
+    } else if (mJustifyContent.primary == StyleAlignFlags::FLEX_END) {
+      // All packing space goes at the beginning
+      mPosition += mPackingSpaceRemaining;
+    } else if (mJustifyContent.primary == StyleAlignFlags::CENTER) {
+      // Half the packing space goes at the beginning
+      mPosition += mPackingSpaceRemaining / 2;
+    } else if (mJustifyContent.primary == StyleAlignFlags::SPACE_BETWEEN ||
+               mJustifyContent.primary == StyleAlignFlags::SPACE_AROUND ||
+               mJustifyContent.primary == StyleAlignFlags::SPACE_EVENLY) {
+      nsFlexContainerFrame::CalculatePackingSpace(
+          aLine->NumItems(), mJustifyContent, &mPosition,
+          &mNumPackingSpacesRemaining, &mPackingSpaceRemaining);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unexpected justify-content value");
     }
   }
 
@@ -3061,9 +3055,9 @@ void MainAxisPositionTracker::ResolveAutoMarginsInMainAxis(FlexItem& aItem) {
 
 void MainAxisPositionTracker::TraversePackingSpace() {
   if (mNumPackingSpacesRemaining) {
-    MOZ_ASSERT(mJustifyContent == NS_STYLE_JUSTIFY_SPACE_BETWEEN ||
-                   mJustifyContent == NS_STYLE_JUSTIFY_SPACE_AROUND ||
-                   mJustifyContent == NS_STYLE_JUSTIFY_SPACE_EVENLY,
+    MOZ_ASSERT(mJustifyContent.primary == StyleAlignFlags::SPACE_BETWEEN ||
+                   mJustifyContent.primary == StyleAlignFlags::SPACE_AROUND ||
+                   mJustifyContent.primary == StyleAlignFlags::SPACE_EVENLY,
                "mNumPackingSpacesRemaining only applies for "
                "space-between/space-around/space-evenly");
 
@@ -3092,12 +3086,13 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
   MOZ_ASSERT(aFirstLine, "null first line pointer");
 
   // Extract and strip the flag bits from alignContent
-  uint8_t alignContentFlags = mAlignContent & NS_STYLE_ALIGN_FLAG_BITS;
-  mAlignContent &= ~NS_STYLE_ALIGN_FLAG_BITS;
+  StyleAlignFlags alignContentFlags =
+      mAlignContent.primary & StyleAlignFlags::FLAG_BITS;
+  mAlignContent.primary &= ~StyleAlignFlags::FLAG_BITS;
 
   // 'normal' behaves as 'stretch'
-  if (mAlignContent == NS_STYLE_ALIGN_NORMAL) {
-    mAlignContent = NS_STYLE_ALIGN_STRETCH;
+  if (mAlignContent.primary == StyleAlignFlags::NORMAL) {
+    mAlignContent.primary = StyleAlignFlags::STRETCH;
   }
 
   const bool isSingleLine =
@@ -3148,8 +3143,9 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
 
   // If <overflow-position> is 'safe' and packing space is negative
   // all align options fall back to 'start'
-  if ((alignContentFlags & NS_STYLE_ALIGN_SAFE) && mPackingSpaceRemaining < 0) {
-    mAlignContent = NS_STYLE_ALIGN_START;
+  if ((alignContentFlags & StyleAlignFlags::SAFE) &&
+      mPackingSpaceRemaining < 0) {
+    mAlignContent.primary = StyleAlignFlags::START;
   }
 
   // If packing space is negative, 'space-between' and 'stretch' behave like
@@ -3158,14 +3154,15 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
   // 'align-content' value and share code. (If we only have one line, all of
   // the 'space-*' keywords fall back as well, but 'stretch' doesn't because
   // even a single line can still stretch.)
-  if (mPackingSpaceRemaining < 0 && mAlignContent == NS_STYLE_ALIGN_STRETCH) {
-    mAlignContent = NS_STYLE_ALIGN_FLEX_START;
+  if (mPackingSpaceRemaining < 0 &&
+      mAlignContent.primary == StyleAlignFlags::STRETCH) {
+    mAlignContent.primary = StyleAlignFlags::FLEX_START;
   } else if (mPackingSpaceRemaining < 0 || numLines == 1) {
-    if (mAlignContent == NS_STYLE_ALIGN_SPACE_BETWEEN) {
-      mAlignContent = NS_STYLE_ALIGN_FLEX_START;
-    } else if (mAlignContent == NS_STYLE_ALIGN_SPACE_AROUND ||
-               mAlignContent == NS_STYLE_ALIGN_SPACE_EVENLY) {
-      mAlignContent = NS_STYLE_ALIGN_CENTER;
+    if (mAlignContent.primary == StyleAlignFlags::SPACE_BETWEEN) {
+      mAlignContent.primary = StyleAlignFlags::FLEX_START;
+    } else if (mAlignContent.primary == StyleAlignFlags::SPACE_AROUND ||
+               mAlignContent.primary == StyleAlignFlags::SPACE_EVENLY) {
+      mAlignContent.primary = StyleAlignFlags::CENTER;
     }
   }
 
@@ -3174,86 +3171,78 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
   // NOTE: It matters precisely when we do this; see comment alongside
   // MainAxisPositionTracker's AreAxesInternallyReversed check.
   if (aAxisTracker.AreAxesInternallyReversed()) {
-    if (mAlignContent == NS_STYLE_ALIGN_FLEX_START) {
-      mAlignContent = NS_STYLE_ALIGN_FLEX_END;
-    } else if (mAlignContent == NS_STYLE_ALIGN_FLEX_END) {
-      mAlignContent = NS_STYLE_ALIGN_FLEX_START;
+    if (mAlignContent.primary == StyleAlignFlags::FLEX_START) {
+      mAlignContent.primary = StyleAlignFlags::FLEX_END;
+    } else if (mAlignContent.primary == StyleAlignFlags::FLEX_END) {
+      mAlignContent.primary = StyleAlignFlags::FLEX_START;
     }
   }
 
   // Map 'start'/'end' to 'flex-start'/'flex-end'.
-  if (mAlignContent == NS_STYLE_ALIGN_START) {
-    mAlignContent = aAxisTracker.IsCrossAxisReversed()
-                        ? NS_STYLE_ALIGN_FLEX_END
-                        : NS_STYLE_ALIGN_FLEX_START;
-  } else if (mAlignContent == NS_STYLE_ALIGN_END) {
-    mAlignContent = aAxisTracker.IsCrossAxisReversed()
-                        ? NS_STYLE_ALIGN_FLEX_START
-                        : NS_STYLE_ALIGN_FLEX_END;
+  if (mAlignContent.primary == StyleAlignFlags::START) {
+    mAlignContent.primary = aAxisTracker.IsCrossAxisReversed()
+                                ? StyleAlignFlags::FLEX_END
+                                : StyleAlignFlags::FLEX_START;
+  } else if (mAlignContent.primary == StyleAlignFlags::END) {
+    mAlignContent.primary = aAxisTracker.IsCrossAxisReversed()
+                                ? StyleAlignFlags::FLEX_START
+                                : StyleAlignFlags::FLEX_END;
   }
 
   // Figure out how much space we'll set aside for packing spaces, and advance
   // past any leading packing-space.
   if (mPackingSpaceRemaining != 0) {
-    switch (mAlignContent) {
-      case NS_STYLE_ALIGN_BASELINE:
-      case NS_STYLE_ALIGN_LAST_BASELINE:
-        NS_WARNING(
-            "NYI: "
-            "align-items/align-self:left/right/self-start/self-end/baseline/"
-            "last baseline");
-        [[fallthrough]];
-      case NS_STYLE_ALIGN_FLEX_START:
-        // All packing space should go at the end --> nothing to do here.
-        break;
-      case NS_STYLE_ALIGN_FLEX_END:
-        // All packing space goes at the beginning
-        mPosition += mPackingSpaceRemaining;
-        break;
-      case NS_STYLE_ALIGN_CENTER:
-        // Half the packing space goes at the beginning
-        mPosition += mPackingSpaceRemaining / 2;
-        break;
-      case NS_STYLE_ALIGN_SPACE_BETWEEN:
-      case NS_STYLE_ALIGN_SPACE_AROUND:
-      case NS_STYLE_ALIGN_SPACE_EVENLY:
-        nsFlexContainerFrame::CalculatePackingSpace(
-            numLines, mAlignContent, &mPosition, &mNumPackingSpacesRemaining,
-            &mPackingSpaceRemaining);
-        break;
-      case NS_STYLE_ALIGN_STRETCH: {
-        // Split space equally between the lines:
-        MOZ_ASSERT(mPackingSpaceRemaining > 0,
-                   "negative packing space should make us use 'flex-start' "
-                   "instead of 'stretch' (and we shouldn't bother with this "
-                   "code if we have 0 packing space)");
+    if (mAlignContent.primary == StyleAlignFlags::BASELINE ||
+        mAlignContent.primary == StyleAlignFlags::LAST_BASELINE) {
+      NS_WARNING(
+          "NYI: "
+          "align-items/align-self:left/right/self-start/self-end/baseline/"
+          "last baseline");
+    } else if (mAlignContent.primary == StyleAlignFlags::FLEX_START) {
+      // All packing space should go at the end --> nothing to do here.
+    } else if (mAlignContent.primary == StyleAlignFlags::FLEX_END) {
+      // All packing space goes at the beginning
+      mPosition += mPackingSpaceRemaining;
+    } else if (mAlignContent.primary == StyleAlignFlags::CENTER) {
+      // Half the packing space goes at the beginning
+      mPosition += mPackingSpaceRemaining / 2;
+    } else if (mAlignContent.primary == StyleAlignFlags::SPACE_BETWEEN ||
+               mAlignContent.primary == StyleAlignFlags::SPACE_AROUND ||
+               mAlignContent.primary == StyleAlignFlags::SPACE_EVENLY) {
+      nsFlexContainerFrame::CalculatePackingSpace(
+          numLines, mAlignContent, &mPosition, &mNumPackingSpacesRemaining,
+          &mPackingSpaceRemaining);
+    } else if (mAlignContent.primary == StyleAlignFlags::STRETCH) {
+      // Split space equally between the lines:
+      MOZ_ASSERT(mPackingSpaceRemaining > 0,
+                 "negative packing space should make us use 'flex-start' "
+                 "instead of 'stretch' (and we shouldn't bother with this "
+                 "code if we have 0 packing space)");
 
-        uint32_t numLinesLeft = numLines;
-        for (FlexLine* line = aFirstLine; line; line = line->getNext()) {
-          // Our share is the amount of space remaining, divided by the number
-          // of lines remainig.
-          MOZ_ASSERT(numLinesLeft > 0, "miscalculated num lines");
-          nscoord shareOfExtraSpace = mPackingSpaceRemaining / numLinesLeft;
-          nscoord newSize = line->LineCrossSize() + shareOfExtraSpace;
-          line->SetLineCrossSize(newSize);
+      uint32_t numLinesLeft = numLines;
+      for (FlexLine* line = aFirstLine; line; line = line->getNext()) {
+        // Our share is the amount of space remaining, divided by the number
+        // of lines remainig.
+        MOZ_ASSERT(numLinesLeft > 0, "miscalculated num lines");
+        nscoord shareOfExtraSpace = mPackingSpaceRemaining / numLinesLeft;
+        nscoord newSize = line->LineCrossSize() + shareOfExtraSpace;
+        line->SetLineCrossSize(newSize);
 
-          mPackingSpaceRemaining -= shareOfExtraSpace;
-          numLinesLeft--;
-        }
-        MOZ_ASSERT(numLinesLeft == 0, "miscalculated num lines");
-        break;
+        mPackingSpaceRemaining -= shareOfExtraSpace;
+        numLinesLeft--;
       }
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected align-content value");
+      MOZ_ASSERT(numLinesLeft == 0, "miscalculated num lines");
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unexpected align-content value");
     }
   }
 }
 
 void CrossAxisPositionTracker::TraversePackingSpace() {
   if (mNumPackingSpacesRemaining) {
-    MOZ_ASSERT(mAlignContent == NS_STYLE_ALIGN_SPACE_BETWEEN ||
-                   mAlignContent == NS_STYLE_ALIGN_SPACE_AROUND ||
-                   mAlignContent == NS_STYLE_ALIGN_SPACE_EVENLY,
+    MOZ_ASSERT(mAlignContent.primary == StyleAlignFlags::SPACE_BETWEEN ||
+                   mAlignContent.primary == StyleAlignFlags::SPACE_AROUND ||
+                   mAlignContent.primary == StyleAlignFlags::SPACE_EVENLY,
                "mNumPackingSpacesRemaining only applies for "
                "space-between/space-around/space-evenly");
 
@@ -3286,10 +3275,10 @@ void FlexLine::ComputeCrossSizeAndBaseline(
   for (const FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
     nscoord curOuterCrossSize = item->OuterCrossSize();
 
-    if ((item->AlignSelf() == NS_STYLE_ALIGN_BASELINE ||
-         item->AlignSelf() == NS_STYLE_ALIGN_LAST_BASELINE) &&
+    if ((item->AlignSelf()._0 == StyleAlignFlags::BASELINE ||
+         item->AlignSelf()._0 == StyleAlignFlags::LAST_BASELINE) &&
         item->NumAutoMarginsInCrossAxis() == 0) {
-      const bool useFirst = (item->AlignSelf() == NS_STYLE_ALIGN_BASELINE);
+      const bool useFirst = (item->AlignSelf()._0 == StyleAlignFlags::BASELINE);
       // FIXME: Once we support "writing-mode", we'll have to do baseline
       // alignment in vertical flex containers here (w/ horizontal cross-axes).
 
@@ -3374,7 +3363,7 @@ void FlexItem::ResolveStretchedCrossSize(nscoord aLineCrossSize) {
   // We stretch IFF we are align-self:stretch, have no auto margins in
   // cross axis, and have cross-axis size property == "auto". If any of those
   // conditions don't hold up, we won't stretch.
-  if (mAlignSelf != NS_STYLE_ALIGN_STRETCH ||
+  if (mAlignSelf._0 != StyleAlignFlags::STRETCH ||
       NumAutoMarginsInCrossAxis() != 0 || !IsCrossSizeAuto()) {
     return;
   }
@@ -3456,106 +3445,100 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
     return;
   }
 
-  uint8_t alignSelf = aItem.AlignSelf();
+  StyleAlignFlags alignSelf = aItem.AlignSelf()._0;
   // NOTE: 'stretch' behaves like 'flex-start' once we've stretched any
   // auto-sized items (which we've already done).
-  if (alignSelf == NS_STYLE_ALIGN_STRETCH) {
-    alignSelf = NS_STYLE_ALIGN_FLEX_START;
+  if (alignSelf == StyleAlignFlags::STRETCH) {
+    alignSelf = StyleAlignFlags::FLEX_START;
   }
 
   // If our cross axis is (internally) reversed, swap the align-self
   // "flex-start" and "flex-end" behaviors:
   if (aAxisTracker.AreAxesInternallyReversed()) {
-    if (alignSelf == NS_STYLE_ALIGN_FLEX_START) {
-      alignSelf = NS_STYLE_ALIGN_FLEX_END;
-    } else if (alignSelf == NS_STYLE_ALIGN_FLEX_END) {
-      alignSelf = NS_STYLE_ALIGN_FLEX_START;
+    if (alignSelf == StyleAlignFlags::FLEX_START) {
+      alignSelf = StyleAlignFlags::FLEX_END;
+    } else if (alignSelf == StyleAlignFlags::FLEX_END) {
+      alignSelf = StyleAlignFlags::FLEX_START;
     }
   }
 
   // Map 'self-start'/'self-end' to 'start'/'end'
-  if (alignSelf == NS_STYLE_ALIGN_SELF_START ||
-      alignSelf == NS_STYLE_ALIGN_SELF_END) {
+  if (alignSelf == StyleAlignFlags::SELF_START ||
+      alignSelf == StyleAlignFlags::SELF_END) {
     const LogicalAxis logCrossAxis =
         aAxisTracker.IsRowOriented() ? eLogicalAxisBlock : eLogicalAxisInline;
     const WritingMode cWM = aAxisTracker.GetWritingMode();
     const bool sameStart =
         cWM.ParallelAxisStartsOnSameSide(logCrossAxis, aItem.GetWritingMode());
-    alignSelf = sameStart == (alignSelf == NS_STYLE_ALIGN_SELF_START)
-                    ? NS_STYLE_ALIGN_START
-                    : NS_STYLE_ALIGN_END;
+    alignSelf = sameStart == (alignSelf == StyleAlignFlags::SELF_START)
+                    ? StyleAlignFlags::START
+                    : StyleAlignFlags::END;
   }
 
   // Map 'start'/'end' to 'flex-start'/'flex-end'.
-  if (alignSelf == NS_STYLE_ALIGN_START) {
-    alignSelf = aAxisTracker.IsCrossAxisReversed() ? NS_STYLE_ALIGN_FLEX_END
-                                                   : NS_STYLE_ALIGN_FLEX_START;
-  } else if (alignSelf == NS_STYLE_ALIGN_END) {
-    alignSelf = aAxisTracker.IsCrossAxisReversed() ? NS_STYLE_ALIGN_FLEX_START
-                                                   : NS_STYLE_ALIGN_FLEX_END;
+  if (alignSelf == StyleAlignFlags::START) {
+    alignSelf = aAxisTracker.IsCrossAxisReversed()
+                    ? StyleAlignFlags::FLEX_END
+                    : StyleAlignFlags::FLEX_START;
+  } else if (alignSelf == StyleAlignFlags::END) {
+    alignSelf = aAxisTracker.IsCrossAxisReversed() ? StyleAlignFlags::FLEX_START
+                                                   : StyleAlignFlags::FLEX_END;
   }
 
   // 'align-self' falls back to 'flex-start' if it is 'center'/'flex-end' and we
   // have cross axis overflow
   // XXX we should really be falling back to 'start' as of bug 1472843
   if (aLine.LineCrossSize() < aItem.OuterCrossSize() &&
-      (aItem.AlignSelfFlags() & NS_STYLE_ALIGN_SAFE)) {
-    alignSelf = NS_STYLE_ALIGN_FLEX_START;
+      (aItem.AlignSelfFlags() & StyleAlignFlags::SAFE)) {
+    alignSelf = StyleAlignFlags::FLEX_START;
   }
 
-  switch (alignSelf) {
-    case NS_STYLE_ALIGN_FLEX_START:
-      // No space to skip over -- we're done.
-      break;
-    case NS_STYLE_ALIGN_FLEX_END:
+  if (alignSelf == StyleAlignFlags::FLEX_START) {
+    // No space to skip over -- we're done.
+  } else if (alignSelf == StyleAlignFlags::FLEX_END) {
+    mPosition += aLine.LineCrossSize() - aItem.OuterCrossSize();
+  } else if (alignSelf == StyleAlignFlags::CENTER) {
+    // Note: If cross-size is odd, the "after" space will get the extra unit.
+    mPosition += (aLine.LineCrossSize() - aItem.OuterCrossSize()) / 2;
+  } else if (alignSelf == StyleAlignFlags::BASELINE ||
+             alignSelf == StyleAlignFlags::LAST_BASELINE) {
+    const bool useFirst = (alignSelf == StyleAlignFlags::BASELINE);
+
+    // Normally, baseline-aligned items are collectively aligned with the
+    // line's physical cross-start side; however, if our cross axis is
+    // (internally) reversed, we instead align them with the physical
+    // cross-end side. A similar logic holds for last baseline-aligned items,
+    // but in reverse.
+    const mozilla::Side baselineAlignStartSide =
+        aAxisTracker.AreAxesInternallyReversed() == useFirst
+            ? aAxisTracker.CrossAxisPhysicalEndSide()
+            : aAxisTracker.CrossAxisPhysicalStartSide();
+
+    nscoord itemBaselineOffset = aItem.BaselineOffsetFromOuterCrossEdge(
+        baselineAlignStartSide, aAxisTracker, useFirst);
+
+    nscoord lineBaselineOffset =
+        useFirst ? aLine.FirstBaselineOffset() : aLine.LastBaselineOffset();
+
+    NS_ASSERTION(lineBaselineOffset >= itemBaselineOffset,
+                 "failed at finding largest baseline offset");
+
+    // How much do we need to adjust our position (from the line edge),
+    // to get the item's baseline to hit the line's baseline offset:
+    nscoord baselineDiff = lineBaselineOffset - itemBaselineOffset;
+
+    if (aAxisTracker.AreAxesInternallyReversed() == useFirst) {
+      // Advance to align item w/ line's flex-end edge (as in FLEX_END case):
       mPosition += aLine.LineCrossSize() - aItem.OuterCrossSize();
-      break;
-    case NS_STYLE_ALIGN_CENTER:
-      // Note: If cross-size is odd, the "after" space will get the extra unit.
-      mPosition += (aLine.LineCrossSize() - aItem.OuterCrossSize()) / 2;
-      break;
-    case NS_STYLE_ALIGN_BASELINE:
-    case NS_STYLE_ALIGN_LAST_BASELINE: {
-      const bool useFirst = (alignSelf == NS_STYLE_ALIGN_BASELINE);
-
-      // Normally, baseline-aligned items are collectively aligned with the
-      // line's physical cross-start side; however, if our cross axis is
-      // (internally) reversed, we instead align them with the physical
-      // cross-end side. A similar logic holds for last baseline-aligned items,
-      // but in reverse.
-      const mozilla::Side baselineAlignStartSide =
-          aAxisTracker.AreAxesInternallyReversed() == useFirst
-              ? aAxisTracker.CrossAxisPhysicalEndSide()
-              : aAxisTracker.CrossAxisPhysicalStartSide();
-
-      nscoord itemBaselineOffset = aItem.BaselineOffsetFromOuterCrossEdge(
-          baselineAlignStartSide, aAxisTracker, useFirst);
-
-      nscoord lineBaselineOffset =
-          useFirst ? aLine.FirstBaselineOffset() : aLine.LastBaselineOffset();
-
-      NS_ASSERTION(lineBaselineOffset >= itemBaselineOffset,
-                   "failed at finding largest baseline offset");
-
-      // How much do we need to adjust our position (from the line edge),
-      // to get the item's baseline to hit the line's baseline offset:
-      nscoord baselineDiff = lineBaselineOffset - itemBaselineOffset;
-
-      if (aAxisTracker.AreAxesInternallyReversed() == useFirst) {
-        // Advance to align item w/ line's flex-end edge (as in FLEX_END case):
-        mPosition += aLine.LineCrossSize() - aItem.OuterCrossSize();
-        // ...and step *back* by the baseline adjustment:
-        mPosition -= baselineDiff;
-      } else {
-        // mPosition is already at line's flex-start edge.
-        // From there, we step *forward* by the baseline adjustment:
-        mPosition += baselineDiff;
-      }
-      break;
+      // ...and step *back* by the baseline adjustment:
+      mPosition -= baselineDiff;
+    } else {
+      // mPosition is already at line's flex-start edge.
+      // From there, we step *forward* by the baseline adjustment:
+      mPosition += baselineDiff;
     }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected align-self value");
-      break;
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Unexpected align-self value");
   }
 }
 
@@ -4040,9 +4023,9 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
                        aReflowInput.ComputedMaxBSize());
 }
 
-void FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
-                                       nscoord aContentBoxMainSize,
-                                       const FlexboxAxisTracker& aAxisTracker) {
+void FlexLine::PositionItemsInMainAxis(
+    const StyleContentDistribution& aJustifyContent,
+    nscoord aContentBoxMainSize, const FlexboxAxisTracker& aAxisTracker) {
   MainAxisPositionTracker mainAxisPosnTracker(
       aAxisTracker, this, aJustifyContent, aContentBoxMainSize);
   for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
@@ -4096,7 +4079,7 @@ void nsFlexContainerFrame::SizeItemInCrossAxis(nsPresContext* aPresContext,
   MOZ_ASSERT(!aItem.HadMeasuringReflow(),
              "We shouldn't need more than one measuring reflow");
 
-  if (aItem.AlignSelf() == NS_STYLE_ALIGN_STRETCH) {
+  if (aItem.AlignSelf()._0 == StyleAlignFlags::STRETCH) {
     // This item's got "align-self: stretch", so we probably imposed a
     // stretched computed cross-size on it during its previous
     // reflow. We're not imposing that BSize for *this* "measuring" reflow, so
@@ -4297,17 +4280,13 @@ class MOZ_RAII AutoFlexItemMainSizeOverride final {
 };
 
 void nsFlexContainerFrame::CalculatePackingSpace(
-    uint32_t aNumThingsToPack, uint8_t aAlignVal, nscoord* aFirstSubjectOffset,
-    uint32_t* aNumPackingSpacesRemaining, nscoord* aPackingSpaceRemaining) {
-  MOZ_ASSERT(NS_STYLE_ALIGN_SPACE_BETWEEN == NS_STYLE_JUSTIFY_SPACE_BETWEEN &&
-                 NS_STYLE_ALIGN_SPACE_AROUND == NS_STYLE_JUSTIFY_SPACE_AROUND &&
-                 NS_STYLE_ALIGN_SPACE_EVENLY == NS_STYLE_JUSTIFY_SPACE_EVENLY,
-             "CalculatePackingSpace assumes that NS_STYLE_ALIGN_SPACE and "
-             "NS_STYLE_JUSTIFY_SPACE constants are interchangeable");
-
-  MOZ_ASSERT(aAlignVal == NS_STYLE_ALIGN_SPACE_BETWEEN ||
-                 aAlignVal == NS_STYLE_ALIGN_SPACE_AROUND ||
-                 aAlignVal == NS_STYLE_ALIGN_SPACE_EVENLY,
+    uint32_t aNumThingsToPack, const StyleContentDistribution& aAlignVal,
+    nscoord* aFirstSubjectOffset, uint32_t* aNumPackingSpacesRemaining,
+    nscoord* aPackingSpaceRemaining) {
+  StyleAlignFlags val = aAlignVal.primary;
+  MOZ_ASSERT(val == StyleAlignFlags::SPACE_BETWEEN ||
+                 val == StyleAlignFlags::SPACE_AROUND ||
+                 val == StyleAlignFlags::SPACE_EVENLY,
              "Unexpected alignment value");
 
   MOZ_ASSERT(*aPackingSpaceRemaining >= 0,
@@ -4324,7 +4303,7 @@ void nsFlexContainerFrame::CalculatePackingSpace(
   // Packing spaces between items:
   *aNumPackingSpacesRemaining = aNumThingsToPack - 1;
 
-  if (aAlignVal == NS_STYLE_ALIGN_SPACE_BETWEEN) {
+  if (val == StyleAlignFlags::SPACE_BETWEEN) {
     // No need to reserve space at beginning/end, so we're done.
     return;
   }
@@ -4332,7 +4311,7 @@ void nsFlexContainerFrame::CalculatePackingSpace(
   // We need to add 1 or 2 packing spaces, split between beginning/end, for
   // space-around / space-evenly:
   size_t numPackingSpacesForEdges =
-      aAlignVal == NS_STYLE_JUSTIFY_SPACE_AROUND ? 1 : 2;
+      val == StyleAlignFlags::SPACE_AROUND ? 1 : 2;
 
   // How big will each "full" packing space be:
   nscoord packingSpaceSize =

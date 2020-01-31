@@ -433,7 +433,7 @@ class nsContainerFrame : public nsSplittableFrame {
    * @param aLogicalAxis The axis (of this container frame) in which the caller
    *                     would like to align the child frame.
    */
-  virtual uint16_t CSSAlignmentForAbsPosChild(
+  virtual mozilla::StyleAlignFlags CSSAlignmentForAbsPosChild(
       const ReflowInput& aChildRI, mozilla::LogicalAxis aLogicalAxis) const;
 
 #ifdef ACCESSIBILITY

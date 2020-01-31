@@ -18,40 +18,38 @@ static nscoord SpaceToFill(WritingMode aWM, const LogicalSize& aSize,
   return aCBSize - (size + aMargin);
 }
 
-nscoord CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
+nscoord CSSAlignUtils::AlignJustifySelf(const StyleAlignFlags& aAlignment,
+                                        LogicalAxis aAxis,
                                         AlignJustifyFlags aFlags,
                                         nscoord aBaselineAdjust,
                                         nscoord aCBSize, const ReflowInput& aRI,
                                         const LogicalSize& aChildSize) {
-  MOZ_ASSERT(aAlignment != NS_STYLE_ALIGN_AUTO,
+  MOZ_ASSERT(aAlignment != StyleAlignFlags::AUTO,
              "auto values should have resolved already");
-  MOZ_ASSERT(
-      aAlignment != NS_STYLE_ALIGN_LEFT && aAlignment != NS_STYLE_ALIGN_RIGHT,
-      "caller should map that to the corresponding START/END");
+  MOZ_ASSERT(aAlignment != StyleAlignFlags::LEFT &&
+                 aAlignment != StyleAlignFlags::RIGHT,
+             "caller should map that to the corresponding START/END");
 
   // Promote aFlags to convenience bools:
   const bool isOverflowSafe = !!(aFlags & AlignJustifyFlags::OverflowSafe);
   const bool isSameSide = !!(aFlags & AlignJustifyFlags::SameSide);
 
+  StyleAlignFlags alignment = aAlignment;
   // Map some alignment values to 'start' / 'end'.
-  switch (aAlignment) {
-    case NS_STYLE_ALIGN_SELF_START:  // align/justify-self: self-start
-      aAlignment =
-          MOZ_LIKELY(isSameSide) ? NS_STYLE_ALIGN_START : NS_STYLE_ALIGN_END;
-      break;
-    case NS_STYLE_ALIGN_SELF_END:  // align/justify-self: self-end
-      aAlignment =
-          MOZ_LIKELY(isSameSide) ? NS_STYLE_ALIGN_END : NS_STYLE_ALIGN_START;
-      break;
+  if (alignment == StyleAlignFlags::SELF_START) {
+    // align/justify-self: self-start
+    alignment =
+        MOZ_LIKELY(isSameSide) ? StyleAlignFlags::START : StyleAlignFlags::END;
+  } else if (alignment == StyleAlignFlags::SELF_END) {
+    alignment =
+        MOZ_LIKELY(isSameSide) ? StyleAlignFlags::END : StyleAlignFlags::START;
     // flex-start/flex-end are the same as start/end, in most contexts.
     // (They have special behavior in flex containers, so flex containers
     // should map them to some other value before calling this method.)
-    case NS_STYLE_ALIGN_FLEX_START:
-      aAlignment = NS_STYLE_ALIGN_START;
-      break;
-    case NS_STYLE_ALIGN_FLEX_END:
-      aAlignment = NS_STYLE_ALIGN_END;
-      break;
+  } else if (alignment == StyleAlignFlags::FLEX_START) {
+    alignment = StyleAlignFlags::START;
+  } else if (alignment == StyleAlignFlags::FLEX_END) {
+    alignment = StyleAlignFlags::END;
   }
 
   // XXX try to condense this code a bit by adding the necessary convenience
@@ -97,7 +95,7 @@ nscoord CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
   // https://drafts.csswg.org/css-align-3/#overflow-values
   // This implements <overflow-position> = 'safe'.
   // And auto-margins: https://drafts.csswg.org/css-grid/#auto-margins
-  if ((MOZ_UNLIKELY(isOverflowSafe) && aAlignment != NS_STYLE_ALIGN_START) ||
+  if ((MOZ_UNLIKELY(isOverflowSafe) && alignment != StyleAlignFlags::START) ||
       hasAutoMarginStart || hasAutoMarginEnd) {
     nscoord space =
         SpaceToFill(wm, aChildSize, marginStart + marginEnd, aAxis, aCBSize);
@@ -106,46 +104,39 @@ nscoord CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
     if (space < 0) {
       // "Overflowing elements ignore their auto margins and overflow
       // in the end directions"
-      aAlignment = NS_STYLE_ALIGN_START;
+      alignment = StyleAlignFlags::START;
     } else if (hasAutoMarginEnd) {
-      aAlignment = hasAutoMarginStart ? NS_STYLE_ALIGN_CENTER
-                                      : (isSameSide ? NS_STYLE_ALIGN_START
-                                                    : NS_STYLE_ALIGN_END);
+      alignment = hasAutoMarginStart ? StyleAlignFlags::CENTER
+                                     : (isSameSide ? StyleAlignFlags::START
+                                                   : StyleAlignFlags::END);
     } else if (hasAutoMarginStart) {
-      aAlignment = isSameSide ? NS_STYLE_ALIGN_END : NS_STYLE_ALIGN_START;
+      alignment = isSameSide ? StyleAlignFlags::END : StyleAlignFlags::START;
     }
   }
 
   // Determine the offset for the child frame (its border-box) which will
   // achieve the requested alignment.
   nscoord offset = 0;
-  switch (aAlignment) {
-    case NS_STYLE_ALIGN_BASELINE:
-    case NS_STYLE_ALIGN_LAST_BASELINE:
-      if (MOZ_LIKELY(isSameSide == (aAlignment == NS_STYLE_ALIGN_BASELINE))) {
-        offset = marginStart + aBaselineAdjust;
-      } else {
-        nscoord size = aChildSize.Size(aAxis, wm);
-        offset = aCBSize - (size + marginEnd) - aBaselineAdjust;
-      }
-      break;
-    case NS_STYLE_ALIGN_STRETCH:
-      [[fallthrough]];  // ComputeSize() deals with it
-    case NS_STYLE_ALIGN_START:
-      offset = marginStart;
-      break;
-    case NS_STYLE_ALIGN_END: {
+  if (alignment == StyleAlignFlags::BASELINE ||
+      alignment == StyleAlignFlags::LAST_BASELINE) {
+    if (MOZ_LIKELY(isSameSide == (alignment == StyleAlignFlags::BASELINE))) {
+      offset = marginStart + aBaselineAdjust;
+    } else {
       nscoord size = aChildSize.Size(aAxis, wm);
-      offset = aCBSize - (size + marginEnd);
-      break;
+      offset = aCBSize - (size + marginEnd) - aBaselineAdjust;
     }
-    case NS_STYLE_ALIGN_CENTER: {
-      nscoord size = aChildSize.Size(aAxis, wm);
-      offset = (aCBSize - size + marginStart - marginEnd) / 2;
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("unknown align-/justify-self value");
+  } else if (alignment == StyleAlignFlags::STRETCH ||
+             alignment == StyleAlignFlags::START) {
+    // ComputeSize() deals with stretch
+    offset = marginStart;
+  } else if (alignment == StyleAlignFlags::END) {
+    nscoord size = aChildSize.Size(aAxis, wm);
+    offset = aCBSize - (size + marginEnd);
+  } else if (alignment == StyleAlignFlags::CENTER) {
+    nscoord size = aChildSize.Size(aAxis, wm);
+    offset = (aCBSize - size + marginStart - marginEnd) / 2;
+  } else {
+    MOZ_ASSERT_UNREACHABLE("unknown align-/justify-self value");
   }
 
   return offset;

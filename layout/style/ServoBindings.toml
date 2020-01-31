@@ -553,6 +553,12 @@ cbindgen-types = [
     { gecko = "StyleContent", servo = "values::computed::counters::Content" },
     { gecko = "StyleSymbolsType", servo = "values::generics::SymbolsType" },
     { gecko = "StyleCounterStyle", servo = "values::generics::CounterStyle" },
+    { gecko = "StyleComputedJustifyItems", servo = "values::computed::align::ComputedJustifyItems" },
+    { gecko = "StyleAlignItems", servo = "values::computed::AlignItems" },
+    { gecko = "StyleJustifySelf", servo = "values::computed::JustifySelf" },
+    { gecko = "StyleAlignSelf", servo = "values::computed::AlignSelf" },
+    { gecko = "StyleAlignContent", servo = "values::computed::align::AlignContent" },
+    { gecko = "StyleJustifyContent", servo = "values::computed::align::JustifyContent" },
 ]
 
 mapped-generic-types = [

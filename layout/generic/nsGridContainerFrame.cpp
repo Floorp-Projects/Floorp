@@ -730,13 +730,13 @@ struct nsGridContainerFrame::GridItemInfo {
    * axis then set aBaselineOffset to the baseline offset and return aAlign.
    * Otherwise, return a fallback alignment.
    */
-  uint8_t GetSelfBaseline(uint8_t aAlign, LogicalAxis aAxis,
-                          nscoord* aBaselineOffset) const {
-    MOZ_ASSERT(aAlign == NS_STYLE_ALIGN_BASELINE ||
-               aAlign == NS_STYLE_ALIGN_LAST_BASELINE);
+  StyleAlignFlags GetSelfBaseline(StyleAlignFlags aAlign, LogicalAxis aAxis,
+                                  nscoord* aBaselineOffset) const {
+    MOZ_ASSERT(aAlign == StyleAlignFlags::BASELINE ||
+               aAlign == StyleAlignFlags::LAST_BASELINE);
     if (!(mState[aAxis] & eSelfBaseline)) {
-      return aAlign == NS_STYLE_ALIGN_BASELINE ? NS_STYLE_ALIGN_SELF_START
-                                               : NS_STYLE_ALIGN_SELF_END;
+      return aAlign == StyleAlignFlags::BASELINE ? StyleAlignFlags::SELF_START
+                                                 : StyleAlignFlags::SELF_END;
     }
     *aBaselineOffset = mBaselineOffset[aAxis];
     return aAlign;
@@ -1846,8 +1846,8 @@ struct nsGridContainerFrame::Tracks {
         mStateUnion(TrackSize::StateBits(0)),
         mAxis(aAxis),
         mCanResolveLineRangeSize(false) {
-    mBaselineSubtreeAlign[BaselineSharingGroup::First] = NS_STYLE_ALIGN_AUTO;
-    mBaselineSubtreeAlign[BaselineSharingGroup::Last] = NS_STYLE_ALIGN_AUTO;
+    mBaselineSubtreeAlign[BaselineSharingGroup::First] = StyleAlignFlags::AUTO;
+    mBaselineSubtreeAlign[BaselineSharingGroup::Last] = StyleAlignFlags::AUTO;
     mBaseline[BaselineSharingGroup::First] = NS_INTRINSIC_ISIZE_UNKNOWN;
     mBaseline[BaselineSharingGroup::Last] = NS_INTRINSIC_ISIZE_UNKNOWN;
   }
@@ -2454,10 +2454,10 @@ struct nsGridContainerFrame::Tracks {
   TrackSize::StateBits mStateUnion;
   LogicalAxis mAxis;
   // Used for aligning a baseline-aligned subtree of items.  The only possible
-  // values are NS_STYLE_ALIGN_{START,END,CENTER,AUTO}.  AUTO means there are
+  // values are StyleAlignFlags::{START,END,CENTER,AUTO}.  AUTO means there are
   // no baseline-aligned items in any track in that axis.
   // There is one alignment value for each BaselineSharingGroup.
-  PerBaseline<uint8_t> mBaselineSubtreeAlign;
+  PerBaseline<StyleAlignFlags> mBaselineSubtreeAlign;
   // True if track positions and sizes are final in this axis.
   bool mCanResolveLineRangeSize;
 };
@@ -3454,12 +3454,12 @@ static uint32_t GetDisplayFlagsForGridItem(nsIFrame* aFrame) {
 }
 
 // Align an item's margin box in its aAxis inside aCBSize.
-static void AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
+static void AlignJustifySelf(StyleAlignFlags aAlignment, LogicalAxis aAxis,
                              AlignJustifyFlags aFlags, nscoord aBaselineAdjust,
                              nscoord aCBSize, const ReflowInput& aRI,
                              const LogicalSize& aChildSize,
                              LogicalPoint* aPos) {
-  MOZ_ASSERT(aAlignment != NS_STYLE_ALIGN_AUTO,
+  MOZ_ASSERT(aAlignment != StyleAlignFlags::AUTO,
              "unexpected 'auto' "
              "computed value for normal flow grid item");
 
@@ -3476,16 +3476,16 @@ static void AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
 }
 
 static void AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
-                      uint8_t aAlignSelf, nscoord aCBSize,
+                      StyleAlignSelf aAlignSelf, nscoord aCBSize,
                       const WritingMode aCBWM, const ReflowInput& aRI,
                       const LogicalSize& aSize, LogicalPoint* aPos) {
-  auto alignSelf = aAlignSelf;
+  auto alignSelf = aAlignSelf._0;
 
   AlignJustifyFlags flags = AlignJustifyFlags::NoFlags;
-  if (alignSelf & NS_STYLE_ALIGN_SAFE) {
+  if (alignSelf & StyleAlignFlags::SAFE) {
     flags |= AlignJustifyFlags::OverflowSafe;
   }
-  alignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+  alignSelf &= ~StyleAlignFlags::FLAG_BITS;
 
   WritingMode childWM = aRI.GetWritingMode();
   if (aCBWM.ParallelAxisStartsOnSameSide(eLogicalAxisBlock, childWM)) {
@@ -3493,16 +3493,17 @@ static void AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
   }
 
   // Grid's 'align-self' axis is never parallel to the container's inline axis.
-  if (alignSelf == NS_STYLE_ALIGN_LEFT || alignSelf == NS_STYLE_ALIGN_RIGHT) {
-    alignSelf = NS_STYLE_ALIGN_START;
+  if (alignSelf == StyleAlignFlags::LEFT ||
+      alignSelf == StyleAlignFlags::RIGHT) {
+    alignSelf = StyleAlignFlags::START;
   }
-  if (MOZ_LIKELY(alignSelf == NS_STYLE_ALIGN_NORMAL)) {
-    alignSelf = NS_STYLE_ALIGN_STRETCH;
+  if (MOZ_LIKELY(alignSelf == StyleAlignFlags::NORMAL)) {
+    alignSelf = StyleAlignFlags::STRETCH;
   }
 
   nscoord baselineAdjust = 0;
-  if (alignSelf == NS_STYLE_ALIGN_BASELINE ||
-      alignSelf == NS_STYLE_ALIGN_LAST_BASELINE) {
+  if (alignSelf == StyleAlignFlags::BASELINE ||
+      alignSelf == StyleAlignFlags::LAST_BASELINE) {
     alignSelf = aGridItem.GetSelfBaseline(alignSelf, eLogicalAxisBlock,
                                           &baselineAdjust);
   }
@@ -3514,43 +3515,39 @@ static void AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
 }
 
 static void JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
-                        uint8_t aJustifySelf, nscoord aCBSize,
+                        StyleJustifySelf aJustifySelf, nscoord aCBSize,
                         const WritingMode aCBWM, const ReflowInput& aRI,
                         const LogicalSize& aSize, LogicalPoint* aPos) {
-  auto justifySelf = aJustifySelf;
+  auto justifySelf = aJustifySelf._0;
 
   AlignJustifyFlags flags = AlignJustifyFlags::NoFlags;
-  if (justifySelf & NS_STYLE_JUSTIFY_SAFE) {
+  if (justifySelf & StyleAlignFlags::SAFE) {
     flags |= AlignJustifyFlags::OverflowSafe;
   }
-  justifySelf &= ~NS_STYLE_JUSTIFY_FLAG_BITS;
+  justifySelf &= ~StyleAlignFlags::FLAG_BITS;
 
   WritingMode childWM = aRI.GetWritingMode();
   if (aCBWM.ParallelAxisStartsOnSameSide(eLogicalAxisInline, childWM)) {
     flags |= AlignJustifyFlags::SameSide;
   }
 
-  if (MOZ_LIKELY(justifySelf == NS_STYLE_ALIGN_NORMAL)) {
-    justifySelf = NS_STYLE_ALIGN_STRETCH;
+  if (MOZ_LIKELY(justifySelf == StyleAlignFlags::NORMAL)) {
+    justifySelf = StyleAlignFlags::STRETCH;
   }
 
   nscoord baselineAdjust = 0;
   // Grid's 'justify-self' axis is always parallel to the container's inline
   // axis, so justify-self:left|right always applies.
-  switch (justifySelf) {
-    case NS_STYLE_JUSTIFY_LEFT:
-      justifySelf =
-          aCBWM.IsBidiLTR() ? NS_STYLE_JUSTIFY_START : NS_STYLE_JUSTIFY_END;
-      break;
-    case NS_STYLE_JUSTIFY_RIGHT:
-      justifySelf =
-          aCBWM.IsBidiLTR() ? NS_STYLE_JUSTIFY_END : NS_STYLE_JUSTIFY_START;
-      break;
-    case NS_STYLE_JUSTIFY_BASELINE:
-    case NS_STYLE_JUSTIFY_LAST_BASELINE:
-      justifySelf = aGridItem.GetSelfBaseline(justifySelf, eLogicalAxisInline,
-                                              &baselineAdjust);
-      break;
+  if (justifySelf == StyleAlignFlags::LEFT) {
+    justifySelf =
+        aCBWM.IsBidiLTR() ? StyleAlignFlags::START : StyleAlignFlags::END;
+  } else if (justifySelf == StyleAlignFlags::RIGHT) {
+    justifySelf =
+        aCBWM.IsBidiLTR() ? StyleAlignFlags::END : StyleAlignFlags::START;
+  } else if (justifySelf == StyleAlignFlags::BASELINE ||
+             justifySelf == StyleAlignFlags::LAST_BASELINE) {
+    justifySelf = aGridItem.GetSelfBaseline(justifySelf, eLogicalAxisInline,
+                                            &baselineAdjust);
   }
 
   bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
@@ -3559,48 +3556,46 @@ static void JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
                    aSize, aPos);
 }
 
-static uint16_t GetAlignJustifyValue(uint16_t aAlignment, const WritingMode aWM,
-                                     const bool aIsAlign, bool* aOverflowSafe) {
-  *aOverflowSafe = aAlignment & NS_STYLE_ALIGN_SAFE;
-  aAlignment &= (NS_STYLE_ALIGN_ALL_BITS & ~NS_STYLE_ALIGN_FLAG_BITS);
+static StyleAlignFlags GetAlignJustifyValue(StyleAlignFlags aAlignment,
+                                            const WritingMode aWM,
+                                            const bool aIsAlign,
+                                            bool* aOverflowSafe) {
+  *aOverflowSafe = bool(aAlignment & StyleAlignFlags::SAFE);
+  aAlignment &= ~StyleAlignFlags::FLAG_BITS;
 
   // Map some alignment values to 'start' / 'end'.
-  switch (aAlignment) {
-    case NS_STYLE_ALIGN_LEFT:
-    case NS_STYLE_ALIGN_RIGHT: {
-      if (aIsAlign) {
-        // Grid's 'align-content' axis is never parallel to the inline axis.
-        return NS_STYLE_ALIGN_START;
-      }
-      bool isStart = aWM.IsBidiLTR() == (aAlignment == NS_STYLE_ALIGN_LEFT);
-      return isStart ? NS_STYLE_ALIGN_START : NS_STYLE_ALIGN_END;
+  if (aAlignment == StyleAlignFlags::LEFT ||
+      aAlignment == StyleAlignFlags::RIGHT) {
+    if (aIsAlign) {
+      // Grid's 'align-content' axis is never parallel to the inline axis.
+      return StyleAlignFlags::START;
     }
-    case NS_STYLE_ALIGN_FLEX_START:  // same as 'start' for Grid
-      return NS_STYLE_ALIGN_START;
-    case NS_STYLE_ALIGN_FLEX_END:  // same as 'end' for Grid
-      return NS_STYLE_ALIGN_END;
+    bool isStart = aWM.IsBidiLTR() == (aAlignment == StyleAlignFlags::LEFT);
+    return isStart ? StyleAlignFlags::START : StyleAlignFlags::END;
+  }
+  if (aAlignment == StyleAlignFlags::FLEX_START) {
+    return StyleAlignFlags::START;  // same as 'start' for Grid
+  }
+  if (aAlignment == StyleAlignFlags::FLEX_END) {
+    return StyleAlignFlags::END;  // same as 'end' for Grid
   }
   return aAlignment;
 }
 
-static uint16_t GetAlignJustifyFallbackIfAny(uint16_t aAlignment,
-                                             const WritingMode aWM,
-                                             const bool aIsAlign,
-                                             bool* aOverflowSafe) {
-  uint16_t fallback = aAlignment >> NS_STYLE_ALIGN_ALL_SHIFT;
-  if (fallback) {
-    return GetAlignJustifyValue(fallback, aWM, aIsAlign, aOverflowSafe);
+static Maybe<StyleAlignFlags> GetAlignJustifyFallbackIfAny(
+    const StyleContentDistribution& aDistribution, const WritingMode aWM,
+    const bool aIsAlign, bool* aOverflowSafe) {
+  // TODO: Eventually this should look at aDistribution's fallback alignment,
+  // see https://github.com/w3c/csswg-drafts/issues/1002.
+  if (aDistribution.primary == StyleAlignFlags::STRETCH ||
+      aDistribution.primary == StyleAlignFlags::SPACE_BETWEEN) {
+    return Some(StyleAlignFlags::START);
   }
-  // https://drafts.csswg.org/css-align-3/#fallback-alignment
-  switch (aAlignment) {
-    case NS_STYLE_ALIGN_STRETCH:
-    case NS_STYLE_ALIGN_SPACE_BETWEEN:
-      return NS_STYLE_ALIGN_START;
-    case NS_STYLE_ALIGN_SPACE_AROUND:
-    case NS_STYLE_ALIGN_SPACE_EVENLY:
-      return NS_STYLE_ALIGN_CENTER;
+  if (aDistribution.primary == StyleAlignFlags::SPACE_AROUND ||
+      aDistribution.primary == StyleAlignFlags::SPACE_EVENLY) {
+    return Some(StyleAlignFlags::CENTER);
   }
-  return 0;
+  return Nothing();
 }
 
 //----------------------------------------------------------------------
@@ -5260,14 +5255,14 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
     if (itemHasBaselineParallelToTrack) {
       // [align|justify]-self:[last ]baseline.
       auto selfAlignment =
-          isOrthogonal ? child->StylePosition()->UsedJustifySelf(containerSC)
-                       : child->StylePosition()->UsedAlignSelf(containerSC);
-      selfAlignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
-      if (selfAlignment == NS_STYLE_ALIGN_BASELINE) {
+          isOrthogonal ? child->StylePosition()->UsedJustifySelf(containerSC)._0
+                       : child->StylePosition()->UsedAlignSelf(containerSC)._0;
+      selfAlignment &= ~StyleAlignFlags::FLAG_BITS;
+      if (selfAlignment == StyleAlignFlags::BASELINE) {
         state |= ItemState::eFirstBaseline | ItemState::eSelfBaseline;
         const GridArea& area = gridItem.mArea;
         baselineTrack = isInlineAxis ? area.mCols.mStart : area.mRows.mStart;
-      } else if (selfAlignment == NS_STYLE_ALIGN_LAST_BASELINE) {
+      } else if (selfAlignment == StyleAlignFlags::LAST_BASELINE) {
         state |= ItemState::eLastBaseline | ItemState::eSelfBaseline;
         const GridArea& area = gridItem.mArea;
         baselineTrack = (isInlineAxis ? area.mCols.mEnd : area.mRows.mEnd) - 1;
@@ -5280,15 +5275,15 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
       // For this purpose, the 'start', 'end', 'flex-start', and 'flex-end'
       // values of 'align-self' are treated as either 'self-start' or
       // 'self-end', whichever they end up equivalent to.
-      auto alignContent = child->StylePosition()->mAlignContent;
-      alignContent &= ~NS_STYLE_ALIGN_FLAG_BITS;
-      if (alignContent == NS_STYLE_ALIGN_BASELINE ||
-          alignContent == NS_STYLE_ALIGN_LAST_BASELINE) {
-        const auto selfAlignEdge = alignContent == NS_STYLE_ALIGN_BASELINE
-                                       ? NS_STYLE_ALIGN_SELF_START
-                                       : NS_STYLE_ALIGN_SELF_END;
-        bool validCombo = selfAlignment == NS_STYLE_ALIGN_NORMAL ||
-                          selfAlignment == NS_STYLE_ALIGN_STRETCH ||
+      auto alignContent = child->StylePosition()->mAlignContent.primary;
+      alignContent &= ~StyleAlignFlags::FLAG_BITS;
+      if (alignContent == StyleAlignFlags::BASELINE ||
+          alignContent == StyleAlignFlags::LAST_BASELINE) {
+        const auto selfAlignEdge = alignContent == StyleAlignFlags::BASELINE
+                                       ? StyleAlignFlags::SELF_START
+                                       : StyleAlignFlags::SELF_END;
+        bool validCombo = selfAlignment == StyleAlignFlags::NORMAL ||
+                          selfAlignment == StyleAlignFlags::STRETCH ||
                           selfAlignment == selfAlignEdge;
         if (!validCombo) {
           // We're doing alignment in the axis that's orthogonal to mAxis here.
@@ -5296,38 +5291,33 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
           // |sameSide| is true if the container's start side in this axis is
           // the same as the child's start side, in the child's parallel axis.
           bool sameSide = wm.ParallelAxisStartsOnSameSide(alignAxis, childWM);
-          switch (selfAlignment) {
-            case NS_STYLE_ALIGN_LEFT:
-              selfAlignment = !isInlineAxis || wm.IsBidiLTR()
-                                  ? NS_STYLE_ALIGN_START
-                                  : NS_STYLE_ALIGN_END;
-              break;
-            case NS_STYLE_ALIGN_RIGHT:
-              selfAlignment = isInlineAxis && wm.IsBidiLTR()
-                                  ? NS_STYLE_ALIGN_END
-                                  : NS_STYLE_ALIGN_START;
-              break;
+          if (selfAlignment == StyleAlignFlags::LEFT) {
+            selfAlignment = !isInlineAxis || wm.IsBidiLTR()
+                                ? StyleAlignFlags::START
+                                : StyleAlignFlags::END;
+          } else if (selfAlignment == StyleAlignFlags::RIGHT) {
+            selfAlignment = isInlineAxis && wm.IsBidiLTR()
+                                ? StyleAlignFlags::END
+                                : StyleAlignFlags::START;
           }
-          switch (selfAlignment) {
-            case NS_STYLE_ALIGN_START:
-            case NS_STYLE_ALIGN_FLEX_START:
-              validCombo =
-                  sameSide == (alignContent == NS_STYLE_ALIGN_BASELINE);
-              break;
-            case NS_STYLE_ALIGN_END:
-            case NS_STYLE_ALIGN_FLEX_END:
-              validCombo =
-                  sameSide == (alignContent == NS_STYLE_ALIGN_LAST_BASELINE);
-              break;
+
+          if (selfAlignment == StyleAlignFlags::START ||
+              selfAlignment == StyleAlignFlags::FLEX_START) {
+            validCombo =
+                sameSide == (alignContent == StyleAlignFlags::BASELINE);
+          } else if (selfAlignment == StyleAlignFlags::END ||
+                     selfAlignment == StyleAlignFlags::FLEX_END) {
+            validCombo =
+                sameSide == (alignContent == StyleAlignFlags::LAST_BASELINE);
           }
         }
         if (validCombo) {
           const GridArea& area = gridItem.mArea;
-          if (alignContent == NS_STYLE_ALIGN_BASELINE) {
+          if (alignContent == StyleAlignFlags::BASELINE) {
             state |= ItemState::eFirstBaseline | ItemState::eContentBaseline;
             baselineTrack =
                 isInlineAxis ? area.mCols.mStart : area.mRows.mStart;
-          } else if (alignContent == NS_STYLE_ALIGN_LAST_BASELINE) {
+          } else if (alignContent == StyleAlignFlags::LAST_BASELINE) {
             state |= ItemState::eLastBaseline | ItemState::eContentBaseline;
             baselineTrack =
                 (isInlineAxis ? area.mCols.mEnd : area.mRows.mEnd) - 1;
@@ -5426,8 +5416,8 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
 
   // TODO: CSS Align spec issue - how to align a baseline subtree in a track?
   // https://lists.w3.org/Archives/Public/www-style/2016May/0141.html
-  mBaselineSubtreeAlign[BaselineSharingGroup::First] = NS_STYLE_ALIGN_START;
-  mBaselineSubtreeAlign[BaselineSharingGroup::Last] = NS_STYLE_ALIGN_END;
+  mBaselineSubtreeAlign[BaselineSharingGroup::First] = StyleAlignFlags::START;
+  mBaselineSubtreeAlign[BaselineSharingGroup::Last] = StyleAlignFlags::END;
 
   CalculateItemBaselines(firstBaselineItems, BaselineSharingGroup::First);
   CalculateItemBaselines(lastBaselineItems, BaselineSharingGroup::Last);
@@ -5454,22 +5444,18 @@ void nsGridContainerFrame::Tracks::AlignBaselineSubtree(
                                        : BaselineSharingGroup::Last;
   nscoord delta = sz.mBase - sz.mBaselineSubtreeSize[baselineGroup];
   const auto subtreeAlign = mBaselineSubtreeAlign[baselineGroup];
-  switch (subtreeAlign) {
-    case NS_STYLE_ALIGN_START:
-      if (state & ItemState::eLastBaseline) {
-        aGridItem.mBaselineOffset[mAxis] += delta;
-      }
-      break;
-    case NS_STYLE_ALIGN_END:
-      if (isFirstBaseline) {
-        aGridItem.mBaselineOffset[mAxis] += delta;
-      }
-      break;
-    case NS_STYLE_ALIGN_CENTER:
-      aGridItem.mBaselineOffset[mAxis] += delta / 2;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected baseline subtree alignment");
+  if (subtreeAlign == StyleAlignFlags::START) {
+    if (state & ItemState::eLastBaseline) {
+      aGridItem.mBaselineOffset[mAxis] += delta;
+    }
+  } else if (subtreeAlign == StyleAlignFlags::END) {
+    if (isFirstBaseline) {
+      aGridItem.mBaselineOffset[mAxis] += delta;
+    }
+  } else if (subtreeAlign == StyleAlignFlags::CENTER) {
+    aGridItem.mBaselineOffset[mAxis] += delta / 2;
+  } else {
+    MOZ_ASSERT_UNREACHABLE("unexpected baseline subtree alignment");
   }
 }
 
@@ -5991,19 +5977,18 @@ void nsGridContainerFrame::Tracks::AlignJustifyContent(
   auto valueAndFallback =
       isAlign ? aStyle->mAlignContent : aStyle->mJustifyContent;
   bool overflowSafe;
-  auto alignment =
-      ::GetAlignJustifyValue(valueAndFallback, aWM, isAlign, &overflowSafe);
-  if (alignment == NS_STYLE_ALIGN_NORMAL) {
-    MOZ_ASSERT(valueAndFallback == NS_STYLE_ALIGN_NORMAL,
-               "*-content:normal cannot be specified with explicit fallback");
-    alignment = NS_STYLE_ALIGN_STRETCH;
-    valueAndFallback = alignment;  // we may need a fallback for 'stretch' below
+  auto alignment = ::GetAlignJustifyValue(valueAndFallback.primary, aWM,
+                                          isAlign, &overflowSafe);
+  if (alignment == StyleAlignFlags::NORMAL) {
+    alignment = StyleAlignFlags::STRETCH;
+    // we may need a fallback for 'stretch' below
+    valueAndFallback = {alignment};
   }
 
   // Compute the free space and count auto-sized tracks.
   size_t numAutoTracks = 0;
   nscoord space;
-  if (alignment != NS_STYLE_ALIGN_START) {
+  if (alignment != StyleAlignFlags::START) {
     nscoord trackSizeSum = 0;
     if (aIsSubgriddedAxis) {
       numAutoTracks = mSizes.Length();
@@ -6018,41 +6003,37 @@ void nsGridContainerFrame::Tracks::AlignJustifyContent(
     space = aContentBoxSize - trackSizeSum - SumOfGridGaps();
     // Use the fallback value instead when applicable.
     if (space < 0 ||
-        (alignment == NS_STYLE_ALIGN_SPACE_BETWEEN && mSizes.Length() == 1)) {
+        (alignment == StyleAlignFlags::SPACE_BETWEEN && mSizes.Length() == 1)) {
       auto fallback = ::GetAlignJustifyFallbackIfAny(valueAndFallback, aWM,
                                                      isAlign, &overflowSafe);
       if (fallback) {
-        alignment = fallback;
+        alignment = *fallback;
       }
     }
     if (space == 0 || (space < 0 && overflowSafe)) {
       // XXX check that this makes sense also for [last ]baseline (bug 1151204).
-      alignment = NS_STYLE_ALIGN_START;
+      alignment = StyleAlignFlags::START;
     }
   }
 
   // Optimize the cases where we just need to set each track's position.
   nscoord pos = 0;
   bool distribute = true;
-  switch (alignment) {
-    case NS_STYLE_ALIGN_BASELINE:
-    case NS_STYLE_ALIGN_LAST_BASELINE:
-      NS_WARNING("NYI: 'first/last baseline' (bug 1151204)");  // XXX
-      [[fallthrough]];
-    case NS_STYLE_ALIGN_START:
-      distribute = false;
-      break;
-    case NS_STYLE_ALIGN_END:
-      pos = space;
-      distribute = false;
-      break;
-    case NS_STYLE_ALIGN_CENTER:
-      pos = space / 2;
-      distribute = false;
-      break;
-    case NS_STYLE_ALIGN_STRETCH:
-      distribute = numAutoTracks != 0;
-      break;
+  if (alignment == StyleAlignFlags::BASELINE ||
+      alignment == StyleAlignFlags::LAST_BASELINE) {
+    NS_WARNING("NYI: 'first/last baseline' (bug 1151204)");  // XXX
+    alignment = StyleAlignFlags::START;
+  }
+  if (alignment == StyleAlignFlags::START) {
+    distribute = false;
+  } else if (alignment == StyleAlignFlags::END) {
+    pos = space;
+    distribute = false;
+  } else if (alignment == StyleAlignFlags::CENTER) {
+    pos = space / 2;
+    distribute = false;
+  } else if (alignment == StyleAlignFlags::STRETCH) {
+    distribute = numAutoTracks != 0;
   }
   if (!distribute) {
     for (TrackSize& sz : mSizes) {
@@ -6065,45 +6046,41 @@ void nsGridContainerFrame::Tracks::AlignJustifyContent(
   // Distribute free space to/between tracks and set their position.
   MOZ_ASSERT(space > 0, "should've handled that on the fallback path above");
   nscoord between, roundingError;
-  switch (alignment) {
-    case NS_STYLE_ALIGN_STRETCH: {
-      MOZ_ASSERT(numAutoTracks > 0, "we handled numAutoTracks == 0 above");
-      nscoord spacePerTrack;
-      roundingError = NSCoordDivRem(space, numAutoTracks, &spacePerTrack);
-      for (TrackSize& sz : mSizes) {
-        sz.mPosition = pos;
-        if (!(sz.mState & TrackSize::eAutoMaxSizing)) {
-          pos += sz.mBase + mGridGap;
-          continue;
-        }
-        nscoord stretch = spacePerTrack;
-        if (roundingError) {
-          roundingError -= 1;
-          stretch += 1;
-        }
-        nscoord newBase = sz.mBase + stretch;
-        sz.mBase = newBase;
-        pos += newBase + mGridGap;
+  if (alignment == StyleAlignFlags::STRETCH) {
+    MOZ_ASSERT(numAutoTracks > 0, "we handled numAutoTracks == 0 above");
+    nscoord spacePerTrack;
+    roundingError = NSCoordDivRem(space, numAutoTracks, &spacePerTrack);
+    for (TrackSize& sz : mSizes) {
+      sz.mPosition = pos;
+      if (!(sz.mState & TrackSize::eAutoMaxSizing)) {
+        pos += sz.mBase + mGridGap;
+        continue;
       }
-      MOZ_ASSERT(!roundingError, "we didn't distribute all rounding error?");
-      return;
+      nscoord stretch = spacePerTrack;
+      if (roundingError) {
+        roundingError -= 1;
+        stretch += 1;
+      }
+      nscoord newBase = sz.mBase + stretch;
+      sz.mBase = newBase;
+      pos += newBase + mGridGap;
     }
-    case NS_STYLE_ALIGN_SPACE_BETWEEN:
-      MOZ_ASSERT(mSizes.Length() > 1, "should've used a fallback above");
-      roundingError = NSCoordDivRem(space, mSizes.Length() - 1, &between);
-      break;
-    case NS_STYLE_ALIGN_SPACE_AROUND:
-      roundingError = NSCoordDivRem(space, mSizes.Length(), &between);
-      pos = between / 2;
-      break;
-    case NS_STYLE_ALIGN_SPACE_EVENLY:
-      roundingError = NSCoordDivRem(space, mSizes.Length() + 1, &between);
-      pos = between;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unknown align-/justify-content value");
-      between = 0;        // just to avoid a compiler warning
-      roundingError = 0;  // just to avoid a compiler warning
+    MOZ_ASSERT(!roundingError, "we didn't distribute all rounding error?");
+    return;
+  }
+  if (alignment == StyleAlignFlags::SPACE_BETWEEN) {
+    MOZ_ASSERT(mSizes.Length() > 1, "should've used a fallback above");
+    roundingError = NSCoordDivRem(space, mSizes.Length() - 1, &between);
+  } else if (alignment == StyleAlignFlags::SPACE_AROUND) {
+    roundingError = NSCoordDivRem(space, mSizes.Length(), &between);
+    pos = between / 2;
+  } else if (alignment == StyleAlignFlags::SPACE_EVENLY) {
+    roundingError = NSCoordDivRem(space, mSizes.Length() + 1, &between);
+    pos = between;
+  } else {
+    MOZ_ASSERT_UNREACHABLE("unknown align-/justify-content value");
+    between = 0;        // just to avoid a compiler warning
+    roundingError = 0;  // just to avoid a compiler warning
   }
   between += mGridGap;
   for (TrackSize& sz : mSizes) {
@@ -6396,13 +6373,13 @@ void nsGridContainerFrame::ReflowInFlowChild(
   if (aGridItemInfo) {
     // Clamp during reflow if we're stretching in that axis.
     auto* pos = aChild->StylePosition();
-    auto j = pos->UsedJustifySelf(Style());
-    auto a = pos->UsedAlignSelf(Style());
+    auto j = pos->UsedJustifySelf(Style())._0;
+    auto a = pos->UsedAlignSelf(Style())._0;
     bool stretch[2];
     stretch[eLogicalAxisInline] =
-        j == NS_STYLE_JUSTIFY_NORMAL || j == NS_STYLE_JUSTIFY_STRETCH;
+        j == StyleAlignFlags::NORMAL || j == StyleAlignFlags::STRETCH;
     stretch[eLogicalAxisBlock] =
-        a == NS_STYLE_ALIGN_NORMAL || a == NS_STYLE_ALIGN_STRETCH;
+        a == StyleAlignFlags::NORMAL || a == StyleAlignFlags::STRETCH;
     auto childIAxis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
     if (stretch[childIAxis] &&
         aGridItemInfo->mState[childIAxis] & ItemState::eClampMarginBoxMinSize) {
@@ -6463,8 +6440,8 @@ void nsGridContainerFrame::ReflowInFlowChild(
     if (!childRI.mStyleMargin->HasBlockAxisAuto(childWM) &&
         childRI.mStylePosition->BSize(childWM).IsAuto()) {
       auto blockAxisAlignment = childRI.mStylePosition->UsedAlignSelf(Style());
-      if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-          blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+      if (blockAxisAlignment._0 == StyleAlignFlags::NORMAL ||
+          blockAxisAlignment._0 == StyleAlignFlags::STRETCH) {
         stretch = true;
       }
     }
@@ -6515,8 +6492,9 @@ void nsGridContainerFrame::ReflowInFlowChild(
       auto align = childRI.mStylePosition->UsedAlignSelf(containerSC);
       auto state = aGridItemInfo->mState[eLogicalAxisBlock];
       if (state & ItemState::eContentBaseline) {
-        align = (state & ItemState::eFirstBaseline) ? NS_STYLE_ALIGN_SELF_START
-                                                    : NS_STYLE_ALIGN_SELF_END;
+        align = {(state & ItemState::eFirstBaseline)
+                     ? StyleAlignFlags::SELF_START
+                     : StyleAlignFlags::SELF_END};
       }
       nscoord cbsz = cb.BSize(wm) - consumedGridAreaBSize;
       AlignSelf(*aGridItemInfo, align, cbsz, wm, childRI, size, &childPos);
@@ -6524,9 +6502,9 @@ void nsGridContainerFrame::ReflowInFlowChild(
     auto justify = childRI.mStylePosition->UsedJustifySelf(containerSC);
     auto state = aGridItemInfo->mState[eLogicalAxisInline];
     if (state & ItemState::eContentBaseline) {
-      justify = (state & ItemState::eFirstBaseline)
-                    ? NS_STYLE_JUSTIFY_SELF_START
-                    : NS_STYLE_JUSTIFY_SELF_END;
+      justify = {(state & ItemState::eFirstBaseline)
+                     ? StyleAlignFlags::SELF_START
+                     : StyleAlignFlags::SELF_END};
     }
     nscoord cbsz = cb.ISize(wm);
     JustifySelf(*aGridItemInfo, justify, cbsz, wm, childRI, size, &childPos);
@@ -8135,46 +8113,47 @@ void nsGridContainerFrame::RemoveFrame(ChildListID aListID,
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
 
-uint16_t nsGridContainerFrame::CSSAlignmentForAbsPosChild(
+StyleAlignFlags nsGridContainerFrame::CSSAlignmentForAbsPosChild(
     const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const {
   MOZ_ASSERT(aChildRI.mFrame->IsAbsolutelyPositioned(),
              "This method should only be called for abspos children");
 
-  uint16_t alignment = (aLogicalAxis == eLogicalAxisInline)
-                           ? aChildRI.mStylePosition->UsedJustifySelf(Style())
-                           : aChildRI.mStylePosition->UsedAlignSelf(Style());
+  StyleAlignFlags alignment =
+      (aLogicalAxis == eLogicalAxisInline)
+          ? aChildRI.mStylePosition->UsedJustifySelf(Style())._0
+          : aChildRI.mStylePosition->UsedAlignSelf(Style())._0;
 
   // Extract and strip the flag bits
-  uint16_t alignmentFlags = alignment & NS_STYLE_ALIGN_FLAG_BITS;
-  alignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
+  StyleAlignFlags alignmentFlags = alignment & StyleAlignFlags::FLAG_BITS;
+  alignment &= ~StyleAlignFlags::FLAG_BITS;
 
-  if (alignment == NS_STYLE_ALIGN_NORMAL) {
+  if (alignment == StyleAlignFlags::NORMAL) {
     // "the 'normal' keyword behaves as 'start' on replaced
     // absolutely-positioned boxes, and behaves as 'stretch' on all other
     // absolutely-positioned boxes."
     // https://drafts.csswg.org/css-align/#align-abspos
     // https://drafts.csswg.org/css-align/#justify-abspos
     alignment = aChildRI.mFrame->IsFrameOfType(nsIFrame::eReplaced)
-                    ? NS_STYLE_ALIGN_START
-                    : NS_STYLE_ALIGN_STRETCH;
-  } else if (alignment == NS_STYLE_ALIGN_FLEX_START) {
-    alignment = NS_STYLE_ALIGN_START;
-  } else if (alignment == NS_STYLE_ALIGN_FLEX_END) {
-    alignment = NS_STYLE_ALIGN_END;
-  } else if (alignment == NS_STYLE_ALIGN_LEFT ||
-             alignment == NS_STYLE_ALIGN_RIGHT) {
+                    ? StyleAlignFlags::START
+                    : StyleAlignFlags::STRETCH;
+  } else if (alignment == StyleAlignFlags::FLEX_START) {
+    alignment = StyleAlignFlags::START;
+  } else if (alignment == StyleAlignFlags::FLEX_END) {
+    alignment = StyleAlignFlags::END;
+  } else if (alignment == StyleAlignFlags::LEFT ||
+             alignment == StyleAlignFlags::RIGHT) {
     if (aLogicalAxis == eLogicalAxisInline) {
-      const bool isLeft = (alignment == NS_STYLE_ALIGN_LEFT);
+      const bool isLeft = (alignment == StyleAlignFlags::LEFT);
       WritingMode wm = GetWritingMode();
-      alignment = (isLeft == wm.IsBidiLTR()) ? NS_STYLE_ALIGN_START
-                                             : NS_STYLE_ALIGN_END;
+      alignment = (isLeft == wm.IsBidiLTR()) ? StyleAlignFlags::START
+                                             : StyleAlignFlags::END;
     } else {
-      alignment = NS_STYLE_ALIGN_START;
+      alignment = StyleAlignFlags::START;
     }
-  } else if (alignment == NS_STYLE_ALIGN_BASELINE) {
-    alignment = NS_STYLE_ALIGN_START;
-  } else if (alignment == NS_STYLE_ALIGN_LAST_BASELINE) {
-    alignment = NS_STYLE_ALIGN_END;
+  } else if (alignment == StyleAlignFlags::BASELINE) {
+    alignment = StyleAlignFlags::START;
+  } else if (alignment == StyleAlignFlags::LAST_BASELINE) {
+    alignment = StyleAlignFlags::END;
   }
 
   return (alignment | alignmentFlags);

@@ -156,7 +156,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   uint32_t GetLineClampValue() const;
 
   // nsContainerFrame overrides
-  uint16_t CSSAlignmentForAbsPosChild(
+  mozilla::StyleAlignFlags CSSAlignmentForAbsPosChild(
       const ReflowInput& aChildRI,
       mozilla::LogicalAxis aLogicalAxis) const override;
 
@@ -165,7 +165,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * subjects in MainAxisPositionTracker() and CrossAxisPositionTracker() for
    * space-between, space-around, and space-evenly.
    *    * @param aNumThingsToPack             Number of alignment subjects.
-   * @param aAlignVal                    Value for align-self or justify-self.
+   * @param aAlignVal                    Value for align-content or
+   *                                     justify-content.
    * @param aFirstSubjectOffset          Outparam for first subject offset.
    * @param aNumPackingSpacesRemaining   Outparam for number of equal-sized
    *                                     packing spaces to apply between each
@@ -173,11 +174,11 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * @param aPackingSpaceRemaining       Outparam for total amount of packing
    *                                     space to be divided up.
    */
-  static void CalculatePackingSpace(uint32_t aNumThingsToPack,
-                                    uint8_t aAlignVal,
-                                    nscoord* aFirstSubjectOffset,
-                                    uint32_t* aNumPackingSpacesRemaining,
-                                    nscoord* aPackingSpaceRemaining);
+  static void CalculatePackingSpace(
+      uint32_t aNumThingsToPack,
+      const mozilla::StyleContentDistribution& aAlignVal,
+      nscoord* aFirstSubjectOffset, uint32_t* aNumPackingSpacesRemaining,
+      nscoord* aPackingSpaceRemaining);
 
   /**
    * This property is created by a call to
