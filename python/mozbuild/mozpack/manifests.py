@@ -128,9 +128,7 @@ class InstallManifest(object):
                                             version)
 
         for line in fileobj:
-            # Explicitly strip on \n so we don't strip out the FIELD_SEPARATOR
-            # as well.
-            line = line.rstrip('\n')
+            line = line.rstrip()
 
             fields = line.split(self.FIELD_SEPARATOR)
 
