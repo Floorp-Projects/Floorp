@@ -334,6 +334,17 @@ static JSObject* SuperFunOperation(JSObject* callee) {
   return callee->as<JSFunction>().staticPrototype();
 }
 
+static JSObject* HomeObjectSuperBase(JSContext* cx, JSObject* homeObj) {
+  MOZ_ASSERT(homeObj->is<PlainObject>() || homeObj->is<JSFunction>());
+
+  if (JSObject* superBase = homeObj->staticPrototype()) {
+    return superBase;
+  }
+
+  ThrowHomeObjectNotObject(cx);
+  return nullptr;
+}
+
 bool js::ReportIsNotFunction(JSContext* cx, HandleValue v, int numToSkip,
                              MaybeConstruct construct) {
   unsigned error = construct ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
@@ -5343,24 +5354,14 @@ bool js::ThrowUninitializedThis(JSContext* cx) {
   return false;
 }
 
-JSObject* js::HomeObjectSuperBase(JSContext* cx, HandleObject homeObj) {
-  RootedObject superBase(cx);
-
-  if (!GetPrototype(cx, homeObj, &superBase)) {
-    return nullptr;
-  }
-
-  if (!superBase) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_CANT_CONVERT_TO, "null", "object");
-    return nullptr;
-  }
-
-  return superBase;
-}
-
 bool js::ThrowInitializedThis(JSContext* cx) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_REINIT_THIS);
+  return false;
+}
+
+bool js::ThrowHomeObjectNotObject(JSContext* cx) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                            "null", "object");
   return false;
 }
 

@@ -148,7 +148,6 @@ namespace jit {
   _(GreaterThan, js::jit::GreaterThan)                                         \
   _(GreaterThanOrEqual, js::jit::GreaterThanOrEqual)                           \
   _(HandleDebugTrap, js::jit::HandleDebugTrap)                                 \
-  _(HomeObjectSuperBase, js::HomeObjectSuperBase)                              \
   _(ImplicitThisOperation, js::ImplicitThisOperation)                          \
   _(ImportMetaOperation, js::ImportMetaOperation)                              \
   _(InitElemGetterSetterOperation, js::InitElemGetterSetterOperation)          \
@@ -275,6 +274,7 @@ namespace jit {
   _(SubstringKernel, js::SubstringKernel)                                      \
   _(ThrowBadDerivedReturn, js::jit::ThrowBadDerivedReturn)                     \
   _(ThrowCheckIsObject, js::ThrowCheckIsObject)                                \
+  _(ThrowHomeObjectNotObject, js::ThrowHomeObjectNotObject)                    \
   _(ThrowInitializedThis, js::ThrowInitializedThis)                            \
   _(ThrowMsgOperation, js::ThrowMsgOperation)                                  \
   _(ThrowObjectCoercible, js::jit::ThrowObjectCoercible)                       \
