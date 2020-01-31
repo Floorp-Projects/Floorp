@@ -61,32 +61,14 @@ class ComputedStyle;
  *  4. media_queries::Device, which holds the initial value of every property
  */
 
-// Various bits used by both Servo and Gecko.
-//
-// Please add an assert that this matches the Servo bit in
-// computed_value_flags::assert_match().
-//
-// FIXME(emilio): Would be nice to use cbindgen when it can handle bitflags!
-// without macro expansion, see https://github.com/eqrion/cbindgen/issues/100.
-enum class ComputedStyleBit : uint16_t {
-  HasTextDecorationLines = 1 << 0,
-  SuppressLineBreak = 1 << 1,
-  IsTextCombined = 1 << 2,
-  RelevantLinkVisited = 1 << 3,
-  HasPseudoElementData = 1 << 4,
-  DependsOnFontMetrics = 1 << 9,
-};
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ComputedStyleBit)
-
 class ComputedStyle {
-  using Bit = ComputedStyleBit;
+  using Flag = StyleComputedValueFlags;
+
+  const StyleComputedValueFlags& Flags() const { return mSource.flags; }
 
  public:
   ComputedStyle(PseudoStyleType aPseudoType,
                 ServoComputedDataForgotten aComputedValues);
-
-  Bit Bits() const { return static_cast<Bit>(mSource.flags.mFlags); }
 
   // Return the ComputedStyle whose style data should be used for the R,
   // G, and B components of color, background-color, and border-*-color
@@ -140,7 +122,7 @@ class ComputedStyle {
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests
   // only the data for a single context.
   bool HasTextDecorationLines() const {
-    return bool(Bits() & Bit::HasTextDecorationLines);
+    return bool(Flags() & Flag::HAS_TEXT_DECORATION_LINES);
   }
 
   // Whether any line break inside should be suppressed? If this returns
@@ -151,17 +133,17 @@ class ComputedStyle {
   // NOTE: for nsTextFrame, use nsTextFrame::ShouldSuppressLineBreak()
   // instead of this method.
   bool ShouldSuppressLineBreak() const {
-    return bool(Bits() & Bit::SuppressLineBreak);
+    return bool(Flags() & Flag::SHOULD_SUPPRESS_LINEBREAK);
   }
 
   // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
   // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText().
-  bool IsTextCombined() const { return bool(Bits() & Bit::IsTextCombined); }
+  bool IsTextCombined() const { return bool(Flags() & Flag::IS_TEXT_COMBINED); }
 
   // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
   // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText().
   bool DependsOnFontMetrics() const {
-    return bool(Bits() & Bit::DependsOnFontMetrics);
+    return bool(Flags() & Flag::DEPENDS_ON_FONT_METRICS);
   }
 
   // Does this ComputedStyle represent the style for a pseudo-element or
@@ -169,14 +151,19 @@ class ComputedStyle {
   // is equivalent to whether it or any of its ancestors returns
   // non-null for IsPseudoElement().
   bool HasPseudoElementData() const {
-    return bool(Bits() & Bit::HasPseudoElementData);
+    return bool(Flags() & Flag::IS_IN_PSEUDO_ELEMENT_SUBTREE);
   }
 
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this ComputedStyle is for (which is that element
   // or its nearest ancestor that is a link) visited?
   bool RelevantLinkVisited() const {
-    return bool(Bits() & Bit::RelevantLinkVisited);
+    return bool(Flags() & Flag::IS_RELEVANT_LINK_VISITED);
+  }
+
+  // Whether this style is for the root element of the document.
+  bool IsRootElementStyle() const {
+    return bool(Flags() & Flag::IS_ROOT_ELEMENT_STYLE);
   }
 
   ComputedStyle* GetCachedInheritingAnonBoxStyle(

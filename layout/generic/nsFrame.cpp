@@ -644,6 +644,7 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   } else {
     PresContext()->ConstructedFrame();
   }
+
   if (GetParent()) {
     if (MOZ_UNLIKELY(mContent == PresContext()->Document()->GetRootElement() &&
                      mContent == GetParent()->GetContent())) {

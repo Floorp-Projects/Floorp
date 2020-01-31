@@ -560,6 +560,7 @@ cbindgen-types = [
     { gecko = "StyleAlignSelf", servo = "values::computed::AlignSelf" },
     { gecko = "StyleAlignContent", servo = "values::computed::align::AlignContent" },
     { gecko = "StyleJustifyContent", servo = "values::computed::align::JustifyContent" },
+    { gecko = "StyleComputedValueFlags", servo = "computed_value_flags::ComputedValueFlags" },
 ]
 
 mapped-generic-types = [
@@ -569,7 +570,6 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoCustomPropertiesMap", servo = "Option<::servo_arc::Arc<::custom_properties::CustomPropertiesMap>>" },
     { generic = false, gecko = "mozilla::ServoRuleNode", servo = "Option<::rule_tree::StrongRuleNode>" },
     { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::servo_arc::RawOffsetArc<::properties::ComputedValues>>" },
-    { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
     { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::servo_arc::RawOffsetArc" },
     { generic = true, gecko = "mozilla::ServoManuallyDrop", servo = "::std::mem::ManuallyDrop" },
     { generic = false, gecko = "nsACString", servo = "nsstring::nsACString" },
