@@ -355,25 +355,33 @@ void RemoteWorkerManager::LaunchNewContentProcess(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
+  RefPtr<RemoteWorkerManager> self = this;
+
   // This runnable will spawn a new process if it doesn't exist yet.
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       __func__, [isServiceWorker = IsServiceWorker(aData),
-                 principalInfo = aData.principalInfo()] {
+                 principalInfo = aData.principalInfo(),
+                 self = std::move(self)]() mutable {
         ContentParent::GetNewOrUsedBrowserProcessAsync(
             /* aFrameElement = */ nullptr,
             /* aRemoteType = */ NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))
-            ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                   [isServiceWorker, principalInfo](
-                       const ContentParent::LaunchPromise::ResolveOrRejectValue&
-                           aResult) {
-                     if (!isServiceWorker) {
-                       return;
-                     }
-                     RefPtr<ContentParent> contentParent =
-                         aResult.IsResolve() ? aResult.ResolveValue() : nullptr;
-                     TransmitPermissionsAndBlobURLsForPrincipalInfo(
-                         contentParent, principalInfo);
-                   });
+            ->Then(
+                GetCurrentThreadSerialEventTarget(), __func__,
+                [isServiceWorker,
+                 principalInfo](ContentParent* aContentParent) {
+                  if (!isServiceWorker) {
+                    return;
+                  }
+                  TransmitPermissionsAndBlobURLsForPrincipalInfo(aContentParent,
+                                                                 principalInfo);
+                },
+                [self = std::move(self)](
+                    const ContentParent::LaunchPromise::RejectValueType&) {
+                  auto pendings = std::move(self->mPendings);
+                  for (const auto& pending : pendings) {
+                    pending.mController->CreationFailed();
+                  }
+                });
       });
 
   nsCOMPtr<nsIEventTarget> target =
