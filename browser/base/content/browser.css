@@ -550,13 +550,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 /* ::::: location bar & search bar ::::: */
 
-/* url bar min-width is defined further down, together with the maximum size
- * of the identity icon block, for different window sizes.
- */
-#search-container {
-  min-width: 25ch;
-}
-
 #urlbar,
 #searchbar {
   /* Setting a width and min-width to let the location & search bars maintain
