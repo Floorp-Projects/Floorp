@@ -1172,7 +1172,7 @@ void Http3Session::CallCertVerification() {
   Unused << mSocketControl->GetProviderFlags(&providerFlags);
 
   SECStatus rv = AuthCertificateHookWithInfo(
-      mSocketControl, static_cast<const void*>(this), certInfo.certs,
+      mSocketControl, static_cast<const void*>(this), std::move(certInfo.certs),
       stapledOCSPResponse, sctsFromTLSExtension, providerFlags);
   if ((rv != SECSuccess) && (rv != SECWouldBlock)) {
     LOG(("Http3Session::CallCertVerification [this=%p] AuthCertificate failed",

@@ -856,13 +856,18 @@ TransportSecurityInfo::GetFailedCertChain(
 }
 
 nsresult TransportSecurityInfo::SetFailedCertChain(
-    UniqueCERTCertList aCertList) {
-  mFailedCertChain.Clear();
-  for (CERTCertListNode* node = CERT_LIST_HEAD(aCertList);
-       !CERT_LIST_END(node, aCertList); node = CERT_LIST_NEXT(node)) {
-    RefPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
-    mFailedCertChain.AppendElement(cert);
+    nsTArray<nsTArray<uint8_t>>&& aCertList) {
+  nsTArray<nsTArray<uint8_t>> certList = std::move(aCertList);
+  nsTArray<RefPtr<nsIX509Cert>> failedCertChain;
+  for (auto& certBytes : certList) {
+    RefPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
+        BitwiseCast<char*, uint8_t*>(certBytes.Elements()), certBytes.Length());
+    if (!cert) {
+      return NS_ERROR_FAILURE;
+    }
+    failedCertChain.AppendElement(cert);
   }
+  mFailedCertChain = std::move(failedCertChain);
   return NS_OK;
 }
 

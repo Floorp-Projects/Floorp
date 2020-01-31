@@ -24,7 +24,7 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
 // completed via SetCertVerificationResult.
 SECStatus AuthCertificateHookWithInfo(
     TransportSecurityInfo* infoObject, const void* aPtrForLogging,
-    nsTArray<nsTArray<uint8_t>>& peerCertChain,
+    nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<nsTArray<uint8_t>>>& stapledOCSPResponses,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags);
 }  // namespace psm
