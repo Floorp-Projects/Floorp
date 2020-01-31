@@ -56,6 +56,9 @@ class UrlbarView {
 
     this.controller.setView(this);
     this.controller.addQueryListener(this);
+    // This is used by autoOpen to avoid flickering results when reopening
+    // previously abandoned searches.
+    this._queryContextCache = new QueryContextCache(5);
   }
 
   get oneOffSearchButtons() {
@@ -374,34 +377,76 @@ class UrlbarView {
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
   }
 
-  maybeReopen() {
-    // Reopen if we have cached results and the input is focused, unless the
-    // search string is empty or different. We don't restore the empty search
-    // because this is supposed to restore the search status when the user
-    // abandoned a search engagement, just opening the dropdown is not
-    // considered a sufficient engagement.
-    if (
-      this.input.megabar &&
-      this._rows.firstElementChild &&
-      this.input.focused &&
-      this.input.value &&
-      this._queryContext.searchString == this.input.value &&
-      this.input.getAttribute("pageproxystate") != "valid"
-    ) {
-      // In some cases where we can move across tabs with an open panel.
-      if (!this.isOpen) {
-        this._openPanel();
-      }
-      this.controller.engagementEvent.discard();
-      this.input.startQuery({
-        autofillIgnoresSelection: true,
-        searchString: this.input.value,
-        allowAutofill: this._queryContext.allowAutofill,
-        event: new CustomEvent("urlbar-reopen"),
-      });
-      return true;
+  /**
+   * This can be used to open the view automatically as a consequence of
+   * specific user actions. For Top Sites searches (without a search string)
+   * the view is opened only for mouse or keyboard interactions.
+   * If the user abandoned a search (there is a search string) the view is
+   * reopened, and we try to use cached results to reduce flickering, then a new
+   * query is started to refresh results.
+   * @param {Event} queryOptions Options to use when starting a new query. The
+   *        event property is mandatory for proper telemetry tracking.
+   * @returns {boolean} Whether the view was opened.
+   */
+  autoOpen(queryOptions = {}) {
+    if (!this.input.openViewOnFocus || !queryOptions.event) {
+      return false;
     }
-    return false;
+
+    if (
+      !this.input.value ||
+      this.input.getAttribute("pageproxystate") == "valid"
+    ) {
+      // We do not show Top Sites in private windows, or if the user disabled them
+      // on about:newtab.
+      let canOpenTopSites =
+        !this.input.isPrivate &&
+        UrlbarPrefs.get("browser.newtabpage.activity-stream.feeds.topsites");
+      if (
+        canOpenTopSites &&
+        !this.isOpen &&
+        ["mousedown", "command"].includes(queryOptions.event.type)
+      ) {
+        this.input.startQuery(queryOptions);
+        return true;
+      }
+      return false;
+    }
+
+    let urlbarFocused = this.input.focused;
+    if (queryOptions.event.type == "TabSelect") {
+      urlbarFocused = queryOptions.event.target.linkedBrowser._urlbarFocused;
+    }
+
+    // Reopen abandoned searches only if the input is focused.
+    if (!urlbarFocused) {
+      return false;
+    }
+
+    if (
+      this._rows.firstElementChild &&
+      this._queryContext.searchString == this.input.value
+    ) {
+      // We can reuse the current results.
+      queryOptions.allowAutofill = this._queryContext.allowAutofill;
+    } else {
+      // To reduce results flickering, try to reuse a cached UrlbarQueryContext.
+      let cachedQueryContext = this._queryContextCache.get(this.input.value);
+      if (cachedQueryContext) {
+        this.onQueryResults(cachedQueryContext);
+      }
+    }
+
+    this._openPanel();
+
+    this.controller.engagementEvent.discard();
+    queryOptions.searchString = this.input.value;
+    queryOptions.autofillIgnoresSelection = true;
+    queryOptions.event.interactionType = "returned";
+    // If we had cached results, this will just refresh them, avoiding results
+    // flicker, otherwise there may be some noise.
+    this.input.startQuery(queryOptions);
+    return true;
   }
 
   // UrlbarController listener methods.
@@ -424,6 +469,7 @@ class UrlbarView {
   }
 
   onQueryResults(queryContext) {
+    this._queryContextCache.put(queryContext);
     this._queryContext = queryContext;
 
     if (!this.isOpen) {
@@ -1482,10 +1528,10 @@ class UrlbarView {
     this.close();
   }
 
-  _on_TabSelect() {
-    // A TabSelect doesn't always change urlbar focus, so we must try to reopen
-    // here too, not just on focus.
-    if (this.maybeReopen()) {
+  _on_TabSelect(event) {
+    // Switching tabs doesn't always change urlbar focus, so we must try to
+    // reopen here too, not just on focus.
+    if (this.autoOpen({ event })) {
       return;
     }
     // The input may retain focus when switching tabs in which case we
@@ -1495,3 +1541,46 @@ class UrlbarView {
 }
 
 UrlbarView.removeStaleRowsTimeout = DEFAULT_REMOVE_STALE_ROWS_TIMEOUT;
+
+/**
+ * Implements a QueryContext cache, working as a circular buffer, when a new
+ * entry is added at the top, the last item is remove from the bottom.
+ */
+class QueryContextCache {
+  /**
+   * Constructor.
+   * @param {number} size The number of entries to keep in the cache.
+   */
+  constructor(size) {
+    this.size = size;
+    this._cache = [];
+  }
+
+  /**
+   * Adds a new entry to the cache.
+   * @param {UrlbarQueryContext} queryContext The UrlbarQueryContext to add.
+   * @note QueryContexts without a searchString or without results are ignored
+   *       and not added.
+   */
+  put(queryContext) {
+    let searchString = queryContext.searchString;
+    if (!searchString || !queryContext.results.length) {
+      return;
+    }
+
+    let index = this._cache.findIndex(e => e.searchString == searchString);
+    if (index != -1) {
+      if (this._cache[index] == queryContext) {
+        return;
+      }
+      this._cache.splice(index, 1);
+    }
+    if (this._cache.unshift(queryContext) > this.size) {
+      this._cache.length = this.size;
+    }
+  }
+
+  get(searchString) {
+    return this._cache.find(e => e.searchString == searchString);
+  }
+}

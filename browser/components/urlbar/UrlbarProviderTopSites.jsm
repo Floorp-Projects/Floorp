@@ -69,6 +69,9 @@ class ProviderTopSites extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
+    // We don't want to show Top sites in private windows or if they are
+    // disabled in about:newtab, but the provider is not disabled in those cases
+    // because the user may still want to show them by pressing down.
     return (
       UrlbarPrefs.get("update1") &&
       UrlbarPrefs.get("openViewOnFocus") &&
