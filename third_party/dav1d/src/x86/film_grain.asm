@@ -27,7 +27,7 @@
 
 %if ARCH_X86_64
 
-SECTION_RODATA
+SECTION_RODATA 32
 pw_1024: times 16 dw 1024
 pb_mask: db 0, 0x80, 0x80, 0, 0x80, 0, 0, 0x80, 0x80, 0, 0, 0x80, 0, 0x80, 0x80, 0
 rnd_next_upperbit_mask: dw 0x100B, 0x2016, 0x402C, 0x8058
@@ -609,6 +609,8 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     movd           xm15, [base+hmul_bits-10+shiftq*2]
     pmovsxbw        xm8, [fg_dataq+FGData.ar_coeffs_uv+uvq+0]   ; cf0-7
     pmovsxbw        xm9, [fg_dataq+FGData.ar_coeffs_uv+uvq+8]   ; cf8-12
+    vpbroadcastw    xm7, [base+hmul_bits+4]
+    vpbroadcastd    xm6, [base+pb_1]
     DEFINE_ARGS buf, bufy, h, x
     pshufd         xm12, xm9, q0000
     pshufd         xm13, xm9, q1111
@@ -639,31 +641,28 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
 
     psrldq          xm4, xm0, 4             ; y=-2,x=[+0,+5]
     psrldq          xm5, xm0, 6             ; y=-2,x=[+1,+5]
-    psrldq          xm6, xm0, 8             ; y=-2,x=[+2,+5]
+    psrldq          xm0, 8                  ; y=-2,x=[+2,+5]
     punpcklwd       xm4, xm5
-    punpcklwd       xm6, xm1
-    psrldq          xm7, xm1, 6             ; y=-1,x=[+1,+5]
+    punpcklwd       xm0, xm1
+    psrldq          xm3, xm1, 6             ; y=-1,x=[+1,+5]
     psrldq          xm1, xm1, 8             ; y=-1,x=[+2,+5]
-    punpcklwd       xm7, xm1
+    punpcklwd       xm3, xm1
     pmaddwd         xm4, xm9
-    pmaddwd         xm6, xm10
-    pmaddwd         xm7, xm12
-    paddd           xm4, xm6
-    paddd           xm2, xm7
+    pmaddwd         xm0, xm10
+    pmaddwd         xm3, xm12
+    paddd           xm4, xm0
+    paddd           xm2, xm3
     paddd           xm2, xm4
 
-    vpbroadcastd    xm4, [base+pb_1]
-    movq            xm6, [bufyq+xq*2]
-    movq            xm7, [bufyq+xq*2+82]
-    pmaddubsw       xm6, xm4, xm6
-    pmaddubsw       xm7, xm4, xm7
-    vpbroadcastw    xm4, [base+hmul_bits+4]
-    paddw           xm6, xm7
-    pmulhrsw        xm6, xm4
-    pxor            xm7, xm7
-    punpcklwd       xm6, xm7
-    pmaddwd         xm6, xm14
-    paddd           xm2, xm6
+    movq            xm0, [bufyq+xq*2]
+    movq            xm3, [bufyq+xq*2+82]
+    pmaddubsw       xm0, xm6, xm0
+    pmaddubsw       xm3, xm6, xm3
+    paddw           xm0, xm3
+    pmulhrsw        xm0, xm7
+    punpcklwd       xm0, xm0
+    pmaddwd         xm0, xm14
+    paddd           xm2, xm0
 
     movq            xm0, [bufq+xq-2]        ; y=0,x=[-2,+5]
 .x_loop_ar2_inner:
@@ -807,8 +806,7 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     pmaddubsw       xm1, xm13, xm1
     pmaddubsw       xm2, xm13, xm2
     paddw           xm1, xm2
-    vpbroadcastw    xm3, xm15
-    pmulhrsw        xm1, xm3
+    pmulhrsw        xm1, xm15
 
     punpcklwd       xm6, xm7
     punpcklwd       xm8, xm9

@@ -146,10 +146,10 @@ void output_close(MuxerContext *const ctx) {
     free(ctx);
 }
 
-int output_verify(MuxerContext *const ctx, const char *const md5_Str) {
+int output_verify(MuxerContext *const ctx, const char *const md5_str) {
     int res = 0;
     if (ctx->impl->verify)
-        res = ctx->impl->verify(ctx->data, md5_Str);
+        res = ctx->impl->verify(ctx->data, md5_str);
     free(ctx);
     return res;
 }

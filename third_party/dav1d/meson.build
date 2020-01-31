@@ -23,14 +23,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '0.5.0',
+    version: '0.5.2',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
                       'b_ndebug=if-release'],
     meson_version: '>= 0.47.0')
 
-dav1d_soname_version       = '3.0.0'
+dav1d_soname_version       = '3.1.0'
 dav1d_api_version_array    = dav1d_soname_version.split('.')
 dav1d_api_version_major    = dav1d_api_version_array[0]
 dav1d_api_version_minor    = dav1d_api_version_array[1]
@@ -98,6 +98,7 @@ if host_machine.system() == 'windows'
     cdata.set('UNICODE',                1) # Define to 1 for Unicode (Wide Chars) APIs
     cdata.set('_UNICODE',               1) # Define to 1 for Unicode (Wide Chars) APIs
     cdata.set('__USE_MINGW_ANSI_STDIO', 1) # Define to force use of MinGW printf
+    cdata.set('_CRT_DECLARE_NONSTDC_NAMES', 1) # Define to get off_t from sys/types.h on MSVC
     if cc.has_function('fseeko', prefix : '#include <stdio.h>', args : test_args)
         cdata.set('_FILE_OFFSET_BITS', 64) # Not set by default by Meson on Windows
     else
@@ -112,11 +113,23 @@ if host_machine.system() == 'windows'
     # On Windows, we use a compatibility layer to emulate pthread
     thread_dependency = []
     thread_compat_dep = declare_dependency(sources : files('src/win32/thread.c'))
+
+    rt_dependency = []
 else
     thread_dependency = dependency('threads')
     thread_compat_dep = []
-endif
 
+    rt_dependency = []
+    if cc.has_function('clock_gettime', prefix : '#include <time.h>', args : test_args)
+        cdata.set('HAVE_CLOCK_GETTIME', 1)
+    elif host_machine.system() != 'darwin'
+        rt_dependency = cc.find_library('rt', required: false)
+        if not cc.has_function('clock_gettime', prefix : '#include <time.h>', args : test_args, dependencies : rt_dependency)
+            error('clock_gettime not found')
+        endif
+        cdata.set('HAVE_CLOCK_GETTIME', 1)
+    endif
+endif
 
 # Header checks
 
@@ -213,6 +226,12 @@ endif
 if (get_option('buildtype') != 'debug' and get_option('buildtype') != 'plain')
     optional_arguments += '-fomit-frame-pointer'
     optional_arguments += '-ffast-math'
+endif
+
+if (host_machine.system() == 'darwin' and cc.get_id() == 'clang' and
+    cc.version().startswith('11'))
+    # Workaround for Xcode 11 -fstack-check bug, see #301
+    optional_arguments += '-fno-stack-check'
 endif
 
 add_project_arguments(cc.get_supported_arguments(optional_arguments), language : 'c')

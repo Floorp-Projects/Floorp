@@ -6,7 +6,7 @@ summary: AV1 decoder from VideoLAN
 description: |
   A small and fast AV1 decoder from the people who brought you VLC.
 
-grade: devel # must be 'stable' to release into candidate/stable channels
+grade: stable
 confinement: strict # use 'strict' once you have the right plugs and slots
 
 apps:

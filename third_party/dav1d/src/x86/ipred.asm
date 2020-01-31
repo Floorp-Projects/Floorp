@@ -1485,7 +1485,7 @@ ALIGN function_align
     pmaddubsw            m0, m1
     pcmpgtw              m1, m9, m6 ; base < max_base_x
     pmulhrsw             m0, m3
-    paddsw               m6, m10    ; xpos += dx
+    paddw                m6, m10    ; xpos += dx
     lea                  r5, [dstq+strideq*2]
     vpblendvb            m0, m7, m0, m1
     packuswb             m0, m0
@@ -1494,9 +1494,9 @@ ALIGN function_align
     pextrd [r5  +strideq*1], xm0, 1
     movd   [dstq+strideq*0], xm1
     pextrd [dstq+strideq*1], xm1, 1
-    lea                dstq, [dstq+strideq*4]
     sub                  hd, 4
     jz .w4_end
+    lea                dstq, [dstq+strideq*4]
     cmp                 r3d, maxbased
     jb .w4_loop
     packuswb            xm7, xm7
@@ -1662,16 +1662,16 @@ ALIGN function_align
     pshufb               m0, m8
     pmaddubsw            m0, m1
     pcmpgtw              m1, m9, m2
-    paddsw               m2, m6
+    paddw                m2, m6
     pmulhrsw             m0, m3
     vpblendvb            m0, m7, m0, m1
     vextracti128        xm1, m0, 1
     packuswb            xm0, xm1
     movq   [dstq+strideq*0], xm0
     movhps [dstq+strideq*1], xm0
-    lea                dstq, [dstq+strideq*2]
     sub                  hd, 2
     jz .w8_end
+    lea                dstq, [dstq+strideq*2]
     cmp                 r3d, maxbased
     jb .w8_loop
     packuswb            xm7, xm7
@@ -1788,13 +1788,13 @@ ALIGN function_align
     pcmpgtw              m1, m9, m6
     pcmpgtw              m2, m10, m6
     packsswb             m1, m2
-    paddsw               m6, m11
+    paddw                m6, m11
     vpblendvb            m0, m7, m0, m1
     mova         [dstq+strideq*0], xm0
     vextracti128 [dstq+strideq*1], m0, 1
-    lea                dstq, [dstq+strideq*2]
     sub                  hd, 2
     jz .w16_end
+    lea                dstq, [dstq+strideq*2]
     cmp                 r3d, maxbased
     jb .w16_loop
 .w16_end_loop:
@@ -1903,20 +1903,20 @@ ALIGN function_align
     movd                xm9, maxbased
     vbroadcasti128       m8, [z_filter_s+2]
     vpbroadcastw         m9, xm9
-    mov                 r3d, dxd
+    mov                 r5d, dxd
     psubw                m9, [z_base_inc]
     mova                m11, m6
     psubw               m10, m9, m3 ; 64*8
 .w32_loop:
-    mov                 r5d, r3d
-    shr                 r5d, 6
+    mov                 r3d, r5d
+    shr                 r3d, 6
     pand                 m1, m4, m6
     psubw                m2, m5, m1
     psllw                m1, 8
     por                  m2, m1
-    movu                 m0, [tlq+r5+0]
-    movu                 m1, [tlq+r5+8]
-    add                 r3d, dxd
+    movu                 m0, [tlq+r3+0]
+    movu                 m1, [tlq+r3+8]
+    add                 r5d, dxd
     pshufb               m0, m8
     pshufb               m1, m8
     pmaddubsw            m0, m2
@@ -1927,13 +1927,13 @@ ALIGN function_align
     pcmpgtw              m1, m9, m6
     pcmpgtw              m2, m10, m6
     packsswb             m1, m2
-    paddsw               m6, m11
+    paddw                m6, m11
     vpblendvb            m0, m7, m0, m1
     mova             [dstq], m0
-    add                dstq, strideq
     dec                  hd
     jz .w32_end
-    cmp                 r3d, maxbased
+    add                dstq, strideq
+    cmp                 r5d, maxbased
     jb .w32_loop
     test                 hb, 1
     jz .w32_end_loop
@@ -2074,25 +2074,23 @@ ALIGN function_align
     mova         [tlq+32*2], m0
     mova         [tlq+32*3], m1
 .w64_main:
-    movd                xm6, dxd
+    movd               xm12, dxd
     vpbroadcastb         m7, [tlq+maxbaseq]
+    lea                 r3d, [dxq-64]
     shl            maxbased, 6
-    vpbroadcastw         m6, xm6
-    movd               xm10, maxbased
+    vpbroadcastw        m12, xm12
+    sub                 r3d, maxbased
     vbroadcasti128       m8, [z_filter_s+2]
-    mov                 r3d, dxd
-    vpbroadcastw        m10, xm10
-    psllw                m0, m3, 2   ; 64*32
-    psubw               m10, [z_base_inc]
-    mova                m14, m6
-    psubw               m11, m10, m3 ; 64*8
-    psubw               m12, m10, m0
-    psubw               m13, m11, m0
+    movd                xm6, r3d
+    mov                 r5d, dxd
+    mova                m10, [pb_1to32]
+    vpbroadcastd        m11, [pb_32]
+    vpbroadcastw         m6, xm6
 .w64_loop:
-    mov                 r5d, r3d
-    shr                 r5d, 6
-    movu                 m0, [tlq+r5+ 0]
-    movu                 m1, [tlq+r5+ 8]
+    mov                 r3d, r5d
+    shr                 r3d, 6
+    movu                 m0, [tlq+r3+ 0]
+    movu                 m1, [tlq+r3+ 8]
     pand                 m2, m4, m6
     psubw                m9, m5, m2
     psllw                m2, 8
@@ -2101,34 +2099,32 @@ ALIGN function_align
     pshufb               m1, m8
     pmaddubsw            m0, m9
     pmaddubsw            m1, m9
+    psraw                m2, m6, 6
     pmulhrsw             m0, m3
     pmulhrsw             m1, m3
+    packsswb             m2, m2
+    paddb                m2, m10
     packuswb             m0, m1
-    pcmpgtw              m1, m10, m6
-    pcmpgtw              m2, m11, m6
-    packsswb             m1, m2
-    vpblendvb            m2, m7, m0, m1
-    movu                 m0, [tlq+r5+32]
-    movu                 m1, [tlq+r5+40]
-    add                 r3d, dxd
-    mova          [dstq+ 0], m2
+    vpblendvb            m0, m7, m0, m2
+    mova          [dstq+ 0], m0
+    movu                 m0, [tlq+r3+32]
+    movu                 m1, [tlq+r3+40]
+    add                 r5d, dxd
     pshufb               m0, m8
     pshufb               m1, m8
     pmaddubsw            m0, m9
     pmaddubsw            m1, m9
-    pcmpgtw              m9, m12, m6
-    pcmpgtw              m2, m13, m6
+    paddb                m2, m11
     pmulhrsw             m0, m3
     pmulhrsw             m1, m3
-    paddsw               m6, m14
-    packsswb             m9, m2
+    paddw                m6, m12
     packuswb             m0, m1
-    vpblendvb            m0, m7, m0, m9
+    vpblendvb            m0, m7, m0, m2
     mova          [dstq+32], m0
-    add                dstq, strideq
     dec                  hd
     jz .w64_end
-    cmp                 r3d, maxbased
+    add                dstq, strideq
+    cmp                 r5d, maxbased
     jb .w64_loop
 .w64_end_loop:
     mova          [dstq+ 0], m7
@@ -2384,7 +2380,7 @@ ALIGN function_align
     vpblendvb            m0, m1, m2
 .w4_toponly:
     pmulhrsw             m0, m13
-    paddsw               m6, m7        ; xpos += dx
+    paddw                m6, m7        ; xpos += dx
     add                  r5, dyq
     packuswb             m0, m0
     vextracti128        xm1, m0, 1
@@ -2392,9 +2388,9 @@ ALIGN function_align
     pextrd [dstq+r9       ], xm0, 1
     movd   [dstq+strideq*0], xm1
     pextrd [dstq+strideq*1], xm1, 1
-    lea                dstq, [dstq+strideq*4]
     sub                  hd, 4
     jz .w4_end
+    lea                dstq, [dstq+strideq*4]
     cmp                 r2d, r8d
     jge .w4_loop
 .w4_leftonly_loop:
@@ -2604,7 +2600,7 @@ ALIGN function_align
 .w8_toponly:
     pmulhrsw             m0, m13
     pmulhrsw             m1, m13
-    paddsw               m6, m4, m7     ; xpos += dx
+    paddw                m6, m4, m7     ; xpos += dx
     add                  r5, dyq
     packuswb             m0, m1
     vextracti128        xm1, m0, 1
@@ -2612,9 +2608,9 @@ ALIGN function_align
     movhps [dstq+strideq*2], xm0
     movq   [dstq+strideq*1], xm1
     movhps [dstq+r9       ], xm1
-    lea                dstq, [dstq+strideq*4]
     sub                  hd, 4
     jz .w8_end
+    lea                dstq, [dstq+strideq*4]
     cmp                 r2d, r8d
     jge .w8_loop
 .w8_leftonly_loop:
@@ -2841,15 +2837,15 @@ ALIGN function_align
 .w16_toponly:
     pmulhrsw             m0, m13
     pmulhrsw             m1, m13
-    paddsw               m6, m5, m7   ; xpos += dx
+    paddw                m6, m5, m7   ; xpos += dx
     sub                  r5, 2
     packuswb             m0, m1
     vpermq               m0, m0, q3120
     mova         [dstq+strideq*0], xm0
     vextracti128 [dstq+strideq*1], m0, 1
-    lea                dstq, [dstq+strideq*2]
     sub                  hd, 2
     jz .w16_end
+    lea                dstq, [dstq+strideq*2]
     cmp                 r2d, (63-16)<<6
     jge .w16_loop
 .w16_leftonly_loop:
@@ -3135,9 +3131,9 @@ ALIGN function_align
     vpbroadcastb         m7, [r4]
     lea                  r4, [dyq+63] ; ypos
     movd                xm9, maxbased
-    sub            maxbased, 63
+    not            maxbased
     vbroadcasti128       m8, [z3_shuf_w4]
-    neg            maxbaseq
+    add            maxbased, 64
     vpbroadcastw         m9, xm9
     psrlw                m7, 8  ; top[max_base_y]
     paddw               m10, m6, m6
@@ -3170,7 +3166,7 @@ ALIGN function_align
     pmaddubsw            m0, m1
     pcmpgtw              m1, m9, m6 ; base < max_base_y
     pmulhrsw             m0, m3
-    paddsw               m6, m10    ; ypos += dy
+    paddw                m6, m10    ; ypos += dy
     vpblendvb            m0, m7, m0, m1
     vextracti128        xm1, m0, 1
     packuswb            xm1, xm0
@@ -3179,9 +3175,9 @@ ALIGN function_align
     pextrd [dstq+strideq*1], xm1, 1
     pextrd [dstq+strideq*2], xm1, 2
     pextrd [dstq+r7       ], xm1, 3
-    add                dstq, 4
     sub                  wd, 4
     jz .h4_end
+    add                dstq, 4
     cmp                 r4d, maxbased
     jg .h4_loop
     packuswb            xm7, xm7
@@ -3344,9 +3340,9 @@ ALIGN function_align
     vpbroadcastb         m7, [r4]
     lea                  r4, [dyq+63]
     movd                xm9, maxbased
-    sub            maxbased, 63
+    not            maxbased
     vbroadcasti128       m8, [z3_shuf]
-    neg            maxbaseq
+    add            maxbased, 64
     vpbroadcastw         m9, xm9
     psrlw                m7, 8
     psubw                m9, m0
@@ -3367,7 +3363,7 @@ ALIGN function_align
     pshufb               m0, m8
     pmaddubsw            m0, m1
     pcmpgtw              m1, m9, m2
-    paddsw               m2, m6
+    paddw                m2, m6
     pmulhrsw             m0, m3
     vpblendvb            m0, m7, m0, m1
     vextracti128        xm1, m0, 1
@@ -3516,9 +3512,9 @@ ALIGN function_align
     vpbroadcastb         m7, [r4]
     lea                  r4, [dyq+63]
     movd                xm9, maxbased
-    sub            maxbased, 63
+    not            maxbased
     vbroadcasti128       m8, [z3_shuf]
-    neg            maxbaseq
+    add            maxbased, 64
     vpbroadcastw         m9, xm9
     psubw                m9, m0
     paddw               m11, m6, m6
@@ -3548,7 +3544,7 @@ ALIGN function_align
     pcmpgtw              m1, m9, m6
     pcmpgtw              m2, m10, m6
     packsswb             m1, m2
-    paddsw               m6, m11
+    paddw                m6, m11
     vpblendvb            m0, m7, m0, m1
     vpermq               m0, m0, q3120
     mova              [rsp], m0
@@ -3742,9 +3738,9 @@ ALIGN function_align
     vpbroadcastb         m7, [r4]
     lea                  r4, [dyq+63]
     movd                xm9, maxbased
-    sub            maxbased, 63
+    not            maxbased
     vbroadcasti128       m8, [z3_shuf]
-    neg            maxbaseq
+    add            maxbased, 64
     vpbroadcastw         m9, xm9
     psubw                m9, [z_base_inc]
     mova                m11, m6
@@ -3772,7 +3768,7 @@ ALIGN function_align
     pcmpgtw              m1, m9, m6
     pcmpgtw              m2, m10, m6
     packsswb             m1, m2
-    paddsw               m6, m11
+    paddw                m6, m11
     vpblendvb            m0, m7, m0, m1
     mova              [rsp], m0
     dec                  wd
@@ -3996,33 +3992,26 @@ ALIGN function_align
     mova           [tlq-63], m0
     mova           [tlq-31], m1
 .h64_main:
-    movd                xm6, dyd
-    mov                  r4, tlq
-    sub                 tlq, 24
-    neg                 dyq
-    vpbroadcastw         m6, xm6
-    sub                  r4, maxbaseq
-    shl            maxbased, 6
-    vpbroadcastb         m7, [r4]
-    lea                  r4, [dyq+63]
-    movd               xm10, maxbased
-    sub            maxbased, 63
-    vbroadcasti128       m8, [z3_shuf]
+    movd               xm12, dyd
     neg            maxbaseq
-    mova                xm1, [z_base_inc+16]
-    vinserti128          m1, [z_base_inc], 1
-    vpbroadcastw        m10, xm10
-    psllw                m0, m3, 2   ; 64*32
-    psubw               m10, m1
-    mova                m14, m6
-    psubw               m11, m10, m3 ; 64*8
-    psubw               m12, m10, m0
-    psubw               m13, m11, m0
+    vbroadcasti128       m8, [z3_shuf]
+    vpbroadcastb         m7, [tlq+maxbaseq]
+    shl            maxbased, 6
+    vpbroadcastw        m12, xm12
+    lea                 r5d, [dyq+maxbaseq-64]
+    neg                 dyq
+    or             maxbased, 63
+    lea                  r4, [dyq+63]
+    movd                xm6, r5d
+    mova               xm10, [pb_1to32+16]
+    vinserti128         m10, [pb_1to32], 1
+    vpbroadcastd        m11, [pb_32]
+    vpbroadcastw         m6, xm6
 .h64_loop:
     mov                  r5, r4
     sar                  r5, 6
-    movu                 m0, [tlq+r5-0]
-    movu                 m1, [tlq+r5-8]
+    movu                 m0, [tlq+r5-24]
+    movu                 m1, [tlq+r5-32]
     pand                 m2, m4, m6
     psubw                m9, m5, m2
     psllw                m2, 8
@@ -4031,30 +4020,28 @@ ALIGN function_align
     pshufb               m1, m8
     pmaddubsw            m0, m9
     pmaddubsw            m1, m9
+    psraw                m2, m6, 6
+    sub                 rsp, 64
     pmulhrsw             m0, m3
     pmulhrsw             m1, m3
+    packsswb             m2, m2
+    paddb                m2, m10
     packuswb             m0, m1
-    pcmpgtw              m1, m10, m6
-    pcmpgtw              m2, m11, m6
-    packsswb             m1, m2
-    vpblendvb            m2, m7, m0, m1
-    movu                 m0, [tlq+r5-32]
-    movu                 m1, [tlq+r5-40]
+    vpblendvb            m0, m7, m0, m2
+    mova           [rsp+32], m0
+    movu                 m0, [tlq+r5-56]
+    movu                 m1, [tlq+r5-64]
     add                  r4, dyq
-    sub                 rsp, 64
-    mova           [rsp+32], m2
     pshufb               m0, m8
     pshufb               m1, m8
     pmaddubsw            m0, m9
     pmaddubsw            m1, m9
-    pcmpgtw              m9, m12, m6
-    pcmpgtw              m2, m13, m6
+    paddb                m2, m11
     pmulhrsw             m0, m3
     pmulhrsw             m1, m3
-    paddsw               m6, m14
-    packsswb             m9, m2
+    paddw                m6, m12
     packuswb             m0, m1
-    vpblendvb            m0, m7, m0, m9
+    vpblendvb            m0, m7, m0, m2
     mova              [rsp], m0
     dec                  wd
     jz .h64_transpose

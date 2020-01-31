@@ -949,8 +949,8 @@ function sgr_box5_h_neon, export=1
         ext             v4.16b, v5.16b, v4.16b, #13
         b               2f
 0:
-        // !LR_HAVE_LEFT, fill v2 with the leftmost byte
-        // and shift v3 to have 2x the first byte at the front.
+        // !LR_HAVE_LEFT, fill v1 with the leftmost byte
+        // and shift v0 to have 2x the first byte at the front.
         dup             v1.16b, v0.b[0]
         dup             v5.16b, v4.b[0]
         // Move x3 back to account for the last 3 bytes we loaded before,
@@ -993,7 +993,7 @@ function sgr_box5_h_neon, export=1
         ext             v20.16b, v4.16b,  v4.16b, #1
         ext             v21.16b, v4.16b,  v4.16b, #2
         ext             v22.16b, v4.16b,  v4.16b, #3
-        ext             v23.16b, v4.16b,  v5.16b, #4
+        ext             v23.16b, v4.16b,  v4.16b, #4
         uaddl           v3.8h,   v0.8b,   v16.8b
         uaddl           v24.8h,  v17.8b,  v18.8b
         uaddl           v7.8h,   v4.8b,   v20.8b
@@ -1053,15 +1053,15 @@ function sgr_box5_h_neon, export=1
         ext             v4.16b,  v4.16b,  v4.16b, #4
 
 6:      // Pad the right edge and produce the last few pixels.
-        // w < 7, w+1 pixels valid in v3/v5
+        // w < 7, w+1 pixels valid in v0/v4
         sub             w13,  w5,  #1
         // w13 = pixels valid - 2
         adr             x14, L(box5_variable_shift_tbl)
         ldrh            w13, [x14, w13, uxtw #1]
         sub             x13, x14, w13, uxth
         br              x13
-        // Shift v3 right, shifting out invalid pixels,
-        // shift v3 left to the original offset, shifting in padding pixels.
+        // Shift v0 right, shifting out invalid pixels,
+        // shift v0 left to the original offset, shifting in padding pixels.
 22:     // 2 pixels valid
         ext             v0.16b,  v0.16b,  v0.16b,  #2
         ext             v4.16b,  v4.16b,  v4.16b,  #2
@@ -1688,14 +1688,14 @@ function sgr_finish_filter2_neon, export=1
 
 2:
         subs            x5,  x5,  #8
-        ext             v22.16b, v0.16b,  v1.16b, #2  // -stride
-        ext             v23.16b, v2.16b,  v3.16b, #2  // +stride
         ext             v24.16b, v0.16b,  v1.16b, #4  // +1-stride
         ext             v25.16b, v2.16b,  v3.16b, #4  // +1+stride
+        ext             v22.16b, v0.16b,  v1.16b, #2  // -stride
+        ext             v23.16b, v2.16b,  v3.16b, #2  // +stride
         add             v0.8h,   v0.8h,   v24.8h      // -1-stride, +1-stride
         add             v25.8h,  v2.8h,   v25.8h      // -1+stride, +1+stride
-        add             v0.8h,   v0.8h,   v25.8h
         add             v2.8h,   v22.8h,  v23.8h      // -stride, +stride
+        add             v0.8h,   v0.8h,   v25.8h
 
         ext             v22.16b, v16.16b, v17.16b, #4 // -stride
         ext             v23.16b, v17.16b, v18.16b, #4
@@ -1760,8 +1760,8 @@ function sgr_finish_filter2_neon, export=1
 
 4:
         subs            x5,  x5,  #8
-        ext             v22.16b, v0.16b,  v1.16b, #2  // 0
         ext             v23.16b, v0.16b,  v1.16b, #4  // +1
+        ext             v22.16b, v0.16b,  v1.16b, #2  // 0
         add             v0.8h,   v0.8h,   v23.8h      // -1, +1
 
         ext             v24.16b, v16.16b, v17.16b, #4 // 0
@@ -1894,12 +1894,12 @@ endfunc
 //                               const int16_t wt[2]);
 function sgr_weighted2_neon, export=1
         ldr             x8,  [sp]
-        ld1             {v31.s}[0], [x8]
         cmp             x7,  #2
         add             x10, x0,  x1
         add             x11, x2,  x3
         add             x12, x4,  #2*FILTER_OUT_STRIDE
         add             x13, x5,  #2*FILTER_OUT_STRIDE
+        ld2r            {v30.8h, v31.8h}, [x8] // wt[0], wt[1]
         mov             x8,  #4*FILTER_OUT_STRIDE
         lsl             x1,  x1,  #1
         lsl             x3,  x3,  #1
@@ -1908,8 +1908,6 @@ function sgr_weighted2_neon, export=1
         sub             x1,  x1,  x9
         sub             x3,  x3,  x9
         sub             x8,  x8,  x9, lsl #1
-        dup             v30.8h, v31.h[0] // wt[0]
-        dup             v31.8h, v31.h[1] // wt[1]
         mov             x9,  x6
         b.lt            2f
 1:

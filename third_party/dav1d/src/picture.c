@@ -52,17 +52,24 @@ int dav1d_default_picture_alloc(Dav1dPicture *const p, void *const cookie) {
     const int has_chroma = p->p.layout != DAV1D_PIXEL_LAYOUT_I400;
     const int ss_ver = p->p.layout == DAV1D_PIXEL_LAYOUT_I420;
     const int ss_hor = p->p.layout != DAV1D_PIXEL_LAYOUT_I444;
-    p->stride[0] = aligned_w << hbd;
-    p->stride[1] = has_chroma ? (aligned_w >> ss_hor) << hbd : 0;
-    const size_t y_sz = p->stride[0] * aligned_h;
-    const size_t uv_sz = p->stride[1] * (aligned_h >> ss_ver);
-    const size_t pic_size = y_sz + 2 * uv_sz;
-
-    uint8_t *data = dav1d_alloc_aligned(pic_size + DAV1D_PICTURE_ALIGNMENT,
-                                        DAV1D_PICTURE_ALIGNMENT);
-    if (data == NULL) {
-        return DAV1D_ERR(ENOMEM);
-    }
+    ptrdiff_t y_stride = aligned_w << hbd;
+    ptrdiff_t uv_stride = has_chroma ? y_stride >> ss_hor : 0;
+    /* Due to how mapping of addresses to sets works in most L1 and L2 cache
+     * implementations, strides of multiples of certain power-of-two numbers
+     * may cause multiple rows of the same superblock to map to the same set,
+     * causing evictions of previous rows resulting in a reduction in cache
+     * hit rate. Avoid that by slightly padding the stride when necessary. */
+    if (!(y_stride & 1023))
+        y_stride += DAV1D_PICTURE_ALIGNMENT;
+    if (!(uv_stride & 1023) && has_chroma)
+        uv_stride += DAV1D_PICTURE_ALIGNMENT;
+    p->stride[0] = y_stride;
+    p->stride[1] = uv_stride;
+    const size_t y_sz = y_stride * aligned_h;
+    const size_t uv_sz = uv_stride * (aligned_h >> ss_ver);
+    const size_t pic_size = y_sz + 2 * uv_sz + DAV1D_PICTURE_ALIGNMENT;
+    uint8_t *data = dav1d_alloc_aligned(pic_size, DAV1D_PICTURE_ALIGNMENT);
+    if (!data) return DAV1D_ERR(ENOMEM);
 
     p->data[0] = data;
     p->data[1] = has_chroma ? data + y_sz : NULL;

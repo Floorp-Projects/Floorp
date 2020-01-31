@@ -680,6 +680,7 @@ static void read_coef_tree(Dav1dTileContext *const t,
         struct CodedBlockInfo *cbi;
 
         if (f->frame_thread.pass) {
+            assert(ts->frame_thread.cf);
             cf = ts->frame_thread.cf;
             ts->frame_thread.cf += imin(t_dim->w, 8) * imin(t_dim->h, 8) * 16;
             cbi = &f->frame_thread.cbi[t->by * f->b4_stride + t->bx];
@@ -1149,6 +1150,7 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTileContext *const t, const enum BlockSize
                              4 * (t->by * PXSTRIDE(f->cur.stride[0]) + t->bx);
                 const uint8_t *pal_idx;
                 if (f->frame_thread.pass) {
+                    assert(ts->frame_thread.pal_idx);
                     pal_idx = ts->frame_thread.pal_idx;
                     ts->frame_thread.pal_idx += bw4 * bh4 * 16;
                 } else {
@@ -1345,6 +1347,7 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTileContext *const t, const enum BlockSize
                 const uint16_t (*pal)[8];
                 const uint8_t *pal_idx;
                 if (f->frame_thread.pass) {
+                    assert(ts->frame_thread.pal_idx);
                     pal = f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) * (f->b4_stride >> 1) +
                                               ((t->bx >> 1) + (t->by & 1))];
                     pal_idx = ts->frame_thread.pal_idx;

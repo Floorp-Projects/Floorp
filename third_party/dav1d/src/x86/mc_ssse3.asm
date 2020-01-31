@@ -68,7 +68,9 @@ pw_6903:  times 8 dw 6903
 pw_8192:  times 8 dw 8192
 pd_32:    times 4 dd 32
 pd_512:   times 4 dd 512
+pd_16384: times 4 dd 16484
 pd_32768: times 4 dd 32768
+pd_262144:times 4 dd 262144
 
 pw_258:  times 2 dw 258
 
@@ -3385,6 +3387,8 @@ cglobal prep_8tap, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
   %define m14 m6
   %define m15 m7
   %define m11 m7
+ %endif
+ %if notcpuflag(ssse3) || ARCH_X86_32
     pxor                m11, m11
  %endif
     lea               tmp1d, [myq+deltaq*4]
@@ -3483,6 +3487,7 @@ cglobal warp_affine_8x8t, 0, 7, 16, -0x130-copy_args, tmp, ts
     mova                m14, [esp+0xE0]
     mova                m15, [esp+0xF0]
 %endif
+%if cpuflag(ssse3)
     psrad               m12, 13
     psrad               m13, 13
     psrad               m14, 13
@@ -3492,6 +3497,22 @@ cglobal warp_affine_8x8t, 0, 7, 16, -0x130-copy_args, tmp, ts
     mova                m13, [PIC_sym(pw_8192)]
     pmulhrsw            m12, m13 ; (x + (1 << 6)) >> 7
     pmulhrsw            m14, m13
+%else
+ %if ARCH_X86_32
+  %define m10 m0
+ %endif
+    mova                m10, [PIC_sym(pd_16384)]
+    paddd               m12, m10
+    paddd               m13, m10
+    paddd               m14, m10
+    paddd               m15, m10
+    psrad               m12, 15
+    psrad               m13, 15
+    psrad               m14, 15
+    psrad               m15, 15
+    packssdw            m12, m13
+    packssdw            m14, m15
+%endif
     mova       [tmpq+tsq*0], m12
     mova       [tmpq+tsq*2], m14
     dec            counterd
@@ -3554,11 +3575,16 @@ cglobal warp_affine_8x8, 0, 7, 16, -0x130-copy_args, \
     call .main2
     lea                dstq, [dstq+dsq*2]
 .start:
-%if cpuflag(ssse3)
- %if ARCH_X86_64
-    mova                m10, [PIC_sym(pw_8192)]
+%if notcpuflag(sse4)
+ %if cpuflag(ssse3)
+  %define roundval pw_8192
  %else
-  %define m10 [PIC_sym(pw_8192)]
+  %define roundval pd_262144
+ %endif
+ %if ARCH_X86_64
+    mova                m10, [PIC_sym(roundval)]
+ %else
+  %define m10 [PIC_sym(roundval)]
  %endif
 %endif
 %if ARCH_X86_32
@@ -3577,10 +3603,18 @@ cglobal warp_affine_8x8, 0, 7, 16, -0x130-copy_args, \
     packusdw            m12, m13
     pavgw               m12, m11 ; (x + (1 << 10)) >> 11
 %else
+ %if cpuflag(ssse3)
     psrad               m12, 17
     psrad               m13, 17
     packssdw            m12, m13
-    pmulhrsw            m12, m10 ; (x + (1 << 10)) >> 11
+    pmulhrsw            m12, m10
+ %else
+    paddd               m12, m10
+    paddd               m13, m10
+    psrad               m12, 19
+    psrad               m13, 19
+    packssdw            m12, m13
+ %endif
 %endif
 %if ARCH_X86_32
  %define m14 m6
@@ -3594,10 +3628,18 @@ cglobal warp_affine_8x8, 0, 7, 16, -0x130-copy_args, \
     packusdw            m14, m15
     pavgw               m14, m11 ; (x + (1 << 10)) >> 11
 %else
+ %if cpuflag(ssse3)
     psrad               m14, 17
     psrad               m15, 17
     packssdw            m14, m15
-    pmulhrsw            m14, m10 ; (x + (1 << 10)) >> 11
+    pmulhrsw            m14, m10
+ %else
+    paddd               m14, m10
+    paddd               m15, m10
+    psrad               m14, 19
+    psrad               m15, 19
+    packssdw            m14, m15
+ %endif
 %endif
     packuswb            m12, m14
     movq       [dstq+dsq*0], m12
@@ -3647,12 +3689,17 @@ ALIGN function_align
     lea             filterq, [PIC_sym(mc_warp_filter)]
 %if ARCH_X86_64
     mov                 myd, r6m
+ %if cpuflag(ssse3)
     pxor                m11, m11
+ %endif
 %endif
     call .h
     psrld                m2, m0, 16
     psrld                m3, m1, 16
 %if ARCH_X86_32
+ %if notcpuflag(ssse3)
+    mova [esp+gprsize+0x00], m2
+ %endif
     mova [esp+gprsize+0x10], m3
 %endif
     call .h
@@ -3666,6 +3713,9 @@ ALIGN function_align
 %if ARCH_X86_64
  %define blendmask [rsp+gprsize+0x80]
 %else
+ %if notcpuflag(ssse3)
+    mova                 m2, [esp+gprsize+0x00]
+ %endif
     mova                 m3, [esp+gprsize+0x10]
  %define blendmask [esp+gprsize+0x120]
  %define m10 m7
@@ -3689,6 +3739,9 @@ ALIGN function_align
     mova [rsp+gprsize+0x30], m5
     call .h
 %if ARCH_X86_32
+ %if notcpuflag(ssse3)
+    mova                 m2, [esp+gprsize+0x00]
+ %endif
     mova                 m3, [esp+gprsize+0x10]
  %define m10 m5
 %endif
@@ -3848,6 +3901,7 @@ ALIGN function_align
     lea               tmp2d, [mxq+alphaq*1]
     shr                 mxd, 10
     shr               tmp1d, 10
+%if cpuflag(ssse3)
     movq                m14, [filterq+mxq  *8]  ; 2 X
     movq                 m9, [filterq+tmp1q*8]  ; 6 X
     lea               tmp1d, [tmp2q+alphaq*4]
@@ -3864,10 +3918,99 @@ ALIGN function_align
     pmaddubsw           m15, m14
     pshufb              m10, m10, [PIC_sym(warp_8x8_shufD)]
     pmaddubsw           m10, m9
-    mova                m14, [PIC_sym(pw_8192)]
-    mova                 m9, [PIC_sym(pd_32768)]
     phaddw               m0, m15
     phaddw               m1, m10
+%else
+ %if ARCH_X86_32
+  %define m11 m2
+ %endif
+    pcmpeqw              m0, m0
+    psrlw               m14, m0, 8
+    psrlw               m15, m10, 8     ; 01 03 05 07  09 11 13 15
+    pand                m14, m10        ; 00 02 04 06  08 10 12 14
+    packuswb            m14, m15        ; 00 02 04 06  08 10 12 14  01 03 05 07  09 11 13 15
+    psrldq               m9, m0, 4
+    pshufd               m0, m14, q0220
+    pand                 m0, m9
+    psrldq              m14, 1          ; 02 04 06 08  10 12 14 01  03 05 07 09  11 13 15 __
+    pslldq              m15, m14, 12
+    por                  m0, m15    ; shufA
+    psrlw               m15, m0, 8
+    psraw               m11, m1, 8
+    psllw                m0, 8
+    psllw                m1, 8
+    psrlw                m0, 8
+    psraw                m1, 8
+    pmullw              m15, m11
+    pmullw               m0, m1
+    paddw                m0, m15    ; pmaddubsw m0, m1
+    pshufd              m15, m14, q0220
+    pand                m15, m9
+    psrldq              m14, 1          ; 04 06 08 10  12 14 01 03  05 07 09 11  13 15 __ __
+    pslldq               m1, m14, 12
+    por                 m15, m1     ; shufC
+    pshufd               m1, m14, q0220
+    pand                 m1, m9
+    psrldq              m14, 1          ; 06 08 10 12  14 01 03 05  07 09 11 13  15 __ __ __
+    pslldq              m11, m14, 12
+    por                  m1, m11    ; shufB
+    pshufd              m10, m14, q0220
+    pand                m10, m9
+    psrldq              m14, 1          ; 08 10 12 14  01 03 05 07  09 11 13 15  __ __ __ __
+    pslldq              m14, m14, 12
+    por                 m10, m14    ; shufD
+    psrlw                m9, m1, 8
+    psraw               m11, m8, 8
+    psllw                m1, 8
+    psllw                m8, 8
+    psrlw                m1, 8
+    psraw                m8, 8
+    pmullw               m9, m11
+    pmullw               m1, m8
+    paddw                m1, m9     ; pmaddubsw m1, m8
+    movq                m14, [filterq+mxq  *8]  ; 2 X
+    movq                 m9, [filterq+tmp1q*8]  ; 6 X
+    lea               tmp1d, [tmp2q+alphaq*4]
+    lea                 mxd, [tmp2q+betaq]  ; mx += beta
+    shr               tmp2d, 10
+    shr               tmp1d, 10
+    movhps              m14, [filterq+tmp2q*8]  ; 2 3
+    movhps               m9, [filterq+tmp1q*8]  ; 6 7
+    psrlw                m8, m15, 8
+    psraw               m11, m14, 8
+    psllw               m15, 8
+    psllw               m14, 8
+    psrlw               m15, 8
+    psraw               m14, 8
+    pmullw               m8, m11
+    pmullw              m15, m14
+    paddw               m15, m8     ; pmaddubsw m15, m14
+    psrlw                m8, m10, 8
+    psraw               m11, m9, 8
+    psllw               m10, 8
+    psllw                m9, 8
+    psrlw               m10, 8
+    psraw                m9, 8
+    pmullw               m8, m11
+    pmullw              m10, m9
+    paddw               m10, m8     ; pmaddubsw m10, m9
+    pslld                m8, m0, 16
+    pslld                m9, m1, 16
+    pslld               m14, m15, 16
+    pslld               m11, m10, 16
+    paddw                m0, m8
+    paddw                m1, m9
+    paddw               m15, m14
+    paddw               m10, m11
+    psrad                m0, 16
+    psrad                m1, 16
+    psrad               m15, 16
+    psrad               m10, 16
+    packssdw             m0, m15    ; phaddw m0, m15
+    packssdw             m1, m10    ; phaddw m1, m10
+%endif
+    mova                m14, [PIC_sym(pw_8192)]
+    mova                 m9, [PIC_sym(pd_32768)]
     pmaddwd              m0, m14 ; 17-bit intermediate, upshifted by 13
     pmaddwd              m1, m14
     paddd                m0, m9  ; rounded 14-bit result in upper 16 bits of dword
@@ -3882,6 +4025,12 @@ WARP_AFFINE_8X8T
 INIT_XMM ssse3
 WARP_AFFINE_8X8
 WARP_AFFINE_8X8T
+
+INIT_XMM sse2
+WARP_AFFINE_8X8
+WARP_AFFINE_8X8T
+
+INIT_XMM ssse3
 
 %if WIN64
 DECLARE_REG_TMP 6, 4
