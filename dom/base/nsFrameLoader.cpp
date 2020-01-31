@@ -2567,8 +2567,10 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     // as its opener. There are likely other mismatches that it does not handle,
     // but those will all be fixed by the removal of TabGroups.
     if (RefPtr<BrowsingContext> openerBC = mBrowsingContext->GetOpener()) {
-      sameTabGroupAs =
-          openerBC->Canonical()->GetCurrentWindowGlobal()->GetBrowserParent();
+      auto global = openerBC->Canonical()->GetCurrentWindowGlobal();
+      if (global) {
+        sameTabGroupAs = global->GetBrowserParent();
+      }
     }
   }
 
