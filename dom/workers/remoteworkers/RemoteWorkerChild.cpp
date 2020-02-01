@@ -997,7 +997,7 @@ IPCResult RemoteWorkerChild::RecvExecServiceWorkerOp(
 
   MaybeReportServiceWorkerShutdownProgress(aArgs);
 
-  MaybeStartOp(ServiceWorkerOp::Create(aArgs, std::move(aResolve)));
+  MaybeStartOp(ServiceWorkerOp::Create(std::move(aArgs), std::move(aResolve)));
 
   return IPC_OK();
 }
