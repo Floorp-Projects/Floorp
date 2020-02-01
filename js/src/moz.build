@@ -446,7 +446,14 @@ if CONFIG['MOZ_VTUNE']:
         'vtune/jitprofiling.c',
         'vtune/VTuneWrapper.cpp',
     ]
-    SOURCES['vtune/ittnotify_static.c'].flags += ['-Wno-varargs', '-Wno-unknown-pragmas']
+    SOURCES['vtune/ittnotify_static.c'].flags += [
+        '-Wno-varargs',
+        '-Wno-unknown-pragmas'
+    ]
+    if CONFIG['CC_TYPE'] == 'gcc':
+        SOURCES['vtune/ittnotify_static.c'].flags += [
+            '-Wno-stringop-overflow'
+        ]
 
 DIRS += [
     'build',
