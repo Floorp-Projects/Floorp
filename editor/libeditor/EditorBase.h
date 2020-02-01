@@ -28,7 +28,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIContentInlines.h"       // for nsINode::IsEditable()
 #include "nsIEditor.h"               // for nsIEditor, etc.
-#include "nsIPlaintextEditor.h"      // for nsIPlaintextEditor, etc.
 #include "nsISelectionController.h"  // for nsISelectionController constants
 #include "nsISelectionListener.h"    // for nsISelectionListener
 #include "nsISupportsImpl.h"         // for EditorBase::Release, etc.
@@ -135,7 +134,7 @@ enum class SplitAtEdges {
  * delegate the actual commands to the editor independent of the XPFE
  * implementation.
  */
-class EditorBase : public nsIPlaintextEditor,
+class EditorBase : public nsIEditor,
                    public nsISelectionListener,
                    public nsSupportsWeakReference {
  public:
