@@ -624,8 +624,10 @@ enum class StyleTableLayout : uint8_t {
   Fixed,
 };
 
-#define NS_STYLE_TABLE_EMPTY_CELLS_HIDE 0
-#define NS_STYLE_TABLE_EMPTY_CELLS_SHOW 1
+enum class StyleEmptyCells : uint8_t {
+    Hide,
+    Show,
+};
 
 // Constants for the caption-side property. Note that despite having "physical"
 // names, these are actually interpreted according to the table's writing-mode:
