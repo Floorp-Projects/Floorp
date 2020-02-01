@@ -82,7 +82,7 @@ class ClientSourceParent final : public PClientSourceParent {
 
   void DetachHandle(ClientHandleParent* aClientSource);
 
-  RefPtr<ClientOpPromise> StartOp(ClientOpConstructorArgs&& aArgs);
+  RefPtr<ClientOpPromise> StartOp(const ClientOpConstructorArgs& aArgs);
 };
 
 }  // namespace dom

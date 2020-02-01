@@ -23,12 +23,12 @@ void ClientHandleOpParent::ActorDestroy(ActorDestroyReason aReason) {
   mSourcePromiseRequestHolder.DisconnectIfExists();
 }
 
-void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
+void ClientHandleOpParent::Init(const ClientOpConstructorArgs& aArgs) {
   auto handle = static_cast<ClientHandleParent*>(Manager());
   handle->EnsureSource()
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
-          [this, args = std::move(aArgs)](ClientSourceParent* source) mutable {
+          [=](ClientSourceParent* source) {
             mSourcePromiseRequestHolder.Complete();
             RefPtr<ClientOpPromise> p;
 
@@ -36,10 +36,10 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
             // can't just forward the args from one PBackground manager to
             // another.  Instead, unpack the structured clone data and repack
             // it into a new set of arguments.
-            if (args.type() ==
+            if (aArgs.type() ==
                 ClientOpConstructorArgs::TClientPostMessageArgs) {
               const ClientPostMessageArgs& orig =
-                  args.get_ClientPostMessageArgs();
+                  aArgs.get_ClientPostMessageArgs();
 
               ClientPostMessageArgs rebuild;
               rebuild.serviceWorker() = orig.serviceWorker();
@@ -54,12 +54,12 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
                 return;
               }
 
-              p = source->StartOp(std::move(rebuild));
+              p = source->StartOp(rebuild);
             }
 
             // Other argument types can just be forwarded straight through.
             else {
-              p = source->StartOp(std::move(args));
+              p = source->StartOp(aArgs);
             }
 
             // Capturing 'this' is safe here because we disconnect the promise

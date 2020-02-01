@@ -43,9 +43,9 @@ IPCResult ClientSourceOpParent::Recv__delete__(const ClientOpResult& aResult) {
   return IPC_OK();
 }
 
-ClientSourceOpParent::ClientSourceOpParent(ClientOpConstructorArgs&& aArgs,
+ClientSourceOpParent::ClientSourceOpParent(const ClientOpConstructorArgs& aArgs,
                                            ClientOpPromise::Private* aPromise)
-    : mArgs(std::move(aArgs)), mPromise(aPromise) {
+    : mArgs(aArgs), mPromise(aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
 }
 

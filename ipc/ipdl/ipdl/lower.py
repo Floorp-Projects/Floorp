@@ -585,7 +585,6 @@ def _cxxConstRefType(ipdltype, side):
         t.ref = True
         return t
     if ipdltype.isCxx() and ipdltype.isMoveonly():
-        t.const = True
         t.ref = True
         return t
     if ipdltype.isCxx() and ipdltype.isRefcounted():
