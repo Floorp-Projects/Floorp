@@ -96,6 +96,10 @@ void RemoteWorkerManager::RegisterActor(RemoteWorkerServiceParent* aActor) {
   if (!mPendings.IsEmpty()) {
     // Flush pending launching.
     for (const Pending& p : mPendings) {
+      if (p.mController->IsTerminated()) {
+        continue;
+      }
+
       LaunchInternal(p.mController, aActor, p.mData);
     }
 
