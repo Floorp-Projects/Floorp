@@ -71,7 +71,6 @@
 #include "ChildIterator.h"
 #include "nsError.h"
 #include "nsLayoutUtils.h"
-#include "nsAutoPtr.h"
 #include "nsBoxFrame.h"
 #include "nsBoxLayout.h"
 #include "nsFlexContainerFrame.h"

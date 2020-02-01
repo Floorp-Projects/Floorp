@@ -9,7 +9,7 @@
 
 #include "mozilla/AtomArray.h"
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -67,13 +67,13 @@ class nsTreeStyleCache {
   //
   // Once the entire word has been consumed, the final state is used
   // to reference the cache table to locate the ComputedStyle.
-  nsAutoPtr<TransitionTable> mTransitionTable;
+  mozilla::UniquePtr<TransitionTable> mTransitionTable;
 
   // The cache of all active ComputedStyles.  This is a hash from
   // a final state in the DFA, Sf, to the resultant ComputedStyle.
   typedef nsRefPtrHashtable<nsUint32HashKey, mozilla::ComputedStyle>
       ComputedStyleCache;
-  nsAutoPtr<ComputedStyleCache> mCache;
+  mozilla::UniquePtr<ComputedStyleCache> mCache;
 
   // An integer counter that is used when we need to make new states in the
   // DFA.

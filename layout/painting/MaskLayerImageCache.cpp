@@ -22,7 +22,7 @@ MaskLayerImageCache::~MaskLayerImageCache() {
 
 void MaskLayerImageCache::Sweep() {
   for (auto iter = mMaskImageContainers.Iter(); !iter.Done(); iter.Next()) {
-    const MaskLayerImageCache::MaskLayerImageKey* key = iter.Get()->mKey;
+    const auto& key = iter.Get()->mKey;
     if (key->HasZeroLayerCount()) {
       iter.Remove();
     }

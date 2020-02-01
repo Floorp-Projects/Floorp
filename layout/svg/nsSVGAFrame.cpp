@@ -9,7 +9,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/SVGAElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "nsAutoPtr.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
