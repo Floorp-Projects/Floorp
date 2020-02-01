@@ -1462,7 +1462,7 @@ nsStyleTableBorder::nsStyleTableBorder(const Document& aDocument)
       mBorderSpacingRow(0),
       mBorderCollapse(StyleBorderCollapse::Separate),
       mCaptionSide(NS_STYLE_CAPTION_SIDE_TOP),
-      mEmptyCells(NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
+      mEmptyCells(StyleEmptyCells::Show) {
   MOZ_COUNT_CTOR(nsStyleTableBorder);
 }
 
