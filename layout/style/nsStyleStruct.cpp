@@ -2699,7 +2699,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mTranslate(StyleTranslate::None()),
       mScale(StyleScale::None()),
       mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
-      mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
+      mTransformStyle(StyleTransformStyle::Flat),
       mTransformBox(StyleGeometryBox::BorderBox),
       mOffsetPath(StyleOffsetPath::None()),
       mOffsetDistance(LengthPercentage::Zero()),
