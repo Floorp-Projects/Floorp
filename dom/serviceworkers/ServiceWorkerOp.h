@@ -30,11 +30,11 @@ class ServiceWorkerOp : public RemoteWorkerChild::Op {
  public:
   // `aCallback` will be called when the operation completes or is canceled.
   static already_AddRefed<ServiceWorkerOp> Create(
-      ServiceWorkerOpArgs&& aArgs,
+      const ServiceWorkerOpArgs& aArgs,
       std::function<void(const ServiceWorkerOpResult&)>&& aCallback);
 
   ServiceWorkerOp(
-      ServiceWorkerOpArgs&& aArgs,
+      const ServiceWorkerOpArgs& aArgs,
       std::function<void(const ServiceWorkerOpResult&)>&& aCallback);
 
   ServiceWorkerOp(const ServiceWorkerOp&) = delete;
