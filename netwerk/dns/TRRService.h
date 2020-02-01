@@ -32,6 +32,7 @@ class TRRService : public nsIObserver,
   nsresult Init();
   nsresult Start();
   bool Enabled(nsIRequest::TRRMode aMode);
+  bool IsConfirmed() { return mConfirmationState == CONFIRM_OK; }
 
   uint32_t Mode() { return mMode; }
   bool AllowRFC1918() { return mRfc1918; }

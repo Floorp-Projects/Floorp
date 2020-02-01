@@ -1453,9 +1453,11 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
     rv = TrrLookup(rec);
   }
 
+  bool serviceNotReady = !gTRRService || !gTRRService->IsConfirmed();
+
   if (effectiveRequestMode == nsIRequest::TRR_DISABLED_MODE ||
       (effectiveRequestMode == nsIRequest::TRR_FIRST_MODE &&
-       (rec->flags & RES_DISABLE_TRR) && NS_FAILED(rv))) {
+       (rec->flags & RES_DISABLE_TRR || serviceNotReady) && NS_FAILED(rv))) {
     if (!rec->IsAddrRecord()) {
       return rv;
     }
