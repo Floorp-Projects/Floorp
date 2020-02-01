@@ -269,7 +269,7 @@ void ClientSourceParent::DetachHandle(ClientHandleParent* aClientHandle) {
 }
 
 RefPtr<ClientOpPromise> ClientSourceParent::StartOp(
-    const ClientOpConstructorArgs& aArgs) {
+    ClientOpConstructorArgs&& aArgs) {
   RefPtr<ClientOpPromise::Private> promise =
       new ClientOpPromise::Private(__func__);
 
@@ -285,8 +285,9 @@ RefPtr<ClientOpPromise> ClientSourceParent::StartOp(
   }
 
   // Constructor failure will reject the promise via ActorDestroy().
-  ClientSourceOpParent* actor = new ClientSourceOpParent(aArgs, promise);
-  Unused << SendPClientSourceOpConstructor(actor, aArgs);
+  ClientSourceOpParent* actor =
+      new ClientSourceOpParent(std::move(aArgs), promise);
+  Unused << SendPClientSourceOpConstructor(actor, actor->Args());
 
   return promise.forget();
 }

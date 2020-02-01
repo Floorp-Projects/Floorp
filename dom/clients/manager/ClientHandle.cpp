@@ -42,7 +42,7 @@ void ClientHandle::StartOp(const ClientOpConstructorArgs& aArgs,
   RefPtr<ClientHandle> kungFuGrip = this;
 
   MaybeExecute(
-      [aArgs, kungFuGrip, aRejectCallback,
+      [&aArgs, kungFuGrip, aRejectCallback,
        resolve = std::move(aResolveCallback)](ClientHandleChild* aActor) {
         MOZ_DIAGNOSTIC_ASSERT(aActor);
         ClientHandleOpChild* actor = new ClientHandleOpChild(
@@ -159,7 +159,7 @@ RefPtr<GenericPromise> ClientHandle::PostMessage(
       new GenericPromise::Private(__func__);
 
   StartOp(
-      args,
+      std::move(args),
       [outerPromise](const ClientOpResult& aResult) {
         outerPromise->Resolve(true, __func__);
       },
