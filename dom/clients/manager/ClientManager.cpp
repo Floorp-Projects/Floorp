@@ -181,7 +181,7 @@ RefPtr<ClientOpPromise> ClientManager::StartOp(
   RefPtr<ClientManager> kungFuGrip = this;
 
   MaybeExecute(
-      [aArgs, promise, kungFuGrip](ClientManagerChild* aActor) {
+      [&aArgs, promise, kungFuGrip](ClientManagerChild* aActor) {
         ClientManagerOpChild* actor =
             new ClientManagerOpChild(kungFuGrip, aArgs, promise);
         if (!aActor->SendPClientManagerOpConstructor(actor, aArgs)) {
