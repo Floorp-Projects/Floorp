@@ -25,7 +25,9 @@ nsAutoCString GetSandboxedGraphitePath() {
     MOZ_CRASH("Library preload failure: Failed to get binary folder\n");
   }
 
-  rv = graphiteFile->AppendNative(NS_LITERAL_CSTRING("libgraphitewasm.so"));
+  rv = graphiteFile->AppendNative(
+      NS_LITERAL_CSTRING(MOZ_DLL_PREFIX "graphitewasm" MOZ_DLL_SUFFIX));
+
   if (NS_FAILED(rv)) {
     MOZ_CRASH("Library preload failure: Failed to get libgraphite file");
   }
@@ -41,7 +43,11 @@ nsAutoCString GetSandboxedGraphitePath() {
 }
 
 void PreloadSandboxedDynamicLibraries() {
-#ifdef MOZ_WASM_SANDBOXING_GRAPHITE
+  // The process level sandbox does not allow loading of dynamic libraries.
+  // This preloads wasm sandboxed libraries before the process level sandbox is
+  // enabled. Currently, this is only needed for Linux as Mac allows loading
+  // libraries from the package file.
+#if defined(XP_LINUX) && defined(MOZ_WASM_SANDBOXING_GRAPHITE)
   nsAutoCString path = GetSandboxedGraphitePath();
   PRLibSpec libSpec;
   libSpec.type = PR_LibSpec_Pathname;
