@@ -1527,7 +1527,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleScale mScale;
 
   uint8_t mBackfaceVisibility;
-  mozilla::StyleTransformStyle mTransformStyle;
+  uint8_t mTransformStyle;
   StyleGeometryBox mTransformBox;
 
   mozilla::StyleOffsetPath mOffsetPath;
@@ -1763,7 +1763,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
    * property. */
   bool HasTransformStyle() const {
     return HasTransformProperty() || HasIndividualTransform() ||
-           mTransformStyle == mozilla::StyleTransformStyle::Preserve3d ||
+           mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
            (mWillChange.bits & mozilla::StyleWillChangeBits::TRANSFORM) ||
            !mOffsetPath.IsNone();
   }

@@ -482,7 +482,6 @@ cbindgen-types = [
     { gecko = "StyleZIndex", servo = "values::computed::ZIndex" },
     { gecko = "StyleGenericZIndex", servo = "values::generics::position::ZIndex" },
     { gecko = "StyleTransformOrigin", servo = "values::computed::TransformOrigin" },
-    { gecko = "StyleTransformStyle", servo = "values::computed::TransformStyle" },
     { gecko = "StyleGenericBorderRadius", servo = "values::generics::border::BorderRadius" },
     { gecko = "StyleLetterSpacing", servo = "values::computed::text::LetterSpacing" },
     { gecko = "StyleGenericLineHeight", servo = "values::generics::text::LineHeight" },
