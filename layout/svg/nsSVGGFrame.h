@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
-#include "nsAutoPtr.h"
 #include "nsSVGContainerFrame.h"
 
 namespace mozilla {

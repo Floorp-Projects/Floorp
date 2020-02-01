@@ -8,6 +8,7 @@
 #define NS_SVGCONTAINERFRAME_H
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
 #include "nsFrame.h"
 #include "nsIFrame.h"
@@ -153,7 +154,7 @@ class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
   /**
    * Cached canvasTM value.
    */
-  nsAutoPtr<gfxMatrix> mCanvasTM;
+  mozilla::UniquePtr<gfxMatrix> mCanvasTM;
 };
 
 #endif

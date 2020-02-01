@@ -15,7 +15,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
 #include "mozilla/ComputedStyle.h"

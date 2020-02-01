@@ -13,7 +13,6 @@
 #include "mozilla/Pair.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "gfxUserFontSet.h"
-#include "nsAutoPtr.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 #include "nsWrapperCache.h"

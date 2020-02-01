@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_nglayout.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/UniquePtr.h"
 #include "nsBoundingMetrics.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
@@ -2281,7 +2282,8 @@ class nsLayoutUtils {
    * want to maintain a mapping from gfxFontEntry to InspectorFontFace
    * records, so use a temporary hashtable for that.
    */
-  typedef nsTArray<nsAutoPtr<mozilla::dom::InspectorFontFace>> UsedFontFaceList;
+  typedef nsTArray<mozilla::UniquePtr<mozilla::dom::InspectorFontFace>>
+      UsedFontFaceList;
   typedef nsDataHashtable<nsPtrHashKey<gfxFontEntry>,
                           mozilla::dom::InspectorFontFace*>
       UsedFontFaceTable;
