@@ -417,6 +417,21 @@ bool RemoteWorkerController::PendingServiceWorkerOp::MaybeStart(
     return false;
   }
 
+  const auto send = [this, &aOwner](const ServiceWorkerOpArgs& args) {
+    aOwner->mActor->SendExecServiceWorkerOp(args)->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [promise = std::move(mPromise)](
+            PRemoteWorkerParent::ExecServiceWorkerOpPromise::
+                ResolveOrRejectValue&& aResult) {
+          if (NS_WARN_IF(aResult.IsReject())) {
+            promise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+            return;
+          }
+
+          promise->Resolve(std::move(aResult.ResolveValue()), __func__);
+        });
+  };
+
   if (mArgs.type() == ServiceWorkerOpArgs::TServiceWorkerMessageEventOpArgs) {
     auto& args = mArgs.get_ServiceWorkerMessageEventOpArgs();
 
@@ -433,21 +448,12 @@ bool RemoteWorkerController::PendingServiceWorkerOp::MaybeStart(
       return true;
     }
 
-    mArgs = std::move(copyArgs);
+    // copyArgs depends on mArgs due to
+    // BuildClonedMessageDataForBackgroundParent.
+    send(std::move(copyArgs));
+  } else {
+    send(mArgs);
   }
-
-  aOwner->mActor->SendExecServiceWorkerOp(mArgs)->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
-      [promise = std::move(mPromise)](
-          PRemoteWorkerParent::ExecServiceWorkerOpPromise::
-              ResolveOrRejectValue&& aResult) {
-        if (NS_WARN_IF(aResult.IsReject())) {
-          promise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
-          return;
-        }
-
-        promise->Resolve(std::move(aResult.ResolveValue()), __func__);
-      });
 
   return true;
 }
