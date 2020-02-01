@@ -9,6 +9,7 @@
 #ifndef mozilla_FunctionTypeTraits_h
 #define mozilla_FunctionTypeTraits_h
 
+#include <cstddef> /* for size_t */
 #include <tuple>
 
 namespace mozilla {
