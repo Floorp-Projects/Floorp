@@ -1650,9 +1650,9 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
     commonParams.fileAddInfos().SwapElements(fileAddInfos);
   }
 
-  const auto& params =
-      aOverwrite ? RequestParams{ObjectStorePutParams(std::move(commonParams))}
-                 : RequestParams{ObjectStoreAddParams(std::move(commonParams))};
+  const auto& params = aOverwrite
+                           ? RequestParams{ObjectStorePutParams(commonParams)}
+                           : RequestParams{ObjectStoreAddParams(commonParams)};
 
   auto request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
