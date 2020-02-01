@@ -1639,7 +1639,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       // to update the overflow areas of all potentially affected frames.
       if ((hint & nsChangeHint_UpdateUsesOpacity) &&
           frame->StyleDisplay()->mTransformStyle ==
-              NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D) {
+              StyleTransformStyle::Preserve3d) {
         hint |= nsChangeHint_UpdateSubtreeOverflow;
       }
 
