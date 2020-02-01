@@ -14,7 +14,6 @@
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "gfxTextRun.h"
-#include "nsAutoPtr.h"
 #include "nsIContent.h"  // for GetContent
 #include "nsStubMutationObserver.h"
 #include "nsSVGContainerFrame.h"

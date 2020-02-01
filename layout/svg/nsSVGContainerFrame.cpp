@@ -416,7 +416,7 @@ gfxMatrix nsSVGDisplayContainerFrame::GetCanvasTM() {
 
     gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
 
-    mCanvasTM = new gfxMatrix(tm);
+    mCanvasTM = MakeUnique<gfxMatrix>(tm);
   }
 
   return *mCanvasTM;

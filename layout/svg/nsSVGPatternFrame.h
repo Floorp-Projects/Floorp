@@ -11,7 +11,7 @@
 #include "gfxMatrix.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsSVGPaintServerFrame.h"
 
 class nsIFrame;
@@ -124,7 +124,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
   // referencing our pattern.  This must be temporary because different
   // referencing frames will all reference this one frame
   mozilla::SVGGeometryFrame* mSource;
-  nsAutoPtr<gfxMatrix> mCTM;
+  mozilla::UniquePtr<gfxMatrix> mCTM;
 
  protected:
   // This flag is used to detect loops in xlink:href processing

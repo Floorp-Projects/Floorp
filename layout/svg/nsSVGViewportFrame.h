@@ -8,7 +8,6 @@
 #define __NS_SVGVIEWPORTFRAME_H__
 
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
 #include "nsSVGContainerFrame.h"
 #include "nsISVGSVGFrame.h"
 

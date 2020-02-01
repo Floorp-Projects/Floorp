@@ -35,7 +35,7 @@ void nsSVGOuterSVGFrame::RegisterForeignObject(
 
   if (!mForeignObjectHash) {
     mForeignObjectHash =
-        new nsTHashtable<nsPtrHashKey<nsSVGForeignObjectFrame> >();
+        MakeUnique<nsTHashtable<nsPtrHashKey<nsSVGForeignObjectFrame>>>();
   }
 
   NS_ASSERTION(!mForeignObjectHash->GetEntry(aFrame),
@@ -891,7 +891,7 @@ gfxMatrix nsSVGOuterSVGFrame::GetCanvasTM() {
 
     gfxMatrix tm = content->PrependLocalTransformsTo(
         gfxMatrix::Scaling(devPxPerCSSPx, devPxPerCSSPx));
-    mCanvasTM = new gfxMatrix(tm);
+    mCanvasTM = MakeUnique<gfxMatrix>(tm);
   }
   return *mCanvasTM;
 }

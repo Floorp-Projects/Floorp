@@ -52,7 +52,6 @@
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "nsAnimationManager.h"
-#include "nsAutoPtr.h"
 #include "nsDisplayList.h"
 #include "nsDocShell.h"
 #include "nsIScrollableFrame.h"
@@ -66,6 +65,8 @@
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
+using mozilla::UniquePtr;
+using mozilla::WrapUnique;
 
 // PaintedLayerData::mAssignedDisplayItems is a std::vector, which is
 // non-memmovable
@@ -272,13 +273,13 @@ void DisplayItemData::EndUpdate() {
   mOldTransform = nullptr;
 }
 
-void DisplayItemData::EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry) {
+void DisplayItemData::EndUpdate(UniquePtr<nsDisplayItemGeometry>&& aGeometry) {
   MOZ_RELEASE_ASSERT(mLayer);
   MOZ_ASSERT(mItem);
   MOZ_ASSERT(mGeometry || aGeometry);
 
   if (aGeometry) {
-    mGeometry = aGeometry;
+    mGeometry = std::move(aGeometry);
   }
   mClip = mItem->GetClip();
   mChangedFrameInvalidations.SetEmpty();
@@ -5235,7 +5236,7 @@ void FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData) {
   // do an in-depth comparison. If we haven't previously stored geometry
   // for this item (if it was an active layer), then we can't skip this
   // yet.
-  nsAutoPtr<nsDisplayItemGeometry> geometry;
+  UniquePtr<nsDisplayItemGeometry> geometry;
   if (aData->mReusedItem && aData->mGeometry) {
     aData->EndUpdate();
     return;
@@ -5259,10 +5260,10 @@ void FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData) {
 
   if (!aData->mGeometry) {
     // This item is being added for the first time, invalidate its entire area.
-    geometry = item->AllocateGeometry(mDisplayListBuilder);
+    geometry = WrapUnique(item->AllocateGeometry(mDisplayListBuilder));
 
-    const nsRect bounds = GetInvalidationRect(geometry, clip, aData->mTransform,
-                                              appUnitsPerDevPixel);
+    const nsRect bounds = GetInvalidationRect(
+        geometry.get(), clip, aData->mTransform, appUnitsPerDevPixel);
 
     invalidPixels = bounds.ScaleToOutsidePixels(
         layerData->mXScale, layerData->mYScale, appUnitsPerDevPixel);
@@ -5276,15 +5277,15 @@ void FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData) {
              (item->IsInvalid(invalid) && invalid.IsEmpty())) {
     // Layout marked item/frame as needing repainting (without an explicit
     // rect), invalidate the entire old and new areas.
-    geometry = item->AllocateGeometry(mDisplayListBuilder);
+    geometry = WrapUnique(item->AllocateGeometry(mDisplayListBuilder));
 
     nsRect oldArea =
-        GetInvalidationRect(aData->mGeometry, aData->mClip,
+        GetInvalidationRect(aData->mGeometry.get(), aData->mClip,
                             aData->mOldTransform, appUnitsPerDevPixel);
     oldArea.MoveBy(shift);
 
-    nsRect newArea = GetInvalidationRect(geometry, clip, aData->mTransform,
-                                         appUnitsPerDevPixel);
+    nsRect newArea = GetInvalidationRect(
+        geometry.get(), clip, aData->mTransform, appUnitsPerDevPixel);
 
     nsRegion combined;
     combined.Or(oldArea, newArea);
@@ -5313,7 +5314,7 @@ void FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData) {
     aData->mGeometry->MoveBy(shift);
 
     nsRegion combined;
-    item->ComputeInvalidationRegion(mDisplayListBuilder, aData->mGeometry,
+    item->ComputeInvalidationRegion(mDisplayListBuilder, aData->mGeometry.get(),
                                     &combined);
 
     // Only allocate a new geometry object if something actually changed,
@@ -5324,7 +5325,7 @@ void FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData) {
     if (!combined.IsEmpty() ||
         aData->mLayerState == LayerState::LAYER_INACTIVE ||
         item->NeedsGeometryUpdates()) {
-      geometry = item->AllocateGeometry(mDisplayListBuilder);
+      geometry = WrapUnique(item->AllocateGeometry(mDisplayListBuilder));
     }
 
     aData->mClip.AddOffsetAndComputeDifference(
@@ -5367,7 +5368,7 @@ void FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData) {
                                   layerData->mTranslation);
   }
 
-  aData->EndUpdate(geometry);
+  aData->EndUpdate(std::move(geometry));
 }
 
 void FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
@@ -7459,7 +7460,7 @@ already_AddRefed<Layer> ContainerState::CreateMaskLayer(
   gfx::Matrix imageTransform = maskTransform;
   imageTransform.PreScale(mParameters.mXScale, mParameters.mYScale);
 
-  nsAutoPtr<MaskLayerImageCache::MaskLayerImageKey> newKey(
+  UniquePtr<MaskLayerImageCache::MaskLayerImageKey> newKey(
       new MaskLayerImageCache::MaskLayerImageKey());
 
   // copy and transform the rounded rects
@@ -7471,7 +7472,7 @@ already_AddRefed<Layer> ContainerState::CreateMaskLayer(
   }
   newKey->mKnowsCompositor = mManager->AsKnowsCompositor();
 
-  const MaskLayerImageCache::MaskLayerImageKey* lookupKey = newKey;
+  const MaskLayerImageCache::MaskLayerImageKey* lookupKey = newKey.get();
 
   // check to see if we can reuse a mask image
   RefPtr<ImageContainer> container =
@@ -7507,7 +7508,7 @@ already_AddRefed<Layer> ContainerState::CreateMaskLayer(
       return nullptr;
     }
 
-    GetMaskLayerImageCache()->PutImage(newKey.forget(), container);
+    GetMaskLayerImageCache()->PutImage(newKey.release(), container);
   }
 
   maskLayer->SetContainer(container);

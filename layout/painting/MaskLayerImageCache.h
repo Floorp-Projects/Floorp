@@ -8,9 +8,9 @@
 #define MASKLAYERIMAGECACHE_H_
 
 #include "DisplayItemClip.h"
-#include "nsAutoPtr.h"
 #include "nsPresContext.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 
@@ -240,10 +240,10 @@ class MaskLayerImageCache {
     enum { ALLOW_MEMMOVE = true };
 
     bool operator==(const MaskLayerImageEntry& aOther) const {
-      return KeyEquals(aOther.mKey);
+      return KeyEquals(aOther.mKey.get());
     }
 
-    nsAutoPtr<const MaskLayerImageKey> mKey;
+    mozilla::UniquePtr<const MaskLayerImageKey> mKey;
     RefPtr<ImageContainer> mContainer;
   };
 

@@ -32,7 +32,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LoadInfo.h"
-#include "nsAutoPtr.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDeviceContext.h"
 #include "nsFontFaceLoader.h"
