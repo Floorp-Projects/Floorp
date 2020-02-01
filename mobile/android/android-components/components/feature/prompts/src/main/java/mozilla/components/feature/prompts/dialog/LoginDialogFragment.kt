@@ -21,7 +21,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.R
@@ -200,7 +202,9 @@ internal class LoginDialogFragment : PromptDialogFragment() {
             username = username,
             password = password
         )
-        stateUpdate?.cancel()
+        // The below code is not thread safe, so we ensure that we block here until we are sure that
+        // the previous call has been canceled
+        runBlocking { stateUpdate?.cancelAndJoin() }
         stateUpdate = scope.launch {
             val result =
                 feature?.loginValidationDelegate?.validateCanPersist(login)?.await()

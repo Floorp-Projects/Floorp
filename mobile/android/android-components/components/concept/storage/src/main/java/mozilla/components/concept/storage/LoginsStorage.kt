@@ -83,6 +83,8 @@ interface LoginValidationDelegate {
     /**
      * Checks whether or not [login] can be persisted.
      *
+     * Note that this method is not thread safe.
+     *
      * @returns a [LoginValidationDelegate.Result], detailing whether [login] can be saved as a new
      * value, used to update an existing one, or an error occured.
      */
