@@ -388,9 +388,9 @@ bool ServiceWorkerOp::MaybeStart(RemoteWorkerChild* aOwner,
 void ServiceWorkerOp::Cancel() { RejectAll(NS_ERROR_DOM_ABORT_ERR); }
 
 ServiceWorkerOp::ServiceWorkerOp(
-    const ServiceWorkerOpArgs& aArgs,
+    ServiceWorkerOpArgs&& aArgs,
     std::function<void(const ServiceWorkerOpResult&)>&& aCallback)
-    : mArgs(aArgs) {
+    : mArgs(std::move(aArgs)) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
   RefPtr<ServiceWorkerOpPromise> promise = mPromiseHolder.Ensure(__func__);
@@ -931,9 +931,9 @@ class MessageEventOp final : public ExtendableEventOp {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MessageEventOp, override)
 
-  MessageEventOp(const ServiceWorkerOpArgs& aArgs,
+  MessageEventOp(ServiceWorkerOpArgs&& aArgs,
                  std::function<void(const ServiceWorkerOpResult&)>&& aCallback)
-      : ExtendableEventOp(aArgs, std::move(aCallback)),
+      : ExtendableEventOp(std::move(aArgs), std::move(aCallback)),
         mData(new ServiceWorkerCloneData()) {
     mData->CopyFromClonedMessageDataForBackgroundChild(
         mArgs.get_ServiceWorkerMessageEventOpArgs().clonedData());
@@ -1633,7 +1633,7 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
 }
 
 /* static */ already_AddRefed<ServiceWorkerOp> ServiceWorkerOp::Create(
-    const ServiceWorkerOpArgs& aArgs,
+    ServiceWorkerOpArgs&& aArgs,
     std::function<void(const ServiceWorkerOpResult&)>&& aCallback) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
@@ -1641,32 +1641,36 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
 
   switch (aArgs.type()) {
     case ServiceWorkerOpArgs::TServiceWorkerCheckScriptEvaluationOpArgs:
-      op = MakeRefPtr<CheckScriptEvaluationOp>(aArgs, std::move(aCallback));
+      op = MakeRefPtr<CheckScriptEvaluationOp>(std::move(aArgs),
+                                               std::move(aCallback));
       break;
     case ServiceWorkerOpArgs::TServiceWorkerUpdateStateOpArgs:
-      op = MakeRefPtr<UpdateServiceWorkerStateOp>(aArgs, std::move(aCallback));
+      op = MakeRefPtr<UpdateServiceWorkerStateOp>(std::move(aArgs),
+                                                  std::move(aCallback));
       break;
     case ServiceWorkerOpArgs::TServiceWorkerTerminateWorkerOpArgs:
-      op = MakeRefPtr<TerminateServiceWorkerOp>(aArgs, std::move(aCallback));
+      op = MakeRefPtr<TerminateServiceWorkerOp>(std::move(aArgs),
+                                                std::move(aCallback));
       break;
     case ServiceWorkerOpArgs::TServiceWorkerLifeCycleEventOpArgs:
-      op = MakeRefPtr<LifeCycleEventOp>(aArgs, std::move(aCallback));
+      op = MakeRefPtr<LifeCycleEventOp>(std::move(aArgs), std::move(aCallback));
       break;
     case ServiceWorkerOpArgs::TServiceWorkerPushEventOpArgs:
-      op = MakeRefPtr<PushEventOp>(aArgs, std::move(aCallback));
+      op = MakeRefPtr<PushEventOp>(std::move(aArgs), std::move(aCallback));
       break;
     case ServiceWorkerOpArgs::TServiceWorkerPushSubscriptionChangeEventOpArgs:
-      op = MakeRefPtr<PushSubscriptionChangeEventOp>(aArgs,
+      op = MakeRefPtr<PushSubscriptionChangeEventOp>(std::move(aArgs),
                                                      std::move(aCallback));
       break;
     case ServiceWorkerOpArgs::TServiceWorkerNotificationEventOpArgs:
-      op = MakeRefPtr<NotificationEventOp>(aArgs, std::move(aCallback));
+      op = MakeRefPtr<NotificationEventOp>(std::move(aArgs),
+                                           std::move(aCallback));
       break;
     case ServiceWorkerOpArgs::TServiceWorkerMessageEventOpArgs:
-      op = MakeRefPtr<MessageEventOp>(aArgs, std::move(aCallback));
+      op = MakeRefPtr<MessageEventOp>(std::move(aArgs), std::move(aCallback));
       break;
     case ServiceWorkerOpArgs::TServiceWorkerFetchEventOpArgs:
-      op = MakeRefPtr<FetchEventOp>(aArgs, std::move(aCallback));
+      op = MakeRefPtr<FetchEventOp>(std::move(aArgs), std::move(aCallback));
       break;
     default:
       MOZ_CRASH("Unknown Service Worker operation!");
