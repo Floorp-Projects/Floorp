@@ -137,6 +137,8 @@ class RemoteWorkerController final {
 
   RefPtr<GenericPromise> SetServiceWorkerSkipWaitingFlag() const;
 
+  bool IsTerminated() const;
+
  private:
   RemoteWorkerController(const RemoteWorkerData& aData,
                          RemoteWorkerObserver* aObserver);

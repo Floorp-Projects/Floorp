@@ -293,6 +293,10 @@ RefPtr<GenericPromise> RemoteWorkerController::SetServiceWorkerSkipWaitingFlag()
   return promise;
 }
 
+bool RemoteWorkerController::IsTerminated() const {
+  return mState == eTerminated;
+}
+
 RemoteWorkerController::PendingSharedWorkerOp::PendingSharedWorkerOp(
     Type aType, uint64_t aWindowID)
     : mType(aType), mWindowID(aWindowID) {
@@ -404,6 +408,19 @@ bool RemoteWorkerController::PendingServiceWorkerOp::MaybeStart(
 
   // The target content process must still be starting up.
   if (!aOwner->mActor) {
+    // We can avoid starting the worker at all if we know it should be
+    // terminated.
+    MOZ_ASSERT(aOwner->mState == RemoteWorkerController::ePending);
+    if (mArgs.type() ==
+        ServiceWorkerOpArgs::TServiceWorkerTerminateWorkerOpArgs) {
+      aOwner->CancelAllPendingOps();
+      Cancel();
+
+      aOwner->mState = RemoteWorkerController::eTerminated;
+
+      return true;
+    }
+
     return false;
   }
 
