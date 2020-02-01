@@ -10,7 +10,6 @@ include protocol PParentToChildStream; // FIXME: bug 792908
 
 include DOMTypes;
 
-using struct mozilla::SerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
 using struct nsID from "nsID.h";
 
 namespace mozilla {
