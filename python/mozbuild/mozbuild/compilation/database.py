@@ -122,6 +122,11 @@ class CompileDBBackend(CommonBackend):
                         accum = word
                     else:
                         c.append(word)
+            # Tell clangd to keep parsing to the end of a file, regardless of
+            # how many errors are encountered. (Unified builds mean that we
+            # encounter a lot of errors parsing some files.)
+            c.append("-ferror-limit=0")
+
             per_source_flags = self._per_source_flags.get(filename)
             if per_source_flags is not None:
                 c.extend(per_source_flags)
