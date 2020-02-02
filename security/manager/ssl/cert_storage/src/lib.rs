@@ -1121,7 +1121,7 @@ impl CertStorage {
             _ => return Err(SecurityStateError::from("could not QI to nsIPrefBranch")),
         };
 
-        for pref in int_prefs.into_iter() {
+        for pref in int_prefs.iter() {
             let pref_nscstr = &nsCStr::from(pref.to_owned()) as &nsACString;
             let rv = (*prefs).AddObserverImpl(pref_nscstr, self.coerce::<nsIObserver>(), false);
             match read_int_pref(pref) {
