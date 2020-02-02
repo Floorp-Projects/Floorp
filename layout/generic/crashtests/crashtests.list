@@ -574,7 +574,7 @@ load 1015562.html
 asserts(1-2) asserts-if(Android,1-3) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
 asserts-if(Android,21) load 1015844.html
-asserts-if(Android,0-24) pref(font.size.inflation.minTwips,200) load 1032450.html
+asserts-if(Android,0-358) pref(font.size.inflation.minTwips,200) load 1032450.html # Bug 1607658
 load 1032613-1.svg
 load 1032613-2.html
 load 1037903.html
