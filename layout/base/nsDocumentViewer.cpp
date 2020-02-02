@@ -18,6 +18,7 @@
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewerPrint.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BeforeUnloadEvent.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/Document.h"
@@ -3171,16 +3172,14 @@ nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
 
 NS_IMETHODIMP
 nsDocumentViewer::GetContentSize(int32_t* aWidth, int32_t* aHeight) {
-  // Skip doing this on docshell-less documents for now
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(mContainer);
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mContainer, NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-  docShellAsItem->GetInProcessSameTypeParent(getter_AddRefs(docShellParent));
+  RefPtr<BrowsingContext> bc = mContainer->GetBrowsingContext();
+  NS_ENSURE_TRUE(bc, NS_ERROR_NOT_AVAILABLE);
 
   // It's only valid to access this from a top frame.  Doesn't work from
   // sub-frames.
-  NS_ENSURE_TRUE(!docShellParent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(bc->IsTop(), NS_ERROR_FAILURE);
 
   return GetContentSizeInternal(aWidth, aHeight, NS_UNCONSTRAINEDSIZE,
                                 NS_UNCONSTRAINEDSIZE);
