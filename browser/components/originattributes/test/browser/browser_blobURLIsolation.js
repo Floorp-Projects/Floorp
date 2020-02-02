@@ -6,7 +6,6 @@ const TEST_PAGE =
   "http://mochi.test:8888/browser/browser/components/" +
   "originattributes/test/browser/file_firstPartyBasic.html";
 const SCRIPT_WORKER_BLOBIFY = "worker_blobify.js";
-const SCRIPT_WORKER_DEBLOBIFY = "worker_deblobify.js";
 
 function page_blobify(browser, input) {
   return SpecialPowers.spawn(browser, [input], function(contentInput) {
@@ -59,28 +58,35 @@ function page_deblobify(browser, blobURL) {
   });
 }
 
-function workerIO(browser, scriptFile, message) {
-  return SpecialPowers.spawn(browser, [{ scriptFile, message }], function(
-    args
-  ) {
-    let worker = new content.Worker(args.scriptFile);
-    let promise = new content.Promise(function(resolve) {
-      let listenFunction = function(event) {
-        worker.removeEventListener("message", listenFunction);
-        worker.terminate();
-        resolve(event.data);
-      };
-      worker.addEventListener("message", listenFunction);
-    });
-    worker.postMessage(args.message);
-    return promise;
-  });
+function workerIO(browser, what, message) {
+  return SpecialPowers.spawn(
+    browser,
+    [
+      {
+        scriptFile: SCRIPT_WORKER_BLOBIFY,
+        message: { message, what },
+      },
+    ],
+    function(args) {
+      if (!content.worker) {
+        content.worker = new content.Worker(args.scriptFile);
+      }
+      let promise = new content.Promise(function(resolve) {
+        let listenFunction = function(event) {
+          content.worker.removeEventListener("message", listenFunction);
+          resolve(event.data);
+        };
+        content.worker.addEventListener("message", listenFunction);
+      });
+      content.worker.postMessage(args.message);
+      return promise;
+    }
+  );
 }
 
-let worker_blobify = (browser, input) =>
-  workerIO(browser, SCRIPT_WORKER_BLOBIFY, input);
+let worker_blobify = (browser, input) => workerIO(browser, "blobify", input);
 let worker_deblobify = (browser, blobURL) =>
-  workerIO(browser, SCRIPT_WORKER_DEBLOBIFY, blobURL);
+  workerIO(browser, "deblobify", blobURL);
 
 function doTest(blobify, deblobify) {
   let blobURL = null;
