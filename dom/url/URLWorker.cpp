@@ -48,24 +48,6 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
       return false;
     }
 
-    if (!mWorkerPrivate->IsSharedWorker() &&
-        !mWorkerPrivate->IsServiceWorker()) {
-      // Walk up to top worker object.
-      WorkerPrivate* wp = mWorkerPrivate;
-      while (WorkerPrivate* parent = wp->GetParent()) {
-        wp = parent;
-      }
-
-      nsCOMPtr<nsIScriptContext> sc = wp->GetScriptContext();
-      // We could not have a ScriptContext in JSM code. In this case, we leak.
-      if (sc) {
-        nsCOMPtr<nsIGlobalObject> global = sc->GetGlobalObject();
-        MOZ_ASSERT(global);
-
-        global->RegisterHostObjectURI(url);
-      }
-    }
-
     mURL = NS_ConvertUTF8toUTF16(url);
     return true;
   }
@@ -97,24 +79,6 @@ class RevokeURLRunnable : public WorkerMainThreadRunnable {
         NS_SUCCEEDED(principal->Subsumes(urlPrincipal, &subsumes)) &&
         subsumes) {
       BlobURLProtocolHandler::RemoveDataEntry(url);
-    }
-
-    if (!mWorkerPrivate->IsSharedWorker() &&
-        !mWorkerPrivate->IsServiceWorker()) {
-      // Walk up to top worker object.
-      WorkerPrivate* wp = mWorkerPrivate;
-      while (WorkerPrivate* parent = wp->GetParent()) {
-        wp = parent;
-      }
-
-      nsCOMPtr<nsIScriptContext> sc = wp->GetScriptContext();
-      // We could not have a ScriptContext in JSM code. In this case, we leak.
-      if (sc) {
-        nsCOMPtr<nsIGlobalObject> global = sc->GetGlobalObject();
-        MOZ_ASSERT(global);
-
-        global->UnregisterHostObjectURI(url);
-      }
     }
 
     return true;
@@ -163,12 +127,10 @@ void URLWorker::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
     return;
   }
 
-  if (workerPrivate->IsSharedWorker() || workerPrivate->IsServiceWorker()) {
-    WorkerGlobalScope* scope = workerPrivate->GlobalScope();
-    MOZ_ASSERT(scope);
+  WorkerGlobalScope* scope = workerPrivate->GlobalScope();
+  MOZ_ASSERT(scope);
 
-    scope->RegisterHostObjectURI(NS_ConvertUTF16toUTF8(aResult));
-  }
+  scope->RegisterHostObjectURI(NS_ConvertUTF16toUTF8(aResult));
 }
 
 /* static */
@@ -185,12 +147,10 @@ void URLWorker::RevokeObjectURL(const GlobalObject& aGlobal,
     return;
   }
 
-  if (workerPrivate->IsSharedWorker() || workerPrivate->IsServiceWorker()) {
-    WorkerGlobalScope* scope = workerPrivate->GlobalScope();
-    MOZ_ASSERT(scope);
+  WorkerGlobalScope* scope = workerPrivate->GlobalScope();
+  MOZ_ASSERT(scope);
 
-    scope->UnregisterHostObjectURI(NS_ConvertUTF16toUTF8(aUrl));
-  }
+  scope->UnregisterHostObjectURI(NS_ConvertUTF16toUTF8(aUrl));
 }
 
 /* static */
