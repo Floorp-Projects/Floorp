@@ -283,12 +283,14 @@ void GetBoxQuads(nsINode* aNode, const dom::BoxQuadOptions& aOptions,
     }
   }
   if (!relativeToFrame) {
-    aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
-    return;
+    // XXXbz There's no spec for this.
+    return aRv.ThrowNotFoundError("No box to get quads relative to");
   }
   if (!CheckFramesInSameTopLevelBrowsingContext(frame, relativeToFrame,
                                                 aCallerType)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
+    aRv.ThrowNotFoundError(
+        "Can't get quads relative to a box in a different toplevel browsing "
+        "context");
     return;
   }
   // GetBoxRectForFrame can modify relativeToFrame so call it first.
@@ -313,12 +315,15 @@ static void TransformPoints(nsINode* aTo, const GeometryNode& aFrom,
     fromFrame = GetFirstNonAnonymousFrameForGeometryNode(aFrom);
   }
   if (!fromFrame || !toFrame) {
-    aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
+    aRv.ThrowNotFoundError(
+        "Can't transform coordinates between nonexistent boxes");
     return;
   }
   if (!CheckFramesInSameTopLevelBrowsingContext(fromFrame, toFrame,
                                                 aCallerType)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
+    aRv.ThrowNotFoundError(
+        "Can't transform coordinates between boxes in different toplevel "
+        "browsing contexts");
     return;
   }
 
@@ -351,7 +356,7 @@ already_AddRefed<DOMQuad> ConvertQuadFromNode(
   for (uint32_t i = 0; i < 4; ++i) {
     DOMPoint* p = aQuad.Point(i);
     if (p->W() != 1.0 || p->Z() != 0.0) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      aRv.ThrowInvalidStateError("Point is not 2d");
       return nullptr;
     }
     points[i] = CSSPoint(p->X(), p->Y());
@@ -387,7 +392,7 @@ already_AddRefed<DOMPoint> ConvertPointFromNode(
     const dom::ConvertCoordinateOptions& aOptions, CallerType aCallerType,
     ErrorResult& aRv) {
   if (aPoint.mW != 1.0 || aPoint.mZ != 0.0) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("Point is not 2d");
     return nullptr;
   }
   CSSPoint point(aPoint.mX, aPoint.mY);

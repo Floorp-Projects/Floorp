@@ -547,7 +547,7 @@ function testInlineCSS() {
 
       browser.test.assertThrows(
         () => style.sheet.wrappedJSObject.cssRules,
-        /operation is insecure/,
+        /Not allowed to access cross-origin stylesheet/,
         "Page content should not be able to access extension-generated CSS rules"
       );
 

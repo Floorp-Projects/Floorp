@@ -312,7 +312,8 @@ static void SetOpacityOnElement(nsIContent* aContent, double aOpacity) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
     nsAutoCString str;
     str.AppendFloat(aOpacity);
-    decl->SetProperty(NS_LITERAL_CSTRING("opacity"), str, EmptyString());
+    decl->SetProperty(NS_LITERAL_CSTRING("opacity"), str, EmptyString(),
+                      IgnoreErrors());
   }
 }
 
@@ -342,7 +343,7 @@ static void UnsetOpacityOnElement(nsIContent* aContent) {
   if (inlineStyleContent) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
     nsAutoString dummy;
-    decl->RemoveProperty(NS_LITERAL_CSTRING("opacity"), dummy);
+    decl->RemoveProperty(NS_LITERAL_CSTRING("opacity"), dummy, IgnoreErrors());
   }
 }
 

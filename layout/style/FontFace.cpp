@@ -507,7 +507,7 @@ bool FontFace::SetDescriptor(nsCSSFontDesc aFontDesc, const nsAString& aValue,
   bool changed;
   if (!Servo_FontFaceRule_SetDescriptor(GetData(), aFontDesc, &value, url,
                                         &changed)) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.ThrowSyntaxError("Invalid font descriptor");
     return false;
   }
 
