@@ -3,7 +3,6 @@
   margin: 0 auto 16px;
 
   &.withButton {
-    padding: 0 25px;
     margin: auto;
     min-height: 60px;
     background-color: transparent;
@@ -59,15 +58,11 @@
       flex-direction: row;
       padding: 0;
       text-align: inherit;
+      width: 696px;
     }
 
     @media (min-width: $break-point-medium) {
       @include full-width-styles;
-    }
-
-    // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 1121px.
-    @media (max-width: $break-point-widest + 1px) {
-      margin: 0 60px;
     }
 
     @media (max-width: 865px) {
@@ -133,9 +128,16 @@
     min-height: 60px;
     background-color: transparent;
 
+    .innerWrapper {
+      // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 1121px.
+      @media (max-width: $break-point-widest + 1px) {
+        margin: 0 40px;
+      }
+    }
+
     .blockButton {
       display: block;
-      inset-inline-end: -15%;
+      inset-inline-end: -10%;
       opacity: 0;
       margin: auto;
       top: unset;
