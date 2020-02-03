@@ -808,9 +808,9 @@ void TrapSiteVectorArray::swap(TrapSiteVectorArray& rhs) {
   }
 }
 
-void TrapSiteVectorArray::podResizeToFit() {
+void TrapSiteVectorArray::shrinkStorageToFit() {
   for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
-    (*this)[trap].podResizeToFit();
+    (*this)[trap].shrinkStorageToFit();
   }
 }
 

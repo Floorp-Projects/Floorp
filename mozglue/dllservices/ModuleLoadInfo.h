@@ -98,7 +98,7 @@ struct ModuleLoadInfo final {
     Unused << mBacktrace.resize(numCaptured);
     // These backtraces might stick around for a while, so let's trim any
     // excess memory.
-    mBacktrace.podResizeToFit();
+    mBacktrace.shrinkStorageToFit();
   }
 
 #endif  // !defined(MOZILLA_INTERNAL_API)
