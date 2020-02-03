@@ -49,16 +49,14 @@ void MediaKeySystemAccessManager::PendingRequest::CancelTimer() {
 void MediaKeySystemAccessManager::PendingRequest::
     RejectPromiseWithInvalidAccessError(const nsAString& aReason) {
   if (mPromise) {
-    mPromise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                          NS_ConvertUTF16toUTF8(aReason));
+    mPromise->MaybeRejectWithInvalidAccessError(NS_ConvertUTF16toUTF8(aReason));
   }
 }
 
 void MediaKeySystemAccessManager::PendingRequest::
     RejectPromiseWithNotSupportedError(const nsAString& aReason) {
   if (mPromise) {
-    mPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                          NS_ConvertUTF16toUTF8(aReason));
+    mPromise->MaybeRejectWithNotSupportedError(NS_ConvertUTF16toUTF8(aReason));
   }
 }
 

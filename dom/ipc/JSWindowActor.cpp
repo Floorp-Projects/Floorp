@@ -310,8 +310,8 @@ void JSWindowActor::ReceiveMessageOrQuery(
     if (aRv.Failed()) {
       if (aRv.IsUncatchableException()) {
         aRv.SuppressException();
-        promise->MaybeRejectWithDOMException(
-            NS_ERROR_FAILURE, "Message handler threw uncatchable exception");
+        promise->MaybeRejectWithTimeoutError(
+            "Message handler threw uncatchable exception");
       } else {
         promise->MaybeReject(aRv);
       }
