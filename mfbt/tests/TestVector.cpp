@@ -24,7 +24,7 @@ struct mozilla::detail::VectorTesting {
   static void testReplaceRawBuffer();
   static void testInsert();
   static void testErase();
-  static void testPodResizeToFit();
+  static void testShrinkStorageToFit();
 };
 
 void mozilla::detail::VectorTesting::testReserved() {
@@ -532,30 +532,134 @@ void mozilla::detail::VectorTesting::testErase() {
   MOZ_RELEASE_ASSERT(S::destructCount == 4);
 }
 
-void mozilla::detail::VectorTesting::testPodResizeToFit() {
+void mozilla::detail::VectorTesting::testShrinkStorageToFit() {
   // Vectors not using inline storage realloc capacity to exact length.
-  Vector<int, 0> v1;
-  MOZ_RELEASE_ASSERT(v1.reserve(10));
-  v1.infallibleAppend(1);
-  MOZ_ASSERT(v1.length() == 1);
-  MOZ_ASSERT(v1.reserved() == 10);
-  MOZ_ASSERT(v1.capacity() >= 10);
-  v1.podResizeToFit();
-  MOZ_ASSERT(v1.length() == 1);
-  MOZ_ASSERT(v1.reserved() == 1);
-  MOZ_ASSERT(v1.capacity() == 1);
+  {
+    Vector<int, 0> v1;
+    MOZ_RELEASE_ASSERT(v1.reserve(10));
+    v1.infallibleAppend(1);
+    MOZ_ASSERT(v1.length() == 1);
+    MOZ_ASSERT(v1.reserved() == 10);
+    MOZ_ASSERT(v1.capacity() >= 10);
+    v1.shrinkStorageToFit();
+    MOZ_ASSERT(v1.length() == 1);
+    MOZ_ASSERT(v1.reserved() == 1);
+    MOZ_ASSERT(v1.capacity() == 1);
+  }
 
   // Vectors using inline storage do nothing.
-  Vector<int, 2> v2;
-  MOZ_RELEASE_ASSERT(v2.reserve(2));
-  v2.infallibleAppend(1);
-  MOZ_ASSERT(v2.length() == 1);
-  MOZ_ASSERT(v2.reserved() == 2);
-  MOZ_ASSERT(v2.capacity() == 2);
-  v2.podResizeToFit();
-  MOZ_ASSERT(v2.length() == 1);
-  MOZ_ASSERT(v2.reserved() == 2);
-  MOZ_ASSERT(v2.capacity() == 2);
+  {
+    Vector<int, 2> v2;
+    MOZ_RELEASE_ASSERT(v2.reserve(2));
+    v2.infallibleAppend(1);
+    MOZ_ASSERT(v2.length() == 1);
+    MOZ_ASSERT(v2.reserved() == 2);
+    MOZ_ASSERT(v2.capacity() == 2);
+    v2.shrinkStorageToFit();
+    MOZ_ASSERT(v2.length() == 1);
+    MOZ_ASSERT(v2.reserved() == 2);
+    MOZ_ASSERT(v2.capacity() == 2);
+  }
+
+  // shrinkStorageToFit uses inline storage if possible.
+  {
+    Vector<int, 2> v;
+    MOZ_RELEASE_ASSERT(v.reserve(4));
+    v.infallibleAppend(1);
+    MOZ_ASSERT(v.length() == 1);
+    MOZ_ASSERT(v.reserved() == 4);
+    MOZ_ASSERT(v.capacity() >= 4);
+    v.shrinkStorageToFit();
+    MOZ_ASSERT(v.length() == 1);
+    MOZ_ASSERT(v.reserved() == 1);
+    MOZ_ASSERT(v.capacity() == 2);
+  }
+
+  // Non-pod shrinking to non-inline storage.
+  {
+    static size_t sConstructCounter = 0;
+    static size_t sCopyCounter = 0;
+    static size_t sMoveCounter = 0;
+    static size_t sDestroyCounter = 0;
+    struct NonPod {
+      int mSomething = 10;
+
+      NonPod() { sConstructCounter++; }
+
+      NonPod(const NonPod& aOther) : mSomething(aOther.mSomething) {
+        sCopyCounter++;
+      }
+      NonPod(NonPod&& aOther) : mSomething(aOther.mSomething) {
+        sMoveCounter++;
+      }
+      ~NonPod() { sDestroyCounter++; }
+    };
+
+    Vector<NonPod, 5> v;
+    MOZ_RELEASE_ASSERT(v.reserve(10));
+    for (size_t i = 0; i < 8; ++i) {
+      v.infallibleEmplaceBack();
+    }
+    MOZ_RELEASE_ASSERT(sConstructCounter == 8);
+    MOZ_RELEASE_ASSERT(sCopyCounter == 0);
+    MOZ_RELEASE_ASSERT(sMoveCounter == 0);
+    MOZ_RELEASE_ASSERT(sDestroyCounter == 0);
+    MOZ_RELEASE_ASSERT(v.length() == 8);
+    MOZ_ASSERT(v.reserved() == 10);
+    MOZ_RELEASE_ASSERT(v.capacity() >= 10);
+    MOZ_RELEASE_ASSERT(v.shrinkStorageToFit());
+
+    MOZ_RELEASE_ASSERT(sConstructCounter == 8);
+    MOZ_RELEASE_ASSERT(sCopyCounter == 0);
+    MOZ_RELEASE_ASSERT(sMoveCounter == 8);
+    MOZ_RELEASE_ASSERT(sDestroyCounter == 8);
+    MOZ_RELEASE_ASSERT(v.length() == 8);
+    MOZ_ASSERT(v.reserved() == 8);
+    MOZ_RELEASE_ASSERT(v.capacity() == 8);
+  }
+
+  // Non-POD shrinking to inline storage.
+  {
+    static size_t sConstructCounter = 0;
+    static size_t sCopyCounter = 0;
+    static size_t sMoveCounter = 0;
+    static size_t sDestroyCounter = 0;
+    struct NonPod {
+      int mSomething = 10;
+
+      NonPod() { sConstructCounter++; }
+
+      NonPod(const NonPod& aOther) : mSomething(aOther.mSomething) {
+        sCopyCounter++;
+      }
+      NonPod(NonPod&& aOther) : mSomething(aOther.mSomething) {
+        sMoveCounter++;
+      }
+      ~NonPod() { sDestroyCounter++; }
+    };
+
+    Vector<NonPod, 5> v;
+    MOZ_RELEASE_ASSERT(v.reserve(10));
+    for (size_t i = 0; i < 3; ++i) {
+      v.infallibleEmplaceBack();
+    }
+    MOZ_RELEASE_ASSERT(sConstructCounter == 3);
+    MOZ_RELEASE_ASSERT(sCopyCounter == 0);
+    MOZ_RELEASE_ASSERT(sMoveCounter == 0);
+    MOZ_RELEASE_ASSERT(sDestroyCounter == 0);
+    MOZ_RELEASE_ASSERT(v.length() == 3);
+    MOZ_ASSERT(v.reserved() == 10);
+    MOZ_RELEASE_ASSERT(v.capacity() >= 10);
+    MOZ_RELEASE_ASSERT(v.shrinkStorageToFit());
+
+    MOZ_RELEASE_ASSERT(sConstructCounter == 3);
+    MOZ_RELEASE_ASSERT(sCopyCounter == 0);
+    MOZ_RELEASE_ASSERT(sMoveCounter == 3);
+    MOZ_RELEASE_ASSERT(sDestroyCounter == 3);
+    MOZ_RELEASE_ASSERT(v.length() == 3);
+    MOZ_ASSERT(v.reserved() == 3);
+    MOZ_RELEASE_ASSERT(v.capacity() == 5);
+  }
 }
 
 // Declare but leave (permanently) incomplete.
@@ -672,6 +776,6 @@ int main() {
   VectorTesting::testReplaceRawBuffer();
   VectorTesting::testInsert();
   VectorTesting::testErase();
-  VectorTesting::testPodResizeToFit();
+  VectorTesting::testShrinkStorageToFit();
   TestVectorBeginNonNull();
 }
