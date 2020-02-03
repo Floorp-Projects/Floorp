@@ -31,8 +31,6 @@ class nsHTMLDocument {
 namespace mozilla {
 namespace dom {
 
-static mozilla::LazyLogModule gU2FLog("u2fmanager");
-
 NS_NAMED_LITERAL_STRING(kFinishEnrollment, "navigator.id.finishEnrollment");
 NS_NAMED_LITERAL_STRING(kGetAssertion, "navigator.id.getAssertion");
 
