@@ -406,13 +406,13 @@ struct TilePreUpdateContext {
 
     /// The visible part of the screen in world coords.
     global_screen_world_rect: WorldRect,
+
+    /// The local rect of the overall picture cache
+    local_rect: PictureRect,
 }
 
 // Immutable context passed to picture cache tiles during post_update
 struct TilePostUpdateContext<'a> {
-    /// The local rect of the overall picture cache
-    local_rect: PictureRect,
-
     /// The local clip rect (in picture space) of the entire picture cache
     local_clip_rect: PictureRect,
 
@@ -667,6 +667,10 @@ pub struct Tile {
     /// TODO(gw): We have multiple dirty rects available due to the quadtree above. In future,
     ///           expose these as multiple dirty rects, which will help in some cases.
     pub world_dirty_rect: WorldRect,
+    /// Picture space rect that contains valid pixels region of this tile.
+    local_valid_rect: PictureRect,
+    /// World space rect that contains valid pixels region of this tile.
+    pub world_valid_rect: WorldRect,
     /// Uniquely describes the content of this tile, in a way that can be
     /// (reasonably) efficiently hashed and compared.
     pub current_descriptor: TileDescriptor,
@@ -707,6 +711,8 @@ impl Tile {
         Tile {
             local_tile_rect: PictureRect::zero(),
             world_tile_rect: WorldRect::zero(),
+            local_valid_rect: PictureRect::zero(),
+            world_valid_rect: WorldRect::zero(),
             local_dirty_rect: PictureRect::zero(),
             world_dirty_rect: WorldRect::zero(),
             surface: None,
@@ -819,11 +825,16 @@ impl Tile {
         ctx: &TilePreUpdateContext,
     ) {
         self.local_tile_rect = local_tile_rect;
+        self.local_valid_rect = local_tile_rect.intersection(&ctx.local_rect).unwrap();
         self.invalidation_reason  = None;
 
         self.world_tile_rect = ctx.pic_to_world_mapper
             .map(&self.local_tile_rect)
             .expect("bug: map local tile rect");
+
+        self.world_valid_rect = ctx.pic_to_world_mapper
+            .map(&self.local_valid_rect)
+            .expect("bug: map local valid rect");
 
         // Check if this tile is currently on screen.
         self.is_visible = self.world_tile_rect.intersects(&ctx.global_screen_world_rect);
@@ -975,9 +986,8 @@ impl Tile {
         // Check if this tile can be considered opaque. Opacity state must be updated only
         // after all early out checks have been performed. Otherwise, we might miss updating
         // the native surface next time this tile becomes visible.
-        let clipped_rect = self.local_tile_rect
-            .intersection(&ctx.local_rect)
-            .and_then(|r| r.intersection(&ctx.local_clip_rect))
+        let clipped_rect = self.local_valid_rect
+            .intersection(&ctx.local_clip_rect)
             .unwrap_or_else(PictureRect::zero);
         self.is_opaque = ctx.backdrop.rect.contains_rect(&clipped_rect);
 
@@ -2196,6 +2206,7 @@ impl TileCacheInstance {
         mem::swap(&mut self.tiles, &mut self.old_tiles);
 
         let ctx = TilePreUpdateContext {
+            local_rect: self.local_rect,
             pic_to_world_mapper,
             fract_offset: self.fract_offset,
             background_color: self.background_color,
@@ -2719,7 +2730,6 @@ impl TileCacheInstance {
         }
 
         let ctx = TilePostUpdateContext {
-            local_rect: self.local_rect,
             local_clip_rect: self.local_clip_rect,
             backdrop: self.backdrop,
             spatial_nodes: &self.spatial_nodes,
@@ -4024,19 +4034,15 @@ impl PicturePrimitive {
 
                         // Get the overall world space rect of the picture cache. Used to clip
                         // the tile rects below for occlusion testing to the relevant area.
-                        let local_clip_rect = tile_cache.local_rect
-                            .intersection(&tile_cache.local_clip_rect)
-                            .unwrap_or_else(PictureRect::zero);
-
                         let world_clip_rect = map_pic_to_world
-                            .map(&local_clip_rect)
+                            .map(&tile_cache.local_clip_rect)
                             .expect("bug: unable to map clip rect");
 
                         for key in &tile_cache.tiles_to_draw {
                             let tile = tile_cache.tiles.get_mut(key).expect("bug: no tile found!");
 
                             // Get the world space rect that this tile will actually occupy on screem
-                            let tile_draw_rect = match world_clip_rect.intersection(&tile.world_tile_rect) {
+                            let world_draw_rect = match world_clip_rect.intersection(&tile.world_valid_rect) {
                                 Some(rect) => rect,
                                 None => {
                                     tile.is_visible = false;
@@ -4048,7 +4054,7 @@ impl PicturePrimitive {
                             // then mark it as not visible and skip drawing. When it's not occluded
                             // it will fail this test, and get rasterized by the render task setup
                             // code below.
-                            if frame_state.composite_state.is_tile_occluded(tile_cache.slice, tile_draw_rect) {
+                            if frame_state.composite_state.is_tile_occluded(tile_cache.slice, world_draw_rect) {
                                 // If this tile has an allocated native surface, free it, since it's completely
                                 // occluded. We will need to re-allocate this surface if it becomes visible,
                                 // but that's likely to be rare (e.g. when there is no content display list
