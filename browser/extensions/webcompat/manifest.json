@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "6.4.0",
+  "version": "7.0.0",
 
   "applications": {
     "gecko": {
@@ -59,16 +59,20 @@
         "script": "experiment-apis/sharedPreferences.js",
         "paths": [["sharedPreferences"]]
       }
+    },
+    "systemManufacturer": {
+      "schema": "experiment-apis/systemManufacturer.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiment-apis/systemManufacturer.js",
+        "paths": [["systemManufacturer"]]
+      }
     }
   },
 
   "content_security_policy": "script-src 'self' 'sha256-MmZkN2QaIHhfRWPZ8TVRjijTn5Ci1iEabtTEWrt9CCo='; default-src 'self'; base-uri moz-extension://*; object-src 'none'",
 
-  "permissions": [
-    "webRequest",
-    "webRequestBlocking",
-    "<all_urls>"
-  ],
+  "permissions": ["webRequest", "webRequestBlocking", "<all_urls>"],
 
   "background": {
     "scripts": [
