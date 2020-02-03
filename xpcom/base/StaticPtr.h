@@ -130,6 +130,12 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticRefPtr {
     return *this;
   }
 
+  template <typename U>
+  StaticRefPtr<T>& operator=(RefPtr<U>&& aRhs) {
+    AssignAssumingAddRef(aRhs.forget().take());
+    return *this;
+  }
+
   StaticRefPtr<T>& operator=(already_AddRefed<T>&& aRhs) {
     AssignAssumingAddRef(aRhs.take());
     return *this;
