@@ -93,7 +93,6 @@ class nsMenuX : public nsMenuObjectX, public nsChangeObserver {
   bool mNeedsRebuild;
   bool mConstructed;
   bool mVisible;
-  bool mXBLAttached;
 };
 
 #endif  // nsMenuX_h_
