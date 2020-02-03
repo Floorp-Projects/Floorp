@@ -119,7 +119,7 @@ tasks:
 # - Signs the builds with the release key
 # - Uploads the builds to the "alpha" track on Google Play
 ###############################################################################
-  - $if: 'tasks_for == "github-release" && event["action"] in ["published", "prereleased"]'
+  - $if: 'tasks_for == "github-release" && event["action"] == "published"'
     then:
       $let:
         decision_task_id: {$eval: as_slugid("decision_task")}
