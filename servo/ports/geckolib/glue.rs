@@ -1697,6 +1697,12 @@ pub unsafe extern "C" fn Servo_AuthorStyles_ForceDirty(styles: &mut RawServoAuth
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_AuthorStyles_IsDirty(styles: &RawServoAuthorStyles) -> bool {
+    let styles = AuthorStyles::<GeckoStyleSheet>::from_ffi(styles);
+    styles.stylesheets.dirty()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_AuthorStyles_Flush(
     styles: &mut RawServoAuthorStyles,
     document_set: &RawServoStyleSet,
