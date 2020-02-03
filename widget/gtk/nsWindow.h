@@ -681,6 +681,7 @@ class nsWindow final : public nsBaseWidget {
 
   bool IsMainMenuWindow();
   GtkWidget* ConfigureWaylandPopupWindows();
+  void PauseRemoteRenderer();
   void HideWaylandWindow();
   void HideWaylandTooltips();
   void HideWaylandPopupAndAllChildren();
