@@ -65,6 +65,7 @@
 .secondary-panes input[type="checkbox"] {
   margin: 0;
   margin-inline-end: 4px;
+  vertical-align: middle;
 }
 
 .secondary-panes-wrapper .command-bar.bottom {
