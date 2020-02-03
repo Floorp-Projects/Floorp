@@ -532,6 +532,17 @@ class MOZ_IS_REFPTR nsCOMPtr final
     NSCAP_ASSERT_NO_QUERY_NEEDED();
   }
 
+  // Construct from |std::move(otherRefPtr)|.
+  template <typename U>
+  MOZ_IMPLICIT nsCOMPtr(RefPtr<U>&& aSmartPtr)
+      : NSCAP_CTOR_BASE(aSmartPtr.forget().take()) {
+    assert_validity();
+    // Make sure that U actually inherits from T
+    static_assert(std::is_base_of<T, U>::value, "U is not a subclass of T");
+    NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
+    NSCAP_ASSERT_NO_QUERY_NEEDED();
+  }
+
   // Construct from |already_AddRefed|.
   template <typename U>
   MOZ_IMPLICIT nsCOMPtr(already_AddRefed<U>& aSmartPtr)
@@ -690,6 +701,16 @@ class MOZ_IS_REFPTR nsCOMPtr final
     // Make sure that U actually inherits from T
     static_assert(std::is_base_of<T, U>::value, "U is not a subclass of T");
     assign_assuming_AddRef(static_cast<T*>(aRhs.take()));
+    NSCAP_ASSERT_NO_QUERY_NEEDED();
+    return *this;
+  }
+
+  // Assign from |std::move(otherRefPtr)|.
+  template <typename U>
+  nsCOMPtr<T>& operator=(RefPtr<U>&& aRhs) {
+    // Make sure that U actually inherits from T
+    static_assert(std::is_base_of<T, U>::value, "U is not a subclass of T");
+    assign_assuming_AddRef(static_cast<T*>(aRhs.forget().take()));
     NSCAP_ASSERT_NO_QUERY_NEEDED();
     return *this;
   }
@@ -1476,6 +1497,14 @@ inline already_AddRefed<T> do_AddRef(const nsCOMPtr<T>& aObj) {
 template <class T>
 std::ostream& operator<<(std::ostream& aOut, const nsCOMPtr<T>& aObj) {
   return mozilla::DebugValue(aOut, aObj.get());
+}
+
+// ToRefPtr allows to move an nsCOMPtr<T> into a RefPtr<T>. Be mindful when
+// using this, because usually RefPtr<T> should only be used with concrete T and
+// nsCOMPtr<T> should only be used with XPCOM interface T.
+template <class T>
+RefPtr<T> ToRefPtr(nsCOMPtr<T>&& aObj) {
+  return aObj.forget();
 }
 
 #endif  // !defined(nsCOMPtr_h___)
