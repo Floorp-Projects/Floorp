@@ -247,18 +247,23 @@ class ReverseSearchInput extends Component {
         onInput: ({ target }) =>
           dispatch(actions.reverseSearchInputChange(target.value)),
       }),
-      this.renderSearchInformation(),
-      this.renderNavigationButtons(),
-      dom.button({
-        className: "devtools-button reverse-search-close-button",
-        title: l10n.getFormatStr(
-          "webconsole.reverseSearch.closeButton.tooltip",
-          ["Esc" + (isMacOS ? " | Ctrl + C" : "")]
-        ),
-        onClick: () => {
-          dispatch(actions.reverseSearchInputToggle());
+      dom.div(
+        {
+          className: "reverse-search-actions",
         },
-      })
+        this.renderSearchInformation(),
+        this.renderNavigationButtons(),
+        dom.button({
+          className: "devtools-button reverse-search-close-button",
+          title: l10n.getFormatStr(
+            "webconsole.reverseSearch.closeButton.tooltip",
+            ["Esc" + (isMacOS ? " | Ctrl + C" : "")]
+          ),
+          onClick: () => {
+            dispatch(actions.reverseSearchInputToggle());
+          },
+        })
+      )
     );
   }
 }
