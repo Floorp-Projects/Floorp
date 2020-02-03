@@ -183,7 +183,7 @@ class SecondaryPanes extends Component<Props, State> {
 
     const buttons = [];
 
-    if (expressions.size) {
+    if (expressions.length) {
       buttons.push(
         debugBtn(
           evt => {
