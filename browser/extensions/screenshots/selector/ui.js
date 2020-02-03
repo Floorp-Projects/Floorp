@@ -376,11 +376,13 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                         <button class="highlight-button-cancel" title="${cancelTitle}">
                           <img src="${browser.extension.getURL("icons/cancel.svg")}" />
                         </button>
-                        <button class="highlight-button-copy" data-l10n-id="screenshots-copy-button" title="${copyTitle}">
-                        <img src="${browser.extension.getURL("icons/copy.svg")}" /></button>
-                      <button class="highlight-button-download" title="${downloadTitle}">
-                        <img src="${browser.extension.getURL("icons/download-white.svg")}"
-                             data-l10n-id="screenshots-download-button"/>
+                        <button class="highlight-button-copy" title="${copyTitle}">
+                          <img src="${browser.extension.getURL("icons/copy.svg")}" />
+                          <span data-l10n-id="screenshots-copy-button"/>
+                        </button>
+                        <button class="highlight-button-download" title="${downloadTitle}">
+                          <img src="${browser.extension.getURL("icons/download-white.svg")}" />
+                          <span data-l10n-id="screenshots-download-button"/>
                       </button>
                     </div>
                       <div class="preview-image-wrapper"></div>
