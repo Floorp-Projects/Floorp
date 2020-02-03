@@ -17,24 +17,27 @@
     }
     </style>
     <script type="application/javascript">
+      "use strict";
+
+      /* exported init */
       function init() {
         const fatarrow = document.getElementById("fatarrow");
 
-        const he = new handleEventClick();
+        const he = new HandleEventClick();
         const anonObjectMethod = document.getElementById("anon-object-method");
         anonObjectMethod.addEventListener("click", he.anonObjectMethod);
 
         const objectMethod = document.getElementById("object-method");
         objectMethod.addEventListener("click", he.objectMethod);
 
-        const bhe = new boundHandleEventClick();
+        const bhe = new BoundHandleEventClick();
         const boundheNode = document.getElementById("boundhe");
         bhe.handleEvent = bhe.handleEvent.bind(bhe);
         boundheNode.addEventListener("click", bhe);
 
         const boundNode = document.getElementById("bound");
-        boundClickHandler = boundClickHandler.bind(this);
-        boundNode.addEventListener("click", boundClickHandler);
+        BoundClickHandler = BoundClickHandler.bind(this);
+        boundNode.addEventListener("click", BoundClickHandler);
 
         fatarrow.addEventListener("click", () => {
           alert("Fat arrow without params!");
@@ -59,15 +62,15 @@
           .addEventListener("click", functionProceededByStreamingComment);
       }
 
-      function boundClickHandler(event) {
+      function BoundClickHandler(event) {
         alert("Bound event");
       }
 
-      function handleEventClick(hehe) {
+      function HandleEventClick(hehe) {
 
       }
 
-      handleEventClick.prototype = {
+      HandleEventClick.prototype = {
         anonObjectMethod: function() {
           alert("obj.anonObjectMethod");
         },
@@ -77,11 +80,11 @@
         },
       };
 
-      function boundHandleEventClick() {
+      function BoundHandleEventClick() {
 
       }
 
-      boundHandleEventClick.prototype = {
+      BoundHandleEventClick.prototype = {
         handleEvent: function() {
           alert("boundHandleEvent");
         }

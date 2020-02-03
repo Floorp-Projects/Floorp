@@ -20,41 +20,41 @@ const TEST_DATA = [
     expected: [
       {
         type: "load",
-        filename: TEST_URL + ":27:38",
+        filename: TEST_URL + ":29:38",
         attributes: [
           "Bubbling",
           "DOM2"
         ],
         handler: `
           () => {
-            var handler1 = function liveDivDblClick() {
+            const handler1 = function liveDivDblClick() {
               alert(1);
             };
-            var handler2 = function liveDivDragStart() {
+            const handler2 = function liveDivDragStart() {
               alert(2);
             };
-            var handler3 = function liveDivDragLeave() {
+            const handler3 = function liveDivDragLeave() {
               alert(3);
             };
-            var handler4 = function liveDivDragEnd() {
+            const handler4 = function liveDivDragEnd() {
               alert(4);
             };
-            var handler5 = function liveDivDrop() {
+            const handler5 = function liveDivDrop() {
               alert(5);
             };
-            var handler6 = function liveDivDragOver() {
+            const handler6 = function liveDivDragOver() {
               alert(6);
             };
-            var handler7 = function divClick1() {
+            const handler7 = function divClick1() {
               alert(7);
             };
-            var handler8 = function divClick2() {
+            const handler8 = function divClick2() {
               alert(8);
             };
-            var handler9 = function divKeyDown() {
+            const handler9 = function divKeyDown() {
               alert(9);
             };
-            var handler10 = function divDragOut() {
+            const handler10 = function divDragOut() {
               alert(10);
             };
 
@@ -74,7 +74,7 @@ const TEST_DATA = [
               $(document).on("dragout", "#livediv:xxxxx", handler10);
             }
 
-            var div = $("div")[0];
+            const div = $("div")[0];
             $(div).click(handler7);
             $(div).click(handler8);
             $(div).keydown(handler9);
@@ -87,7 +87,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":34:41",
+        filename: TEST_URL + ":36:43",
         attributes: [
           "jQuery"
         ],
@@ -98,7 +98,7 @@ const TEST_DATA = [
       },
       {
         type: "click",
-        filename: TEST_URL + ":35:41",
+        filename: TEST_URL + ":37:43",
         attributes: [
           "jQuery"
         ],
@@ -109,7 +109,7 @@ const TEST_DATA = [
       },
       {
         type: "keydown",
-        filename: TEST_URL + ":36:42",
+        filename: TEST_URL + ":38:44",
         attributes: [
           "jQuery"
         ],
@@ -125,7 +125,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "dragend",
-        filename: TEST_URL + ":31:46",
+        filename: TEST_URL + ":33:48",
         attributes: [
           "jQuery",
           "Live"
@@ -137,7 +137,7 @@ const TEST_DATA = [
       },
       {
         type: "dragleave",
-        filename: TEST_URL + ":30:48",
+        filename: TEST_URL + ":32:50",
         attributes: [
           "jQuery",
           "Live"
@@ -149,7 +149,7 @@ const TEST_DATA = [
       },
       {
         type: "dragover",
-        filename: TEST_URL + ":33:47",
+        filename: TEST_URL + ":35:49",
         attributes: [
           "jQuery",
           "Live"
@@ -161,7 +161,7 @@ const TEST_DATA = [
       },
       {
         type: "drop",
-        filename: TEST_URL + ":32:43",
+        filename: TEST_URL + ":34:45",
         attributes: [
           "jQuery",
           "Live"

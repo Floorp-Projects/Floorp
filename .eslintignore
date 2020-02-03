@@ -56,14 +56,8 @@ browser/locales/
 # Generated data files
 browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 
-# devtools/ exclusions
-devtools/client/inspector/markup/test/doc_markup_events_*.html
-devtools/client/performance/components/test/test_jit_optimizations_01.html
-devtools/server/tests/browser/storage-*.html
-!devtools/server/tests/browser/storage-unsecured-iframe.html
-devtools/server/tests/browser/stylesheets-nested-iframes.html
-devtools/client/webreplay/mochitest/examples/*.html
-devtools/client/webreplay/mochitest/examples/
+# Soon to be removed (bug 1609815)
+devtools/client/webreplay/
 
 # Ignore devtools debugger files which aren't intended for linting, and also
 # aren't included in any .eslintignore or .prettierignore file.

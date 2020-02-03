@@ -11,7 +11,7 @@ const TEST_URL = URL_ROOT + "doc_markup_events_01.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
-const TEST_DATA = [ // eslint-disable-line
+const TEST_DATA = [
   {
     selector: "html",
     expected: [
@@ -28,12 +28,12 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "mouseover",
-        filename: TEST_URL + ":45:31",
+        filename: TEST_URL + ":48:31",
         attributes: ["Capturing", "DOM2"],
         handler:
           "function mouseoverHandler(event) {\n" +
           '  if (event.target.id !== "container") {\n' +
-          '    let output = document.getElementById("output");\n' +
+          '    const output = document.getElementById("output");\n' +
           "    output.textContent = event.target.textContent;\n" +
           "  }\n" +
           "}",
@@ -45,21 +45,21 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":52:27",
+        filename: TEST_URL + ":55:27",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function clickHandler(event) {\n" +
-          '  let output = document.getElementById("output");\n' +
+          '  const output = document.getElementById("output");\n' +
           '  output.textContent = "click";\n' +
           "}",
       },
       {
         type: "mouseup",
-        filename: TEST_URL + ":57:29",
+        filename: TEST_URL + ":60:29",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function mouseupHandler(event) {\n" +
-          '  let output = document.getElementById("output");\n' +
+          '  const output = document.getElementById("output");\n' +
           '  output.textContent = "mouseup";\n' +
           "}",
       },
@@ -81,7 +81,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":72:35",
+        filename: TEST_URL + ":75:35",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function noeventsClickHandler(event) {\n" +
@@ -117,7 +117,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":67:29",
+        filename: TEST_URL + ":70:29",
         attributes: ["Bubbling", "DOM2"],
         handler: "function(blah) {\n" + '  alert("handleEvent");\n' + "}",
       },

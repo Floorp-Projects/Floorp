@@ -13,8 +13,10 @@
   <p>A test page with nested iframes</p>
   <iframe></iframe>
   <script type="application/javascript">
+    "use strict";
+
     const iframe = document.querySelector("iframe");
-    let i = parseInt(location.href.split("?")[1]) || 1;
+    let i = parseInt(location.href.split("?")[1], 10) || 1;
 
     // The frame can't have the same src URL as any of its ancestors.
     // This will not infinitely recurse because a frame won't get a content

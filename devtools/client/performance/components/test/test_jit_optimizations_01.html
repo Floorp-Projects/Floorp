@@ -13,15 +13,15 @@ Test the rendering of the JIT Optimizations tree. Tests when jit data has observ
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
+"use strict";
+
 window.onload = async function () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
     const JITOptimizations = React.createFactory(browserRequire("devtools/client/performance/components/JITOptimizations"));
     ok(JITOptimizations, "Should get JITOptimizations");
-    let opts;
-
-    opts = ReactDOM.render(JITOptimizations({
+    const opts = ReactDOM.render(JITOptimizations({
       onViewSourceInDebugger: function(){},
       frameData: {
         isMetaCategory: false,
