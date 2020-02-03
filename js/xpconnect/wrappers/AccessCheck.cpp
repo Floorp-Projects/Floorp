@@ -163,7 +163,7 @@ void AccessCheck::reportCrossOriginDenial(JSContext* cx, JS::HandleId id,
               NS_LITERAL_CSTRING(" on cross-origin object");
   }
   ErrorResult rv;
-  rv.ThrowDOMException(NS_ERROR_DOM_SECURITY_ERR, message);
+  rv.ThrowSecurityError(message);
   MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(cx));
 }
 

@@ -31,7 +31,7 @@ void ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs) {
     ClientSource* source = GetSource();
     if (!source) {
       CopyableErrorResult rv;
-      rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "Unknown Client");
+      rv.ThrowAbortError("Unknown Client");
       Unused << PClientSourceOpChild::Send__delete__(this, rv);
       return;
     }

@@ -847,14 +847,14 @@ void Navigator::CheckProtocolHandlerAllowed(const nsAString& aScheme,
     aHandlerURI->GetSpec(spec);
     nsPrintfCString message("Permission denied to add %s as a protocol handler",
                             spec.get());
-    aRv.ThrowDOMException(NS_ERROR_DOM_SECURITY_ERR, message);
+    aRv.ThrowSecurityError(message);
   };
 
   auto raisePermissionDeniedScheme = [&] {
     nsPrintfCString message(
         "Permission denied to add a protocol handler for %s",
         NS_ConvertUTF16toUTF8(aScheme).get());
-    aRv.ThrowDOMException(NS_ERROR_DOM_SECURITY_ERR, message);
+    aRv.ThrowSecurityError(message);
   };
 
   if (!aDocumentURI || !aHandlerURI) {
@@ -867,8 +867,7 @@ void Navigator::CheckProtocolHandlerAllowed(const nsAString& aScheme,
   // If the uri doesn't contain '%s', it won't be a good handler - the %s
   // gets replaced with the handled URI.
   if (!FindInReadable(NS_LITERAL_CSTRING("%s"), spec)) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
-                          "Handler URI does not contain \"%s\".");
+    aRv.ThrowSyntaxError("Handler URI does not contain \"%s\".");
     return;
   }
 

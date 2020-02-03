@@ -14,7 +14,7 @@ namespace dom {
 void ClientHandleOpChild::ActorDestroy(ActorDestroyReason aReason) {
   mClientHandle = nullptr;
   CopyableErrorResult rv;
-  rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "Client load aborted");
+  rv.ThrowAbortError("Client load aborted");
   mRejectCallback(rv);
 }
 

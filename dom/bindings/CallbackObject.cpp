@@ -214,8 +214,8 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   JSObject* wrappedCallback = aCallback->CallbackPreserveColor();
   if (!wrappedCallback) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                          "Cannot execute callback from a nuked compartment.");
+    aRv.ThrowNotSupportedError(
+        "Cannot execute callback from a nuked compartment.");
     return;
   }
 
@@ -231,8 +231,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       // Make sure to use realCallback to get the global of the callback
       // object, not the wrapper.
       if (!xpc::Scriptability::Get(realCallback).Allowed()) {
-        aRv.ThrowDOMException(
-            NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        aRv.ThrowNotSupportedError(
             "Refusing to execute function from global in which script is "
             "disabled.");
         return;
@@ -248,8 +247,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       // We don't want to run script in windows that have been navigated away
       // from.
       if (!win->HasActiveDocument()) {
-        aRv.ThrowDOMException(
-            NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        aRv.ThrowNotSupportedError(
             "Refusing to execute function from window whose document is no "
             "longer active.");
         return;
@@ -264,8 +262,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   // Bail out if there's no useful global.
   if (!globalObject->HasJSGlobal()) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+    aRv.ThrowNotSupportedError(
         "Refusing to execute function from global which is being torn down.");
     return;
   }
@@ -280,8 +277,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     // nsIGlobalObject has severed its reference to the JS global. Let's just
     // be safe here, so that nobody has to waste a day debugging gaia-ui tests.
     if (!incumbent->HasJSGlobal()) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      aRv.ThrowNotSupportedError(
           "Refusing to execute function because our incumbent global is being "
           "torn down.");
       return;

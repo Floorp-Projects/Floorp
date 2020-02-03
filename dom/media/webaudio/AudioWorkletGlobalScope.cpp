@@ -55,8 +55,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    *    a valid key.
    */
   if (aName.IsEmpty()) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+    aRv.ThrowNotSupportedError(
         "Argument 1 of AudioWorkletGlobalScope.registerProcessor should not be "
         "an empty string.");
     return;
@@ -70,8 +69,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    */
   if (mNameToProcessorMap.GetWeak(aName)) {
     // Duplicate names are not allowed
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+    aRv.ThrowNotSupportedError(
         "Argument 1 of AudioWorkletGlobalScope.registerProcessor is invalid: a "
         "class with the same name is already registered.");
     return;
@@ -239,31 +237,28 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
     }
 
     if (namesSet.Contains(descriptor.mName)) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      aRv.ThrowNotSupportedError(
           NS_LITERAL_CSTRING("Duplicated name \"") +
-              NS_ConvertUTF16toUTF8(descriptor.mName) +
-              NS_LITERAL_CSTRING("\" in parameterDescriptors."));
+          NS_ConvertUTF16toUTF8(descriptor.mName) +
+          NS_LITERAL_CSTRING("\" in parameterDescriptors."));
       return AudioParamDescriptorMap();
     }
 
     if (descriptor.mMinValue > descriptor.mMaxValue) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      aRv.ThrowNotSupportedError(
           NS_LITERAL_CSTRING("In parameterDescriptors, ") +
-              NS_ConvertUTF16toUTF8(descriptor.mName) +
-              NS_LITERAL_CSTRING(" minValue should be smaller than maxValue."));
+          NS_ConvertUTF16toUTF8(descriptor.mName) +
+          NS_LITERAL_CSTRING(" minValue should be smaller than maxValue."));
       return AudioParamDescriptorMap();
     }
 
     if (descriptor.mDefaultValue < descriptor.mMinValue ||
         descriptor.mDefaultValue > descriptor.mMaxValue) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      aRv.ThrowNotSupportedError(
           NS_LITERAL_CSTRING("In parameterDescriptors, ") +
-              NS_ConvertUTF16toUTF8(descriptor.mName) +
-              NS_LITERAL_CSTRING(" defaultValue is out of the range defined by "
-                                 "minValue and maxValue."));
+          NS_ConvertUTF16toUTF8(descriptor.mName) +
+          NS_LITERAL_CSTRING(" defaultValue is out of the range defined by "
+                             "minValue and maxValue."));
       return AudioParamDescriptorMap();
     }
 

@@ -118,7 +118,7 @@ void WindowGlobalActor::ConstructActor(const nsAString& aName,
   if (NS_WARN_IF(!ctor.isObject())) {
     nsPrintfCString message("Could not find actor constructor '%s'",
                             NS_ConvertUTF16toUTF8(ctorName).get());
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_FOUND_ERR, message);
+    aRv.ThrowNotFoundError(message);
     return;
   }
 

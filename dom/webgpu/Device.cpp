@@ -78,8 +78,7 @@ void Device::CreateBufferMapped(JSContext* aCx,
   ipc::Shmem shmem;
   if (!mBridge->AllocShmem(size, ipc::Shmem::SharedMemory::TYPE_BASIC,
                            &shmem)) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_ABORT_ERR,
+    aRv.ThrowAbortError(
         nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
     return;
   }
@@ -116,8 +115,7 @@ RefPtr<MappingPromise> Device::MapBufferForReadAsync(RawId aId, size_t aSize,
   ipc::Shmem shmem;
   if (!mBridge->AllocShmem(aSize, ipc::Shmem::SharedMemory::TYPE_BASIC,
                            &shmem)) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_ABORT_ERR,
+    aRv.ThrowAbortError(
         nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, aSize));
     return nullptr;
   }

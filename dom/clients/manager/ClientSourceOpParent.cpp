@@ -16,7 +16,7 @@ using mozilla::ipc::IPCResult;
 void ClientSourceOpParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mPromise) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "Client torn down");
+    rv.ThrowAbortError("Client torn down");
     mPromise->Reject(rv, __func__);
     mPromise = nullptr;
   }

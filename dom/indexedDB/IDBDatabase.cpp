@@ -379,11 +379,9 @@ RefPtr<IDBObjectStore> IDBDatabase::CreateObjectStore(
         return aName == objectStore.metadata().name();
       });
   if (foundIt != end) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR,
-        nsPrintfCString("Object store named '%s' already exists at index '%zu'",
-                        NS_ConvertUTF16toUTF8(aName).get(),
-                        foundIt.GetIndex()));
+    aRv.ThrowConstraintError(nsPrintfCString(
+        "Object store named '%s' already exists at index '%zu'",
+        NS_ConvertUTF16toUTF8(aName).get(), foundIt.GetIndex()));
     return nullptr;
   }
 
