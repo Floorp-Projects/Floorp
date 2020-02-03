@@ -101,6 +101,7 @@ class AddonManagerTest {
         val metadata: Metadata = mock()
         whenever(newlySupportedExtension.isEnabled()).thenReturn(false)
         whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(DisabledFlags.APP_SUPPORT))
+        whenever(metadata.optionsPageUrl).thenReturn("http://options-page.moz")
         whenever(newlySupportedExtension.id).thenReturn("ext3")
         whenever(newlySupportedExtension.url).thenReturn("site_url")
         whenever(newlySupportedExtension.getMetadata()).thenReturn(metadata)
@@ -131,6 +132,7 @@ class AddonManagerTest {
         assertTrue(addons[2].isSupported())
         assertFalse(addons[2].isEnabled())
         assertTrue(addons[2].isDisabledAsUnsupported())
+        assertEquals("http://options-page.moz", addons[2].installedState!!.optionsPageUrl)
 
         // Verify the unsupported add-on was included in addons
         assertEquals("unsupported_ext", addons[3].id)

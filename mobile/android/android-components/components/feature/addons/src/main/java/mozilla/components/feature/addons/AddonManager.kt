@@ -217,13 +217,10 @@ class AddonManager(
 class AddonManagerException(throwable: Throwable) : Exception(throwable)
 
 private fun WebExtension.toInstalledState() =
-    // TODO Add optionsUrl
-    // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
-    // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1597793
     Addon.InstalledState(
         id = id,
         version = getMetadata()?.version ?: "",
-        optionsPageUrl = "https://mozilla.org",
+        optionsPageUrl = getMetadata()?.optionsPageUrl ?: "",
         enabled = isEnabled(),
         disabledAsUnsupported = getMetadata()?.disabledFlags?.contains(DisabledFlags.APP_SUPPORT) == true
     )

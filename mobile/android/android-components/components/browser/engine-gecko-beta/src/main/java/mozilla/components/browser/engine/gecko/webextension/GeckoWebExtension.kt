@@ -260,7 +260,7 @@ class GeckoWebExtension(
                 hostPermissions = it.origins.toList(),
                 disabledFlags = DisabledFlags.select(0),
                 optionsPageUrl = null, // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
-                openOptionsPageInTab = null // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
+                openOptionsPageInTab = false // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
             )
         }
     }
