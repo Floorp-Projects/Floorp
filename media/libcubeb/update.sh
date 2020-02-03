@@ -10,14 +10,12 @@ cp $1/AUTHORS .
 cp $1/LICENSE .
 cp $1/README.md .
 cp $1/include/cubeb/cubeb.h include
-cp $1/src/android/audiotrack_definitions.h src/android
 cp $1/src/android/sles_definitions.h src/android
 cp $1/src/cubeb-internal.h src
 cp $1/src/cubeb-speex-resampler.h src
 cp $1/src/cubeb.c src
 cp $1/src/cubeb_alsa.c src
 cp $1/src/cubeb_array_queue.h src
-cp $1/src/cubeb_audiotrack.c src
 cp $1/src/cubeb_audiounit.cpp src
 cp $1/src/cubeb_jack.cpp src
 cp $1/src/cubeb_log.cpp src
