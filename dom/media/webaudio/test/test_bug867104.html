@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtest for bug 867104</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var ctx = new AudioContext();
+  var source = ctx.createBufferSource();
+  var b0 = ctx.createBuffer(32,798,22050);
+  var b1 = ctx.createBuffer(32,28,22050);
+  var sp = ctx.createScriptProcessor(0, 2, 0);
+  source.buffer = b0;
+  source.connect(sp);
+  source.start(0);
+  source.buffer = b1;
+  sp.onaudioprocess = function() {
+    ok(true, "We did not crash.");
+    sp.onaudioprocess = null;
+    SimpleTest.finish();
+  };
+});
+
+
+</script>
+</pre>
+</body>
+</html>

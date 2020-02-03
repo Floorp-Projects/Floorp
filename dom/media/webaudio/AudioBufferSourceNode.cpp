@@ -584,8 +584,7 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
       mLoopEnd(0.0),
       // mOffset and mDuration are initialized in Start().
       mLoop(false),
-      mStartCalled(false),
-      mBufferSet(false) {
+      mStartCalled(false) {
   CreateAudioParam(mPlaybackRate, PLAYBACKRATE, "playbackRate", 1.0f);
   CreateAudioParam(mDetune, DETUNE, "detune", 0.0f);
   AudioBufferSourceNodeEngine* engine =
@@ -605,9 +604,8 @@ already_AddRefed<AudioBufferSourceNode> AudioBufferSourceNode::Create(
       new AudioBufferSourceNode(&aAudioContext);
 
   if (aOptions.mBuffer.WasPassed()) {
-    ErrorResult ignored;
     MOZ_ASSERT(aCx);
-    audioNode->SetBuffer(aCx, aOptions.mBuffer.Value(), ignored);
+    audioNode->SetBuffer(aCx, aOptions.mBuffer.Value());
   }
 
   audioNode->Detune()->SetValue(aOptions.mDetune);
