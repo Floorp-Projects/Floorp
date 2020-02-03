@@ -363,9 +363,19 @@ class WebConsoleUI {
       await this.proxy.connect();
       return;
     }
-    // Ignore frame targets, except the top level one, which is handled in the previous
-    // block. Also ignore workers as they are not supported yet. (see bug 1592584)
-    if (type != this.hud.targetList.TYPES.PROCESS) {
+
+    // Allow frame, but only in content toolbox, when the fission/content toolbox pref is
+    // set. i.e. still ignore them in the content of the browser toolbox as we inspect
+    // messages via the process targets
+    // Also ignore workers as they are not supported yet. (see bug 1592584)
+    const isContentToolbox = this.hud.targetList.targetFront.isLocalTab;
+    const listenForFrames =
+      isContentToolbox &&
+      Services.prefs.getBoolPref("devtools.contenttoolbox.fission");
+    if (
+      type != this.hud.targetList.TYPES.PROCESS &&
+      (type != this.hud.targetList.TYPES.FRAME || !listenForFrames)
+    ) {
       return;
     }
     const proxy = new WebConsoleConnectionProxy(this, targetFront);
