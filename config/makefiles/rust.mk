@@ -93,12 +93,6 @@ ifdef MOZ_USING_SCCACHE
 export RUSTC_WRAPPER=$(CCACHE)
 endif
 
-ifdef MOZ_CODE_COVERAGE
-ifeq (gcc,$(CC_TYPE))
-CODE_COVERAGE_GCC=1
-endif
-endif
-
 ifneq (,$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN))
 ifndef CROSS_COMPILE
 NATIVE_SANITIZERS=1
@@ -122,7 +116,7 @@ rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 export CC_$(rust_cc_env_name)=$(CC)
 export CXX_$(rust_cc_env_name)=$(CXX)
 export AR_$(rust_cc_env_name)=$(AR)
-ifeq (,$(NATIVE_SANITIZERS)$(CODE_COVERAGE_GCC))
+ifeq (,$(NATIVE_SANITIZERS)$(MOZ_CODE_COVERAGE))
 # -DMOZILLA_CONFIG_H is added to prevent mozilla-config.h from injecting anything
 # in C/C++ compiles from rust. That's not needed in the other branch because the
 # base flags don't force-include mozilla-config.h.
