@@ -115,7 +115,11 @@ class CargoProvider(MachCommandBase):
     @CommandArgument('--all-crates', default=None, action='store_true',
                      help='Check all of the crates in the tree.')
     @CommandArgument('crates', default=None, nargs='*', help='The crate name(s) to check.')
-    def check(self, all_crates=None, crates=None):
+    @CommandArgument('--jobs', '-j', default='1', nargs='?', metavar='jobs', type=int,
+                     help='Run the tests in parallel using multiple processes.')
+    @CommandArgument('-v', '--verbose', action='store_true',
+                     help='Verbose output.')
+    def check(self, all_crates=None, crates=None, jobs=0, verbose=False):
         # XXX duplication with `mach vendor rust`
         crates_and_roots = {
             'gkrust': 'toolkit/library/rust',
@@ -146,8 +150,9 @@ class CargoProvider(MachCommandBase):
             ]
 
             ret = self._run_make(srcdir=False, directory=root,
-                                 ensure_exit_code=0, silent=True,
-                                 print_directory=False, target=check_targets)
+                                 ensure_exit_code=0, silent=not verbose,
+                                 print_directory=False, target=check_targets,
+                                 num_jobs=jobs)
             if ret != 0:
                 return ret
 
