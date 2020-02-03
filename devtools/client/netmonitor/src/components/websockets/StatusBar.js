@@ -92,7 +92,7 @@ class StatusBar extends Component {
             title: TOOLTIP_FRAMES_TOTAL_SIZE,
           },
           L10N.getFormatStr(
-            "networkMenu.ws.summary.tooltip.framesTranferredSize",
+            "networkMenu.ws.summary.label.framesTranferredSize",
             totalSizeText,
             sentSizeText,
             receivedText
