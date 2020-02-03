@@ -10157,6 +10157,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
+      "from-font",
       "inherit",
       "initial",
       "revert",
@@ -10171,7 +10172,6 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
-      "from-font",
       "inherit",
       "initial",
       "left",
@@ -10805,20 +10805,20 @@ exports.PREFERENCES = [
     "layout.css.scrollbar-color.enabled"
   ],
   [
-    "text-decoration-thickness",
-    "layout.css.text-decoration-thickness.enabled"
-  ],
-  [
     "translate",
     "layout.css.individual-transform.enabled"
   ],
   [
-    "offset-distance",
-    "layout.css.motion-path.enabled"
+    "text-decoration-thickness",
+    "layout.css.text-decoration-thickness.enabled"
   ],
   [
     "text-underline-offset",
     "layout.css.text-underline-offset.enabled"
+  ],
+  [
+    "offset-distance",
+    "layout.css.motion-path.enabled"
   ],
   [
     "overflow-clip-box",
