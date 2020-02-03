@@ -335,7 +335,7 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
 
   if (mEditorStatus != eEditorCreationInProgress) {
     RefPtr<ComposerCommandsUpdater> updater = mComposerCommandsUpdater;
-    updater->NotifyDocumentCreated();
+    updater->OnHTMLEditorCreated();
 
     // At this point we have made a final decision that we don't support
     // editing the current document.  This is an internal failure state, but
@@ -411,8 +411,7 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
 
   // Set up as a doc state listener
   // Important! We must have this to broadcast the "obs_documentCreated" message
-  rv = htmlEditor->AddDocumentStateListener(mComposerCommandsUpdater);
-  NS_ENSURE_SUCCESS(rv, rv);
+  htmlEditor->SetComposerCommandsUpdater(mComposerCommandsUpdater);
 
   rv = htmlEditor->Init(*doc, nullptr /* root content */, nullptr, mEditorFlags,
                         EmptyString());
@@ -422,8 +421,6 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }
-
-  htmlEditor->SetComposerCommandsUpdater(mComposerCommandsUpdater);
 
   // and as a transaction listener
   MOZ_ASSERT(mComposerCommandsUpdater);
@@ -452,7 +449,6 @@ void nsEditingSession::RemoveListenersAndControllers(
 
   // Remove all the listeners
   aHTMLEditor->SetComposerCommandsUpdater(nullptr);
-  aHTMLEditor->RemoveDocumentStateListener(mComposerCommandsUpdater);
   DebugOnly<bool> removedTransactionListener =
       aHTMLEditor->RemoveTransactionListener(*mComposerCommandsUpdater);
   NS_WARNING_ASSERTION(removedTransactionListener,
