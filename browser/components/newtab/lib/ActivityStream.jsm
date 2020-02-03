@@ -257,9 +257,9 @@ const PREFS_CONFIG = new Map([
   [
     "discoverystream.personalization.modelKeys",
     {
-      title: "",
+      title: "Configurable keys used by personalization version 2.",
       value:
-        "nmf_model_animals, nmf_model_business, nmf_model_career, nmf_model_datascience, nmf_model_design, nmf_model_education, nmf_model_entertainment, nmf_model_environment, nmf_model_fashion, nmf_model_finance, nmf_model_food, nmf_model_health, nmf_model_home, nmf_model_life, nmf_model_marketing, nmf_model_politics, nmf_model_programming, nmf_model_science, nmf_model_shopping, nmf_model_sports, nmf_model_tech, nmf_model_travel, nb_model_animals, nb_model_books, nb_model_business, nb_model_career, nb_model_datascience, nb_model_design, nb_model_economics, nb_model_education, nb_model_entertainment, nb_model_environment, nb_model_fashion, nb_model_finance, nb_model_food, nb_model_game, nb_model_health, nb_model_history, nb_model_home, nb_model_life, nb_model_marketing, nb_model_military, nb_model_philosophy, nb_model_photography, nb_model_politics, nb_model_productivity, nb_model_programming, nb_model_psychology, nb_model_science, nb_model_shopping, nb_model_society, nb_model_space, nb_model_sports, nb_model_tech, nb_model_travel, nb_model_writing",
+        "nb_model_business, nb_model_career, nb_model_education, nb_model_entertainment, nb_model_environment, nb_model_food, nb_model_gaming, nb_model_health_fitness, nb_model_parenting, nb_model_personal_finance, nb_model_politics, nb_model_science, nb_model_self_improvement, nb_model_sports, nb_model_technology, nb_model_travel",
     },
   ],
   [
