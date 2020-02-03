@@ -10,7 +10,6 @@ import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -224,7 +223,6 @@ class HomeFragment : Fragment() {
 
         ConstraintSet().apply {
             clone(view.homeLayout)
-
 
             if (shouldUseBottomToolbar) {
                 connect(sessionControlView.view.id, TOP, view.wordmark.id, BOTTOM)
