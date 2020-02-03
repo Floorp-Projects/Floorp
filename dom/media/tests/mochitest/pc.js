@@ -2060,7 +2060,11 @@ PeerConnectionWrapper.prototype = {
    */
   getStats(selector) {
     return this._pc.getStats(selector).then(stats => {
-      info(this + ": Got stats: " + JSON.stringify(stats));
+      let dict = {};
+      for (const [k, v] of stats.entries()) {
+        dict[k] = v;
+      }
+      info(this + ": Got stats: " + JSON.stringify(dict));
       this._last_stats = stats;
       return stats;
     });
