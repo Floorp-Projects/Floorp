@@ -41,8 +41,7 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
     RefPtr<Device> device = new Device(this, id.value());
     promise->MaybeResolve(device);
   } else {
-    promise->MaybeRejectWithDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                         "Unable to instanciate a Device");
+    promise->MaybeRejectWithNotSupportedError("Unable to instanciate a Device");
   }
 
   return promise.forget();

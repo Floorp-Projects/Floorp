@@ -147,9 +147,8 @@ void MediaKeys::Shutdown() {
 
   for (auto iter = mPromises.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<dom::DetailedPromise>& promise = iter.Data();
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Promise still outstanding at MediaKeys shutdown"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Promise still outstanding at MediaKeys shutdown");
     Release();
   }
   mPromises.Clear();
@@ -176,9 +175,8 @@ already_AddRefed<DetailedPromise> MediaKeys::SetServerCertificate(
 
   if (!mProxy) {
     NS_WARNING("Tried to use a MediaKeys without a CDM");
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Null CDM in MediaKeys.setServerCertificate()"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Null CDM in MediaKeys.setServerCertificate()");
     return promise.forget();
   }
 
@@ -347,10 +345,8 @@ void MediaKeys::ResolvePromise(PromiseId aId) {
   mPendingSessions.Remove(token, getter_AddRefs(session));
   if (!session || session->GetSessionId().IsEmpty()) {
     NS_WARNING("Received activation for non-existent session!");
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_ACCESS_ERR,
-        NS_LITERAL_CSTRING("CDM LoadSession() returned a different session ID "
-                           "than requested"));
+    promise->MaybeRejectWithInvalidAccessError(
+        "CDM LoadSession() returned a different session ID than requested");
     return;
   }
   mKeySessions.Put(session->GetSessionId(), session);
@@ -409,9 +405,8 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   // Determine principal (at creation time) of the MediaKeys object.
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(GetParentObject());
   if (!sop) {
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Couldn't get script principal in MediaKeys::Init"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Couldn't get script principal in MediaKeys::Init");
     return promise.forget();
   }
   mPrincipal = sop->GetPrincipal();
@@ -420,17 +415,15 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   // page that will display in the URL bar.
   nsCOMPtr<nsPIDOMWindowInner> window = GetParentObject();
   if (!window) {
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Couldn't get top-level window in MediaKeys::Init"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Couldn't get top-level window in MediaKeys::Init");
     return promise.forget();
   }
   nsCOMPtr<nsPIDOMWindowOuter> top =
       window->GetOuterWindow()->GetInProcessTop();
   if (!top || !top->GetExtantDoc()) {
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Couldn't get document in MediaKeys::Init"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Couldn't get document in MediaKeys::Init");
     return promise.forget();
   }
 
@@ -440,28 +433,23 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
 
   if (!mPrincipal || !mTopLevelPrincipal) {
     NS_WARNING("Failed to get principals when creating MediaKeys");
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Couldn't get principal(s) in MediaKeys::Init"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Couldn't get principal(s) in MediaKeys::Init");
     return promise.forget();
   }
 
   nsAutoCString origin;
   nsresult rv = mPrincipal->GetOrigin(origin);
   if (NS_FAILED(rv)) {
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING(
-            "Couldn't get principal origin string in MediaKeys::Init"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Couldn't get principal origin string in MediaKeys::Init");
     return promise.forget();
   }
   nsAutoCString topLevelOrigin;
   rv = mTopLevelPrincipal->GetOrigin(topLevelOrigin);
   if (NS_FAILED(rv)) {
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Couldn't get top-level principal origin string in "
-                           "MediaKeys::Init"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Couldn't get top-level principal origin string in MediaKeys::Init");
     return promise.forget();
   }
 
@@ -649,17 +637,15 @@ already_AddRefed<Promise> MediaKeys::GetStatusForPolicy(
         "keysystem ",
         this);
     NS_WARNING("Tried to query without a CDM");
-    promise->MaybeReject(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        NS_LITERAL_CSTRING("HDCP policy check on unsupported keysystem"));
+    promise->MaybeRejectWithNotSupportedError(
+        "HDCP policy check on unsupported keysystem");
     return promise.forget();
   }
 
   if (!mProxy) {
     NS_WARNING("Tried to use a MediaKeys without a CDM");
-    promise->MaybeReject(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Null CDM in MediaKeys.GetStatusForPolicy()"));
+    promise->MaybeRejectWithInvalidStateError(
+        "Null CDM in MediaKeys.GetStatusForPolicy()");
     return promise.forget();
   }
 

@@ -50,6 +50,8 @@ namespace mozilla {
 
 namespace dom {
 
+class Promise;
+
 enum ErrNum {
 #define MSG_DEF(_name, _argc, _exn, _str) _name,
 #include "mozilla/dom/Errors.msg"
@@ -318,16 +320,6 @@ class TErrorResult {
     return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION;
   }
 
-  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
-  ThrowDOMException(nsresult rv, const nsACString& message);
-
-  // Same thing, but using a string literal.
-  template <int N>
-  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
-  ThrowDOMException(nsresult rv, const char (&aMessage)[N]) {
-    ThrowDOMException(rv, nsLiteralCString(aMessage));
-  }
-
   // Facilities for throwing DOMExceptions of whatever type a spec calls for.
   // If an empty message string is passed to one of these Throw*Error functions,
   // the default message string for the relevant type of DOMException will be
@@ -403,6 +395,25 @@ class TErrorResult {
 
  protected:
   nsresult ErrorCode() const { return mResult; }
+
+  // Helper methods for throwing DOMExceptions, for now.  We can try to get rid
+  // of these once EME code is fixed to not use them and we decouple
+  // DOMExceptions from nsresult.
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowDOMException(nsresult rv, const nsACString& message);
+
+  // Same thing, but using a string literal.
+  template <int N>
+  void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG
+  ThrowDOMException(nsresult rv, const char (&aMessage)[N]) {
+    ThrowDOMException(rv, nsLiteralCString(aMessage));
+  }
+
+  // Allow Promise to call the above methods when it really needs to.
+  // Unfortunately, we can't have the definition of Promise here, so can't mark
+  // just it's MaybeRejectWithDOMException method as a friend.  In any case,
+  // hopefully it's all temporary until we sort out the EME bits.
+  friend class dom::Promise;
 
  private:
 #ifdef DEBUG
