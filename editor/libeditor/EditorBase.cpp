@@ -25,6 +25,7 @@
 #include "PlaceholderTransaction.h"         // for PlaceholderTransaction
 #include "SplitNodeTransaction.h"           // for SplitNodeTransaction
 #include "mozilla/CheckedInt.h"             // for CheckedInt
+#include "mozilla/ComposerCommandsUpdater.h"  // for ComposerCommandsUpdater
 #include "mozilla/ComputedStyle.h"          // for ComputedStyle
 #include "mozilla/CSSEditUtils.h"           // for CSSEditUtils
 #include "mozilla/EditAction.h"             // for EditSubAction
@@ -2883,37 +2884,44 @@ nsINode* EditorBase::GetFirstEditableNode(nsINode* aRoot) {
 
 nsresult EditorBase::NotifyDocumentListeners(
     TDocumentListenerNotification aNotificationType) {
-  if (!mDocStateListeners.Length()) {
-    // Maybe there just aren't any.
+  RefPtr<ComposerCommandsUpdater> composerCommandsUpdate =
+      AsHTMLEditor() ? AsHTMLEditor()->mComposerCommandsUpdater : nullptr;
+  if (!mDocStateListeners.Length() && !composerCommandsUpdate) {
     return NS_OK;
   }
 
   AutoDocumentStateListenerArray listeners(mDocStateListeners);
-  nsresult rv = NS_OK;
-
   switch (aNotificationType) {
     case eDocumentCreated:
+      if (composerCommandsUpdate) {
+        composerCommandsUpdate->OnHTMLEditorCreated();
+      }
       for (auto& listener : listeners) {
-        rv = listener->NotifyDocumentCreated();
-        if (NS_FAILED(rv)) {
-          break;
+        nsresult rv = listener->NotifyDocumentCreated();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
         }
       }
-      break;
+      return NS_OK;
 
     case eDocumentToBeDestroyed:
+      if (composerCommandsUpdate) {
+        composerCommandsUpdate->OnBeforeHTMLEditorDestroyed();
+      }
       for (auto& listener : listeners) {
-        rv = listener->NotifyDocumentWillBeDestroyed();
-        if (NS_FAILED(rv)) {
-          break;
+        nsresult rv = listener->NotifyDocumentWillBeDestroyed();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
         }
       }
-      break;
+      return NS_OK;
 
     case eDocumentStateChanged: {
       bool docIsDirty;
-      rv = GetDocumentModified(&docIsDirty);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = GetDocumentModified(&docIsDirty);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       if (static_cast<int8_t>(docIsDirty) == mDocDirtyState) {
         return NS_OK;
@@ -2921,19 +2929,21 @@ nsresult EditorBase::NotifyDocumentListeners(
 
       mDocDirtyState = docIsDirty;
 
+      if (composerCommandsUpdate) {
+        composerCommandsUpdate->OnHTMLEditorDirtyStateChanged(mDocDirtyState);
+      }
       for (auto& listener : listeners) {
-        rv = listener->NotifyDocumentStateChanged(mDocDirtyState);
-        if (NS_FAILED(rv)) {
-          break;
+        nsresult rv = listener->NotifyDocumentStateChanged(mDocDirtyState);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
         }
       }
-      break;
+      return NS_OK;
     }
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown notification");
+      return NS_ERROR_FAILURE;
   }
-
-  return rv;
 }
 
 nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
