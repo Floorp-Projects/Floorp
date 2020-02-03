@@ -21,7 +21,14 @@ job-defaults:
 jobs:
     mac:
         description: Extract macOS system symbols found in crashreports
+        index:
+            product: system-symbols
+            job-name: mac
+            type: generic
         worker:
+            env:
+                PROCESSED_PACKAGES_INDEX: gecko.v2.mozilla-central.latest.system-symbols.mac
+                PROCESSED_PACKAGES_PATH: public/build/processed-packages.gz
             artifacts:
                 - name: public/build
                   type: directory
