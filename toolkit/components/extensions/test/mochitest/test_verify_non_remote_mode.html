@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Verify non-remote mode</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+add_task(async function verify_extensions_in_parent_process() {
+  // This test ensures we are running with the proper settings.
+  const { WebExtensionPolicy } = SpecialPowers.Cu.getGlobalForObject(SpecialPowers.Services);
+  SimpleTest.ok(!WebExtensionPolicy.useRemoteWebExtensions, "extensions running in-process");
+
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
+    Assert.ok(WebExtensionPolicy.isExtensionProcess, "parent is extension process");
+    this.sendAsyncMessage("checks_done");
+  });
+  await chromeScript.promiseOneMessage("checks_done");
+  chromeScript.destroy();
+});
+</script>
+
+</body>
+</html>
+
