@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1579624011498">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1580207330647">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3537,6 +3537,42 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="54396dc1-f469-4a88-b0f8-352985a85b13" id="{669207af-aef4-42e5-b1fa-675995be9cf9}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="cb6be8a0-0600-439e-85f1-512cc1d0e48f" id="{c77fdf50-1880-4914-b553-6e3500f43f2e}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d94be063-b34b-4ec1-bb02-59bc343029a4" id="/^((zddx9wbjta9g23vk5ejo@zddx9wbjta9g23vk5ejo\.com)|(\{0629026f-e941-4a98-8975-b8cdcc20fbdc\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="2af6cf76-8f55-405b-8f5b-d784616768ba" id="/^((\{50fc0c97-b405-4f63-9c10-465cab131ec7\})|(\{e08f09a1-e8e4-421c-a460-ada7b13077c1\})|(\{887c8e31-c11d-4b67-8bbc-e5b5e8fea9dc\})|(\{d67b6e83-976d-458f-aece-0af986c16db7\})|(\{d0c0679f-9fa1-448c-a78b-f8fa1591597b\})|(\{23747ea4-fb31-4349-9954-2728f1d4bda2\})|(\{5d492e1a-7e3a-48ca-9745-784a5b61980a\})|(\{bec8dea7-eed3-464a-b99e-92cab1e10373\})|(\{48d63231-1796-4b26-a3f7-1aa7f5bed1f4\})|(\{fdc94eff-5212-416e-b2e4-d67c088c4907\})|(\{ffd2c868-9f15-48f1-a77b-c5a1842a2e41\})|(\{9b0e5b96-2b47-4ee4-b511-7402c05ab43a\})|(\{f01f803c-fb6a-4c0f-9dfa-d8f6173b3b17\})|(\{b2ed387a-02c8-4bff-bf6f-00ce6b5f067f\})|(\{7222c5ee-8154-4e47-8521-1dafcd00d902\})|(\{c085ea8c-57cf-41c5-a41e-38dd6288e808\})|(\{2cc9608c-dc69-4bc0-8d3b-95852face3ac\})|(\{5977f159-e17c-48d4-8e2a-8b48962a57cd\})|(\{10e4d201-689d-4864-a04e-f21186f3d4e2\})|(\{79119982-95ef-4cfd-9fe2-b193018503ee\})|(\{520dd821-08e0-4821-abf8-347474c78f72\})|(\{6ff93655-17b6-4bab-bb0e-40abfcd5a853\})|(\{af670583-4dde-4e1f-b169-efc5aec481f0\})|(\{b053d2ab-0c28-41a6-99c4-4d276af55169\})|(\{4b70886d-6215-492d-8330-c220b714a216\})|(\{21855045-7800-4467-923b-096efe6ded40\})|(\{6c1f8c3a-47dc-480f-8007-3204db00a8c2\})|(\{2dc676a9-bc76-405c-9252-b76c60cc172d\})|(\{d464e0a4-8798-4356-8cb1-b1b819d80d2d\})|(\{b4cc995f-aca5-43dc-bde2-dc5b5de620ba\})|(\{448b1043-fc5e-471a-8a10-5ec74fb16054\})|(\{becb255d-985e-4f59-9e7b-a3f678bb53ba\})|(\{f200084c-a7cc-46a1-a84e-289a8c033124\})|(\{c6b5b880-ae5e-4cad-8eaf-fce059892c0b\})|(\{0ea7199a-707d-457c-95d3-cc84436c5634\})|(\{dc702775-072a-42c4-8a7f-0e02b202a48f\})|(\{4a1c6922-5b77-4f07-84f7-47e504ec5249\})|(\{145fa75f-ba31-4f91-8664-c2559887a664\})|(\{b9d3f331-5a3c-494e-a0dd-5b7dc1b949b3\})|(\{f7801e2a-e119-434d-83c5-e87eedffecf2\})|(\{1b88498d-c70e-41ab-98ef-4239582e77d6\})|(\{b0162d70-142b-43f2-8414-30414a2b1ea0\})|(\{1f7166b4-c765-4129-b727-ef077814e0af\})|(\{ee2cd2a1-b4f8-4ef1-9fe8-db89e8844e47\})|(\{569c8641-f0f7-4eda-afd2-4ca6f6fc8bc9\})|(\{85c5a731-0b8b-4d91-bbad-07790b7a0165\})|(\{02197da2-c4b2-4a55-b323-f56aba8d3ed2\})|(\{d5250fb9-6db6-4eb3-bfe7-b8d3bf326c6e\})|(\{947c328f-b462-4618-bc4a-a967d1d7bc77\})|(\{c04bf263-7edd-481f-a3b1-0ea9d2aff14b\})|(\{f69637b8-b48a-46b5-b1ad-132afc1dcaa0\})|(\{8f2b4de9-599f-452e-9fe5-a3ea7ee2d633\})|(\{ebc34c54-8004-4281-8321-84145bda54ec\})|(\{c3f94bd2-0391-44c0-89a1-212ca3844abe\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="83d7f7c0-8a56-4feb-9e66-b77af6343430" id="/^((zdphb@swlguy)|(czgnp@hhjl)|(mjrxg@zdphb)|(fuevm@czkvq)|(bgufa@djuvt)|(czkvq@bgufa)|(axvij@fuevm)|(swlguy@axvij))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ad789bcb-4c12-401d-b6fe-202a5b6697b6" id="djuvt@czgnp">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="18581952-6448-4728-9fd4-2860b3e6534e" id="{c6ce41ee-a4e3-4fd7-ab6a-988b6916d66a}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="303a149e-8262-4d16-b24b-348b84d5051e" id="/^((\{9237d0ab-aaf0-41a2-b873-c0f131b09ce4\})|(\{18b14b7d-e228-416a-bab8-37acf6d6dfca\})|(rwkaddon@racewarkingdoms\.com)|(\{2e2d6d72-2634-496c-a8db-db869b639a21\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="70af2927-6552-4eae-a91a-89e4cdd61b88" id="/^((\{0ded4ebe-965f-4de0-89d2-91ed13ae15ee\})|(\{5c143da2-6a9e-4afe-9ca2-b758aebe6e64\})|(\{c6566b12-297b-41fb-8189-f32a7d1c1b87\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="5b4a4d34-1341-49ea-8b53-96a1ecfac49e" id="/^((\{6b7df170-e6fa-4b9b-bd76-d6b866a5bc6c\})|(\{7e1c1f98-4c89-4668-b9ea-e258e7c9e22b\})|(\{1f2128cd-bcaa-4e60-b555-0713054df0f9\})|(\{9043971c-ce88-400b-b56f-7a9e3853eb32\})|(\{afcbdf71-be6d-46cf-b5ff-6a6b9ec7f920\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
