@@ -52,6 +52,7 @@ const PREFS_WHITELIST = [
   "browser.search.useDBForOrder",
   "browser.sessionstore.",
   "browser.startup.homepage",
+  "browser.startup.page",
   "browser.tabs.",
   "browser.urlbar.",
   "browser.zoom.",
