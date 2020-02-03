@@ -120,7 +120,7 @@ typedef Vector<char, 0, SystemAllocPolicy> UTF8Bytes;
 typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 typedef Vector<UniqueChars, 0, SystemAllocPolicy> UniqueCharsVector;
 
-// To call Vector::podResizeToFit, a type must specialize mozilla::IsPod
+// To call Vector::shrinkStorageToFit , a type must specialize mozilla::IsPod
 // which is pretty verbose to do within js::wasm, so factor that process out
 // into a macro.
 
@@ -1842,7 +1842,7 @@ struct TrapSiteVectorArray
   bool empty() const;
   void clear();
   void swap(TrapSiteVectorArray& rhs);
-  void podResizeToFit();
+  void shrinkStorageToFit();
 
   WASM_DECLARE_SERIALIZABLE(TrapSiteVectorArray)
 };

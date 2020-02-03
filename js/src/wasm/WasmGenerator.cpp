@@ -214,7 +214,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   // final reallocs. In particular, the MacroAssembler can be enormous, so be
   // extra conservative. Since large over-reservations may fail when the
   // actual allocations will succeed, ignore OOM failures. Note,
-  // podResizeToFit calls at the end will trim off unneeded capacity.
+  // shrinkStorageToFit calls at the end will trim off unneeded capacity.
 
   size_t codeSectionSize = env_->codeSection ? env_->codeSection->size : 0;
 
@@ -997,13 +997,13 @@ bool ModuleGenerator::finishMetadataTier() {
   // These Vectors can get large and the excess capacity can be significant,
   // so realloc them down to size.
 
-  metadataTier_->funcToCodeRange.podResizeToFit();
-  metadataTier_->codeRanges.podResizeToFit();
-  metadataTier_->callSites.podResizeToFit();
-  metadataTier_->trapSites.podResizeToFit();
-  metadataTier_->debugTrapFarJumpOffsets.podResizeToFit();
+  metadataTier_->funcToCodeRange.shrinkStorageToFit();
+  metadataTier_->codeRanges.shrinkStorageToFit();
+  metadataTier_->callSites.shrinkStorageToFit();
+  metadataTier_->trapSites.shrinkStorageToFit();
+  metadataTier_->debugTrapFarJumpOffsets.shrinkStorageToFit();
   for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
-    metadataTier_->trapSites[trap].podResizeToFit();
+    metadataTier_->trapSites[trap].shrinkStorageToFit();
   }
 
   return true;
