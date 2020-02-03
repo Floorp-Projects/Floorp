@@ -63,11 +63,10 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
       },
       [promise](const Maybe<ipc::ResponseRejectReason>& aRv) {
         if (aRv.isSome()) {
-          promise->MaybeRejectWithDOMException(NS_ERROR_DOM_ABORT_ERR,
-                                               "Internal communication error!");
+          promise->MaybeRejectWithAbortError("Internal communication error!");
         } else {
-          promise->MaybeRejectWithDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                               "No matching adapter found!");
+          promise->MaybeRejectWithInvalidStateError(
+              "No matching adapter found!");
         }
       });
 

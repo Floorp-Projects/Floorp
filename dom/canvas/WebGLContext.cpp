@@ -1837,8 +1837,7 @@ already_AddRefed<dom::Promise> ClientWebGLContext::MakeXRCompatible(
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   if (IsContextLost()) {
-    promise->MaybeRejectWithDOMException(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
+    promise->MaybeRejectWithInvalidStateError(
         "Can not make context XR compatible when context is already lost.");
     return promise.forget();
   }

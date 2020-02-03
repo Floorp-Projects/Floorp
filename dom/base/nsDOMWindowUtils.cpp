@@ -4111,14 +4111,12 @@ nsDOMWindowUtils::StartCompositionRecording(Promise** aOutPromise) {
               if (aSuccess) {
                 promise->MaybeResolve(true);
               } else {
-                promise->MaybeRejectWithDOMException(
-                    NS_ERROR_DOM_INVALID_STATE_ERR,
+                promise->MaybeRejectWithInvalidStateError(
                     "The composition recorder is already running.");
               }
             },
             [promise](const mozilla::ipc::ResponseRejectReason&) {
-              promise->MaybeRejectWithDOMException(
-                  NS_ERROR_DOM_INVALID_STATE_ERR,
+              promise->MaybeRejectWithInvalidStateError(
                   "Could not start the composition recorder.");
             });
   }
@@ -4154,14 +4152,12 @@ nsDOMWindowUtils::StopCompositionRecording(bool aWriteToDisk,
           if (aSuccess) {
             promise->MaybeResolveWithUndefined();
           } else {
-            promise->MaybeRejectWithDOMException(
-                NS_ERROR_DOM_INVALID_STATE_ERR,
+            promise->MaybeRejectWithInvalidStateError(
                 "The composition recorder is not running.");
           }
         },
         [promise](const mozilla::ipc::ResponseRejectReason&) {
-          promise->MaybeRejectWithDOMException(
-              NS_ERROR_DOM_UNKNOWN_ERR,
+          promise->MaybeRejectWithUnknownError(
               "Could not stop the composition recorder.");
         });
   } else {
@@ -4169,8 +4165,7 @@ nsDOMWindowUtils::StopCompositionRecording(bool aWriteToDisk,
         GetCurrentThreadSerialEventTarget(), __func__,
         [promise](Maybe<CollectedFramesParams>&& aFrames) {
           if (!aFrames) {
-            promise->MaybeRejectWithDOMException(
-                NS_ERROR_DOM_UNKNOWN_ERR,
+            promise->MaybeRejectWithUnknownError(
                 "Could not stop the composition recorder.");
             return;
           }
@@ -4191,8 +4186,7 @@ nsDOMWindowUtils::StopCompositionRecording(bool aWriteToDisk,
 
           if (totalSize.isValid() &&
               totalSize.value() > aFrames->buffer().Size<char>()) {
-            promise->MaybeRejectWithDOMException(
-                NS_ERROR_DOM_UNKNOWN_ERR,
+            promise->MaybeRejectWithUnknownError(
                 "Could not interpret returned frames.");
             return;
           }
@@ -4221,8 +4215,7 @@ nsDOMWindowUtils::StopCompositionRecording(bool aWriteToDisk,
           promise->MaybeResolve(domFrames);
         },
         [promise](const mozilla::ipc::ResponseRejectReason&) {
-          promise->MaybeRejectWithDOMException(
-              NS_ERROR_DOM_UNKNOWN_ERR,
+          promise->MaybeRejectWithUnknownError(
               "Could not stop the composition recorder.");
         });
   }
