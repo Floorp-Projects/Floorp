@@ -3478,6 +3478,20 @@ void gfxPlatform::InitOMTPConfig() {
                           Preferences::GetBool("layers.omtp.enabled", false,
                                                PrefValueKind::Default));
 
+  if (sizeof(void*) <= sizeof(uint32_t)) {
+    int32_t cpuCores = PR_GetNumberOfProcessors();
+    const uint64_t kMinSystemMemory = 2147483648;  // 2 GB
+    if (cpuCores <= 2) {
+      omtp.ForceDisable(FeatureStatus::Broken,
+                        "OMTP is not supported on 32-bit with <= 2 cores",
+                        NS_LITERAL_CSTRING("FEATURE_FAILURE_OMTP_32BIT_CORES"));
+    } else if (mTotalSystemMemory < kMinSystemMemory) {
+      omtp.ForceDisable(FeatureStatus::Broken,
+                        "OMTP is not supported on 32-bit with < 2 GB RAM",
+                        NS_LITERAL_CSTRING("FEATURE_FAILURE_OMTP_32BIT_MEM"));
+    }
+  }
+
   if (mContentBackend == BackendType::CAIRO) {
     omtp.ForceDisable(FeatureStatus::Broken,
                       "OMTP is not supported when using cairo",
