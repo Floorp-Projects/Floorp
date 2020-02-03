@@ -4129,32 +4129,14 @@ pub fn get_raster_rects(
     Some((clipped.to_i32(), unclipped))
 }
 
-/// Choose the decoration mask tile size for a given line.
-///
-/// Given a line with overall size `rect_size` and the given `orientation`,
-/// return the dimensions of a single mask tile for the decoration pattern
-/// described by `style` and `wavy_line_thickness`.
-///
-/// If `style` is `Solid`, no mask tile is necessary; return `None`. The other
-/// styles each have their own characteristic periods of repetition, so for each
-/// one, this function returns a `LayoutSize` with the right aspect ratio and
-/// whose specific size is convenient for the `cs_line_decoration.glsl` fragment
-/// shader to work with. The shader uses a local coordinate space in which the
-/// tile fills a rectangle with one corner at the origin, and with the size this
-/// function returns.
-///
-/// The returned size is not necessarily in pixels; device scaling and other
-/// concerns can still affect the actual task size.
-///
-/// Regardless of whether `orientation` is `Vertical` or `Horizontal`, the
-/// `width` and `height` of the returned size are always horizontal and
-/// vertical, respectively.
-pub fn get_line_decoration_size(
+/// Get the inline (horizontal) and block (vertical) sizes
+/// for a given line decoration.
+pub fn get_line_decoration_sizes(
     rect_size: &LayoutSize,
     orientation: LineOrientation,
     style: LineStyle,
     wavy_line_thickness: f32,
-) -> Option<LayoutSize> {
+) -> Option<(f32, f32)> {
     let h = match orientation {
         LineOrientation::Horizontal => rect_size.height,
         LineOrientation::Vertical => rect_size.width,
@@ -4166,20 +4148,20 @@ pub fn get_line_decoration_size(
     //           quality on a wider range of inputs!
     //           See nsCSSRendering::PaintDecorationLine in Gecko.
 
-    let (parallel, perpendicular) = match style {
+    match style {
         LineStyle::Solid => {
-            return None;
+            None
         }
         LineStyle::Dashed => {
             let dash_length = (3.0 * h).min(64.0).max(1.0);
 
-            (2.0 * dash_length, 4.0)
+            Some((2.0 * dash_length, 4.0))
         }
         LineStyle::Dotted => {
             let diameter = h.min(64.0).max(1.0);
             let period = 2.0 * diameter;
 
-            (period, diameter)
+            Some((period, diameter))
         }
         LineStyle::Wavy => {
             let line_thickness = wavy_line_thickness.max(1.0);
@@ -4187,14 +4169,9 @@ pub fn get_line_decoration_size(
             let flat_length = ((line_thickness - 1.0) * 2.0).max(1.0);
             let approx_period = 2.0 * (slope_length + flat_length);
 
-            (approx_period, h)
+            Some((approx_period, h))
         }
-    };
-
-    Some(match orientation {
-        LineOrientation::Horizontal => LayoutSize::new(parallel, perpendicular),
-        LineOrientation::Vertical => LayoutSize::new(perpendicular, parallel),
-    })
+    }
 }
 
 fn update_opacity_binding(
