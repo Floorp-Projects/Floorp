@@ -19,6 +19,7 @@ let { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/performance/",
   window,
 });
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => scope.querySelectorAll(selector);

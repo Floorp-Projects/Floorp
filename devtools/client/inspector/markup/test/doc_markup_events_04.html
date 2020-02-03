@@ -16,15 +16,18 @@
     }
     </style>
     <script type="application/javascript">
+      "use strict";
+
       const constructedFunc = new Function();
 
       const constructedFuncWithBodyString =
         new Function('a', 'b', 'c', 'alert("constructedFuncWithBodyString");');
 
-      const multipleAssignment = foo = bar = function multi() {
+      const multipleAssignment = function multi() {
         alert("multipleAssignment");
       }
 
+      /* exported init */
       function init() {
         const constructedFunctionNode =
           document.getElementById("constructed-function");
@@ -81,10 +84,6 @@
           }
         }
       };
-
-      function* generator() {
-        alert("generator");
-      }
     </script>
   </head>
   <body onload="init();">

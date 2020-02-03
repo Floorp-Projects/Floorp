@@ -11,13 +11,13 @@ const TEST_URL = URL_ROOT + "doc_markup_events_04.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
-const TEST_DATA = [ // eslint-disable-line
+const TEST_DATA = [
   {
     selector: "html",
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":56:67",
+        filename: TEST_URL + ":59:67",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function(foo2, bar2) {\n" +
@@ -26,7 +26,7 @@ const TEST_DATA = [ // eslint-disable-line
       },
       {
         type: "click",
-        filename: TEST_URL + ":52:51",
+        filename: TEST_URL + ":55:51",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function(foo, bar) {\n" +
@@ -71,7 +71,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":24:57",
+        filename: TEST_URL + ":26:47",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function multi() {\n" + '  alert("multipleAssignment");\n' + "}",
@@ -105,7 +105,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":77:29",
+        filename: TEST_URL + ":80:29",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function(event) {\n" +

@@ -16,6 +16,8 @@
     </style>
 
     <script type="application/javascript">
+      "use strict";
+
       const jq = document.location.search.substr(1);
 
       const script = document.createElement("script");
@@ -25,16 +27,16 @@
       document.head.appendChild(script);
 
       window.addEventListener("load", () => {
-        var handler1 = function liveDivDblClick() { alert(1); };
-        var handler2 = function liveDivDragStart() { alert(2); };
-        var handler3 = function liveDivDragLeave() { alert(3); };
-        var handler4 = function liveDivDragEnd() { alert(4); };
-        var handler5 = function liveDivDrop() { alert(5); };
-        var handler6 = function liveDivDragOver() { alert(6); };
-        var handler7 = function divClick1() { alert(7); };
-        var handler8 = function divClick2() { alert(8); };
-        var handler9 = function divKeyDown() { alert(9); };
-        var handler10 = function divDragOut() { alert(10); };
+        const handler1 = function liveDivDblClick() { alert(1); };
+        const handler2 = function liveDivDragStart() { alert(2); };
+        const handler3 = function liveDivDragLeave() { alert(3); };
+        const handler4 = function liveDivDragEnd() { alert(4); };
+        const handler5 = function liveDivDrop() { alert(5); };
+        const handler6 = function liveDivDragOver() { alert(6); };
+        const handler7 = function divClick1() { alert(7); };
+        const handler8 = function divClick2() { alert(8); };
+        const handler9 = function divKeyDown() { alert(9); };
+        const handler10 = function divDragOut() { alert(10); };
 
         if ($("#livediv").live) {
           $("#livediv").live( "dblclick", handler1);
@@ -52,7 +54,7 @@
           $(document).on( "dragout", "#livediv:xxxxx", handler10);
         }
 
-        var div = $("div")[0];
+        const div = $("div")[0];
         $(div).click(handler7);
         $(div).click(handler8);
         $(div).keydown(handler9);
