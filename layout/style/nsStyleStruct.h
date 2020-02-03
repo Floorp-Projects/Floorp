@@ -1149,7 +1149,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleLineHeight mLineHeight;
   mozilla::LengthPercentage mTextIndent;
 
-  mozilla::StyleTextDecorationLength mTextUnderlineOffset;
+  mozilla::LengthPercentageOrAuto mTextUnderlineOffset;
   mozilla::StyleTextDecorationSkipInk mTextDecorationSkipInk;
   mozilla::StyleTextUnderlinePosition mTextUnderlinePosition;
 
@@ -1277,7 +1277,14 @@ inline StyleTextTransform StyleTextTransform::None() {
 
 inline bool StyleTextTransform::IsNone() const { return *this == None(); }
 
-inline bool StyleTextUnderlinePosition::IsAuto() const { return *this == AUTO; }
+// Note that IsAuto() does not exclude the possibility that `left` or `right`
+// is set; it refers only to behavior in horizontal typographic mode.
+inline bool StyleTextUnderlinePosition::IsAuto() const {
+  return !(*this & (StyleTextUnderlinePosition::FROM_FONT | StyleTextUnderlinePosition::UNDER));
+}
+inline bool StyleTextUnderlinePosition::IsFromFont() const {
+  return bool(*this & StyleTextUnderlinePosition::FROM_FONT);
+}
 inline bool StyleTextUnderlinePosition::IsUnder() const {
   return bool(*this & StyleTextUnderlinePosition::UNDER);
 }
