@@ -80,14 +80,16 @@ void ExternalHelperAppParent::Init(
     SetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"),
                            referrer);
 
-  WindowGlobalParent* parent = aContext->Canonical()->GetCurrentWindowGlobal();
-  if (parent) {
-    RefPtr<BrowserParent> browser = parent->GetBrowserParent();
-    if (browser) {
-      bool isPrivate = false;
-      nsCOMPtr<nsILoadContext> loadContext = browser->GetLoadContext();
-      loadContext->GetUsePrivateBrowsing(&isPrivate);
-      SetPrivate(isPrivate);
+  if (aContext) {
+    WindowGlobalParent* parent = aContext->Canonical()->GetCurrentWindowGlobal();
+    if (parent) {
+      RefPtr<BrowserParent> browser = parent->GetBrowserParent();
+      if (browser) {
+        bool isPrivate = false;
+        nsCOMPtr<nsILoadContext> loadContext = browser->GetLoadContext();
+        loadContext->GetUsePrivateBrowsing(&isPrivate);
+        SetPrivate(isPrivate);
+      }
     }
   }
 
