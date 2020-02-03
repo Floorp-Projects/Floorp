@@ -13,7 +13,9 @@ using mozilla::ipc::IPCResult;
 
 void ClientNavigateOpParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mPromise) {
-    mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+    CopyableErrorResult rv;
+    rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "Client aborted");
+    mPromise->Reject(rv, __func__);
     mPromise = nullptr;
   }
 }

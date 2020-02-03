@@ -85,7 +85,7 @@ Result<ClientState, ErrorResult> ClientSource::SnapshotWindowState() {
   Document* doc = window->GetExtantDoc();
   ErrorResult rv;
   if (NS_WARN_IF(!doc)) {
-    rv.Throw(NS_ERROR_UNEXPECTED);
+    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "Document not active");
     return Err(std::move(rv));
   }
 
@@ -446,7 +446,8 @@ RefPtr<ClientOpPromise> ClientSource::Control(
 
   if (NS_WARN_IF(!controlAllowed)) {
     CopyableErrorResult rv;
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                         "Client cannot be controlled");
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
@@ -533,7 +534,7 @@ RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
 
   if (mClientInfo.Type() != ClientType::Window) {
     CopyableErrorResult rv;
-    rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    rv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR, "Not a Window client");
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }
   nsPIDOMWindowOuter* outer = nullptr;
@@ -550,7 +551,8 @@ RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
 
   if (!outer) {
     CopyableErrorResult rv;
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                         "Browsing context discarded");
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
@@ -581,7 +583,9 @@ RefPtr<ClientOpPromise> ClientSource::PostMessage(
   }
 
   CopyableErrorResult rv;
-  rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  rv.ThrowDOMException(
+      NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      "postMessage to non-Window clients is not supported yet");
   return ClientOpPromise::CreateAndReject(rv, __func__);
 }
 
@@ -594,7 +598,8 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
   nsIGlobalObject* global = GetGlobal();
   if (NS_WARN_IF(!global)) {
     CopyableErrorResult rv;
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                         "Browsing context torn down");
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
@@ -613,7 +618,10 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
       [innerPromise, clientInfo = mClientInfo, swd]() mutable {
         RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
         if (NS_WARN_IF(!swm)) {
-          innerPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+          CopyableErrorResult rv;
+          rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                               "Browser shutting down");
+          innerPromise->Reject(rv, __func__);
           return;
         }
 
@@ -674,7 +682,7 @@ Result<ClientState, ErrorResult> ClientSource::SnapshotState() {
   WorkerPrivate* workerPrivate = GetWorkerPrivate();
   if (!workerPrivate) {
     ErrorResult rv;
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "Worker terminated");
     return Err(std::move(rv));
   }
 

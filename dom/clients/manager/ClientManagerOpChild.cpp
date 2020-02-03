@@ -15,7 +15,9 @@ namespace dom {
 void ClientManagerOpChild::ActorDestroy(ActorDestroyReason aReason) {
   mClientManager = nullptr;
   if (mPromise) {
-    mPromise->Reject(NS_ERROR_ABORT, __func__);
+    CopyableErrorResult rv;
+    rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "Client aborted");
+    mPromise->Reject(rv, __func__);
     mPromise = nullptr;
   }
 }

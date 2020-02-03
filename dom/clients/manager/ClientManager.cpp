@@ -189,7 +189,12 @@ RefPtr<ClientOpPromise> ClientManager::StartOp(
           return;
         }
       },
-      [promise] { promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__); });
+      [promise] {
+        CopyableErrorResult rv;
+        rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                             "Client has been destroyed");
+        promise->Reject(rv, __func__);
+      });
 
   return promise.forget();
 }
