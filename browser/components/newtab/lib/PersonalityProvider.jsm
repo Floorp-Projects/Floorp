@@ -105,7 +105,6 @@ this.PersonalityProvider = class PersonalityProvider {
     this.scores = scores || {};
     this.interestConfig = this.scores.interestConfig;
     this.interestVector = this.scores.interestVector;
-    this.taggers = this.scores.taggers;
     this.onSync = this.onSync.bind(this);
     this.setup();
   }
@@ -482,9 +481,12 @@ this.PersonalityProvider = class PersonalityProvider {
       maxHistoryQueryResults: this.maxHistoryQueryResults,
       version: this.version,
       scores: {
+        // We cannot return taggers here.
+        // What we return here goes into persistent cache, and taggers have functions on it.
+        // If we attempted to save taggers into persistent cache, it would store it to disk,
+        // and the next time we load it, it would start thowing function is not defined.
         interestConfig: this.interestConfig,
         interestVector: this.interestVector,
-        taggers: this.taggers,
       },
     };
   }
