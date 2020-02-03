@@ -11,6 +11,7 @@ import kotlinx.coroutines.MainScope
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.GleanMetrics.AboutPage
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
@@ -465,6 +466,21 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.TopSiteRemoved -> EventWrapper<NoExtraKeys>(
             { TopSites.remove.record(it) }
+        )
+        is Event.SupportTapped -> EventWrapper<NoExtraKeys>(
+            { AboutPage.supportTapped.record(it) }
+        )
+        is Event.PrivacyNoticeTapped -> EventWrapper<NoExtraKeys>(
+            { AboutPage.privacyNoticeTapped.record(it) }
+        )
+        is Event.RightsTapped -> EventWrapper<NoExtraKeys>(
+            { AboutPage.rightsTapped.record(it) }
+        )
+        is Event.LicensingTapped -> EventWrapper<NoExtraKeys>(
+            { AboutPage.licensingTapped.record(it) }
+        )
+        is Event.LibrariesThatWeUseTapped -> EventWrapper<NoExtraKeys>(
+            { AboutPage.librariesTapped.record(it) }
         )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null

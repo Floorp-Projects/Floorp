@@ -40,6 +40,11 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
+| about_page.libraries_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Libraries that we use" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-09-01 |
+| about_page.licensing_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Licensing information" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-09-01 |
+| about_page.privacy_notice_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Privacy notice" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-09-01 |
+| about_page.rights_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Know your rights" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-09-01 |
+| about_page.support_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Support" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-09-01 |
 | bookmarks_management.copied |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user copied a bookmark.  |[1](https://github.com/mozilla-mobile/fenix/pull/1708)||2020-09-01 |
 | bookmarks_management.edited |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user edited the title and/or URL of an existing bookmark.  |[1](https://github.com/mozilla-mobile/fenix/pull/1708)||2020-09-01 |
 | bookmarks_management.folder_add |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user added a new bookmark folder.  |[1](https://github.com/mozilla-mobile/fenix/pull/1708)||2020-09-01 |

@@ -1703,3 +1703,60 @@ top_sites:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+
+about_page:
+  support_tapped:
+    type: event
+    description: >
+      A user tapped on "Support" item from About page
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6834
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8047
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  privacy_notice_tapped:
+    type: event
+    description: >
+      A user tapped on "Privacy notice" item from About page
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6834
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8047
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  rights_tapped:
+    type: event
+    description: >
+      A user tapped on "Know your rights" item from About page
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6834
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8047
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  licensing_tapped:
+    type: event
+    description: >
+      A user tapped on "Licensing information" item from About page
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6834
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8047
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  libraries_tapped:
+    type: event
+    description: >
+      A user tapped on "Libraries that we use" item from About page
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6834
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8047
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
