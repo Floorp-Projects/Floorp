@@ -129,6 +129,10 @@ const DOCUMENTS = {
   ],
 };
 
+// In order to determine whether we should show an update tip, we check for app
+// updates, but only once per this time period.
+const UPDATE_CHECK_PERIOD_MS = 12 * 60 * 60 * 1000; // 12 hours
+
 /**
  * A node in the QueryScorer's phrase tree.
  */
@@ -451,6 +455,10 @@ class ProviderInterventions extends UrlbarProvider {
       }
     }
 
+    // The update tips depend on the app's update status, so check for updates
+    // now (if we haven't already checked within the update-check period).
+    this.checkForBrowserUpdate();
+
     // Determine the tip to show, if any. If there are multiple top-score docs,
     // prefer them in the following order.
     if (topDocIDs.has("update")) {
@@ -623,6 +631,24 @@ class ProviderInterventions extends UrlbarProvider {
           "https://www.mozilla.org/firefox/new/"
         );
         break;
+    }
+  }
+
+  /**
+   * Checks for app updates.
+   *
+   * @param {boolean} force If false, this only checks for updates if we haven't
+   *        already checked within the update-check period.  If true, we check
+   *        regardless.
+   */
+  checkForBrowserUpdate(force = false) {
+    if (
+      force ||
+      !this._lastUpdateCheckTime ||
+      Date.now() - this._lastUpdateCheckTime >= UPDATE_CHECK_PERIOD_MS
+    ) {
+      this._lastUpdateCheckTime = Date.now();
+      appUpdater.check();
     }
   }
 }
