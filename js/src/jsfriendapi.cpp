@@ -571,17 +571,6 @@ JS_FRIEND_API void JS_SetSetUseCounterCallback(
   cx->runtime()->setUseCounterCallback(cx->runtime(), callback);
 }
 
-JS_FRIEND_API void JS_ReportFirstCompileTime(JS::HandleScript script,
-                                             mozilla::TimeDuration& parse,
-                                             mozilla::TimeDuration& emit) {
-  auto ss = script->scriptSource();
-  if (!ss) {
-    return;
-  }
-  parse = ss->parseTime();
-  emit = ss->emitTime();
-}
-
 JS_FRIEND_API JSObject* JS_CloneObject(JSContext* cx, HandleObject obj,
                                        HandleObject protoArg) {
   // |obj| might be in a different compartment.

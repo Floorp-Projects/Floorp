@@ -70,25 +70,6 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
       MakeSpan(scriptText.begin() + haveRead, needed.value()), aEndOfStream);
   MOZ_ASSERT(written <= needed.value());
 
-  // Telemetry: Measure the throughput at which bytes are streamed and the ratio
-  // of streamed bytes, such that we can determine the effectiveness of a
-  // streaming parser for JavaScript.
-  using namespace mozilla::Telemetry;
-  if (aEndOfStream && haveRead) {
-    // Compute the percent of data transfered incrementally.
-    Accumulate(DOM_SCRIPT_LOAD_INCREMENTAL_RATIO,
-               100 * haveRead / (haveRead + written));
-    // Compute the rate of transfer of the incremental data calls averaged
-    // across the time needed to complete the request.
-    auto streamingTime = TimeStamp::Now() - mFirstOnIncrementalData;
-    double ms = streamingTime.ToMilliseconds();
-    Accumulate(DOM_SCRIPT_LOAD_INCREMENTAL_AVG_TRANSFER_RATE, haveRead / ms);
-    mRequest->mStreamingTime = streamingTime;
-  }
-  if (!aEndOfStream && !haveRead) {
-    mFirstOnIncrementalData = TimeStamp::Now();
-  }
-
   haveRead += written;
   MOZ_ASSERT(haveRead <= capacity.value(),
              "mDecoder produced more data than expected");
