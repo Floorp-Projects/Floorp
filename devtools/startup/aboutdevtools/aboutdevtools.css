@@ -61,7 +61,9 @@ p {
 }
 
 .feature-icon {
-  width: 55%;
+  width: 60%;
+  max-width: 180px;
+  margin-bottom: 10px;
 }
 
 .feature {
@@ -71,9 +73,14 @@ p {
 }
 
 .feature-name {
+  display: block;
+  margin: 10px 0;
   font-size: 28px;
   font-weight: 300;
-  margin: 10px 0;
+}
+
+.feature-name span {
+  display: block;
 }
 
 .feature-desc {
@@ -81,6 +88,11 @@ p {
 }
 
 .feature-link {
+  display: block;
+  color: inherit;
+}
+
+.feature-more-link {
   display: block;
   margin-top: 10px;
 }

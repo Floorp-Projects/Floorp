@@ -1,25 +1,10 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="222px" height="122px" viewBox="0 0 222 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 45.2 (43514) - http://www.bohemiancoding.com/sketch -->
-    <title>Network</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="2017.06.07.Firefox.DevEdition-[white]" transform="translate(-149.000000, -3171.000000)">
-            <path d="M198.474304,3207.33333 L320.101069,3207.33333" id="Stroke-7" stroke="#031537" stroke-width="5" stroke-linecap="round" transform="translate(259.500000, 3206.500000) scale(1, -1) translate(-259.500000, -3206.500000) "></path>
-            <g id="Group-20" transform="translate(207.000000, 3202.000000)" stroke="#031537" stroke-width="5" stroke-linecap="round">
-                <path d="M107,0 L107,8.69585809" id="Stroke-5" transform="translate(109.500000, 4.347929) scale(1, -1) translate(-109.500000, -4.347929) "></path>
-                <path d="M71,0 L71,8.69585809" id="Stroke-7" transform="translate(73.500000, 4.347929) scale(1, -1) translate(-73.500000, -4.347929) "></path>
-                <path d="M34,0 L34,8.69585809" id="Stroke-9" transform="translate(36.500000, 4.347929) scale(1, -1) translate(-36.500000, -4.347929) "></path>
-                <path d="M0,0 L0,8.69585809" id="Stroke-11" transform="translate(2.500000, 4.347929) scale(1, -1) translate(-2.500000, -4.347929) "></path>
-            </g>
-            <rect id="Rectangle-9" fill="#0080FF" x="199" y="3227" width="56.0699997" height="5" rx="2.5"></rect>
-            <rect id="Rectangle-9" fill="#00C7D8" x="283" y="3259" width="33.0764463" height="5" rx="2.5"></rect>
-            <rect id="Rectangle-9" fill="#0080FF" x="264" y="3227" width="33.0764463" height="5" rx="2.5"></rect>
-            <path d="M239,3245.5 C239,3244.11929 240.110137,3243 241.509621,3243 L324.292032,3243 C325.678057,3243 326.801653,3244.10966 326.801653,3245.5 L326.801653,3245.5 C326.801653,3246.88071 325.691516,3248 324.292032,3248 L241.509621,3248 C240.123596,3248 239,3246.89034 239,3245.5 L239,3245.5 Z" id="Rectangle-9" fill="#1C2142"></path>
-            <g id="Group-6" transform="translate(145.000000, 2865.000000)"></g>
-        </g>
-    </g>
+<svg viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M48.47 33.67H170.1M164 38.7V30m-36 8.7V30m-37 8.7V30m-34 8.7V30" stroke="#031537" stroke-width="5" stroke-linecap="round"/>
+  <path d="M102.57 55H51.5a2.5 2.5 0 000 5h51.07a2.5 2.5 0 100-5z" fill="#0080FF"/>
+  <path d="M163.58 87H135.5a2.5 2.5 0 100 5h28.08a2.5 2.5 0 100-5z" fill="#00C7D8"/>
+  <path d="M144.58 55H116.5a2.5 2.5 0 100 5h28.08a2.5 2.5 0 100-5z" fill="#0080FF"/>
+  <path fill-rule="evenodd" d="M89 73.5a2.5 2.5 0 012.51-2.5h82.78a2.5 2.5 0 110 5H91.51A2.5 2.5 0 0189 73.5z" fill="#1C2142"/>
 </svg>
