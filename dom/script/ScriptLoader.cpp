@@ -2573,29 +2573,6 @@ class MOZ_RAII AutoSetProcessingScriptTag {
   ~AutoSetProcessingScriptTag() { mContext->SetProcessingScriptTag(mOldTag); }
 };
 
-static void ReportStreamAndParseTelemetry(JS::Handle<JSScript*> aScript,
-                                          TimeDuration aStreamingTime) {
-  using namespace mozilla::Telemetry;
-  if (!aStreamingTime) {
-    Accumulate(DOM_SCRIPT_IS_STREAMED, false);
-    return;
-  }
-  Accumulate(DOM_SCRIPT_IS_STREAMED, true);
-  TimeDuration parseTime;
-  TimeDuration emitTime;
-  JS_ReportFirstCompileTime(aScript, parseTime, emitTime);
-
-  double st = aStreamingTime.ToMilliseconds();
-  double pt = parseTime.ToMilliseconds();
-  double et = emitTime.ToMilliseconds();
-  double total = st + pt + et;
-  double spt = st + std::max(pt - st, double(0)) + et;
-  Accumulate(DOM_SCRIPT_LOAD_STREAM_TIME_PERCENT, 100 * st / total);
-  Accumulate(DOM_SCRIPT_LOAD_PARSE_TIME_PERCENT, 100 * pt / total);
-  Accumulate(DOM_SCRIPT_LOAD_EMIT_TIME_PERCENT, 100 * et / total);
-  Accumulate(DOM_SCRIPT_LOAD_STREAMPARSE_ESTIMATE_PERCENT, 100 * spt / total);
-}
-
 static nsresult ExecuteCompiledScript(JSContext* aCx,
                                       ScriptLoadRequest* aRequest,
                                       nsJSUtils::ExecutionContext& aExec) {
@@ -2605,11 +2582,6 @@ static nsresult ExecuteCompiledScript(JSContext* aCx,
     // disabled for the global.
     return NS_OK;
   }
-
-  // Report telemetry about streaming, parsing and emitting code for the given
-  // script. These telemetry are used to analyze whether it would be beneficial
-  // to use a streaming parser.
-  ReportStreamAndParseTelemetry(script, aRequest->mStreamingTime);
 
   // Create a ClassicScript object and associate it with the JSScript.
   RefPtr<ClassicScript> classicScript =

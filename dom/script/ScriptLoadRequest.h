@@ -12,7 +12,6 @@
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
@@ -342,11 +341,6 @@ class ScriptLoadRequest
   // For preload requests, we defer reporting errors to the console until the
   // request is used.
   nsresult mUnreportedPreloadError;
-
-  // Measure the duration of streamed bytes and the duration of parsing, to
-  // determine the maximal gain of streaming parsing using the same parsing
-  // speed.
-  TimeDuration mStreamingTime;
 };
 
 class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {
