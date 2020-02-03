@@ -1101,6 +1101,8 @@ nsFtpState::R_retr() {
   }
 
   if (mResponseCode / 100 == 1) {
+    mChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+
     Telemetry::ScalarAdd(
         Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
 
