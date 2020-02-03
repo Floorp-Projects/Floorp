@@ -532,9 +532,8 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     // which is retrieved via Node.getEmbedderElement and doesn't return the LocalTabTargetActor.
     // We should probably work on TabDescriptor so that the LocalTabTargetActor has a descriptor,
     // and see if we can possibly move the local tab specific out of the TargetActor and have
-    // the TabDescriptor expose a pure FrameTargetActor??
+    // the TabDescriptor expose a pure FrameTargetActor?? (See bug 1579042)
     if (Cu.getObjectPrincipal(global) == Cu.getObjectPrincipal(dbg)) {
-      dump("Ignored system principal in getEmbedderElement!\n");
       return undefined;
     }
 
