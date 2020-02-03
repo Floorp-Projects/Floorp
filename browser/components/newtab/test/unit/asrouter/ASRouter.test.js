@@ -50,6 +50,7 @@ function fakeExecuteUserAction(action) {
   return fakeAsyncMessage({ data: action, type: "USER_ACTION" });
 }
 
+// eslint-disable-next-line max-statements
 describe("ASRouter", () => {
   let Router;
   let globals;
@@ -4036,6 +4037,27 @@ describe("ASRouter", () => {
         id: "unblock",
         value: true,
       });
+    });
+  });
+  describe("#loadMessagesForProvider", () => {
+    it("should fetch json from url", async () => {
+      let result = await MessageLoaderUtils.loadMessagesForProvider({
+        location: "http://fake.com/endpoint",
+        type: "json",
+      });
+
+      assert.property(result, "messages");
+      assert.lengthOf(result.messages, FAKE_REMOTE_MESSAGES.length);
+    });
+    it("should catch errors", async () => {
+      fetchStub.throws();
+      let result = await MessageLoaderUtils.loadMessagesForProvider({
+        location: "http://fake.com/endpoint",
+        type: "json",
+      });
+
+      assert.property(result, "messages");
+      assert.lengthOf(result.messages, 0);
     });
   });
 });
