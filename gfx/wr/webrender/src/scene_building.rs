@@ -27,7 +27,7 @@ use crate::prim_store::{PrimitiveInstance, PrimitiveSceneData};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use crate::prim_store::{ScrollNodeAndClipChain, PictureIndex};
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex};
-use crate::prim_store::{register_prim_chase_id, get_line_decoration_sizes};
+use crate::prim_store::{register_prim_chase_id, get_line_decoration_size};
 use crate::prim_store::{SpaceSnapper};
 use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
@@ -2749,33 +2749,28 @@ impl<'a> SceneBuilder<'a> {
         // pixel ratio or transform.
         let mut info = info.clone();
 
-        let size = get_line_decoration_sizes(
+        let size = get_line_decoration_size(
             &info.rect.size,
             orientation,
             style,
             wavy_line_thickness,
         );
 
-        let cache_key = size.map(|(inline_size, block_size)| {
-            let size = match orientation {
-                LineOrientation::Horizontal => LayoutSize::new(inline_size, block_size),
-                LineOrientation::Vertical => LayoutSize::new(block_size, inline_size),
-            };
-
+        let cache_key = size.map(|size| {
             // If dotted, adjust the clip rect to ensure we don't draw a final
             // partial dot.
             if style == LineStyle::Dotted {
                 let clip_size = match orientation {
                     LineOrientation::Horizontal => {
                         LayoutSize::new(
-                            inline_size * (info.rect.size.width / inline_size).floor(),
+                            size.width * (info.rect.size.width / size.width).floor(),
                             info.rect.size.height,
                         )
                     }
                     LineOrientation::Vertical => {
                         LayoutSize::new(
                             info.rect.size.width,
-                            inline_size * (info.rect.size.height / inline_size).floor(),
+                            size.height * (info.rect.size.height / size.height).floor(),
                         )
                     }
                 };
