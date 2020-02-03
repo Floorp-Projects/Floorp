@@ -123,8 +123,6 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
 
   nsCOMPtr<nsIObserverService> mObs;
 
-  static bool sRemoteExtensions;
-
   nsString mBaseCSP;
   nsString mDefaultCSP;
 };
