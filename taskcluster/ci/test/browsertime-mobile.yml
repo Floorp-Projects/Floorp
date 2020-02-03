@@ -96,3 +96,12 @@ browsertime-tp6m-profiling:
         extra-options:
             - --browsertime
             - --gecko-profile
+
+browsertime-benchmark-speedometer:
+    description: "Browsertime speedometer on android"
+    apps: ["geckoview", "fenix", "fennec"]
+    treeherder-symbol: Btime(sp)
+    mozharness:
+        extra-options:
+            - --browsertime
+            - --test=raptor-speedometer
