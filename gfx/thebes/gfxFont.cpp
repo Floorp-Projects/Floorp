@@ -3807,11 +3807,17 @@ UniquePtr<const gfxFont::Metrics> gfxFont::CreateVerticalMetrics() {
   }
 
   // Get underline thickness from the 'post' table if available.
+  // We also read the underline position, although in vertical-upright mode
+  // this will not be appropriate to use directly (see nsTextFrame.cpp).
   gfxFontEntry::AutoTable postTable(mFontEntry, kPostTableTag);
   if (postTable) {
     const PostTable* post =
         reinterpret_cast<const PostTable*>(hb_blob_get_data(postTable, &len));
     if (len >= offsetof(PostTable, underlineThickness) + sizeof(uint16_t)) {
+      static_assert(offsetof(PostTable, underlinePosition) <
+                        offsetof(PostTable, underlineThickness),
+                    "broken PostTable struct?");
+      SET_SIGNED(underlineOffset, post->underlinePosition);
       SET_UNSIGNED(underlineSize, post->underlineThickness);
       // Also use for strikeout if we didn't find that in OS/2 above.
       if (!metrics->strikeoutSize) {
@@ -3830,10 +3836,7 @@ UniquePtr<const gfxFont::Metrics> gfxFont::CreateVerticalMetrics() {
 
   // Thickness of underline and strikeout may have been read from tables,
   // but in case they were not present, ensure a minimum of 1 pixel.
-  // We synthesize our own positions, as font metrics don't provide these
-  // for vertical layout.
   metrics->underlineSize = std::max(1.0, metrics->underlineSize);
-  metrics->underlineOffset = -metrics->maxDescent - metrics->underlineSize;
 
   metrics->strikeoutSize = std::max(1.0, metrics->strikeoutSize);
   metrics->strikeoutOffset = -0.5 * metrics->strikeoutSize;
