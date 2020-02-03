@@ -337,7 +337,7 @@ class GeckoWebExtensionTest {
         metaDataBundle.putString("creatorURL", "https://developer1.dev")
         metaDataBundle.putString("homepageURL", "https://mozilla.org")
         metaDataBundle.putString("name", "myextension")
-        metaDataBundle.putString("optionsPageUrl", "")
+        metaDataBundle.putString("optionsPageURL", "http://options-page.moz")
         metaDataBundle.putBoolean("openOptionsPageInTab", false)
         metaDataBundle.putStringArray("disabledFlags", arrayOf("userDisabled"))
         val bundle = GeckoBundle()
@@ -357,11 +357,11 @@ class GeckoWebExtensionTest {
         assertEquals("https://developer1.dev", metadata.developerUrl)
         assertEquals("https://mozilla.org", metadata.homePageUrl)
         assertEquals("myextension", metadata.name)
+        assertEquals("http://options-page.moz", metadata.optionsPageUrl)
+        assertFalse(metadata.openOptionsPageInTab)
         assertTrue(metadata.disabledFlags.contains(DisabledFlags.USER))
         assertFalse(metadata.disabledFlags.contains(DisabledFlags.BLOCKLIST))
         assertFalse(metadata.disabledFlags.contains(DisabledFlags.APP_SUPPORT))
-        assertNull(metadata.optionsPageUrl)
-        assertNull(metadata.openOptionsPageInTab)
     }
 
     @Test
@@ -396,7 +396,6 @@ class GeckoWebExtensionTest {
         assertNull(metadata.homePageUrl)
         assertNull(metadata.name)
         assertNull(metadata.optionsPageUrl)
-        assertNull(metadata.openOptionsPageInTab)
     }
 
     @Test

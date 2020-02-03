@@ -356,11 +356,11 @@ class GeckoWebExtensionTest {
         assertEquals("https://developer1.dev", metadata.developerUrl)
         assertEquals("https://mozilla.org", metadata.homePageUrl)
         assertEquals("myextension", metadata.name)
+        assertFalse(metadata.openOptionsPageInTab)
         assertFalse(metadata.disabledFlags.contains(DisabledFlags.USER))
         assertFalse(metadata.disabledFlags.contains(DisabledFlags.BLOCKLIST))
         assertFalse(metadata.disabledFlags.contains(DisabledFlags.APP_SUPPORT))
         assertNull(metadata.optionsPageUrl)
-        assertNull(metadata.openOptionsPageInTab)
     }
 
     @Test
@@ -394,7 +394,6 @@ class GeckoWebExtensionTest {
         assertNull(metadata.homePageUrl)
         assertNull(metadata.name)
         assertNull(metadata.optionsPageUrl)
-        assertNull(metadata.openOptionsPageInTab)
     }
 
     @Test

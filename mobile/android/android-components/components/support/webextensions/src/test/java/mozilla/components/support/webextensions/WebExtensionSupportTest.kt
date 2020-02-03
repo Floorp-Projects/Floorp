@@ -354,12 +354,14 @@ class WebExtensionSupportTest {
     }
 
     @Test
-    fun `reacts to action popup being toggled by opening and closing tab`() {
+    fun `reacts to action popup being toggled by opening and closing tab if configured`() {
         val engine: Engine = mock()
+
         val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("test")
+
         val engineSession: EngineSession = mock()
         val browserAction: Action = mock()
-        whenever(ext.id).thenReturn("test")
         val store = spy(BrowserStore(BrowserState(
             extensions = mapOf(ext.id to WebExtensionState(ext.id))
         )))
@@ -405,12 +407,14 @@ class WebExtensionSupportTest {
     }
 
     @Test
-    fun `allows overriding action popup behaviour`() {
+    fun `reacts to action popup being toggled by opening a popup`() {
         val engine: Engine = mock()
+
         val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("test")
+
         val engineSession: EngineSession = mock()
         val browserAction: Action = mock()
-        whenever(ext.id).thenReturn("test")
         val store = spy(BrowserStore(BrowserState(
             extensions = mapOf(ext.id to WebExtensionState(ext.id))
         )))

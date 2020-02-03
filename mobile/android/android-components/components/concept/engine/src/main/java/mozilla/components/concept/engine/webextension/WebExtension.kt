@@ -311,7 +311,7 @@ data class Metadata(
      * Whether or not the options page should be opened in a new tab:
      * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/options_ui#syntax
      */
-    val openOptionsPageInTab: Boolean?,
+    val openOptionsPageInTab: Boolean,
 
     /**
      * Describes the reason (or reasons) why an extension is disabled.
