@@ -651,6 +651,14 @@ class ProviderInterventions extends UrlbarProvider {
       appUpdater.check();
     }
   }
+
+  /**
+   * Resets the provider's app updater state by making a new app updater.  This
+   * is intended to be used by tests.
+   */
+  resetAppUpdater() {
+    appUpdater = new AppUpdater();
+  }
 }
 
 var UrlbarProviderInterventions = new ProviderInterventions();
