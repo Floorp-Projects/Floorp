@@ -32,11 +32,11 @@
     <button id="errorTryAgain" onclick="window.location.reload()"></button>
 
     <!-- Advanced Button -->
-    <button id="advancedButton" class="buttonSecondary" onclick="toggleAdvancedAndScroll()" style="display: none;"></button>
+    <button id="advancedButton" class="buttonSecondary hidden" onclick="toggleAdvancedAndScroll()"></button>
 
-    <hr id="horizontalLine" style="display: none;">
+    <hr id="horizontalLine" class="hidden">
     <div id="advancedPanelContainer">
-        <div id="badCertAdvancedPanel" class="advanced-panel" style="display: none;">
+        <div id="badCertAdvancedPanel" class="advanced-panel hidden">
             <p id="badCertTechnicalInfo"></p>
             <div id="advancedPanelBackButtonContainer" class="advancedPanelButtonContainer">
                 <button id="advancedPanelBackButton" onClick="window.history.back()"></button>
@@ -57,25 +57,14 @@ function toggleAdvancedAndScroll() {
     const horizontalLine = document.getElementById("horizontalLine");
     const advancedPanelAcceptButton = document.getElementById("advancedPanelAcceptButton");
     const badCertAdvancedPanel = document.getElementById("badCertAdvancedPanel");
-/*
-    horizontalLine.style.display = "block";
-    advancedPanelAcceptButton.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
-
-*/
 
     // We know that the button is being displayed
-
-    if (badCertAdvancedPanel.style.display === "block") {
-        horizontalLine.style.display = "block";
+    if (badCertAdvancedPanel.classList.has("hidden")) {
+        horizontalLine.classList.remove("hidden");
         advancedPanelAcceptButton.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
-    } else if (badCertAdvancedPanel.style.display === "none") {
-        horizontalLine.style.display = "none";
+    } else if (badCertAdvancedPanel.classList.has("hidden")) {
+        horizontalLine.classList.add("hidden");
     }
-}
-
-function overrideAdvancedButtonStyling() {
-    const advancedButton = document.getElementById("advancedButton");
-    advancedButton.style.display = "inline-flex";
 }
 </script>
 

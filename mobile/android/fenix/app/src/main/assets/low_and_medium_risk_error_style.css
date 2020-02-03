@@ -98,6 +98,10 @@ hr {
   min-height: 100%;
 }
 
+.hidden {
+  display: none;
+}
+
 /* On large width devices, apply specific styles here. Often triggered by landscape mode or tablets */
 @media (min-width: 550px) {
   button {

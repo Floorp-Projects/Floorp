@@ -6,7 +6,6 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.net.ConnectivityManager
-import androidx.annotation.StringRes
 import androidx.core.content.getSystemService
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
@@ -123,16 +122,13 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     }
 
     internal enum class RiskLevel(val htmlRes: String) {
-
         Low(LOW_AND_MEDIUM_RISK_ERROR_PAGES),
         Medium(LOW_AND_MEDIUM_RISK_ERROR_PAGES),
         High(HIGH_RISK_ERROR_PAGES),
     }
-
 
     companion object {
         internal const val LOW_AND_MEDIUM_RISK_ERROR_PAGES = "low_and_medium_risk_error_pages.html"
         internal const val HIGH_RISK_ERROR_PAGES = "high_risk_error_pages.html"
     }
 }
-

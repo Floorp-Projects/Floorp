@@ -70,31 +70,9 @@ button {
   background-image: none;
 }
 
-button.inProgress {
-  background-image: linear-gradient(-45deg, #dfe8ee,     #dfe8ee 33%,
-                                            #ecf0f3 33%, #ecf0f3 66%,
-                                            #dfe8ee 66%, #dfe8ee);
-  background-size: 37px 5px;
-  background-repeat: repeat-x;
-  animation: progress 6s linear infinite;
-}
 
-@keyframes progress {
-  from { background-position: 0 100%; }
-  to { background-position: 100% 100%; }
-}
-
-#errorPageContainer {
-  /* If the page is greater than 550px center the content.
-   * This number should be kept in sync with the media query for tablets below */
-  max-width: 550px;
-  margin: 0 auto;
-  transform: translateY(var(--moz-background-height));
-  padding-bottom: var(--moz-vertical-spacing);
-
-  min-height: calc(100% - var(--moz-background-height) - var(--moz-vertical-spacing));
-  display: flex;
-  flex-direction: column;
+.hidden {
+  display: none;
 }
 
 /* On large width devices, apply specific styles here. Often triggered by landscape mode or tablets */
