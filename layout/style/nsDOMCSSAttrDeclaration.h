@@ -51,9 +51,9 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
   nsresult SetSMILValue(const nsCSSPropertyID aPropID,
                         const SVGAnimatedLength& aLength);
 
-  nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
-                            const nsACString& aValue,
-                            nsIPrincipal* aSubjectPrincipal) override;
+  void SetPropertyValue(const nsCSSPropertyID aPropID, const nsACString& aValue,
+                        nsIPrincipal* aSubjectPrincipal,
+                        mozilla::ErrorResult& aRv) override;
 
   static void MutationClosureFunction(void* aData);
 

@@ -86,7 +86,9 @@ uint32_t GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex,
 
   uint32_t count = StyleRuleCount();
   if (aIndex > count) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "Can't insert rule at index %u because rule list length is %u", aIndex,
+        count));
     return 0;
   }
 
@@ -113,7 +115,8 @@ void GroupRule::DeleteRule(uint32_t aIndex, ErrorResult& aRv) {
 
   uint32_t count = StyleRuleCount();
   if (aIndex >= count) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "Index %u is too large for list of length %u", aIndex, count));
     return;
   }
 

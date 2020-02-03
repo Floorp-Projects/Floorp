@@ -178,9 +178,9 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
   });
 }
 
-nsresult nsDOMCSSAttributeDeclaration::SetPropertyValue(
+void nsDOMCSSAttributeDeclaration::SetPropertyValue(
     const nsCSSPropertyID aPropID, const nsACString& aValue,
-    nsIPrincipal* aSubjectPrincipal) {
+    nsIPrincipal* aSubjectPrincipal, ErrorResult& aRv) {
   // Scripted modifications to style.opacity or style.transform (or other
   // transform-like properties, e.g. style.translate, style.rotate, style.scale)
   // could immediately force us into the animated state if heuristics suggest
@@ -204,8 +204,8 @@ nsresult nsDOMCSSAttributeDeclaration::SetPropertyValue(
                                                         this);
     }
   }
-  return nsDOMCSSDeclaration::SetPropertyValue(aPropID, aValue,
-                                               aSubjectPrincipal);
+  nsDOMCSSDeclaration::SetPropertyValue(aPropID, aValue, aSubjectPrincipal,
+                                        aRv);
 }
 
 void nsDOMCSSAttributeDeclaration::MutationClosureFunction(void* aData) {

@@ -102,7 +102,7 @@ nsresult SMILCSSProperty::SetAnimValue(const SMILValue& aValue) {
 void SMILCSSProperty::ClearAnimValue() {
   // Put empty string in override style for our property
   mElement->SMILOverrideStyle()->SetPropertyValue(mPropID, EmptyCString(),
-                                                  nullptr);
+                                                  nullptr, IgnoreErrors());
 }
 
 // Based on http://www.w3.org/TR/SVG/propidx.html

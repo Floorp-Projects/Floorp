@@ -171,18 +171,27 @@ ChangeStyleTransaction::DoTransaction() {
       RemoveValueFromListOfValues(values, NS_LITERAL_STRING("none"));
       RemoveValueFromListOfValues(values, mValue);
       if (values.IsEmpty()) {
-        rv = cssDecl->RemoveProperty(propertyNameString, returnString);
-        NS_ENSURE_SUCCESS(rv, rv);
+        ErrorResult res;
+        cssDecl->RemoveProperty(propertyNameString, returnString, res);
+        if (NS_WARN_IF(res.Failed())) {
+          return res.StealNSResult();
+        }
       } else {
+        ErrorResult res;
         nsAutoString priority;
         cssDecl->GetPropertyPriority(propertyNameString, priority);
-        rv = cssDecl->SetProperty(propertyNameString,
-                                  NS_ConvertUTF16toUTF8(values), priority);
-        NS_ENSURE_SUCCESS(rv, rv);
+        cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(values),
+                             priority, res);
+        if (NS_WARN_IF(res.Failed())) {
+          return res.StealNSResult();
+        }
       }
     } else {
-      rv = cssDecl->RemoveProperty(propertyNameString, returnString);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult res;
+      cssDecl->RemoveProperty(propertyNameString, returnString, res);
+      if (NS_WARN_IF(res.Failed())) {
+        return res.StealNSResult();
+      }
     }
   } else {
     nsAutoString priority;
@@ -193,9 +202,12 @@ ChangeStyleTransaction::DoTransaction() {
     } else {
       values.Assign(mValue);
     }
-    rv = cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(values),
-                              priority);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult res;
+    cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(values),
+                         priority, res);
+    if (NS_WARN_IF(res.Failed())) {
+      return res.StealNSResult();
+    }
   }
 
   // Let's be sure we don't keep an empty style attribute
@@ -221,16 +233,21 @@ nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
     NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
 
+    ErrorResult rv;
     if (aValue.IsEmpty()) {
       // An empty value means we have to remove the property
       nsAutoString returnString;
-      return cssDecl->RemoveProperty(propertyNameString, returnString);
+      cssDecl->RemoveProperty(propertyNameString, returnString, rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        return rv.StealNSResult();
+      }
     }
     // Let's recreate the declaration as it was
     nsAutoString priority;
     cssDecl->GetPropertyPriority(propertyNameString, priority);
-    return cssDecl->SetProperty(propertyNameString,
-                                NS_ConvertUTF16toUTF8(aValue), priority);
+    cssDecl->SetProperty(propertyNameString, NS_ConvertUTF16toUTF8(aValue),
+                         priority, rv);
+    return rv.StealNSResult();
   }
   return mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
 }
