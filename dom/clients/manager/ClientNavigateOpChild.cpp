@@ -52,14 +52,21 @@ class NavigateLoadListener final : public nsIWebProgressListener,
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
     if (!channel) {
-      mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+      // This is not going to happen; how could it?
+      CopyableErrorResult result;
+      result.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "Bad request");
+      mPromise->Reject(result, __func__);
       return NS_OK;
     }
 
     nsCOMPtr<nsIURI> channelURL;
     nsresult rv = NS_GetFinalChannelURI(channel, getter_AddRefs(channelURL));
     if (NS_FAILED(rv)) {
-      mPromise->Reject(rv, __func__);
+      CopyableErrorResult result;
+      // XXXbz We can't actually get here; NS_GetFinalChannelURI never fails in
+      // practice!
+      result.Throw(rv);
+      mPromise->Reject(result, __func__);
       return NS_OK;
     }
 
@@ -159,14 +166,15 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
     ClientSource* target = targetActor->GetSource();
     if (!target) {
       CopyableErrorResult rv;
-      rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "Unknown Client");
       return ClientOpPromise::CreateAndReject(rv, __func__);
     }
 
     window = target->GetInnerWindow();
     if (!window) {
       CopyableErrorResult rv;
-      rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                           "Client load for a destroyed Window");
       return ClientOpPromise::CreateAndReject(rv, __func__);
     }
   }
@@ -185,7 +193,8 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
     // This is rather unexpected: This is the worker URL we passed from the
     // parent, so we expect this to parse fine!
     CopyableErrorResult result;
-    result.Throw(rv);
+    result.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                             "Invalid worker URL");
     return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
@@ -224,7 +233,8 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   RefPtr<Document> doc = window->GetExtantDoc();
   if (!doc || !doc->IsActive()) {
     CopyableErrorResult result;
-    result.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    result.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                             "Document is not active.");
     return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
@@ -234,7 +244,8 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
   if (!docShell || !webProgress) {
     CopyableErrorResult result;
-    result.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    result.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                             "Document's browsing context has been discarded");
     return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
@@ -272,7 +283,10 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   rv = webProgress->AddProgressListener(listener,
                                         nsIWebProgress::NOTIFY_STATE_DOCUMENT);
   if (NS_FAILED(rv)) {
-    promise->Reject(rv, __func__);
+    CopyableErrorResult result;
+    // XXXbz Can we throw something better here?
+    result.Throw(rv);
+    promise->Reject(result, __func__);
     return promise.forget();
   }
 

@@ -50,7 +50,8 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
               if (!data.BuildClonedMessageDataForBackgroundParent(
                       source->Manager()->Manager(), rebuild.clonedData())) {
                 CopyableErrorResult rv;
-                rv.Throw(NS_ERROR_DOM_ABORT_ERR);
+                rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR,
+                                     "Aborting client operation");
                 Unused << PClientHandleOpParent::Send__delete__(this, rv);
                 return;
               }

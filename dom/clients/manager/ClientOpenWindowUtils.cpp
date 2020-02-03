@@ -63,7 +63,10 @@ class WebProgressListener final : public nsIWebProgressListener,
 
     nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
     if (NS_WARN_IF(!doc)) {
-      mPromise->Reject(NS_ERROR_FAILURE, __func__);
+      CopyableErrorResult rv;
+      rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                           "Document is discarded");
+      mPromise->Reject(rv, __func__);
       mPromise = nullptr;
       return NS_OK;
     }
@@ -85,7 +88,10 @@ class WebProgressListener final : public nsIWebProgressListener,
     Maybe<ClientState> state(doc->GetClientState());
 
     if (NS_WARN_IF(info.isNothing() || state.isNothing())) {
-      mPromise->Reject(NS_ERROR_FAILURE, __func__);
+      // XXXbz Can we find a useful error message here?
+      CopyableErrorResult rv;
+      rv.Throw(NS_ERROR_FAILURE);
+      mPromise->Reject(rv, __func__);
       mPromise = nullptr;
       return NS_OK;
     }
@@ -137,7 +143,9 @@ class WebProgressListener final : public nsIWebProgressListener,
  private:
   ~WebProgressListener() {
     if (mPromise) {
-      mPromise->Reject(NS_ERROR_ABORT, __func__);
+      CopyableErrorResult rv;
+      rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "openWindow aborted");
+      mPromise->Reject(rv, __func__);
       mPromise = nullptr;
     }
   }
@@ -289,7 +297,10 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
   nsCOMPtr<nsIURI> baseURI;
   nsresult rv = NS_NewURI(getter_AddRefs(baseURI), aArgs.baseURL());
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->Reject(rv, __func__);
+    // Shouldn't really happen, since we passed in the serialization of a URI.
+    CopyableErrorResult result;
+    result.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR, "Bad URL");
+    promise->Reject(result, __func__);
     return;
   }
 
@@ -297,7 +308,9 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
 
   if (NS_WARN_IF(!webProgress)) {
-    promise->Reject(NS_ERROR_FAILURE, __func__);
+    CopyableErrorResult rv;
+    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "No browsing context");
+    promise->Reject(rv, __func__);
     return;
   }
 
@@ -309,7 +322,10 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
   rv = webProgress->AddProgressListener(listener,
                                         nsIWebProgress::NOTIFY_STATE_DOCUMENT);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->Reject(rv, __func__);
+    CopyableErrorResult result;
+    // XXXbz Can we throw something better here?
+    result.Throw(rv);
+    promise->Reject(result, __func__);
     return;
   }
 

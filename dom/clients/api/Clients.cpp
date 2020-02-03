@@ -269,7 +269,8 @@ already_AddRefed<Promise> Clients::Claim(ErrorResult& aRv) {
 
   if (serviceWorker.State() != ServiceWorkerState::Activating &&
       serviceWorker.State() != ServiceWorkerState::Activated) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                          "Service worker is not active in Clients.claim");
     return outerPromise.forget();
   }
 
