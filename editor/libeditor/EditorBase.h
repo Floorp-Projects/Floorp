@@ -2839,9 +2839,8 @@ class EditorBase : public nsIEditor,
       AutoEditorObserverArray;
   AutoEditorObserverArray mEditorObservers;
   // Listen to overall doc state (dirty or not, just created, etc.).
-  // Document state listener is currently used by EditingSession and
-  // BlueGriffon so that reserving only one is enough (although, this is not
-  // necessary for TextEditor).
+  // Document state listener is currently used by FinderHighlighter and
+  // BlueGriffon so that reserving only one is enough.
   typedef AutoTArray<OwningNonNull<nsIDocumentStateListener>, 1>
       AutoDocumentStateListenerArray;
   AutoDocumentStateListenerArray mDocStateListeners;

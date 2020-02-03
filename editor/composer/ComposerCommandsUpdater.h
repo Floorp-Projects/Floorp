@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"  // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDocumentStateListener.h"
 #include "nsINamed.h"
 #include "nsISupportsImpl.h"         // for NS_DECL_ISUPPORTS
 #include "nsITimer.h"                // for NS_DECL_NSITIMERCALLBACK, etc
@@ -24,8 +23,7 @@ class nsPIDOMWindowOuter;
 
 namespace mozilla {
 
-class ComposerCommandsUpdater final : public nsIDocumentStateListener,
-                                      public nsITransactionListener,
+class ComposerCommandsUpdater final : public nsITransactionListener,
                                       public nsITimerCallback,
                                       public nsINamed {
  public:
@@ -34,10 +32,7 @@ class ComposerCommandsUpdater final : public nsIDocumentStateListener,
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ComposerCommandsUpdater,
-                                           nsIDocumentStateListener)
-
-  // nsIDocumentStateListener
-  NS_DECL_NSIDOCUMENTSTATELISTENER
+                                           nsITransactionListener)
 
   // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
@@ -55,6 +50,43 @@ class ComposerCommandsUpdater final : public nsIDocumentStateListener,
    */
   void OnSelectionChange() { PrimeUpdateTimer(); }
 
+  /**
+   * OnHTMLEditorCreated() is called when `HTMLEditor` is created and
+   * initialized.
+   */
+  MOZ_CAN_RUN_SCRIPT void OnHTMLEditorCreated() {
+    UpdateOneCommand("obs_documentCreated");
+  }
+
+  /**
+   * OnBeforeHTMLEditorDestroyed() is called when `HTMLEditor` is being
+   * destroyed.
+   */
+  MOZ_CAN_RUN_SCRIPT void OnBeforeHTMLEditorDestroyed() {
+    // cancel any outstanding update timer
+    if (mUpdateTimer) {
+      mUpdateTimer->Cancel();
+      mUpdateTimer = nullptr;
+    }
+
+    // We can't notify the command manager of this right now; it is too late in
+    // some cases and the window is already partially destructed (e.g. JS
+    // objects may be gone).
+  }
+
+  /**
+   * OnHTMLEditorDirtyStateChanged() is called when dirty state of `HTMLEditor`
+   * is changed form or to "dirty".
+   */
+  MOZ_CAN_RUN_SCRIPT void OnHTMLEditorDirtyStateChanged(bool aNowDirty) {
+    if (mDirtyState == static_cast<int8_t>(aNowDirty)) {
+      return;
+    }
+    UpdateCommandGroup(CommandGroup::Save);
+    UpdateCommandGroup(CommandGroup::Undo);
+    mDirtyState = aNowDirty;
+  }
+
  protected:
   virtual ~ComposerCommandsUpdater();
 
@@ -65,9 +97,13 @@ class ComposerCommandsUpdater final : public nsIDocumentStateListener,
   };
 
   bool SelectionIsCollapsed();
-  nsresult UpdateDirtyState(bool aNowDirty);
-  nsresult UpdateOneCommand(const char* aCommand);
-  nsresult UpdateCommandGroup(const nsAString& aCommandGroup);
+  MOZ_CAN_RUN_SCRIPT nsresult UpdateOneCommand(const char* aCommand);
+  enum class CommandGroup {
+    Save,
+    Style,
+    Undo,
+  };
+  MOZ_CAN_RUN_SCRIPT void UpdateCommandGroup(CommandGroup aCommandGroup);
 
   nsCommandManager* GetCommandManager();
 
