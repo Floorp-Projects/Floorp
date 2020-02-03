@@ -14,6 +14,7 @@
 #include "js/GCVector.h"
 #include "js/HeapAPI.h"
 #include "js/Wrapper.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/Printer.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
@@ -1002,35 +1003,34 @@ MOZ_ALWAYS_INLINE JSObject* ToObjectFromStack(JSContext* cx, HandleValue vp) {
 }
 
 JSObject* ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
-                                        HandleId key, bool reportScanStack);
+                                        int valIndex, HandleId key);
 JSObject* ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
-                                        HandlePropertyName key,
-                                        bool reportScanStack);
+                                        int valIndex, HandlePropertyName key);
 JSObject* ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
-                                        HandleValue keyValue,
-                                        bool reportScanStack);
+                                        int valIndex, HandleValue keyValue);
 
 MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(JSContext* cx,
                                                                HandleValue vp,
+                                                               int vpIndex,
                                                                HandleId key) {
   if (vp.isObject()) {
     return &vp.toObject();
   }
-  return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
+  return js::ToObjectSlowForPropertyAccess(cx, vp, vpIndex, key);
 }
 MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(
-    JSContext* cx, HandleValue vp, HandlePropertyName key) {
+    JSContext* cx, HandleValue vp, int vpIndex, HandlePropertyName key) {
   if (vp.isObject()) {
     return &vp.toObject();
   }
-  return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
+  return js::ToObjectSlowForPropertyAccess(cx, vp, vpIndex, key);
 }
 MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(
-    JSContext* cx, HandleValue vp, HandleValue key) {
+    JSContext* cx, HandleValue vp, int vpIndex, HandleValue key) {
   if (vp.isObject()) {
     return &vp.toObject();
   }
-  return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
+  return js::ToObjectSlowForPropertyAccess(cx, vp, vpIndex, key);
 }
 
 template <XDRMode mode>
