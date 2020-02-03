@@ -1212,15 +1212,12 @@ impl BatchBuilder {
                                     ctx.screen_world_rect,
                                     ctx.spatial_tree,
                                 );
-                                let local_tile_clip_rect = LayoutRect::from_untyped(&tile_cache.local_rect.to_untyped());
-                                let local_tile_clip_rect = match local_tile_clip_rect.intersection(&prim_info.combined_local_clip_rect) {
-                                    Some(rect) => rect,
-                                    None => {
-                                        return;
-                                    }
-                                };
+                                // TODO(gw): As a follow up to the valid_rect work, see why we use
+                                //           prim_info.combined_local_clip_rect here instead of the
+                                //           local_clip_rect built in the TileCacheInstance. Perhaps
+                                //           these can be unified or are different for a good reason?
                                 let world_clip_rect = map_local_to_world
-                                    .map(&local_tile_clip_rect)
+                                    .map(&prim_info.combined_local_clip_rect)
                                     .expect("bug: unable to map clip rect");
                                 let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round();
                                 let z_id = composite_state.z_generator.next();
