@@ -16,35 +16,35 @@
     }
     </style>
     <script type="application/javascript">
-      let constructedFunc = new Function();
+      const constructedFunc = new Function();
 
-      let constructedFuncWithBodyString =
+      const constructedFuncWithBodyString =
         new Function('a', 'b', 'c', 'alert("constructedFuncWithBodyString");');
 
-      let multipleAssignment = foo = bar = function multi() {
+      const multipleAssignment = foo = bar = function multi() {
         alert("multipleAssignment");
       }
 
       function init() {
-        let constructedFunctionNode =
+        const constructedFunctionNode =
           document.getElementById("constructed-function");
         constructedFunctionNode.addEventListener("click", constructedFunc);
 
-        let constructedFunctionWithBodyStringNode =
+        const constructedFunctionWithBodyStringNode =
           document.getElementById("constructed-function-with-body-string");
         constructedFunctionWithBodyStringNode
           .addEventListener("click", constructedFuncWithBodyString);
 
-        let multipleAssignmentNode =
+        const multipleAssignmentNode =
           document.getElementById("multiple-assignment");
         multipleAssignmentNode.addEventListener("click", multipleAssignment);
 
-        let promiseNode = document.getElementById("promise");
+        const promiseNode = document.getElementById("promise");
         new Promise((resolve, reject) => {
           promiseNode.addEventListener("click", resolve);
         });
 
-        let mathPowNode = document.getElementById("math-pow");
+        const mathPowNode = document.getElementById("math-pow");
         mathPowNode.addEventListener("click", Math.pow);
 
         new HandleEvent();
@@ -69,7 +69,7 @@
       };
 
       function HandleEvent() {
-        let handleEventNode = document.getElementById("handleEvent");
+        const handleEventNode = document.getElementById("handleEvent");
         handleEventNode.addEventListener("click", this);
       }
 

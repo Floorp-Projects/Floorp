@@ -15,9 +15,9 @@ Test the rendering of the JIT Optimizations tree. Tests when jit data has observ
 <script type="application/javascript">
 window.onload = async function () {
   try {
-    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    let React = browserRequire("devtools/client/shared/vendor/react");
-    let JITOptimizations = React.createFactory(browserRequire("devtools/client/performance/components/JITOptimizations"));
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const JITOptimizations = React.createFactory(browserRequire("devtools/client/performance/components/JITOptimizations"));
     ok(JITOptimizations, "Should get JITOptimizations");
     let opts;
 

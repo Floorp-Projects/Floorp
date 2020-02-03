@@ -18,21 +18,21 @@
     </style>
     <script type="application/javascript">
       function init() {
-        let fatarrow = document.getElementById("fatarrow");
+        const fatarrow = document.getElementById("fatarrow");
 
-        let he = new handleEventClick();
-        let anonObjectMethod = document.getElementById("anon-object-method");
+        const he = new handleEventClick();
+        const anonObjectMethod = document.getElementById("anon-object-method");
         anonObjectMethod.addEventListener("click", he.anonObjectMethod);
 
-        let objectMethod = document.getElementById("object-method");
+        const objectMethod = document.getElementById("object-method");
         objectMethod.addEventListener("click", he.objectMethod);
 
-        let bhe = new boundHandleEventClick();
-        let boundheNode = document.getElementById("boundhe");
+        const bhe = new boundHandleEventClick();
+        const boundheNode = document.getElementById("boundhe");
         bhe.handleEvent = bhe.handleEvent.bind(bhe);
         boundheNode.addEventListener("click", bhe);
 
-        let boundNode = document.getElementById("bound");
+        const boundNode = document.getElementById("bound");
         boundClickHandler = boundClickHandler.bind(this);
         boundNode.addEventListener("click", boundClickHandler);
 
@@ -50,11 +50,11 @@
 
         fatarrow.addEventListener("click", b => b);
 
-        let inlineCommentNode = document.getElementById("comment-inline");
+        const inlineCommentNode = document.getElementById("comment-inline");
         inlineCommentNode
           .addEventListener("click", functionProceededByInlineComment);
 
-        let streamingCommentNode = document.getElementById("comment-streaming");
+        const streamingCommentNode = document.getElementById("comment-streaming");
         streamingCommentNode
           .addEventListener("click", functionProceededByStreamingComment);
       }
