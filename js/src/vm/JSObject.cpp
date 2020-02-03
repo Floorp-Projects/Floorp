@@ -3334,7 +3334,8 @@ JSObject* js::ToObjectSlow(JSContext* cx, JS::HandleValue val,
   MOZ_ASSERT(!val.isObject());
 
   if (val.isNullOrUndefined()) {
-    ReportIsNullOrUndefinedForPropertyAccess(cx, val, reportScanStack);
+    ReportIsNullOrUndefinedForPropertyAccess(
+        cx, val, reportScanStack ? JSDVG_SEARCH_STACK : JSDVG_IGNORE_STACK);
     return nullptr;
   }
 
@@ -3342,13 +3343,12 @@ JSObject* js::ToObjectSlow(JSContext* cx, JS::HandleValue val,
 }
 
 JSObject* js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
-                                            HandleId key,
-                                            bool reportScanStack) {
+                                            int valIndex, HandleId key) {
   MOZ_ASSERT(!val.isMagic());
   MOZ_ASSERT(!val.isObject());
 
   if (val.isNullOrUndefined()) {
-    ReportIsNullOrUndefinedForPropertyAccess(cx, val, key, reportScanStack);
+    ReportIsNullOrUndefinedForPropertyAccess(cx, val, valIndex, key);
     return nullptr;
   }
 
@@ -3356,14 +3356,14 @@ JSObject* js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
 }
 
 JSObject* js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
-                                            HandlePropertyName key,
-                                            bool reportScanStack) {
+                                            int valIndex,
+                                            HandlePropertyName key) {
   MOZ_ASSERT(!val.isMagic());
   MOZ_ASSERT(!val.isObject());
 
   if (val.isNullOrUndefined()) {
     RootedId keyId(cx, NameToId(key));
-    ReportIsNullOrUndefinedForPropertyAccess(cx, val, keyId, reportScanStack);
+    ReportIsNullOrUndefinedForPropertyAccess(cx, val, valIndex, keyId);
     return nullptr;
   }
 
@@ -3371,8 +3371,8 @@ JSObject* js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
 }
 
 JSObject* js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
-                                            HandleValue keyValue,
-                                            bool reportScanStack) {
+                                            int valIndex,
+                                            HandleValue keyValue) {
   MOZ_ASSERT(!val.isMagic());
   MOZ_ASSERT(!val.isObject());
 
@@ -3382,9 +3382,9 @@ JSObject* js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
       if (!ValueToId<CanGC>(cx, keyValue, &key)) {
         return nullptr;
       }
-      ReportIsNullOrUndefinedForPropertyAccess(cx, val, key, reportScanStack);
+      ReportIsNullOrUndefinedForPropertyAccess(cx, val, valIndex, key);
     } else {
-      ReportIsNullOrUndefinedForPropertyAccess(cx, val, reportScanStack);
+      ReportIsNullOrUndefinedForPropertyAccess(cx, val, valIndex);
     }
     return nullptr;
   }
