@@ -105,7 +105,7 @@ registerCleanupFunction(() => {
 // This is an IP that is local, so we don't crash when connecting to it,
 // but also connecting to it fails, so we attempt to retry with regular DNS.
 const BAD_IP = (() => {
-  if (mozinfo.os == "linux") {
+  if (mozinfo.os == "linux" || mozinfo.os == "android") {
     return "127.9.9.9";
   }
   return "0.0.0.0";
