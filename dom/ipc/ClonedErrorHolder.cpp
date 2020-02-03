@@ -84,8 +84,7 @@ void ClonedErrorHolder::Init(JSContext* aCx, JS::Handle<JSObject*> aError,
     } else if (NS_SUCCEEDED(UNWRAP_OBJECT(Exception, aError, exn))) {
       mType = Type::Exception;
     } else {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      aRv.ThrowNotSupportedError(
           "We can only clone DOM Exceptions and native JS Error objects");
       return;
     }

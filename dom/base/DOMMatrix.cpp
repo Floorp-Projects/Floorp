@@ -504,8 +504,7 @@ void DOMMatrixReadOnly::Stringify(nsAString& aResult, ErrorResult& aRv) {
   auto AppendDouble = [&aRv, &cbuf, &matrixStr](double d,
                                                 bool isLastItem = false) {
     if (!mozilla::IsFinite(d)) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_INVALID_STATE_ERR,
+      aRv.ThrowInvalidStateError(
           "Matrix with a non-finite element cannot be stringified.");
       return false;
     }

@@ -55,8 +55,7 @@ void ClientHandle::StartOp(const ClientOpConstructorArgs& aArgs,
       [aRejectCallback] {
         MOZ_DIAGNOSTIC_ASSERT(aRejectCallback);
         CopyableErrorResult rv;
-        rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                             "Client has been destroyed");
+        rv.ThrowInvalidStateError("Client has been destroyed");
         aRejectCallback(rv);
       });
 }
@@ -146,8 +145,7 @@ RefPtr<GenericErrorResultPromise> ClientHandle::PostMessage(
     StructuredCloneData& aData, const ServiceWorkerDescriptor& aSource) {
   if (IsShutdown()) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                         "Client has been destroyed");
+    rv.ThrowInvalidStateError("Client has been destroyed");
     return GenericErrorResultPromise::CreateAndReject(rv, __func__);
   }
 
@@ -157,8 +155,7 @@ RefPtr<GenericErrorResultPromise> ClientHandle::PostMessage(
   if (!aData.BuildClonedMessageDataForBackgroundChild(
           GetActor()->Manager()->Manager(), args.clonedData())) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                         "Failed to clone data");
+    rv.ThrowInvalidStateError("Failed to clone data");
     return GenericErrorResultPromise::CreateAndReject(rv, __func__);
   }
 

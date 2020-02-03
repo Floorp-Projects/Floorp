@@ -64,8 +64,7 @@ class WebProgressListener final : public nsIWebProgressListener,
     nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
     if (NS_WARN_IF(!doc)) {
       CopyableErrorResult rv;
-      rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                           "Document is discarded");
+      rv.ThrowInvalidStateError("Document is discarded");
       mPromise->Reject(rv, __func__);
       mPromise = nullptr;
       return NS_OK;
@@ -144,7 +143,7 @@ class WebProgressListener final : public nsIWebProgressListener,
   ~WebProgressListener() {
     if (mPromise) {
       CopyableErrorResult rv;
-      rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "openWindow aborted");
+      rv.ThrowAbortError("openWindow aborted");
       mPromise->Reject(rv, __func__);
       mPromise = nullptr;
     }
@@ -299,7 +298,7 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Shouldn't really happen, since we passed in the serialization of a URI.
     CopyableErrorResult result;
-    result.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR, "Bad URL");
+    result.ThrowSyntaxError("Bad URL");
     promise->Reject(result, __func__);
     return;
   }
@@ -309,7 +308,7 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
 
   if (NS_WARN_IF(!webProgress)) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "No browsing context");
+    rv.ThrowInvalidStateError("No browsing context");
     promise->Reject(rv, __func__);
     return;
   }

@@ -2474,8 +2474,7 @@ RefPtr<GenericErrorResultPromise> ServiceWorkerManager::MaybeClaimClient(
 
   if (!aWorkerRegistration->GetActive()) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                         "Worker is not active");
+    rv.ThrowInvalidStateError("Worker is not active");
     return GenericErrorResultPromise::CreateAndReject(rv, __func__);
   }
 
@@ -2483,8 +2482,7 @@ RefPtr<GenericErrorResultPromise> ServiceWorkerManager::MaybeClaimClient(
   nsCOMPtr<nsIPrincipal> principal(aClientInfo.GetPrincipal());
   if (!aWorkerRegistration->Principal()->Equals(principal)) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_SECURITY_ERR,
-                         "Worker is for a different origin");
+    rv.ThrowSecurityError("Worker is for a different origin");
     return GenericErrorResultPromise::CreateAndReject(rv, __func__);
   }
 

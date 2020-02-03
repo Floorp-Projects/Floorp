@@ -2288,14 +2288,18 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
                      const nsAString& aScriptURL) {
   MOZ_ASSERT(!aRv.Failed());
 
+  nsPrintfCString err("Failed to load worker script at \"%s\"",
+                      NS_ConvertUTF16toUTF8(aScriptURL).get());
+
   switch (aLoadResult) {
     case NS_ERROR_FILE_NOT_FOUND:
     case NS_ERROR_NOT_AVAILABLE:
-      aLoadResult = NS_ERROR_DOM_NETWORK_ERR;
+      aRv.ThrowNetworkError(err);
       break;
 
     case NS_ERROR_MALFORMED_URI:
-      aLoadResult = NS_ERROR_DOM_SYNTAX_ERR;
+    case NS_ERROR_DOM_SYNTAX_ERR:
+      aRv.ThrowSyntaxError(err);
       break;
 
     case NS_BINDING_ABORTED:
@@ -2303,38 +2307,29 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
       // NS_BINDING_ABORTED, but then ShutdownScriptLoader did it anyway.  The
       // other callsite, in WorkerPrivate::Constructor, never passed in
       // NS_BINDING_ABORTED.  So just throw it directly here.  Consumers will
-      // deal as needed.  But note that we do NOT want to ThrowDOMException()
-      // for this case, because that will make it impossible for consumers to
-      // realize that our error was NS_BINDING_ABORTED.
+      // deal as needed.  But note that we do NOT want to use one of the
+      // Throw*Error() methods on ErrorResult for this case, because that will
+      // make it impossible for consumers to realize that our error was
+      // NS_BINDING_ABORTED.
       aRv.Throw(aLoadResult);
       return;
 
-    case NS_ERROR_DOM_SECURITY_ERR:
-    case NS_ERROR_DOM_SYNTAX_ERR:
-      break;
-
     case NS_ERROR_DOM_BAD_URI:
       // This is actually a security error.
-      aLoadResult = NS_ERROR_DOM_SECURITY_ERR;
+    case NS_ERROR_DOM_SECURITY_ERR:
+      aRv.ThrowSecurityError(err);
       break;
 
     default:
       // For lack of anything better, go ahead and throw a NetworkError here.
       // We don't want to throw a JS exception, because for toplevel script
       // loads that would get squelched.
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_NETWORK_ERR,
-          nsPrintfCString(
-              "Failed to load worker script at %s (nsresult = 0x%" PRIx32 ")",
-              NS_ConvertUTF16toUTF8(aScriptURL).get(),
-              static_cast<uint32_t>(aLoadResult)));
+      aRv.ThrowNetworkError(nsPrintfCString(
+          "Failed to load worker script at %s (nsresult = 0x%" PRIx32 ")",
+          NS_ConvertUTF16toUTF8(aScriptURL).get(),
+          static_cast<uint32_t>(aLoadResult)));
       return;
   }
-
-  aRv.ThrowDOMException(
-      aLoadResult, NS_LITERAL_CSTRING("Failed to load worker script at \"") +
-                       NS_ConvertUTF16toUTF8(aScriptURL) +
-                       NS_LITERAL_CSTRING("\""));
 }
 
 void LoadMainScript(WorkerPrivate* aWorkerPrivate,

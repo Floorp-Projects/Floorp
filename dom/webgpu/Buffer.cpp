@@ -69,8 +69,7 @@ already_AddRefed<dom::Promise> Buffer::MapReadAsync(ErrorResult& aRv) {
     return nullptr;
   }
   if (mMapping) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                          "Unable to map a buffer that is already mapped");
+    aRv.ThrowInvalidStateError("Unable to map a buffer that is already mapped");
     return nullptr;
   }
   const auto checked = CheckedInt<size_t>(mSize);
