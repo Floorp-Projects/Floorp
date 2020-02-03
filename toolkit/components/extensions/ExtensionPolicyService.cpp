@@ -14,6 +14,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/SimpleEnumerator.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/ContentParent.h"
@@ -80,9 +81,6 @@ static mozIExtensionProcessScript& ProcessScript() {
  * ExtensionPolicyService
  *****************************************************************************/
 
-/* static */
-bool ExtensionPolicyService::sRemoteExtensions;
-
 /* static */ ExtensionPolicyService& ExtensionPolicyService::GetSingleton() {
   static RefPtr<ExtensionPolicyService> sExtensionPolicyService;
 
@@ -98,9 +96,6 @@ ExtensionPolicyService::ExtensionPolicyService() {
   mObs = services::GetObserverService();
   MOZ_RELEASE_ASSERT(mObs);
 
-  Preferences::AddBoolVarCache(&sRemoteExtensions,
-                               "extensions.webextensions.remote", false);
-
   mBaseCSP.SetIsVoid(true);
   mDefaultCSP.SetIsVoid(true);
 
@@ -112,7 +107,11 @@ ExtensionPolicyService::~ExtensionPolicyService() {
 }
 
 bool ExtensionPolicyService::UseRemoteExtensions() const {
-  return sRemoteExtensions && BrowserTabsRemoteAutostart();
+  static Maybe<bool> sRemoteExtensions;
+  if (MOZ_UNLIKELY(sRemoteExtensions.isNothing())) {
+    sRemoteExtensions = Some(StaticPrefs::extensions_webextensions_remote());
+  }
+  return sRemoteExtensions.value() && BrowserTabsRemoteAutostart();
 }
 
 bool ExtensionPolicyService::IsExtensionProcess() const {
