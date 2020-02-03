@@ -11,10 +11,10 @@ import type { TabList, Tab, TabsSources } from "../reducers/types";
  * Finds the hidden tabs by comparing the tabs' top offset.
  * hidden tabs will have a great top offset.
  *
- * @param sourceTabs Immutable.list
+ * @param sourceTabs Array
  * @param sourceTabEls HTMLCollection
  *
- * @returns Immutable.list
+ * @returns Array
  */
 
 export function getHiddenTabs(
