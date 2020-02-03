@@ -454,9 +454,9 @@ pub(crate) mod desc {
                 kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
-                name: "aAxisSelect",
+                name: "aOrientation",
                 count: 1,
-                kind: VertexAttributeKind::F32,
+                kind: VertexAttributeKind::I32,
             },
         ],
     };
