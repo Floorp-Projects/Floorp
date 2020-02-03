@@ -160,6 +160,7 @@ index:
         - 'static-analysis'
         - 'devedition'
         - 'source'
+        - 'system-symbols'
 
 try:
     # We have a few platforms for which we want to do some "extra" builds, or at
