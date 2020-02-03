@@ -36,7 +36,6 @@ FRAME_CLASSES = [
     Frame("nsGridContainerFrame", "GridContainer", NOT_LEAF),
     Frame("nsGridRowGroupFrame", "Box", NOT_LEAF),
     Frame("nsGridRowLeafFrame", "Box", NOT_LEAF),
-    Frame("nsGroupBoxFrame", "Box", NOT_LEAF),
     Frame("nsHTMLButtonControlFrame", "HTMLButtonControl", NOT_LEAF),
     Frame("nsHTMLCanvasFrame", "HTMLCanvas", NOT_LEAF),
     Frame("nsHTMLFramesetBlankFrame", "None", LEAF),

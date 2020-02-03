@@ -3971,8 +3971,7 @@ static bool IsXULDisplayType(const nsStyleDisplay* aDisplay) {
           aDisplay->mDisplay == StyleDisplay::MozGridGroup ||
           aDisplay->mDisplay == StyleDisplay::MozGridLine ||
           aDisplay->mDisplay == StyleDisplay::MozDeck ||
-          aDisplay->mDisplay == StyleDisplay::MozPopup ||
-          aDisplay->mDisplay == StyleDisplay::MozGroupbox);
+          aDisplay->mDisplay == StyleDisplay::MozPopup);
 #else
   return false;
 #endif
@@ -4501,11 +4500,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     case StyleDisplayInside::MozDeck: {
       static const FrameConstructionData data =
           SIMPLE_XUL_FCDATA(NS_NewDeckFrame);
-      return &data;
-    }
-    case StyleDisplayInside::MozGroupbox: {
-      static const FrameConstructionData data =
-          SCROLLABLE_XUL_FCDATA(NS_NewGroupBoxFrame);
       return &data;
     }
     case StyleDisplayInside::MozPopup: {
