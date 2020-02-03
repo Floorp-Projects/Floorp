@@ -16,7 +16,7 @@ Bug 1302702 - Test connect to a webextension addon
 <script type="application/javascript">
 "use strict";
 
-async function test_connect_addon(oopMode) {
+add_task(async function test_webextension_addon_debugging_connect() {
   // Install and start a test webextension.
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
@@ -43,7 +43,7 @@ async function test_connect_addon(oopMode) {
   ok(addonTarget, "The expected webextension target addon actor has been found");
 
   // Connect to the target addon actor and wait for the updated list of frames.
-  is(addonDescriptor.targetForm.isOOP, oopMode,
+  is(addonDescriptor.targetForm.isOOP, true,
      "Got the expected oop mode in the webextension actor form");
   const frames = await waitForFramesUpdated(addonTarget);
   const backgroundPageFrame = frames.filter((frame) => {
@@ -53,16 +53,14 @@ async function test_connect_addon(oopMode) {
 
   // When running in oop mode we can explicitly attach the thread without locking
   // the main process.
-  if (oopMode) {
-    const [, threadFront] = await addonTarget.attachThread();
+  const [, threadFront] = await addonTarget.attachThread();
 
-    ok(threadFront, "Got a threadFront for the target addon");
-    is(threadFront.paused, true, "The addon threadActor is paused");
-    await threadFront.resume();
-    is(threadFront.paused, false, "The addon threadActor has been resumed");
+  ok(threadFront, "Got a threadFront for the target addon");
+  is(threadFront.paused, true, "The addon threadActor is paused");
+  await threadFront.resume();
+  is(threadFront.paused, false, "The addon threadActor has been resumed");
 
-    await threadFront.detach();
-  }
+  await threadFront.detach();
 
   const waitTransportClosed = new Promise(resolve => {
     client._transport.once("close", resolve);
@@ -78,16 +76,6 @@ async function test_connect_addon(oopMode) {
      "The debug browser has been released when the RDP connection has been closed");
 
   await extension.unload();
-}
-
-add_task(async function test_webextension_addon_debugging_connect_inprocess() {
-  await setWebExtensionOOPMode(false);
-  await test_connect_addon(false);
-});
-
-add_task(async function test_webextension_addon_debugging_connect_oop() {
-  await setWebExtensionOOPMode(true);
-  await test_connect_addon(true);
 });
 
 </script>
