@@ -2040,7 +2040,9 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
              op == JSOp::InitElem || op == JSOp::InitHiddenElem ||
              op == JSOp::InitElemArray || op == JSOp::InitElemInc);
 
-  RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, objv, index));
+  int objvIndex = -3;
+  RootedObject obj(
+      cx, ToObjectFromStackForPropertyAccess(cx, objv, objvIndex, index));
   if (!obj) {
     return false;
   }
@@ -2628,7 +2630,9 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedPropertyName name(cx, script->getName(pc));
   RootedId id(cx, NameToId(name));
 
-  RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, lhs, id));
+  int lhsIndex = -2;
+  RootedObject obj(cx,
+                   ToObjectFromStackForPropertyAccess(cx, lhs, lhsIndex, id));
   if (!obj) {
     return false;
   }

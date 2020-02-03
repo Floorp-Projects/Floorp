@@ -50,7 +50,7 @@
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"
 #include "util/Windows.h"
-#include "vm/BytecodeUtil.h"
+#include "vm/BytecodeUtil.h" // JSDVG_IGNORE_STACK
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
@@ -888,18 +888,17 @@ const char* NullOrUndefinedToCharZ(HandleValue v) {
 }
 
 void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
-                                                  bool reportScanStack) {
+                                                  int vIndex) {
   MOZ_ASSERT(v.isNullOrUndefined());
 
-  if (!reportScanStack) {
+  if (vIndex == JSDVG_IGNORE_STACK) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CANT_CONVERT_TO, NullOrUndefinedToCharZ(v),
                               "object");
     return;
   }
 
-  UniqueChars bytes =
-      DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
+  UniqueChars bytes = DecompileValueGenerator(cx, vIndex, v, nullptr);
   if (!bytes) {
     return;
   }
@@ -916,12 +915,11 @@ void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
 }
 
 void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
-                                                  HandleId key,
-                                                  bool reportScanStack) {
+                                                  int vIndex, HandleId key) {
   MOZ_ASSERT(v.isNullOrUndefined());
 
   if (!cx->realm()->creationOptions().getPropertyErrorMessageFixEnabled()) {
-    ReportIsNullOrUndefinedForPropertyAccess(cx, v, reportScanStack);
+    ReportIsNullOrUndefinedForPropertyAccess(cx, v, vIndex);
     return;
   }
 
@@ -936,14 +934,13 @@ void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
     return;
   }
 
-  if (!reportScanStack) {
+  if (vIndex == JSDVG_IGNORE_STACK) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
                              keyStr.get(), NullOrUndefinedToCharZ(v));
     return;
   }
 
-  UniqueChars bytes =
-      DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
+  UniqueChars bytes = DecompileValueGenerator(cx, vIndex, v, nullptr);
   if (!bytes) {
     return;
   }

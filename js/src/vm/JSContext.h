@@ -1105,12 +1105,10 @@ extern void ReportIsNotDefined(JSContext* cx, HandleId id);
  * Report an attempt to access the property of a null or undefined value (v).
  */
 extern void ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx,
-                                                     HandleValue v,
-                                                     bool reportScanStack);
+                                                     HandleValue v, int vIndex);
 extern void ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx,
-                                                     HandleValue v,
-                                                     HandleId key,
-                                                     bool reportScanStack);
+                                                     HandleValue v, int vIndex,
+                                                     HandleId key);
 
 /*
  * Report error using js_DecompileValueGenerator(cx, spindex, v, fallback) as

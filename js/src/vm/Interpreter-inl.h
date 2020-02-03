@@ -16,6 +16,7 @@
 
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/BytecodeUtil.h" // JSDVG_SEARCH_STACK
 #include "vm/Realm.h"
 
 #include "vm/EnvironmentObject-inl.h"
@@ -494,12 +495,13 @@ static MOZ_ALWAYS_INLINE bool GetObjectElementOperation(
 }
 
 static MOZ_ALWAYS_INLINE bool GetPrimitiveElementOperation(
-    JSContext* cx, JSOp op, JS::HandleValue receiver, HandleValue key,
-    MutableHandleValue res) {
+    JSContext* cx, JSOp op, JS::HandleValue receiver, int receiverIndex,
+    HandleValue key, MutableHandleValue res) {
   MOZ_ASSERT(op == JSOp::GetElem || op == JSOp::CallElem);
 
   // FIXME: Bug 1234324 We shouldn't be boxing here.
-  RootedObject boxed(cx, ToObjectFromStackForPropertyAccess(cx, receiver, key));
+  RootedObject boxed(
+      cx, ToObjectFromStackForPropertyAccess(cx, receiver, receiverIndex, key));
   if (!boxed) {
     return false;
   }
@@ -572,10 +574,9 @@ static MOZ_ALWAYS_INLINE bool GetElemOptimizedArguments(
   return true;
 }
 
-static MOZ_ALWAYS_INLINE bool GetElementOperation(JSContext* cx, JSOp op,
-                                                  HandleValue lref,
-                                                  HandleValue rref,
-                                                  MutableHandleValue res) {
+static MOZ_ALWAYS_INLINE bool GetElementOperationWithStackIndex(
+    JSContext* cx, JSOp op, HandleValue lref, int lrefIndex, HandleValue rref,
+    MutableHandleValue res) {
   MOZ_ASSERT(op == JSOp::GetElem || op == JSOp::CallElem);
 
   uint32_t index;
@@ -593,12 +594,21 @@ static MOZ_ALWAYS_INLINE bool GetElementOperation(JSContext* cx, JSOp op,
 
   if (lref.isPrimitive()) {
     RootedValue thisv(cx, lref);
-    return GetPrimitiveElementOperation(cx, op, thisv, rref, res);
+    return GetPrimitiveElementOperation(cx, op, thisv, lrefIndex, rref, res);
   }
 
   RootedObject obj(cx, &lref.toObject());
   RootedValue thisv(cx, lref);
   return GetObjectElementOperation(cx, op, obj, thisv, rref, res);
+}
+
+// Wrapper for callVM from JIT.
+static MOZ_ALWAYS_INLINE bool GetElementOperation(JSContext* cx, JSOp op,
+                                                  HandleValue lref,
+                                                  HandleValue rref,
+                                                  MutableHandleValue res) {
+  return GetElementOperationWithStackIndex(cx, op, lref, JSDVG_SEARCH_STACK,
+                                           rref, res);
 }
 
 static MOZ_ALWAYS_INLINE JSString* TypeOfOperation(const Value& v,
