@@ -154,12 +154,20 @@ body {
   background-image: url("chrome://devtools/skin/images/webconsole/editor.svg");
 }
 
-.reverse-search {
+.webconsole-app .reverse-search {
   grid-column: 1 / 2;
   grid-row: -1 / -2;
+  /* Those 2 next lines make it so the element isn't impacting the grid column size, but
+     will still take the whole available space. */
+  width: 0;
+  min-width: 100%;
+  /* Let the reverse search buttons wrap to the next line */
+  flex-wrap: wrap;
+  justify-content: end;
   border-top: 1px solid var(--theme-splitter-color);
   border-inline-end: 1px solid var(--theme-splitter-color);
 }
+
 
 .sidebar {
   display: grid;
