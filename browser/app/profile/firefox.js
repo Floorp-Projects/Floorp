@@ -332,6 +332,10 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 // focused in design update 1.
 pref("browser.urlbar.update1.expandTextOnFocus", false);
 
+// If true, we show actionable tips in the Urlbar when the user is searching
+// for those actions.
+pref("browser.urlbar.update1.interventions", false);
+
 // If true, we show new users and those about to start an organic search a tip
 // encouraging them to use the Urlbar.
 pref("browser.urlbar.update1.searchTips", false);

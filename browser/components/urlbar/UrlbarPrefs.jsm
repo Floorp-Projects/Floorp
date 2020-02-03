@@ -153,6 +153,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the quantum bar displays design update 1.
   ["update1", false],
 
+  // If true, we show actionable tips in the Urlbar when the user is searching
+  // for those actions.
+  ["update1.interventions", false],
+
   // If true, we strip https:// instead of http:// from URLs in the results view.
   ["update1.view.stripHttps", false],
 
