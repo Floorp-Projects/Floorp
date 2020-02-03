@@ -1278,6 +1278,7 @@ const selectors = {
   expressionInput: ".expressions-list  input.input-expression",
   expressionNodes: ".expressions-list .tree-node",
   expressionPlus: ".watch-expressions-pane button.plus",
+  expressionRefresh: ".watch-expressions-pane button.refresh",
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
   breakpointLabel: i => `${selectors.breakpointItem(i)} .breakpoint-label`,
