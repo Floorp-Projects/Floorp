@@ -1,11 +1,10 @@
 "use strict";
 
 /**
- * help.pandora.com - Hide unsupported message in Firefox for Android
- * WebCompat issue #38433 - https://webcompat.com/issues/38433
+ * Salesforce Communities - Hide unsupported message in Firefox for Android
  *
- * SalesForce Communities are showing unsupported message
- * for help.pandora.com and some more sites. See the full list here:
+ * Sites based on Salesforce Communities are showing unsupported message.
+ * See the full list here:
  * https://github.com/webcompat/web-bugs/issues?utf8=%E2%9C%93&q=doNotShowUnsupportedBrowserModal
  */
 
