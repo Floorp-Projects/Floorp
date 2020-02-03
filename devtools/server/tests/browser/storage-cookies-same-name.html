@@ -18,8 +18,8 @@ window.removeCookie = function (name) {
 };
 
 window.clearCookies = function () {
-  let cookies = document.cookie;
-  for (let cookie of cookies.split(";")) {
+  const cookies = document.cookie;
+  for (const cookie of cookies.split(";")) {
     removeCookie(cookie.split("=")[0]);
   }
 };

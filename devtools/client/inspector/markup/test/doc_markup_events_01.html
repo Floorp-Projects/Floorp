@@ -30,32 +30,32 @@
     </style>
     <script type="application/javascript">
       function init() {
-        let container = document.getElementById("container");
-        let multiple = document.getElementById("multiple");
+        const container = document.getElementById("container");
+        const multiple = document.getElementById("multiple");
 
         container.addEventListener("mouseover", mouseoverHandler, true);
-        multiple.addEventListener("click", clickHandler, false);
-        multiple.addEventListener("mouseup", mouseupHandler, false);
+        multiple.addEventListener("click", clickHandler);
+        multiple.addEventListener("mouseup", mouseupHandler);
 
-        let he = new handleEventClick();
-        let handleevent = document.getElementById("handleevent");
+        const he = new handleEventClick();
+        const handleevent = document.getElementById("handleevent");
         handleevent.addEventListener("click", he);
       }
 
       function mouseoverHandler(event) {
         if (event.target.id !== "container") {
-          let output = document.getElementById("output");
+          const output = document.getElementById("output");
           output.textContent = event.target.textContent;
         }
       }
 
       function clickHandler(event) {
-        let output = document.getElementById("output");
+        const output = document.getElementById("output");
         output.textContent = "click";
       }
 
       function mouseupHandler(event) {
-        let output = document.getElementById("output");
+        const output = document.getElementById("output");
         output.textContent = "mouseup";
       }
 
@@ -74,12 +74,12 @@
       }
 
       function addNoeventsClickHandler() {
-        let noevents = document.getElementById("noevents");
+        const noevents = document.getElementById("noevents");
         noevents.addEventListener("click", noeventsClickHandler);
       }
 
       function removeNoeventsClickHandler() {
-        let noevents = document.getElementById("noevents");
+        const noevents = document.getElementById("noevents");
         noevents.removeEventListener("click", noeventsClickHandler);
       }
     </script>
