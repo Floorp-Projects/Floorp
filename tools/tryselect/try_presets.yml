@@ -30,8 +30,7 @@ devtools:
         - "'mozlint-eslint"
         - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'windows10-64/ | 'macosx1014-64"
         # Linux is being named "linux1804" and may change over time, so use a more flexible search
-        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux '64/"
-        - "'linux '64/opt-mochitest-devtools-chrome-fis-e10s"
+        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc | 'mochitest-devtools-chrome-fis-e10s linux '64/"
         - "'xpcshell-e10s 'linux '64/"
 
 devtools-linux:
