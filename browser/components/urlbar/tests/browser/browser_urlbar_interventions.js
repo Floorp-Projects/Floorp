@@ -19,8 +19,6 @@ const SEARCH_STRINGS = {
   UPDATE: "firefox update",
 };
 
-const REQ_LOC_CHANGE_EVENT = "intl:requested-locales-changed";
-
 add_task(async function init() {
   makeProfileResettable();
   await SpecialPowers.pushPrefEnv({
