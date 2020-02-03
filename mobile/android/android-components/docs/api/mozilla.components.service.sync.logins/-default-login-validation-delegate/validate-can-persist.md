@@ -8,6 +8,8 @@ Overrides [LoginValidationDelegate.validateCanPersist](../../mozilla.components.
 
 Checks whether or not [login](../../mozilla.components.concept.storage/-login-validation-delegate/validate-can-persist.md#mozilla.components.concept.storage.LoginValidationDelegate$validateCanPersist(mozilla.components.concept.storage.Login)/login) can be persisted.
 
+Note that this method is not thread safe.
+
 **Returns**
 a [LoginValidationDelegate.Result](../../mozilla.components.concept.storage/-login-validation-delegate/-result/index.md), detailing whether [login](../../mozilla.components.concept.storage/-login-validation-delegate/validate-can-persist.md#mozilla.components.concept.storage.LoginValidationDelegate$validateCanPersist(mozilla.components.concept.storage.Login)/login) can be saved as a new
 value, used to update an existing one, or an error occured.

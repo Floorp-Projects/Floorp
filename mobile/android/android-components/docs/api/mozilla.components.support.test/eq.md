@@ -2,7 +2,7 @@
 
 # eq
 
-`fun <T> eq(value: `[`T`](eq.md#T)`): `[`T`](eq.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/Matchers.kt#L25)
+`fun <T> eq(value: `[`T`](eq.md#T)`): `[`T`](eq.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/Matchers.kt#L26)
 
 Mockito matcher that matches if the argument is the same as the provided value.
 
