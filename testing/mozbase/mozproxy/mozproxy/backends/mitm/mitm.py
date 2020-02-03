@@ -224,6 +224,7 @@ class Mitmproxy(Playback):
                 args = [
                     "-v",
                     "--set", "upstream_cert=false",
+                    "--set", "upload_dir=" + self.upload_dir,
                     "--set", "websocket=false",
                     "--set", "server_replay_files={}".format(",".join(recording_paths)),
                     "--scripts", script,
