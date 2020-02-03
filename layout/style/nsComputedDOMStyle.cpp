@@ -57,6 +57,7 @@
 #include "mozilla/AppUnits.h"
 #include <algorithm>
 #include "mozilla/ComputedStyleInlines.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -362,10 +363,13 @@ nsresult nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
   return GetPropertyValue(nsCSSProps::GetStringValue(aPropID), aValue);
 }
 
-nsresult nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
-                                              const nsACString& aValue,
-                                              nsIPrincipal* aSubjectPrincipal) {
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+void nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
+                                          const nsACString& aValue,
+                                          nsIPrincipal* aSubjectPrincipal,
+                                          ErrorResult& aRv) {
+  aRv.ThrowNoModificationAllowedError(nsPrintfCString(
+      "Can't set value for property '%s' in computed style",
+      PromiseFlatCString(nsCSSProps::GetStringValue(aPropID)).get()));
 }
 
 void nsComputedDOMStyle::GetCssText(nsAString& aCssText) {
@@ -375,7 +379,7 @@ void nsComputedDOMStyle::GetCssText(nsAString& aCssText) {
 void nsComputedDOMStyle::SetCssText(const nsAString& aCssText,
                                     nsIPrincipal* aSubjectPrincipal,
                                     ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+  aRv.ThrowNoModificationAllowedError("Can't set cssText on computed style");
 }
 
 uint32_t nsComputedDOMStyle::Length() {
@@ -698,7 +702,10 @@ void nsComputedDOMStyle::GetCSSImageURLs(const nsACString& aPropertyName,
                                          mozilla::ErrorResult& aRv) {
   nsCSSPropertyID prop = nsCSSProps::LookupProperty(aPropertyName);
   if (prop == eCSSProperty_UNKNOWN) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    // Note: not using nsPrintfCString here in case aPropertyName contains
+    // nulls.
+    aRv.ThrowSyntaxError(NS_LITERAL_CSTRING("Invalid property name '") +
+                         aPropertyName + NS_LITERAL_CSTRING("'"));
     return;
   }
 
@@ -1124,10 +1131,13 @@ void nsComputedDOMStyle::ClearCurrentStyleSources() {
   mPresShell = nullptr;
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::RemoveProperty(const nsACString& aPropertyName,
-                                   nsAString& aReturn) {
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+void nsComputedDOMStyle::RemoveProperty(const nsACString& aPropertyName,
+                                        nsAString& aReturn, ErrorResult& aRv) {
+  // Note: not using nsPrintfCString here in case aPropertyName contains
+  // nulls.
+  aRv.ThrowNoModificationAllowedError(
+      NS_LITERAL_CSTRING("Can't remove property '") + aPropertyName +
+      NS_LITERAL_CSTRING("' from computed style"));
 }
 
 void nsComputedDOMStyle::GetPropertyPriority(const nsACString& aPropertyName,
@@ -1135,12 +1145,16 @@ void nsComputedDOMStyle::GetPropertyPriority(const nsACString& aPropertyName,
   aReturn.Truncate();
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::SetProperty(const nsACString& aPropertyName,
-                                const nsACString& aValue,
-                                const nsAString& aPriority,
-                                nsIPrincipal* aSubjectPrincipal) {
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+void nsComputedDOMStyle::SetProperty(const nsACString& aPropertyName,
+                                     const nsACString& aValue,
+                                     const nsAString& aPriority,
+                                     nsIPrincipal* aSubjectPrincipal,
+                                     ErrorResult& aRv) {
+  // Note: not using nsPrintfCString here in case aPropertyName contains
+  // nulls.
+  aRv.ThrowNoModificationAllowedError(
+      NS_LITERAL_CSTRING("Can't set value for property '") + aPropertyName +
+      NS_LITERAL_CSTRING("' in computed style"));
 }
 
 void nsComputedDOMStyle::IndexedGetter(uint32_t aIndex, bool& aFound,

@@ -216,7 +216,7 @@ void AnonymousContent::SetStyle(const nsACString& aProperty,
 
   nsGenericHTMLElement* element = nsGenericHTMLElement::FromNode(mContentNode);
   nsCOMPtr<nsICSSDeclaration> declaration = element->Style();
-  declaration->SetProperty(aProperty, aValue, EmptyString());
+  declaration->SetProperty(aProperty, aValue, EmptyString(), IgnoreErrors());
 }
 
 }  // namespace dom

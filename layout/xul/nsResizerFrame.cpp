@@ -435,7 +435,8 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
         if (!widthstr.IsEmpty() &&
             !Substring(widthstr, widthstr.Length() - 2, 2).EqualsLiteral("px"))
           widthstr.AppendLiteral("px");
-        decl->SetProperty(NS_LITERAL_CSTRING("width"), widthstr, EmptyString());
+        decl->SetProperty(NS_LITERAL_CSTRING("width"), widthstr, EmptyString(),
+                          IgnoreErrors());
       }
       if (aDirection.mVertical) {
         NS_ConvertUTF16toUTF8 heightstr(aSizeInfo.height);
@@ -444,7 +445,7 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
                  .EqualsLiteral("px"))
           heightstr.AppendLiteral("px");
         decl->SetProperty(NS_LITERAL_CSTRING("height"), heightstr,
-                          EmptyString());
+                          EmptyString(), IgnoreErrors());
       }
     }
   }

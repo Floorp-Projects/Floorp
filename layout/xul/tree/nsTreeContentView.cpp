@@ -146,7 +146,7 @@ nsTreeContentView::SetSelection(nsITreeSelection* aSelection) {
 void nsTreeContentView::SetSelection(nsITreeSelection* aSelection,
                                      ErrorResult& aError) {
   if (aSelection && !CanTrustTreeSelection(aSelection)) {
-    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aError.ThrowSecurityError("Not allowed to set tree selection");
     return;
   }
 
