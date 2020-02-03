@@ -84,6 +84,7 @@
 #email {
   width: 100%;
   box-sizing: border-box;
+  margin: 4px 0;
   padding: 8px;
 }
 

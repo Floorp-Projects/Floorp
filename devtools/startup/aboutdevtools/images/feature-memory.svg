@@ -1,35 +1,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="222px" height="122px" viewBox="0 0 222 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 45.2 (43514) - http://www.bohemiancoding.com/sketch -->
-    <title>Memory</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="2017.06.07.Firefox.DevEdition-[white]" transform="translate(-846.000000, -3508.000000)">
-            <path d="M918,3609.05462 C918,3611.74049 920.178731,3613.9179 922.866215,3613.9179 L994.621505,3613.9179 C997.308989,3613.9179 999.48772,3611.74049 999.48772,3609.05462 L999.48772,3574.73675 C995.606387,3572.77699 992.938301,3569.64701 992.938301,3565.00403 C992.938301,3560.36017 995.606387,3557.23107 999.48772,3555.27131 L999.48772,3530.86328 C999.48772,3528.17742 997.308989,3526 994.621505,3526 L922.866215,3526 C920.178731,3526 918,3528.17742 918,3530.86328" id="Stroke-1" stroke="#0080FF" stroke-width="5" stroke-linecap="round"></path>
-            <path d="M918,3532 L918,3554.51876 C921.882215,3556.47764 924.549419,3559.60762 924.549419,3564.25149 C924.549419,3568.89358 921.882215,3572.02356 918,3573.98421 L918,3610.19047" id="Stroke-3" stroke="#0080FF" stroke-width="5" stroke-linecap="round"></path>
-            <path d="M965,3594 L965,3599.21751" id="Stroke-5" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"></path>
-            <path d="M976,3594 L976,3599.21751" id="Stroke-7" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"></path>
-            <path d="M954,3594 L954,3599.21751" id="Stroke-9" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"></path>
-            <path d="M943,3594 L943,3599.21751" id="Stroke-11" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"></path>
-            <path d="M972.908182,3546 L946.753278,3546 C944.688851,3546 943,3547.68615 943,3549.74628 L943,3573.58554 C943,3575.64566 944.688851,3577.33181 946.753278,3577.33181 L972.908182,3577.33181 C974.972609,3577.33181 976.662285,3575.64566 976.662285,3573.58554 L976.662285,3549.74628 C976.662285,3547.68615 974.972609,3546 972.908182,3546 Z" id="Stroke-31" stroke="#0022A9" stroke-width="4" stroke-linecap="round"></path>
-            <g id="Group-19" transform="translate(938.000000, 3541.000000)" stroke="#0022A9" stroke-width="4" stroke-linecap="round">
-                <path d="M39.3191489,13 L43.9659236,13" id="Stroke-19"></path>
-                <path d="M39.3191489,21 L43.9659236,21" id="Stroke-21"></path>
-                <path d="M39.3191489,30 L43.9659236,30" id="Stroke-23"></path>
-                <path d="M0,13 L4.64677463,13" id="Stroke-25"></path>
-                <path d="M0,21 L4.64677463,21" id="Stroke-27"></path>
-                <path d="M0,30 L4.64677463,30" id="Stroke-29"></path>
-                <path d="M13,5.07816341 L13,0.445188366" id="Stroke-33"></path>
-                <path d="M21.5,5.07816341 L21.5,0.445188366" id="Stroke-35"></path>
-                <path d="M30,5.07816341 L30,0.445188366" id="Stroke-37"></path>
-                <path d="M13,42.2908441 L13,37.6578691" id="Stroke-39"></path>
-                <path d="M21.5,42.2908441 L21.5,37.6578691" id="Stroke-41"></path>
-                <path d="M30,42.2908441 L30,37.6578691" id="Stroke-43"></path>
-            </g>
-            <g id="Group-6" transform="translate(145.000000, 2865.000000)"></g>
-        </g>
-    </g>
+<svg viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M152.49 65.74h2.5V64.2l-1.38-.7-1.12 2.24zm0-19.47l1.13 2.23 1.37-.7v-1.53h-2.5zM71 45.52h-2.5v1.54l1.37.7L71 45.51zm0 19.46l-1.13-2.23-1.37.7v1.53H71zm4.87 42.44h71.75v-5H75.87v5zm71.75 0c4.07 0 7.37-3.3 7.37-7.36h-5c0 1.3-1.06 2.36-2.37 2.36v5zm7.37-7.36V65.74h-5v34.32h5zM153.6 63.5c-3.3-1.67-5.17-4.07-5.17-7.5h-5c0 5.84 3.46 9.7 7.92 11.96l2.25-4.46zm-5.17-7.5c0-3.45 1.88-5.84 5.18-7.5l-2.26-4.47c-4.46 2.25-7.92 6.12-7.92 11.96h5zm6.55-9.74v-24.4h-5v24.4h5zm0-24.4c0-4.07-3.3-7.37-7.37-7.37v5c1.31 0 2.37 1.06 2.37 2.36h5zm-7.37-7.37H75.87v5h71.75v-5zm-71.75 0a7.36 7.36 0 00-7.37 7.36h5c0-1.3 1.06-2.36 2.37-2.36v-5zm-6 33.25c3.3 1.66 5.18 4.06 5.18 7.5h5c0-5.84-3.46-9.7-7.92-11.96l-2.26 4.46zm5.18 7.5c0 3.44-1.88 5.84-5.18 7.5l2.26 4.47c4.46-2.26 7.92-6.12 7.92-11.97h-5zm-6.55 9.73v35.52h5V64.98h-5zm0-43.12v23.66h5V21.86h-5zm0 78.64c0 1.63.49 3.41 1.82 4.8 1.35 1.42 3.28 2.12 5.55 2.12v-5c-1.23 0-1.73-.36-1.94-.57-.23-.24-.43-.67-.43-1.35h-5z" fill="#0080FF"/>
+  <path d="M118 85v5.22M129 85v5.22M107 85v5.22M96 85v5.22" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"/>
+  <path d="M130.32 45h4.65m-4.65 8h4.65m-4.65 9h4.65M91 45h4.65M91 53h4.65M91 62h4.65M104 37.08v-4.63m8.5 4.63v-4.63m8.5 4.63v-4.63m-17 41.84v-4.63m8.5 4.63v-4.63m8.5 4.63v-4.63" stroke="#0022A9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M125.9 37H99.76A3.76 3.76 0 0096 40.75v23.84a3.76 3.76 0 003.75 3.74h26.16a3.76 3.76 0 003.75-3.74V40.75a3.76 3.76 0 00-3.75-3.75z" stroke="#0022A9" stroke-width="4" stroke-linecap="round"/>
 </svg>
