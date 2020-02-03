@@ -10,6 +10,7 @@ import os
 import json
 import hashlib
 import urllib
+from collections import defaultdict
 
 import typing
 from urllib import parse
@@ -85,6 +86,7 @@ class AlternateServerPlayback:
         ctx.master.addons.remove(ctx.master.addons.get("serverplayback"))
         self.flowmap = {}
         self.configured = False
+        self.netlocs = defaultdict(int)
 
     def load(self, loader):
         loader.add_option(
@@ -92,6 +94,10 @@ class AlternateServerPlayback:
             typing.Sequence[str],
             [],
             "Replay server responses from a saved file.",
+        )
+        loader.add_option(
+            "upload_dir", str, "",
+            "Upload directory",
         )
 
     def load_flows(self, flows):
@@ -171,8 +177,19 @@ class AlternateServerPlayback:
             self.configured = True
             self.load_files(ctx.options.server_replay_files)
 
+    def done(self):
+        if not ctx.options.upload_dir:
+            return
+        netlocs = sorted(self.netlocs.items(), key=lambda item: -item[1])
+        path = os.path.join(ctx.options.upload_dir, "mitm_netlocs.log")
+        with open(path, "w") as f:
+            for url, count in netlocs:
+                f.write("%s: %d\n" % (url, count))
+
     def request(self, f):
         if self.flowmap:
+            parsed_url = urllib.parse.urlparse(parse.unquote(f.request.url))
+            self.netlocs[parsed_url.netloc] += 1
             rflow = self.next_flow(f)
             if rflow:
                 response = rflow.response.copy()
