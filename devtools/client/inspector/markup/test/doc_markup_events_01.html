@@ -29,6 +29,9 @@
     }
     </style>
     <script type="application/javascript">
+      "use strict";
+
+      /* exported init */
       function init() {
         const container = document.getElementById("container");
         const multiple = document.getElementById("multiple");
@@ -37,7 +40,7 @@
         multiple.addEventListener("click", clickHandler);
         multiple.addEventListener("mouseup", mouseupHandler);
 
-        const he = new handleEventClick();
+        const he = new HandleEventClick();
         const handleevent = document.getElementById("handleevent");
         handleevent.addEventListener("click", he);
       }
@@ -59,11 +62,11 @@
         output.textContent = "mouseup";
       }
 
-      function handleEventClick(hehe) {
+      function HandleEventClick(hehe) {
 
       }
 
-      handleEventClick.prototype = {
+      HandleEventClick.prototype = {
         handleEvent: function(blah) {
           alert("handleEvent");
         }
@@ -73,6 +76,7 @@
         alert("noevents has an event listener");
       }
 
+      /* exported addNoeventsClickHandler, removeNoeventsClickHandler */
       function addNoeventsClickHandler() {
         const noevents = document.getElementById("noevents");
         noevents.addEventListener("click", noeventsClickHandler);

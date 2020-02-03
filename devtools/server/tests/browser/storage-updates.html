@@ -39,7 +39,7 @@ window.clearLocalAndSessionStores = function() {
 window.clearCookies = function() {
   const cookies = document.cookie;
   for (const cookie of cookies.split(";")) {
-    removeCookie(cookie.split("=")[0]);
+    window.removeCookie(cookie.split("=")[0]);
   }
 };
 </script>

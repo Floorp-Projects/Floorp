@@ -11,13 +11,13 @@ const TEST_URL = URL_ROOT + "doc_markup_events_03.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
-const TEST_DATA = [ // eslint-disable-line
+const TEST_DATA = [
   {
     selector: "#es6-method",
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":66:17",
+        filename: TEST_URL + ":69:17",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "es6Method(foo, bar) {\n" + '  alert("obj.es6Method");\n' + "}",
@@ -29,7 +29,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":85:25",
+        filename: TEST_URL + ":88:25",
         attributes: ["Bubbling", "DOM2"],
         handler: "function* generator() {\n" + '  alert("generator");\n' + "}",
       },
@@ -40,7 +40,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":43:58",
+        filename: TEST_URL + ":46:58",
         attributes: ["Bubbling", "DOM2"],
         handler: "function*() {\n" + '  alert("anonGenerator");\n' + "}",
       },
@@ -51,7 +51,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":20:18",
+        filename: TEST_URL + ":22:18",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function foo() {\n" + '  alert("namedFunctionExpression");\n' + "}",
@@ -63,7 +63,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":24:43",
+        filename: TEST_URL + ":26:45",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function() {\n" + '  alert("anonFunctionExpression");\n' + "}",
@@ -75,7 +75,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":29:27",
+        filename: TEST_URL + ":31:27",
         attributes: ["Bubbling", "DOM2"],
         handler: "function bar() {\n" + '  alert("returnedFunction");\n' + "}",
       },

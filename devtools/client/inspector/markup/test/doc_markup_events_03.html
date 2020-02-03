@@ -16,6 +16,8 @@
     }
     </style>
     <script type="application/javascript">
+      "use strict";
+
       const namedFunctionExpression =
       function foo() {
         alert("namedFunctionExpression");
@@ -31,6 +33,7 @@
         }
       })();
 
+      /* exported init */
       function init() {
         const em = new Es6Method();
         const es6Method = document.getElementById("es6-method");

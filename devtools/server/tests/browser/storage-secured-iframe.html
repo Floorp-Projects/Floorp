@@ -8,7 +8,7 @@ Iframe for testing multiple host detetion in storage actor
 </head>
 <body>
 <script type="application/javascript">
-
+"use strict";
 document.cookie = "sc1=foobar;";
 localStorage.setItem("iframe-s-ls1", "foobar");
 sessionStorage.setItem("iframe-s-ss1", "foobar-2");
@@ -20,10 +20,10 @@ const idbGenerator = async function () {
   };
   const db = await new Promise(done => {
     request.onupgradeneeded = event => {
-      const db = event.target.result;
-      const store1 = db.createObjectStore("obj-s1", { keyPath: "id" });
+      const dbResult = event.target.result;
+      const store1 = dbResult.createObjectStore("obj-s1", { keyPath: "id" });
       store1.transaction.oncomplete = () => {
-        done(db);
+        done(dbResult);
       };
     };
   });
@@ -44,12 +44,12 @@ const idbGenerator = async function () {
   request = indexedDB.open("idb-s2", 1);
   const db2 = await new Promise(done => {
     request.onupgradeneeded = event => {
-      const db2 = event.target.result;
+      const db2Result = event.target.result;
       const store3 =
-        db2.createObjectStore("obj-s2", { keyPath: "id3", autoIncrement: true });
+        db2Result.createObjectStore("obj-s2", { keyPath: "id3", autoIncrement: true });
       store3.createIndex("name2", "name2", { unique: true });
       store3.transaction.oncomplete = () => {
-        done(db2);
+        done(db2Result);
       };
     };
   });
