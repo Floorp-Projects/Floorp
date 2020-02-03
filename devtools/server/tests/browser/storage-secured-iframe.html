@@ -13,15 +13,15 @@ document.cookie = "sc1=foobar;";
 localStorage.setItem("iframe-s-ls1", "foobar");
 sessionStorage.setItem("iframe-s-ss1", "foobar-2");
 
-let idbGenerator = async function () {
+const idbGenerator = async function () {
   let request = indexedDB.open("idb-s1", 1);
   request.onerror = function() {
     throw new Error("error opening db connection");
   };
-  let db = await new Promise(done => {
+  const db = await new Promise(done => {
     request.onupgradeneeded = event => {
-      let db = event.target.result;
-      let store1 = db.createObjectStore("obj-s1", { keyPath: "id" });
+      const db = event.target.result;
+      const store1 = db.createObjectStore("obj-s1", { keyPath: "id" });
       store1.transaction.oncomplete = () => {
         done(db);
       };
@@ -32,7 +32,7 @@ let idbGenerator = async function () {
   });
 
   let transaction = db.transaction(["obj-s1"], "readwrite");
-  let store1 = transaction.objectStore("obj-s1");
+  const store1 = transaction.objectStore("obj-s1");
   store1.add({id: 6, name: "foo", email: "foo@bar.com"});
   store1.add({id: 7, name: "foo2", email: "foo2@bar.com"});
   await new Promise(success => {
@@ -42,10 +42,10 @@ let idbGenerator = async function () {
   db.close();
 
   request = indexedDB.open("idb-s2", 1);
-  let db2 = await new Promise(done => {
+  const db2 = await new Promise(done => {
     request.onupgradeneeded = event => {
-      let db2 = event.target.result;
-      let store3 =
+      const db2 = event.target.result;
+      const store3 =
         db2.createObjectStore("obj-s2", { keyPath: "id3", autoIncrement: true });
       store3.createIndex("name2", "name2", { unique: true });
       store3.transaction.oncomplete = () => {
@@ -58,7 +58,7 @@ let idbGenerator = async function () {
   });
 
   transaction = db2.transaction(["obj-s2"], "readwrite");
-  let store3 = transaction.objectStore("obj-s2");
+  const store3 = transaction.objectStore("obj-s2");
   store3.add({id3: 16, name2: "foo", email: "foo@bar.com"});
   await new Promise(success => {
     transaction.oncomplete = success;

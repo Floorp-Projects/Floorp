@@ -16,45 +16,45 @@
     }
     </style>
     <script type="application/javascript">
-      let namedFunctionExpression =
+      const namedFunctionExpression =
       function foo() {
         alert("namedFunctionExpression");
       }
 
-      let anonFunctionExpression = function() {
+      const anonFunctionExpression = function() {
         alert("anonFunctionExpression");
       };
 
-      let returnedFunction = (function() {
+      const returnedFunction = (function() {
         return function bar() {
           alert("returnedFunction");
         }
       })();
 
       function init() {
-        let em = new Es6Method();
-        let es6Method = document.getElementById("es6-method");
+        const em = new Es6Method();
+        const es6Method = document.getElementById("es6-method");
         es6Method.addEventListener("click", em.es6Method);
 
-        let generatorNode = document.getElementById("generator");
+        const generatorNode = document.getElementById("generator");
         generatorNode.addEventListener("click", generator);
 
-        let anonGenerator = document.getElementById("anon-generator");
+        const anonGenerator = document.getElementById("anon-generator");
         anonGenerator.addEventListener("click", function* () {
           alert("anonGenerator");
         });
 
-        let namedFunctionExpressionNode =
+        const namedFunctionExpressionNode =
           document.getElementById("named-function-expression");
         namedFunctionExpressionNode.addEventListener("click",
                                                      namedFunctionExpression);
 
-        let anonFunctionExpressionNode =
+        const anonFunctionExpressionNode =
           document.getElementById("anon-function-expression");
         anonFunctionExpressionNode.addEventListener("click",
                                                      anonFunctionExpression);
 
-        let returnedFunctionNode = document.getElementById("returned-function");
+        const returnedFunctionNode = document.getElementById("returned-function");
         returnedFunctionNode.addEventListener("click", returnedFunction);
       }
 
@@ -69,7 +69,7 @@
       };
 
       function HandleEvent() {
-        let handleEventNode = document.getElementById("handleEvent");
+        const handleEventNode = document.getElementById("handleEvent");
         handleEventNode.addEventListener("click", this);
       }
 
