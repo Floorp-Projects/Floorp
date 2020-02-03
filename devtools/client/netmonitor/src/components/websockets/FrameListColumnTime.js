@@ -7,12 +7,6 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-
-const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
-  formatMatcher: "basic",
-  hour12: false,
-});
 
 /**
  * Renders the "Time" column of a WebSocket frame.
@@ -36,13 +30,24 @@ class FrameListColumnTime extends Component {
    * @param {number} highResTimeStamp
    */
   formatTime(highResTimeStamp) {
-    const timeStamp = Math.floor(highResTimeStamp / 1000);
-    const hoursMinutesSeconds = dateTimeFormat.format(new Date(timeStamp));
-    return L10N.getFormatStr(
-      "netmonitor.ws.time.format",
-      hoursMinutesSeconds,
-      String(timeStamp % 1000).padStart(3, "0")
-    );
+    const date = new Date(highResTimeStamp / 1000);
+    const hh = date
+      .getHours()
+      .toString()
+      .padStart(2, "0");
+    const mm = date
+      .getMinutes()
+      .toString()
+      .padStart(2, "0");
+    const ss = date
+      .getSeconds()
+      .toString()
+      .padStart(2, "0");
+    const mmm = date
+      .getMilliseconds()
+      .toString()
+      .padStart(3, "0");
+    return `${hh}:${mm}:${ss}.${mmm}`;
   }
 
   render() {
