@@ -1218,6 +1218,10 @@ linux64-ccov/opt:
     run-on-projects: ['mozilla-central', 'try']
     worker-type: b-linux
     worker:
+        artifacts:
+            - name: public/code-coverage-grcov.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/code-coverage-grcov.zip
+              type: file
         max-run-time: 7200
         env:
             FORCE_GCC: '1'
