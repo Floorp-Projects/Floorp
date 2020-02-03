@@ -25,7 +25,7 @@ var ecmaGlobals = [
   { name: "AggregateError", nightly: true },
   "Array",
   "ArrayBuffer",
-  { name: "Atomics", nightly: true },
+  { name: "Atomics", earlyBetaOrEalier: true },
   "Boolean",
   "BigInt",
   "BigInt64Array",
@@ -59,7 +59,7 @@ var ecmaGlobals = [
   "Reflect",
   "RegExp",
   "Set",
-  { name: "SharedArrayBuffer", nightly: true },
+  { name: "SharedArrayBuffer", earlyBetaOrEalier: true },
   "String",
   "Symbol",
   "SyntaxError",
@@ -257,6 +257,7 @@ var interfaceNamesInGlobalScope = [
 
 function createInterfaceMap({
   isNightly,
+  isEarlyBetaOrEarlier,
   isRelease,
   isDesktop,
   isAndroid,
@@ -283,6 +284,7 @@ function createInterfaceMap({
           entry.fennecOrDesktop === (isAndroid && !isFennec) ||
           entry.fennec === !isFennec ||
           entry.release === !isRelease ||
+          entry.earlyBetaOrEalier === !isEarlyBetaOrEarlier ||
           entry.disabled
         ) {
           interfaceMap[entry.name] = false;
