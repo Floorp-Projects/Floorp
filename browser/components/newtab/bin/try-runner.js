@@ -50,6 +50,7 @@ function logStart(name) {
 function karma() {
   logStart("karma");
 
+  const errors = [];
   const { out } = execOut("npm", [
     "run",
     "testmc:unit",
@@ -63,6 +64,7 @@ function karma() {
     return false;
   }
 
+  // Detect mocha failures
   let jsonContent;
   try {
     // Note that this will be overwritten at each run, but that shouldn't
@@ -72,27 +74,28 @@ function karma() {
     console.error("exception reading karma-run-results.json: ", ex);
     return false;
   }
-
   const results = JSON.parse(jsonContent);
-
-  const failed = results.summary.failed === 0;
-
-  let errors = [];
   // eslint-disable-next-line guard-for-in
   for (let testArray in results.result) {
     let failedTests = Array.from(results.result[testArray]).filter(
       test => !test.success && !test.skipped
     );
 
-    let errs = failedTests.map(test => {
-      return `${test.suite.join(":")} ${test.description}: ${test.log[0]}`;
-    });
+    errors.push(
+      ...failedTests.map(
+        test => `${test.suite.join(":")} ${test.description}: ${test.log[0]}`
+      )
+    );
+  }
 
-    errors = errors.concat(errs);
+  // Detect istanbul failures (coverage thresholds set in karma config)
+  const coverage = out.match(/ERROR.+coverage-istanbul.+/g);
+  if (coverage) {
+    errors.push(...coverage.map(line => line.match(/Coverage.+/)[0]));
   }
 
   logErrors("karma", errors);
-  return failed;
+  return errors.length === 0;
 }
 
 function sasslint() {
