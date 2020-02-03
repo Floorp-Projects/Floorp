@@ -177,6 +177,7 @@ An individual experiment record looks e.g. like this:
 
 The experiments records in Kinto contain the following properties:
 
+<<<<<<< HEAD
 | Name                      | Type   | Required | Description                                                                                                                                     | Example                                                        |
 |---------------------------|--------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
 | id                        | string |     x    | The unique id of the experiment.                                                                                                                | `"login-button-color-test"`                                    |
@@ -192,7 +193,7 @@ The experiments records in Kinto contain the following properties:
 | match                     | object |     x    | Object containing the filter parameters to match specific user groups.                                                                          |                                                                |
 | match.app_id              | regex  |          | The app ID (package name)                                                                                                                       | "^org.mozilla.firefox_beta${'$'}|^org.mozilla.firefox${'$'}"   |
 | match.device_manufacturer | regex  |          | The Android device manufacturer.                                                                                                                |                                                                |
-| match.device_model        | regex  |          | The Android device model.                                                                                                                       |                                                                |
+| match.device_model        | regex  |          | The Android device model, [`Build.DEVICE`]. This is the codename for the device's industrial design.                                            | `"^(flame\|coral)$"` (to match Pixel 4 or Pixel 4 XL)          |
 | match.locale_country      |        |          | The default locales country.                                                                                                                    | "USA|DEU"                                                      |
 | match.locale_language     |        |          | The default locales language.                                                                                                                   | "eng|zho|deu"                                                  |
 | match.app_display_version | regex  |          | The application version.                                                                                                                        | `"1.0.0"`                                                      |
@@ -201,8 +202,12 @@ The experiments records in Kinto contain the following properties:
 | match.regions             | array  |          | Array of strings. Not currently supported. Custom regions, different from the one from the default locale (like a GeoIP, or something similar). | `["USA", "GBR"]`                                               |
 | match.debug_tags          | array  |          | Array of strings. Debug tags to match only specific client for QA of experiments launch & targeting.                                            | `["john-test-1"]`                                              |
 
+
+[`Build.DEVICE`]: https://developer.android.com/reference/android/os/Build.html#DEVICE
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
     License, v. 2.0. If a copy of the MPL was not distributed with this
     file, You can obtain one at http://mozilla.org/MPL/2.0/
+
