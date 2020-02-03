@@ -1,0 +1,20 @@
+[
+  {
+    "namespace": "systemManufacturer",
+    "description": "experimental API extension to allow reading the device's manufacturer",
+    "functions": [
+      {
+        "name": "getManufacturer",
+        "type": "function",
+        "description": "Get the device's manufacturer",
+        "parameters": [],
+        "returns": {
+          "type": "string",
+          "properties": {},
+          "additionalProperties": { "type": "any" },
+          "description": "The manufacturer's name."
+        }
+      }
+    ]
+  }
+]
