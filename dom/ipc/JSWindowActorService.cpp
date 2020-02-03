@@ -119,10 +119,9 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
   }
 
   if (!aOptions.mChild.WasPassed() && !aOptions.mParent.WasPassed()) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        NS_LITERAL_CSTRING("No point registering an actor with neither child "
-                           "nor parent specifications."));
+    aRv.ThrowNotSupportedError(
+        "No point registering an actor with neither child nor parent "
+        "specifications.");
     return nullptr;
   }
 
@@ -377,9 +376,9 @@ void JSWindowActorService::RegisterWindowActor(
 
   auto entry = mDescriptors.LookupForAdd(aName);
   if (entry) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                          nsPrintfCString("'%s' actor is already registered.",
-                                          NS_ConvertUTF16toUTF8(aName).get()));
+    aRv.ThrowNotSupportedError(
+        nsPrintfCString("'%s' actor is already registered.",
+                        NS_ConvertUTF16toUTF8(aName).get()));
     return;
   }
 

@@ -873,9 +873,7 @@ RefPtr<IDBObjectStore> IDBTransaction::ObjectStore(const nsAString& aName,
   AssertIsOnOwningThread();
 
   if (IsCommittingOrFinished()) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Transaction is already committing or done."));
+    aRv.ThrowInvalidStateError("Transaction is already committing or done.");
     return nullptr;
   }
 

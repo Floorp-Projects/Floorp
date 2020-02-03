@@ -2735,10 +2735,9 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
   if (list) {
     if (!*list) {
       // Invalid selector.
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_SYNTAX_ERR,
-          NS_LITERAL_CSTRING("'") + NS_ConvertUTF16toUTF8(aSelectorString) +
-              NS_LITERAL_CSTRING("' is not a valid selector"));
+      aRv.ThrowSyntaxError(NS_LITERAL_CSTRING("'") +
+                           NS_ConvertUTF16toUTF8(aSelectorString) +
+                           NS_LITERAL_CSTRING("' is not a valid selector"));
       return nullptr;
     }
 
@@ -2756,9 +2755,8 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
 
   // Now make sure we throw an exception if the selector was invalid.
   if (!ret) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
-                          NS_LITERAL_CSTRING("'") + selectorString +
-                              NS_LITERAL_CSTRING("' is not a valid selector"));
+    aRv.ThrowSyntaxError(NS_LITERAL_CSTRING("'") + selectorString +
+                         NS_LITERAL_CSTRING("' is not a valid selector"));
   }
 
   return ret;

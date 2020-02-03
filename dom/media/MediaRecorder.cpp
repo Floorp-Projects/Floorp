@@ -1452,9 +1452,8 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   // 5. If the value of recorder’s state attribute is not inactive, throw an
   //    InvalidStateError DOMException and abort these steps.
   if (mState != RecordingState::Inactive) {
-    aResult.ThrowDOMException(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("The MediaRecorder has already been started"));
+    aResult.ThrowInvalidStateError(
+        "The MediaRecorder has already been started");
     return;
   }
 
@@ -1463,29 +1462,25 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   if (mStream) {
     RefPtr<nsIPrincipal> streamPrincipal = mStream->GetPrincipal();
     if (!PrincipalSubsumes(this, streamPrincipal)) {
-      aResult.ThrowDOMException(
-          NS_ERROR_DOM_SECURITY_ERR,
-          NS_LITERAL_CSTRING("The MediaStream's isolation properties disallow "
-                             "access from MediaRecorder"));
+      aResult.ThrowSecurityError(
+          "The MediaStream's isolation properties disallow access from "
+          "MediaRecorder");
       return;
     }
   }
   if (mAudioNode && !AudioNodePrincipalSubsumes(this, mAudioNode)) {
     LOG(LogLevel::Warning,
         ("MediaRecorder %p Start AudioNode principal check failed", this));
-    aResult.ThrowDOMException(
-        NS_ERROR_DOM_SECURITY_ERR,
-        NS_LITERAL_CSTRING("The AudioNode's isolation properties disallow "
-                           "access from MediaRecorder"));
+    aResult.ThrowSecurityError(
+        "The AudioNode's isolation properties disallow access from "
+        "MediaRecorder");
     return;
   }
 
   // 7. If stream is inactive, throw a NotSupportedError DOMException and abort
   //    these steps.
   if (mStream && !mStream->Active()) {
-    aResult.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        NS_LITERAL_CSTRING("The MediaStream is inactive"));
+    aResult.ThrowNotSupportedError("The MediaStream is inactive");
     return;
   }
 
@@ -1508,23 +1503,19 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
     if (support != TypeSupport::Supported) {
       nsString id;
       track->GetId(id);
-      aResult.ThrowDOMException(
-          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-          nsPrintfCString(
-              "%s track cannot be recorded: %s",
-              track->AsAudioStreamTrack() ? "An audio" : "A video",
-              TypeSupportToCString(support, mConstrainedMimeType).get()));
+      aResult.ThrowNotSupportedError(nsPrintfCString(
+          "%s track cannot be recorded: %s",
+          track->AsAudioStreamTrack() ? "An audio" : "A video",
+          TypeSupportToCString(support, mConstrainedMimeType).get()));
       return;
     }
   }
   if (mAudioNode) {
     TypeSupport support = CanRecordAudioTrackWith(mime, mConstrainedMimeType);
     if (support != TypeSupport::Supported) {
-      aResult.ThrowDOMException(
-          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-          nsPrintfCString(
-              "An AudioNode cannot be recorded: %s",
-              TypeSupportToCString(support, mConstrainedMimeType).get()));
+      aResult.ThrowNotSupportedError(nsPrintfCString(
+          "An AudioNode cannot be recorded: %s",
+          TypeSupportToCString(support, mConstrainedMimeType).get()));
       return;
     }
   }
@@ -1620,8 +1611,7 @@ void MediaRecorder::Pause(ErrorResult& aResult) {
   // 1. If state is inactive, throw an InvalidStateError DOMException and abort
   //    these steps.
   if (mState == RecordingState::Inactive) {
-    aResult.ThrowDOMException(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
+    aResult.ThrowInvalidStateError(
         NS_LITERAL_CSTRING("The MediaRecorder is inactive"));
     return;
   }
@@ -1661,8 +1651,7 @@ void MediaRecorder::Resume(ErrorResult& aResult) {
   // 1. If state is inactive, throw an InvalidStateError DOMException and abort
   //    these steps.
   if (mState == RecordingState::Inactive) {
-    aResult.ThrowDOMException(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
+    aResult.ThrowInvalidStateError(
         NS_LITERAL_CSTRING("The MediaRecorder is inactive"));
     return;
   }
@@ -1707,8 +1696,7 @@ void MediaRecorder::RequestData(ErrorResult& aResult) {
   //      data has been gathered yet.)
   //   2. Create a new Blob and gather subsequent data into it.
   if (mState == RecordingState::Inactive) {
-    aResult.ThrowDOMException(
-        NS_ERROR_DOM_INVALID_STATE_ERR,
+    aResult.ThrowInvalidStateError(
         NS_LITERAL_CSTRING("The MediaRecorder is inactive"));
     return;
   }
@@ -1748,8 +1736,8 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   if (support != TypeSupport::Supported) {
     // This catches also the empty string mimeType when support for any encoders
     // has been disabled.
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                          TypeSupportToCString(support, aOptions.mMimeType));
+    aRv.ThrowNotSupportedError(
+        TypeSupportToCString(support, aOptions.mMimeType));
     return nullptr;
   }
 
@@ -1832,8 +1820,7 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   // output.
   if (aAudioNode.NumberOfOutputs() > 0 &&
       aAudioNodeOutput >= aAudioNode.NumberOfOutputs()) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_INDEX_SIZE_ERR,
-                          NS_LITERAL_CSTRING("Invalid AudioNode output index"));
+    aRv.ThrowIndexSizeError("Invalid AudioNode output index");
     return nullptr;
   }
 
@@ -1853,8 +1840,8 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   if (support != TypeSupport::Supported) {
     // This catches also the empty string mimeType when support for any encoders
     // has been disabled.
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                          TypeSupportToCString(support, aOptions.mMimeType));
+    aRv.ThrowNotSupportedError(
+        TypeSupportToCString(support, aOptions.mMimeType));
     return nullptr;
   }
 

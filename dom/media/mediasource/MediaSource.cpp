@@ -97,14 +97,12 @@ void MediaSource::IsTypeSupported(const nsAString& aType,
 
   Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
   if (!containerType) {
-    return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                 "Unknown type");
+    return aRv.ThrowNotSupportedError("Unknown type");
   }
 
   if (DecoderTraits::CanHandleContainerType(*containerType, aDiagnostics) ==
       CANPLAY_NO) {
-    return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                 "Can't play type");
+    return aRv.ThrowNotSupportedError("Can't play type");
   }
 
   // Now we know that this media type could be played.
@@ -115,8 +113,7 @@ void MediaSource::IsTypeSupported(const nsAString& aType,
     if (!StaticPrefs::media_mediasource_mp4_enabled()) {
       // Don't leak information about the fact that it's pref-disabled; just act
       // like we can't play it.  Or should this throw "Unknown type"?
-      return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                   "Can't play type");
+      return aRv.ThrowNotSupportedError("Can't play type");
     }
     return;
   }
@@ -133,8 +130,7 @@ void MediaSource::IsTypeSupported(const nsAString& aType,
           IsWebMForced(aDiagnostics))) {
       // Don't leak information about the fact that it's pref-disabled; just act
       // like we can't play it.  Or should this throw "Unknown type"?
-      return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                   "Can't play type");
+      return aRv.ThrowNotSupportedError("Can't play type");
     }
     return;
   }
@@ -143,14 +139,12 @@ void MediaSource::IsTypeSupported(const nsAString& aType,
           StaticPrefs::media_mediasource_webm_audio_enabled())) {
       // Don't leak information about the fact that it's pref-disabled; just act
       // like we can't play it.  Or should this throw "Unknown type"?
-      return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                   "Can't play type");
+      return aRv.ThrowNotSupportedError("Can't play type");
     }
     return;
   }
 
-  return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                               "Type not supported in MediaSource");
+  return aRv.ThrowNotSupportedError("Type not supported in MediaSource");
 }
 
 /* static */

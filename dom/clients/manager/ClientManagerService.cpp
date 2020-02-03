@@ -281,7 +281,7 @@ RefPtr<ClientOpPromise> ClientManagerService::Navigate(
       FindSource(aArgs.target().id(), aArgs.target().principalInfo());
   if (!source) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "Unknown client");
+    rv.ThrowInvalidStateError("Unknown client");
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
@@ -306,7 +306,7 @@ RefPtr<ClientOpPromise> ClientManagerService::Navigate(
       manager->SendPClientNavigateOpConstructor(op, args);
   if (!result) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "Client is aborted");
+    rv.ThrowInvalidStateError("Client is aborted");
     promise->Reject(rv, __func__);
   }
 
@@ -449,7 +449,7 @@ RefPtr<ClientOpPromise> ClaimOnMainThread(
               "Service worker at <%s> can't claim Client at <%s>",
               desc.ScriptURL().get(), clientInfo.URL().get());
           CopyableErrorResult rv;
-          rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, err);
+          rv.ThrowInvalidStateError(err);
           promise->Reject(rv, __func__);
         });
 
@@ -536,7 +536,7 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
 
   if (!source) {
     CopyableErrorResult rv;
-    rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR, "Unknown client");
+    rv.ThrowInvalidStateError("Unknown client");
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }
 
@@ -552,8 +552,7 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
 
           if (!source) {
             CopyableErrorResult rv;
-            rv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                 "Unknown client");
+            rv.ThrowInvalidStateError("Unknown client");
             return ClientOpPromise::CreateAndReject(rv, __func__);
           }
 
@@ -619,7 +618,7 @@ class OpenWindowRunnable final : public Runnable {
     // promise if we could not.
     if (!targetProcess) {
       CopyableErrorResult rv;
-      rv.ThrowDOMException(NS_ERROR_DOM_ABORT_ERR, "Opening window aborted");
+      rv.ThrowAbortError("Opening window aborted");
       mPromise->Reject(rv, __func__);
       mPromise = nullptr;
       return NS_OK;

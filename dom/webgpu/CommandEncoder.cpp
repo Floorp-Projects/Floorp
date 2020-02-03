@@ -54,16 +54,13 @@ already_AddRefed<ComputePassEncoder> CommandEncoder::BeginComputePass(
 void CommandEncoder::EndComputePass(Span<const uint8_t> aData,
                                     ErrorResult& aRv) {
   if (!mValid) {
-    return aRv.ThrowDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                 "Command encoder is not valid");
+    return aRv.ThrowInvalidStateError("Command encoder is not valid");
   }
   ipc::Shmem shmem;
   if (!mBridge->AllocShmem(aData.Length(), ipc::Shmem::SharedMemory::TYPE_BASIC,
                            &shmem)) {
-    return aRv.ThrowDOMException(
-        NS_ERROR_DOM_ABORT_ERR,
-        nsPrintfCString("Unable to allocate shmem of size %zu",
-                        aData.Length()));
+    return aRv.ThrowAbortError(nsPrintfCString(
+        "Unable to allocate shmem of size %zu", aData.Length()));
   }
 
   memcpy(shmem.get<uint8_t>(), aData.data(), aData.Length());

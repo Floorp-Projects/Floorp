@@ -742,8 +742,7 @@ void CustomElementRegistry::Define(
   Document* doc = mWindow->GetExtantDoc();
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
   if (!nsContentUtils::IsCustomElementName(nameAtom, nameSpaceID)) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_SYNTAX_ERR,
+    aRv.ThrowSyntaxError(
         nsPrintfCString("'%s' is not a valid custom element name",
                         NS_ConvertUTF16toUTF8(aName).get()));
     return;
@@ -754,8 +753,7 @@ void CustomElementRegistry::Define(
    *    throw a "NotSupportedError" DOMException and abort these steps.
    */
   if (mCustomDefinitions.GetWeak(nameAtom)) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+    aRv.ThrowNotSupportedError(
         nsPrintfCString("'%s' has already been defined as a custom element",
                         NS_ConvertUTF16toUTF8(aName).get()));
     return;
@@ -772,8 +770,7 @@ void CustomElementRegistry::Define(
                "Definition must be found in mCustomDefinitions");
     nsAutoCString name;
     ptr->value()->ToUTF8String(name);
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+    aRv.ThrowNotSupportedError(
         nsPrintfCString("'%s' and '%s' have the same constructor",
                         NS_ConvertUTF16toUTF8(aName).get(), name.get()));
     return;
@@ -807,8 +804,7 @@ void CustomElementRegistry::Define(
   if (aOptions.mExtends.WasPassed()) {
     RefPtr<nsAtom> extendsAtom(NS_Atomize(aOptions.mExtends.Value()));
     if (nsContentUtils::IsCustomElementName(extendsAtom, kNameSpaceID_XHTML)) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      aRv.ThrowNotSupportedError(
           nsPrintfCString("'%s' cannot extend a custom element",
                           NS_ConvertUTF16toUTF8(aName).get()));
       return;
@@ -839,8 +835,7 @@ void CustomElementRegistry::Define(
    * set, then throw a "NotSupportedError" DOMException and abort these steps.
    */
   if (mIsCustomDefinitionRunning) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+    aRv.ThrowNotSupportedError(
         "Cannot define a custom element while defining another custom element");
     return;
   }
@@ -1101,12 +1096,10 @@ static void DoUpgrade(Element* aElement, CustomElementDefinition* aDefinition,
                       CustomElementConstructor* aConstructor,
                       ErrorResult& aRv) {
   if (aDefinition->mDisableShadow && aElement->GetShadowRoot()) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        nsPrintfCString(
-            "Custom element upgrade to '%s' is disabled due to shadow root "
-            "already exists",
-            NS_ConvertUTF16toUTF8(aDefinition->mType->GetUTF16String()).get()));
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "Custom element upgrade to '%s' is disabled due to shadow root "
+        "already exists",
+        NS_ConvertUTF16toUTF8(aDefinition->mType->GetUTF16String()).get()));
     return;
   }
 
