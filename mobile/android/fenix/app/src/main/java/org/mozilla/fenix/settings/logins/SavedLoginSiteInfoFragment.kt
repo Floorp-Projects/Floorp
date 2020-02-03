@@ -78,12 +78,12 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
     private fun togglePasswordReveal() {
         if (passwordInfoText.inputType == InputType.TYPE_TEXT_VARIATION_PASSWORD or InputType.TYPE_CLASS_TEXT) {
             context?.components?.analytics?.metrics?.track(Event.ViewLoginPassword)
-            revealPasswordItem.setImageDrawable(context?.getDrawable(R.drawable.ic_password_hide))
+            revealPasswordItem.setImageDrawable(context?.getDrawable(R.drawable.mozac_ic_password_hide))
             passwordInfoText.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             revealPasswordItem.contentDescription =
                 context?.getString(R.string.saved_login_hide_password)
         } else {
-            revealPasswordItem.setImageDrawable(context?.getDrawable(R.drawable.ic_password_reveal))
+            revealPasswordItem.setImageDrawable(context?.getDrawable(R.drawable.mozac_ic_password_reveal))
             passwordInfoText.inputType =
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
             revealPasswordItem.contentDescription =

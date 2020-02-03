@@ -111,11 +111,12 @@
         android:layout_height="48dp"
         android:layout_marginEnd="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:tint="?android:colorAccent"
         android:contentDescription="@string/saved_login_reveal_password"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/copyPasswordItem"
         app:layout_constraintTop_toBottomOf="@id/copyUsernameItem"
-        app:srcCompat="@drawable/ic_password_reveal" />
+        app:srcCompat="@drawable/mozac_ic_password_reveal" />
 
     <ImageButton
         android:id="@+id/copyPasswordItem"
