@@ -5285,12 +5285,16 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
 // https://drafts.csswg.org/css-text-decor-4/#text-decoration-width-property
 static void SetWidthIfLength(
     const StyleTextDecorationLength& aDecorationThickness,
-    Float* aLineThickness, const gfxFloat aAppUnitsPerDevPixel) {
+    Float* aLineThickness, const gfxFloat aEmHeight,
+    const gfxFloat aAppUnitsPerDevPixel) {
   // auto is from-font (the automatic thickness is derived from font metrics) so
   // we only change the value if it is a length
-  if (aDecorationThickness.IsLength()) {
-    *aLineThickness =
-        aDecorationThickness.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
+  if (aDecorationThickness.IsLengthPercentage()) {
+    auto em = [&] {
+      return nscoord(NS_round(aEmHeight * aAppUnitsPerDevPixel));
+    };
+    *aLineThickness = aDecorationThickness.AsLengthPercentage().Resolve(em) /
+                      aAppUnitsPerDevPixel;
   }
 }
 
@@ -5322,8 +5326,9 @@ static void SetOffsetIfLength(const StyleTextDecorationLength& aOffset,
     return;
   }
 
-  MOZ_ASSERT(aOffset.IsLength(), "unexpected value type!");
-
+  auto em = [&] {
+    return nscoord(NS_round(aFontMetrics.emHeight * aAppUnitsPerDevPixel));
+  };
   if (aParams.vertical && !aIsSideways &&
       aParams.decoration == StyleTextDecorationLine::UNDERLINE) {
     // vertical text has a baseline that goes through the center of the text
@@ -5332,13 +5337,16 @@ static void SetOffsetIfLength(const StyleTextDecorationLength& aOffset,
     // use the default line thickness to set the offset behind (closer to the
     // text) than the automatic offset, then set the user's defined offset
     aParams.offset += aParams.defaultLineThickness;
-    aParams.offset -= aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
+    aParams.offset -=
+        aOffset.AsLengthPercentage().Resolve(em) / aAppUnitsPerDevPixel;
   } else if (aRightUnderline) {
     // handles right underline (generally japanese/korean text)
     aParams.offset -= aParams.defaultLineThickness;
-    aParams.offset += aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
+    aParams.offset +=
+        aOffset.AsLengthPercentage().Resolve(em) / aAppUnitsPerDevPixel;
   } else {
-    aParams.offset = -aOffset.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
+    aParams.offset =
+        -aOffset.AsLengthPercentage().Resolve(em) / aAppUnitsPerDevPixel;
   }
 }
 
@@ -5383,18 +5391,20 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     const StyleTextDecorationLength& textDecorationThickness =
         aBlock->Style()->StyleTextReset()->mTextDecorationThickness;
 
-    if (textUnderlineOffset.IsLength()) {
+    if (textUnderlineOffset.IsLengthPercentage()) {
+      auto em = [&] { return fontMetrics->EmHeight(); };
       if (verticalRun) {
         underlineOffset += underlineSize;
-        underlineOffset -= textUnderlineOffset.AsLength().ToAppUnits();
+        underlineOffset -= textUnderlineOffset.AsLengthPercentage().Resolve(em);
       } else {
-        underlineOffset = -textUnderlineOffset.AsLength().ToAppUnits();
+        underlineOffset = -textUnderlineOffset.AsLengthPercentage().Resolve(em);
       }
     }
 
     params.defaultLineThickness = underlineSize;
-    if (textDecorationThickness.IsLength()) {
-      underlineSize = textDecorationThickness.AsLength().ToAppUnits();
+    if (textDecorationThickness.IsLengthPercentage()) {
+      auto em = [&] { return fontMetrics->EmHeight(); };
+      underlineSize = textDecorationThickness.AsLengthPercentage().Resolve(em);
     }
 
     nscoord maxAscent =
@@ -5499,7 +5509,8 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
             }
 
             SetWidthIfLength(dec.mTextDecorationThickness,
-                             &params.lineSize.height, appUnitsPerDevUnit);
+                             &params.lineSize.height, metrics.emHeight,
+                             appUnitsPerDevUnit);
 
             const nsRect decorationRect =
                 nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
@@ -5725,7 +5736,7 @@ void nsTextFrame::DrawSelectionDecorations(
 
       params.lineSize.height = params.defaultLineThickness;
       SetWidthIfLength(decThickness, &params.lineSize.height,
-                       appUnitsPerDevPixel);
+                       aFontMetrics.emHeight, appUnitsPerDevPixel);
 
       bool isIMEType = aSelectionType != SelectionType::eSpellCheck;
 
@@ -5799,7 +5810,7 @@ void nsTextFrame::DrawSelectionDecorations(
       params.style = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
       params.lineSize.height = metrics.strikeoutSize;
       params.defaultLineThickness = params.lineSize.height;
-      SetWidthIfLength(decThickness, &params.lineSize.height,
+      SetWidthIfLength(decThickness, &params.lineSize.height, metrics.emHeight,
                        appUnitsPerDevPixel);
       params.offset = metrics.strikeoutOffset + 0.5;
       params.decoration = StyleTextDecorationLine::LINE_THROUGH;
@@ -7016,7 +7027,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
                         swapUnderline);
     }
     SetWidthIfLength(dec.mTextDecorationThickness, &params.lineSize.height,
-                     PresContext()->AppUnitsPerDevPixel());
+                     metrics.emHeight, PresContext()->AppUnitsPerDevPixel());
 
     params.style = dec.mStyle;
     PaintDecorationLine(params);
@@ -7364,7 +7375,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     params.defaultLineThickness = ComputeSelectionUnderlineHeight(
         aPresContext, metrics, sd->mSelectionType);
     params.lineSize.height = params.defaultLineThickness;
-    SetWidthIfLength(decThickness, &params.lineSize.height,
+    SetWidthIfLength(decThickness, &params.lineSize.height, metrics.emHeight,
                      aPresContext->AppUnitsPerDevPixel());
 
     bool swapUnderline =
