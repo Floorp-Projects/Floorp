@@ -137,6 +137,11 @@
     <!-- Preference for language -->
     <string name="preferences_language">ພາສາ</string>
 
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Sync ຕອນນີ້</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">ເລືອກສິ່ງທີ່ຕ້ອງການຈະ sync</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">ປະຫວັດການ sync</string>
     <!-- Preference for syncing bookmarks -->
@@ -153,5 +158,80 @@
     <string name="sync_syncing_in_progress">ກຳລັງ sync…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">ການ sync ລົ້ມເຫລວ. ການ sync ສຳເລັດຄັ້ງສຸດທ້າຍ: %s</string>
+
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">ເປີດ Sync</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">ເຂົ້າສູ່ລະບົບ</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">ລຶບບັນຊີ</string>
+
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">ເປີດກ້ອງ</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">ຍົກເລີກ</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">ເທິງ</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">ລຸ່ມ</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">ແສງ</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">ເຂັ້ມ</string>
+
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">ດາວໂຫລດ</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">ບຸກມາກ</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">ເມນູບຸກມາກ</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">ບຸກມາກອື່ນໆ</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">ປະຫວັດການໃຊ້ງານ</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">ລາຍການອ່ານ</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">ຄົ້ນຫາ</string>
+    <!-- Library Page Title -->
+    <string name="library_title">ຫ້ອງສະໝຸດ</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">ການຕັ້ງຄ່າ</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">ປິດ</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">ເປີດແທັບ</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">ແທັບສ່ວນຕົວ</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">ເພີ່ມແທັບ</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">ປິດແທັບ</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">ປິດແທັບ %s</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">ປິດແທັບທັງຫມົດ</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">ແບ່ງປັນແທັບ</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">ເມນູແທັບ</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">ແບ່ງປັນແທັບ</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">ລົບ</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">ບັນທຶກ</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">ແບ່ງປັນ</string>
 
     </resources>

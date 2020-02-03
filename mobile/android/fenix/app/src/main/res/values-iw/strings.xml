@@ -236,6 +236,8 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">סנכרון אחרון: אף פעם</string>
 
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">התרעות עבור לשוניות שהתקבלו ממכשירי Firefox אחרים.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">התקבלה לשונית</string>
     <!-- When multiple tabs have been received -->
@@ -402,12 +404,19 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">שחזור לשונית</string>
 
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">תפריט סימניות</string>
     <!-- Screen title for editing bookmarks -->
     <string name="bookmark_edit">עריכת סימנייה</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">בחירת תיקייה</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">הוספת תיקייה</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">סימנייה נוצרה.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">הסימנייה נשמרה!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">עריכה</string>
     <!-- Bookmark overflow menu edit button -->
@@ -448,6 +457,9 @@
 
     <!-- Bookmark screen message for empty bookmarks folder -->
     <string name="bookmarks_empty_message">אין סימניות כאן</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">נמחק %1$s</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
     <string name="bookmark_deletion_multiple_snackbar_message">בתהליך מחיקת הסימניות שנבחרו</string>
     <!-- Bookmark undo button for deletion snackbar action -->
@@ -492,6 +504,8 @@
     <string name="preference_option_autoplay_blocked">וידאו ושמע חסומים</string>
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">וידאו ושמע מאופשרים</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">פעיל</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">כבוי</string>
 
@@ -638,6 +652,11 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d דפים</string>
+    <!-- Title for the collections item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_collections_title">אוספים</string>
+    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
+        number of collections that will be deleted -->
+    <string name="preferences_delete_browsing_data_collections_subtitle">%d אוספים</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">עוגיות</string>
     <!-- Title for the cached images and files item in Delete browsing data -->

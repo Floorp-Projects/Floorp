@@ -598,7 +598,7 @@
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">Žane zběrki</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Waše zběrki so tu wočinja.</string>
+    <string name="no_collections_description">Waše zběrki so tu pokazaja.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Rajtarki wubrać</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -814,7 +814,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Sće jako %s w druhim wobhladowaku Firefox na tutym telefonje přizjewił. Chceće so z tutym kontom přizjewić?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_2">Sće so jako %s w druhim wobhladowaku Firefox na tutym telefonje přizjewił. Chceće so z tutym kontom přizjewić?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Haj, přizjewić</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -843,7 +843,7 @@
     <string name="onboarding_privacy_notice_header">Waša priwatnosć</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Sym %s wuwili, zo bychmy wam kontrolu wo tym dali, što online
+    <string name="onboarding_privacy_notice_description">Smy %s wuwili, zo bychmy wam kontrolu wo tym dali, što online
         dźěliće a što z nami.
     </string>
     <!-- Text for the button to read the privacy notice -->

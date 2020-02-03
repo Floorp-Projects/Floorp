@@ -109,6 +109,16 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">外観</string>
 
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">選択した言語</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">検索</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">端末の言語設定に従う</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">言語を検索</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">スキャン</string>
@@ -760,6 +770,11 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d ページ</string>
+    <!-- Title for the collections item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_collections_title">コレクション</string>
+    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
+        number of collections that will be deleted -->
+    <string name="preferences_delete_browsing_data_collections_subtitle">%d 件のコレクション</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1102,7 +1117,7 @@
     <string name="search_engine_delete">削除</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label">カスタム</string>
+    <string name="search_add_custom_engine_label_other">その他</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">検索エンジン名</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
