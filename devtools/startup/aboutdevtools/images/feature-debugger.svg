@@ -1,36 +1,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="222px" height="122px" viewBox="0 0 222 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 45.2 (43514) - http://www.bohemiancoding.com/sketch -->
-    <title>Debugger</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="2017.06.07.Firefox.DevEdition-[white]" transform="translate(-843.000000, -2865.000000)">
-            <g id="Group-11" transform="translate(892.000000, 2893.000000)">
-                <g id="Page-1" transform="translate(4.032520, 0.000000)" stroke="#0080FF" stroke-width="4" stroke-linecap="round">
-                    <path d="M101.173069,18.4397779 L101.173069,14.4680499 C101.173069,11.4317399 103.618565,8.9694856 106.635539,8.9694856 L117.258565,8.9694856" id="Stroke-1"></path>
-                    <polyline id="Stroke-3" points="111.688269 2.54689767 118.069417 8.97002819 111.688269 15.3931587"></polyline>
-                    <path d="M89.3390484,28 L97.1187005,28" id="Stroke-5"></path>
-                    <path d="M104.283097,28 L112.063828,28" id="Stroke-7"></path>
-                    <path d="M44.237984,28 L53.1153058,28" id="Stroke-16"></path>
-                    <path d="M61.2894936,28 L70.1668153,28" id="Stroke-18"></path>
-                    <path d="M47.537031,0.000325551471 L52.0409266,0.000325551471 C55.4827353,0.000325551471 58.2743527,2.80874957 58.2743527,6.27261722 L58.2743527,18.4710308" id="Stroke-20"></path>
-                    <polyline id="Stroke-22" points="65.5557405 12.0750296 58.2742449 19.4031932 50.991671 12.0750296"></polyline>
-                    <path d="M47.537031,0.000325551471 L52.0409266,0.000325551471 C55.4827353,0.000325551471 58.2743527,2.80874957 58.2743527,6.27261722 L58.2743527,18.4710308" id="Stroke-24"></path>
-                    <polyline id="Stroke-26" points="65.5557405 12.0750296 58.2742449 19.4031932 50.991671 12.0750296"></polyline>
-                    <path d="M3.81743446,28 L7.27973011,28" id="Stroke-28"></path>
-                    <path d="M0.057215327,16.1793655 L2.74855446,12.0274991 C4.8058762,8.85445741 9.03050228,7.96027604 12.1833371,10.0307834 L23.2861892,17.3220512" id="Stroke-30"></path>
-                    <polyline id="Stroke-32" points="21.8156571 6.78590337 24.1339179 17.8785271 13.1119353 20.2105608"></polyline>
-                    <path d="M0.057215327,16.1793655 L2.74855446,12.0274991 C4.8058762,8.85445741 9.03050228,7.96027604 12.1833371,10.0307834 L23.2861892,17.3220512" id="Stroke-34"></path>
-                    <polyline id="Stroke-36" points="21.8156571 6.78590337 24.1339179 17.8785271 13.1119353 20.2105608"></polyline>
-                </g>
-                <rect id="Rectangle-10" fill="#00C7D8" x="0" y="46.6764706" width="124" height="5" rx="2.5"></rect>
-                <rect id="Rectangle-10" fill="#0080FF" x="1" y="62.9117647" width="35.2299995" height="5" rx="2.5"></rect>
-                <rect id="Rectangle-10" fill="#1C2142" x="45.2764228" y="62.9117647" width="45.3658537" height="5" rx="2.5"></rect>
-            </g>
-            <g id="Group-6" transform="translate(145.000000, 2865.000000)"></g>
-        </g>
-    </g>
+<svg viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M169.5 73.68h-119a2.5 2.5 0 000 5h119a2.5 2.5 0 100-5z" fill="#00C7D8"/>
+  <path d="M81.73 89.91H51.5a2.5 2.5 0 000 5h30.23a2.5 2.5 0 000-5z" fill="#0080FF"/>
+  <path d="M136.15 89.91H95.78a2.5 2.5 0 000 5h40.37a2.5 2.5 0 100-5z" fill="#1C2142"/>
+  <path d="M153.2 45.44v-3.97c0-3.04 2.45-5.5 5.47-5.5h10.62M141.37 55h7.78m7.17 0h7.78m-67.83 0h8.88m8.17 0h8.88M99.57 27h4.5c3.45 0 6.24 2.8 6.24 6.27v12.2M55.85 55h3.46m-7.22-11.82l2.7-4.15a6.8 6.8 0 019.43-2l11.1 7.3m-1.47-10.54l2.32 11.09-11.03 2.33m98.58-17.66l6.38 6.42-6.38 6.42V29.55zm-46.13 9.53l-7.29 7.32-7.29-7.32h14.58z" stroke="#0080FF" stroke-width="4" stroke-linecap="round"/>
 </svg>

@@ -143,14 +143,18 @@ function createFeatureEl(feature) {
 
   const { icon, link, title, desc } = feature;
   // eslint-disable-next-line no-unsanitized/property
-  li.innerHTML = `<a class="feature-link" href="${link}" target="_blank">
-       <img class="feature-icon" src="${icon}"/>
-     </a>
-     <h3 class="feature-name" data-l10n-id="${title}"></h3>
-     <p class="feature-desc" data-l10n-id="${desc}">
-       <a class="external feature-link" href="${link}"
-          target="_blank" data-l10n-name="learn-more"></a>
-     </p>`;
+  li.innerHTML = `
+    <h3 class="feature-name">
+      <a class="feature-link" href="${link}" target="_blank">
+        <img class="feature-icon" src="${icon}" alt="" />
+        <span data-l10n-id="${title}"></span>
+      </a>
+    </h3>
+    <p class="feature-desc" data-l10n-id="${desc}">
+      <a class="feature-more-link external" href="${link}"
+         aria-hidden="true" tabindex="-1"
+         target="_blank" data-l10n-name="learn-more"></a>
+    </p>`;
 
   return li;
 }
@@ -196,7 +200,7 @@ window.addEventListener(
     }
 
     // Add Google Analytics parameters to all the external links.
-    const externalLinks = [...document.querySelectorAll("a.external")];
+    const externalLinks = document.querySelectorAll("a[href*='mozilla.org']");
     for (const link of externalLinks) {
       const linkUrl = new URL(link.getAttribute("href"));
       GA_PARAMETERS.forEach(([key, value]) =>
