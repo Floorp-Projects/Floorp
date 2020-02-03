@@ -2,7 +2,7 @@
 
 # not
 
-`fun <T> not(value: `[`T`](not.md#T)`): `[`T`](not.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/Matchers.kt#L34)
+`fun <T> not(value: `[`T`](not.md#T)`): `[`T`](not.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/Matchers.kt#L35)
 
 Mockito matcher that matches if the argument is not the same as the provided value.
 

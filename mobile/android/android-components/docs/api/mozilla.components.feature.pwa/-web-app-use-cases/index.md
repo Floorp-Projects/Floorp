@@ -11,6 +11,7 @@ These use cases allow for adding a web app or web site to the homescreen.
 | Name | Summary |
 |---|---|
 | [AddToHomescreenUseCase](-add-to-homescreen-use-case/index.md) | `class AddToHomescreenUseCase`<br>Let the user add the selected session to the homescreen. |
+| [GetInstallStateUseCase](-get-install-state-use-case/index.md) | `class GetInstallStateUseCase`<br>Checks the current install state of a Web App. |
 
 ### Constructors
 
@@ -23,6 +24,7 @@ These use cases allow for adding a web app or web site to the homescreen.
 | Name | Summary |
 |---|---|
 | [addToHomescreen](add-to-homescreen.md) | `val addToHomescreen: `[`AddToHomescreenUseCase`](-add-to-homescreen-use-case/index.md) |
+| [getInstallState](get-install-state.md) | `val getInstallState: `[`GetInstallStateUseCase`](-get-install-state-use-case/index.md) |
 
 ### Functions
 

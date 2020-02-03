@@ -2,7 +2,7 @@
 
 # onWebAppManifestChanged
 
-`fun onWebAppManifestChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/ManifestUpdateFeature.kt#L46)
+`fun onWebAppManifestChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/ManifestUpdateFeature.kt#L47)
 
 Overrides [Observer.onWebAppManifestChanged](../../mozilla.components.browser.session/-session/-observer/on-web-app-manifest-changed.md)
 
