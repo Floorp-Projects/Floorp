@@ -7,14 +7,25 @@ export PATH="$PATH:/home/worker/bin:$base"
 
 cd /home/worker
 
+if test "$PROCESSED_PACKAGES_INDEX" && test "$PROCESSED_PACKAGES_PATH" && test "$TASKCLUSTER_ROOT_URL"; then
+  PROCESSED_PACKAGES="$TASKCLUSTER_ROOT_URL/api/index/v1/task/$PROCESSED_PACKAGES_INDEX/artifacts/$PROCESSED_PACKAGES_PATH"
+fi
+
 if test "$PROCESSED_PACKAGES"; then
-  curl -L "$PROCESSED_PACKAGES" | gzip -dc > processed-packages
-  # Prevent reposado from downloading packages that have previously been
-  # dumped.
-  for f in $(cat processed-packages); do
+  rm -f processed-packages
+  if test `curl --output /dev/null --silent --head --location "$PROCESSED_PACKAGES" -w "%{http_code}"` = 200; then
+    curl -L "$PROCESSED_PACKAGES" | gzip -dc > processed-packages
+  elif test -f "$PROCESSED_PACKAGES"; then
+    gzip -dc "$PROCESSED_PACKAGES" > processed-packages
+  fi
+  if test -f processed-packages; then
+    # Prevent reposado from downloading packages that have previously been
+    # dumped.
+    for f in $(cat processed-packages); do
       mkdir -p "$(dirname "$f")"
       touch "$f"
-  done
+    done
+  fi
 fi
 
 mkdir -p /opt/data-reposado/html /opt/data-reposado/metadata
