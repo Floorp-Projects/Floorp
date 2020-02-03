@@ -659,7 +659,7 @@ class JSONAnnotationWriter : public AnnotationWriter {
     mWriter.WriteBuffer(buf, 1);
   }
 
-  PlatformWriter mWriter;
+  PlatformWriter& mWriter;
   bool mEmpty;
 };
 
