@@ -17,7 +17,7 @@ Bug 1302702 - Test connect to a webextension addon
 
 // NOTE: This test installs the webextension addon using the addon manager, so that
 // it can be reloaded using the same actor RDP method used by the developer tools.
-async function test_reload_addon() {
+add_task(async function test_webextension_addon_debugging_reload() {
   const addonID = "test-webext-debugging-reload@test.mozilla.com";
   const addonFile = generateWebExtensionXPI({
     manifest: {
@@ -114,16 +114,6 @@ async function test_reload_addon() {
   // Debugging client has to be closed explicitly when
   // the target has been created as remote.
   await client.close();
-}
-
-add_task(async function test_webextension_addon_debugging_reload_inprocess() {
-  await setWebExtensionOOPMode(false);
-  await test_reload_addon(false);
-});
-
-add_task(async function test_webextension_addon_debugging_reload_oop() {
-  await setWebExtensionOOPMode(true);
-  await test_reload_addon(true);
 });
 
 </script>

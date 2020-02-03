@@ -1,4 +1,4 @@
-/* exported attachAddon, setWebExtensionOOPMode, waitForFramesUpdated, reloadAddon,
+/* exported attachAddon, waitForFramesUpdated, reloadAddon,
    collectFrameUpdates, generateWebExtensionXPI, promiseInstallFile,
    promiseWebExtensionStartup, promiseWebExtensionShutdown
  */
@@ -55,12 +55,6 @@ SimpleTest.registerCleanupFunction(function() {
 });
 
 // Test helpers related to the webextensions debugging RDP actors.
-
-function setWebExtensionOOPMode(oopMode) {
-  return SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.remote", oopMode]],
-  });
-}
 
 function waitForFramesUpdated(target, matchFn) {
   return new Promise(resolve => {
