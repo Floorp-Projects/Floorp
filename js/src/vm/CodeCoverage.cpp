@@ -137,7 +137,6 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
     const PCCounts* counts =
         sc->maybeGetPCCounts(script->pcToOffset(script->main()));
     outFNDA_.printf("FNDA:%" PRIu64 ",%s\n", counts->numExec(), scriptName);
-    outFNDA_.put("\n", 1);
 
     // Set the hit count of the pre-main code to 1, if the function ever got
     // visited.
