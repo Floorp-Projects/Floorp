@@ -4221,6 +4221,12 @@ impl Renderer {
                 None => continue,
             };
 
+            // Only composite the part of the tile that contains valid pixels
+            let clip_rect = match clip_rect.intersection(&tile.valid_rect) {
+                Some(rect) => rect,
+                None => continue,
+            };
+
             // Flush this batch if the textures aren't compatible
             if !current_textures.is_compatible_with(&textures) {
                 self.draw_instanced_batch(
