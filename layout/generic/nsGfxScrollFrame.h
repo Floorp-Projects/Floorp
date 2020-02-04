@@ -278,7 +278,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
    * Returns true if a suitable snap point could be found and aDestination has
    * been updated to a valid snapping position.
    */
-  bool GetSnapPointForDestination(mozilla::ScrollUnit aUnit, nsPoint aStartPos,
+  bool GetSnapPointForDestination(mozilla::ScrollUnit aUnit,
+                                  const nsPoint& aStartPos,
                                   nsPoint& aDestination);
 
   nsMargin GetScrollPadding() const;
