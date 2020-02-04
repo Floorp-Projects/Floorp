@@ -77,8 +77,8 @@ test_upgrade(function(testWindow, testElement, msg) {
     InstantiatesItselfAfterSuper
   );
 
-  SimpleTest.is(uncaughtError.name, "InvalidStateError", msg);
-}, "Upgrading must report an InvalidStateError when the top of the " +
+  SimpleTest.is(uncaughtError.name, "TypeError", msg);
+}, "Upgrading must report an TypeError when the top of the " +
   "construction stack is marked AlreadyConstructed");
 
 test_upgrade(function(testWindow, testElement, msg) {
@@ -101,8 +101,8 @@ test_upgrade(function(testWindow, testElement, msg) {
     InstantiatesItselfBeforeSuper
   );
 
-  SimpleTest.is(uncaughtError.name, "InvalidStateError", msg);
-}, "Upgrading must report an InvalidStateError when the top of the " +
+  SimpleTest.is(uncaughtError.name, "TypeError", msg);
+}, "Upgrading must report an TypeError when the top of the " +
   "construction stack is marked AlreadyConstructed due to a custom element " +
   "constructor constructing itself before super() call");
 
@@ -123,6 +123,6 @@ test_upgrade(function(testWindow, testElement, msg) {
   };
   testWindow.customElements.define("unresolved-element", MyOtherElement);
 
-  SimpleTest.is(uncaughtError.name, "InvalidStateError", msg);
-}, "Upgrading must report an InvalidStateError when the returned element is " +
+  SimpleTest.is(uncaughtError.name, "TypeError", msg);
+}, "Upgrading must report an TypeError when the returned element is " +
   "not SameValue as the upgraded element");
