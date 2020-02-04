@@ -68,6 +68,48 @@ interface nsIDNSService : nsISupports
                                 out nsICancelable    aResult);
 
     /**
+     * kicks off an asynchronous host lookup with a specific TRR server to be
+     * used. This request will not be cached.
+     *
+     * @param aHostName
+     *        the hostname or IP-address-literal to resolve.
+     * @param aTrrServer
+     *        the uri of a trr server to be used.
+     * @param aFlags
+     *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
+     * @param aListener
+     *        the listener to be notified when the result is available.
+     * @param aListenerTarget
+     *        optional parameter (may be null).  if non-null, this parameter
+     *        specifies the nsIEventTarget of the thread on which the
+     *        listener's onLookupComplete should be called.  however, if this
+     *        parameter is null, then onLookupComplete will be called on an
+     *        unspecified thread (possibly recursively).
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving, the DNS cache will be
+     *        separated according to this originAttributes. This attribute is
+     *        optional to avoid breaking add-ons.
+     *
+     * @return An object that can be used to cancel the host lookup.
+     */
+    [implicit_jscontext, optional_argc]
+    nsICancelable asyncResolveWithTrrServer(in AUTF8String       aHostName,
+                                            in AUTF8String       aTrrServer,
+                                            in unsigned long     aFlags,
+                                            in nsIDNSListener    aListener,
+                                            in nsIEventTarget    aListenerTarget,
+                                 [optional] in jsval aOriginAttributes);
+
+    [notxpcom]
+    nsresult asyncResolveWithTrrServerNative(in AUTF8String       aHostName,
+                                             in AUTF8String       aTrrServer,
+                                             in unsigned long     aFlags,
+                                             in nsIDNSListener    aListener,
+                                             in nsIEventTarget    aListenerTarget,
+                                             in OriginAttributes  aOriginAttributes,
+                                             out nsICancelable    aResult);
+
+    /**
       * kicks off an asynchronous host lookup by type, e.g. TXT.
       *
       * @param aHostName
@@ -138,6 +180,41 @@ interface nsIDNSService : nsISupports
                                       in nsIDNSListener    aListener,
                                       in nsresult          aReason,
                                       in OriginAttributes  aOriginAttributes);
+
+    /**
+     * Attempts to cancel a previously requested async DNS lookup
+     *
+     * @param aHostName
+     *        the hostname or IP-address-literal to resolve.
+     * @param aTrrServer
+     *        the uri of a trr server to be used.
+     * @param aFlags
+     *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
+     * @param aListener
+     *        the original listener which was to be notified about the host lookup
+     *        result - used to match request information to requestor.
+     * @param aReason
+     *        nsresult reason for the cancellation
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving. This attribute is optional
+     *        to avoid breaking add-ons.
+     */
+    [implicit_jscontext, optional_argc]
+    void cancelAsyncResolveWithTrrServer(in AUTF8String       aHostName,
+                                         in AUTF8String       aTrrServer,
+                                         in unsigned long     aFlags,
+                                         in nsIDNSListener    aListener,
+                                         in nsresult          aReason,
+                              [optional] in jsval             aOriginAttributes);
+
+
+    [notxpcom]
+    nsresult cancelAsyncResolveWithTrrServerNative(in AUTF8String       aHostName,
+                                                   in AUTF8String       aTrrServer,
+                                                   in unsigned long     aFlags,
+                                                   in nsIDNSListener    aListener,
+                                                   in nsresult          aReason,
+                                                   in OriginAttributes  aOriginAttributes);
 
     /**
      * Attempts to cancel a previously requested async DNS lookup
