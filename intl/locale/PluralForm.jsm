@@ -4,6 +4,8 @@
 
 var EXPORTED_SYMBOLS = ["PluralForm"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 /**
  * This module provides the PluralForm object which contains a method to figure
  * out which plural form of a word to use for a given number based on the
@@ -36,6 +38,7 @@ const kIntlProperties = "chrome://global/locale/intl.properties";
 // These are the available plural functions that give the appropriate index
 // based on the plural rule number specified. The first element is the number
 // of plural forms and the second is the function to figure out the index.
+/* eslint-disable no-nested-ternary */
 var gFunctions = [
   // 0: Chinese
   [1, n => 0],
@@ -184,6 +187,7 @@ var gFunctions = [
         : 2,
   ],
 ];
+/* eslint-enable no-nested-ternary */
 
 var PluralForm = {
   /**
@@ -290,8 +294,7 @@ var PluralForm = {
    */
   get ruleNum() {
     return Number(
-      Cc["@mozilla.org/intl/stringbundle;1"]
-        .getService(Ci.nsIStringBundleService)
+      Services.strings
         .createBundle(kIntlProperties)
         .GetStringFromName("pluralRule")
     );
@@ -306,8 +309,6 @@ var PluralForm = {
  */
 function log(aMsg) {
   let msg = "PluralForm.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
-  Cc["@mozilla.org/consoleservice;1"]
-    .getService(Ci.nsIConsoleService)
-    .logStringMessage(msg);
+  Services.console.logStringMessage(msg);
   dump(msg + "\n");
 }

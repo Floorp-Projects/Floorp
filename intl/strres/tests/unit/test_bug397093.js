@@ -4,6 +4,8 @@
  * all GetStringFromName calls should fail.
  */
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const name_ascii = "asciiProperty";
 const value_ascii = "";
 
@@ -14,11 +16,8 @@ const name_latin1 = "latin1";
 const value_latin1 = "";
 
 function run_test() {
-  var StringBundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(
-    Ci.nsIStringBundleService
-  );
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var bundleURI = ios.newFileURI(do_get_file("397093.properties"));
+  var StringBundle = Services.strings;
+  var bundleURI = Services.io.newFileURI(do_get_file("397093.properties"));
 
   var bundle = StringBundle.createBundle(bundleURI.spec);
 
