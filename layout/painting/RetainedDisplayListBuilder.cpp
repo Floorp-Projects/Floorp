@@ -346,7 +346,7 @@ static void UpdateASR(nsDisplayItem* aItem,
 
   if (aItem->HasHitTestInfo()) {
     const HitTestInfo& info =
-        static_cast<nsDisplayHitTestInfoItem*>(aItem)->GetHitTestInfo();
+        static_cast<nsDisplayHitTestInfoBase*>(aItem)->GetHitTestInfo();
     asr = SelectContainerASR(info.mClipChain, info.mASR, aContainerASR);
   } else {
     asr = aContainerASR;
@@ -373,7 +373,7 @@ static void CopyASR(nsDisplayItem* aOld, nsDisplayItem* aNew) {
   if (aOld->HasHitTestInfo()) {
     MOZ_ASSERT(aNew->HasHitTestInfo());
     const HitTestInfo& info =
-        static_cast<nsDisplayHitTestInfoItem*>(aOld)->GetHitTestInfo();
+        static_cast<nsDisplayHitTestInfoBase*>(aOld)->GetHitTestInfo();
     hitTest = info.mASR;
   }
 
@@ -382,7 +382,7 @@ static void CopyASR(nsDisplayItem* aOld, nsDisplayItem* aNew) {
   // SetActiveScrolledRoot for most items will also set the hit-test info item's
   // asr, so we need to manually set that again to what we saved earlier.
   if (aOld->HasHitTestInfo()) {
-    static_cast<nsDisplayHitTestInfoItem*>(aNew)
+    static_cast<nsDisplayHitTestInfoBase*>(aNew)
         ->UpdateHitTestInfoActiveScrolledRoot(hitTest);
   }
 }

@@ -4001,7 +4001,7 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
                                              nsDisplayItem* aItem,
                                              const DisplayItemClip& aClip,
                                              TransformClipNode* aTransform) {
-  auto* item = static_cast<nsDisplayHitTestInfoItem*>(aItem);
+  auto* item = static_cast<nsDisplayHitTestInfoBase*>(aItem);
   const HitTestInfo& info = item->GetHitTestInfo();
 
   nsRect area = info.mArea;
@@ -4545,7 +4545,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     if (marker == DisplayItemEntryType::HitTestInfo) {
       MOZ_ASSERT(item->IsHitTestItem());
       const auto& hitTestInfo =
-          static_cast<nsDisplayHitTestInfoItem*>(item)->GetHitTestInfo();
+          static_cast<nsDisplayHitTestInfoBase*>(item)->GetHitTestInfo();
 
       // Override the layer selection hints for items that have hit test
       // information. This is needed because container items may have different

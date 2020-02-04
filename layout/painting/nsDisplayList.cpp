@@ -2332,7 +2332,7 @@ LayoutDeviceIntRegion nsDisplayListBuilder::GetWindowDraggingRegion() const {
   return result;
 }
 
-void nsDisplayHitTestInfoItem::AddSizeOfExcludingThis(
+void nsDisplayHitTestInfoBase::AddSizeOfExcludingThis(
     nsWindowSizes& aSizes) const {
   nsPaintedDisplayItem::AddSizeOfExcludingThis(aSizes);
   aSizes.mLayoutRetainedDisplayListSize +=
@@ -2340,7 +2340,7 @@ void nsDisplayHitTestInfoItem::AddSizeOfExcludingThis(
 }
 
 void nsDisplayTransform::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
-  nsDisplayHitTestInfoItem::AddSizeOfExcludingThis(aSizes);
+  nsDisplayHitTestInfoBase::AddSizeOfExcludingThis(aSizes);
   aSizes.mLayoutRetainedDisplayListSize +=
       aSizes.mState.mMallocSizeOf(mTransformPreserves3D.get());
 }
@@ -5360,7 +5360,7 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags, uint16_t aIndex,
     const mozilla::Maybe<nsRect>& aArea)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+    : nsDisplayHitTestInfoBase(aBuilder, aFrame),
       mIndex(aIndex),
       mAppUnitsPerDevPixel(mFrame->PresContext()->AppUnitsPerDevPixel()) {
   MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
@@ -5380,7 +5380,7 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
 nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+    : nsDisplayHitTestInfoBase(aBuilder, aFrame),
       mIndex(0),
       mAppUnitsPerDevPixel(mFrame->PresContext()->AppUnitsPerDevPixel()) {
   MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
@@ -5452,7 +5452,7 @@ uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameKey() const {
 
 int32_t nsDisplayCompositorHitTestInfo::ZIndex() const {
   return mOverrideZIndex ? *mOverrideZIndex
-                         : nsDisplayHitTestInfoItem::ZIndex();
+                         : nsDisplayHitTestInfoBase::ZIndex();
 }
 
 void nsDisplayCompositorHitTestInfo::SetOverrideZIndex(int32_t aZIndex) {
@@ -5984,7 +5984,7 @@ nsDisplayWrapList::nsDisplayWrapList(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot, bool aClearClipChain,
     uint16_t aIndex)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame, aActiveScrolledRoot),
+    : nsDisplayHitTestInfoBase(aBuilder, aFrame, aActiveScrolledRoot),
       mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot()),
       mOverrideZIndex(0),
       mIndex(aIndex),
@@ -6028,7 +6028,7 @@ nsDisplayWrapList::nsDisplayWrapList(
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayItem* aItem)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame,
+    : nsDisplayHitTestInfoBase(aBuilder, aFrame,
                                aBuilder->CurrentActiveScrolledRoot()),
       mOverrideZIndex(0),
       mIndex(0),
@@ -7884,7 +7884,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        nsIFrame* aFrame, nsDisplayList* aList,
                                        const nsRect& aChildrenBuildingRect,
                                        uint16_t aIndex)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+    : nsDisplayHitTestInfoBase(aBuilder, aFrame),
       mTransform(Some(Matrix4x4())),
       mTransformGetter(nullptr),
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
@@ -7903,7 +7903,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        const nsRect& aChildrenBuildingRect,
                                        uint16_t aIndex,
                                        bool aAllowAsyncAnimation)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+    : nsDisplayHitTestInfoBase(aBuilder, aFrame),
       mTransformGetter(nullptr),
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
@@ -7921,7 +7921,7 @@ nsDisplayTransform::nsDisplayTransform(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const nsRect& aChildrenBuildingRect, uint16_t aIndex,
     ComputeTransformFunction aTransformGetter)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+    : nsDisplayHitTestInfoBase(aBuilder, aFrame),
       mTransformGetter(aTransformGetter),
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
@@ -9165,7 +9165,7 @@ void nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream) {
 nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
                                            nsIFrame* aFrame,
                                            nsDisplayList* aList)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame) {
+    : nsDisplayHitTestInfoBase(aBuilder, aFrame) {
   mList.AppendToTop(aList);
   MOZ_ASSERT(mList.Count() == 1);
   MOZ_ASSERT(mList.GetTop()->GetType() == DisplayItemType::TYPE_TRANSFORM);
