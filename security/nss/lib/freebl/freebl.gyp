@@ -274,9 +274,14 @@
             'gcm-aes-aarch64_c_lib',
           ],
         }],
-        [ 'target_arch=="ppc64le"', {
+        [ 'disable_altivec==0 and (target_arch=="ppc64" or target_arch=="ppc64le")', {
           'dependencies': [
             'gcm-aes-ppc_c_lib',
+          ],
+        }],
+        [ 'disable_altivec==1 and (target_arch=="ppc64" or target_arch=="ppc64le")', {
+          'defines!': [
+            'NSS_DISABLE_ALTIVEC',
           ],
         }],
         [ 'OS=="linux"', {
@@ -330,9 +335,14 @@
             'gcm-aes-aarch64_c_lib',
           ],
         }],
-        [ 'target_arch=="ppc64" or target_arch=="ppc64le"', {
+        [ 'disable_altivec==0 and (target_arch=="ppc64" or target_arch=="ppc64le")', {
           'dependencies': [
             'gcm-aes-ppc_c_lib',
+          ],
+        }],
+        [ 'disable_altivec==1 and (target_arch=="ppc64" or target_arch=="ppc64le")', {
+          'defines!': [
+            'NSS_DISABLE_ALTIVEC',
           ],
         }],
         [ 'OS!="linux"', {

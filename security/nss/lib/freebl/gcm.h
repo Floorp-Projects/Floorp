@@ -30,7 +30,7 @@
 #include <arm_neon.h>
 #endif
 
-#ifdef __powerpc64__
+#if defined(__powerpc64__) && !defined(NSS_DISABLE_ALTIVEC)
 #include "altivec-types.h"
 
 /* The ghash freebl test tries to use this in C++, and gcc defines conflict. */
