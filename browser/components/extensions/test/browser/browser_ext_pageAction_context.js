@@ -225,6 +225,11 @@ add_task(async function testTabSwitchContext() {
 });
 
 add_task(async function testMultipleWindows() {
+  // Disable newtab preloading, so that the tabs.create call below will always
+  // trigger a new load that can be detected by webNavigation.onCompleted.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtab.preload", false]],
+  });
   await runTests({
     manifest: {
       page_action: {
@@ -232,6 +237,7 @@ add_task(async function testMultipleWindows() {
         default_popup: "default.html",
         default_title: "Default Title",
       },
+      permissions: ["webNavigation"],
     },
 
     files: {
@@ -253,10 +259,28 @@ add_task(async function testMultipleWindows() {
         },
       ];
 
+      function promiseWebNavigationCompleted(url) {
+        return new Promise(resolve => {
+          // The pageAction visibility state is reset when the location changes.
+          // The webNavigation.onCompleted event is triggered when that happens.
+          browser.webNavigation.onCompleted.addListener(
+            function listener() {
+              browser.webNavigation.onCompleted.removeListener(listener);
+              resolve();
+            },
+            {
+              url: [{ urlEquals: url }],
+            }
+          );
+        });
+      }
+
       return [
         async expect => {
           browser.test.log("Create a new tab, expect hidden pageAction.");
+          let promise = promiseWebNavigationCompleted("about:newtab");
           let tab = await browser.tabs.create({ active: true });
+          await promise;
           tabs.push(tab.id);
           expect(null);
         },
@@ -313,6 +337,7 @@ add_task(async function testMultipleWindows() {
       ];
     },
   });
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function testNavigationClearsData() {
