@@ -5,7 +5,6 @@ config = {
         'get-secrets',
         'build',
     ],
-    'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
     'max_build_output_timeout': 60 * 80,
 
