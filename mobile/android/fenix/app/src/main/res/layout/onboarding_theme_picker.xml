@@ -52,12 +52,10 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/onboarding_theme_light_title"
         android:elevation="1dp"
-        app:layout_constraintBottom_toBottomOf="@+id/theme_light_image"
-        app:layout_constraintCircle="@id/theme_light_image"
-        app:layout_constraintCircleAngle="298"
-        app:layout_constraintCircleRadius="66dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/description_text"
+        android:translationX="-7dp"
+        android:translationY="-8dp"
+        app:layout_constraintStart_toStartOf="@+id/theme_light_image"
+        app:layout_constraintTop_toTopOf="@+id/theme_light_image"
         app:onboardingKey="@string/pref_key_light_theme" />
 
     <ImageButton
@@ -80,12 +78,10 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/onboarding_theme_dark_title"
         android:elevation="1dp"
-        app:layout_constraintBottom_toBottomOf="@+id/theme_dark_image"
-        app:layout_constraintCircle="@id/theme_dark_image"
-        app:layout_constraintCircleAngle="298"
-        app:layout_constraintCircleRadius="66dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/description_text"
+        android:translationX="-7dp"
+        android:translationY="-8dp"
+        app:layout_constraintStart_toStartOf="@+id/theme_dark_image"
+        app:layout_constraintTop_toTopOf="@+id/theme_dark_image"
         app:onboardingKey="@string/pref_key_dark_theme" />
 
     <ImageButton
