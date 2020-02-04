@@ -75,7 +75,6 @@ web-platform-tests:
             linux.*64-asan/opt: 2
             windows10-aarch64.*: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
-            linux.*64-ccov/opt: 3
             default: default
     mozharness:
         chunked: true
@@ -138,7 +137,6 @@ web-platform-tests-wdspec:
             android.*: 3
             linux.*64-asan/opt: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
-            linux.*64-ccov/opt: 3
             default: default
 
 web-platform-tests-wdspec-headless:
@@ -181,7 +179,6 @@ web-platform-tests-crashtests:
             linux1804-64-asan/opt: 2
             windows10-aarch64.*: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
-            linux.*64-ccov/opt: 3
             default: default
 
 test-verify-wpt:
