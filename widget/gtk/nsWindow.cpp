@@ -1386,10 +1386,10 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   }
 
   if (needsPositionUpdate && needsSizeUpdate) {
-    Resize(newBounds.x, newBounds.y, newBounds.width, newBounds.height, true);
+    mBounds = newBounds;
     NotifyWindowMoved(newBounds.x, newBounds.y);
   } else if (needsPositionUpdate) {
-    Move(newBounds.x, newBounds.y);
+    mBounds = newBounds;
     NotifyWindowMoved(newBounds.x, newBounds.y);
   } else {
     Resize(newBounds.width, newBounds.height, true);
@@ -1476,6 +1476,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   bool isWidgetVisible =
       (sGtkWidgetIsVisible != nullptr) && sGtkWidgetIsVisible(mShell);
   if (isWidgetVisible) {
+    PauseRemoteRenderer();
     gtk_widget_hide(mShell);
   }
 
@@ -4497,16 +4498,8 @@ void nsWindow::NativeMoveResize() {
   }
 }
 
-void nsWindow::HideWaylandWindow() {
+void nsWindow::PauseRemoteRenderer() {
 #ifdef MOZ_WAYLAND
-  if (mWindowType == eWindowType_popup) {
-    LOG(("nsWindow::HideWaylandWindow: popup [%p]\n", this));
-    GList* foundWindow = g_list_find(gVisibleWaylandPopupWindows, this);
-    if (foundWindow) {
-      gVisibleWaylandPopupWindows =
-          g_list_delete_link(gVisibleWaylandPopupWindows, foundWindow);
-    }
-  }
   if (!mIsDestroyed) {
     if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
       // Because wl_egl_window is destroyed on moz_container_unmap(),
@@ -4529,6 +4522,18 @@ void nsWindow::HideWaylandWindow() {
     }
   }
 #endif
+}
+
+void nsWindow::HideWaylandWindow() {
+  if (mWindowType == eWindowType_popup) {
+    LOG(("nsWindow::HideWaylandWindow: popup [%p]\n", this));
+    GList* foundWindow = g_list_find(gVisibleWaylandPopupWindows, this);
+    if (foundWindow) {
+      gVisibleWaylandPopupWindows =
+          g_list_delete_link(gVisibleWaylandPopupWindows, foundWindow);
+    }
+  }
+  PauseRemoteRenderer();
   gtk_widget_hide(mShell);
 }
 
