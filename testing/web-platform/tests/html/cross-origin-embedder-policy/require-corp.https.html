@@ -16,7 +16,7 @@ async_test(t => {
     // reliable event.
     assert_equals(frame.contentDocument, null);
     t.done();
-  }, 500);
+  }, 2000);
   frame.src = "/common/blank.html";
   document.body.append(frame);
   assert_equals(frame.contentDocument.body.localName, "body");
@@ -148,7 +148,7 @@ async_test(t => {
     // and have a reliable event.
     assert_equals(frame.contentDocument, null);
     t.done();
-  }, 500);
+  }, 2000);
   frame.src = "/common/blank.html";
   document.body.append(frame);
   assert_equals(frame.contentDocument.body.localName, "body");
