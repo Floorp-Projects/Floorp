@@ -69,7 +69,6 @@ xpcshell:
         by-test-platform:
             windows10-64-asan.*: 3
             windows10-aarch64.*: 2
-            linux.*64-ccov/opt: 3
             default: default
     fetches:
         toolchain:
