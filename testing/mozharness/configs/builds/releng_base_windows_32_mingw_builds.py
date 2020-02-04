@@ -8,7 +8,6 @@ config = {
     # code block and also make sure this is synced with
     # releng_base_linux_64_builds.py
 
-    'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     'secret_files': [
         {'filename': '/builds/gls-gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gls-gapi.data',
