@@ -23,6 +23,7 @@ from .create import create_tasks
 from .generator import TaskGraphGenerator
 from .parameters import Parameters, get_version, get_app_version
 from .taskgraph import TaskGraph
+from taskgraph.util.python_path import find_object
 from .try_option_syntax import parse_message
 from .util.hg import get_hg_revision_branch, get_hg_commit_message
 from .util.partials import populate_release_history
@@ -356,6 +357,10 @@ def get_decision_parameters(graph_config, options):
 
     if options.get('optimize_target_tasks') is not None:
         parameters['optimize_target_tasks'] = options['optimize_target_tasks']
+
+    if 'decision-parameters' in graph_config['taskgraph']:
+        find_object(graph_config['taskgraph']['decision-parameters'])(graph_config,
+                                                                      parameters)
 
     result = Parameters(**parameters)
     result.check()

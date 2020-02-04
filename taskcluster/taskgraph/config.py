@@ -99,6 +99,7 @@ graph_config_schema = Schema({
             "register",
             description="Python function to call to register extensions.",
         ): text_type,
+        Optional('decision-parameters'): text_type,
     },
 })
 
