@@ -3639,51 +3639,6 @@ bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
   return (*thingp)->asTenured().isMarkedAny();
 }
 
-template <typename T>
-bool js::gc::IsMarkedBlackInternal(JSRuntime* rt, T** thingp) {
-  if (IsOwnedByOtherRuntime(rt, *thingp)) {
-    return true;
-  }
-
-  if (MightBeNurseryAllocated<T>::value && IsInsideNursery(*thingp)) {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    Cell** cellp = reinterpret_cast<Cell**>(thingp);
-    return Nursery::getForwardedPointer(cellp);
-  }
-
-  if (!ShouldCheckMarkState(rt, thingp)) {
-    return true;
-  }
-
-  return (*thingp)->asTenured().isMarkedBlack();
-}
-
-template <typename T>
-bool js::gc::IsMarkedInternal(JSRuntime* rt, T* thingp) {
-  bool marked = true;
-  auto thing = MapGCThingTyped(*thingp, [rt, &marked](auto t) {
-    marked = IsMarkedInternal(rt, &t);
-    return TaggedPtr<T>::wrap(t);
-  });
-  if (thing.isSome() && thing.value() != *thingp) {
-    *thingp = thing.value();
-  }
-  return marked;
-}
-
-template <typename T>
-bool js::gc::IsMarkedBlackInternal(JSRuntime* rt, T* thingp) {
-  bool marked = true;
-  auto thing = MapGCThingTyped(*thingp, [rt, &marked](auto t) {
-    marked = IsMarkedBlackInternal(rt, &t);
-    return TaggedPtr<T>::wrap(t);
-  });
-  if (thing.isSome() && thing.value() != *thingp) {
-    *thingp = thing.value();
-  }
-  return marked;
-}
-
 bool js::gc::IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured) {
   MOZ_ASSERT(!IsInsideNursery(&tenured));
   MOZ_ASSERT(tenured.zoneFromAnyThread()->isGCSweeping());
@@ -3802,21 +3757,24 @@ JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
 JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
     INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
 
-#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type)               \
-  template bool IsMarkedInternal(JSRuntime* rt, type* thing);      \
-  template bool IsMarkedBlackInternal(JSRuntime* rt, type* thing); \
+#define INSTANTIATE_INTERNAL_IS_MARKED_FUNCTION(type) \
+  template bool IsMarkedInternal(JSRuntime* rt, type* thing);
+
+#define INSTANTIATE_INTERNAL_IATBF_FUNCTION(type) \
   template bool IsAboutToBeFinalizedInternal(type* thingp);
 
 #define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, \
                                                               _3)           \
-  INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type*)
+  INSTANTIATE_INTERNAL_IS_MARKED_FUNCTION(type*)                            \
+  INSTANTIATE_INTERNAL_IATBF_FUNCTION(type*)
 
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND)
-JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
-    INSTANTIATE_INTERNAL_MARKING_FUNCTIONS)
 
+JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_INTERNAL_IATBF_FUNCTION)
+
+#undef INSTANTIATE_INTERNAL_IS_MARKED_FUNCTION
+#undef INSTANTIATE_INTERNAL_IATBF_FUNCTION
 #undef INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND
-#undef INSTANTIATE_INTERNAL_MARKING_FUNCTIONS
 
 #ifdef DEBUG
 bool CurrentThreadIsGCMarking() { return TlsContext.get()->gcMarking; }
