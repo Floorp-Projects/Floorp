@@ -117,7 +117,7 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
   }
 
   if (aItem->HasHitTestInfo()) {
-    auto* hitTestInfoItem = static_cast<nsDisplayHitTestInfoItem*>(aItem);
+    auto* hitTestInfoItem = static_cast<nsDisplayHitTestInfoBase*>(aItem);
 
     aStream << nsPrintfCString(" hitTestInfo(0x%x)",
                                hitTestInfoItem->HitTestFlags().serialize());

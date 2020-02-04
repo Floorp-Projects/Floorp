@@ -3877,17 +3877,17 @@ struct HitTestInfo {
   const mozilla::DisplayItemClip* mClip;
 };
 
-class nsDisplayHitTestInfoItem : public nsPaintedDisplayItem {
+class nsDisplayHitTestInfoBase : public nsPaintedDisplayItem {
  public:
-  nsDisplayHitTestInfoItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+  nsDisplayHitTestInfoBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : nsPaintedDisplayItem(aBuilder, aFrame) {}
 
-  nsDisplayHitTestInfoItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+  nsDisplayHitTestInfoBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                            const ActiveScrolledRoot* aActiveScrolledRoot)
       : nsPaintedDisplayItem(aBuilder, aFrame, aActiveScrolledRoot) {}
 
-  nsDisplayHitTestInfoItem(nsDisplayListBuilder* aBuilder,
-                           const nsDisplayHitTestInfoItem& aOther)
+  nsDisplayHitTestInfoBase(nsDisplayListBuilder* aBuilder,
+                           const nsDisplayHitTestInfoBase& aOther)
       : nsPaintedDisplayItem(aBuilder, aOther) {}
 
   const HitTestInfo& GetHitTestInfo() const {
@@ -5261,7 +5261,7 @@ class nsDisplayEventReceiver final : public nsDisplayItem {
  * compositor some hit-test info for a frame. This is effectively a dummy item
  * whose sole purpose is to carry the hit-test info to the compositor.
  */
-class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoItem {
+class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoBase {
  public:
   nsDisplayCompositorHitTestInfo(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -5330,7 +5330,7 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoItem {
  * we allow the frame to be nullptr. Callers to GetUnderlyingFrame must
  * detect and handle this case.
  */
-class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
+class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
  public:
   /**
    * Takes all the items from aList and puts them in our list.
@@ -5347,7 +5347,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
                     bool aClearClipChain = false, uint16_t aIndex = 0);
 
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+      : nsDisplayHitTestInfoBase(aBuilder, aFrame),
         mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot()),
         mOverrideZIndex(0),
         mIndex(0),
@@ -5366,7 +5366,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
   nsDisplayWrapList(const nsDisplayWrapList& aOther) = delete;
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                     const nsDisplayWrapList& aOther)
-      : nsDisplayHitTestInfoItem(aBuilder, aOther),
+      : nsDisplayHitTestInfoBase(aBuilder, aOther),
         mListPtr(&mList),
         mFrameActiveScrolledRoot(aOther.mFrameActiveScrolledRoot),
         mMergedFrames(aOther.mMergedFrames),
@@ -5388,7 +5388,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
 
   void Destroy(nsDisplayListBuilder* aBuilder) override {
     mList.DeleteAll(aBuilder);
-    nsDisplayHitTestInfoItem::Destroy(aBuilder);
+    nsDisplayHitTestInfoBase::Destroy(aBuilder);
   }
 
   /**
@@ -5431,9 +5431,9 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
   void SetActiveScrolledRoot(
       const ActiveScrolledRoot* aActiveScrolledRoot) override {
     // Skip unnecessary call to
-    // |nsDisplayHitTestInfoItem::UpdateHitTestInfoActiveScrolledRoot()|, since
+    // |nsDisplayHitTestInfoBase::UpdateHitTestInfoActiveScrolledRoot()|, since
     // callers will manually call that with different ASR.
-    nsDisplayHitTestInfoItem::SetActiveScrolledRoot(aActiveScrolledRoot);
+    nsDisplayHitTestInfoBase::SetActiveScrolledRoot(aActiveScrolledRoot);
   }
 
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
@@ -5513,7 +5513,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
 
   int32_t ZIndex() const override {
     return (mHasZIndexOverride) ? mOverrideZIndex
-                                : nsDisplayHitTestInfoItem::ZIndex();
+                                : nsDisplayHitTestInfoBase::ZIndex();
   }
 
   void SetOverrideZIndex(int32_t aZIndex) {
@@ -6864,7 +6864,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
  * function.
  * INVARIANT: The wrapped frame is non-null.
  */
-class nsDisplayTransform : public nsDisplayHitTestInfoItem {
+class nsDisplayTransform : public nsDisplayHitTestInfoBase {
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::gfx::Matrix4x4Flagged Matrix4x4Flagged;
   typedef mozilla::gfx::Point3D Point3D;
@@ -6905,7 +6905,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
   NS_DISPLAY_DECL_NAME("nsDisplayTransform", TYPE_TRANSFORM)
 
   void RestoreState() override {
-    nsDisplayHitTestInfoItem::RestoreState();
+    nsDisplayHitTestInfoBase::RestoreState();
     mShouldFlatten = false;
   }
 
@@ -6921,7 +6921,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
 
   void Destroy(nsDisplayListBuilder* aBuilder) override {
     GetChildren()->DeleteAll(aBuilder);
-    nsDisplayHitTestInfoItem::Destroy(aBuilder);
+    nsDisplayHitTestInfoBase::Destroy(aBuilder);
   }
 
   nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override;
@@ -6996,7 +6996,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
     if (!mTransformGetter) {
       return mFrame;
     }
-    return nsDisplayHitTestInfoItem::ReferenceFrameForChildren();
+    return nsDisplayHitTestInfoBase::ReferenceFrameForChildren();
   }
 
   AnimatedGeometryRoot* AnimatedGeometryRootForScrollMetadata() const override {
@@ -7242,7 +7242,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
  * perspective-origin is relative to an ancestor of the transformed frame, and
  * APZ can scroll the child separately.
  */
-class nsDisplayPerspective : public nsDisplayHitTestInfoItem {
+class nsDisplayPerspective : public nsDisplayHitTestInfoBase {
   typedef mozilla::gfx::Point3D Point3D;
 
  public:
@@ -7254,7 +7254,7 @@ class nsDisplayPerspective : public nsDisplayHitTestInfoItem {
 
   void Destroy(nsDisplayListBuilder* aBuilder) override {
     mList.DeleteAll(aBuilder);
-    nsDisplayHitTestInfoItem::Destroy(aBuilder);
+    nsDisplayHitTestInfoBase::Destroy(aBuilder);
   }
 
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
