@@ -19,4 +19,4 @@ DevToolsModules(
 )
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
-MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']

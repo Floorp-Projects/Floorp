@@ -5,7 +5,7 @@ var gClient;
 function test() {
   waitForExplicitFinish();
   const actorURL =
-    "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
+    "chrome://mochitests/content/chrome/devtools/server/tests/chrome/hello-actor.js";
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
