@@ -197,11 +197,11 @@ struct MOZ_RAII AutoPrepareFocusRange {
     }
     bool userSelection = aSelection->mUserInitiated;
 
-    nsTArray<StyledRange>& ranges = aSelection->mRanges;
+    nsTArray<RangeData>& ranges = aSelection->mRanges;
     if (!userSelection || (!aContinueSelection && aMultipleSelection)) {
       // Scripted command or the user is starting a new explicit multi-range
       // selection.
-      for (StyledRange& entry : ranges) {
+      for (RangeData& entry : ranges) {
         entry.mRange->SetIsGenerated(false);
       }
       return;
