@@ -575,14 +575,6 @@ partial interface Document {
   void setSuppressedEventListener(EventListener? aListener);
 };
 
-// Extension to give chrome and XBL JS the ability to determine whether
-// the document is sandboxed without permission to run scripts
-// and whether inline scripts are blocked by the document's CSP.
-partial interface Document {
-  [Func="IsChromeOrXBL"] readonly attribute boolean hasScriptsBlockedBySandbox;
-  [Func="IsChromeOrXBL"] readonly attribute boolean inlineScriptAllowedByCSP;
-};
-
 // Allows frontend code to query a CSP which needs to be passed for a
 // new load into docshell. Further, allows to query the CSP in JSON
 // format for testing purposes.
