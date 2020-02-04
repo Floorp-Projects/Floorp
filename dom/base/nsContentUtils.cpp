@@ -2030,7 +2030,7 @@ bool nsContentUtils::ShouldResistFingerprinting() {
 
 bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
   if (!aDocShell) {
-    return false;
+    return ShouldResistFingerprinting();
   }
   return ShouldResistFingerprinting(aDocShell->GetDocument());
 }
@@ -2038,7 +2038,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
   if (!aDoc) {
-    return false;
+    return ShouldResistFingerprinting();
   }
   bool isChrome = nsContentUtils::IsChromeDoc(aDoc);
   return !isChrome && ShouldResistFingerprinting();
@@ -2047,7 +2047,7 @@ bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
   if (!aPrincipal) {
-    return false;
+    return ShouldResistFingerprinting();
   }
   bool isChrome = aPrincipal->IsSystemPrincipal();
   return !isChrome && ShouldResistFingerprinting();
