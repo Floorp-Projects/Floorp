@@ -47,6 +47,8 @@ body {
     * |  |        JSTerm        |  ↔                 |
     * |  |                      |  ↔                 |
     * |  +----------------------+  ↔                 |
+    * |  |  [EagerEvaluation]   |  ↔                 |
+    * |  +----------------------+  ↔                 |
     * |                            ↔                 |
     * +----------------------------↔                 |
     * |  [Reverse search input]    ↔                 |
@@ -57,6 +59,10 @@ body {
      *   rows/columns to "auto" to make them collapse when the element
      *   they contain is hidden.
     */
+  grid-template-areas: "filter-toolbar           sidebar"
+                       "filter-toolbar-secondary sidebar"
+                       "output-input             sidebar"
+                       "reverse-search           sidebar";
   grid-template-rows: var(--primary-toolbar-height) auto 1fr auto;
   grid-template-columns: minmax(200px, 1fr) minmax(0, auto);
   max-height: 100vh !important;
@@ -68,25 +74,25 @@ body {
 }
 
 .webconsole-filteringbar-wrapper {
-  grid-column: 1 / 2;
-  grid-row: 1 / 3;
+  grid-column: filter-toolbar;
+  grid-row: filter-toolbar / filter-toolbar-secondary;
   grid-template-rows: subgrid;
+  grid-template-columns: subgrid;
 }
 
 .webconsole-filterbar-primary {
-  grid-row: 1 / 2;
+  grid-area: filter-toolbar;
 }
 
 /* Only put the filter buttons toolbar on its own row in narrow filterbar layout  */
 .narrow .devtools-toolbar.webconsole-filterbar-secondary {
-  grid-row: 2 / 3;
+  grid-area: filter-toolbar-secondary;
 }
 
 .flexible-output-input {
   display: flex;
   flex-direction: column;
-  grid-column: 1 / 2;
-  grid-row: 3 / 4;
+  grid-area: output-input;
   /* Don't take more height than the grid allows to */
   max-height: 100%;
   overflow: hidden;
@@ -155,8 +161,7 @@ body {
 }
 
 .webconsole-app .reverse-search {
-  grid-column: 1 / 2;
-  grid-row: -1 / -2;
+  grid-area: reverse-search;
   /* Those 2 next lines make it so the element isn't impacting the grid column size, but
      will still take the whole available space. */
   width: 0;
@@ -171,8 +176,7 @@ body {
 
 .sidebar {
   display: grid;
-  grid-row: 1 / -1;
-  grid-column: -1 / -2;
+  grid-area: sidebar;
   grid-template-rows: subgrid;
   border-inline-start: 1px solid var(--theme-splitter-color);
   background-color: var(--theme-sidebar-background);
@@ -239,6 +243,11 @@ body {
      *   rows/columns to "auto" to make them collapse when the element
      *   they contain is hidden.
      */
+  grid-template-areas: "notification      notification               notification"
+                       "editor-toolbar    filter-toolbar             sidebar"
+                       "editor            filter-toolbar-secondary   sidebar"
+                       "editor            output                     sidebar"
+                       "reverse-search    output                     sidebar";
   grid-template-rows:
     auto
     var(--primary-toolbar-height)
@@ -253,18 +262,8 @@ body {
   display: contents;
 }
 
-.jsterm-editor .webconsole-filteringbar-wrapper {
-  grid-row: 2 / 4;
-  grid-column: 2 / 3;
-}
-
-.jsterm-editor .webconsole-filterbar-primary {
-  grid-row: 1 / 2;
-}
-
 .jsterm-editor .webconsole-editor-toolbar {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
+  grid-area: editor-toolbar;
   border-inline-end: 1px solid var(--theme-splitter-color);
   display: grid;
   align-items: center;
@@ -345,13 +344,11 @@ body {
 }
 
 .jsterm-editor .webconsole-output {
-  grid-column: 2 / 3;
-  grid-row: 4 / -1;
+  grid-area: output;
 }
 
 .jsterm-editor .jsterm-input-container {
-  grid-column: 1 / 2;
-  grid-row: 3 / 5;
+  grid-area: editor;
   width: 30vw;
   /* Don't allow the input to be narrower than the grid-column it's in  */
   min-width: 100%;
@@ -364,8 +361,7 @@ body {
 }
 
 .jsterm-editor #webconsole-notificationbox {
-  grid-column: -1 / 1;
-  grid-row: 1 / 2;
+  grid-area: notification;
 }
 
 .jsterm-editor .jsterm-input-container > .CodeMirror {
@@ -376,20 +372,10 @@ body {
   background-image: none;
 }
 
-.jsterm-editor .sidebar {
-  grid-row: 2 / -1;
-}
-
 .jsterm-editor .editor-resizer {
-  grid-column: 1 / 2;
+  grid-column: editor;
   /* We want the splitter to cover the whole column (minus self-xss message) */
-  grid-row: 2 / -1;
-}
-
-.jsterm-editor .sidebar-resizer {
-  grid-column: -1 / -2;
-  /* We want the splitter to cover the whole column (minus self-xss message) */
-  grid-row: 2 / -1;
+  grid-row: editor / reverse-search;
 }
 
 .editor-onboarding {
