@@ -3182,7 +3182,7 @@ void nsCSSBorderRenderer::DrawBorders() {
     // XXX In fact is this optimization even worth the complexity it adds to
     // the code?  1px wide dashed borders are not overly common, and drawing
     // corners for them is not that expensive.
-    NS_FOR_CSS_FULL_CORNERS(corner) {
+    for (const auto corner : mozilla::AllPhysicalCorners()) {
       const mozilla::Side sides[2] = {mozilla::Side(corner), PREV_SIDE(corner)};
 
       if (!IsZeroSize(mBorderRadii[corner])) {
@@ -3199,7 +3199,7 @@ void nsCSSBorderRenderer::DrawBorders() {
     }
 
     // First, the corners
-    NS_FOR_CSS_FULL_CORNERS(corner) {
+    for (const auto corner : mozilla::AllPhysicalCorners()) {
       // if there's no corner, don't do all this work for it
       if (IsZeroSize(mBorderCornerDimensions[corner])) {
         continue;
