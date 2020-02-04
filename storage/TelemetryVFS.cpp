@@ -167,140 +167,11 @@ struct telemetry_file {
   sqlite3_file pReal[1];
 };
 
-const char* DatabasePathFromWALPath(const char* zWALName) {
-  /**
-   * Do some sketchy pointer arithmetic to find the parameter key. The WAL
-   * filename is in the middle of a big allocated block that contains:
-   *
-   *   - Random Values
-   *   - Main Database Path
-   *   - \0
-   *   - Multiple URI components consisting of:
-   *     - Key
-   *     - \0
-   *     - Value
-   *     - \0
-   *   - \0
-   *   - Journal Path
-   *   - \0
-   *   - WAL Path (zWALName)
-   *   - \0
-   *
-   * Because the main database path is preceded by a random value we have to be
-   * careful when trying to figure out when we should terminate this loop.
-   */
-  MOZ_ASSERT(zWALName);
-
-  nsDependentCSubstring dbPath(zWALName, strlen(zWALName));
-
-  // Chop off the "-wal" suffix.
-  NS_NAMED_LITERAL_CSTRING(kWALSuffix, "-wal");
-  MOZ_ASSERT(StringEndsWith(dbPath, kWALSuffix));
-
-  dbPath.Rebind(zWALName, dbPath.Length() - kWALSuffix.Length());
-  MOZ_ASSERT(!dbPath.IsEmpty());
-
-  // We want to scan to the end of the key/value URI pairs. Skip the preceding
-  // null and go to the last char of the journal path.
-  const char* cursor = zWALName - 2;
-
-  // Make sure we just skipped a null.
-  MOZ_ASSERT(!*(cursor + 1));
-
-  // Walk backwards over the journal path.
-  while (*cursor) {
-    cursor--;
-  }
-
-  // There should be another null here.
-  cursor--;
-  MOZ_ASSERT(!*cursor);
-
-  // Back up one more char to the last char of the previous string. It may be
-  // the database path or it may be a key/value URI pair.
-  cursor--;
-
-#ifdef DEBUG
-  {
-    // Verify that we just walked over the journal path. Account for the two
-    // nulls we just skipped.
-    const char* journalStart = cursor + 3;
-
-    nsDependentCSubstring journalPath(journalStart, strlen(journalStart));
-
-    // Chop off the "-journal" suffix.
-    NS_NAMED_LITERAL_CSTRING(kJournalSuffix, "-journal");
-    MOZ_ASSERT(StringEndsWith(journalPath, kJournalSuffix));
-
-    journalPath.Rebind(journalStart,
-                       journalPath.Length() - kJournalSuffix.Length());
-    MOZ_ASSERT(!journalPath.IsEmpty());
-
-    // Make sure that the database name is a substring of the journal name.
-    MOZ_ASSERT(journalPath == dbPath);
-  }
-#endif
-
-  // Now we're either at the end of the key/value URI pairs or we're at the
-  // end of the database path. Carefully walk backwards one character at a
-  // time to do this safely without running past the beginning of the database
-  // path.
-  const char* const dbPathStart = dbPath.BeginReading();
-  const char* dbPathCursor = dbPath.EndReading() - 1;
-  bool isDBPath = true;
-
-  while (true) {
-    MOZ_ASSERT(*dbPathCursor, "dbPathCursor should never see a null char!");
-
-    if (isDBPath) {
-      isDBPath =
-          dbPathStart <= dbPathCursor && *dbPathCursor == *cursor && *cursor;
-    }
-
-    if (!isDBPath) {
-      // This isn't the database path so it must be a value. Scan past it and
-      // the key also.
-      for (size_t stringCount = 0; stringCount < 2; stringCount++) {
-        // Scan past the string to the preceding null character.
-        while (*cursor) {
-          cursor--;
-        }
-
-        // Back up one more char to the last char of preceding string.
-        cursor--;
-      }
-
-      // Reset and start again.
-      dbPathCursor = dbPath.EndReading() - 1;
-      isDBPath = true;
-
-      continue;
-    }
-
-    MOZ_ASSERT(isDBPath);
-    MOZ_ASSERT(*cursor);
-
-    if (dbPathStart == dbPathCursor) {
-      // Found the full database path, we're all done.
-      MOZ_ASSERT(nsDependentCString(cursor) == dbPath);
-      return cursor;
-    }
-
-    // Change the cursors and go through the loop again.
-    cursor--;
-    dbPathCursor--;
-  }
-
-  MOZ_CRASH("Should never get here!");
-}
-
-already_AddRefed<QuotaObject> GetQuotaObjectFromNameAndParameters(
-    const char* zName, const char* zURIParameterKey) {
+already_AddRefed<QuotaObject> GetQuotaObjectFromName(const char* zName) {
   MOZ_ASSERT(zName);
-  MOZ_ASSERT(zURIParameterKey);
 
   const char* directoryLockIdParam =
-      sqlite3_uri_parameter(zURIParameterKey, "directoryLockId");
+      sqlite3_uri_parameter(zName, "directoryLockId");
   if (!directoryLockIdParam) {
     return nullptr;
   }
@@ -325,16 +196,7 @@ void MaybeEstablishQuotaControl(const char* zName, telemetry_file* pFile,
   if (!(flags & (SQLITE_OPEN_URI | SQLITE_OPEN_WAL))) {
     return;
   }
-
-  MOZ_ASSERT(zName);
-
-  const char* zURIParameterKey =
-      (flags & SQLITE_OPEN_WAL) ? DatabasePathFromWALPath(zName) : zName;
-
-  MOZ_ASSERT(zURIParameterKey);
-
-  pFile->quotaObject =
-      GetQuotaObjectFromNameAndParameters(zName, zURIParameterKey);
+  pFile->quotaObject = GetQuotaObjectFromName(zName);
 }
 
 /*
@@ -687,10 +549,7 @@ int xDelete(sqlite3_vfs* vfs, const char* zName, int syncDir) {
   RefPtr<QuotaObject> quotaObject;
 
   if (StringEndsWith(nsDependentCString(zName), NS_LITERAL_CSTRING("-wal"))) {
-    const char* zURIParameterKey = DatabasePathFromWALPath(zName);
-    MOZ_ASSERT(zURIParameterKey);
-
-    quotaObject = GetQuotaObjectFromNameAndParameters(zName, zURIParameterKey);
+    quotaObject = GetQuotaObjectFromName(zName);
   }
 
   rc = orig_vfs->xDelete(orig_vfs, zName, syncDir);
