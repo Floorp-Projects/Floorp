@@ -904,7 +904,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
   return NS_OK;
 }
 
-nsresult TRR::ReturnData() {
+nsresult TRR::ReturnData(nsIChannel* aChannel) {
   if (mType != TRRTYPE_TXT) {
     // create and populate an AddrInfo instance to pass on
     RefPtr<AddrInfo> ai(new AddrInfo(mHost, mType));
@@ -923,6 +923,21 @@ nsresult TRR::ReturnData() {
       }
     }
     ai->ttl = ttl;
+
+    // Set timings.
+    nsCOMPtr<nsITimedChannel> timedChan = do_QueryInterface(aChannel);
+    if (timedChan) {
+      TimeStamp asyncOpen, start, end;
+      if (NS_SUCCEEDED(timedChan->GetAsyncOpen(&asyncOpen)) && !asyncOpen.IsNull()) {
+        ai->SetTrrFetchDuration((TimeStamp::Now() - asyncOpen).ToMilliseconds());
+      }
+      if (NS_SUCCEEDED(timedChan->GetRequestStart(&start)) &&
+          NS_SUCCEEDED(timedChan->GetResponseEnd(&end)) &&
+          !start.IsNull() && !end.IsNull()) {
+        ai->SetTrrFetchDurationNetworkOnly((end - start).ToMilliseconds());
+      }
+    }
+
     if (!mHostResolver) {
       return NS_ERROR_FAILURE;
     }
@@ -955,7 +970,7 @@ nsresult TRR::FailData(nsresult error) {
   return NS_OK;
 }
 
-nsresult TRR::On200Response() {
+nsresult TRR::On200Response(nsIChannel* aChannel) {
   // decode body and create an AddrInfo struct for the response
   nsresult rv = DohDecode(mHost);
 
@@ -968,7 +983,7 @@ nsresult TRR::On200Response() {
       rv = DohDecode(cname);
       if (NS_SUCCEEDED(rv) && mDNS.mAddresses.getFirst()) {
         LOG(("TRR: Got the CNAME record without asking for it\n"));
-        ReturnData();
+        ReturnData(aChannel);
         return NS_OK;
       }
       // restore mCname as DohDecode() change it
@@ -987,7 +1002,7 @@ nsresult TRR::On200Response() {
       }
     } else {
       // pass back the response data
-      ReturnData();
+      ReturnData(aChannel);
       return NS_OK;
     }
   } else {
@@ -1050,7 +1065,7 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     uint32_t httpStatus;
     rv = httpChannel->GetResponseStatus(&httpStatus);
     if (NS_SUCCEEDED(rv) && httpStatus == 200) {
-      rv = On200Response();
+      rv = On200Response(channel);
       if (NS_SUCCEEDED(rv)) {
         RecordProcessingTime(channel);
         return rv;

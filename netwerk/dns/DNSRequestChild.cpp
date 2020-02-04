@@ -81,6 +81,18 @@ ChildDNSRecord::IsTRR(bool* retval) {
 }
 
 NS_IMETHODIMP
+ChildDNSRecord::GetTrrFetchDuration(double* aTime) {
+  *aTime = 0;
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+ChildDNSRecord::GetTrrFetchDurationNetworkOnly(double* aTime) {
+  *aTime = 0;
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 ChildDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
   if (mCurrent >= mLength) {
     return NS_ERROR_NOT_AVAILABLE;

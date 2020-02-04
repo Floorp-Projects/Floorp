@@ -303,7 +303,9 @@ AddrInfo::AddrInfo(const nsACString& host, const PRAddrInfo* prAddrInfo,
     : mHostName(host),
       mCanonicalName(cname),
       ttl(NO_TTL_DATA),
-      mFromTRR(false) {
+      mFromTRR(false),
+      mTrrFetchDuration(0),
+      mTrrFetchDurationNetworkOnly(0) {
   MOZ_ASSERT(prAddrInfo,
              "Cannot construct AddrInfo with a null prAddrInfo pointer!");
   const uint32_t nameCollisionAddr = htonl(0x7f003535);  // 127.0.53.53
@@ -327,13 +329,17 @@ AddrInfo::AddrInfo(const nsACString& host, const nsACString& cname,
     : mHostName(host),
       mCanonicalName(cname),
       ttl(NO_TTL_DATA),
-      mFromTRR(aTRR) {}
+      mFromTRR(aTRR),
+      mTrrFetchDuration(0),
+      mTrrFetchDurationNetworkOnly(0) {}
 
 AddrInfo::AddrInfo(const nsACString& host, unsigned int aTRR)
     : mHostName(host),
       mCanonicalName(EmptyCString()),
       ttl(NO_TTL_DATA),
-      mFromTRR(aTRR) {}
+      mFromTRR(aTRR),
+      mTrrFetchDuration(0),
+      mTrrFetchDurationNetworkOnly(0) {}
 
 // deep copy constructor
 AddrInfo::AddrInfo(const AddrInfo* src) {
@@ -341,6 +347,8 @@ AddrInfo::AddrInfo(const AddrInfo* src) {
   mCanonicalName = src->mCanonicalName;
   ttl = src->ttl;
   mFromTRR = src->mFromTRR;
+  mTrrFetchDuration = src->mTrrFetchDuration;
+  mTrrFetchDurationNetworkOnly = src->mTrrFetchDurationNetworkOnly;
 
   for (auto element = src->mAddresses.getFirst(); element;
        element = element->getNext()) {
