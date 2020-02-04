@@ -5339,6 +5339,17 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
         JitSpew(js::jit::JitSpew_IonScripts, "Disable ion");
       }
       break;
+    case JSJITCOMPILER_JIT_TRUSTEDPRINCIPALS_ENABLE:
+      if (value == 1) {
+        jit::JitOptions.jitForTrustedPrincipals = true;
+        JitSpew(js::jit::JitSpew_IonScripts,
+                "Enable ion and baselinejit for trusted principals");
+      } else if (value == 0) {
+        jit::JitOptions.jitForTrustedPrincipals = false;
+        JitSpew(js::jit::JitSpew_IonScripts,
+                "Disable ion and baselinejit for trusted principals");
+      }
+      break;
     case JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD:
       if (value == uint32_t(-1)) {
         jit::DefaultJitOptions defaultValues;
