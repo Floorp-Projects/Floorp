@@ -2884,27 +2884,26 @@ nsINode* EditorBase::GetFirstEditableNode(nsINode* aRoot) {
 
 nsresult EditorBase::NotifyDocumentListeners(
     TDocumentListenerNotification aNotificationType) {
-  RefPtr<ComposerCommandsUpdater> composerCommandsUpdate =
-      AsHTMLEditor() ? AsHTMLEditor()->mComposerCommandsUpdater : nullptr;
-  if (!mDocStateListeners.Length() && !composerCommandsUpdate) {
-    return NS_OK;
-  }
-
-  AutoDocumentStateListenerArray listeners(mDocStateListeners);
   switch (aNotificationType) {
     case eDocumentCreated:
-      if (composerCommandsUpdate) {
-        composerCommandsUpdate->OnHTMLEditorCreated();
+      if (!AsHTMLEditor()) {
+        return NS_OK;
       }
-      for (auto& listener : listeners) {
-        nsresult rv = listener->NotifyDocumentCreated();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      if (RefPtr<ComposerCommandsUpdater> composerCommandsUpdate =
+              AsHTMLEditor()->mComposerCommandsUpdater) {
+        composerCommandsUpdate->OnHTMLEditorCreated();
       }
       return NS_OK;
 
-    case eDocumentToBeDestroyed:
+    case eDocumentToBeDestroyed: {
+      RefPtr<ComposerCommandsUpdater> composerCommandsUpdate =
+          AsHTMLEditor() ? AsHTMLEditor()->mComposerCommandsUpdater : nullptr;
+      if (!mDocStateListeners.Length() && !composerCommandsUpdate) {
+        return NS_OK;
+      }
+      // Needs to store all listeners before notifying ComposerCommandsUpdate
+      // since notifying it might change mDocStateListeners.
+      AutoDocumentStateListenerArray listeners(mDocStateListeners);
       if (composerCommandsUpdate) {
         composerCommandsUpdate->OnBeforeHTMLEditorDestroyed();
       }
@@ -2915,7 +2914,7 @@ nsresult EditorBase::NotifyDocumentListeners(
         }
       }
       return NS_OK;
-
+    }
     case eDocumentStateChanged: {
       bool docIsDirty;
       nsresult rv = GetDocumentModified(&docIsDirty);
@@ -2929,6 +2928,14 @@ nsresult EditorBase::NotifyDocumentListeners(
 
       mDocDirtyState = docIsDirty;
 
+      RefPtr<ComposerCommandsUpdater> composerCommandsUpdate =
+          AsHTMLEditor() ? AsHTMLEditor()->mComposerCommandsUpdater : nullptr;
+      if (!mDocStateListeners.Length() && !composerCommandsUpdate) {
+        return NS_OK;
+      }
+      // Needs to store all listeners before notifying ComposerCommandsUpdate
+      // since notifying it might change mDocStateListeners.
+      AutoDocumentStateListenerArray listeners(mDocStateListeners);
       if (composerCommandsUpdate) {
         composerCommandsUpdate->OnHTMLEditorDirtyStateChanged(mDocDirtyState);
       }
