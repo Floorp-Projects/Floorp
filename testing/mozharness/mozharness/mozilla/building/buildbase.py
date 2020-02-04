@@ -32,7 +32,7 @@ from mozharness.base.script import PostScriptRun
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.automation import (EXIT_STATUS_DICT, TBPL_FAILURE,
                                            TBPL_RETRY, TBPL_STATUS_DICT,
-                                           TBPL_SUCCESS, TBPL_WARNING,
+                                           TBPL_SUCCESS,
                                            TBPL_WORST_LEVEL_TUPLE,
                                            AutomationMixin)
 from mozharness.mozilla.secrets import SecretsMixin
@@ -543,9 +543,6 @@ class BuildScript(AutomationMixin,
             if not self.stage_platform:
                 self.error("'stage_platform' not determined and is required")
             self.fatal("Please add missing items to your config")
-        self.buildid = None
-        self.query_buildid()  # sets self.buildid
-        self.generated_build_props = False
         self.client_id = None
         self.access_token = None
 
@@ -600,51 +597,6 @@ items from that key's value."
         self.info("Both --dump-config and --dump-config-hierarchy don't "
                   "actually run any actions.")
 
-    def _query_build_prop_from_app_ini(self, prop, app_ini_path=None):
-        dirs = self.query_abs_dirs()
-        print_conf_setting_path = os.path.join(dirs['abs_src_dir'],
-                                               'config',
-                                               'printconfigsetting.py')
-        if not app_ini_path:
-            # set the default
-            app_ini_path = dirs['abs_app_ini_path']
-        if (os.path.exists(print_conf_setting_path) and
-                os.path.exists(app_ini_path)):
-            cmd = [
-                sys.executable,
-                os.path.join(
-                    dirs['abs_src_dir'],
-                    'mach'),
-                'python',
-                print_conf_setting_path,
-                app_ini_path,
-                'App',
-                prop]
-            env = self.query_build_env()
-            # dirs['abs_obj_dir'] can be different from env['MOZ_OBJDIR'] on
-            # mac, and that confuses mach.
-            del env['MOZ_OBJDIR']
-            return self.get_output_from_command(
-                cmd, cwd=dirs['abs_obj_dir'], env=env)
-        else:
-            return None
-
-    def query_buildid(self):
-        if self.buildid:
-            return self.buildid
-
-        # for taskcluster, we pass MOZ_BUILD_DATE into mozharness as an
-        # environment variable, only to have it pass the same value out with
-        # the same name.
-        buildid = os.environ.get('MOZ_BUILD_DATE')
-
-        if not buildid:
-            self.info("Creating buildid through current time")
-            buildid = generate_build_ID()
-
-        self.buildid = buildid
-        return self.buildid
-
     def _query_objdir(self):
         if self.objdir:
             return self.objdir
@@ -668,9 +620,6 @@ items from that key's value."
         env = copy.deepcopy(
             super(BuildScript, self).query_env(**kwargs)
         )
-
-        # first grab the buildid
-        env['MOZ_BUILD_DATE'] = self.query_buildid()
 
         if self.query_is_nightly() or self.query_is_nightly_promotion():
             # taskcluster sets the update channel for shipping builds
@@ -809,61 +758,6 @@ items from that key's value."
         self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
                          env=env)
 
-    def generate_build_props(self, console_output=True, halt_on_failure=False):
-        """sets props found from mach build and, in addition, buildid,
-        sourcestamp,  appVersion, and appName."""
-
-        error_level = ERROR
-        if halt_on_failure:
-            error_level = FATAL
-
-        if self.generated_build_props:
-            return
-
-        dirs = self.query_abs_dirs()
-        print_conf_setting_path = os.path.join(dirs['abs_src_dir'],
-                                               'config',
-                                               'printconfigsetting.py')
-        if (not os.path.exists(print_conf_setting_path) or
-                not os.path.exists(dirs['abs_app_ini_path'])):
-            self.log("Can't set the following properties: "
-                     "buildid, sourcestamp, appVersion, and appName. "
-                     "Required paths missing. Verify both %s and %s "
-                     "exist. These paths require the 'build' action to be "
-                     "run prior to this" % (print_conf_setting_path,
-                                            dirs['abs_app_ini_path']),
-                     level=error_level)
-        self.info("Setting properties found in: %s" % dirs['abs_app_ini_path'])
-        env = self.query_build_env()
-        # dirs['abs_obj_dir'] can be different from env['MOZ_OBJDIR'] on
-        # mac, and that confuses mach.
-        del env['MOZ_OBJDIR']
-
-        if self.config.get('is_automation'):
-            self.info("Verifying buildid from application.ini matches buildid "
-                      "from automation")
-            app_ini_buildid = self._query_build_prop_from_app_ini('BuildID')
-            # it would be hard to imagine query_buildid evaluating to a falsey
-            #  value (e.g. 0), but incase it does, force it to None
-            automation_buildid = self.query_buildid() or None
-            self.info(
-                'buildid from application.ini: "%s". buildid from automation '
-                'properties: "%s"' % (app_ini_buildid, automation_buildid)
-            )
-            if app_ini_buildid == automation_buildid is not None:
-                self.info('buildids match.')
-            else:
-                self.error(
-                    'buildids do not match or values could not be determined'
-                )
-                # set the build to orange if not already worse
-                self.return_code = self.worst_level(
-                    EXIT_STATUS_DICT[TBPL_WARNING], self.return_code,
-                    AUTOMATION_EXIT_CODES[::-1]
-                )
-
-        self.generated_build_props = True
-
     def _create_mozbuild_dir(self, mozbuild_path=None):
         if not mozbuild_path:
             env = self.query_build_env()
@@ -904,10 +798,6 @@ items from that key's value."
 
         # This will error on non-0 exit code.
         self._run_mach_command_in_build_env(args)
-
-        if not custom_build_targets:
-            self.generate_build_props(
-                console_output=True, halt_on_failure=True)
 
         self._generate_build_stats()
 
