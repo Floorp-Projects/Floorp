@@ -546,21 +546,9 @@ enum Corner {
 // switch-case.
 constexpr int eCornerCount = 4;
 
-// Creates a for loop that walks over the four mozilla::Corner values. This
-// implementation uses the same technique as NS_FOR_CSS_SIDES.
-#define NS_FOR_CSS_FULL_CORNERS(var_)                                          \
-  int32_t MOZ_CONCAT(var_, __LINE__) = mozilla::eCornerTopLeft;                \
-  for (mozilla::Corner var_;                                                   \
-       MOZ_CONCAT(var_, __LINE__) <= mozilla::eCornerBottomLeft &&             \
-       (static_cast<void>(var_ = mozilla::Corner(MOZ_CONCAT(var_, __LINE__))), \
-        true);                                                                 \
-       ++MOZ_CONCAT(var_, __LINE__))
-
-static inline Corner operator++(Corner& aCorner) {
-  MOZ_ASSERT(aCorner >= eCornerTopLeft && aCorner <= eCornerBottomLeft,
-             "Out of range corner!");
-  aCorner = Corner(aCorner + 1);
-  return aCorner;
+constexpr auto AllPhysicalCorners() {
+  return mozilla::MakeInclusiveEnumeratedRange(eCornerTopLeft,
+                                               eCornerBottomLeft);
 }
 
 // Indices into "half corner" arrays (nsStyleCorners e.g.)
