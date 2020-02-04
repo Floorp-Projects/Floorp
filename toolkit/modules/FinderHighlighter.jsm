@@ -1999,7 +1999,6 @@ FinderHighlighter.prototype = {
       },
 
       // Unimplemented
-      notifyDocumentCreated() {},
       notifyDocumentStateChanged(aDirty) {},
     };
   },
