@@ -1256,7 +1256,7 @@ async function saveJSON(aData, aFile) {
     aFile,
     new TextEncoder().encode(JSON.stringify(aData, null, 2))
   );
-  info("Done saving JSON file " + aFile.path);
+  info("Done saving JSON file " + aFile);
 }
 
 XPCOMUtils.defineLazyServiceGetter(
