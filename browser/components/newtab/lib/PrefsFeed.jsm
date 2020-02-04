@@ -41,6 +41,27 @@ this.PrefsFeed = class PrefsFeed {
     }
   }
 
+  _setStringPref(values, key, defaultValue) {
+    this._setPref(values, key, defaultValue, Services.prefs.getStringPref);
+  }
+
+  _setBoolPref(values, key, defaultValue) {
+    this._setPref(values, key, defaultValue, Services.prefs.getBoolPref);
+  }
+
+  _setIntPref(values, key, defaultValue) {
+    this._setPref(values, key, defaultValue, Services.prefs.getIntPref);
+  }
+
+  _setPref(values, key, defaultValue, getPrefFunction) {
+    let value = getPrefFunction(
+      `browser.newtabpage.activity-stream.${key}`,
+      defaultValue
+    );
+    values[key] = value;
+    this._prefMap.set(key, { value });
+  }
+
   init() {
     this._prefs.observeBranch(this);
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
@@ -90,42 +111,16 @@ this.PrefsFeed = class PrefsFeed {
       value: handoffToAwesomebarPrefValue,
     });
 
-    let discoveryStreamEnabled = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.discoverystream.enabled",
-      false
-    );
-    let discoveryStreamHardcodedBasicLayout = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout",
-      false
-    );
-    let discoveryStreamSpocsEndpoint = Services.prefs.getStringPref(
-      "browser.newtabpage.activity-stream.discoverystream.spocs-endpoint",
+    this._setBoolPref(values, "discoverystream.enabled", false);
+    this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
+    this._setStringPref(values, "discoverystream.lang-layout-config", "");
+    this._setStringPref(
+      values,
+      "discoverystream.personalization.modelKeys",
       ""
     );
-    let discoveryStreamLangLayoutConfig = Services.prefs.getStringPref(
-      "browser.newtabpage.activity-stream.discoverystream.lang-layout-config",
-      ""
-    );
-    values["discoverystream.enabled"] = discoveryStreamEnabled;
-    this._prefMap.set("discoverystream.enabled", {
-      value: discoveryStreamEnabled,
-    });
-    values[
-      "discoverystream.hardcoded-basic-layout"
-    ] = discoveryStreamHardcodedBasicLayout;
-    this._prefMap.set("discoverystream.hardcoded-basic-layout", {
-      value: discoveryStreamHardcodedBasicLayout,
-    });
-    values["discoverystream.spocs-endpoint"] = discoveryStreamSpocsEndpoint;
-    this._prefMap.set("discoverystream.spocs-endpoint", {
-      value: discoveryStreamSpocsEndpoint,
-    });
-    values[
-      "discoverystream.lang-layout-config"
-    ] = discoveryStreamLangLayoutConfig;
-    this._prefMap.set("discoverystream.lang-layout-config", {
-      value: discoveryStreamLangLayoutConfig,
-    });
+    this._setIntPref(values, "discoverystream.personalization.version", 1);
+    this._setStringPref(values, "discoverystream.spocs-endpoint", "");
 
     // Set the initial state of all prefs in redux
     this.store.dispatch(

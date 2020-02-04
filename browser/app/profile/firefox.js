@@ -1300,6 +1300,10 @@ pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout"
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 // List of langs that get the 7 row layout.
 pref("browser.newtabpage.activity-stream.discoverystream.lang-layout-config", "en");
+// Switch between different versions of the recommendation provider.
+pref("browser.newtabpage.activity-stream.discoverystream.personalization.version", 1);
+// Configurable keys used by personalization version 2.
+pref("browser.newtabpage.activity-stream.discoverystream.personalization.modelKeys", "nb_model_business, nb_model_career, nb_model_education, nb_model_entertainment, nb_model_environment, nb_model_food, nb_model_gaming, nb_model_health_fitness, nb_model_parenting, nb_model_personal_finance, nb_model_politics, nb_model_science, nb_model_self_improvement, nb_model_sports, nb_model_technology, nb_model_travel");
 
 // The pref controls if search hand-off is enabled for Activity Stream.
 #ifdef NIGHTLY_BUILD
