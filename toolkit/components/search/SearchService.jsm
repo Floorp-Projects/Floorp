@@ -123,7 +123,7 @@ function isUSTimezone() {
 }
 
 // A method that tries to determine our region via an XHR geoip lookup.
-var ensureKnownRegion = async function(ss) {
+var ensureKnownRegion = async function(ss, awaitRegionCheck) {
   // If we have a region already stored in our prefs we trust it.
   let region = Services.prefs.getCharPref("browser.search.region", "");
   try {
@@ -131,7 +131,7 @@ var ensureKnownRegion = async function(ss) {
       // We don't have it cached, so fetch it. fetchRegion() will call
       // storeRegion if it gets a result (even if that happens after the
       // promise resolves) and fetchRegionDefault.
-      await fetchRegion(ss);
+      await fetchRegion(ss, awaitRegionCheck);
     } else if (gGeoSpecificDefaultsEnabled && !gModernConfig) {
       // The territory default we have already fetched may have expired.
       let expired = (ss.getGlobalAttr("searchDefaultExpir") || 0) <= Date.now();
@@ -159,7 +159,7 @@ var ensureKnownRegion = async function(ss) {
             clearTimeout(timerId);
             resolve();
           };
-          fetchRegionDefault(ss)
+          fetchRegionDefault(ss, awaitRegionCheck)
             .then(callback)
             .catch(err => {
               Cu.reportError(err);
@@ -246,7 +246,7 @@ async function storeRegion(region) {
 }
 
 // Get the region we are in via a XHR geoip request.
-function fetchRegion(ss) {
+function fetchRegion(ss, awaitRegionCheck) {
   // values for the SEARCH_SERVICE_COUNTRY_FETCH_RESULT 'enum' telemetry probe.
   const TELEMETRY_RESULT_ENUM = {
     SUCCESS: 0,
@@ -324,9 +324,9 @@ function fetchRegion(ss) {
       };
 
       if (result && gGeoSpecificDefaultsEnabled && gModernConfig) {
-        ss._maybeReloadEngines().then(callback);
+        ss._maybeReloadEngines(awaitRegionCheck).then(callback);
       } else if (result && gGeoSpecificDefaultsEnabled && !gModernConfig) {
-        fetchRegionDefault(ss)
+        fetchRegionDefault(ss, awaitRegionCheck)
           .then(callback)
           .catch(err => {
             Cu.reportError(err);
@@ -414,7 +414,7 @@ function convertGoogleEngines(engineNames) {
 // responsibility to ensure with a timer that we are not going to
 // block the async init for too long.
 // @deprecated Unused in the modern config.
-var fetchRegionDefault = ss =>
+var fetchRegionDefault = (ss, awaitRegionCheck) =>
   new Promise(resolve => {
     let urlTemplate = Services.prefs
       .getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF)
@@ -491,7 +491,7 @@ var fetchRegionDefault = ss =>
       );
       // If we're doing this somewhere during the app's lifetime, reload the list
       // of engines in order to pick up any geo-specific changes.
-      ss._maybeReloadEngines().finally(resolve);
+      ss._maybeReloadEngines(awaitRegionCheck).finally(resolve);
     };
     request.ontimeout = function(event) {
       SearchUtils.log("fetchRegionDefault: XHR finally timed-out");
@@ -700,6 +700,7 @@ SearchService.prototype = {
     this._searchPrivateDefault = null;
     this._searchOrder = [];
     this._metaData = {};
+    this._maybeReloadDebounce = false;
   },
 
   // If initialization has not been completed yet, perform synchronous
@@ -729,15 +730,15 @@ SearchService.prototype = {
   /**
    * Asynchronous implementation of the initializer.
    *
-   * @param {boolean} [skipRegionCheck]
+   * @param {boolean} [awaitRegionCheck]
    *   Indicates whether we should explicitly await the the region check process to
-   *   complete, which may be fetched remotely. Pass in `false` if the caller needs
+   *   complete, which may be fetched remotely. Pass in `true` if the caller needs
    *   to be absolutely certain of the correct default engine and/ or ordering of
    *   visible engines.
    * @returns {number}
    *   A Components.results success code on success, otherwise a failure code.
    */
-  async _init(skipRegionCheck) {
+  async _init(awaitRegionCheck) {
     SearchUtils.log("_init start");
 
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -763,12 +764,12 @@ SearchService.prototype = {
       // The init flow is not going to block on a fetch from an external service,
       // but we're kicking it off as soon as possible to prevent UI flickering as
       // much as possible.
-      this._ensureKnownRegionPromise = ensureKnownRegion(this)
+      this._ensureKnownRegionPromise = ensureKnownRegion(this, awaitRegionCheck)
         .catch(ex =>
           SearchUtils.log("_init: failure determining region: " + ex)
         )
         .finally(() => (this._ensureKnownRegionPromise = null));
-      if (!skipRegionCheck) {
+      if (awaitRegionCheck) {
         await this._ensureKnownRegionPromise;
       }
 
@@ -1386,8 +1387,39 @@ SearchService.prototype = {
   /**
    * Reloads engines asynchronously, but only when the service has already been
    * initialized.
+   * @param {boolean} awaitRegionCheck
+   *   Whether the caller is waiting for the region check.
    */
-  async _maybeReloadEngines() {
+  async _maybeReloadEngines(awaitRegionCheck) {
+    // The caller is already awaiting on the region check
+    // completing, so we dont need to queue a reload.
+    if (awaitRegionCheck) {
+      return;
+    }
+    if (!gInitialized) {
+      if (this._maybeReloadDebounce) {
+        SearchUtils.log(
+          "We're already waiting for init to finish and reload engines after."
+        );
+        return;
+      }
+      this._maybeReloadDebounce = true;
+      // Schedule a reload to happen at most 10 seconds after initialization of
+      // the service finished, during an idle moment.
+      this._initObservers.promise.then(() => {
+        Services.tm.idleDispatchToMainThread(() => {
+          if (!this._maybeReloadDebounce) {
+            return;
+          }
+          delete this._maybeReloadDebounce;
+          this._maybeReloadEngines();
+        }, 10000);
+      });
+      SearchUtils.log(
+        "Post-poning maybeReloadEngines() as we're currently initializing."
+      );
+      return;
+    }
     // There's no point in already reloading the list of engines, when the service
     // hasn't even initialized yet.
     if (!gInitialized) {
@@ -1445,7 +1477,7 @@ SearchService.prototype = {
     );
   },
 
-  _reInit(origin, skipRegionCheck = true) {
+  _reInit(origin, awaitRegionCheck = false) {
     SearchUtils.log("_reInit");
     // Re-entrance guard, because we're using an async lambda below.
     if (gReinitializing) {
@@ -1488,13 +1520,16 @@ SearchService.prototype = {
         // The init flow is not going to block on a fetch from an external service,
         // but we're kicking it off as soon as possible to prevent UI flickering as
         // much as possible.
-        this._ensureKnownRegionPromise = ensureKnownRegion(this)
+        this._ensureKnownRegionPromise = ensureKnownRegion(
+          this,
+          awaitRegionCheck
+        )
           .catch(ex =>
             SearchUtils.log("_reInit: failure determining region: " + ex)
           )
           .finally(() => (this._ensureKnownRegionPromise = null));
 
-        if (!skipRegionCheck) {
+        if (awaitRegionCheck) {
           await this._ensureKnownRegionPromise;
         }
 
@@ -2274,10 +2309,10 @@ SearchService.prototype = {
   },
 
   // nsISearchService
-  async init(skipRegionCheck = false) {
-    SearchUtils.log("SearchService.init: " + skipRegionCheck);
+  async init(awaitRegionCheck = false) {
+    SearchUtils.log("SearchService.init: " + awaitRegionCheck);
     if (this._initStarted) {
-      if (!skipRegionCheck) {
+      if (awaitRegionCheck) {
         await this._ensureKnownRegionPromise;
       }
       return this._initObservers.promise;
@@ -2287,7 +2322,7 @@ SearchService.prototype = {
     this._initStarted = true;
     try {
       // Complete initialization by calling asynchronous initializer.
-      await this._init(skipRegionCheck);
+      await this._init(awaitRegionCheck);
       TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
     } catch (ex) {
       if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
@@ -2314,24 +2349,24 @@ SearchService.prototype = {
   },
 
   // reInit is currently only exposed for testing purposes
-  async reInit(skipRegionCheck) {
-    return this._reInit("test", skipRegionCheck);
+  async reInit(awaitRegionCheck) {
+    return this._reInit("test", awaitRegionCheck);
   },
 
   async getEngines() {
-    await this.init(true);
+    await this.init();
     SearchUtils.log("getEngines: getting all engines");
     return this._getSortedEngines(true);
   },
 
   async getVisibleEngines() {
-    await this.init();
+    await this.init(true);
     SearchUtils.log("getVisibleEngines: getting all visible engines");
     return this._getSortedEngines(false);
   },
 
   async getDefaultEngines() {
-    await this.init(true);
+    await this.init();
     function isDefault(engine) {
       return engine._isDefault;
     }
@@ -2414,7 +2449,7 @@ SearchService.prototype = {
   },
 
   async getEnginesByExtensionID(extensionID) {
-    await this.init(true);
+    await this.init();
     SearchUtils.log("getEngines: getting all engines for " + extensionID);
     var engines = this._getSortedEngines(true).filter(function(engine) {
       return engine._extensionID == extensionID;
@@ -2481,7 +2516,7 @@ SearchService.prototype = {
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
     if (!gInitialized && !isBuiltin && !params.initEngine) {
-      await this.init(true);
+      await this.init();
     }
     if (!name) {
       SearchUtils.fail("Invalid name passed to addEngineWithDetails!");
@@ -2767,7 +2802,7 @@ SearchService.prototype = {
 
   async addEngine(engineURL, iconURL, confirm, extensionID) {
     SearchUtils.log('addEngine: Adding "' + engineURL + '".');
-    await this.init(true);
+    await this.init();
     let errCode;
     try {
       var engine = new SearchEngine({
@@ -2811,7 +2846,7 @@ SearchService.prototype = {
   },
 
   async removeEngine(engine) {
-    await this.init(true);
+    await this.init();
     if (!engine) {
       SearchUtils.fail("no engine passed to removeEngine!");
     }
@@ -2882,7 +2917,7 @@ SearchService.prototype = {
   },
 
   async moveEngine(engine, newIndex) {
-    await this.init(true);
+    await this.init();
     if (newIndex > this._sortedEngines.length || newIndex < 0) {
       SearchUtils.fail("moveEngine: Index out of bounds!");
     }
@@ -3145,22 +3180,22 @@ SearchService.prototype = {
   },
 
   async getDefault() {
-    await this.init(true);
+    await this.init();
     return this.defaultEngine;
   },
 
   async setDefault(engine) {
-    await this.init(true);
+    await this.init();
     return (this.defaultEngine = engine);
   },
 
   async getDefaultPrivate() {
-    await this.init(true);
+    await this.init();
     return this.defaultPrivateEngine;
   },
 
   async setDefaultPrivate(engine) {
-    await this.init(true);
+    await this.init();
     return (this.defaultPrivateEngine = engine);
   },
 
