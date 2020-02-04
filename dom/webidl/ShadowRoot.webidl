@@ -37,10 +37,10 @@ interface ShadowRoot : DocumentFragment
   // As such, these methods allow UA widget code to simultaneously create nodes
   // and associate them with the UA widget tree, so that the reflectors get
   // created in the right scope.
-  [CEReactions, Throws, Func="IsChromeOrXBLOrUAWidget"]
+  [CEReactions, Throws, Func="IsChromeOrUAWidget"]
   Node importNodeAndAppendChildAt(Node parentNode, Node node, optional boolean deep = false);
 
-  [CEReactions, Throws, Func="IsChromeOrXBLOrUAWidget"]
+  [CEReactions, Throws, Func="IsChromeOrUAWidget"]
   Node createElementAndAppendChildAt(Node parentNode, DOMString localName);
 
   // For triggering UA Widget scope in tests.

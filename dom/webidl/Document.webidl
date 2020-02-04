@@ -197,7 +197,7 @@ partial interface Document {
    * True if this document is synthetic : stand alone image, video, audio file,
    * etc.
    */
-  [Func="IsChromeOrXBLOrUAWidget"] readonly attribute boolean mozSyntheticDocument;
+  [Func="IsChromeOrUAWidget"] readonly attribute boolean mozSyntheticDocument;
   /**
    * Returns the script element whose script is currently being processed.
    *
@@ -379,7 +379,7 @@ partial interface Document {
 //  Mozilla extensions of various sorts
 partial interface Document {
   // Creates a new XUL element regardless of the document's default type.
-  [CEReactions, NewObject, Throws, Func="IsChromeOrXBL"]
+  [ChromeOnly, CEReactions, NewObject, Throws]
   Element createXULElement(DOMString localName, optional (ElementCreationOptions or DOMString) options = {});
   // Wether the document was loaded using a nsXULPrototypeDocument.
   [ChromeOnly]

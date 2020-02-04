@@ -4,8 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Func="IsChromeOrXBL",
- Exposed=Window]
+[ChromeOnly, Exposed=Window]
 interface CommandEvent : Event {
   readonly attribute DOMString? command;
 };

@@ -35,7 +35,6 @@ void IntlUtils::GetDisplayNames(const Sequence<nsString>& aLocales,
                                 DisplayNameResult& aResult,
                                 ErrorResult& aError) {
   MOZ_ASSERT(nsContentUtils::IsCallerChrome() ||
-             nsContentUtils::IsCallerContentXBL() ||
              nsContentUtils::IsCallerUAWidget());
 
   nsCOMPtr<mozIMozIntl> mozIntl = do_GetService("@mozilla.org/mozintl;1");
@@ -90,7 +89,6 @@ void IntlUtils::GetDisplayNames(const Sequence<nsString>& aLocales,
 void IntlUtils::GetLocaleInfo(const Sequence<nsString>& aLocales,
                               LocaleInfo& aResult, ErrorResult& aError) {
   MOZ_ASSERT(nsContentUtils::IsCallerChrome() ||
-             nsContentUtils::IsCallerContentXBL() ||
              nsContentUtils::IsCallerUAWidget());
 
   nsCOMPtr<mozIMozIntl> mozIntl = do_GetService("@mozilla.org/mozintl;1");
