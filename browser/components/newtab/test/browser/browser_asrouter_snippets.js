@@ -46,8 +46,10 @@ test_newtab({
       type: "SET_MESSAGE",
       data,
     });
+
+    return data;
   },
-  test: async function test_simple_snippet() {
+  test: async function test_simple_snippet(msg) {
     // Verify the simple_snippet renders in the footer and the container below
     // searchbox is not rendered.
     await ContentTaskUtils.waitForCondition(
@@ -56,6 +58,22 @@ test_newtab({
           "#footer-asrouter-container .SimpleSnippet"
         ),
       "Should find the snippet inside the footer container"
+    );
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.querySelector(
+          "#footer-asrouter-container .SimpleSnippet .icon"
+        ),
+      "Should render an icon"
+    );
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.querySelector(
+          `#footer-asrouter-container .SimpleSnippet a[href='${
+            msg.content.links.syncLink.url
+          }']`
+        ),
+      "Should render an anchor with the correct href"
     );
 
     ok(
