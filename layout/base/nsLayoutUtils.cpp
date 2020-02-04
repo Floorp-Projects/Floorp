@@ -7194,7 +7194,7 @@ static bool NonZeroCorner(const LengthPercentage& aLength) {
 
 /* static */
 bool nsLayoutUtils::HasNonZeroCorner(const BorderRadius& aCorners) {
-  NS_FOR_CSS_HALF_CORNERS(corner) {
+  for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
     if (NonZeroCorner(aCorners.Get(corner))) return true;
   }
   return false;
@@ -7239,7 +7239,7 @@ bool nsLayoutUtils::HasNonZeroCornerOnSide(const BorderRadius& aCorners,
   static_assert(eCornerBottomLeftY / 2 == eCornerBottomLeft,
                 "Check for Non Zero on side");
 
-  NS_FOR_CSS_HALF_CORNERS(corner) {
+  for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
     // corner is a "half corner" value, so dividing by two gives us a
     // "full corner" value.
     if (NonZeroCorner(aCorners.Get(corner)) &&

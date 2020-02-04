@@ -1815,7 +1815,7 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
                                   const nsSize& aBorderArea, Sides aSkipSides,
                                   nscoord aRadii[8]) {
   // Percentages are relative to whichever side they're on.
-  NS_FOR_CSS_HALF_CORNERS(i) {
+  for (const auto i : mozilla::AllPhysicalHalfCorners()) {
     const LengthPercentage& c = aBorderRadius.Get(i);
     nscoord axis = HalfCornerIsX(i) ? aFrameSize.width : aFrameSize.height;
     aRadii[i] = std::max(0, c.Resolve(axis));
@@ -1868,7 +1868,9 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
     }
   }
   if (ratio < 1.0) {
-    NS_FOR_CSS_HALF_CORNERS(corner) { aRadii[corner] *= ratio; }
+    for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
+      aRadii[corner] *= ratio;
+    }
   }
 
   return haveRadius;
@@ -1916,7 +1918,7 @@ void nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
 }
 
 static inline bool RadiiAreDefinitelyZero(const BorderRadius& aBorderRadius) {
-  NS_FOR_CSS_HALF_CORNERS(corner) {
+  for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
     if (!aBorderRadius.Get(corner).IsDefinitelyZero()) {
       return false;
     }
@@ -1941,7 +1943,9 @@ bool nsIFrame::GetBorderRadii(const nsSize& aFrameSize,
     // In an ideal world, we might have a way for the them to tell us an
     // border radius, but since we don't, we're better off assuming
     // zero.
-    NS_FOR_CSS_HALF_CORNERS(corner) { aRadii[corner] = 0; }
+    for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
+      aRadii[corner] = 0;
+    }
     return false;
   }
 
@@ -1984,7 +1988,7 @@ bool nsIFrame::GetBoxBorderRadii(nscoord aRadii[8], nsMargin aOffset,
   } else {
     InsetBorderRadii(aRadii, aOffset);
   }
-  NS_FOR_CSS_HALF_CORNERS(corner) {
+  for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
     if (aRadii[corner]) return true;
   }
   return false;

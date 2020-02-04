@@ -564,23 +564,9 @@ enum HalfCorner : uint8_t {
   eCornerBottomLeftY = 7
 };
 
-// Creates a for loop that walks over the eight mozilla::HalfCorner values.
-// This implementation uses the same technique as NS_FOR_CSS_SIDES.
-#define NS_FOR_CSS_HALF_CORNERS(var_)                                \
-  int32_t MOZ_CONCAT(var_, __LINE__) = mozilla::eCornerTopLeftX;     \
-  for (mozilla::HalfCorner var_;                                     \
-       MOZ_CONCAT(var_, __LINE__) <= mozilla::eCornerBottomLeftY &&  \
-       (static_cast<void>(                                           \
-            var_ = mozilla::HalfCorner(MOZ_CONCAT(var_, __LINE__))), \
-        true);                                                       \
-       ++MOZ_CONCAT(var_, __LINE__))
-
-static inline HalfCorner operator++(HalfCorner& aHalfCorner) {
-  MOZ_ASSERT(
-      aHalfCorner >= eCornerTopLeftX && aHalfCorner <= eCornerBottomLeftY,
-      "Out of range half corner!");
-  aHalfCorner = HalfCorner(aHalfCorner + 1);
-  return aHalfCorner;
+constexpr auto AllPhysicalHalfCorners() {
+  return mozilla::MakeInclusiveEnumeratedRange(eCornerTopLeftX,
+                                               eCornerBottomLeftY);
 }
 
 // The result of these conversion functions are exhaustively checked in

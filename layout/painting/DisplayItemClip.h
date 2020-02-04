@@ -57,7 +57,7 @@ class DisplayItemClip {
         return false;
       }
 
-      NS_FOR_CSS_HALF_CORNERS(corner) {
+      for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
         if (mRadii[corner] != aOther.mRadii[corner]) {
           return false;
         }
