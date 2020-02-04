@@ -275,8 +275,18 @@ bool JitSupportsSimd();
 bool JitSupportsAtomics();
 
 inline bool IsIonEnabled(JSContext* cx) {
-  return IsBaselineJitEnabled() && JitOptions.ion &&
-         !cx->options().disableIon();
+  if (MOZ_UNLIKELY(!IsBaselineJitEnabled() || cx->options().disableIon())) {
+    return false;
+  }
+  if (MOZ_LIKELY(JitOptions.ion)) {
+    return true;
+  }
+  if (JitOptions.ionForTrustedPrincipals) {
+    JS::Realm* realm = js::GetContextRealm(cx);
+    return realm && JS::GetRealmPrincipals(realm) &&
+           JS::GetRealmPrincipals(realm)->isSystemOrAddonPrincipal();
+  }
+  return false;
 }
 
 }  // namespace jit

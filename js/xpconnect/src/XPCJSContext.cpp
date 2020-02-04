@@ -789,6 +789,8 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   bool useBaselineInterp = Preferences::GetBool(JS_OPTIONS_DOT_STR "blinterp");
   bool useBaselineJit = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit");
   bool useIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion");
+  bool useIonForTrustedPrincipals =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "ion_trustedprincipals");
   bool useNativeRegExp =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "native_regexp");
 
@@ -838,6 +840,7 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
       useBaselineInterp = false;
       useBaselineJit = false;
       useIon = false;
+      useIonForTrustedPrincipals = false;
       useNativeRegExp = false;
     }
   }
@@ -847,6 +850,8 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE,
                                 useBaselineJit);
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_ENABLE, useIon);
+  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_TRUSTEDPRINCIPALS_ENABLE,
+                                useIonForTrustedPrincipals);
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_NATIVE_REGEXP_ENABLE,
                                 useNativeRegExp);
 
