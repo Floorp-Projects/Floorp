@@ -365,8 +365,8 @@ class UrlbarView {
     // focus) we should discard the telemetry event created when the view was
     // opened.
     if (!this.input.focused && !elementPicked) {
-      this.input.controller.engagementEvent.discard();
-      this.input.controller.engagementEvent.record(null, {});
+      this.controller.engagementEvent.discard();
+      this.controller.engagementEvent.record(null, {});
     }
 
     this.window.removeEventListener("resize", this);
@@ -387,6 +387,10 @@ class UrlbarView {
    * @returns {boolean} Whether the view was opened.
    */
   autoOpen(queryOptions = {}) {
+    if (this._pickSearchTipIfPresent(queryOptions.event)) {
+      return false;
+    }
+
     if (!this.input.openViewOnFocus || !queryOptions.event) {
       return false;
     }
@@ -395,8 +399,8 @@ class UrlbarView {
       !this.input.value ||
       this.input.getAttribute("pageproxystate") == "valid"
     ) {
-      // We do not show Top Sites in private windows, or if the user disabled them
-      // on about:newtab.
+      // We do not show Top Sites in private windows, or if the user disabled
+      // them on about:newtab.
       let canOpenTopSites =
         !this.input.isPrivate &&
         UrlbarPrefs.get("browser.newtabpage.activity-stream.feeds.topsites");
@@ -1400,6 +1404,38 @@ class UrlbarView {
     } else {
       element.removeAttribute("title");
     }
+  }
+
+  /**
+   * If the view is open and showing a single search tip, this method picks it
+   * and closes the view.  This counts as an engagement, so this method should
+   * only be called due to user interaction.
+   *
+   * @param {event} event
+   *   The user-initiated event for the interaction.  Should not be null.
+   * @returns {boolean}
+   *   True if this method picked a tip, false otherwise.
+   */
+  _pickSearchTipIfPresent(event) {
+    if (
+      !this.isOpen ||
+      !this._queryContext ||
+      this._queryContext.results.length != 1
+    ) {
+      return false;
+    }
+    let result = this._queryContext.results[0];
+    if (result.type != UrlbarUtils.RESULT_TYPE.TIP) {
+      return false;
+    }
+    let tipButton = this._rows.firstElementChild.querySelector(
+      ".urlbarView-tip-button"
+    );
+    if (!tipButton) {
+      throw new Error("Expected a tip button");
+    }
+    this.input.pickElement(tipButton, event);
+    return true;
   }
 
   // Event handlers below.
