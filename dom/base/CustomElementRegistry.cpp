@@ -1117,7 +1117,7 @@ static void DoUpgrade(Element* aElement, CustomElementDefinition* aDefinition,
   // always forms the return value from a JSObject.
   if (NS_FAILED(UNWRAP_OBJECT(Element, &constructResult, element)) ||
       element != aElement) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowTypeError(u"Custom element constructor returned a wrong element");
     return;
   }
 }
