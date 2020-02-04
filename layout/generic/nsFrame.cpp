@@ -1265,7 +1265,7 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     if (disp->mPosition != oldDisp->mPosition) {
       if (!disp->IsRelativelyPositionedStyle() &&
           oldDisp->IsRelativelyPositionedStyle()) {
-        RemoveProperty(NormalPositionProperty());
+        DeleteProperty(NormalPositionProperty());
       }
 
       handleStickyChange = disp->mPosition == NS_STYLE_POSITION_STICKY ||
