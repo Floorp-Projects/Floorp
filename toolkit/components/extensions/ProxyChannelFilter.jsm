@@ -308,7 +308,7 @@ class ProxyChannelFilter {
     if (this.extraInfoSpec.includes("requestHeaders")) {
       data.requestHeaders = channel.getRequestHeaders();
     }
-    if (this.extension.isPrivileged) {
+    if (channel.urlClassification) {
       data.urlClassification = {
         firstParty: channel.urlClassification.firstParty.filter(
           c => !c.startsWith("socialtracking")
