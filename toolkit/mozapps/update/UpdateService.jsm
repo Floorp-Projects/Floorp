@@ -3289,6 +3289,15 @@ UpdateService.prototype = {
     if (!gLogEnabled) {
       return;
     }
+    if (this.disabledByPolicy) {
+      LOG("Current UpdateService status: disabledByPolicy");
+      // Return early if UpdateService is disabled by policy. Otherwise some of
+      // the getters we call to display status information may discover that the
+      // update directory is not writable, which automatically results in the
+      // permissions being fixed. Which we shouldn't really be doing if update
+      // is disabled by policy.
+      return;
+    }
     LOG("Logging current UpdateService status:");
     // These getters print their own logging
     this.canCheckForUpdates;
