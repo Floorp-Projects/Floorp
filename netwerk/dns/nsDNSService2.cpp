@@ -118,6 +118,29 @@ nsDNSRecord::IsTRR(bool* retval) {
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDNSRecord::GetTrrFetchDuration(double* aTime) {
+  MutexAutoLock lock(mHostRecord->addr_info_lock);
+  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRR()) {
+    *aTime = mHostRecord->addr_info->GetTrrFetchDuration();
+  } else {
+    *aTime = 0;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSRecord::GetTrrFetchDurationNetworkOnly(double* aTime) {
+  MutexAutoLock lock(mHostRecord->addr_info_lock);
+  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRR()) {
+    *aTime = mHostRecord->addr_info->GetTrrFetchDurationNetworkOnly();
+  } else {
+    *aTime = 0;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
   if (mDone) {

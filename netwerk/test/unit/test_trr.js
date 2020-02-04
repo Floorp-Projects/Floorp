@@ -112,10 +112,11 @@ const BAD_IP = (() => {
 })();
 
 class DNSListener {
-  constructor(name, expectedAnswer, expectedSuccess = true) {
+  constructor(name, expectedAnswer, expectedSuccess = true, delay) {
     this.name = name;
     this.expectedAnswer = expectedAnswer;
     this.expectedSuccess = expectedSuccess;
+    this.delay = delay;
     this.promise = new Promise(resolve => {
       this.resolve = resolve;
     });
@@ -148,6 +149,36 @@ class DNSListener {
       this.expectedAnswer,
       `Checking result for ${this.name}`
     );
+
+    if (this.delay !== undefined) {
+      Assert.greaterOrEqual(
+        inRecord.trrFetchDurationNetworkOnly,
+        this.delay,
+        `the response should take at least ${this.delay}`
+      );
+
+      Assert.greaterOrEqual(
+        inRecord.trrFetchDuration,
+        this.delay,
+        `the response should take at least ${this.delay}`
+      );
+
+      if (this.delay == 0) {
+        // The response timing should be really 0
+        Assert.equal(
+          inRecord.trrFetchDurationNetworkOnly,
+          0,
+          `the response time should be 0`
+        );
+
+        Assert.equal(
+          inRecord.trrFetchDuration,
+          this.delay,
+          `the response time should be 0`
+        );
+      }
+    }
+
     this.resolve([inRequest, inRecord, inStatus]);
   }
 
@@ -163,6 +194,7 @@ class DNSListener {
     return this.promise.then.apply(this.promise, arguments);
   }
 }
+
 add_task(async function test0_nodeExecute() {
   // This test checks that moz-http2.js running in node is working.
   // This should always be the first test in this file (except for setup)
@@ -1376,6 +1408,59 @@ add_task(async function test_vpnDetection() {
     "network:link-status-changed",
     "changed"
   );
+});
+
+// verify TRR timings
+add_task(async function test_fetch_time() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2&delayIPv4=20`
+  );
+
+  await new DNSListener("bar_time.example.com", "2.2.2.2", true, 20);
+});
+
+// gets an error from DoH. It will fall back to regular DNS. The TRR timing should be 0.
+add_task(async function test_no_fetch_time_on_trr_error() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/404&delayIPv4=20`
+  );
+
+  await new DNSListener("bar_time1.example.com", "127.0.0.1", true, 0);
+});
+
+// check an excluded domain. It should fall back to regular DNS. The TRR timing should be 0.
+add_task(async function test_no_fetch_time_for_excluded_domains() {
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.excluded-domains",
+    "bar_time2.example.com"
+  );
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2&delayIPv4=20`
+  );
+
+  await new DNSListener("bar_time2.example.com", "127.0.0.1", true, 0);
+
+  Services.prefs.setCharPref("network.trr.excluded-domains", "");
+});
+
+// verify RFC1918 address from the server is rejected and the TRR timing will be not set because the response will be from the native resolver.
+add_task(async function test_no_fetch_time_for_rfc1918_not_allowed() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=192.168.0.1&delayIPv4=20`
+  );
+  await new DNSListener("rfc1918_time.example.com", "127.0.0.1", true, 0);
 });
 
 // confirmationNS set without confirmed NS yet

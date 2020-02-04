@@ -154,9 +154,20 @@ class AddrInfo {
   AutoCleanLinkedList<NetAddrElement> mAddresses;
   unsigned int IsTRR() { return mFromTRR; }
 
+  double GetTrrFetchDuration() { return mTrrFetchDuration; }
+  double GetTrrFetchDurationNetworkOnly() { return mTrrFetchDurationNetworkOnly; }
+  void SetTrrFetchDuration(double aTime) {
+      mTrrFetchDuration = aTime;
+  }
+  void SetTrrFetchDurationNetworkOnly(double aTime) {
+      mTrrFetchDurationNetworkOnly = aTime;
+  }
+
  private:
   ~AddrInfo();
   unsigned int mFromTRR;
+  double mTrrFetchDuration;
+  double mTrrFetchDurationNetworkOnly;
 };
 
 // Copies the contents of a PRNetAddr to a NetAddr.
