@@ -77,7 +77,7 @@ interface Element : Node {
   [Pure]
   HTMLCollection getElementsByClassName(DOMString classNames);
 
-  [CEReactions, Throws, Pure]
+  [CEReactions, Throws]
   Element? insertAdjacentElement(DOMString where, Element element); // historical
 
   [Throws]
