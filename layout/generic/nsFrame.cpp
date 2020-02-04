@@ -710,22 +710,9 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   const nsStyleDisplay* disp = StyleDisplay();
   if (disp->HasTransform(this)) {
-    // The frame gets reconstructed if we toggle the transform
-    // property, so we can set this bit here and then ignore it.
+    // If 'transform' dynamically changes, RestyleManager takes care of
+    // updating this bit.
     AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
-  }
-  if (disp->mPosition == NS_STYLE_POSITION_STICKY && !aPrevInFlow &&
-      !(mState & NS_FRAME_IS_NONDISPLAY)) {
-    // Note that we only add first continuations, but we really only
-    // want to add first continuation-or-ib-split-siblings.  But since we
-    // don't yet know if we're a later part of a block-in-inline split,
-    // we'll just add later members of a block-in-inline split here, and
-    // then StickyScrollContainer will remove them later.
-    StickyScrollContainer* ssc =
-        StickyScrollContainer::GetStickyScrollContainerForFrame(this);
-    if (ssc) {
-      ssc->AddFrame(this);
-    }
   }
 
   if (disp->IsContainLayout() && disp->IsContainSize() &&
@@ -1202,6 +1189,8 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   newLayers = &StyleSVGReset()->mMask;
   AddAndRemoveImageAssociations(*imageLoader, this, oldLayers, newLayers);
 
+  const nsStyleDisplay* disp = StyleDisplay();
+  bool handleStickyChange = false;
   if (aOldComputedStyle) {
     // Detect style changes that should trigger a scroll anchor adjustment
     // suppression.
@@ -1243,7 +1232,7 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
 
     const nsStyleDisplay* oldDisp = aOldComputedStyle->StyleDisplay();
-    if (oldDisp->mOverflowAnchor != StyleDisplay()->mOverflowAnchor) {
+    if (oldDisp->mOverflowAnchor != disp->mOverflowAnchor) {
       if (auto* container = ScrollAnchorContainer::FindFor(this)) {
         container->InvalidateAnchor();
       }
@@ -1253,23 +1242,52 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
 
     if (mInScrollAnchorChain) {
-      const nsStylePosition* oldPosition = aOldComputedStyle->StylePosition();
+      const nsStylePosition* pos = StylePosition();
+      const nsStylePosition* oldPos = aOldComputedStyle->StylePosition();
       if (!needAnchorSuppression &&
-          (oldPosition->mOffset != StylePosition()->mOffset ||
-           oldPosition->mWidth != StylePosition()->mWidth ||
-           oldPosition->mMinWidth != StylePosition()->mMinWidth ||
-           oldPosition->mMaxWidth != StylePosition()->mMaxWidth ||
-           oldPosition->mHeight != StylePosition()->mHeight ||
-           oldPosition->mMinHeight != StylePosition()->mMinHeight ||
-           oldPosition->mMaxHeight != StylePosition()->mMaxHeight ||
-           oldDisp->mPosition != StyleDisplay()->mPosition ||
-           oldDisp->mTransform != StyleDisplay()->mTransform)) {
+          (oldPos->mOffset != pos->mOffset || oldPos->mWidth != pos->mWidth ||
+           oldPos->mMinWidth != pos->mMinWidth ||
+           oldPos->mMaxWidth != pos->mMaxWidth ||
+           oldPos->mHeight != pos->mHeight ||
+           oldPos->mMinHeight != pos->mMinHeight ||
+           oldPos->mMaxHeight != pos->mMaxHeight ||
+           oldDisp->mPosition != disp->mPosition ||
+           oldDisp->mTransform != disp->mTransform)) {
         needAnchorSuppression = true;
       }
 
       if (needAnchorSuppression &&
           StaticPrefs::layout_css_scroll_anchoring_suppressions_enabled()) {
         ScrollAnchorContainer::FindFor(this)->SuppressAdjustments();
+      }
+    }
+
+    if (disp->mPosition != oldDisp->mPosition) {
+      if (!disp->IsRelativelyPositionedStyle() &&
+          oldDisp->IsRelativelyPositionedStyle()) {
+        RemoveProperty(NormalPositionProperty());
+      }
+
+      handleStickyChange = disp->mPosition == NS_STYLE_POSITION_STICKY ||
+                           oldDisp->mPosition == NS_STYLE_POSITION_STICKY;
+    }
+  } else {  // !aOldComputedStyle
+    handleStickyChange = disp->mPosition == NS_STYLE_POSITION_STICKY;
+  }
+
+  if (handleStickyChange && !HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) &&
+      !GetPrevInFlow()) {
+    // Note that we only add first continuations, but we really only
+    // want to add first continuation-or-ib-split-siblings. But since we don't
+    // yet know if we're a later part of a block-in-inline split, we'll just
+    // add later members of a block-in-inline split here, and then
+    // StickyScrollContainer will remove them later.
+    if (auto* ssc =
+            StickyScrollContainer::GetStickyScrollContainerForFrame(this)) {
+      if (disp->mPosition == NS_STYLE_POSITION_STICKY) {
+        ssc->AddFrame(this);
+      } else {
+        ssc->RemoveFrame(this);
       }
     }
   }
