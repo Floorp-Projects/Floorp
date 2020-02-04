@@ -32,11 +32,12 @@
 
 #ifdef XP_MACOSX
 #include ../../../base/content/macWindow.inc.xhtml
+#else
+    <script src="chrome://browser/content/utilityOverlay.js"/>
 #endif
 
     <stringbundle id="backgroundBundle"
                   src="chrome://browser/locale/shellservice.properties"/>
-    <script src="chrome://browser/content/utilityOverlay.js"/>
     <script src="chrome://browser/content/setDesktopBackground.js"/>
     <script src="chrome://global/content/contentAreaUtils.js"/>
 
