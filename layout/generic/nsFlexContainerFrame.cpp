@@ -5192,6 +5192,11 @@ nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
   bool onFirstChild = true;
 
   for (nsIFrame* childFrame : mFrames) {
+    // Skip out-of-flow children because they don't participate in flex layout.
+    if (childFrame->IsPlaceholderFrame()) {
+      continue;
+    }
+
     // If we're using legacy "visibility:collapse" behavior, then we don't
     // care about the sizes of any collapsed children.
     if (!useMozBoxCollapseBehavior ||
