@@ -884,6 +884,10 @@ nsresult nsSystemInfo::Init() {
     secondaryLibrary.Append(nsDependentCSubstring(gtkver, gtkver_len));
   }
 
+#ifndef MOZ_TSAN
+  // With TSan, avoid loading libpulse here because we cannot unload it
+  // afterwards due to restrictions from TSan about unloading libraries
+  // matched by the suppression list.
   void* libpulse = dlopen("libpulse.so.0", RTLD_LAZY);
   const char* libpulseVersion = "not-available";
   if (libpulse) {
@@ -900,6 +904,7 @@ nsresult nsSystemInfo::Init() {
   if (libpulse) {
     dlclose(libpulse);
   }
+#endif
 
   rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
                              secondaryLibrary);

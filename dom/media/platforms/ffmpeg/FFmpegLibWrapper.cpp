@@ -173,12 +173,17 @@ void FFmpegLibWrapper::Unlink() {
     // This prevents ASAN and valgrind to report sizeof(pthread_mutex_t) leaks.
     av_lockmgr_register(nullptr);
   }
+#ifndef MOZ_TSAN
+  // With TSan, we cannot unload libav once we have loaded it because
+  // TSan does not support unloading libraries that are matched from its
+  // suppression list. Hence we just keep the library loaded in TSan builds.
   if (mAVUtilLib && mAVUtilLib != mAVCodecLib) {
     PR_UnloadLibrary(mAVUtilLib);
   }
   if (mAVCodecLib) {
     PR_UnloadLibrary(mAVCodecLib);
   }
+#endif
   PodZero(this);
 }
 

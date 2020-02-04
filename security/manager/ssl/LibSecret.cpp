@@ -120,10 +120,19 @@ nsresult MaybeLoadLibSecret() {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
+// With TSan, we cannot unload libsecret once we have loaded it because
+// TSan does not support unloading libraries that are matched from its
+// suppression list. Hence we just keep the library loaded in TSan builds.
+#ifdef MOZ_TSAN
+#  define UNLOAD_LIBSECRET(x) do {} while(0)
+#else
+#  define UNLOAD_LIBSECRET(x) PR_UnloadLibrary(x)
+#endif
+
 #define FIND_FUNCTION_SYMBOL(function)                                   \
   function = (function##_fn)PR_FindFunctionSymbol(libsecret, #function); \
   if (!(function)) {                                                     \
-    PR_UnloadLibrary(libsecret);                                         \
+    UNLOAD_LIBSECRET(libsecret);                                         \
     libsecret = nullptr;                                                 \
     return NS_ERROR_NOT_AVAILABLE;                                       \
   }
@@ -195,7 +204,7 @@ LibSecret::~LibSecret() {
     secret_password_store_sync = nullptr;
     secret_password_free = nullptr;
     secret_error_get_quark = nullptr;
-    PR_UnloadLibrary(libsecret);
+    UNLOAD_LIBSECRET(libsecret);
     libsecret = nullptr;
   }
 }
