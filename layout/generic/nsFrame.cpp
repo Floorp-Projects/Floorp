@@ -1853,7 +1853,7 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   // corner radii when they are too big.
   bool haveRadius = false;
   double ratio = 1.0f;
-  NS_FOR_CSS_SIDES(side) {
+  for (const auto side : mozilla::AllPhysicalSides()) {
     uint32_t hc1 = SideToHalfCorner(side, false, true);
     uint32_t hc2 = SideToHalfCorner(side, true, true);
     nscoord length =
@@ -1876,7 +1876,7 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
 
 /* static */
 void nsIFrame::InsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
-  NS_FOR_CSS_SIDES(side) {
+  for (const auto side : mozilla::AllPhysicalSides()) {
     nscoord offset = aOffsets.Side(side);
     uint32_t hc1 = SideToHalfCorner(side, false, false);
     uint32_t hc2 = SideToHalfCorner(side, true, false);
@@ -1900,7 +1900,7 @@ void nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
     return aOffset;
   };
 
-  NS_FOR_CSS_SIDES(side) {
+  for (const auto side : mozilla::AllPhysicalSides()) {
     const nscoord offset = aOffsets.Side(side);
     const uint32_t hc1 = SideToHalfCorner(side, false, false);
     const uint32_t hc2 = SideToHalfCorner(side, true, false);
