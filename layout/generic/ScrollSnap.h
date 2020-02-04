@@ -10,6 +10,9 @@
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/Maybe.h"
 
+struct nsPoint;
+struct nsRect;
+
 namespace mozilla {
 
 namespace layers {
