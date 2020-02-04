@@ -1089,9 +1089,7 @@ function invokeInTab(fnc, ...args) {
   return ContentTask.spawn(
     gBrowser.selectedBrowser,
     { fnc, args },
-    function({ fnc, args }) {
-      return content.wrappedJSObject[fnc](...args);
-    }
+    ({ fnc, args }) => content.wrappedJSObject[fnc](...args)
   );
 }
 
@@ -1936,6 +1934,30 @@ function evaluateExpressionInConsole(hud, expression) {
 
 function waitForInspectorPanelChange(dbg) {
   return dbg.toolbox.getPanelWhenReady("inspector");
+}
+
+function getEagerEvaluationElement(hud) {
+  return hud.ui.outputNode.querySelector(".eager-evaluation-result");
+}
+
+async function waitForEagerEvaluationResult(hud, text) {
+  await waitUntil(() => {
+    const elem = getEagerEvaluationElement(hud);
+    if (elem) {
+      if (text instanceof RegExp) {
+        return text.test(elem.innerText);
+      }
+      return elem.innerText == text;
+    }
+    return false;
+  });
+  ok(true, `Got eager evaluation result ${text}`);
+}
+
+function setInputValue(hud, value) {
+  const onValueSet = hud.jsterm.once("set-input-value");
+  hud.jsterm._setValue(value);
+  return onValueSet;
 }
 
 const { PromiseTestUtils } = ChromeUtils.import(

@@ -234,7 +234,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   get skipBreakpoints() {
-    return this._options.skipBreakpoints;
+    return (
+      this._options.skipBreakpoints ||
+      (this.insideClientEvaluation && this.insideClientEvaluation.eager)
+    );
   },
 
   /**
