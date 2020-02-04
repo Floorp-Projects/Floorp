@@ -22,7 +22,7 @@ add_task(async function test_regular_init() {
       Services.obs.addObserver(obs, SEARCH_SERVICE_TOPIC);
 
       await Promise.all([
-        Services.search.init(),
+        Services.search.init(true),
         SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
         promiseAfterCache(),
       ]);

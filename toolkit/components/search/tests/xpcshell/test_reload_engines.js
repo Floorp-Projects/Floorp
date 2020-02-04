@@ -74,7 +74,7 @@ add_task(async function test_regular_init() {
   Services.prefs.setCharPref("browser.search.geoip.url", geoUrl);
 
   await Promise.all([
-    Services.search.init(),
+    Services.search.init(true),
     SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
     promiseAfterCache(),
   ]);
@@ -93,10 +93,6 @@ add_task(async function test_regular_init() {
 
 add_task(async function test_init_with_slow_region_lookup() {
   let reloadObserved = listenFor(SEARCH_SERVICE_TOPIC, "engines-reloaded");
-  let privateEngineNotification = listenFor(
-    SearchUtils.TOPIC_ENGINE_MODIFIED,
-    SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
-  );
   let initPromise;
 
   // Ensure the region lookup completes after init so the
@@ -135,16 +131,6 @@ add_task(async function test_init_with_slow_region_lookup() {
     "Test engine shouldn't be the default anymore"
   );
 
-  // Note: If we don't call getDefaultPrivate() then
-  // this._currentPrivateEngine never gets set in
-  // SearchService.jsm which means the private engine
-  // changed notification doesn't get sent.
-  Assert.equal(
-    (await Services.search.getDefaultPrivate()).name,
-    DEFAULT,
-    "Test engine shouldn't be the private default anymore either"
-  );
-
   await Promise.all(otherPromises);
 
   // Ensure that correct engine is being reported as the default.
@@ -160,5 +146,4 @@ add_task(async function test_init_with_slow_region_lookup() {
   );
 
   Assert.ok(reloadObserved(), "Engines do reload with delayed region fetch");
-  Assert.ok(privateEngineNotification(), "Private engine notified its change");
 });
