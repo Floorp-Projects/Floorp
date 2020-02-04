@@ -3503,7 +3503,7 @@ void PrintHitTestInfoStatsInternal(nsDisplayList* aList, int& aTotal,
       aHitTest++;
 
       const auto& hitTestInfo =
-          static_cast<nsDisplayHitTestInfoItem*>(i)->HitTestFlags();
+          static_cast<nsDisplayHitTestInfoBase*>(i)->HitTestFlags();
 
       if (hitTestInfo.size() > 1) {
         aSpecial++;

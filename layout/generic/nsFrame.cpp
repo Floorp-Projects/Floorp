@@ -3054,11 +3054,11 @@ struct ContainerTracker {
 static void AddHitTestInfo(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
                            nsDisplayItem* aContainer, nsIFrame* aFrame,
                            mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
-  nsDisplayHitTestInfoItem* hitTestItem;
+  nsDisplayHitTestInfoBase* hitTestItem;
 
   if (aContainer) {
     MOZ_ASSERT(aContainer->IsHitTestItem());
-    hitTestItem = static_cast<nsDisplayHitTestInfoItem*>(aContainer);
+    hitTestItem = static_cast<nsDisplayHitTestInfoBase*>(aContainer);
     hitTestItem->SetHitTestInfo(std::move(aHitTestInfo));
   } else {
     // No container item was created for this frame. Create a separate
