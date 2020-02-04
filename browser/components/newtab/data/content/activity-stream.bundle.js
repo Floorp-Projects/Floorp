@@ -3085,7 +3085,8 @@ class Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompone
       fxaEndpoint: this.props.fxaEndpoint,
       UTMTerm: UTMTerm,
       flowParams: this.props.flowParams,
-      onClose: this.closeModal
+      onClose: this.closeModal,
+      showSignInLink: true
     }))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "trailheadStart",
       "data-l10n-id": content.skipButton.string_id,

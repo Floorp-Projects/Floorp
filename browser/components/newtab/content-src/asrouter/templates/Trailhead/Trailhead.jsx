@@ -127,6 +127,7 @@ export class Trailhead extends React.PureComponent {
               UTMTerm={UTMTerm}
               flowParams={this.props.flowParams}
               onClose={this.closeModal}
+              showSignInLink={true}
             />
           </div>
         </div>
