@@ -304,7 +304,7 @@ export class ASRouterUISurface extends React.PureComponent {
     }
     if (endpoint && endpoint.dir === "rtl") {
       //Set `dir = rtl` on the HTML
-      this.props.document.getElementById("root").dir = "rtl";
+      this.props.document.dir = "rtl";
     }
     ASRouterUtils.addListener(this.onMessageFromParent);
     this.requestMessage(endpoint);
