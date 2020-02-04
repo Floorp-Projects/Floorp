@@ -149,7 +149,7 @@ class TRR : public Runnable,
   nsresult PassQName(unsigned int& index);
   nsresult GetQname(nsAutoCString& aQname, unsigned int& aIndex);
   nsresult DohDecode(nsCString& aHost);
-  nsresult ReturnData();
+  nsresult ReturnData(nsIChannel* aChannel);
 
   // FailData() must be called to signal that the asynch TRR resolve is
   // completed. For failed name resolves ("no such host"), the 'error' it
@@ -161,7 +161,7 @@ class TRR : public Runnable,
   nsresult DohDecodeQuery(const nsCString& query, nsCString& host,
                           enum TrrType& type);
   nsresult ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec);
-  nsresult On200Response();
+  nsresult On200Response(nsIChannel* aChannel);
 
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
