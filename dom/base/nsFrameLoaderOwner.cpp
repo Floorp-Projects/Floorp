@@ -43,7 +43,6 @@ nsFrameLoaderOwner::GetBrowsingContext() {
 
 bool nsFrameLoaderOwner::UseRemoteSubframes() {
   RefPtr<Element> owner = do_QueryObject(this);
-  MOZ_ASSERT(this);
 
   nsILoadContext* loadContext = owner->OwnerDoc()->GetLoadContext();
   MOZ_DIAGNOSTIC_ASSERT(loadContext);
