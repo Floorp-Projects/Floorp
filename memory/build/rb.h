@@ -546,6 +546,9 @@ class RedBlackTree {
     }
     // Update root.
     mRoot = TreeNode(rbp_r_s.addr()).Left().Get();
+    aNode.SetLeft(nullptr);
+    aNode.SetRight(nullptr);
+    aNode.SetColor(NodeColor::Black);
   }
 
   TreeNode RotateLeft(TreeNode aNode) {
