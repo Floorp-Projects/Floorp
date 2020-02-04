@@ -196,6 +196,11 @@ DEFINES += -DPKIX_OBJECT_LEAK_TEST
 endif
 endif
 
+# Avoid building with PowerPC's Altivec acceleration
+ifdef NSS_DISABLE_ALTIVEC
+DEFINES += -DNSS_DISABLE_ALTIVEC
+endif
+
 # This allows all library and tools code to use the util function
 # implementations directly from libnssutil3, rather than the wrappers
 # in libnss3 which are present for binary compatibility only
