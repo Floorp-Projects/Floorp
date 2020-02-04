@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_add_on_internal_settings.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.action.WebExtensionAction
@@ -32,6 +33,12 @@ class WebExtensionActionPopupFragment : Fragment(), EngineSession.Observer {
     }
     private var engineSession: EngineSession? = null
     private val coreComponents by lazy { requireComponents.core }
+    private val safeArguments get() = requireNotNull(arguments)
+    private var sessionConsumed
+        get() = safeArguments.getBoolean("isSessionConsumed", false)
+        set(value) {
+            safeArguments.putBoolean("isSessionConsumed", value)
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -80,13 +87,16 @@ class WebExtensionActionPopupFragment : Fragment(), EngineSession.Observer {
         } else {
             consumeFrom(coreComponents.store) { state ->
                 state.extensions[webExtensionId]?.let { extState ->
-                    extState.popupSession?.let {
-                        if (engineSession == null) {
-                            addonSettingsEngineView.render(it)
-                            it.register(this)
-                            consumePopupSession()
-                            engineSession = it
-                        }
+                    val popupSession = extState.popupSession
+                    if (popupSession != null) {
+                        addonSettingsEngineView.render(popupSession)
+                        popupSession.register(this)
+                        consumePopupSession()
+                        engineSession = popupSession
+                    } else if (sessionConsumed) {
+                        // In case we can't retrieve the popup session lets close the fragment,
+                        // this can happen when Android recreates the activity.
+                        findNavController().popBackStack()
                     }
                 }
             }
@@ -97,5 +107,6 @@ class WebExtensionActionPopupFragment : Fragment(), EngineSession.Observer {
         coreComponents.store.dispatch(
             WebExtensionAction.UpdatePopupSessionAction(webExtensionId, popupSession = null)
         )
+        sessionConsumed = true
     }
 }
