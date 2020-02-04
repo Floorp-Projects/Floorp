@@ -137,7 +137,7 @@ class HomeFragment : Fragment() {
 
     data class PendingSessionDeletion(val deletionJob: (suspend () -> Unit), val sessionId: String)
 
-    private lateinit var homeAppBarOffSetListener : AppBarLayout.OnOffsetChangedListener
+    private lateinit var homeAppBarOffSetListener: AppBarLayout.OnOffsetChangedListener
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var homeFragmentStore: HomeFragmentStore
     private lateinit var sessionControlInteractor: SessionControlInteractor
@@ -208,8 +208,10 @@ class HomeFragment : Fragment() {
         )
         updateLayout(view)
         setOffset(view)
-        sessionControlView = SessionControlView(homeFragmentStore,
-                                view.sessionControlRecyclerView, sessionControlInteractor)
+        sessionControlView = SessionControlView(
+            homeFragmentStore,
+            view.sessionControlRecyclerView, sessionControlInteractor
+        )
         activity.themeManager.applyStatusBarTheme(activity)
         return view
     }
@@ -217,13 +219,16 @@ class HomeFragment : Fragment() {
     private fun updateLayout(view: View) {
         val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
 
-        if(!shouldUseBottomToolbar){
-            view.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.WRAP_CONTENT)
+        if (!shouldUseBottomToolbar) {
+            view.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.MATCH_PARENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+            )
                 .apply {
                     gravity = Gravity.TOP
                 }
 
-            view.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams>{
+            view.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 topMargin = HEADER_MARGIN.dpToPx(resources.displayMetrics)
             }
 
@@ -231,13 +236,14 @@ class HomeFragment : Fragment() {
             view.homeAppBar.addOnOffsetChangedListener(
                 homeAppBarOffSetListener
             )
-        }else {
+        } else {
             createNewAppBarListener(0F)
             view.homeAppBar.addOnOffsetChangedListener(
                 homeAppBarOffSetListener
             )
         }
     }
+
     @ExperimentalCoroutinesApi
     @SuppressWarnings("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -318,7 +324,8 @@ class HomeFragment : Fragment() {
 
             if (onboarding.userHasBeenOnboarded()) {
                 homeFragmentStore.dispatch(
-                    HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode)))
+                    HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
+                )
             }
         }
     }
@@ -337,12 +344,14 @@ class HomeFragment : Fragment() {
         val context = requireContext()
         val components = context.components
 
-        homeFragmentStore.dispatch(HomeFragmentAction.Change(
-            collections = components.core.tabCollectionStorage.cachedTabCollections,
-            mode = currentMode.getCurrentMode(),
-            tabs = getListOfSessions().toTabs(),
-            topSites = components.core.topSiteStorage.cachedTopSites
-        ))
+        homeFragmentStore.dispatch(
+            HomeFragmentAction.Change(
+                collections = components.core.tabCollectionStorage.cachedTabCollections,
+                mode = currentMode.getCurrentMode(),
+                tabs = getListOfSessions().toTabs(),
+                topSites = components.core.topSiteStorage.cachedTopSites
+            )
+        )
 
         requireComponents.backgroundServices.accountManager.register(currentMode, owner = this)
         requireComponents.backgroundServices.accountManager.register(object : AccountObserver {
@@ -359,7 +368,8 @@ class HomeFragment : Fragment() {
         }, owner = this)
 
         if (context.settings().showPrivateModeContextualFeatureRecommender &&
-            browsingModeManager.mode.isPrivate) {
+            browsingModeManager.mode.isPrivate
+        ) {
             recommendPrivateBrowsingShortcut()
         }
 
@@ -499,7 +509,8 @@ class HomeFragment : Fragment() {
             // Otherwise, we will encounter an activity token error.
             privateBrowsingButton.post {
                 privateBrowsingRecommend.showAsDropDown(
-                    privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END)
+                    privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END
+                )
             }
         }
     }
@@ -510,7 +521,9 @@ class HomeFragment : Fragment() {
             homeFragmentStore.dispatch(
                 HomeFragmentAction.ModeChange(
                     mode = currentMode.getCurrentMode(),
-                    tabs = getListOfSessions().toTabs()))
+                    tabs = getListOfSessions().toTabs()
+                )
+            )
         }
     }
 
@@ -754,8 +767,12 @@ class HomeFragment : Fragment() {
                     border?.visibility = View.GONE
                 }
 
-                override fun onAnimationStart(animation: Animator?) { /* noop */ }
-                override fun onAnimationRepeat(animation: Animator?) { /* noop */ }
+                override fun onAnimationStart(animation: Animator?) { /* noop */
+                }
+
+                override fun onAnimationRepeat(animation: Animator?) { /* noop */
+                }
+
                 override fun onAnimationEnd(animation: Animator?) {
                     border?.animate()?.alpha(0.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
                         ?.setDuration(FADE_ANIM_DURATION)
@@ -815,8 +832,8 @@ class HomeFragment : Fragment() {
 
     private fun calculateNewOffset() {
         homeAppBarOffset = ((view!!.findViewById<AppBarLayout>(R.id.homeAppBar)
-                                .layoutParams as CoordinatorLayout.LayoutParams)
-                                .behavior as AppBarLayout.Behavior).topAndBottomOffset
+            .layoutParams as CoordinatorLayout.LayoutParams)
+            .behavior as AppBarLayout.Behavior).topAndBottomOffset
     }
 
     private fun setOffset(currentView: View) {
@@ -830,11 +847,12 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun createNewAppBarListener(margin : Float){
-         homeAppBarOffSetListener = AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
-            val reduceScrollRanged =  appBarLayout.totalScrollRange.toFloat() - margin
-            appBarLayout.alpha = 1.0f - abs(verticalOffset / reduceScrollRanged)
-        }
+    private fun createNewAppBarListener(margin: Float) {
+        homeAppBarOffSetListener =
+            AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
+                val reduceScrollRanged = appBarLayout.totalScrollRange.toFloat() - margin
+                appBarLayout.alpha = 1.0f - abs(verticalOffset / reduceScrollRanged)
+            }
     }
 
     companion object {
