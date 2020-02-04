@@ -9,7 +9,4 @@ export MOZ_LTO=cross
 
 ac_add_options --with-branding=browser/branding/aurora
 
-unset ENABLE_CLANG_PLUGIN
-
 . "$topsrcdir/build/mozconfig.common.override"
-
