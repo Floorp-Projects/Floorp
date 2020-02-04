@@ -2852,10 +2852,7 @@ static bool ScrollbarGenerationChanged(const nsStyleDisplay& aOld,
 
 nsChangeHint nsStyleDisplay::CalcDifference(
     const nsStyleDisplay& aNewData, const nsStylePosition& aOldPosition) const {
-  nsChangeHint hint = nsChangeHint(0);
-
-  if (mPosition != aNewData.mPosition || mDisplay != aNewData.mDisplay ||
-      mContain != aNewData.mContain ||
+  if (mDisplay != aNewData.mDisplay || mContain != aNewData.mContain ||
       (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None) ||
       mScrollBehavior != aNewData.mScrollBehavior ||
       mScrollSnapType != aNewData.mScrollSnapType ||
@@ -2874,6 +2871,35 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     // nsTextControlFrame instead of nsNumberControlFrame if the author
     // specifies 'textfield'.
     return nsChangeHint_ReconstructFrame;
+  }
+
+  auto hint = nsChangeHint(0);
+  if (mPosition != aNewData.mPosition) {
+    if (IsAbsolutelyPositionedStyle() ||
+        aNewData.IsAbsolutelyPositionedStyle()) {
+      // This changes our parent relationship on the frame tree and / or needs
+      // to create a placeholder, so gotta reframe. There are some cases (when
+      // switching from fixed to absolute or viceversa, if our containing block
+      // happens to remain the same, i.e., if it has a transform or such) where
+      // this wouldn't really be needed (though we'd still need to move the
+      // frame from one child list to another). In any case we don't have a hand
+      // to that information from here, and it doesn't seem like a case worth
+      // optimizing for.
+      return nsChangeHint_ReconstructFrame;
+    }
+    // We start or stop being a containing block for abspos descendants. This
+    // also causes painting to change, as we'd become a pseudo-stacking context.
+    if (IsRelativelyPositionedStyle() !=
+        aNewData.IsRelativelyPositionedStyle()) {
+      hint |= nsChangeHint_UpdateContainingBlock | nsChangeHint_RepaintFrame;
+    }
+    if (IsPositionForcingStackingContext() !=
+        aNewData.IsPositionForcingStackingContext()) {
+      hint |= nsChangeHint_RepaintFrame;
+    }
+    // On top of that: if the above ends up not reframing, we need a reflow to
+    // compute our relative, static or sticky position.
+    hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
   }
 
   if (mScrollSnapAlign != aNewData.mScrollSnapAlign) {
