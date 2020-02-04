@@ -1992,7 +1992,7 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
                             BaselineFrame* osrFrame, uint32_t osrFrameSize,
                             jsbytecode* osrPc, bool forceRecompile = false) {
   MOZ_ASSERT(jit::IsIonEnabled(cx));
-  MOZ_ASSERT(jit::IsBaselineJitEnabled());
+  MOZ_ASSERT(jit::IsBaselineJitEnabled(cx));
 
   AutoGeckoProfilerEntry pseudoFrame(
       cx, "Ion script compilation",
