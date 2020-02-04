@@ -3606,6 +3606,7 @@ impl FlattenedStackingContext {
         struct SliceInfo {
             cluster_index: usize,
             scroll_root: SpatialNodeIndex,
+            cluster_flags: ClusterFlags,
         }
 
         let mut content_slice_count = 0;
@@ -3621,8 +3622,19 @@ impl FlattenedStackingContext {
             // (1) This cluster is a scrollbar
             // (2) Certain conditions when the scroll root changes (see below)
             // (3) No slice exists yet
-            let create_new_slice =
-                cluster.flags.contains(ClusterFlags::SCROLLBAR_CONTAINER) ||
+            let mut cluster_flags = ClusterFlags::empty();
+
+            if cluster.flags.contains(ClusterFlags::SCROLLBAR_CONTAINER) {
+                // Scrollbar containers need to ensure that a new slice is
+                // created both before and after the scrollbar, so that no
+                // other prims with the same scroll root sneak into this slice.
+                cluster_flags.insert(
+                    ClusterFlags::CREATE_PICTURE_CACHE_PRE |
+                    ClusterFlags::CREATE_PICTURE_CACHE_POST
+                );
+            }
+
+            let create_new_slice_for_scroll_root =
                 slices.last().map(|slice| {
                     match (slice.scroll_root, scroll_root) {
                         (ROOT_SPATIAL_NODE_INDEX, ROOT_SPATIAL_NODE_INDEX) => {
@@ -3671,11 +3683,16 @@ impl FlattenedStackingContext {
                     }
                 }).unwrap_or(true);
 
+            if create_new_slice_for_scroll_root {
+                cluster_flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+            }
+
             // Create a new slice if required
-            if create_new_slice {
+            if !cluster_flags.is_empty() {
                 slices.push(SliceInfo {
                     cluster_index,
-                    scroll_root
+                    scroll_root,
+                    cluster_flags,
                 });
             }
         }
@@ -3702,7 +3719,7 @@ impl FlattenedStackingContext {
                 content_slice_count += 1;
                 let cluster = &mut self.prim_list.clusters[slice.cluster_index];
                 // Mark that this cluster creates a picture cache slice
-                cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+                cluster.flags.insert(slice.cluster_flags);
                 cluster.cache_scroll_root = Some(slice.scroll_root);
             }
         }
