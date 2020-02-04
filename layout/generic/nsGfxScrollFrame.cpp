@@ -6976,7 +6976,7 @@ layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo(
 }
 
 bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
-                                                   nsPoint aStartPos,
+                                                   const nsPoint& aStartPos,
                                                    nsPoint& aDestination) {
   Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
       GetScrollSnapInfo(Some(aDestination)), aUnit, GetLayoutScrollRange(),
