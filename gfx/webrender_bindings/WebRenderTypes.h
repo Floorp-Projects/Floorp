@@ -391,13 +391,6 @@ static inline wr::LayoutPoint ToLayoutPoint(
   return ToLayoutPoint(LayoutDevicePoint(point));
 }
 
-static inline wr::LayoutPoint ToRoundedLayoutPoint(
-    const mozilla::LayoutDevicePoint& point) {
-  mozilla::LayoutDevicePoint rounded = point;
-  rounded.Round();
-  return ToLayoutPoint(rounded);
-}
-
 static inline wr::WorldPoint ToWorldPoint(const mozilla::ScreenPoint& point) {
   wr::WorldPoint p;
   p.x = point.x;
@@ -461,13 +454,6 @@ static inline wr::LayoutIntRect ToLayoutIntRect(
 static inline wr::LayoutRect ToLayoutRect(
     const mozilla::LayoutDeviceIntRect& rect) {
   return ToLayoutRect(IntRectToRect(rect));
-}
-
-static inline wr::LayoutRect ToRoundedLayoutRect(
-    const mozilla::LayoutDeviceRect& aRect) {
-  auto rect = aRect;
-  rect.Round();
-  return wr::ToLayoutRect(rect);
 }
 
 static inline wr::LayoutRect IntersectLayoutRect(const wr::LayoutRect& aRect,
