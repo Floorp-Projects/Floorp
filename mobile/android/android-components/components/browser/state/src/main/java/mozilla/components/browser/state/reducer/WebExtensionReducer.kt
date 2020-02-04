@@ -23,7 +23,10 @@ internal object WebExtensionReducer {
                         extensions = state.extensions + (action.extension.id to action.extension)
                     )
                 } else {
-                    state
+                    state.updateWebExtensionState(action.extension.id) {
+                        // Keep existing browser and page actions in case we received them before the install action
+                        action.extension.copy(browserAction = it.browserAction, pageAction = it.pageAction)
+                    }
                 }
             }
             is WebExtensionAction.UninstallWebExtensionAction -> {

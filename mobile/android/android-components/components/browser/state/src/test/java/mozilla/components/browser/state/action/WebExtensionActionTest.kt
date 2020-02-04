@@ -41,6 +41,25 @@ class WebExtensionActionTest {
     }
 
     @Test
+    fun `InstallWebExtension - Keeps existing browser and page actions`() {
+        val store = BrowserStore()
+        assertTrue(store.state.extensions.isEmpty())
+
+        val extension = WebExtensionState("id", "url", "name")
+        val mockedBrowserAction = mock<WebExtensionBrowserAction>()
+        val mockedPageAction = mock<WebExtensionPageAction>()
+        store.dispatch(WebExtensionAction.UpdateBrowserAction(extension.id, mockedBrowserAction)).joinBlocking()
+        store.dispatch(WebExtensionAction.UpdatePageAction(extension.id, mockedPageAction)).joinBlocking()
+        store.dispatch(WebExtensionAction.InstallWebExtensionAction(extension)).joinBlocking()
+
+        assertFalse(store.state.extensions.isEmpty())
+        assertEquals(extension.copy(
+            browserAction = mockedBrowserAction,
+            pageAction = mockedPageAction
+        ), store.state.extensions.values.first())
+    }
+
+    @Test
     fun `UninstallWebExtension - Removes all state of the uninstalled extension`() {
         val tab1 = createTab("url")
         val tab2 = createTab("url")
