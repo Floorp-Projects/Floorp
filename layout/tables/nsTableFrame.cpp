@@ -6797,7 +6797,7 @@ static void AdjustAndPushBevel(wr::DisplayListBuilder& aBuilder,
   Float offset = NSAppUnitsToFloatPixels(aBevel.mOffset, aAppUnitsPerDevPixel);
   wr::LayoutRect bevelRect = aRect;
   wr::BorderSide bevelBorder[4];
-  NS_FOR_CSS_SIDES(i) {
+  for (const auto i : mozilla::AllPhysicalSides()) {
     bevelBorder[i] =
         wr::ToBorderSide(ToDeviceColor(aColor), StyleBorderStyle::Solid);
   }
@@ -6910,7 +6910,7 @@ static void CreateWRCommandsForBorderSegment(
 
   wr::LayoutRect r = wr::ToLayoutRect(borderRect);
   wr::BorderSide wrSide[4];
-  NS_FOR_CSS_SIDES(i) {
+  for (const auto i : mozilla::AllPhysicalSides()) {
     wrSide[i] = wr::ToBorderSide(ToDeviceColor(aBorderParams.mBorderColor),
                                  StyleBorderStyle::None);
   }

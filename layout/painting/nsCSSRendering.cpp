@@ -630,7 +630,7 @@ static Maybe<nsStyleBorder> GetBorderIfVisited(const ComputedStyle& aStyle) {
 
   result.emplace(*aStyle.StyleBorder());
   auto& newBorder = result.ref();
-  NS_FOR_CSS_SIDES(side) {
+  for (const auto side : mozilla::AllPhysicalSides()) {
     nscolor color = aStyle.GetVisitedDependentColor(
         nsStyleBorder::BorderColorFieldFor(side));
     newBorder.BorderColorFor(side) = StyleColor::FromColor(color);
@@ -800,7 +800,7 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
   nscolor borderColors[4];
 
   // pull out styles, colors
-  NS_FOR_CSS_SIDES(i) {
+  for (const auto i : mozilla::AllPhysicalSides()) {
     borderStyles[i] = aStyleBorder.GetBorderStyle(i);
     borderColors[i] = aStyleBorder.BorderColorFor(i).CalcColor(*aStyle);
   }
@@ -1978,7 +1978,7 @@ static bool IsOpaqueBorderEdge(const nsStyleBorder& aBorder,
  * Returns true if all border edges are either missing or opaque.
  */
 static bool IsOpaqueBorder(const nsStyleBorder& aBorder) {
-  NS_FOR_CSS_SIDES(i) {
+  for (const auto i : mozilla::AllPhysicalSides()) {
     if (!IsOpaqueBorderEdge(aBorder, i)) {
       return false;
     }
