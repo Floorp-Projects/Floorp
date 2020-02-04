@@ -137,6 +137,7 @@ class HomeFragment : Fragment() {
 
     data class PendingSessionDeletion(val deletionJob: (suspend () -> Unit), val sessionId: String)
 
+    private lateinit var homeAppBarOffSetListener : AppBarLayout.OnOffsetChangedListener
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var homeFragmentStore: HomeFragmentStore
     private lateinit var sessionControlInteractor: SessionControlInteractor
@@ -205,20 +206,10 @@ class HomeFragment : Fragment() {
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt
             )
         )
-
-        view.homeAppBar.addOnOffsetChangedListener(
-            AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
-                appBarLayout.alpha =
-                    1.0f - abs(verticalOffset / appBarLayout.totalScrollRange.toFloat())
-            }
-        )
-
+        updateLayout(view)
         setOffset(view)
-
-
         sessionControlView = SessionControlView(homeFragmentStore,
                                 view.sessionControlRecyclerView, sessionControlInteractor)
-        updateLayout(view)
         activity.themeManager.applyStatusBarTheme(activity)
         return view
     }
@@ -226,33 +217,25 @@ class HomeFragment : Fragment() {
     private fun updateLayout(view: View) {
         val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
 
-
         if(!shouldUseBottomToolbar){
             view.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.WRAP_CONTENT)
                 .apply {
                     gravity = Gravity.TOP
                 }
-        }
 
-        val headingsTopMargins = if (shouldUseBottomToolbar) { HEADER_MARGIN } else { TOP_TOOLBAR_HEADER_MARGIN }
-        val sessionControlViewTopMargin = if (shouldUseBottomToolbar) {
-            SESSION_CONTROL_VIEW_TOP_MARGIN
-        } else {
-            SESSION_CONTROL_VIEW_TOP_TOOLBAR_MARGIN
-        }
-
-        view.wordmark.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            topMargin = headingsTopMargins.dpToPx(resources.displayMetrics)
-        }
-
-        sessionControlView!!.view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            topMargin = sessionControlViewTopMargin.dpToPx(resources.displayMetrics)
-        }
-
-        if (!shouldUseBottomToolbar) {
-            view.privateBrowsingButton.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = PRIVATE_BROWSING_BUTTON_TOP_MARGIN.dpToPx(resources.displayMetrics)
+            view.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams>{
+                topMargin = HEADER_MARGIN.dpToPx(resources.displayMetrics)
             }
+
+            createNewAppBarListener(HEADER_MARGIN.dpToPx(resources.displayMetrics).toFloat())
+            view.homeAppBar.addOnOffsetChangedListener(
+                homeAppBarOffSetListener
+            )
+        }else {
+            createNewAppBarListener(0F)
+            view.homeAppBar.addOnOffsetChangedListener(
+                homeAppBarOffSetListener
+            )
         }
     }
     @ExperimentalCoroutinesApi
@@ -342,6 +325,7 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         sessionControlView = null
+        view!!.homeAppBar.removeOnOffsetChangedListener(homeAppBarOffSetListener)
         super.onDestroyView()
     }
 
@@ -846,6 +830,13 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun createNewAppBarListener(margin : Float){
+         homeAppBarOffSetListener = AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
+            val reduceScrollRanged =  appBarLayout.totalScrollRange.toFloat() - margin
+            appBarLayout.alpha = 1.0f - abs(verticalOffset / reduceScrollRanged)
+        }
+    }
+
     companion object {
         private const val NON_TAB_ITEM_NUM = 3
         private const val ANIM_SCROLL_DELAY = 100L
@@ -858,10 +849,6 @@ class HomeFragment : Fragment() {
 
         // Layout
         private const val HEADER_MARGIN = 60
-        private const val TOP_TOOLBAR_HEADER_MARGIN = 120
-        private const val SESSION_CONTROL_VIEW_TOP_MARGIN = 32
-        private const val SESSION_CONTROL_VIEW_TOP_TOOLBAR_MARGIN = 64
-        private const val PRIVATE_BROWSING_BUTTON_TOP_MARGIN = 40
     }
 }
 
