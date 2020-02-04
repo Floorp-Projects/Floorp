@@ -37,7 +37,13 @@ bool nsCUPSShim::Init() {
       msg.AppendLiteral(" not found in CUPS library");
       NS_WARNING(msg.get());
 #endif
+
+#ifndef MOZ_TSAN
+      // With TSan, we cannot unload libcups once we have loaded it because
+      // TSan does not support unloading libraries that are matched from its
+      // suppression list. Hence we just keep the library loaded in TSan builds.
       PR_UnloadLibrary(mCupsLib);
+#endif
       mCupsLib = nullptr;
       return false;
     }
