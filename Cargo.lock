@@ -2463,7 +2463,6 @@ name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
  "libc",
- "log",
  "quote",
  "serde",
  "serde_derive",
