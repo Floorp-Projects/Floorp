@@ -195,7 +195,7 @@
     <key id="key_paste"
          data-l10n-id="text-action-paste-shortcut"
          modifiers="accel"/>
-    <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
+    <key id="key_delete" keycode="VK_DELETE" command="cmd_delete" reserved="false"/>
     <key id="key_selectAll" data-l10n-id="text-action-select-all-shortcut" modifiers="accel"/>
 
     <key keycode="VK_BACK" command="cmd_handleBackspace" reserved="false"/>
