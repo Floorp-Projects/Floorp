@@ -153,9 +153,9 @@ if (!navigator.platform.includes("Mac")) {
   });
 }
 
-// There is a <key> element for Backspace with reserved="false", so make sure that it is not
-// treated as a blocked shortcut key.
-add_task(async function test_backspace() {
+// There is a <key> element for Backspace and delete with reserved="false",
+// so make sure that it is not treated as a blocked shortcut key.
+add_task(async function test_backspace_delete() {
   await new Promise(resolve => {
     SpecialPowers.pushPrefEnv(
       { set: [["permissions.default.shortcuts", 2]] },
@@ -196,6 +196,33 @@ add_task(async function test_backspace() {
     }
   );
   is(fieldValue, "omething", "backspace not prevented");
+
+  // now do the same thing for the delete key:
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    content.document.getElementById("field").focus();
+
+    // Add a promise that resolves when the backspace key gets received
+    // so we can ensure the key gets received before checking the result.
+    content.keysPromise = new Promise(resolve => {
+      content.addEventListener("keyup", event => {
+        if (event.code == "Delete") {
+          resolve(content.document.getElementById("field").value);
+        }
+      });
+    });
+  });
+
+  // Move the caret so backspace will delete the first character.
+  EventUtils.synthesizeKey("KEY_Delete", {});
+
+  fieldValue = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [],
+    async function() {
+      return content.keysPromise;
+    }
+  );
+  is(fieldValue, "mething", "delete not prevented");
 
   BrowserTestUtils.removeTab(tab);
 });
