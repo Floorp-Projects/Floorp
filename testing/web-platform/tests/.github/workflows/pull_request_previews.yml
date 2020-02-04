@@ -26,7 +26,4 @@ jobs:
         # "DEPLOY_TOKEN" in this GitHub project.
         #
         # [1] https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows
-        #
-        # Temporarily using 'STEPHEN_TOKEN' for testing. To be removed once we
-        # verify the end-to-end flow.
-        DEPLOY_TOKEN: ${{ secrets.STEPHEN_TOKEN }}
+        DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
