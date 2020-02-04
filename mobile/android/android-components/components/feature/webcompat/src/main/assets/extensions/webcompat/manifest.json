@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "5.0.2",
+  "version": "7.0.0",
 
   "applications": {
     "gecko": {
@@ -27,25 +27,64 @@
         "script": "about-compat/aboutPage.js",
         "events": ["startup"]
       }
+    },
+    "experiments": {
+      "schema": "experiment-apis/experiments.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/experiments.js",
+        "paths": [["experiments"]]
+      }
+    },
+    "pictureInPictureChild": {
+      "schema": "experiment-apis/pictureInPicture.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiment-apis/pictureInPicture.js",
+        "paths": [["pictureInPictureChild"]]
+      }
+    },
+    "pictureInPictureParent": {
+      "schema": "experiment-apis/pictureInPicture.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/pictureInPicture.js",
+        "paths": [["pictureInPictureParent"]]
+      }
+    },
+    "sharedPreferences": {
+      "schema": "experiment-apis/sharedPreferences.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/sharedPreferences.js",
+        "paths": [["sharedPreferences"]]
+      }
+    },
+    "systemManufacturer": {
+      "schema": "experiment-apis/systemManufacturer.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiment-apis/systemManufacturer.js",
+        "paths": [["systemManufacturer"]]
+      }
     }
   },
 
-  "content_security_policy": "script-src 'self' 'sha256-MmZkN2QaIHhfRWPZ8TVRjijTn5Ci1iEabtTEWrt9CCo='; default-src 'self'; base-uri moz-extension://*;",
+  "content_security_policy": "script-src 'self' 'sha256-MmZkN2QaIHhfRWPZ8TVRjijTn5Ci1iEabtTEWrt9CCo='; default-src 'self'; base-uri moz-extension://*; object-src 'none'",
 
-  "permissions": [
-    "webRequest",
-    "webRequestBlocking",
-    "<all_urls>"
-  ],
+  "permissions": ["webRequest", "webRequestBlocking", "<all_urls>"],
 
   "background": {
     "scripts": [
       "lib/module_shim.js",
+      "lib/google.js",
       "data/injections.js",
+      "data/picture_in_picture_overrides.js",
       "data/ua_overrides.js",
       "lib/about_compat_broker.js",
       "lib/custom_functions.js",
       "lib/injections.js",
+      "lib/picture_in_picture_overrides.js",
       "lib/ua_overrides.js",
       "run.js"
     ]

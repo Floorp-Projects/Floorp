@@ -80,7 +80,7 @@ class Injections {
 
   async enableInjection(injection) {
     if (injection.active) {
-      return;
+      return undefined;
     }
 
     if (injection.customFunc) {
@@ -96,7 +96,9 @@ class Injections {
       injection.active = true;
     } else {
       console.error(
-        `Provided function ${injection.customFunc} wasn't found in functions list`
+        `Provided function ${
+          injection.customFunc
+        } wasn't found in functions list`
       );
     }
   }
@@ -129,7 +131,7 @@ class Injections {
 
   async disableInjection(injection) {
     if (!injection.active) {
-      return;
+      return undefined;
     }
 
     if (injection.customFunc) {

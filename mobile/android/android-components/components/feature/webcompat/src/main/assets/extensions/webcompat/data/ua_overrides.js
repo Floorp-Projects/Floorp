@@ -4,7 +4,12 @@
 
 "use strict";
 
-/* globals module */
+/* globals browser, module, require */
+
+// This is a hack for the tests.
+if (typeof getMatchPatternsForGoogleURL === "undefined") {
+  var getMatchPatternsForGoogleURL = require("../lib/google");
+}
 
 /**
  * For detailed information on our policies, and a documention on this format
@@ -18,14 +23,40 @@ const AVAILABLE_UA_OVERRIDES = [
     platform: "all",
     domain: "webcompat-addon-testbed.herokuapp.com",
     bug: "0000000",
-    hidden: true,
     config: {
+      hidden: true,
       matches: ["*://webcompat-addon-testbed.herokuapp.com/*"],
       uaTransformer: originalUA => {
         return (
           UAHelpers.getPrefix(originalUA) +
           " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36 for WebCompat"
         );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1564594 - Create UA override for Enhanced Search on Firefox Android
+     *
+     * Enables the Chrome Google Search experience for Fennec users.
+     */
+    id: "bug1564594",
+    platform: "android",
+    domain: "Enhanced Search",
+    bug: "1567945",
+    config: {
+      matches: [
+        ...getMatchPatternsForGoogleURL("images.google"),
+        ...getMatchPatternsForGoogleURL("maps.google"),
+        ...getMatchPatternsForGoogleURL("news.google"),
+        ...getMatchPatternsForGoogleURL("www.google"),
+      ],
+      blocks: [...getMatchPatternsForGoogleURL("www.google", "serviceworker")],
+      permanentPref: "enable_enhanced_search",
+      telemetryKey: "enhancedSearch",
+      experiment: ["enhanced-search", "enhanced-search-control"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -121,23 +152,66 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1579453 - UA override for www.thule.com
-     * WebCompat issue #35022 - https://webcompat.com/issues/35022
+     * Bug 1582582 - sling.com - UA override for sling.com
+     * WebCompat issue #17804 - https://webcompat.com/issues/17804
      *
-     * www.thule.com continuously requesting for location permission
-     * due to the UA detection making the site unusable. Spoofing as Chrome
-     * allows to interact with the page normally
+     * sling.com blocks Firefox users showing unsupported browser message.
+     * When spoofing as Chrome playing content works fine
      */
-    id: "bug1579453",
-    platform: "all",
-    domain: "thule.com",
-    bug: "1579453",
+    id: "bug1582582",
+    platform: "desktop",
+    domain: "sling.com",
+    bug: "1582582",
     config: {
-      matches: ["https://*.thule.com/*/*/dealer-locator*"],
+      matches: ["https://watch.sling.com/*", "https://www.sling.com/*"],
       uaTransformer: originalUA => {
         return (
           UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Safari/537.36"
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36"
+        );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1610010 - criticalcareontario.ca - UA override for criticalcareontario.ca
+     * WebCompat issue #40267 - https://webcompat.com/issues/40267
+     *
+     * criticalcareontario.ca enters a reload loop based on UA detection
+     * Spoofing as Chrome prevents the site from doing a constant page refresh
+     */
+    id: "bug1610010",
+    platform: "desktop",
+    domain: "criticalcareontario.ca",
+    bug: "1610010",
+    config: {
+      matches: ["https://www.criticalcareontario.ca/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36"
+        );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1610026 - www.mobilesuica.com - UA override for www.mobilesuica.com
+     * WebCompat issue #4608 - https://webcompat.com/issues/4608
+     *
+     * mobilesuica.com showing unsupported message for Firefox users
+     * Spoofing as Chrome allows to access the page
+     */
+    id: "bug1610026",
+    platform: "all",
+    domain: "www.mobilesuica.com",
+    bug: "1610026",
+    config: {
+      matches: ["https://www.mobilesuica.com/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36"
         );
       },
     },
@@ -326,29 +400,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1509852 - redbull.com - Add UA override for redbull.com
-     * WebCompat issue #21439 - https://webcompat.com/issues/21439
-     *
-     * Redbull.com blocks some features, for example the live video player, for
-     * Fennec. Spoofing as Chrome results in us rendering the video just fine,
-     * and everything else works as well.
-     */
-    id: "bug1509852",
-    platform: "android",
-    domain: "redbull.com",
-    bug: "1509852",
-    config: {
-      matches: ["*://*.redbull.com/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
-        );
-      },
-    },
-  },
-  {
-    /*
      * Bug 1509873 - zmags.com - Add UA override for secure.viewer.zmags.com
      * WebCompat issue #21576 - https://webcompat.com/issues/21576
      *
@@ -406,28 +457,6 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://beeg.com/*"],
       uaTransformer: originalUA => {
         return originalUA.replace(/Firefox.+$/, "");
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1571036 - UA override for mobile.aireuropa.com on Firefox for Android
-     * WebCompat issue #34760 - https://webcompat.com/issues/34760
-     *
-     * mobile.aireuropa.com has a UA detection which prevents Firefox for Android
-     * from opening main menu. Spoofing as Chrome allows to open it.
-     */
-    id: "bug1571036",
-    platform: "android",
-    domain: "mobile.aireuropa.com",
-    bug: "1571036",
-    config: {
-      matches: ["*://mobile.aireuropa.com/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36"
-        );
       },
     },
   },
@@ -541,9 +570,106 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1598198 - User Agent extension for Samsung's galaxy.store URLs
+     *
+     * Samsung's galaxy.store shortlinks are supposed to redirect to a Samsung
+     * intent:// URL on Samsung devices, but to an error page on other brands.
+     * As we do not provide device info in our user agent string, this check
+     * fails, and even Samsung users land on an error page if they use Firefox
+     * for Android.
+     * This intervention adds a simple "Samsung" identifier to the User Agent
+     * on only the Galaxy Store URLs if the device happens to be a Samsung.
+     */
+    id: "bug1598198",
+    platform: "android",
+    domain: "galaxy.store",
+    bug: "1598198",
+    config: {
+      matches: [
+        "*://galaxy.store/*",
+        "*://dev.galaxy.store/*",
+        "*://stg.galaxy.store/*",
+      ],
+      uaTransformer: originalUA => {
+        if (!browser.systemManufacturer) {
+          return originalUA;
+        }
+
+        const manufacturer = browser.systemManufacturer.getManufacturer();
+        if (manufacturer && manufacturer.toLowerCase() === "samsung") {
+          return originalUA.replace("Mobile;", "Mobile; Samsung;");
+        }
+
+        return originalUA;
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1610370 - UA override for answers.yahoo.com on Firefox for Android
+     * WebCompat issue #5460 - https://webcompat.com/issues/5460
+     *
+     * answers.yahoo.com is not showing lazy loaded content based on UA detection
+     * When spoofing as Chrome it's possible to load the content
+     */
+    id: "bug1610370",
+    platform: "android",
+    domain: "answers.yahoo.com",
+    bug: "1610370",
+    config: {
+      matches: ["https://answers.yahoo.com/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Mobile Safari/537.36"
+        );
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1595215 - UA overrides for Uniqlo sites
+     * Webcompat issue #38825 - https://webcompat.com/issues/38825
+     *
+     * To receive the proper mobile version instead of the desktop version or
+     * avoid redirect loop, the UA is spoofed.
+     */
+    id: "bug1595215",
+    platform: "android",
+    domain: "uniqlo.com",
+    bug: "1595215",
+    config: {
+      matches: ["*://*.uniqlo.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Mobile Safari";
+      },
+    },
+  },
 ];
 
 const UAHelpers = {
+  getDeviceAppropriateChromeUA() {
+    if (!UAHelpers._deviceAppropriateChromeUA) {
+      const userAgent =
+        typeof navigator !== "undefined" ? navigator.userAgent : "";
+      const RunningFirefoxVersion = (userAgent.match(/Firefox\/([0-9.]+)/) || [
+        "",
+        "58.0",
+      ])[1];
+      const RunningAndroidVersion =
+        userAgent.match(/Android\/[0-9.]+/) || "Android 6.0";
+      const ChromeVersionToMimic = "76.0.3809.111";
+      const ChromePhoneUA = `Mozilla/5.0 (Linux; ${RunningAndroidVersion}; Nexus 5 Build/MRA58N) FxQuantum/${RunningFirefoxVersion} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${ChromeVersionToMimic} Mobile Safari/537.36`;
+      const ChromeTabletUA = `Mozilla/5.0 (Linux; ${RunningAndroidVersion}; Nexus 7 Build/JSS15Q) FxQuantum/${RunningFirefoxVersion} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${ChromeVersionToMimic} Safari/537.36`;
+      const IsPhone = userAgent.includes("Mobile");
+      UAHelpers._deviceAppropriateChromeUA = IsPhone
+        ? ChromePhoneUA
+        : ChromeTabletUA;
+    }
+    return UAHelpers._deviceAppropriateChromeUA;
+  },
   getPrefix(originalUA) {
     return originalUA.substr(0, originalUA.indexOf(")") + 1);
   },
