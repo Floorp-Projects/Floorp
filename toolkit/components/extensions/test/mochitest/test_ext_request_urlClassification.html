@@ -32,7 +32,6 @@ add_task(async function test_urlClassification() {
       applications: {gecko: {id: "classification@mochi.test"}},
       permissions: ["webRequest", "webRequestBlocking", "proxy", "<all_urls>"],
     },
-    isPrivileged: true,
     background() {
       let expected = {
         "http://tracking.example.org/": {first: "tracking", thirdParty: false, },
