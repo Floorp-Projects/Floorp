@@ -5238,27 +5238,21 @@ class nsDisplayOutline final : public nsPaintedDisplayItem {
  * A class that lets you receive events within the frame bounds but never
  * paints.
  */
-class nsDisplayEventReceiver : public nsPaintedDisplayItem {
+class nsDisplayEventReceiver final : public nsDisplayItem {
  public:
   nsDisplayEventReceiver(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsPaintedDisplayItem(aBuilder, aFrame) {
+      : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayEventReceiver);
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-  ~nsDisplayEventReceiver() override { MOZ_COUNT_DTOR(nsDisplayEventReceiver); }
+  ~nsDisplayEventReceiver() final { MOZ_COUNT_DTOR(nsDisplayEventReceiver); }
 #endif
 
   NS_DISPLAY_DECL_NAME("EventReceiver", TYPE_EVENT_RECEIVER)
 
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
-  bool CreateWebRenderCommands(
-      mozilla::wr::DisplayListBuilder& aBuilder,
-      mozilla::wr::IpcResourceUpdateQueue& aResources,
-      const StackingContextHelper& aSc,
-      mozilla::layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder) override;
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) final;
 };
 
 /**

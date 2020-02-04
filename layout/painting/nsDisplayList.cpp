@@ -5356,18 +5356,6 @@ void nsDisplayEventReceiver::HitTest(nsDisplayListBuilder* aBuilder,
   aOutFrames->AppendElement(mFrame);
 }
 
-bool nsDisplayEventReceiver::CreateWebRenderCommands(
-    mozilla::wr::DisplayListBuilder& aBuilder,
-    mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc,
-    mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder) {
-  // This display item should never be getting created when building a display
-  // list for WebRender consumption, so this function should never get called.
-  MOZ_ASSERT(false);
-  return true;
-}
-
 nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags, uint16_t aIndex,
