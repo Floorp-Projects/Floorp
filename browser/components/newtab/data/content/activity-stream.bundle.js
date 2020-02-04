@@ -2367,7 +2367,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
 
     if (endpoint && endpoint.dir === "rtl") {
       //Set `dir = rtl` on the HTML
-      this.props.document.getElementById("root").dir = "rtl";
+      this.props.document.dir = "rtl";
     }
 
     ASRouterUtils.addListener(this.onMessageFromParent);
