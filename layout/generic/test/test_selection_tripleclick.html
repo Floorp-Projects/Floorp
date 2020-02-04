@@ -1,0 +1,42 @@
+<!DOCTYPE>
+<title>Selection test</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  body { margin: 0; font: 16px/1 sans-serif; }
+  code { display: inline-block }
+</style>
+<p id="a">Some <code>code</code> with <span>text</span> with <code>code</code> in it</p>
+
+<p id="b">Here's <span>some</span> <code><span>code</span><br><span>broken</span></code> with <span>text</span> with <code><span>code</span><br><span>broken</span></code> in <span>it and such</span> and so on</p>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(function () {
+    for (let child of document.querySelectorAll("#a span, #a code")) {
+      synthesizeMouse(child, 5, 5, { clickCount: 3 });
+      is(window.getSelection().toString(), "Some code with text with code in it");
+      window.getSelection().removeAllRanges();
+    }
+
+    let spans = document.querySelectorAll("#b span");
+    let expectations = [
+      "Here's some code", // First span, at the beginning of the text.
+      "Here's some code", // Top span in the inline-block, before break.
+      "broken with text with code", // Bottom span in inline-block, after break
+      "broken with text with code", // Center of the text.
+      "broken with text with code", // Top span in the second inline-block, before break.
+      "broken in it and such and so on", // Bottom span in the second inline-block, after break.
+      "broken in it and such and so on", // Last span, at the end of the text.
+
+    ];
+    is(spans.length, expectations.length);
+    for (let i = 0; i < expectations.length; ++i) {
+      synthesizeMouse(spans[i], 5, 5, { clickCount: 3 });
+      is(window.getSelection().toString(), expectations[i]);
+      window.getSelection().removeAllRanges();
+    }
+
+    SimpleTest.finish();
+  });
+</script>

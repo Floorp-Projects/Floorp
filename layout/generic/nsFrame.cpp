@@ -8388,9 +8388,10 @@ nsIFrame::CaretPosition nsIFrame::GetExtremeCaretPosition(bool aStart) {
 }
 
 // Find the first (or last) descendant of the given frame
-// which is either a block frame or a BRFrame.
-static nsContentAndOffset FindBlockFrameOrBR(nsIFrame* aFrame,
-                                             nsDirection aDirection) {
+// which is either a block-level frame or a BRFrame, or some other kind of break
+// which stops the line.
+static nsContentAndOffset FindLineBreakingFrame(nsIFrame* aFrame,
+                                                nsDirection aDirection) {
   nsContentAndOffset result;
   result.mContent = nullptr;
   result.mOffset = 0;
@@ -8407,7 +8408,7 @@ static nsContentAndOffset FindBlockFrameOrBR(nsIFrame* aFrame,
   // the content of the inline frames they were created from. The
   // first/last child of such frames is the real block frame we're
   // looking for.
-  if ((aFrame->IsBlockFrameOrSubclass() &&
+  if ((aFrame->IsBlockOutside() &&
        !(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) ||
       aFrame->IsBrFrame()) {
     nsIContent* content = aFrame->GetContent();
@@ -8436,13 +8437,13 @@ static nsContentAndOffset FindBlockFrameOrBR(nsIFrame* aFrame,
     nsIFrame* child =
         aFrame->GetChildList(nsIFrame::kPrincipalList).LastChild();
     while (child && !result.mContent) {
-      result = FindBlockFrameOrBR(child, aDirection);
+      result = FindLineBreakingFrame(child, aDirection);
       child = child->GetPrevSibling();
     }
   } else {  // eDirNext
     nsIFrame* child = aFrame->PrincipalChildList().FirstChild();
     while (child && !result.mContent) {
-      result = FindBlockFrameOrBR(child, aDirection);
+      result = FindLineBreakingFrame(child, aDirection);
       child = child->GetNextSibling();
     }
   }
@@ -8453,12 +8454,12 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
   nsIFrame* frame = this;
   nsContentAndOffset blockFrameOrBR;
   blockFrameOrBR.mContent = nullptr;
-  bool reachedBlockAncestor = frame->IsBlockFrameOrSubclass();
+  bool reachedBlockAncestor = frame->IsBlockOutside();
 
   // Go through containing frames until reaching a block frame.
   // In each step, search the previous (or next) siblings for the closest
   // "stop frame" (a block frame or a BRFrame).
-  // If found, set it to be the selection boundray and abort.
+  // If found, set it to be the selection boundary and abort.
 
   if (aPos->mDirection == eDirPrevious) {
     while (!reachedBlockAncestor) {
@@ -8471,7 +8472,7 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
       }
       nsIFrame* sibling = frame->GetPrevSibling();
       while (sibling && !blockFrameOrBR.mContent) {
-        blockFrameOrBR = FindBlockFrameOrBR(sibling, eDirPrevious);
+        blockFrameOrBR = FindLineBreakingFrame(sibling, eDirPrevious);
         sibling = sibling->GetPrevSibling();
       }
       if (blockFrameOrBR.mContent) {
@@ -8480,7 +8481,7 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
         break;
       }
       frame = parent;
-      reachedBlockAncestor = (frame && frame->IsBlockFrameOrSubclass());
+      reachedBlockAncestor = frame && frame->IsBlockOutside();
     }
     if (reachedBlockAncestor) {  // no "stop frame" found
       aPos->mResultContent = frame->GetContent();
@@ -8495,9 +8496,9 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
         reachedBlockAncestor = true;
         break;
       }
-      nsIFrame* sibling = frame;
+      nsIFrame* sibling = frame->GetNextSibling();
       while (sibling && !blockFrameOrBR.mContent) {
-        blockFrameOrBR = FindBlockFrameOrBR(sibling, eDirNext);
+        blockFrameOrBR = FindLineBreakingFrame(sibling, eDirNext);
         sibling = sibling->GetNextSibling();
       }
       if (blockFrameOrBR.mContent) {
@@ -8506,7 +8507,7 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
         break;
       }
       frame = parent;
-      reachedBlockAncestor = (frame && frame->IsBlockFrameOrSubclass());
+      reachedBlockAncestor = frame && frame->IsBlockOutside();
     }
     if (reachedBlockAncestor) {  // no "stop frame" found
       aPos->mResultContent = frame->GetContent();
