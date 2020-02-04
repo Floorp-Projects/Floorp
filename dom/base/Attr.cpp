@@ -183,7 +183,8 @@ nsresult Attr::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
 nsIURI* Attr::GetBaseURI(bool aTryUseXHRDocBaseURI) const {
   Element* parent = GetElement();
 
-  return parent ? parent->GetBaseURI(aTryUseXHRDocBaseURI) : nullptr;
+  return parent ? parent->GetBaseURI(aTryUseXHRDocBaseURI)
+                : OwnerDoc()->GetBaseURI(aTryUseXHRDocBaseURI);
 }
 
 void Attr::GetTextContentInternal(nsAString& aTextContent,
