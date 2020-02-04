@@ -9,6 +9,10 @@
 #ifndef mozilla_LayoutTelemetryTools_h
 #define mozilla_LayoutTelemetryTools_h
 
+#include "mozilla/EnumeratedArray.h"
+#include "mozilla/EnumeratedRange.h"
+#include "mozilla/FlushType.h"
+#include "mozilla/Saturate.h"
 #include "mozilla/TimeStamp.h"
 
 #define LAYOUT_TELEMETRY_RECORD(subsystem) \

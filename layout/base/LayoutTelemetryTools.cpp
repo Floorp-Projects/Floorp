@@ -6,10 +6,8 @@
 
 #include "mozilla/layout/LayoutTelemetryTools.h"
 
+#include "MainThreadUtils.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/EnumeratedRange.h"
-#include "mozilla/FlushType.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
