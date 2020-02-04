@@ -7,9 +7,7 @@ const osPrefs = Cc["@mozilla.org/intl/ospreferences;1"].getService(
   Ci.mozIOSPreferences
 );
 
-const localeService = Cc["@mozilla.org/intl/localeservice;1"].getService(
-  Ci.mozILocaleService
-);
+const localeService = Services.locale;
 
 /**
  * Make sure the locale service can be instantiated.

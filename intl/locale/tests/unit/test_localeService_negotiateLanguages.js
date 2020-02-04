@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const localeService = Cc["@mozilla.org/intl/localeservice;1"].getService(
-  Ci.mozILocaleService
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const localeService = Services.locale;
 
 const data = {
   filtering: {
@@ -148,10 +147,10 @@ function run_test() {
         const requested = test[0];
         const available = test[1];
         const defaultLocale = test.length > 3 ? test[2] : undefined;
-        const strategy = test.length > 4 ? test[3] : undefined;
+        const strategyInner = test.length > 4 ? test[3] : undefined;
         const supported = test[test.length - 1];
 
-        const result = nl(test[0], test[1], defaultLocale, strategy);
+        const result = nl(test[0], test[1], defaultLocale, strategyInner);
         deepEqual(
           result,
           supported,
