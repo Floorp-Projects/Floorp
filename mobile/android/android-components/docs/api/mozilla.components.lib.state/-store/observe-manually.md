@@ -2,7 +2,7 @@
 
 # observeManually
 
-`@CheckResult("observe") @Synchronized fun observeManually(observer: `[`Observer`](../-observer.md)`<`[`S`](index.md#S)`>): `[`Subscription`](-subscription/index.md)`<`[`S`](index.md#S)`, `[`A`](index.md#A)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L83)
+`@CheckResult("observe") @Synchronized fun observeManually(observer: `[`Observer`](../-observer.md)`<`[`S`](index.md#S)`>): `[`Subscription`](-subscription/index.md)`<`[`S`](index.md#S)`, `[`A`](index.md#A)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L82)
 
 Registers an [Observer](../-observer.md) function that will be invoked whenever the [State](../-state.md) changes.
 

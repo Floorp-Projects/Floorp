@@ -2,7 +2,7 @@
 
 # dispatch
 
-`fun dispatch(action: `[`A`](index.md#A)`): Job` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L96)
+`fun dispatch(action: `[`A`](index.md#A)`): Job` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt#L95)
 
 Dispatch an [Action](../-action.md) to the store in order to trigger a [State](../-state.md) change.
 
