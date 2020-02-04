@@ -26,6 +26,7 @@
 #include "nsIContentInlines.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
 nsPlaceholderFrame* NS_NewPlaceholderFrame(PresShell* aPresShell,
