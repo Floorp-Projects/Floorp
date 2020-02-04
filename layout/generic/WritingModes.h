@@ -11,6 +11,7 @@
 
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/EnumeratedRange.h"
 
 #include "nsRect.h"
 #include "nsBidiUtils.h"
@@ -52,6 +53,10 @@ enum LogicalSide : uint8_t {
   eLogicalSideIStart = (eLogicalAxisInline << 1) | eLogicalEdgeStart,  // 0x2
   eLogicalSideIEnd = (eLogicalAxisInline << 1) | eLogicalEdgeEnd       // 0x3
 };
+constexpr auto AllLogicalSides() {
+  return mozilla::MakeInclusiveEnumeratedRange(eLogicalSideBStart,
+                                               eLogicalSideIEnd);
+}
 
 enum LogicalCorner {
   eLogicalCornerBStartIStart = 0,
