@@ -2,6 +2,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// Make Cu.isInAutomation true.
+Services.prefs.setBoolPref(
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+  true
+);
+
 // This verifies that app upgrades produce the expected behaviours,
 // with strict compatibility checking disabled.
 
@@ -13,8 +19,9 @@ Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 // Enable loading extensions from the application scope
 Services.prefs.setIntPref(
   "extensions.enabledScopes",
-  AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
+  AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION
 );
+Services.prefs.setIntPref("extensions.sideloadScopes", AddonManager.SCOPE_ALL);
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
