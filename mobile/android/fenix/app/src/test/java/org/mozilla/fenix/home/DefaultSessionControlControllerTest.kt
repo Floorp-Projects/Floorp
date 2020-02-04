@@ -72,7 +72,6 @@ class DefaultSessionControlControllerTest {
             activity = activity,
             store = store,
             navController = navController,
-            homeLayout = homeLayout,
             browsingModeManager = browsingModeManager,
             lifecycleScope = MainScope(),
             closeTab = closeTab,

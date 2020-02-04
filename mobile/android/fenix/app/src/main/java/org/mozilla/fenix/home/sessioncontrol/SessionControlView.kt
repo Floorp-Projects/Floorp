@@ -5,9 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol
 
 import android.os.Build
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -135,22 +133,18 @@ private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapI
 @ExperimentalCoroutinesApi
 class SessionControlView(
     private val homeFragmentStore: HomeFragmentStore,
-    private val container: ViewGroup,
+    override val containerView: View?,
     interactor: SessionControlInteractor
 ) : LayoutContainer {
-    override val containerView: View?
-        get() = container
 
-    val view: RecyclerView = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_session_control, container, true)
-        .findViewById(R.id.home_component)
+    val view: RecyclerView = containerView as RecyclerView
 
     private val sessionControlAdapter = SessionControlAdapter(interactor)
 
     init {
         view.apply {
             adapter = sessionControlAdapter
-            layoutManager = LinearLayoutManager(container.context)
+            layoutManager = LinearLayoutManager(containerView!!.context)
             val itemTouchHelper =
                 ItemTouchHelper(
                     SwipeToDeleteCallback(

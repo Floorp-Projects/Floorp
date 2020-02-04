@@ -19,14 +19,10 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-import androidx.constraintlayout.widget.ConstraintSet
-import androidx.constraintlayout.widget.ConstraintSet.BOTTOM
-import androidx.constraintlayout.widget.ConstraintSet.END
-import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
-import androidx.constraintlayout.widget.ConstraintSet.START
-import androidx.constraintlayout.widget.ConstraintSet.TOP
-import androidx.core.view.updateLayoutParams
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -41,6 +37,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import androidx.transition.TransitionInflater
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
@@ -91,6 +88,7 @@ import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
+import kotlin.math.abs
 import kotlin.math.min
 
 @ExperimentalCoroutinesApi
@@ -106,7 +104,7 @@ class HomeFragment : Fragment() {
         }
 
     private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
-
+    private var homeAppBarOffset = 0
     private val singleSessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {
             if (deleteAllSessionsJob == null) emitSessionChanges()
@@ -142,7 +140,7 @@ class HomeFragment : Fragment() {
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var homeFragmentStore: HomeFragmentStore
     private lateinit var sessionControlInteractor: SessionControlInteractor
-    private lateinit var sessionControlView: SessionControlView
+    private var sessionControlView: SessionControlView? = null
     private lateinit var currentMode: CurrentMode
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -195,7 +193,6 @@ class HomeFragment : Fragment() {
                 activity = activity,
                 store = homeFragmentStore,
                 navController = findNavController(),
-                homeLayout = view.homeLayout,
                 browsingModeManager = browsingModeManager,
                 lifecycleScope = viewLifecycleOwner.lifecycleScope,
                 closeTab = ::closeTab,
@@ -209,37 +206,32 @@ class HomeFragment : Fragment() {
             )
         )
 
-        sessionControlView = SessionControlView(homeFragmentStore, view.homeLayout, sessionControlInteractor)
+        view.homeAppBar.addOnOffsetChangedListener(
+            AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
+                appBarLayout.alpha =
+                    1.0f - abs(verticalOffset / appBarLayout.totalScrollRange.toFloat())
+            }
+        )
 
+        setOffset(view)
+
+
+        sessionControlView = SessionControlView(homeFragmentStore,
+                                view.sessionControlRecyclerView, sessionControlInteractor)
         updateLayout(view)
-
         activity.themeManager.applyStatusBarTheme(activity)
-
         return view
     }
 
     private fun updateLayout(view: View) {
         val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
 
-        ConstraintSet().apply {
-            clone(view.homeLayout)
 
-            if (shouldUseBottomToolbar) {
-                connect(sessionControlView.view.id, TOP, view.wordmark.id, BOTTOM)
-                connect(sessionControlView.view.id, BOTTOM, view.toolbarLayout.id, TOP)
-
-                connect(view.toolbarLayout.id, BOTTOM, PARENT_ID, BOTTOM)
-                connect(view.privateBrowsingButton.id, TOP, PARENT_ID, TOP)
-            } else {
-                connect(sessionControlView.view.id, TOP, view.wordmark.id, TOP)
-                connect(sessionControlView.view.id, BOTTOM, PARENT_ID, BOTTOM)
-
-                connect(view.privateBrowsingButton.id, TOP, view.toolbarLayout.id, BOTTOM)
-            }
-            connect(sessionControlView.view.id, START, PARENT_ID, START)
-            connect(sessionControlView.view.id, END, PARENT_ID, END)
-
-            applyTo(view.homeLayout)
+        if(!shouldUseBottomToolbar){
+            view.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.WRAP_CONTENT)
+                .apply {
+                    gravity = Gravity.TOP
+                }
         }
 
         val headingsTopMargins = if (shouldUseBottomToolbar) { HEADER_MARGIN } else { TOP_TOOLBAR_HEADER_MARGIN }
@@ -253,7 +245,7 @@ class HomeFragment : Fragment() {
             topMargin = headingsTopMargins.dpToPx(resources.displayMetrics)
         }
 
-        sessionControlView.view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+        sessionControlView!!.view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             topMargin = sessionControlViewTopMargin.dpToPx(resources.displayMetrics)
         }
 
@@ -263,7 +255,6 @@ class HomeFragment : Fragment() {
             }
         }
     }
-
     @ExperimentalCoroutinesApi
     @SuppressWarnings("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -274,9 +265,8 @@ class HomeFragment : Fragment() {
                 ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
             }
             homeViewModel.layoutManagerState?.also { parcelable ->
-                sessionControlView.view.layoutManager?.onRestoreInstanceState(parcelable)
+                sessionControlView!!.view.layoutManager?.onRestoreInstanceState(parcelable)
             }
-            homeLayout?.progress = homeViewModel.motionLayoutProgress
             homeViewModel.layoutManagerState = null
         }
 
@@ -348,6 +338,11 @@ class HomeFragment : Fragment() {
                     HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode)))
             }
         }
+    }
+
+    override fun onDestroyView() {
+        sessionControlView = null
+        super.onDestroyView()
     }
 
     override fun onStart() {
@@ -476,13 +471,17 @@ class HomeFragment : Fragment() {
             ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
         }
         homeViewModel.layoutManagerState =
-            sessionControlView.view.layoutManager?.onSaveInstanceState()
-        homeViewModel.motionLayoutProgress = homeLayout?.progress ?: 0F
+            sessionControlView!!.view.layoutManager?.onSaveInstanceState()
     }
 
     override fun onResume() {
         super.onResume()
         hideToolbar()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        calculateNewOffset()
     }
 
     private fun recommendPrivateBrowsingShortcut() {
@@ -710,7 +709,7 @@ class HomeFragment : Fragment() {
     private fun scrollToTheTop() {
         lifecycleScope.launch(Main) {
             delay(ANIM_SCROLL_DELAY)
-            sessionControlView.view.smoothScrollToPosition(0)
+            sessionControlView!!.view.smoothScrollToPosition(0)
         }
     }
 
@@ -720,7 +719,7 @@ class HomeFragment : Fragment() {
     ) {
         if (view != null) {
             viewLifecycleOwner.lifecycleScope.launch {
-                val recyclerView = sessionControlView.view
+                val recyclerView = sessionControlView!!.view
                 delay(ANIM_SCROLL_DELAY)
                 val tabsSize = getListOfSessions().size
 
@@ -763,7 +762,7 @@ class HomeFragment : Fragment() {
     private fun animateCollection(addedTabsSize: Int, indexOfCollection: Int) {
         viewLifecycleOwner.lifecycleScope.launch {
             val viewHolder =
-                sessionControlView.view.findViewHolderForAdapterPosition(indexOfCollection)
+                sessionControlView!!.view.findViewHolderForAdapterPosition(indexOfCollection)
             val border =
                 (viewHolder as? CollectionViewHolder)?.view?.findViewById<View>(R.id.selected_border)
             val listener = object : Animator.AnimatorListener {
@@ -827,6 +826,23 @@ class HomeFragment : Fragment() {
             }
 
             it.toTab(requireContext(), it == selected, mediaState)
+        }
+    }
+
+    private fun calculateNewOffset() {
+        homeAppBarOffset = ((view!!.findViewById<AppBarLayout>(R.id.homeAppBar)
+                                .layoutParams as CoordinatorLayout.LayoutParams)
+                                .behavior as AppBarLayout.Behavior).topAndBottomOffset
+    }
+
+    private fun setOffset(currentView: View) {
+        if (homeAppBarOffset <= 0) {
+            (currentView.homeAppBar.layoutParams as CoordinatorLayout.LayoutParams)
+                .behavior = AppBarLayout.Behavior().apply {
+                topAndBottomOffset = this@HomeFragment.homeAppBarOffset
+            }
+        } else {
+            currentView.homeAppBar.setExpanded(false)
         }
     }
 
