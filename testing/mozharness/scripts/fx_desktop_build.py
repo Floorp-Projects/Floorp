@@ -53,14 +53,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
                 "repo_base": "https://hg.mozilla.org",
                 "graph_selector": "/server/collect.cgi",
-                # only used for make uploadsymbols
-                'old_packages': [
-                    "%(objdir)s/dist/firefox-*",
-                    "%(objdir)s/dist/fennec*",
-                    "%(objdir)s/dist/seamonkey*",
-                    "%(objdir)s/dist/thunderbird*",
-                    "%(objdir)s/dist/install/sea/*.exe"
-                ],
                 'build_resources_path': '%(upload_path)s/build_resources.json',
                 'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
 
