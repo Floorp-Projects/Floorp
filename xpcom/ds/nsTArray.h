@@ -574,7 +574,9 @@ struct AssignRangeAlgorithm<true, true> {
   template <class Item, class ElemType, class IndexType, class SizeType>
   static void implementation(ElemType* aElements, IndexType aStart,
                              SizeType aCount, const Item* aValues) {
-    memcpy(aElements + aStart, aValues, aCount * sizeof(ElemType));
+    if (aValues) {
+      memcpy(aElements + aStart, aValues, aCount * sizeof(ElemType));
+    }
   }
 };
 
