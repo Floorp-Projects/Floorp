@@ -15,7 +15,7 @@ exports.callParent = function() {
     // eslint-disable-next-line no-restricted-properties
     conn.setupInParent({
       module:
-        "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/setup-in-parent.js",
+        "chrome://mochitests/content/chrome/devtools/server/tests/chrome/setup-in-parent.js",
       setupParent: "setupParent",
       args: [{ one: true }, 2, "three"],
     });

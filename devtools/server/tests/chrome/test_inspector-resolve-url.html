@@ -33,7 +33,7 @@ addTest(function() {
   info("Resolve a relative URL without providing a context node");
   gInspector.resolveRelativeURL("test.png?id=4#wow").then(url => {
     is(url, "chrome://mochitests/content/chrome/devtools/server/tests/" +
-            "mochitest/test.png?id=4#wow");
+            "chrome/test.png?id=4#wow");
     runNextTest();
   });
 });
@@ -52,7 +52,7 @@ addTest(function() {
   const node = gDoc.querySelector(".big-horizontal");
   gInspector.resolveRelativeURL("test.png?id=4#wow", node).then(url => {
     is(url, "chrome://mochitests/content/chrome/devtools/server/tests/" +
-            "mochitest/test.png?id=4#wow");
+            "chrome/test.png?id=4#wow");
     runNextTest();
   });
 });
