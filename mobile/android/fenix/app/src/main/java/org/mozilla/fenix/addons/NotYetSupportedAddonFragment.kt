@@ -1,0 +1,76 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.fenix.addons
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.android.synthetic.main.fragment_not_yet_supported_addons.view.*
+import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.ui.UnsupportedAddonsAdapter
+import mozilla.components.feature.addons.ui.UnsupportedAddonsAdapterDelegate
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.showToolbar
+
+private const val LEARN_MORE_URL =
+    "https://support.mozilla.org/kb/add-compatibility-firefox-preview"
+
+/**
+ * Fragment for displaying and managing add-ons that are not yet supported by the browser.
+ */
+class NotYetSupportedAddonFragment : Fragment(), UnsupportedAddonsAdapterDelegate {
+    private val addons: List<Addon> by lazy {
+        NotYetSupportedAddonFragmentArgs.fromBundle(requireNotNull(arguments)).addons.toList()
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_not_yet_supported_addons, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        view.unsupported_add_ons_list.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = UnsupportedAddonsAdapter(
+                addonManager = requireContext().components.addonManager,
+                unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
+                unsupportedAddons = addons
+            )
+        }
+
+        view.learn_more_label.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW).setData(Uri.parse(LEARN_MORE_URL))
+            startActivity(intent)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        showToolbar(getString(R.string.mozac_feature_addons_unsupported_section))
+    }
+
+    override fun onUninstallError(addonId: String, throwable: Throwable) {
+        this@NotYetSupportedAddonFragment.view?.let { view ->
+            showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_remove, ""))
+        }
+    }
+
+    override fun onUninstallSuccess() {
+        this@NotYetSupportedAddonFragment.view?.let { view ->
+            showSnackBar(view, getString(R.string.mozac_feature_addons_successfully_removed, ""))
+        }
+    }
+}

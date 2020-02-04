@@ -51,6 +51,10 @@
         android:id="@+id/action_global_homeFragment"
         app:destination="@id/homeFragment" />
 
+    <action
+        android:id="@+id/action_global_webExtensionActionPopupFragment"
+        app:destination="@id/webExtensionActionPopupFragment" />
+
     <fragment
         android:id="@+id/homeFragment"
         android:name="org.mozilla.fenix.home.HomeFragment"
@@ -201,6 +205,9 @@
         <action
             android:id="@+id/action_browserFragment_to_trackingProtectionPanelDialogFragment"
             app:destination="@id/trackingProtectionPanelDialogFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_addonsManagementFragment"
+            app:destination="@id/addonsManagementFragment" />
     </fragment>
 
     <fragment
@@ -409,6 +416,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_localeSettingsFragment"
             app:destination="@id/localeSettingsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_addonsFragment"
+            app:destination="@id/addonsManagementFragment" />
     </fragment>
     <fragment
         android:id="@+id/dataChoicesFragment"
@@ -702,4 +712,72 @@
         android:id="@+id/saveLoginSettingFragment"
         android:name="org.mozilla.fenix.settings.logins.SaveLoginSettingFragment"
         android:label="SaveLoginSettingFragment" />
+    <fragment
+        android:id="@+id/addonsManagementFragment"
+        android:name="org.mozilla.fenix.addons.AddonsManagementFragment">
+        <action
+            android:id="@+id/action_addonsManagementFragment_to_addonDetailsFragment"
+            app:destination="@id/addonDetailsFragment" />
+        <action
+            android:id="@+id/action_addonsManagementFragment_to_installedAddonDetails"
+            app:destination="@id/installedAddonDetailsFragment" />
+        <action
+            android:id="@+id/action_addonsManagementFragment_to_notYetSupportedAddonFragment"
+            app:destination="@id/notYetSupportedAddonFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addonDetailsFragment"
+        android:name="org.mozilla.fenix.addons.AddonDetailsFragment">
+        <argument
+            android:name="addon"
+            app:argType="mozilla.components.feature.addons.Addon" />
+    </fragment>
+    <fragment
+        android:id="@+id/installedAddonDetailsFragment"
+        android:name="org.mozilla.fenix.addons.InstalledAddonDetailsFragment">
+        <action
+            android:id="@+id/action_installedAddonFragment_to_addonInternalSettingsFragment"
+            app:destination="@id/addonInternalSettingsFragment" />
+        <action
+            android:id="@+id/action_installedAddonFragment_to_addonDetailsFragment"
+            app:destination="@id/addonDetailsFragment" />
+        <action
+            android:id="@+id/action_installedAddonFragment_to_addonPermissionsDetailsFragment"
+            app:destination="@id/addonPermissionsDetailFragment" />
+        <argument
+            android:name="addon"
+            app:argType="mozilla.components.feature.addons.Addon" />
+    </fragment>
+    <fragment
+        android:id="@+id/notYetSupportedAddonFragment"
+        android:name="org.mozilla.fenix.addons.NotYetSupportedAddonFragment">
+        <argument
+            android:name="addons"
+            app:argType="mozilla.components.feature.addons.Addon[]" />
+    </fragment>
+    <fragment
+        android:id="@+id/addonInternalSettingsFragment"
+        android:name="org.mozilla.fenix.addons.AddonInternalSettingsFragment">
+        <argument
+            android:name="addon"
+            app:argType="mozilla.components.feature.addons.Addon" />
+    </fragment>
+    <fragment
+        android:id="@+id/addonPermissionsDetailFragment"
+        android:name="org.mozilla.fenix.addons.AddonPermissionsDetailsFragment">
+        <argument
+            android:name="addon"
+            app:argType="mozilla.components.feature.addons.Addon" />
+    </fragment>
+    <fragment
+        android:id="@+id/webExtensionActionPopupFragment"
+        android:name="org.mozilla.fenix.addons.WebExtensionActionPopupFragment">
+        <argument
+            android:name="webExtensionId"
+            app:argType="string" />
+        <argument
+            android:name="webExtensionTitle"
+            app:argType="string"
+            app:nullable="true"/>
+    </fragment>
 </navigation>

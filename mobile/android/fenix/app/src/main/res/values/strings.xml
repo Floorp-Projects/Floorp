@@ -65,6 +65,8 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Edit bookmark</string>
     <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_addon_manager">Add-ons Manager</string>
+    <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that sends a to a the what's new article -->
     <string name="browser_menu_whats_new">What’s New</string>
@@ -242,6 +244,8 @@
     <string name="preferences_account_settings">Account settings</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Open links in apps</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Add-ons</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

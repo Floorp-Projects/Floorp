@@ -18,6 +18,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.glean.Glean
@@ -31,6 +32,7 @@ import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.locale.LocaleAwareApplication
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
+import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.session.NotificationSessionObserver
@@ -115,6 +117,8 @@ open class FenixApplication : LocaleAwareApplication() {
 
             // Make sure the engine is initialized and ready to use.
             components.core.engine.warmUp()
+
+            initializeWebExtensionSupport()
 
             // Just to make sure it is impossible for any application-services pieces
             // to invoke parts of itself that require complete megazord initialization
@@ -275,6 +279,31 @@ open class FenixApplication : LocaleAwareApplication() {
                 builder.detectContentUriWithoutPermission()
             if (SDK_INT >= Build.VERSION_CODES.P) builder = builder.detectNonSdkApiUsage()
             StrictMode.setVmPolicy(builder.build())
+        }
+    }
+
+    private fun initializeWebExtensionSupport() {
+        try {
+            WebExtensionSupport.initialize(
+                components.core.engine,
+                components.core.store,
+                onNewTabOverride = {
+                    _, engineSession, url ->
+                        val session = Session(url)
+                        components.core.sessionManager.add(session, true, engineSession)
+                        session.id
+                },
+                onCloseTabOverride = {
+                    _, sessionId -> components.tabsUseCases.removeTab(sessionId)
+                },
+                onSelectTabOverride = {
+                    _, sessionId ->
+                        val selected = components.core.sessionManager.findSessionById(sessionId)
+                        selected?.let { components.tabsUseCases.selectTab(it) }
+                }
+            )
+        } catch (e: UnsupportedOperationException) {
+            Logger.error("Failed to initialize web extension support", e)
         }
     }
 }

@@ -104,12 +104,16 @@
     <PreferenceCategory
         android:title="@string/preferences_category_advanced"
         app:iconSpaceReserved="false"
-        android:key="@string/pref_key_advanced"
-        app:isPreferenceVisible="false">
+        android:key="@string/pref_key_advanced">
+        <androidx.preference.Preference
+            android:icon="@drawable/mozac_ic_extensions_black"
+            android:key="@string/pref_key_addons"
+            android:title="@string/preferences_addons" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_language"
             android:key="@string/pref_key_language"
-            android:title="@string/preferences_language" />
+            android:title="@string/preferences_language"
+            app:isPreferenceVisible="false" />
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -326,6 +326,15 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
+    fun handleToolbarAddonsManagerPress() = runBlockingTest {
+        val item = ToolbarMenu.Item.AddonsManager
+
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.ADDONS_MANAGER)) }
+    }
+
+    @Test
     fun handleToolbarAddToHomeScreenPress() {
         val item = ToolbarMenu.Item.AddToHomeScreen
 

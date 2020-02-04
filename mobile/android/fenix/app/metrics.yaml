@@ -82,7 +82,7 @@ events:
           A string containing the name of the item the user tapped. These items include:
           Settings, Library, Help, Desktop Site toggle on/off, Find in Page, New Tab,
           Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button, Quit,
-          Reader Mode On, Reader Mode Off, Open In App, Add to Firefox Home
+          Reader Mode On, Reader Mode Off, Open In App, Add to Firefox Home, Add-ons Manager
     bugs:
     - https://github.com/mozilla-mobile/fenix/issues/1024
     data_reviews:

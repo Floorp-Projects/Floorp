@@ -23,10 +23,12 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import kotlinx.android.synthetic.main.activity_home.navigationToolbarStub
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -35,6 +37,7 @@ import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
+import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import org.mozilla.fenix.browser.UriOpenedObserver
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -70,6 +73,7 @@ import org.mozilla.fenix.utils.BrowsersCache
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 open class HomeActivity : LocaleAwareAppCompatActivity() {
 
+    private var webExtScope: CoroutineScope? = null
     lateinit var themeManager: ThemeManager
     lateinit var browsingModeManager: BrowsingModeManager
 
@@ -78,6 +82,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     private val hotStartMonitor = HotStartPerformanceMonitor()
 
     private var isToolbarInflated = false
+
+    private val webExtensionPopupFeature by lazy {
+        WebExtensionPopupFeature(components.core.store, ::openPopup)
+    }
 
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
@@ -126,6 +134,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
         }
         supportActionBar?.hide()
+
+        lifecycle.addObserver(webExtensionPopupFeature)
     }
 
     @CallSuper
@@ -375,6 +385,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     protected open fun createThemeManager(): ThemeManager {
         return DefaultThemeManager(browsingModeManager.mode, this)
+    }
+
+    private fun openPopup(webExtensionState: WebExtensionState) {
+        val action = NavGraphDirections.actionGlobalWebExtensionActionPopupFragment(
+            webExtensionId = webExtensionState.id,
+            webExtensionTitle = webExtensionState.name
+        )
+        navHost.navController.navigate(action)
     }
 
     companion object {

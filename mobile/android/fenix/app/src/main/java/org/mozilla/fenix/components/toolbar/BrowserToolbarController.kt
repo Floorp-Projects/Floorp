@@ -207,6 +207,13 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.Help -> {
                 activity.components.useCases.tabsUseCases.addTab.invoke(getSupportUrl())
             }
+            ToolbarMenu.Item.AddonsManager -> {
+                navController.nav(
+                    R.id.browserFragment,
+                    BrowserFragmentDirections
+                        .actionBrowserFragmentToAddonsManagementFragment()
+                )
+            }
             ToolbarMenu.Item.SaveToCollection -> {
                 activity.components.analytics.metrics
                     .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENTIFIER))
@@ -340,6 +347,7 @@ class DefaultBrowserToolbarController(
                 Event.BrowserMenuItemTapped.Item.READER_MODE_APPEARANCE
             ToolbarMenu.Item.OpenInApp -> Event.BrowserMenuItemTapped.Item.OPEN_IN_APP
             ToolbarMenu.Item.Bookmark -> Event.BrowserMenuItemTapped.Item.BOOKMARK
+            ToolbarMenu.Item.AddonsManager -> Event.BrowserMenuItemTapped.Item.ADDONS_MANAGER
         }
 
         activity.components.analytics.metrics.track(Event.BrowserMenuItemTapped(eventItem))

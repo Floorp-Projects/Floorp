@@ -100,6 +100,9 @@ object Deps {
     const val mozilla_browser_errorpages = "org.mozilla.components:browser-errorpages:${Versions.mozilla_android_components}"
     const val mozilla_browser_storage_sync = "org.mozilla.components:browser-storage-sync:${Versions.mozilla_android_components}"
 
+    const val mozilla_feature_addons = "org.mozilla.components:feature-addons:${Versions.mozilla_android_components}"
+    const val mozilla_support_extensions = "org.mozilla.components:support-webextensions:${Versions.mozilla_android_components}"
+
     const val mozilla_feature_accounts = "org.mozilla.components:feature-accounts:${Versions.mozilla_android_components}"
     const val mozilla_feature_app_links = "org.mozilla.components:feature-app-links:${Versions.mozilla_android_components}"
     const val mozilla_feature_awesomebar = "org.mozilla.components:feature-awesomebar:${Versions.mozilla_android_components}"
