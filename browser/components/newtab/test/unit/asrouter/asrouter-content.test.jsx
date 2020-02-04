@@ -204,11 +204,12 @@ describe("ASRouterUISurface", () => {
     assert.property(stub.firstCall.args[0].detail.data, "sidebar_text");
   });
 
-  it("should set `dir=rtl` on the page's root element if the dir param is set", () => {
+  it("should set `dir=rtl` on the page's <html> element if the dir param is set", () => {
+    assert.notPropertyVal(fakeDocument, "dir", "rtl");
     sandbox.stub(ASRouterUtils, "getPreviewEndpoint").returns({ dir: "rtl" });
 
     wrapper = mount(<ASRouterUISurface document={fakeDocument} />);
-    assert.propertyVal(root, "dir", "rtl");
+    assert.propertyVal(fakeDocument, "dir", "rtl");
   });
 
   describe("snippets", () => {
