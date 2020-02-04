@@ -58,9 +58,6 @@ class Components(private val context: Context) {
         )
     }
 
-    /**
-     * Add-on
-     */
     val addonCollectionProvider by lazy {
         AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
     }
