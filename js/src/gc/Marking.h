@@ -54,14 +54,7 @@ class TenuredCell;
 // separate implementations.
 
 template <typename T>
-bool IsMarkedInternal(JSRuntime* rt, T* thing);
-template <typename T>
 bool IsMarkedInternal(JSRuntime* rt, T** thing);
-
-template <typename T>
-bool IsMarkedBlackInternal(JSRuntime* rt, T* thing);
-template <typename T>
-bool IsMarkedBlackInternal(JSRuntime* rt, T** thing);
 
 template <typename T>
 bool IsAboutToBeFinalizedInternal(T* thingp);
@@ -74,28 +67,6 @@ bool IsAboutToBeFinalizedInternal(T** thingp);
 template <typename T>
 inline bool IsMarkedUnbarriered(JSRuntime* rt, T* thingp) {
   return IsMarkedInternal(rt, ConvertToBase(thingp));
-}
-
-// Report whether a GC thing has been marked with any color. Things which are in
-// zones that are not currently being collected or are owned by another runtime
-// are always reported as being marked.
-template <typename T>
-inline bool IsMarked(JSRuntime* rt, WriteBarriered<T>* thingp) {
-  return IsMarkedInternal(rt,
-                          ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
-}
-
-// Report whether a GC thing has been marked black.
-template <typename T>
-inline bool IsMarkedBlackUnbarriered(JSRuntime* rt, T* thingp) {
-  return IsMarkedBlackInternal(rt, ConvertToBase(thingp));
-}
-
-// Report whether a GC thing has been marked black.
-template <typename T>
-inline bool IsMarkedBlack(JSRuntime* rt, WriteBarriered<T>* thingp) {
-  return IsMarkedBlackInternal(
-      rt, ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
 template <typename T>
