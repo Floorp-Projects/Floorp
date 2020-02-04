@@ -134,9 +134,9 @@ add_task(async function test_trailhead_branches() {
     [
       ".trailhead.joinCohort",
       "h3[data-l10n-id=onboarding-welcome-form-header]",
-      "p[data-l10n-id=onboarding-benefit-products-text]",
-      "p[data-l10n-id=onboarding-benefit-knowledge-text]",
-      "p[data-l10n-id=onboarding-benefit-privacy-text]",
+      "p[data-l10n-id=onboarding-benefit-sync-text]",
+      "p[data-l10n-id=onboarding-benefit-monitor-text]",
+      "p[data-l10n-id=onboarding-benefit-lockwise-text]",
     ]
   );
 
