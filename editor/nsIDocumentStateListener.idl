@@ -5,13 +5,28 @@
 
 #include "nsISupports.idl"
 
+/**
+ * Due to the historical reason, this listener interface says "document state",
+ * but this listener listens to HTML editor state.
+ */
 [scriptable, uuid(050cdc00-3b8e-11d3-9ce4-a458f454fcbc)]
 interface nsIDocumentStateListener : nsISupports
 {
-  [can_run_script]
-  void NotifyDocumentCreated();
+  /**
+   * NotifyDocumentWillBeDestroyed() is called when HTML editor instance is
+   * being destroyed.  Note that related objects may have already gone when
+   * this is called because that may cause destroying HTML editor.
+   */
   [can_run_script]
   void NotifyDocumentWillBeDestroyed();
+
+  /**
+   * NotifyDocumentStateChanged() is called when dirty state of HTML editor
+   * is changed.
+   *
+   * @param aNowDirty   if true, this is called when the HTML editor becomes
+   *                    dirty.  Otherwise, called when it becomes not dirty.
+   */
   [can_run_script]
-  void NotifyDocumentStateChanged(in boolean nowDirty);
+  void NotifyDocumentStateChanged(in boolean aNowDirty);
 };

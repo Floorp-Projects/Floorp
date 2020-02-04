@@ -37,9 +37,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
           editor.removeDocumentStateListener(this);
         },
 
-        NotifyDocumentCreated() {
-        },
-
         NotifyDocumentStateChanged(aNowDirty) {
           var editor = SpecialPowers.wrap(this.input).editor;
           editor.removeDocumentStateListener(this);
@@ -89,8 +86,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
         document.body.removeChild(input);
         ok(true, "Multiple listeners removed themselves after " +
                  "NotifyDocumentWillBeDestroyed notifications - didn't crash");
-
-       // TODO: Test for NotifyDocumentCreated
 
        SimpleTest.finish();
       }
