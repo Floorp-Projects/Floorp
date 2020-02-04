@@ -72,11 +72,11 @@ function testFirstLetterProperty(property, rule, expected, reason) {
 
 for (var property in validProperties) {
   testFirstLetterProperty(property, validProperties[property], validProperties[property],
-                          "Whitelisted property " + property + " should be applied to first-letter pseudo elements.");
+                          property + " should be applied to first-letter pseudo elements.");
 }
 
 for (var property in invalidProperties) {
   testFirstLetterProperty(property, invalidProperties[property], defaultComputedStyle[property],
-                          "Non-whitelisted property " + property + " should not be applied to first-letter pseudo elements.");
+                          property + " should not be applied to first-letter pseudo elements.");
 }
 </script>
