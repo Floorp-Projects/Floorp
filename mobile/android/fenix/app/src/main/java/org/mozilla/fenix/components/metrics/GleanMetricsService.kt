@@ -571,6 +571,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         }
 
         activationPing.checkAndSend()
+        InstallationPing(context).checkAndSend()
     }
 
     override fun stop() {

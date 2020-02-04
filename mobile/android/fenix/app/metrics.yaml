@@ -1789,3 +1789,70 @@ pocket:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+
+installation:
+  campaign:
+   type: string
+   send_in_pings:
+     - installation
+   description: >
+     Campaign
+   bugs:
+     - https://github.com/mozilla-mobile/fenix/issues/7295
+   data_reviews:
+     - https://github.com/mozilla-mobile/fenix/pull/8074
+   notification_emails:
+     - fenix-core@mozilla.com
+   expires: "2020-09-01"
+  network:
+    type: string
+    send_in_pings:
+      - installation
+    description: >
+      Network
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/7295
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8074
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  adgroup:
+    type: string
+    send_in_pings:
+      - installation
+    description: >
+      AdGroup
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/7295
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8074
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  creative:
+    send_in_pings:
+      - installation
+    type: string
+    description: >
+      Creative
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/7295
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8074
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  timestamp:
+    send_in_pings:
+      - installation
+    type: string
+    description: >
+      Timestamp
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/7295
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8074
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"

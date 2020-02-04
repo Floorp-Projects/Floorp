@@ -133,6 +133,11 @@
     <string name="pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>
     <string name="pref_key_reader_mode_notification" translatable="false">pref_key_reader_mode_notification</string>
     <string name="pref_key_adjust_campaign" translatable="false">pref_key_adjust_campaign</string>
+    <string name="pref_key_adjust_network" translatable="false">pref_key_adjust_network</string>
+    <string name="pref_key_adjust_adgroup" translatable="false">pref_key_adjust_adgroup</string>
+    <string name="pref_key_adjust_creative" translatable="false">pref_key_adjust_creative</string>
+    <string name="pref_key_adjust_install_timestamp" translatable="false">pref_key_adjust_install_timestamp</string>
+
     <string name="pref_key_testing_stage" translatable="false">pref_key_testing_stage</string>
 
     <string name="pref_key_encryption_key_generated" translatable="false">pref_key_encryption_key_generated</string>

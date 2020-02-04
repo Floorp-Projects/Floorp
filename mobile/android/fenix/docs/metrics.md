@@ -10,6 +10,7 @@ This means you might have to go searching through the dependency tree to get a f
  - [activation](#activation)
  - [baseline](#baseline)
  - [events](#events)
+ - [installation](#installation)
  - [metrics](#metrics)
 
 
@@ -168,6 +169,19 @@ The following metrics are added to the ping:
 | tracking_protection.panel_settings |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user opened tracking protection settings from the panel.  |[1](https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188)||2020-09-01 |
 | user_specified_search_engines.custom_engine_added |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user added a new custom search engine  |[1](https://github.com/mozilla-mobile/fenix/pull/6918)||2020-09-01 |
 | user_specified_search_engines.custom_engine_deleted |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user deleted a custom search engine  |[1](https://github.com/mozilla-mobile/fenix/pull/6918)||2020-09-01 |
+
+## installation
+Intended for counting user installs.
+
+The following metrics are added to the ping:
+
+| Name | Type | Description | Data reviews | Extras | Expiration |
+| --- | --- | --- | --- | --- | --- |
+| installation.adgroup |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |AdGroup  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
+| installation.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Campaign  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
+| installation.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Creative  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
+| installation.network |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Network  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
+| installation.timestamp |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Timestamp  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
 
 ## metrics
 This is a built-in ping that is assembled out of the box by the Glean SDK.

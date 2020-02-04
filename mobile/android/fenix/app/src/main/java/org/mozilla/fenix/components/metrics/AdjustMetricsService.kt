@@ -38,9 +38,27 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
         )
 
         config.setOnAttributionChangedListener {
-            it.campaign?.let { campaign ->
-                application.applicationContext.settings().adjustCampaignId = campaign
+            if (!it.network.isNullOrEmpty()) {
+                application.applicationContext.settings().adjustNetwork =
+                    it.network
             }
+            if (!it.adgroup.isNullOrEmpty()) {
+                application.applicationContext.settings().adjustAdGroup =
+                    it.adgroup
+            }
+            if (!it.creative.isNullOrEmpty()) {
+                application.applicationContext.settings().adjustCreative =
+                    it.creative
+            }
+            if (!it.campaign.isNullOrEmpty()) {
+                application.applicationContext.settings().adjustCampaignId =
+                    it.campaign
+            }
+            if (application.applicationContext.settings().adjustInstallTimestamp.isEmpty()) {
+                application.applicationContext.settings().adjustInstallTimestamp =
+                    System.currentTimeMillis().toString()
+            }
+            InstallationPing(application).checkAndSend()
         }
 
         config.setLogLevel(LogLevel.SUPRESS)

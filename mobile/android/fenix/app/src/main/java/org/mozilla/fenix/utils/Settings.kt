@@ -95,6 +95,26 @@ class Settings private constructor(
         default = ""
     )
 
+    var adjustNetwork by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_adjust_network),
+        default = ""
+    )
+
+    var adjustAdGroup by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_adjust_adgroup),
+        default = ""
+    )
+
+    var adjustCreative by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_adjust_creative),
+        default = ""
+    )
+
+    var adjustInstallTimestamp by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_adjust_install_timestamp),
+        default = ""
+    )
+
     var openLinksInAPrivateTab by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab),
         default = false
