@@ -16,4 +16,4 @@ DevToolsModules(
     'WaterfallTreeRow.js',
 )
 
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']

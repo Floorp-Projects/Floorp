@@ -50,7 +50,7 @@ module.exports = {
       "client/shared/*.jsm",
       "client/shared/widgets/*.jsm",
       "client/storage/VariablesView.jsm",
-      "shared/webconsole/test/*.html",
+      "shared/webconsole/test/chrome/*.html",
     ],
     "rules": {
       "mozilla/no-aArgs": "off",

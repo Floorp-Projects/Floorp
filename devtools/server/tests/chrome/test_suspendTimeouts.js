@@ -61,7 +61,7 @@ window.onload = function() {
 
   const iframe = document.createElement("iframe");
   iframe.src =
-    "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/suspendTimeouts_content.html";
+    "http://mochi.test:8888/chrome/devtools/server/tests/chrome/suspendTimeouts_content.html";
   iframe.onload = iframe_onload_handler;
   document.body.appendChild(iframe);
 

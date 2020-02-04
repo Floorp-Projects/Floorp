@@ -1,9 +1,10 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Tests for InspectorActor.getImageDataFromURL() in following cases:
- * Normal case, image loads after a small delay.
+Tests for InspectorActor.getImageData() in following cases:
  * Image takes too long to load (the method rejects after a timeout).
+ * Image is loading when the method is called and the load finishes before
+   timeout.
  * Image fails to load.
 
 https://bugzilla.mozilla.org/show_bug.cgi?id=1192536
@@ -18,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1192536
   <script type="application/javascript">
 "use strict";
 
-const PATH = "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/";
+const PATH = "http://mochi.test:8888/chrome/devtools/server/tests/chrome/";
 const BASE_IMAGE = PATH + "inspector-delay-image-response.sjs";
 const DELAYED_IMAGE = BASE_IMAGE + "?delay=300";
 const TIMEOUT_IMAGE = BASE_IMAGE + "?delay=50000";
@@ -36,12 +37,19 @@ function pushPref(preferenceName, value) {
   });
 }
 
-let gInspector = null;
+let gImg = null;
+let gNodeFront = null;
+let gWalker = null;
 
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  const { target } = await attachURL(url);
-  gInspector = await target.getFront("inspector");
+  const { target, doc } = await attachURL(url);
+  const inspector = await target.getFront("inspector");
+  gWalker = inspector.walker;
+  gNodeFront = await gWalker.querySelector(gWalker.rootNode, "img.custom");
+  gImg = doc.querySelector("img.custom");
+  ok(gNodeFront, "Got the image NodeFront.");
+  ok(gImg, "Got the image Node.");
   runNextTest();
 });
 
@@ -51,8 +59,10 @@ addTest(async function testTimeout() {
   // imageToImageData() only times out when flags.testing is not set.
   await pushPref("devtools.testing", false);
 
-  ensureRejects(gInspector.getImageDataFromURL(TIMEOUT_IMAGE),
-    "Image that loads for too long").then(runNextTest);
+  gImg.src = TIMEOUT_IMAGE;
+
+  info("Calling getImageData().");
+  ensureRejects(gNodeFront.getImageData(), "Timeout image").then(runNextTest);
 });
 
 addTest(async function testNonExistentImage() {
@@ -61,21 +71,28 @@ addTest(async function testNonExistentImage() {
   // This test shouldn't hit the timeout.
   await pushPref("devtools.testing", true);
 
-  ensureRejects(gInspector.getImageDataFromURL(NONEXISTENT_IMAGE),
-    "Non-existent image").then(runNextTest);
+  gImg.src = NONEXISTENT_IMAGE;
+
+  info("Calling getImageData().");
+  ensureRejects(gNodeFront.getImageData(), "Non-existent image").then(runNextTest);
 });
 
-addTest(async function testNormalImage() {
+addTest(async function testDelayedImage() {
   info("Testing that the method waits for an image to load.");
 
   // This test shouldn't hit the timeout.
   await pushPref("devtools.testing", true);
 
-  checkImageData(gInspector.getImageDataFromURL(DELAYED_IMAGE)).then(runNextTest);
+  gImg.src = DELAYED_IMAGE;
+
+  info("Calling getImageData().");
+  checkImageData(gNodeFront.getImageData()).then(runNextTest);
 });
 
 addTest(function cleanup() {
-  gInspector = null;
+  gImg = null;
+  gNodeFront = null;
+  gWalker = null;
   runNextTest();
 });
 

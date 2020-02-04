@@ -63,7 +63,7 @@ function runTests() {
 
     // Ask the child to call setupInParent
     DebuggerServer.setupInChild({
-      module: "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/setup-in-child.js",
+      module: "chrome://mochitests/content/chrome/devtools/server/tests/chrome/setup-in-child.js",
       setupChild: "callParent",
     });
   };
@@ -84,7 +84,7 @@ function runTests() {
   // Instanciate e10s machinery and call setupInChild
   connectToFrame(conn, iframe).then(actor => {
     DebuggerServer.setupInChild({
-      module: "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/setup-in-child.js",
+      module: "chrome://mochitests/content/chrome/devtools/server/tests/chrome/setup-in-child.js",
       setupChild: "setupChild",
       args: [1, "two", {three: true}],
     });
