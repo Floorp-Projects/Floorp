@@ -14397,26 +14397,6 @@ bool Document::HasScriptsBlockedBySandbox() {
   return mSandboxFlags & SANDBOXED_SCRIPTS;
 }
 
-bool Document::InlineScriptAllowedByCSP() {
-  // this function assumes the inline script is parser created
-  //  (e.g., before setting attribute(!) event handlers)
-  bool allowsInlineScript = true;
-  if (mCSP) {
-    nsresult rv = mCSP->GetAllowsInline(
-        nsIContentPolicy::TYPE_SCRIPT,
-        EmptyString(),  // aNonce
-        true,           // aParserCreated
-        nullptr,        // aTriggeringElement
-        nullptr,        // aCSPEventListener
-        EmptyString(),  // FIXME get script sample (bug 1314567)
-        0,              // aLineNumber
-        0,              // aColumnNumber
-        &allowsInlineScript);
-    NS_ENSURE_SUCCESS(rv, true);
-  }
-  return allowsInlineScript;
-}
-
 // Some use-counter sanity-checking.
 static_assert(size_t(eUseCounter_EndCSSProperties) -
                       size_t(eUseCounter_FirstCSSProperty) ==

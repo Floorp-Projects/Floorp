@@ -3566,8 +3566,6 @@ class Document : public nsINode,
 
   bool HasScriptsBlockedBySandbox();
 
-  bool InlineScriptAllowedByCSP();
-
   void ReportHasScrollLinkedEffect();
   bool HasScrollLinkedEffect() const { return mHasScrollLinkedEffect; }
 
