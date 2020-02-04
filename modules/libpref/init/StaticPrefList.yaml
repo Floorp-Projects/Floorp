@@ -2950,6 +2950,14 @@
   value: true
   mirror: always
 
+# about:home and about:newtab include remote snippets that contain arbitrarily
+# placed anchor tags in their content; we want sanitization to be turned off
+# in order to render them correctly
+- name: dom.about_newtab_sanitization.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
