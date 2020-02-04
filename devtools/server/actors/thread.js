@@ -1834,6 +1834,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this.removeAllWatchpoints();
     this.disableAllBreakpoints();
+    this.dbg.onEnterFrame = undefined;
+    this.dbg.onExceptionUnwind = undefined;
   },
 
   _onNavigate: function() {
