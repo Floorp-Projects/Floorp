@@ -10013,7 +10013,7 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
                          radii * 2);
 
       nscoord ellipseRadii[8];
-      NS_FOR_CSS_HALF_CORNERS(corner) {
+      for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
         ellipseRadii[corner] =
             HalfCornerIsX(corner) ? radii.width : radii.height;
       }

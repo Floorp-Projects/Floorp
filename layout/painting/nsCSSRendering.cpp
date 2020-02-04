@@ -607,8 +607,9 @@ void nsCSSRendering::ComputePixelRadii(const nscoord* aAppUnitsRadii,
                                        nscoord aAppUnitsPerPixel,
                                        RectCornerRadii* oBorderRadii) {
   Float radii[8];
-  NS_FOR_CSS_HALF_CORNERS(corner)
-  radii[corner] = Float(aAppUnitsRadii[corner]) / aAppUnitsPerPixel;
+  for (const auto corner : mozilla::AllPhysicalHalfCorners()) {
+    radii[corner] = Float(aAppUnitsRadii[corner]) / aAppUnitsPerPixel;
+  }
 
   (*oBorderRadii)[C_TL] = Size(radii[eCornerTopLeftX], radii[eCornerTopLeftY]);
   (*oBorderRadii)[C_TR] =
