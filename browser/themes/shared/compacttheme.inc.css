@@ -9,5 +9,4 @@
 :root:-moz-lwtheme-brighttext {
   /* !important to override LightweightThemeConsumer.jsm */
   --autocomplete-popup-background: #2A2A2E !important;
-  --autocomplete-popup-highlight-background: #0060DF;
 }
