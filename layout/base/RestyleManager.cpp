@@ -904,22 +904,23 @@ static bool HasBoxAncestor(nsIFrame* aFrame) {
 
 /**
  * Return true if aFrame's subtree has placeholders for out-of-flow content
- * whose 'position' style's bit in aPositionMask is set that would be affected
- * due to the change to `aPossiblyChangingContainingBlock` (and thus would need
- * to get reframed).
+ * that would be affected due to the change to
+ * `aPossiblyChangingContainingBlock` (and thus would need to get reframed).
  *
  * In particular, this function returns true if there are placeholders whose OOF
  * frames may need to be reparented (via reframing) as a result of whatever
  * change actually happened.
  *
- * `aIsContainingBlock` represents whether `aPossiblyChangingContainingBlock` is
- * a containing block with the _new_ style it just got, for any of the sorts of
- * positioned descendants in aPositionMask.
+ * The `aIs{Abs,Fixed}PosContainingBlock` params represent whether
+ * `aPossiblyChangingContainingBlock` is a containing block for abs pos / fixed
+ * pos stuff, respectively, for the _new_ style that the frame already has, not
+ * the old one.
  */
 static bool ContainingBlockChangeAffectsDescendants(
     nsIFrame* aPossiblyChangingContainingBlock, nsIFrame* aFrame,
-    uint32_t aPositionMask, bool aIsContainingBlock) {
-  MOZ_ASSERT(aPositionMask & (1 << NS_STYLE_POSITION_FIXED));
+    bool aIsAbsPosContainingBlock, bool aIsFixedPosContainingBlock) {
+  // All fixed-pos containing blocks should also be abs-pos containing blocks.
+  MOZ_ASSERT_IF(aIsFixedPosContainingBlock, aIsAbsPosContainingBlock);
 
   for (nsIFrame::ChildListIterator lists(aFrame); !lists.IsDone();
        lists.Next()) {
@@ -930,11 +931,16 @@ static bool ContainingBlockChangeAffectsDescendants(
         // they ignore their position style ... but they can't.
         NS_ASSERTION(!nsSVGUtils::IsInSVGTextSubtree(outOfFlow),
                      "SVG text frames can't be out of flow");
-        if (aPositionMask & (1 << outOfFlow->StyleDisplay()->mPosition)) {
+        auto* display = outOfFlow->StyleDisplay();
+        if (display->IsAbsolutelyPositionedStyle()) {
+          const bool isContainingBlock =
+              aIsFixedPosContainingBlock ||
+              (aIsAbsPosContainingBlock &&
+               display->mPosition == NS_STYLE_POSITION_ABSOLUTE);
           // NOTE(emilio): aPossiblyChangingContainingBlock is guaranteed to be
           // a first continuation, see the assertion in the caller.
           nsIFrame* parent = outOfFlow->GetParent()->FirstContinuation();
-          if (aIsContainingBlock) {
+          if (isContainingBlock) {
             // If we are becoming a containing block, we only need to reframe if
             // this oof's current containing block is an ancestor of the new
             // frame.
@@ -961,8 +967,8 @@ static bool ContainingBlockChangeAffectsDescendants(
       // cont->MarkAsNotAbsoluteContainingBlock() before we've reframed
       // the descendant and taken it off the absolute list.
       if (ContainingBlockChangeAffectsDescendants(
-              aPossiblyChangingContainingBlock, f, aPositionMask,
-              aIsContainingBlock)) {
+              aPossiblyChangingContainingBlock, f, aIsAbsPosContainingBlock,
+              aIsFixedPosContainingBlock)) {
         return true;
       }
     }
@@ -971,40 +977,17 @@ static bool ContainingBlockChangeAffectsDescendants(
 }
 
 static bool NeedToReframeToUpdateContainingBlock(nsIFrame* aFrame) {
-  static_assert(
-      0 <= NS_STYLE_POSITION_ABSOLUTE && NS_STYLE_POSITION_ABSOLUTE < 32,
-      "Style constant out of range");
-  static_assert(0 <= NS_STYLE_POSITION_FIXED && NS_STYLE_POSITION_FIXED < 32,
-                "Style constant out of range");
+  // NOTE: This looks at the new style.
+  const bool isFixedContainingBlock = aFrame->IsFixedPosContainingBlock();
+  MOZ_ASSERT_IF(isFixedContainingBlock, aFrame->IsAbsPosContainingBlock());
 
-  uint32_t positionMask;
-  bool isContainingBlock;
-  // Don't call aFrame->IsPositioned here, since that returns true if
-  // the frame already has a transform, and we want to ignore that here
-  if (aFrame->IsAbsolutelyPositioned() || aFrame->IsRelativelyPositioned()) {
-    // This frame is a container for abs-pos descendants whether or not its
-    // containing-block-ness could change for some other reasons (since we
-    // reframe for position changes).
-    // So abs-pos descendants are no problem; we only need to reframe if
-    // we have fixed-pos descendants.
-    positionMask = 1 << NS_STYLE_POSITION_FIXED;
-    isContainingBlock = aFrame->IsFixedPosContainingBlock();
-  } else {
-    // This frame may not be a container for abs-pos descendants already.
-    // So reframe if we have abs-pos or fixed-pos descendants.
-    positionMask =
-        (1 << NS_STYLE_POSITION_FIXED) | (1 << NS_STYLE_POSITION_ABSOLUTE);
-    isContainingBlock = aFrame->IsAbsPosContainingBlock() ||
-                        aFrame->IsFixedPosContainingBlock();
-  }
-
-  MOZ_ASSERT(!aFrame->GetPrevContinuation(),
-             "We only process change hints on first continuations");
+  const bool isAbsPosContainingBlock =
+      isFixedContainingBlock || aFrame->IsAbsPosContainingBlock();
 
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
-    if (ContainingBlockChangeAffectsDescendants(aFrame, f, positionMask,
-                                                isContainingBlock)) {
+    if (ContainingBlockChangeAffectsDescendants(
+            aFrame, f, isAbsPosContainingBlock, isFixedContainingBlock)) {
       return true;
     }
   }
