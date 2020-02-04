@@ -105,7 +105,7 @@ WaylandDMABufSurface::WaylandDMABufSurface()
       mBufferPlaneCount(1),
       mGbmBufferFlags(0),
       mEGLImage(LOCAL_EGL_NO_IMAGE),
-      mGLFbo(0),
+      mTexture(0),
       mWLBufferAttached(false),
       mFastWLBufferCreation(true) {
   for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
@@ -318,7 +318,7 @@ bool WaylandDMABufSurface::IsEGLSupported(mozilla::gl::GLContext* aGLContext) {
 
 bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   MOZ_ASSERT(mGbmBufferObject, "Can't create EGLImage, missing dmabuf object!");
-  MOZ_ASSERT(!mEGLImage && !mGLFbo, "EGLImage is already created!");
+  MOZ_ASSERT(!mEGLImage && !mTexture, "EGLImage is already created!");
 
   nsTArray<EGLint> attribs;
   attribs.AppendElement(LOCAL_EGL_WIDTH);
@@ -361,10 +361,6 @@ bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   }
 
   aGLContext->MakeCurrent();
-
-  int savedFb = 0;
-  aGLContext->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
-
   aGLContext->fGenTextures(1, &mTexture);
   aGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
@@ -375,42 +371,23 @@ bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
                              LOCAL_GL_LINEAR);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
                              LOCAL_GL_LINEAR);
-
   aGLContext->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mEGLImage);
-  aGLContext->fGenFramebuffers(1, &mGLFbo);
-  aGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGLFbo);
-  aGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                                    LOCAL_GL_COLOR_ATTACHMENT0,
-                                    LOCAL_GL_TEXTURE_2D, mTexture, 0);
-  bool ret = (aGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
-              LOCAL_GL_FRAMEBUFFER_COMPLETE);
-  if (!ret) {
-    NS_WARNING("WaylandDMABufSurface - FBO creation failed");
-  }
-  aGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
-
   mGL = aGLContext;
-
-  return ret;
+  return true;
 }
 
 void WaylandDMABufSurface::ReleaseEGLImage() {
+  if (mTexture && mGL->MakeCurrent()) {
+    mGL->fDeleteTextures(1, &mTexture);
+    mTexture = 0;
+    mGL = nullptr;
+  }
+
   if (mEGLImage) {
     auto* egl = gl::GLLibraryEGL::Get();
     egl->fDestroyImage(egl->Display(), mEGLImage);
     mEGLImage = nullptr;
   }
-
-  if (mGLFbo) {
-    if (mGL->MakeCurrent()) {
-      mGL->fDeleteTextures(1, &mTexture);
-      mGL->fDeleteFramebuffers(1, &mGLFbo);
-    }
-    mTexture = 0;
-    mGLFbo = 0;
-  }
-
-  mGL = nullptr;
 }
 
 void WaylandDMABufSurface::ReleaseDMABufSurface() {
