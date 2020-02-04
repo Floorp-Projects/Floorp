@@ -11,7 +11,6 @@ author: Jordan Lund
 
 """
 import copy
-import glob
 import json
 import os
 import re
@@ -654,25 +653,6 @@ items from that key's value."
                                                        'en-US')
         return mach_env
 
-    def _rm_old_package(self):
-        """rm the old package."""
-        c = self.config
-        dirs = self.query_abs_dirs()
-        old_package_paths = []
-        old_package_patterns = c.get('old_packages')
-
-        self.info("removing old packages...")
-        if os.path.exists(dirs['abs_obj_dir']):
-            for product in old_package_patterns:
-                old_package_paths.extend(
-                    glob.glob(product % {"objdir": dirs['abs_obj_dir']})
-                )
-        if old_package_paths:
-            for package_path in old_package_paths:
-                self.rmtree(package_path)
-        else:
-            self.info("There wasn't any old packages to remove.")
-
     def _get_mozconfig(self):
         """assign mozconfig."""
         dirs = self.query_abs_dirs()
@@ -770,11 +750,6 @@ items from that key's value."
 
     def preflight_build(self):
         """set up machine state for a complete build."""
-        if not self.query_is_nightly():
-            # the old package should live in source dir so we don't need to do
-            # this for nighties since we clobber the whole work_dir in
-            # clobber()
-            self._rm_old_package()
         self._get_mozconfig()
         self._run_tooltool()
         self._create_mozbuild_dir()
