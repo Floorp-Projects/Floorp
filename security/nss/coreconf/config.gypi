@@ -102,6 +102,7 @@
     'disable_dbm%': 1,
     'disable_libpkix%': 1,
     'disable_werror%': 0,
+    'disable_altivec%': 0,
     'mozilla_client%': 0,
     'comm_client%': 0,
     'moz_fold_libs%': 0,
