@@ -438,9 +438,21 @@ bool JSFunction::hasNonConfigurablePrototypeDataProperty() {
   }
 
   if (isSelfHostedBuiltin()) {
-    // Self-hosted constructors have a non-configurable .prototype data
-    // property. See the MakeConstructible intrinsic.
-    return isConstructor();
+    // Self-hosted constructors other than bound functions have a
+    // non-configurable .prototype data property. See the MakeConstructible
+    // intrinsic.
+    if (!isConstructor() || isBoundFunction()) {
+      return false;
+    }
+#ifdef DEBUG
+    PropertyName* prototypeName =
+        runtimeFromMainThread()->commonNames->prototype;
+    Shape* shape = lookupPure(prototypeName);
+    MOZ_ASSERT(shape);
+    MOZ_ASSERT(shape->isDataProperty());
+    MOZ_ASSERT(!shape->configurable());
+#endif
+    return true;
   }
 
   if (!isConstructor()) {
