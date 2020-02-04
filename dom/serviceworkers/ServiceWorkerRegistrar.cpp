@@ -1106,9 +1106,11 @@ void ServiceWorkerRegistrar::ProfileStarted() {
     return;
   }
 
-  rv = GetShutdownPhase()->AddBlocker(
-      this, NS_LITERAL_STRING(__FILE__), __LINE__,
-      NS_LITERAL_STRING("ServiceWorkerRegistrar: Flushing data"));
+  nsAutoString blockerName;
+  MOZ_ALWAYS_SUCCEEDS(GetName(blockerName));
+
+  rv = GetShutdownPhase()->AddBlocker(this, NS_LITERAL_STRING(__FILE__),
+                                      __LINE__, blockerName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
