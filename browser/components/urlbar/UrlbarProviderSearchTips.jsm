@@ -92,8 +92,6 @@ class ProviderSearchTips extends UrlbarProvider {
     this.showedTipInCurrentSession = false;
     // Whether we've shown a tip in the current engagement.
     this.showedTipInCurrentEngagement = false;
-
-    this._l10n = new Localization(["browser/browser.ftl"]);
   }
 
   get PRIORITY() {
@@ -160,7 +158,7 @@ class ProviderSearchTips extends UrlbarProvider {
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
-        buttonText: await this._l10n.formatValue("urlbar-search-tips-confirm"),
+        buttonTextData: { id: "urlbar-search-tips-confirm" },
         icon: defaultEngine.iconURI.spec,
       }
     );
@@ -168,21 +166,21 @@ class ProviderSearchTips extends UrlbarProvider {
     switch (tip) {
       case TIPS.ONBOARD:
         result.heuristic = true;
-        result.payload.text = await this._l10n.formatValue(
-          "urlbar-search-tips-onboard",
-          {
+        result.payload.textData = {
+          id: "urlbar-search-tips-onboard",
+          args: {
             engineName: defaultEngine.name,
-          }
-        );
+          },
+        };
         break;
       case TIPS.REDIRECT:
         result.heuristic = false;
-        result.payload.text = await this._l10n.formatValue(
-          "urlbar-search-tips-redirect",
-          {
+        result.payload.textData = {
+          id: "urlbar-search-tips-redirect",
+          args: {
             engineName: defaultEngine.name,
-          }
-        );
+          },
+        };
         break;
     }
 

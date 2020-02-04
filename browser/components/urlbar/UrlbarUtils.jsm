@@ -91,7 +91,9 @@ var UrlbarUtils = {
     // Payload: { url, icon, device, title }
     REMOTE_TAB: 6,
     // An actionable message to help the user with their query.
-    // Payload: { text, buttonText, data, [buttonUrl], [helpUrl] }
+    // textData and buttonTextData are objects containing an l10n id and args.
+    // If a tip is untranslated it's possible to provide text and buttonText.
+    // Payload: { icon, textData, buttonTextData, [buttonUrl], [helpUrl] }
     TIP: 7,
   },
 
