@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_TYPES_H_
 
 #include "mozilla/EndianUtils.h"
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/MacroArgs.h"  // for MOZ_CONCAT
 #include "mozilla/TypedEnumBits.h"
 
@@ -515,6 +516,10 @@ namespace mozilla {
 // Side constants for use in various places.
 enum Side { eSideTop, eSideRight, eSideBottom, eSideLeft };
 
+constexpr auto AllPhysicalSides() {
+  return mozilla::MakeInclusiveEnumeratedRange(eSideTop, eSideLeft);
+}
+
 enum class SideBits {
   eNone = 0,
   eTop = 1 << eSideTop,
@@ -527,24 +532,6 @@ enum class SideBits {
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SideBits)
-
-// Creates a for loop that walks over the four mozilla::Side values.
-// We use an int32_t helper variable (instead of a Side) for our loop counter,
-// to avoid triggering undefined behavior just before we exit the loop (at
-// which point the counter is incremented beyond the largest valid Side value).
-#define NS_FOR_CSS_SIDES(var_)                                               \
-  int32_t MOZ_CONCAT(var_, __LINE__) = mozilla::eSideTop;                    \
-  for (mozilla::Side var_;                                                   \
-       MOZ_CONCAT(var_, __LINE__) <= mozilla::eSideLeft &&                   \
-       (static_cast<void>(var_ = mozilla::Side(MOZ_CONCAT(var_, __LINE__))), \
-        true);                                                               \
-       ++MOZ_CONCAT(var_, __LINE__))
-
-static inline Side& operator++(Side& side) {
-  MOZ_ASSERT(side >= eSideTop && side <= eSideLeft, "Out of range side");
-  side = Side(side + 1);
-  return side;
-}
 
 enum Corner {
   // This order is important!

@@ -381,7 +381,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
   }
 
   nsMargin rootMargin;
-  NS_FOR_CSS_SIDES(side) {
+  for (const auto side : mozilla::AllPhysicalSides()) {
     nscoord basis = side == eSideTop || side == eSideBottom ? rootRect.Height()
                                                             : rootRect.Width();
     rootMargin.Side(side) =
