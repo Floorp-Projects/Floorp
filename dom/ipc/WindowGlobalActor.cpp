@@ -34,6 +34,8 @@ WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
 void WindowGlobalActor::ConstructActor(const nsAString& aName,
                                        JS::MutableHandleObject aActor,
                                        ErrorResult& aRv) {
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+
   JSWindowActor::Type actorType = GetSide();
   MOZ_ASSERT_IF(actorType == JSWindowActor::Type::Parent,
                 XRE_IsParentProcess());
