@@ -20,13 +20,14 @@ class DNSRequestParent : public PDNSRequestParent, public nsIDNSListener {
 
   DNSRequestParent();
 
-  void DoAsyncResolve(const nsACString& hostname,
-                      const OriginAttributes& originAttributes, uint32_t flags);
+  void DoAsyncResolve(const nsACString& hostname, const nsACString& trrServer,
+                      uint16_t type, const OriginAttributes& originAttributes,
+                      uint32_t flags);
 
   // Pass args here rather than storing them in the parent; they are only
   // needed if the request is to be canceled.
   mozilla::ipc::IPCResult RecvCancelDNSRequest(
-      const nsCString& hostName, const uint16_t& type,
+      const nsCString& hostName, const nsCString& trrServer, const uint16_t& type,
       const OriginAttributes& originAttributes, const uint32_t& flags,
       const nsresult& reason);
 

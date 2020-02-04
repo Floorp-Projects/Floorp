@@ -21,6 +21,8 @@ namespace net {
 DNSRequestParent::DNSRequestParent() : mFlags(0) {}
 
 void DNSRequestParent::DoAsyncResolve(const nsACString& hostname,
+                                      const nsACString& trrServer,
+                                      uint16_t type,
                                       const OriginAttributes& originAttributes,
                                       uint32_t flags) {
   nsresult rv;
@@ -29,8 +31,17 @@ void DNSRequestParent::DoAsyncResolve(const nsACString& hostname,
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
     nsCOMPtr<nsICancelable> unused;
-    rv = dns->AsyncResolveNative(hostname, flags, this, main, originAttributes,
-                                 getter_AddRefs(unused));
+    if (type != nsIDNSService::RESOLVE_TYPE_DEFAULT) {
+        rv = dns->AsyncResolveByTypeNative(hostname, type, flags, this, main,
+                                           originAttributes, getter_AddRefs(unused));
+    } else if (trrServer.IsEmpty()) {
+        rv = dns->AsyncResolveNative(hostname, flags, this, main, originAttributes,
+                                     getter_AddRefs(unused));
+    } else {
+        rv = dns->AsyncResolveWithTrrServerNative(hostname, trrServer, flags, this,
+                                                  main, originAttributes,
+                                                  getter_AddRefs(unused));
+    }
   }
 
   if (NS_FAILED(rv) && CanSend()) {
@@ -39,18 +50,21 @@ void DNSRequestParent::DoAsyncResolve(const nsACString& hostname,
 }
 
 mozilla::ipc::IPCResult DNSRequestParent::RecvCancelDNSRequest(
-    const nsCString& hostName, const uint16_t& type,
-    const OriginAttributes& originAttributes, const uint32_t& flags,
-    const nsresult& reason) {
+    const nsCString& hostName, const nsCString& aTrrServer,
+    const uint16_t& type, const OriginAttributes& originAttributes,
+    const uint32_t& flags, const nsresult& reason) {
   nsresult rv;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    if (type == nsIDNSService::RESOLVE_TYPE_DEFAULT) {
+    if (type != nsIDNSService::RESOLVE_TYPE_DEFAULT) {
+      rv = dns->CancelAsyncResolveByTypeNative(hostName, type, flags, this,
+                                               reason, originAttributes);
+    } else if (aTrrServer.IsEmpty()) {
       rv = dns->CancelAsyncResolveNative(hostName, flags, this, reason,
                                          originAttributes);
     } else {
-      rv = dns->CancelAsyncResolveByTypeNative(hostName, type, flags, this,
-                                               reason, originAttributes);
+      rv = dns->CancelAsyncResolveWithTrrServerNative(hostName, aTrrServer, flags,
+                                                      this, reason, originAttributes);
     }
   }
   return IPC_OK();
