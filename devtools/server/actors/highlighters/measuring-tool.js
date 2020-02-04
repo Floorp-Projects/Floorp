@@ -25,20 +25,7 @@ const LABEL_POS_MARGIN = 4;
 const LABEL_POS_WIDTH = 40;
 const LABEL_POS_HEIGHT = 34;
 
-// List of all DOM Events subscribed directly to the document from the
-// Measuring Tool highlighter
-const DOM_EVENTS = [
-  "mousedown",
-  "mousemove",
-  "mouseup",
-  "mouseleave",
-  "scroll",
-  "pagehide",
-];
-
 const SIDES = ["top", "right", "bottom", "left"];
-const HANDLERS = [...SIDES, "topleft", "topright", "bottomleft", "bottomright"];
-const HANDLER_SIZE = 6;
 
 /**
  * The MeasuringToolHighlighter is used to measure distances in a content page.
@@ -60,14 +47,17 @@ function MeasuringToolHighlighter(highlighterEnv) {
 
   const { pageListenerTarget } = highlighterEnv;
 
-  // Register the measuring tool instance to all events we're interested in.
-  DOM_EVENTS.forEach(type => pageListenerTarget.addEventListener(type, this));
+  pageListenerTarget.addEventListener("mousedown", this);
+  pageListenerTarget.addEventListener("mousemove", this);
+  pageListenerTarget.addEventListener("mouseleave", this);
+  pageListenerTarget.addEventListener("scroll", this);
+  pageListenerTarget.addEventListener("pagehide", this);
 }
 
 MeasuringToolHighlighter.prototype = {
   typeName: "MeasuringToolHighlighter",
 
-  ID_CLASS_PREFIX: "measuring-tool-",
+  ID_CLASS_PREFIX: "measuring-tool-highlighter-",
 
   _buildMarkup() {
     const prefix = this.ID_CLASS_PREFIX;
@@ -98,19 +88,6 @@ MeasuringToolHighlighter.prototype = {
       },
       prefix,
     });
-
-    for (const side of SIDES) {
-      createSVGNode(window, {
-        nodeType: "line",
-        parent: svg,
-        attributes: {
-          class: `guide-${side}`,
-          id: `guide-${side}`,
-          hidden: "true",
-        },
-        prefix,
-      });
-    }
 
     createNode(window, {
       nodeType: "label",
@@ -150,7 +127,6 @@ MeasuringToolHighlighter.prototype = {
       nodeType: "path",
       attributes: {
         id: "box-path",
-        class: "box-path",
       },
       parent: g,
       prefix,
@@ -160,20 +136,18 @@ MeasuringToolHighlighter.prototype = {
       nodeType: "path",
       attributes: {
         id: "diagonal-path",
-        class: "diagonal-path",
       },
       parent: g,
       prefix,
     });
 
-    for (const handler of HANDLERS) {
+    for (const side of SIDES) {
       createSVGNode(window, {
-        nodeType: "circle",
-        parent: g,
+        nodeType: "line",
+        parent: svg,
         attributes: {
-          class: `handler-${handler}`,
-          id: `handler-${handler}`,
-          r: HANDLER_SIZE,
+          class: `guide-${side}`,
+          id: `guide-${side}`,
           hidden: "true",
         },
         prefix,
@@ -235,9 +209,12 @@ MeasuringToolHighlighter.prototype = {
     const { pageListenerTarget } = this.env;
 
     if (pageListenerTarget) {
-      DOM_EVENTS.forEach(type =>
-        pageListenerTarget.removeEventListener(type, this)
-      );
+      pageListenerTarget.removeEventListener("mousedown", this);
+      pageListenerTarget.removeEventListener("mousemove", this);
+      pageListenerTarget.removeEventListener("mouseup", this);
+      pageListenerTarget.removeEventListener("scroll", this);
+      pageListenerTarget.removeEventListener("pagehide", this);
+      pageListenerTarget.removeEventListener("mouseleave", this);
     }
 
     this.markup.destroy();
@@ -297,9 +274,8 @@ MeasuringToolHighlighter.prototype = {
 
     setIgnoreLayoutChanges(true);
 
-    if (this._dragging) {
+    if (this._isDragging) {
       this.updatePaths();
-      this.updateHandlers();
     }
 
     this.updateLabel();
@@ -326,7 +302,7 @@ MeasuringToolHighlighter.prototype = {
   },
 
   updateLabel(type) {
-    type = type || (this._dragging ? "size" : "position");
+    type = type || this._isDragging ? "size" : "position";
 
     const isSizeLabel = type === "size";
 
@@ -340,12 +316,8 @@ MeasuringToolHighlighter.prototype = {
 
     w = w || 0;
     h = h || 0;
-    x = x || 0;
-    y = y || 0;
-    if (type === "size") {
-      x += w;
-      y += h;
-    }
+    x = (x || 0) + w;
+    y = (y || 0) + h;
 
     let labelMargin, labelHeight, labelWidth;
 
@@ -469,25 +441,6 @@ MeasuringToolHighlighter.prototype = {
     guide.setAttribute("y2", "100%");
   },
 
-  setHandlerPosition(handler, x, y) {
-    const handlerElement = this.getElement(`handler-${handler}`);
-    handlerElement.setAttribute("cx", x);
-    handlerElement.setAttribute("cy", y);
-  },
-
-  updateHandlers() {
-    const { w, h } = this.coords;
-
-    this.setHandlerPosition("top", w / 2, 0);
-    this.setHandlerPosition("topright", w, 0);
-    this.setHandlerPosition("right", w, h / 2);
-    this.setHandlerPosition("bottomright", w, h);
-    this.setHandlerPosition("bottom", w / 2, h);
-    this.setHandlerPosition("bottomleft", 0, h);
-    this.setHandlerPosition("left", 0, h / 2);
-    this.setHandlerPosition("topleft", 0, 0);
-  },
-
   showLabel(type) {
     setIgnoreLayoutChanges(true);
 
@@ -520,252 +473,91 @@ MeasuringToolHighlighter.prototype = {
     }
   },
 
-  showHandler(id) {
-    const prefix = this.ID_CLASS_PREFIX + "handler-";
-    this.markup.removeAttributeForElement(prefix + id, "hidden");
-  },
-
-  showHandlers() {
-    const prefix = this.ID_CLASS_PREFIX + "handler-";
-
-    for (const handler of HANDLERS) {
-      this.markup.removeAttributeForElement(prefix + handler, "hidden");
-    }
-  },
-
-  hideAll() {
-    this.hideLabel("position");
-    this.hideLabel("size");
-    this.hideGuides();
-    this.hideHandlers();
-  },
-
-  showGuidesAndHandlers() {
-    // Shows the guides and handlers only if an actual area is selected
-    if (this.coords.w !== 0 && this.coords.h !== 0) {
-      this.updateGuides();
-      this.showGuides();
-      this.updateHandlers();
-      this.showHandlers();
-    }
-  },
-
-  hideHandlers() {
-    const prefix = this.ID_CLASS_PREFIX + "handler-";
-
-    for (const handler of HANDLERS) {
-      this.markup.setAttributeForElement(prefix + handler, "hidden", "true");
-    }
-  },
-
   handleEvent(event) {
-    const { target, type } = event;
+    let scrollX, scrollY, innerWidth, innerHeight;
+    let x, y;
 
-    switch (type) {
+    const { pageListenerTarget } = this.env;
+
+    switch (event.type) {
       case "mousedown":
-        if (event.button || this._dragging) {
+        if (event.button) {
           return;
         }
 
-        const isHandler = event.originalTarget.id.includes("handler");
-        if (isHandler) {
-          this.handleResizingMouseDownEvent(event);
-        } else {
-          this.handleMouseDownEvent(event);
-        }
-        break;
-      case "mousemove":
-        if (this._dragging) {
-          if (this._dragging.handler) {
-            this.handleResizingMouseMoveEvent(event);
-          } else {
-            this.handleMouseMoveEvent(event);
-          }
-        }
+        this._isDragging = true;
+
+        const { window } = this.env;
+
+        ({ scrollX, scrollY } = window);
+        x = event.clientX + scrollX;
+        y = event.clientY + scrollY;
+
+        pageListenerTarget.addEventListener("mouseup", this);
+
+        setIgnoreLayoutChanges(true);
+
+        this.getElement("tool").setAttribute("class", "dragging");
+
+        this.hideLabel("size");
+        this.hideLabel("position");
+
+        this.hideGuides();
+        this.setCoords(x, y, 0, 0);
+
+        setIgnoreLayoutChanges(false, window.document.documentElement);
+
         break;
       case "mouseup":
-        if (this._dragging) {
-          if (this._dragging.handler) {
-            this.handleResizingMouseUpEvent();
-          } else {
-            this.handleMouseUpEvent();
-          }
+        this._isDragging = false;
+
+        pageListenerTarget.removeEventListener("mouseup", this);
+
+        setIgnoreLayoutChanges(true);
+
+        this.getElement("tool").removeAttribute("class", "");
+
+        // Shows the guides only if an actual area is selected
+        if (this.coords.w !== 0 && this.coords.h !== 0) {
+          this.updateGuides();
+          this.showGuides();
         }
+
+        setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
+
         break;
-      case "mouseleave": {
-        if (!this._dragging) {
+      case "mousemove":
+        ({ scrollX, scrollY, innerWidth, innerHeight } = this.env.window);
+        x = event.clientX + scrollX;
+        y = event.clientY + scrollY;
+
+        const { coords } = this;
+
+        x = Math.min(innerWidth + scrollX, Math.max(scrollX, x));
+        y = Math.min(innerHeight + scrollY, Math.max(scrollY, y));
+
+        this.setSize(x - coords.x, y - coords.y);
+
+        const type = this._isDragging ? "size" : "position";
+
+        this.showLabel(type);
+        break;
+      case "mouseleave":
+        if (!this._isDragging) {
           this.hideLabel("position");
         }
         break;
-      }
-      case "scroll": {
+      case "scroll":
         this.hideLabel("position");
         break;
-      }
-      case "pagehide": {
+      case "pagehide":
         // If a page hide event is triggered for current window's highlighter, hide the
         // highlighter.
-        if (target.defaultView === this.env.window) {
+        if (event.target.defaultView === this.env.window) {
           this.destroy();
         }
         break;
-      }
     }
-  },
-
-  handleMouseDownEvent(event) {
-    const { pageX, pageY } = event;
-    const { window } = this.env;
-    const elementId = `${this.ID_CLASS_PREFIX}tool`;
-
-    setIgnoreLayoutChanges(true);
-
-    this.markup.getElement(elementId).classList.add("dragging");
-
-    this.hideAll();
-
-    setIgnoreLayoutChanges(false, window.document.documentElement);
-
-    // Store all the initial values needed for drag & drop
-    this._dragging = {
-      handler: null,
-      x: pageX,
-      y: pageY,
-    };
-
-    this.setCoords(pageX, pageY, 0, 0);
-  },
-
-  handleMouseMoveEvent(event) {
-    const { pageX, pageY } = event;
-    const { coords } = this;
-    let { x, y, w, h } = coords;
-    let labelType;
-
-    if (this._dragging) {
-      w = pageX - coords.x;
-      h = pageY - coords.y;
-
-      this.setCoords(x, y, w, h);
-
-      labelType = "size";
-    } else {
-      labelType = "position";
-
-      this.setCoords(pageX, pageY);
-    }
-
-    this.showLabel(labelType);
-  },
-
-  handleMouseUpEvent() {
-    setIgnoreLayoutChanges(true);
-
-    this.getElement("tool").classList.remove("dragging");
-
-    this.showGuidesAndHandlers();
-
-    setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
-    this._dragging = null;
-  },
-
-  handleResizingMouseDownEvent(event) {
-    const { originalTarget, pageX, pageY } = event;
-    const { window } = this.env;
-    const prefix = this.ID_CLASS_PREFIX + "handler-";
-    const handler = originalTarget.id.replace(prefix, "");
-
-    setIgnoreLayoutChanges(true);
-
-    this.markup.getElement(originalTarget.id).classList.add("dragging");
-
-    this.hideAll();
-    this.showHandler(handler);
-
-    // Set coordinates to the current measurement area's position
-    const [, x, y] = this.getElement("tool")
-      .getAttribute("transform")
-      .match(/(\d+),(\d+)/);
-    this.setCoords(Number(x), Number(y));
-
-    setIgnoreLayoutChanges(false, window.document.documentElement);
-
-    // Store all the initial values needed for drag & drop
-    this._dragging = {
-      handler,
-      x: pageX,
-      y: pageY,
-    };
-  },
-
-  handleResizingMouseMoveEvent(event) {
-    const { pageX, pageY } = event;
-    const { coords } = this;
-    let { x, y, w, h } = coords;
-
-    const { handler } = this._dragging;
-
-    switch (handler) {
-      case "top":
-        y = pageY;
-        h = coords.y + coords.h - pageY;
-        break;
-      case "topright":
-        y = pageY;
-        w = pageX - coords.x;
-        h = coords.y + coords.h - pageY;
-        break;
-      case "right":
-        w = pageX - coords.x;
-        break;
-      case "bottomright":
-        w = pageX - coords.x;
-        h = pageY - coords.y;
-        break;
-      case "bottom":
-        h = pageY - coords.y;
-        break;
-      case "bottomleft":
-        x = pageX;
-        w = coords.x + coords.w - pageX;
-        h = pageY - coords.y;
-        break;
-      case "left":
-        x = pageX;
-        w = coords.x + coords.w - pageX;
-        break;
-      case "topleft":
-        x = pageX;
-        y = pageY;
-        w = coords.x + coords.w - pageX;
-        h = coords.y + coords.h - pageY;
-        break;
-    }
-
-    this.setCoords(x, y, w, h);
-
-    // Changes the resizing cursors in case the measuring box is mirrored
-    const isMirrored =
-      (coords.w < 0 || coords.h < 0) && !(coords.w < 0 && coords.h < 0);
-    this.getElement("tool").classList[isMirrored ? "add" : "remove"](
-      "mirrored"
-    );
-
-    this.showLabel("size");
-  },
-
-  handleResizingMouseUpEvent() {
-    const { handler } = this._dragging;
-
-    setIgnoreLayoutChanges(true);
-
-    this.getElement(`handler-${handler}`).classList.remove("dragging");
-    this.showHandlers();
-
-    this.showGuidesAndHandlers();
-
-    setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
-    this._dragging = null;
   },
 };
 exports.MeasuringToolHighlighter = MeasuringToolHighlighter;
