@@ -254,7 +254,7 @@ add_task(async function test_topSites_newtab_visits_favicons() {
       url: "https://amazon.com",
       title: "@amazon",
       favicon:
-        "resource://activity-stream/data/content/tippytop/images/amazon@2x.png",
+        "resource://activity-stream/data/content/tippytop/favicons/amazon.ico",
     },
     {
       type: "url",
@@ -273,35 +273,35 @@ add_task(async function test_topSites_newtab_visits_favicons() {
       url: "https://www.youtube.com/",
       title: "youtube",
       favicon:
-        "resource://activity-stream/data/content/tippytop/images/youtube-com@2x.png",
+        "resource://activity-stream/data/content/tippytop/favicons/youtube-com.png",
     },
     {
       type: "url",
       url: "https://www.facebook.com/",
       title: "facebook",
       favicon:
-        "resource://activity-stream/data/content/tippytop/images/facebook-com@2x.png",
+        "resource://activity-stream/data/content/tippytop/favicons/facebook-com.ico",
     },
     {
       type: "url",
       url: "https://www.reddit.com/",
       title: "reddit",
       favicon:
-        "resource://activity-stream/data/content/tippytop/images/reddit-com@2x.png",
+        "resource://activity-stream/data/content/tippytop/favicons/reddit-com.png",
     },
     {
       type: "url",
       url: "https://www.wikipedia.org/",
       title: "wikipedia",
       favicon:
-        "resource://activity-stream/data/content/tippytop/images/wikipedia-org@2x.png",
+        "resource://activity-stream/data/content/tippytop/favicons/wikipedia-org.ico",
     },
     {
       type: "url",
       url: "https://twitter.com/",
       title: "twitter",
       favicon:
-        "resource://activity-stream/data/content/tippytop/images/twitter-com@2x.png",
+        "resource://activity-stream/data/content/tippytop/favicons/twitter-com.ico",
     },
   ];
 
@@ -347,7 +347,7 @@ add_task(async function test_topSites_newtab_visits_favicons_limit() {
       url: "https://amazon.com",
       title: "@amazon",
       favicon:
-        "resource://activity-stream/data/content/tippytop/images/amazon@2x.png",
+        "resource://activity-stream/data/content/tippytop/favicons/amazon.ico",
     },
     {
       type: "url",

@@ -154,3 +154,19 @@ browser/chrome/browser/content/browser/aboutlogins/third-party/app-store/app_nb.
 browser/chrome/browser/content/browser/aboutlogins/third-party/app-store/app_nn.png
 browser/chrome/browser/content/browser/aboutlogins/third-party/play-store/play_nb.png
 browser/chrome/browser/content/browser/aboutlogins/third-party/play-store/play_nn.png
+# Bug 1606928 - There's no reliable way to connect Top Sites favicons with the favicons in the Search Service
+browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/bbc-uk.ico
+browser/chrome/browser/search-extensions/bbc-alba/favicon.ico
+browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/allegro-pl.ico
+browser/chrome/browser/search-extensions/allegro-pl/favicon.ico
+browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/amazon.ico
+browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/ebay.ico
+browser/chrome/browser/search-extensions/ebay/favicon.ico
+browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/twitter-com.ico
+browser/chrome/browser/search-extensions/twitter/favicon.ico
+browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/bing-com.ico
+browser/chrome/browser/search-extensions/bing/favicon.ico
+browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/duckduckgo-com.ico
+browser/chrome/browser/search-extensions/ddg/favicon.ico
+browser/chrome/browser/res/activity-stream/data/content/tippytop/favicons/google-com.ico
+browser/chrome/browser/search-extensions/google/favicon.ico

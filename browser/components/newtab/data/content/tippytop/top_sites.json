@@ -2,106 +2,127 @@
   {
     "title": "aliexpress",
     "url": "https://www.aliexpress.com/",
-    "image_url": "aliexpress-com@2x.png"
+    "image_url": "images/aliexpress-com@2x.png",
+    "favicon_url": "favicons/aliexpress-com.ico"
   },
   {
     "title": "allegro",
     "url": "https://www.allegro.pl/",
-    "image_url": "allegro-pl@2x.png"
+    "image_url": "images/allegro-pl@2x.png",
+    "favicon_url": "favicons/allegro-pl.ico"
   },
   {
     "title": "amazon",
     "urls": ["https://www.amazon.ca/", "https://www.amazon.co.uk/", "https://www.amazon.com/", "https://www.amazon.de/", "https://www.amazon.fr/"],
-    "image_url": "amazon@2x.png"
+    "image_url": "images/amazon@2x.png",
+    "favicon_url": "favicons/amazon.ico"
   },
   {
     "title": "avito",
     "url": "https://www.avito.ru/",
-    "image_url": "avito-ru@2x.png"
+    "image_url": "images/avito-ru@2x.png",
+    "favicon_url": "favicons/avito-ru.ico"
   },
   {
     "title": "baidu",
     "url": "https://www.baidu.com/",
-    "image_url": "baidu-com@2x.png"
+    "image_url": "images/baidu-com@2x.png",
+    "favicon_url": "favicons/baidu-com.ico"
   },
   {
     "title": "bbc",
     "url": "https://www.bbc.co.uk/",
-    "image_url": "bbc-uk@2x.png"
+    "image_url": "images/bbc-uk@2x.png",
+    "favicon_url": "favicons/bbc-uk.ico"
   },
   {
     "title": "bing",
     "url": "https://www.bing.com/",
-    "image_url": "bing-com@2x.png"
+    "image_url": "images/bing-com@2x.png",
+    "favicon_url": "favicons/bing-com.ico"
   },
   {
     "title": "duckduckgo",
     "url": "https://www.duckduckgo.com/",
-    "image_url": "duckduckgo-com@2x.png"
+    "image_url": "images/duckduckgo-com@2x.png",
+    "favicon_url": "favicons/duckduckgo-com.ico"
   },
   {
     "title": "ebay",
     "urls": ["https://www.ebay.com", "https://www.ebay.co.uk/", "https://ebay.de"],
-    "image_url": "ebay@2x.png"
+    "image_url": "images/ebay@2x.png",
+    "favicon_url": "favicons/ebay.ico"
   },
   {
     "title": "facebook",
     "url": "https://www.facebook.com/",
-    "image_url": "facebook-com@2x.png"
+    "image_url": "images/facebook-com@2x.png",
+    "favicon_url": "favicons/facebook-com.ico"
   },
   {
     "title": "google",
     "url": "https://www.google.com/",
-    "image_url": "google-com@2x.png"
+    "image_url": "images/google-com@2x.png",
+    "favicon_url": "favicons/google-com.ico"
   },
   {
     "title": "leboncoin",
     "url": "http://www.leboncoin.fr/",
-    "image_url": "leboncoin-fr@2x.png"
+    "image_url": "images/leboncoin-fr@2x.png",
+    "favicon_url": "favicons/leboncoin-fr.png"
   },
   {
     "title": "ok",
     "url": "https://www.ok.ru/",
-    "image_url": "ok-ru@2x.png"
+    "image_url": "images/ok-ru@2x.png",
+    "favicon_url": "favicons/ok-ru.ico"
   },
   {
     "title": "olx",
     "url": "https://www.olx.pl/",
-    "image_url": "olx-pl@2x.png"
+    "image_url": "images/olx-pl@2x.png",
+    "favicon_url": "favicons/olx-pl.ico"
   },
   {
     "title": "reddit",
     "url": "https://www.reddit.com/",
-    "image_url": "reddit-com@2x.png"
+    "image_url": "images/reddit-com@2x.png",
+    "favicon_url": "favicons/reddit-com.png"
   },
   {
     "title": "twitter",
     "url": "https://twitter.com/",
-    "image_url": "twitter-com@2x.png"
+    "image_url": "images/twitter-com@2x.png",
+    "favicon_url": "favicons/twitter-com.ico"
   },
   {
     "title": "vk",
     "url": "https://vk.com/",
-    "image_url": "vk-com@2x.png"
+    "image_url": "images/vk-com@2x.png",
+    "favicon_url": "favicons/vk-com.ico"
   },
   {
     "title": "wikipedia",
     "url": "https://www.wikipedia.org/",
-    "image_url": "wikipedia-org@2x.png"
+    "image_url": "images/wikipedia-org@2x.png",
+    "favicon_url": "favicons/wikipedia-org.ico"
   },
   {
     "title": "wykop",
     "url": "https://www.wykop.pl/",
-    "image_url": "wykop-pl@2x.png"
+    "image_url": "images/wykop-pl@2x.png",
+    "favicon_url": "favicons/wykop-pl.png"
   },
   {
     "title": "yandex",
     "url": "https://www.yandex.com/",
-    "image_url": "yandex-com@2x.png"
+    "image_url": "images/yandex-com@2x.png",
+    "favicon_url": "favicons/yandex-com.png"
   },
   {
     "title": "youtube",
     "url": "https://www.youtube.com/",
-    "image_url": "youtube-com@2x.png"
+    "image_url": "images/youtube-com@2x.png",
+    "favicon_url": "favicons/youtube-com.png"
   }
 ]
