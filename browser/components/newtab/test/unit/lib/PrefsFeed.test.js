@@ -25,6 +25,7 @@ describe("PrefsFeed", () => {
       prefs: {
         clearUserPref: sinon.spy(),
         getStringPref: sinon.spy(),
+        getIntPref: sinon.spy(),
         getBoolPref: sinon.spy(),
       },
     };
