@@ -24,8 +24,8 @@ class MigrationDecisionActivity : Activity() {
         val intent = if (intent != null) intent else Intent()
 
         val activity = when (store.state.progress) {
-            MigrationProgress.COMPLETED, MigrationProgress.NONE -> HomeActivity::class.java
-            MigrationProgress.MIGRATING -> MigrationProgressActivity::class.java
+            MigrationProgress.NONE -> HomeActivity::class.java
+            MigrationProgress.MIGRATING, MigrationProgress.COMPLETED -> MigrationProgressActivity::class.java
         }
 
         intent.setClass(applicationContext, activity)

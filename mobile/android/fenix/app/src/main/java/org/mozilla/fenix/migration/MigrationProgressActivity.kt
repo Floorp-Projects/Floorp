@@ -22,6 +22,7 @@ import mozilla.components.support.migration.Migration.History
 import mozilla.components.support.migration.Migration.Logins
 import mozilla.components.support.migration.Migration.Settings
 import mozilla.components.support.migration.MigrationResults
+import mozilla.components.support.migration.state.MigrationAction
 import mozilla.components.support.migration.state.MigrationProgress
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.HomeActivity
@@ -62,6 +63,7 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
 
                 // If we received a user-initiated intent, throw this back to the intent receiver.
                 if (intent.hasExtra(HomeActivity.OPEN_TO_BROWSER)) {
+                    store.dispatch(MigrationAction.Clear)
                     intent.setClassName(applicationContext, IntentReceiverActivity::class.java.name)
                     startActivity(intent)
                 }
