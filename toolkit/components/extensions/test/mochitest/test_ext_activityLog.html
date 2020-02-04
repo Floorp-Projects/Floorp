@@ -67,8 +67,7 @@ add_task(async function test_api() {
         );
 
         // Test a child event manager.
-        browser.test.onMessage.addListener(async msg => {
-        });
+        browser.test.onMessage.addListener(async msg => {});
 
         // Test a parent event manager.
         browser.webRequest.onBeforeRequest.addListener(
@@ -193,6 +192,7 @@ add_task(async function test_api() {
               thirdParty: false,
               ip: null,
               frameAncestors: [],
+              urlClassification: { firstParty: [], thirdParty: [] },
               requestSize: 0,
               responseSize: 0,
               incognito: false,
