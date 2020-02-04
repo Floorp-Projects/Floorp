@@ -7,6 +7,7 @@ package mozilla.components.service.fxa
 import mozilla.appservices.fxaclient.AccessTokenInfo
 import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.Device
+import mozilla.appservices.fxaclient.MigrationState
 import mozilla.appservices.fxaclient.Profile
 import mozilla.appservices.fxaclient.ScopedKey
 import mozilla.appservices.fxaclient.TabHistoryEntry
@@ -16,6 +17,7 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.Avatar
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceType
+import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.concept.sync.SyncAuthInfo
 
@@ -222,4 +224,15 @@ fun mozilla.components.concept.sync.DeviceEvent.TabReceived.into(): AccountEvent
         from = this.from?.into(),
         entries = this.entries.map { it.into() }.toTypedArray()
     )
+}
+
+/**
+ * Conversion function from fxaclient's data structure to ours.
+ */
+fun MigrationState.into(): InFlightMigrationState {
+    return when (this) {
+        MigrationState.NONE -> InFlightMigrationState.NONE
+        MigrationState.COPY_SESSION_TOKEN -> InFlightMigrationState.COPY_SESSION_TOKEN
+        MigrationState.REUSE_SESSION_TOKEN -> InFlightMigrationState.REUSE_SESSION_TOKEN
+    }
 }

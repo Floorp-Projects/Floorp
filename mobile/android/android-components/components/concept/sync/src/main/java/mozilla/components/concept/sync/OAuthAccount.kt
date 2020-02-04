@@ -5,6 +5,7 @@
 package mozilla.components.concept.sync
 
 import kotlinx.coroutines.Deferred
+import org.json.JSONObject
 
 /**
  * An auth-related exception type, for use with [AuthException].
@@ -40,6 +41,27 @@ class AuthException(type: AuthExceptionType, cause: Exception? = null) : Throwab
  * @property url Url which needs to be loaded to go through the authentication flow identified by [state].
  */
 data class AuthFlowUrl(val state: String, val url: String)
+
+/**
+ * Represents a specific type of an "in-flight" migration state that could result from intermittent
+ * issues during [OAuthAccount.migrateFromSessionTokenAsync] or [OAuthAccount.copyFromSessionTokenAsync].
+ */
+enum class InFlightMigrationState {
+    /**
+     * No in-flight migration.
+     */
+    NONE,
+
+    /**
+     * "Copy" in-flight migration present. Can retry migration via [OAuthAccount.retryMigrateFromSessionTokenAsync].
+     */
+    COPY_SESSION_TOKEN,
+
+    /**
+     * "Reuse" in-flight migration present. Can retry migration via [OAuthAccount.retryMigrateFromSessionTokenAsync].
+     */
+    REUSE_SESSION_TOKEN
+}
 
 /**
  * Facilitates testing consumers of FirefoxAccount.
@@ -158,9 +180,11 @@ interface OAuthAccount : AutoCloseable {
      * @param sessionToken token string to use for login
      * @param kSync sync string for login
      * @param kXCS XCS string for login
-     * @return Deferred boolean success or failure for the migration event
+     * @return JSON object with the result of the migration or 'null' if it failed.
+     * For up-to-date schema, see underlying implementation in https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
+     * At the moment, it's just "{total_duration: long}".
      */
-    fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean>
+    fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<JSONObject?>
 
     /**
      * Attempts to migrate from an existing session token without user input.
@@ -169,9 +193,28 @@ interface OAuthAccount : AutoCloseable {
      * @param sessionToken token string to use for login
      * @param kSync sync string for login
      * @param kXCS XCS string for login
-     * @return Deferred boolean success or failure for the migration event
+     * @return JSON object with the result of the migration or 'null' if it failed.
+     * For up-to-date schema, see underlying implementation in https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
+     * At the moment, it's just "{total_duration: long}".
      */
-    fun copyFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean>
+    fun copyFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<JSONObject?>
+
+    /**
+     * Checks if there's a migration in-flight. An in-flight migration means that we've tried to migrate
+     * via either [migrateFromSessionTokenAsync] or [copyFromSessionTokenAsync], and failed for intermittent
+     * (e.g. network)
+     * reasons. When an in-flight migration is present, we can retry using [retryMigrateFromSessionTokenAsync].
+     * @return InFlightMigrationState indicating specific migration state.
+     */
+    fun isInMigrationState(): InFlightMigrationState
+
+    /**
+     * Retries an in-flight migration attempt.
+     * @return JSON object with the result of the retry attempt or 'null' if it failed.
+     * For up-to-date schema, see underlying implementation in https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
+     * At the moment, it's just "{total_duration: long}".
+     */
+    fun retryMigrateFromSessionTokenAsync(): Deferred<JSONObject?>
 
     /**
      * Returns the device constellation for the current account

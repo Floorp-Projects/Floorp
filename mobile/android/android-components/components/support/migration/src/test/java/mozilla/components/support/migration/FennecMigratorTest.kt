@@ -35,6 +35,7 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.ServerPassword
@@ -496,7 +497,48 @@ class FennecMigratorTest {
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(true))
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+            CompletableDeferred(SignInWithShareableAccountResult.Success)
+        )
+
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.FxA))
+            assertTrue(this.getValue(Migration.FxA).success)
+        }
+
+        val captor = argumentCaptor<ShareableAccount>()
+        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(false))
+
+        assertEquals("test@example.com", captor.value.email)
+        // This is going to be package name (org.mozilla.firefox) in actual builds.
+        assertEquals("mozilla.components.support.migration.test", captor.value.sourcePackage)
+        assertEquals("252fsvj8932vj32movj97325hjfksdhfjstrg23yurt267r23", captor.value.authInfo.kSync)
+        assertEquals("0b3ba79bfxdf32f3of32jowef7987f", captor.value.authInfo.kXCS)
+        assertEquals("fjsdkfksf3e8f32f23f832fwf32jf89o327u2843gj23", captor.value.authInfo.sessionToken)
+
+        // Does not run FxA migration again.
+        reset(accountManager)
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(0, this.size)
+        }
+
+        verifyZeroInteractions(accountManager)
+    }
+
+    @Test
+    fun `fxa migration - authenticated account, sign-in will retry`() = runBlocking {
+        val accountManager: FxaAccountManager = mock()
+        val migrator = FennecMigrator.Builder(testContext, mock())
+            .migrateFxa(accountManager)
+            .setFxaState(File(getTestPath("fxa"), "married-v4.json"))
+            .setCoroutineContext(this.coroutineContext)
+            .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
+            .build()
+
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+            CompletableDeferred(SignInWithShareableAccountResult.WillRetry)
+        )
 
         with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
@@ -534,7 +576,9 @@ class FennecMigratorTest {
             .build()
 
         // For now, we don't treat sign-in failure any different from success. E.g. it's a one-shot attempt.
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(false))
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+            CompletableDeferred(SignInWithShareableAccountResult.Failure)
+        )
 
         with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)

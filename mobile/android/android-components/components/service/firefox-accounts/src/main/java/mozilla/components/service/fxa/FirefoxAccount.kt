@@ -7,6 +7,7 @@ package mozilla.components.service.fxa
 import android.net.Uri
 import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
@@ -17,6 +18,7 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.support.base.log.logger.Logger
+import org.json.JSONObject
 
 typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.PersistCallback
 
@@ -155,14 +157,22 @@ class FirefoxAccount internal constructor(
     }
 
     override fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String) = scope.async {
-        handleFxaExceptions(logger, "migrateFromSessionToken") {
+        handleFxaExceptions(logger, "migrateFromSessionToken", { null }) {
             inner.migrateFromSessionToken(sessionToken, kSync, kXCS)
         }
     }
 
     override fun copyFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String) = scope.async {
-        handleFxaExceptions(logger, "copyFromSessionToken") {
+        handleFxaExceptions(logger, "copyFromSessionToken", { null }) {
             inner.copyFromSessionToken(sessionToken, kSync, kXCS)
+        }
+    }
+
+    override fun isInMigrationState() = inner.isInMigrationState().into()
+
+    override fun retryMigrateFromSessionTokenAsync(): Deferred<JSONObject?> = scope.async {
+        handleFxaExceptions(logger, "retryMigrateFromSessionToken", { null }) {
+            inner.retryMigrateFromSessionToken()
         }
     }
 

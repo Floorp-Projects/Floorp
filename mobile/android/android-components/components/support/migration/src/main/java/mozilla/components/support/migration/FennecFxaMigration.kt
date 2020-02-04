@@ -6,6 +6,7 @@ package mozilla.components.support.migration
 
 import android.content.Context
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.fxa.sharing.ShareableAuthInfo
 import mozilla.components.support.base.log.logger.Logger
@@ -72,6 +73,15 @@ sealed class FxaMigrationResult {
         data class SignedInIntoAuthenticatedAccount(val email: String, val stateLabel: String) : Success() {
             override fun toString(): String {
                 return "Signed-in into an authenticated account"
+            }
+        }
+
+        /**
+         * Sign-in attempt encountered a recoverable problem, and a retry will be performed later.
+         */
+        data class WillAutoRetrySignInLater(val email: String, val stateLabel: String) : Success() {
+            override fun toString(): String {
+                return "Will auto-retry sign-in later"
             }
         }
     }
@@ -148,24 +158,28 @@ private object AuthenticatedAccountProcessor {
             authInfo = fennecAuthInfo
         )
 
-        if (!accountManager.signInWithShareableAccountAsync(shareableAccount, reuseAccount = false).await()) {
-            // What do we do now?
-            // We detected an account in a good state, and failed to actually login with it.
-            // This could indicate that credentials stored in Fennec are no longer valid, or that we had a
-            // network issue during the sign-in.
-            // Ideally, we're able to detect which one it is, and maybe retry in case of network issues.
-            // `signInWithShareableAccountAsync` needs to be expanded to support better error reporting.
-            return Result.Failure(
-                FxaMigrationException(Failure.FailedToSignIntoAuthenticatedAccount(
+        return when (accountManager.signInWithShareableAccountAsync(shareableAccount, reuseAccount = false).await()) {
+            SignInWithShareableAccountResult.Failure -> {
+                Result.Failure(
+                    FxaMigrationException(Failure.FailedToSignIntoAuthenticatedAccount(
+                        email = fennecAccount.email,
+                        stateLabel = fennecAccount.stateLabel
+                    ))
+                )
+            }
+            SignInWithShareableAccountResult.Success -> {
+                Result.Success(SignedInIntoAuthenticatedAccount(
                     email = fennecAccount.email,
                     stateLabel = fennecAccount.stateLabel
                 ))
-            )
+            }
+            SignInWithShareableAccountResult.WillRetry -> {
+                Result.Success(FxaMigrationResult.Success.WillAutoRetrySignInLater(
+                    email = fennecAccount.email,
+                    stateLabel = fennecAccount.stateLabel
+                ))
+            }
         }
-        return Result.Success(SignedInIntoAuthenticatedAccount(
-            email = fennecAccount.email,
-            stateLabel = fennecAccount.stateLabel
-        ))
     }
 }
 

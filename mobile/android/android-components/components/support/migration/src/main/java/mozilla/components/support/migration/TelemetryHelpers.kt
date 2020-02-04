@@ -92,4 +92,6 @@ internal enum class SuccessReasonTelemetryCodes(val code: Int) {
     GECKO_MIGRATED(15),
 
     TELEMETRY_IDENTIFIERS_MIGRATED(16),
+
+    FXA_WILL_RETRY(17),
 }

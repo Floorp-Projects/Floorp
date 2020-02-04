@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -81,7 +82,9 @@ class FennecFxaMigrationTest {
         val fxaPath = File(getTestPath("fxa"), "married-v4.json")
         val accountManager: FxaAccountManager = mock()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(true))
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+            CompletableDeferred(SignInWithShareableAccountResult.Success)
+        )
 
         with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager) as Result.Success) {
             assertEquals(FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount::class, this.value::class)
@@ -103,7 +106,9 @@ class FennecFxaMigrationTest {
         val fxaPath = File(getTestPath("fxa"), "cohabiting-v4.json")
         val accountManager: FxaAccountManager = mock()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(true))
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+            CompletableDeferred(SignInWithShareableAccountResult.Success)
+        )
 
         with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager) as Result.Success) {
             assertEquals(FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount::class, this.value::class)
@@ -121,11 +126,37 @@ class FennecFxaMigrationTest {
     }
 
     @Test
+    fun `cohabiting fxa state v4 will retry sign-in`() = runBlocking {
+        val fxaPath = File(getTestPath("fxa"), "cohabiting-v4.json")
+        val accountManager: FxaAccountManager = mock()
+
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+            CompletableDeferred(SignInWithShareableAccountResult.WillRetry)
+        )
+
+        with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager) as Result.Success) {
+            assertEquals(FxaMigrationResult.Success.WillAutoRetrySignInLater::class, this.value::class)
+            assertEquals("test@example.com", (this.value as FxaMigrationResult.Success.WillAutoRetrySignInLater).email)
+            assertEquals("Cohabiting", (this.value as FxaMigrationResult.Success.WillAutoRetrySignInLater).stateLabel)
+
+            val captor = argumentCaptor<ShareableAccount>()
+            verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(false))
+
+            assertEquals("test@example.com", captor.value.email)
+            assertEquals("252bc4ccc3a239fsdfsdf32fg32wf3w4e3472d41d1a204890", captor.value.authInfo.kSync)
+            assertEquals("0b3ba79b18bd9fsdfsdf4g234adedd87", captor.value.authInfo.kXCS)
+            assertEquals("fsdfjsdffsdf342f23g3ogou97328uo23ij", captor.value.authInfo.sessionToken)
+        }
+    }
+
+    @Test
     fun `married fxa state v4 failed sign-in`() = runBlocking {
         val fxaPath = File(getTestPath("fxa"), "married-v4.json")
         val accountManager: FxaAccountManager = mock()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(false))
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+            CompletableDeferred(SignInWithShareableAccountResult.Failure)
+        )
 
         with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager) as Result.Failure) {
             val unwrapped = this.throwables.first() as FxaMigrationException
@@ -191,7 +222,9 @@ class FennecFxaMigrationTest {
         val fxaPath = File(getTestPath("fxa"), "cohabiting-v4.json")
         val accountManager: FxaAccountManager = mock()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(false))
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+            CompletableDeferred(SignInWithShareableAccountResult.Failure)
+        )
 
         with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager) as Result.Failure) {
             val unwrapped = this.throwables.first() as FxaMigrationException

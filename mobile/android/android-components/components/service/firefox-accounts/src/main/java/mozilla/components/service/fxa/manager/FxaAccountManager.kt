@@ -26,6 +26,7 @@ import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
@@ -107,6 +108,31 @@ const val SCOPE_SYNC = "https://identity.mozilla.com/apps/oldsync"
 const val SCOPE_SESSION = "https://identity.mozilla.com/tokens/session"
 
 /**
+ * Describes a result of running [FxaAccountManager.signInWithShareableAccountAsync].
+ */
+enum class SignInWithShareableAccountResult {
+    /**
+     * Sign-in failed due to an intermittent problem (such as a network failure). A retry attempt will
+     * be performed automatically during account manager initialization, or as a side-effect of certain
+     * user actions (e.g. triggering a sync).
+     *
+     * Applications may treat this account as "authenticated" after seeing this result.
+     */
+    WillRetry,
+
+    /**
+     * Sign-in succeeded with no issues.
+     * Applications may treat this account as "authenticated" after seeing this result.
+     */
+    Success,
+
+    /**
+     * Sign-in failed due to non-recoverable issues.
+     */
+    Failure
+}
+
+/**
  * An account manager which encapsulates various internal details of an account lifecycle and provides
  * an observer interface along with a public API for interacting with an account.
  * The internal state machine abstracts over state space as exposed by the fxaclient library, not
@@ -177,55 +203,6 @@ open class FxaAccountManager(
 
     private lateinit var statePersistenceCallback: FxaStatePersistenceCallback
 
-    companion object {
-        /**
-         * State transition matrix. It's in the companion object to enforce purity.
-         * @return An optional [AccountState] if provided state+event combination results in a
-         * state transition. Note that states may transition into themselves.
-         */
-        internal fun nextState(state: AccountState, event: Event): AccountState? =
-            when (state) {
-                AccountState.Start -> when (event) {
-                    Event.Init -> AccountState.Start
-                    Event.AccountNotFound -> AccountState.NotAuthenticated
-                    Event.AccountRestored -> AccountState.AuthenticatedNoProfile
-                    else -> null
-                }
-                AccountState.NotAuthenticated -> when (event) {
-                    Event.Authenticate -> AccountState.NotAuthenticated
-                    Event.FailedToAuthenticate -> AccountState.NotAuthenticated
-
-                    is Event.SignInShareableAccount -> AccountState.NotAuthenticated
-                    is Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
-
-                    is Event.Pair -> AccountState.NotAuthenticated
-                    is Event.Authenticated -> AccountState.AuthenticatedNoProfile
-                    else -> null
-                }
-                AccountState.AuthenticatedNoProfile -> when (event) {
-                    is Event.AuthenticationError -> AccountState.AuthenticationProblem
-                    Event.FetchProfile -> AccountState.AuthenticatedNoProfile
-                    Event.FetchedProfile -> AccountState.AuthenticatedWithProfile
-                    Event.FailedToFetchProfile -> AccountState.AuthenticatedNoProfile
-                    Event.Logout -> AccountState.NotAuthenticated
-                    else -> null
-                }
-                AccountState.AuthenticatedWithProfile -> when (event) {
-                    is Event.AuthenticationError -> AccountState.AuthenticationProblem
-                    Event.Logout -> AccountState.NotAuthenticated
-                    else -> null
-                }
-                AccountState.AuthenticationProblem -> when (event) {
-                    Event.Authenticate -> AccountState.AuthenticationProblem
-                    Event.FailedToAuthenticate -> AccountState.AuthenticationProblem
-                    Event.RecoveredFromAuthenticationProblem -> AccountState.AuthenticatedNoProfile
-                    is Event.Authenticated -> AccountState.AuthenticatedNoProfile
-                    Event.Logout -> AccountState.NotAuthenticated
-                    else -> null
-                }
-        }
-    }
-
     // 'account' is initialized during processing of an 'Init' event.
     // Note on threading: we use a single-threaded executor, so there's no concurrent access possible.
     // However, that executor doesn't guarantee that it'll always use the same thread, and so vars
@@ -293,12 +270,19 @@ open class FxaAccountManager(
     fun signInWithShareableAccountAsync(
         fromAccount: ShareableAccount,
         reuseAccount: Boolean = false
-    ): Deferred<Boolean> {
+    ): Deferred<SignInWithShareableAccountResult> {
         val stateMachineTransition = processQueueAsync(Event.SignInShareableAccount(fromAccount, reuseAccount))
-        val result = CompletableDeferred<Boolean>()
+        val result = CompletableDeferred<SignInWithShareableAccountResult>()
         CoroutineScope(coroutineContext).launch {
             stateMachineTransition.await()
-            result.complete(authenticatedAccount() != null)
+
+            if (accountMigrationInFlight()) {
+                result.complete(SignInWithShareableAccountResult.WillRetry)
+            } else if (authenticatedAccount() != null) {
+                result.complete(SignInWithShareableAccountResult.Success)
+            } else {
+                result.complete(SignInWithShareableAccountResult.Failure)
+            }
         }
         return result
     }
@@ -389,17 +373,32 @@ open class FxaAccountManager(
         reason: SyncReason,
         debounce: Boolean = false
     ): Deferred<Unit> = CoroutineScope(coroutineContext).async {
-        // Make sure auth cache is populated before we try to sync.
-        maybeUpdateSyncAuthInfoCache()
-
-        // Access to syncManager is guarded by `this`.
-        synchronized(this) {
-            if (syncManager == null) {
-                throw IllegalStateException(
-                        "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
-                )
+        // We may be in a state where we're not quite authenticated yet - but can auto-retry our
+        // authentication, instead.
+        // This is one of our trigger points for retrying - when a user asks us to sync.
+        // Another trigger point is the initialization flow of the account manager itself.
+        if (accountMigrationInFlight()) {
+            // Only trigger a retry attempt if the sync request was caused by a direct user action.
+            // We don't attempt to retry migration on 'SyncReason.Startup' because a retry will happen during
+            // account manager initialization if necessary anyway.
+            // If the retry attempt succeeds, sync will run as a by-product of regular account authentication flow,
+            // which is why we don't check for the result of a retry attempt here.
+            when (reason) {
+                SyncReason.User, SyncReason.EngineChange -> processQueueAsync(Event.RetryMigration).await()
             }
-            syncManager?.now(reason, debounce)
+        } else {
+            // Make sure auth cache is populated before we try to sync.
+            maybeUpdateSyncAuthInfoCache()
+
+            // Access to syncManager is guarded by `this`.
+            synchronized(this) {
+                if (syncManager == null) {
+                    throw IllegalStateException(
+                        "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
+                    )
+                }
+                syncManager?.now(reason, debounce)
+            }
         }
         Unit
     }
@@ -422,13 +421,25 @@ open class FxaAccountManager(
      * @return [OAuthAccount] if we're in an authenticated state, null otherwise. Returned [OAuthAccount]
      * may need to be re-authenticated; consumers are expected to check [accountNeedsReauth].
      */
-    fun authenticatedAccount(): OAuthAccount? {
-        return when (state) {
-            AccountState.AuthenticatedWithProfile,
-            AccountState.AuthenticatedNoProfile,
-            AccountState.AuthenticationProblem -> account
-            else -> null
-        }
+    fun authenticatedAccount(): OAuthAccount? = when (state) {
+        AccountState.AuthenticatedWithProfile,
+        AccountState.AuthenticatedNoProfile,
+        AccountState.AuthenticationProblem,
+        AccountState.CanAutoRetryAuthenticationViaTokenReuse,
+        AccountState.CanAutoRetryAuthenticationViaTokenCopy -> account
+        else -> null
+    }
+
+    /**
+     * Checks if there's an in-flight account migration. An in-flight migration means that we've tried to "migrate"
+     * via [signInWithShareableAccountAsync] and failed for intermittent (e.g. network) reasons.
+     * A migration sign-in attempt will be retried automatically either during account manager initialization,
+     * or as a by-product of user-triggered [syncNowAsync].
+     */
+    fun accountMigrationInFlight(): Boolean = when (state) {
+        AccountState.CanAutoRetryAuthenticationViaTokenReuse,
+        AccountState.CanAutoRetryAuthenticationViaTokenCopy -> true
+        else -> false
     }
 
     /**
@@ -536,7 +547,7 @@ open class FxaAccountManager(
         eventQueue.add(event)
         do {
             val toProcess: Event = eventQueue.poll()!!
-            val transitionInto = nextState(state, toProcess)
+            val transitionInto = FxaStateMatrix.nextState(state, toProcess)
 
             if (transitionInto == null) {
                 logger.warn("Got invalid event $toProcess for state $state.")
@@ -557,7 +568,7 @@ open class FxaAccountManager(
     /**
      * Side-effects matrix. Defines non-pure operations that must take place for state+event combinations.
      */
-    @Suppress("ComplexMethod", "ReturnCount", "ThrowsCount")
+    @Suppress("ComplexMethod", "ReturnCount", "ThrowsCount", "NestedBlockDepth", "LongMethod")
     private suspend fun stateActions(forState: AccountState, via: Event): Event? {
         // We're about to enter a new state ('forState') via some event ('via').
         // States will have certain side-effects associated with different event transitions.
@@ -571,7 +582,7 @@ open class FxaAccountManager(
                 when (via) {
                     Event.Init -> {
                         // Locally corrupt accounts are simply treated as 'absent'.
-                        val savedAccount = try {
+                        account = try {
                             getAccountStorage().read()
                         } catch (e: FxaPanicException) {
                             // Don't swallow panics from the underlying library.
@@ -579,13 +590,14 @@ open class FxaAccountManager(
                         } catch (e: FxaException) {
                             logger.error("Failed to load saved account. Re-initializing...", e)
                             null
-                        }
+                        } ?: return Event.AccountNotFound
 
-                        if (savedAccount == null) {
-                            Event.AccountNotFound
-                        } else {
-                            account = savedAccount
-                            Event.AccountRestored
+                        // We may have attempted a migration previously, which failed in a way that allows
+                        // us to retry it (e.g. a migration could have hit
+                        when (account.isInMigrationState()) {
+                            InFlightMigrationState.NONE -> Event.AccountRestored
+                            InFlightMigrationState.REUSE_SESSION_TOKEN -> Event.InFlightReuseMigration
+                            InFlightMigrationState.COPY_SESSION_TOKEN -> Event.InFlightCopyMigration
                         }
                     }
                     else -> null
@@ -645,10 +657,41 @@ open class FxaAccountManager(
                             ).await()
                         }
 
-                        return if (migrationResult) {
-                            Event.SignedInShareableAccount(via.reuseAccount)
-                        } else {
-                            null
+                        // If a migration fails, we need to determine if it failed for a reason that allows
+                        // retrying - e.g. an intermittent issue, where `isInMigrationState` will be 'true'.
+                        // We model "ability to retry an in-flight migration" as a distinct state.
+                        // This allows keeping this retry logic somewhat more contained, and not involved
+                        // in a regular flow of things.
+
+                        // So, below we will return the following:
+                        // - `null` if migration failed in an unrecoverable way
+                        // - SignedInShareableAccount if we succeeded
+                        // - One of the 'retry' events if we can retry later
+
+                        // Currently, we don't really care about the returned json blob. Right now all
+                        // it contains is how long a migration took - which really is just measuring
+                        // network performance for this particular operation.
+
+                        if (migrationResult != null) {
+                            return Event.SignedInShareableAccount(via.reuseAccount)
+                        }
+
+                        when (account.isInMigrationState()) {
+                            InFlightMigrationState.NONE -> {
+                                null
+                            }
+                            InFlightMigrationState.COPY_SESSION_TOKEN -> {
+                                if (via.reuseAccount) {
+                                    throw IllegalStateException("Expected 'reuse' in-flight state, saw 'copy'")
+                                }
+                                Event.RetryLaterViaTokenCopy
+                            }
+                            InFlightMigrationState.REUSE_SESSION_TOKEN -> {
+                                if (!via.reuseAccount) {
+                                    throw IllegalStateException("Expected 'copy' in-flight state, saw 'reuse'")
+                                }
+                                Event.RetryLaterViaTokenReuse
+                            }
                         }
                     }
                     is Event.Pair -> {
@@ -660,6 +703,24 @@ open class FxaAccountManager(
                         latestAuthState = authFlowUrl.state
                         oauthObservers.notifyObservers { onBeginOAuthFlow(authFlowUrl) }
                         null
+                    }
+                    else -> null
+                }
+            }
+            AccountState.CanAutoRetryAuthenticationViaTokenReuse -> {
+                when (via) {
+                    Event.RetryMigration,
+                    Event.InFlightReuseMigration -> {
+                        return retryMigration(reuseAccount = true)
+                    }
+                    else -> null
+                }
+            }
+            AccountState.CanAutoRetryAuthenticationViaTokenCopy -> {
+                when (via) {
+                    Event.RetryMigration,
+                    Event.InFlightCopyMigration -> {
+                        return retryMigration(reuseAccount = false)
                     }
                     else -> null
                 }
@@ -906,6 +967,29 @@ open class FxaAccountManager(
             // ... update constellation state, and poll for any pending device events.
             account.deviceConstellation().refreshDevicesAsync().await()
             account.deviceConstellation().pollForEventsAsync().await()
+        }
+    }
+
+    private suspend fun retryMigration(reuseAccount: Boolean): Event {
+        val resultJson = account.retryMigrateFromSessionTokenAsync().await()
+        if (resultJson != null) {
+            return Event.SignedInShareableAccount(reuseAccount)
+        }
+
+        return when (account.isInMigrationState()) {
+            InFlightMigrationState.NONE -> Event.FailedToAuthenticate
+            InFlightMigrationState.COPY_SESSION_TOKEN -> {
+                if (reuseAccount) {
+                    throw IllegalStateException("Expected 'reuse' in-flight state, saw 'copy'")
+                }
+                Event.RetryLaterViaTokenCopy
+            }
+            InFlightMigrationState.REUSE_SESSION_TOKEN -> {
+                if (!reuseAccount) {
+                    throw IllegalStateException("Expected 'copy' in-flight state, saw 'reuse'")
+                }
+                Event.RetryLaterViaTokenReuse
+            }
         }
     }
 
