@@ -936,8 +936,7 @@ impl Shaders {
                     }
                     BrushBatchKind::Image(image_buffer_kind) => {
                         if features.contains(BatchFeatures::ANTIALIASING) ||
-                            features.contains(BatchFeatures::REPETITION) ||
-                            !features.contains(BatchFeatures::ALPHA_PASS) {
+                            features.contains(BatchFeatures::REPETITION) {
 
                             self.brush_image[image_buffer_kind as usize]
                                 .as_mut()
