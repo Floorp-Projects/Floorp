@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.264';
-const pdfjsBuild = '4729fdc0';
+const pdfjsVersion = '2.4.292';
+const pdfjsBuild = '668a29aa';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.264';
+    const workerVersion = '2.4.292';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -9241,7 +9241,14 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
     var sign = readBits(1);
     var value = readBits(1) ? readBits(1) ? readBits(1) ? readBits(1) ? readBits(1) ? readBits(32) + 4436 : readBits(12) + 340 : readBits(8) + 84 : readBits(6) + 20 : readBits(4) + 4 : readBits(2);
-    return sign === 0 ? value : value > 0 ? -value : null;
+
+    if (sign === 0) {
+      return value;
+    } else if (value > 0) {
+      return -value;
+    }
+
+    return null;
   }
 
   function decodeIAID(contextCache, decoder, codeLength) {
@@ -10186,12 +10193,28 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
 
     segmentHeader.retainBits = retainBits;
-    var referredToSegmentNumberSize = segmentHeader.number <= 256 ? 1 : segmentHeader.number <= 65536 ? 2 : 4;
+    let referredToSegmentNumberSize = 4;
+
+    if (segmentHeader.number <= 256) {
+      referredToSegmentNumberSize = 1;
+    } else if (segmentHeader.number <= 65536) {
+      referredToSegmentNumberSize = 2;
+    }
+
     var referredTo = [];
     var i, ii;
 
     for (i = 0; i < referredToCount; i++) {
-      var number = referredToSegmentNumberSize === 1 ? data[position] : referredToSegmentNumberSize === 2 ? (0, _util.readUint16)(data, position) : (0, _util.readUint32)(data, position);
+      let number;
+
+      if (referredToSegmentNumberSize === 1) {
+        number = data[position];
+      } else if (referredToSegmentNumberSize === 2) {
+        number = (0, _util.readUint16)(data, position);
+      } else {
+        number = (0, _util.readUint32)(data, position);
+      }
+
       referredTo.push(number);
       position += referredToSegmentNumberSize;
     }
@@ -12380,7 +12403,15 @@ var JpegImage = function JpegImageClosure() {
 
       if ((p1 | p2 | p3 | p4 | p5 | p6 | p7) === 0) {
         t = dctSqrt2 * p0 + 8192 >> 14;
-        t = t < -2040 ? 0 : t >= 2024 ? 255 : t + 2056 >> 4;
+
+        if (t < -2040) {
+          t = 0;
+        } else if (t >= 2024) {
+          t = 255;
+        } else {
+          t = t + 2056 >> 4;
+        }
+
         blockData[blockBufferOffset + col] = t;
         blockData[blockBufferOffset + col + 8] = t;
         blockData[blockBufferOffset + col + 16] = t;
@@ -12427,14 +12458,71 @@ var JpegImage = function JpegImageClosure() {
       p5 = v2 - v5;
       p3 = v3 + v4;
       p4 = v3 - v4;
-      p0 = p0 < 16 ? 0 : p0 >= 4080 ? 255 : p0 >> 4;
-      p1 = p1 < 16 ? 0 : p1 >= 4080 ? 255 : p1 >> 4;
-      p2 = p2 < 16 ? 0 : p2 >= 4080 ? 255 : p2 >> 4;
-      p3 = p3 < 16 ? 0 : p3 >= 4080 ? 255 : p3 >> 4;
-      p4 = p4 < 16 ? 0 : p4 >= 4080 ? 255 : p4 >> 4;
-      p5 = p5 < 16 ? 0 : p5 >= 4080 ? 255 : p5 >> 4;
-      p6 = p6 < 16 ? 0 : p6 >= 4080 ? 255 : p6 >> 4;
-      p7 = p7 < 16 ? 0 : p7 >= 4080 ? 255 : p7 >> 4;
+
+      if (p0 < 16) {
+        p0 = 0;
+      } else if (p0 >= 4080) {
+        p0 = 255;
+      } else {
+        p0 >>= 4;
+      }
+
+      if (p1 < 16) {
+        p1 = 0;
+      } else if (p1 >= 4080) {
+        p1 = 255;
+      } else {
+        p1 >>= 4;
+      }
+
+      if (p2 < 16) {
+        p2 = 0;
+      } else if (p2 >= 4080) {
+        p2 = 255;
+      } else {
+        p2 >>= 4;
+      }
+
+      if (p3 < 16) {
+        p3 = 0;
+      } else if (p3 >= 4080) {
+        p3 = 255;
+      } else {
+        p3 >>= 4;
+      }
+
+      if (p4 < 16) {
+        p4 = 0;
+      } else if (p4 >= 4080) {
+        p4 = 255;
+      } else {
+        p4 >>= 4;
+      }
+
+      if (p5 < 16) {
+        p5 = 0;
+      } else if (p5 >= 4080) {
+        p5 = 255;
+      } else {
+        p5 >>= 4;
+      }
+
+      if (p6 < 16) {
+        p6 = 0;
+      } else if (p6 >= 4080) {
+        p6 = 255;
+      } else {
+        p6 >>= 4;
+      }
+
+      if (p7 < 16) {
+        p7 = 0;
+      } else if (p7 >= 4080) {
+        p7 = 255;
+      } else {
+        p7 >>= 4;
+      }
+
       blockData[blockBufferOffset + col] = p0;
       blockData[blockBufferOffset + col + 8] = p1;
       blockData[blockBufferOffset + col + 16] = p2;
@@ -14853,11 +14941,31 @@ var JpxImage = function JpxImageClosure() {
     function BitModel(width, height, subband, zeroBitPlanes, mb) {
       this.width = width;
       this.height = height;
-      this.contextLabelTable = subband === "HH" ? HHContextLabel : subband === "HL" ? HLContextLabel : LLAndLHContextsLabel;
+      let contextLabelTable;
+
+      if (subband === "HH") {
+        contextLabelTable = HHContextLabel;
+      } else if (subband === "HL") {
+        contextLabelTable = HLContextLabel;
+      } else {
+        contextLabelTable = LLAndLHContextsLabel;
+      }
+
+      this.contextLabelTable = contextLabelTable;
       var coefficientCount = width * height;
       this.neighborsSignificance = new Uint8Array(coefficientCount);
       this.coefficentsSign = new Uint8Array(coefficientCount);
-      this.coefficentsMagnitude = mb > 14 ? new Uint32Array(coefficientCount) : mb > 6 ? new Uint16Array(coefficientCount) : new Uint8Array(coefficientCount);
+      let coefficentsMagnitude;
+
+      if (mb > 14) {
+        coefficentsMagnitude = new Uint32Array(coefficientCount);
+      } else if (mb > 6) {
+        coefficentsMagnitude = new Uint16Array(coefficientCount);
+      } else {
+        coefficentsMagnitude = new Uint8Array(coefficientCount);
+      }
+
+      this.coefficentsMagnitude = coefficentsMagnitude;
       this.processingFlags = new Uint8Array(coefficientCount);
       var bitsDecoded = new Uint8Array(coefficientCount);
 
@@ -17941,8 +18049,18 @@ const LabCS = function LabCSClosure() {
       bs = decode(bs, maxVal, cs.bmin, cs.bmax);
     }
 
-    as = as > cs.amax ? cs.amax : as < cs.amin ? cs.amin : as;
-    bs = bs > cs.bmax ? cs.bmax : bs < cs.bmin ? cs.bmin : bs;
+    if (as > cs.amax) {
+      as = cs.amax;
+    } else if (as < cs.amin) {
+      as = cs.amin;
+    }
+
+    if (bs > cs.bmax) {
+      bs = cs.bmax;
+    } else if (bs < cs.bmin) {
+      bs = cs.bmin;
+    }
+
     let M = (Ls + 16) / 116;
     let L = M + as / 500;
     let N = M - bs / 200;
@@ -24508,7 +24626,15 @@ var Font = function FontClosure() {
     var subtype = properties.subtype;
     this.type = type;
     this.subtype = subtype;
-    this.fallbackName = this.isMonospace ? "monospace" : this.isSerifFont ? "serif" : "sans-serif";
+    let fallbackName = "sans-serif";
+
+    if (this.isMonospace) {
+      fallbackName = "monospace";
+    } else if (this.isSerifFont) {
+      fallbackName = "serif";
+    }
+
+    this.fallbackName = fallbackName;
     this.differences = properties.differences;
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
@@ -24633,7 +24759,12 @@ var Font = function FontClosure() {
   }
 
   function safeString16(value) {
-    value = value > 0x7fff ? 0x7fff : value < -0x8000 ? -0x8000 : value;
+    if (value > 0x7fff) {
+      value = 0x7fff;
+    } else if (value < -0x8000) {
+      value = -0x8000;
+    }
+
     return String.fromCharCode(value >> 8 & 0xff, value & 0xff);
   }
 
@@ -25614,7 +25745,23 @@ var Font = function FontClosure() {
             glyf[j - 1] = flag & 0x3f;
           }
 
-          var xyLength = (flag & 2 ? 1 : flag & 16 ? 0 : 2) + (flag & 4 ? 1 : flag & 32 ? 0 : 2);
+          let xLength = 2;
+
+          if (flag & 2) {
+            xLength = 1;
+          } else if (flag & 16) {
+            xLength = 0;
+          }
+
+          let yLength = 2;
+
+          if (flag & 4) {
+            yLength = 1;
+          } else if (flag & 32) {
+            yLength = 0;
+          }
+
+          const xyLength = xLength + yLength;
           coordinatesLength += xyLength;
 
           if (flag & 8) {
@@ -26112,7 +26259,15 @@ var Font = function FontClosure() {
           }
 
           if (!inFDEF && !inELSE) {
-            var stackDelta = op <= 0x8e ? TTOpsStackDeltas[op] : op >= 0xc0 && op <= 0xdf ? -1 : op >= 0xe0 ? -2 : 0;
+            let stackDelta = 0;
+
+            if (op <= 0x8e) {
+              stackDelta = TTOpsStackDeltas[op];
+            } else if (op >= 0xc0 && op <= 0xdf) {
+              stackDelta = -1;
+            } else if (op >= 0xe0) {
+              stackDelta = -2;
+            }
 
             if (op >= 0x71 && op <= 0x75) {
               n = stack.pop();
@@ -36446,6 +36601,19 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
     return data[offset] << 8 | data[offset + 1];
   }
 
+  function getSubroutineBias(subrs) {
+    const numSubrs = subrs.length;
+    let bias = 32768;
+
+    if (numSubrs < 1240) {
+      bias = 107;
+    } else if (numSubrs < 33900) {
+      bias = 1131;
+    }
+
+    return bias;
+  }
+
   function parseCmap(data, start, end) {
     var offset = getUshort(data, start + 2) === 1 ? getLong(data, start + 8) : getLong(data, start + 16);
     var format = getUshort(data, start + offset);
@@ -36893,8 +37061,7 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
                 }
 
                 if (subrs) {
-                  let numSubrs = subrs.length;
-                  n += numSubrs < 1240 ? 107 : numSubrs < 33900 ? 1131 : 32768;
+                  n += getSubroutineBias(subrs);
                   subrCode = subrs[n];
                 }
               } else {
@@ -37309,8 +37476,8 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
       this.subrs = cffInfo.subrs || [];
       this.cmap = cmap;
       this.glyphNameMap = glyphNameMap || (0, _glyphlist.getGlyphsUnicode)();
-      this.gsubrsBias = this.gsubrs.length < 1240 ? 107 : this.gsubrs.length < 33900 ? 1131 : 32768;
-      this.subrsBias = this.subrs.length < 1240 ? 107 : this.subrs.length < 33900 ? 1131 : 32768;
+      this.gsubrsBias = getSubroutineBias(this.gsubrs);
+      this.subrsBias = getSubroutineBias(this.subrs);
       this.isCFFCIDFont = cffInfo.isCFFCIDFont;
       this.fdSelect = cffInfo.fdSelect;
       this.fdArray = cffInfo.fdArray;
@@ -39060,10 +39227,18 @@ function reverseValues(arr, start, end) {
   }
 }
 
-function createBidiText(str, isLTR, vertical) {
+function createBidiText(str, isLTR, vertical = false) {
+  let dir = "ltr";
+
+  if (vertical) {
+    dir = "ttb";
+  } else if (!isLTR) {
+    dir = "rtl";
+  }
+
   return {
     str,
-    dir: vertical ? "ttb" : isLTR ? "ltr" : "rtl"
+    dir
   };
 }
 
@@ -44122,12 +44297,28 @@ var PDFImage = function PDFImageClosure() {
 
   function decodeAndClamp(value, addend, coefficient, max) {
     value = addend + value * coefficient;
-    return value < 0 ? 0 : value > max ? max : value;
+
+    if (value < 0) {
+      value = 0;
+    } else if (value > max) {
+      value = max;
+    }
+
+    return value;
   }
 
   function resizeImageMask(src, bpc, w1, h1, w2, h2) {
     var length = w2 * h2;
-    var dest = bpc <= 8 ? new Uint8Array(length) : bpc <= 16 ? new Uint16Array(length) : new Uint32Array(length);
+    let dest;
+
+    if (bpc <= 8) {
+      dest = new Uint8Array(length);
+    } else if (bpc <= 16) {
+      dest = new Uint16Array(length);
+    } else {
+      dest = new Uint32Array(length);
+    }
+
     var xRatio = w1 / w2;
     var yRatio = h1 / h2;
     var i,
@@ -44433,7 +44624,16 @@ var PDFImage = function PDFImageClosure() {
       var numComps = this.numComps;
       var length = width * height * numComps;
       var bufferPos = 0;
-      var output = bpc <= 8 ? new Uint8Array(length) : bpc <= 16 ? new Uint16Array(length) : new Uint32Array(length);
+      let output;
+
+      if (bpc <= 8) {
+        output = new Uint8Array(length);
+      } else if (bpc <= 16) {
+        output = new Uint16Array(length);
+      } else {
+        output = new Uint32Array(length);
+      }
+
       var rowComps = width * numComps;
       var max = (1 << bpc) - 1;
       var i = 0,
@@ -44486,8 +44686,15 @@ var PDFImage = function PDFImageClosure() {
           }
 
           var remainingBits = bits - bpc;
-          var value = buf >> remainingBits;
-          output[i] = value < 0 ? 0 : value > max ? max : value;
+          let value = buf >> remainingBits;
+
+          if (value < 0) {
+            value = 0;
+          } else if (value > max) {
+            value = max;
+          }
+
+          output[i] = value;
           buf = buf & (1 << remainingBits) - 1;
           bits = remainingBits;
         }
@@ -45237,8 +45444,8 @@ class MessageHandler {
   }
 
   async _deleteStreamController(streamId) {
-    await Promise.all([this.streamControllers[streamId].startCall, this.streamControllers[streamId].pullCall, this.streamControllers[streamId].cancelCall].map(function (capability) {
-      return capability && capability.promise.catch(function () {});
+    await Promise.allSettled([this.streamControllers[streamId].startCall, this.streamControllers[streamId].pullCall, this.streamControllers[streamId].cancelCall].map(function (capability) {
+      return capability && capability.promise;
     }));
     delete this.streamControllers[streamId];
   }
