@@ -224,7 +224,6 @@ class nsContentUtils {
 
   static bool IsCallerChrome();
   static bool ThreadsafeIsCallerChrome();
-  static bool IsCallerContentXBL();
   static bool IsCallerUAWidget();
   static bool IsFuzzingEnabled()
 #ifndef FUZZING

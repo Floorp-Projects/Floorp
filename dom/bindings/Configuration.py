@@ -100,14 +100,14 @@ class Configuration(DescriptorProvider):
             iface = thing
             if not iface.isExternal():
                 if not (iface.getExtendedAttribute("ChromeOnly") or
-                        iface.getExtendedAttribute("Func") == ["IsChromeOrXBL"] or
                         iface.getExtendedAttribute("Func") == ["nsContentUtils::IsCallerChromeOrFuzzingEnabled"] or
                         not iface.hasInterfaceObject() or
                         isInWebIDLRoot(iface.filename())):
                     raise TypeError(
                         "Interfaces which are exposed to the web may only be "
                         "defined in a DOM WebIDL root %r. Consider marking "
-                        "the interface [ChromeOnly] or [Func='IsChromeOrXBL'] "
+                        "the interface [ChromeOnly] or "
+                        "[Func='nsContentUtils::IsCallerChromeOrFuzzingEnabled'] "
                         "if you do not want it exposed to the web.\n"
                         "%s" %
                         (webRoots, iface.location))

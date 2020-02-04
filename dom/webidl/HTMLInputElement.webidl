@@ -201,13 +201,13 @@ interface mixin MozEditableElement {
   // This is set to true if "input" event should be fired with InputEvent on
   // the element.  Otherwise, i.e., if "input" event should be fired with
   // Event, set to false.
-  [Func="IsChromeOrXBLOrUAWidget"]
+  [ChromeOnly]
   readonly attribute boolean isInputEventTarget;
 
   // This is similar to set .value on nsIDOMInput/TextAreaElements, but handling
   // of the value change is closer to the normal user input, so 'change' event
   // for example will be dispatched when focusing out the element.
-  [Func="IsChromeOrXBLOrUAWidget", NeedsSubjectPrincipal]
+  [Func="IsChromeOrUAWidget", NeedsSubjectPrincipal]
   void setUserInput(DOMString input);
 };
 
@@ -264,26 +264,26 @@ partial interface HTMLInputElement {
    BinaryName="getMaximumAsDouble"]
   double getMaximum();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
   void openDateTimePicker(optional DateTimeValue initialValue = {});
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
   void updateDateTimePicker(optional DateTimeValue value = {});
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
   void closeDateTimePicker();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
   void setFocusState(boolean aIsFocused);
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
+  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget"]
   void updateValidityState();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget",
+  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget",
    BinaryName="getStepAsDouble"]
   double getStep();
 
-  [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget",
+  [Pref="dom.forms.datetime", Func="IsChromeOrUAWidget",
    BinaryName="getStepBaseAsDouble"]
   double getStepBase();
 };
