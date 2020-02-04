@@ -18,7 +18,6 @@ from voluptuous import (
     ALLOW_EXTRA,
     Any,
     Inclusive,
-    PREVENT_EXTRA,
     Required,
     Schema,
 )
@@ -57,7 +56,7 @@ def get_app_version(product_dir='browser'):
     return get_contents(app_version_path)
 
 
-base_schema = {
+base_schema = Schema({
     Required('app_version'): text_type,
     Required('base_repository'): text_type,
     Required('build_date'): int,
@@ -100,7 +99,7 @@ base_schema = {
     Required('try_options'): Any(None, dict),
     Required('try_task_config'): dict,
     Required('version'): text_type,
-}
+})
 
 
 COMM_PARAMETERS = [
@@ -109,6 +108,17 @@ COMM_PARAMETERS = [
     'comm_head_repository',
     'comm_head_rev',
 ]
+
+
+def extend_parameters_schema(schema):
+    """
+    Extend the schema for parameters to include per-project configuration.
+
+    This should be called by the `taskgraph.register` function in the
+    graph-configuration.
+    """
+    global base_schema
+    base_schema = base_schema.extend(schema)
 
 
 class Parameters(ReadOnlyDict):
@@ -183,7 +193,7 @@ class Parameters(ReadOnlyDict):
         return kwargs
 
     def check(self):
-        schema = Schema(base_schema, extra=PREVENT_EXTRA if self.strict else ALLOW_EXTRA)
+        schema = base_schema if self.strict else base_schema.extend({}, extra=ALLOW_EXTRA)
         validate_schema(schema, self.copy(), 'Invalid parameters:')
 
     def __getitem__(self, k):
