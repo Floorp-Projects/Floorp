@@ -364,11 +364,15 @@ struct RectCornerRadii final {
   RectCornerRadii() = default;
 
   explicit RectCornerRadii(Float radius) {
-    NS_FOR_CSS_FULL_CORNERS(i) { radii[i].SizeTo(radius, radius); }
+    for (const auto i : mozilla::AllPhysicalCorners()) {
+      radii[i].SizeTo(radius, radius);
+    }
   }
 
   RectCornerRadii(Float radiusX, Float radiusY) {
-    NS_FOR_CSS_FULL_CORNERS(i) { radii[i].SizeTo(radiusX, radiusY); }
+    for (const auto i : mozilla::AllPhysicalCorners()) {
+      radii[i].SizeTo(radiusX, radiusY);
+    }
   }
 
   RectCornerRadii(Float tl, Float tr, Float br, Float bl) {
@@ -402,7 +406,9 @@ struct RectCornerRadii final {
   }
 
   void Scale(Float aXScale, Float aYScale) {
-    NS_FOR_CSS_FULL_CORNERS(i) { radii[i].Scale(aXScale, aYScale); }
+    for (const auto i : mozilla::AllPhysicalCorners()) {
+      radii[i].Scale(aXScale, aYScale);
+    }
   }
 
   const Size TopLeft() const { return radii[eCornerTopLeft]; }
