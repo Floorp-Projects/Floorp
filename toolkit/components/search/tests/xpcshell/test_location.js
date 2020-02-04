@@ -10,7 +10,7 @@ add_task(async function test_location() {
     "browser.search.geoip.url",
     'data:application/json,{"country_code": "AU"}'
   );
-  await Services.search.init();
+  await Services.search.init(true);
   equal(
     Services.prefs.getCharPref("browser.search.region"),
     "AU",

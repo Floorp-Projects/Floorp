@@ -29,7 +29,7 @@ add_task(async function test_maybereloadengine_update_distro() {
   };
   Services.obs.addObserver(obs, SEARCH_SERVICE_TOPIC);
 
-  let initPromise = Services.search.init(true);
+  let initPromise = Services.search.init(false);
 
   async function cont(requests) {
     await Promise.all([

@@ -33,7 +33,7 @@ add_task(async function setup() {
 
 add_task(async function async_init() {
   let commitPromise = promiseAfterCache();
-  await Services.search.init();
+  await Services.search.init(true);
 
   let engines = await Services.search.getEngines();
   Assert.equal(engines.length, 1);
@@ -74,7 +74,7 @@ add_task(async function invalid_engine() {
     .getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF)
     .setCharPref(kUrlPref, url);
 
-  await asyncReInit({ waitForRegionFetch: true });
+  await asyncReInit({ awaitRegionFetch: true });
 
   let engines = await Services.search.getEngines();
   Assert.equal(engines.length, 2);
