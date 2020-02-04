@@ -675,7 +675,7 @@ static void LogSecurityFlags(nsSecurityFlags securityFlags) {
       {nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL_OVERRULE_OWNER,
        "SEC_FORCE_INHERIT_PRINCIPAL_OVERRULE_OWNER"}};
 
-  for (const DebugSecFlagType flag : secTypes) {
+  for (const DebugSecFlagType& flag : secTypes) {
     if (securityFlags & flag.secFlag) {
       MOZ_LOG(sCSMLog, LogLevel::Debug, ("    %s,\n", flag.secTypeStr));
     }
