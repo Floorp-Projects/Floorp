@@ -6540,14 +6540,12 @@ class MDefFun : public MBinaryInstruction, public ObjectPolicy<0>::Data {
 
 class MRegExp : public MNullaryInstruction {
   CompilerGCPointer<RegExpObject*> source_;
-  bool mustClone_;
   bool hasShared_;
 
   MRegExp(TempAllocator& alloc, CompilerConstraintList* constraints,
           RegExpObject* source, bool hasShared)
       : MNullaryInstruction(classOpcode),
         source_(source),
-        mustClone_(true),
         hasShared_(hasShared) {
     setResultType(MIRType::Object);
     setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, source));
@@ -6557,8 +6555,6 @@ class MRegExp : public MNullaryInstruction {
   INSTRUCTION_HEADER(RegExp)
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
 
-  void setDoNotClone() { mustClone_ = false; }
-  bool mustClone() const { return mustClone_; }
   bool hasShared() const { return hasShared_; }
   RegExpObject* source() const { return source_; }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
