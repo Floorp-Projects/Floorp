@@ -62,6 +62,7 @@ struct DefaultJitOptions {
   bool baselineInterpreter;
   bool baselineJit;
   bool ion;
+  bool ionForTrustedPrincipals;
   bool nativeRegExp;
   bool forceInlineCaches;
   bool fullDebugChecks;
