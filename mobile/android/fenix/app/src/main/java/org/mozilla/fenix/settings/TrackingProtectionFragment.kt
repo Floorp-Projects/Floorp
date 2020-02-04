@@ -6,6 +6,8 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.navigation.findNavController
+import androidx.preference.CheckBoxPreference
+import androidx.preference.DropDownPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
@@ -34,9 +36,21 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     }
     private lateinit var radioStrict: RadioButtonInfoPreference
     private lateinit var radioStandard: RadioButtonInfoPreference
+    private lateinit var radioCustom: RadioButtonInfoPreference
+    private lateinit var customCookies: CheckBoxPreference
+    private lateinit var customCookiesSelect: DropDownPreference
+    private lateinit var customTracking: CheckBoxPreference
+    private lateinit var customTrackingSelect: DropDownPreference
+    private lateinit var customCryptominers: CheckBoxPreference
+    private lateinit var customFingerprinters: CheckBoxPreference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.tracking_protection_preferences, rootKey)
+        bindStrict()
+        bindStandard()
+        bindCustom()
+        setupRadioGroups()
+        updateCustomOptionsVisibility()
     }
 
     override fun onResume() {
@@ -58,10 +72,6 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             }
             true
         }
-
-        bindStrict()
-        bindStandard()
-        setupRadioGroups()
 
         val trackingProtectionLearnMore =
             context!!.getPreferenceKey(R.string.pref_key_etp_learn_more)
@@ -100,6 +110,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                         )
                     )
                 }
+                updateCustomOptionsVisibility()
                 return super.onPreferenceChange(preference, newValue)
             }
         }
@@ -107,7 +118,9 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             nav(
                 R.id.trackingProtectionFragment,
                 TrackingProtectionFragmentDirections
-                    .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(true)
+                    .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(
+                        getString(R.string.preference_enhanced_tracking_protection_strict_default)
+                    )
             )
         }
     }
@@ -127,6 +140,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                         )
                     )
                 }
+                updateCustomOptionsVisibility()
                 return super.onPreferenceChange(preference, newValue)
             }
         }
@@ -134,9 +148,102 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             nav(
                 R.id.trackingProtectionFragment,
                 TrackingProtectionFragmentDirections
-                    .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(false)
+                    .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(
+                        getString(R.string.preference_enhanced_tracking_protection_standard)
+                    )
             )
         }
+    }
+
+    private fun bindCustom() {
+        val keyCustom = getString(R.string.pref_key_tracking_protection_custom_option)
+        radioCustom = requireNotNull(findPreference(keyCustom))
+        radioCustom.contentDescription =
+            getString(R.string.preference_enhanced_tracking_protection_custom_info_button)
+        radioCustom.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                if (newValue == true) {
+                    updateTrackingProtectionPolicy()
+                }
+                updateCustomOptionsVisibility()
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
+        radioCustom.onInfoClickListener {
+            nav(
+                R.id.trackingProtectionFragment,
+                TrackingProtectionFragmentDirections
+                    .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(
+                        getString(R.string.preference_enhanced_tracking_protection_custom)
+                    )
+            )
+        }
+
+        customCookies = requireNotNull(
+            findPreference(
+                getString(R.string.pref_key_tracking_protection_custom_cookies)
+            )
+        )
+
+        customCookiesSelect = requireNotNull(
+            findPreference(
+                getString(R.string.pref_key_tracking_protection_custom_cookies_select)
+            )
+        )
+        customTracking = requireNotNull(
+            findPreference(
+                getString(R.string.pref_key_tracking_protection_custom_tracking_content)
+            )
+        )
+        customTrackingSelect = requireNotNull(
+            findPreference(
+                getString(R.string.pref_key_tracking_protection_custom_tracking_content_select)
+            )
+        )
+        customCryptominers = requireNotNull(
+            findPreference(
+                getString(R.string.pref_key_tracking_protection_custom_cryptominers)
+            )
+        )
+        customFingerprinters = requireNotNull(
+            findPreference(
+                getString(R.string.pref_key_tracking_protection_custom_fingerprinters)
+            )
+        )
+
+        customCookies.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    updateTrackingProtectionPolicy()
+                customCookiesSelect.isVisible = !customCookies.isChecked
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
+
+        customTracking.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    updateTrackingProtectionPolicy()
+                customTrackingSelect.isVisible = !customTracking.isChecked
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
+
+        customCookiesSelect.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                updateTrackingProtectionPolicy()
+                customTrackingSelect.isVisible = !customTracking.isChecked
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
+
+        customTrackingSelect.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                updateTrackingProtectionPolicy()
+                customTrackingSelect.isVisible = !customTracking.isChecked
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
+
+        updateCustomOptionsVisibility()
     }
 
     private fun updateTrackingProtectionPolicy() {
@@ -150,5 +257,21 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     private fun setupRadioGroups() {
         radioStandard.addToRadioGroup(radioStrict)
         radioStrict.addToRadioGroup(radioStandard)
+
+        radioStandard.addToRadioGroup(radioCustom)
+        radioCustom.addToRadioGroup(radioStandard)
+
+        radioStrict.addToRadioGroup(radioCustom)
+        radioCustom.addToRadioGroup(radioStrict)
+    }
+
+    private fun updateCustomOptionsVisibility() {
+        val isCustomSelected = requireContext().settings().useCustomTrackingProtection
+        customCookies.isVisible = isCustomSelected
+        customCookiesSelect.isVisible = isCustomSelected && customCookies.isChecked
+        customTracking.isVisible = isCustomSelected
+        customTrackingSelect.isVisible = isCustomSelected && customTracking.isChecked
+        customCryptominers.isVisible = isCustomSelected
+        customFingerprinters.isVisible = isCustomSelected
     }
 }

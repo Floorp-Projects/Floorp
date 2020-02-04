@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="cookies_options_entries">
+        <item>@string/preference_enhanced_tracking_protection_custom_cookies_1</item>
+        <item>@string/preference_enhanced_tracking_protection_custom_cookies_2</item>
+        <item>@string/preference_enhanced_tracking_protection_custom_cookies_3</item>
+        <item>@string/preference_enhanced_tracking_protection_custom_cookies_4</item>
+    </string-array>
+
+    <string-array name="cookies_options_entry_values">
+        <item>social</item>
+        <item>unvisited</item>
+        <item>third-party</item>
+        <item>all</item>
+    </string-array>
+
+    <string-array name="tracking_content_options_entries">
+        <item>@string/preference_enhanced_tracking_protection_custom_tracking_content_1</item>
+        <item>@string/preference_enhanced_tracking_protection_custom_tracking_content_2</item>
+    </string-array>
+
+    <string-array name="tracking_content_options_entry_values">
+        <item>all</item>
+        <item>private</item>
+    </string-array>
+</resources>

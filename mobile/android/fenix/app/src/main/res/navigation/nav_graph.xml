@@ -665,8 +665,8 @@
         android:id="@+id/trackingProtectionBlockingFragment"
         android:name="org.mozilla.fenix.trackingprotection.TrackingProtectionBlockingFragment">
         <argument
-            android:name="strictMode"
-            app:argType="boolean" />
+            android:name="protectionMode"
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/deleteBrowsingDataOnQuitFragment"

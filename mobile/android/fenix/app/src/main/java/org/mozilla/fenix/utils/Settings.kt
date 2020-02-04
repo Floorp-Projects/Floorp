@@ -225,6 +225,40 @@ class Settings private constructor(
         true
     )
 
+    val useCustomTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_option),
+        false
+    )
+
+    val blockCookiesInCustomTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies),
+        true
+    )
+    val blockCookiesSelectionInCustomTrackingProtection by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies_select),
+        ""
+    )
+
+    val blockTrackingContentInCustomTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_tracking_content),
+        true
+    )
+
+    val blockTrackingContentSelectionInCustomTrackingProtection by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_tracking_content_select),
+        ""
+    )
+
+    val blockCryptominersInCustomTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cryptominers),
+        true
+    )
+
+    val blockFingerprintersInCustomTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_fingerprinters),
+        true
+    )
+
     val shouldUseFixedTopToolbar: Boolean
         get() {
             return touchExplorationIsEnabled || switchServiceIsEnabled
