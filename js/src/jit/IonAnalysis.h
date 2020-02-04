@@ -49,8 +49,6 @@ MOZ_MUST_USE bool EliminateDeadCode(MIRGenerator* mir, MIRGraph& graph);
 
 MOZ_MUST_USE bool ApplyTypeInformation(MIRGenerator* mir, MIRGraph& graph);
 
-MOZ_MUST_USE bool MakeMRegExpHoistable(MIRGenerator* mir, MIRGraph& graph);
-
 void RenumberBlocks(MIRGraph& graph);
 
 MOZ_MUST_USE bool AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph,
