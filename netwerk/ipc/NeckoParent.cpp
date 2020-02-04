@@ -603,17 +603,18 @@ bool NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
 }
 
 already_AddRefed<PDNSRequestParent> NeckoParent::AllocPDNSRequestParent(
-    const nsCString& aHost, const OriginAttributes& aOriginAttributes,
-    const uint32_t& aFlags) {
+    const nsCString& aHost, const nsCString& aTrrServer, const uint16_t& aType,
+    const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
   RefPtr<DNSRequestParent> actor = new DNSRequestParent();
   return actor.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDNSRequestConstructor(
     PDNSRequestParent* aActor, const nsCString& aHost,
+    const nsCString& aTrrServer, const uint16_t& aType,
     const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
   static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(
-      aHost, aOriginAttributes, aFlags);
+      aHost, aTrrServer, aType, aOriginAttributes, aFlags);
   return IPC_OK();
 }
 

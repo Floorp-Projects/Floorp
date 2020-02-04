@@ -56,13 +56,15 @@ extern mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
 
 struct nsHostKey {
   const nsCString host;
+  const nsCString mTrrServer;
   uint16_t type;
   uint16_t flags;
   uint16_t af;
   bool pb;
   const nsCString originSuffix;
-  explicit nsHostKey(const nsACString& host, uint16_t type, uint16_t flags,
-                     uint16_t af, bool pb, const nsACString& originSuffix);
+  explicit nsHostKey(const nsACString& host, const nsACString& aTrrServer,
+                     uint16_t type, uint16_t flags, uint16_t af, bool pb,
+                     const nsACString& originSuffix);
   bool operator==(const nsHostKey& other) const;
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   PLDHashNumber Hash() const;
@@ -378,7 +380,8 @@ class AHostResolver {
   virtual LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
                                             const nsTArray<nsCString>* aResult,
                                             uint32_t aTtl, bool pb) = 0;
-  virtual nsresult GetHostRecord(const nsACString& host, uint16_t type,
+  virtual nsresult GetHostRecord(const nsACString& host,
+                                 const nsACString& aTrrServer, uint16_t type,
                                  uint16_t flags, uint16_t af, bool pb,
                                  const nsCString& originSuffix,
                                  nsHostRecord** result) {
@@ -428,7 +431,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
    * host lookup cannot be canceled (cancelation can be layered above this by
    * having the callback implementation return without doing anything).
    */
-  nsresult ResolveHost(const nsACString& hostname, uint16_t type,
+  nsresult ResolveHost(const nsACString& hostname, const nsACString& trrServer,
+                       uint16_t type,
                        const mozilla::OriginAttributes& aOriginAttributes,
                        uint16_t flags, uint16_t af,
                        nsResolveHostCallback* callback);
@@ -440,7 +444,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
    * executes the callback if the callback is still pending with the given
    * status.
    */
-  void DetachCallback(const nsACString& hostname, uint16_t type,
+  void DetachCallback(const nsACString& hostname, const nsACString& trrServer,
+                      uint16_t type,
                       const mozilla::OriginAttributes& aOriginAttributes,
                       uint16_t flags, uint16_t af,
                       nsResolveHostCallback* callback, nsresult status);
@@ -452,7 +457,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
    * parameters passed to ResolveHost.  If this is the last callback associated
    * with the host record, it is removed from any request queues it might be on.
    */
-  void CancelAsyncRequest(const nsACString& host, uint16_t type,
+  void CancelAsyncRequest(const nsACString& host, const nsACString& trrServer,
+                          uint16_t type,
                           const mozilla::OriginAttributes& aOriginAttributes,
                           uint16_t flags, uint16_t af,
                           nsIDNSListener* aListener, nsresult status);
@@ -490,9 +496,9 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
                                     const nsTArray<nsCString>* aResult,
                                     uint32_t aTtl, bool pb) override;
-  nsresult GetHostRecord(const nsACString& host, uint16_t type, uint16_t flags,
-                         uint16_t af, bool pb, const nsCString& originSuffix,
-                         nsHostRecord** result) override;
+  nsresult GetHostRecord(const nsACString& host, const nsACString& trrServer,
+                         uint16_t type, uint16_t flags, uint16_t af, bool pb,
+                         const nsCString& originSuffix, nsHostRecord** result) override;
   nsresult TrrLookup_unlocked(nsHostRecord*,
                               mozilla::net::TRR* pushedTRR = nullptr) override;
 

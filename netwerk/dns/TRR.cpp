@@ -218,7 +218,11 @@ nsresult TRR::SendHTTPRequest() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString uri;
-    gTRRService->GetURI(uri);
+    if (!mRec || mRec->mTrrServer.IsEmpty()) {
+      gTRRService->GetURI(uri);
+    } else {
+      uri = mRec->mTrrServer;
+    }
     uri.Append(NS_LITERAL_CSTRING("?dns="));
     uri.Append(body);
     LOG(("TRR::SendHTTPRequest GET dns=%s\n", body.get()));
@@ -228,7 +232,11 @@ nsresult TRR::SendHTTPRequest() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString uri;
-    gTRRService->GetURI(uri);
+    if (!mRec || mRec->mTrrServer.IsEmpty()) {
+      gTRRService->GetURI(uri);
+    } else {
+      uri = mRec->mTrrServer;
+    }
     rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
   }
   if (NS_FAILED(rv)) {
@@ -268,7 +276,9 @@ nsresult TRR::SendHTTPRequest() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString cred;
-  gTRRService->GetCredentials(cred);
+  if (!mRec || mRec->mTrrServer.IsEmpty()) {
+    gTRRService->GetCredentials(cred);
+  }
   if (!cred.IsEmpty()) {
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Authorization"),
                                        cred, false);
@@ -469,7 +479,8 @@ nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
   RefPtr<nsHostRecord> hostRecord;
   nsresult rv;
   rv = mHostResolver->GetHostRecord(
-      mHost, (mType != TRRTYPE_TXT) ? 0 : nsIDNSService::RESOLVE_TYPE_TXT,
+      mHost, EmptyCString(),
+      (mType != TRRTYPE_TXT) ? 0 : nsIDNSService::RESOLVE_TYPE_TXT,
       pushedRec->flags, pushedRec->af, pushedRec->pb, pushedRec->originSuffix,
       getter_AddRefs(hostRecord));
   if (NS_FAILED(rv)) {
@@ -498,6 +509,9 @@ TRR::OnPush(nsIHttpChannel* associated, nsIHttpChannel* pushed) {
   LOG(("TRR::OnPush entry\n"));
   MOZ_ASSERT(associated == mChannel);
   if (!mRec) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!mRec->mTrrServer.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1041,9 +1055,11 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   nsCOMPtr<nsIChannel> channel;
   channel.swap(mChannel);
 
-  // Bad content is still considered "okay" if the HTTP response is okay
-  gTRRService->TRRIsOkay(NS_SUCCEEDED(aStatusCode) ? TRRService::OKAY_NORMAL
-                                                   : TRRService::OKAY_BAD);
+  if (!mRec || mRec->mTrrServer.IsEmpty()) {
+    // Bad content is still considered "okay" if the HTTP response is okay
+    gTRRService->TRRIsOkay(NS_SUCCEEDED(aStatusCode) ? TRRService::OKAY_NORMAL
+                                                     : TRRService::OKAY_BAD);
+  }
 
   // if status was "fine", parse the response and pass on the answer
   if (!mFailed && NS_SUCCEEDED(aStatusCode)) {
