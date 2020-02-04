@@ -105,6 +105,10 @@ check_and_add_gcc_warning('-Wduplicated-cond')
 # catches unintentional switch case fallthroughs
 check_and_add_gcc_warning('-Wimplicit-fallthrough', cxx_compiler)
 
+# catches unused variable/function declarations
+check_and_add_gcc_warning('-Wunused-function', cxx_compiler)
+check_and_add_gcc_warning('-Wunused-variable', cxx_compiler)
+
 # catches expressions used as a null pointer constant
 # XXX: at the time of writing, the version of clang used on the OS X test
 # machines has a bug that causes it to reject some valid files if both
