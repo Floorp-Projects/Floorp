@@ -24,7 +24,7 @@
 #include "jsapi.h"
 
 #include "ds/Fifo.h"
-#include "jit/Ion.h"
+#include "jit/JitContext.h"
 #include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CompileOptions.h"
 #include "js/SourceText.h"

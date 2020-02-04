@@ -44,6 +44,7 @@
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
+#include "jit/Ion.h"
 #include "jit/JitRealm.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{DetachArrayBuffer,GetArrayBufferLengthAndData,NewArrayBufferWithContents}
