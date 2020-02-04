@@ -576,6 +576,35 @@ add_task(async function ignoreEndsEngagement() {
       );
     });
   });
+  resetProvider();
+});
+
+// Since we coupled the logic that decides whether to show the tip with our
+// gURLBar.search call, we should make sure search isn't called when
+// the conditions for a tip are met but the provider is disabled.
+add_task(async function noActionWhenDisabled() {
+  await setDefaultEngine("Bing");
+  await withDNSRedirect("www.bing.com", "/", async url => {
+    await checkTab(window, url, TIPS.REDIRECT);
+  });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+        false,
+      ],
+    ],
+  });
+
+  await withDNSRedirect("www.bing.com", "/", async url => {
+    Assert.ok(
+      !UrlbarTestUtils.isPopupOpen(window),
+      "The UrlbarView should not be open."
+    );
+  });
+
+  await SpecialPowers.popPrefEnv();
 });
 
 async function checkTip(win, expectedTip, closeView = true) {
