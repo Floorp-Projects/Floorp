@@ -744,12 +744,6 @@ namespace mozilla {
 namespace dom {
 
 /**
- * A test for whether WebIDL methods that should only be visible to
- * chrome or XBL scopes should be exposed.
- */
-bool IsChromeOrXBL(JSContext* cx, JSObject* /* unused */);
-
-/**
  * This is used to prevent UA widget code from directly creating and adopting
  * nodes via the content document, since they should use the special
  * create-and-insert apis instead.
@@ -760,12 +754,12 @@ bool IsNotUAWidget(JSContext* cx, JSObject* /* unused */);
  * A test for whether WebIDL methods that should only be visible to
  * chrome, XBL scopes, or UA Widget scopes.
  */
-bool IsChromeOrXBLOrUAWidget(JSContext* cx, JSObject* /* unused */);
+bool IsChromeOrUAWidget(JSContext* cx, JSObject* /* unused */);
 
 /**
- * Same as IsChromeOrXBLOrUAWidget but can be used in worker threads as well.
+ * Same as IsChromeOrUAWidget but can be used in worker threads as well.
  */
-bool ThreadSafeIsChromeOrXBLOrUAWidget(JSContext* cx, JSObject* obj);
+bool ThreadSafeIsChromeOrUAWidget(JSContext* cx, JSObject* obj);
 
 }  // namespace dom
 

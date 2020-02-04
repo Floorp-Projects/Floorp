@@ -8,7 +8,7 @@
  * This interface is supported by command events, which are dispatched to
  * XUL elements as a result of mouse or keyboard activation.
  */
-[Func="IsChromeOrXBL",
+[ChromeOnly,
  Exposed=Window]
 interface XULCommandEvent : UIEvent
 {

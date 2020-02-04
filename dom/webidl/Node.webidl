@@ -115,7 +115,7 @@ interface Node : EventTarget {
   readonly attribute boolean isNativeAnonymous;
 
   // Maybe this would be useful to authors? https://github.com/whatwg/dom/issues/826
-  [Func="IsChromeOrXBLOrUAWidget", Pure, BinaryName="containingShadow"]
+  [Func="IsChromeOrUAWidget", Pure, BinaryName="containingShadow"]
   readonly attribute ShadowRoot? containingShadowRoot;
 
   // Mozilla devtools-specific stuff

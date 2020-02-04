@@ -83,8 +83,11 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JS::Compartment* aCompartment,
   // remote XUL domains, _except_ if we have an additional pref override set.
   //
   // Note that we can't quite remove this yet, even though we never actually
-  // use XBL scopes, because some code (including the security manager) uses
-  // this boolean to make decisions that we rely on in our test infrastructure.
+  // use XBL scopes, because the security manager uses this boolean to make
+  // decisions that we rely on in our test infrastructure.
+  //
+  // FIXME(emilio): Now that the security manager is the only caller probably
+  // should be renamed, but what's a good name for this?
   mAllowContentXBLScope = !RemoteXULForbidsXBLScope(aFirstGlobal);
 }
 

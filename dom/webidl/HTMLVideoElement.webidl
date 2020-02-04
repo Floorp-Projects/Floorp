@@ -50,10 +50,10 @@ partial interface HTMLVideoElement {
 
   // Attributes for builtin video controls to lock screen orientation.
   // True if video controls should lock orientation when fullscreen.
-  [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrXBLOrUAWidget"]
+  [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrUAWidget"]
     readonly attribute boolean mozOrientationLockEnabled;
   // True if screen orientation is locked by video controls.
-  [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrXBLOrUAWidget"]
+  [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrUAWidget"]
     attribute boolean mozIsOrientationLocked;
 
   // Clones the frames playing in this <video> to the target. Cloning ends
@@ -63,17 +63,17 @@ partial interface HTMLVideoElement {
   // installed in this <video>'s MediaDecoder, or selected video
   // MediaStreamTrack, whichever is available first. Note that it might never
   // resolve.
-  [Throws, Func="IsChromeOrXBLOrUAWidget"]
+  [Throws, Func="IsChromeOrUAWidget"]
     Promise<void> cloneElementVisually(HTMLVideoElement target);
 
   // Stops a <video> from cloning visually. Does nothing if the <video>
   // wasn't cloning in the first place.
-  [Func="IsChromeOrXBLOrUAWidget"]
+  [Func="IsChromeOrUAWidget"]
     void stopCloningElementVisually();
 
   // Returns true if the <video> is being cloned visually to another
   // <video> element (see cloneElementVisually).
-  [Func="IsChromeOrXBLOrUAWidget"]
+  [Func="IsChromeOrUAWidget"]
     readonly attribute boolean isCloningElementVisually;
 };
 

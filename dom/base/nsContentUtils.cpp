@@ -2141,24 +2141,6 @@ bool nsContentUtils::ThreadsafeIsCallerChrome() {
                            : IsCurrentThreadRunningChromeWorker();
 }
 
-bool nsContentUtils::IsCallerContentXBL() {
-  JSContext* cx = GetCurrentJSContext();
-  if (!cx) return false;
-
-  JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
-  if (!realm) return false;
-
-  // For remote XUL, we run XBL in the XUL scope. Given that we care about
-  // compat and not security for remote XUL, just always claim to be XBL.
-  if (!xpc::AllowContentXBLScope(realm)) {
-    MOZ_ASSERT(
-        nsContentUtils::AllowXULXBLForPrincipal(xpc::GetRealmPrincipal(realm)));
-    return true;
-  }
-
-  return false;
-}
-
 bool nsContentUtils::IsCallerUAWidget() {
   JSContext* cx = GetCurrentJSContext();
   if (!cx) {
@@ -6001,7 +5983,7 @@ bool nsContentUtils::CheckMayLoad(nsIPrincipal* aPrincipal,
 
 /* static */
 bool nsContentUtils::CanAccessNativeAnon() {
-  return LegacyIsCallerChromeOrNativeCode() || IsCallerContentXBL();
+  return LegacyIsCallerChromeOrNativeCode();
 }
 
 /* static */

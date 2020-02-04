@@ -17,10 +17,10 @@ interface mixin ParentNode {
   [Pure]
   readonly attribute unsigned long childElementCount;
 
-  [Func="IsChromeOrXBL"]
+  [ChromeOnly]
   HTMLCollection getElementsByAttribute(DOMString name,
                                         [TreatNullAs=EmptyString] DOMString value);
-  [Throws, Func="IsChromeOrXBL"]
+  [ChromeOnly, Throws]
   HTMLCollection getElementsByAttributeNS(DOMString? namespaceURI, DOMString name,
                                           [TreatNullAs=EmptyString] DOMString value);
 

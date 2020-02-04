@@ -1259,8 +1259,7 @@ nsScriptSecurityManager::PrincipalWithOA(
       return NS_ERROR_INVALID_ARG;
     }
     RefPtr<ContentPrincipal> copy = new ContentPrincipal();
-    ContentPrincipal* contentPrincipal =
-        static_cast<ContentPrincipal*>(aPrincipal);
+    auto* contentPrincipal = static_cast<ContentPrincipal*>(aPrincipal);
     nsresult rv = copy->Init(contentPrincipal, attrs);
     NS_ENSURE_SUCCESS(rv, rv);
     copy.forget(aReturnPrincipal);
