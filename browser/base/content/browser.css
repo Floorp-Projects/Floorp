@@ -720,7 +720,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 /* Customize mode is difficult to use at moderate window width if the Urlbar
    remains 350px wide. */
-:root[customize-entered] #urlbar-container {
+:root[customizing] #urlbar-container {
   min-width: 280px;
 }
 
@@ -735,7 +735,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   #nav-bar[downloadsbuttonshown] #urlbar-container {
     min-width: 280px;
   }
-  :root[customize-entered] #urlbar-container {
+  :root[customizing] #urlbar-container {
     min-width: 245px;
   }
   #identity-icon-labels {
@@ -772,8 +772,8 @@ toolbarspring {
   max-width: 112px;
 }
 
-:root[customize-entered] toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
-:root[customize-entered] toolbarspring {
+:root[customizing] toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
+:root[customizing] toolbarspring {
   /* At very small window widths, expand the springs slightly so that they
      can be manipulated with the mouse. */
   min-width: 10px;
