@@ -66,7 +66,7 @@ class WebExtension(Perftest):
             self.control_server.port,
             self.post_startup_delay,
             host=self.config["host"],
-            b_port=int(self.benchmark.port),
+            b_port=self.benchmark_port,
             debug_mode=1 if self.debug_mode else 0,
             browser_cycle=test.get("browser_cycle", 1),
         )
@@ -154,6 +154,7 @@ class WebExtension(Perftest):
     def serve_benchmark_source(self, test):
         # benchmark-type tests require the benchmark test to be served out
         self.benchmark = Benchmark(self.config, test)
+        self.benchmark_port = int(self.benchmark.port)
 
     def install_raptor_webext(self):
         # must intall raptor addon each time because we dynamically update some content
