@@ -425,11 +425,7 @@
 
 /* Measuring Tool Highlighter */
 
-:-moz-native-anonymous .measuring-tool-tool {
-  pointer-events: auto;
-}
-
-:-moz-native-anonymous .measuring-tool-root {
+:-moz-native-anonymous .measuring-tool-highlighter-root {
   position: absolute;
   top: 0;
   left: 0;
@@ -437,69 +433,25 @@
   cursor: crosshair;
 }
 
-:-moz-native-anonymous .measuring-tool-elements {
+:-moz-native-anonymous .measuring-tool-highlighter-elements {
   position: absolute;
 }
 
-:-moz-native-anonymous .measuring-tool-root path {
-  shape-rendering: geometricPrecision;
-  pointer-events: auto;
-}
-
-:-moz-native-anonymous .measuring-tool-root .measuring-tool-box-path,
-:-moz-native-anonymous .measuring-tool-root .measuring-tool-diagonal-path {
+:-moz-native-anonymous .measuring-tool-highlighter-root path {
+  shape-rendering: crispEdges;
   fill: rgba(135, 206, 235, 0.6);
   stroke: var(--highlighter-guide-color);
+  pointer-events: none;
 }
 
-:-moz-native-anonymous .measuring-tool-root circle {
+:-moz-native-anonymous .dragging path {
+  fill: rgba(135, 206, 235, 0.6);
   stroke: var(--highlighter-guide-color);
-  stroke-width: 2px;
-  fill: #fff;
-  vector-effect: non-scaling-stroke;
-}
-
-:-moz-native-anonymous .measuring-tool-handler-top,
-:-moz-native-anonymous .measuring-tool-handler-bottom {
-  cursor: ns-resize;
-}
-
-:-moz-native-anonymous .measuring-tool-handler-right,
-:-moz-native-anonymous .measuring-tool-handler-left {
-  cursor: ew-resize;
-}
-
-:-moz-native-anonymous .measuring-tool-handler-topleft,
-:-moz-native-anonymous .measuring-tool-handler-bottomright {
-  cursor: nwse-resize;
-}
-
-:-moz-native-anonymous .measuring-tool-handler-topright,
-:-moz-native-anonymous .measuring-tool-handler-bottomleft {
-  cursor: nesw-resize;
-}
-
-:-moz-native-anonymous .mirrored .measuring-tool-handler-topleft,
-:-moz-native-anonymous .mirrored .measuring-tool-handler-bottomright {
-  cursor: nesw-resize;
-}
-
-:-moz-native-anonymous .mirrored .measuring-tool-handler-topright,
-:-moz-native-anonymous .mirrored .measuring-tool-handler-bottomleft {
-  cursor: nwse-resize;
-}
-
-:-moz-native-anonymous [class^=measuring-tool-handler].dragging {
-  fill: var(--highlighter-guide-color);
-}
-
-:-moz-native-anonymous .dragging .measuring-tool-box-path,
-:-moz-native-anonymous .dragging .measuring-tool-diagonal-path {
   opacity: 0.45;
 }
 
-:-moz-native-anonymous .measuring-tool-label-size,
-:-moz-native-anonymous .measuring-tool-label-position {
+:-moz-native-anonymous .measuring-tool-highlighter-label-size,
+:-moz-native-anonymous .measuring-tool-highlighter-label-position {
   position: absolute;
   top: 0;
   left: 0;
@@ -514,19 +466,22 @@
   box-sizing: border-box;
 }
 
-:-moz-native-anonymous .measuring-tool-label-position {
+:-moz-native-anonymous .measuring-tool-highlighter-label-position {
   color: #fff;
   background: hsla(214, 13%, 24%, 0.8);
 }
 
-:-moz-native-anonymous .measuring-tool-label-size {
+:-moz-native-anonymous .measuring-tool-highlighter-label-size {
   color: var(--highlighter-bubble-text-color);
   background: var(--highlighter-bubble-background-color);
   border: 1px solid var(--highlighter-bubble-border-color);
   line-height: 1.5em;
 }
 
-:-moz-native-anonymous [class^=measuring-tool-guide] {
+:-moz-native-anonymous .measuring-tool-highlighter-guide-top,
+:-moz-native-anonymous .measuring-tool-highlighter-guide-right,
+:-moz-native-anonymous .measuring-tool-highlighter-guide-bottom,
+:-moz-native-anonymous .measuring-tool-highlighter-guide-left {
   stroke: var(--highlighter-guide-color);
   stroke-dasharray: 5 3;
   shape-rendering: crispEdges;
