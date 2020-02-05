@@ -28,9 +28,12 @@
 /**
  * Confirmation dialog of removing sites selected
  */
+:root[windowtype="Browser:SiteDataRemoveSelected"] {
+  min-height: 36em;
+}
+
 #SiteDataRemoveSelectedDialog {
   padding: 16px;
-  min-height: 36em;
 }
 
 #contentContainer {
