@@ -345,7 +345,7 @@ class MarkupContextMenu {
   _showDOMProperties() {
     this.toolbox.openSplitConsole().then(() => {
       const { hud } = this.toolbox.getPanel("webconsole");
-      hud.ui.wrapper.dispatchEvaluateExpression("inspect($0)");
+      hud.ui.wrapper.dispatchEvaluateExpression("inspect($0, true)");
     });
   }
 

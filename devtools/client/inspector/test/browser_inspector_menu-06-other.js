@@ -2,22 +2,16 @@
 http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const {
-  getHistoryEntries,
-} = require("devtools/client/webconsole/selectors/history");
-
 // Tests for menuitem functionality that doesn't fit into any specific category
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 add_task(async function() {
   const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  await testShowDOMProperties();
   await testDuplicateNode();
   await testDeleteNode();
   await testDeleteTextNode();
   await testDeleteRootNode();
   await testScrollIntoView();
-  // This needs to be last as the webconsole `inspect` command impact the selected node in
-  // the inspector.
-  await testShowDOMProperties();
 
   async function testDuplicateNode() {
     info("Testing 'Duplicate Node' menu item for normal elements.");
@@ -135,12 +129,25 @@ add_task(async function() {
     await consoleOpened;
 
     const webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
-    const messagesAdded = webconsoleUI.once("new-messages");
-    await messagesAdded;
-    info("Checking if 'inspect($0)' was evaluated");
 
-    const state = webconsoleUI.wrapper.getStore().getState();
-    ok(getHistoryEntries(state)[0] === "inspect($0)");
+    await poll(
+      () => {
+        const messages = [
+          ...webconsoleUI.outputNode.querySelectorAll(".message"),
+        ];
+        const nodeMessage = messages.find(m => m.textContent.includes("body"));
+        // wait for the object to be expanded
+        return (
+          nodeMessage &&
+          nodeMessage.querySelectorAll(".object-inspector .node").length > 10
+        );
+      },
+      "Waiting for the element node to be expanded",
+      10,
+      1000
+    );
+
+    info("Close split console");
     await toolbox.toggleSplitConsole();
   }
 
