@@ -32,9 +32,13 @@ void SharedMessageBody::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
   MOZ_ASSERT(!mCloneData && !mRefData);
   MOZ_ASSERT(aRefMessageBodyService);
 
+  JS::CloneDataPolicy cloneDataPolicy;
+  // TODO: this is going to change in the next patches.
+  cloneDataPolicy.allowIntraClusterClonableSharedObjects();
+
   mCloneData = MakeUnique<ipc::StructuredCloneData>(
       JS::StructuredCloneScope::UnknownDestination, mSupportsTransferring);
-  mCloneData->Write(aCx, aValue, aTransfers, aRv);
+  mCloneData->Write(aCx, aValue, aTransfers, cloneDataPolicy, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
