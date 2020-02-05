@@ -16,6 +16,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
@@ -40,8 +41,10 @@ import mozilla.components.support.migration.GleanMetrics.MigrationHistory
 import mozilla.components.support.migration.GleanMetrics.MigrationLogins
 import mozilla.components.support.migration.GleanMetrics.MigrationTelemetryIdentifiers
 import mozilla.components.support.migration.GleanMetrics.MigrationOpenTabs
+import mozilla.components.support.migration.GleanMetrics.MigrationSearch
 import mozilla.components.support.migration.GleanMetrics.MigrationSettings
 import java.io.File
+import java.lang.AssertionError
 import java.lang.Exception
 import java.util.Date
 import java.util.UUID
@@ -97,6 +100,11 @@ sealed class Migration(val currentVersion: Int) {
      * Migrates Fennec's telemetry identifiers.
      */
     object TelemetryIdentifiers : Migration(currentVersion = 1)
+
+    /**
+     * Migrates Fennec's default search engine.
+     */
+    object SearchEngine : Migration(currentVersion = 1)
 }
 
 /**
@@ -167,6 +175,12 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
      * @param cause Original exception which caused the problem.
      */
     class TelemetryIdentifierException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating the default search engine.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateSearchEngineException(cause: Exception) : FennecMigratorException(cause)
 }
 
 /**
@@ -188,6 +202,7 @@ class FennecMigrator private constructor(
     private val loginsStorage: AsyncLoginsStorage?,
     private val loginsStorageKey: String?,
     private val sessionManager: SessionManager?,
+    private val searchEngineManager: SearchEngineManager?,
     private val accountManager: FxaAccountManager?,
     private val engine: Engine?,
     private val addonCollectionProvider: AddonCollectionProvider?,
@@ -209,6 +224,7 @@ class FennecMigrator private constructor(
         private var loginsStorage: AsyncLoginsStorage? = null
         private var loginsStorageKey: String? = null
         private var sessionManager: SessionManager? = null
+        private var searchEngineManager: SearchEngineManager? = null
         private var accountManager: FxaAccountManager? = null
         private var engine: Engine? = null
         private var addonCollectionProvider: AddonCollectionProvider? = null
@@ -304,6 +320,22 @@ class FennecMigrator private constructor(
         }
 
         /**
+         * Enable default search engine migration.
+         *
+         * @param searchEngineManager An instance of [SearchEngineManager] used for restoring the
+         * migrated default search engine.
+         * @param version Version of the migration; defaults to the current version.
+         */
+        fun migrateSearchEngine(
+            searchEngineManager: SearchEngineManager,
+            version: Int = Migration.SearchEngine.currentVersion
+        ): Builder {
+            this.searchEngineManager = searchEngineManager
+            migrations.add(VersionedMigration(Migration.SearchEngine, version))
+            return this
+        }
+
+        /**
          * Enable FxA state migration.
          *
          * @param accountManager An instance of [FxaAccountManager] used for authenticating using a migrated account.
@@ -366,6 +398,7 @@ class FennecMigrator private constructor(
                 loginsStorage,
                 loginsStorageKey,
                 sessionManager,
+                searchEngineManager,
                 accountManager,
                 engine,
                 addonCollectionProvider,
@@ -536,6 +569,7 @@ class FennecMigrator private constructor(
                 Migration.Settings -> migrateSharedPrefs()
                 Migration.Addons -> migrateAddons()
                 Migration.TelemetryIdentifiers -> migrateTelemetryIdentifiers()
+                Migration.SearchEngine -> migrateSearchEngine()
             }
 
             val migrationRun = when (migrationResult) {
@@ -555,6 +589,7 @@ class FennecMigrator private constructor(
                         Migration.Settings -> MigrationSettings.anyFailures.set(true)
                         Migration.Addons -> MigrationAddons.anyFailures.set(true)
                         Migration.TelemetryIdentifiers -> MigrationTelemetryIdentifiers.anyFailures.set(true)
+                        Migration.SearchEngine -> MigrationSearch.anyFailures.set(true)
                     }
                     setFailure(versionedMigration.migration)
 
@@ -956,6 +991,50 @@ class FennecMigrator private constructor(
                 MigrationSettings.telemetryEnabled.set(success.telemetry)
                 result
             }
+        }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught")
+    private suspend fun migrateSearchEngine(): Result<SearchEngineMigrationResult> {
+        val manager = searchEngineManager
+            ?: throw AssertionError("Migrating search engines without search engine manager set")
+
+        try {
+            val result = SearchEngineMigration.migrate(context, manager)
+
+            if (result is Result.Failure<SearchEngineMigrationResult>) {
+                val migrationFailureWrapper = result.throwables.first() as SearchEngineMigrationException
+                return when (val failure = migrationFailureWrapper.failure) {
+                    is SearchEngineMigrationResult.Failure.NoDefault -> {
+                        logger.error("Missing search engine default: $failure")
+                        crashReporter.submitCaughtException(migrationFailureWrapper)
+                        MigrationSearch.failureReason.add(FailureReasonTelemetryCodes.SEARCH_NO_DEFAULT.code)
+                        result
+                    }
+
+                    is SearchEngineMigrationResult.Failure.NoMatch -> {
+                        logger.error("Could not find matching search engine: $failure")
+                        crashReporter.submitCaughtException(migrationFailureWrapper)
+                        MigrationSearch.failureReason.add(FailureReasonTelemetryCodes.SEARCH_NO_MATCH.code)
+                        result
+                    }
+                }
+            }
+
+            val migrationSuccess = result as Result.Success<SearchEngineMigrationResult>
+            return when (migrationSuccess.value as SearchEngineMigrationResult.Success) {
+                is SearchEngineMigrationResult.Success.SearchEngineMigrated -> {
+                    logger.debug("Migrated default search engine")
+                    MigrationSearch.successReason.add(SuccessReasonTelemetryCodes.SEARCH_MIGRATED.code)
+                    result
+                }
+            }
+        } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateSearchEngineException(e)
+            )
+            MigrationSearch.failureReason.add(FailureReasonTelemetryCodes.SEARCH_EXCEPTION.code)
+            return Result.Failure(e)
         }
     }
 

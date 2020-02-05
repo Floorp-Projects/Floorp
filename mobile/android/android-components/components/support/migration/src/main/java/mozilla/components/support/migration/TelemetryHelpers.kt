@@ -16,6 +16,7 @@ internal fun Migration.telemetryIdentifier(): String {
         Migration.Settings -> "settings"
         Migration.Addons -> "addons"
         Migration.TelemetryIdentifiers -> "telemetry_identifiers"
+        Migration.SearchEngine -> "search"
     }
 }
 
@@ -64,6 +65,10 @@ internal enum class FailureReasonTelemetryCodes(val code: Int) {
 
     TELEMETRY_IDENTIFIERS_MISSING_PROFILE(29),
     TELEMETRY_IDENTIFIERS_MIGRATE_EXCEPTION(30),
+
+    SEARCH_NO_DEFAULT(31),
+    SEARCH_NO_MATCH(32),
+    SEARCH_EXCEPTION(33)
 }
 
 @SuppressWarnings("MagicNumber")
@@ -94,4 +99,5 @@ internal enum class SuccessReasonTelemetryCodes(val code: Int) {
     TELEMETRY_IDENTIFIERS_MIGRATED(16),
 
     FXA_WILL_RETRY(17),
+    SEARCH_MIGRATED(18)
 }

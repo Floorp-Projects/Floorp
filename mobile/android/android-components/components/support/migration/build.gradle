@@ -64,9 +64,11 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 dependencies {
     implementation project(':concept-engine')
-    implementation project(':browser-session')
 
+    implementation project(':browser-search')
+    implementation project(':browser-session')
     implementation project(':browser-storage-sync')
+
     implementation project(':service-firefox-accounts')
     implementation project(':service-sync-logins')
     implementation project(':service-glean')

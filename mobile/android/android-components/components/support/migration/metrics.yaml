@@ -19,6 +19,7 @@ migration:
       - settings
       - telemetry_identifiers
       - addons
+      - search
     send_in_pings:
       - migration
     bugs:
@@ -741,6 +742,50 @@ migration.addons:
       - https://github.com/mozilla-mobile/fenix/issues/5888
     data_reviews:
       - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.search:
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/5818
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5819#pullrequestreview-353890362
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  failure_reason:
+    type: counter
+    description: >
+      Why this migration failed. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/5818
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5819#pullrequestreview-353890362
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  success_reason:
+    type: counter
+    description: >
+      Why this migration succeeded. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/5818
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5819#pullrequestreview-353890362
     notification_emails:
       - fenix-core@mozilla.com
     expires: 2020-10-01
