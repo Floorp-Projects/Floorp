@@ -1140,15 +1140,8 @@ class nsIFrame : public nsQueryFrame {
    * was stored in a frame property.
    */
   inline nsPoint GetNormalPosition(bool* aHasProperty = nullptr) const;
-
-  mozilla::LogicalPoint GetLogicalNormalPosition(
-      mozilla::WritingMode aWritingMode, const nsSize& aContainerSize) const {
-    // Subtract the size of this frame from the container size to get
-    // the correct position in rtl frames where the origin is on the
-    // right instead of the left
-    return mozilla::LogicalPoint(aWritingMode, GetNormalPosition(),
-                                 aContainerSize - mRect.Size());
-  }
+  inline mozilla::LogicalPoint GetLogicalNormalPosition(
+      mozilla::WritingMode aWritingMode, const nsSize& aContainerSize) const;
 
   virtual nsPoint GetPositionOfChildIgnoringScrolling(const nsIFrame* aChild) {
     return aChild->GetPosition();
@@ -5061,22 +5054,6 @@ template <bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
 
   // We made it to the end without returning early, so the list is sorted.
   return true;
-}
-
-// Needs to be defined here rather than nsIFrameInlines.h, because it is used
-// within this header.
-nsPoint nsIFrame::GetNormalPosition(bool* aHasProperty) const {
-  nsPoint* normalPosition = GetProperty(NormalPositionProperty());
-  if (normalPosition) {
-    if (aHasProperty) {
-      *aHasProperty = true;
-    }
-    return *normalPosition;
-  }
-  if (aHasProperty) {
-    *aHasProperty = false;
-  }
-  return GetPosition();
 }
 
 #endif /* nsIFrame_h___ */
