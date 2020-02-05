@@ -63,12 +63,12 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   using AssertedScopeKind = typename Base::AssertedScopeKind;
 
  public:
-  BinASTParser(JSContext* cx, ParseInfo& parseInfo,
+  BinASTParser(JSContext* cx, CompilationInfo& compilationInfo,
                const JS::ReadOnlyCompileOptions& options,
                HandleScriptSourceObject sourceObject,
                Handle<LazyScript*> lazyScript = nullptr)
-      : BinASTParserPerTokenizer<Tok>(cx, parseInfo, options, sourceObject,
-                                      lazyScript) {}
+      : BinASTParserPerTokenizer<Tok>(cx, compilationInfo, options,
+                                      sourceObject, lazyScript) {}
   ~BinASTParser() {}
 
  protected:

@@ -11,7 +11,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompilation.h"
-#include "frontend/ParseInfo.h"
+#include "frontend/CompilationInfo.h"
 #include "gc/HashUtil.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
@@ -325,12 +325,12 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     }
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::ParseInfo parseInfo(cx, allocScope);
-    if (!parseInfo.initFromOptions(cx, options)) {
+    frontend::CompilationInfo compilationInfo(cx, allocScope);
+    if (!compilationInfo.initFromOptions(cx, options)) {
       return false;
     }
 
-    frontend::EvalScriptInfo info(cx, parseInfo, options, env, enclosing);
+    frontend::EvalScriptInfo info(cx, compilationInfo, options, env, enclosing);
     RootedScript compiled(cx, frontend::CompileEvalScript(info, srcBuf));
     if (!compiled) {
       return false;
@@ -423,12 +423,12 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
     }
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::ParseInfo parseInfo(cx, allocScope);
-    if (!parseInfo.initFromOptions(cx, options)) {
+    frontend::CompilationInfo compilationInfo(cx, allocScope);
+    if (!compilationInfo.initFromOptions(cx, options)) {
       return false;
     }
 
-    frontend::EvalScriptInfo info(cx, parseInfo, options, env, enclosing);
+    frontend::EvalScriptInfo info(cx, compilationInfo, options, env, enclosing);
     JSScript* compiled = frontend::CompileEvalScript(info, srcBuf);
     if (!compiled) {
       return false;

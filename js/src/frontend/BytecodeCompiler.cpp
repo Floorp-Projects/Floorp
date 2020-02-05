@@ -395,12 +395,13 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 }
 #endif
 
-BytecodeCompiler::BytecodeCompiler(JSContext* cx, ParseInfo& parseInfo,
+BytecodeCompiler::BytecodeCompiler(JSContext* cx,
+                                   CompilationInfo& compilationInfo,
                                    const ReadOnlyCompileOptions& options)
     : keepAtoms(cx),
       cx(cx),
       options(options),
-      parseInfo(parseInfo),
+      compilationInfo(compilationInfo),
       directives(options.forceStrictMode()),
       script(cx) {}
 
@@ -426,8 +427,8 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
   if (info.canLazilyParse()) {
     syntaxParser.emplace(info.cx, info.options, sourceBuffer_.units(),
                          sourceBuffer_.length(),
-                         /* foldConstants = */ false, info.parseInfo, nullptr,
-                         nullptr, info.parseInfo.sourceObject);
+                         /* foldConstants = */ false, info.compilationInfo,
+                         nullptr, nullptr, info.compilationInfo.sourceObject);
     if (!syntaxParser->checkOptions()) {
       return false;
     }
@@ -435,8 +436,8 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
 
   parser.emplace(
       info.cx, info.options, sourceBuffer_.units(), sourceBuffer_.length(),
-      /* foldConstants = */ true, info.parseInfo, syntaxParser.ptrOr(nullptr),
-      nullptr, info.parseInfo.sourceObject);
+      /* foldConstants = */ true, info.compilationInfo,
+      syntaxParser.ptrOr(nullptr), nullptr, info.compilationInfo.sourceObject);
   parser->ss = info.scriptSource();
   return parser->checkOptions();
 }
@@ -445,10 +446,10 @@ bool BytecodeCompiler::internalCreateScript(HandleObject functionOrGlobal,
                                             uint32_t toStringStart,
                                             uint32_t toStringEnd,
                                             uint32_t sourceBufferLength) {
-  script =
-      JSScript::Create(cx, functionOrGlobal, options, parseInfo.sourceObject,
-                       /* sourceStart = */ 0, sourceBufferLength, toStringStart,
-                       toStringEnd, options.lineno, options.column);
+  script = JSScript::Create(
+      cx, functionOrGlobal, options, compilationInfo.sourceObject,
+      /* sourceStart = */ 0, sourceBufferLength, toStringStart, toStringEnd,
+      options.lineno, options.column);
   return script != nullptr;
 }
 
@@ -460,7 +461,7 @@ bool BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
                                                  : BytecodeEmitter::Normal;
   emitter.emplace(/* parent = */ nullptr, parser, sharedContext, script,
                   /* lazyScript = */ nullptr, options.lineno, options.column,
-                  parseInfo, emitterMode);
+                  compilationInfo, emitterMode);
   return emitter->init();
 }
 
@@ -536,13 +537,13 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     }
 
     // Reset preserved state before trying again.
-    info.parseInfo.usedNames.reset();
+    info.compilationInfo.usedNames.reset();
     parser->getTreeHolder().resetFunctionTree();
   }
 
   // We have just finished parsing the source. Inform the source so that we
   // can compute statistics (e.g. how much time our functions remain lazy).
-  info.parseInfo.sourceObject->source()->recordParseEnded();
+  info.compilationInfo.sourceObject->source()->recordParseEnded();
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!info.scriptSource()->tryCompressOffThread(cx)) {
@@ -573,7 +574,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   ModuleBuilder builder(cx, module, parser.ptr());
 
   RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
-  ModuleSharedContext modulesc(cx, module, info.parseInfo, enclosingScope,
+  ModuleSharedContext modulesc(cx, module, info.compilationInfo, enclosingScope,
                                builder);
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
@@ -724,33 +725,34 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ParseInfo parseInfo(cx, allocScope);
-  if (!parseInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope);
+  if (!compilationInfo.initFromOptions(cx, options)) {
     return nullptr;
   }
 
-  if (!parseInfo.sourceObject->source()->setBinASTSourceCopy(cx, src, len)) {
+  if (!compilationInfo.sourceObject->source()->setBinASTSourceCopy(cx, src,
+                                                                   len)) {
     return nullptr;
   }
 
   RootedScript script(
-      cx, JSScript::Create(cx, cx->global(), options, parseInfo.sourceObject, 0,
-                           len, 0, len, 0, 0));
+      cx, JSScript::Create(cx, cx->global(), options,
+                           compilationInfo.sourceObject, 0, len, 0, len, 0, 0));
 
   if (!script) {
     return nullptr;
   }
 
   Directives directives(options.forceStrictMode());
-  GlobalSharedContext globalsc(cx, ScopeKind::Global, parseInfo, directives,
-                               options.extraWarningsOption);
+  GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
+                               directives, options.extraWarningsOption);
 
-  frontend::BinASTParser<ParserT> parser(cx, parseInfo, options,
-                                         parseInfo.sourceObject);
+  frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
+                                         compilationInfo.sourceObject);
 
   // Metadata stores internal pointers, so we must use the same buffer every
   // time, including for lazy parses
-  ScriptSource* ss = parseInfo.sourceObject->source();
+  ScriptSource* ss = compilationInfo.sourceObject->source();
   BinASTSourceMetadata* metadata = nullptr;
   auto parsed =
       parser.parse(&globalsc, ss->binASTSource(), ss->length(), &metadata);
@@ -759,10 +761,10 @@ static JSScript* CompileGlobalBinASTScriptImpl(
     return nullptr;
   }
 
-  parseInfo.sourceObject->source()->setBinASTSourceMetadata(metadata);
+  compilationInfo.sourceObject->source()->setBinASTSourceMetadata(metadata);
 
   BytecodeEmitter bce(nullptr, &parser, &globalsc, script, nullptr, 0, 0,
-                      parseInfo);
+                      compilationInfo);
 
   if (!bce.init()) {
     return nullptr;
@@ -774,7 +776,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   }
 
   if (sourceObjectOut) {
-    *sourceObjectOut = parseInfo.sourceObject;
+    *sourceObjectOut = compilationInfo.sourceObject;
   }
 
   tellDebuggerAboutCompiledScript(cx, script);
@@ -814,12 +816,12 @@ static ModuleObject* InternalParseModule(
   options.allowHTMLComments = false;
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ParseInfo parseInfo(cx, allocScope);
-  if (!parseInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope);
+  if (!compilationInfo.initFromOptions(cx, options)) {
     return nullptr;
   }
 
-  ModuleInfo info(cx, parseInfo, options);
+  ModuleInfo info(cx, compilationInfo, options);
 
   AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
@@ -1005,12 +1007,13 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ParseInfo parseInfo(cx, allocScope);
-  parseInfo.initFromSourceObject(lazy->sourceObject());
+  CompilationInfo compilationInfo(cx, allocScope);
+  compilationInfo.initFromSourceObject(lazy->sourceObject());
 
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
-                                        /* foldConstants = */ true, parseInfo,
-                                        nullptr, lazy, parseInfo.sourceObject);
+                                        /* foldConstants = */ true,
+                                        compilationInfo, nullptr, lazy,
+                                        compilationInfo.sourceObject);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -1036,7 +1039,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   }
 
   BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), script,
-                      lazy, lazy->lineno(), lazy->column(), parseInfo,
+                      lazy, lazy->lineno(), lazy->column(), compilationInfo,
                       BytecodeEmitter::LazyFunction, fieldInitializers);
   if (!bce.init(pn->pn_pos)) {
     return false;
@@ -1090,16 +1093,16 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
       .setSelfHostingMode(false);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ParseInfo parseInfo(cx, allocScope);
-  parseInfo.initFromSourceObject(lazy->sourceObject());
+  CompilationInfo compilationInfo(cx, allocScope);
+  compilationInfo.initFromSourceObject(lazy->sourceObject());
 
   RootedScript script(cx, JSScript::CreateFromLazy(cx, lazy));
   if (!script) {
     return false;
   }
 
-  frontend::BinASTParser<ParserT> parser(cx, parseInfo, options,
-                                         parseInfo.sourceObject, lazy);
+  frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
+                                         compilationInfo.sourceObject, lazy);
 
   auto parsed =
       parser.parseLazyFunction(lazy->scriptSource(), lazy->sourceStart());
@@ -1111,7 +1114,7 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   FunctionNode* pn = parsed.unwrap();
 
   BytecodeEmitter bce(nullptr, &parser, pn->funbox(), script, lazy,
-                      lazy->lineno(), lazy->column(), parseInfo,
+                      lazy->lineno(), lazy->column(), compilationInfo,
                       BytecodeEmitter::LazyFunction);
 
   if (!bce.init(pn->pn_pos)) {
@@ -1152,12 +1155,12 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ParseInfo parseInfo(cx, allocScope);
-  if (!parseInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope);
+  if (!compilationInfo.initFromOptions(cx, options)) {
     return false;
   }
 
-  StandaloneFunctionInfo info(cx, parseInfo, options);
+  StandaloneFunctionInfo info(cx, compilationInfo, options);
 
   StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
   if (!compiler.prepare(allocScope, info)) {
@@ -1180,7 +1183,8 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
   // interpreted script.
   if (info.getScript()) {
     if (parameterListEnd) {
-      parseInfo.sourceObject->source()->setParameterListEnd(*parameterListEnd);
+      compilationInfo.sourceObject->source()->setParameterListEnd(
+          *parameterListEnd);
     }
     tellDebuggerAboutCompiledScript(cx, info.getScript());
   }
@@ -1226,7 +1230,7 @@ bool frontend::CompileStandaloneAsyncGenerator(
                                    FunctionAsyncKind::AsyncFunction);
 }
 
-bool frontend::ParseInfo::initFromOptions(
+bool frontend::CompilationInfo::initFromOptions(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options) {
   sourceObject = CreateScriptSourceObject(cx, options);
   return !!sourceObject;

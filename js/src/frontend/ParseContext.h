@@ -8,12 +8,11 @@
 #define frontend_ParseContext_h
 
 #include "ds/Nestable.h"
-
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/CompilationInfo.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/FunctionTree.h"
 #include "frontend/NameCollections.h"
-#include "frontend/ParseInfo.h"
 #include "frontend/SharedContext.h"
 #include "frontend/UsedNameTracker.h"
 
@@ -341,7 +340,7 @@ class ParseContext : public Nestable<ParseContext> {
 
  public:
   ParseContext(JSContext* cx, ParseContext*& parent, SharedContext* sc,
-               ErrorReporter& errorReporter, ParseInfo& parseInfo,
+               ErrorReporter& errorReporter, CompilationInfo& compilationInfo,
                Directives* newDirectives, bool isFull);
 
   MOZ_MUST_USE bool init();

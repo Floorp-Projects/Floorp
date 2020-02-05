@@ -12,7 +12,7 @@
 #include <new>
 
 #include "builtin/ModuleObject.h"
-#include "frontend/ParseInfo.h"
+#include "frontend/CompilationInfo.h"
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "gc/Allocator.h"
@@ -1706,7 +1706,8 @@ JS::ubi::Node::Size JS::ubi::Concrete<Scope>::size(
 }
 
 /* static */
-bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
+bool ScopeCreationData::create(JSContext* cx,
+                               frontend::CompilationInfo& compilationInfo,
                                Handle<FunctionScope::Data*> dataArg,
                                bool hasParameterExprs, bool needsEnvironment,
                                frontend::FunctionBox* funbox,
@@ -1730,19 +1731,17 @@ bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
     return false;
   }
 
-  *index = parseInfo.scopeCreationData.length();
-  return parseInfo.scopeCreationData.emplaceBack(
+  *index = compilationInfo.scopeCreationData.length();
+  return compilationInfo.scopeCreationData.emplaceBack(
       cx, ScopeKind::Function, enclosing, std::move(data.get()), envShape,
       funbox);
 }
 
 /* static */
-bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
-                               ScopeKind kind,
-                               Handle<LexicalScope::Data*> dataArg,
-                               uint32_t firstFrameSlot,
-                               Handle<AbstractScope> enclosing,
-                               ScopeIndex* index) {
+bool ScopeCreationData::create(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo, ScopeKind kind,
+    Handle<LexicalScope::Data*> dataArg, uint32_t firstFrameSlot,
+    Handle<AbstractScope> enclosing, ScopeIndex* index) {
   // The data that's passed in is from the frontend and is LifoAlloc'd.
   // Copy it now that we're creating a permanent VM scope.
   Rooted<UniquePtr<LexicalScope::Data>> data(
@@ -1757,12 +1756,13 @@ bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
     return false;
   }
 
-  *index = parseInfo.scopeCreationData.length();
-  return parseInfo.scopeCreationData.emplaceBack(
+  *index = compilationInfo.scopeCreationData.length();
+  return compilationInfo.scopeCreationData.emplaceBack(
       cx, kind, enclosing, std::move(data.get()), envShape);
 }
 
-bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
+bool ScopeCreationData::create(JSContext* cx,
+                               frontend::CompilationInfo& compilationInfo,
                                ScopeKind kind, Handle<VarScope::Data*> dataArg,
                                uint32_t firstFrameSlot, bool needsEnvironment,
                                Handle<AbstractScope> enclosing,
@@ -1782,13 +1782,14 @@ bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
     return false;
   }
 
-  *index = parseInfo.scopeCreationData.length();
-  return parseInfo.scopeCreationData.emplaceBack(
+  *index = compilationInfo.scopeCreationData.length();
+  return compilationInfo.scopeCreationData.emplaceBack(
       cx, kind, enclosing, std::move(data.get()), envShape);
 }
 
 /* static */
-bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
+bool ScopeCreationData::create(JSContext* cx,
+                               frontend::CompilationInfo& compilationInfo,
                                ScopeKind kind,
                                Handle<GlobalScope::Data*> dataArg,
                                ScopeIndex* index) {
@@ -1807,13 +1808,14 @@ bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
   // have names on them deleted.
   Rooted<AbstractScope> enclosing(cx);
 
-  *index = parseInfo.scopeCreationData.length();
-  return parseInfo.scopeCreationData.emplaceBack(cx, kind, enclosing,
-                                                 std::move(data.get()));
+  *index = compilationInfo.scopeCreationData.length();
+  return compilationInfo.scopeCreationData.emplaceBack(cx, kind, enclosing,
+                                                       std::move(data.get()));
 }
 
 /* static */
-bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
+bool ScopeCreationData::create(JSContext* cx,
+                               frontend::CompilationInfo& compilationInfo,
                                ScopeKind kind, Handle<EvalScope::Data*> dataArg,
                                Handle<AbstractScope> enclosing,
                                ScopeIndex* index) {
@@ -1831,13 +1833,14 @@ bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
     return false;
   }
 
-  *index = parseInfo.scopeCreationData.length();
-  return parseInfo.scopeCreationData.emplaceBack(
+  *index = compilationInfo.scopeCreationData.length();
+  return compilationInfo.scopeCreationData.emplaceBack(
       cx, kind, enclosing, std::move(data.get()), envShape);
 }
 
 /* static */
-bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
+bool ScopeCreationData::create(JSContext* cx,
+                               frontend::CompilationInfo& compilationInfo,
                                Handle<ModuleScope::Data*> dataArg,
                                HandleModuleObject module,
                                Handle<AbstractScope> enclosing,
@@ -1860,18 +1863,19 @@ bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
     return false;
   }
 
-  *index = parseInfo.scopeCreationData.length();
-  return parseInfo.scopeCreationData.emplaceBack(
+  *index = compilationInfo.scopeCreationData.length();
+  return compilationInfo.scopeCreationData.emplaceBack(
       cx, ScopeKind::Module, enclosing, std::move(data.get()), envShape);
 }
 
 /* static */
-bool ScopeCreationData::create(JSContext* cx, frontend::ParseInfo& parseInfo,
+bool ScopeCreationData::create(JSContext* cx,
+                               frontend::CompilationInfo& compilationInfo,
                                Handle<AbstractScope> enclosing,
                                ScopeIndex* index) {
-  *index = parseInfo.scopeCreationData.length();
-  return parseInfo.scopeCreationData.emplaceBack(cx, ScopeKind::With,
-                                                 enclosing);
+  *index = compilationInfo.scopeCreationData.length();
+  return compilationInfo.scopeCreationData.emplaceBack(cx, ScopeKind::With,
+                                                       enclosing);
 }
 
 // WithScopes are unique because they don't go through the

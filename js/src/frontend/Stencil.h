@@ -248,41 +248,41 @@ class ScopeCreationData {
   }
 
   // FunctionScope
-  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      Handle<FunctionScope::Data*> dataArg,
                      bool hasParameterExprs, bool needsEnvironment,
                      frontend::FunctionBox* funbox,
                      Handle<AbstractScope> enclosing, ScopeIndex* index);
 
   // LexicalScope
-  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<LexicalScope::Data*> dataArg,
                      uint32_t firstFrameSlot, Handle<AbstractScope> enclosing,
                      ScopeIndex* index);
   // VarScope
-  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<VarScope::Data*> dataArg,
                      uint32_t firstFrameSlot, bool needsEnvironment,
                      Handle<AbstractScope> enclosing, ScopeIndex* index);
 
   // GlobalScope
-  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<GlobalScope::Data*> dataArg,
                      ScopeIndex* index);
 
   // EvalScope
-  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      ScopeKind kind, Handle<EvalScope::Data*> dataArg,
                      Handle<AbstractScope> enclosing, ScopeIndex* index);
 
   // ModuleScope
-  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      Handle<ModuleScope::Data*> dataArg,
                      HandleModuleObject module, Handle<AbstractScope> enclosing,
                      ScopeIndex* index);
 
   // WithScope
-  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+  static bool create(JSContext* cx, frontend::CompilationInfo& compilationInfo,
                      Handle<AbstractScope> enclosing, ScopeIndex* index);
 
   bool hasEnvironment() const {

@@ -16,8 +16,8 @@
 
 #include "builtin/Array.h"
 #include "builtin/Reflect.h"
+#include "frontend/CompilationInfo.h"
 #include "frontend/ModuleSharedContext.h"
-#include "frontend/ParseInfo.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "js/CharacterEncoding.h"
@@ -3222,8 +3222,8 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
       break;
 
     case ParseNodeKind::RegExpExpr: {
-      RootedObject re1(
-          cx, pn->as<RegExpLiteral>().getOrCreate(cx, parser->getParseInfo()));
+      RootedObject re1(cx, pn->as<RegExpLiteral>().getOrCreate(
+                               cx, parser->getCompilationInfo()));
       LOCAL_ASSERT(re1 && re1->is<RegExpObject>());
 
       RootedObject re2(cx, CloneRegExpObject(cx, re1.as<RegExpObject>()));
@@ -3698,15 +3698,15 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   mozilla::Range<const char16_t> chars = linearChars.twoByteRange();
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ParseInfo parseInfo(cx, allocScope);
-  if (!parseInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope);
+  if (!compilationInfo.initFromOptions(cx, options)) {
     return false;
   }
 
   Parser<FullParseHandler, char16_t> parser(
       cx, options, chars.begin().get(), chars.length(),
-      /* foldConstants = */ false, parseInfo, nullptr, nullptr,
-      parseInfo.sourceObject);
+      /* foldConstants = */ false, compilationInfo, nullptr, nullptr,
+      compilationInfo.sourceObject);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -3731,7 +3731,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
     ModuleBuilder builder(cx, module, &parser);
 
-    ModuleSharedContext modulesc(cx, module, parseInfo,
+    ModuleSharedContext modulesc(cx, module, compilationInfo,
                                  &cx->global()->emptyGlobalScope(), builder);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {

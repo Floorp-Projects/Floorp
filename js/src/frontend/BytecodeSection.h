@@ -50,7 +50,7 @@ struct MOZ_STACK_CLASS GCThingList {
   using ListType =
       mozilla::Variant<JS::GCCellPtr, BigIntIndex, ObjLiteralCreationData,
                        RegExpIndex, ScopeIndex>;
-  ParseInfo& parseInfo;
+  CompilationInfo& compilationInfo;
   JS::RootedVector<ListType> vector;
 
   // Last emitted object.
@@ -59,8 +59,8 @@ struct MOZ_STACK_CLASS GCThingList {
   // Index of the first scope in the vector.
   mozilla::Maybe<uint32_t> firstScopeIndex;
 
-  explicit GCThingList(JSContext* cx, ParseInfo& parseInfo)
-      : parseInfo(parseInfo), vector(cx) {}
+  explicit GCThingList(JSContext* cx, CompilationInfo& compilationInfo)
+      : compilationInfo(compilationInfo), vector(cx) {}
 
   MOZ_MUST_USE bool append(ScopeIndex scope, uint32_t* index) {
     *index = vector.length();
@@ -104,7 +104,7 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(ObjectBox* obj, uint32_t* index);
 
   uint32_t length() const { return vector.length(); }
-  MOZ_MUST_USE bool finish(JSContext* cx, ParseInfo& parseInfo,
+  MOZ_MUST_USE bool finish(JSContext* cx, CompilationInfo& compilationInfo,
                            mozilla::Span<JS::GCCellPtr> array);
   void finishInnerFunctions();
 
@@ -113,7 +113,7 @@ struct MOZ_STACK_CLASS GCThingList {
     if (elem.is<JS::GCCellPtr>()) {
       return AbstractScope(&elem.as<JS::GCCellPtr>().as<Scope>());
     }
-    return AbstractScope(parseInfo, elem.as<ScopeIndex>());
+    return AbstractScope(compilationInfo, elem.as<ScopeIndex>());
   }
 
   AbstractScope firstScope() const {
@@ -388,7 +388,8 @@ class BytecodeSection {
 // bytecode, but referred from bytecode is stored in this class.
 class PerScriptData {
  public:
-  explicit PerScriptData(JSContext* cx, frontend::ParseInfo& parseInfo);
+  explicit PerScriptData(JSContext* cx,
+                         frontend::CompilationInfo& compilationInfo);
 
   MOZ_MUST_USE bool init(JSContext* cx);
 
