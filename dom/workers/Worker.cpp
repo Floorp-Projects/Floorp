@@ -115,6 +115,7 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     }
   }
 
+  // TODO: what about cloneDataPolicy.allowSharedMemoryObjects()
   runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
 
   if (isTimelineRecording) {

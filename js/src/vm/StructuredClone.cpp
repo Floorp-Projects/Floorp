@@ -1259,7 +1259,8 @@ bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
 bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   MOZ_ASSERT(obj->canUnwrapAs<SharedArrayBufferObject>());
 
-  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
+  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
+      !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
@@ -1305,7 +1306,8 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
   MOZ_ASSERT(obj->canUnwrapAs<WasmMemoryObject>());
 
   // Check the policy here so that we can report a sane error.
-  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
+  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
+      !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
@@ -2234,7 +2236,8 @@ bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
 }
 
 bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
-  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
+  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
+      !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
@@ -2298,7 +2301,8 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
     return false;
   }
 
-  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
+  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
+      !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
