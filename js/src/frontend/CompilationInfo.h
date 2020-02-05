@@ -12,6 +12,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "frontend/FunctionTree.h"
+#include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "frontend/UsedNameTracker.h"
 #include "js/RealmOptions.h"
@@ -32,6 +33,8 @@ struct MOZ_RAII CompilationInfo {
   // Until we have dealt with Atoms in the front end, we need to hold
   // onto them.
   AutoKeepAtoms keepAtoms;
+
+  Directives directives;
 
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
@@ -60,6 +63,7 @@ struct MOZ_RAII CompilationInfo {
       : cx(cx),
         options(options),
         keepAtoms(cx),
+        directives(options.forceStrictMode()),
         usedNames(cx),
         allocScope(alloc),
         treeHolder(cx),
