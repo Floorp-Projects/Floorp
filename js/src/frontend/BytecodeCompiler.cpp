@@ -368,9 +368,7 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 BytecodeCompiler::BytecodeCompiler(JSContext* cx,
                                    CompilationInfo& compilationInfo,
                                    const ReadOnlyCompileOptions& options)
-    : compilationInfo(compilationInfo),
-      directives(options.forceStrictMode()),
-      script(cx) {}
+    : compilationInfo(compilationInfo), script(cx) {}
 
 bool BytecodeCompiler::canLazilyParse() const {
   return !compilationInfo.options.discardSource &&
@@ -445,7 +443,8 @@ bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
     // Syntax parsing has now been disabled in the parser, so retry
     // the parse.
     parser->clearAbortedSyntaxParse();
-  } else if (parser->anyChars.hadError() || info.directives == newDirectives) {
+  } else if (parser->anyChars.hadError() ||
+             info.compilationInfo.directives == newDirectives) {
     return false;
   }
 
@@ -453,9 +452,10 @@ bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
   parser->tokenStream.rewind(startPosition);
 
   // Assignment must be monotonic to prevent reparsing iloops
-  MOZ_ASSERT_IF(info.directives.strict(), newDirectives.strict());
-  MOZ_ASSERT_IF(info.directives.asmJS(), newDirectives.asmJS());
-  info.directives = newDirectives;
+  MOZ_ASSERT_IF(info.compilationInfo.directives.strict(),
+                newDirectives.strict());
+  MOZ_ASSERT_IF(info.compilationInfo.directives.asmJS(), newDirectives.asmJS());
+  info.compilationInfo.directives = newDirectives;
   return true;
 }
 
@@ -504,7 +504,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     }
 
     // Maybe we aborted a syntax parse. See if we can try again.
-    if (!handleParseFailure(info, info.directives, startPosition)) {
+    if (!handleParseFailure(info, info.compilationInfo.directives,
+                            startPosition)) {
       return nullptr;
     }
 
@@ -606,10 +607,10 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
 
   FunctionNode* fn;
   do {
-    Directives newDirectives = info.directives;
-    fn = parser->standaloneFunction(fun, enclosingScope, parameterListEnd,
-                                    generatorKind, asyncKind, info.directives,
-                                    &newDirectives);
+    Directives newDirectives = info.compilationInfo.directives;
+    fn = parser->standaloneFunction(
+        fun, enclosingScope, parameterListEnd, generatorKind, asyncKind,
+        info.compilationInfo.directives, &newDirectives);
     if (!fn && !handleParseFailure(info, newDirectives, startPosition)) {
       return nullptr;
     }
