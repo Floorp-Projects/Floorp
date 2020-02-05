@@ -127,18 +127,6 @@ class Native2WrappedNativeMap {
     return wrapper;
   }
 
-  inline void Remove(XPCWrappedNative* wrapper) {
-    MOZ_ASSERT(wrapper, "bad param");
-#ifdef DEBUG
-    XPCWrappedNative* wrapperInMap = Find(wrapper->GetIdentityObject());
-    MOZ_ASSERT(!wrapperInMap || wrapperInMap == wrapper,
-               "About to remove a different wrapper with the same "
-               "nsISupports identity! This will most likely cause serious "
-               "problems!");
-#endif
-    mTable.Remove(wrapper->GetIdentityObject());
-  }
-
   inline void Clear() { mTable.Clear(); }
 
   inline uint32_t Count() { return mTable.EntryCount(); }
@@ -294,11 +282,6 @@ class ClassInfo2WrappedNativeProtoMap {
     return proto;
   }
 
-  inline void Remove(nsIClassInfo* info) {
-    MOZ_ASSERT(info, "bad param");
-    mTable.Remove(info);
-  }
-
   inline void Clear() { mTable.Clear(); }
 
   inline uint32_t Count() { return mTable.EntryCount(); }
@@ -402,11 +385,6 @@ class XPCWrappedNativeProtoMap {
     }
     entry->key = proto;
     return proto;
-  }
-
-  inline void Remove(XPCWrappedNativeProto* proto) {
-    MOZ_ASSERT(proto, "bad param");
-    mTable.Remove(proto);
   }
 
   inline uint32_t Count() { return mTable.EntryCount(); }
