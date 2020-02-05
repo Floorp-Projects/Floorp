@@ -245,6 +245,14 @@ struct ClipChainPairInfo {
     clip_chain_id: ClipChainId,
 }
 
+bitflags! {
+    /// Slice flags
+    pub struct SliceFlags : u8 {
+        /// Slice created by a cluster that has ClusterFlags::SCROLLBAR_CONTAINER
+        const IS_SCROLLBAR = 1;
+    }
+}
+
 /// Information about a set of primitive clusters that will form a picture cache slice.
 struct Slice {
     /// The spatial node root of the picture cache. If this is None, the slice
@@ -256,6 +264,8 @@ struct Slice {
     /// A list of clips that are shared by all primitives in the slice. These can be
     /// filtered out and applied when the tile cache is composited rather than per-item.
     shared_clips: Option<Vec<ClipDataHandle>>,
+    /// Various flags describing properties of this slice
+    pub flags: SliceFlags,
 }
 
 impl Slice {
@@ -545,10 +555,16 @@ impl<'a> SceneBuilder<'a> {
                     prev_slice.pop_clip_instances(&clip_chain_instance_stack);
                 }
 
+                let slice_flags = if cluster.flags.contains(ClusterFlags::SCROLLBAR_CONTAINER) {
+                    SliceFlags::IS_SCROLLBAR
+                } else {
+                    SliceFlags::empty()
+                };
                 let mut slice = Slice {
                     cache_scroll_root: cluster.cache_scroll_root,
                     prim_list: PrimitiveList::empty(),
                     shared_clips: None,
+                    flags: slice_flags
                 };
 
                 // Open up clip chains on the stack on the new slice
@@ -662,6 +678,7 @@ impl<'a> SceneBuilder<'a> {
 
             let instance = create_tile_cache(
                 slice_index,
+                slice.flags,
                 scroll_root,
                 slice.prim_list,
                 background_color,
@@ -3994,6 +4011,7 @@ fn process_repeat_size(
 /// that wraps the primitive list.
 fn create_tile_cache(
     slice: usize,
+    slice_flags: SliceFlags,
     scroll_root: SpatialNodeIndex,
     prim_list: PrimitiveList,
     background_color: Option<ColorF>,
@@ -4048,6 +4066,7 @@ fn create_tile_cache(
 
     let tile_cache = Box::new(TileCacheInstance::new(
         slice,
+        slice_flags,
         scroll_root,
         background_color,
         shared_clips,
