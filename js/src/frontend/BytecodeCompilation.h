@@ -72,26 +72,9 @@ extern JSScript* CompileGlobalScript(CompilationInfo& compilationInfo,
                                      GlobalSharedContext& globalsc,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 
-class MOZ_STACK_CLASS EvalScriptInfo final : public BytecodeCompiler {
-  JS::Handle<JSObject*> environment_;
-  EvalSharedContext evalsc_;
-
- public:
-  EvalScriptInfo(JSContext* cx, CompilationInfo& compilationInfo,
-                 const JS::ReadOnlyCompileOptions& options,
-                 JS::Handle<JSObject*> environment,
-                 JS::Handle<Scope*> enclosingScope)
-      : BytecodeCompiler(cx, compilationInfo, options),
-        environment_(environment),
-        evalsc_(cx, environment_, compilationInfo, enclosingScope,
-                compilationInfo.directives, options.extraWarningsOption) {}
-
-  HandleObject environment() { return environment_; }
-
-  EvalSharedContext* sharedContext() { return &evalsc_; }
-};
-
-extern JSScript* CompileEvalScript(EvalScriptInfo& info,
+extern JSScript* CompileEvalScript(CompilationInfo& compilationInfo,
+                                   EvalSharedContext& evalsc,
+                                   JS::Handle<JSObject*> environment,
                                    JS::SourceText<char16_t>& srcBuf);
 
 class MOZ_STACK_CLASS ModuleInfo final : public BytecodeCompiler {
