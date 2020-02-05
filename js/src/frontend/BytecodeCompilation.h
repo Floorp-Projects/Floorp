@@ -54,10 +54,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
 
   JS::Rooted<JSScript*> script;
 
-  ScriptSource* scriptSource() const {
-    return compilationInfo.sourceObject->source();
-  };
-
  protected:
   BytecodeCompiler(JSContext* cx, CompilationInfo& compilationInfo,
                    const JS::ReadOnlyCompileOptions& options);
@@ -83,7 +79,7 @@ class MOZ_STACK_CLASS BytecodeCompiler {
  protected:
   void assertSourceCreated() const {
     MOZ_ASSERT(compilationInfo.sourceObject != nullptr);
-    MOZ_ASSERT(scriptSource() != nullptr);
+    MOZ_ASSERT(compilationInfo.sourceObject->source() != nullptr);
   }
 
   // Create a script for source of the given length, using the explicitly-
@@ -101,8 +97,8 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   // uses fields in *this* class.
   template <typename Unit>
   MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
-    return scriptSource()->assignSource(context(), compilationInfo.options,
-                                        sourceBuffer);
+    return compilationInfo.sourceObject->source()->assignSource(
+        context(), compilationInfo.options, sourceBuffer);
   }
 
   bool canLazilyParse() const;
