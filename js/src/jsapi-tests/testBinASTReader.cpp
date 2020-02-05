@@ -281,8 +281,8 @@ void runTestFromPath(JSContext* cx, const char* path) {
     CompileOptions txtOptions(cx);
     txtOptions.setFileAndLine(txtPath.begin(), 0);
 
-    frontend::CompilationInfo compilationInfo(cx, allocScope);
-    if (!compilationInfo.initFromOptions(cx, txtOptions)) {
+    frontend::CompilationInfo compilationInfo(cx, allocScope, txtOptions);
+    if (!compilationInfo.init(cx)) {
       MOZ_CRASH("Couldn't initialize CompilationInfo");
     }
 
@@ -324,8 +324,8 @@ void runTestFromPath(JSContext* cx, const char* path) {
     CompileOptions binOptions(cx);
     binOptions.setFileAndLine(binPath.begin(), 0);
 
-    frontend::CompilationInfo binCompilationInfo(cx, allocScope);
-    if (!binCompilationInfo.initFromOptions(cx, binOptions)) {
+    frontend::CompilationInfo binCompilationInfo(cx, allocScope, binOptions);
+    if (!binCompilationInfo.init(cx)) {
       MOZ_CRASH();
     }
 

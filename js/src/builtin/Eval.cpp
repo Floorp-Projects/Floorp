@@ -325,8 +325,8 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     }
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope);
-    if (!compilationInfo.initFromOptions(cx, options)) {
+    frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+    if (!compilationInfo.init(cx)) {
       return false;
     }
 
@@ -423,8 +423,8 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
     }
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope);
-    if (!compilationInfo.initFromOptions(cx, options)) {
+    frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+    if (!compilationInfo.init(cx)) {
       return false;
     }
 

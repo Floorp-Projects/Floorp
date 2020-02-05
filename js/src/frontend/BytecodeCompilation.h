@@ -51,8 +51,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
  protected:
   AutoKeepAtoms keepAtoms;
 
-  JSContext* cx;
-  const JS::ReadOnlyCompileOptions& options;
   CompilationInfo& compilationInfo;
 
   Directives directives;
@@ -77,7 +75,7 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   friend class StandaloneFunctionCompiler;
 
  public:
-  JSContext* context() const { return cx; }
+  JSContext* context() const { return compilationInfo.cx; }
 
   ScriptSourceObject* sourceObjectPtr() const {
     return compilationInfo.sourceObject;
@@ -106,7 +104,8 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   // uses fields in *this* class.
   template <typename Unit>
   MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
-    return scriptSource()->assignSource(cx, options, sourceBuffer);
+    return scriptSource()->assignSource(context(), compilationInfo.options,
+                                        sourceBuffer);
   }
 
   bool canLazilyParse() const;

@@ -3698,8 +3698,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   mozilla::Range<const char16_t> chars = linearChars.twoByteRange();
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope);
-  if (!compilationInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope, options);
+  if (!compilationInfo.init(cx)) {
     return false;
   }
 

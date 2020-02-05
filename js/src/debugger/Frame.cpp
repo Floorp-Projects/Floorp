@@ -978,8 +978,8 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     }
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope);
-    if (!compilationInfo.initFromOptions(cx, options)) {
+    frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+    if (!compilationInfo.init(cx)) {
       return false;
     }
 
@@ -996,8 +996,8 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     // the global scope.
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope);
-    if (!compilationInfo.initFromOptions(cx, options)) {
+    frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+    if (!compilationInfo.init(cx)) {
       return false;
     }
 
