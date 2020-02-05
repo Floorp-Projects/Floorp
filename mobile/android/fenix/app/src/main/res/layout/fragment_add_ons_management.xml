@@ -21,4 +21,23 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/add_ons_progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" />
+
+    <TextView
+        android:id="@+id/add_ons_empty_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="4dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="@string/no_add_ons"
+        android:textColor="?secondaryText"
+        android:textSize="16sp"
+        android:visibility="gone"/>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

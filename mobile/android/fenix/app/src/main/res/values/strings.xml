@@ -66,6 +66,8 @@
     <string name="browser_menu_edit_bookmark">Edit bookmark</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_addon_manager">Add-ons Manager</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">No add-ons here</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that sends a to a the what's new article -->

@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
@@ -87,11 +88,16 @@ class AddonsManagementFragment : Fragment(), AddonsManagerAdapterDelegate {
                         this@AddonsManagementFragment,
                         addons
                     )
+                    view.add_ons_progress_bar.isVisible = false
+                    view.add_ons_empty_message.isVisible = false
+
                     recyclerView.adapter = adapter
                 }
             } catch (e: AddonManagerException) {
                 lifecycleScope.launch(Dispatchers.Main) {
                     showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_query_add_ons))
+                    view.add_ons_progress_bar.isVisible = false
+                    view.add_ons_empty_message.isVisible = true
                 }
             }
         }
