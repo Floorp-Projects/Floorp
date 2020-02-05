@@ -23,6 +23,7 @@ import org.mozilla.geckoview.BuildConfig
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.test.TestCrashHandler
 import org.mozilla.geckoview.test.util.Environment
+import org.mozilla.geckoview.test.util.RuntimeCreator
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -36,13 +37,17 @@ class ParentCrashTest {
 
     @Before
     fun setup() {
+        // Since this test starts up its own GeckoRuntime via
+        // RemoteGeckoService, we need to shutdown any runtime already running
+        // in the RuntimeCreator.
+        RuntimeCreator.shutdownRuntime()
+
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val binder = rule.bindService(Intent(context, RemoteGeckoService::class.java))
         messenger = Messenger(binder)
         assertThat("messenger should not be null", binder, notNullValue())
     }
 
-    @Ignore // Bug 1607537 disabled due to frequent timeouts
     @Test
     @UiThreadTest
     fun crashParent() {
