@@ -8,6 +8,7 @@
 #define frontend_FunctionTree_h
 
 #include "mozilla/Attributes.h"
+#include "jsfriendapi.h"
 
 #include "js/Vector.h"
 
