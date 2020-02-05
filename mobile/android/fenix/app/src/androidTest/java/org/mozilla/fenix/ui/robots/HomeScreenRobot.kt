@@ -138,9 +138,9 @@ class HomeScreenRobot {
             .perform(click())
     }
 
-    fun swipeToBottom() = onView(withId(R.id.home_component)).perform(ViewActions.swipeUp())
+    fun swipeToBottom() = onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeUp())
 
-    fun swipeToTop() = onView(withId(R.id.home_component)).perform(ViewActions.swipeDown())
+    fun swipeToTop() = onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeDown())
 
     fun swipeTabRight(title: String) =
         onView(allOf(withId(R.id.tab_title), withText(title))).perform(ViewActions.swipeRight())
@@ -274,7 +274,7 @@ private fun assertNoCollectionsText() =
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertHomeComponent() = onView(ViewMatchers.withResourceName("home_component"))
+private fun assertHomeComponent() = onView(ViewMatchers.withResourceName("sessionControlRecyclerView"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
@@ -410,7 +410,7 @@ private fun assertExistingTabList() =
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertExistingOpenTabs(title: String) =
-    onView(withId(R.id.home_component)).perform(
+    onView(withId(R.id.sessionControlRecyclerView)).perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
             ViewMatchers.hasDescendant(withText(title))
         )
