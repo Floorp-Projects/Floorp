@@ -196,6 +196,8 @@ either Raptor or browsertime."""
             platform = "%s-%s" % (device_name, android_app)
         else:
             platform = get_current_platform()
+
+        LOG.info("Platform used: %s" % platform)
         try:
             cond_prof_target_dir = get_profile(temp_download_dir, platform, "settled")
         except ProfileNotFoundError:
