@@ -33,10 +33,16 @@ void SharedMessageBody::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
   MOZ_ASSERT(aRefMessageBodyService);
 
   JS::CloneDataPolicy cloneDataPolicy;
-  // TODO: this is going to change in the next patches.
+  // During a writing, we don't know the destination, so we assume it is part of
+  // the same agent cluster.
   cloneDataPolicy.allowIntraClusterClonableSharedObjects();
 
-  // TODO: what about cloneDataPolicy.allowSharedMemoryObjects()
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  MOZ_ASSERT(global);
+
+  if (global->IsSharedMemoryAllowed()) {
+    cloneDataPolicy.allowSharedMemoryObjects();
+  }
 
   mCloneData = MakeUnique<ipc::StructuredCloneData>(
       JS::StructuredCloneScope::UnknownDestination, mSupportsTransferring);
@@ -71,12 +77,12 @@ void SharedMessageBody::Read(JSContext* aCx,
 
   JS::CloneDataPolicy cloneDataPolicy;
 
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  MOZ_ASSERT(global);
+
   // Clones within the same agent cluster are allowed to use shared array
   // buffers and WASM modules.
   if (mAgentClusterId.isSome()) {
-    nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-    MOZ_ASSERT(global);
-
     Maybe<nsID> agentClusterId = global->GetAgentClusterId();
     if (agentClusterId.isSome() &&
         mAgentClusterId.value().Equals(agentClusterId.value())) {
@@ -84,7 +90,9 @@ void SharedMessageBody::Read(JSContext* aCx,
     }
   }
 
-  // TODO: what about cloneDataPolicy.allowSharedMemoryObjects()
+  if (global->IsSharedMemoryAllowed()) {
+    cloneDataPolicy.allowSharedMemoryObjects();
+  }
 
   MOZ_ASSERT(!mRefData);
   MOZ_ASSERT(mRefDataId.isSome());
