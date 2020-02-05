@@ -580,7 +580,7 @@ const SVGPreserveAspectRatio* SVGSVGElement::GetPreserveAspectRatioProperty()
 }
 
 bool SVGSVGElement::ClearPreserveAspectRatioProperty() {
-  void* valPtr = UnsetProperty(nsGkAtoms::overridePreserveAspectRatio);
+  void* valPtr = TakeProperty(nsGkAtoms::overridePreserveAspectRatio);
   bool didHaveProperty = !!valPtr;
   delete static_cast<SVGPreserveAspectRatio*>(valPtr);
   return didHaveProperty;

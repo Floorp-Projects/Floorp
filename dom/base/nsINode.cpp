@@ -219,9 +219,8 @@ void nsINode::DeleteProperty(const nsAtom* aPropertyName) {
   OwnerDoc()->PropertyTable().DeleteProperty(this, aPropertyName);
 }
 
-void* nsINode::UnsetProperty(const nsAtom* aPropertyName, nsresult* aStatus) {
-  return OwnerDoc()->PropertyTable().UnsetProperty(this, aPropertyName,
-                                                   aStatus);
+void* nsINode::TakeProperty(const nsAtom* aPropertyName, nsresult* aStatus) {
+  return OwnerDoc()->PropertyTable().TakeProperty(this, aPropertyName, aStatus);
 }
 
 nsIContentSecurityPolicy* nsINode::GetCsp() const {
