@@ -1573,10 +1573,10 @@
   value: false
   mirror: always
 
-# Whether the form.requestSubmit API is enabled
+# Enable the form.requestSubmit API
 - name: dom.forms.requestsubmit.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether the Gamepad API is enabled
