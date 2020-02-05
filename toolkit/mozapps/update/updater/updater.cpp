@@ -4060,10 +4060,10 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
 
 int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
   int rv = OK;
-  NS_tchar foundpath[MAXPATHLEN];
+  NS_tchar foundpath[PATH_MAX];
   struct {
     dirent dent_buffer;
-    char chars[MAXNAMLEN];
+    char chars[NAME_MAX];
   } ent_buf;
   struct dirent* ent;
   mozilla::UniquePtr<NS_tchar[]> searchpath(get_full_path(dirpath));
