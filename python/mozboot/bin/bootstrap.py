@@ -85,6 +85,15 @@ def fetch_files(repo_url, repo_rev, repo_type):
                 continue
 
             files[name] = zip.read(f)
+
+        # Retrieve distro script
+        url = repo_url + '/archive/%s.zip/third_party/python/distro/distro.py' % repo_rev
+        req = urlopen(url=url, timeout=30)
+        data = BytesIO(req.read())
+        data.seek(0)
+        zip = zipfile.ZipFile(data, 'r')
+        files["distro.py"] = zip.read(zip.infolist()[0])
+
     else:
         raise NotImplementedError('Not sure how to handle repo type.', repo_type)
 
