@@ -1,0 +1,11 @@
+---
+loader: taskgraph.loader.transform:loader
+transforms:
+    - taskgraph.transforms.index_search:transforms
+    - taskgraph.transforms.task:transforms
+
+jobs:
+    linux64-minidump-stackwalk:
+        description: "minidump_stackwalk toolchain"
+        index-search:
+            - gecko.cache.level-3.toolchains.v3.linux64-minidump-stackwalk.latest

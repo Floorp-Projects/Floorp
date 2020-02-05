@@ -8,6 +8,7 @@ transforms:
 
 kind-dependencies:
     - signing
+    - toolchain
 
 only-for-build-types:
     - performance-test
@@ -19,6 +20,7 @@ only-for-abis:
 job-defaults:
     dependencies:
         geckoview-nightly: geckoview-nightly
+        linux64-minidump-stackwalk: toolchain-linux64-minidump-stackwalk
     notify:
         by-level:
             '3':
@@ -76,6 +78,9 @@ job-defaults:
             - '--binary=org.mozilla.fenix.performancetest'
             - '--activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity'
             - '--download-symbols=ondemand'
+    fetches:
+        linux64-minidump-stackwalk:
+            - artifact: minidump_stackwalk.tar.xz
 
 jobs:
     tp6m-1-cold:
