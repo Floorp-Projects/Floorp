@@ -74,7 +74,6 @@ void WaylandDMABUFTextureHostOGL::SetTextureSourceProvider(
 }
 
 gfx::SurfaceFormat WaylandDMABUFTextureHostOGL::GetFormat() const {
-  MOZ_ASSERT(mTextureSource);
   return mTextureSource ? mTextureSource->GetFormat()
                         : gfx::SurfaceFormat::UNKNOWN;
 }
