@@ -8,7 +8,6 @@
         o389=o5.createBuffer(2,22050,44100);
         o420=new AudioBufferSourceNode(o5, {buffer:o389,detune:27});
         o389.copyToChannel(o291,1,0);
-        o420.buffer=o389;
         document.close();
     }
 </script>
