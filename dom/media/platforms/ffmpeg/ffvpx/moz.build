@@ -33,6 +33,10 @@ if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
     '-Wno-unknown-attributes',
   ]
+if CONFIG['CC_TYPE'] == 'gcc':
+  CXXFLAGS += [
+    '-Wno-attributes',
+  ]
 
 DEFINES['FFVPX_VERSION'] = 46465650
 DEFINES['USING_MOZFFVPX'] = True

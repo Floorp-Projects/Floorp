@@ -21,5 +21,9 @@ if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
     '-Wno-unknown-attributes',
   ]
+if CONFIG['CC_TYPE'] == 'gcc':
+  CXXFLAGS += [
+    '-Wno-attributes',
+  ]
 
 FINAL_LIBRARY = 'xul'
