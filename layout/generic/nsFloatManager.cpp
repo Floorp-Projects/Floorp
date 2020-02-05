@@ -18,6 +18,8 @@
 #include "nsBlockFrame.h"
 #include "nsDeviceContext.h"
 #include "nsError.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsImageRenderer.h"
 #include "nsMemory.h"
 

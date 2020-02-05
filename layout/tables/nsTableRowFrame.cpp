@@ -13,6 +13,8 @@
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsCSSRendering.h"

@@ -232,4 +232,27 @@ nsIFrame* nsIFrame::GetClosestFlattenedTreeAncestorPrimaryFrame() const {
   return nullptr;
 }
 
+nsPoint nsIFrame::GetNormalPosition(bool* aHasProperty) const {
+  nsPoint* normalPosition = GetProperty(NormalPositionProperty());
+  if (normalPosition) {
+    if (aHasProperty) {
+      *aHasProperty = true;
+    }
+    return *normalPosition;
+  }
+  if (aHasProperty) {
+    *aHasProperty = false;
+  }
+  return GetPosition();
+}
+
+mozilla::LogicalPoint nsIFrame::GetLogicalNormalPosition(
+    mozilla::WritingMode aWritingMode, const nsSize& aContainerSize) const {
+  // Subtract the size of this frame from the container size to get
+  // the correct position in rtl frames where the origin is on the
+  // right instead of the left
+  return mozilla::LogicalPoint(aWritingMode, GetNormalPosition(),
+                               aContainerSize - mRect.Size());
+}
+
 #endif
