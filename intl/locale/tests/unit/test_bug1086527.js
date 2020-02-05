@@ -6,7 +6,9 @@
  * This unit test makes sure that PluralForm.get can be called from strict mode
  */
 
-const {PluralForm} = ChromeUtils.import("resource://gre/modules/PluralForm.jsm");
+const { PluralForm } = ChromeUtils.import(
+  "resource://gre/modules/PluralForm.jsm"
+);
 
 delete PluralForm.numForms;
 delete PluralForm.get;
@@ -16,5 +18,5 @@ function run_test() {
   "use strict";
 
   Assert.equal(3, PluralForm.numForms());
-  Assert.equal("one", PluralForm.get(5, 'one;many'));
+  Assert.equal("one", PluralForm.get(5, "one;many"));
 }

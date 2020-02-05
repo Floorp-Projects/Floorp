@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [ "PluralForm" ];
+var EXPORTED_SYMBOLS = ["PluralForm"];
 
 /**
  * This module provides the PluralForm object which contains a method to figure
@@ -38,45 +38,151 @@ const kIntlProperties = "chrome://global/locale/intl.properties";
 // of plural forms and the second is the function to figure out the index.
 var gFunctions = [
   // 0: Chinese
-  [1, (n) => 0],
+  [1, n => 0],
   // 1: English
-  [2, (n) => n!=1?1:0],
+  [2, n => (n != 1 ? 1 : 0)],
   // 2: French
-  [2, (n) => n>1?1:0],
+  [2, n => (n > 1 ? 1 : 0)],
   // 3: Latvian
-  [3, (n) => n%10==1&&n%100!=11?1:n%10==0?0:2],
+  [3, n => (n % 10 == 1 && n % 100 != 11 ? 1 : n % 10 == 0 ? 0 : 2)],
   // 4: Scottish Gaelic
-  [4, (n) => n==1||n==11?0:n==2||n==12?1:n>0&&n<20?2:3],
+  [
+    4,
+    n =>
+      n == 1 || n == 11 ? 0 : n == 2 || n == 12 ? 1 : n > 0 && n < 20 ? 2 : 3,
+  ],
   // 5: Romanian
-  [3, (n) => n==1?0:n==0||n%100>0&&n%100<20?1:2],
+  [3, n => (n == 1 ? 0 : n == 0 || (n % 100 > 0 && n % 100 < 20) ? 1 : 2)],
   // 6: Lithuanian
-  [3, (n) => n%10==1&&n%100!=11?0:n%10>=2&&(n%100<10||n%100>=20)?2:1],
+  [
+    3,
+    n =>
+      n % 10 == 1 && n % 100 != 11
+        ? 0
+        : n % 10 >= 2 && (n % 100 < 10 || n % 100 >= 20)
+        ? 2
+        : 1,
+  ],
   // 7: Russian
-  [3, (n) => n%10==1&&n%100!=11?0:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?1:2],
+  [
+    3,
+    n =>
+      n % 10 == 1 && n % 100 != 11
+        ? 0
+        : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
+        ? 1
+        : 2,
+  ],
   // 8: Slovak
-  [3, (n) => n==1?0:n>=2&&n<=4?1:2],
+  [3, n => (n == 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2)],
   // 9: Polish
-  [3, (n) => n==1?0:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?1:2],
+  [
+    3,
+    n =>
+      n == 1
+        ? 0
+        : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
+        ? 1
+        : 2,
+  ],
   // 10: Slovenian
-  [4, (n) => n%100==1?0:n%100==2?1:n%100==3||n%100==4?2:3],
+  [
+    4,
+    n =>
+      n % 100 == 1
+        ? 0
+        : n % 100 == 2
+        ? 1
+        : n % 100 == 3 || n % 100 == 4
+        ? 2
+        : 3,
+  ],
   // 11: Irish Gaeilge
-  [5, (n) => n==1?0:n==2?1:n>=3&&n<=6?2:n>=7&&n<=10?3:4],
+  [
+    5,
+    n =>
+      n == 1
+        ? 0
+        : n == 2
+        ? 1
+        : n >= 3 && n <= 6
+        ? 2
+        : n >= 7 && n <= 10
+        ? 3
+        : 4,
+  ],
   // 12: Arabic
-  [6, (n) => n==0?5:n==1?0:n==2?1:n%100>=3&&n%100<=10?2:n%100>=11&&n%100<=99?3:4],
+  [
+    6,
+    n =>
+      n == 0
+        ? 5
+        : n == 1
+        ? 0
+        : n == 2
+        ? 1
+        : n % 100 >= 3 && n % 100 <= 10
+        ? 2
+        : n % 100 >= 11 && n % 100 <= 99
+        ? 3
+        : 4,
+  ],
   // 13: Maltese
-  [4, (n) => n==1?0:n==0||n%100>0&&n%100<=10?1:n%100>10&&n%100<20?2:3],
+  [
+    4,
+    n =>
+      n == 1
+        ? 0
+        : n == 0 || (n % 100 > 0 && n % 100 <= 10)
+        ? 1
+        : n % 100 > 10 && n % 100 < 20
+        ? 2
+        : 3,
+  ],
   // 14: Unused
-  [3, (n) => n%10==1?0:n%10==2?1:2],
+  [3, n => (n % 10 == 1 ? 0 : n % 10 == 2 ? 1 : 2)],
   // 15: Icelandic, Macedonian
-  [2, (n) => n%10==1&&n%100!=11?0:1],
+  [2, n => (n % 10 == 1 && n % 100 != 11 ? 0 : 1)],
   // 16: Breton
-  [5, (n) => n%10==1&&n%100!=11&&n%100!=71&&n%100!=91?0:n%10==2&&n%100!=12&&n%100!=72&&n%100!=92?1:(n%10==3||n%10==4||n%10==9)&&n%100!=13&&n%100!=14&&n%100!=19&&n%100!=73&&n%100!=74&&n%100!=79&&n%100!=93&&n%100!=94&&n%100!=99?2:n%1000000==0&&n!=0?3:4],
+  [
+    5,
+    n =>
+      n % 10 == 1 && n % 100 != 11 && n % 100 != 71 && n % 100 != 91
+        ? 0
+        : n % 10 == 2 && n % 100 != 12 && n % 100 != 72 && n % 100 != 92
+        ? 1
+        : (n % 10 == 3 || n % 10 == 4 || n % 10 == 9) &&
+          n % 100 != 13 &&
+          n % 100 != 14 &&
+          n % 100 != 19 &&
+          n % 100 != 73 &&
+          n % 100 != 74 &&
+          n % 100 != 79 &&
+          n % 100 != 93 &&
+          n % 100 != 94 &&
+          n % 100 != 99
+        ? 2
+        : n % 1000000 == 0 && n != 0
+        ? 3
+        : 4,
+  ],
   // 17: Shuar
-  [2, (n) => n!=0?1:0],
+  [2, n => (n != 0 ? 1 : 0)],
   // 18: Welsh
-  [6, (n) => n==0?0:n==1?1:n==2?2:n==3?3:n==6?4:5],
+  [
+    6,
+    n => (n == 0 ? 0 : n == 1 ? 1 : n == 2 ? 2 : n == 3 ? 3 : n == 6 ? 4 : 5),
+  ],
   // 19: Slavic languages (bs, hr, sr). Same as rule 7, but resulting in different CLDR categories
-  [3, (n) => n%10==1&&n%100!=11?0:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?1:2],
+  [
+    3,
+    n =>
+      n % 10 == 1 && n % 100 != 11
+        ? 0
+        : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
+        ? 1
+        : 2,
+  ],
 ];
 
 var PluralForm = {
@@ -89,8 +195,7 @@ var PluralForm = {
    *        A semi-colon (;) separated string of words to pick the plural form
    * @return The appropriate plural form of the word
    */
-  get get()
-  {
+  get get() {
     // This method will lazily load to avoid perf when it is first needed and
     // creates getPluralForm function. The function it creates is based on the
     // value of pluralRule specified in the intl stringbundle.
@@ -101,7 +206,9 @@ var PluralForm = {
     delete PluralForm.get;
 
     // Make the plural form get function and set it as the default get
-    [PluralForm.get, PluralForm.numForms] = PluralForm.makeGetter(PluralForm.ruleNum);
+    [PluralForm.get, PluralForm.numForms] = PluralForm.makeGetter(
+      PluralForm.ruleNum
+    );
     return PluralForm.get;
   },
 
@@ -113,8 +220,7 @@ var PluralForm = {
    * @return A pair: [function that gets the right plural form,
    *                  function that returns the number of plural forms]
    */
-  makeGetter: function(aRuleNum)
-  {
+  makeGetter(aRuleNum) {
     // Default to "all plural" if the value is out of bounds or invalid
     if (aRuleNum < 0 || aRuleNum >= gFunctions.length || isNaN(aRuleNum)) {
       log(["Invalid rule number: ", aRuleNum, " -- defaulting to 0"]);
@@ -126,29 +232,44 @@ var PluralForm = {
 
     // Return functions that give 1) the number of forms and 2) gets the right
     // plural form
-    return [function(aNum, aWords) {
-      // Figure out which index to use for the semi-colon separated words
-      let index = pluralFunc(aNum ? Number(aNum) : 0);
-      let words = aWords ? aWords.split(/;/) : [""];
+    return [
+      function(aNum, aWords) {
+        // Figure out which index to use for the semi-colon separated words
+        let index = pluralFunc(aNum ? Number(aNum) : 0);
+        let words = aWords ? aWords.split(/;/) : [""];
 
-      // Explicitly check bounds to avoid strict warnings
-      let ret = index < words.length ? words[index] : undefined;
+        // Explicitly check bounds to avoid strict warnings
+        let ret = index < words.length ? words[index] : undefined;
 
-      // Check for array out of bounds or empty strings
-      if ((ret == undefined) || (ret == "")) {
-        // Report the caller to help figure out who is causing badness
-        let caller = Components.stack.caller ? Components.stack.caller.name : "top";
+        // Check for array out of bounds or empty strings
+        if (ret == undefined || ret == "") {
+          // Report the caller to help figure out who is causing badness
+          let caller = Components.stack.caller
+            ? Components.stack.caller.name
+            : "top";
 
-        // Display a message in the error console
-        log(["Index #", index, " of '", aWords, "' for value ", aNum,
-            " is invalid -- plural rule #", aRuleNum, "; called by ", caller]);
+          // Display a message in the error console
+          log([
+            "Index #",
+            index,
+            " of '",
+            aWords,
+            "' for value ",
+            aNum,
+            " is invalid -- plural rule #",
+            aRuleNum,
+            "; called by ",
+            caller,
+          ]);
 
-        // Default to the first entry (which might be empty, but not undefined)
-        ret = words[0];
-      }
+          // Default to the first entry (which might be empty, but not undefined)
+          ret = words[0];
+        }
 
-      return ret;
-    }, () => numForms];
+        return ret;
+      },
+      () => numForms,
+    ];
   },
 
   /**
@@ -156,8 +277,7 @@ var PluralForm = {
    *
    * @return The number of forms
    */
-  get numForms()
-  {
+  get numForms() {
     // We lazily load numForms, so trigger the init logic with get()
     PluralForm.get();
     return PluralForm.numForms;
@@ -168,12 +288,14 @@ var PluralForm = {
    *
    * @return The plural rule number
    */
-  get ruleNum()
-  {
-    return Number(Cc["@mozilla.org/intl/stringbundle;1"].
-      getService(Ci.nsIStringBundleService).createBundle(kIntlProperties).
-      GetStringFromName("pluralRule"));
-  }
+  get ruleNum() {
+    return Number(
+      Cc["@mozilla.org/intl/stringbundle;1"]
+        .getService(Ci.nsIStringBundleService)
+        .createBundle(kIntlProperties)
+        .GetStringFromName("pluralRule")
+    );
+  },
 };
 
 /**
@@ -182,10 +304,10 @@ var PluralForm = {
  * @param aMsg
  *        Error message to log or an array of strings to concat
  */
-function log(aMsg)
-{
+function log(aMsg) {
   let msg = "PluralForm.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
-  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).
-    logStringMessage(msg);
+  Cc["@mozilla.org/consoleservice;1"]
+    .getService(Ci.nsIConsoleService)
+    .logStringMessage(msg);
   dump(msg + "\n");
 }

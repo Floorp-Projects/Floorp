@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const localeService =
-  Cc["@mozilla.org/intl/localeservice;1"]
-  .getService(Ci.mozILocaleService);
+const localeService = Cc["@mozilla.org/intl/localeservice;1"].getService(
+  Ci.mozILocaleService
+);
 
 const data = {
-  "filtering": {
+  filtering: {
     "exact match": [
       [["en"], ["en"], ["en"]],
       [["en-US"], ["en-US"], ["en-US"]],
@@ -26,7 +26,11 @@ const data = {
     ],
     "should match on likely subtag": [
       [["en"], ["en-GB", "de", "en-US"], ["en-US", "en-GB"]],
-      [["en"], ["en-Latn-GB", "de", "en-Latn-US"], ["en-Latn-US", "en-Latn-GB"]],
+      [
+        ["en"],
+        ["en-Latn-GB", "de", "en-Latn-US"],
+        ["en-Latn-US", "en-Latn-GB"],
+      ],
       [["fr"], ["fr-CA", "fr-FR"], ["fr-FR", "fr-CA"]],
       [["az-IR"], ["az-Latn", "az-Arab"], ["az-Arab"]],
       [["sr-RU"], ["sr-Cyrl", "sr-Latn"], ["sr-Latn"]],
@@ -48,26 +52,47 @@ const data = {
     ],
     "should prioritize properly": [
       // exact match first
-      [["en-US"], ["en-US-windows", "en", "en-US"], ["en-US", "en", "en-US-windows"]],
+      [
+        ["en-US"],
+        ["en-US-windows", "en", "en-US"],
+        ["en-US", "en", "en-US-windows"],
+      ],
       // available as range second
       [["en-Latn-US"], ["en-GB", "en-US"], ["en-US", "en-GB"]],
       // likely subtags third
       [["en"], ["en-Cyrl-US", "en-Latn-US"], ["en-Latn-US"]],
       // variant range fourth
-      [["en-US-macos"], ["en-US-windows", "en-GB-macos"], ["en-US-windows", "en-GB-macos"]],
+      [
+        ["en-US-macos"],
+        ["en-US-windows", "en-GB-macos"],
+        ["en-US-windows", "en-GB-macos"],
+      ],
       // regional range fifth
       [["en-US-macos"], ["en-GB-windows"], ["en-GB-windows"]],
       [["en-US"], ["en-GB", "en"], ["en", "en-GB"]],
-      [["fr-CA-macos", "de-DE"], ["de-DE", "fr-FR-windows"], ["fr-FR-windows", "de-DE"]],
+      [
+        ["fr-CA-macos", "de-DE"],
+        ["de-DE", "fr-FR-windows"],
+        ["fr-FR-windows", "de-DE"],
+      ],
     ],
     "should handle default locale properly": [
       [["fr"], ["de", "it"], []],
       [["fr"], ["de", "it"], "en-US", ["en-US"]],
       [["fr"], ["de", "en-US"], "en-US", ["en-US"]],
-      [["fr", "de-DE"], ["de-DE", "fr-CA"], "en-US", ["fr-CA", "de-DE", "en-US"]],
+      [
+        ["fr", "de-DE"],
+        ["de-DE", "fr-CA"],
+        "en-US",
+        ["fr-CA", "de-DE", "en-US"],
+      ],
     ],
     "should handle all matches on the 1st higher than any on the 2nd": [
-      [["fr-CA-macos", "de-DE"], ["de-DE", "fr-FR-windows"], ["fr-FR-windows", "de-DE"]],
+      [
+        ["fr-CA-macos", "de-DE"],
+        ["de-DE", "fr-FR-windows"],
+        ["fr-FR-windows", "de-DE"],
+      ],
     ],
     "should handle cases and underscores, returning the form given in the 'available' list": [
       [["fr_FR"], ["fr-FR"], ["fr-FR"]],
@@ -86,33 +111,33 @@ const data = {
       [["2"], ["ąóżł"], []],
       [[[""]], ["fr-FR"], []],
     ],
-    "should not match on invalid input": [
-      [["en"], ["ťŮ"], []],
-    ],
+    "should not match on invalid input": [[["en"], ["ťŮ"], []]],
   },
-  "matching": {
+  matching: {
     "should match only one per requested": [
       [
         ["fr", "en"],
-        ["en-US", "fr-FR", "en", "fr"], null,
-        localeService.langNegStrategyMatching, ["fr", "en"]
+        ["en-US", "fr-FR", "en", "fr"],
+        null,
+        localeService.langNegStrategyMatching,
+        ["fr", "en"],
       ],
-    ]
+    ],
   },
-  "lookup": {
+  lookup: {
     "should match only one": [
       [
         ["fr-FR", "en"],
-        ["en-US", "fr-FR", "en", "fr"], 'en-US',
-        localeService.langNegStrategyLookup, ["fr-FR"]
+        ["en-US", "fr-FR", "en", "fr"],
+        "en-US",
+        localeService.langNegStrategyLookup,
+        ["fr-FR"],
       ],
-    ]
-  }
+    ],
+  },
 };
 
-function run_test()
-{
-
+function run_test() {
   const nl = localeService.negotiateLanguages;
 
   const json = JSON.stringify;
@@ -127,8 +152,13 @@ function run_test()
         const supported = test[test.length - 1];
 
         const result = nl(test[0], test[1], defaultLocale, strategy);
-        deepEqual(result, supported,
-  `\nExpected ${json(requested)} * ${json(available)} = ${json(supported)}.\n`);
+        deepEqual(
+          result,
+          supported,
+          `\nExpected ${json(requested)} * ${json(available)} = ${json(
+            supported
+          )}.\n`
+        );
       }
     }
   }
@@ -136,13 +166,13 @@ function run_test()
   // Verify that we error out when requested or available is not an array.
   for (const [req, avail] in [
     [null, ["fr-FR"]],
-		[undefined, ["fr-FR"]],
-		[2, ["fr-FR"]],
-		["fr-FR", ["fr-FR"]],
-		[["fr-FR"], null],
-		[["fr-FR"], undefined],
-		[["fr-FR"], 2],
-		[["fr-FR"], "fr-FR"],
+    [undefined, ["fr-FR"]],
+    [2, ["fr-FR"]],
+    ["fr-FR", ["fr-FR"]],
+    [["fr-FR"], null],
+    [["fr-FR"], undefined],
+    [["fr-FR"], 2],
+    [["fr-FR"], "fr-FR"],
     [[null], []],
     [[undefined], []],
     [[undefined], [null]],
@@ -150,8 +180,11 @@ function run_test()
     [[null], [null]],
     [[[]], [[2]]],
   ]) {
-    Assert.throws(() => {
-      nl(req, avail);
-    }, err => err.result == Cr.NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY);
+    Assert.throws(
+      () => {
+        nl(req, avail);
+      },
+      err => err.result == Cr.NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY
+    );
   }
 }
