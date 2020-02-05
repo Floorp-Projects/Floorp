@@ -108,6 +108,30 @@ const reducers = {
       axes.wdth = parseFloat(match[1]);
     }
 
+    // If not defined in font-variation-settings, setup "slnt" axis with the negative
+    // of the "font-style: oblique" angle, if any.
+    const style = properties["font-style"];
+    const obliqueMatch = style.trim().match(/^oblique(?:\s*(\d+(.\d+)?)deg)?$/);
+    if (axes.slnt === undefined && obliqueMatch) {
+      if (obliqueMatch[1]) {
+        // Negate the angle because CSS and OpenType measure in opposite directions.
+        axes.slnt = -parseFloat(obliqueMatch[1]);
+      } else {
+        // Lack of an <angle> for "font-style: oblique" represents "14deg".
+        axes.slnt = -14;
+      }
+    }
+
+    // If not defined in font-variation-settings, setup "ital" axis with 0 for
+    // "font-style: normal" or 1 for "font-style: italic".
+    if (axes.ital === undefined) {
+      if (style === "normal") {
+        axes.ital = 0;
+      } else if (style === "italic") {
+        axes.ital = 1;
+      }
+    }
+
     return { ...state, axes, fonts, properties, id };
   },
 
