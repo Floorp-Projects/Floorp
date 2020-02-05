@@ -46,36 +46,6 @@ using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
 using JS::SourceText;
 
-// CompileScript independently returns the ScriptSourceObject (SSO) for the
-// compile.  This is used by off-thread script compilation (OT-SC).
-//
-// OT-SC cannot initialize the SSO when it is first constructed because the
-// SSO is allocated initially in a separate compartment.
-//
-// After OT-SC, the separate compartment is merged with the main compartment,
-// at which point the JSScripts created become observable by the debugger via
-// memory-space scanning.
-//
-// Whatever happens to the top-level script compilation (even if it fails and
-// returns null), we must finish initializing the SSO.  This is because there
-// may be valid inner scripts observable by the debugger which reference the
-// partially-initialized SSO.
-class MOZ_STACK_CLASS AutoInitializeSourceObject {
-  BytecodeCompiler& compiler_;
-  ScriptSourceObject** sourceObjectOut_;
-
- public:
-  AutoInitializeSourceObject(BytecodeCompiler& compiler,
-                             ScriptSourceObject** sourceObjectOut)
-      : compiler_(compiler), sourceObjectOut_(sourceObjectOut) {}
-
-  inline ~AutoInitializeSourceObject() {
-    if (sourceObjectOut_) {
-      *sourceObjectOut_ = compiler_.sourceObjectPtr();
-    }
-  }
-};
-
 // RAII class to check the frontend reports an exception when it fails to
 // compile a script.
 class MOZ_RAII AutoAssertReportedException {
@@ -825,9 +795,11 @@ static ModuleObject* InternalParseModule(
     return nullptr;
   }
 
-  ModuleInfo info(cx, compilationInfo, options);
+  if (sourceObjectOut) {
+    *sourceObjectOut = compilationInfo.sourceObject;
+  }
 
-  AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
+  ModuleInfo info(cx, compilationInfo, options);
 
   ModuleCompiler<Unit> compiler(srcBuf);
   Rooted<ModuleObject*> module(cx, compiler.compile(allocScope, info));
