@@ -1051,21 +1051,19 @@
             if (containersEnabled) {
               parent.setAttribute("context", "new-tab-button-popup");
 
-              let popup = document
-                .getElementById("new-tab-button-popup")
-                .cloneNode(true);
-              popup.removeAttribute("id");
-              popup.className = "new-tab-popup";
-              popup.setAttribute("position", "after_end");
-              parent.prepend(popup);
-              parent.setAttribute("type", "menu");
               if (newTabLeftClickOpensContainersMenu) {
-                gClickAndHoldListenersOnElement.remove(parent);
+                let popup = document
+                  .getElementById("new-tab-button-popup")
+                  .cloneNode(true);
+                popup.removeAttribute("id");
+                popup.className = "new-tab-popup";
+                popup.setAttribute("position", "after_end");
+                parent.prepend(popup);
+                parent.setAttribute("type", "menu");
                 // Update tooltip text
                 nodeToTooltipMap[parent.id] = "newTabAlwaysContainer.tooltip";
               } else {
-                gClickAndHoldListenersOnElement.add(parent);
-                nodeToTooltipMap[parent.id] = "newTabContainer.tooltip";
+                nodeToTooltipMap[parent.id] = "newTabButton.tooltip";
               }
             } else {
               nodeToTooltipMap[parent.id] = "newTabButton.tooltip";
