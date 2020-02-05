@@ -55,8 +55,8 @@ class PostMessageEvent final : public Runnable {
                          aScriptLocation, aIsFromPrivateWindow, Nothing()) {}
 
   void Write(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-             JS::Handle<JS::Value> aTransfer, JS::CloneDataPolicy aClonePolicy,
-             ErrorResult& aError) {
+             JS::Handle<JS::Value> aTransfer,
+             const JS::CloneDataPolicy& aClonePolicy, ErrorResult& aError) {
     mHolder.construct<StructuredCloneHolder>(
         StructuredCloneHolder::CloningSupported,
         StructuredCloneHolder::TransferringSupported,

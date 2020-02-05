@@ -235,7 +235,8 @@ bool MessageManagerFuzzer::Mutate(JSContext* aCx, const nsAString& aMessageName,
 
   /* Write mutated StructuredCloneData. */
   ipc::StructuredCloneData mutatedStructuredCloneData;
-  mutatedStructuredCloneData.Write(aCx, scdMutationContent, t, rv);
+  mutatedStructuredCloneData.Write(aCx, scdMutationContent, t,
+                                   JS::CloneDataPolicy(), rv);
   if (NS_WARN_IF(rv.Failed())) {
     rv.SuppressException();
     JS_ClearPendingException(aCx);
