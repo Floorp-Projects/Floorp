@@ -20,7 +20,6 @@
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
 
 struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSFunction;
 class JS_PUBLIC_API JSObject;
 class JS_PUBLIC_API JSScript;
 
@@ -61,9 +60,6 @@ extern JS_PUBLIC_API TranscodeResult EncodeScript(JSContext* cx,
                                                   TranscodeBuffer& buffer,
                                                   Handle<JSScript*> script);
 
-extern JS_PUBLIC_API TranscodeResult EncodeInterpretedFunction(
-    JSContext* cx, TranscodeBuffer& buffer, Handle<JSObject*> funobj);
-
 extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, TranscodeBuffer& buffer,
              MutableHandle<JSScript*> scriptp, size_t cursorIndex = 0);
@@ -71,10 +67,6 @@ DecodeScript(JSContext* cx, TranscodeBuffer& buffer,
 extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, const TranscodeRange& range,
              MutableHandle<JSScript*> scriptp);
-
-extern JS_PUBLIC_API TranscodeResult DecodeInterpretedFunction(
-    JSContext* cx, TranscodeBuffer& buffer, MutableHandle<JSFunction*> funp,
-    size_t cursorIndex = 0);
 
 // Register an encoder on the given script source, such that all functions can
 // be encoded as they are parsed. This strategy is used to avoid blocking the
