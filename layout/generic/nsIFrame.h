@@ -4764,7 +4764,7 @@ class MOZ_NONHEAP_CLASS AutoWeakFrame {
     mPrev = nullptr;
   }
 
-  bool IsAlive() { return !!mFrame; }
+  bool IsAlive() const { return !!mFrame; }
 
   nsIFrame* GetFrame() const { return mFrame; }
 
@@ -4835,7 +4835,7 @@ class MOZ_HEAP_CLASS WeakFrame {
     mFrame = nullptr;
   }
 
-  bool IsAlive() { return !!mFrame; }
+  bool IsAlive() const { return !!mFrame; }
   nsIFrame* GetFrame() const { return mFrame; }
 
  private:
