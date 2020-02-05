@@ -12,7 +12,7 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/browser_toolbar_height"
     android:layout_gravity="top"
-    android:background="@drawable/toolbar_background"
+    android:background="@drawable/toolbar_background_top"
     android:clickable="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
@@ -20,7 +20,7 @@
     app:browserToolbarClearColor="?primaryText"
     app:browserToolbarInsecureColor="?primaryText"
     app:browserToolbarMenuColor="?primaryText"
-    app:browserToolbarProgressBarGravity="top"
+    app:browserToolbarProgressBarGravity="bottom"
     app:browserToolbarSecureColor="?primaryText"
     app:browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor="?toolbarDivider" />
 </com.google.android.material.appbar.AppBarLayout>

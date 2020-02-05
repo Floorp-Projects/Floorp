@@ -141,10 +141,10 @@ class BrowserToolbarView(
                     false
                 }
 
-                display.progressGravity = if (isCustomTabSession) {
-                    DisplayToolbar.Gravity.BOTTOM
-                } else {
+                display.progressGravity = if (shouldUseBottomToolbar) {
                     DisplayToolbar.Gravity.TOP
+                } else {
+                    DisplayToolbar.Gravity.BOTTOM
                 }
 
                 val primaryTextColor = ContextCompat.getColor(
