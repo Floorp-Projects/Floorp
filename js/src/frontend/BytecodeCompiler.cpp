@@ -110,14 +110,15 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
            createCompleteScript(compilationInfo);
   }
 
-  void assertSourceAndParserCreated(BytecodeCompiler& info) const {
-    info.assertSourceCreated();
+  void assertSourceAndParserCreated(CompilationInfo& compilationInfo) const {
+    MOZ_ASSERT(compilationInfo.sourceObject != nullptr);
+    MOZ_ASSERT(compilationInfo.sourceObject->source() != nullptr);
     MOZ_ASSERT(parser.isSome());
   }
 
-  void assertSourceParserAndScriptCreated(BytecodeCompiler& info) {
-    assertSourceAndParserCreated(info);
-    MOZ_ASSERT(info.compilationInfo.script != nullptr);
+  void assertSourceParserAndScriptCreated(CompilationInfo& compilationInfo) {
+    assertSourceAndParserCreated(compilationInfo);
+    MOZ_ASSERT(compilationInfo.script != nullptr);
   }
 
   MOZ_MUST_USE bool emplaceEmitter(CompilationInfo& compilationInfo,
@@ -476,7 +477,7 @@ bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 template <typename Unit>
 JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     BytecodeCompiler& info, HandleObject environment, SharedContext* sc) {
-  assertSourceParserAndScriptCreated(info);
+  assertSourceParserAndScriptCreated(info.compilationInfo);
 
   TokenStreamPosition startPosition(info.compilationInfo.keepAtoms,
                                     parser->tokenStream);
@@ -610,7 +611,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
   MOZ_ASSERT(fun);
   MOZ_ASSERT(fun->isTenured());
 
-  assertSourceAndParserCreated(info);
+  assertSourceAndParserCreated(info.compilationInfo);
 
   TokenStreamPosition startPosition(info.compilationInfo.keepAtoms,
                                     parser->tokenStream);

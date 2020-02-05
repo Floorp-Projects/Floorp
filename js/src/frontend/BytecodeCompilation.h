@@ -62,12 +62,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
 
  public:
   CompilationInfo& compilationInfo;
-
- protected:
-  void assertSourceCreated() const {
-    MOZ_ASSERT(compilationInfo.sourceObject != nullptr);
-    MOZ_ASSERT(compilationInfo.sourceObject->source() != nullptr);
-  }
 };
 
 class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {
