@@ -35,6 +35,7 @@ var gExceptionPaths = [
 
   // https://github.com/mozilla/activity-stream/issues/3053
   "resource://activity-stream/data/content/tippytop/images/",
+  "resource://activity-stream/data/content/tippytop/favicons/",
   // These resources are referenced by messages delivered through Remote Settings
   "resource://activity-stream/data/content/assets/remote/",
 
