@@ -13,6 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=445886
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+/* eslint-disable no-eval */
+
 /** Test that unicode non-characters are not discarded **/
 function test()
 {
@@ -20,6 +22,7 @@ function test()
     SimpleTest.finish();
 }
 
+// eslint-disable-next-line complexity
 function Inject()
 {
     // script fragments containing Unicode non-characters

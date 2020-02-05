@@ -54,7 +54,7 @@ function testCase(testText, expectedText, bufferLength, charset) {
   );
 
   if (!(testConverter instanceof Ci.nsIUnicharLineInputStream)) {
-    throw "not line input stream";
+    throw new Error("not line input stream");
   }
 
   var outStr = "";
@@ -69,7 +69,7 @@ function testCase(testText, expectedText, bufferLength, charset) {
   if (outStr != expectedText) {
     dump("Failed with bufferLength = " + bufferLength + "\n");
     if (outStr.length == expectedText.length) {
-      for (i = 0; i < outStr.length; ++i) {
+      for (let i = 0; i < outStr.length; ++i) {
         if (outStr.charCodeAt(i) != expectedText.charCodeAt(i)) {
           dump(
             i +

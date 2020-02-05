@@ -1,12 +1,11 @@
 // Tests for nsITextToSubURI.unEscapeNonAsciiURI
 function run_test() {
-  const textToSubURI = Cc["@mozilla.org/intl/texttosuburi;1"].getService(
-    Ci.nsITextToSubURI
-  );
-
   // Tests whether nsTextToSubURI does UTF-16 unescaping (it shouldn't)
   const testURI = "data:text/html,%FE%FF";
-  Assert.equal(textToSubURI.unEscapeNonAsciiURI("UTF-16", testURI), testURI);
+  Assert.equal(
+    Services.textToSubURI.unEscapeNonAsciiURI("UTF-16", testURI),
+    testURI
+  );
 
   // Tests whether incomplete multibyte sequences throw.
   const tests = [
@@ -44,14 +43,14 @@ function run_test() {
     if (t.throws !== undefined) {
       let thrown = undefined;
       try {
-        textToSubURI.unEscapeNonAsciiURI("UTF-8", t.input);
+        Services.textToSubURI.unEscapeNonAsciiURI("UTF-8", t.input);
       } catch (e) {
         thrown = e.result;
       }
       Assert.equal(thrown, t.throws);
     } else {
       Assert.equal(
-        textToSubURI.unEscapeNonAsciiURI("UTF-8", t.input),
+        Services.textToSubURI.unEscapeNonAsciiURI("UTF-8", t.input),
         t.expected
       );
     }
