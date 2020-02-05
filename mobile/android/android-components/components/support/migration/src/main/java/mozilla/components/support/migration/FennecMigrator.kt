@@ -810,6 +810,7 @@ class FennecMigrator private constructor(
         }
     }
 
+    @Suppress("ComplexMethod", "LongMethod")
     private suspend fun migrateFxA(): Result<FxaMigrationResult> {
         val result = FennecFxaMigration.migrate(fxaState!!, context, accountManager!!)
 
@@ -866,6 +867,11 @@ class FennecMigrator private constructor(
             is FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount -> {
                 logger.debug("Signed-in into a detected Fennec account")
                 MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_SIGNED_IN.code)
+                result
+            }
+            is FxaMigrationResult.Success.WillAutoRetrySignInLater -> {
+                logger.debug("Will auto-retry Fennec account migration later")
+                MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_WILL_RETRY.code)
                 result
             }
         }

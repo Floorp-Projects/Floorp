@@ -15,6 +15,8 @@ enum class AccountState {
     Start,
     NotAuthenticated,
     AuthenticationProblem,
+    CanAutoRetryAuthenticationViaTokenCopy,
+    CanAutoRetryAuthenticationViaTokenReuse,
     AuthenticatedNoProfile,
     AuthenticatedWithProfile,
 }
@@ -42,6 +44,17 @@ internal sealed class Event {
             return this.javaClass.simpleName
         }
     }
+
+    /**
+     * Fired during account init, if an in-flight copy migration was detected.
+     */
+    object InFlightCopyMigration : Event()
+
+    /**
+     * Fired during account init, if an in-flight copy migration was detected.
+     */
+    object InFlightReuseMigration : Event()
+
     data class AuthenticationError(val error: AuthException) : Event() {
         override fun toString(): String {
             return this.javaClass.simpleName
@@ -53,6 +66,22 @@ internal sealed class Event {
         }
     }
     data class SignedInShareableAccount(val reuseAccount: Boolean) : Event()
+
+    /**
+     * Fired during SignInShareableAccount(reuseAccount=true) processing if an intermittent problem is encountered.
+     */
+    object RetryLaterViaTokenReuse : Event()
+
+    /**
+     * Fired during SignInShareableAccount(reuseAccount=false) processing if an intermittent problem is encountered.
+     */
+    object RetryLaterViaTokenCopy : Event()
+
+    /**
+     * Fired to trigger a migration retry.
+     */
+    object RetryMigration : Event()
+
     object RecoveredFromAuthenticationProblem : Event()
     object FetchProfile : Event()
     object FetchedProfile : Event()
@@ -69,4 +98,75 @@ internal sealed class Event {
             return this.javaClass.simpleName
         }
     }
+}
+
+internal object FxaStateMatrix {
+    /**
+     * State transition matrix.
+     * @return An optional [AccountState] if provided state+event combination results in a
+     * state transition. Note that states may transition into themselves.
+     */
+    internal fun nextState(state: AccountState, event: Event): AccountState? =
+        when (state) {
+            AccountState.Start -> when (event) {
+                Event.Init -> AccountState.Start
+                Event.AccountNotFound -> AccountState.NotAuthenticated
+                Event.AccountRestored -> AccountState.AuthenticatedNoProfile
+
+                Event.InFlightCopyMigration -> AccountState.CanAutoRetryAuthenticationViaTokenCopy
+                Event.InFlightReuseMigration -> AccountState.CanAutoRetryAuthenticationViaTokenReuse
+
+                else -> null
+            }
+            AccountState.NotAuthenticated -> when (event) {
+                Event.Authenticate -> AccountState.NotAuthenticated
+                Event.FailedToAuthenticate -> AccountState.NotAuthenticated
+
+                is Event.SignInShareableAccount -> AccountState.NotAuthenticated
+                is Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
+                is Event.RetryLaterViaTokenCopy -> AccountState.CanAutoRetryAuthenticationViaTokenCopy
+                is Event.RetryLaterViaTokenReuse -> AccountState.CanAutoRetryAuthenticationViaTokenReuse
+
+                is Event.Pair -> AccountState.NotAuthenticated
+                is Event.Authenticated -> AccountState.AuthenticatedNoProfile
+                else -> null
+            }
+            AccountState.CanAutoRetryAuthenticationViaTokenCopy -> when (event) {
+                Event.RetryMigration -> AccountState.CanAutoRetryAuthenticationViaTokenCopy
+                Event.FailedToAuthenticate -> AccountState.NotAuthenticated
+                is Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
+                Event.RetryLaterViaTokenCopy -> AccountState.CanAutoRetryAuthenticationViaTokenCopy
+                Event.Logout -> AccountState.NotAuthenticated
+                else -> null
+            }
+            AccountState.CanAutoRetryAuthenticationViaTokenReuse -> when (event) {
+                Event.RetryMigration -> AccountState.CanAutoRetryAuthenticationViaTokenReuse
+                Event.FailedToAuthenticate -> AccountState.NotAuthenticated
+                is Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
+                Event.RetryLaterViaTokenReuse -> AccountState.CanAutoRetryAuthenticationViaTokenReuse
+                Event.Logout -> AccountState.NotAuthenticated
+                else -> null
+            }
+            AccountState.AuthenticatedNoProfile -> when (event) {
+                is Event.AuthenticationError -> AccountState.AuthenticationProblem
+                Event.FetchProfile -> AccountState.AuthenticatedNoProfile
+                Event.FetchedProfile -> AccountState.AuthenticatedWithProfile
+                Event.FailedToFetchProfile -> AccountState.AuthenticatedNoProfile
+                Event.Logout -> AccountState.NotAuthenticated
+                else -> null
+            }
+            AccountState.AuthenticatedWithProfile -> when (event) {
+                is Event.AuthenticationError -> AccountState.AuthenticationProblem
+                Event.Logout -> AccountState.NotAuthenticated
+                else -> null
+            }
+            AccountState.AuthenticationProblem -> when (event) {
+                Event.Authenticate -> AccountState.AuthenticationProblem
+                Event.FailedToAuthenticate -> AccountState.AuthenticationProblem
+                Event.RecoveredFromAuthenticationProblem -> AccountState.AuthenticatedNoProfile
+                is Event.Authenticated -> AccountState.AuthenticatedNoProfile
+                Event.Logout -> AccountState.NotAuthenticated
+                else -> null
+            }
+        }
 }
