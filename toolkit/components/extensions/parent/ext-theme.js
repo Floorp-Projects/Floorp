@@ -473,6 +473,8 @@ this.theme = class extends ExtensionAPI {
             if (!browserWindow) {
               return Promise.reject(`Invalid window ID: ${windowId}`);
             }
+          } else if (defaultTheme.extension !== extension) {
+            return;
           }
 
           if (!defaultTheme && !windowOverrides.has(windowId)) {
