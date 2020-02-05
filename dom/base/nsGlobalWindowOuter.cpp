@@ -5781,6 +5781,9 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
       callerInnerWindow->IsSharedMemoryAllowed()) {
     clonePolicy.allowIntraClusterClonableSharedObjects();
   }
+
+  // TODO: what about cloneDataPolicy.allowSharedMemoryObjects()
+
   event->Write(aCx, aMessage, aTransfer, clonePolicy, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return;
