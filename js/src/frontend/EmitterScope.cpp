@@ -349,7 +349,7 @@ bool EmitterScope::internScopeCreationData(BytecodeEmitter* bce,
   if (!createScope(bce->cx, enclosing, &index)) {
     return false;
   }
-  auto scope = bce->parseInfo.scopeCreationData[index.index];
+  auto scope = bce->compilationInfo.scopeCreationData[index.index];
   hasEnvironment_ = scope.get().hasEnvironment();
   return bce->perScriptData().gcThingList().append(index, &scopeIndex_);
 }
@@ -502,7 +502,7 @@ bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
   auto createScope = [kind, bindings, firstFrameSlot, bce](
                          JSContext* cx, Handle<AbstractScope> enclosing,
                          ScopeIndex* index) {
-    return ScopeCreationData::create(cx, bce->parseInfo, kind, bindings,
+    return ScopeCreationData::create(cx, bce->compilationInfo, kind, bindings,
                                      firstFrameSlot, enclosing, index);
   };
   if (!internScopeCreationData(bce, createScope)) {
@@ -566,7 +566,7 @@ bool EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox) {
   auto createScope = [funbox, scopeKind, bce](JSContext* cx,
                                               Handle<AbstractScope> enclosing,
                                               ScopeIndex* index) {
-    return ScopeCreationData::create(cx, bce->parseInfo, scopeKind,
+    return ScopeCreationData::create(cx, bce->compilationInfo, scopeKind,
                                      funbox->namedLambdaBindings(),
                                      LOCALNO_LIMIT, enclosing, index);
   };
@@ -658,7 +658,7 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
                                    Handle<AbstractScope> enclosing,
                                    ScopeIndex* index) {
     return ScopeCreationData::create(
-        cx, bce->parseInfo, funbox->functionScopeBindings(),
+        cx, bce->compilationInfo, funbox->functionScopeBindings(),
         funbox->hasParameterExprs,
         funbox->needsCallObjectRegardlessOfBindings(), funbox, enclosing,
         index);
@@ -718,7 +718,7 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
                          JSContext* cx, Handle<AbstractScope> enclosing,
                          ScopeIndex* index) {
     return ScopeCreationData::create(
-        cx, bce->parseInfo, ScopeKind::FunctionBodyVar,
+        cx, bce->compilationInfo, ScopeKind::FunctionBodyVar,
         funbox->extraVarScopeBindings(), firstFrameSlot,
         funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings(), enclosing,
         index);
@@ -822,8 +822,9 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
                                      Handle<AbstractScope> enclosing,
                                      ScopeIndex* index) {
     MOZ_ASSERT(!enclosing.get());
-    return ScopeCreationData::create(cx, bce->parseInfo, globalsc->scopeKind(),
-                                     globalsc->bindings, index);
+    return ScopeCreationData::create(cx, bce->compilationInfo,
+                                     globalsc->scopeKind(), globalsc->bindings,
+                                     index);
   };
   return internBodyScopeCreationData(bce, createScope);
 }
@@ -847,7 +848,7 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
                                    ScopeIndex* index) {
     ScopeKind scopeKind =
         evalsc->strict() ? ScopeKind::StrictEval : ScopeKind::Eval;
-    return ScopeCreationData::create(cx, bce->parseInfo, scopeKind,
+    return ScopeCreationData::create(cx, bce->compilationInfo, scopeKind,
                                      evalsc->bindings, enclosing, index);
   };
   if (!internBodyScopeCreationData(bce, createScope)) {
@@ -948,8 +949,9 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
   auto createScope = [modulesc, bce](JSContext* cx,
                                      Handle<AbstractScope> enclosing,
                                      ScopeIndex* index) {
-    return ScopeCreationData::create(cx, bce->parseInfo, modulesc->bindings,
-                                     modulesc->module(), enclosing, index);
+    return ScopeCreationData::create(cx, bce->compilationInfo,
+                                     modulesc->bindings, modulesc->module(),
+                                     enclosing, index);
   };
   if (!internBodyScopeCreationData(bce, createScope)) {
     return false;
@@ -970,7 +972,8 @@ bool EmitterScope::enterWith(BytecodeEmitter* bce) {
 
   auto createScope = [bce](JSContext* cx, Handle<AbstractScope> enclosing,
                            ScopeIndex* index) {
-    return ScopeCreationData::create(cx, bce->parseInfo, enclosing, index);
+    return ScopeCreationData::create(cx, bce->compilationInfo, enclosing,
+                                     index);
   };
   if (!internScopeCreationData(bce, createScope)) {
     return false;

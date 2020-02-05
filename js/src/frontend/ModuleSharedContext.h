@@ -29,8 +29,9 @@ class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext {
   JS::Rooted<ModuleScope::Data*> bindings;
   ModuleBuilder& builder;
 
-  ModuleSharedContext(JSContext* cx, ModuleObject* module, ParseInfo& parseInfo,
-                      Scope* enclosingScope, ModuleBuilder& builder);
+  ModuleSharedContext(JSContext* cx, ModuleObject* module,
+                      CompilationInfo& compilationInfo, Scope* enclosingScope,
+                      ModuleBuilder& builder);
 
   JS::Handle<ModuleObject*> module() const { return module_; }
   Scope* compilationEnclosingScope() const override { return enclosingScope_; }

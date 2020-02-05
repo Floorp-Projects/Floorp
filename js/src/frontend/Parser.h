@@ -179,18 +179,17 @@
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/CompilationInfo.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/FunctionTree.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/ParseContext.h"
-#include "frontend/ParseInfo.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
 #include "js/Vector.h"
-
 #include "vm/ErrorReporting.h"
 
 namespace js {
@@ -208,7 +207,7 @@ class SourceParseContext : public ParseContext {
   SourceParseContext(GeneralParser<ParseHandler, Unit>* prs, SharedContext* sc,
                      Directives* newDirectives)
       : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream,
-                     prs->getParseInfo(), newDirectives,
+                     prs->getCompilationInfo(), newDirectives,
                      mozilla::IsSame<ParseHandler, FullParseHandler>::value) {}
 };
 
@@ -245,7 +244,7 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
  public:
   enum class Kind { Parser, BinASTParser };
 
-  ParserSharedBase(JSContext* cx, ParseInfo& parserInfo,
+  ParserSharedBase(JSContext* cx, CompilationInfo& compilationInfo,
                    ScriptSourceObject* sourceObject, Kind kind);
   ~ParserSharedBase();
 
@@ -255,7 +254,7 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   LifoAlloc& alloc_;
 
   // Information for parsing with a lifetime longer than the parser itself.
-  ParseInfo& parseInfo_;
+  CompilationInfo& compilationInfo_;
 
   // list of parsed objects and BigInts for GC tracing
   TraceListNode* traceListHead_;
@@ -289,7 +288,7 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   void cleanupTraceList();
 
  public:
-  ParseInfo& getParseInfo() { return parseInfo_; }
+  CompilationInfo& getCompilationInfo() { return compilationInfo_; }
 
   // Create a new JSObject and store it into the trace list.
   ObjectBox* newObjectBox(JSObject* obj);
@@ -350,7 +349,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   friend class AutoInParametersOfAsyncFunction;
 
   ParserBase(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-             bool foldConstants, ParseInfo& parseInfo,
+             bool foldConstants, CompilationInfo& compilationInfo,
              ScriptSourceObject* sourceObject);
   ~ParserBase();
 
@@ -517,7 +516,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                   bool foldConstants, ParseInfo& parserInfo,
+                   bool foldConstants, CompilationInfo& compilationInfo,
                    LazyScript* lazyOuterFunction,
                    ScriptSourceObject* sourceObject,
                    void* internalSyntaxParser);
@@ -525,12 +524,12 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
  protected:
   template <typename Unit>
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                   bool foldConstants, ParseInfo& parserInfo,
+                   bool foldConstants, CompilationInfo& compilationInfo,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser,
                    LazyScript* lazyOuterFunction,
                    ScriptSourceObject* sourceObject)
       : PerHandlerParser(
-            cx, options, foldConstants, parserInfo, lazyOuterFunction,
+            cx, options, foldConstants, compilationInfo, lazyOuterFunction,
             sourceObject,
             // JSOPTION_EXTRA_WARNINGS adds extra warnings not
             // generated when functions are parsed lazily.
@@ -991,7 +990,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
  public:
   GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                 const Unit* units, size_t length, bool foldConstants,
-                ParseInfo& parserInfo, SyntaxParser* syntaxParser,
+                CompilationInfo& compilationInfo, SyntaxParser* syntaxParser,
                 LazyScript* lazyOuterFunction,
                 ScriptSourceObject* sourceObject);
 
