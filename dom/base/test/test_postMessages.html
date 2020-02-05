@@ -174,11 +174,6 @@ function runTests(obj) {
 
   // cloning tests - everyWhere
   new Promise(function(resolve, reject) {
-    if (!obj.clonableObjectsEveryWhere) {
-      resolve();
-      return;
-    }
-
     var clonableObjectsId = 0;
     function runClonableTest() {
       if (clonableObjectsId >= clonableObjects.length) {
@@ -194,7 +189,12 @@ function runTests(obj) {
       }
 
       obj.send(object.data, []).then(function(received) {
-        compare(received.data, object.data);
+        if (!obj.clonableObjectsEveryWhere) {
+          ok(received.error, "Error expected");
+        } else {
+          ok(!received.error, "Error not expected");
+          compare(received.data, object.data);
+        }
         runClonableTest();
       });
     }
@@ -205,11 +205,6 @@ function runTests(obj) {
   // clonable same process
   .then(function() {
     return new Promise(function(resolve, reject) {
-      if (!obj.clonableObjectsSameProcess) {
-        resolve();
-        return;
-      }
-
       var clonableObjectsId = 0;
       function runClonableTest() {
         if (clonableObjectsId >= clonableObjects.length) {
@@ -225,7 +220,12 @@ function runTests(obj) {
         }
 
         obj.send(object.data, []).then(function(received) {
-          compare(received.data, object.data);
+          if (!obj.clonableObjectsSameProcess) {
+            ok(received.error, "Error expected");
+          } else {
+            ok(!received.error, "Error not expected");
+            compare(received.data, object.data);
+          }
           runClonableTest();
         });
       }
@@ -301,7 +301,7 @@ function test_windowToWindow() {
   info("Testing window to window");
   var resolve;
 
-  onmessage = function(e) {
+  function resolvePromise(data) {
     if (!resolve) {
       ok(false, "Unexpected message!");
       return;
@@ -309,7 +309,15 @@ function test_windowToWindow() {
 
     let tmp = resolve;
     resolve = null;
-    tmp({ data: e.data, ports: e.ports });
+    tmp(data);
+  }
+
+  onmessage = function(e) {
+    resolvePromise({ data: e.data, ports: e.ports, error: false });
+  }
+
+  onmessageerror = function(e) {
+    resolvePromise({ error: true });
   }
 
   runTests({
@@ -331,6 +339,7 @@ function test_windowToWindow() {
 
     finished() {
       onmessage = null;
+      onmessageerror = null;
       next();
     }
   });
@@ -360,7 +369,7 @@ function test_windowToIframeURL(url, clonableObjectsSameProcess) {
 
     let tmp = resolve;
     resolve = null;
-    tmp({ data: e.data, ports: e.ports });
+    tmp({ data: e.data, ports: e.ports, error: e.data === "error" });
   }
 
   var ifr = document.createElement('iframe');
@@ -411,7 +420,7 @@ function test_workers() {
 
       let tmp = resolve;
       resolve = null;
-      tmp({ data: e1.data, ports: e1.ports });
+      tmp({ data: e1.data, ports: e1.ports, error: e1.data === "error" });
     }
 
     runTests({
@@ -431,7 +440,53 @@ function test_workers() {
       },
 
       finished() {
-        onmessage = null;
+        w.terminate();
+        next();
+      }
+    });
+  }
+}
+
+// PostMessage for SharedWorkers
+function test_sharedWorkers() {
+  info("Testing SharedWorkers");
+
+  var resolve;
+
+  var w = new SharedWorker('worker_postMessages.js');
+  w.port.postMessage('sharedworkers');
+  w.port.onmessage = function(e) {
+    is(e.data, 'ok', "Worker ready!");
+
+    w.port.onmessage = function(e1) {
+      if (!resolve) {
+        ok(false, "Unexpected message!");
+        return;
+      }
+
+      let tmp = resolve;
+      resolve = null;
+      tmp({ data: e1.data, ports: e1.ports, error: e1.data === "error" });
+    }
+
+    runTests({
+      clonableObjectsEveryWhere: true,
+      clonableObjectsSameProcess: false,
+      transferableObjects: true,
+      send(what, ports) {
+        return new Promise(function(r, rr) {
+          resolve = r;
+          try {
+            w.port.postMessage(what, ports);
+          } catch(ex) {
+            resolve = null;
+            rr();
+          }
+        });
+      },
+
+      finished() {
+        w.port.postMessage("terminate");
         next();
       }
     });
@@ -447,7 +502,7 @@ function test_broadcastChannel() {
 
   var resolve;
 
-  bc2.onmessage = function(e) {
+  function resolvePromise(data) {
     if (!resolve) {
       ok(false, "Unexpected message!");
       return;
@@ -455,7 +510,15 @@ function test_broadcastChannel() {
 
     let tmp = resolve;
     resolve = null;
-    tmp({ data: e.data, ports: [] });
+    tmp(data);
+  }
+
+  bc2.onmessage = function(e) {
+    resolvePromise({ data: e.data, ports: [], error: false });
+  }
+
+  bc2.onmessageerror = function(e) {
+    resolvePromise({ error: true });
   }
 
   runTests({
@@ -475,7 +538,8 @@ function test_broadcastChannel() {
     },
 
     finished() {
-      onmessage = null;
+      bc1.close();
+      bc2.close();
       next();
     }
   });
@@ -501,7 +565,55 @@ function test_broadcastChannel_inWorkers() {
 
       let tmp = resolve;
       resolve = null;
-      tmp({ data: e1.data, ports: e1.ports });
+      tmp({ data: e1.data, ports: e1.ports, error: e1.data === "error" });
+    }
+
+    runTests({
+      clonableObjectsEveryWhere: true,
+      clonableObjectsSameProcess: true,
+      transferableObjects: false,
+      send(what, ports) {
+        return new Promise(function(r, rr) {
+          if (ports.length) {
+            rr();
+            return;
+          }
+
+          resolve = r;
+          bc.postMessage(what);
+        });
+      },
+
+      finished() {
+        bc.close();
+        w.terminate();
+        next();
+      }
+    });
+  }
+}
+
+// PostMessage for BroadcastChannel in SharedWorkers
+function test_broadcastChannel_inSharedWorkers() {
+  info("Testing broadcastChannel in SharedWorkers");
+
+  var bc = new BroadcastChannel('postMessagesTest_inWorkers');
+  var resolve;
+
+  var w = new SharedWorker('worker_postMessages.js');
+  w.port.postMessage('broadcastChannel');
+  w.port.onmessage = function(e) {
+    is(e.data, 'ok', "Worker ready!");
+
+    w.port.onmessage = function(e1) {
+      if (!resolve) {
+        ok(false, "Unexpected message!");
+        return;
+      }
+
+      let tmp = resolve;
+      resolve = null;
+      tmp({ data: e1.data, ports: e1.ports, error: e1.data === "error" });
     }
 
     runTests({
@@ -521,7 +633,8 @@ function test_broadcastChannel_inWorkers() {
       },
 
       finished() {
-        onmessage = null;
+        bc.close();
+        w.port.postMessage("terminate");
         next();
       }
     });
@@ -535,7 +648,7 @@ function test_messagePort() {
   var mc = new MessageChannel();
   var resolve;
 
-  mc.port2.onmessage = function(e) {
+  function resolvePromise(data) {
     if (!resolve) {
       ok(false, "Unexpected message!");
       return;
@@ -543,7 +656,15 @@ function test_messagePort() {
 
     let tmp = resolve;
     resolve = null;
-    tmp({ data: e.data, ports: e.ports });
+    tmp(data);
+  }
+
+  mc.port2.onmessage = function(e) {
+    resolvePromise({ data: e.data, ports: e.ports, error: false });
+  }
+
+  mc.port2.onmessageerror = function(e) {
+    resolvePromise({ error: true });
   }
 
   runTests({
@@ -563,7 +684,6 @@ function test_messagePort() {
     },
 
     finished() {
-      onmessage = null;
       next();
     }
   });
@@ -589,12 +709,12 @@ function test_messagePort_inWorkers() {
 
       let tmp = resolve;
       resolve = null;
-      tmp({ data: e1.data, ports: e1.ports });
+      tmp({ data: e1.data, ports: e1.ports, error: e1.data === "error" });
     }
 
     runTests({
       clonableObjectsEveryWhere: true,
-      clonableObjectsSameProcess: false,
+      clonableObjectsSameProcess: true,
       transferableObjects: true,
       send(what, ports) {
         return new Promise(function(r, rr) {
@@ -609,7 +729,7 @@ function test_messagePort_inWorkers() {
       },
 
       finished() {
-        onmessage = null;
+        w.terminate();
         next();
       }
     });
@@ -628,9 +748,11 @@ var tests = [
   test_windowToCrossOriginIframe,
 
   test_workers,
+  test_sharedWorkers,
 
   test_broadcastChannel,
   test_broadcastChannel_inWorkers,
+  test_broadcastChannel_inSharedWorkers,
 
   test_messagePort,
   test_messagePort_inWorkers,
