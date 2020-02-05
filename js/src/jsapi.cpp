@@ -5796,19 +5796,6 @@ JS_PUBLIC_API JS::TranscodeResult JS::EncodeScript(JSContext* cx,
   return JS::TranscodeResult_Ok;
 }
 
-JS_PUBLIC_API JS::TranscodeResult JS::EncodeInterpretedFunction(
-    JSContext* cx, TranscodeBuffer& buffer, HandleObject funobjArg) {
-  XDREncoder encoder(cx, buffer, buffer.length());
-  RootedFunction funobj(cx, &funobjArg->as<JSFunction>());
-  XDRResult res = encoder.codeFunction(&funobj);
-  if (res.isErr()) {
-    buffer.clearAndFree();
-    return res.unwrapErr();
-  }
-  MOZ_ASSERT(!buffer.empty());
-  return JS::TranscodeResult_Ok;
-}
-
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
     JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
@@ -5837,23 +5824,6 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
   }
   XDRResult res = decoder->codeScript(scriptp);
   MOZ_ASSERT(bool(scriptp) == res.isOk());
-  if (res.isErr()) {
-    return res.unwrapErr();
-  }
-  return JS::TranscodeResult_Ok;
-}
-
-JS_PUBLIC_API JS::TranscodeResult JS::DecodeInterpretedFunction(
-    JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleFunction funp,
-    size_t cursorIndex) {
-  Rooted<UniquePtr<XDRDecoder>> decoder(
-      cx, js::MakeUnique<XDRDecoder>(cx, buffer, cursorIndex));
-  if (!decoder) {
-    ReportOutOfMemory(cx);
-    return JS::TranscodeResult_Throw;
-  }
-  XDRResult res = decoder->codeFunction(funp);
-  MOZ_ASSERT(bool(funp) == res.isOk());
   if (res.isErr()) {
     return res.unwrapErr();
   }
