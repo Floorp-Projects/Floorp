@@ -300,6 +300,26 @@ class ExperimentsTest {
     }
 
     @Test
+    fun `updating experiments invokes callback`() {
+        resetExperiments()
+
+        // Set up the Kinto-side experiments.
+        val experimentsList1 = listOf(createDefaultExperiment(id = "id"))
+        val snapshot1 = ExperimentsSnapshot(experimentsList1, null)
+        `when`(experimentSource.getExperiments(any())).thenReturn(snapshot1)
+
+        var canary = false
+        experiments.initialize(context, configuration) { canary = true }
+
+        verify(experimentStorage, times(1)).retrieve()
+        verify(experimentSource, times(1)).getExperiments(any())
+        verify(experiments, times(1)).onExperimentsUpdated(snapshot1)
+        assertEquals(experimentsList1, experiments.experiments)
+        assertEquals(snapshot1, experiments.experimentsResult)
+        assertTrue(canary)
+    }
+
+    @Test
     fun getActiveExperiments() {
         resetExperiments()
         experiments.initialize(mockContext, configuration)
