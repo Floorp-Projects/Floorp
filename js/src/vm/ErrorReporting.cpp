@@ -94,14 +94,16 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
   return true;
 }
 
-void js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata,
-                            UniquePtr<JSErrorNotes> notes, unsigned flags,
-                            unsigned errorNumber, va_list* args) {
+static void ReportCompileErrorImpl(JSContext* cx, js::ErrorMetadata&& metadata,
+                                   js::UniquePtr<JSErrorNotes> notes,
+                                   unsigned flags, unsigned errorNumber,
+                                   va_list* args,
+                                   js::ErrorArgumentsType argumentsType) {
   // On the main thread, report the error immediately. When compiling off
   // thread, save the error so that the thread finishing the parse can report
   // it later.
-  CompileError tempErr;
-  CompileError* err = &tempErr;
+  js::CompileError tempErr;
+  js::CompileError* err = &tempErr;
   if (cx->isHelperThreadContext() && !cx->addPendingCompileError(&err)) {
     return;
   }
@@ -120,14 +122,28 @@ void js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata,
                           metadata.tokenOffset);
   }
 
-  if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
-                              nullptr, ArgumentsAreLatin1, err, *args)) {
+  if (!js::ExpandErrorArgumentsVA(cx, js::GetErrorMessage, nullptr, errorNumber,
+                                  nullptr, argumentsType, err, *args)) {
     return;
   }
 
   if (!cx->isHelperThreadContext()) {
     err->throwError(cx);
   }
+}
+
+void js::ReportCompileErrorLatin1(JSContext* cx, ErrorMetadata&& metadata,
+                                  UniquePtr<JSErrorNotes> notes, unsigned flags,
+                                  unsigned errorNumber, va_list* args) {
+  ReportCompileErrorImpl(cx, std::move(metadata), std::move(notes), flags,
+                         errorNumber, args, ArgumentsAreLatin1);
+}
+
+void js::ReportCompileErrorUTF8(JSContext* cx, ErrorMetadata&& metadata,
+                                UniquePtr<JSErrorNotes> notes, unsigned flags,
+                                unsigned errorNumber, va_list* args) {
+  ReportCompileErrorImpl(cx, std::move(metadata), std::move(notes), flags,
+                         errorNumber, args, ArgumentsAreUTF8);
 }
 
 void js::ReportErrorToGlobal(JSContext* cx, Handle<GlobalObject*> global,
