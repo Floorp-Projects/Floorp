@@ -36,7 +36,6 @@ class RenderWaylandDMABUFTextureHostOGL final : public RenderTextureHostOGL {
 
   RefPtr<WaylandDMABufSurface> mSurface;
   RefPtr<gl::GLContext> mGL;
-  GLuint mTextureHandle;
 };
 
 }  // namespace wr
