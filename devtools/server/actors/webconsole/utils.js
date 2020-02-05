@@ -629,7 +629,11 @@ WebConsoleCommands._registerOriginal("cd", function(owner, window) {
  * @param object object
  *        Object to inspect.
  */
-WebConsoleCommands._registerOriginal("inspect", function(owner, object) {
+WebConsoleCommands._registerOriginal("inspect", function(
+  owner,
+  object,
+  forceExpandInConsole = false
+) {
   const dbgObj = owner.preprocessDebuggerObject(
     owner.makeDebuggeeValue(object)
   );
@@ -639,6 +643,7 @@ WebConsoleCommands._registerOriginal("inspect", function(owner, object) {
     type: "inspectObject",
     input: owner.evalInput,
     object: grip,
+    forceExpandInConsole,
   };
 });
 

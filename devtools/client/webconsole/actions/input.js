@@ -148,7 +148,7 @@ function handleHelperResult(response) {
           break;
         case "inspectObject": {
           const objectActor = helperResult.object;
-          if (hud.toolbox) {
+          if (hud.toolbox && !helperResult.forceExpandInConsole) {
             hud.toolbox.inspectObjectActor(objectActor);
           } else {
             webConsoleUI.inspectObjectActor(objectActor);
