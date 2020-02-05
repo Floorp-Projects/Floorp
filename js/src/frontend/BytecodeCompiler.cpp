@@ -77,6 +77,11 @@ class MOZ_RAII AutoAssertReportedException {
 #endif
 };
 
+static bool InternalCreateScript(CompilationInfo& compilationinfo,
+                                 HandleObject functionOrGlobal,
+                                 uint32_t toStringStart, uint32_t toStringEnd,
+                                 uint32_t sourceBufferLength);
+
 template <typename Unit>
 class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
  protected:
@@ -95,9 +100,9 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
 
   // Call this before calling compile{Global,Eval}Script.
   MOZ_MUST_USE bool prepareScriptParse(LifoAllocScope& allocScope,
-                                       BytecodeCompiler& info) {
-    return createSourceAndParser(allocScope, info.compilationInfo) &&
-           createCompleteScript(info);
+                                       CompilationInfo& compilationInfo) {
+    return createSourceAndParser(allocScope, compilationInfo) &&
+           createCompleteScript(compilationInfo);
   }
 
   void assertSourceAndParserCreated(BytecodeCompiler& info) const {
@@ -123,13 +128,14 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   // This assumes the created script's offsets in the source used to parse it
   // are the same as are used to compute its Function.prototype.toString()
   // value.
-  MOZ_MUST_USE bool createCompleteScript(BytecodeCompiler& info) {
-    JSContext* cx = info.compilationInfo.cx;
+  MOZ_MUST_USE bool createCompleteScript(CompilationInfo& compilationInfo) {
+    JSContext* cx = compilationInfo.cx;
     RootedObject global(cx, cx->global());
     uint32_t toStringStart = 0;
     uint32_t len = sourceBuffer_.length();
     uint32_t toStringEnd = len;
-    return info.internalCreateScript(global, toStringStart, toStringEnd, len);
+    return InternalCreateScript(compilationInfo, global, toStringStart,
+                                toStringEnd, len);
   }
 
   MOZ_MUST_USE bool handleParseFailure(BytecodeCompiler& compiler,
@@ -156,8 +162,8 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
   explicit ScriptCompiler(SourceText<Unit>& srcBuf) : Base(srcBuf) {}
 
   MOZ_MUST_USE bool prepareScriptParse(LifoAllocScope& allocScope,
-                                       BytecodeCompiler& compiler) {
-    return Base::prepareScriptParse(allocScope, compiler);
+                                       CompilationInfo& compilationInfo) {
+    return Base::prepareScriptParse(allocScope, compilationInfo);
   }
 
   JSScript* compileScript(BytecodeCompiler& compiler, HandleObject environment,
@@ -184,7 +190,7 @@ static JSScript* CreateGlobalScript(GlobalScriptInfo& info,
   LifoAllocScope allocScope(&info.compilationInfo.cx->tempLifoAlloc());
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
 
-  if (!compiler.prepareScriptParse(allocScope, info)) {
+  if (!compiler.prepareScriptParse(allocScope, info.compilationInfo)) {
     return nullptr;
   }
 
@@ -216,7 +222,7 @@ static JSScript* CreateEvalScript(frontend::EvalScriptInfo& info,
   LifoAllocScope allocScope(&info.compilationInfo.cx->tempLifoAlloc());
 
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
-  if (!compiler.prepareScriptParse(allocScope, info)) {
+  if (!compiler.prepareScriptParse(allocScope, info.compilationInfo)) {
     return nullptr;
   }
 
@@ -288,12 +294,12 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
  private:
   // Create a script for a function with the given toString offsets in source
   // text.
-  MOZ_MUST_USE bool createFunctionScript(StandaloneFunctionInfo& info,
+  MOZ_MUST_USE bool createFunctionScript(CompilationInfo& compilationInfo,
                                          HandleObject function,
                                          uint32_t toStringStart,
                                          uint32_t toStringEnd) {
-    return info.internalCreateScript(function, toStringStart, toStringEnd,
-                                     sourceBuffer_.length());
+    return InternalCreateScript(compilationInfo, function, toStringStart,
+                                toStringEnd, sourceBuffer_.length());
   }
 };
 
@@ -410,10 +416,11 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
   return parser->checkOptions();
 }
 
-bool BytecodeCompiler::internalCreateScript(HandleObject functionOrGlobal,
-                                            uint32_t toStringStart,
-                                            uint32_t toStringEnd,
-                                            uint32_t sourceBufferLength) {
+// Allocate a script for CompilationInfo for the given function or global
+static bool InternalCreateScript(CompilationInfo& compilationInfo,
+                                 HandleObject functionOrGlobal,
+                                 uint32_t toStringStart, uint32_t toStringEnd,
+                                 uint32_t sourceBufferLength) {
   compilationInfo.script = JSScript::Create(
       compilationInfo.cx, functionOrGlobal, compilationInfo.options,
       compilationInfo.sourceObject,
@@ -533,7 +540,7 @@ template <typename Unit>
 ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     LifoAllocScope& allocScope, ModuleInfo& info) {
   if (!createSourceAndParser(allocScope, info.compilationInfo) ||
-      !createCompleteScript(info)) {
+      !createCompleteScript(info.compilationInfo)) {
     return nullptr;
   }
 
@@ -630,7 +637,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
   if (funbox->isInterpreted()) {
     MOZ_ASSERT(fun == funbox->function());
 
-    if (!createFunctionScript(info, fun, funbox->toStringStart,
+    if (!createFunctionScript(info.compilationInfo, fun, funbox->toStringStart,
                               funbox->toStringEnd)) {
       return false;
     }
