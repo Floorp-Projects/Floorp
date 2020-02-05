@@ -42,11 +42,10 @@ class SyntaxParseHandler {
   //          this class.  The |lastAtom| field above is safe because
   //          SyntaxParseHandler only appears as a field in
   //          PerHandlerParser<SyntaxParseHandler>, and that class inherits
-  //          from ParserBase which contains an AutoKeepAtoms field that
-  //          prevents atoms from being moved around while the AutoKeepAtoms
-  //          lives -- which is as long as ParserBase lives, which is longer
-  //          than the PerHandlerParser<SyntaxParseHandler> that inherits
-  //          from it will live.
+  //          from ParserBase which contains a reference to a CompilationInfo,
+  //          which has an AutoKeepAtoms field that prevents atoms from being
+  //          moved around while the AutoKeepAtoms lives -- which is longer
+  //          than the lifetime of any of the parser classes.
 
  public:
   enum Node {

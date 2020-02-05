@@ -398,8 +398,7 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 BytecodeCompiler::BytecodeCompiler(JSContext* cx,
                                    CompilationInfo& compilationInfo,
                                    const ReadOnlyCompileOptions& options)
-    : keepAtoms(cx),
-      compilationInfo(compilationInfo),
+    : compilationInfo(compilationInfo),
       directives(options.forceStrictMode()),
       script(cx) {}
 
@@ -495,7 +494,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     BytecodeCompiler& info, HandleObject environment, SharedContext* sc) {
   assertSourceParserAndScriptCreated(info);
 
-  TokenStreamPosition startPosition(info.keepAtoms, parser->tokenStream);
+  TokenStreamPosition startPosition(info.compilationInfo.keepAtoms,
+                                    parser->tokenStream);
 
   JSContext* cx = info.compilationInfo.cx;
 
@@ -626,7 +626,8 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
 
   assertSourceAndParserCreated(info);
 
-  TokenStreamPosition startPosition(info.keepAtoms, parser->tokenStream);
+  TokenStreamPosition startPosition(info.compilationInfo.keepAtoms,
+                                    parser->tokenStream);
 
   // Speculatively parse using the default directives implied by the context.
   // If a directive is encountered (e.g., "use strict") that changes how the
