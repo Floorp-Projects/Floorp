@@ -68,10 +68,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
     MOZ_ASSERT(compilationInfo.sourceObject != nullptr);
     MOZ_ASSERT(compilationInfo.sourceObject->source() != nullptr);
   }
-
-  MOZ_MUST_USE bool emplaceEmitter(mozilla::Maybe<BytecodeEmitter>& emitter,
-                                   const EitherParser& parser,
-                                   SharedContext* sharedContext);
 };
 
 class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {

@@ -82,6 +82,11 @@ static bool InternalCreateScript(CompilationInfo& compilationinfo,
                                  uint32_t toStringStart, uint32_t toStringEnd,
                                  uint32_t sourceBufferLength);
 
+static bool EmplaceEmitter(CompilationInfo& compilationInfo,
+                           Maybe<BytecodeEmitter>& emitter,
+                           const EitherParser& parser,
+                           SharedContext* sharedContext);
+
 template <typename Unit>
 class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
  protected:
@@ -115,11 +120,11 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
     MOZ_ASSERT(info.compilationInfo.script != nullptr);
   }
 
-  MOZ_MUST_USE bool emplaceEmitter(BytecodeCompiler& info,
+  MOZ_MUST_USE bool emplaceEmitter(CompilationInfo& compilationInfo,
                                    Maybe<BytecodeEmitter>& emitter,
                                    SharedContext* sharedContext) {
-    return info.emplaceEmitter(emitter, EitherParser(parser.ptr()),
-                               sharedContext);
+    return EmplaceEmitter(compilationInfo, emitter, EitherParser(parser.ptr()),
+                          sharedContext);
   }
 
   MOZ_MUST_USE bool createSourceAndParser(LifoAllocScope& allocScope,
@@ -429,9 +434,10 @@ static bool InternalCreateScript(CompilationInfo& compilationInfo,
   return compilationInfo.script != nullptr;
 }
 
-bool BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
-                                      const EitherParser& parser,
-                                      SharedContext* sharedContext) {
+static bool EmplaceEmitter(CompilationInfo& compilationInfo,
+                           Maybe<BytecodeEmitter>& emitter,
+                           const EitherParser& parser,
+                           SharedContext* sharedContext) {
   BytecodeEmitter::EmitterMode emitterMode =
       compilationInfo.options.selfHostingMode ? BytecodeEmitter::SelfHosting
                                               : BytecodeEmitter::Normal;
@@ -499,7 +505,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       }
 
       Maybe<BytecodeEmitter> emitter;
-      if (!emplaceEmitter(info, emitter, sc)) {
+      if (!emplaceEmitter(info.compilationInfo, emitter, sc)) {
         return nullptr;
       }
 
@@ -568,7 +574,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
 
   Maybe<BytecodeEmitter> emitter;
-  if (!emplaceEmitter(info, emitter, &modulesc)) {
+  if (!emplaceEmitter(info.compilationInfo, emitter, &modulesc)) {
     return nullptr;
   }
 
@@ -647,7 +653,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     }
 
     Maybe<BytecodeEmitter> emitter;
-    if (!emplaceEmitter(info, emitter, funbox)) {
+    if (!emplaceEmitter(info.compilationInfo, emitter, funbox)) {
       return false;
     }
 
