@@ -34,6 +34,11 @@
 #  include "SharedSurfaceGLX.h"
 #endif
 
+#ifdef MOZ_WAYLAND
+#  include "gfxPlatformGtk.h"
+#  include "SharedSurfaceDMABUF.h"
+#endif
+
 namespace mozilla::gl {
 
 using gfx::SurfaceFormat;
@@ -84,6 +89,13 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
   if (useGl) {
 #if defined(XP_MACOSX)
     factory = SurfaceFactory_IOSurface::Create(gl, caps, ipcChannel, flags);
+#elif defined(MOZ_WAYLAND)
+    if (gl->GetContextType() == GLContextType::EGL) {
+      if (gfxPlatformGtk::GetPlatform()->UseWaylandDMABufWebGL()) {
+        factory =
+            MakeUnique<SurfaceFactory_DMABUF>(gl, caps, ipcChannel, flags);
+      }
+    }
 #elif defined(MOZ_X11)
     if (sGLXLibrary.UseTextureFromPixmap())
       factory = SurfaceFactory_GLXDrawable::Create(gl, caps, ipcChannel, flags);

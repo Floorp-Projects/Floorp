@@ -118,6 +118,7 @@ elif gl_provider == 'GLX':
 if CONFIG['MOZ_WAYLAND']:
     SOURCES += [
         'GLContextProviderWayland.cpp',
+        'SharedSurfaceDMABUF.cpp'
     ]
 
 UNIFIED_SOURCES += [
