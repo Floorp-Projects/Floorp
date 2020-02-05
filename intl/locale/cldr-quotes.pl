@@ -19,7 +19,7 @@ use strict;
 use Encode;
 use IO::Uncompress::Unzip;
 
-my $filename = 'cldr-common-35.1.zip';
+my $filename = 'cldr-common-36.0.zip';
 
 my (%langQuotes, %quoteLangs);
 
