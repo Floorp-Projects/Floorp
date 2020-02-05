@@ -27,7 +27,7 @@ class MOZ_STACK_CLASS BaseIter {
  public:
   typedef T SelfType;
 
-  PropertyType begin() const { return elem(Self()); }
+  PropertyType begin() const { return PropertyType(Self()); }
 
   PropertyType end() const {
     PropertyType elem(Self());
