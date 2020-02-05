@@ -47,8 +47,15 @@ function create_wasmModule() {
   });
 }
 
-function test_simple() {
-  info("BroadcastChannel");
+function enable_sab() {
+  SpecialPowers.pushPrefEnv(
+    {"set": [
+      ["dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled", true],
+    ]}, next);
+}
+
+function test_wasm() {
+  info("BroadcastChannel + WASM");
 
   if (!wasmModule) {
     next();
@@ -68,8 +75,8 @@ function test_simple() {
   bc2.close();
 }
 
-function test_worker() {
-  info("BroadcastChannel in workers");
+function test_wasm_worker() {
+  info("BroadcastChannel + WASM in workers");
 
   if (!wasmModule) {
     next();
@@ -92,10 +99,50 @@ function test_worker() {
   new Worker(URL.createObjectURL(blob));
 }
 
+function test_sab() {
+  info("BroadcastChannel + SAB");
+
+  const bc1 = new BroadcastChannel('a');
+  const bc2 = new BroadcastChannel('a');
+
+  bc1.onmessage = e => {
+    ok(e.data.sab instanceof SharedArrayBuffer, "SAB received");
+    bc1.close();
+    next();
+  };
+
+  bc2.postMessage({sab: new SharedArrayBuffer(1024)});
+  bc2.close();
+}
+
+function test_sab_worker() {
+  info("BroadcastChannel + WASM in workers");
+
+  const bc = new BroadcastChannel('b');
+  bc.onmessage = e => {
+    if (e.data === "ready") {
+      bc.postMessage({sab: new SharedArrayBuffer(1024)});
+      return;
+    }
+
+    ok(e.data.sab instanceof SharedArrayBuffer, "SAB received");
+    bc.close();
+    next();
+  };
+
+  const blob = new Blob([document.getElementById('myWorker').textContent]);
+  new Worker(URL.createObjectURL(blob));
+}
+
 const tests = [
+  enable_sab,
   create_wasmModule,
-  test_simple,
-  test_worker,
+
+  test_wasm,
+  test_wasm_worker,
+
+  test_sab,
+  test_sab_worker,
 ];
 
 function next() {
