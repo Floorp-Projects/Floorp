@@ -7,6 +7,7 @@
 #ifndef mozilla_InspectorFontFace_h
 #define mozilla_InspectorFontFace_h
 
+#include "gfxTypes.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
