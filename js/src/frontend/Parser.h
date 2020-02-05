@@ -267,9 +267,6 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
 
   RootedScriptSourceObject sourceObject_;
 
-  // Root atoms and objects allocated for the parsed tree.
-  AutoKeepAtoms keepAtoms_;
-
  private:
   // This is needed to cast a parser to JS::AutoGCRooter.
   friend void js::frontend::TraceParser(JSTracer* trc,
@@ -769,7 +766,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::getFilename;
   using Base::hasValidSimpleStrictParameterNames;
   using Base::isUnexpectedEOF_;
-  using Base::keepAtoms_;
   using Base::nameIsArgumentsOrEval;
   using Base::newFunction;
   using Base::newFunctionBox;
@@ -1560,7 +1556,6 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::functionFormalParametersAndBody;
   using Base::handler_;
   using Base::innerFunction;
-  using Base::keepAtoms_;
   using Base::matchOrInsertSemicolon;
   using Base::mustMatchToken;
   using Base::newFunctionBox;
@@ -1711,7 +1706,6 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::finishLexicalScope;
   using Base::innerFunction;
   using Base::innerFunctionForFunctionBox;
-  using Base::keepAtoms_;
   using Base::matchOrInsertSemicolon;
   using Base::mustMatchToken;
   using Base::newEvalScopeData;

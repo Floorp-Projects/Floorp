@@ -1230,8 +1230,8 @@ class MOZ_RAII AutoKeepAtoms {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
  public:
-  explicit inline AutoKeepAtoms(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-  inline ~AutoKeepAtoms();
+  explicit AutoKeepAtoms(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  ~AutoKeepAtoms();
 };
 
 class MOZ_RAII AutoNoteDebuggerEvaluationWithOnNativeCallHook {
