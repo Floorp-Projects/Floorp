@@ -50,8 +50,8 @@ static int testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
   }
 
   LifoAllocScope allocScope(&gCx->tempLifoAlloc());
-  CompilationInfo binCompilationInfo(gCx, allocScope);
-  if (!binCompilationInfo.initFromOptions(gCx, options)) {
+  CompilationInfo binCompilationInfo(gCx, allocScope, options);
+  if (!binCompilationInfo.init(gCx)) {
     return 0;
   }
 

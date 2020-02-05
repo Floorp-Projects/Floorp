@@ -67,8 +67,8 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   CHECK_THREAD(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationInfo compilationInfo(cx, allocScope);
-  if (!compilationInfo.initFromOptions(cx, options)) {
+  frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+  if (!compilationInfo.init(cx)) {
     return nullptr;
   }
 
@@ -227,8 +227,8 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
 
   CompileOptions options(cx);
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope);
-  if (!compilationInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope, options);
+  if (!compilationInfo.init(cx)) {
     return false;
   }
 
@@ -549,8 +549,8 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   RootedScript script(cx);
   {
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
-    frontend::CompilationInfo compilationInfo(cx, allocScope);
-    if (!compilationInfo.initFromOptions(cx, options)) {
+    frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+    if (!compilationInfo.init(cx)) {
       return false;
     }
 

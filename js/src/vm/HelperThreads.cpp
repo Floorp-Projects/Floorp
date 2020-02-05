@@ -592,8 +592,8 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationInfo compilationInfo(cx, allocScope);
-  if (!compilationInfo.initFromOptions(cx, options)) {
+  frontend::CompilationInfo compilationInfo(cx, allocScope, options);
+  if (!compilationInfo.init(cx)) {
     return;
   }
 

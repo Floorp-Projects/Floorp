@@ -26,6 +26,9 @@ namespace frontend {
 // compilation as well as controls the lifetime of parse nodes and other data by
 // controling the mark and reset of the LifoAlloc.
 struct MOZ_RAII CompilationInfo {
+  JSContext* cx;
+  const JS::ReadOnlyCompileOptions& options;
+
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
@@ -48,8 +51,11 @@ struct MOZ_RAII CompilationInfo {
   JS::Rooted<ScriptSourceObject*> sourceObject;
 
   // Construct a CompilationInfo
-  CompilationInfo(JSContext* cx, LifoAllocScope& alloc)
-      : usedNames(cx),
+  CompilationInfo(JSContext* cx, LifoAllocScope& alloc,
+                  const JS::ReadOnlyCompileOptions& options)
+      : cx(cx),
+        options(options),
+        usedNames(cx),
         allocScope(alloc),
         treeHolder(cx),
         regExpData(cx),
@@ -57,8 +63,7 @@ struct MOZ_RAII CompilationInfo {
         scopeCreationData(cx),
         sourceObject(cx) {}
 
-  bool initFromOptions(JSContext* cx,
-                       const JS::ReadOnlyCompileOptions& options);
+  bool init(JSContext* cx);
 
   void initFromSourceObject(ScriptSourceObject* sso) { sourceObject = sso; }
 
