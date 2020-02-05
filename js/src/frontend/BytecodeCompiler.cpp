@@ -267,7 +267,7 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
  public:
   explicit ModuleCompiler(SourceText<Unit>& srcBuf) : Base(srcBuf) {}
 
-  ModuleObject* compile(LifoAllocScope& allocScope, ModuleInfo& info);
+  ModuleObject* compile(CompilationInfo& compilationInfo);
 };
 
 template <typename Unit>
@@ -550,20 +550,20 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
 template <typename Unit>
 ModuleObject* frontend::ModuleCompiler<Unit>::compile(
-    LifoAllocScope& allocScope, ModuleInfo& info) {
-  if (!createSourceAndParser(allocScope, info.compilationInfo) ||
-      !createCompleteScript(info.compilationInfo)) {
+    CompilationInfo& compilationInfo) {
+  if (!createSourceAndParser(compilationInfo.allocScope, compilationInfo) ||
+      !createCompleteScript(compilationInfo)) {
     return nullptr;
   }
 
-  JSContext* cx = info.compilationInfo.cx;
+  JSContext* cx = compilationInfo.cx;
 
   Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
   if (!module) {
     return nullptr;
   }
 
-  module->init(info.compilationInfo.script);
+  module->init(compilationInfo.script);
 
   ModuleBuilder builder(cx, module, parser.ptr());
 
@@ -580,7 +580,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
 
   Maybe<BytecodeEmitter> emitter;
-  if (!emplaceEmitter(info.compilationInfo, emitter, &modulesc)) {
+  if (!emplaceEmitter(compilationInfo, emitter, &modulesc)) {
     return nullptr;
   }
 
@@ -597,7 +597,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   }
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!info.compilationInfo.sourceObject->source()->tryCompressOffThread(cx)) {
+  if (!compilationInfo.sourceObject->source()->tryCompressOffThread(cx)) {
     return nullptr;
   }
 
@@ -822,15 +822,13 @@ static ModuleObject* InternalParseModule(
     *sourceObjectOut = compilationInfo.sourceObject;
   }
 
-  ModuleInfo info(cx, compilationInfo, options);
-
   ModuleCompiler<Unit> compiler(srcBuf);
-  Rooted<ModuleObject*> module(cx, compiler.compile(allocScope, info));
+  Rooted<ModuleObject*> module(cx, compiler.compile(compilationInfo));
   if (!module) {
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(cx, info.compilationInfo.script);
+  tellDebuggerAboutCompiledScript(cx, compilationInfo.script);
 
   assertException.reset();
   return module;
