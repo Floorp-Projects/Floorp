@@ -1,49 +1,52 @@
 add_task(async function() {
-  let tabs = [gBrowser.selectedTab, BrowserTestUtils.addTab(gBrowser)];
+  const URL =
+    "data:text/html,<!DOCTYPE html><html><body><input autofocus id='target'></body></html>";
+  const foregroundTab = gBrowser.selectedTab;
+  const backgroundTab = BrowserTestUtils.addTab(gBrowser);
 
-  // The first tab has an autofocused element.
-  // The second tab is exactly like the first one without the autofocus.
-  let testingList = [
-    {
-      uri:
-        "data:text/html,<!DOCTYPE html><html><body><input autofocus id='target'></body></html>",
-      tagName: "INPUT",
-    },
-  ];
-
-  // Set the focus to the first tab.
-  tabs[0].linkedBrowser.focus();
+  // Ensure tab is still in the foreground.
+  is(
+    gBrowser.selectedTab,
+    foregroundTab,
+    "foregroundTab should still be selected"
+  );
 
   // Load the second tab in the background.
-  let loadedPromise = BrowserTestUtils.browserLoaded(tabs[1].linkedBrowser);
-  BrowserTestUtils.loadURI(tabs[1].linkedBrowser, testingList[0].uri);
+  const loadedPromise = BrowserTestUtils.browserLoaded(
+    backgroundTab.linkedBrowser,
+    /* includesubframes */ false,
+    URL
+  );
+  BrowserTestUtils.loadURI(backgroundTab.linkedBrowser, URL);
   await loadedPromise;
 
-  for (var i = 0; i < testingList.length; ++i) {
-    // Get active element in the tab.
-    let tagName = await SpecialPowers.spawn(
-      tabs[i + 1].linkedBrowser,
-      [],
-      async function() {
-        return content.document.activeElement.tagName;
-      }
-    );
+  // Get active element in the tab.
+  let tagName = await SpecialPowers.spawn(
+    backgroundTab.linkedBrowser,
+    [],
+    async function() {
+      return content.document.activeElement.tagName;
+    }
+  );
 
-    is(
-      tagName,
-      testingList[i].tagName,
-      "The background tab's focused element should be " + testingList[i].tagName
-    );
-  }
+  is(
+    tagName,
+    "INPUT",
+    "The background tab's focused element should be the <input>"
+  );
+
+  is(
+    gBrowser.selectedTab,
+    foregroundTab,
+    "foregroundTab tab should still be selected, shouldn't cause a tab switch"
+  );
 
   is(
     document.activeElement,
-    tabs[0].linkedBrowser,
-    "The background tab's focused element should not cause the tab to be focused"
+    foregroundTab.linkedBrowser,
+    "The background tab's focused element should not cause the tab to be selected"
   );
 
   // Cleaning up.
-  for (let i = 1; i < tabs.length; i++) {
-    BrowserTestUtils.removeTab(tabs[i]);
-  }
+  BrowserTestUtils.removeTab(backgroundTab);
 });
