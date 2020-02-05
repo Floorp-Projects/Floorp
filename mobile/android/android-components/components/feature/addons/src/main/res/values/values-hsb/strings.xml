@@ -136,4 +136,6 @@
     <string name="mozac_feature_addons_unsupported_caption">Přidatk: 1</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
     <string name="mozac_feature_addons_unsupported_caption_plural">Přidatki: %1$s</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">Dalše informacije</string>
 </resources>
