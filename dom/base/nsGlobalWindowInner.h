@@ -944,7 +944,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
   }
 
-  bool IsSharedMemoryAllowed() const;
+  bool IsSharedMemoryAllowed() const override;
 
   // https://whatpr.org/html/4734/structured-data.html#cross-origin-isolated
   bool CrossOriginIsolated() const;
