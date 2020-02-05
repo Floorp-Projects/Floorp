@@ -383,11 +383,6 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 }
 #endif
 
-BytecodeCompiler::BytecodeCompiler(JSContext* cx,
-                                   CompilationInfo& compilationInfo,
-                                   const ReadOnlyCompileOptions& options)
-    : compilationInfo(compilationInfo) {}
-
 static bool CanLazilyParse(const CompilationInfo& compilationInfo) {
   return !compilationInfo.options.discardSource &&
          !compilationInfo.options.sourceIsLazy &&

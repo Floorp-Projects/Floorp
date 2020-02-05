@@ -44,26 +44,6 @@ class ModuleCompiler;
 template <typename Unit>
 class StandaloneFunctionCompiler;
 
-// The BytecodeCompiler class contains resources common to compiling scripts and
-// function bodies.
-class MOZ_STACK_CLASS BytecodeCompiler {
- protected:
-  BytecodeCompiler(JSContext* cx, CompilationInfo& compilationInfo,
-                   const JS::ReadOnlyCompileOptions& options);
-
-  template <typename Unit>
-  friend class SourceAwareCompiler;
-  template <typename Unit>
-  friend class ScriptCompiler;
-  template <typename Unit>
-  friend class ModuleCompiler;
-  template <typename Unit>
-  friend class StandaloneFunctionCompiler;
-
- public:
-  CompilationInfo& compilationInfo;
-};
-
 extern JSScript* CompileGlobalScript(CompilationInfo& compilationInfo,
                                      GlobalSharedContext& globalsc,
                                      JS::SourceText<char16_t>& srcBuf);
