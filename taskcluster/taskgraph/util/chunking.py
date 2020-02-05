@@ -34,9 +34,11 @@ def guess_mozinfo_from_task(task):
         A dict that can be used as a mozinfo replacement.
     """
     info = {
+        'asan': 'asan' in task['build-attributes']['build_platform'],
         'ccov': 'ccov' in task['build-attributes']['build_platform'],
         'debug': task['build-attributes']['build_type'] == 'debug',
         'e10s': task['attributes']['e10s'],
+        'tsan': 'tsan' in task['build-attributes']['build_platform'],
         'webrender': task.get('webrender', False),
     }
     for platform in ('android', 'linux', 'mac', 'win'):
