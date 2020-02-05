@@ -50,8 +50,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
  protected:
   CompilationInfo& compilationInfo;
 
-  Directives directives;
-
   JS::Rooted<JSScript*> script;
 
  protected:
@@ -108,7 +106,7 @@ class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {
                    const JS::ReadOnlyCompileOptions& options,
                    ScopeKind scopeKind)
       : BytecodeCompiler(cx, compilationInfo, options),
-        globalsc_(cx, scopeKind, compilationInfo, directives,
+        globalsc_(cx, scopeKind, compilationInfo, compilationInfo.directives,
                   options.extraWarningsOption) {
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
                scopeKind == ScopeKind::NonSyntactic);
@@ -134,8 +132,8 @@ class MOZ_STACK_CLASS EvalScriptInfo final : public BytecodeCompiler {
                  JS::Handle<Scope*> enclosingScope)
       : BytecodeCompiler(cx, compilationInfo, options),
         environment_(environment),
-        evalsc_(cx, environment_, compilationInfo, enclosingScope, directives,
-                options.extraWarningsOption) {}
+        evalsc_(cx, environment_, compilationInfo, enclosingScope,
+                compilationInfo.directives, options.extraWarningsOption) {}
 
   HandleObject environment() { return environment_; }
 
