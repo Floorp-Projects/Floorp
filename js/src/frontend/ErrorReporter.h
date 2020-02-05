@@ -144,8 +144,9 @@ class ErrorReportMixin : public StrictModeGetter {
       return;
     }
 
-    ReportCompileError(getContext(), std::move(metadata), std::move(notes),
-                       JSREPORT_ERROR, errorNumber, args);
+    ReportCompileErrorLatin1(getContext(), std::move(metadata),
+                             std::move(notes), JSREPORT_ERROR, errorNumber,
+                             args);
   }
 
   // ==== warning ====
@@ -436,8 +437,9 @@ class ErrorReportMixin : public StrictModeGetter {
     }
 
     if (strict) {
-      ReportCompileError(getContext(), std::move(metadata), std::move(notes),
-                         JSREPORT_ERROR, errorNumber, args);
+      ReportCompileErrorLatin1(getContext(), std::move(metadata),
+                               std::move(notes), JSREPORT_ERROR, errorNumber,
+                               args);
       return false;
     }
 
@@ -453,8 +455,8 @@ class ErrorReportMixin : public StrictModeGetter {
                                    va_list* args) {
     if (options().werrorOption) {
       flags &= ~JSREPORT_WARNING;
-      ReportCompileError(getContext(), std::move(metadata), std::move(notes),
-                         flags, errorNumber, args);
+      ReportCompileErrorLatin1(getContext(), std::move(metadata),
+                               std::move(notes), flags, errorNumber, args);
       return false;
     }
 
