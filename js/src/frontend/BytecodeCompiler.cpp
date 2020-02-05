@@ -96,7 +96,7 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   // Call this before calling compile{Global,Eval}Script.
   MOZ_MUST_USE bool prepareScriptParse(LifoAllocScope& allocScope,
                                        BytecodeCompiler& info) {
-    return createSourceAndParser(allocScope, info) &&
+    return createSourceAndParser(allocScope, info.compilationInfo) &&
            createCompleteScript(info);
   }
 
@@ -118,7 +118,7 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   }
 
   MOZ_MUST_USE bool createSourceAndParser(LifoAllocScope& allocScope,
-                                          BytecodeCompiler& compiler);
+                                          CompilationInfo& compilationInfo);
 
   // This assumes the created script's offsets in the source used to parse it
   // are the same as are used to compute its Function.prototype.toString()
@@ -272,8 +272,8 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
       : Base(srcBuf) {}
 
   MOZ_MUST_USE bool prepare(LifoAllocScope& allocScope,
-                            StandaloneFunctionInfo& info) {
-    return createSourceAndParser(allocScope, info);
+                            CompilationInfo& compilationInfo) {
+    return createSourceAndParser(allocScope, compilationInfo);
   }
 
   FunctionNode* parse(StandaloneFunctionInfo& info, HandleFunction fun,
@@ -380,12 +380,10 @@ static bool CanLazilyParse(const CompilationInfo& compilationInfo) {
 
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
-    LifoAllocScope& allocScope, BytecodeCompiler& info) {
-  if (!info.compilationInfo.assignSource(sourceBuffer_)) {
+    LifoAllocScope& allocScope, CompilationInfo& compilationInfo) {
+  if (!compilationInfo.assignSource(sourceBuffer_)) {
     return false;
   }
-  CompilationInfo& compilationInfo = info.compilationInfo;
-
   // Note the contents of any compiled scripts when recording/replaying.
   if (mozilla::recordreplay::IsRecordingOrReplaying()) {
     mozilla::recordreplay::NoteContentParse(
@@ -405,7 +403,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
 
   parser.emplace(compilationInfo.cx, compilationInfo.options,
                  sourceBuffer_.units(), sourceBuffer_.length(),
-                 /* foldConstants = */ true, info.compilationInfo,
+                 /* foldConstants = */ true, compilationInfo,
                  syntaxParser.ptrOr(nullptr), nullptr,
                  compilationInfo.sourceObject);
   parser->ss = compilationInfo.sourceObject->source();
@@ -534,7 +532,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 template <typename Unit>
 ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     LifoAllocScope& allocScope, ModuleInfo& info) {
-  if (!createSourceAndParser(allocScope, info) || !createCompleteScript(info)) {
+  if (!createSourceAndParser(allocScope, info.compilationInfo) ||
+      !createCompleteScript(info)) {
     return nullptr;
   }
 
@@ -1143,7 +1142,7 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
   StandaloneFunctionInfo info(cx, compilationInfo, options);
 
   StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
-  if (!compiler.prepare(allocScope, info)) {
+  if (!compiler.prepare(allocScope, compilationInfo)) {
     return false;
   }
 
