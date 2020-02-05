@@ -172,8 +172,8 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
     return Base::prepareScriptParse(allocScope, compilationInfo);
   }
 
-  JSScript* compileScript(BytecodeCompiler& compiler, HandleObject environment,
-                          SharedContext* sc);
+  JSScript* compileScript(CompilationInfo& compilationInfo,
+                          HandleObject environment, SharedContext* sc);
 };
 
 /* If we're on main thread, tell the Debugger about a newly compiled script.
@@ -189,36 +189,38 @@ static void tellDebuggerAboutCompiledScript(JSContext* cx,
 }
 
 template <typename Unit>
-static JSScript* CreateGlobalScript(GlobalScriptInfo& info,
+static JSScript* CreateGlobalScript(CompilationInfo& compilationInfo,
+                                    GlobalSharedContext& globalsc,
                                     JS::SourceText<Unit>& srcBuf) {
-  AutoAssertReportedException assertException(info.compilationInfo.cx);
+  AutoAssertReportedException assertException(compilationInfo.cx);
 
-  LifoAllocScope allocScope(&info.compilationInfo.cx->tempLifoAlloc());
+  LifoAllocScope allocScope(&compilationInfo.cx->tempLifoAlloc());
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
 
-  if (!compiler.prepareScriptParse(allocScope, info.compilationInfo)) {
+  if (!compiler.prepareScriptParse(allocScope, compilationInfo)) {
     return nullptr;
   }
 
-  if (!compiler.compileScript(info, nullptr, info.sharedContext())) {
+  if (!compiler.compileScript(compilationInfo, nullptr, &globalsc)) {
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(info.compilationInfo.cx,
-                                  info.compilationInfo.script);
+  tellDebuggerAboutCompiledScript(compilationInfo.cx, compilationInfo.script);
 
   assertException.reset();
-  return info.compilationInfo.script;
+  return compilationInfo.script;
 }
 
-JSScript* frontend::CompileGlobalScript(GlobalScriptInfo& info,
+JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
+                                        GlobalSharedContext& globalsc,
                                         JS::SourceText<char16_t>& srcBuf) {
-  return CreateGlobalScript(info, srcBuf);
+  return CreateGlobalScript(compilationInfo, globalsc, srcBuf);
 }
 
-JSScript* frontend::CompileGlobalScript(GlobalScriptInfo& info,
+JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
+                                        GlobalSharedContext& globalsc,
                                         JS::SourceText<Utf8Unit>& srcBuf) {
-  return CreateGlobalScript(info, srcBuf);
+  return CreateGlobalScript(compilationInfo, globalsc, srcBuf);
 }
 
 template <typename Unit>
@@ -232,7 +234,8 @@ static JSScript* CreateEvalScript(frontend::EvalScriptInfo& info,
     return nullptr;
   }
 
-  if (!compiler.compileScript(info, info.environment(), info.sharedContext())) {
+  if (!compiler.compileScript(info.compilationInfo, info.environment(),
+                              info.sharedContext())) {
     return nullptr;
   }
 
@@ -475,13 +478,14 @@ bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 
 template <typename Unit>
 JSScript* frontend::ScriptCompiler<Unit>::compileScript(
-    BytecodeCompiler& info, HandleObject environment, SharedContext* sc) {
-  assertSourceParserAndScriptCreated(info.compilationInfo);
+    CompilationInfo& compilationInfo, HandleObject environment,
+    SharedContext* sc) {
+  assertSourceParserAndScriptCreated(compilationInfo);
 
-  TokenStreamPosition startPosition(info.compilationInfo.keepAtoms,
+  TokenStreamPosition startPosition(compilationInfo.keepAtoms,
                                     parser->tokenStream);
 
-  JSContext* cx = info.compilationInfo.cx;
+  JSContext* cx = compilationInfo.cx;
 
   for (;;) {
     ParseNode* pn;
@@ -505,7 +509,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       }
 
       Maybe<BytecodeEmitter> emitter;
-      if (!emplaceEmitter(info.compilationInfo, emitter, sc)) {
+      if (!emplaceEmitter(compilationInfo, emitter, sc)) {
         return nullptr;
       }
 
@@ -518,28 +522,28 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     }
 
     // Maybe we aborted a syntax parse. See if we can try again.
-    if (!handleParseFailure(info.compilationInfo,
-                            info.compilationInfo.directives, startPosition)) {
+    if (!handleParseFailure(compilationInfo, compilationInfo.directives,
+                            startPosition)) {
       return nullptr;
     }
 
     // Reset preserved state before trying again.
-    info.compilationInfo.usedNames.reset();
+    compilationInfo.usedNames.reset();
     parser->getTreeHolder().resetFunctionTree();
   }
 
   // We have just finished parsing the source. Inform the source so that we
   // can compute statistics (e.g. how much time our functions remain lazy).
-  info.compilationInfo.sourceObject->source()->recordParseEnded();
+  compilationInfo.sourceObject->source()->recordParseEnded();
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  if (!info.compilationInfo.sourceObject->source()->tryCompressOffThread(cx)) {
+  if (!compilationInfo.sourceObject->source()->tryCompressOffThread(cx)) {
     return nullptr;
   }
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
 
-  return info.compilationInfo.script;
+  return compilationInfo.script;
 }
 
 template <typename Unit>
@@ -734,9 +738,9 @@ static JSScript* CompileGlobalBinASTScriptImpl(
     return nullptr;
   }
 
-  Directives directives(options.forceStrictMode());
   GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
-                               directives, options.extraWarningsOption);
+                               compilationInfo.directives,
+                               compilationInfo.options.extraWarningsOption);
 
   frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
                                          compilationInfo.sourceObject);
