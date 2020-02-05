@@ -2,7 +2,7 @@
 
 # migrateTelemetryIdentifiers
 
-`fun migrateTelemetryIdentifiers(version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.TelemetryIdentifiers.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L323)
+`fun migrateTelemetryIdentifiers(version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.TelemetryIdentifiers.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L329)
 
 Enable migration of Fennec telemetry identifiers.
 

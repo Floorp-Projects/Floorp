@@ -2,7 +2,7 @@
 
 # Success
 
-`sealed class Success : `[`AddonMigrationResult`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L28)
+`sealed class Success : `[`AddonMigrationResult`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L35)
 
 Success variants of an add-on migration.
 

@@ -2,7 +2,7 @@
 
 # Addons
 
-`object Addons : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L92)
+`object Addons : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L94)
 
 Migrates / Disables all currently unsupported Add-ons.
 

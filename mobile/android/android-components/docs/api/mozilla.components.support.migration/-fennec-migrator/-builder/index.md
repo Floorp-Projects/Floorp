@@ -2,7 +2,7 @@
 
 # Builder
 
-`class Builder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L202)
+`class Builder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L206)
 
 Data migration builder. Allows configuring which migrations to run, their versions and relative order.
 
@@ -17,7 +17,7 @@ Data migration builder. Allows configuring which migrations to run, their versio
 | Name | Summary |
 |---|---|
 | [build](build.md) | `fun build(): `[`FennecMigrator`](../index.md)<br>Constructs a [FennecMigrator](../index.md) based on the current configuration. |
-| [migrateAddons](migrate-addons.md) | `fun migrateAddons(engine: `[`Engine`](../../../mozilla.components.concept.engine/-engine/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Settings.currentVersion): `[`Builder`](./index.md)<br>Enables Add-on migration. |
+| [migrateAddons](migrate-addons.md) | `fun migrateAddons(engine: `[`Engine`](../../../mozilla.components.concept.engine/-engine/index.md)`, addonCollectionProvider: `[`AddonCollectionProvider`](../../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md)`, addonUpdater: `[`AddonUpdater`](../../../mozilla.components.feature.addons.update/-addon-updater/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Addons.currentVersion): `[`Builder`](./index.md)<br>Enables Add-on migration. |
 | [migrateBookmarks](migrate-bookmarks.md) | `fun migrateBookmarks(storage: `[`PlacesBookmarksStorage`](../../../mozilla.components.browser.storage.sync/-places-bookmarks-storage/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Bookmarks.currentVersion): `[`Builder`](./index.md)<br>Enable bookmarks migration. Must be called after [migrateHistory](migrate-history.md). |
 | [migrateFxa](migrate-fxa.md) | `fun migrateFxa(accountManager: `[`FxaAccountManager`](../../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.FxA.currentVersion): `[`Builder`](./index.md)<br>Enable FxA state migration. |
 | [migrateGecko](migrate-gecko.md) | `fun migrateGecko(version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Gecko.currentVersion): `[`Builder`](./index.md)<br>Enables the migration of Gecko internal files. |
