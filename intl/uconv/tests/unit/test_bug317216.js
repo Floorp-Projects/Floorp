@@ -112,7 +112,7 @@ function testCase(testText, expectedText, bufferLength, charset) {
   );
 
   if (!(testConverter instanceof Ci.nsIUnicharLineInputStream)) {
-    throw "not line input stream";
+    throw new Error("not line input stream");
   }
 
   var outStr = "";

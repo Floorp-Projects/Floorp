@@ -12,7 +12,6 @@
  */
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const beBOM = "%FE%FF";
 const leBOM = "%FF%FE";
@@ -29,6 +28,7 @@ registerCleanupFunction(() => {
 });
 
 function makeText(withBOM, charset) {
+  // eslint-disable-next-line no-eval
   var theText = eval("sample" + charset);
   if (withBOM) {
     if (charset == "UTF16BE") {
@@ -63,7 +63,7 @@ function testCase(withBOM, charset, charsetDec, decoder, bufferLength) {
   );
 
   if (!(testConverter instanceof Ci.nsIUnicharLineInputStream)) {
-    throw "not line input stream";
+    throw new Error("not line input stream");
   }
 
   var outStr = "";
@@ -90,7 +90,7 @@ function testCase(withBOM, charset, charsetDec, decoder, bufferLength) {
         "\n"
     );
     if (outStr.length == expected.length) {
-      for (i = 0; i < outStr.length; ++i) {
+      for (let i = 0; i < outStr.length; ++i) {
         if (outStr.charCodeAt(i) != expected.charCodeAt(i)) {
           dump(
             i +
