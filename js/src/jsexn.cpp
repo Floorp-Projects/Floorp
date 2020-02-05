@@ -534,15 +534,21 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
       str = msg;
     }
 
-    if (JS_GetProperty(cx, exnObject, filename_str, &val)) {
-      RootedString tmp(cx, ToString<CanGC>(cx, val));
-      if (tmp) {
-        filename = JS_EncodeStringToUTF8(cx, tmp);
-      } else {
-        cx->clearPendingException();
+    {
+      AutoClearPendingException acpe(cx);
+      if (JS_GetProperty(cx, exnObject, filename_str, &val)) {
+        RootedString tmp(cx, ToString<CanGC>(cx, val));
+        if (tmp) {
+          filename = JS_EncodeStringToUTF8(cx, tmp);
+        }
       }
-    } else {
-      cx->clearPendingException();
+    }
+    if (!filename) {
+      filename = DuplicateString("");
+      if (!filename) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
     }
 
     uint32_t lineno;
