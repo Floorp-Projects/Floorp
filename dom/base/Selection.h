@@ -153,7 +153,7 @@ class Selection final : public nsSupportsWeakReference,
                           ScrollAxis aVertical = ScrollAxis(),
                           ScrollAxis aHorizontal = ScrollAxis(),
                           int32_t aFlags = 0);
-  static nsresult SubtractRange(StyledRange* aRange, nsRange* aSubtract,
+  static nsresult SubtractRange(StyledRange& aRange, nsRange& aSubtract,
                                 nsTArray<StyledRange>* aOutput);
 
  private:
