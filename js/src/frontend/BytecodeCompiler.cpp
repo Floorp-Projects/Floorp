@@ -144,7 +144,7 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
                                 toStringEnd, len);
   }
 
-  MOZ_MUST_USE bool handleParseFailure(BytecodeCompiler& compiler,
+  MOZ_MUST_USE bool handleParseFailure(CompilationInfo& compilationInfo,
                                        const Directives& newDirectives,
                                        TokenStreamPosition& startPosition);
 };
@@ -451,7 +451,7 @@ static bool EmplaceEmitter(CompilationInfo& compilationInfo,
 
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
-    BytecodeCompiler& info, const Directives& newDirectives,
+    CompilationInfo& compilationInfo, const Directives& newDirectives,
     TokenStreamPosition& startPosition) {
   if (parser->hadAbortedSyntaxParse()) {
     // Hit some unrecoverable ambiguity during an inner syntax parse.
@@ -459,7 +459,7 @@ bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
     // the parse.
     parser->clearAbortedSyntaxParse();
   } else if (parser->anyChars.hadError() ||
-             info.compilationInfo.directives == newDirectives) {
+             compilationInfo.directives == newDirectives) {
     return false;
   }
 
@@ -467,10 +467,9 @@ bool frontend::SourceAwareCompiler<Unit>::handleParseFailure(
   parser->tokenStream.rewind(startPosition);
 
   // Assignment must be monotonic to prevent reparsing iloops
-  MOZ_ASSERT_IF(info.compilationInfo.directives.strict(),
-                newDirectives.strict());
-  MOZ_ASSERT_IF(info.compilationInfo.directives.asmJS(), newDirectives.asmJS());
-  info.compilationInfo.directives = newDirectives;
+  MOZ_ASSERT_IF(compilationInfo.directives.strict(), newDirectives.strict());
+  MOZ_ASSERT_IF(compilationInfo.directives.asmJS(), newDirectives.asmJS());
+  compilationInfo.directives = newDirectives;
   return true;
 }
 
@@ -519,8 +518,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     }
 
     // Maybe we aborted a syntax parse. See if we can try again.
-    if (!handleParseFailure(info, info.compilationInfo.directives,
-                            startPosition)) {
+    if (!handleParseFailure(info.compilationInfo,
+                            info.compilationInfo.directives, startPosition)) {
       return nullptr;
     }
 
@@ -627,7 +626,8 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
     fn = parser->standaloneFunction(
         fun, enclosingScope, parameterListEnd, generatorKind, asyncKind,
         info.compilationInfo.directives, &newDirectives);
-    if (!fn && !handleParseFailure(info, newDirectives, startPosition)) {
+    if (!fn && !handleParseFailure(info.compilationInfo, newDirectives,
+                                   startPosition)) {
       return nullptr;
     }
   } while (!fn);
