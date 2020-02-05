@@ -372,7 +372,7 @@ BytecodeCompiler::BytecodeCompiler(JSContext* cx,
                                    const ReadOnlyCompileOptions& options)
     : compilationInfo(compilationInfo) {}
 
-bool BytecodeCompiler::canLazilyParse() const {
+static bool CanLazilyParse(const CompilationInfo& compilationInfo) {
   return !compilationInfo.options.discardSource &&
          !compilationInfo.options.sourceIsLazy &&
          !compilationInfo.options.forceFullParse();
@@ -393,7 +393,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
         sourceBuffer_.units(), sourceBuffer_.length());
   }
 
-  if (info.canLazilyParse()) {
+  if (CanLazilyParse(compilationInfo)) {
     syntaxParser.emplace(compilationInfo.cx, compilationInfo.options,
                          sourceBuffer_.units(), sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationInfo, nullptr,
