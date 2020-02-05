@@ -144,6 +144,8 @@ class nsIGlobalObject : public nsISupports,
 
   virtual mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const;
 
+  virtual mozilla::Maybe<nsID> GetAgentClusterId() const;
+
   virtual mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController()
       const;
 
