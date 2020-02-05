@@ -756,20 +756,24 @@ nsresult Selection::FindInsertionPoint(
 //    difference to aOutput. It is assumed that the caller has checked that
 //    aRange and aSubtract do indeed overlap
 
-nsresult Selection::SubtractRange(StyledRange* aRange, nsRange* aSubtract,
+nsresult Selection::SubtractRange(StyledRange& aRange, nsRange& aSubtract,
                                   nsTArray<StyledRange>* aOutput) {
-  nsRange* range = aRange->mRange;
+  nsRange* range = aRange.mRange;
+
+  if (NS_WARN_IF(!range->IsPositioned())) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   // First we want to compare to the range start
   int32_t cmp;
   nsresult rv = CompareToRangeStart(range->GetStartContainer(),
-                                    range->StartOffset(), aSubtract, &cmp);
+                                    range->StartOffset(), &aSubtract, &cmp);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Also, make a comparison to the range end
   int32_t cmp2;
   rv = CompareToRangeEnd(range->GetEndContainer(), range->EndOffset(),
-                         aSubtract, &cmp2);
+                         &aSubtract, &cmp2);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If the existing range left overlaps the new range (aSubtract) then
@@ -782,7 +786,7 @@ nsresult Selection::SubtractRange(StyledRange* aRange, nsRange* aSubtract,
     // the end of aSubtract to the end of range
     ErrorResult error;
     RefPtr<nsRange> postOverlap =
-        nsRange::Create(aSubtract->EndRef(), range->EndRef(), error);
+        nsRange::Create(aSubtract.EndRef(), range->EndRef(), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -791,7 +795,7 @@ nsresult Selection::SubtractRange(StyledRange* aRange, nsRange* aSubtract,
       if (!aOutput->InsertElementAt(0, StyledRange(postOverlap))) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      (*aOutput)[0].mTextRangeStyle = aRange->mTextRangeStyle;
+      (*aOutput)[0].mTextRangeStyle = aRange.mTextRangeStyle;
     }
   }
 
@@ -800,7 +804,7 @@ nsresult Selection::SubtractRange(StyledRange* aRange, nsRange* aSubtract,
     // the start of the range to the start of aSubtract
     ErrorResult error;
     RefPtr<nsRange> preOverlap =
-        nsRange::Create(range->StartRef(), aSubtract->StartRef(), error);
+        nsRange::Create(range->StartRef(), aSubtract.StartRef(), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -809,7 +813,7 @@ nsresult Selection::SubtractRange(StyledRange* aRange, nsRange* aSubtract,
       if (!aOutput->InsertElementAt(0, StyledRange(preOverlap))) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      (*aOutput)[0].mTextRangeStyle = aRange->mTextRangeStyle;
+      (*aOutput)[0].mTextRangeStyle = aRange.mTextRangeStyle;
     }
   }
 
@@ -1012,7 +1016,7 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   nsTArray<StyledRange> temp;
   for (int32_t i = overlaps.Length() - 1; i >= 0; i--) {
-    nsresult rv = SubtractRange(&overlaps[i], aRange, &temp);
+    nsresult rv = SubtractRange(overlaps[i], *aRange, &temp);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
