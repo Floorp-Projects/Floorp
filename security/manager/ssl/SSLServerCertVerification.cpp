@@ -186,7 +186,7 @@ class SSLServerCertVerificationResult : public Runnable {
   void Dispatch(nsNSSCertificate* aCert,
                 nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
-                uint16_t aCertificateTransparencyStatus, SECOidTag aEvOidPolicy,
+                uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
                 uint32_t aCollectedErrors);
 
@@ -196,7 +196,7 @@ class SSLServerCertVerificationResult : public Runnable {
   nsTArray<nsTArray<uint8_t>> mBuiltChain;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   uint16_t mCertificateTransparencyStatus;
-  SECOidTag mEvOidPolicy;
+  EVStatus mEVStatus;
   bool mSucceeded;
   PRErrorCode mFinalError;
   uint32_t mCollectedErrors;
@@ -1126,7 +1126,7 @@ static void AuthCertificateSetResults(
     TransportSecurityInfo* aInfoObject, nsNSSCertificate* aCert,
     nsTArray<nsTArray<uint8_t>>&& aBuiltCertChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
-    uint16_t aCertificateTransparencyStatus, SECOidTag aEvOidPolicy,
+    uint16_t aCertificateTransparencyStatus, EVStatus aEvStatus,
     bool aSucceeded) {
   MOZ_ASSERT(aInfoObject);
 
@@ -1136,14 +1136,7 @@ static void AuthCertificateSetResults(
     RememberCertErrorsTable::GetInstance().RememberCertHasError(aInfoObject,
                                                                 SECSuccess);
 
-    EVStatus evStatus;
-    if (aEvOidPolicy == SEC_OID_UNKNOWN) {
-      evStatus = EVStatus::NotEV;
-    } else {
-      evStatus = EVStatus::EV;
-    }
-
-    aInfoObject->SetServerCert(aCert, evStatus);
+    aInfoObject->SetServerCert(aCert, aEvStatus);
     aInfoObject->SetSucceededCertChain(std::move(aBuiltCertChain));
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("AuthCertificate setting NEW cert %p", aCert));
@@ -1401,11 +1394,13 @@ SSLServerCertVerificationJob::Run() {
 
     certBytesArray =
         TransportSecurityInfo::CreateCertBytesArray(builtCertChain);
+    EVStatus evStatus =
+        evOidPolicy == SEC_OID_UNKNOWN ? EVStatus::NotEV : EVStatus::EV;
     mResultTask->Dispatch(
         nsc, std::move(certBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
-        evOidPolicy, true, 0, 0);
+        evStatus, true, 0, 0);
     return NS_OK;
   }
 
@@ -1423,7 +1418,7 @@ SSLServerCertVerificationJob::Run() {
   mResultTask->Dispatch(
       nsc, std::move(certBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
-      evOidPolicy, false, finalError, collectedErrors);
+      EVStatus::NotEV, false, finalError, collectedErrors);
   return NS_OK;
 }
 
@@ -1638,13 +1633,13 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
 void SSLServerCertVerificationResult::Dispatch(
     nsNSSCertificate* aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
-    uint16_t aCertificateTransparencyStatus, SECOidTag aEvOidPolicy,
+    uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors) {
   mCert = aCert;
   mBuiltChain = std::move(aBuiltChain);
   mPeerCertChain = std::move(aPeerCertChain);
   mCertificateTransparencyStatus = aCertificateTransparencyStatus;
-  mEvOidPolicy = aEvOidPolicy;
+  mEVStatus = aEVStatus;
   mSucceeded = aSucceeded;
   mFinalError = aFinalError;
   mCollectedErrors = aCollectedErrors;
@@ -1674,7 +1669,7 @@ SSLServerCertVerificationResult::Run() {
 
   AuthCertificateSetResults(
       mInfoObject, mCert, std::move(mBuiltChain), std::move(mPeerCertChain),
-      mCertificateTransparencyStatus, mEvOidPolicy, mSucceeded);
+      mCertificateTransparencyStatus, mEVStatus, mSucceeded);
 
   if (!mSucceeded && mCollectedErrors != 0) {
     mInfoObject->SetStatusErrorBits(mCert, mCollectedErrors);
