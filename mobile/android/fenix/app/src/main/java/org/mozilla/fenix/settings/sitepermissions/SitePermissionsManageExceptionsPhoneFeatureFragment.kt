@@ -17,6 +17,7 @@ import android.widget.RadioButton
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
@@ -32,6 +33,7 @@ import org.mozilla.fenix.settings.setStartCheckedIndicator
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
+
     private lateinit var phoneFeature: PhoneFeature
     private lateinit var sitePermissions: SitePermissions
     private lateinit var radioAllow: RadioButton
@@ -42,13 +44,10 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        phoneFeature = SitePermissionsManageExceptionsPhoneFeatureFragmentArgs
-            .fromBundle(requireArguments())
-            .phoneFeatureId.toPhoneFeature()
+        val args by navArgs<SitePermissionsManageExceptionsPhoneFeatureFragmentArgs>()
 
-        sitePermissions = SitePermissionsManageExceptionsPhoneFeatureFragmentArgs
-            .fromBundle(requireArguments())
-            .sitePermissions
+        phoneFeature = args.phoneFeatureId.toPhoneFeature()
+        sitePermissions = args.sitePermissions
 
         showToolbar(phoneFeature.getLabel(requireContext()))
     }

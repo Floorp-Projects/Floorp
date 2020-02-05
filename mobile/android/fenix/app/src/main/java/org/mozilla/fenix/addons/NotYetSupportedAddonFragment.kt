@@ -7,13 +7,11 @@ package org.mozilla.fenix.addons
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_not_yet_supported_addons.view.*
-import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.UnsupportedAddonsAdapter
 import mozilla.components.feature.addons.ui.UnsupportedAddonsAdapterDelegate
 import org.mozilla.fenix.R
@@ -26,18 +24,10 @@ private const val LEARN_MORE_URL =
 /**
  * Fragment for displaying and managing add-ons that are not yet supported by the browser.
  */
-class NotYetSupportedAddonFragment : Fragment(), UnsupportedAddonsAdapterDelegate {
-    private val addons: List<Addon> by lazy {
-        NotYetSupportedAddonFragmentArgs.fromBundle(requireNotNull(arguments)).addons.toList()
-    }
+class NotYetSupportedAddonFragment :
+    Fragment(R.layout.fragment_not_yet_supported_addons), UnsupportedAddonsAdapterDelegate {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_not_yet_supported_addons, container, false)
-    }
+    private val args by navArgs<NotYetSupportedAddonFragmentArgs>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,7 +37,7 @@ class NotYetSupportedAddonFragment : Fragment(), UnsupportedAddonsAdapterDelegat
             adapter = UnsupportedAddonsAdapter(
                 addonManager = requireContext().components.addonManager,
                 unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
-                unsupportedAddons = addons
+                unsupportedAddons = args.addons.toList()
             )
         }
 

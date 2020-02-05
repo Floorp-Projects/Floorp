@@ -12,6 +12,7 @@ import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_turn_on_sync.view.*
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -22,11 +23,9 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 
-@SuppressWarnings("TooManyFunctions")
 class TurnOnSyncFragment : Fragment(), AccountObserver {
 
-    private val safeArguments get() = requireNotNull(arguments)
-    private val args get() = TurnOnSyncFragmentArgs.fromBundle(safeArguments)
+    private val args by navArgs<TurnOnSyncFragmentArgs>()
 
     private val signInClickListener = View.OnClickListener {
         requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())

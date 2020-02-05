@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkNameEdit
 import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkParentFolderSelector
 import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkUrlEdit
@@ -52,7 +53,7 @@ import org.mozilla.fenix.library.bookmarks.DesktopFolders
  */
 class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
-    private lateinit var guidToEdit: String
+    private val args by navArgs<EditBookmarkFragmentArgs>()
     private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
         ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
     }
@@ -68,13 +69,12 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         super.onViewCreated(view, savedInstanceState)
         initToolbar()
 
-        guidToEdit = EditBookmarkFragmentArgs.fromBundle(arguments!!).guidToEdit
         lifecycleScope.launch(Main) {
             val context = requireContext()
 
             withContext(IO) {
                 val bookmarksStorage = context.components.core.bookmarksStorage
-                bookmarkNode = bookmarksStorage.getTree(guidToEdit)
+                bookmarkNode = bookmarksStorage.getTree(args.guidToEdit)
                 bookmarkParent = sharedViewModel.selectedFolder
                     ?: bookmarkNode?.parentGuid
                         ?.let { bookmarksStorage.getTree(it) }
@@ -160,7 +160,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 }
                 setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
                     lifecycleScope.launch(IO) {
-                        requireComponents.core.bookmarksStorage.deleteNode(guidToEdit)
+                        requireComponents.core.bookmarksStorage.deleteNode(args.guidToEdit)
                         requireComponents.analytics.metrics.track(Event.RemoveBookmark)
 
                         launch(Main) {
@@ -205,7 +205,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                         components.analytics.metrics.track(Event.MovedBookmark)
                     }
                     components.core.bookmarksStorage.updateNode(
-                        guidToEdit,
+                        args.guidToEdit,
                         BookmarkInfo(
                             sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid,
                             bookmarkNode?.position,

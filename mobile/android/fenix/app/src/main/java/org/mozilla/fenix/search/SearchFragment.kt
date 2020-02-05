@@ -21,6 +21,7 @@ import androidx.core.view.marginStart
 import androidx.fragment.app.Fragment
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
@@ -73,17 +74,11 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val session = arguments
-            ?.let(SearchFragmentArgs.Companion::fromBundle)
-            ?.let { it.sessionId }
+        val args = arguments?.let { navArgs<SearchFragmentArgs>().value }
+        val session = args?.sessionId
             ?.let(requireComponents.core.sessionManager::findSessionById)
-
-        val pastedText = arguments
-            ?.let(SearchFragmentArgs.Companion::fromBundle)
-            ?.let { it.pastedText }
-
-        val searchAccessPoint = arguments
-                ?.let(SearchFragmentArgs.Companion::fromBundle)?.searchAccessPoint
+        val pastedText = args?.pastedText
+        val searchAccessPoint = args?.searchAccessPoint
 
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = session?.url.orEmpty()

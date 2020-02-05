@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_add_on_internal_settings.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.action.WebExtensionAction
@@ -25,12 +26,8 @@ import org.mozilla.fenix.ext.showToolbar
  * A fragment to show the web extension action popup with [EngineView].
  */
 class WebExtensionActionPopupFragment : Fragment(), EngineSession.Observer {
-    private val webExtensionTitle: String? by lazy {
-        WebExtensionActionPopupFragmentArgs.fromBundle(requireNotNull(arguments)).webExtensionTitle
-    }
-    private val webExtensionId: String by lazy {
-        WebExtensionActionPopupFragmentArgs.fromBundle(requireNotNull(arguments)).webExtensionId
-    }
+
+    private val args by navArgs<WebExtensionActionPopupFragmentArgs>()
     private var engineSession: EngineSession? = null
     private val coreComponents by lazy { requireComponents.core }
     private val safeArguments get() = requireNotNull(arguments)
@@ -47,7 +44,7 @@ class WebExtensionActionPopupFragment : Fragment(), EngineSession.Observer {
     ): View? {
         // Grab the [EngineSession] from the store when the view is created if it is available.
         if (engineSession == null) {
-            engineSession = coreComponents.store.state.extensions[webExtensionId]?.popupSession
+            engineSession = coreComponents.store.state.extensions[args.webExtensionId]?.popupSession
         }
 
         return inflater.inflate(R.layout.fragment_add_on_internal_settings, container, false)
@@ -55,7 +52,7 @@ class WebExtensionActionPopupFragment : Fragment(), EngineSession.Observer {
 
     override fun onResume() {
         super.onResume()
-        val title = webExtensionTitle ?: webExtensionId
+        val title = args.webExtensionTitle ?: args.webExtensionId
         showToolbar(title)
     }
 
@@ -86,7 +83,7 @@ class WebExtensionActionPopupFragment : Fragment(), EngineSession.Observer {
             consumePopupSession()
         } else {
             consumeFrom(coreComponents.store) { state ->
-                state.extensions[webExtensionId]?.let { extState ->
+                state.extensions[args.webExtensionId]?.let { extState ->
                     val popupSession = extState.popupSession
                     if (popupSession != null) {
                         addonSettingsEngineView.render(popupSession)
@@ -105,7 +102,7 @@ class WebExtensionActionPopupFragment : Fragment(), EngineSession.Observer {
 
     private fun consumePopupSession() {
         coreComponents.store.dispatch(
-            WebExtensionAction.UpdatePopupSessionAction(webExtensionId, popupSession = null)
+            WebExtensionAction.UpdatePopupSessionAction(args.webExtensionId, popupSession = null)
         )
         sessionConsumed = true
     }

@@ -5,9 +5,7 @@
 package org.mozilla.fenix.addons
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -32,15 +30,7 @@ import org.mozilla.fenix.ext.showToolbar
  * Fragment use for managing add-ons.
  */
 @Suppress("TooManyFunctions")
-class AddonsManagementFragment : Fragment(), AddonsManagerAdapterDelegate {
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.fragment_add_ons_management, container, false)
-    }
+class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management), AddonsManagerAdapterDelegate {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

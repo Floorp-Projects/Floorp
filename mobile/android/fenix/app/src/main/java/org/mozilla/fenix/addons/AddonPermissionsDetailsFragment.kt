@@ -7,11 +7,10 @@ package org.mozilla.fenix.addons
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_add_on_permissions.view.*
 import mozilla.components.feature.addons.Addon
@@ -26,24 +25,15 @@ private const val LEARN_MORE_URL =
 /**
  * A fragment to show the permissions of an add-on.
  */
-class AddonPermissionsDetailsFragment : Fragment(), View.OnClickListener {
-    private val addon: Addon by lazy {
-        AddonDetailsFragmentArgs.fromBundle(requireNotNull(arguments)).addon
-    }
+class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permissions), View.OnClickListener {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.fragment_add_on_permissions, container, false)
-    }
+    private val args by navArgs<AddonPermissionsDetailsFragmentArgs>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        showToolbar(addon.translatableName.translate())
+        showToolbar(args.addon.translatableName.translate())
 
-        bindPermissions(addon, view)
+        bindPermissions(args.addon, view)
         bindLearnMore(view)
     }
 

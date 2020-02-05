@@ -8,11 +8,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_add_on_details.view.*
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translate
@@ -25,22 +24,13 @@ import java.util.Locale
 /**
  * A fragment to show the details of an add-on.
  */
-class AddonDetailsFragment : Fragment() {
-    private val addon: Addon by lazy {
-        AddonDetailsFragmentArgs.fromBundle(requireNotNull(arguments)).addon
-    }
+class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.fragment_add_on_details, container, false)
-    }
+    private val args by navArgs<AddonDetailsFragmentArgs>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        bind(addon, view)
+        bind(args.addon, view)
     }
 
     private fun bind(addon: Addon, view: View) {

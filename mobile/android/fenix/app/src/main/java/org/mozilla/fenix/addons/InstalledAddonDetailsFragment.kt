@@ -15,10 +15,10 @@ import androidx.navigation.findNavController
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translate
+import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
-import mozilla.components.feature.addons.ui.translatedName
 
 /**
  * An activity to show the details of a installed add-on.
@@ -57,9 +57,10 @@ class InstalledAddonDetailsFragment : Fragment() {
     private fun bindEnableSwitch(view: View) {
         val switch = view.enable_switch
         switch.setState(addon.isEnabled())
-        switch.setOnCheckedChangeListener { _, isChecked ->
+        switch.setOnCheckedChangeListener { v, isChecked ->
+            val addonManager = v.context.components.addonManager
             if (isChecked) {
-                requireContext().components.addonManager.enableAddon(
+                addonManager.enableAddon(
                     addon,
                     onSuccess = {
                         runIfFragmentIsAttached {
@@ -87,7 +88,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     }
                 )
             } else {
-                requireContext().components.addonManager.disableAddon(
+                addonManager.disableAddon(
                     addon,
                     onSuccess = {
                         runIfFragmentIsAttached {

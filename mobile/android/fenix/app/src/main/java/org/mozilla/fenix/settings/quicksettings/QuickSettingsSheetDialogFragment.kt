@@ -21,6 +21,7 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.*
@@ -42,26 +43,20 @@ import com.google.android.material.R as MaterialR
  * - website permission.
  */
 class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
+
     private lateinit var quickSettingsStore: QuickSettingsFragmentStore
     private lateinit var quickSettingsController: QuickSettingsController
     private lateinit var websiteInfoView: WebsiteInfoView
     private lateinit var websitePermissionsView: WebsitePermissionsView
     private lateinit var interactor: QuickSettingsInteractor
-    private val safeArguments get() = requireNotNull(arguments)
-    private val promptGravity: Int by lazy {
-        QuickSettingsSheetDialogFragmentArgs.fromBundle(
-            safeArguments
-        ).gravity
-    }
+    private val args by navArgs<QuickSettingsSheetDialogFragmentArgs>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        val context = context!!
-        val args = QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments)
+        val context = requireContext()
         val rootView = inflateRootView(container)
 
         quickSettingsStore = QuickSettingsFragmentStore.createStore(
@@ -114,7 +109,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return if (promptGravity == BOTTOM) {
+        return if (args.gravity == BOTTOM) {
             BottomSheetDialog(requireContext(), this.theme).apply {
                 setOnShowListener {
                     val bottomSheet =
@@ -160,7 +155,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         )
 
         window?.apply {
-            setGravity(promptGravity)
+            setGravity(args.gravity)
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             // This must be called after addContentView, or it won't fully fill to the edge.
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)

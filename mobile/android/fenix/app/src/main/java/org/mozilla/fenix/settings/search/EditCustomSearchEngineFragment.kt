@@ -13,6 +13,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.custom_search_engine.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -28,10 +29,12 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 import java.util.Locale
 
+/**
+ * Fragment to enter a custom search engine name and URL template.
+ */
 class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine) {
-    private val engineIdentifier: String by lazy {
-        EditCustomSearchEngineFragmentArgs.fromBundle(requireArguments()).searchEngineIdentifier
-    }
+
+    private val args by navArgs<EditCustomSearchEngineFragmentArgs>()
 
     private lateinit var searchEngine: SearchEngine
 
@@ -39,7 +42,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         searchEngine = CustomSearchEngineStore.loadCustomSearchEngines(requireContext()).first {
-            it.identifier == engineIdentifier
+            it.identifier == args.searchEngineIdentifier
         }
     }
 
@@ -104,7 +107,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
             .allSearchEngineIdentifiers()
             .map { it.toLowerCase(Locale.ROOT) }
 
-        val nameHasChanged = name != engineIdentifier
+        val nameHasChanged = name != args.searchEngineIdentifier
 
         if (existingIdentifiers.contains(name.toLowerCase(Locale.ROOT)) && nameHasChanged) {
             custom_search_engine_name_field.error = resources
@@ -142,7 +145,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
                 SearchStringValidator.Result.Success -> {
                     CustomSearchEngineStore.updateSearchEngine(
                         context = requireContext(),
-                        oldEngineName = engineIdentifier,
+                        oldEngineName = args.searchEngineIdentifier,
                         newEngineName = name,
                         searchQuery = searchString
                     )
