@@ -178,7 +178,6 @@ bool RenderCompositorANGLE::Initialize() {
     }
   }
 
-  // SyncObject is used only by D3D11DXVA2Manager
   mSyncObject = layers::SyncObjectHost::CreateSyncObjectHost(mDevice);
   if (!mSyncObject->Init()) {
     // Some errors occur. Clear the mSyncObject here.
@@ -435,6 +434,13 @@ bool RenderCompositorANGLE::BeginFrame() {
     return false;
   }
 
+  if (mSyncObject) {
+    if (!mSyncObject->Synchronize(/* aFallible */ true)) {
+      // It's timeout or other error. Handle the device-reset here.
+      RenderThread::Get()->HandleDeviceReset("SyncObject", /* aNotify */ true);
+      return false;
+    }
+  }
   return true;
 }
 
