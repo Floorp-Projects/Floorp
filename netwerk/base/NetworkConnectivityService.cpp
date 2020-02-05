@@ -287,8 +287,6 @@ NetworkConnectivityService::OnStopRequest(nsIRequest* aRequest,
   } else if (aRequest == mIPv6Channel) {
     mIPv6 = status;
     mIPv6Channel = nullptr;
-  } else {
-    MOZ_ASSERT(false, "Unknown request");
   }
 
   if (!mIPv6Channel && !mIPv4Channel) {
