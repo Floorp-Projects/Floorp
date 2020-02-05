@@ -348,6 +348,51 @@ class SourceSurface : public external::AtomicRefCounted<SourceSurface> {
   virtual IntRect GetRect() const { return IntRect(IntPoint(0, 0), GetSize()); }
   virtual SurfaceFormat GetFormat() const = 0;
 
+  /**
+   * Structure containing memory size information for the surface.
+   */
+  struct SizeOfInfo {
+    SizeOfInfo()
+        : mHeapBytes(0),
+          mNonHeapBytes(0),
+          mUnknownBytes(0),
+          mExternalHandles(0),
+          mExternalId(0),
+          mTypes(0) {}
+
+    void Accumulate(const SizeOfInfo& aOther) {
+      mHeapBytes += aOther.mHeapBytes;
+      mNonHeapBytes += aOther.mNonHeapBytes;
+      mUnknownBytes += aOther.mUnknownBytes;
+      mExternalHandles += aOther.mExternalHandles;
+      if (aOther.mExternalId) {
+        mExternalId = aOther.mExternalId;
+      }
+      mTypes |= aOther.mTypes;
+    }
+
+    void AddType(SurfaceType aType) { mTypes |= 1 << uint32_t(aType); }
+
+    size_t mHeapBytes;        // Bytes allocated on the heap.
+    size_t mNonHeapBytes;     // Bytes allocated off the heap.
+    size_t mUnknownBytes;     // Bytes allocated to either, but unknown.
+    size_t mExternalHandles;  // Open handles for the surface.
+    uint64_t mExternalId;     // External ID for WebRender, if available.
+    uint32_t mTypes;          // Bit shifted values representing SurfaceType.
+  };
+
+  /**
+   * Get the size information of the underlying data buffer.
+   */
+  virtual void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                   SizeOfInfo& aInfo) const {
+    // Default is to estimate the footprint based on its size/format.
+    auto size = GetSize();
+    auto format = GetFormat();
+    aInfo.AddType(GetType());
+    aInfo.mUnknownBytes = size.width * size.height * BytesPerPixel(format);
+  }
+
   /** This returns false if some event has made this source surface invalid for
    * usage with current DrawTargets. For example in the case of Direct2D this
    * could return false if we have switched devices since this surface was
@@ -486,6 +531,11 @@ class DataSourceSurface : public SourceSurface {
       return &mMap;
     }
 
+    const DataSourceSurface* GetSurface() const {
+      MOZ_ASSERT(mIsMapped);
+      return mSurface;
+    }
+
     bool IsMapped() const { return mIsMapped; }
 
    private:
@@ -549,15 +599,6 @@ class DataSourceSurface : public SourceSurface {
    * The caller needs to do null-check before using it.
    */
   already_AddRefed<DataSourceSurface> GetDataSurface() override;
-
-  /**
-   * Add the size of the underlying data buffer to the aggregate.
-   */
-  virtual void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                                      size_t& aHeapSizeOut,
-                                      size_t& aNonHeapSizeOut,
-                                      size_t& aExtHandlesOut,
-                                      uint64_t& aExtIdOut) const {}
 
   /**
    * Returns whether or not the data was allocated on the heap. This should

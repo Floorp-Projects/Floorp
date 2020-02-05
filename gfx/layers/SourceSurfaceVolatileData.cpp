@@ -33,16 +33,16 @@ void SourceSurfaceVolatileData::GuaranteePersistance() {
   MOZ_ASSERT_UNREACHABLE("Should use SourceSurfaceRawData wrapper!");
 }
 
-void SourceSurfaceVolatileData::AddSizeOfExcludingThis(
-    MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut, size_t& aNonHeapSizeOut,
-    size_t& aExtHandlesOut, uint64_t& aExtIdOut) const {
+void SourceSurfaceVolatileData::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                                    SizeOfInfo& aInfo) const {
+  aInfo.AddType(SurfaceType::DATA);
   if (mVBuf) {
-    aHeapSizeOut += mVBuf->HeapSizeOfExcludingThis(aMallocSizeOf);
-    aNonHeapSizeOut += mVBuf->NonHeapSizeOfExcludingThis();
+    aInfo.mHeapBytes = mVBuf->HeapSizeOfExcludingThis(aMallocSizeOf);
+    aInfo.mNonHeapBytes = mVBuf->NonHeapSizeOfExcludingThis();
 #ifdef ANDROID
     if (!mVBuf->OnHeap()) {
       // Volatile buffers keep a file handle open on Android.
-      ++aExtHandlesOut;
+      aInfo.mExternalHandles = 1;
     }
 #endif
   }

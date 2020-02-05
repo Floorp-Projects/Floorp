@@ -143,9 +143,8 @@ class SourceSurfaceSharedData final : public DataSourceSurface {
 
   void GuaranteePersistance() override;
 
-  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
-                              size_t& aNonHeapSizeOut, size_t& aExtHandlesOut,
-                              uint64_t& aExtIdOut) const override;
+  void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                           SizeOfInfo& aInfo) const override;
 
   bool OnHeap() const override { return false; }
 
