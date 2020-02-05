@@ -189,7 +189,7 @@ function expandRow(panel, labelText) {
 }
 
 async function evaluateJSAsync(panel, expression) {
-  const consoleFront = await panel.currentTarget.getFront("console");
+  const consoleFront = await panel.target.getFront("console");
   return consoleFront.evaluateJSAsync(expression);
 }
 
