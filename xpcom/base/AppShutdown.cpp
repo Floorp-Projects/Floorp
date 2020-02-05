@@ -134,7 +134,7 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
     MaybeDoRestart();
 
 #ifdef MOZ_GECKO_PROFILER
-    profiler_shutdown();
+    profiler_shutdown(IsFastShutdown::Yes);
 #endif
 
     DoImmediateExit();
