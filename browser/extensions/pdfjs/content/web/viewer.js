@@ -456,9 +456,14 @@ const PDFViewerApplication = {
       return undefined;
     }
 
-    const waitOn = [];
     const hash = document.location.hash.substring(1);
-    const hashParams = (0, _ui_utils.parseQueryString)(hash);
+
+    if (!hash) {
+      return undefined;
+    }
+
+    const hashParams = (0, _ui_utils.parseQueryString)(hash),
+          waitOn = [];
 
     if ("disableworker" in hashParams && hashParams["disableworker"] === "true") {
       waitOn.push(loadFakeWorker());
@@ -486,10 +491,6 @@ const PDFViewerApplication = {
 
     if ("webgl" in hashParams) {
       _app_options.AppOptions.set("enableWebGL", hashParams["webgl"] === "true");
-    }
-
-    if ("useonlycsszoom" in hashParams) {
-      _app_options.AppOptions.set("useOnlyCssZoom", hashParams["useonlycsszoom"] === "true");
     }
 
     if ("verbosity" in hashParams) {
@@ -1619,8 +1620,7 @@ function loadAndEnablePDFBug(enabledTabs) {
   return (0, _pdfjsLib.loadScript)(appConfig.debuggerScriptPath).then(function () {
     PDFBug.enable(enabledTabs);
     PDFBug.init({
-      OPS: _pdfjsLib.OPS,
-      createObjectURL: _pdfjsLib.createObjectURL
+      OPS: _pdfjsLib.OPS
     }, appConfig.mainContainer);
   });
 }
@@ -3591,7 +3591,7 @@ function GrabToPan(options) {
   this._onmousedown = this._onmousedown.bind(this);
   this._onmousemove = this._onmousemove.bind(this);
   this._endPan = this._endPan.bind(this);
-  var overlay = this.overlay = document.createElement("div");
+  const overlay = this.overlay = document.createElement("div");
   overlay.className = "grab-to-pan-grabbing";
 }
 
@@ -3654,7 +3654,7 @@ GrabToPan.prototype = {
     this.element.addEventListener("scroll", this._endPan, true);
     event.preventDefault();
     event.stopPropagation();
-    var focusedElement = document.activeElement;
+    const focusedElement = document.activeElement;
 
     if (focusedElement && !focusedElement.contains(event.target)) {
       focusedElement.blur();
@@ -3669,10 +3669,10 @@ GrabToPan.prototype = {
       return;
     }
 
-    var xDiff = event.clientX - this.clientXStart;
-    var yDiff = event.clientY - this.clientYStart;
-    var scrollTop = this.scrollTopStart - yDiff;
-    var scrollLeft = this.scrollLeftStart - xDiff;
+    const xDiff = event.clientX - this.clientXStart;
+    const yDiff = event.clientY - this.clientYStart;
+    const scrollTop = this.scrollTopStart - yDiff;
+    const scrollLeft = this.scrollLeftStart - xDiff;
 
     if (this.element.scrollTo) {
       this.element.scrollTo({
@@ -3696,9 +3696,9 @@ GrabToPan.prototype = {
     this.overlay.remove();
   }
 };
-var matchesSelector;
+let matchesSelector;
 ["webkitM", "mozM", "msM", "oM", "m"].some(function (prefix) {
-  var name = prefix + "atches";
+  let name = prefix + "atches";
 
   if (name in document.documentElement) {
     matchesSelector = name;
@@ -3712,10 +3712,10 @@ var matchesSelector;
 
   return matchesSelector;
 });
-var isNotIEorIsIE10plus = !document.documentMode || document.documentMode > 9;
-var chrome = window.chrome;
-var isChrome15OrOpera15plus = chrome && (chrome.webstore || chrome.app);
-var isSafari6plus = /Apple/.test(navigator.vendor) && /Version\/([6-9]\d*|[1-5]\d+)/.test(navigator.userAgent);
+const isNotIEorIsIE10plus = !document.documentMode || document.documentMode > 9;
+const chrome = window.chrome;
+const isChrome15OrOpera15plus = chrome && (chrome.webstore || chrome.app);
+const isSafari6plus = /Apple/.test(navigator.vendor) && /Version\/([6-9]\d*|[1-5]\d+)/.test(navigator.userAgent);
 
 function isLeftMouseReleased(event) {
   if ("buttons" in event && isNotIEorIsIE10plus) {
