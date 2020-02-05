@@ -562,7 +562,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   ModuleBuilder builder(cx, module, parser.ptr());
 
   RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
-  ModuleSharedContext modulesc(cx, module, info.compilationInfo, enclosingScope,
+  ModuleSharedContext modulesc(cx, module, compilationInfo, enclosingScope,
                                builder);
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
