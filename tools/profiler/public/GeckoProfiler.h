@@ -311,10 +311,15 @@ void profiler_init_threadmanager();
 // Call this after the nsThreadManager is Init()ed
 #  define AUTO_PROFILER_INIT2 mozilla::AutoProfilerInit2 PROFILER_RAII
 
+enum class IsFastShutdown {
+  No,
+  Yes,
+};
+
 // Clean up the profiler module, stopping it if required. This function may
 // also save a shutdown profile if requested. No profiler calls should happen
 // after this point and all profiling stack labels should have been popped.
-void profiler_shutdown();
+void profiler_shutdown(IsFastShutdown aIsFastShutdown = IsFastShutdown::No);
 
 // Start the profiler -- initializing it first if necessary -- with the
 // selected options. Stops and restarts the profiler if it is already active.
