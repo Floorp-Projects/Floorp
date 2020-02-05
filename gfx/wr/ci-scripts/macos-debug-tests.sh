@@ -22,10 +22,6 @@ set -o xtrace
 CARGOFLAGS=${CARGOFLAGS:-"--verbose"}  # default to --verbose if not set
 CARGOTESTFLAGS=${CARGOTESTFLAGS:-""}
 
-pushd webrender_api
-cargo check ${CARGOFLAGS} --features "ipc"
-popd
-
 pushd webrender
 cargo check ${CARGOFLAGS} --no-default-features
 cargo check ${CARGOFLAGS} --no-default-features --features capture
