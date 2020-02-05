@@ -91,8 +91,7 @@ mozilla::ipc::IPCResult CacheStorageParent::RecvPCacheOpConstructor(
 
   if (NS_WARN_IF(NS_FAILED(mVerifiedStatus))) {
     ErrorResult result(mVerifiedStatus);
-    Unused << CacheOpParent::Send__delete__(actor, result, void_t());
-    result.SuppressException();
+    Unused << CacheOpParent::Send__delete__(actor, std::move(result), void_t());
     return IPC_OK();
   }
 
