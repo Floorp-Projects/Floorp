@@ -144,7 +144,6 @@ either Raptor or browsertime."""
         self.installerpath = installerpath
         self.playback = None
         self.benchmark = None
-        self.benchmark_port = 0
         self.gecko_profiler = None
         self.post_startup_delay = post_startup_delay
         self.device = None
@@ -512,9 +511,9 @@ class PerftestAndroid(Perftest):
 
             if self.benchmark:
                 LOG.info("making the raptor benchmarks server port available to device")
-                self.set_reverse_port(self.benchmark_port)
+                self.set_reverse_port(int(self.benchmark.port))
         else:
-            LOG.info("Reverse port forwarding is uded only on local devices")
+            LOG.info("Reverse port forwarding is used only on local devices")
 
     def build_browser_profile(self):
         super(PerftestAndroid, self).build_browser_profile()

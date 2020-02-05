@@ -326,7 +326,7 @@ def test_android_reverse_ports(host, playback, benchmark):
     if benchmark:
         benchmark_mock = mock.patch("raptor.raptor.benchmark.Benchmark")
         raptor.benchmark = benchmark_mock
-        raptor.benchmark_port = 1234
+        raptor.benchmark.port = 1234
 
     if playback:
         playback_mock = mock.patch(
