@@ -48,13 +48,6 @@ class WebExtensionActionPopupActivity : AppCompatActivity() {
             else -> super.onCreateView(parent, name, context, attrs)
         }
 
-    override fun onBackPressed() {
-        components.store.dispatch(
-            WebExtensionAction.UpdatePopupSessionAction(webExtensionId, popupSession = null)
-        )
-        super.onBackPressed()
-    }
-
     /**
      * A fragment to show the web extension action popup with [EngineView].
      */
@@ -76,18 +69,26 @@ class WebExtensionActionPopupActivity : AppCompatActivity() {
             val session = engineSession
             if (session != null) {
                 addonSettingsEngineView.render(session)
+                consumePopupSession()
             } else {
                 consumeFrom(context!!.components.store) { state ->
                     state.extensions[webExtensionId]?.let { extState ->
                         extState.popupSession?.let {
                             if (engineSession == null) {
                                 addonSettingsEngineView.render(it)
+                                consumePopupSession()
                                 engineSession = it
                             }
                         }
                     }
                 }
             }
+        }
+
+        private fun consumePopupSession() {
+            components.store.dispatch(
+                WebExtensionAction.UpdatePopupSessionAction(webExtensionId, popupSession = null)
+            )
         }
 
         companion object {
