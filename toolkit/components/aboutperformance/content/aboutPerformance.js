@@ -690,7 +690,8 @@ var Control = {
       if (target.classList.contains("addon-icon")) {
         let row = target.parentNode.parentNode;
         let id = row.windowId;
-        let parentWin = window.docShell.rootTreeItem.domWindow;
+        let parentWin =
+          window.docShell.browsingContext.embedderElement.ownerGlobal;
         parentWin.BrowserOpenAddonsMgr(
           "addons://detail/" + encodeURIComponent(id)
         );
