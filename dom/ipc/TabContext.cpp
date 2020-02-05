@@ -27,8 +27,6 @@ TabContext::TabContext()
 
 bool TabContext::IsMozBrowserElement() const { return mIsMozBrowserElement; }
 
-bool TabContext::IsMozBrowser() const { return IsMozBrowserElement(); }
-
 bool TabContext::IsJSPlugin() const { return mJSPluginID >= 0; }
 
 int32_t TabContext::JSPluginId() const { return mJSPluginID; }

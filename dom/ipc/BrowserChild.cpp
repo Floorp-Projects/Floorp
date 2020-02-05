@@ -2336,7 +2336,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvSwappedWithOtherRemoteLoader(
   // Ignore previous value of mTriedBrowserInit since owner content has changed.
   mTriedBrowserInit = true;
   // Initialize the child side of the browser element machinery, if appropriate.
-  if (IsMozBrowser()) {
+  if (IsMozBrowserElement()) {
     RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
   }
 
@@ -2681,7 +2681,7 @@ bool BrowserChild::InitBrowserChildMessageManager() {
     mTriedBrowserInit = true;
     // Initialize the child side of the browser element machinery,
     // if appropriate.
-    if (IsMozBrowser()) {
+    if (IsMozBrowserElement()) {
       RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
     }
   }
