@@ -59,6 +59,7 @@ class VRManager : nsIObserver {
   void StopVRNavigation(const uint32_t& aDisplayID,
                         const TimeDuration& aTimeout);
   void Shutdown();
+  void ShutdownVRManagerParents();
 #if !defined(MOZ_WIDGET_ANDROID)
   bool RunPuppet(const nsTArray<uint64_t>& aBuffer,
                  VRManagerParent* aManagerParent);

@@ -32,6 +32,7 @@ class VRManagerParent final : public PVRManagerParent {
   static VRManagerParent* CreateSameProcess();
   static bool CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint);
   static bool CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint);
+  static void Shutdown();
 
   bool IsSameProcess() const;
   bool HaveEventListener();
@@ -73,6 +74,7 @@ class VRManagerParent final : public PVRManagerParent {
   mozilla::ipc::IPCResult RecvResetPuppet();
 
  private:
+  void ActorDealloc() override;
   void RegisterWithManager();
   void UnregisterFromManager();
 
@@ -80,7 +82,7 @@ class VRManagerParent final : public PVRManagerParent {
 
   static void RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager);
 
-  void DeferredDestroy();
+  static void ShutdownInternal();
 
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.
