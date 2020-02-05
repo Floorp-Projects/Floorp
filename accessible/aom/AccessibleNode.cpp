@@ -164,7 +164,7 @@ void AccessibleNode::Get(JSContext* aCX, const nsAString& aAttribute,
                          JS::MutableHandle<JS::Value> aValue,
                          ErrorResult& aRv) {
   if (!mIntl) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("No attributes available");
     return;
   }
 
@@ -172,13 +172,10 @@ void AccessibleNode::Get(JSContext* aCX, const nsAString& aAttribute,
   nsAutoString value;
   attrs->GetStringProperty(NS_ConvertUTF16toUTF8(aAttribute), value);
 
-  JS::Rooted<JS::Value> jsval(aCX);
-  if (!ToJSValue(aCX, value, &jsval)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  if (!ToJSValue(aCX, value, aValue)) {
+    aRv.NoteJSContextException(aCX);
     return;
   }
-
-  aValue.set(jsval);
 }
 
 nsINode* AccessibleNode::GetDOMNode() { return mDOMNode; }
