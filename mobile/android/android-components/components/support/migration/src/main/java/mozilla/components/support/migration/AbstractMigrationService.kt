@@ -12,6 +12,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -43,7 +44,7 @@ abstract class AbstractMigrationService : Service() {
 
         logger.debug("Migration service started")
 
-        showForegroundNotification()
+        showMigrationStartedNotification()
 
         scope.launch {
             try {
@@ -75,31 +76,44 @@ abstract class AbstractMigrationService : Service() {
         scope.cancel()
     }
 
-    private fun showForegroundNotification() {
-        val channel = ensureChannelExists()
-
-        val builder = NotificationCompat.Builder(this, channel)
-            .setSmallIcon(R.drawable.mozac_support_migration_notification_icon)
-            .setContentTitle(getString(R.string.mozac_support_migration_ongoing_notification_title))
-            .setContentText(getString(R.string.mozac_support_migration_ongoing_notification_text))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-
-        val id = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
-        startForeground(id, builder.build())
-    }
-
     private fun shutdown() {
         store.dispatch(MigrationAction.Completed)
 
         stopForeground(true)
 
-        // Now after the migration this notification channel is no longer needed and we can just
-        // remove it again.
-        removeChannel()
+        showMigrationCompleteNotification()
 
         stopSelf()
+    }
+
+    private fun showMigrationStartedNotification() {
+        val channel: String = ensureChannelExists()
+        val titleRes: Int = R.string.mozac_support_migration_ongoing_notification_title
+        val contentRes: Int = R.string.mozac_support_migration_ongoing_notification_text
+        val builder = getNotificationBuilder(titleRes, contentRes, channel)
+        val id = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
+
+        startForeground(id, builder.build())
+    }
+
+    private fun showMigrationCompleteNotification() {
+        val channel: String = NOTIFICATION_CHANNEL_ID
+        val titleRes: Int = R.string.mozac_support_migration_complete_notification_title
+        val contentRes: Int = R.string.mozac_support_migration_complete_notification_text
+        val builder = getNotificationBuilder(titleRes, contentRes, channel)
+        val id = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
+
+        NotificationManagerCompat.from(this).notify(id, builder.build())
+    }
+
+    private fun getNotificationBuilder(titleRes: Int, contentRes: Int, channel: String): NotificationCompat.Builder {
+        return NotificationCompat.Builder(this, channel)
+                .setSmallIcon(R.drawable.mozac_support_migration_notification_icon)
+                .setContentTitle(getString(titleRes))
+                .setContentText(getString(contentRes))
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
     }
 
     private fun ensureChannelExists(): String {
@@ -120,15 +134,5 @@ abstract class AbstractMigrationService : Service() {
         }
 
         return NOTIFICATION_CHANNEL_ID
-    }
-
-    private fun removeChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager: NotificationManager = getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
-
-            notificationManager.deleteNotificationChannel(NOTIFICATION_CHANNEL_ID)
-        }
     }
 }
