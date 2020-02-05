@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for promise in worklet</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+function runTestInIframe() {
+  if (!SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported()) {
+    SimpleTest.finish();
+    return;
+  }
+
+  ok(window.isSecureContext, "Test should run in secure context");
+  var audioContext = new AudioContext();
+  ok(audioContext.audioWorklet instanceof AudioWorklet,
+     "AudioContext.audioWorklet should be an instance of AudioWorklet");
+  audioContext.audioWorklet.addModule("worklet_promise.js")
+  .then(() => {
+    const node = new AudioWorkletNode(audioContext, 'promise');
+    node.port.onmessage = e => {
+      ok(e.data instanceof WebAssembly.Module, "The WasmModule has been compiled into the worklet.");
+      SimpleTest.finish();
+    }
+
+    const wasmTextToBinary = SpecialPowers.unwrap(SpecialPowers.Cu.getJSTestingFunctions().wasmTextToBinary);
+    const fooModuleCode = wasmTextToBinary(`(module
+      (func $foo (result i32) (i32.const 42))
+      (export "foo" $foo)
+    )`);
+
+    node.port.postMessage(fooModuleCode);
+  });
+}
+</script>
+</body>
+</html>
