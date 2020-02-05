@@ -20,6 +20,13 @@ namespace mozilla {
 //
 // But they only contain pointers so it is ok. Also, this warning hilariously
 // doesn't exist in GCC.
+//
+// A solution for this is to explicitly instantiate the template, but duplicate
+// instantiations are an error.
+//
+// https://github.com/eqrion/cbindgen/issues/402 tracks an improvement to
+// cbindgen that would allow it to autogenerate the template instantiations on
+// its own.
 #pragma GCC diagnostic push
 #ifdef __clang__
 #  pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
