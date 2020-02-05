@@ -97,7 +97,7 @@ class DebianBootstrapper(
         self.dist_id = dist_id
 
         self.packages = self.COMMON_PACKAGES + self.DISTRO_PACKAGES
-        if self.distro == 'Debian' or self.distro == 'debian':
+        if self.distro == 'debian':
             self.packages += self.DEBIAN_PACKAGES
         self.browser_packages = self.BROWSER_COMMON_PACKAGES + self.BROWSER_DISTRO_PACKAGES
         self.mobile_android_packages = self.MOBILE_ANDROID_COMMON_PACKAGES + \

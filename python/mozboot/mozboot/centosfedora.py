@@ -64,7 +64,7 @@ class CentOSFedoraBootstrapper(
             'wget',
         ]
 
-        if self.distro in ('CentOS', 'CentOS Linux'):
+        if self.distro in ('centos'):
             self.group_packages += [
                 'Development Tools',
             ]
@@ -101,7 +101,7 @@ class CentOSFedoraBootstrapper(
                     'python-dbus',
                 ]
 
-        elif self.distro == 'Fedora':
+        elif self.distro == 'fedora':
             self.group_packages += [
                 'C Development Tools and Libraries',
             ]
@@ -141,7 +141,7 @@ class CentOSFedoraBootstrapper(
         self.dnf_groupinstall(*self.browser_group_packages)
         self.dnf_install(*self.browser_packages)
 
-        if self.distro in ('CentOS', 'CentOS Linux') and self.version == 6:
+        if self.distro in ('centos') and self.version == 6:
             yasm = ('http://dl.fedoraproject.org/pub/epel/6/i386/'
                     'Packages/y/yasm-1.2.0-1.el6.i686.rpm')
             if platform.architecture()[0] == '64bit':
