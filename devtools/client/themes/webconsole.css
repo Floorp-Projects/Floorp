@@ -520,7 +520,7 @@ html #webconsole-notificationbox {
   height: 18px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: pre;
 }
 
 .webconsole-app .cm-auto-complete-shadow-text::after {
