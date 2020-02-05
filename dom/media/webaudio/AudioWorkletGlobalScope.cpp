@@ -33,7 +33,7 @@ NS_IMPL_ADDREF_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope)
 NS_IMPL_RELEASE_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope)
 
 AudioWorkletGlobalScope::AudioWorkletGlobalScope(AudioWorkletImpl* aImpl)
-    : mImpl(aImpl) {}
+    : WorkletGlobalScope(aImpl->GetAgentClusterId()), mImpl(aImpl) {}
 
 bool AudioWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsDOMNavigationTiming.h"
@@ -37,7 +38,7 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkletGlobalScope)
 
-  WorkletGlobalScope();
+  explicit WorkletGlobalScope(const Maybe<nsID>& aAgentClusterId);
 
   nsIGlobalObject* GetParentObject() const { return nullptr; }
 
@@ -64,12 +65,15 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
     return duration.ToMilliseconds();
   }
 
+  Maybe<nsID> GetAgentClusterId() const override { return mAgentClusterId; }
+
  protected:
   ~WorkletGlobalScope();
   ;
 
  private:
   TimeStamp mCreationTimeStamp;
+  Maybe<nsID> mAgentClusterId;
   RefPtr<Console> mConsole;
 };
 
