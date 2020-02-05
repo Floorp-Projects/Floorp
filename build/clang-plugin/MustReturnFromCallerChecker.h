@@ -19,6 +19,7 @@ public:
   void check(const MatchFinder::MatchResult &Result) override;
 
 private:
+  bool isIgnorable(const Stmt *S);
   bool immediatelyReturns(RecurseGuard<const CFGBlock *> Block,
                           ASTContext *TheContext, size_t FromIdx);
 };
