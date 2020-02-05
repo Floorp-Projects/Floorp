@@ -133,6 +133,28 @@ int b3(Thrower& thrower) {
   return 5;
 }
 
+// Explicit test in orer to also verify the `UnaryOperator` node in the `CFG`
+int b3a(Thrower& thrower) {
+  if (Condition()) {
+    thrower.Throw();
+  }
+  return -1;
+}
+
+float b3b(Thrower& thrower) {
+  if (Condition()) {
+    thrower.Throw();
+  }
+  return 1.0f;
+}
+
+bool b3c(Thrower& thrower) {
+  if (Condition()) {
+    thrower.Throw();
+  }
+  return false;
+}
+
 int b4(Thrower& thrower) {
   if (Condition()) {
     thrower.Throw(); // expected-error {{You must immediately return after calling this function}}
@@ -237,3 +259,12 @@ void c1() {
   thrower.Throw();
   DoAnythingElse(); // Should be allowed, since our thrower is not an arg
 }
+
+class TestRet {
+  TestRet *b13(Thrower &thrower) {
+    if (Condition()) {
+      thrower.Throw();
+    }
+    return this;
+  }
+};
