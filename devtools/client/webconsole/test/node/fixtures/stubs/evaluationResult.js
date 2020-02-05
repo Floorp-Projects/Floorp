@@ -155,7 +155,8 @@ rawPackets.set(`inspect({a: 1})`, {
         }
       },
       "actorID": "server0.conn0.child1/obj28"
-    }
+    },
+    "forceExpandInConsole": false
   },
   "input": "inspect({a: 1})",
   "result": {
