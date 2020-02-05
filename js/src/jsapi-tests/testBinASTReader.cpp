@@ -281,15 +281,15 @@ void runTestFromPath(JSContext* cx, const char* path) {
     CompileOptions txtOptions(cx);
     txtOptions.setFileAndLine(txtPath.begin(), 0);
 
-    frontend::ParseInfo parseInfo(cx, allocScope);
-    if (!parseInfo.initFromOptions(cx, txtOptions)) {
-      MOZ_CRASH("Couldn't initialize ParseInfo");
+    frontend::CompilationInfo compilationInfo(cx, allocScope);
+    if (!compilationInfo.initFromOptions(cx, txtOptions)) {
+      MOZ_CRASH("Couldn't initialize CompilationInfo");
     }
 
     js::frontend::Parser<js::frontend::FullParseHandler, mozilla::Utf8Unit>
         txtParser(cx, txtOptions, txtSource.begin(), txtSource.length(),
-                  /* foldConstants = */ false, parseInfo, nullptr, nullptr,
-                  parseInfo.sourceObject);
+                  /* foldConstants = */ false, compilationInfo, nullptr,
+                  nullptr, compilationInfo.sourceObject);
     if (!txtParser.checkOptions()) {
       MOZ_CRASH("Bad options");
     }
@@ -324,17 +324,17 @@ void runTestFromPath(JSContext* cx, const char* path) {
     CompileOptions binOptions(cx);
     binOptions.setFileAndLine(binPath.begin(), 0);
 
-    frontend::ParseInfo binParseInfo(cx, allocScope);
-    if (!binParseInfo.initFromOptions(cx, binOptions)) {
+    frontend::CompilationInfo binCompilationInfo(cx, allocScope);
+    if (!binCompilationInfo.initFromOptions(cx, binOptions)) {
       MOZ_CRASH();
     }
 
     frontend::Directives directives(false);
-    frontend::GlobalSharedContext globalsc(cx, ScopeKind::Global, binParseInfo,
-                                           directives, false);
+    frontend::GlobalSharedContext globalsc(
+        cx, ScopeKind::Global, binCompilationInfo, directives, false);
 
-    frontend::BinASTParser<Tok> binParser(cx, binParseInfo, binOptions,
-                                          binParseInfo.sourceObject);
+    frontend::BinASTParser<Tok> binParser(cx, binCompilationInfo, binOptions,
+                                          binCompilationInfo.sourceObject);
 
     auto binParsed = binParser.parse(
         &globalsc,

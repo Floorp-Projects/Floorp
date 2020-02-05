@@ -592,8 +592,8 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::ParseInfo parseInfo(cx, allocScope);
-  if (!parseInfo.initFromOptions(cx, options)) {
+  frontend::CompilationInfo compilationInfo(cx, allocScope);
+  if (!compilationInfo.initFromOptions(cx, options)) {
     return;
   }
 
@@ -601,9 +601,9 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   // we must finish initializing the SSO.  This is because there may be valid
   // inner scripts observable by the debugger which reference the partially-
   // initialized SSO.
-  sourceObjects.infallibleAppend(parseInfo.sourceObject);
+  sourceObjects.infallibleAppend(compilationInfo.sourceObject);
 
-  frontend::GlobalScriptInfo info(cx, parseInfo, options, scopeKind);
+  frontend::GlobalScriptInfo info(cx, compilationInfo, options, scopeKind);
   JSScript* script = frontend::CompileGlobalScript(info, data);
 
   if (script) {

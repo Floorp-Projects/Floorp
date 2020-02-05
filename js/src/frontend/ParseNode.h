@@ -48,7 +48,7 @@ class ArrayObject;
 namespace frontend {
 
 class ParseContext;
-struct ParseInfo;
+struct CompilationInfo;
 class ParserSharedBase;
 class FullParseHandler;
 class FunctionBox;
@@ -1548,10 +1548,10 @@ class NumericLiteral : public ParseNode {
 };
 
 class BigIntLiteral : public ParseNode {
-  // BigIntLiterals hold onto a ParseInfo reference to avoid
-  // having to plumb ParseInfo through FoldConstants.
+  // BigIntLiterals hold onto a CompilationInfo reference to avoid
+  // having to plumb CompilationInfo through FoldConstants.
   struct Deferred {
-    ParseInfo& parseInfo;
+    CompilationInfo& compilationInfo;
     BigIntIndex index;
   };
   mozilla::Variant<Deferred, BigIntBox*> data_;
@@ -1562,10 +1562,10 @@ class BigIntLiteral : public ParseNode {
   BigIntLiteral(BigIntBox* bibox, const TokenPos& pos)
       : ParseNode(ParseNodeKind::BigIntExpr, pos), data_(bibox) {}
 
-  explicit BigIntLiteral(BigIntIndex index, ParseInfo& parseInfo,
+  explicit BigIntLiteral(BigIntIndex index, CompilationInfo& compilationInfo,
                          const TokenPos& pos)
       : ParseNode(ParseNodeKind::BigIntExpr, pos),
-        data_(Deferred{parseInfo, index}) {}
+        data_(Deferred{compilationInfo, index}) {}
 
   bool isDeferred() { return data_.is<Deferred>(); }
 
@@ -1888,7 +1888,8 @@ class RegExpLiteral : public ParseNode {
 
   ObjectBox* objbox() const { return data_.as<ObjectBox*>(); }
 
-  RegExpObject* getOrCreate(JSContext* cx, ParseInfo& parseInfo) const;
+  RegExpObject* getOrCreate(JSContext* cx,
+                            CompilationInfo& compilationInfo) const;
 
 #ifdef DEBUG
   void dumpImpl(GenericPrinter& out, int indent);

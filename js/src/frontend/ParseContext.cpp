@@ -220,8 +220,8 @@ void ParseContext::Scope::removeCatchParameters(ParseContext* pc,
 
 ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
                            SharedContext* sc, ErrorReporter& errorReporter,
-                           ParseInfo& parseInfo, Directives* newDirectives,
-                           bool isFull)
+                           CompilationInfo& compilationInfo,
+                           Directives* newDirectives, bool isFull)
     : Nestable<ParseContext>(&parent),
       traceLog_(sc->cx_,
                 isFull ? TraceLogger_ParsingFull : TraceLogger_ParsingSyntax,
@@ -237,7 +237,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       newDirectives(newDirectives),
       lastYieldOffset(NoYieldOffset),
       lastAwaitOffset(NoAwaitOffset),
-      scriptId_(parseInfo.usedNames.nextScriptId()),
+      scriptId_(compilationInfo.usedNames.nextScriptId()),
       isStandaloneFunctionBody_(false),
       superScopeNeedsHomeObject_(false) {
   if (isFunctionBox()) {
@@ -246,13 +246,13 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
     // don't have a long enough lifespan, as AsmJS marks the lifo allocator
     // inside the ModuleValidator, and frees it again when that dies.
     if (!this->functionBox()->useAsmOrInsideUseAsm()) {
-      tree.emplace(parseInfo.treeHolder);
+      tree.emplace(compilationInfo.treeHolder);
     }
 
     if (functionBox()->isNamedLambda()) {
-      namedLambdaScope_.emplace(cx, parent, parseInfo.usedNames);
+      namedLambdaScope_.emplace(cx, parent, compilationInfo.usedNames);
     }
-    functionScope_.emplace(cx, parent, parseInfo.usedNames);
+    functionScope_.emplace(cx, parent, compilationInfo.usedNames);
   }
 }
 

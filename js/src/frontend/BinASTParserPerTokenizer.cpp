@@ -82,14 +82,15 @@ using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
 template <typename Tok>
 BinASTParserPerTokenizer<Tok>::BinASTParserPerTokenizer(
-    JSContext* cx, ParseInfo& parseInfo,
+    JSContext* cx, CompilationInfo& compilationInfo,
     const JS::ReadOnlyCompileOptions& options,
     HandleScriptSourceObject sourceObject,
     Handle<LazyScript*> lazyScript /* = nullptr */)
-    : BinASTParserBase(cx, parseInfo, sourceObject),
+    : BinASTParserBase(cx, compilationInfo, sourceObject),
       options_(options),
       lazyScript_(cx, lazyScript),
-      handler_(cx, parseInfo.allocScope.alloc(), nullptr, SourceKind::Binary),
+      handler_(cx, compilationInfo.allocScope.alloc(), nullptr,
+               SourceKind::Binary),
       variableDeclarationKind_(VariableDeclarationKind::Var),
       treeHolder_(cx) {
   MOZ_ASSERT_IF(lazyScript_, lazyScript_->isBinAST());
@@ -278,7 +279,7 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   }
 
   auto* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, fun, /* toStringStart = */ 0, getParseInfo(),
+      cx_, traceListHead_, fun, /* toStringStart = */ 0, getCompilationInfo(),
       *directives,
       /* extraWarning = */ false, generatorKind, functionAsyncKind);
   if (MOZ_UNLIKELY(!funbox)) {

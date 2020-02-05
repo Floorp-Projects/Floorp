@@ -26,7 +26,7 @@ namespace frontend {
 
 class BinASTParserBase : public ParserSharedBase {
  public:
-  BinASTParserBase(JSContext* cx, ParseInfo& parseInfo,
+  BinASTParserBase(JSContext* cx, CompilationInfo& compilationInfo,
                    HandleScriptSourceObject sourceObject);
   ~BinASTParserBase() = default;
 

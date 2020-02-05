@@ -15,9 +15,10 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
-#include "jstypes.h"                // JS_PUBLIC_API
+#include "jstypes.h"  // JS_PUBLIC_API
+
+#include "frontend/CompilationInfo.h"
 #include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
-#include "frontend/ParseInfo.h"
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"      // JS::{,Mutable}Handle, JS::Rooted
@@ -52,18 +53,18 @@ class MOZ_STACK_CLASS BytecodeCompiler {
 
   JSContext* cx;
   const JS::ReadOnlyCompileOptions& options;
-  ParseInfo& parseInfo;
+  CompilationInfo& compilationInfo;
 
   Directives directives;
 
   JS::Rooted<JSScript*> script;
 
   ScriptSource* scriptSource() const {
-    return parseInfo.sourceObject->source();
+    return compilationInfo.sourceObject->source();
   };
 
  protected:
-  BytecodeCompiler(JSContext* cx, ParseInfo& parseInfo,
+  BytecodeCompiler(JSContext* cx, CompilationInfo& compilationInfo,
                    const JS::ReadOnlyCompileOptions& options);
 
   template <typename Unit>
@@ -78,13 +79,15 @@ class MOZ_STACK_CLASS BytecodeCompiler {
  public:
   JSContext* context() const { return cx; }
 
-  ScriptSourceObject* sourceObjectPtr() const { return parseInfo.sourceObject; }
+  ScriptSourceObject* sourceObjectPtr() const {
+    return compilationInfo.sourceObject;
+  }
 
   JS::Handle<JSScript*> getScript() { return script; }
 
  protected:
   void assertSourceCreated() const {
-    MOZ_ASSERT(parseInfo.sourceObject != nullptr);
+    MOZ_ASSERT(compilationInfo.sourceObject != nullptr);
     MOZ_ASSERT(scriptSource() != nullptr);
   }
 
@@ -113,11 +116,11 @@ class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {
   GlobalSharedContext globalsc_;
 
  public:
-  GlobalScriptInfo(JSContext* cx, ParseInfo& parseInfo,
+  GlobalScriptInfo(JSContext* cx, CompilationInfo& compilationInfo,
                    const JS::ReadOnlyCompileOptions& options,
                    ScopeKind scopeKind)
-      : BytecodeCompiler(cx, parseInfo, options),
-        globalsc_(cx, scopeKind, parseInfo, directives,
+      : BytecodeCompiler(cx, compilationInfo, options),
+        globalsc_(cx, scopeKind, compilationInfo, directives,
                   options.extraWarningsOption) {
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||
                scopeKind == ScopeKind::NonSyntactic);
@@ -137,13 +140,13 @@ class MOZ_STACK_CLASS EvalScriptInfo final : public BytecodeCompiler {
   EvalSharedContext evalsc_;
 
  public:
-  EvalScriptInfo(JSContext* cx, ParseInfo& parseInfo,
+  EvalScriptInfo(JSContext* cx, CompilationInfo& compilationInfo,
                  const JS::ReadOnlyCompileOptions& options,
                  JS::Handle<JSObject*> environment,
                  JS::Handle<Scope*> enclosingScope)
-      : BytecodeCompiler(cx, parseInfo, options),
+      : BytecodeCompiler(cx, compilationInfo, options),
         environment_(environment),
-        evalsc_(cx, environment_, parseInfo, enclosingScope, directives,
+        evalsc_(cx, environment_, compilationInfo, enclosingScope, directives,
                 options.extraWarningsOption) {}
 
   HandleObject environment() { return environment_; }
@@ -156,16 +159,16 @@ extern JSScript* CompileEvalScript(EvalScriptInfo& info,
 
 class MOZ_STACK_CLASS ModuleInfo final : public BytecodeCompiler {
  public:
-  ModuleInfo(JSContext* cx, ParseInfo& parseInfo,
+  ModuleInfo(JSContext* cx, CompilationInfo& compilationInfo,
              const JS::ReadOnlyCompileOptions& options)
-      : BytecodeCompiler(cx, parseInfo, options) {}
+      : BytecodeCompiler(cx, compilationInfo, options) {}
 };
 
 class MOZ_STACK_CLASS StandaloneFunctionInfo final : public BytecodeCompiler {
  public:
-  StandaloneFunctionInfo(JSContext* cx, ParseInfo& parseInfo,
+  StandaloneFunctionInfo(JSContext* cx, CompilationInfo& compilationInfo,
                          const JS::ReadOnlyCompileOptions& options)
-      : BytecodeCompiler(cx, parseInfo, options) {}
+      : BytecodeCompiler(cx, compilationInfo, options) {}
 };
 
 extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_ParseInfo_h
-#define frontend_ParseInfo_h
+#ifndef frontend_CompilationInfo_h
+#define frontend_CompilationInfo_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Variant.h"
@@ -22,10 +22,10 @@
 namespace js {
 namespace frontend {
 
-// ParseInfo owns a number of pieces of information about a parse,
-// as well as controls the lifetime of parse nodes and other data
-// by controling the mark and reset of the LifoAlloc.
-struct MOZ_RAII ParseInfo {
+// CompilationInfo owns a number of pieces of information about script
+// compilation as well as controls the lifetime of parse nodes and other data by
+// controling the mark and reset of the LifoAlloc.
+struct MOZ_RAII CompilationInfo {
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
@@ -42,13 +42,13 @@ struct MOZ_RAII ParseInfo {
   // the parser data structures.
   //
   // References to scopes are controlled via AbstractScope, which holds onto
-  // an index (and ParseInfo reference).
+  // an index (and CompilationInfo reference).
   JS::RootedVector<ScopeCreationData> scopeCreationData;
 
   JS::Rooted<ScriptSourceObject*> sourceObject;
 
-  // Construct a ParseInfo
-  ParseInfo(JSContext* cx, LifoAllocScope& alloc)
+  // Construct a CompilationInfo
+  CompilationInfo(JSContext* cx, LifoAllocScope& alloc)
       : usedNames(cx),
         allocScope(alloc),
         treeHolder(cx),
@@ -64,10 +64,10 @@ struct MOZ_RAII ParseInfo {
 
   // To avoid any misuses, make sure this is neither copyable,
   // movable or assignable.
-  ParseInfo(const ParseInfo&) = delete;
-  ParseInfo(ParseInfo&&) = delete;
-  ParseInfo& operator=(const ParseInfo&) = delete;
-  ParseInfo& operator=(ParseInfo&&) = delete;
+  CompilationInfo(const CompilationInfo&) = delete;
+  CompilationInfo(CompilationInfo&&) = delete;
+  CompilationInfo& operator=(const CompilationInfo&) = delete;
+  CompilationInfo& operator=(CompilationInfo&&) = delete;
 };
 
 }  // namespace frontend

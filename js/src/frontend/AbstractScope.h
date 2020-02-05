@@ -23,7 +23,7 @@ class EvalScope;
 class GCMarker;
 
 namespace frontend {
-struct ParseInfo;
+struct CompilationInfo;
 class FunctionBox;
 class ScopeCreationData;
 }  // namespace frontend
@@ -41,11 +41,11 @@ using HeapPtrScope = HeapPtr<Scope*>;
 // occur to ensure that the scope is traced.
 class AbstractScope {
  public:
-  // Used to hold index and the parseInfo together to avoid having a
-  // potentially nullable parseInfo.
+  // Used to hold index and the compilationInfo together to avoid having a
+  // potentially nullable compilationInfo.
   struct Deferred {
     ScopeIndex index;
-    frontend::ParseInfo& parseInfo;
+    frontend::CompilationInfo& compilationInfo;
   };
 
   // To make writing code and managing invariants easier, we require that
@@ -70,8 +70,8 @@ class AbstractScope {
 
   explicit AbstractScope(Scope* scope) : scope_(HeapPtrScope(scope)) {}
 
-  AbstractScope(frontend::ParseInfo& parseInfo, ScopeIndex scope)
-      : scope_(Deferred{scope, parseInfo}) {}
+  AbstractScope(frontend::CompilationInfo& compilationInfo, ScopeIndex scope)
+      : scope_(Deferred{scope, compilationInfo}) {}
 
   bool isNullptr() const {
     if (isScopeCreationData()) {
@@ -88,7 +88,7 @@ class AbstractScope {
 
   bool isScopeCreationData() const { return scope_.is<Deferred>(); }
 
-  // Note: this handle is rooted in the ParseInfo.
+  // Note: this handle is rooted in the CompilationInfo.
   MutableHandle<frontend::ScopeCreationData> scopeCreationData() const;
 
   Scope* scope() const { return scope_.as<HeapPtrScope>(); }

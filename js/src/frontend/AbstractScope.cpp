@@ -8,7 +8,7 @@
 
 #include "mozilla/Maybe.h"
 
-#include "frontend/ParseInfo.h"
+#include "frontend/CompilationInfo.h"
 #include "frontend/Stencil.h"
 #include "js/GCPolicyAPI.h"
 #include "js/GCVariant.h"
@@ -18,7 +18,7 @@ using namespace js::frontend;
 
 MutableHandle<ScopeCreationData> AbstractScope::scopeCreationData() const {
   const Deferred& data = scope_.as<Deferred>();
-  return data.parseInfo.scopeCreationData[data.index.index];
+  return data.compilationInfo.scopeCreationData[data.index.index];
 }
 
 // This is used during allocation of the scopes to ensure that we only
