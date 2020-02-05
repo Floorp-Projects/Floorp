@@ -107,7 +107,7 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
 
   void assertSourceParserAndScriptCreated(BytecodeCompiler& info) {
     assertSourceAndParserCreated(info);
-    MOZ_ASSERT(info.script != nullptr);
+    MOZ_ASSERT(info.compilationInfo.script != nullptr);
   }
 
   MOZ_MUST_USE bool emplaceEmitter(BytecodeCompiler& info,
@@ -192,10 +192,10 @@ static JSScript* CreateGlobalScript(GlobalScriptInfo& info,
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(info.context(), info.getScript());
+  tellDebuggerAboutCompiledScript(info.context(), info.compilationInfo.script);
 
   assertException.reset();
-  return info.getScript();
+  return info.compilationInfo.script;
 }
 
 JSScript* frontend::CompileGlobalScript(GlobalScriptInfo& info,
@@ -223,10 +223,10 @@ static JSScript* CreateEvalScript(frontend::EvalScriptInfo& info,
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(info.context(), info.getScript());
+  tellDebuggerAboutCompiledScript(info.context(), info.compilationInfo.script);
 
   assertException.reset();
-  return info.getScript();
+  return info.compilationInfo.script;
 }
 
 JSScript* frontend::CompileEvalScript(EvalScriptInfo& info,
@@ -368,7 +368,7 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 BytecodeCompiler::BytecodeCompiler(JSContext* cx,
                                    CompilationInfo& compilationInfo,
                                    const ReadOnlyCompileOptions& options)
-    : compilationInfo(compilationInfo), script(cx) {}
+    : compilationInfo(compilationInfo) {}
 
 bool BytecodeCompiler::canLazilyParse() const {
   return !compilationInfo.options.discardSource &&
@@ -414,12 +414,12 @@ bool BytecodeCompiler::internalCreateScript(HandleObject functionOrGlobal,
                                             uint32_t toStringStart,
                                             uint32_t toStringEnd,
                                             uint32_t sourceBufferLength) {
-  script = JSScript::Create(
+  compilationInfo.script = JSScript::Create(
       compilationInfo.cx, functionOrGlobal, compilationInfo.options,
       compilationInfo.sourceObject,
       /* sourceStart = */ 0, sourceBufferLength, toStringStart, toStringEnd,
       compilationInfo.options.lineno, compilationInfo.options.column);
-  return script != nullptr;
+  return compilationInfo.script != nullptr;
 }
 
 bool BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
@@ -428,7 +428,8 @@ bool BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
   BytecodeEmitter::EmitterMode emitterMode =
       compilationInfo.options.selfHostingMode ? BytecodeEmitter::SelfHosting
                                               : BytecodeEmitter::Normal;
-  emitter.emplace(/* parent = */ nullptr, parser, sharedContext, script,
+  emitter.emplace(/* parent = */ nullptr, parser, sharedContext,
+                  compilationInfo.script,
                   /* lazyScript = */ nullptr, compilationInfo.options.lineno,
                   compilationInfo.options.column, compilationInfo, emitterMode);
   return emitter->init();
@@ -525,7 +526,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
   MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
 
-  return info.script;
+  return info.compilationInfo.script;
 }
 
 template <typename Unit>
@@ -542,7 +543,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  module->init(info.script);
+  module->init(info.compilationInfo.script);
 
   ModuleBuilder builder(cx, module, parser.ptr());
 
@@ -808,7 +809,7 @@ static ModuleObject* InternalParseModule(
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(cx, info.getScript());
+  tellDebuggerAboutCompiledScript(cx, info.compilationInfo.script);
 
   assertException.reset();
   return module;
@@ -1158,12 +1159,12 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
   // Note: If AsmJS successfully compiles, the into.script will still be
   // nullptr. In this case we have compiled to a native function instead of an
   // interpreted script.
-  if (info.getScript()) {
+  if (info.compilationInfo.script) {
     if (parameterListEnd) {
       compilationInfo.sourceObject->source()->setParameterListEnd(
           *parameterListEnd);
     }
-    tellDebuggerAboutCompiledScript(cx, info.getScript());
+    tellDebuggerAboutCompiledScript(cx, info.compilationInfo.script);
   }
 
   assertException.reset();

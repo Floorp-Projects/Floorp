@@ -48,11 +48,6 @@ class StandaloneFunctionCompiler;
 // function bodies.
 class MOZ_STACK_CLASS BytecodeCompiler {
  protected:
-  CompilationInfo& compilationInfo;
-
-  JS::Rooted<JSScript*> script;
-
- protected:
   BytecodeCompiler(JSContext* cx, CompilationInfo& compilationInfo,
                    const JS::ReadOnlyCompileOptions& options);
 
@@ -66,9 +61,8 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   friend class StandaloneFunctionCompiler;
 
  public:
+  CompilationInfo& compilationInfo;
   JSContext* context() const { return compilationInfo.cx; }
-
-  JS::Handle<JSScript*> getScript() { return script; }
 
  protected:
   void assertSourceCreated() const {
