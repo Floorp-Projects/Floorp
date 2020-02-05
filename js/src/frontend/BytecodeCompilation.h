@@ -70,10 +70,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
  public:
   JSContext* context() const { return compilationInfo.cx; }
 
-  ScriptSourceObject* sourceObjectPtr() const {
-    return compilationInfo.sourceObject;
-  }
-
   JS::Handle<JSScript*> getScript() { return script; }
 
  protected:
