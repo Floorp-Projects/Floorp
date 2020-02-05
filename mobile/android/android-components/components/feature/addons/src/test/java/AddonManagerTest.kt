@@ -48,6 +48,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import java.util.Locale
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -108,8 +109,11 @@ class AddonManagerTest {
         WebExtensionSupport.installedExtensions["ext3"] = newlySupportedExtension
 
         val unsupportedExtension: WebExtension = mock()
+        val unsupportedExtensionMetadata: Metadata = mock()
+        whenever(unsupportedExtensionMetadata.name).thenReturn("name")
         whenever(unsupportedExtension.id).thenReturn("unsupported_ext")
         whenever(unsupportedExtension.url).thenReturn("site_url")
+        whenever(unsupportedExtension.getMetadata()).thenReturn(unsupportedExtensionMetadata)
         WebExtensionSupport.installedExtensions["unsupported_ext"] = unsupportedExtension
 
         // Verify add-ons were updated with state provided by the engine/store
@@ -136,6 +140,9 @@ class AddonManagerTest {
 
         // Verify the unsupported add-on was included in addons
         assertEquals("unsupported_ext", addons[3].id)
+        assertEquals(1, addons[3].translatableName.size)
+        assertTrue(addons[3].translatableName.containsKey(Locale.getDefault().language))
+        assertTrue(addons[3].translatableName.containsValue("name"))
         assertFalse(addons[3].installedState!!.supported)
     }
 

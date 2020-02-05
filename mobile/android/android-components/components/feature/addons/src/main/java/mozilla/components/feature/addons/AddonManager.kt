@@ -13,6 +13,7 @@ import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.webextensions.WebExtensionSupport
 import mozilla.components.support.webextensions.WebExtensionSupport.installedExtensions
 import java.lang.IllegalStateException
+import java.util.Locale
 
 /**
  * Provides access to installed and recommended [Addon]s and manages their states.
@@ -55,14 +56,21 @@ class AddonManager(
 
             // Get all installed addons that are not yet supported.
             val unsupportedAddons = installedExtensions
-                    .filterKeys { !supportedAddonIds.contains(it) }
-                    .filterValues { !it.isBuiltIn() }
-                    .map { extensionEntry ->
-                val extension = extensionEntry.value
-
-                val installedState = extension.toInstalledState().copy(enabled = false, supported = false)
-                Addon(extension.id, siteUrl = extension.url, installedState = installedState)
-            }
+                .filterKeys { !supportedAddonIds.contains(it) }
+                .filterValues { !it.isBuiltIn() }
+                .map { extensionEntry ->
+                    val extension: WebExtension = extensionEntry.value
+                    val lang = Locale.getDefault().language
+                    val name = extension.getMetadata()?.name ?: extension.id
+                    val installedState =
+                        extension.toInstalledState().copy(enabled = false, supported = false)
+                    Addon(
+                        id = extension.id,
+                        translatableName = mapOf(lang to name),
+                        siteUrl = extension.url,
+                        installedState = installedState
+                    )
+                }
 
             return supportedAddons + unsupportedAddons
         } catch (throwable: Throwable) {
