@@ -64,27 +64,12 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   CompilationInfo& compilationInfo;
 };
 
-class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {
-  GlobalSharedContext globalsc_;
-
- public:
-  GlobalScriptInfo(JSContext* cx, CompilationInfo& compilationInfo,
-                   const JS::ReadOnlyCompileOptions& options,
-                   ScopeKind scopeKind)
-      : BytecodeCompiler(cx, compilationInfo, options),
-        globalsc_(cx, scopeKind, compilationInfo, compilationInfo.directives,
-                  options.extraWarningsOption) {
-    MOZ_ASSERT(scopeKind == ScopeKind::Global ||
-               scopeKind == ScopeKind::NonSyntactic);
-  }
-
-  GlobalSharedContext* sharedContext() { return &globalsc_; }
-};
-
-extern JSScript* CompileGlobalScript(GlobalScriptInfo& info,
+extern JSScript* CompileGlobalScript(CompilationInfo& compilationInfo,
+                                     GlobalSharedContext& globalsc,
                                      JS::SourceText<char16_t>& srcBuf);
 
-extern JSScript* CompileGlobalScript(GlobalScriptInfo& info,
+extern JSScript* CompileGlobalScript(CompilationInfo& compilationInfo,
+                                     GlobalSharedContext& globalsc,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 
 class MOZ_STACK_CLASS EvalScriptInfo final : public BytecodeCompiler {

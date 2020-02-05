@@ -603,8 +603,11 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   // initialized SSO.
   sourceObjects.infallibleAppend(compilationInfo.sourceObject);
 
-  frontend::GlobalScriptInfo info(cx, compilationInfo, options, scopeKind);
-  JSScript* script = frontend::CompileGlobalScript(info, data);
+  frontend::GlobalSharedContext globalsc(
+      cx, scopeKind, compilationInfo, compilationInfo.directives,
+      compilationInfo.options.extraWarningsOption);
+  JSScript* script =
+      frontend::CompileGlobalScript(compilationInfo, globalsc, data);
 
   if (script) {
     scripts.infallibleAppend(script);

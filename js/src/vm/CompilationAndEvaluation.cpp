@@ -72,8 +72,10 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
     return nullptr;
   }
 
-  frontend::GlobalScriptInfo info(cx, compilationInfo, options, scopeKind);
-  return frontend::CompileGlobalScript(info, srcBuf);
+  frontend::GlobalSharedContext globalsc(
+      cx, scopeKind, compilationInfo, compilationInfo.directives,
+      compilationInfo.options.extraWarningsOption);
+  return frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
 }
 
 static JSScript* CompileUtf8Inflating(JSContext* cx,
@@ -554,8 +556,10 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
       return false;
     }
 
-    frontend::GlobalScriptInfo info(cx, compilationInfo, options, scopeKind);
-    script = frontend::CompileGlobalScript(info, srcBuf);
+    frontend::GlobalSharedContext globalsc(
+        cx, scopeKind, compilationInfo, compilationInfo.directives,
+        compilationInfo.options.extraWarningsOption);
+    script = frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
     if (!script) {
       return false;
     }
