@@ -77,12 +77,15 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   void SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus);
 
-  nsresult SetSucceededCertChain(mozilla::UniqueCERTCertList certList);
+  nsresult SetSucceededCertChain(nsTArray<nsTArray<uint8_t>>&& certList);
 
   bool HasServerCert() { return mServerCert != nullptr; }
 
   static uint16_t ConvertCertificateTransparencyInfoToStatus(
       const mozilla::psm::CertificateTransparencyInfo& info);
+
+  static nsTArray<nsTArray<uint8_t>> CreateCertBytesArray(
+      const UniqueCERTCertList& aCertChain);
 
   // Use errorCode == 0 to indicate success;
   virtual void SetCertVerificationResult(PRErrorCode errorCode){};
