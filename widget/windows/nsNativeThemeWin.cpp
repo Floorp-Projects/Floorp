@@ -870,7 +870,6 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
 
       enum InputState { UNCHECKED = 0, CHECKED, INDETERMINATE };
       InputState inputState = UNCHECKED;
-      bool isXULCheckboxRadio = false;
 
       if (!aFrame) {
         aState = TS_NORMAL;
@@ -882,8 +881,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
           inputState = INDETERMINATE;
         }
 
-        EventStates eventState = GetContentState(
-            isXULCheckboxRadio ? aFrame->GetParent() : aFrame, aAppearance);
+        EventStates eventState = GetContentState(aFrame, aAppearance);
         if (IsDisabled(aFrame, eventState)) {
           aState = TS_DISABLED;
         } else {
