@@ -1254,6 +1254,10 @@ impl RenderBackend {
                         // We don't want to forward this message to the renderer.
                         return RenderBackendStatus::Continue;
                     }
+                    DebugCommand::EnableMultithreading(enable) => {
+                        self.resource_cache.enable_multithreading(enable);
+                        return RenderBackendStatus::Continue;
+                    }
                     DebugCommand::SimulateLongSceneBuild(time_ms) => {
                         self.scene_tx.send(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)).unwrap();
                         return RenderBackendStatus::Continue;

@@ -108,6 +108,10 @@ impl GlyphRasterizer {
         self.request_glyphs_from_backend(font, new_glyphs);
     }
 
+    pub fn enable_multithreading(&mut self, enable: bool) {
+        self.enable_multithreading = enable;
+    }
+
     pub(in super) fn request_glyphs_from_backend(&mut self, font: FontInstance, glyphs: Vec<GlyphKey>) {
         let font_contexts = Arc::clone(&self.font_contexts);
         let glyph_tx = self.glyph_tx.clone();
@@ -154,7 +158,7 @@ impl GlyphRasterizer {
 
         // if the number of glyphs is small, do it inline to avoid the threading overhead;
         // send the result into glyph_tx so downstream code can't tell the difference.
-        if glyphs.len() < 8 {
+        if !self.enable_multithreading || glyphs.len() < 8 {
             let jobs = glyphs.iter()
                              .map(|key: &GlyphKey| process_glyph(key, &font_contexts, &font))
                              .collect();
@@ -880,6 +884,9 @@ pub struct GlyphRasterizer {
 
     #[allow(dead_code)]
     next_gpu_glyph_cache_key: GpuGlyphCacheKey,
+
+    // Whether to parallelize glyph rasterization with rayon.
+    enable_multithreading: bool,
 }
 
 impl GlyphRasterizer {
@@ -912,6 +919,7 @@ impl GlyphRasterizer {
             fonts_to_remove: Vec::new(),
             font_instances_to_remove: Vec::new(),
             next_gpu_glyph_cache_key: GpuGlyphCacheKey(0),
+            enable_multithreading: true,
         })
     }
 

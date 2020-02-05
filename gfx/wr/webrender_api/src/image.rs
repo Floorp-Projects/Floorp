@@ -409,6 +409,9 @@ pub trait BlobImageHandler: Send {
     /// A hook to let the handler clean up any state related a given namespace before the
     /// resource cache deletes them.
     fn clear_namespace(&mut self, namespace: IdNamespace);
+
+    /// Whether to allow rendering blobs on multiple threads.
+    fn enable_multithreading(&mut self, enable: bool);
 }
 
 /// A group of rasterization requests to execute synchronously on the scene builder thread.
