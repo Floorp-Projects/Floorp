@@ -33,7 +33,6 @@ import re
 # But for now, let's just import a few sets of tests.
 
 gSubtrees = [
-    os.path.join("css-conditional"),
     os.path.join("css-values"),
     os.path.join("css-writing-modes"),
 ]
