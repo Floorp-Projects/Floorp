@@ -4,47 +4,6 @@
 # import-tests.py locally on web platform tests repository against the
 # revision listed at the beginning of received/import.log.
 
-== css-conditional/at-media-whitespace-optional-001.html css-conditional/reference/background-lime.html
-== css-conditional/at-media-whitespace-optional-002.html css-conditional/reference/background-lime.html
-== css-conditional/at-supports-001.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-002.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-003.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-004.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-005.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-006.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-007.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-008.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-009.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-010.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-011.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-012.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-013.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-014.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-015.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-016.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-017.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-018.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-019.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-020.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-021.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-022.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-023.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-024.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-025.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-026.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-027.html css-conditional/at-supports-027-ref.html
-== css-conditional/at-supports-028.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-029.html css-conditional/at-supports-027-ref.html
-== css-conditional/at-supports-030.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-031.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-032.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-033.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-034.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-035.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-036.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-037.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-038.html css-conditional/at-supports-001-ref.html
-== css-conditional/at-supports-039.html css-conditional/at-supports-001-ref.html
 fails == css-values/attr-color-invalid-cast.html css-values/reference/200-200-green.html
 == css-values/attr-color-invalid-fallback.html css-values/reference/200-200-green.html
 fails == css-values/attr-color-valid.html css-values/reference/200-200-green.html
