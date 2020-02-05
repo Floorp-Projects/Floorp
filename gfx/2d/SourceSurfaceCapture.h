@@ -33,6 +33,9 @@ class SourceSurfaceCapture : public SourceSurface {
   IntSize GetSize() const override { return mSize; }
   SurfaceFormat GetFormat() const override { return mFormat; }
 
+  void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                           SizeOfInfo& aInfo) const override;
+
   bool IsValid() const override;
   already_AddRefed<DataSourceSurface> GetDataSurface() override;
 

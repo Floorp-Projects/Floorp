@@ -923,18 +923,26 @@ void imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
 
   AddSizeOfCbData metadata;
 
-  metadata.finished = mFinished;
+  metadata.mFinished = mFinished;
   if (mLockedSurface) {
-    metadata.heap += aMallocSizeOf(mLockedSurface);
+    // The locked surface should only be present if we have mRawSurface. Hence
+    // we only need to get its allocation size to avoid double counting.
+    metadata.mHeapBytes += aMallocSizeOf(mLockedSurface);
+    metadata.AddType(mLockedSurface->GetType());
   }
   if (mOptSurface) {
-    metadata.heap += aMallocSizeOf(mOptSurface);
+    metadata.mHeapBytes += aMallocSizeOf(mOptSurface);
+
+    SourceSurface::SizeOfInfo info;
+    mOptSurface->SizeOfExcludingThis(aMallocSizeOf, info);
+    metadata.Accumulate(info);
   }
   if (mRawSurface) {
-    metadata.heap += aMallocSizeOf(mRawSurface);
-    mRawSurface->AddSizeOfExcludingThis(aMallocSizeOf, metadata.heap,
-                                        metadata.nonHeap, metadata.handles,
-                                        metadata.externalId);
+    metadata.mHeapBytes += aMallocSizeOf(mRawSurface);
+
+    SourceSurface::SizeOfInfo info;
+    mRawSurface->SizeOfExcludingThis(aMallocSizeOf, info);
+    metadata.Accumulate(info);
   }
 
   aCallback(metadata);

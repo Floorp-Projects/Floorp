@@ -36,9 +36,11 @@ struct MemoryCounter {
       : mSource(0),
         mDecodedHeap(0),
         mDecodedNonHeap(0),
+        mDecodedUnknown(0),
         mExternalHandles(0),
         mFrameIndex(0),
-        mExternalId(0) {}
+        mExternalId(0),
+        mSurfaceTypes(0) {}
 
   void SetSource(size_t aCount) { mSource = aCount; }
   size_t Source() const { return mSource; }
@@ -46,18 +48,24 @@ struct MemoryCounter {
   size_t DecodedHeap() const { return mDecodedHeap; }
   void SetDecodedNonHeap(size_t aCount) { mDecodedNonHeap = aCount; }
   size_t DecodedNonHeap() const { return mDecodedNonHeap; }
+  void SetDecodedUnknown(size_t aCount) { mDecodedUnknown = aCount; }
+  size_t DecodedUnknown() const { return mDecodedUnknown; }
   void SetExternalHandles(size_t aCount) { mExternalHandles = aCount; }
   size_t ExternalHandles() const { return mExternalHandles; }
   void SetFrameIndex(size_t aIndex) { mFrameIndex = aIndex; }
   size_t FrameIndex() const { return mFrameIndex; }
   void SetExternalId(uint64_t aId) { mExternalId = aId; }
   uint64_t ExternalId() const { return mExternalId; }
+  void SetSurfaceTypes(uint32_t aTypes) { mSurfaceTypes = aTypes; }
+  uint32_t SurfaceTypes() const { return mSurfaceTypes; }
 
   MemoryCounter& operator+=(const MemoryCounter& aOther) {
     mSource += aOther.mSource;
     mDecodedHeap += aOther.mDecodedHeap;
     mDecodedNonHeap += aOther.mDecodedNonHeap;
+    mDecodedUnknown += aOther.mDecodedUnknown;
     mExternalHandles += aOther.mExternalHandles;
+    mSurfaceTypes |= aOther.mSurfaceTypes;
     return *this;
   }
 
@@ -65,9 +73,11 @@ struct MemoryCounter {
   size_t mSource;
   size_t mDecodedHeap;
   size_t mDecodedNonHeap;
+  size_t mDecodedUnknown;
   size_t mExternalHandles;
   size_t mFrameIndex;
   uint64_t mExternalId;
+  uint32_t mSurfaceTypes;
 };
 
 enum class SurfaceMemoryCounterType { NORMAL, COMPOSITING, COMPOSITING_PREV };
@@ -121,15 +131,15 @@ struct ImageMemoryCounter {
 
   bool IsNotable() const {
     // Errors or requests without images are always notable.
-    if (mHasError || mProgress == UINT32_MAX || mProgress & FLAG_HAS_ERROR ||
-        mType == imgIContainer::TYPE_REQUEST) {
+    if (mHasError || mValidating || mProgress == UINT32_MAX ||
+        mProgress & FLAG_HAS_ERROR || mType == imgIContainer::TYPE_REQUEST) {
       return true;
     }
 
     // Sufficiently large images are notable.
     const size_t NotableThreshold = 16 * 1024;
-    size_t total =
-        mValues.Source() + mValues.DecodedHeap() + mValues.DecodedNonHeap();
+    size_t total = mValues.Source() + mValues.DecodedHeap() +
+                   mValues.DecodedNonHeap() + mValues.DecodedUnknown();
     if (total >= NotableThreshold) {
       return true;
     }

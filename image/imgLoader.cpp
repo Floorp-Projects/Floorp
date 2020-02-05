@@ -183,6 +183,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
 
         n += counter.Values().DecodedHeap();
         n += counter.Values().DecodedNonHeap();
+        n += counter.Values().DecodedUnknown();
       }
     }
     return n;
@@ -352,7 +353,9 @@ class imgMemoryReporter final : public nsIMemoryReporter {
       if (counter.CannotSubstitute()) {
         surfacePathPrefix.AppendLiteral("cannot_substitute/");
       }
-      surfacePathPrefix.AppendLiteral("surface(");
+      surfacePathPrefix.AppendLiteral("types=");
+      surfacePathPrefix.AppendInt(counter.Values().SurfaceTypes(), 16);
+      surfacePathPrefix.AppendLiteral("/surface(");
       surfacePathPrefix.AppendInt(counter.Key().Size().width);
       surfacePathPrefix.AppendLiteral("x");
       surfacePathPrefix.AppendInt(counter.Key().Size().height);
@@ -488,6 +491,11 @@ class imgMemoryReporter final : public nsIMemoryReporter {
                 "decoded-nonheap",
                 "Decoded image data which isn't stored on the heap.",
                 aCounter.DecodedNonHeap());
+
+    ReportValue(aHandleReport, aData, KIND_OTHER, aPathPrefix,
+                "decoded-unknown",
+                "Decoded image data which is unknown to be on the heap or not.",
+                aCounter.DecodedUnknown());
   }
 
   static void ReportSourceValue(nsIHandleReportCallback* aHandleReport,
