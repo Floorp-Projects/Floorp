@@ -713,12 +713,10 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
                                         aRange.EndOffset());
 }
 
-nsresult Selection::FindInsertionPoint(
+int32_t Selection::FindInsertionPoint(
     const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
     int32_t aPointOffset,
-    int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&),
-    int32_t* aInsertionPoint) {
-  *aInsertionPoint = 0;
+    int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&)) {
   int32_t beginSearch = 0;
   int32_t endSearch = aElementArray->Length();  // one beyond what to check
 
@@ -741,8 +739,7 @@ nsresult Selection::FindInsertionPoint(
     } while (endSearch - beginSearch > 0);
   }
 
-  *aInsertionPoint = beginSearch;
-  return NS_OK;
+  return beginSearch;
 }
 
 // Selection::SubtractRange
@@ -1013,12 +1010,10 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   }
 
   // Insert the new element into our "leftovers" array
-  int32_t insertionPoint;
-  // `aRange` is positioned, it has to have a start container.
-  rv = FindInsertionPoint(&temp, *aRange->GetStartContainer(),
-                          aRange->StartOffset(), CompareToRangeStart,
-                          &insertionPoint);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // `aRange` is positioned, so it has to have a start container.
+  int32_t insertionPoint{FindInsertionPoint(&temp, *aRange->GetStartContainer(),
+                                            aRange->StartOffset(),
+                                            CompareToRangeStart)};
 
   if (!temp.InsertElementAt(insertionPoint, StyledRange(aRange))) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1168,11 +1163,8 @@ nsresult Selection::GetIndicesForInterval(
 
   // Ranges that end before the given interval and begin after the given
   // interval can be discarded
-  int32_t endsBeforeIndex;
-  if (NS_FAILED(FindInsertionPoint(&mRanges, *aEndNode, aEndOffset,
-                                   &CompareToRangeStart, &endsBeforeIndex))) {
-    return NS_OK;
-  }
+  int32_t endsBeforeIndex{FindInsertionPoint(&mRanges, *aEndNode, aEndOffset,
+                                             &CompareToRangeStart)};
 
   if (endsBeforeIndex == 0) {
     const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
@@ -1193,11 +1185,9 @@ nsresult Selection::GetIndicesForInterval(
   }
   aEndIndex = endsBeforeIndex;
 
-  int32_t beginsAfterIndex;
-  if (NS_FAILED(FindInsertionPoint(&mRanges, *aBeginNode, aBeginOffset,
-                                   &CompareToRangeEnd, &beginsAfterIndex))) {
-    return NS_OK;
-  }
+  int32_t beginsAfterIndex{FindInsertionPoint(
+      &mRanges, *aBeginNode, aBeginOffset, &CompareToRangeEnd)};
+
   if (beginsAfterIndex == (int32_t)mRanges.Length())
     return NS_OK;  // optimization: all ranges are strictly before us
 
