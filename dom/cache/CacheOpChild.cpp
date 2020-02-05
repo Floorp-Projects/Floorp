@@ -90,15 +90,12 @@ void CacheOpChild::ActorDestroy(ActorDestroyReason aReason) {
 }
 
 mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
-    const ErrorResult& aRv, const CacheOpResult& aResult) {
+    ErrorResult&& aRv, const CacheOpResult& aResult) {
   NS_ASSERT_OWNINGTHREAD(CacheOpChild);
 
   if (NS_WARN_IF(aRv.Failed())) {
     MOZ_DIAGNOSTIC_ASSERT(aResult.type() == CacheOpResult::Tvoid_t);
-    // TODO: Remove this const_cast (bug 1152078).
-    // It is safe for now since this ErrorResult is handed off to us by IPDL
-    // and is thrown into the trash afterwards.
-    mPromise->MaybeReject(const_cast<ErrorResult&>(aRv));
+    mPromise->MaybeReject(aRv);
     mPromise = nullptr;
     return IPC_OK();
   }
