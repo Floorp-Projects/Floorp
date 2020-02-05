@@ -8,10 +8,11 @@
  * development), English.
  */
 
-const {PluralForm} = ChromeUtils.import("resource://gre/modules/PluralForm.jsm");
+const { PluralForm } = ChromeUtils.import(
+  "resource://gre/modules/PluralForm.jsm"
+);
 
-function run_test()
-{
+function run_test() {
   // Irish is plural rule #11
   let [get, numForms] = PluralForm.makeGetter(11);
 
@@ -22,8 +23,9 @@ function run_test()
   let words = "is 1;is 2;is 3-6;is 7-10;everything else";
 
   let test = function(text, low, high) {
-    for (let num = low; num <= high; num++)
+    for (let num = low; num <= high; num++) {
       Assert.equal(text, get(num, words));
+    }
   };
 
   // Make sure for good inputs, things work as expected

@@ -3,20 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const osPrefs = Cc["@mozilla.org/intl/ospreferences;1"].
-  getService(Ci.mozIOSPreferences);
+const osPrefs = Cc["@mozilla.org/intl/ospreferences;1"].getService(
+  Ci.mozIOSPreferences
+);
 
-const localeService =
-  Cc["@mozilla.org/intl/localeservice;1"]
-  .getService(Ci.mozILocaleService);
+const localeService = Cc["@mozilla.org/intl/localeservice;1"].getService(
+  Ci.mozILocaleService
+);
 
 /**
  * Make sure the locale service can be instantiated.
  */
-function run_test()
-{
-  run_next_test();
-}
 
 add_test(function test_defaultLocale() {
   const defaultLocale = localeService.defaultLocale;
@@ -37,7 +34,10 @@ add_test(function test_appLocalesAsLangTags() {
   const appLocales = localeService.appLocalesAsLangTags;
   Assert.ok(Array.isArray(appLocales), "appLocales returns an array");
 
-  Assert.ok(appLocale == appLocales[0], "appLocale matches first entry in appLocales");
+  Assert.ok(
+    appLocale == appLocales[0],
+    "appLocale matches first entry in appLocales"
+  );
 
   const enUSLocales = appLocales.filter(loc => loc === "en-US");
   Assert.ok(enUSLocales.length == 1, "en-US is present exactly one time");
@@ -50,7 +50,10 @@ const REQ_LOC_CHANGE_EVENT = "intl:requested-locales-changed";
 
 add_test(function test_requestedLocales() {
   const requestedLocales = localeService.requestedLocales;
-  Assert.ok(Array.isArray(requestedLocales), "requestedLocales returns an array");
+  Assert.ok(
+    Array.isArray(requestedLocales),
+    "requestedLocales returns an array"
+  );
 
   run_next_test();
 });
@@ -69,7 +72,7 @@ add_test(function test_requestedLocales_matchOS() {
   Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "ar-IR");
 
   const observer = {
-    observe: function (aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       switch (aTopic) {
         case REQ_LOC_CHANGE_EVENT:
           const reqLocs = localeService.requestedLocales;
@@ -77,7 +80,7 @@ add_test(function test_requestedLocales_matchOS() {
           Services.obs.removeObserver(observer, REQ_LOC_CHANGE_EVENT);
           do_test_finished();
       }
-    }
+    },
   };
 
   Services.obs.addObserver(observer, REQ_LOC_CHANGE_EVENT);
@@ -97,7 +100,7 @@ add_test(function test_requestedLocales_onChange() {
   Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "ar-IR");
 
   const observer = {
-    observe: function (aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       switch (aTopic) {
         case REQ_LOC_CHANGE_EVENT:
           const reqLocs = localeService.requestedLocales;
@@ -105,7 +108,7 @@ add_test(function test_requestedLocales_onChange() {
           Services.obs.removeObserver(observer, REQ_LOC_CHANGE_EVENT);
           do_test_finished();
       }
-    }
+    },
   };
 
   Services.obs.addObserver(observer, REQ_LOC_CHANGE_EVENT);
@@ -118,7 +121,10 @@ add_test(function test_requestedLocale() {
   Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "tlh");
 
   let requestedLocale = localeService.requestedLocale;
-  Assert.ok(requestedLocale === "tlh", "requestedLocale returns the right value");
+  Assert.ok(
+    requestedLocale === "tlh",
+    "requestedLocale returns the right value"
+  );
 
   Services.prefs.clearUserPref(PREF_REQUESTED_LOCALES);
 
@@ -126,18 +132,18 @@ add_test(function test_requestedLocale() {
 });
 
 add_test(function test_requestedLocales() {
-  localeService.requestedLocales = ['de-AT', 'de-DE', 'de-CH'];
+  localeService.requestedLocales = ["de-AT", "de-DE", "de-CH"];
 
   let locales = localeService.requestedLocales;
-  Assert.ok(locales[0] === 'de-AT');
-  Assert.ok(locales[1] === 'de-DE');
-  Assert.ok(locales[2] === 'de-CH');
+  Assert.ok(locales[0] === "de-AT");
+  Assert.ok(locales[1] === "de-DE");
+  Assert.ok(locales[2] === "de-CH");
 
   run_next_test();
 });
 
 add_test(function test_isAppLocaleRTL() {
-  Assert.ok(typeof localeService.isAppLocaleRTL === 'boolean');
+  Assert.ok(typeof localeService.isAppLocaleRTL === "boolean");
 
   run_next_test();
 });
@@ -179,8 +185,8 @@ add_test(function test_availableLocales() {
 
   let locales = localeService.availableLocales;
   Assert.ok(locales.length == 2);
-  Assert.ok(locales[0] === 'und');
-  Assert.ok(locales[1] === 'ar-IR');
+  Assert.ok(locales[0] === "und");
+  Assert.ok(locales[1] === "ar-IR");
 
   localeService.availableLocales = avLocales;
 
@@ -191,7 +197,10 @@ add_test(function test_availableLocales() {
  * This test verifies that all values coming from the pref are sanitized.
  */
 add_test(function test_requestedLocales_sanitize() {
-  Services.prefs.setStringPref(PREF_REQUESTED_LOCALES, "de,2,#$@#,pl,ąó,!a2,DE-at,,;");
+  Services.prefs.setStringPref(
+    PREF_REQUESTED_LOCALES,
+    "de,2,#$@#,pl,ąó,!a2,DE-at,,;"
+  );
 
   let locales = localeService.requestedLocales;
   Assert.equal(locales[0], "de");
@@ -210,19 +219,19 @@ add_test(function test_handle_ja_JP_mac() {
 
   localeService.availableLocales = ["ja-JP-mac", "en-US"];
 
-  localeService.requestedLocales = ['ja-JP-mac'];
+  localeService.requestedLocales = ["ja-JP-mac"];
 
   let reqLocales = localeService.requestedLocales;
-  Assert.equal(reqLocales[0], 'ja-JP-macos');
+  Assert.equal(reqLocales[0], "ja-JP-macos");
 
   let avLocales = localeService.availableLocales;
-  Assert.equal(avLocales[0], 'ja-JP-macos');
+  Assert.equal(avLocales[0], "ja-JP-macos");
 
   let appLocales = localeService.appLocalesAsBCP47;
-  Assert.equal(appLocales[0], 'ja-JP-macos');
+  Assert.equal(appLocales[0], "ja-JP-macos");
 
   let appLocalesAsLT = localeService.appLocalesAsLangTags;
-  Assert.equal(appLocalesAsLT[0], 'ja-JP-mac');
+  Assert.equal(appLocalesAsLT[0], "ja-JP-mac");
 
   Assert.equal(localeService.appLocaleAsLangTag, "ja-JP-mac");
 
@@ -230,7 +239,6 @@ add_test(function test_handle_ja_JP_mac() {
 
   run_next_test();
 });
-
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_REQUESTED_LOCALES);

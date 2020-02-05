@@ -26,39 +26,36 @@ const name_hello = "hello";
 const var_hello = "World";
 const value_hello = "Hello World"; // tests formatStringFromName with parameter
 
-
 function run_test() {
-    var StringBundle = 
-	Cc["@mozilla.org/intl/stringbundle;1"]
-	 .getService(Ci.nsIStringBundleService);
-    var ios = Cc["@mozilla.org/network/io-service;1"]
-	 .getService(Ci.nsIIOService);
-    var bundleURI = ios.newFileURI(do_get_file("strres.properties"));
+  var StringBundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(
+    Ci.nsIStringBundleService
+  );
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var bundleURI = ios.newFileURI(do_get_file("strres.properties"));
 
-    var bundle = StringBundle.createBundle(bundleURI.spec);
+  var bundle = StringBundle.createBundle(bundleURI.spec);
 
-    var bundle_file = bundle.GetStringFromName(name_file);
-    Assert.equal(bundle_file, value_file);
+  var bundle_file = bundle.GetStringFromName(name_file);
+  Assert.equal(bundle_file, value_file);
 
-    var bundle_loyal = bundle.GetStringFromName(name_loyal);
-    Assert.equal(bundle_loyal, value_loyal);
+  var bundle_loyal = bundle.GetStringFromName(name_loyal);
+  Assert.equal(bundle_loyal, value_loyal);
 
-    var bundle_trout = bundle.GetStringFromName(name_trout);
-    Assert.equal(bundle_trout, value_trout);
+  var bundle_trout = bundle.GetStringFromName(name_trout);
+  Assert.equal(bundle_trout, value_trout);
 
-    var bundle_edit = bundle.GetStringFromName(name_edit);
-    Assert.equal(bundle_edit, value_edit);
+  var bundle_edit = bundle.GetStringFromName(name_edit);
+  Assert.equal(bundle_edit, value_edit);
 
-    var bundle_view = bundle.GetStringFromName(name_view);
-    Assert.equal(bundle_view, value_view);
+  var bundle_view = bundle.GetStringFromName(name_view);
+  Assert.equal(bundle_view, value_view);
 
-    var bundle_go = bundle.GetStringFromName(name_go);
-    Assert.equal(bundle_go, value_go);
+  var bundle_go = bundle.GetStringFromName(name_go);
+  Assert.equal(bundle_go, value_go);
 
-    var bundle_message = bundle.GetStringFromName(name_message);
-    Assert.equal(bundle_message, value_message);
+  var bundle_message = bundle.GetStringFromName(name_message);
+  Assert.equal(bundle_message, value_message);
 
-    var bundle_hello = bundle.formatStringFromName(name_hello, [var_hello]);
-    Assert.equal(bundle_hello, value_hello);
+  var bundle_hello = bundle.formatStringFromName(name_hello, [var_hello]);
+  Assert.equal(bundle_hello, value_hello);
 }
-    
