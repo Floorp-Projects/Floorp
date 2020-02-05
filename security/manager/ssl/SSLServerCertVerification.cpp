@@ -183,7 +183,8 @@ class SSLServerCertVerificationResult : public Runnable {
 
   explicit SSLServerCertVerificationResult(TransportSecurityInfo* infoObject);
 
-  void Dispatch(nsNSSCertificate* aCert, UniqueCERTCertList aBuiltChain,
+  void Dispatch(nsNSSCertificate* aCert,
+                nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, SECOidTag aEvOidPolicy,
                 bool aSucceeded, PRErrorCode aFinalError,
@@ -192,7 +193,7 @@ class SSLServerCertVerificationResult : public Runnable {
  private:
   const RefPtr<TransportSecurityInfo> mInfoObject;
   RefPtr<nsNSSCertificate> mCert;
-  UniqueCERTCertList mBuiltChain;
+  nsTArray<nsTArray<uint8_t>> mBuiltChain;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   uint16_t mCertificateTransparencyStatus;
   SECOidTag mEvOidPolicy;
@@ -1123,7 +1124,7 @@ static void CollectCertTelemetry(
 
 static void AuthCertificateSetResults(
     TransportSecurityInfo* aInfoObject, nsNSSCertificate* aCert,
-    UniqueCERTCertList& aBuiltCertChain,
+    nsTArray<nsTArray<uint8_t>>&& aBuiltCertChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, SECOidTag aEvOidPolicy,
     bool aSucceeded) {
@@ -1391,13 +1392,17 @@ SSLServerCertVerificationJob::Run() {
       certificateTransparencyInfo);
 
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
+  nsTArray<nsTArray<uint8_t>> certBytesArray;
   if (rv == Success) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX, jobStartTime,
         TimeStamp::Now());
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
+
+    certBytesArray =
+        TransportSecurityInfo::CreateCertBytesArray(builtCertChain);
     mResultTask->Dispatch(
-        nsc, std::move(builtCertChain), std::move(mPeerCertChain),
+        nsc, std::move(certBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
         evOidPolicy, true, 0, 0);
@@ -1416,7 +1421,7 @@ SSLServerCertVerificationJob::Run() {
 
   // NB: finalError may be 0 here, in which the connection will continue.
   mResultTask->Dispatch(
-      nsc, std::move(builtCertChain), std::move(mPeerCertChain),
+      nsc, std::move(certBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
       evOidPolicy, false, finalError, collectedErrors);
   return NS_OK;
@@ -1517,13 +1522,8 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
     return SECFailure;
   }
 
-  nsTArray<nsTArray<uint8_t>> peerCertsBytes;
-  for (CERTCertListNode* n = CERT_LIST_HEAD(peerCertChain);
-       !CERT_LIST_END(n, peerCertChain); n = CERT_LIST_NEXT(n)) {
-    nsTArray<uint8_t> certBytes;
-    certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
-    peerCertsBytes.AppendElement(std::move(certBytes));
-  }
+  nsTArray<nsTArray<uint8_t>> peerCertsBytes =
+      TransportSecurityInfo::CreateCertBytesArray(peerCertChain);
 
   // SSL_PeerStapledOCSPResponses will never return a non-empty response if
   // OCSP stapling wasn't enabled because libssl wouldn't have let the server
@@ -1636,7 +1636,7 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
       mCollectedErrors(0) {}
 
 void SSLServerCertVerificationResult::Dispatch(
-    nsNSSCertificate* aCert, UniqueCERTCertList aBuiltChain,
+    nsNSSCertificate* aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, SECOidTag aEvOidPolicy,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors) {
@@ -1673,7 +1673,7 @@ SSLServerCertVerificationResult::Run() {
 #endif
 
   AuthCertificateSetResults(
-      mInfoObject, mCert, mBuiltChain, std::move(mPeerCertChain),
+      mInfoObject, mCert, std::move(mBuiltChain), std::move(mPeerCertChain),
       mCertificateTransparencyStatus, mEvOidPolicy, mSucceeded);
 
   if (!mSucceeded && mCollectedErrors != 0) {

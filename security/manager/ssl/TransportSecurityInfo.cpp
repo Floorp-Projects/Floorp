@@ -855,24 +855,27 @@ TransportSecurityInfo::GetFailedCertChain(
   return NS_OK;
 }
 
-nsresult TransportSecurityInfo::SetFailedCertChain(
-    nsTArray<nsTArray<uint8_t>>&& aCertList) {
+static nsresult CreateCertChain(nsTArray<RefPtr<nsIX509Cert>>& aOutput,
+                                nsTArray<nsTArray<uint8_t>>&& aCertList) {
   nsTArray<nsTArray<uint8_t>> certList = std::move(aCertList);
-  nsTArray<RefPtr<nsIX509Cert>> failedCertChain;
+  aOutput.Clear();
   for (auto& certBytes : certList) {
     RefPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
         BitwiseCast<char*, uint8_t*>(certBytes.Elements()), certBytes.Length());
     if (!cert) {
       return NS_ERROR_FAILURE;
     }
-    failedCertChain.AppendElement(cert);
+    aOutput.AppendElement(cert);
   }
-  mFailedCertChain = std::move(failedCertChain);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TransportSecurityInfo::GetServerCert(nsIX509Cert** aServerCert) {
+nsresult TransportSecurityInfo::SetFailedCertChain(
+    nsTArray<nsTArray<uint8_t>>&& aCertList) {
+  return CreateCertChain(mFailedCertChain, std::move(aCertList));
+}
+
+NS_IMETHODIMP TransportSecurityInfo::GetServerCert(nsIX509Cert** aServerCert) {
   NS_ENSURE_ARG_POINTER(aServerCert);
 
   nsCOMPtr<nsIX509Cert> cert = mServerCert;
@@ -901,18 +904,8 @@ TransportSecurityInfo::GetSucceededCertChain(
 }
 
 nsresult TransportSecurityInfo::SetSucceededCertChain(
-    UniqueCERTCertList aCertList) {
-  // This function effectively takes ownership of aCertList by consuming its
-  // elements and then releasing the original aCertList when it goes out of
-  // scope.
-  mSucceededCertChain.Clear();
-  for (CERTCertListNode* node = CERT_LIST_HEAD(aCertList);
-       !CERT_LIST_END(node, aCertList); node = CERT_LIST_NEXT(node)) {
-    RefPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
-    mSucceededCertChain.AppendElement(cert);
-  }
-
-  return NS_OK;
+    nsTArray<nsTArray<uint8_t>>&& aCertList) {
+  return CreateCertChain(mSucceededCertChain, std::move(aCertList));
 }
 
 NS_IMETHODIMP
@@ -1031,6 +1024,19 @@ uint16_t TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
   }
 
   return nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
+}
+
+// static
+nsTArray<nsTArray<uint8_t>> TransportSecurityInfo::CreateCertBytesArray(
+    const UniqueCERTCertList& aCertChain) {
+  nsTArray<nsTArray<uint8_t>> certsBytes;
+  for (CERTCertListNode* n = CERT_LIST_HEAD(aCertChain);
+       !CERT_LIST_END(n, aCertChain); n = CERT_LIST_NEXT(n)) {
+    nsTArray<uint8_t> certBytes;
+    certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
+    certsBytes.AppendElement(std::move(certBytes));
+  }
+  return certsBytes;
 }
 
 NS_IMETHODIMP
