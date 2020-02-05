@@ -5365,13 +5365,14 @@ static gfxFloat ComputeDecorationLineOffset(
 
     // text-underline-position must be 'auto', so zero position is the
     // baseline and 'auto' offset will apply the font's underline-offset.
+    //
+    // If offset is `auto`, we clamp the offset (in horizontal typographic mode)
+    // to a minimum of 1/16 em (equivalent to 1px at font-size 16px) to mitigate
+    // skip-ink issues with fonts that leave the underlineOffset field as zero.
     MOZ_ASSERT(aPosition.IsAuto());
-    gfxFloat zeroPos = 0;
-    gfxFloat offset =
-        aOffset.IsAuto()
-            ? -aFontMetrics.underlineOffset
-            : aOffset.AsLengthPercentage().Resolve(em) / aAppUnitsPerDevPixel;
-    return zeroPos - offset;
+    return aOffset.IsAuto()
+            ? std::min(aFontMetrics.underlineOffset, -aFontMetrics.emHeight / 16.0)
+            : -aOffset.AsLengthPercentage().Resolve(em) / aAppUnitsPerDevPixel;
   }
 
   if (aLineType == StyleTextDecorationLine::OVERLINE) {
