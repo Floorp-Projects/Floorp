@@ -187,12 +187,6 @@ class BrowserToolbarView(
                 DefaultToolbarMenu(
                     context = this,
                     hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
-                    requestDesktopStateProvider = {
-                        sessionManager.selectedSession?.desktopMode ?: false
-                    },
-                    readerModeStateProvider = {
-                        sessionManager.selectedSession?.readerMode ?: false
-                    },
                     shouldReverseItems = !shouldUseBottomToolbar,
                     onItemTapped = { interactor.onBrowserToolbarMenuItemTapped(it) },
                     lifecycleOwner = container.context as AppCompatActivity,

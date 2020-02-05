@@ -6,6 +6,7 @@ package org.mozilla.fenix.customtabs
 
 import android.content.Context
 import android.graphics.Typeface
+import androidx.annotation.ColorRes
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.menu.item.BrowserMenuDivider
@@ -19,6 +20,13 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.theme.ThemeManager
 
+/**
+ * Builds the toolbar object used with the 3-dot menu in the custom tab browser fragment.
+ * @param sessionManager Reference to the session manager that contains all tabs.
+ * @param sessionId ID of the open custom tab session.
+ * @param shouldReverseItems If true, reverse the menu items.
+ * @param onItemTapped Called when a menu item is tapped.
+ */
 class CustomTabToolbarMenu(
     private val context: Context,
     private val sessionManager: SessionManager,
@@ -26,10 +34,12 @@ class CustomTabToolbarMenu(
     private val shouldReverseItems: Boolean,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
+
     override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
-    private val session: Session?
-        get() = sessionId?.let { sessionManager.findSessionById(it) }
+    /** Gets the current custom tab session */
+    private val session: Session? get() = sessionId?.let { sessionManager.findSessionById(it) }
+    private val appName = context.getString(R.string.app_name)
 
     override val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
@@ -116,24 +126,23 @@ class CustomTabToolbarMenu(
     }
 
     private val openInFenix = SimpleBrowserMenuItem(
-        label = {
-            val appName = context.getString(R.string.app_name)
-            context.getString(R.string.browser_menu_open_in_fenix, appName)
-        }(),
+        label = context.getString(R.string.browser_menu_open_in_fenix, appName),
         textColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
     }
 
     private val poweredBy = BrowserMenuCategory(
-        label = {
-            val appName = context.getString(R.string.app_name)
-            context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
-        }(),
-        textSize = ToolbarMenu.CAPTION_TEXT_SIZE,
+        label = context.getString(R.string.browser_menu_powered_by, appName).toUpperCase(),
+        textSize = CAPTION_TEXT_SIZE,
         textColorResource = primaryTextColor(),
         textStyle = Typeface.NORMAL
     )
 
+    @ColorRes
     private fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+
+    companion object {
+        private const val CAPTION_TEXT_SIZE = 12f
+    }
 }

@@ -36,8 +36,4 @@ interface ToolbarMenu {
 
     val menuBuilder: BrowserMenuBuilder
     val menuToolbar: BrowserMenuItemToolbar
-
-    companion object {
-        const val CAPTION_TEXT_SIZE = 12f
-    }
 }
