@@ -25,6 +25,7 @@ const {
   EDITOR_SET_WIDTH,
   EDITOR_ONBOARDING_DISMISS,
   EAGER_EVALUATION_TOGGLE,
+  AUTOCOMPLETE_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 function openLink(url, e) {
@@ -65,6 +66,19 @@ function timestampsToggle() {
     prefsService.setBoolPref(
       PREFS.UI.MESSAGE_TIMESTAMP,
       uiState.timestampsVisible
+    );
+  };
+}
+
+function autocompleteToggle() {
+  return ({ dispatch, getState, prefsService }) => {
+    dispatch({
+      type: AUTOCOMPLETE_TOGGLE,
+    });
+    const prefsState = getAllPrefs(getState());
+    prefsService.setBoolPref(
+      PREFS.FEATURES.AUTOCOMPLETE,
+      prefsState.autocomplete
     );
   };
 }
@@ -224,4 +238,5 @@ module.exports = {
   openLink,
   openSidebar,
   timeWarp,
+  autocompleteToggle,
 };

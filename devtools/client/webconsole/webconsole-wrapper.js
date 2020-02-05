@@ -102,15 +102,11 @@ class WebConsoleWrapper {
         this.toolbox.threadFront.on("progress", this.dispatchProgress);
       }
 
-      const { prefs } = store.getState();
-      const autocomplete = prefs.autocomplete;
-
       const app = App({
         serviceContainer,
         webConsoleUI,
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
-        autocomplete,
         hidePersistLogsCheckbox:
           webConsoleUI.isBrowserConsole || webConsoleUI.isBrowserToolboxConsole,
         hideShowContentMessagesCheckbox:
