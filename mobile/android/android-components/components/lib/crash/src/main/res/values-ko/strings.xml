@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_dialog_title">죄송합니다. %1$s에 문제가 있어 종료되었습니다.</string>
+    <string name="mozac_lib_crash_dialog_title">죄송합니다. %1$s에 문제가 발생하여 충돌했습니다.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_crash_dialog_checkbox">%1$s에 충돌 보고서 보내기</string>

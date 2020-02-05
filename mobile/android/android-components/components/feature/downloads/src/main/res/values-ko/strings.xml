@@ -2,22 +2,37 @@
 <resources>
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">다운로드</string>
-    <!-- Text shown on the first row of an ongoing download notification. -->
-    <string name="mozac_feature_downloads_ongoing_notification_title">다운로드 중</string>
-    <!-- Text shown on the second row of an ongoing download notification. -->
-    <string name="mozac_feature_downloads_ongoing_notification_text">다운로드 진행 중</string>
 
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">다운로드 일시 중지됨</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text">다운로드를 완료하였습니다.</string>
+    <string name="mozac_feature_downloads_completed_notification_text2">다운로드 완료</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_failed_notification_text">다운로드를 실패하였습니다.</string>
+    <string name="mozac_feature_downloads_failed_notification_text2">다운로드 실패</string>
 
-    <!-- Alert dialog confirmation before download a file, this is the title. -->
-    <string name="mozac_feature_downloads_dialog_title">파일 다운로드</string>
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">다운로드 (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">다운로드</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">취소</string>
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
-    <string name="mozac_feature_downloads_file_not_supported2">%1$s는 이 형식의 파일을 내려받을 수 없습니다</string>
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s는 이 파일 형식은 다운로드 할 수 없습니다</string>
+
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">파일을 열 수 없습니다</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">일시 중지</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">계속</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">취소</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">열기</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">다시 시도</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">닫기</string>
 </resources>
