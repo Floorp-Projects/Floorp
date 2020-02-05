@@ -468,6 +468,7 @@ const mapStateToProps = state => ({
   sidebarVisible: state.ui.sidebarVisible,
   filterBarDisplayMode: state.ui.filterBarDisplayMode,
   eagerEvaluationEnabled: state.prefs.eagerEvaluation,
+  autocomplete: state.prefs.autocomplete,
 });
 
 const mapDispatchToProps = dispatch => ({

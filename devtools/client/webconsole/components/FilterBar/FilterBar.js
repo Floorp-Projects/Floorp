@@ -71,6 +71,7 @@ class FilterBar extends Component {
       showContentMessages: PropTypes.bool.isRequired,
       timestampsVisible: PropTypes.bool.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
+      autocomplete: PropTypes.bool.isRequired,
     };
   }
 
@@ -116,6 +117,7 @@ class FilterBar extends Component {
       showContentMessages,
       timestampsVisible,
       eagerEvaluation,
+      autocomplete,
     } = this.props;
 
     if (
@@ -126,7 +128,8 @@ class FilterBar extends Component {
       nextProps.persistLogs !== persistLogs ||
       nextProps.showContentMessages !== showContentMessages ||
       nextProps.timestampsVisible !== timestampsVisible ||
-      nextProps.eagerEvaluation !== eagerEvaluation
+      nextProps.eagerEvaluation !== eagerEvaluation ||
+      nextProps.autocomplete !== autocomplete
     ) {
       return true;
     }
@@ -337,6 +340,7 @@ class FilterBar extends Component {
       showContentMessages,
       timestampsVisible,
       webConsoleUI,
+      autocomplete,
     } = this.props;
 
     return ConsoleSettings({
@@ -349,6 +353,7 @@ class FilterBar extends Component {
       showContentMessages,
       timestampsVisible,
       webConsoleUI,
+      autocomplete,
     });
   }
 
@@ -434,6 +439,7 @@ function mapStateToProps(state) {
     eagerEvaluation: prefsState.eagerEvaluation,
     showContentMessages: uiState.showContentMessages,
     timestampsVisible: uiState.timestampsVisible,
+    autocomplete: prefsState.autocomplete,
   };
 }
 

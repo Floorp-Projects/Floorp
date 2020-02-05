@@ -48,6 +48,7 @@ class ConsoleSettings extends Component {
       showContentMessages: PropTypes.bool.isRequired,
       timestampsVisible: PropTypes.bool.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
+      autocomplete: PropTypes.bool.isRequired,
     };
   }
 
@@ -61,6 +62,7 @@ class ConsoleSettings extends Component {
       persistLogs,
       showContentMessages,
       timestampsVisible,
+      autocomplete,
     } = this.props;
 
     const items = [];
@@ -131,6 +133,23 @@ class ConsoleSettings extends Component {
           "webconsole.console.settings.menu.item.warningGroups.tooltip"
         ),
         onClick: () => dispatch(actions.warningGroupsToggle()),
+      })
+    );
+
+    // autocomplete
+    items.push(
+      MenuItem({
+        key: "webconsole-console-settings-menu-item-autocomplete",
+        checked: autocomplete,
+        className:
+          "menu-item webconsole-console-settings-menu-item-autocomplete",
+        label: l10n.getStr(
+          "webconsole.console.settings.menu.item.autocomplete.label"
+        ),
+        tooltip: l10n.getStr(
+          "webconsole.console.settings.menu.item.autocomplete.tooltip"
+        ),
+        onClick: () => dispatch(actions.autocompleteToggle()),
       })
     );
 
