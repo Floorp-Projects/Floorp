@@ -9,6 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
+import androidx.annotation.Dimension
+import androidx.annotation.Dimension.DP
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.appcompat.widget.AppCompatImageView
@@ -338,7 +340,7 @@ interface Toolbar {
      * @param padding A optional custom padding.
      */
     open class ActionSpace(
-        private val desiredWidth: Int,
+        @Dimension(unit = DP) private val desiredWidth: Int,
         private val padding: Padding? = null
     ) : Action {
         override fun createView(parent: ViewGroup): View = View(parent.context).apply {

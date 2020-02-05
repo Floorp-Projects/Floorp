@@ -4,6 +4,9 @@
 
 package mozilla.components.support.base.android
 
+import androidx.annotation.Dimension
+import androidx.annotation.Dimension.PX
+
 /**
  * A representation of an Android Padding.
  *
@@ -12,4 +15,9 @@ package mozilla.components.support.base.android
  * @param right Padding end in PX.
  * @param bottom Padding end in PX.
  */
-data class Padding(val left: Int, val top: Int, val right: Int, val bottom: Int)
+data class Padding(
+    @Dimension(unit = PX) val left: Int,
+    @Dimension(unit = PX) val top: Int,
+    @Dimension(unit = PX) val right: Int,
+    @Dimension(unit = PX) val bottom: Int
+)

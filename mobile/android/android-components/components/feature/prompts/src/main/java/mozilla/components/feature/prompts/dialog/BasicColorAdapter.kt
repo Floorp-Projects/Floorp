@@ -4,15 +4,9 @@
 
 package mozilla.components.feature.prompts.dialog
 
-import android.graphics.BlendMode
-import android.graphics.BlendModeColorFilter
 import android.graphics.Color
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +14,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
+import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat.MULTIPLY
+import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -103,11 +100,7 @@ internal class ColorViewHolder(
 
         // Set the background to look like this item's color
         itemView.background = itemView.background.apply {
-            colorFilter = if (SDK_INT >= Build.VERSION_CODES.Q) {
-                BlendModeColorFilter(colorItem.color, BlendMode.MULTIPLY)
-            } else {
-                PorterDuffColorFilter(colorItem.color, PorterDuff.Mode.MULTIPLY)
-            }
+            colorFilter = createBlendModeColorFilterCompat(colorItem.color, MULTIPLY)
         }
         itemView.contentDescription = colorItem.contentDescription
 
@@ -115,11 +108,7 @@ internal class ColorViewHolder(
         val check = if (colorItem.selected) {
             checkDrawable?.apply {
                 val readableColor = ColorUtils.getReadableTextColor(color)
-                colorFilter = if (SDK_INT >= Build.VERSION_CODES.Q) {
-                    BlendModeColorFilter(readableColor, BlendMode.SRC_IN)
-                } else {
-                    PorterDuffColorFilter(readableColor, PorterDuff.Mode.SRC_IN)
-                }
+                colorFilter = createBlendModeColorFilterCompat(readableColor, SRC_IN)
             }
         } else {
             null
