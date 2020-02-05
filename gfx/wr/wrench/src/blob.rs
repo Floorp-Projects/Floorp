@@ -166,6 +166,8 @@ impl BlobImageHandler for CheckerboardRenderer {
     fn create_blob_rasterizer(&mut self) -> Box<dyn AsyncBlobImageRasterizer> {
         Box::new(Rasterizer { image_cmds: self.image_cmds.clone() })
     }
+
+    fn enable_multithreading(&mut self, _enable: bool) {}
 }
 
 struct Command {

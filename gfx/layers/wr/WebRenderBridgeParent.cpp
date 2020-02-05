@@ -1755,11 +1755,22 @@ void WebRenderBridgeParent::UpdateQualitySettings() {
 }
 
 void WebRenderBridgeParent::UpdateDebugFlags() {
+  auto flags = gfxVars::WebRenderDebugFlags();
   for (auto& api : mApis) {
     if (!api) {
       continue;
     }
-    api->UpdateDebugFlags(gfxVars::WebRenderDebugFlags());
+    api->UpdateDebugFlags(flags);
+  }
+}
+
+void WebRenderBridgeParent::UpdateMultithreading() {
+  bool multithreading = gfxVars::UseWebRenderMultithreading();
+  for (auto& api : mApis) {
+    if (!api) {
+      continue;
+    }
+    api->EnableMultithreading(multithreading);
   }
 }
 

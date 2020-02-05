@@ -3846,6 +3846,11 @@
   value: false
   mirror: once
 
+- name: gfx.webrender.enable-multithreading
+  type: bool
+  value: true
+  mirror: always
+
 - name: gfx.webrender.compositor
   type: bool
 #if defined(XP_WIN) || defined(XP_MACOSX)

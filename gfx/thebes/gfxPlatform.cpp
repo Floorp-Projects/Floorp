@@ -615,6 +615,14 @@ static void WebRenderQualityPrefChangeCallback(const char* aPref, void*) {
   gfxPlatform::GetPlatform()->UpdateAllowSacrificingSubpixelAA();
 }
 
+static void WebRenderMultithreadingPrefChangeCallback(const char* aPrefName,
+                                                      void*) {
+  bool enable = Preferences::GetBool(
+      StaticPrefs::GetPrefName_gfx_webrender_enable_multithreading(), true);
+
+  gfx::gfxVars::SetUseWebRenderMultithreading(enable);
+}
+
 #if defined(USE_SKIA)
 static uint32_t GetSkiaGlyphCacheSize() {
   // Only increase font cache size on non-android to save memory.
@@ -3334,6 +3342,11 @@ void gfxPlatform::InitWebRenderConfig() {
           nsDependentCString(
               StaticPrefs::
                   GetPrefName_gfx_webrender_quality_force_disable_sacrificing_subpixel_aa()));
+      Preferences::RegisterCallback(
+          WebRenderMultithreadingPrefChangeCallback,
+          nsDependentCString(
+              StaticPrefs::GetPrefName_gfx_webrender_enable_multithreading()));
+
       UpdateAllowSacrificingSubpixelAA();
     }
   }

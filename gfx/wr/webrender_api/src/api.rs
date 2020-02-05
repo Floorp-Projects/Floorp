@@ -972,6 +972,8 @@ pub enum DebugCommand {
     ClearCaches(ClearCache),
     /// Enable/disable native compositor usage
     EnableNativeCompositor(bool),
+    /// Enable/disable parallel job execution with rayon.
+    EnableMultithreading(bool),
     /// Invalidate GPU cache, forcing the update from the CPU mirror.
     InvalidateGpuCache,
     /// Causes the scene builder to pause for a given amount of milliseconds each time it

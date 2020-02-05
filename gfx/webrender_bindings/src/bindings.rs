@@ -1603,6 +1603,11 @@ pub unsafe extern "C" fn wr_api_enable_native_compositor(dh: &mut DocumentHandle
     dh.api.send_debug_cmd(DebugCommand::EnableNativeCompositor(enable));
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_enable_multithreading(dh: &mut DocumentHandle, enable: bool) {
+    dh.api.send_debug_cmd(DebugCommand::EnableMultithreading(enable));
+}
+
 fn make_transaction(do_async: bool) -> Transaction {
     let mut transaction = Transaction::new();
     // Ensure that we either use async scene building or not based on the
