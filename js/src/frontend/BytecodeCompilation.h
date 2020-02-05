@@ -77,13 +77,6 @@ extern JSScript* CompileEvalScript(CompilationInfo& compilationInfo,
                                    JS::Handle<JSObject*> environment,
                                    JS::SourceText<char16_t>& srcBuf);
 
-class MOZ_STACK_CLASS StandaloneFunctionInfo final : public BytecodeCompiler {
- public:
-  StandaloneFunctionInfo(JSContext* cx, CompilationInfo& compilationInfo,
-                         const JS::ReadOnlyCompileOptions& options)
-      : BytecodeCompiler(cx, compilationInfo, options) {}
-};
-
 extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,
                                              JS::Handle<LazyScript*> lazy,
                                              const char16_t* units,
