@@ -87,8 +87,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
     return compilationInfo.sourceObject->source()->assignSource(
         compilationInfo.cx, compilationInfo.options, sourceBuffer);
   }
-
-  bool canLazilyParse() const;
 };
 
 class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {
