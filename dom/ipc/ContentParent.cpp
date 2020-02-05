@@ -4877,7 +4877,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   if (topParent) {
     frame = topParent->GetOwnerElement();
 
-    if (NS_WARN_IF(topParent->IsMozBrowser())) {
+    if (NS_WARN_IF(topParent->IsMozBrowserElement())) {
       return IPC_FAIL(this, "aThisTab is not a MozBrowser");
     }
   }
