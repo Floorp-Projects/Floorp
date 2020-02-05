@@ -171,9 +171,6 @@ class DebuggerFrame : public NativeObject {
   static MOZ_MUST_USE bool getAsyncPromise(JSContext* cx,
                                            HandleDebuggerFrame frame,
                                            MutableHandleDebuggerObject result);
-  static MOZ_MUST_USE bool getOlderSavedFrame(JSContext* cx,
-                                              HandleDebuggerFrame frame,
-                                              MutableHandleSavedFrame result);
   static MOZ_MUST_USE bool getThis(JSContext* cx, HandleDebuggerFrame frame,
                                    MutableHandleValue result);
   static DebuggerFrameType getType(HandleDebuggerFrame frame);
