@@ -224,31 +224,33 @@ JSScript* frontend::CompileGlobalScript(CompilationInfo& compilationInfo,
 }
 
 template <typename Unit>
-static JSScript* CreateEvalScript(frontend::EvalScriptInfo& info,
+static JSScript* CreateEvalScript(CompilationInfo& compilationInfo,
+                                  EvalSharedContext& evalsc,
+                                  JS::Handle<JSObject*> environment,
                                   SourceText<Unit>& srcBuf) {
-  AutoAssertReportedException assertException(info.compilationInfo.cx);
-  LifoAllocScope allocScope(&info.compilationInfo.cx->tempLifoAlloc());
+  AutoAssertReportedException assertException(compilationInfo.cx);
+  LifoAllocScope allocScope(&compilationInfo.cx->tempLifoAlloc());
 
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
-  if (!compiler.prepareScriptParse(allocScope, info.compilationInfo)) {
+  if (!compiler.prepareScriptParse(allocScope, compilationInfo)) {
     return nullptr;
   }
 
-  if (!compiler.compileScript(info.compilationInfo, info.environment(),
-                              info.sharedContext())) {
+  if (!compiler.compileScript(compilationInfo, environment, &evalsc)) {
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(info.compilationInfo.cx,
-                                  info.compilationInfo.script);
+  tellDebuggerAboutCompiledScript(compilationInfo.cx, compilationInfo.script);
 
   assertException.reset();
-  return info.compilationInfo.script;
+  return compilationInfo.script;
 }
 
-JSScript* frontend::CompileEvalScript(EvalScriptInfo& info,
+JSScript* frontend::CompileEvalScript(CompilationInfo& compilationInfo,
+                                      EvalSharedContext& evalsc,
+                                      JS::Handle<JSObject*> environment,
                                       JS::SourceText<char16_t>& srcBuf) {
-  return CreateEvalScript(info, srcBuf);
+  return CreateEvalScript(compilationInfo, evalsc, environment, srcBuf);
 }
 
 template <typename Unit>

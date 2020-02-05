@@ -984,8 +984,10 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
       return false;
     }
 
-    frontend::EvalScriptInfo info(cx, compilationInfo, options, env, scope);
-    script = frontend::CompileEvalScript(info, srcBuf);
+    frontend::EvalSharedContext evalsc(cx, env, compilationInfo, scope,
+                                       compilationInfo.directives,
+                                       options.extraWarningsOption);
+    script = frontend::CompileEvalScript(compilationInfo, evalsc, env, srcBuf);
     if (!script) {
       return false;
     }
