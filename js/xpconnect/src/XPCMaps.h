@@ -23,6 +23,18 @@
 // no virtuals in the maps - all the common stuff inlined
 // templates could be used to good effect here.
 
+/***************************************************************************/
+// default initial sizes for maps (hashtables)
+
+#define XPC_JS_MAP_LENGTH 32
+
+#define XPC_NATIVE_MAP_LENGTH 8
+#define XPC_NATIVE_PROTO_MAP_LENGTH 8
+#define XPC_DYING_NATIVE_PROTO_MAP_LENGTH 8
+#define XPC_NATIVE_INTERFACE_MAP_LENGTH 32
+#define XPC_NATIVE_SET_MAP_LENGTH 32
+#define XPC_WRAPPER_MAP_LENGTH 8
+
 /*************************/
 
 class JSObject2WrappedJSMap {
@@ -31,7 +43,7 @@ class JSObject2WrappedJSMap {
                           InfallibleAllocPolicy>;
 
  public:
-  explicit JSObject2WrappedJSMap(size_t length) : mTable(length) {}
+  JSObject2WrappedJSMap() : mTable(XPC_JS_MAP_LENGTH) {}
 
   inline nsXPCWrappedJS* Find(JSObject* Obj) {
     MOZ_ASSERT(Obj, "bad param");
@@ -99,7 +111,7 @@ class Native2WrappedNativeMap {
     XPCWrappedNative* value;
   };
 
-  explicit Native2WrappedNativeMap(int size);
+  Native2WrappedNativeMap();
 
   inline XPCWrappedNative* Find(nsISupports* Obj) const {
     MOZ_ASSERT(Obj, "bad param");
@@ -146,7 +158,7 @@ class IID2NativeInterfaceMap {
     static const struct PLDHashTableOps sOps;
   };
 
-  explicit IID2NativeInterfaceMap(int size);
+  IID2NativeInterfaceMap();
 
   inline XPCNativeInterface* Find(REFNSIID iid) const {
     auto entry = static_cast<Entry*>(mTable.Search(&iid));
@@ -197,7 +209,7 @@ class ClassInfo2NativeSetMap {
     static void Clear(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
   };
 
-  explicit ClassInfo2NativeSetMap(int size);
+  ClassInfo2NativeSetMap();
 
   inline XPCNativeSet* Find(nsIClassInfo* info) const {
     auto entry = static_cast<Entry*>(mTable.Search(info));
@@ -244,7 +256,7 @@ class ClassInfo2WrappedNativeProtoMap {
     XPCWrappedNativeProto* value;
   };
 
-  explicit ClassInfo2WrappedNativeProtoMap(int size);
+  ClassInfo2WrappedNativeProtoMap();
 
   inline XPCWrappedNativeProto* Find(nsIClassInfo* info) const {
     auto entry = static_cast<Entry*>(mTable.Search(info));
@@ -290,7 +302,7 @@ class NativeSetMap {
     static const struct PLDHashTableOps sOps;
   };
 
-  explicit NativeSetMap(int size);
+  NativeSetMap();
 
   inline XPCNativeSet* Find(XPCNativeSetKey* key) const {
     auto entry = static_cast<Entry*>(mTable.Search(key));
@@ -347,7 +359,7 @@ class XPCWrappedNativeProtoMap {
  public:
   typedef PLDHashEntryStub Entry;
 
-  explicit XPCWrappedNativeProtoMap(int size);
+  XPCWrappedNativeProtoMap();
 
   inline XPCWrappedNativeProto* Add(XPCWrappedNativeProto* proto) {
     MOZ_ASSERT(proto, "bad param");
@@ -379,7 +391,7 @@ class JSObject2JSObjectMap {
                             js::SystemAllocPolicy>;
 
  public:
-  explicit JSObject2JSObjectMap(size_t length) : mTable(length) {}
+  JSObject2JSObjectMap() : mTable(XPC_WRAPPER_MAP_LENGTH) {}
 
   inline JSObject* Find(JSObject* key) {
     MOZ_ASSERT(key, "bad param");

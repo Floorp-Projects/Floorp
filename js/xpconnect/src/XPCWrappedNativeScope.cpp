@@ -63,9 +63,8 @@ static bool RemoteXULForbidsXBLScope(HandleObject aFirstGlobal) {
 
 XPCWrappedNativeScope::XPCWrappedNativeScope(JS::Compartment* aCompartment,
                                              JS::HandleObject aFirstGlobal)
-    : mWrappedNativeMap(new Native2WrappedNativeMap(XPC_NATIVE_MAP_LENGTH)),
-      mWrappedNativeProtoMap(
-          new ClassInfo2WrappedNativeProtoMap(XPC_NATIVE_PROTO_MAP_LENGTH)),
+    : mWrappedNativeMap(new Native2WrappedNativeMap()),
+      mWrappedNativeProtoMap(new ClassInfo2WrappedNativeProtoMap()),
       mComponents(nullptr),
       mCompartment(aCompartment) {
 #ifdef DEBUG
