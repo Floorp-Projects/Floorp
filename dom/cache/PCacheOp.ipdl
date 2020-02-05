@@ -11,7 +11,7 @@ include protocol PParentToChildStream;
 
 include CacheTypes;
 
-using mozilla::ErrorResult from "ipc/ErrorIPCUtils.h";
+using moveonly mozilla::ErrorResult from "ipc/ErrorIPCUtils.h";
 
 namespace mozilla {
 namespace dom {

@@ -51,6 +51,11 @@ struct ParamTraits<mozilla::ErrorResult> {
     }
   }
 
+  static void Write(Message* aMsg, paramType&& aParam) {
+    Write(aMsg, static_cast<const paramType&>(aParam));
+    aParam.SuppressException();
+  }
+
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     paramType readValue;
