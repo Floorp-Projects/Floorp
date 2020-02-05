@@ -1407,6 +1407,13 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       return true;
     }
 
+    // If the content is focused, and is being re-framed, reset the selection
+    // listener for the node because the previous selection listener is on the
+    // old frame.
+    if (aRoot->IsElement() && FocusMgr()->HasDOMFocus(aRoot)) {
+      SelectionMgr()->SetControlSelectionListener(aRoot->AsElement());
+    }
+
     // The accessible can be reparented or reordered in its parent.
     // We schedule it for reinsertion. For example, a slotted element
     // can change its slot attribute to a different slot.
