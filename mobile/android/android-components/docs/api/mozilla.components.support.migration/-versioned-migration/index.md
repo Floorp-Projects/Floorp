@@ -2,7 +2,7 @@
 
 # VersionedMigration
 
-`data class VersionedMigration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L106)
+`data class VersionedMigration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L108)
 
 Describes a [Migration](../-migration/index.md) at a specific version, enforcing in-range version specification.
 
