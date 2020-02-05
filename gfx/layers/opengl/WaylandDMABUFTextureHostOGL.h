@@ -25,8 +25,6 @@ class WaylandDMABUFTextureHostOGL : public TextureHost {
                               const SurfaceDescriptor& aDesc);
   virtual ~WaylandDMABUFTextureHostOGL();
 
-  void DeallocateDeviceData() override;
-
   void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   bool Lock() override;
