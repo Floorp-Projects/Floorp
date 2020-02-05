@@ -69,13 +69,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
     MOZ_ASSERT(compilationInfo.sourceObject->source() != nullptr);
   }
 
-  // Create a script for source of the given length, using the explicitly-
-  // provided toString offsets as the created script's offsets in the source.
-  MOZ_MUST_USE bool internalCreateScript(HandleObject functionOrGlobal,
-                                         uint32_t toStringStart,
-                                         uint32_t toStringEnd,
-                                         uint32_t sourceBufferLength);
-
   MOZ_MUST_USE bool emplaceEmitter(mozilla::Maybe<BytecodeEmitter>& emitter,
                                    const EitherParser& parser,
                                    SharedContext* sharedContext);
