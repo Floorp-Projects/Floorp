@@ -91,7 +91,7 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
 internal val whiteList = mapOf(
     Bookmarks to R.string.preferences_sync_bookmarks,
     History to R.string.preferences_sync_history,
-    Logins to R.string.preferences_sync_logins,
+    Logins to R.string.migration_text_passwords,
     Settings to R.string.settings_title
 )
 

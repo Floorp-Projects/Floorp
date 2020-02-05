@@ -1172,6 +1172,8 @@
     <string name="migration_update_app_button">Start %s</string>
     <!-- Accessibility description text for completed migration item (e.g. Bookmarks, History). Placeholder replaced with app name -->
     <string name="migration_icon_description">Migration status: %s</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Passwords</string>
 
     <!-- Site Permissions Preferences -->
     <!-- Preference for reducing image sizes, bandwidth and platform-level optimizations -->
