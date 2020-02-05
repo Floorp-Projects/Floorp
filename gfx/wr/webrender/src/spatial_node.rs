@@ -699,8 +699,12 @@ impl SpatialNode {
                     }
 
                     // Assume animations start at the identity transform for snapping purposes.
+                    // We still want to incorporate the reference frame offset however.
                     // TODO(aosmond): Is there a better known starting point?
-                    PropertyBinding::Binding(..) => ScaleOffset::identity(),
+                    PropertyBinding::Binding(..) => {
+                        let origin_offset = info.origin_in_parent_reference_frame;
+                        ScaleOffset::from_offset(origin_offset.to_untyped())
+                    }
                 }
             }
             _ => ScaleOffset::identity(),
