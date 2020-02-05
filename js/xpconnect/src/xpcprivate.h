@@ -166,18 +166,6 @@ class Exception;
 }  // namespace mozilla
 
 /***************************************************************************/
-// default initial sizes for maps (hashtables)
-
-#define XPC_JS_MAP_LENGTH 32
-
-#define XPC_NATIVE_MAP_LENGTH 8
-#define XPC_NATIVE_PROTO_MAP_LENGTH 8
-#define XPC_DYING_NATIVE_PROTO_MAP_LENGTH 8
-#define XPC_NATIVE_INTERFACE_MAP_LENGTH 32
-#define XPC_NATIVE_SET_MAP_LENGTH 32
-#define XPC_WRAPPER_MAP_LENGTH 8
-
-/***************************************************************************/
 // data declarations...
 extern const char XPC_EXCEPTION_CONTRACTID[];
 extern const char XPC_CONSOLE_CONTRACTID[];

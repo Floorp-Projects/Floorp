@@ -200,7 +200,7 @@ CompartmentPrivate::CompartmentPrivate(
       isUAWidgetCompartment(false),
       hasExclusiveExpandos(false),
       wasShutdown(false),
-      mWrappedJSMap(new JSObject2WrappedJSMap(XPC_JS_MAP_LENGTH)),
+      mWrappedJSMap(new JSObject2WrappedJSMap()),
       mScope(std::move(scope)) {
   MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
 }
@@ -2913,15 +2913,12 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 
 XPCJSRuntime::XPCJSRuntime(JSContext* aCx)
     : CycleCollectedJSRuntime(aCx),
-      mWrappedJSMap(new JSObject2WrappedJSMap(XPC_JS_MAP_LENGTH)),
-      mIID2NativeInterfaceMap(
-          new IID2NativeInterfaceMap(XPC_NATIVE_INTERFACE_MAP_LENGTH)),
-      mClassInfo2NativeSetMap(
-          new ClassInfo2NativeSetMap(XPC_NATIVE_SET_MAP_LENGTH)),
-      mNativeSetMap(new NativeSetMap(XPC_NATIVE_SET_MAP_LENGTH)),
+      mWrappedJSMap(new JSObject2WrappedJSMap()),
+      mIID2NativeInterfaceMap(new IID2NativeInterfaceMap()),
+      mClassInfo2NativeSetMap(new ClassInfo2NativeSetMap()),
+      mNativeSetMap(new NativeSetMap()),
       mWrappedNativeScopes(),
-      mDyingWrappedNativeProtoMap(
-          new XPCWrappedNativeProtoMap(XPC_DYING_NATIVE_PROTO_MAP_LENGTH)),
+      mDyingWrappedNativeProtoMap(new XPCWrappedNativeProtoMap()),
       mGCIsRunning(false),
       mNativesToReleaseArray(),
       mDoingFinalization(false),
