@@ -19,7 +19,10 @@ from perftest import Perftest
 from results import BrowsertimeResultsHandler
 
 LOG = RaptorLogger(component="raptor-browsertime")
+
 DEFAULT_CHROMEVERSION = "77"
+BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT = 120  # 2 minutes
+BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT = 900  # 15 minutes
 
 
 class Browsertime(Perftest):
@@ -291,7 +294,9 @@ class Browsertime(Perftest):
             proc = self.process_handler(cmd, env=env)
             proc.run(
                 timeout=self._compute_process_timeout(test, timeout),
-                outputTimeout=2 * 60,
+                outputTimeout=BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT
+                if self.benchmark
+                else BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT,
             )
             proc.wait()
 

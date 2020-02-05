@@ -100,7 +100,9 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         super(BrowsertimeAndroid, self).run_test_setup(test)
 
         self.set_reverse_ports()
-        self.turn_on_android_app_proxy()
+
+        if self.playback:
+            self.turn_on_android_app_proxy()
         self.remove_mozprofile_delimiters_from_profile()
 
     def run_tests(self, tests, test_names):
