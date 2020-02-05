@@ -103,8 +103,23 @@ async function checkIntervention({
   // Do a search that triggers the tip.
   let [result, element] = await awaitTip(searchString);
   Assert.strictEqual(result.payload.type, tip);
-  Assert.equal(element._elements.get("title").textContent, title);
-  Assert.equal(element._elements.get("tipButton").textContent, button);
+
+  let actualTitle = element._elements.get("title").textContent;
+  if (typeof title == "string") {
+    Assert.equal(actualTitle, title, "Title string");
+  } else {
+    // regexp
+    Assert.ok(title.test(actualTitle), "Title regexp");
+  }
+
+  let actualButton = element._elements.get("tipButton").textContent;
+  if (typeof button == "string") {
+    Assert.equal(actualButton, button, "Button string");
+  } else {
+    // regexp
+    Assert.ok(button.test(actualButton), "Button regexp");
+  }
+
   Assert.ok(BrowserTestUtils.is_visible(element._elements.get("helpButton")));
 
   let values = await Promise.all([awaitCallback(), pickTip()]);

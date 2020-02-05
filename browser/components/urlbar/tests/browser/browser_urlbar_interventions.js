@@ -35,7 +35,7 @@ add_task(async function refresh() {
     tip: TIPS.REFRESH,
     title:
       "Restore default settings and remove old add-ons for optimal performance.",
-    button: "Refresh Nightly…",
+    button: /^Refresh .+…$/,
     awaitCallback() {
       return promiseAlertDialog("cancel", [
         "chrome://global/content/resetProfile.xhtml",
