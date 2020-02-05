@@ -46,13 +46,6 @@ class TabContext {
    */
   bool IsMozBrowserElement() const;
 
-  /**
-   * Does this TabContext correspond to a mozbrowser?  This is equivalent to
-   * IsMozBrowserElement().  Returns false for <xul:browser>, which isn't a
-   * mozbrowser.
-   */
-  bool IsMozBrowser() const;
-
   bool IsJSPlugin() const;
   int32_t JSPluginId() const;
 
