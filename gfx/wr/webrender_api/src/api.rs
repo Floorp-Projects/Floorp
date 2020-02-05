@@ -6,7 +6,7 @@
 
 extern crate serde_bytes;
 
-use crate::channel::{self, MsgSender, Payload, PayloadSender, PayloadSenderHelperMethods};
+use crate::channel::{self, MsgSender, Payload, PayloadSender};
 use peek_poke::PeekPoke;
 use std::cell::Cell;
 use std::fmt;
@@ -1601,7 +1601,7 @@ impl RenderApi {
     #[doc(hidden)]
     pub fn send_payload(&self, data: &[u8]) {
         self.payload_sender
-            .send_payload(Payload::from_data(data))
+            .send(Payload::from_data(data))
             .unwrap();
     }
 
@@ -1629,7 +1629,7 @@ impl RenderApi {
     pub fn send_transaction(&self, document_id: DocumentId, transaction: Transaction) {
         let (msg, payloads) = transaction.finalize();
         for payload in payloads {
-            self.payload_sender.send_payload(payload).unwrap();
+            self.payload_sender.send(payload).unwrap();
         }
         self.api_sender.send(ApiMsg::UpdateDocuments(vec![document_id], vec![msg])).unwrap();
     }
@@ -1647,7 +1647,7 @@ impl RenderApi {
                     (msgs, document_payloads)
                 });
         for payload in document_payloads.drain(..).flatten() {
-            self.payload_sender.send_payload(payload).unwrap();
+            self.payload_sender.send(payload).unwrap();
         }
         self.api_sender.send(ApiMsg::UpdateDocuments(document_ids, msgs)).unwrap();
     }

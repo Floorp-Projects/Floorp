@@ -4,9 +4,10 @@
 
 use crate::api::{Epoch, PipelineId};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use std::io::{Cursor, Read};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::io::{self, Cursor, Error, ErrorKind, Read};
 use std::mem;
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc;
 
 #[derive(Clone)]
 pub struct Payload {
@@ -39,9 +40,6 @@ impl Payload {
     }
     /// Convert the payload to a raw byte vector, in order for it to be
     /// efficiently shared via shmem, for example.
-    ///
-    /// TODO(emilio, #1049): Consider moving the IPC boundary to the
-    /// constellation in Servo and remove this complexity from WR.
     pub fn to_data(&self) -> Vec<u8> {
         Self::construct_data(self.epoch, self.pipeline_id, &self.display_list_data)
     }
@@ -71,23 +69,64 @@ impl Payload {
     }
 }
 
+pub type PayloadSender = MsgSender<Payload>;
 
-/// A helper to handle the interface difference between `IpcBytesSender`
-/// and `Sender<Vec<u8>>`.
-pub trait PayloadSenderHelperMethods {
-    fn send_payload(&self, data: Payload) -> Result<(), Error>;
+pub type PayloadReceiver = MsgReceiver<Payload>;
+
+pub struct MsgReceiver<T> {
+    rx: mpsc::Receiver<T>,
 }
 
-pub trait PayloadReceiverHelperMethods {
-    fn recv_payload(&self) -> Result<Payload, Error>;
+impl<T> MsgReceiver<T> {
+    pub fn recv(&self) -> Result<T, Error> {
+        use std::error::Error;
+        self.rx.recv().map_err(|e| io::Error::new(ErrorKind::Other, e.description()))
+    }
 
-    // For an MPSC receiver, this is the identity function,
-    // for an IPC receiver, it routes to a new mpsc receiver
-    fn to_mpsc_receiver(self) -> Receiver<Payload>;
+    pub fn to_mpsc_receiver(self) -> mpsc::Receiver<T> {
+        self.rx
+    }
 }
 
-#[cfg(not(feature = "ipc"))]
-include!("channel_mpsc.rs");
+#[derive(Clone)]
+pub struct MsgSender<T> {
+    tx: mpsc::Sender<T>,
+}
 
-#[cfg(feature = "ipc")]
-include!("channel_ipc.rs");
+impl<T> MsgSender<T> {
+    pub fn send(&self, data: T) -> Result<(), Error> {
+        self.tx.send(data).map_err(|_| Error::new(ErrorKind::Other, "cannot send on closed channel"))
+    }
+}
+
+pub fn payload_channel() -> Result<(PayloadSender, PayloadReceiver), Error> {
+    let (tx, rx) = mpsc::channel();
+    Ok((PayloadSender { tx }, PayloadReceiver { rx }))
+}
+
+pub fn msg_channel<T>() -> Result<(MsgSender<T>, MsgReceiver<T>), Error> {
+    let (tx, rx) = mpsc::channel();
+    Ok((MsgSender { tx }, MsgReceiver { rx }))
+}
+
+///
+/// These serialize methods are needed to satisfy the compiler
+/// which uses these implementations for the recording tool.
+/// The recording tool only outputs messages that don't contain
+/// Senders or Receivers, so in theory these should never be
+/// called in the in-process config. If they are called,
+/// there may be a bug in the messages that the replay tool is writing.
+///
+
+impl<T> Serialize for MsgSender<T> {
+    fn serialize<S: Serializer>(&self, _: S) -> Result<S::Ok, S::Error> {
+        unreachable!();
+    }
+}
+
+impl<'de, T> Deserialize<'de> for MsgSender<T> {
+    fn deserialize<D>(_: D) -> Result<MsgSender<T>, D::Error>
+                      where D: Deserializer<'de> {
+        unreachable!();
+    }
+}

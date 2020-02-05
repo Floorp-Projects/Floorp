@@ -45,7 +45,7 @@ use api::ExternalImage;
 use api::channel;
 use api::units::*;
 pub use api::DebugFlags;
-use api::channel::{MsgSender, PayloadReceiverHelperMethods};
+use api::channel::MsgSender;
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};

@@ -8,7 +8,6 @@ check-alphabetical-order = false
 packages = [
     "core-graphics",
     "core-text",
-    "crossbeam-utils",
     "gl_generator",
     "lazy_static",
     "percent-encoding",

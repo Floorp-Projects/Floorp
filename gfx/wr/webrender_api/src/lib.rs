@@ -28,8 +28,6 @@ extern crate core_graphics;
 #[macro_use]
 extern crate derive_more;
 pub extern crate euclid;
-#[cfg(feature = "ipc")]
-extern crate ipc_channel;
 #[macro_use]
 extern crate malloc_size_of_derive;
 extern crate serde;
