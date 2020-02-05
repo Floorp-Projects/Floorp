@@ -79,21 +79,21 @@ function checkEncode(converter, charset, inText, expectedText) {
   Assert.equal(outText, expectedText);
 }
 
-function testDecodeAliases() {
+function testDecodeAliases(aliases, inString, expectedString) {
   var converter = CreateScriptableConverter();
   for (var i = 0; i < aliases.length; ++i) {
     checkDecode(converter, aliases[i], inString, expectedString);
   }
 }
 
-function testEncodeAliases() {
+function testEncodeAliases(aliases, inString, expectedString) {
   var converter = CreateScriptableConverter();
   for (var i = 0; i < aliases.length; ++i) {
     checkEncode(converter, aliases[i], inString, expectedString);
   }
 }
 
-function testDecodeAliasesInternal() {
+function testDecodeAliasesInternal(aliases, inString, expectedString) {
   var converter = CreateScriptableConverter();
   converter.isInternal = true;
   for (var i = 0; i < aliases.length; ++i) {
@@ -101,7 +101,7 @@ function testDecodeAliasesInternal() {
   }
 }
 
-function testEncodeAliasesInternal() {
+function testEncodeAliasesInternal(aliases, inString, expectedString) {
   var converter = CreateScriptableConverter();
   converter.isInternal = true;
   for (var i = 0; i < aliases.length; ++i) {

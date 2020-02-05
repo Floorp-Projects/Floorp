@@ -2,8 +2,6 @@
 // This is a sniff test which doesn't cover the full gbk range: the test string
 // includes only the ASCII range and the first 63 double byte characters
 
-load("CharsetConversionTests.js");
-
 const inString =
   " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x81@\x81A\x81B\x81C\x81D\x81E\x81F\x81G\x81H\x81I\x81J\x81K\x81L\x81M\x81N\x81O\x81P\x81Q\x81R\x81S\x81T\x81U\x81V\x81W\x81X\x81Y\x81Z\x81[\x81\\\x81]\x81^\x81_\x81`\x81a\x81b\x81c\x81d\x81e\x81f\x81g\x81h\x81i\x81j\x81k\x81l\x81m\x81n\x81o\x81p\x81q\x81r\x81s\x81t\x81u\x81v\x81w\x81x\x81y\x81z\x81{\x81|\x81}\x81~";
 
@@ -13,5 +11,5 @@ const expectedString =
 const aliases = ["gbk", "x-gbk"];
 
 function run_test() {
-  testDecodeAliases();
+  testDecodeAliases(aliases, inString, expectedString);
 }

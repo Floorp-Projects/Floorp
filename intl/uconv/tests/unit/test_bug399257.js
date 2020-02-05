@@ -1,6 +1,4 @@
 // Tests encoding of characters below U+0020
-load("CharsetConversionTests.js");
-
 const inString = "Hello\u000aWorld";
 const expectedString = "Hello\nWorld";
 

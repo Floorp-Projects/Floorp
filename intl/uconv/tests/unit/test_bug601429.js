@@ -1,6 +1,5 @@
 // Tests whether characters above 0x7F decode to ASCII characters liable to
 // expose XSS vulnerabilities
-load("CharsetConversionTests.js");
 
 function run_test() {
   var failures = false;
