@@ -8,6 +8,7 @@
 #define mozilla_dom_worklet_WorkletImpl_h
 
 #include "MainThreadUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 
@@ -74,6 +75,8 @@ class WorkletImpl {
   }
   const ipc::PrincipalInfo& PrincipalInfo() const { return mPrincipalInfo; }
 
+  const Maybe<nsID>& GetAgentClusterId() const { return mAgentClusterId; }
+
  protected:
   WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
   virtual ~WorkletImpl();
@@ -93,6 +96,8 @@ class WorkletImpl {
 
   // Execution thread only.
   RefPtr<dom::WorkletGlobalScope> mGlobalScope;
+
+  Maybe<nsID> mAgentClusterId;
 };
 
 }  // namespace mozilla

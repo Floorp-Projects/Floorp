@@ -40,6 +40,10 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
       mTerminated(false) {
   Unused << NS_WARN_IF(
       NS_FAILED(ipc::PrincipalToPrincipalInfo(mPrincipal, &mPrincipalInfo)));
+
+  if (aWindow->GetDocGroup()) {
+    mAgentClusterId.emplace(aWindow->GetDocGroup()->AgentClusterId());
+  }
 }
 
 WorkletImpl::~WorkletImpl() {
