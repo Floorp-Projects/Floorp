@@ -12,6 +12,7 @@ import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
@@ -31,17 +32,20 @@ class OnboardingAutomaticSignInViewHolder(private val view: View) : RecyclerView
             CoroutineScope(Dispatchers.Main).launch {
                 val result = view.context.components.backgroundServices.accountManager
                     .signInWithShareableAccountAsync(shareableAccount).await()
-                if (result) {
-                    // Success.
-                } else {
-                    // Failed to sign-in (either network problem, or bad credentials). Allow to try again.
-                    it.turn_on_sync_button.text = it.context.getString(
-                        R.string.onboarding_firefox_account_auto_signin_confirm
-                    )
-                    it.turn_on_sync_button.isEnabled = true
-                    FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
-                        it.context.getString(R.string.onboarding_firefox_account_automatic_signin_failed)
-                    ).show()
+                when (result) {
+                    SignInWithShareableAccountResult.Failure -> {
+                        // Failed to sign-in (e.g. bad credentials). Allow to try again.
+                        it.turn_on_sync_button.text = it.context.getString(
+                            R.string.onboarding_firefox_account_auto_signin_confirm
+                        )
+                        it.turn_on_sync_button.isEnabled = true
+                        FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
+                            it.context.getString(R.string.onboarding_firefox_account_automatic_signin_failed)
+                        ).show()
+                    }
+                    SignInWithShareableAccountResult.WillRetry, SignInWithShareableAccountResult.Success -> {
+                        // We consider both of these as a 'success'.
+                    }
                 }
             }
         }
