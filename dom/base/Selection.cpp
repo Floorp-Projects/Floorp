@@ -673,52 +673,50 @@ void Selection::SetAnchorFocusRange(int32_t indx) {
   }
 }
 
-static nsresult CompareToRangeStart(const nsINode* aCompareNode,
-                                    int32_t aCompareOffset,
-                                    const nsRange* aRange, int32_t* aCmp) {
-  nsINode* start = aRange->GetStartContainer();
-  NS_ENSURE_STATE(aCompareNode && start);
+static int32_t CompareToRangeStart(const nsINode& aCompareNode,
+                                   int32_t aCompareOffset,
+                                   const nsRange& aRange) {
+  MOZ_ASSERT(aRange.GetStartContainer());
+  nsINode* start = aRange.GetStartContainer();
   // If the nodes that we're comparing are not in the same document or in the
   // same subtree, assume that aCompareNode will fall at the end of the ranges.
-  if (aCompareNode->GetComposedDoc() != start->GetComposedDoc() ||
+  if (aCompareNode.GetComposedDoc() != start->GetComposedDoc() ||
       !start->GetComposedDoc() ||
-      aCompareNode->SubtreeRoot() != start->SubtreeRoot()) {
+      aCompareNode.SubtreeRoot() != start->SubtreeRoot()) {
     NS_WARNING(
         "`CompareToRangeStart` couldn't compare nodes, pretending some order.");
-    *aCmp = 1;
-  } else {
-    // The points are in the same subtree, hence there has to be an order.
-    *aCmp = *nsContentUtils::ComparePoints(aCompareNode, aCompareOffset, start,
-                                           aRange->StartOffset());
+    return 1;
   }
-  return NS_OK;
+
+  // The points are in the same subtree, hence there has to be an order.
+  return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, start,
+                                        aRange.StartOffset());
 }
 
-static nsresult CompareToRangeEnd(const nsINode* aCompareNode,
-                                  int32_t aCompareOffset, const nsRange* aRange,
-                                  int32_t* aCmp) {
-  nsINode* end = aRange->GetEndContainer();
-  NS_ENSURE_STATE(aCompareNode && end);
+static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
+                                 int32_t aCompareOffset,
+                                 const nsRange& aRange) {
+  MOZ_ASSERT(aRange.IsPositioned());
+  nsINode* end = aRange.GetEndContainer();
   // If the nodes that we're comparing are not in the same document or in the
   // same subtree, assume that aCompareNode will fall at the end of the ranges.
-  if (aCompareNode->GetComposedDoc() != end->GetComposedDoc() ||
+  if (aCompareNode.GetComposedDoc() != end->GetComposedDoc() ||
       !end->GetComposedDoc() ||
-      aCompareNode->SubtreeRoot() != end->SubtreeRoot()) {
+      aCompareNode.SubtreeRoot() != end->SubtreeRoot()) {
     NS_WARNING(
         "`CompareToRangeEnd` couldn't compare nodes, pretending some order.");
-    *aCmp = 1;
-  } else {
-    // The points are in the same subtree, hence there has to be an order.
-    *aCmp = *nsContentUtils::ComparePoints(aCompareNode, aCompareOffset, end,
-                                           aRange->EndOffset());
+    return 1;
   }
-  return NS_OK;
+
+  // The points are in the same subtree, hence there has to be an order.
+  return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, end,
+                                        aRange.EndOffset());
 }
 
 nsresult Selection::FindInsertionPoint(
-    const nsTArray<StyledRange>* aElementArray, const nsINode* aPointNode,
+    const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
     int32_t aPointOffset,
-    nsresult (*aComparator)(const nsINode*, int32_t, const nsRange*, int32_t*),
+    int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&),
     int32_t* aInsertionPoint) {
   *aInsertionPoint = 0;
   int32_t beginSearch = 0;
@@ -729,9 +727,7 @@ nsresult Selection::FindInsertionPoint(
     do {
       const nsRange* range = (*aElementArray)[center].mRange;
 
-      int32_t cmp;
-      nsresult rv = aComparator(aPointNode, aPointOffset, range, &cmp);
-      NS_ENSURE_SUCCESS(rv, rv);
+      int32_t cmp{aComparator(aPointNode, aPointOffset, *range)};
 
       if (cmp < 0) {  // point < cur
         endSearch = center;
@@ -765,16 +761,12 @@ nsresult Selection::SubtractRange(StyledRange& aRange, nsRange& aSubtract,
   }
 
   // First we want to compare to the range start
-  int32_t cmp;
-  nsresult rv = CompareToRangeStart(range->GetStartContainer(),
-                                    range->StartOffset(), &aSubtract, &cmp);
-  NS_ENSURE_SUCCESS(rv, rv);
+  int32_t cmp{CompareToRangeStart(*range->GetStartContainer(),
+                                  range->StartOffset(), aSubtract)};
 
   // Also, make a comparison to the range end
-  int32_t cmp2;
-  rv = CompareToRangeEnd(range->GetEndContainer(), range->EndOffset(),
-                         &aSubtract, &cmp2);
-  NS_ENSURE_SUCCESS(rv, rv);
+  int32_t cmp2{CompareToRangeEnd(*range->GetEndContainer(), range->EndOffset(),
+                                 aSubtract)};
 
   // If the existing range left overlaps the new range (aSubtract) then
   // cmp < 0, and cmp2 < 0
@@ -1022,7 +1014,8 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   // Insert the new element into our "leftovers" array
   int32_t insertionPoint;
-  rv = FindInsertionPoint(&temp, aRange->GetStartContainer(),
+  // `aRange` is positioned, it has to have a start container.
+  rv = FindInsertionPoint(&temp, *aRange->GetStartContainer(),
                           aRange->StartOffset(), CompareToRangeStart,
                           &insertionPoint);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1128,6 +1121,14 @@ void Selection::GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
 nsresult Selection::GetRangesForIntervalArray(
     nsINode* aBeginNode, int32_t aBeginOffset, nsINode* aEndNode,
     int32_t aEndOffset, bool aAllowAdjacent, nsTArray<nsRange*>* aRanges) {
+  if (NS_WARN_IF(!aBeginNode)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (NS_WARN_IF(!aEndNode)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   aRanges->Clear();
   int32_t startIndex, endIndex;
   nsresult res =
@@ -1149,6 +1150,14 @@ nsresult Selection::GetIndicesForInterval(
     const nsINode* aBeginNode, int32_t aBeginOffset, const nsINode* aEndNode,
     int32_t aEndOffset, bool aAllowAdjacent, int32_t& aStartIndex,
     int32_t& aEndIndex) const {
+  if (NS_WARN_IF(!aBeginNode)) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+
+  if (NS_WARN_IF(!aEndNode)) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+
   aStartIndex = -1;
   aEndIndex = -1;
 
@@ -1160,7 +1169,7 @@ nsresult Selection::GetIndicesForInterval(
   // Ranges that end before the given interval and begin after the given
   // interval can be discarded
   int32_t endsBeforeIndex;
-  if (NS_FAILED(FindInsertionPoint(&mRanges, aEndNode, aEndOffset,
+  if (NS_FAILED(FindInsertionPoint(&mRanges, *aEndNode, aEndOffset,
                                    &CompareToRangeStart, &endsBeforeIndex))) {
     return NS_OK;
   }
@@ -1185,7 +1194,7 @@ nsresult Selection::GetIndicesForInterval(
   aEndIndex = endsBeforeIndex;
 
   int32_t beginsAfterIndex;
-  if (NS_FAILED(FindInsertionPoint(&mRanges, aBeginNode, aBeginOffset,
+  if (NS_FAILED(FindInsertionPoint(&mRanges, *aBeginNode, aBeginOffset,
                                    &CompareToRangeEnd, &beginsAfterIndex))) {
     return NS_OK;
   }
