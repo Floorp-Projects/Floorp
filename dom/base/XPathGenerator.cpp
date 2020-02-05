@@ -54,7 +54,7 @@ void GetPrefix(const nsINode* aNode, nsAString& aResult) {
 
 void GetNameAttribute(const nsINode* aNode, nsAString& aResult) {
   if (aNode->HasName()) {
-    const Element* elem = aNode->AsElement();
+    const mozilla::dom::Element* elem = aNode->AsElement();
     elem->GetAttr(kNameSpaceID_None, nsGkAtoms::name, aResult);
   }
 }
@@ -151,7 +151,7 @@ void XPathGenerator::Generate(const nsINode* aNode, nsAString& aResult) {
 
   if (aNode->HasID()) {
     // this must be an element
-    const Element* elem = aNode->AsElement();
+    const mozilla::dom::Element* elem = aNode->AsElement();
     nsAutoString elemId;
     nsAutoString quotedArgument;
     elem->GetId(elemId);
@@ -164,7 +164,7 @@ void XPathGenerator::Generate(const nsINode* aNode, nsAString& aResult) {
   int32_t count = 1;
   nsAutoString nodeNameAttribute;
   GetNameAttribute(aNode, nodeNameAttribute);
-  for (const Element* e = aNode->GetPreviousElementSibling(); e;
+  for (const mozilla::dom::Element* e = aNode->GetPreviousElementSibling(); e;
        e = e->GetPreviousElementSibling()) {
     nsAutoString elementNamespaceURI;
     e->GetNamespaceURI(elementNamespaceURI);
