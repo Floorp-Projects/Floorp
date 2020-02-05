@@ -573,7 +573,6 @@ function forward(browser) {
 
 function addDeviceForTest(device) {
   info(`Adding Test Device "${device.name}" to the list.`);
-  addDevice(device);
 
   registerCleanupFunction(() => {
     // Note that assertions in cleanup functions are not displayed unless they failed.
@@ -582,6 +581,8 @@ function addDeviceForTest(device) {
       `Removed Test Device "${device.name}" from the list.`
     );
   });
+
+  return addDevice(device);
 }
 
 async function waitForClientClose(ui) {
