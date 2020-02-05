@@ -1,6 +1,6 @@
-// Tests whether characters above 0x7F decode to ASCII characters liable to 
+// Tests whether characters above 0x7F decode to ASCII characters liable to
 // expose XSS vulnerabilities
-load('CharsetConversionTests.js');
+load("CharsetConversionTests.js");
 
 function run_test() {
   var failures = false;
@@ -44,7 +44,7 @@ function run_test() {
     "macintosh",
     "x-mac-cyrillic",
     "x-user-defined",
-    "UTF-8"
+    "UTF-8",
   ];
 
   var counter = 0;
@@ -57,18 +57,25 @@ function run_test() {
       var inString = String.fromCharCode(i);
       var outString;
       try {
-	outString = decodingConverter.ConvertToUnicode(inString) +
-	                decodingConverter.Finish();
-      } catch(e) {
-	outString = String.fromCharCode(0xFFFD);
+        outString =
+          decodingConverter.ConvertToUnicode(inString) +
+          decodingConverter.Finish();
+      } catch (e) {
+        outString = String.fromCharCode(0xfffd);
       }
       for (var n = 0; n < outString.length; ++n) {
-	var outChar = outString.charAt(n);
-	if (outChar == '<' || outChar == '>' || outChar == '/') {
-	  dump(charset + " has a problem: " + escape(inString) +
-	       " decodes to '" + outString + "'\n");
-	  failures = true;
-	}
+        var outChar = outString.charAt(n);
+        if (outChar == "<" || outChar == ">" || outChar == "/") {
+          dump(
+            charset +
+              " has a problem: " +
+              escape(inString) +
+              " decodes to '" +
+              outString +
+              "'\n"
+          );
+          failures = true;
+        }
       }
     }
   }
