@@ -4,15 +4,14 @@
 
 package mozilla.components.support.migration
 
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.migration.session.StreamingSessionStoreParser
 import org.json.JSONException
-import org.json.JSONObject
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.lang.Exception
 
 /**
  * Helper for importing/migrating "open tabs" from Fennec.
@@ -25,7 +24,8 @@ internal object FennecSessionMigration {
      * [SessionManager.Snapshot] (wrapped in [Result.Success]).
      */
     fun migrate(
-        profilePath: File
+        profilePath: File,
+        crashReporter: CrashReporter
     ): Result<SessionManager.Snapshot> {
         val sessionFiles = findSessionFiles(profilePath)
         if (sessionFiles.isEmpty()) {
@@ -36,12 +36,20 @@ internal object FennecSessionMigration {
 
         for (file in sessionFiles) {
             try {
-                return parseJSON(file.readText())
+                return StreamingSessionStoreParser.parse(file)
+            } catch (e: FileNotFoundException) {
+                logger.warn("FileNotFoundException while trying to parse sessopm stpre", e)
             } catch (e: IOException) {
+                crashReporter.submitCaughtException(e)
                 logger.error("IOException while parsing Fennec session store", e)
                 failures.add(e)
             } catch (e: JSONException) {
+                crashReporter.submitCaughtException(e)
                 logger.error("JSONException while parsing Fennec session store", e)
+                failures.add(e)
+            } catch (e: IllegalStateException) {
+                crashReporter.submitCaughtException(e)
+                logger.error("IllegalStateException while parsing Fennec session store", e)
                 failures.add(e)
             }
         }
@@ -63,51 +71,5 @@ internal object FennecSessionMigration {
         }
 
         return files
-    }
-
-    @Throws(IOException::class, JSONException::class)
-    private fun parseJSON(json: String): Result.Success<SessionManager.Snapshot> {
-        var selection = -1
-        val sessions = mutableListOf<Session>()
-
-        val windows = JSONObject(json).getJSONArray("windows")
-        if (windows.length() == 0) {
-            return Result.Success(SessionManager.Snapshot.empty())
-        }
-
-        val window = windows.getJSONObject(0)
-        val tabs = window.getJSONArray("tabs")
-        val selectedTab = window.optInt("selected", -1)
-
-        for (i in 0 until tabs.length()) {
-            val tab = tabs.getJSONObject(i)
-
-            val index = tab.getInt("index")
-            val entries = tab.getJSONArray("entries")
-            if (index < 1 || entries.length() < index) {
-                // This tab has no entries at all. Let's just stkip it.
-                continue
-            }
-
-            val entry = entries.getJSONObject(index - 1)
-            val url = entry.getString("url")
-            val title = entry.optString("title").ifEmpty { url }
-            val selected = selectedTab == i + 1
-
-            sessions.add(Session(
-                initialUrl = url
-            ).also {
-                it.title = title
-            })
-
-            if (selected) {
-                selection = sessions.size - 1
-            }
-        }
-
-        return Result.Success(SessionManager.Snapshot(
-            sessions.map { SessionManager.Snapshot.Item(it) },
-            selection
-        ))
     }
 }
