@@ -36,6 +36,10 @@ struct MOZ_RAII CompilationInfo {
 
   Directives directives;
 
+  // The resulting outermost script for the compilation powered
+  // by this CompilationInfo.
+  JS::Rooted<JSScript*> script;
+
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
@@ -64,6 +68,7 @@ struct MOZ_RAII CompilationInfo {
         options(options),
         keepAtoms(cx),
         directives(options.forceStrictMode()),
+        script(cx),
         usedNames(cx),
         allocScope(alloc),
         treeHolder(cx),
