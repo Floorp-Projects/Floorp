@@ -12,7 +12,7 @@ add_task(async function() {
   info("Test DOM panel node highlight started");
 
   const { panel } = await addTestTab(TEST_PAGE_URL);
-  const toolbox = gDevTools.getToolbox(panel.currentTarget);
+  const toolbox = gDevTools.getToolbox(panel.target);
 
   info("Highlight the node by moving the cursor on it");
   let node = getRowByIndex(panel, 2).querySelector(".objectBox-node");
