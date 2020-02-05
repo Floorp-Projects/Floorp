@@ -16,6 +16,7 @@
 #include "frontend/Stencil.h"
 #include "frontend/UsedNameTracker.h"
 #include "js/RealmOptions.h"
+#include "js/SourceText.h"
 #include "js/Vector.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
@@ -80,6 +81,11 @@ struct MOZ_RAII CompilationInfo {
   bool init(JSContext* cx);
 
   void initFromSourceObject(ScriptSourceObject* sso) { sourceObject = sso; }
+
+  template <typename Unit>
+  MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
+    return sourceObject->source()->assignSource(cx, options, sourceBuffer);
+  }
 
   // To avoid any misuses, make sure this is neither copyable,
   // movable or assignable.

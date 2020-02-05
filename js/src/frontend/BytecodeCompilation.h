@@ -79,14 +79,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   MOZ_MUST_USE bool emplaceEmitter(mozilla::Maybe<BytecodeEmitter>& emitter,
                                    const EitherParser& parser,
                                    SharedContext* sharedContext);
-
-  // This function lives here, not in SourceAwareCompiler, because it mostly
-  // uses fields in *this* class.
-  template <typename Unit>
-  MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
-    return compilationInfo.sourceObject->source()->assignSource(
-        compilationInfo.cx, compilationInfo.options, sourceBuffer);
-  }
 };
 
 class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {

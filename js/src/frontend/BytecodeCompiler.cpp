@@ -381,7 +381,7 @@ static bool CanLazilyParse(const CompilationInfo& compilationInfo) {
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
     LifoAllocScope& allocScope, BytecodeCompiler& info) {
-  if (!info.assignSource(sourceBuffer_)) {
+  if (!info.compilationInfo.assignSource(sourceBuffer_)) {
     return false;
   }
   CompilationInfo& compilationInfo = info.compilationInfo;
