@@ -62,7 +62,6 @@ class MOZ_STACK_CLASS BytecodeCompiler {
 
  public:
   CompilationInfo& compilationInfo;
-  JSContext* context() const { return compilationInfo.cx; }
 
  protected:
   void assertSourceCreated() const {
@@ -86,7 +85,7 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   template <typename Unit>
   MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
     return compilationInfo.sourceObject->source()->assignSource(
-        context(), compilationInfo.options, sourceBuffer);
+        compilationInfo.cx, compilationInfo.options, sourceBuffer);
   }
 
   bool canLazilyParse() const;
