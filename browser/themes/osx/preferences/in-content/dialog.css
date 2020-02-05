@@ -8,6 +8,6 @@ window {
   font: message-box !important;
 }
 
-dialog > * {
+:root > * {
   font-size: 1.18em;
 }
