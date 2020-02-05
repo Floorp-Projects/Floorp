@@ -204,19 +204,9 @@ frame, this property throws a `TypeError`.
 Accessing this property will throw if `.terminated == true`.
 
 ### `older`
-The `Debugger.Frame` for the next-older visible frame, in which control will
-resume when this frame completes. If there is no older frame, this is `null`.
-If there an explicitly inserted asynchronous stack trace above this frame,
-this is `null`, since the explicit saved frame takes priority.
-If this frame is a suspended generator or async call, this will also be `null`.
-
-Accessing this property will throw if `.terminated == true`.
-
-### `olderSavedFrame`
-
-If this frame has no `older` frame, this field may hold a [`SavedFrame`][saved-frame]
-object representing the saved asynchronous stack that triggered execution of
-this `Debugger.Frame` instance.
+The next-older visible frame, in which control will resume when this
+frame completes. If there is no older frame, this is `null`. If this frame is
+a suspended generator or async call, this will also be `null`.
 
 Accessing this property will throw if `.terminated == true`.
 
@@ -482,4 +472,3 @@ Accessing this property will throw if `.onStack == false`.
 [environment]: Debugger.Environment.md
 [rv]: Conventions.html#resumption-values
 [fr eval]: #eval-code-options
-[saved-frame]: ../SavedFrame/index
