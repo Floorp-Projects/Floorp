@@ -227,6 +227,15 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
     refreshStart = mTransactionStart;
   }
 
+  // Skip the synchronization for buffer since we also skip the painting during
+  // device-reset status.
+  if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+    if (WrBridge()->GetSyncObject() &&
+        WrBridge()->GetSyncObject()->IsSyncObjectValid()) {
+      WrBridge()->GetSyncObject()->Synchronize();
+    }
+  }
+
   GetCompositorBridgeChild()->EndCanvasTransaction();
 
   AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
@@ -401,6 +410,15 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   for (auto renderRoot : wr::kRenderRoots) {
     if (resourceUpdates.HasSubQueue(renderRoot)) {
       WrBridge()->RemoveExpiredFontKeys(resourceUpdates.SubQueue(renderRoot));
+    }
+  }
+
+  // Skip the synchronization for buffer since we also skip the painting during
+  // device-reset status.
+  if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+    if (WrBridge()->GetSyncObject() &&
+        WrBridge()->GetSyncObject()->IsSyncObjectValid()) {
+      WrBridge()->GetSyncObject()->Synchronize();
     }
   }
 
