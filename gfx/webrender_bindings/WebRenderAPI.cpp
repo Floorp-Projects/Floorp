@@ -525,6 +525,10 @@ void WebRenderAPI::EnableNativeCompositor(bool aEnable) {
   wr_api_enable_native_compositor(mDocHandle, aEnable);
 }
 
+void WebRenderAPI::EnableMultithreading(bool aEnable) {
+  wr_api_enable_multithreading(mDocHandle, aEnable);
+}
+
 void WebRenderAPI::Pause() {
   class PauseEvent : public RendererEvent {
    public:

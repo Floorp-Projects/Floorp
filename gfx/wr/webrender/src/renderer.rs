@@ -2285,6 +2285,7 @@ impl Renderer {
             scene_tx.clone()
         };
 
+        let enable_multithreading = options.enable_multithreading;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(rb_thread_name.clone());
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
@@ -2306,12 +2307,14 @@ impl Renderer {
 
             let glyph_cache = GlyphCache::new(max_glyph_cache_size);
 
-            let resource_cache = ResourceCache::new(
+            let mut resource_cache = ResourceCache::new(
                 texture_cache,
                 glyph_rasterizer,
                 glyph_cache,
                 blob_image_handler,
             );
+
+            resource_cache.enable_multithreading(enable_multithreading);
 
             let mut backend = RenderBackend::new(
                 api_rx,
@@ -2874,7 +2877,8 @@ impl Renderer {
             DebugCommand::ClearCaches(_)
             | DebugCommand::SimulateLongSceneBuild(_)
             | DebugCommand::SimulateLongLowPrioritySceneBuild(_)
-            | DebugCommand::EnableNativeCompositor(_) => {}
+            | DebugCommand::EnableNativeCompositor(_)
+            | DebugCommand::EnableMultithreading(_) => {}
             DebugCommand::InvalidateGpuCache => {
                 match self.gpu_cache_texture.bus {
                     GpuCacheBus::PixelBuffer { ref mut rows, .. } => {
@@ -6222,6 +6226,7 @@ pub struct RendererOptions {
     pub scatter_gpu_cache_updates: bool,
     pub upload_method: UploadMethod,
     pub workers: Option<Arc<ThreadPool>>,
+    pub enable_multithreading: bool,
     pub blob_image_handler: Option<Box<dyn BlobImageHandler>>,
     pub recorder: Option<Box<dyn ApiRecordingReceiver>>,
     pub thread_listener: Option<Box<dyn ThreadListener + Send + Sync>>,
@@ -6295,6 +6300,7 @@ impl Default for RendererOptions {
             // but we are unable to make this decision here, so picking the reasonable medium.
             upload_method: UploadMethod::PixelBuffer(VertexUsageHint::Stream),
             workers: None,
+            enable_multithreading: true,
             blob_image_handler: None,
             recorder: None,
             thread_listener: None,

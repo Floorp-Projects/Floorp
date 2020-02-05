@@ -735,6 +735,11 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   static void UpdateDebugFlags();
 
   /**
+   * Notify the compositor the debug flags have been updated.
+   */
+  static void UpdateWebRenderMultithreading();
+
+  /**
    * Wrap the data structure to be sent over IPC.
    */
   Maybe<CollectedFramesParams> WrapCollectedFrames(CollectedFrames&& aFrames);

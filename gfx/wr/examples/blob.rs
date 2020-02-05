@@ -160,6 +160,7 @@ impl api::BlobImageHandler for CheckerboardRenderer {
         _requests: &[api::BlobImageParams],
     ) {}
 
+    fn enable_multithreading(&mut self, _: bool) {}
     fn delete_font(&mut self, _font: api::FontKey) {}
     fn delete_font_instance(&mut self, _instance: api::FontInstanceKey) {}
     fn clear_namespace(&mut self, _namespace: api::IdNamespace) {}

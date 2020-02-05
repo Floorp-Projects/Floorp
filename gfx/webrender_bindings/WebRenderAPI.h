@@ -248,6 +248,7 @@ class WebRenderAPI final {
 
   void ClearAllCaches();
   void EnableNativeCompositor(bool aEnable);
+  void EnableMultithreading(bool aEnable);
 
   void Pause();
   bool Resume();

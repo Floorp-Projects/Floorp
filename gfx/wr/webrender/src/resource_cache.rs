@@ -556,6 +556,13 @@ impl ResourceCache {
         self.texture_cache.max_texture_size()
     }
 
+    pub fn enable_multithreading(&mut self, enable: bool) {
+        self.glyph_rasterizer.enable_multithreading(enable);
+        if let Some(ref mut handler) = self.blob_image_handler {
+            handler.enable_multithreading(enable);
+        }
+    }
+
     fn should_tile(limit: i32, descriptor: &ImageDescriptor, data: &CachedImageData) -> bool {
         let size_check = descriptor.size.width > limit || descriptor.size.height > limit;
         match *data {
