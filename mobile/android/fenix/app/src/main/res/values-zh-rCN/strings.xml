@@ -898,9 +898,9 @@
     <string name="onboarding_theme_light_title">明亮主题</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
-    <string name="sync_sent_tabs_snackbar">标签页已发送！</string>
+    <string name="sync_sent_tabs_snackbar">标签页发送成功！</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
-    <string name="sync_sent_tab_snackbar">标签页已发送！</string>
+    <string name="sync_sent_tab_snackbar">标签页发送成功！</string>
     <!-- Text shown in snackbar when sharing tabs failed  -->
     <string name="sync_sent_tab_error_snackbar">无法发送</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
