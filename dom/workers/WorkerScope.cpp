@@ -536,6 +536,10 @@ WorkerGlobalScope::GetExistingDebuggerNotificationManager() {
   return mDebuggerNotificationManager;
 }
 
+bool WorkerGlobalScope::IsSharedMemoryAllowed() const {
+  return mWorkerPrivate->IsSharedMemoryAllowed();
+}
+
 Maybe<ClientInfo> WorkerGlobalScope::GetClientInfo() const {
   return mWorkerPrivate->GetClientInfo();
 }
