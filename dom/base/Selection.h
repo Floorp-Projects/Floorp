@@ -7,6 +7,7 @@
 #ifndef mozilla_Selection_h__
 #define mozilla_Selection_h__
 
+#include "mozilla/dom/StyledRange.h"
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/PresShell.h"
@@ -43,13 +44,6 @@ namespace dom {
 class DocGroup;
 }  // namespace dom
 }  // namespace mozilla
-
-struct RangeData {
-  explicit RangeData(nsRange* aRange) : mRange(aRange) {}
-
-  RefPtr<nsRange> mRange;
-  mozilla::TextRangeStyle mTextRangeStyle;
-};
 
 namespace mozilla {
 namespace dom {
@@ -159,8 +153,8 @@ class Selection final : public nsSupportsWeakReference,
                           ScrollAxis aVertical = ScrollAxis(),
                           ScrollAxis aHorizontal = ScrollAxis(),
                           int32_t aFlags = 0);
-  static nsresult SubtractRange(RangeData* aRange, nsRange* aSubtract,
-                                nsTArray<RangeData>* aOutput);
+  static nsresult SubtractRange(StyledRange* aRange, nsRange* aSubtract,
+                                nsTArray<StyledRange>* aOutput);
 
  private:
   /**
@@ -748,7 +742,7 @@ class Selection final : public nsSupportsWeakReference,
    * @param aInsertionPoint can be in [0, `aElementArray->Length()`].
    */
   static nsresult FindInsertionPoint(
-      const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
+      const nsTArray<StyledRange>* aElementArray, const nsINode* aPointNode,
       int32_t aPointOffset,
       nsresult (*aComparator)(const nsINode*, int32_t, const nsRange*,
                               int32_t*),
@@ -769,7 +763,7 @@ class Selection final : public nsSupportsWeakReference,
                                  int32_t aEndOffset, bool aAllowAdjacent,
                                  int32_t& aStartIndex,
                                  int32_t& aEndIndex) const;
-  RangeData* FindRangeData(nsRange* aRange);
+  StyledRange* FindRangeData(nsRange* aRange);
 
   static void UserSelectRangesToAdd(nsRange* aItem,
                                     nsTArray<RefPtr<nsRange>>& rangesToAdd);
@@ -836,7 +830,7 @@ class Selection final : public nsSupportsWeakReference,
   // proves to be a performance concern, then an interval tree may be a
   // possible solution, allowing the calculation of the overlap interval in
   // O(log n) time, though this would require rebalancing and other overhead.
-  AutoTArray<RangeData, 1> mRanges;
+  AutoTArray<StyledRange, 1> mRanges;
 
   RefPtr<nsRange> mAnchorFocusRange;
   RefPtr<nsFrameSelection> mFrameSelection;

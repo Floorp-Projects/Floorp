@@ -716,7 +716,7 @@ static nsresult CompareToRangeEnd(const nsINode* aCompareNode,
 }
 
 nsresult Selection::FindInsertionPoint(
-    const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
+    const nsTArray<StyledRange>* aElementArray, const nsINode* aPointNode,
     int32_t aPointOffset,
     nsresult (*aComparator)(const nsINode*, int32_t, const nsRange*, int32_t*),
     int32_t* aInsertionPoint) {
@@ -752,12 +752,12 @@ nsresult Selection::FindInsertionPoint(
 // Selection::SubtractRange
 //
 //    A helper function that subtracts aSubtract from aRange, and adds
-//    1 or 2 RangeData objects representing the remaining non-overlapping
+//    1 or 2 StyledRange objects representing the remaining non-overlapping
 //    difference to aOutput. It is assumed that the caller has checked that
 //    aRange and aSubtract do indeed overlap
 
-nsresult Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
-                                  nsTArray<RangeData>* aOutput) {
+nsresult Selection::SubtractRange(StyledRange* aRange, nsRange* aSubtract,
+                                  nsTArray<StyledRange>* aOutput) {
   nsRange* range = aRange->mRange;
 
   // First we want to compare to the range start
@@ -778,7 +778,7 @@ nsresult Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
   // If it fully contains the new range, then cmp < 0 and cmp2 > 0
 
   if (cmp2 > 0) {
-    // We need to add a new RangeData to the output, running from
+    // We need to add a new StyledRange to the output, running from
     // the end of aSubtract to the end of range
     ErrorResult error;
     RefPtr<nsRange> postOverlap =
@@ -788,14 +788,15 @@ nsresult Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
     }
     MOZ_ASSERT(postOverlap);
     if (!postOverlap->Collapsed()) {
-      if (!aOutput->InsertElementAt(0, RangeData(postOverlap)))
+      if (!aOutput->InsertElementAt(0, StyledRange(postOverlap))) {
         return NS_ERROR_OUT_OF_MEMORY;
+      }
       (*aOutput)[0].mTextRangeStyle = aRange->mTextRangeStyle;
     }
   }
 
   if (cmp < 0) {
-    // We need to add a new RangeData to the output, running from
+    // We need to add a new StyledRange to the output, running from
     // the start of the range to the start of aSubtract
     ErrorResult error;
     RefPtr<nsRange> preOverlap =
@@ -805,8 +806,9 @@ nsresult Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
     }
     MOZ_ASSERT(preOverlap);
     if (!preOverlap->Collapsed()) {
-      if (!aOutput->InsertElementAt(0, RangeData(preOverlap)))
+      if (!aOutput->InsertElementAt(0, StyledRange(preOverlap))) {
         return NS_ERROR_OUT_OF_MEMORY;
+      }
       (*aOutput)[0].mTextRangeStyle = aRange->mTextRangeStyle;
     }
   }
@@ -942,7 +944,7 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   // a common case is that we have no ranges yet
   if (mRanges.Length() == 0) {
-    if (!mRanges.AppendElement(RangeData(aRange))) {
+    if (!mRanges.AppendElement(StyledRange(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     aRange->SetSelection(this);
@@ -979,7 +981,7 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   if (startIndex == endIndex) {
     // The new range doesn't overlap any existing ranges
-    if (!mRanges.InsertElementAt(startIndex, RangeData(aRange))) {
+    if (!mRanges.InsertElementAt(startIndex, StyledRange(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     aRange->SetSelection(this);
@@ -993,7 +995,7 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   // same range) as these may partially overlap the new range. Any ranges
   // between these indices are fully overlapped by the new range, and so can be
   // removed
-  nsTArray<RangeData> overlaps;
+  nsTArray<StyledRange> overlaps;
   if (!overlaps.InsertElementAt(0, mRanges[startIndex]))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1008,7 +1010,7 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   }
   mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
-  nsTArray<RangeData> temp;
+  nsTArray<StyledRange> temp;
   for (int32_t i = overlaps.Length() - 1; i >= 0; i--) {
     nsresult rv = SubtractRange(&overlaps[i], aRange, &temp);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1021,7 +1023,7 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
                           &insertionPoint);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!temp.InsertElementAt(insertionPoint, RangeData(aRange))) {
+  if (!temp.InsertElementAt(insertionPoint, StyledRange(aRange))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1611,7 +1613,7 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
     newHead->mStart = start;
     newHead->mEnd = end;
     newHead->mSelectionType = aSelectionType;
-    RangeData* rd = FindRangeData(range);
+    StyledRange* rd = FindRangeData(range);
     if (rd) {
       newHead->mTextRangeStyle = rd->mTextRangeStyle;
     }
@@ -1694,7 +1696,7 @@ void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
   }
 }
 
-RangeData* Selection::FindRangeData(nsRange* aRange) {
+StyledRange* Selection::FindRangeData(nsRange* aRange) {
   NS_ENSURE_TRUE(aRange, nullptr);
   for (uint32_t i = 0; i < mRanges.Length(); i++) {
     if (mRanges[i].mRange == aRange) return &mRanges[i];
@@ -1705,7 +1707,7 @@ RangeData* Selection::FindRangeData(nsRange* aRange) {
 nsresult Selection::SetTextRangeStyle(nsRange* aRange,
                                       const TextRangeStyle& aTextRangeStyle) {
   NS_ENSURE_ARG_POINTER(aRange);
-  RangeData* rd = FindRangeData(aRange);
+  StyledRange* rd = FindRangeData(aRange);
   if (rd) {
     rd->mTextRangeStyle = aTextRangeStyle;
   }
@@ -2220,7 +2222,7 @@ nsRange* Selection::GetRangeAt(uint32_t aIndex, ErrorResult& aRv) {
 }
 
 nsRange* Selection::GetRangeAt(int32_t aIndex) const {
-  RangeData empty(nullptr);
+  StyledRange empty(nullptr);
   return mRanges.SafeElementAt(aIndex, empty).mRange;
 }
 
@@ -2968,7 +2970,7 @@ void Selection::RemoveSelectionListener(
 
 Element* Selection::GetCommonEditingHostForAllRanges() {
   Element* editingHost = nullptr;
-  for (RangeData& rangeData : mRanges) {
+  for (StyledRange& rangeData : mRanges) {
     nsRange* range = rangeData.mRange;
     MOZ_ASSERT(range);
     nsINode* commonAncestorNode = range->GetClosestCommonInclusiveAncestor();
