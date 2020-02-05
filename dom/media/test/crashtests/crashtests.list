@@ -66,13 +66,11 @@ skip-if(verify&&isDebugBuild&&gtkWidget) load 933151.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 933156.html
 load 944851.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 952756.html
-skip-if(verify&&isDebugBuild&&gtkWidget) load 966636.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 986901.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 990794.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 995289.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 1012609.html
 load 1015662.html
-skip-if(verify&&isDebugBuild&&gtkWidget) load 1020205.html
 skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
 skip-if(verify&&isDebugBuild&&gtkWidget) load 1041466.html
 skip-if(verify&&isDebugBuild&&gtkWidget) load 1045650.html

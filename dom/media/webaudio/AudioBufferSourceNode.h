@@ -47,7 +47,15 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
   void Stop(double aWhen, ErrorResult& aRv) override;
 
   AudioBuffer* GetBuffer(JSContext* aCx) const { return mBuffer; }
-  void SetBuffer(JSContext* aCx, AudioBuffer* aBuffer) {
+  void SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv) {
+    if (aBuffer && mBufferSet) {
+      aRv.ThrowInvalidStateError("Cannot set the buffer attribute of an AudioBufferSourceNode "
+          "with an AudioBuffer more than once");
+      return;
+    }
+    if (aBuffer) {
+      mBufferSet = true;
+    }
     mBuffer = aBuffer;
     SendBufferParameterToTrack(aCx);
     SendLoopParametersToTrack();
@@ -115,6 +123,7 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
   RefPtr<AudioParam> mDetune;
   bool mLoop;
   bool mStartCalled;
+  bool mBufferSet;
 };
 
 }  // namespace dom
