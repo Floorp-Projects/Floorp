@@ -62,36 +62,56 @@ class InstalledAddonDetailsFragment : Fragment() {
                 requireContext().components.addonManager.enableAddon(
                     addon,
                     onSuccess = {
-                        switch.setState(true)
-                        this.addon = it
-                        showSnackBar(
-                            view,
-                            getString(R.string.mozac_feature_addons_successfully_enabled, addon.translatedName)
-                        )
+                        runIfFragmentIsAttached {
+                            switch.setState(true)
+                            this.addon = it
+                            showSnackBar(
+                                view,
+                                getString(
+                                    R.string.mozac_feature_addons_successfully_enabled,
+                                    addon.translatedName
+                                )
+                            )
+                        }
                     },
                     onError = {
-                        showSnackBar(
-                            view,
-                            getString(R.string.mozac_feature_addons_failed_to_enable, addon.translatedName)
-                        )
+                        runIfFragmentIsAttached {
+                            showSnackBar(
+                                view,
+                                getString(
+                                    R.string.mozac_feature_addons_failed_to_enable,
+                                    addon.translatedName
+                                )
+                            )
+                        }
                     }
                 )
             } else {
                 requireContext().components.addonManager.disableAddon(
                     addon,
                     onSuccess = {
-                        switch.setState(false)
-                        this.addon = it
-                        showSnackBar(
-                            view,
-                            getString(R.string.mozac_feature_addons_successfully_disabled, addon.translatedName)
-                        )
+                        runIfFragmentIsAttached {
+                            switch.setState(false)
+                            this.addon = it
+                            showSnackBar(
+                                view,
+                                getString(
+                                    R.string.mozac_feature_addons_successfully_disabled,
+                                    addon.translatedName
+                                )
+                            )
+                        }
                     },
                     onError = {
-                        showSnackBar(
-                            view,
-                            getString(R.string.mozac_feature_addons_failed_to_disable, addon.translatedName)
-                        )
+                        runIfFragmentIsAttached {
+                            showSnackBar(
+                                view,
+                                getString(
+                                    R.string.mozac_feature_addons_failed_to_disable,
+                                    addon.translatedName
+                                )
+                            )
+                        }
                     }
                 )
             }
@@ -136,20 +156,27 @@ class InstalledAddonDetailsFragment : Fragment() {
             requireContext().components.addonManager.uninstallAddon(
                 addon,
                 onSuccess = {
-                    showSnackBar(
-                        view,
-                        getString(R.string.mozac_feature_addons_successfully_uninstalled, addon.translatedName)
-                    )
-                    view.findNavController().popBackStack()
+                    runIfFragmentIsAttached {
+                        showSnackBar(
+                            view,
+                            getString(
+                                R.string.mozac_feature_addons_successfully_uninstalled,
+                                addon.translatedName
+                            )
+                        )
+                        view.findNavController().popBackStack()
+                    }
                 },
                 onError = { _, _ ->
-                    showSnackBar(
-                        view,
-                        getString(
-                            R.string.mozac_feature_addons_failed_to_uninstall,
-                            addon.translatedName
+                    runIfFragmentIsAttached {
+                        showSnackBar(
+                            view,
+                            getString(
+                                R.string.mozac_feature_addons_failed_to_uninstall,
+                                addon.translatedName
+                            )
                         )
-                    )
+                    }
                 }
             )
         }
