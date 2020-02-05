@@ -368,7 +368,9 @@ bool ExecutionRunnable::ParseAndLinkModule(
 }
 
 void ExecutionRunnable::RunOnWorkletThread() {
-  WorkletThread::EnsureCycleCollectedJSContext(mParentRuntime);
+  WorkletThread* workletThread =
+      static_cast<WorkletThread*>(NS_GetCurrentThread());
+  workletThread->EnsureCycleCollectedJSContext(mParentRuntime);
 
   WorkletGlobalScope* globalScope = mWorkletImpl->GetGlobalScope();
   MOZ_ASSERT(globalScope);
