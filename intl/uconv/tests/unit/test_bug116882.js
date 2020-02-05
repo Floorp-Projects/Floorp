@@ -6,8 +6,6 @@ const inText = "\xfd\xfe\xff\x81\x20\x81\x3f\x86\x3c";
 const expectedText = "\ufffd\ufffd\ufffd\ufffd \ufffd?\ufffd<";
 const charset = "Shift_JIS";
 
-load("CharsetConversionTests.js");
-
 function run_test() {
   checkDecode(CreateScriptableConverter(), charset, inText, expectedText);
 }
