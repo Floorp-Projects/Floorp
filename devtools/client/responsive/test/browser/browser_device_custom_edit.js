@@ -10,7 +10,7 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive/types");
 
 const device = {
-  name: "Custom Device",
+  name: "Original Custom Device",
   width: 320,
   height: 480,
   pixelRatio: 1,
@@ -49,9 +49,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   document.getElementById("device-close-button").click();
 
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const originalDevice = menuItems.find(
-      i => i.getAttribute("label") === device.name
-    );
+    const originalDevice = findMenuItem(menuItems, device.name);
     ok(originalDevice, "Original custom device menu item exists.");
   });
 
@@ -110,12 +108,8 @@ addRDMTask(TEST_URL, async function({ ui }) {
   deviceSelector = document.getElementById("device-selector");
 
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const originalDevice = menuItems.find(
-      i => i.getAttribute("label") === device.name
-    );
-    const editedDevice = menuItems.find(
-      i => i.getAttribute("label") === newDevice.name
-    );
+    const originalDevice = findMenuItem(menuItems, device.name);
+    const editedDevice = findMenuItem(menuItems, newDevice.name);
     ok(!originalDevice, "Original custom device menu item does not exist");
     ok(editedDevice, "Edited Custom Device menu item exists");
   });
