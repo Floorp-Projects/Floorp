@@ -29,6 +29,10 @@ struct MOZ_RAII CompilationInfo {
   JSContext* cx;
   const JS::ReadOnlyCompileOptions& options;
 
+  // Until we have dealt with Atoms in the front end, we need to hold
+  // onto them.
+  AutoKeepAtoms keepAtoms;
+
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
@@ -55,6 +59,7 @@ struct MOZ_RAII CompilationInfo {
                   const JS::ReadOnlyCompileOptions& options)
       : cx(cx),
         options(options),
+        keepAtoms(cx),
         usedNames(cx),
         allocScope(alloc),
         treeHolder(cx),

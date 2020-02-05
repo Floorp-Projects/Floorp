@@ -161,8 +161,7 @@ ParserSharedBase::ParserSharedBase(JSContext* cx,
       traceListHead_(nullptr),
       pc_(nullptr),
       usedNames_(compilationInfo.usedNames),
-      sourceObject_(cx, sourceObject),
-      keepAtoms_(cx) {
+      sourceObject_(cx, sourceObject) {
   cx->frontendCollectionPool().addActiveCompilation();
 }
 
@@ -2784,7 +2783,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   Directives directives(pc_);
   Directives newDirectives = directives;
 
-  Position start(keepAtoms_, tokenStream);
+  Position start(this->compilationInfo_.keepAtoms, tokenStream);
 
   // Parse the inner function. The following is a loop as we may attempt to
   // reparse a function due to failed syntax parsing and encountering new
@@ -2824,7 +2823,8 @@ bool Parser<FullParseHandler, Unit>::advancePastSyntaxParsedFunction(
   MOZ_ASSERT(getSyntaxParser() == syntaxParser);
 
   // Advance this parser over tokens processed by the syntax parser.
-  Position currentSyntaxPosition(keepAtoms_, syntaxParser->tokenStream);
+  Position currentSyntaxPosition(this->compilationInfo_.keepAtoms,
+                                 syntaxParser->tokenStream);
   if (!tokenStream.fastForward(currentSyntaxPosition, syntaxParser->anyChars)) {
     return false;
   }
@@ -2869,7 +2869,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     //   var x = (y = z => 2) => q;
     //   //           ^ we first seek to here to syntax-parse this function
     //   //      ^ then we seek back to here to syntax-parse the outer function
-    Position currentPosition(keepAtoms_, tokenStream);
+    Position currentPosition(this->compilationInfo_.keepAtoms, tokenStream);
     if (!syntaxParser->tokenStream.seekTo(currentPosition, anyChars)) {
       return false;
     }
@@ -2903,7 +2903,8 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
       return false;
     }
 
-    if (!advancePastSyntaxParsedFunction(keepAtoms_, syntaxParser)) {
+    if (!advancePastSyntaxParsedFunction(this->compilationInfo_.keepAtoms,
+                                         syntaxParser)) {
       return false;
     }
 
@@ -8620,7 +8621,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
   // Save the tokenizer state in case we find an arrow function and have to
   // rewind.
-  Position start(keepAtoms_, tokenStream);
+  Position start(this->compilationInfo_.keepAtoms, tokenStream);
 
   PossibleError possibleErrorInner(*this);
   Node lhs;

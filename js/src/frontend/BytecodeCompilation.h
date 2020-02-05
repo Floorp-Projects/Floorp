@@ -23,7 +23,6 @@
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"      // JS::{,Mutable}Handle, JS::Rooted
 #include "js/SourceText.h"      // JS::SourceText
-#include "vm/JSContext.h"       // js::AutoKeepAtoms
 #include "vm/JSScript.h"  // js::{FunctionAsync,Generator}Kind, js::LazyScript, JSScript, js::ScriptSource, js::ScriptSourceObject
 #include "vm/Scope.h"     // js::ScopeKind
 
@@ -49,8 +48,6 @@ class StandaloneFunctionCompiler;
 // function bodies.
 class MOZ_STACK_CLASS BytecodeCompiler {
  protected:
-  AutoKeepAtoms keepAtoms;
-
   CompilationInfo& compilationInfo;
 
   Directives directives;
