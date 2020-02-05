@@ -22,6 +22,36 @@
 
 namespace mozilla {
 
+// We need to explicitly instantiate these so that the clang plugin can see that
+// they're trivially copiable...
+//
+// https://github.com/eqrion/cbindgen/issues/402 tracks doing something like
+// this automatically from cbindgen.
+template struct StyleOwned<RawServoAnimationValueMap>;
+template struct StyleOwned<RawServoAuthorStyles>;
+template struct StyleOwned<RawServoSourceSizeList>;
+template struct StyleOwned<StyleUseCounters>;
+template struct StyleOwnedOrNull<StyleUseCounters>;
+template struct StyleOwnedOrNull<RawServoSelectorList>;
+template struct StyleStrong<ComputedStyle>;
+template struct StyleStrong<ServoCssRules>;
+template struct StyleStrong<RawServoAnimationValue>;
+template struct StyleStrong<RawServoDeclarationBlock>;
+template struct StyleStrong<RawServoStyleSheetContents>;
+template struct StyleStrong<RawServoKeyframe>;
+template struct StyleStrong<RawServoMediaList>;
+template struct StyleStrong<RawServoStyleRule>;
+template struct StyleStrong<RawServoImportRule>;
+template struct StyleStrong<RawServoKeyframesRule>;
+template struct StyleStrong<RawServoMediaRule>;
+template struct StyleStrong<RawServoMozDocumentRule>;
+template struct StyleStrong<RawServoNamespaceRule>;
+template struct StyleStrong<RawServoPageRule>;
+template struct StyleStrong<RawServoSupportsRule>;
+template struct StyleStrong<RawServoFontFeatureValuesRule>;
+template struct StyleStrong<RawServoFontFaceRule>;
+template struct StyleStrong<RawServoCounterStyleRule>;
+
 template <typename T>
 inline void StyleOwnedSlice<T>::Clear() {
   if (!len) {
