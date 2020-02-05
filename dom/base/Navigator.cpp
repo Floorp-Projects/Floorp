@@ -1360,10 +1360,8 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
   bool someMemberPassed = aData.mTitle.WasPassed() || aData.mText.WasPassed() ||
                           aData.mUrl.WasPassed();
   if (!someMemberPassed) {
-    nsAutoString message;
-    nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                       "WebShareAPI_NeedOneMember", message);
-    aRv.ThrowTypeError<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>(message);
+    aRv.ThrowTypeError(
+        u"Must have a title, text, or url in the ShareData dictionary");
     return nullptr;
   }
 
