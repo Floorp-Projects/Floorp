@@ -23,7 +23,7 @@ add_task(async function test_containers_no_left_click() {
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");
   let popup = findPopup();
-  ok(!popup, "new tab should not have a popup");
+  ok(popup, "new tab should have a popup");
 
   // Test context menu
   let contextMenu = findContextPopup();
