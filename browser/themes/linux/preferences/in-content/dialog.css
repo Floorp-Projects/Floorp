@@ -4,7 +4,7 @@
 
 %include ../../../shared/incontentprefs/dialog.inc.css
 
-dialog > * {
+:root > * {
   font-size: 1.05em;
 }
 
