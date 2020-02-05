@@ -293,13 +293,12 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
     return createSourceAndParser(allocScope, compilationInfo);
   }
 
-  FunctionNode* parse(StandaloneFunctionInfo& info, HandleFunction fun,
+  FunctionNode* parse(CompilationInfo& compilationInfo, HandleFunction fun,
                       HandleScope enclosingScope, GeneratorKind generatorKind,
                       FunctionAsyncKind asyncKind,
                       const Maybe<uint32_t>& parameterListEnd);
 
-  MOZ_MUST_USE bool compile(MutableHandleFunction fun,
-                            StandaloneFunctionInfo& info,
+  MOZ_MUST_USE bool compile(MutableHandleFunction fun, CompilationInfo& info,
                             FunctionNode* parsedFunction);
 
  private:
@@ -610,15 +609,15 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
 // constructor.
 template <typename Unit>
 FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
-    StandaloneFunctionInfo& info, HandleFunction fun,
+    CompilationInfo& compilationInfo, HandleFunction fun,
     HandleScope enclosingScope, GeneratorKind generatorKind,
     FunctionAsyncKind asyncKind, const Maybe<uint32_t>& parameterListEnd) {
   MOZ_ASSERT(fun);
   MOZ_ASSERT(fun->isTenured());
 
-  assertSourceAndParserCreated(info.compilationInfo);
+  assertSourceAndParserCreated(compilationInfo);
 
-  TokenStreamPosition startPosition(info.compilationInfo.keepAtoms,
+  TokenStreamPosition startPosition(compilationInfo.keepAtoms,
                                     parser->tokenStream);
 
   // Speculatively parse using the default directives implied by the context.
@@ -628,12 +627,12 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
 
   FunctionNode* fn;
   do {
-    Directives newDirectives = info.compilationInfo.directives;
-    fn = parser->standaloneFunction(
-        fun, enclosingScope, parameterListEnd, generatorKind, asyncKind,
-        info.compilationInfo.directives, &newDirectives);
-    if (!fn && !handleParseFailure(info.compilationInfo, newDirectives,
-                                   startPosition)) {
+    Directives newDirectives = compilationInfo.directives;
+    fn = parser->standaloneFunction(fun, enclosingScope, parameterListEnd,
+                                    generatorKind, asyncKind,
+                                    compilationInfo.directives, &newDirectives);
+    if (!fn &&
+        !handleParseFailure(compilationInfo, newDirectives, startPosition)) {
       return nullptr;
     }
   } while (!fn);
@@ -644,13 +643,13 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
 // Compile a standalone JS function.
 template <typename Unit>
 bool frontend::StandaloneFunctionCompiler<Unit>::compile(
-    MutableHandleFunction fun, StandaloneFunctionInfo& info,
+    MutableHandleFunction fun, CompilationInfo& compilationInfo,
     FunctionNode* parsedFunction) {
   FunctionBox* funbox = parsedFunction->funbox();
   if (funbox->isInterpreted()) {
     MOZ_ASSERT(fun == funbox->function());
 
-    if (!createFunctionScript(info.compilationInfo, fun, funbox->toStringStart,
+    if (!createFunctionScript(compilationInfo, fun, funbox->toStringStart,
                               funbox->toStringEnd)) {
       return false;
     }
@@ -660,7 +659,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     }
 
     Maybe<BytecodeEmitter> emitter;
-    if (!emplaceEmitter(info.compilationInfo, emitter, funbox)) {
+    if (!emplaceEmitter(compilationInfo, emitter, funbox)) {
       return false;
     }
 
@@ -674,8 +673,8 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
   }
 
   // Enqueue an off-thread source compression task after finishing parsing.
-  return info.compilationInfo.sourceObject->source()->tryCompressOffThread(
-      info.compilationInfo.cx);
+  return compilationInfo.sourceObject->source()->tryCompressOffThread(
+      compilationInfo.cx);
 }
 
 ScriptSourceObject* frontend::CreateScriptSourceObject(
@@ -1157,8 +1156,6 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
     return false;
   }
 
-  StandaloneFunctionInfo info(cx, compilationInfo, options);
-
   StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
   if (!compiler.prepare(allocScope, compilationInfo)) {
     return false;
@@ -1169,21 +1166,22 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
     scope = &cx->global()->emptyGlobalScope();
   }
 
-  FunctionNode* parsedFunction = compiler.parse(info, fun, scope, generatorKind,
-                                                asyncKind, parameterListEnd);
-  if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
+  FunctionNode* parsedFunction = compiler.parse(
+      compilationInfo, fun, scope, generatorKind, asyncKind, parameterListEnd);
+  if (!parsedFunction ||
+      !compiler.compile(fun, compilationInfo, parsedFunction)) {
     return false;
   }
 
   // Note: If AsmJS successfully compiles, the into.script will still be
   // nullptr. In this case we have compiled to a native function instead of an
   // interpreted script.
-  if (info.compilationInfo.script) {
+  if (compilationInfo.script) {
     if (parameterListEnd) {
       compilationInfo.sourceObject->source()->setParameterListEnd(
           *parameterListEnd);
     }
-    tellDebuggerAboutCompiledScript(cx, info.compilationInfo.script);
+    tellDebuggerAboutCompiledScript(cx, compilationInfo.script);
   }
 
   assertException.reset();
