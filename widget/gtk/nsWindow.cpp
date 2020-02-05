@@ -1012,10 +1012,7 @@ void nsWindow::ApplySizeConstraints(void) {
       hints |= GDK_HINT_ASPECT;
     }
 
-    // We use gdk_window_set_geometry_hints() instead of
-    // gtk_window_set_geometry_hints() as it sets GDK_HINT_BASE_SIZE
-    // and it breaks KDE and other window managers (Bug 1600414).
-    gdk_window_set_geometry_hints(gtk_widget_get_window(mShell), &geometry,
+    gtk_window_set_geometry_hints(GTK_WINDOW(mShell), nullptr, &geometry,
                                   GdkWindowHints(hints));
   }
 }
