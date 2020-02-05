@@ -4,12 +4,19 @@
 
 package mozilla.components.support.migration
 
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.update.AddonUpdater
+
+@VisibleForTesting
+internal var supportedAddonsFallback = listOf("uBlock0@raymondhill.net")
 
 /**
  * Wraps [AddonMigrationResult] in an exception so that it can be returned via [Result.Failure].
@@ -76,11 +83,17 @@ sealed class AddonMigrationResult {
 internal object AddonMigration {
 
     /**
-     * Performs a migration of all installed add-ons. The only migration step involved
-     * is to make sure we disable all currently unsupported add-ons.
+     * Performs a migration of all installed add-ons. Migration involves:
+     * - Disabling unsupported add-ons
+     * - Enabling supported add-ons that where unsupported in previous migration runs
+     * - Registering enabled add-ons for automatic updates
      */
-    @SuppressWarnings("TooGenericExceptionCaught")
-    suspend fun migrate(engine: Engine): Result<AddonMigrationResult> {
+    @SuppressWarnings("TooGenericExceptionCaught", "ComplexMethod")
+    suspend fun migrate(
+        engine: Engine,
+        addonCollectionProvider: AddonCollectionProvider,
+        addonUpdater: AddonUpdater
+    ): Result<AddonMigrationResult> {
         val installedAddons =
         try {
             getInstalledAddons(engine)
@@ -92,11 +105,21 @@ internal object AddonMigration {
             return Result.Success(AddonMigrationResult.Success.NoAddons)
         }
 
+        val supportedAddonIds = try {
+            addonCollectionProvider.getAvailableAddons().mapNotNull { it.id }
+        } catch (e: Exception) {
+            supportedAddonsFallback
+        }
+
         val migratedAddons = mutableListOf<WebExtension>()
         val failures = mutableMapOf<WebExtension, Exception>()
         installedAddons.filter { !it.isBuiltIn() }.forEach { addon ->
             try {
-                migratedAddons += migrateAddon(engine, addon)
+                val migratedAddon = migrateAddon(engine, addon, supportedAddonIds)
+                if (migratedAddon.isEnabled()) {
+                    addonUpdater.registerForFutureUpdates(migratedAddon.id)
+                }
+                migratedAddons += migratedAddon
             } catch (e: Exception) {
                 failures[addon] = e
             }
@@ -121,20 +144,35 @@ internal object AddonMigration {
         }.await()
     }
 
-    private suspend fun migrateAddon(engine: Engine, addon: WebExtension): WebExtension {
-        // TODO (For final migration): check if addon is supported (against AMO via
-        // AddonCollectionProvider and/or offline whitelist):
-        // https://github.com/mozilla-mobile/fenix/issues/4983
-        // For now let's disable unconditionally, as we don't support any addon yet.
-        return CompletableDeferred<WebExtension>().also { result ->
-            withContext(Dispatchers.Main) {
-                engine.disableWebExtension(
-                    addon,
-                    EnableSource.APP_SUPPORT,
-                    onSuccess = { result.complete(it) },
-                    onError = { result.completeExceptionally(it) }
-                )
+    private suspend fun migrateAddon(engine: Engine, addon: WebExtension, supportedAddons: List<String>): WebExtension {
+        if (supportedAddons.contains(addon.id)) {
+            // Enable the add-on if it was unsupported and disabled in a previous migration run
+            if (addon.getMetadata()?.disabledFlags?.contains(DisabledFlags.APP_SUPPORT) == true) {
+                return CompletableDeferred<WebExtension>().also { result ->
+                    withContext(Dispatchers.Main) {
+                        engine.enableWebExtension(
+                            addon,
+                            EnableSource.APP_SUPPORT,
+                            onSuccess = { result.complete(it) },
+                            onError = { result.completeExceptionally(it) }
+                        )
+                    }
+                }.await()
             }
-        }.await()
+            // No need to do anything if the add-on is supported and not disabled in a previous migration run
+            return addon
+        } else {
+            // Disable the add-on if it is unsupported
+            return CompletableDeferred<WebExtension>().also { result ->
+                withContext(Dispatchers.Main) {
+                    engine.disableWebExtension(
+                        addon,
+                        EnableSource.APP_SUPPORT,
+                        onSuccess = { result.complete(it) },
+                        onError = { result.completeExceptionally(it) }
+                    )
+                }
+            }.await()
+        }
     }
 }
