@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.292';
-const pdfjsBuild = '668a29aa';
+const pdfjsVersion = '2.4.326';
+const pdfjsBuild = 'd6754d1e';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.292';
+    const workerVersion = '2.4.326';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -608,18 +608,21 @@ var WorkerMessageHandler = {
     });
     handler.on("Terminate", function wphTerminate(data) {
       terminated = true;
+      const waitOn = [];
 
       if (pdfManager) {
         pdfManager.terminate(new _util.AbortException("Worker was terminated."));
+        const cleanupPromise = pdfManager.cleanup();
+        waitOn.push(cleanupPromise);
         pdfManager = null;
+      } else {
+        (0, _primitives.clearPrimitiveCaches)();
       }
 
       if (cancelXHRs) {
         cancelXHRs(new _util.AbortException("Worker was terminated."));
       }
 
-      (0, _primitives.clearPrimitiveCaches)();
-      var waitOn = [];
       WorkerTasks.forEach(function (task) {
         waitOn.push(task.finished);
         task.terminate();
@@ -676,15 +679,10 @@ exports.isBool = isBool;
 exports.isEmptyObj = isEmptyObj;
 exports.isNum = isNum;
 exports.isString = isString;
-exports.isSpace = isSpace;
 exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
 exports.isLittleEndian = isLittleEndian;
 exports.isEvalSupported = isEvalSupported;
-exports.log2 = log2;
-exports.readInt8 = readInt8;
-exports.readUint16 = readUint16;
-exports.readUint32 = readUint32;
 exports.removeNullCharacters = removeNullCharacters;
 exports.setVerbosityLevel = setVerbosityLevel;
 exports.shadow = shadow;
@@ -1229,26 +1227,6 @@ function string32(value) {
   return String.fromCharCode(value >> 24 & 0xff, value >> 16 & 0xff, value >> 8 & 0xff, value & 0xff);
 }
 
-function log2(x) {
-  if (x <= 0) {
-    return 0;
-  }
-
-  return Math.ceil(Math.log2(x));
-}
-
-function readInt8(data, start) {
-  return data[start] << 24 >> 24;
-}
-
-function readUint16(data, offset) {
-  return data[offset] << 8 | data[offset + 1];
-}
-
-function readUint32(data, offset) {
-  return (data[offset] << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3]) >>> 0;
-}
-
 function isLittleEndian() {
   const buffer8 = new Uint8Array(4);
   buffer8[0] = 1;
@@ -1402,7 +1380,7 @@ function utf8StringToString(str) {
 }
 
 function isEmptyObj(obj) {
-  for (let key in obj) {
+  for (const key in obj) {
     return false;
   }
 
@@ -1433,10 +1411,6 @@ function isArrayEqual(arr1, arr2) {
   return arr1.every(function (element, index) {
     return element === arr2[index];
   });
-}
-
-function isSpace(ch) {
-  return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
 }
 
 function createPromiseCapability() {
@@ -1666,16 +1640,16 @@ var Dict = function DictClosure() {
   Dict.empty = new Dict(null);
 
   Dict.merge = function (xref, dictArray) {
-    let mergedDict = new Dict(xref);
+    const mergedDict = new Dict(xref);
 
     for (let i = 0, ii = dictArray.length; i < ii; i++) {
-      let dict = dictArray[i];
+      const dict = dictArray[i];
 
       if (!isDict(dict)) {
         continue;
       }
 
-      for (let keyName in dict._map) {
+      for (const keyName in dict._map) {
         if (mergedDict._map[keyName] !== undefined) {
           continue;
         }
@@ -2537,7 +2511,7 @@ class ChunkedStreamManager {
   }
 
   onReceiveData(args) {
-    let chunk = args.chunk;
+    const chunk = args.chunk;
     const isProgressive = args.begin === undefined;
     const begin = isProgressive ? this.progressiveDataLength : args.begin;
     const end = begin + chunk.byteLength;
@@ -2647,6 +2621,11 @@ Object.defineProperty(exports, "__esModule", {
 exports.getLookupTableFactory = getLookupTableFactory;
 exports.getInheritableProperty = getInheritableProperty;
 exports.toRomanNumerals = toRomanNumerals;
+exports.log2 = log2;
+exports.readInt8 = readInt8;
+exports.readUint16 = readUint16;
+exports.readUint32 = readUint32;
+exports.isSpace = isSpace;
 exports.XRefParseException = exports.XRefEntryException = exports.MissingDataException = void 0;
 
 var _util = __w_pdfjs_require__(2);
@@ -2723,8 +2702,8 @@ const ROMAN_NUMBER_MAP = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", 
 
 function toRomanNumerals(number, lowerCase = false) {
   (0, _util.assert)(Number.isInteger(number) && number > 0, "The number should be a positive integer.");
-  let pos,
-      romanBuf = [];
+  const romanBuf = [];
+  let pos;
 
   while (number >= 1000) {
     number -= 1000;
@@ -2740,6 +2719,30 @@ function toRomanNumerals(number, lowerCase = false) {
   romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
   const romanStr = romanBuf.join("");
   return lowerCase ? romanStr.toLowerCase() : romanStr;
+}
+
+function log2(x) {
+  if (x <= 0) {
+    return 0;
+  }
+
+  return Math.ceil(Math.log2(x));
+}
+
+function readInt8(data, offset) {
+  return data[offset] << 24 >> 24;
+}
+
+function readUint16(data, offset) {
+  return data[offset] << 8 | data[offset + 1];
+}
+
+function readUint32(data, offset) {
+  return (data[offset] << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3]) >>> 0;
+}
+
+function isSpace(ch) {
+  return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
 }
 
 /***/ }),
@@ -3262,7 +3265,7 @@ class PDFDocument {
 
         do {
           ch = stream.getByte();
-        } while ((0, _util.isSpace)(ch));
+        } while ((0, _core_utils.isSpace)(ch));
 
         let str = "";
 
@@ -3471,8 +3474,8 @@ class PDFDocument {
     return this.catalog.fontFallback(id, handler);
   }
 
-  cleanup() {
-    return this.catalog.cleanup();
+  async cleanup() {
+    return this.catalog ? this.catalog.cleanup() : (0, _primitives.clearPrimitiveCaches)();
   }
 
 }
@@ -3732,7 +3735,7 @@ class Catalog {
     if (obj instanceof NameTree) {
       const names = obj.getAll();
 
-      for (let name in names) {
+      for (const name in names) {
         dests[name] = fetchDestination(names[name]);
       }
     } else if (obj instanceof _primitives.Dict) {
@@ -4953,15 +4956,15 @@ var XRef = function XRefClosure() {
               startPos = position + token.length;
 
           while (startPos < buffer.length) {
-            let endPos = startPos + skipUntil(buffer, startPos, objBytes) + 4;
+            const endPos = startPos + skipUntil(buffer, startPos, objBytes) + 4;
             contentLength = endPos - position;
-            let checkPos = Math.max(endPos - CHECK_CONTENT_LENGTH, startPos);
-            let tokenStr = (0, _util.bytesToString)(buffer.subarray(checkPos, endPos));
+            const checkPos = Math.max(endPos - CHECK_CONTENT_LENGTH, startPos);
+            const tokenStr = (0, _util.bytesToString)(buffer.subarray(checkPos, endPos));
 
             if (endobjRegExp.test(tokenStr)) {
               break;
             } else {
-              let objToken = nestedObjRegExp.exec(tokenStr);
+              const objToken = nestedObjRegExp.exec(tokenStr);
 
               if (objToken && objToken[1]) {
                 (0, _util.warn)('indexObjects: Found new "obj" inside of another "obj", ' + 'caused by missing "endobj" -- trying to recover.');
@@ -4973,7 +4976,7 @@ var XRef = function XRefClosure() {
             startPos = endPos;
           }
 
-          let content = buffer.subarray(position, position + contentLength);
+          const content = buffer.subarray(position, position + contentLength);
           var xrefTagOffset = skipUntil(content, 0, xrefBytes);
 
           if (xrefTagOffset < contentLength && content[xrefTagOffset + 5] < 64) {
@@ -5013,7 +5016,7 @@ var XRef = function XRefClosure() {
           continue;
         }
 
-        let dict = parser.getObj();
+        const dict = parser.getObj();
 
         if (!(0, _primitives.isDict)(dict)) {
           continue;
@@ -5050,7 +5053,7 @@ var XRef = function XRefClosure() {
     },
     readXRef: function XRef_readXRef(recoveryMode) {
       var stream = this.stream;
-      let startXRefParsedCache = Object.create(null);
+      const startXRefParsedCache = Object.create(null);
 
       try {
         while (this.startXRefQueue.length) {
@@ -5583,18 +5586,18 @@ var FileSpec = function FileSpecClosure() {
 
 exports.FileSpec = FileSpec;
 
-let ObjectLoader = function () {
+const ObjectLoader = function () {
   function mayHaveChildren(value) {
     return value instanceof _primitives.Ref || value instanceof _primitives.Dict || Array.isArray(value) || (0, _primitives.isStream)(value);
   }
 
   function addChildren(node, nodesToVisit) {
     if (node instanceof _primitives.Dict || (0, _primitives.isStream)(node)) {
-      let dict = node instanceof _primitives.Dict ? node : node.dict;
-      let dictKeys = dict.getKeys();
+      const dict = node instanceof _primitives.Dict ? node : node.dict;
+      const dictKeys = dict.getKeys();
 
       for (let i = 0, ii = dictKeys.length; i < ii; i++) {
-        let rawValue = dict.getRaw(dictKeys[i]);
+        const rawValue = dict.getRaw(dictKeys[i]);
 
         if (mayHaveChildren(rawValue)) {
           nodesToVisit.push(rawValue);
@@ -5602,7 +5605,7 @@ let ObjectLoader = function () {
       }
     } else if (Array.isArray(node)) {
       for (let i = 0, ii = node.length; i < ii; i++) {
-        let value = node[i];
+        const value = node[i];
 
         if (mayHaveChildren(value)) {
           nodesToVisit.push(value);
@@ -5624,15 +5627,15 @@ let ObjectLoader = function () {
         return undefined;
       }
 
-      let {
+      const {
         keys,
         dict
       } = this;
       this.refSet = new _primitives.RefSet();
-      let nodesToVisit = [];
+      const nodesToVisit = [];
 
       for (let i = 0, ii = keys.length; i < ii; i++) {
-        let rawValue = dict.getRaw(keys[i]);
+        const rawValue = dict.getRaw(keys[i]);
 
         if (rawValue !== undefined) {
           nodesToVisit.push(rawValue);
@@ -5643,8 +5646,8 @@ let ObjectLoader = function () {
     },
 
     async _walk(nodesToVisit) {
-      let nodesToRevisit = [];
-      let pendingRequests = [];
+      const nodesToRevisit = [];
+      const pendingRequests = [];
 
       while (nodesToVisit.length) {
         let currentNode = nodesToVisit.pop();
@@ -5671,11 +5674,11 @@ let ObjectLoader = function () {
         }
 
         if (currentNode && currentNode.getBaseStreams) {
-          let baseStreams = currentNode.getBaseStreams();
+          const baseStreams = currentNode.getBaseStreams();
           let foundMissingData = false;
 
           for (let i = 0, ii = baseStreams.length; i < ii; i++) {
-            let stream = baseStreams[i];
+            const stream = baseStreams[i];
 
             if (stream.allChunksLoaded && !stream.allChunksLoaded()) {
               foundMissingData = true;
@@ -5698,7 +5701,7 @@ let ObjectLoader = function () {
         await this.xref.stream.manager.requestRanges(pendingRequests);
 
         for (let i = 0, ii = nodesToRevisit.length; i < ii; i++) {
-          let node = nodesToRevisit[i];
+          const node = nodesToRevisit[i];
 
           if (node instanceof _primitives.Ref) {
             this.refSet.remove(node);
@@ -5736,6 +5739,8 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(4);
 
+var _core_utils = __w_pdfjs_require__(7);
+
 var _ccitt_stream = __w_pdfjs_require__(12);
 
 var _jbig2_stream = __w_pdfjs_require__(14);
@@ -5743,8 +5748,6 @@ var _jbig2_stream = __w_pdfjs_require__(14);
 var _jpeg_stream = __w_pdfjs_require__(17);
 
 var _jpx_stream = __w_pdfjs_require__(19);
-
-var _core_utils = __w_pdfjs_require__(7);
 
 const MAX_LENGTH_TO_CACHE = 1000;
 const MAX_ADLER32_LENGTH = 5552;
@@ -5903,8 +5906,8 @@ class Parser {
           CR = 0xd;
     const n = 10,
           NUL = 0x0;
-    let startPos = stream.pos,
-        state = 0,
+    const startPos = stream.pos;
+    let state = 0,
         ch,
         maybeEIPos;
 
@@ -5956,7 +5959,7 @@ class Parser {
     ch = stream.peekByte();
     stream.skip(endOffset);
 
-    if (!(0, _util.isSpace)(ch)) {
+    if (!(0, _core_utils.isSpace)(ch)) {
       endOffset--;
     }
 
@@ -5964,11 +5967,10 @@ class Parser {
   }
 
   findDCTDecodeInlineStreamEnd(stream) {
-    let startPos = stream.pos,
-        foundEOI = false,
+    const startPos = stream.pos;
+    let foundEOI = false,
         b,
-        markerLength,
-        length;
+        markerLength;
 
     while ((b = stream.getByte()) !== -1) {
       if (b !== 0xff) {
@@ -6041,7 +6043,7 @@ class Parser {
       }
     }
 
-    length = stream.pos - startPos;
+    const length = stream.pos - startPos;
 
     if (b === -1) {
       (0, _util.warn)("Inline DCTDecode image stream: " + "EOI marker not found, searching for /EI/ instead.");
@@ -6056,16 +6058,15 @@ class Parser {
   findASCII85DecodeInlineStreamEnd(stream) {
     const TILDE = 0x7e,
           GT = 0x3e;
-    let startPos = stream.pos,
-        ch,
-        length;
+    const startPos = stream.pos;
+    let ch;
 
     while ((ch = stream.getByte()) !== -1) {
       if (ch === TILDE) {
         const tildePos = stream.pos;
         ch = stream.peekByte();
 
-        while ((0, _util.isSpace)(ch)) {
+        while ((0, _core_utils.isSpace)(ch)) {
           stream.skip();
           ch = stream.peekByte();
         }
@@ -6085,7 +6086,7 @@ class Parser {
       }
     }
 
-    length = stream.pos - startPos;
+    const length = stream.pos - startPos;
 
     if (ch === -1) {
       (0, _util.warn)("Inline ASCII85Decode image stream: " + "EOD marker not found, searching for /EI/ instead.");
@@ -6099,9 +6100,8 @@ class Parser {
 
   findASCIIHexDecodeInlineStreamEnd(stream) {
     const GT = 0x3e;
-    let startPos = stream.pos,
-        ch,
-        length;
+    const startPos = stream.pos;
+    let ch;
 
     while ((ch = stream.getByte()) !== -1) {
       if (ch === GT) {
@@ -6109,7 +6109,7 @@ class Parser {
       }
     }
 
-    length = stream.pos - startPos;
+    const length = stream.pos - startPos;
 
     if (ch === -1) {
       (0, _util.warn)("Inline ASCIIHexDecode image stream: " + "EOD marker not found, searching for /EI/ instead.");
@@ -6300,7 +6300,7 @@ class Parser {
           if (maybeLength >= 0) {
             const lastByte = stream.peekBytes(end + 1)[end];
 
-            if (!(0, _util.isSpace)(lastByte)) {
+            if (!(0, _core_utils.isSpace)(lastByte)) {
               break;
             }
 
@@ -6348,8 +6348,8 @@ class Parser {
     let maybeLength = length;
 
     if (Array.isArray(filter)) {
-      let filterArray = filter;
-      let paramsArray = params;
+      const filterArray = filter;
+      const paramsArray = params;
 
       for (let i = 0, ii = filterArray.length; i < ii; ++i) {
         filter = this.xref.fetchIfRef(filterArray[i]);
@@ -6517,7 +6517,7 @@ class Lexer {
     }
 
     if (ch < 0x30 || ch > 0x39) {
-      if (divideBy === 10 && sign === 0 && ((0, _util.isSpace)(ch) || ch === -1)) {
+      if (divideBy === 10 && sign === 0 && ((0, _core_utils.isSpace)(ch) || ch === -1)) {
         (0, _util.warn)("Lexer.getNumber - treating a single decimal point as zero.");
         return 0;
       }
@@ -7025,6 +7025,8 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(4);
 
+var _core_utils = __w_pdfjs_require__(7);
+
 var Stream = function StreamClosure() {
   function Stream(arrayBuffer, start, length, dict) {
     this.bytes = arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer);
@@ -7074,7 +7076,7 @@ var Stream = function StreamClosure() {
       var strEnd = this.end;
 
       if (!length) {
-        let subarray = bytes.subarray(pos, strEnd);
+        const subarray = bytes.subarray(pos, strEnd);
         return forceClamped ? new Uint8ClampedArray(subarray) : subarray;
       }
 
@@ -7085,7 +7087,7 @@ var Stream = function StreamClosure() {
       }
 
       this.pos = end;
-      let subarray = bytes.subarray(pos, end);
+      const subarray = bytes.subarray(pos, end);
       return forceClamped ? new Uint8ClampedArray(subarray) : subarray;
     },
 
@@ -7141,7 +7143,7 @@ exports.Stream = Stream;
 
 var StringStream = function StringStreamClosure() {
   function StringStream(str) {
-    let bytes = (0, _util.stringToBytes)(str);
+    const bytes = (0, _util.stringToBytes)(str);
     Stream.call(this, bytes);
   }
 
@@ -7252,7 +7254,7 @@ var DecodeStream = function DecodeStreamClosure() {
       }
 
       this.pos = end;
-      let subarray = this.buffer.subarray(pos, end);
+      const subarray = this.buffer.subarray(pos, end);
       return forceClamped && !(subarray instanceof Uint8ClampedArray) ? new Uint8ClampedArray(subarray) : subarray;
     },
 
@@ -7976,7 +7978,7 @@ var Ascii85Stream = function Ascii85StreamClosure() {
     var str = this.str;
     var c = str.getByte();
 
-    while ((0, _util.isSpace)(c)) {
+    while ((0, _core_utils.isSpace)(c)) {
       c = str.getByte();
     }
 
@@ -8004,7 +8006,7 @@ var Ascii85Stream = function Ascii85StreamClosure() {
       for (i = 1; i < 5; ++i) {
         c = str.getByte();
 
-        while ((0, _util.isSpace)(c)) {
+        while ((0, _core_utils.isSpace)(c)) {
           c = str.getByte();
         }
 
@@ -8359,7 +8361,7 @@ var CCITTFaxStream = function CCITTFaxStreamClosure() {
 
   CCITTFaxStream.prototype.readBlock = function () {
     while (!this.eof) {
-      let c = this.ccittFaxDecoder.readNextChar();
+      const c = this.ccittFaxDecoder.readNextChar();
 
       if (c === -1) {
         this.eof = true;
@@ -8390,7 +8392,7 @@ exports.CCITTFaxDecoder = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-let CCITTFaxDecoder = function CCITTFaxDecoder() {
+const CCITTFaxDecoder = function CCITTFaxDecoder() {
   const ccittEOL = -2;
   const ccittEOF = -1;
   const twoDimPass = 0;
@@ -8462,9 +8464,9 @@ let CCITTFaxDecoder = function CCITTFaxDecoder() {
         return -1;
       }
 
-      let refLine = this.refLine;
-      let codingLine = this.codingLine;
-      let columns = this.columns;
+      const refLine = this.refLine;
+      const codingLine = this.codingLine;
+      const columns = this.columns;
       let refPos, blackPixels, bits, i;
 
       if (this.outputBits === 0) {
@@ -8851,7 +8853,7 @@ let CCITTFaxDecoder = function CCITTFaxDecoder() {
     },
 
     _addPixels(a1, blackPixels) {
-      let codingLine = this.codingLine;
+      const codingLine = this.codingLine;
       let codingPos = this.codingPos;
 
       if (a1 > codingLine[codingPos]) {
@@ -8872,7 +8874,7 @@ let CCITTFaxDecoder = function CCITTFaxDecoder() {
     },
 
     _addPixelsNeg(a1, blackPixels) {
-      let codingLine = this.codingLine;
+      const codingLine = this.codingLine;
       let codingPos = this.codingPos;
 
       if (a1 > codingLine[codingPos]) {
@@ -8905,7 +8907,7 @@ let CCITTFaxDecoder = function CCITTFaxDecoder() {
     },
 
     _findTableCode(start, end, table, limit) {
-      let limitValue = limit || 0;
+      const limitValue = limit || 0;
 
       for (let i = start; i <= end; ++i) {
         let code = this._lookBits(i);
@@ -8919,7 +8921,7 @@ let CCITTFaxDecoder = function CCITTFaxDecoder() {
         }
 
         if (!limitValue || code >= limitValue) {
-          let p = table[code - limitValue];
+          const p = table[code - limitValue];
 
           if (p[0] === i) {
             this._eatBits(i);
@@ -8946,7 +8948,7 @@ let CCITTFaxDecoder = function CCITTFaxDecoder() {
           return p[1];
         }
       } else {
-        let result = this._findTableCode(1, 7, twoDimTable);
+        const result = this._findTableCode(1, 7, twoDimTable);
 
         if (result[0] && result[2]) {
           return result[1];
@@ -9101,7 +9103,7 @@ var _jbig = __w_pdfjs_require__(15);
 
 var _util = __w_pdfjs_require__(2);
 
-let Jbig2Stream = function Jbig2StreamClosure() {
+const Jbig2Stream = function Jbig2StreamClosure() {
   function Jbig2Stream(stream, maybeLength, dict, params) {
     this.stream = stream;
     this.maybeLength = maybeLength;
@@ -9127,14 +9129,14 @@ let Jbig2Stream = function Jbig2StreamClosure() {
       return;
     }
 
-    let jbig2Image = new _jbig.Jbig2Image();
-    let chunks = [];
+    const jbig2Image = new _jbig.Jbig2Image();
+    const chunks = [];
 
     if ((0, _primitives.isDict)(this.params)) {
-      let globalsStream = this.params.get("JBIG2Globals");
+      const globalsStream = this.params.get("JBIG2Globals");
 
       if ((0, _primitives.isStream)(globalsStream)) {
-        let globals = globalsStream.getBytes();
+        const globals = globalsStream.getBytes();
         chunks.push({
           data: globals,
           start: 0,
@@ -9148,8 +9150,8 @@ let Jbig2Stream = function Jbig2StreamClosure() {
       start: 0,
       end: this.bytes.length
     });
-    let data = jbig2Image.parseChunks(chunks);
-    let dataLength = data.length;
+    const data = jbig2Image.parseChunks(chunks);
+    const dataLength = data.length;
 
     for (let i = 0; i < dataLength; i++) {
       data[i] ^= 0xff;
@@ -9178,6 +9180,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.Jbig2Image = void 0;
 
 var _util = __w_pdfjs_require__(2);
+
+var _core_utils = __w_pdfjs_require__(7);
 
 var _arithmetic_decoder = __w_pdfjs_require__(16);
 
@@ -9498,7 +9502,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
   function decodeBitmap(mmr, width, height, templateIndex, prediction, skip, at, decodingContext) {
     if (mmr) {
-      let input = new Reader(decodingContext.data, decodingContext.start, decodingContext.end);
+      const input = new Reader(decodingContext.data, decodingContext.start, decodingContext.end);
       return decodeMMRBitmap(input, width, height, false);
     }
 
@@ -9719,7 +9723,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
     var newSymbols = [];
     var currentHeight = 0;
-    var symbolCodeLength = (0, _util.log2)(symbols.length + numberOfNewSymbols);
+    var symbolCodeLength = (0, _core_utils.log2)(symbols.length + numberOfNewSymbols);
     var decoder = decodingContext.decoder;
     var contextCache = decodingContext.contextCache;
     let tableB1, symbolWidths;
@@ -9735,7 +9739,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
       currentHeight += deltaHeight;
       let currentWidth = 0,
           totalWidth = 0;
-      let firstSymbol = huffman ? symbolWidths.length : 0;
+      const firstSymbol = huffman ? symbolWidths.length : 0;
 
       while (true) {
         var deltaWidth = huffman ? huffmanTables.tableDeltaWidth.decode(huffmanInput) : decodeInteger(contextCache, "IADW", decoder);
@@ -9771,22 +9775,22 @@ var Jbig2Image = function Jbig2ImageClosure() {
       }
 
       if (huffman && !refinement) {
-        let bitmapSize = huffmanTables.tableBitmapSize.decode(huffmanInput);
+        const bitmapSize = huffmanTables.tableBitmapSize.decode(huffmanInput);
         huffmanInput.byteAlign();
         let collectiveBitmap;
 
         if (bitmapSize === 0) {
           collectiveBitmap = readUncompressedBitmap(huffmanInput, totalWidth, currentHeight);
         } else {
-          let originalEnd = huffmanInput.end;
-          let bitmapEnd = huffmanInput.position + bitmapSize;
+          const originalEnd = huffmanInput.end;
+          const bitmapEnd = huffmanInput.position + bitmapSize;
           huffmanInput.end = bitmapEnd;
           collectiveBitmap = decodeMMRBitmap(huffmanInput, totalWidth, currentHeight, false);
           huffmanInput.end = originalEnd;
           huffmanInput.position = bitmapEnd;
         }
 
-        let numberOfSymbolsDecoded = symbolWidths.length;
+        const numberOfSymbolsDecoded = symbolWidths.length;
 
         if (firstSymbol === numberOfSymbolsDecoded - 1) {
           newSymbols.push(collectiveBitmap);
@@ -9985,7 +9989,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
   }
 
   function decodePatternDictionary(mmr, patternWidth, patternHeight, maxPatternIndex, template, decodingContext) {
-    let at = [];
+    const at = [];
 
     if (!mmr) {
       at.push({
@@ -10009,33 +10013,27 @@ var Jbig2Image = function Jbig2ImageClosure() {
       }
     }
 
-    let collectiveWidth = (maxPatternIndex + 1) * patternWidth;
-    let collectiveBitmap = decodeBitmap(mmr, collectiveWidth, patternHeight, template, false, null, at, decodingContext);
-    let patterns = [],
-        i = 0,
-        patternBitmap,
-        xMin,
-        xMax,
-        y;
+    const collectiveWidth = (maxPatternIndex + 1) * patternWidth;
+    const collectiveBitmap = decodeBitmap(mmr, collectiveWidth, patternHeight, template, false, null, at, decodingContext);
+    const patterns = [];
 
-    while (i <= maxPatternIndex) {
-      patternBitmap = [];
-      xMin = patternWidth * i;
-      xMax = xMin + patternWidth;
+    for (let i = 0; i <= maxPatternIndex; i++) {
+      const patternBitmap = [];
+      const xMin = patternWidth * i;
+      const xMax = xMin + patternWidth;
 
-      for (y = 0; y < patternHeight; y++) {
+      for (let y = 0; y < patternHeight; y++) {
         patternBitmap.push(collectiveBitmap[y].subarray(xMin, xMax));
       }
 
       patterns.push(patternBitmap);
-      i++;
     }
 
     return patterns;
   }
 
   function decodeHalftoneRegion(mmr, patterns, template, regionWidth, regionHeight, defaultPixelValue, enableSkip, combinationOperator, gridWidth, gridHeight, gridOffsetX, gridOffsetY, gridVectorX, gridVectorY, decodingContext) {
-    let skip = null;
+    const skip = null;
 
     if (enableSkip) {
       throw new Jbig2Error("skip is not supported");
@@ -10045,7 +10043,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
       throw new Jbig2Error("operator " + combinationOperator + " is not supported in halftone region");
     }
 
-    let regionBitmap = [];
+    const regionBitmap = [];
     let i, j, row;
 
     for (i = 0; i < regionHeight; i++) {
@@ -10060,12 +10058,12 @@ var Jbig2Image = function Jbig2ImageClosure() {
       regionBitmap.push(row);
     }
 
-    let numberOfPatterns = patterns.length;
-    let pattern0 = patterns[0];
-    let patternWidth = pattern0[0].length,
-        patternHeight = pattern0.length;
-    let bitsPerValue = (0, _util.log2)(numberOfPatterns);
-    let at = [];
+    const numberOfPatterns = patterns.length;
+    const pattern0 = patterns[0];
+    const patternWidth = pattern0[0].length,
+          patternHeight = pattern0.length;
+    const bitsPerValue = (0, _core_utils.log2)(numberOfPatterns);
+    const at = [];
 
     if (!mmr) {
       at.push({
@@ -10089,9 +10087,8 @@ var Jbig2Image = function Jbig2ImageClosure() {
       }
     }
 
-    let grayScaleBitPlanes = [],
-        mmrInput,
-        bitmap;
+    const grayScaleBitPlanes = [];
+    let mmrInput, bitmap;
 
     if (mmr) {
       mmrInput = new Reader(decodingContext.data, decodingContext.start, decodingContext.end);
@@ -10162,7 +10159,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
   function readSegmentHeader(data, start) {
     var segmentHeader = {};
-    segmentHeader.number = (0, _util.readUint32)(data, start);
+    segmentHeader.number = (0, _core_utils.readUint32)(data, start);
     var flags = data[start + 4];
     var segmentType = flags & 0x3f;
 
@@ -10180,7 +10177,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
     var position = start + 6;
 
     if (referredFlags === 7) {
-      referredToCount = (0, _util.readUint32)(data, position - 1) & 0x1fffffff;
+      referredToCount = (0, _core_utils.readUint32)(data, position - 1) & 0x1fffffff;
       position += 3;
       var bytes = referredToCount + 7 >> 3;
       retainBits[0] = data[position++];
@@ -10210,9 +10207,9 @@ var Jbig2Image = function Jbig2ImageClosure() {
       if (referredToSegmentNumberSize === 1) {
         number = data[position];
       } else if (referredToSegmentNumberSize === 2) {
-        number = (0, _util.readUint16)(data, position);
+        number = (0, _core_utils.readUint16)(data, position);
       } else {
-        number = (0, _util.readUint32)(data, position);
+        number = (0, _core_utils.readUint32)(data, position);
       }
 
       referredTo.push(number);
@@ -10224,11 +10221,11 @@ var Jbig2Image = function Jbig2ImageClosure() {
     if (!pageAssociationFieldSize) {
       segmentHeader.pageAssociation = data[position++];
     } else {
-      segmentHeader.pageAssociation = (0, _util.readUint32)(data, position);
+      segmentHeader.pageAssociation = (0, _core_utils.readUint32)(data, position);
       position += 4;
     }
 
-    segmentHeader.length = (0, _util.readUint32)(data, position);
+    segmentHeader.length = (0, _core_utils.readUint32)(data, position);
     position += 4;
 
     if (segmentHeader.length === 0xffffffff) {
@@ -10312,10 +10309,10 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
   function readRegionSegmentInformation(data, start) {
     return {
-      width: (0, _util.readUint32)(data, start),
-      height: (0, _util.readUint32)(data, start + 4),
-      x: (0, _util.readUint32)(data, start + 8),
-      y: (0, _util.readUint32)(data, start + 12),
+      width: (0, _core_utils.readUint32)(data, start),
+      height: (0, _core_utils.readUint32)(data, start + 4),
+      x: (0, _core_utils.readUint32)(data, start + 8),
+      y: (0, _core_utils.readUint32)(data, start + 12),
       combinationOperator: data[start + 16] & 7
     };
   }
@@ -10332,7 +10329,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
     switch (header.type) {
       case 0:
         var dictionary = {};
-        var dictionaryFlags = (0, _util.readUint16)(data, position);
+        var dictionaryFlags = (0, _core_utils.readUint16)(data, position);
         dictionary.huffman = !!(dictionaryFlags & 1);
         dictionary.refinement = !!(dictionaryFlags & 2);
         dictionary.huffmanDHSelector = dictionaryFlags >> 2 & 3;
@@ -10351,8 +10348,8 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
           for (i = 0; i < atLength; i++) {
             at.push({
-              x: (0, _util.readInt8)(data, position),
-              y: (0, _util.readInt8)(data, position + 1)
+              x: (0, _core_utils.readInt8)(data, position),
+              y: (0, _core_utils.readInt8)(data, position + 1)
             });
             position += 2;
           }
@@ -10365,8 +10362,8 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
           for (i = 0; i < 2; i++) {
             at.push({
-              x: (0, _util.readInt8)(data, position),
-              y: (0, _util.readInt8)(data, position + 1)
+              x: (0, _core_utils.readInt8)(data, position),
+              y: (0, _core_utils.readInt8)(data, position + 1)
             });
             position += 2;
           }
@@ -10374,9 +10371,9 @@ var Jbig2Image = function Jbig2ImageClosure() {
           dictionary.refinementAt = at;
         }
 
-        dictionary.numberOfExportedSymbols = (0, _util.readUint32)(data, position);
+        dictionary.numberOfExportedSymbols = (0, _core_utils.readUint32)(data, position);
         position += 4;
-        dictionary.numberOfNewSymbols = (0, _util.readUint32)(data, position);
+        dictionary.numberOfNewSymbols = (0, _core_utils.readUint32)(data, position);
         position += 4;
         args = [dictionary, header.number, header.referredTo, data, position, end];
         break;
@@ -10386,7 +10383,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
         var textRegion = {};
         textRegion.info = readRegionSegmentInformation(data, position);
         position += RegionSegmentInformationFieldLength;
-        var textRegionSegmentFlags = (0, _util.readUint16)(data, position);
+        var textRegionSegmentFlags = (0, _core_utils.readUint16)(data, position);
         position += 2;
         textRegion.huffman = !!(textRegionSegmentFlags & 1);
         textRegion.refinement = !!(textRegionSegmentFlags & 2);
@@ -10400,7 +10397,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
         textRegion.refinementTemplate = textRegionSegmentFlags >> 15 & 1;
 
         if (textRegion.huffman) {
-          var textRegionHuffmanFlags = (0, _util.readUint16)(data, position);
+          var textRegionHuffmanFlags = (0, _core_utils.readUint16)(data, position);
           position += 2;
           textRegion.huffmanFS = textRegionHuffmanFlags & 3;
           textRegion.huffmanDS = textRegionHuffmanFlags >> 2 & 3;
@@ -10417,8 +10414,8 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
           for (i = 0; i < 2; i++) {
             at.push({
-              x: (0, _util.readInt8)(data, position),
-              y: (0, _util.readInt8)(data, position + 1)
+              x: (0, _core_utils.readInt8)(data, position),
+              y: (0, _core_utils.readInt8)(data, position + 1)
             });
             position += 2;
           }
@@ -10426,45 +10423,45 @@ var Jbig2Image = function Jbig2ImageClosure() {
           textRegion.refinementAt = at;
         }
 
-        textRegion.numberOfSymbolInstances = (0, _util.readUint32)(data, position);
+        textRegion.numberOfSymbolInstances = (0, _core_utils.readUint32)(data, position);
         position += 4;
         args = [textRegion, header.referredTo, data, position, end];
         break;
 
       case 16:
-        let patternDictionary = {};
-        let patternDictionaryFlags = data[position++];
+        const patternDictionary = {};
+        const patternDictionaryFlags = data[position++];
         patternDictionary.mmr = !!(patternDictionaryFlags & 1);
         patternDictionary.template = patternDictionaryFlags >> 1 & 3;
         patternDictionary.patternWidth = data[position++];
         patternDictionary.patternHeight = data[position++];
-        patternDictionary.maxPatternIndex = (0, _util.readUint32)(data, position);
+        patternDictionary.maxPatternIndex = (0, _core_utils.readUint32)(data, position);
         position += 4;
         args = [patternDictionary, header.number, data, position, end];
         break;
 
       case 22:
       case 23:
-        let halftoneRegion = {};
+        const halftoneRegion = {};
         halftoneRegion.info = readRegionSegmentInformation(data, position);
         position += RegionSegmentInformationFieldLength;
-        let halftoneRegionFlags = data[position++];
+        const halftoneRegionFlags = data[position++];
         halftoneRegion.mmr = !!(halftoneRegionFlags & 1);
         halftoneRegion.template = halftoneRegionFlags >> 1 & 3;
         halftoneRegion.enableSkip = !!(halftoneRegionFlags & 8);
         halftoneRegion.combinationOperator = halftoneRegionFlags >> 4 & 7;
         halftoneRegion.defaultPixelValue = halftoneRegionFlags >> 7 & 1;
-        halftoneRegion.gridWidth = (0, _util.readUint32)(data, position);
+        halftoneRegion.gridWidth = (0, _core_utils.readUint32)(data, position);
         position += 4;
-        halftoneRegion.gridHeight = (0, _util.readUint32)(data, position);
+        halftoneRegion.gridHeight = (0, _core_utils.readUint32)(data, position);
         position += 4;
-        halftoneRegion.gridOffsetX = (0, _util.readUint32)(data, position) & 0xffffffff;
+        halftoneRegion.gridOffsetX = (0, _core_utils.readUint32)(data, position) & 0xffffffff;
         position += 4;
-        halftoneRegion.gridOffsetY = (0, _util.readUint32)(data, position) & 0xffffffff;
+        halftoneRegion.gridOffsetY = (0, _core_utils.readUint32)(data, position) & 0xffffffff;
         position += 4;
-        halftoneRegion.gridVectorX = (0, _util.readUint16)(data, position);
+        halftoneRegion.gridVectorX = (0, _core_utils.readUint16)(data, position);
         position += 2;
-        halftoneRegion.gridVectorY = (0, _util.readUint16)(data, position);
+        halftoneRegion.gridVectorY = (0, _core_utils.readUint16)(data, position);
         position += 2;
         args = [halftoneRegion, header.referredTo, data, position, end];
         break;
@@ -10485,8 +10482,8 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
           for (i = 0; i < atLength; i++) {
             at.push({
-              x: (0, _util.readInt8)(data, position),
-              y: (0, _util.readInt8)(data, position + 1)
+              x: (0, _core_utils.readInt8)(data, position),
+              y: (0, _core_utils.readInt8)(data, position + 1)
             });
             position += 2;
           }
@@ -10499,10 +10496,10 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
       case 48:
         var pageInfo = {
-          width: (0, _util.readUint32)(data, position),
-          height: (0, _util.readUint32)(data, position + 4),
-          resolutionX: (0, _util.readUint32)(data, position + 8),
-          resolutionY: (0, _util.readUint32)(data, position + 12)
+          width: (0, _core_utils.readUint32)(data, position),
+          height: (0, _core_utils.readUint32)(data, position + 4),
+          resolutionX: (0, _core_utils.readUint32)(data, position + 8),
+          resolutionY: (0, _core_utils.readUint32)(data, position + 12)
         };
 
         if (pageInfo.height === 0xffffffff) {
@@ -10510,7 +10507,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
         }
 
         var pageSegmentFlags = data[position + 16];
-        (0, _util.readUint16)(data, position + 17);
+        (0, _core_utils.readUint16)(data, position + 17);
         pageInfo.lossless = !!(pageSegmentFlags & 1);
         pageInfo.refinement = !!(pageSegmentFlags & 2);
         pageInfo.defaultPixelValue = pageSegmentFlags >> 2 & 1;
@@ -10566,32 +10563,32 @@ var Jbig2Image = function Jbig2ImageClosure() {
   }
 
   function parseJbig2(data) {
-    let position = 0,
-        end = data.length;
+    const end = data.length;
+    let position = 0;
 
     if (data[position] !== 0x97 || data[position + 1] !== 0x4a || data[position + 2] !== 0x42 || data[position + 3] !== 0x32 || data[position + 4] !== 0x0d || data[position + 5] !== 0x0a || data[position + 6] !== 0x1a || data[position + 7] !== 0x0a) {
       throw new Jbig2Error("parseJbig2 - invalid header.");
     }
 
-    let header = Object.create(null);
+    const header = Object.create(null);
     position += 8;
     const flags = data[position++];
     header.randomAccess = !(flags & 1);
 
     if (!(flags & 2)) {
-      header.numberOfPages = (0, _util.readUint32)(data, position);
+      header.numberOfPages = (0, _core_utils.readUint32)(data, position);
       position += 4;
     }
 
-    let segments = readSegments(header, data, position, end);
-    let visitor = new SimpleSegmentVisitor();
+    const segments = readSegments(header, data, position, end);
+    const visitor = new SimpleSegmentVisitor();
     processSegments(segments, visitor);
     const {
       width,
       height
     } = visitor.currentPageInfo;
     const bitPacked = visitor.buffer;
-    let imgData = new Uint8ClampedArray(width * height);
+    const imgData = new Uint8ClampedArray(width * height);
     let q = 0,
         k = 0;
 
@@ -10721,7 +10718,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
       var inputSymbols = [];
 
       for (var i = 0, ii = referredSegments.length; i < ii; i++) {
-        let referredSymbols = symbols[referredSegments[i]];
+        const referredSymbols = symbols[referredSegments[i]];
 
         if (referredSymbols) {
           inputSymbols = inputSymbols.concat(referredSymbols);
@@ -10738,14 +10735,14 @@ var Jbig2Image = function Jbig2ImageClosure() {
       var inputSymbols = [];
 
       for (var i = 0, ii = referredSegments.length; i < ii; i++) {
-        let referredSymbols = symbols[referredSegments[i]];
+        const referredSymbols = symbols[referredSegments[i]];
 
         if (referredSymbols) {
           inputSymbols = inputSymbols.concat(referredSymbols);
         }
       }
 
-      var symbolCodeLength = (0, _util.log2)(inputSymbols.length);
+      var symbolCodeLength = (0, _core_utils.log2)(inputSymbols.length);
 
       if (region.huffman) {
         huffmanInput = new Reader(data, start, end);
@@ -10767,15 +10764,15 @@ var Jbig2Image = function Jbig2ImageClosure() {
         this.patterns = patterns = {};
       }
 
-      let decodingContext = new DecodingContext(data, start, end);
+      const decodingContext = new DecodingContext(data, start, end);
       patterns[currentSegment] = decodePatternDictionary(dictionary.mmr, dictionary.patternWidth, dictionary.patternHeight, dictionary.maxPatternIndex, dictionary.template, decodingContext);
     },
 
     onImmediateHalftoneRegion(region, referredSegments, data, start, end) {
-      let patterns = this.patterns[referredSegments[0]];
-      let regionInfo = region.info;
-      let decodingContext = new DecodingContext(data, start, end);
-      let bitmap = decodeHalftoneRegion(region.mmr, patterns, region.template, regionInfo.width, regionInfo.height, region.defaultPixelValue, region.enableSkip, region.combinationOperator, region.gridWidth, region.gridHeight, region.gridOffsetX, region.gridOffsetY, region.gridVectorX, region.gridVectorY, decodingContext);
+      const patterns = this.patterns[referredSegments[0]];
+      const regionInfo = region.info;
+      const decodingContext = new DecodingContext(data, start, end);
+      const bitmap = decodeHalftoneRegion(region.mmr, patterns, region.template, regionInfo.width, regionInfo.height, region.defaultPixelValue, region.enableSkip, region.combinationOperator, region.gridWidth, region.gridHeight, region.gridOffsetX, region.gridOffsetY, region.gridVectorX, region.gridVectorY, decodingContext);
       this.drawBitmap(regionInfo, bitmap);
     },
 
@@ -10829,7 +10826,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
 
   HuffmanTreeNode.prototype = {
     buildTree(line, shift) {
-      let bit = line.prefixCode >> shift & 1;
+      const bit = line.prefixCode >> shift & 1;
 
       if (shift <= 0) {
         this.children[bit] = new HuffmanTreeNode(line);
@@ -10850,11 +10847,11 @@ var Jbig2Image = function Jbig2ImageClosure() {
           return null;
         }
 
-        let htOffset = reader.readBits(this.rangeLength);
+        const htOffset = reader.readBits(this.rangeLength);
         return this.rangeLow + (this.isLowerRange ? -htOffset : htOffset);
       }
 
-      let node = this.children[reader.readBit()];
+      const node = this.children[reader.readBit()];
 
       if (!node) {
         throw new Jbig2Error("invalid Huffman data");
@@ -10871,12 +10868,9 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
 
     this.rootNode = new HuffmanTreeNode(null);
-    let i,
-        ii = lines.length,
-        line;
 
-    for (i = 0; i < ii; i++) {
-      line = lines[i];
+    for (let i = 0, ii = lines.length; i < ii; i++) {
+      const line = lines[i];
 
       if (line.prefixLength > 0) {
         this.rootNode.buildTree(line, line.prefixLength - 1);
@@ -10890,17 +10884,16 @@ var Jbig2Image = function Jbig2ImageClosure() {
     },
 
     assignPrefixCodes(lines) {
-      let linesLength = lines.length,
-          prefixLengthMax = 0,
-          i;
+      const linesLength = lines.length;
+      let prefixLengthMax = 0;
 
-      for (i = 0; i < linesLength; i++) {
+      for (let i = 0; i < linesLength; i++) {
         prefixLengthMax = Math.max(prefixLengthMax, lines[i].prefixLength);
       }
 
-      let histogram = new Uint32Array(prefixLengthMax + 1);
+      const histogram = new Uint32Array(prefixLengthMax + 1);
 
-      for (i = 0; i < linesLength; i++) {
+      for (let i = 0; i < linesLength; i++) {
         histogram[lines[i].prefixLength]++;
       }
 
@@ -10934,13 +10927,13 @@ var Jbig2Image = function Jbig2ImageClosure() {
   };
 
   function decodeTablesSegment(data, start, end) {
-    let flags = data[start];
-    let lowestValue = (0, _util.readUint32)(data, start + 1) & 0xffffffff;
-    let highestValue = (0, _util.readUint32)(data, start + 5) & 0xffffffff;
-    let reader = new Reader(data, start + 9, end);
-    let prefixSizeBits = (flags >> 1 & 7) + 1;
-    let rangeSizeBits = (flags >> 4 & 7) + 1;
-    let lines = [];
+    const flags = data[start];
+    const lowestValue = (0, _core_utils.readUint32)(data, start + 1) & 0xffffffff;
+    const highestValue = (0, _core_utils.readUint32)(data, start + 5) & 0xffffffff;
+    const reader = new Reader(data, start + 9, end);
+    const prefixSizeBits = (flags >> 1 & 7) + 1;
+    const rangeSizeBits = (flags >> 4 & 7) + 1;
+    const lines = [];
     let prefixLength,
         rangeLength,
         currentRangeLow = lowestValue;
@@ -10965,7 +10958,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
     return new HuffmanTable(lines, false);
   }
 
-  let standardTablesCache = {};
+  const standardTablesCache = {};
 
   function getStandardTable(number) {
     let table = standardTablesCache[number];
@@ -11041,10 +11034,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
         throw new Jbig2Error(`standard table B.${number} does not exist`);
     }
 
-    let length = lines.length,
-        i;
-
-    for (i = 0; i < length; i++) {
+    for (let i = 0, ii = lines.length; i < ii; i++) {
       lines[i] = new HuffmanLine(lines[i]);
     }
 
@@ -11073,7 +11063,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
         this.shift = 7;
       }
 
-      let bit = this.currentByte >> this.shift & 1;
+      const bit = this.currentByte >> this.shift & 1;
       this.shift--;
       return bit;
     },
@@ -11104,13 +11094,10 @@ var Jbig2Image = function Jbig2ImageClosure() {
   };
 
   function getCustomHuffmanTable(index, referredTo, customTables) {
-    let currentIndex = 0,
-        i,
-        ii = referredTo.length,
-        table;
+    let currentIndex = 0;
 
-    for (i = 0; i < ii; i++) {
-      table = customTables[referredTo[i]];
+    for (let i = 0, ii = referredTo.length; i < ii; i++) {
+      const table = customTables[referredTo[i]];
 
       if (table) {
         if (index === currentIndex) {
@@ -11125,20 +11112,18 @@ var Jbig2Image = function Jbig2ImageClosure() {
   }
 
   function getTextRegionHuffmanTables(textRegion, referredTo, customTables, numberOfSymbols, reader) {
-    let codes = [],
-        i,
-        codeLength;
+    const codes = [];
 
-    for (i = 0; i <= 34; i++) {
-      codeLength = reader.readBits(4);
+    for (let i = 0; i <= 34; i++) {
+      const codeLength = reader.readBits(4);
       codes.push(new HuffmanLine([i, codeLength, 0, 0]));
     }
 
-    let runCodesTable = new HuffmanTable(codes, false);
+    const runCodesTable = new HuffmanTable(codes, false);
     codes.length = 0;
 
-    for (i = 0; i < numberOfSymbols;) {
-      codeLength = runCodesTable.decode(reader);
+    for (let i = 0; i < numberOfSymbols;) {
+      const codeLength = runCodesTable.decode(reader);
 
       if (codeLength >= 32) {
         let repeatedLength, numberOfRepeats, j;
@@ -11178,7 +11163,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
 
     reader.byteAlign();
-    let symbolIDTable = new HuffmanTable(codes, false);
+    const symbolIDTable = new HuffmanTable(codes, false);
     let customIndex = 0,
         tableFirstS,
         tableDeltaS,
@@ -11302,16 +11287,13 @@ var Jbig2Image = function Jbig2ImageClosure() {
   }
 
   function readUncompressedBitmap(reader, width, height) {
-    let bitmap = [],
-        x,
-        y,
-        row;
+    const bitmap = [];
 
-    for (y = 0; y < height; y++) {
-      row = new Uint8Array(width);
+    for (let y = 0; y < height; y++) {
+      const row = new Uint8Array(width);
       bitmap.push(row);
 
-      for (x = 0; x < width; x++) {
+      for (let x = 0; x < width; x++) {
         row[x] = reader.readBit();
       }
 
@@ -11322,28 +11304,24 @@ var Jbig2Image = function Jbig2ImageClosure() {
   }
 
   function decodeMMRBitmap(input, width, height, endOfBlock) {
-    let params = {
+    const params = {
       K: -1,
       Columns: width,
       Rows: height,
       BlackIs1: true,
       EndOfBlock: endOfBlock
     };
-    let decoder = new _ccitt.CCITTFaxDecoder(input, params);
-    let bitmap = [],
-        x,
-        y,
-        row,
-        currentByte,
-        shift,
+    const decoder = new _ccitt.CCITTFaxDecoder(input, params);
+    const bitmap = [];
+    let currentByte,
         eof = false;
 
-    for (y = 0; y < height; y++) {
-      row = new Uint8Array(width);
+    for (let y = 0; y < height; y++) {
+      const row = new Uint8Array(width);
       bitmap.push(row);
-      shift = -1;
+      let shift = -1;
 
-      for (x = 0; x < width; x++) {
+      for (let x = 0; x < width; x++) {
         if (shift < 0) {
           currentByte = decoder.readNextChar();
 
@@ -11771,7 +11749,7 @@ var _primitives = __w_pdfjs_require__(4);
 
 var _jpg = __w_pdfjs_require__(18);
 
-let JpegStream = function JpegStreamClosure() {
+const JpegStream = function JpegStreamClosure() {
   function JpegStream(stream, maybeLength, dict, params) {
     let ch;
 
@@ -11805,18 +11783,18 @@ let JpegStream = function JpegStreamClosure() {
       return;
     }
 
-    let jpegOptions = {
+    const jpegOptions = {
       decodeTransform: undefined,
       colorTransform: undefined
     };
-    let decodeArr = this.dict.getArray("Decode", "D");
+    const decodeArr = this.dict.getArray("Decode", "D");
 
     if (this.forceRGB && Array.isArray(decodeArr)) {
-      let bitsPerComponent = this.dict.get("BitsPerComponent") || 8;
-      let decodeArrLength = decodeArr.length;
-      let transform = new Int32Array(decodeArrLength);
+      const bitsPerComponent = this.dict.get("BitsPerComponent") || 8;
+      const decodeArrLength = decodeArr.length;
+      const transform = new Int32Array(decodeArrLength);
       let transformNeeded = false;
-      let maxValue = (1 << bitsPerComponent) - 1;
+      const maxValue = (1 << bitsPerComponent) - 1;
 
       for (let i = 0; i < decodeArrLength; i += 2) {
         transform[i] = (decodeArr[i + 1] - decodeArr[i]) * 256 | 0;
@@ -11833,7 +11811,7 @@ let JpegStream = function JpegStreamClosure() {
     }
 
     if ((0, _primitives.isDict)(this.params)) {
-      let colorTransform = this.params.get("ColorTransform");
+      const colorTransform = this.params.get("ColorTransform");
 
       if (Number.isInteger(colorTransform)) {
         jpegOptions.colorTransform = colorTransform;
@@ -11842,7 +11820,7 @@ let JpegStream = function JpegStreamClosure() {
 
     const jpegImage = new _jpg.JpegImage(jpegOptions);
     jpegImage.parse(this.bytes);
-    let data = jpegImage.getData({
+    const data = jpegImage.getData({
       width: this.drawWidth,
       height: this.drawHeight,
       forceRGB: this.forceRGB,
@@ -11875,6 +11853,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.JpegImage = void 0;
 
 var _util = __w_pdfjs_require__(2);
+
+var _core_utils = __w_pdfjs_require__(7);
 
 class JpegError extends _util.BaseException {
   constructor(msg) {
@@ -11992,7 +11972,8 @@ var JpegImage = function JpegImageClosure() {
         if (nextByte) {
           if (nextByte === 0xdc && parseDNLMarker) {
             offset += 2;
-            const scanLines = data[offset++] << 8 | data[offset++];
+            const scanLines = (0, _core_utils.readUint16)(data, offset);
+            offset += 2;
 
             if (scanLines > 0 && scanLines !== frame.scanLines) {
               throw new DNLMarkerError("Found DNL marker (0xFFDC) while parsing scan data", scanLines);
@@ -12015,13 +11996,15 @@ var JpegImage = function JpegImageClosure() {
       while (true) {
         node = node[readBit()];
 
-        if (typeof node === "number") {
-          return node;
+        switch (typeof node) {
+          case "number":
+            return node;
+
+          case "object":
+            continue;
         }
 
-        if (typeof node !== "object") {
-          throw new JpegError("invalid huffman sequence");
-        }
+        throw new JpegError("invalid huffman sequence");
       }
     }
 
@@ -12131,8 +12114,8 @@ var JpegImage = function JpegImageClosure() {
       var rs;
 
       while (k <= e) {
-        let offsetZ = offset + dctZigZag[k];
-        let sign = component.blockData[offsetZ] < 0 ? -1 : 1;
+        const offsetZ = offset + dctZigZag[k];
+        const sign = component.blockData[offsetZ] < 0 ? -1 : 1;
 
         switch (successiveACState) {
           case 0:
@@ -12550,10 +12533,6 @@ var JpegImage = function JpegImageClosure() {
   }
 
   function findNextFileMarker(data, currentPos, startPos = currentPos) {
-    function peekUint16(pos) {
-      return data[pos] << 8 | data[pos + 1];
-    }
-
     const maxPos = data.length - 1;
     var newPos = startPos < currentPos ? startPos : currentPos;
 
@@ -12561,7 +12540,7 @@ var JpegImage = function JpegImageClosure() {
       return null;
     }
 
-    var currentMarker = peekUint16(currentPos);
+    var currentMarker = (0, _core_utils.readUint16)(data, currentPos);
 
     if (currentMarker >= 0xffc0 && currentMarker <= 0xfffe) {
       return {
@@ -12571,14 +12550,14 @@ var JpegImage = function JpegImageClosure() {
       };
     }
 
-    var newMarker = peekUint16(newPos);
+    var newMarker = (0, _core_utils.readUint16)(data, newPos);
 
     while (!(newMarker >= 0xffc0 && newMarker <= 0xfffe)) {
       if (++newPos >= maxPos) {
         return null;
       }
 
-      newMarker = peekUint16(newPos);
+      newMarker = (0, _core_utils.readUint16)(data, newPos);
     }
 
     return {
@@ -12592,15 +12571,10 @@ var JpegImage = function JpegImageClosure() {
     parse(data, {
       dnlScanLines = null
     } = {}) {
-      function readUint16() {
-        var value = data[offset] << 8 | data[offset + 1];
-        offset += 2;
-        return value;
-      }
-
       function readDataBlock() {
-        var length = readUint16();
-        var endOffset = offset + length - 2;
+        const length = (0, _core_utils.readUint16)(data, offset);
+        offset += 2;
+        let endOffset = offset + length - 2;
         var fileMarker = findNextFileMarker(data, endOffset, offset);
 
         if (fileMarker && fileMarker.invalid) {
@@ -12641,13 +12615,15 @@ var JpegImage = function JpegImageClosure() {
       var quantizationTables = [];
       var huffmanTablesAC = [],
           huffmanTablesDC = [];
-      var fileMarker = readUint16();
+      let fileMarker = (0, _core_utils.readUint16)(data, offset);
+      offset += 2;
 
       if (fileMarker !== 0xffd8) {
         throw new JpegError("SOI not found");
       }
 
-      fileMarker = readUint16();
+      fileMarker = (0, _core_utils.readUint16)(data, offset);
+      offset += 2;
 
       markerLoop: while (fileMarker !== 0xffd9) {
         var i, j, l;
@@ -12703,7 +12679,8 @@ var JpegImage = function JpegImageClosure() {
             break;
 
           case 0xffdb:
-            var quantizationTablesLength = readUint16();
+            const quantizationTablesLength = (0, _core_utils.readUint16)(data, offset);
+            offset += 2;
             var quantizationTablesEnd = quantizationTablesLength + offset - 2;
             var z;
 
@@ -12719,7 +12696,8 @@ var JpegImage = function JpegImageClosure() {
               } else if (quantizationTableSpec >> 4 === 1) {
                 for (j = 0; j < 64; j++) {
                   z = dctZigZag[j];
-                  tableData[z] = readUint16();
+                  tableData[z] = (0, _core_utils.readUint16)(data, offset);
+                  offset += 2;
                 }
               } else {
                 throw new JpegError("DQT - invalid table spec");
@@ -12737,14 +12715,16 @@ var JpegImage = function JpegImageClosure() {
               throw new JpegError("Only single frame JPEGs supported");
             }
 
-            readUint16();
+            offset += 2;
             frame = {};
             frame.extended = fileMarker === 0xffc1;
             frame.progressive = fileMarker === 0xffc2;
             frame.precision = data[offset++];
-            const sofScanLines = readUint16();
+            const sofScanLines = (0, _core_utils.readUint16)(data, offset);
+            offset += 2;
             frame.scanLines = dnlScanLines || sofScanLines;
-            frame.samplesPerLine = readUint16();
+            frame.samplesPerLine = (0, _core_utils.readUint16)(data, offset);
+            offset += 2;
             frame.components = [];
             frame.componentIds = {};
             var componentsCount = data[offset++],
@@ -12782,7 +12762,8 @@ var JpegImage = function JpegImageClosure() {
             break;
 
           case 0xffc4:
-            var huffmanLength = readUint16();
+            const huffmanLength = (0, _core_utils.readUint16)(data, offset);
+            offset += 2;
 
             for (i = 2; i < huffmanLength;) {
               var huffmanTableSpec = data[offset++];
@@ -12806,13 +12787,14 @@ var JpegImage = function JpegImageClosure() {
             break;
 
           case 0xffdd:
-            readUint16();
-            resetInterval = readUint16();
+            offset += 2;
+            resetInterval = (0, _core_utils.readUint16)(data, offset);
+            offset += 2;
             break;
 
           case 0xffda:
             const parseDNLMarker = ++numSOSMarkers === 1 && !dnlScanLines;
-            readUint16();
+            offset += 2;
             var selectorsCount = data[offset++];
             var components = [],
                 component;
@@ -12861,12 +12843,7 @@ var JpegImage = function JpegImageClosure() {
             break;
 
           default:
-            if (data[offset - 3] === 0xff && data[offset - 2] >= 0xc0 && data[offset - 2] <= 0xfe) {
-              offset -= 3;
-              break;
-            }
-
-            let nextFileMarker = findNextFileMarker(data, offset - 2);
+            const nextFileMarker = findNextFileMarker(data, offset - 2, offset - 3);
 
             if (nextFileMarker && nextFileMarker.invalid) {
               (0, _util.warn)("JpegImage.parse - unexpected data, current marker is: " + nextFileMarker.invalid);
@@ -12874,7 +12851,7 @@ var JpegImage = function JpegImageClosure() {
               break;
             }
 
-            if (offset > data.length - 2) {
+            if (offset >= data.length - 1) {
               (0, _util.warn)("JpegImage.parse - reached the end of the image data " + "without finding an EOI marker (0xFFD9).");
               break markerLoop;
             }
@@ -12882,7 +12859,8 @@ var JpegImage = function JpegImageClosure() {
             throw new JpegError("JpegImage.parse - unknown marker: " + fileMarker.toString(16));
         }
 
-        fileMarker = readUint16();
+        fileMarker = (0, _core_utils.readUint16)(data, offset);
+        offset += 2;
       }
 
       this.width = frame.samplesPerLine;
@@ -13115,7 +13093,7 @@ var _jpx = __w_pdfjs_require__(20);
 
 var _util = __w_pdfjs_require__(2);
 
-let JpxStream = function JpxStreamClosure() {
+const JpxStream = function JpxStreamClosure() {
   function JpxStream(stream, maybeLength, dict, params) {
     this.stream = stream;
     this.maybeLength = maybeLength;
@@ -13140,32 +13118,32 @@ let JpxStream = function JpxStreamClosure() {
       return;
     }
 
-    let jpxImage = new _jpx.JpxImage();
+    const jpxImage = new _jpx.JpxImage();
     jpxImage.parse(this.bytes);
-    let width = jpxImage.width;
-    let height = jpxImage.height;
-    let componentsCount = jpxImage.componentsCount;
-    let tileCount = jpxImage.tiles.length;
+    const width = jpxImage.width;
+    const height = jpxImage.height;
+    const componentsCount = jpxImage.componentsCount;
+    const tileCount = jpxImage.tiles.length;
 
     if (tileCount === 1) {
       this.buffer = jpxImage.tiles[0].items;
     } else {
-      let data = new Uint8ClampedArray(width * height * componentsCount);
+      const data = new Uint8ClampedArray(width * height * componentsCount);
 
       for (let k = 0; k < tileCount; k++) {
-        let tileComponents = jpxImage.tiles[k];
-        let tileWidth = tileComponents.width;
-        let tileHeight = tileComponents.height;
-        let tileLeft = tileComponents.left;
-        let tileTop = tileComponents.top;
-        let src = tileComponents.items;
+        const tileComponents = jpxImage.tiles[k];
+        const tileWidth = tileComponents.width;
+        const tileHeight = tileComponents.height;
+        const tileLeft = tileComponents.left;
+        const tileTop = tileComponents.top;
+        const src = tileComponents.items;
         let srcPosition = 0;
         let dataPosition = (width * tileTop + tileLeft) * componentsCount;
-        let imgRowSize = width * componentsCount;
-        let tileRowSize = tileWidth * componentsCount;
+        const imgRowSize = width * componentsCount;
+        const tileRowSize = tileWidth * componentsCount;
 
         for (let j = 0; j < tileHeight; j++) {
-          let rowBytes = src.subarray(srcPosition, srcPosition + tileRowSize);
+          const rowBytes = src.subarray(srcPosition, srcPosition + tileRowSize);
           data.set(rowBytes, dataPosition);
           srcPosition += tileRowSize;
           dataPosition += imgRowSize;
@@ -13198,6 +13176,8 @@ exports.JpxImage = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
+var _core_utils = __w_pdfjs_require__(7);
+
 var _arithmetic_decoder = __w_pdfjs_require__(16);
 
 class JpxError extends _util.BaseException {
@@ -13221,7 +13201,7 @@ var JpxImage = function JpxImageClosure() {
 
   JpxImage.prototype = {
     parse: function JpxImage_parse(data) {
-      var head = (0, _util.readUint16)(data, 0);
+      var head = (0, _core_utils.readUint16)(data, 0);
 
       if (head === 0xff4f) {
         this.parseCodestream(data, 0, data.length);
@@ -13233,12 +13213,12 @@ var JpxImage = function JpxImageClosure() {
 
       while (position < length) {
         var headerSize = 8;
-        var lbox = (0, _util.readUint32)(data, position);
-        var tbox = (0, _util.readUint32)(data, position + 4);
+        var lbox = (0, _core_utils.readUint32)(data, position);
+        var tbox = (0, _core_utils.readUint32)(data, position + 4);
         position += headerSize;
 
         if (lbox === 1) {
-          lbox = (0, _util.readUint32)(data, position) * 4294967296 + (0, _util.readUint32)(data, position + 4);
+          lbox = (0, _core_utils.readUint32)(data, position) * 4294967296 + (0, _core_utils.readUint32)(data, position + 4);
           position += 8;
           headerSize += 8;
         }
@@ -13263,7 +13243,7 @@ var JpxImage = function JpxImageClosure() {
             var method = data[position];
 
             if (method === 1) {
-              var colorspace = (0, _util.readUint32)(data, position + 3);
+              var colorspace = (0, _core_utils.readUint32)(data, position + 3);
 
               switch (colorspace) {
                 case 16:
@@ -13286,7 +13266,7 @@ var JpxImage = function JpxImageClosure() {
             break;
 
           case 0x6a502020:
-            if ((0, _util.readUint32)(data, position) !== 0x0d0a870a) {
+            if ((0, _core_utils.readUint32)(data, position) !== 0x0d0a870a) {
               (0, _util.warn)("Invalid JP2 signature");
             }
 
@@ -13344,7 +13324,7 @@ var JpxImage = function JpxImageClosure() {
         var position = start;
 
         while (position + 1 < end) {
-          var code = (0, _util.readUint16)(data, position);
+          var code = (0, _core_utils.readUint16)(data, position);
           position += 2;
           var length = 0,
               j,
@@ -13363,17 +13343,17 @@ var JpxImage = function JpxImageClosure() {
               break;
 
             case 0xff51:
-              length = (0, _util.readUint16)(data, position);
+              length = (0, _core_utils.readUint16)(data, position);
               var siz = {};
-              siz.Xsiz = (0, _util.readUint32)(data, position + 4);
-              siz.Ysiz = (0, _util.readUint32)(data, position + 8);
-              siz.XOsiz = (0, _util.readUint32)(data, position + 12);
-              siz.YOsiz = (0, _util.readUint32)(data, position + 16);
-              siz.XTsiz = (0, _util.readUint32)(data, position + 20);
-              siz.YTsiz = (0, _util.readUint32)(data, position + 24);
-              siz.XTOsiz = (0, _util.readUint32)(data, position + 28);
-              siz.YTOsiz = (0, _util.readUint32)(data, position + 32);
-              var componentsCount = (0, _util.readUint16)(data, position + 36);
+              siz.Xsiz = (0, _core_utils.readUint32)(data, position + 4);
+              siz.Ysiz = (0, _core_utils.readUint32)(data, position + 8);
+              siz.XOsiz = (0, _core_utils.readUint32)(data, position + 12);
+              siz.YOsiz = (0, _core_utils.readUint32)(data, position + 16);
+              siz.XTsiz = (0, _core_utils.readUint32)(data, position + 20);
+              siz.YTsiz = (0, _core_utils.readUint32)(data, position + 24);
+              siz.XTOsiz = (0, _core_utils.readUint32)(data, position + 28);
+              siz.YTOsiz = (0, _core_utils.readUint32)(data, position + 32);
+              var componentsCount = (0, _core_utils.readUint16)(data, position + 36);
               siz.Csiz = componentsCount;
               var components = [];
               j = position + 38;
@@ -13398,7 +13378,7 @@ var JpxImage = function JpxImageClosure() {
               break;
 
             case 0xff5c:
-              length = (0, _util.readUint16)(data, position);
+              length = (0, _core_utils.readUint16)(data, position);
               var qcd = {};
               j = position + 2;
               sqcd = data[j++];
@@ -13455,7 +13435,7 @@ var JpxImage = function JpxImageClosure() {
               break;
 
             case 0xff5d:
-              length = (0, _util.readUint16)(data, position);
+              length = (0, _core_utils.readUint16)(data, position);
               var qcc = {};
               j = position + 2;
               var cqcc;
@@ -13463,7 +13443,7 @@ var JpxImage = function JpxImageClosure() {
               if (context.SIZ.Csiz < 257) {
                 cqcc = data[j++];
               } else {
-                cqcc = (0, _util.readUint16)(data, j);
+                cqcc = (0, _core_utils.readUint16)(data, j);
                 j += 2;
               }
 
@@ -13520,7 +13500,7 @@ var JpxImage = function JpxImageClosure() {
               break;
 
             case 0xff52:
-              length = (0, _util.readUint16)(data, position);
+              length = (0, _core_utils.readUint16)(data, position);
               var cod = {};
               j = position + 2;
               var scod = data[j++];
@@ -13528,7 +13508,7 @@ var JpxImage = function JpxImageClosure() {
               cod.sopMarkerUsed = !!(scod & 2);
               cod.ephMarkerUsed = !!(scod & 4);
               cod.progressionOrder = data[j++];
-              cod.layersCount = (0, _util.readUint16)(data, j);
+              cod.layersCount = (0, _core_utils.readUint16)(data, j);
               j += 2;
               cod.multipleComponentTransform = data[j++];
               cod.decompositionLevelsCount = data[j++];
@@ -13594,10 +13574,10 @@ var JpxImage = function JpxImageClosure() {
               break;
 
             case 0xff90:
-              length = (0, _util.readUint16)(data, position);
+              length = (0, _core_utils.readUint16)(data, position);
               tile = {};
-              tile.index = (0, _util.readUint16)(data, position + 2);
-              tile.length = (0, _util.readUint32)(data, position + 4);
+              tile.index = (0, _core_utils.readUint16)(data, position + 2);
+              tile.length = (0, _core_utils.readUint32)(data, position + 4);
               tile.dataEnd = tile.length + position - 2;
               tile.partIndex = data[position + 8];
               tile.partsCount = data[position + 9];
@@ -13629,7 +13609,7 @@ var JpxImage = function JpxImageClosure() {
             case 0xff57:
             case 0xff58:
             case 0xff64:
-              length = (0, _util.readUint16)(data, position);
+              length = (0, _core_utils.readUint16)(data, position);
               break;
 
             case 0xff53:
@@ -14465,7 +14445,7 @@ var JpxImage = function JpxImageClosure() {
           codeblock.Lblock++;
         }
 
-        var codingpassesLog2 = (0, _util.log2)(codingpasses);
+        var codingpassesLog2 = (0, _core_utils.log2)(codingpasses);
         var bits = (codingpasses < 1 << codingpassesLog2 ? codingpassesLog2 - 1 : codingpassesLog2) + codeblock.Lblock;
         var codedDataLength = readBits(bits);
         queue.push({
@@ -14730,7 +14710,7 @@ var JpxImage = function JpxImageClosure() {
             y0 = y0items[j] + offset;
             y1 = y1items[j];
             y2 = y2items[j];
-            let g = y0 - (y2 + y1 >> 2);
+            const g = y0 - (y2 + y1 >> 2);
             out[pos++] = g + y2 >> shift;
             out[pos++] = g >> shift;
             out[pos++] = g + y1 >> shift;
@@ -14779,7 +14759,7 @@ var JpxImage = function JpxImageClosure() {
 
   var TagTree = function TagTreeClosure() {
     function TagTree(width, height) {
-      var levelsLength = (0, _util.log2)(Math.max(width, height)) + 1;
+      var levelsLength = (0, _core_utils.log2)(Math.max(width, height)) + 1;
       this.levels = [];
 
       for (var i = 0; i < levelsLength; i++) {
@@ -14847,7 +14827,7 @@ var JpxImage = function JpxImageClosure() {
 
   var InclusionTree = function InclusionTreeClosure() {
     function InclusionTree(width, height, defaultValue) {
-      var levelsLength = (0, _util.log2)(Math.max(width, height)) + 1;
+      var levelsLength = (0, _core_utils.log2)(Math.max(width, height)) + 1;
       this.levels = [];
 
       for (var i = 0; i < levelsLength; i++) {
@@ -16160,7 +16140,7 @@ class AESBaseCipher {
 
   _decrypt(input, key) {
     let t, u, v;
-    let state = new Uint8Array(16);
+    const state = new Uint8Array(16);
     state.set(input);
 
     for (let j = 0, k = this._keySize; j < 16; ++j, ++k) {
@@ -16196,10 +16176,10 @@ class AESBaseCipher {
       }
 
       for (let j = 0; j < 16; j += 4) {
-        let s0 = this._mix[state[j]];
-        let s1 = this._mix[state[j + 1]];
-        let s2 = this._mix[state[j + 2]];
-        let s3 = this._mix[state[j + 3]];
+        const s0 = this._mix[state[j]];
+        const s1 = this._mix[state[j + 1]];
+        const s2 = this._mix[state[j + 2]];
+        const s3 = this._mix[state[j + 3]];
         t = s0 ^ s1 >>> 8 ^ s1 << 24 ^ s2 >>> 16 ^ s2 << 16 ^ s3 >>> 24 ^ s3 << 8;
         state[j] = t >>> 24 & 0xff;
         state[j + 1] = t >> 16 & 0xff;
@@ -16238,7 +16218,7 @@ class AESBaseCipher {
   _encrypt(input, key) {
     const s = this._s;
     let t, u, v;
-    let state = new Uint8Array(16);
+    const state = new Uint8Array(16);
     state.set(input);
 
     for (let j = 0; j < 16; ++j) {
@@ -16270,10 +16250,10 @@ class AESBaseCipher {
       state[15] = t;
 
       for (let j = 0; j < 16; j += 4) {
-        let s0 = state[j + 0];
-        let s1 = state[j + 1];
-        let s2 = state[j + 2];
-        let s3 = state[j + 3];
+        const s0 = state[j + 0];
+        const s1 = state[j + 1];
+        const s2 = state[j + 2];
+        const s3 = state[j + 3];
         t = s0 ^ s1 ^ s2 ^ s3;
         state[j + 0] ^= t ^ this._mixCol[s0 ^ s1];
         state[j + 1] ^= t ^ this._mixCol[s1 ^ s2];
@@ -16317,11 +16297,11 @@ class AESBaseCipher {
   }
 
   _decryptBlock2(data, finalize) {
-    let sourceLength = data.length;
+    const sourceLength = data.length;
     let buffer = this.buffer,
         bufferLength = this.bufferPosition;
-    let result = [],
-        iv = this.iv;
+    const result = [];
+    let iv = this.iv;
 
     for (let i = 0; i < sourceLength; ++i) {
       buffer[bufferLength] = data[i];
@@ -16331,7 +16311,7 @@ class AESBaseCipher {
         continue;
       }
 
-      let plain = this._decrypt(buffer, this._key);
+      const plain = this._decrypt(buffer, this._key);
 
       for (let j = 0; j < 16; ++j) {
         plain[j] ^= iv[j];
@@ -16354,7 +16334,7 @@ class AESBaseCipher {
     let outputLength = 16 * result.length;
 
     if (finalize) {
-      let lastBlock = result[result.length - 1];
+      const lastBlock = result[result.length - 1];
       let psLen = lastBlock[15];
 
       if (psLen <= 16) {
@@ -16370,7 +16350,7 @@ class AESBaseCipher {
       }
     }
 
-    let output = new Uint8Array(outputLength);
+    const output = new Uint8Array(outputLength);
 
     for (let i = 0, j = 0, ii = result.length; i < ii; ++i, j += 16) {
       output.set(result[i], j);
@@ -16380,9 +16360,9 @@ class AESBaseCipher {
   }
 
   decryptBlock(data, finalize, iv = null) {
-    let sourceLength = data.length;
-    let buffer = this.buffer,
-        bufferLength = this.bufferPosition;
+    const sourceLength = data.length;
+    const buffer = this.buffer;
+    let bufferLength = this.bufferPosition;
 
     if (iv) {
       this.iv = iv;
@@ -16407,10 +16387,10 @@ class AESBaseCipher {
   }
 
   encrypt(data, iv) {
-    let sourceLength = data.length;
+    const sourceLength = data.length;
     let buffer = this.buffer,
         bufferLength = this.bufferPosition;
-    let result = [];
+    const result = [];
 
     if (!iv) {
       iv = new Uint8Array(16);
@@ -16428,7 +16408,7 @@ class AESBaseCipher {
         buffer[j] ^= iv[j];
       }
 
-      let cipher = this._encrypt(buffer, this._key);
+      const cipher = this._encrypt(buffer, this._key);
 
       iv = cipher;
       result.push(cipher);
@@ -16444,8 +16424,8 @@ class AESBaseCipher {
       return new Uint8Array(0);
     }
 
-    let outputLength = 16 * result.length;
-    let output = new Uint8Array(outputLength);
+    const outputLength = 16 * result.length;
+    const output = new Uint8Array(outputLength);
 
     for (let i = 0, j = 0, ii = result.length; i < ii; ++i, j += 16) {
       output.set(result[i], j);
@@ -16469,7 +16449,7 @@ class AES128Cipher extends AESBaseCipher {
     const b = 176;
     const s = this._s;
     const rcon = this._rcon;
-    let result = new Uint8Array(b);
+    const result = new Uint8Array(b);
     result.set(cipherKey);
 
     for (let j = 16, i = 1; j < b; ++i) {
@@ -16513,7 +16493,7 @@ class AES256Cipher extends AESBaseCipher {
   _expandKey(cipherKey) {
     const b = 240;
     const s = this._s;
-    let result = new Uint8Array(b);
+    const result = new Uint8Array(b);
     result.set(cipherKey);
     let r = 1;
     let t1, t2, t3, t4;
@@ -17127,12 +17107,12 @@ var _primitives = __w_pdfjs_require__(4);
 function resizeRgbImage(src, dest, w1, h1, w2, h2, alpha01) {
   const COMPONENTS = 3;
   alpha01 = alpha01 !== 1 ? 0 : alpha01;
-  let xRatio = w1 / w2;
-  let yRatio = h1 / h2;
+  const xRatio = w1 / w2;
+  const yRatio = h1 / h2;
   let newIndex = 0,
       oldIndex;
-  let xScaled = new Uint16Array(w2);
-  let w1Scanline = w1 * COMPONENTS;
+  const xScaled = new Uint16Array(w2);
+  const w1Scanline = w1 * COMPONENTS;
 
   for (let i = 0; i < w2; i++) {
     xScaled[i] = Math.floor(i * xRatio) * COMPONENTS;
@@ -17162,7 +17142,7 @@ class ColorSpace {
   }
 
   getRgb(src, srcOffset) {
-    let rgb = new Uint8ClampedArray(3);
+    const rgb = new Uint8ClampedArray(3);
     this.getRgbItem(src, srcOffset, rgb, 0);
     return rgb;
   }
@@ -17188,21 +17168,21 @@ class ColorSpace {
   }
 
   fillRgb(dest, originalWidth, originalHeight, width, height, actualHeight, bpc, comps, alpha01) {
-    let count = originalWidth * originalHeight;
+    const count = originalWidth * originalHeight;
     let rgbBuf = null;
-    let numComponentColors = 1 << bpc;
-    let needsResizing = originalHeight !== height || originalWidth !== width;
+    const numComponentColors = 1 << bpc;
+    const needsResizing = originalHeight !== height || originalWidth !== width;
 
     if (this.isPassthrough(bpc)) {
       rgbBuf = comps;
     } else if (this.numComps === 1 && count > numComponentColors && this.name !== "DeviceGray" && this.name !== "DeviceRGB") {
-      let allColors = bpc <= 8 ? new Uint8Array(numComponentColors) : new Uint16Array(numComponentColors);
+      const allColors = bpc <= 8 ? new Uint8Array(numComponentColors) : new Uint16Array(numComponentColors);
 
       for (let i = 0; i < numComponentColors; i++) {
         allColors[i] = i;
       }
 
-      let colorMap = new Uint8ClampedArray(numComponentColors * 3);
+      const colorMap = new Uint8ClampedArray(numComponentColors * 3);
       this.getRgbBuffer(allColors, 0, numComponentColors, colorMap, 0, bpc, 0);
 
       if (!needsResizing) {
@@ -17257,12 +17237,12 @@ class ColorSpace {
   }
 
   static parse(cs, xref, res, pdfFunctionFactory) {
-    let IR = this.parseToIR(cs, xref, res, pdfFunctionFactory);
+    const IR = this.parseToIR(cs, xref, res, pdfFunctionFactory);
     return this.fromIR(IR);
   }
 
   static fromIR(IR) {
-    let name = Array.isArray(IR) ? IR[0] : IR;
+    const name = Array.isArray(IR) ? IR[0] : IR;
     let whitePoint, blackPoint, gamma;
 
     switch (name) {
@@ -17285,7 +17265,7 @@ class ColorSpace {
         whitePoint = IR[1];
         blackPoint = IR[2];
         gamma = IR[3];
-        let matrix = IR[4];
+        const matrix = IR[4];
         return new CalRGBCS(whitePoint, blackPoint, gamma, matrix);
 
       case "PatternCS":
@@ -17298,21 +17278,21 @@ class ColorSpace {
         return new PatternCS(basePatternCS);
 
       case "IndexedCS":
-        let baseIndexedCS = IR[1];
-        let hiVal = IR[2];
-        let lookup = IR[3];
+        const baseIndexedCS = IR[1];
+        const hiVal = IR[2];
+        const lookup = IR[3];
         return new IndexedCS(this.fromIR(baseIndexedCS), hiVal, lookup);
 
       case "AlternateCS":
-        let numComps = IR[1];
-        let alt = IR[2];
-        let tintFn = IR[3];
+        const numComps = IR[1];
+        const alt = IR[2];
+        const tintFn = IR[3];
         return new AlternateCS(numComps, this.fromIR(alt), tintFn);
 
       case "LabCS":
         whitePoint = IR[1];
         blackPoint = IR[2];
-        let range = IR[3];
+        const range = IR[3];
         return new LabCS(whitePoint, blackPoint, range);
 
       default:
@@ -17342,10 +17322,10 @@ class ColorSpace {
 
         default:
           if ((0, _primitives.isDict)(res)) {
-            let colorSpaces = res.get("ColorSpace");
+            const colorSpaces = res.get("ColorSpace");
 
             if ((0, _primitives.isDict)(colorSpaces)) {
-              let resCS = colorSpaces.get(cs.name);
+              const resCS = colorSpaces.get(cs.name);
 
               if (resCS) {
                 if ((0, _primitives.isName)(resCS)) {
@@ -17363,7 +17343,7 @@ class ColorSpace {
     }
 
     if (Array.isArray(cs)) {
-      let mode = xref.fetchIfRef(cs[0]).name;
+      const mode = xref.fetchIfRef(cs[0]).name;
       let numComps, params, alt, whitePoint, blackPoint, gamma;
 
       switch (mode) {
@@ -17391,18 +17371,18 @@ class ColorSpace {
           whitePoint = params.getArray("WhitePoint");
           blackPoint = params.getArray("BlackPoint");
           gamma = params.getArray("Gamma");
-          let matrix = params.getArray("Matrix");
+          const matrix = params.getArray("Matrix");
           return ["CalRGBCS", whitePoint, blackPoint, gamma, matrix];
 
         case "ICCBased":
-          let stream = xref.fetchIfRef(cs[1]);
-          let dict = stream.dict;
+          const stream = xref.fetchIfRef(cs[1]);
+          const dict = stream.dict;
           numComps = dict.get("N");
           alt = dict.get("Alternate");
 
           if (alt) {
-            let altIR = this.parseToIR(alt, xref, res, pdfFunctionFactory);
-            let altCS = this.fromIR(altIR, pdfFunctionFactory);
+            const altIR = this.parseToIR(alt, xref, res, pdfFunctionFactory);
+            const altCS = this.fromIR(altIR, pdfFunctionFactory);
 
             if (altCS.numComps === numComps) {
               return altIR;
@@ -17432,8 +17412,8 @@ class ColorSpace {
 
         case "Indexed":
         case "I":
-          let baseIndexedCS = this.parseToIR(cs[1], xref, res, pdfFunctionFactory);
-          let hiVal = xref.fetchIfRef(cs[2]) + 1;
+          const baseIndexedCS = this.parseToIR(cs[1], xref, res, pdfFunctionFactory);
+          const hiVal = xref.fetchIfRef(cs[2]) + 1;
           let lookup = xref.fetchIfRef(cs[3]);
 
           if ((0, _primitives.isStream)(lookup)) {
@@ -17444,17 +17424,17 @@ class ColorSpace {
 
         case "Separation":
         case "DeviceN":
-          let name = xref.fetchIfRef(cs[1]);
+          const name = xref.fetchIfRef(cs[1]);
           numComps = Array.isArray(name) ? name.length : 1;
           alt = this.parseToIR(cs[2], xref, res, pdfFunctionFactory);
-          let tintFn = pdfFunctionFactory.create(xref.fetchIfRef(cs[3]));
+          const tintFn = pdfFunctionFactory.create(xref.fetchIfRef(cs[3]));
           return ["AlternateCS", numComps, alt, tintFn];
 
         case "Lab":
           params = xref.fetchIfRef(cs[1]);
           whitePoint = params.getArray("WhitePoint");
           blackPoint = params.getArray("BlackPoint");
-          let range = params.getArray("Range");
+          const range = params.getArray("Range");
           return ["LabCS", whitePoint, blackPoint, range];
 
         default:
@@ -17514,23 +17494,23 @@ class AlternateCS extends ColorSpace {
   }
 
   getRgbItem(src, srcOffset, dest, destOffset) {
-    let tmpBuf = this.tmpBuf;
+    const tmpBuf = this.tmpBuf;
     this.tintFn(src, srcOffset, tmpBuf, 0);
     this.base.getRgbItem(tmpBuf, 0, dest, destOffset);
   }
 
   getRgbBuffer(src, srcOffset, count, dest, destOffset, bits, alpha01) {
-    let tintFn = this.tintFn;
-    let base = this.base;
-    let scale = 1 / ((1 << bits) - 1);
-    let baseNumComps = base.numComps;
-    let usesZeroToOneRange = base.usesZeroToOneRange;
-    let isPassthrough = (base.isPassthrough(8) || !usesZeroToOneRange) && alpha01 === 0;
+    const tintFn = this.tintFn;
+    const base = this.base;
+    const scale = 1 / ((1 << bits) - 1);
+    const baseNumComps = base.numComps;
+    const usesZeroToOneRange = base.usesZeroToOneRange;
+    const isPassthrough = (base.isPassthrough(8) || !usesZeroToOneRange) && alpha01 === 0;
     let pos = isPassthrough ? destOffset : 0;
-    let baseBuf = isPassthrough ? dest : new Uint8ClampedArray(baseNumComps * count);
-    let numComps = this.numComps;
-    let scaled = new Float32Array(numComps);
-    let tinted = new Float32Array(baseNumComps);
+    const baseBuf = isPassthrough ? dest : new Uint8ClampedArray(baseNumComps * count);
+    const numComps = this.numComps;
+    const scaled = new Float32Array(numComps);
+    const tinted = new Float32Array(baseNumComps);
     let i, j;
 
     for (i = 0; i < count; i++) {
@@ -17578,12 +17558,12 @@ class IndexedCS extends ColorSpace {
     super("Indexed", 1);
     this.base = base;
     this.highVal = highVal;
-    let baseNumComps = base.numComps;
-    let length = baseNumComps * highVal;
+    const baseNumComps = base.numComps;
+    const length = baseNumComps * highVal;
 
     if ((0, _primitives.isStream)(lookup)) {
       this.lookup = new Uint8Array(length);
-      let bytes = lookup.getBytes(length);
+      const bytes = lookup.getBytes(length);
       this.lookup.set(bytes);
     } else if ((0, _util.isString)(lookup)) {
       this.lookup = new Uint8Array(length);
@@ -17599,19 +17579,19 @@ class IndexedCS extends ColorSpace {
   }
 
   getRgbItem(src, srcOffset, dest, destOffset) {
-    let numComps = this.base.numComps;
-    let start = src[srcOffset] * numComps;
+    const numComps = this.base.numComps;
+    const start = src[srcOffset] * numComps;
     this.base.getRgbBuffer(this.lookup, start, 1, dest, destOffset, 8, 0);
   }
 
   getRgbBuffer(src, srcOffset, count, dest, destOffset, bits, alpha01) {
-    let base = this.base;
-    let numComps = base.numComps;
-    let outputDelta = base.getOutputLength(numComps, alpha01);
-    let lookup = this.lookup;
+    const base = this.base;
+    const numComps = base.numComps;
+    const outputDelta = base.getOutputLength(numComps, alpha01);
+    const lookup = this.lookup;
 
     for (let i = 0; i < count; ++i) {
-      let lookupPos = src[srcOffset++] * numComps;
+      const lookupPos = src[srcOffset++] * numComps;
       base.getRgbBuffer(lookup, lookupPos, 1, dest, destOffset, 8, alpha01);
       destOffset += outputDelta;
     }
@@ -17647,17 +17627,17 @@ class DeviceGrayCS extends ColorSpace {
   }
 
   getRgbItem(src, srcOffset, dest, destOffset) {
-    let c = src[srcOffset] * 255;
+    const c = src[srcOffset] * 255;
     dest[destOffset] = dest[destOffset + 1] = dest[destOffset + 2] = c;
   }
 
   getRgbBuffer(src, srcOffset, count, dest, destOffset, bits, alpha01) {
-    let scale = 255 / ((1 << bits) - 1);
+    const scale = 255 / ((1 << bits) - 1);
     let j = srcOffset,
         q = destOffset;
 
     for (let i = 0; i < count; ++i) {
-      let c = scale * src[j++];
+      const c = scale * src[j++];
       dest[q++] = c;
       dest[q++] = c;
       dest[q++] = c;
@@ -17688,7 +17668,7 @@ class DeviceRgbCS extends ColorSpace {
       return;
     }
 
-    let scale = 255 / ((1 << bits) - 1);
+    const scale = 255 / ((1 << bits) - 1);
     let j = srcOffset,
         q = destOffset;
 
@@ -17712,10 +17692,10 @@ class DeviceRgbCS extends ColorSpace {
 
 const DeviceCmykCS = function DeviceCmykCSClosure() {
   function convertToRgb(src, srcOffset, srcScale, dest, destOffset) {
-    let c = src[srcOffset] * srcScale;
-    let m = src[srcOffset + 1] * srcScale;
-    let y = src[srcOffset + 2] * srcScale;
-    let k = src[srcOffset + 3] * srcScale;
+    const c = src[srcOffset] * srcScale;
+    const m = src[srcOffset + 1] * srcScale;
+    const y = src[srcOffset + 2] * srcScale;
+    const k = src[srcOffset + 3] * srcScale;
     dest[destOffset] = 255 + c * (-4.387332384609988 * c + 54.48615194189176 * m + 18.82290502165302 * y + 212.25662451639585 * k + -285.2331026137004) + m * (1.7149763477362134 * m - 5.6096736904047315 * y + -17.873870861415444 * k - 5.497006427196366) + y * (-2.5217340131683033 * y - 21.248923337353073 * k + 17.5119270841813) + k * (-21.86122147463605 * k - 189.48180835922747);
     dest[destOffset + 1] = 255 + c * (8.841041422036149 * c + 60.118027045597366 * m + 6.871425592049007 * y + 31.159100130055922 * k + -79.2970844816548) + m * (-15.310361306967817 * m + 17.575251261109482 * y + 131.35250912493976 * k - 190.9453302588951) + y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) + k * (-20.737325471181034 * k - 187.80453709719578);
     dest[destOffset + 2] = 255 + c * (0.8842522430003296 * c + 8.078677503112928 * m + 30.89978309703729 * y - 0.23883238689178934 * k + -14.183576799673286) + m * (10.49593273432072 * m + 63.02378494754052 * y + 50.606957656360734 * k - 112.23884253719248) + y * (0.03296041114873217 * y + 115.60384449646641 * k + -193.58209356861505) + k * (-22.33816807309886 * k - 180.12613974708367);
@@ -17731,7 +17711,7 @@ const DeviceCmykCS = function DeviceCmykCSClosure() {
     }
 
     getRgbBuffer(src, srcOffset, count, dest, destOffset, bits, alpha01) {
-      let scale = 1 / ((1 << bits) - 1);
+      const scale = 1 / ((1 << bits) - 1);
 
       for (let i = 0; i < count; i++) {
         convertToRgb(src, srcOffset, scale, dest, destOffset);
@@ -17751,10 +17731,10 @@ const DeviceCmykCS = function DeviceCmykCSClosure() {
 
 const CalGrayCS = function CalGrayCSClosure() {
   function convertToRgb(cs, src, srcOffset, dest, destOffset, scale) {
-    let A = src[srcOffset] * scale;
-    let AG = Math.pow(A, cs.G);
-    let L = cs.YW * AG;
-    let val = Math.max(295.8 * Math.pow(L, 0.333333333333333333) - 40.8, 0);
+    const A = src[srcOffset] * scale;
+    const AG = Math.pow(A, cs.G);
+    const L = cs.YW * AG;
+    const val = Math.max(295.8 * Math.pow(L, 0.333333333333333333) - 40.8, 0);
     dest[destOffset] = val;
     dest[destOffset + 1] = val;
     dest[destOffset + 2] = val;
@@ -17802,7 +17782,7 @@ const CalGrayCS = function CalGrayCSClosure() {
     }
 
     getRgbBuffer(src, srcOffset, count, dest, destOffset, bits, alpha01) {
-      let scale = 1 / ((1 << bits) - 1);
+      const scale = 1 / ((1 << bits) - 1);
 
       for (let i = 0; i < count; ++i) {
         convertToRgb(this, src, srcOffset, dest, destOffset, scale);
@@ -17825,9 +17805,9 @@ const CalRGBCS = function CalRGBCSClosure() {
   const BRADFORD_SCALE_INVERSE_MATRIX = new Float32Array([0.9869929, -0.1470543, 0.1599627, 0.4323053, 0.5183603, 0.0492912, -0.0085287, 0.0400428, 0.9684867]);
   const SRGB_D65_XYZ_TO_RGB_MATRIX = new Float32Array([3.2404542, -1.5371385, -0.4985314, -0.9692660, 1.8760108, 0.0415560, 0.0556434, -0.2040259, 1.0572252]);
   const FLAT_WHITEPOINT_MATRIX = new Float32Array([1, 1, 1]);
-  let tempNormalizeMatrix = new Float32Array(3);
-  let tempConvertMatrix1 = new Float32Array(3);
-  let tempConvertMatrix2 = new Float32Array(3);
+  const tempNormalizeMatrix = new Float32Array(3);
+  const tempConvertMatrix1 = new Float32Array(3);
+  const tempConvertMatrix2 = new Float32Array(3);
   const DECODE_L_CONSTANT = Math.pow((8 + 16) / 116, 3) / 8.0;
 
   function matrixProduct(a, b, result) {
@@ -17883,19 +17863,19 @@ const CalRGBCS = function CalRGBCSClosure() {
       return;
     }
 
-    let zeroDecodeL = decodeL(0);
-    let X_DST = zeroDecodeL;
-    let X_SRC = decodeL(sourceBlackPoint[0]);
-    let Y_DST = zeroDecodeL;
-    let Y_SRC = decodeL(sourceBlackPoint[1]);
-    let Z_DST = zeroDecodeL;
-    let Z_SRC = decodeL(sourceBlackPoint[2]);
-    let X_Scale = (1 - X_DST) / (1 - X_SRC);
-    let X_Offset = 1 - X_Scale;
-    let Y_Scale = (1 - Y_DST) / (1 - Y_SRC);
-    let Y_Offset = 1 - Y_Scale;
-    let Z_Scale = (1 - Z_DST) / (1 - Z_SRC);
-    let Z_Offset = 1 - Z_Scale;
+    const zeroDecodeL = decodeL(0);
+    const X_DST = zeroDecodeL;
+    const X_SRC = decodeL(sourceBlackPoint[0]);
+    const Y_DST = zeroDecodeL;
+    const Y_SRC = decodeL(sourceBlackPoint[1]);
+    const Z_DST = zeroDecodeL;
+    const Z_SRC = decodeL(sourceBlackPoint[2]);
+    const X_Scale = (1 - X_DST) / (1 - X_SRC);
+    const X_Offset = 1 - X_Scale;
+    const Y_Scale = (1 - Y_DST) / (1 - Y_SRC);
+    const Y_Offset = 1 - Y_Scale;
+    const Z_Scale = (1 - Z_DST) / (1 - Z_SRC);
+    const Z_Offset = 1 - Z_Scale;
     result[0] = XYZ_Flat[0] * X_Scale + X_Offset;
     result[1] = XYZ_Flat[1] * Y_Scale + Y_Offset;
     result[2] = XYZ_Flat[2] * Z_Scale + Z_Offset;
@@ -17909,42 +17889,42 @@ const CalRGBCS = function CalRGBCSClosure() {
       return;
     }
 
-    let LMS = result;
+    const LMS = result;
     matrixProduct(BRADFORD_SCALE_MATRIX, XYZ_In, LMS);
-    let LMS_Flat = tempNormalizeMatrix;
+    const LMS_Flat = tempNormalizeMatrix;
     convertToFlat(sourceWhitePoint, LMS, LMS_Flat);
     matrixProduct(BRADFORD_SCALE_INVERSE_MATRIX, LMS_Flat, result);
   }
 
   function normalizeWhitePointToD65(sourceWhitePoint, XYZ_In, result) {
-    let LMS = result;
+    const LMS = result;
     matrixProduct(BRADFORD_SCALE_MATRIX, XYZ_In, LMS);
-    let LMS_D65 = tempNormalizeMatrix;
+    const LMS_D65 = tempNormalizeMatrix;
     convertToD65(sourceWhitePoint, LMS, LMS_D65);
     matrixProduct(BRADFORD_SCALE_INVERSE_MATRIX, LMS_D65, result);
   }
 
   function convertToRgb(cs, src, srcOffset, dest, destOffset, scale) {
-    let A = adjustToRange(0, 1, src[srcOffset] * scale);
-    let B = adjustToRange(0, 1, src[srcOffset + 1] * scale);
-    let C = adjustToRange(0, 1, src[srcOffset + 2] * scale);
-    let AGR = Math.pow(A, cs.GR);
-    let BGG = Math.pow(B, cs.GG);
-    let CGB = Math.pow(C, cs.GB);
-    let X = cs.MXA * AGR + cs.MXB * BGG + cs.MXC * CGB;
-    let Y = cs.MYA * AGR + cs.MYB * BGG + cs.MYC * CGB;
-    let Z = cs.MZA * AGR + cs.MZB * BGG + cs.MZC * CGB;
-    let XYZ = tempConvertMatrix1;
+    const A = adjustToRange(0, 1, src[srcOffset] * scale);
+    const B = adjustToRange(0, 1, src[srcOffset + 1] * scale);
+    const C = adjustToRange(0, 1, src[srcOffset + 2] * scale);
+    const AGR = Math.pow(A, cs.GR);
+    const BGG = Math.pow(B, cs.GG);
+    const CGB = Math.pow(C, cs.GB);
+    const X = cs.MXA * AGR + cs.MXB * BGG + cs.MXC * CGB;
+    const Y = cs.MYA * AGR + cs.MYB * BGG + cs.MYC * CGB;
+    const Z = cs.MZA * AGR + cs.MZB * BGG + cs.MZC * CGB;
+    const XYZ = tempConvertMatrix1;
     XYZ[0] = X;
     XYZ[1] = Y;
     XYZ[2] = Z;
-    let XYZ_Flat = tempConvertMatrix2;
+    const XYZ_Flat = tempConvertMatrix2;
     normalizeWhitePointToFlat(cs.whitePoint, XYZ, XYZ_Flat);
-    let XYZ_Black = tempConvertMatrix1;
+    const XYZ_Black = tempConvertMatrix1;
     compensateBlackPoint(cs.blackPoint, XYZ_Flat, XYZ_Black);
-    let XYZ_D65 = tempConvertMatrix2;
+    const XYZ_D65 = tempConvertMatrix2;
     normalizeWhitePointToD65(FLAT_WHITEPOINT_MATRIX, XYZ_Black, XYZ_D65);
-    let SRGB = tempConvertMatrix1;
+    const SRGB = tempConvertMatrix1;
     matrixProduct(SRGB_D65_XYZ_TO_RGB_MATRIX, XYZ_D65, SRGB);
     dest[destOffset] = sRGBTransferFunction(SRGB[0]) * 255;
     dest[destOffset + 1] = sRGBTransferFunction(SRGB[1]) * 255;
@@ -17962,13 +17942,13 @@ const CalRGBCS = function CalRGBCSClosure() {
       blackPoint = blackPoint || new Float32Array(3);
       gamma = gamma || new Float32Array([1, 1, 1]);
       matrix = matrix || new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
-      let XW = whitePoint[0];
-      let YW = whitePoint[1];
-      let ZW = whitePoint[2];
+      const XW = whitePoint[0];
+      const YW = whitePoint[1];
+      const ZW = whitePoint[2];
       this.whitePoint = whitePoint;
-      let XB = blackPoint[0];
-      let YB = blackPoint[1];
-      let ZB = blackPoint[2];
+      const XB = blackPoint[0];
+      const YB = blackPoint[1];
+      const ZB = blackPoint[2];
       this.blackPoint = blackPoint;
       this.GR = gamma[0];
       this.GG = gamma[1];
@@ -18003,7 +17983,7 @@ const CalRGBCS = function CalRGBCSClosure() {
     }
 
     getRgbBuffer(src, srcOffset, count, dest, destOffset, bits, alpha01) {
-      let scale = 1 / ((1 << bits) - 1);
+      const scale = 1 / ((1 << bits) - 1);
 
       for (let i = 0; i < count; ++i) {
         convertToRgb(this, src, srcOffset, dest, destOffset, scale);
@@ -18061,12 +18041,12 @@ const LabCS = function LabCSClosure() {
       bs = cs.bmin;
     }
 
-    let M = (Ls + 16) / 116;
-    let L = M + as / 500;
-    let N = M - bs / 200;
-    let X = cs.XW * fn_g(L);
-    let Y = cs.YW * fn_g(M);
-    let Z = cs.ZW * fn_g(N);
+    const M = (Ls + 16) / 116;
+    const L = M + as / 500;
+    const N = M - bs / 200;
+    const X = cs.XW * fn_g(L);
+    const Y = cs.YW * fn_g(M);
+    const Z = cs.ZW * fn_g(N);
     let r, g, b;
 
     if (cs.ZW < 1) {
@@ -18128,7 +18108,7 @@ const LabCS = function LabCSClosure() {
     }
 
     getRgbBuffer(src, srcOffset, count, dest, destOffset, bits, alpha01) {
-      let maxVal = (1 << bits) - 1;
+      const maxVal = (1 << bits) - 1;
 
       for (let i = 0; i < count; i++) {
         convertToRgb(this, src, srcOffset, maxVal, dest, destOffset);
@@ -18966,8 +18946,8 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       const xref = params.xref;
 
       for (let i = 0, ii = options.length; i < ii; i++) {
-        let option = xref.fetchIfRef(options[i]);
-        let isOptionArray = Array.isArray(option);
+        const option = xref.fetchIfRef(options[i]);
+        const isOptionArray = Array.isArray(option);
         this.data.options[i] = {
           exportValue: isOptionArray ? xref.fetchIfRef(option[0]) : option,
           displayValue: (0, _util.stringToPDFString)(isOptionArray ? xref.fetchIfRef(option[1]) : option)
@@ -20354,7 +20334,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var SMALL_IMAGE_DIMENSIONS = 200;
 
       if (isInline && !softMask && !mask && !(image instanceof _jpeg_stream.JpegStream) && w + h < SMALL_IMAGE_DIMENSIONS) {
-        let imageObj = new _image.PDFImage({
+        const imageObj = new _image.PDFImage({
           xref: this.xref,
           res: resources,
           image,
@@ -20468,7 +20448,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var transferObj = smask.get("TR");
 
       if ((0, _function.isPDFFunction)(transferObj)) {
-        let transferFn = this.pdfFunctionFactory.create(transferObj);
+        const transferFn = this.pdfFunctionFactory.create(transferObj);
         var transferMap = new Uint8Array(256);
         var tmp = new Float32Array(1);
 
@@ -20485,10 +20465,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     },
 
     handleTilingType(fn, args, resources, pattern, patternDict, operatorList, task) {
-      let tilingOpList = new _operator_list.OperatorList();
-      let resourcesArray = [patternDict.get("Resources"), resources];
+      const tilingOpList = new _operator_list.OperatorList();
+      const resourcesArray = [patternDict.get("Resources"), resources];
 
-      let patternResources = _primitives.Dict.merge(this.xref, resourcesArray);
+      const patternResources = _primitives.Dict.merge(this.xref, resourcesArray);
 
       return this.getOperatorList({
         stream: pattern,
@@ -20569,8 +20549,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var promise = Promise.resolve();
 
       for (var i = 0, ii = gStateKeys.length; i < ii; i++) {
-        let key = gStateKeys[i];
-        let value = gState.get(key);
+        const key = gStateKeys[i];
+        const value = gState.get(key);
 
         switch (key) {
           case "Type":
@@ -20681,11 +20661,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           featureId: _util.UNSUPPORTED_FEATURES.font
         });
         (0, _util.warn)(`${partialMsg} -- attempting to fallback to a default font.`);
-        fontRef = new _primitives.Dict();
-        fontRef.set("BaseFont", _primitives.Name.get("PDFJS-FallbackFont"));
-        fontRef.set("Type", _primitives.Name.get("FallbackType"));
-        fontRef.set("Subtype", _primitives.Name.get("FallbackType"));
-        fontRef.set("Encoding", _primitives.Name.get("WinAnsiEncoding"));
+        fontRef = PartialEvaluator.getFallbackFontDict();
       }
 
       if (this.fontCache.has(fontRef)) {
@@ -20895,7 +20871,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       }
 
       return new Promise(function promiseBody(resolve, reject) {
-        let next = function (promise) {
+        const next = function (promise) {
           Promise.all([promise, operatorList.ready]).then(function () {
             try {
               promiseBody(resolve, reject);
@@ -20938,7 +20914,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                   throw new _util.FormatError("XObject must be referred to by name.");
                 }
 
-                let xobj = xobjs.get(name);
+                const xobj = xobjs.get(name);
 
                 if (!xobj) {
                   operatorList.addOp(fn, args);
@@ -20950,7 +20926,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                   throw new _util.FormatError("XObject should be a stream");
                 }
 
-                let type = xobj.dict.get("Subtype");
+                const type = xobj.dict.get("Subtype");
 
                 if (!(0, _primitives.isName)(type)) {
                   throw new _util.FormatError("XObject should have a Name subtype");
@@ -21509,7 +21485,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       }
 
       function enqueueChunk() {
-        let length = textContent.items.length;
+        const length = textContent.items.length;
 
         if (length > 0) {
           sink.enqueue(textContent, length);
@@ -21520,7 +21496,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
       var timeSlotManager = new TimeSlotManager();
       return new Promise(function promiseBody(resolve, reject) {
-        let next = function (promise) {
+        const next = function (promise) {
           enqueueChunk();
           Promise.all([promise, sink.ready]).then(function () {
             try {
@@ -21718,7 +21694,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                   throw new _util.FormatError("XObject must be referred to by name.");
                 }
 
-                let xobj = xobjs.get(name);
+                const xobj = xobjs.get(name);
 
                 if (!xobj) {
                   resolveXObject();
@@ -21729,7 +21705,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                   throw new _util.FormatError("XObject should be a stream");
                 }
 
-                let type = xobj.dict.get("Subtype");
+                const type = xobj.dict.get("Subtype");
 
                 if (!(0, _primitives.isName)(type)) {
                   throw new _util.FormatError("XObject should have a Name subtype");
@@ -21741,16 +21717,16 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                   return;
                 }
 
-                let currentState = stateManager.state.clone();
-                let xObjStateManager = new StateManager(currentState);
-                let matrix = xobj.dict.getArray("Matrix");
+                const currentState = stateManager.state.clone();
+                const xObjStateManager = new StateManager(currentState);
+                const matrix = xobj.dict.getArray("Matrix");
 
                 if (Array.isArray(matrix) && matrix.length === 6) {
                   xObjStateManager.transform(matrix);
                 }
 
                 enqueueChunk();
-                let sinkWrapper = {
+                const sinkWrapper = {
                   enqueueInvoked: false,
 
                   enqueue(chunk, size) {
@@ -21855,8 +21831,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     },
 
     extractDataStructures: function PartialEvaluator_extractDataStructures(dict, baseDict, properties) {
-      let xref = this.xref,
-          cidToGidBytes;
+      const xref = this.xref;
+      let cidToGidBytes;
       var toUnicode = dict.get("ToUnicode") || baseDict.get("ToUnicode");
       var toUnicodePromise = toUnicode ? this.readToUnicode(toUnicode) : Promise.resolve(undefined);
 
@@ -21962,15 +21938,13 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
     _buildSimpleFontToUnicode(properties, forceGlyphs = false) {
       (0, _util.assert)(!properties.composite, "Must be a simple font.");
-      let toUnicode = [],
-          charcode,
-          glyphName;
-      let encoding = properties.defaultEncoding.slice();
-      let baseEncodingName = properties.baseEncodingName;
-      let differences = properties.differences;
+      const toUnicode = [];
+      const encoding = properties.defaultEncoding.slice();
+      const baseEncodingName = properties.baseEncodingName;
+      const differences = properties.differences;
 
-      for (charcode in differences) {
-        glyphName = differences[charcode];
+      for (const charcode in differences) {
+        const glyphName = differences[charcode];
 
         if (glyphName === ".notdef") {
           continue;
@@ -21979,10 +21953,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         encoding[charcode] = glyphName;
       }
 
-      let glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
+      const glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
 
-      for (charcode in encoding) {
-        glyphName = encoding[charcode];
+      for (const charcode in encoding) {
+        let glyphName = encoding[charcode];
 
         if (glyphName === "") {
           continue;
@@ -22024,7 +21998,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               break;
 
             default:
-              let unicode = (0, _unicode.getUnicodeForGlyph)(glyphName, glyphsUnicodeMap);
+              const unicode = (0, _unicode.getUnicodeForGlyph)(glyphName, glyphsUnicodeMap);
 
               if (unicode !== -1) {
                 code = unicode;
@@ -22034,7 +22008,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
           if (code) {
             if (baseEncodingName && code === +charcode) {
-              let baseEncoding = (0, _encodings.getEncoding)(baseEncodingName);
+              const baseEncoding = (0, _encodings.getEncoding)(baseEncodingName);
 
               if (baseEncoding && (glyphName = baseEncoding[charcode])) {
                 toUnicode[charcode] = String.fromCharCode(glyphsUnicodeMap[glyphName]);
@@ -22070,24 +22044,24 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       }
 
       if (properties.composite && (properties.cMap.builtInCMap && !(properties.cMap instanceof _cmap.IdentityCMap) || properties.cidSystemInfo.registry === "Adobe" && (properties.cidSystemInfo.ordering === "GB1" || properties.cidSystemInfo.ordering === "CNS1" || properties.cidSystemInfo.ordering === "Japan1" || properties.cidSystemInfo.ordering === "Korea1"))) {
-        let registry = properties.cidSystemInfo.registry;
-        let ordering = properties.cidSystemInfo.ordering;
+        const registry = properties.cidSystemInfo.registry;
+        const ordering = properties.cidSystemInfo.ordering;
 
-        let ucs2CMapName = _primitives.Name.get(registry + "-" + ordering + "-UCS2");
+        const ucs2CMapName = _primitives.Name.get(registry + "-" + ordering + "-UCS2");
 
         return _cmap.CMapFactory.create({
           encoding: ucs2CMapName,
           fetchBuiltInCMap: this.fetchBuiltInCMap,
           useCMap: null
         }).then(function (ucs2CMap) {
-          let cMap = properties.cMap;
-          let toUnicode = [];
+          const cMap = properties.cMap;
+          const toUnicode = [];
           cMap.forEach(function (charcode, cid) {
             if (cid > 0xffff) {
               throw new _util.FormatError("Max size of CID is 65,535");
             }
 
-            let ucs2 = ucs2CMap.lookup(cid);
+            const ucs2 = ucs2CMap.lookup(cid);
 
             if (ucs2) {
               toUnicode[charcode] = String.fromCharCode((ucs2.charCodeAt(0) << 8) + ucs2.charCodeAt(1));
@@ -22594,6 +22568,19 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     }
   };
 
+  PartialEvaluator.getFallbackFontDict = function () {
+    if (this._fallbackFontDict) {
+      return this._fallbackFontDict;
+    }
+
+    const dict = new _primitives.Dict();
+    dict.set("BaseFont", _primitives.Name.get("PDFJS-FallbackFont"));
+    dict.set("Type", _primitives.Name.get("FallbackType"));
+    dict.set("Subtype", _primitives.Name.get("FallbackType"));
+    dict.set("Encoding", _primitives.Name.get("WinAnsiEncoding"));
+    return this._fallbackFontDict = dict;
+  };
+
   return PartialEvaluator;
 }();
 
@@ -22650,7 +22637,7 @@ var TranslatedFont = function TranslatedFontClosure() {
       var charProcOperatorList = Object.create(null);
 
       for (var i = 0, n = charProcKeys.length; i < n; ++i) {
-        let key = charProcKeys[i];
+        const key = charProcKeys[i];
         loadCharProcsPromise = loadCharProcsPromise.then(function () {
           var glyphStream = charProcs.get(key);
           var operatorList = new _operator_list.OperatorList();
@@ -23379,8 +23366,8 @@ class CMap {
   }
 
   mapBfRangeToArray(low, high, array) {
-    let i = 0,
-        ii = array.length;
+    const ii = array.length;
+    let i = 0;
 
     while (low <= high && i < ii) {
       this._map[low] = array[i++];
@@ -23401,8 +23388,8 @@ class CMap {
   }
 
   forEach(callback) {
-    let map = this._map;
-    let length = map.length;
+    const map = this._map;
+    const length = map.length;
 
     if (length <= 0x10000) {
       for (let i = 0; i < length; i++) {
@@ -23411,7 +23398,7 @@ class CMap {
         }
       }
     } else {
-      for (let i in map) {
+      for (const i in map) {
         callback(i, map[i]);
       }
     }
@@ -23424,7 +23411,7 @@ class CMap {
       return map.indexOf(value);
     }
 
-    for (let charCode in map) {
+    for (const charCode in map) {
       if (map[charCode] === value) {
         return charCode | 0;
       }
@@ -24245,11 +24232,11 @@ var _standard_fonts = __w_pdfjs_require__(32);
 
 var _unicode = __w_pdfjs_require__(33);
 
+var _core_utils = __w_pdfjs_require__(7);
+
 var _font_renderer = __w_pdfjs_require__(34);
 
 var _cmap = __w_pdfjs_require__(26);
-
-var _core_utils = __w_pdfjs_require__(7);
 
 var _stream = __w_pdfjs_require__(11);
 
@@ -24415,13 +24402,13 @@ var ToUnicodeMap = function ToUnicodeMapClosure() {
     },
 
     charCodeOf(value) {
-      let map = this._map;
+      const map = this._map;
 
       if (map.length <= 0x10000) {
         return map.indexOf(value);
       }
 
-      for (let charCode in map) {
+      for (const charCode in map) {
         if (map[charCode] === value) {
           return charCode | 0;
         }
@@ -24587,7 +24574,7 @@ var OpenTypeFileBuilder = function OpenTypeFileBuilderClosure() {
         var checksum = 0;
 
         for (j = tableOffsets[i], jj = tableOffsets[i + 1]; j < jj; j += 4) {
-          var quad = (0, _util.readUint32)(file, j);
+          var quad = (0, _core_utils.readUint32)(file, j);
           checksum = checksum + quad >>> 0;
         }
 
@@ -24770,11 +24757,11 @@ var Font = function FontClosure() {
 
   function isTrueTypeFile(file) {
     var header = file.peekBytes(4);
-    return (0, _util.readUint32)(header, 0) === 0x00010000 || (0, _util.bytesToString)(header) === "true";
+    return (0, _core_utils.readUint32)(header, 0) === 0x00010000 || (0, _util.bytesToString)(header) === "true";
   }
 
   function isTrueTypeCollectionFile(file) {
-    let header = file.peekBytes(4);
+    const header = file.peekBytes(4);
     return (0, _util.bytesToString)(header) === "ttcf";
   }
 
@@ -25261,7 +25248,7 @@ var Font = function FontClosure() {
             map[+charCode] = SupplementalGlyphMapForArialBlack[charCode];
           }
         } else if (/Calibri/i.test(name)) {
-          let SupplementalGlyphMapForCalibri = (0, _standard_fonts.getSupplementalGlyphMapForCalibri)();
+          const SupplementalGlyphMapForCalibri = (0, _standard_fonts.getSupplementalGlyphMapForCalibri)();
 
           for (charCode in SupplementalGlyphMapForCalibri) {
             map[+charCode] = SupplementalGlyphMapForCalibri[charCode];
@@ -25324,7 +25311,7 @@ var Font = function FontClosure() {
       const VALID_TABLES = ["OS/2", "cmap", "head", "hhea", "hmtx", "maxp", "name", "post", "loca", "glyf", "fpgm", "prep", "cvt ", "CFF "];
 
       function readTables(file, numTables) {
-        let tables = Object.create(null);
+        const tables = Object.create(null);
         tables["OS/2"] = null;
         tables["cmap"] = null;
         tables["head"] = null;
@@ -25335,7 +25322,7 @@ var Font = function FontClosure() {
         tables["post"] = null;
 
         for (let i = 0; i < numTables; i++) {
-          let table = readTableEntry(font);
+          const table = readTableEntry(font);
 
           if (!VALID_TABLES.includes(table.tag)) {
             continue;
@@ -25387,18 +25374,18 @@ var Font = function FontClosure() {
       }
 
       function readTrueTypeCollectionHeader(ttc) {
-        let ttcTag = (0, _util.bytesToString)(ttc.getBytes(4));
+        const ttcTag = (0, _util.bytesToString)(ttc.getBytes(4));
         (0, _util.assert)(ttcTag === "ttcf", "Must be a TrueType Collection font.");
-        let majorVersion = ttc.getUint16();
-        let minorVersion = ttc.getUint16();
-        let numFonts = ttc.getInt32() >>> 0;
-        let offsetTable = [];
+        const majorVersion = ttc.getUint16();
+        const minorVersion = ttc.getUint16();
+        const numFonts = ttc.getInt32() >>> 0;
+        const offsetTable = [];
 
         for (let i = 0; i < numFonts; i++) {
           offsetTable.push(ttc.getInt32() >>> 0);
         }
 
-        let header = {
+        const header = {
           ttcTag,
           majorVersion,
           minorVersion,
@@ -25421,25 +25408,25 @@ var Font = function FontClosure() {
       }
 
       function readTrueTypeCollectionData(ttc, fontName) {
-        let {
+        const {
           numFonts,
           offsetTable
         } = readTrueTypeCollectionHeader(ttc);
 
         for (let i = 0; i < numFonts; i++) {
           ttc.pos = (ttc.start || 0) + offsetTable[i];
-          let potentialHeader = readOpenTypeHeader(ttc);
-          let potentialTables = readTables(ttc, potentialHeader.numTables);
+          const potentialHeader = readOpenTypeHeader(ttc);
+          const potentialTables = readTables(ttc, potentialHeader.numTables);
 
           if (!potentialTables["name"]) {
             throw new _util.FormatError('TrueType Collection font must contain a "name" table.');
           }
 
-          let nameTable = readNameTable(potentialTables["name"]);
+          const nameTable = readNameTable(potentialTables["name"]);
 
           for (let j = 0, jj = nameTable.length; j < jj; j++) {
             for (let k = 0, kk = nameTable[j].length; k < kk; k++) {
-              let nameEntry = nameTable[j][k];
+              const nameEntry = nameTable[j][k];
 
               if (nameEntry && nameEntry.replace(/\s/g, "") === fontName) {
                 return {
@@ -26170,7 +26157,7 @@ var Font = function FontClosure() {
                 ttContext.functionsUsed[funcId] = true;
 
                 if (funcId in ttContext.functionsStackDeltas) {
-                  let newStackLength = stack.length + ttContext.functionsStackDeltas[funcId];
+                  const newStackLength = stack.length + ttContext.functionsStackDeltas[funcId];
 
                   if (newStackLength < 0) {
                     (0, _util.warn)("TT: CALL invalid functions stack delta.");
@@ -26387,7 +26374,7 @@ var Font = function FontClosure() {
       let header, tables;
 
       if (isTrueTypeCollectionFile(font)) {
-        let ttcData = readTrueTypeCollectionData(font, this.name);
+        const ttcData = readTrueTypeCollectionData(font, this.name);
         header = ttcData.header;
         tables = ttcData.tables;
       } else {
@@ -27064,7 +27051,7 @@ var Type1Font = function Type1FontClosure() {
       if (j >= signatureLength) {
         i += j;
 
-        while (i < streamBytesLength && (0, _util.isSpace)(streamBytes[i])) {
+        while (i < streamBytesLength && (0, _core_utils.isSpace)(streamBytes[i])) {
           i++;
         }
 
@@ -27318,9 +27305,9 @@ var Type1Font = function Type1FontClosure() {
       var i, ii;
 
       for (i = 0; i < count; i++) {
-        let glyphName = charstrings[i].glyphName;
+        const glyphName = charstrings[i].glyphName;
 
-        let index = _cff_parser.CFFStandardStrings.indexOf(glyphName);
+        const index = _cff_parser.CFFStandardStrings.indexOf(glyphName);
 
         if (index === -1) {
           strings.add(glyphName);
@@ -29088,23 +29075,23 @@ var CFFCompiler = function CFFCompilerClosure() {
     },
     compileCharset: function CFFCompiler_compileCharset(charset, numGlyphs, strings, isCIDFont) {
       let out;
-      let numGlyphsLessNotDef = numGlyphs - 1;
+      const numGlyphsLessNotDef = numGlyphs - 1;
 
       if (isCIDFont) {
         out = new Uint8Array([2, 0, 0, numGlyphsLessNotDef >> 8 & 0xff, numGlyphsLessNotDef & 0xff]);
       } else {
-        let length = 1 + numGlyphsLessNotDef * 2;
+        const length = 1 + numGlyphsLessNotDef * 2;
         out = new Uint8Array(length);
         out[0] = 0;
         let charsetIndex = 0;
-        let numCharsets = charset.charset.length;
+        const numCharsets = charset.charset.length;
         let warned = false;
 
         for (let i = 1; i < out.length; i += 2) {
           let sid = 0;
 
           if (charsetIndex < numCharsets) {
-            let name = charset.charset[charsetIndex++];
+            const name = charset.charset[charsetIndex++];
             sid = strings.getSID(name);
 
             if (sid === -1) {
@@ -29128,7 +29115,7 @@ var CFFCompiler = function CFFCompilerClosure() {
       return this.compileTypedArray(encoding.raw);
     },
     compileFDSelect: function CFFCompiler_compileFDSelect(fdSelect) {
-      let format = fdSelect.format;
+      const format = fdSelect.format;
       let out, i;
 
       switch (format) {
@@ -29143,12 +29130,12 @@ var CFFCompiler = function CFFCompilerClosure() {
           break;
 
         case 3:
-          let start = 0;
+          const start = 0;
           let lastFD = fdSelect.fdSelect[0];
-          let ranges = [format, 0, 0, start >> 8 & 0xff, start & 0xff, lastFD];
+          const ranges = [format, 0, 0, start >> 8 & 0xff, start & 0xff, lastFD];
 
           for (i = 1; i < fdSelect.fdSelect.length; i++) {
-            let currentFD = fdSelect.fdSelect[i];
+            const currentFD = fdSelect.fdSelect[i];
 
             if (currentFD !== lastFD) {
               ranges.push(i >> 8 & 0xff, i & 0xff, currentFD);
@@ -29156,7 +29143,7 @@ var CFFCompiler = function CFFCompilerClosure() {
             }
           }
 
-          let numRanges = (ranges.length - 3) / 3;
+          const numRanges = (ranges.length - 3) / 3;
           ranges[1] = numRanges >> 8 & 0xff;
           ranges[2] = numRanges & 0xff;
           ranges.push(i >> 8 & 0xff, i & 0xff);
@@ -37050,11 +37037,11 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
             subrCode = null;
 
             if (font.isCFFCIDFont) {
-              let fdIndex = font.fdSelect.getFDIndex(glyphId);
+              const fdIndex = font.fdSelect.getFDIndex(glyphId);
 
               if (fdIndex >= 0 && fdIndex < font.fdArray.length) {
-                let fontDict = font.fdArray[fdIndex],
-                    subrs;
+                const fontDict = font.fdArray[fdIndex];
+                let subrs;
 
                 if (fontDict.privateDict && fontDict.privateDict.subrsIndex) {
                   subrs = fontDict.privateDict.subrsIndex.objects;
@@ -37415,10 +37402,10 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
       let fontMatrix = this.fontMatrix;
 
       if (this.isCFFCIDFont) {
-        let fdIndex = this.fdSelect.getFDIndex(glyphId);
+        const fdIndex = this.fdSelect.getFDIndex(glyphId);
 
         if (fdIndex >= 0 && fdIndex < this.fdArray.length) {
-          let fontDict = this.fdArray[fdIndex];
+          const fontDict = this.fdArray[fdIndex];
           fontMatrix = fontDict.getByName("FontMatrix") || _util.FONT_IDENTITY_MATRIX;
         } else {
           (0, _util.warn)("Invalid fd index for glyph index.");
@@ -37548,11 +37535,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Type1Parser = void 0;
 
-var _util = __w_pdfjs_require__(2);
-
 var _encodings = __w_pdfjs_require__(30);
 
+var _core_utils = __w_pdfjs_require__(7);
+
 var _stream = __w_pdfjs_require__(11);
+
+var _util = __w_pdfjs_require__(2);
 
 var HINTING_ENABLED = false;
 
@@ -37992,7 +37981,7 @@ var Type1Parser = function Type1ParserClosure() {
           }
         } else if (ch === 0x25) {
           comment = true;
-        } else if (!(0, _util.isSpace)(ch)) {
+        } else if (!(0, _core_utils.isSpace)(ch)) {
           break;
         }
 
@@ -38009,7 +37998,7 @@ var Type1Parser = function Type1ParserClosure() {
       do {
         token += String.fromCharCode(ch);
         ch = this.nextChar();
-      } while (ch >= 0 && !(0, _util.isSpace)(ch) && !isSpecial(ch));
+      } while (ch >= 0 && !(0, _core_utils.isSpace)(ch) && !isSpecial(ch));
 
       return token;
     },
@@ -39162,14 +39151,14 @@ Shadings.Dummy = function DummyClosure() {
 }();
 
 function getTilingPatternIR(operatorList, dict, args) {
-  let matrix = dict.getArray("Matrix");
+  const matrix = dict.getArray("Matrix");
 
-  let bbox = _util.Util.normalizeRect(dict.getArray("BBox"));
+  const bbox = _util.Util.normalizeRect(dict.getArray("BBox"));
 
-  let xstep = dict.get("XStep");
-  let ystep = dict.get("YStep");
-  let paintType = dict.get("PaintType");
-  let tilingType = dict.get("TilingType");
+  const xstep = dict.get("XStep");
+  const ystep = dict.get("YStep");
+  const paintType = dict.get("PaintType");
+  const tilingType = dict.get("TilingType");
 
   if (bbox[2] - bbox[0] === 0 || bbox[3] - bbox[1] === 0) {
     throw new _util.FormatError(`Invalid getTilingPatternIR /BBox array: [${bbox}].`);
@@ -42463,7 +42452,7 @@ var _primitives = __w_pdfjs_require__(4);
 
 var _ps_parser = __w_pdfjs_require__(40);
 
-let IsEvalSupportedCached = {
+const IsEvalSupportedCached = {
   get value() {
     return (0, _util.shadow)(this, "value", (0, _util.isEvalSupported)());
   }
@@ -42628,7 +42617,7 @@ var PDFFunction = function PDFFunctionClosure() {
       isEvalSupported,
       fn
     }) {
-      let IR = this.getIR({
+      const IR = this.getIR({
         xref,
         isEvalSupported,
         fn
@@ -42954,7 +42943,7 @@ var PDFFunction = function PDFFunctionClosure() {
       var code = IR[3];
 
       if (isEvalSupported && IsEvalSupportedCached.value) {
-        let compiled = new PostScriptCompiler().compile(code, domain, range);
+        const compiled = new PostScriptCompiler().compile(code, domain, range);
 
         if (compiled) {
           return new Function("src", "srcOffset", "dest", "destOffset", compiled);
@@ -43818,6 +43807,8 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(4);
 
+var _core_utils = __w_pdfjs_require__(7);
+
 class PostScriptParser {
   constructor(lexer) {
     this.lexer = lexer;
@@ -43973,7 +43964,7 @@ class PostScriptLexer {
         }
       } else if (ch === 0x25) {
         comment = true;
-      } else if (!(0, _util.isSpace)(ch)) {
+      } else if (!(0, _core_utils.isSpace)(ch)) {
         break;
       }
 
@@ -44436,7 +44427,7 @@ var PDFImage = function PDFImageClosure() {
         }
       }
 
-      let resources = isInline ? res : null;
+      const resources = isInline ? res : null;
       this.colorSpace = _colorspace.ColorSpace.parse(colorSpace, xref, resources, pdfFunctionFactory);
       this.numComps = this.colorSpace.numComps;
     }
