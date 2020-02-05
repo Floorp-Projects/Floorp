@@ -872,9 +872,9 @@ class nsINode : public mozilla::dom::EventTarget {
   void DeleteProperty(const nsAtom* aPropertyName);
 
   /**
-   * Unset a property associated with this node. The value will not be
-   * destroyed but rather returned. It is the caller's responsibility to
-   * destroy the value after that point.
+   * Take a property associated with this node. The value will not be destroyed
+   * but rather returned. It is the caller's responsibility to destroy the value
+   * after that point.
    *
    * @param aPropertyName  name of property to unset.
    * @param aStatus        out parameter for storing resulting status.
@@ -884,7 +884,7 @@ class nsINode : public mozilla::dom::EventTarget {
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  void* UnsetProperty(const nsAtom* aPropertyName, nsresult* aStatus = nullptr);
+  void* TakeProperty(const nsAtom* aPropertyName, nsresult* aStatus = nullptr);
 
   bool HasProperties() const { return HasFlag(NODE_HAS_PROPERTIES); }
 

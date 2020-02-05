@@ -3207,7 +3207,7 @@ void nsCSSFrameConstructor::ConstructTextFrame(
   if (newFrame->IsGeneratedContentFrame()) {
     UniquePtr<nsGenConInitializer> initializer(
         static_cast<nsGenConInitializer*>(
-            aContent->UnsetProperty(nsGkAtoms::genConInitializerProperty)));
+            aContent->TakeProperty(nsGkAtoms::genConInitializerProperty)));
     if (initializer) {
       if (initializer->mNode.release()->InitTextFrame(
               initializer->mList,

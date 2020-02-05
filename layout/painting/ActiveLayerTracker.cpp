@@ -253,8 +253,8 @@ void ActiveLayerTracker::TransferActivityToContent(nsIFrame* aFrame,
 /* static */
 void ActiveLayerTracker::TransferActivityToFrame(nsIContent* aContent,
                                                  nsIFrame* aFrame) {
-  LayerActivity* layerActivity = static_cast<LayerActivity*>(
-      aContent->UnsetProperty(nsGkAtoms::LayerActivity));
+  auto* layerActivity = static_cast<LayerActivity*>(
+      aContent->TakeProperty(nsGkAtoms::LayerActivity));
   if (!layerActivity) {
     return;
   }

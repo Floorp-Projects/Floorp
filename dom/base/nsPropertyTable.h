@@ -89,11 +89,11 @@ class nsPropertyTable {
   nsresult DeleteProperty(nsPropertyOwner aObject, const nsAtom* aPropertyName);
 
   /**
-   * Unset the property |aPropertyName| in the global category for object
+   * Remove the property |aPropertyName| in the global category for object
    * |aObject|, but do not call the property's destructor function.  The
    * property value is returned.
    */
-  void* UnsetProperty(const nsPropertyOwner& aObject,
+  void* TakeProperty(const nsPropertyOwner& aObject,
                       const nsAtom* aPropertyName,
                       nsresult* aStatus = nullptr) {
     return GetPropertyInternal(aObject, aPropertyName, true, aStatus);
