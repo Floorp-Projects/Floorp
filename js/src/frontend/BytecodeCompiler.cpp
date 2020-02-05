@@ -124,7 +124,7 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   // are the same as are used to compute its Function.prototype.toString()
   // value.
   MOZ_MUST_USE bool createCompleteScript(BytecodeCompiler& info) {
-    JSContext* cx = info.context();
+    JSContext* cx = info.compilationInfo.cx;
     RootedObject global(cx, cx->global());
     uint32_t toStringStart = 0;
     uint32_t len = sourceBuffer_.length();
@@ -179,9 +179,9 @@ static void tellDebuggerAboutCompiledScript(JSContext* cx,
 template <typename Unit>
 static JSScript* CreateGlobalScript(GlobalScriptInfo& info,
                                     JS::SourceText<Unit>& srcBuf) {
-  AutoAssertReportedException assertException(info.context());
+  AutoAssertReportedException assertException(info.compilationInfo.cx);
 
-  LifoAllocScope allocScope(&info.context()->tempLifoAlloc());
+  LifoAllocScope allocScope(&info.compilationInfo.cx->tempLifoAlloc());
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
 
   if (!compiler.prepareScriptParse(allocScope, info)) {
@@ -192,7 +192,8 @@ static JSScript* CreateGlobalScript(GlobalScriptInfo& info,
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(info.context(), info.compilationInfo.script);
+  tellDebuggerAboutCompiledScript(info.compilationInfo.cx,
+                                  info.compilationInfo.script);
 
   assertException.reset();
   return info.compilationInfo.script;
@@ -211,8 +212,8 @@ JSScript* frontend::CompileGlobalScript(GlobalScriptInfo& info,
 template <typename Unit>
 static JSScript* CreateEvalScript(frontend::EvalScriptInfo& info,
                                   SourceText<Unit>& srcBuf) {
-  AutoAssertReportedException assertException(info.context());
-  LifoAllocScope allocScope(&info.context()->tempLifoAlloc());
+  AutoAssertReportedException assertException(info.compilationInfo.cx);
+  LifoAllocScope allocScope(&info.compilationInfo.cx->tempLifoAlloc());
 
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
   if (!compiler.prepareScriptParse(allocScope, info)) {
@@ -223,7 +224,8 @@ static JSScript* CreateEvalScript(frontend::EvalScriptInfo& info,
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(info.context(), info.compilationInfo.script);
+  tellDebuggerAboutCompiledScript(info.compilationInfo.cx,
+                                  info.compilationInfo.script);
 
   assertException.reset();
   return info.compilationInfo.script;
