@@ -145,9 +145,6 @@ Preferences.addAll([
   // Fonts
   { id: "font.language.group", type: "wstring" },
 
-  // Zoom
-  { id: "browser.zoom.full", type: "bool", inverted: true },
-
   // Languages
   { id: "browser.translation.detectLanguage", type: "bool" },
 
@@ -949,6 +946,11 @@ var gMainPane = {
       let parsedZoom = parseFloat((event.target.value / 100).toFixed(2));
       gMainPane.handleDefaultZoomChange(parsedZoom);
     });
+
+    setEventListener("zoomText", "command", function() {
+      win.ZoomManager.toggleZoom();
+    });
+
     let zoomValues = win.ZoomManager.zoomValues.map(a => {
       return Math.round(a * 100);
     });
@@ -966,6 +968,9 @@ var gMainPane = {
     let menupopup = menulist.querySelector("menupopup");
     menupopup.appendChild(fragment);
     menulist.value = Math.round(selected * 100);
+
+    let checkbox = document.getElementById("zoomText");
+    checkbox.checked = !win.ZoomManager.useFullZoom;
 
     document.getElementById("zoomBox").hidden = false;
   },
