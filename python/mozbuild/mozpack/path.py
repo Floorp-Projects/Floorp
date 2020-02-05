@@ -52,7 +52,13 @@ def relpath(path, start):
         # paths, so strip a //?/ prefix if present (bug 1581248)
         path = cargo_workaround(path)
         start = cargo_workaround(start)
-    rel = normsep(os.path.relpath(path, start))
+    try:
+        rel = os.path.relpath(path, start)
+    except ValueError:
+        # On Windows this can throw a ValueError if the two paths are on
+        # different drives. In that case, just return the path.
+        return abspath(path)
+    rel = normsep(rel)
     return '' if rel == '.' else rel
 
 
