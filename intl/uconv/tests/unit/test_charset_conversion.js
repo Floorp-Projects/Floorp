@@ -129,7 +129,12 @@ function getUnicharInputStream(filename, encoding) {
   file.append(filename);
 
   const PR_RDONLY = 0x1;
-  var fis = new FIS(file, PR_RDONLY, 0644, Ci.nsIFileInputStream.CLOSE_ON_EOF);
+  var fis = new FIS(
+    file,
+    PR_RDONLY,
+    "0644",
+    Ci.nsIFileInputStream.CLOSE_ON_EOF
+  );
   return new CIS(fis, encoding, 8192, 0x0);
 }
 
@@ -138,13 +143,17 @@ function getBinaryInputStream(filename, encoding) {
   file.append(filename);
 
   const PR_RDONLY = 0x1;
-  var fis = new FIS(file, PR_RDONLY, 0644, Ci.nsIFileInputStream.CLOSE_ON_EOF);
+  var fis = new FIS(
+    file,
+    PR_RDONLY,
+    "0644",
+    Ci.nsIFileInputStream.CLOSE_ON_EOF
+  );
   return new BIS(fis);
 }
 
 function equalStreams(stream, codePoints) {
-  var sz,
-    currIndex = 0;
+  var currIndex = 0;
   while (true) {
     var unit = stream.readUnit();
     if (unit < 0) {
@@ -154,7 +163,7 @@ function equalStreams(stream, codePoints) {
       return false;
     }
   }
-
+  // eslint-disable-next-line no-unreachable
   do_throw("not reached");
   return false;
 }
@@ -179,6 +188,7 @@ function equalUnicharStreams(s1, s2) {
   }
 
   // not reached
+  // eslint-disable-next-line no-unreachable
   return false;
 }
 

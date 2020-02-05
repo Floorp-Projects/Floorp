@@ -32,14 +32,14 @@ function test(inString) {
 
   var outLen = outString.length;
   for (var pos = 1; pos < 3; ++pos) {
-    outPos = outLen - (9 - pos);
+    let outPos = outLen - (9 - pos);
     if (outPos < 0) {
       outPos = 0;
     }
-    c0 = inString.charCodeAt(0);
-    c1 = inString.charCodeAt(1);
-    c2 = inString.charCodeAt(2);
-    c3 = inString.charCodeAt(3);
+    let c0 = inString.charCodeAt(0);
+    let c1 = inString.charCodeAt(1);
+    let c2 = inString.charCodeAt(2);
+    let c3 = inString.charCodeAt(3);
     if (
       IsASCII(inString.charCodeAt(pos)) &&
       !(
