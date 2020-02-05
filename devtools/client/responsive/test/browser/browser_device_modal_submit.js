@@ -86,14 +86,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Checking new device is added to the device selector.");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
     is(
-      menuItems.length - 2,
+      menuItems.length - 1,
       featuredCount + 1,
       "Got expected number of devices in device selector."
     );
 
-    const menuItem = menuItems.find(
-      item => item.getAttribute("label") === name
-    );
+    const menuItem = findMenuItem(menuItems, value);
     ok(menuItem, value + " added to the device selector.");
   });
 
@@ -123,14 +121,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Checking that the device is not in the device selector.");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
     is(
-      menuItems.length - 2,
+      menuItems.length - 1,
       featuredCount,
       "Got expected number of devices in device selector."
     );
 
-    const menuItem = menuItems.find(
-      item => item.getAttribute("label") === checkedVal
-    );
+    const menuItem = findMenuItem(menuItems, checkedVal);
     ok(!menuItem, checkedVal + " removed from the device selector.");
   });
 
@@ -177,28 +173,24 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, items => {
     is(
-      items.length - 2,
+      items.length - 1,
       featuredCount -
         preferredDevices.removed.size +
         preferredDevices.added.size,
       "Got expected number of devices in device selector."
     );
 
-    const added = findItem(items, addedDevice.name);
+    const added = findMenuItem(items, addedDevice.name);
     ok(added, "Dummy device added to the device selector.");
 
     for (const name of preferredDevices.added.keys()) {
-      const menuItem = findItem(items, name);
+      const menuItem = findMenuItem(items, name);
       ok(menuItem, "Device added by user still in the device selector.");
     }
 
     for (const name of preferredDevices.removed.keys()) {
-      const menuItem = findItem(items, name);
+      const menuItem = findMenuItem(items, name);
       ok(!menuItem, "Device removed by user not in the device selector.");
     }
   });
 });
-
-function findItem(items, name) {
-  return items.find(item => item.getAttribute("label").includes(name));
-}
