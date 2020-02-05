@@ -16,7 +16,7 @@ dictionary AudioWorkletNodeOptions : AudioNodeOptions {
              unsigned long             numberOfOutputs = 1;
              sequence<unsigned long>   outputChannelCount;
              record<DOMString, double> parameterData;
-             object?                   processorOptions = null;
+             object                    processorOptions;
 };
 
 [SecureContext, Pref="dom.audioworklet.enabled",
