@@ -200,14 +200,13 @@ CompartmentPrivate::CompartmentPrivate(
       isUAWidgetCompartment(false),
       hasExclusiveExpandos(false),
       wasShutdown(false),
-      mWrappedJSMap(new JSObject2WrappedJSMap()),
+      mWrappedJSMap(mozilla::MakeUnique<JSObject2WrappedJSMap>()),
       mScope(std::move(scope)) {
   MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
 }
 
 CompartmentPrivate::~CompartmentPrivate() {
   MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
-  delete mWrappedJSMap;
 }
 
 void CompartmentPrivate::SystemIsBeingShutDown() {
@@ -1085,16 +1084,12 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
 
   // Clean up and destroy maps. Any remaining entries in mWrappedJSMap will be
   // cleaned up by the weak pointer callbacks.
-  delete mIID2NativeInterfaceMap;
   mIID2NativeInterfaceMap = nullptr;
 
-  delete mClassInfo2NativeSetMap;
   mClassInfo2NativeSetMap = nullptr;
 
-  delete mNativeSetMap;
   mNativeSetMap = nullptr;
 
-  delete mDyingWrappedNativeProtoMap;
   mDyingWrappedNativeProtoMap = nullptr;
 
   // Prevent ~LinkedList assertion failures if we leaked things.
@@ -1105,7 +1100,6 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
 
 XPCJSRuntime::~XPCJSRuntime() {
   MOZ_COUNT_DTOR_INHERITED(XPCJSRuntime, CycleCollectedJSRuntime);
-  delete mWrappedJSMap;
 }
 
 // If |*anonymizeID| is non-zero and this is a user realm, the name will
@@ -2913,12 +2907,13 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 
 XPCJSRuntime::XPCJSRuntime(JSContext* aCx)
     : CycleCollectedJSRuntime(aCx),
-      mWrappedJSMap(new JSObject2WrappedJSMap()),
-      mIID2NativeInterfaceMap(new IID2NativeInterfaceMap()),
-      mClassInfo2NativeSetMap(new ClassInfo2NativeSetMap()),
-      mNativeSetMap(new NativeSetMap()),
+      mWrappedJSMap(mozilla::MakeUnique<JSObject2WrappedJSMap>()),
+      mIID2NativeInterfaceMap(mozilla::MakeUnique<IID2NativeInterfaceMap>()),
+      mClassInfo2NativeSetMap(mozilla::MakeUnique<ClassInfo2NativeSetMap>()),
+      mNativeSetMap(mozilla::MakeUnique<NativeSetMap>()),
       mWrappedNativeScopes(),
-      mDyingWrappedNativeProtoMap(new XPCWrappedNativeProtoMap()),
+      mDyingWrappedNativeProtoMap(
+          mozilla::MakeUnique<XPCWrappedNativeProtoMap>()),
       mGCIsRunning(false),
       mNativesToReleaseArray(),
       mDoingFinalization(false),
@@ -3149,7 +3144,7 @@ void XPCJSRuntime::DebugDump(int16_t depth) {
   XPC_LOG_INDENT();
 
   // iterate wrappers...
-  XPC_LOG_ALWAYS(("mWrappedJSMap @ %p with %d wrappers(s)", mWrappedJSMap,
+  XPC_LOG_ALWAYS(("mWrappedJSMap @ %p with %d wrappers(s)", mWrappedJSMap.get(),
                   mWrappedJSMap->Count()));
   if (depth && mWrappedJSMap->Count()) {
     XPC_LOG_INDENT();
@@ -3158,12 +3153,14 @@ void XPCJSRuntime::DebugDump(int16_t depth) {
   }
 
   XPC_LOG_ALWAYS(("mIID2NativeInterfaceMap @ %p with %d interface(s)",
-                  mIID2NativeInterfaceMap, mIID2NativeInterfaceMap->Count()));
+                  mIID2NativeInterfaceMap.get(),
+                  mIID2NativeInterfaceMap->Count()));
 
   XPC_LOG_ALWAYS(("mClassInfo2NativeSetMap @ %p with %d sets(s)",
-                  mClassInfo2NativeSetMap, mClassInfo2NativeSetMap->Count()));
+                  mClassInfo2NativeSetMap.get(),
+                  mClassInfo2NativeSetMap->Count()));
 
-  XPC_LOG_ALWAYS(("mNativeSetMap @ %p with %d sets(s)", mNativeSetMap,
+  XPC_LOG_ALWAYS(("mNativeSetMap @ %p with %d sets(s)", mNativeSetMap.get(),
                   mNativeSetMap->Count()));
 
   // iterate sets...
