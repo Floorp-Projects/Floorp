@@ -35,15 +35,17 @@ class RecyclingSourceSurface final : public gfx::DataSourceSurface {
     return mSurface->GetFormat();
   }
 
-  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
-                              size_t& aNonHeapSizeOut, size_t& aExtHandlesOut,
-                              uint64_t& aExtIdOut) const override {}
-
   bool OnHeap() const override { return mSurface->OnHeap(); }
   bool Map(MapType aType, MappedSurface* aMappedSurface) override {
     return mSurface->Map(aType, aMappedSurface);
   }
   void Unmap() override { mSurface->Unmap(); }
+
+  void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                           SizeOfInfo& aInfo) const override {
+    aInfo.AddType(mType);
+    mSurface->SizeOfExcludingThis(aMallocSizeOf, aInfo);
+  }
 
   gfx::DataSourceSurface* GetChildSurface() const { return mSurface; }
 

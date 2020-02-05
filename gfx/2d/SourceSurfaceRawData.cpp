@@ -42,6 +42,16 @@ void SourceSurfaceRawData::GuaranteePersistance() {
   mOwnData = true;
 }
 
+void SourceSurfaceRawData::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                               SizeOfInfo& aInfo) const {
+  aInfo.AddType(SurfaceType::DATA);
+  if (mDeallocator) {
+    aInfo.mUnknownBytes = mStride * mSize.height;
+  } else if (mOwnData) {
+    aInfo.mHeapBytes = mStride * mSize.height;
+  }
+}
+
 bool SourceSurfaceAlignedRawData::Init(const IntSize& aSize,
                                        SurfaceFormat aFormat, bool aClearMem,
                                        uint8_t aClearValue, int32_t aStride) {
@@ -71,10 +81,10 @@ bool SourceSurfaceAlignedRawData::Init(const IntSize& aSize,
   return mArray != nullptr;
 }
 
-void SourceSurfaceAlignedRawData::AddSizeOfExcludingThis(
-    MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut, size_t& aNonHeapSizeOut,
-    size_t& aExtHandlesOut, uint64_t& aExtIdOut) const {
-  aHeapSizeOut += mArray.HeapSizeOfExcludingThis(aMallocSizeOf);
+void SourceSurfaceAlignedRawData::SizeOfExcludingThis(
+    MallocSizeOf aMallocSizeOf, SizeOfInfo& aInfo) const {
+  aInfo.AddType(SurfaceType::DATA_ALIGNED);
+  aInfo.mHeapBytes = mArray.HeapSizeOfExcludingThis(aMallocSizeOf);
 }
 
 }  // namespace gfx

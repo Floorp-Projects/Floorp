@@ -197,13 +197,15 @@ class CachedSurface {
             SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
                                          aCachedSurface->IsLocked(),
                                          aCachedSurface->CannotSubstitute(),
-                                         aIsFactor2, aMetadata.finished);
+                                         aIsFactor2, aMetadata.mFinished);
 
-            counter.Values().SetDecodedHeap(aMetadata.heap);
-            counter.Values().SetDecodedNonHeap(aMetadata.nonHeap);
-            counter.Values().SetExternalHandles(aMetadata.handles);
-            counter.Values().SetFrameIndex(aMetadata.index);
-            counter.Values().SetExternalId(aMetadata.externalId);
+            counter.Values().SetDecodedHeap(aMetadata.mHeapBytes);
+            counter.Values().SetDecodedNonHeap(aMetadata.mNonHeapBytes);
+            counter.Values().SetDecodedUnknown(aMetadata.mUnknownBytes);
+            counter.Values().SetExternalHandles(aMetadata.mExternalHandles);
+            counter.Values().SetFrameIndex(aMetadata.mIndex);
+            counter.Values().SetExternalId(aMetadata.mExternalId);
+            counter.Values().SetSurfaceTypes(aMetadata.mTypes);
 
             mCounters.AppendElement(counter);
           });

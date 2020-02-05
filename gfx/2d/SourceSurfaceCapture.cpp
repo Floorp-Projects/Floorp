@@ -64,6 +64,24 @@ SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
 
 SourceSurfaceCapture::~SourceSurfaceCapture() {}
 
+void SourceSurfaceCapture::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                               SizeOfInfo& aInfo) const {
+  MutexAutoLock lock(mLock);
+  aInfo.AddType(SurfaceType::CAPTURE);
+  if (mSurfToOptimize) {
+    mSurfToOptimize->SizeOfExcludingThis(aMallocSizeOf, aInfo);
+    return;
+  }
+  if (mResolved) {
+    mResolved->SizeOfExcludingThis(aMallocSizeOf, aInfo);
+    return;
+  }
+  if (mHasCommandList) {
+    aInfo.mHeapBytes += mCommands.BufferCapacity();
+    return;
+  }
+}
+
 bool SourceSurfaceCapture::IsValid() const {
   // We must either be able to source a command list, or we must have a cached
   // and rasterized surface.

@@ -132,7 +132,7 @@ void AnimationFrameRetainedBuffer::AddSizeOfExcludingThis(
     ++i;
     frame->AddSizeOfExcludingThis(aMallocSizeOf,
                                   [&](AddSizeOfCbData& aMetadata) {
-                                    aMetadata.index = i;
+                                    aMetadata.mIndex = i;
                                     aCallback(aMetadata);
                                   });
   }
@@ -276,7 +276,7 @@ void AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf, const AddSizeOfCb& aCallback) {
   mFirstFrame->AddSizeOfExcludingThis(aMallocSizeOf,
                                       [&](AddSizeOfCbData& aMetadata) {
-                                        aMetadata.index = 1;
+                                        aMetadata.mIndex = 1;
                                         aCallback(aMetadata);
                                       });
 
@@ -295,7 +295,7 @@ void AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(
 
     frame->AddSizeOfExcludingThis(aMallocSizeOf,
                                   [&](AddSizeOfCbData& aMetadata) {
-                                    aMetadata.index = i;
+                                    aMetadata.mIndex = i;
                                     aCallback(aMetadata);
                                   });
   }
@@ -324,7 +324,7 @@ void AnimationFrameRecyclingQueue::AddSizeOfExcludingThis(
     if (entry.mFrame) {
       entry.mFrame->AddSizeOfExcludingThis(
           aMallocSizeOf, [&](AddSizeOfCbData& aMetadata) {
-            aMetadata.index = 0;  // Frame is not applicable
+            aMetadata.mIndex = 0;  // Frame is not applicable
             aCallback(aMetadata);
           });
     }

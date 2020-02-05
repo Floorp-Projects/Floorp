@@ -31,6 +31,12 @@ class SourceSurfaceMappedData final : public DataSourceSurface {
   IntSize GetSize() const final { return mSize; }
   SurfaceFormat GetFormat() const final { return mFormat; }
 
+  void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                           SizeOfInfo& aInfo) const override {
+    aInfo.AddType(SurfaceType::DATA);
+    mMap.GetSurface()->SizeOfExcludingThis(aMallocSizeOf, aInfo);
+  }
+
   void GuaranteePersistance() final {}
 
  private:
@@ -66,6 +72,9 @@ class SourceSurfaceRawData : public DataSourceSurface {
   virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
   virtual IntSize GetSize() const override { return mSize; }
   virtual SurfaceFormat GetFormat() const override { return mFormat; }
+
+  void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                           SizeOfInfo& aInfo) const override;
 
   virtual void GuaranteePersistance() override;
 
@@ -107,9 +116,8 @@ class SourceSurfaceAlignedRawData : public DataSourceSurface {
   IntSize GetSize() const override { return mSize; }
   SurfaceFormat GetFormat() const override { return mFormat; }
 
-  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
-                              size_t& aNonHeapSizeOut, size_t& aExtHandlesOut,
-                              uint64_t& aExtIdOut) const override;
+  void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                           SizeOfInfo& aInfo) const override;
 
  private:
   friend class Factory;
