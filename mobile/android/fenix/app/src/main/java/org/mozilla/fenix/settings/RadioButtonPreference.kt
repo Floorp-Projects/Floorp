@@ -7,11 +7,11 @@ package org.mozilla.fenix.settings
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.TextView
 import androidx.core.content.res.TypedArrayUtils.getAttr
 import androidx.core.content.withStyledAttributes
-import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
@@ -22,10 +22,9 @@ open class RadioButtonPreference @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : Preference(context, attrs) {
     private val radioGroups = mutableListOf<RadioButtonPreference>()
-    private var summaryView: TextView? = null
+    private var summaryView: LinearLayout? = null
     private var titleView: TextView? = null
     private var radioButton: RadioButton? = null
-    private var shouldSummaryBeParsedAsHtmlContent: Boolean = true
     private var defaultValue: Boolean = false
     private var clickListener: (() -> Unit)? = null
 
@@ -127,17 +126,11 @@ open class RadioButtonPreference @JvmOverloads constructor(
     }
 
     private fun bindSummaryView(holder: PreferenceViewHolder) {
-        summaryView = holder.findViewById(R.id.widget_summary) as TextView
+        summaryView = holder.findViewById(R.id.widget_summary) as LinearLayout
 
         summaryView?.alpha = if (isEnabled) FULL_ALPHA else HALF_ALPHA
         summaryView?.let {
             if (!summary.isNullOrEmpty()) {
-                it.text = if (shouldSummaryBeParsedAsHtmlContent) {
-                    HtmlCompat.fromHtml(summary.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT)
-                } else {
-                    summary
-                }
-
                 it.visibility = View.VISIBLE
             } else {
                 it.visibility = View.GONE

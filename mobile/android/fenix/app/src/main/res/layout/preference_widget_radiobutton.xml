@@ -9,7 +9,6 @@
         android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:baselineAligned="false">
 
     <RadioButton
@@ -36,19 +35,53 @@
             android:textAppearance="?android:attr/textAppearanceListItem"
             app:layout_constraintTop_toTopOf="@id/radio_button"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/radio_button"
+            app:layout_constraintStart_toEndOf="@id/radio_button"
             app:layout_constraintBottom_toBottomOf="@id/radio_button"/>
 
-    <TextView
-            android:id="@+id/widget_summary"
-            android:layout_width="0dp"
+    <LinearLayout
+        android:id="@+id/widget_summary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/radio_button_preference_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="@id/title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/radio_button">
+
+        <TextView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="?android:attr/textColorSecondary"
-            tools:text="@string/preference_recommended_settings_summary"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@id/title"
-            app:layout_constraintTop_toBottomOf="@id/radio_button"
-            app:layout_constraintStart_toStartOf="@id/title" />
+            android:layout_marginBottom="8dp"
+            android:text="@string/preference_recommended_settings_blocked_title"
+            android:textStyle="bold" />
+        <TextView
+            android:text="@string/preference_recommended_settings_blocked_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/preference_recommended_settings_allow_title"
+            android:textStyle="bold" />
+        <TextView
+            android:text="@string/preference_recommended_settings_allow_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/preference_recommended_settings_allowed_title"
+            android:textStyle="bold" />
+        <TextView
+            android:text="@string/preference_recommended_settings_allowed_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

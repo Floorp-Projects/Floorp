@@ -17,18 +17,40 @@
         tools:visibility="visible">
 
     <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceListItem"
-            android:text="@string/phone_feature_blocked_by_android"
-            android:layout_marginBottom="16dp"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:text="@string/phone_feature_blocked_by_android"
+        android:layout_marginBottom="16dp" />
 
     <TextView
-            android:id="@+id/blocked_by_android_explanation_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceListItemSmall"
-            tools:text="@string/phone_feature_blocked_by_android_explanation"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:text="@string/phone_feature_blocked_intro"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:text="@string/phone_feature_blocked_step_settings"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/blocked_by_android_permissions_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        tools:text="@string/phone_feature_blocked_step_permissions"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/blocked_by_android_feature_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        tools:text="@string/phone_feature_blocked_step_feature"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/settings_button"

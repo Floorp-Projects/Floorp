@@ -222,7 +222,10 @@ class DefaultToolbarMenu(
     }
 
     private val addToFirefoxHome = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_add_to_firefox_home),
+        label = context.getString(
+            R.string.browser_menu_add_to_firefox_home,
+            context.getString(R.string.app_name)
+        ),
         imageResource = R.drawable.ic_home,
         iconTintColorResource = primaryTextColor()
     ) {

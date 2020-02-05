@@ -43,12 +43,16 @@ fun initBlockedByAndroidView(phoneFeature: PhoneFeature, blockedByAndroidView: V
     if (!phoneFeature.isAndroidPermissionGranted(context)) {
         blockedByAndroidView.visibility = View.VISIBLE
 
-        val descriptionLabel = blockedByAndroidView.findViewById<TextView>(R.id.blocked_by_android_explanation_label)
-        val text = context.getString(
-            R.string.phone_feature_blocked_by_android_explanation,
+        val descriptionLabel = blockedByAndroidView.findViewById<TextView>(R.id.blocked_by_android_feature_label)
+        val descriptionText = context.getString(
+            R.string.phone_feature_blocked_step_feature,
             phoneFeature.getLabel(context)
         )
-        descriptionLabel.text = HtmlCompat.fromHtml(text, HtmlCompat.FROM_HTML_MODE_COMPACT)
+        descriptionLabel.text = HtmlCompat.fromHtml(descriptionText, HtmlCompat.FROM_HTML_MODE_COMPACT)
+
+        val permissionsLabel = blockedByAndroidView.findViewById<TextView>(R.id.blocked_by_android_permissions_label)
+        val permissionsText = context.getString(R.string.phone_feature_blocked_step_permissions)
+        permissionsLabel.text = HtmlCompat.fromHtml(permissionsText, HtmlCompat.FROM_HTML_MODE_COMPACT)
     } else {
         blockedByAndroidView.visibility = View.GONE
     }

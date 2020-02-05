@@ -64,7 +64,7 @@
     <string name="browser_menu_bookmark">Bookmark</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Edit bookmark</string>
-    <!-- Browser menu button that sends a user to help articles -->
+    <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_addon_manager">Add-ons Manager</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">No add-ons here</string>
@@ -78,8 +78,8 @@
     <string name="browser_menu_your_library">Your Library</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop site</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_firefox_home">Add to Firefox home</string>
+    <!-- Browser menu button that adds a top site to the home fragment (for example: Fenix) -->
+    <string name="browser_menu_add_to_firefox_home">Add to %s home</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Add to Home screen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -1170,7 +1170,7 @@
     <string name="migration_updating_app_button_text">Updating %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Start %s</string>
-    <!-- Accessibility description text for completed migration item (e.g. Bookmarks, History). Placeholder replaced with app name -->
+    <!-- Accessibility description text for completed migration item (e.g. Bookmarks, History). Placeholder example: complete -->
     <string name="migration_icon_description">Migration status: %s</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Passwords</string>
@@ -1182,25 +1182,34 @@
     <string name="preference_optimize_summary">Lower image quality, throttle streaming bandwidth, and platform-level optimizations</string>
     <!-- Preference for applying recommend rules to all sites -->
     <string name="preference_recommended_settings">Use recommended settings</string>
-    <!-- Label summary to explain how the recommended settings work -->
-    <string name="preference_recommended_settings_summary"><![CDATA[
-        <b>Blocked</b>
+    <!-- Title for the blocked permission explanation -->
+    <string name="preference_recommended_settings_blocked_title">Blocked</string>
+    <!-- Description for the blocked permission explanation -->
+    <string name="preference_recommended_settings_blocked_description">Ads, autoplay sound and video (block playing media with sound), cookies (block third-party trackers cookies), trackers (allow some trackers), pop-up, website redirects.</string>
+    <!-- Title for the "Ask to Allow" permission explanation -->
+    <string name="preference_recommended_settings_allow_title">Ask to allow</string>
+    <!-- Description for the "Ask to Allow" permission explanation -->
+    <string name="preference_recommended_settings_allow_description">Camera, location, microphone and notification.</string>
+    <!-- Title for the allowed permission explanation -->
+    <string name="preference_recommended_settings_allowed_title">Allowed</string>
+    <!-- Description for the allowed permission explanation -->
+    <string name="preference_recommended_settings_allowed_description">DRM audio and video, JavaScript, cache and site data, images.</string>
 
-        <br/> Ads, autoplay sound and video (block playing media with sound), cookies (block third-party trackers cookies), trackers (allow some trackers), pop-up, website redirects. <br/><br/> <b>Ask to allow</b>
-
-        <br/> Camera, location, microphone and notification. <br/><br/> <b>Allowed</b>
-
-        <br/> DRM audio and video, JavaScript, cache and site data, images.]]></string>
     <!-- Preference for applying custom rules to all sites -->
     <string name="preference_custom_settings">Use custom settings</string>
     <!-- Preference category for feature phone permissions likes Camera,Microphone, Location ... etc -->
     <string name="preference_category_phone_feature">Phone Feature</string>
     <!--Label that indicates that a user hasn't select a value for a site permission-->
     <string name="phone_feature_no_decision">No Decision</string>
-    <!-- Explanation that is shown when a permissions like (camera,location and microphone) is required. Informs the user to enable the permission via Android settings. %1$s indicates the name of the permission (camera,location and microphone)  -->
-    <string name="phone_feature_blocked_by_android_explanation"><![CDATA[
-        To allow it: <br/><br/> 1. Go to Android Settings <br/><br/>2. Tap <b>Permissions</b> <br/><br/> 3. Toggle <b>%1$s</b> to ON
-        ]]></string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">To allow it:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Go to Android Settings</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tap <b>Permissions</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Toggle <b>%1$s</b> to ON]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Secure Connection</string>
