@@ -14,6 +14,8 @@
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsGkAtoms.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"

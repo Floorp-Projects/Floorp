@@ -15,6 +15,8 @@
 #include "nsPresContext.h"
 #include "gfxContext.h"
 #include "nsGkAtoms.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsIPrintSettings.h"
 #include "nsPageFrame.h"
 #include "nsSubDocumentFrame.h"
