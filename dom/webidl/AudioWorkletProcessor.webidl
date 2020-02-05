@@ -13,7 +13,7 @@
 [Exposed=AudioWorklet]
 interface AudioWorkletProcessor {
   [Throws]
-  constructor(optional AudioWorkletNodeOptions options = {});
+  constructor();
 
   readonly attribute MessagePort port;
 };

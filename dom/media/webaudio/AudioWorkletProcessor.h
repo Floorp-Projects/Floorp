@@ -28,8 +28,7 @@ class AudioWorkletProcessor final : public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioWorkletProcessor)
 
   static already_AddRefed<AudioWorkletProcessor> Constructor(
-      const GlobalObject& aGlobal, const AudioWorkletNodeOptions& aOptions,
-      ErrorResult& aRv);
+      const GlobalObject& aGlobal, ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const { return mParent; }
 
