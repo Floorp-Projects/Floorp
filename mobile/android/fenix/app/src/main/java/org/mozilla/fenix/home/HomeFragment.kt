@@ -831,8 +831,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun calculateNewOffset() {
-        homeAppBarOffset = ((view!!.findViewById<AppBarLayout>(R.id.homeAppBar)
-            .layoutParams as CoordinatorLayout.LayoutParams)
+        homeAppBarOffset = ((homeAppBar.layoutParams as CoordinatorLayout.LayoutParams)
             .behavior as AppBarLayout.Behavior).topAndBottomOffset
     }
 
