@@ -5240,8 +5240,8 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
       .setFileAndLine("<ArrayBuffer>", 1);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope);
-  if (!compilationInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope, options);
+  if (!compilationInfo.init(cx)) {
     return false;
   }
 
@@ -5324,8 +5324,8 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope);
-  if (!compilationInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope, options);
+  if (!compilationInfo.init(cx)) {
     return false;
   }
 
@@ -5395,8 +5395,8 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   size_t length = scriptContents->length();
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  CompilationInfo compilationInfo(cx, allocScope);
-  if (!compilationInfo.initFromOptions(cx, options)) {
+  CompilationInfo compilationInfo(cx, allocScope, options);
+  if (!compilationInfo.init(cx)) {
     return false;
   }
 
