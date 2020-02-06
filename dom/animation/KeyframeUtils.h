@@ -49,6 +49,9 @@ class KeyframeUtils {
    * @param aDocument The document to use when parsing CSS properties.
    * @param aFrames The JS value, provided as an optional IDL |object?| value,
    *   that is the keyframe list specification.
+   * @param aContext Information about who is trying to get keyframes from the
+   *   object, for use in error reporting.  This must be be a non-null
+   *   pointer representing a null-terminated ASCII string.
    * @param aRv (out) Out-param to hold any error returned by this function.
    *   Must be initially empty.
    * @return The set of processed keyframes. If an error occurs, aRv will be
@@ -57,7 +60,7 @@ class KeyframeUtils {
    */
   static nsTArray<Keyframe> GetKeyframesFromObject(
       JSContext* aCx, dom::Document* aDocument, JS::Handle<JSObject*> aFrames,
-      ErrorResult& aRv);
+      const char* aContext, ErrorResult& aRv);
 
   /**
    * Calculate the computed offset of keyframes by evenly distributing keyframes

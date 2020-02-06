@@ -218,7 +218,7 @@ add_task(async function test_fetch_nonexistent() {
 add_task(async function test_error_cases() {
   Assert.throws(
     () => PlacesUtils.history.fetch("3"),
-    /TypeError: 3 is not a valid /
+    /TypeError: URL constructor: 3 is not a valid /
   );
   Assert.throws(
     () => PlacesUtils.history.fetch({ not: "a valid string or guid" }),

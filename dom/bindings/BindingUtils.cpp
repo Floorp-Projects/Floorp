@@ -99,21 +99,22 @@ static const constructorGetterCallback sConstructorGetterCallback[] = {
 #undef HTML_OTHER
 };
 
-const JSErrorFormatString ErrorFormatString[] = {
-#define MSG_DEF(_name, _argc, _exn, _str) {#_name, _str, _argc, _exn},
+static const JSErrorFormatString ErrorFormatString[] = {
+#define MSG_DEF(_name, _argc, _has_context, _exn, _str) \
+  {#_name, _str, _argc, _exn},
 #include "mozilla/dom/Errors.msg"
 #undef MSG_DEF
 };
 
-#define MSG_DEF(_name, _argc, _exn, _str)        \
-  static_assert(                                 \
-      (_argc) < JS::MaxNumErrorArguments, #_name \
+#define MSG_DEF(_name, _argc, _has_context, _exn, _str) \
+  static_assert(                                        \
+      (_argc) < JS::MaxNumErrorArguments, #_name        \
       " must only have as many error arguments as the JS engine can support");
 #include "mozilla/dom/Errors.msg"
 #undef MSG_DEF
 
-const JSErrorFormatString* GetErrorMessage(void* aUserRef,
-                                           const unsigned aErrorNumber) {
+static const JSErrorFormatString* GetErrorMessage(void* aUserRef,
+                                                  const unsigned aErrorNumber) {
   MOZ_ASSERT(aErrorNumber < ArrayLength(ErrorFormatString));
   return &ErrorFormatString[aErrorNumber];
 }
@@ -248,6 +249,15 @@ void TErrorResult<CleanupPolicy>::SetPendingExceptionWithMessage(
 
   Message* message = mExtra.mMessage;
   MOZ_RELEASE_ASSERT(message->HasCorrectNumberOfArguments());
+  if (dom::ErrorFormatHasContext[message->mErrorNumber]) {
+    MOZ_ASSERT(!message->mArgs.IsEmpty(), "How could we have no args here?");
+    MOZ_ASSERT(message->mArgs[0].IsEmpty(), "Context should not be set yet!");
+    if (context) {
+      // Prepend our context and ": "; see API documentation.
+      message->mArgs[0].AssignASCII(context);
+      message->mArgs[0].AppendLiteral(": ");
+    }
+  }
   const uint32_t argCount = message->mArgs.Length();
   const char16_t* args[JS::MaxNumErrorArguments + 1];
   for (uint32_t i = 0; i < argCount; ++i) {
@@ -1266,7 +1276,7 @@ void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
 }
 
 bool ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp) {
-  return ThrowErrorMessage<MSG_ILLEGAL_CONSTRUCTOR>(cx);
+  return ThrowErrorMessage<MSG_ILLEGAL_CONSTRUCTOR>(cx, "");
 }
 
 bool ThrowConstructorWithoutNew(JSContext* cx, const char* name) {

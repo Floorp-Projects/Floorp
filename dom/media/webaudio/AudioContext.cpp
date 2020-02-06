@@ -606,8 +606,7 @@ already_AddRefed<Promise> AudioContext::DecodeAudioData(
 
   if (!aBuffer.Data()) {
     // Throw if the buffer is detached
-    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_DETACHED>(
-        NS_LITERAL_STRING("Argument of AudioContext.decodeAudioData"));
+    aRv.ThrowTypeError(u"Buffer argument can't be a detached buffer");
     return nullptr;
   }
 
