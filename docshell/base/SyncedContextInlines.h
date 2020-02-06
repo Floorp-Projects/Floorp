@@ -18,6 +18,10 @@ namespace syncedcontext {
 
 template <typename Context>
 nsresult Transaction<Context>::Commit(Context* aOwner) {
+  if (NS_WARN_IF(aOwner->IsDiscarded())) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (!Validate(aOwner, nullptr)) {
     MOZ_CRASH("Attempt to commit invalid transaction");
   }
