@@ -7,18 +7,46 @@
 #ifndef frontend_Stencil_h
 #define frontend_Stencil_h
 
-#include "frontend/AbstractScope.h"
-#include "frontend/TypedIndex.h"
-#include "gc/AllocKind.h"
-#include "gc/Rooting.h"
-#include "js/RegExpFlags.h"
-#include "vm/BigIntType.h"
-#include "vm/JSFunction.h"
-#include "vm/JSScript.h"
-#include "vm/Scope.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_RELEASE_ASSERT
+#include "mozilla/Maybe.h"       // mozilla::{Maybe, Nothing}
+#include "mozilla/Range.h"       // mozilla::Range
+#include "mozilla/Span.h"        // mozilla::Span
+
+#include <stdint.h>  // char16_t, uint8_t, uint32_t
+#include <stdlib.h>  // size_t
+
+#include "frontend/AbstractScope.h"      // AbstractScope, ScopeIndex
+#include "frontend/NameAnalysisTypes.h"  // {AtomVector, FunctionBoxVector}
+#include "frontend/TypedIndex.h"         // TypedIndex
+#include "gc/AllocKind.h"                // gc::AllocKind
+#include "gc/Barrier.h"                  // HeapPtr, GCPtrAtom
+#include "gc/Rooting.h"  // HandleAtom, HandleModuleObject, HandleScriptSourceObject, MutableHandleScope
+#include "js/RegExpFlags.h"  // JS::RegExpFlags
+#include "js/RootingAPI.h"   // Handle
+#include "js/UniquePtr.h"    // UniquePtr
+#include "js/Utility.h"      // JS::FreePolicy, UniqueTwoByteChars
+#include "js/Vector.h"       // js::Vector
+#include "util/Text.h"       // DuplicateString
+#include "vm/BigIntType.h"   // ParseBigIntLiteral
+#include "vm/JSFunction.h"   // FunctionFlags
+#include "vm/JSScript.h"  // GeneratorKind, FunctionAsyncKind, ScopeNote, JSTryNote, FieldInitializers
+#include "vm/Runtime.h"  // ReportOutOfMemory
+#include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
+#include "vm/ScopeKind.h"  // ScopeKind
+
+struct JSContext;
+class JSAtom;
+class JSFunction;
+class JSTracer;
 
 namespace js {
+
+class Shape;
+
 namespace frontend {
+
+struct ParseInfo;
+class FunctionBox;
 
 // [SMDOC] Script Stencil (Frontend Representation)
 //
@@ -333,6 +361,81 @@ class ScopeCreationData {
     }
     return data<SpecificScopeType>().nextFrameSlot;
   }
+};
+
+// Data used to instantiate the non-lazy script.
+class ScriptStencil {
+ public:
+  // See `BaseScript::{lineno_,column_}`.
+  unsigned lineno = 0;
+  unsigned column = 0;
+
+  // See `initAtomMap` method.
+  uint32_t natoms = 0;
+
+  // See `finishGCThings` method.
+  uint32_t ngcthings = 0;
+
+  // See `finishResumeOffsets` method.
+  uint32_t numResumeOffsets = 0;
+
+  // See `finishScopeNotes` method.
+  uint32_t numScopeNotes = 0;
+
+  // See `finishTryNotes` method.
+  uint32_t numTryNotes = 0;
+
+  // See `ImmutableScriptData`.
+  uint32_t mainOffset = 0;
+  uint32_t nfixed = 0;
+  uint32_t nslots = 0;
+  uint32_t bodyScopeIndex = 0;
+  uint32_t numICEntries = 0;
+  uint32_t numBytecodeTypeSets = 0;
+
+  // `See BaseScript::ImmutableFlags`.
+  bool strict = false;
+  bool bindingsAccessedDynamically = false;
+  bool hasCallSiteObj = false;
+  bool isForEval = false;
+  bool isModule = false;
+  bool isFunction = false;
+  bool hasNonSyntacticScope = false;
+  bool needsFunctionEnvironmentObjects = false;
+  bool hasModuleGoal = false;
+
+  // FIXME: Create Stencil structs for the following fields, instead of
+  //        relying on the data owned by BytecodeEmitter.
+
+  mozilla::Span<const jsbytecode> code;
+  mozilla::Span<const jssrcnote> notes;
+
+  js::frontend::FunctionBox* functionBox = nullptr;
+
+  // Store all GC things into `gcthings`.
+  // `gcthings.Length()` is `this.ngcthings`.
+  virtual bool finishGCThings(JSContext* cx,
+                              mozilla::Span<JS::GCCellPtr> gcthings) const = 0;
+
+  // Store all atoms into `atoms`
+  // `atoms` is the pointer to `this.natoms`-length array of `GCPtrAtom`.
+  virtual void initAtomMap(GCPtrAtom* atoms) const = 0;
+
+  // Store all resume offsets into `resumeOffsets`
+  // `resumeOffsets.Length()` is `this.numResumeOffsets`.
+  virtual void finishResumeOffsets(
+      mozilla::Span<uint32_t> resumeOffsets) const = 0;
+
+  // Store all scope notes into `scopeNotes`.
+  // `scopeNotes.Length()` is `this.numScopeNotes`.
+  virtual void finishScopeNotes(mozilla::Span<ScopeNote> scopeNotes) const = 0;
+
+  // Store all try notes into `tryNotes`.
+  // `tryNotes.Length()` is `this.numTryNotes`.
+  virtual void finishTryNotes(mozilla::Span<JSTryNote> tryNotes) const = 0;
+
+  // Call `FunctionBox::finish` for all inner functions.
+  virtual void finishInnerFunctions() const = 0;
 };
 
 } /* namespace frontend */

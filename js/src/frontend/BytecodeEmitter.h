@@ -113,7 +113,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   CompilationInfo& compilationInfo;
 
-  // First line and column, for JSScript::initFromEmitter.
+  // First line and column, for JSScript::fullyInitFromStencil.
   unsigned firstLine = 0;
   unsigned firstColumn = 0;
 
@@ -376,6 +376,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Emit global, eval, or module code for tree rooted at body. Always
   // encompasses the entire source.
   MOZ_MUST_USE bool emitScript(ParseNode* body);
+
+  // Calculate the `nslots` value for BCEScriptStencil constructor parameter.
+  // Fails if it overflows.
+  MOZ_MUST_USE bool getNslots(uint32_t* nslots);
 
   // Emit function code for the tree rooted at body.
   enum class TopLevelFunction { No, Yes };
