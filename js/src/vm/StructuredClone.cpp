@@ -3211,9 +3211,9 @@ bool JSAutoStructuredCloneBuffer::write(
     const JS::CloneDataPolicy& cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   clear();
-  bool ok =
-      JS_WriteStructuredClone(cx, value, &data_, data_.scope(), cloneDataPolicy,
-                              optionalCallbacks, closure, transferable);
+  bool ok = JS_WriteStructuredClone(
+      cx, value, &data_, data_.scopeForInternalWriting(), cloneDataPolicy,
+      optionalCallbacks, closure, transferable);
 
   if (ok) {
     data_.ownTransferables_ = OwnTransferablePolicy::OwnsTransferablesIfAny;
