@@ -625,11 +625,6 @@ static void AddImageURL(const StyleComputedUrl& aURL,
   }
 }
 
-static void AddImageURL(const nsStyleImageRequest& aRequest,
-                        nsTArray<nsCString>& aURLs) {
-  AddImageURL(aRequest.GetImageValue(), aURLs);
-}
-
 static void AddImageURL(const nsStyleImage& aImage,
                         nsTArray<nsCString>& aURLs) {
   if (auto* urlValue = aImage.GetURLValue()) {
@@ -669,7 +664,7 @@ static void CollectImageURLsForProperty(nsCSSPropertyID aProp,
   switch (aProp) {
     case eCSSProperty_cursor:
       for (auto& image : aStyle.StyleUI()->mCursorImages) {
-        AddImageURL(*image.mImage, aURLs);
+        AddImageURL(image.mImage, aURLs);
       }
       break;
     case eCSSProperty_background_image:
@@ -678,11 +673,13 @@ static void CollectImageURLsForProperty(nsCSSPropertyID aProp,
     case eCSSProperty_mask_clip:
       AddImageURLs(aStyle.StyleSVGReset()->mMask, aURLs);
       break;
-    case eCSSProperty_list_style_image:
-      if (nsStyleImageRequest* image = aStyle.StyleList()->mListStyleImage) {
-        AddImageURL(*image, aURLs);
+    case eCSSProperty_list_style_image: {
+      const auto& image = aStyle.StyleList()->mListStyleImage;
+      if (image.IsUrl()) {
+        AddImageURL(image.AsUrl(), aURLs);
       }
       break;
+    }
     case eCSSProperty_border_image_source:
       AddImageURL(aStyle.StyleBorder()->mBorderImageSource, aURLs);
       break;

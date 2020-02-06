@@ -170,6 +170,7 @@ include = [
   "ComputedUrl",
   "ComputedImageUrl",
   "UrlOrNone",
+  "ImageUrlOrNone",
   "Filter",
   "Gradient",
   "GridTemplateAreas",
@@ -206,6 +207,7 @@ renaming_overrides_prefixing = true
 "nscolor" = "nscolor"
 "nsAtom" = "nsAtom"
 "nsIURI" = "nsIURI"
+"imgRequestProxy" = "imgRequestProxy"
 "nsCompatibility" = "nsCompatibility"
 "SharedFontList" = "SharedFontList"
 "nsSimpleContentList" = "nsSimpleContentList"
@@ -651,7 +653,11 @@ renaming_overrides_prefixing = true
   inline StyleCorsMode CorsMode() const;
   already_AddRefed<nsIURI> ResolveLocalRef(nsIURI* aBase) const;
   already_AddRefed<nsIURI> ResolveLocalRef(const nsIContent* aContent) const;
-  already_AddRefed<imgRequestProxy> LoadImage(mozilla::dom::Document&);
+
+  // Only relevant for images.
+  inline bool IsImageResolved() const;
+  inline imgRequestProxy* GetImage() const;
+  void ResolveImage(dom::Document&, const StyleComputedUrl* aOldImage);
 """
 
 "GenericGradient" = """
