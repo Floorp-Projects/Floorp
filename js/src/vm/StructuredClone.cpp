@@ -1259,8 +1259,7 @@ bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
 bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   MOZ_ASSERT(obj->canUnwrapAs<SharedArrayBufferObject>());
 
-  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
-      !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
+  if (!cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
@@ -1306,8 +1305,7 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
   MOZ_ASSERT(obj->canUnwrapAs<WasmMemoryObject>());
 
   // Check the policy here so that we can report a sane error.
-  if (!cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed() ||
-      !cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
+  if (!cloneDataPolicy.areSharedMemoryObjectsAllowed()) {
     auto errorMsg =
         context()->realm()->creationOptions().getCoopAndCoepEnabled()
             ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
