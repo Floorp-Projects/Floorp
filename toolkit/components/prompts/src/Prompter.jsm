@@ -395,6 +395,10 @@ var PromptUtilsTemp = {
 
     return promptBox;
   },
+
+  getBrandFullName() {
+    return this.brandBundle.GetStringFromName("brandFullName");
+  },
 };
 
 PromptUtils = PromptUtilsTemp;
@@ -405,6 +409,16 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "strBundle", function() {
   );
   if (!bundle) {
     throw new Error("String bundle for Prompter not present!");
+  }
+  return bundle;
+});
+
+XPCOMUtils.defineLazyGetter(PromptUtils, "brandBundle", function() {
+  let bundle = Services.strings.createBundle(
+    "chrome://branding/locale/brand.properties"
+  );
+  if (!bundle) {
+    throw new Error("String bundle for branding not present!");
   }
   return bundle;
 });
@@ -886,7 +900,9 @@ ModalPrompter.prototype = {
     checkValue
   ) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("PromptUsernameAndPassword2");
+      title = PromptUtils.getLocalizedString("PromptUsernameAndPassword3", [
+        PromptUtils.getBrandFullName(),
+      ]);
     }
 
     let args = {
@@ -915,7 +931,9 @@ ModalPrompter.prototype = {
 
   nsIPrompt_promptPassword(title, text, pass, checkLabel, checkValue) {
     if (!title) {
-      title = PromptUtils.getLocalizedString("PromptPassword2");
+      title = PromptUtils.getLocalizedString("PromptPassword3", [
+        PromptUtils.getBrandFullName(),
+      ]);
     }
 
     let args = {
