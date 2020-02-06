@@ -88,6 +88,11 @@ nsresult nsNumberControlFrame::CreateAnonymousContent(
   mOuterWrapper = MakeAnonymousElement(nullptr, nsGkAtoms::div,
                                        PseudoStyleType::mozNumberWrapper);
 
+  // We want to do this now, rather than on the caller, so that the
+  // AppendChildTo calls below know that they are anonymous already. This is
+  // important for the NODE_IS_EDITABLE flag handling, for example.
+  mOuterWrapper->SetIsNativeAnonymousRoot();
+
   aElements.AppendElement(mOuterWrapper);
 
   nsTArray<ContentInfo> nestedContent;

@@ -296,13 +296,26 @@ void Element::UpdateState(bool aNotify) {
 }  // namespace mozilla
 
 void nsIContent::UpdateEditableState(bool aNotify) {
-  nsIContent* parent = GetParent();
+  if (IsInNativeAnonymousSubtree()) {
+    // Don't propagate the editable flag into native anonymous subtrees.
+    if (IsRootOfNativeAnonymousSubtree()) {
+      return;
+    }
 
-  // Don't implicitly set the flag on the root of a native anonymous subtree.
-  // This needs to be set explicitly, see for example
-  // nsTextControlFrame::CreateRootNode().
-  SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE) &&
-                  !IsRootOfNativeAnonymousSubtree());
+    // We allow setting the flag on NAC (explicitly, see
+    // nsTextControlFrame::CreateAnonymousContent for example), but not
+    // unsetting it.
+    //
+    // Otherwise, just the act of binding the NAC subtree into our non-anonymous
+    // parent would clear the flag, which is not good. As we shouldn't move NAC
+    // around, this is fine.
+    if (HasFlag(NODE_IS_EDITABLE)) {
+      return;
+    }
+  }
+
+  nsIContent* parent = GetParent();
+  SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
 }
 
 namespace mozilla {
