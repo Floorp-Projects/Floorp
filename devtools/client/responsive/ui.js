@@ -351,6 +351,7 @@ class ResponsiveUI {
 
     if (this.isBrowserUIEnabled) {
       await this.responsiveFront.setDocumentInRDMPane(false);
+      await this.responsiveFront.setFloatingScrollbars(false);
     }
 
     this.tab.removeEventListener("TabClose", this);
@@ -807,6 +808,12 @@ class ResponsiveUI {
       // by RDM are not preserved. So we need to set setDocumentInRDMPane = true whenever
       // there is a target switch.
       await this.responsiveFront.setDocumentInRDMPane(true);
+
+      // Apply floating scrollbar styles to document.
+      await this.responsiveFront.setFloatingScrollbars(true);
+
+      // Attach current target to the selected browser tab.
+      await this.currentTarget.attach();
     }
 
     const hasDeviceState = await this.hasDeviceState();
