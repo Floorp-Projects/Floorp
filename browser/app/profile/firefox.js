@@ -320,9 +320,6 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 #ifdef NIGHTLY_BUILD
   // Whether the quantum bar displays design update 1.
   pref("browser.urlbar.update1", true);
-  // If true, we show actionable tips in the Urlbar when the user is searching
-  // for those actions.
-  pref("browser.urlbar.update1.interventions", true);
   // If true, we do not allow the TAB key to cycle through results when the
   // Urlbar was focused with the keyboard. Instead, Tab will focus the next
   // focusable toolbar element after the Urlbar.
@@ -332,7 +329,6 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
   pref("browser.urlbar.openViewOnFocus", true);
 #else
   pref("browser.urlbar.update1", false);
-  pref("browser.urlbar.update1.interventions", false);
   pref("browser.urlbar.update1.restrictTabAfterKeyboardFocus", false);
   pref("browser.urlbar.update1.view.stripHttps", false);
   pref("browser.urlbar.openViewOnFocus", false);
@@ -340,6 +336,10 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 // Whether we expand the font size when when the urlbar is
 // focused in design update 1.
 pref("browser.urlbar.update1.expandTextOnFocus", false);
+
+// If true, we show actionable tips in the Urlbar when the user is searching
+// for those actions.
+pref("browser.urlbar.update1.interventions", false);
 
 // If true, we show new users and those about to start an organic search a tip
 // encouraging them to use the Urlbar.
