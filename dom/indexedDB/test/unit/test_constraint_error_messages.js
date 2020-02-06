@@ -32,7 +32,7 @@ async function testSteps() {
     ok(true, "ConstraintError should be thrown if object store already exists");
     is(
       e.message,
-      "Object store named '" +
+      "IDBDatabase.createObjectStore: Object store named '" +
         objectStoreName +
         "' already exists at index '0'",
       "Threw with correct error message"
@@ -53,7 +53,7 @@ async function testSteps() {
     ok(true, "ConstraintError should be thrown if index already exists");
     is(
       e.message,
-      "Index named '" + indexName + "' already exists at index '0'",
+      `IDBObjectStore.createIndex: Index named '${indexName}' already exists at index '0'`,
       "Threw with correct error message"
     );
   }

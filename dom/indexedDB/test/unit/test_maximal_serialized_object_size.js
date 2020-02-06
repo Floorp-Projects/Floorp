@@ -65,7 +65,9 @@ function* testSteps() {
       is(e.name, "UnknownError", "correct error");
       ok(!!e.message, "Error message: " + e.message);
       ok(
-        e.message.startsWith("The serialized value is too large"),
+        e.message.startsWith(
+          `IDBObjectStore.${aOperation}: The serialized value is too large`
+        ),
         "Correct error message prefix."
       );
     }

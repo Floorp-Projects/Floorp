@@ -57,9 +57,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    *    a valid key.
    */
   if (aName.IsEmpty()) {
-    aRv.ThrowNotSupportedError(
-        "Argument 1 of AudioWorkletGlobalScope.registerProcessor should not be "
-        "an empty string.");
+    aRv.ThrowNotSupportedError("Argument 1 should not be an empty string.");
     return;
   }
 
@@ -72,8 +70,8 @@ void AudioWorkletGlobalScope::RegisterProcessor(
   if (mNameToProcessorMap.GetWeak(aName)) {
     // Duplicate names are not allowed
     aRv.ThrowNotSupportedError(
-        "Argument 1 of AudioWorkletGlobalScope.registerProcessor is invalid: a "
-        "class with the same name is already registered.");
+        "Argument 1 is invalid: a class with the same name is already "
+        "registered.");
     return;
   }
 
