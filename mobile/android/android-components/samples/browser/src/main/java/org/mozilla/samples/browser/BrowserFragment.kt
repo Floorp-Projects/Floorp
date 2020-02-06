@@ -43,7 +43,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             .addHistoryProvider(
                 components.historyStorage,
                 components.sessionUseCases.loadUrl)
-            .addSessionProvider(components.sessionManager, components.tabsUseCases.selectTab)
+            .addSessionProvider(resources, components.sessionManager, components.tabsUseCases.selectTab)
             .addSearchProvider(
                 requireContext(),
                 components.searchEngineManager,

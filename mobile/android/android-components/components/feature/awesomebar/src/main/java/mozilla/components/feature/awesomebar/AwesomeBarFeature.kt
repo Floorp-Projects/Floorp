@@ -5,6 +5,7 @@
 package mozilla.components.feature.awesomebar
 
 import android.content.Context
+import android.content.res.Resources
 import android.view.View
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.search.SearchEngine
@@ -50,10 +51,11 @@ class AwesomeBarFeature(
      * Add a [AwesomeBar.SuggestionProvider] for "Open tabs" to the [AwesomeBar].
      */
     fun addSessionProvider(
+        resources: Resources,
         sessionManager: SessionManager,
         selectTabUseCase: TabsUseCases.SelectTabUseCase
     ): AwesomeBarFeature {
-        val provider = SessionSuggestionProvider(sessionManager, selectTabUseCase, icons)
+        val provider = SessionSuggestionProvider(resources, sessionManager, selectTabUseCase, icons)
         awesomeBar.addProviders(provider)
         return this
     }
