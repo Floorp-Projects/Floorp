@@ -52,8 +52,8 @@ namespace dom {
 
 class Promise;
 
-enum ErrNum {
-#define MSG_DEF(_name, _argc, _exn, _str) _name,
+enum ErrNum : uint16_t {
+#define MSG_DEF(_name, _argc, _has_context, _exn, _str) _name,
 #include "mozilla/dom/Errors.msg"
 #undef MSG_DEF
   Err_Limit
@@ -63,11 +63,18 @@ enum ErrNum {
 // use in static_assert.
 #if defined(DEBUG) && (defined(__clang__) || defined(__GNUC__))
 uint16_t constexpr ErrorFormatNumArgs[] = {
-#  define MSG_DEF(_name, _argc, _exn, _str) _argc,
+#  define MSG_DEF(_name, _argc, _has_context, _exn, _str) _argc,
 #  include "mozilla/dom/Errors.msg"
 #  undef MSG_DEF
 };
 #endif
+
+// Table of whether various error messages want a context arg.
+bool constexpr ErrorFormatHasContext[] = {
+#define MSG_DEF(_name, _argc, _has_context, _exn, _str) _has_context,
+#include "mozilla/dom/Errors.msg"
+#undef MSG_DEF
+};
 
 uint16_t GetErrorArgCount(const ErrNum aErrorNumber);
 
@@ -450,9 +457,10 @@ class TErrorResult {
   template <dom::ErrNum errorNumber, typename... Ts>
   void ThrowErrorWithMessage(nsresult errorType, Ts&&... messageArgs) {
 #if defined(DEBUG) && (defined(__clang__) || defined(__GNUC__))
-    static_assert(
-        dom::ErrorFormatNumArgs[errorNumber] == sizeof...(messageArgs),
-        "Pass in the right number of arguments");
+    static_assert(dom::ErrorFormatNumArgs[errorNumber] ==
+                      sizeof...(messageArgs) +
+                          int(dom::ErrorFormatHasContext[errorNumber]),
+                  "Pass in the right number of arguments");
 #endif
 
     ClearUnionData();
@@ -460,6 +468,16 @@ class TErrorResult {
     nsTArray<nsString>& messageArgsArray =
         CreateErrorMessageHelper(errorNumber, errorType);
     uint16_t argCount = dom::GetErrorArgCount(errorNumber);
+    if (dom::ErrorFormatHasContext[errorNumber]) {
+      // Insert an empty string arg at the beginning and reduce our arg count to
+      // still be appended accordingly.
+      MOZ_ASSERT(argCount > 0,
+                 "Must have at least one arg if we have a context!");
+      MOZ_ASSERT(messageArgsArray.Length() == 0,
+                 "Why do we already have entries in the array?");
+      --argCount;
+      messageArgsArray.AppendElement();
+    }
     dom::StringArrayAppender::Append(messageArgsArray, argCount,
                                      std::forward<Ts>(messageArgs)...);
 #ifdef DEBUG

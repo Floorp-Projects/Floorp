@@ -24,7 +24,7 @@ var testDecodeAudioDataOnDetachedBuffer = function(buffer) {
     SimpleTest.finish();
   }, function(r) {
     SimpleTest.isa(r, TypeError);
-    is(r.message, "Argument of AudioContext.decodeAudioData can't be a detached buffer", "Incorrect message");
+    is(r.message, "BaseAudioContext.decodeAudioData: Buffer argument can't be a detached buffer", "Incorrect message");
     SimpleTest.finish();
   });
 };

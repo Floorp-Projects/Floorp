@@ -145,9 +145,8 @@ void AudioWorkletGlobalScope::RegisterProcessor(
   }
 
   if (!descriptors.isUndefined() && !isArray) {
-    aRv.ThrowTypeError<MSG_NOT_ARRAY_NOR_UNDEFINED>(NS_LITERAL_STRING(
-        "Argument 2 of AudioWorkletGlobalScope.registerProcessor "
-        "constructor.parameterDescriptors"));
+    aRv.ThrowTypeError<MSG_NOT_ARRAY_NOR_UNDEFINED>(
+        NS_LITERAL_STRING(".constructor.parameterDescriptors of argument 2"));
     return;
   }
 
