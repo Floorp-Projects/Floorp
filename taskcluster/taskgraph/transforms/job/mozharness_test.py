@@ -33,7 +33,6 @@ VARIANTS = [
     'pgo',
     'asan',
     'stylo',
-    'stylo-disabled',
     'qr',
     'ccov',
 ]
