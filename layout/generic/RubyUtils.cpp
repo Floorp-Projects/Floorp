@@ -24,7 +24,7 @@ void RubyUtils::SetReservedISize(nsIFrame* aFrame, nscoord aISize) {
 /* static */
 void RubyUtils::ClearReservedISize(nsIFrame* aFrame) {
   MOZ_ASSERT(IsExpandableRubyBox(aFrame));
-  aFrame->TakeProperty(ReservedISize());
+  aFrame->DeleteProperty(ReservedISize());
 }
 
 /* static */
