@@ -495,7 +495,9 @@ class PredictorLearnRunnable final : public Runnable {
         mTargetURI(targetURI),
         mSourceURI(sourceURI),
         mReason(reason),
-        mOA(oa) {}
+        mOA(oa) {
+    MOZ_DIAGNOSTIC_ASSERT(targetURI, "Must have a target URI");
+  }
 
   ~PredictorLearnRunnable() = default;
 
@@ -508,14 +510,8 @@ class PredictorLearnRunnable final : public Runnable {
       return NS_OK;
     }
 
-    ipc::URIParams serTargetURI;
-    SerializeURI(mTargetURI, serTargetURI);
-
-    Maybe<ipc::URIParams> serSourceURI;
-    SerializeURI(mSourceURI, serSourceURI);
-
     PREDICTOR_LOG(("predictor::learn (async) forwarding to parent"));
-    gNeckoChild->SendPredLearn(serTargetURI, serSourceURI, mReason, mOA);
+    gNeckoChild->SendPredLearn(mTargetURI, mSourceURI, mReason, mOA);
 
     return NS_OK;
   }
@@ -624,11 +620,6 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
     MOZ_DIAGNOSTIC_ASSERT(gNeckoChild);
 
     PREDICTOR_LOG(("    called on child process"));
-
-    Maybe<ipc::URIParams> serTargetURI, serSourceURI;
-    SerializeURI(targetURI, serTargetURI);
-    SerializeURI(sourceURI, serSourceURI);
-
     // If two different threads are predicting concurently, this will be
     // overwritten. Thankfully, we only use this in tests, which will
     // overwrite mVerifier perhaps multiple times for each individual test;
@@ -639,8 +630,8 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
       mChildVerifier = verifier;
     }
     PREDICTOR_LOG(("    forwarding to parent process"));
-    gNeckoChild->SendPredPredict(serTargetURI, serSourceURI, reason,
-                                 originAttributes, verifier);
+    gNeckoChild->SendPredPredict(targetURI, sourceURI, reason, originAttributes,
+                                 verifier);
     return NS_OK;
   }
 
@@ -2206,15 +2197,14 @@ Predictor::OnPredictPrefetch(nsIURI* aURI, uint32_t httpStatus) {
     return NS_OK;
   }
 
-  ipc::URIParams serURI;
-  SerializeURI(aURI, serURI);
+  MOZ_DIAGNOSTIC_ASSERT(aURI, "aURI must not be null");
 
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
     PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
     if (!neckoParent) {
       continue;
     }
-    if (!neckoParent->SendPredOnPredictPrefetch(serURI, httpStatus)) {
+    if (!neckoParent->SendPredOnPredictPrefetch(aURI, httpStatus)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -2234,15 +2224,14 @@ Predictor::OnPredictPreconnect(nsIURI* aURI) {
     return NS_OK;
   }
 
-  ipc::URIParams serURI;
-  SerializeURI(aURI, serURI);
+  MOZ_DIAGNOSTIC_ASSERT(aURI, "aURI must not be null");
 
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
     PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
     if (!neckoParent) {
       continue;
     }
-    if (!neckoParent->SendPredOnPredictPreconnect(serURI)) {
+    if (!neckoParent->SendPredOnPredictPreconnect(aURI)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -2262,15 +2251,14 @@ Predictor::OnPredictDNS(nsIURI* aURI) {
     return NS_OK;
   }
 
-  ipc::URIParams serURI;
-  SerializeURI(aURI, serURI);
+  MOZ_DIAGNOSTIC_ASSERT(aURI, "aURI must not be null");
 
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
     PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
     if (!neckoParent) {
       continue;
     }
-    if (!neckoParent->SendPredOnPredictDNS(serURI)) {
+    if (!neckoParent->SendPredOnPredictDNS(aURI)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
