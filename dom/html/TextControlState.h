@@ -396,12 +396,6 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
       const Maybe<uint32_t>& aSelectionStart = Nothing(),
       const Maybe<uint32_t>& aSelectionEnd = Nothing());
 
-  void UpdateEditableState(bool aNotify) {
-    if (auto* root = GetRootNode()) {
-      root->UpdateEditableState(aNotify);
-    }
-  }
-
  private:
   explicit TextControlState(TextControlElement* aOwningElement);
   MOZ_CAN_RUN_SCRIPT ~TextControlState();
