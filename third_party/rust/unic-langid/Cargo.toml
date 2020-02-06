@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "unic-langid"
-version = "0.7.1"
+version = "0.8.0"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>"]
 description = "API for managing Unicode Language Identifiers"
 readme = "README.md"
@@ -21,13 +21,13 @@ categories = ["internationalization"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/zbraniecki/unic-locale"
 [dependencies.unic-langid-impl]
-version = "0.7.1"
+version = "0.8"
 
 [dependencies.unic-langid-macros]
-version = "0.7"
+version = "0.8"
 optional = true
 [dev-dependencies.unic-langid-macros]
-version = "0.7"
+version = "0.8"
 
 [features]
 default = []

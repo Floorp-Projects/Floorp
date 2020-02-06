@@ -1256,9 +1256,9 @@ dependencies = [
 
 [[package]]
 name = "fluent-langneg"
-version = "0.11.1"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55e840a3a9938e6dd9a57a6a3be02bef1d51b1d75b883cdfe84810c7e7ca1293"
+checksum = "fe5815efd5542e40841cd34ef9003822352b04c67a70c595c6758597c72e1f56"
 dependencies = [
  "unic-langid",
 ]
@@ -4419,9 +4419,9 @@ dependencies = [
 
 [[package]]
 name = "unic-langid"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7935b530ca240640bf8dd67d04301a3ed02bfc8635105fea9e9a26477143ca22"
+checksum = "24d81136159f779c35b10655f45210c71cd5ca5a45aadfe9840a61c7071735ed"
 dependencies = [
  "unic-langid-impl",
 ]
@@ -4439,9 +4439,9 @@ dependencies = [
 
 [[package]]
 name = "unic-langid-impl"
-version = "0.7.2"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86ab4a5be993d5b9d082476a7dd7149c083cf63a72469e700c09e69784511957"
+checksum = "c43c61e94492eb67f20facc7b025778a904de83d953d8fcb60dd9adfd6e2d0ea"
 dependencies = [
  "tinystr",
 ]

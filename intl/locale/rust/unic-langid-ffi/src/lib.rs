@@ -40,7 +40,7 @@ pub unsafe extern "C" fn unic_langid_get_language(
     langid: &LanguageIdentifier,
     len: *mut u32,
 ) -> *const u8 {
-    let lang = langid.get_language();
+    let lang = langid.language();
     *len = lang.len() as u32;
     lang.as_bytes().as_ptr()
 }
@@ -63,7 +63,7 @@ pub unsafe extern "C" fn unic_langid_get_script(
     langid: &LanguageIdentifier,
     len: *mut u32,
 ) -> *const u8 {
-    let script = langid.get_script().unwrap_or("");
+    let script = langid.script().unwrap_or("");
     *len = script.len() as u32;
     script.as_bytes().as_ptr()
 }
@@ -86,7 +86,7 @@ pub unsafe extern "C" fn unic_langid_get_region(
     langid: &LanguageIdentifier,
     len: *mut u32,
 ) -> *const u8 {
-    let region = langid.get_region().unwrap_or("");
+    let region = langid.region().unwrap_or("");
     *len = region.len() as u32;
     region.as_bytes().as_ptr()
 }
@@ -109,7 +109,7 @@ pub unsafe extern "C" fn unic_langid_get_variants(
     langid: &LanguageIdentifier,
     variants: &mut ThinVec<nsCString>,
 ) {
-    for v in langid.get_variants() {
+    for v in langid.variants() {
         variants.push(v.into());
     }
 }
@@ -139,5 +139,5 @@ pub unsafe extern "C" fn unic_langid_matches(
 
 #[no_mangle]
 pub unsafe extern "C" fn unic_langid_add_likely_subtags(langid: &mut LanguageIdentifier) -> bool {
-    langid.add_likely_subtags()
+    langid.maximize()
 }

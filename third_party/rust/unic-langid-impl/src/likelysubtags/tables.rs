@@ -1,8 +1,8 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::unreadable_literal)]
 
-pub const CLDR_VERSION: &str = "36";
-pub const LANG_ONLY: &[(u64, (Option<u64>, Option<u32>, Option<u32>)); 1333] = &[
+pub static CLDR_VERSION: &str = "36";
+pub static LANG_ONLY: [(u64, (Option<u64>, Option<u32>, Option<u32>)); 1333] = [
     (24929, (Some(24929), Some(1853120844), Some(21573))),
     (24930, (Some(24930), Some(1819441475), Some(21842))),
     (24931, (Some(24931), Some(1853120844), Some(21317))),
@@ -1337,7 +1337,7 @@ pub const LANG_ONLY: &[(u64, (Option<u64>, Option<u32>, Option<u32>)); 1333] = &
     (8026732, (Some(8026732), Some(1853120844), Some(21076))),
     (8026733, (Some(8026733), Some(1853120844), None)),
 ];
-pub const LANG_REGION: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); 45] = [
+pub static LANG_REGION: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); 45] = [
     (24936, 17491, (Some(24936), Some(1650553409), Some(17491))),
     (24936, 19779, (Some(24936), Some(1650553409), Some(19779))),
     (24944, 19280, (Some(24944), Some(1650553409), Some(19280))),
@@ -1400,7 +1400,7 @@ pub const LANG_REGION: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); 45]
         (Some(7499381), Some(1635149124), Some(20558)),
     ),
 ];
-pub const LANG_SCRIPT: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); 28] = [
+pub static LANG_SCRIPT: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); 28] = [
     (
         24944,
         1650553409,
@@ -1542,7 +1542,7 @@ pub const LANG_SCRIPT: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); 28]
         (Some(7563629), Some(1717855565), Some(18254)),
     ),
 ];
-pub const SCRIPT_REGION: [(u32, u32, (Option<u64>, Option<u32>, Option<u32>)); 59] = [
+pub static SCRIPT_REGION: [(u32, u32, (Option<u64>, Option<u32>, Option<u32>)); 59] = [
     (
         1635149124,
         19014,
@@ -1839,7 +1839,7 @@ pub const SCRIPT_REGION: [(u32, u32, (Option<u64>, Option<u32>, Option<u32>)); 5
         (Some(7628907), Some(1919777101), Some(20041)),
     ),
 ];
-pub const SCRIPT_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); 154] = [
+pub static SCRIPT_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); 154] = [
     (1633773652, (Some(30308), Some(1633773652), Some(22093))),
     (1633840197, (Some(29043), Some(1633840197), Some(19521))),
     (1633971787, (Some(28267), Some(1633971787), Some(20041))),
@@ -1995,7 +1995,7 @@ pub const SCRIPT_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); 154] = [
     (2020501584, (Some(7235696), Some(2020501584), Some(16972))),
     (2020963160, (Some(7039841), Some(2020963160), Some(20809))),
 ];
-pub const REGION_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); 227] = [
+pub static REGION_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); 227] = [
     (16706, (Some(29538), Some(1853120844), Some(16706))),
     (16709, (Some(29541), Some(1853120844), Some(16709))),
     (16711, (Some(29286), Some(1853120844), Some(16711))),
