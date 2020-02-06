@@ -2083,22 +2083,18 @@ nsresult JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
                                                std::string* mid,
                                                bool* skipped) {
   mLastError.clear();
+  *skipped = true;
   if (!mCurrentLocalDescription && !mPendingLocalDescription) {
     JSEP_SET_ERROR("Cannot add ICE candidate when there is no local SDP");
     return NS_ERROR_UNEXPECTED;
   }
 
   JsepTransceiver* transceiver = GetTransceiverWithTransport(transportId);
-  *skipped = !transceiver;
-  if (*skipped) {
+  if (!transceiver || !transceiver->IsAssociated()) {
     // mainly here to make some testing less complicated, but also just in case
     return NS_OK;
   }
 
-  MOZ_ASSERT(
-      transceiver->IsAssociated(),
-      "ICE candidate was gathered before the transceiver was associated! "
-      "This should never happen.");
   *level = transceiver->GetLevel();
   *mid = transceiver->GetMid();
 
@@ -2115,6 +2111,7 @@ nsresult JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
                                       *level, ufrag);
   }
 
+  *skipped = false;
   return rv;
 }
 
