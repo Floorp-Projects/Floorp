@@ -317,6 +317,10 @@ RulersHighlighter.prototype = {
       this.ID_CLASS_PREFIX + "elements",
       "hidden"
     );
+    this.markup.removeAttributeForElement(
+      this.ID_CLASS_PREFIX + "viewport-infobar-container",
+      "hidden"
+    );
 
     this._update();
 
@@ -326,6 +330,11 @@ RulersHighlighter.prototype = {
   hide: function() {
     this.markup.setAttributeForElement(
       this.ID_CLASS_PREFIX + "elements",
+      "hidden",
+      "true"
+    );
+    this.markup.setAttributeForElement(
+      this.ID_CLASS_PREFIX + "viewport-infobar-container",
       "hidden",
       "true"
     );
