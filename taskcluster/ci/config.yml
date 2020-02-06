@@ -83,7 +83,6 @@ treeherder:
         'tt-1proc': 'Telemetry tests without e10s'
         'SY': 'Are we slim yet tests by TaskCluster'
         'SY-fis': 'Are we slim yet tests by TaskCluster, fission enabled'
-        'SYsd': 'Are we slim yet tests by TaskCluster, Stylo disabled'
         'VP': 'VideoPuppeteer tests'
         'W': 'Web platform tests'
         'W-1proc': 'Web platform tests without e10s'
