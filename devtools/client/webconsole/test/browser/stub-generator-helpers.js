@@ -10,14 +10,13 @@ const {
   getAdHocFrontOrPrimitiveGrip,
 } = require("devtools/shared/fronts/object");
 
+const CHROME_PREFIX = "chrome://mochitests/content/browser/";
 const STUBS_FOLDER = "devtools/client/webconsole/test/node/fixtures/stubs/";
 const STUBS_UPDATE_ENV = "WEBCONSOLE_STUBS_UPDATE";
 
 // eslint-disable-next-line complexity
 function getCleanedPacket(key, packet) {
-  const {
-    stubPackets,
-  } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+  const { stubPackets } = require(CHROME_PREFIX + STUBS_FOLDER + "index");
 
   // Strip escaped characters.
   const safeKey = key
@@ -322,10 +321,15 @@ function copyExistingActor(front1, front2) {
 /**
  * Write stubs to a given file
  *
- * @param {String} filePath: The file to write the stubs in.
+ * @param {Object} env
+ * @param {String} fileName: The file to write the stubs in.
  * @param {Map} packets: A Map of the packets.
+ * @param {Boolean} isNetworkMessage: Is the packets are networkMessage packets
  */
-async function writeStubsToFile(filePath, packets, isNetworkMessage) {
+async function writeStubsToFile(env, fileName, packets, isNetworkMessage) {
+  const mozRepo = env.get("MOZ_DEVELOPER_REPO_DIR");
+  const filePath = `${mozRepo}/${STUBS_FOLDER + fileName}`;
+
   const serializedPackets = Array.from(packets.entries()).map(
     ([key, packet]) => {
       const stringifiedPacket = getSerializedPacket(packet);
@@ -345,7 +349,7 @@ async function writeStubsToFile(filePath, packets, isNetworkMessage) {
 
 const {
   parsePacketsWithFronts,
-} = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
+} = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
 const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
 const {
   ConsoleMessage,
@@ -360,10 +364,16 @@ const stubPackets = parsePacketsWithFronts(rawPackets);
 
 const stubPreparedMessages = new Map();
 for (const [key, packet] of Array.from(stubPackets.entries())) {
-  const transformedPacket = prepareMessage(packet, {
+  const transformedPacket = prepareMessage(${
+    isNetworkMessage ? "packet.networkInfo || packet" : "packet"
+  }, {
     getNextId: () => "1",
   });
-  const message = ConsoleMessage(transformedPacket);
+  const message = ${
+    isNetworkMessage
+      ? "NetworkEventMessage(transformedPacket);"
+      : "ConsoleMessage(transformedPacket);"
+  }
   stubPreparedMessages.set(key, message);
 }
 
@@ -377,9 +387,8 @@ module.exports = {
   await OS.File.writeAtomic(filePath, fileContent);
 }
 
-function getStubFilePath(fileName, env, absolute = false) {
-  const path = STUBS_FOLDER + fileName;
-  return absolute ? `${env.get("MOZ_DEVELOPER_REPO_DIR")}/${path}` : path;
+function getStubFile(fileName) {
+  return require(CHROME_PREFIX + STUBS_FOLDER + fileName);
 }
 
 function getSerializedPacket(packet) {
@@ -438,7 +447,7 @@ function parsePacketAndCreateFronts(packet) {
 
 module.exports = {
   STUBS_UPDATE_ENV,
-  getStubFilePath,
+  getStubFile,
   getCleanedPacket,
   getSerializedPacket,
   parsePacketsWithFronts,
