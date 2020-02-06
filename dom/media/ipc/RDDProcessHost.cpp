@@ -147,8 +147,8 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
   if (aSucceeded) {
     mProcessToken = ++sRDDProcessTokenCounter;
     mRDDChild = MakeUnique<RDDChild>(this);
-    DebugOnly<bool> rv =
-        mRDDChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
+    DebugOnly<bool> rv = mRDDChild->Open(
+        TakeChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
     // Only clear mPrefSerializer in the success case to avoid a

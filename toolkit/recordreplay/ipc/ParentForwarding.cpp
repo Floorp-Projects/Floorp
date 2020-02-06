@@ -347,7 +347,7 @@ static void ForwardingMessageLoopMain(void*) {
   gChildProtocol->mOppositeMessageLoop = gForwardingMessageLoop;
 
   gParentProtocol->Open(
-      gRecordingProcess->GetChannel(),
+      gRecordingProcess->TakeChannel(),
       base::GetProcId(gRecordingProcess->GetChildProcessHandle()));
 
   // Notify the main thread that we have finished initialization.

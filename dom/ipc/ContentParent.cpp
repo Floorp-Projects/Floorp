@@ -2319,7 +2319,7 @@ void ContentParent::LaunchSubprocessInternal(
     }
 
     base::ProcessId procId = base::GetProcId(handle);
-    Open(mSubprocess->GetChannel(), procId);
+    Open(mSubprocess->TakeChannel(), procId);
 #ifdef MOZ_CODE_COVERAGE
     Unused << SendShareCodeCoverageMutex(
         CodeCoverageHandler::Get()->GetMutexHandle(procId));

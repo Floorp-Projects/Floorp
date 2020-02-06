@@ -30,7 +30,7 @@ class ChildThread : public IPC::Channel::Listener, public base::Thread {
   // Returns the one child thread.
   static ChildThread* current();
 
-  IPC::Channel* channel() { return channel_.get(); }
+  mozilla::UniquePtr<IPC::Channel> TakeChannel() { return std::move(channel_); }
 
   // Thread implementation.
   virtual void Init() override;

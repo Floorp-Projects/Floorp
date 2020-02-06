@@ -830,8 +830,8 @@ void MessageChannel::Clear() {
   }
 }
 
-bool MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop,
-                          Side aSide) {
+bool MessageChannel::Open(mozilla::UniquePtr<Transport> aTransport,
+                          MessageLoop* aIOLoop, Side aSide) {
   MOZ_ASSERT(!mLink, "Open() called > once");
 
   mMonitor = new RefCountedMonitor();
@@ -841,7 +841,8 @@ bool MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop,
   mListener->OnIPCChannelOpened();
 
   ProcessLink* link = new ProcessLink(this);
-  link->Open(aTransport, aIOLoop, aSide);  // :TODO: n.b.: sets mChild
+  link->Open(std::move(aTransport), aIOLoop,
+             aSide);  // :TODO: n.b.: sets mChild
   mLink = link;
   mIsCrossProcess = true;
   ChannelCountReporter::Increment(mName);

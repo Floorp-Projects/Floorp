@@ -584,14 +584,6 @@ IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,
   mToplevel = this;
 }
 
-IToplevelProtocol::~IToplevelProtocol() {
-  if (mTrans) {
-    RefPtr<DeleteTask<Transport>> task =
-        new DeleteTask<Transport>(mTrans.release());
-    XRE_GetIOMessageLoop()->PostTask(task.forget());
-  }
-}
-
 base::ProcessId IToplevelProtocol::OtherPid() const {
   base::ProcessId pid = OtherPidMaybeInvalid();
   MOZ_RELEASE_ASSERT(pid != kInvalidProcessId);
@@ -610,11 +602,11 @@ void IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid) {
   }
 }
 
-bool IToplevelProtocol::Open(mozilla::ipc::Transport* aTransport,
+bool IToplevelProtocol::Open(UniquePtr<Transport> aTransport,
                              base::ProcessId aOtherPid, MessageLoop* aThread,
                              mozilla::ipc::Side aSide) {
   SetOtherProcessId(aOtherPid);
-  return GetIPCChannel()->Open(aTransport, aThread, aSide);
+  return GetIPCChannel()->Open(std::move(aTransport), aThread, aSide);
 }
 
 bool IToplevelProtocol::Open(MessageChannel* aChannel,
@@ -630,12 +622,6 @@ bool IToplevelProtocol::Open(MessageChannel* aChannel,
                              mozilla::ipc::Side aSide) {
   SetOtherProcessId(base::GetCurrentProcId());
   return GetIPCChannel()->Open(aChannel, aEventTarget, aSide);
-}
-
-bool IToplevelProtocol::OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
-                                         MessageLoop* aThread,
-                                         mozilla::ipc::Side aSide) {
-  return GetIPCChannel()->Open(aTransport, aThread, aSide);
 }
 
 bool IToplevelProtocol::OpenOnSameThread(MessageChannel* aChannel, Side aSide) {

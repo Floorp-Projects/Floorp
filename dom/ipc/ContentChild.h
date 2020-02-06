@@ -120,7 +120,7 @@ class ContentChild final
                                bool* aWindowIsNew, BrowsingContext** aReturn);
 
   bool Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
-            const char* aParentBuildID, IPC::Channel* aChannel,
+            const char* aParentBuildID, UniquePtr<IPC::Channel> aChannel,
             uint64_t aChildID, bool aIsForBrowser);
 
   void InitXPCOM(const XPCOMInitData& aXPCOMInit,

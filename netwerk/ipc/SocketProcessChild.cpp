@@ -69,11 +69,11 @@ void CGSShutdownServerConnections();
 
 bool SocketProcessChild::Init(base::ProcessId aParentPid,
                               const char* aParentBuildID, MessageLoop* aIOLoop,
-                              IPC::Channel* aChannel) {
+                              UniquePtr<IPC::Channel> aChannel) {
   if (NS_WARN_IF(NS_FAILED(nsThreadManager::get().Init()))) {
     return false;
   }
-  if (NS_WARN_IF(!Open(aChannel, aParentPid, aIOLoop))) {
+  if (NS_WARN_IF(!Open(std::move(aChannel), aParentPid, aIOLoop))) {
     return false;
   }
   // This must be sent before any IPDL message, which may hit sentinel

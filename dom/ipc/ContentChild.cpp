@@ -631,8 +631,9 @@ mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
 }
 
 bool ContentChild::Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
-                        const char* aParentBuildID, IPC::Channel* aChannel,
-                        uint64_t aChildID, bool aIsForBrowser) {
+                        const char* aParentBuildID,
+                        UniquePtr<IPC::Channel> aChannel, uint64_t aChildID,
+                        bool aIsForBrowser) {
 #ifdef MOZ_WIDGET_GTK
   // When running X11 only build we need to pass a display down
   // to gtk_init because it's not going to use the one from the environment
@@ -696,7 +697,7 @@ bool ContentChild::Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
     ActorConnected();
   }
 
-  if (!Open(aChannel, aParentPid, aIOLoop)) {
+  if (!Open(std::move(aChannel), aParentPid, aIOLoop)) {
     return false;
   }
   sSingleton = this;
