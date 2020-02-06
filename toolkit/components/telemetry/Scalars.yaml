@@ -5593,7 +5593,7 @@ corroborate:
       - 1515712
     description: >-
           Whether the omni jar (omni.ja) was found to be missing or corrupt when checked during startup.
-    expires: "71"
+    expires: "80"
     kind: boolean
     notification_emails:
       - rhelmer@mozilla.com
@@ -5627,7 +5627,7 @@ corroborate:
       - 1515712
     description: >-
       Whether any system add-on (XPI files) were found to be missing or corrupt when checked during startup.
-    expires: "71"
+    expires: "80"
     kind: boolean
     notification_emails:
       - rhelmer@mozilla.com
