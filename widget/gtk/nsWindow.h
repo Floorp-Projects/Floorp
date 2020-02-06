@@ -687,6 +687,9 @@ class nsWindow final : public nsBaseWidget {
   void HideWaylandPopupAndAllChildren();
   void CleanupWaylandPopups();
   GtkWindow* GetCurrentTopmostWindow();
+  GtkWindow* GetCurrentWindow();
+  GtkWindow* GetTopmostWindow();
+  bool IsWidgetOverflowWindow();
 
   /**
    * |mIMContext| takes all IME related stuff.

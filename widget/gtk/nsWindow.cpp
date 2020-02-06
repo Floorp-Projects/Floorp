@@ -1193,20 +1193,26 @@ void nsWindow::CleanupWaylandPopups() {
   while (popupList) {
     LOG(("  Looking for %p [nsWindow]\n", popupList->data));
     nsWindow* waylandWnd = static_cast<nsWindow*>(popupList->data);
-    bool popupFound = false;
-    for (unsigned long i = 0; i < widgetChain.Length(); i++) {
-      if (waylandWnd == widgetChain[i]) {
-        popupFound = true;
-        break;
+    // Remove only menu popups or empty frames - they are most likely
+    // already rolledup popups
+    if (waylandWnd->IsMainMenuWindow() || !waylandWnd->GetFrame()) {
+      bool popupFound = false;
+      for (unsigned long i = 0; i < widgetChain.Length(); i++) {
+        if (waylandWnd == widgetChain[i]) {
+          popupFound = true;
+          break;
+        }
       }
-    }
-    if (!popupFound) {
-      LOG(("    nsWindow [%p] not found in PopupManager, hiding it.\n",
-           waylandWnd));
-      waylandWnd->HideWaylandWindow();
-      popupList = gVisibleWaylandPopupWindows;
+      if (!popupFound) {
+        LOG(("    nsWindow [%p] not found in PopupManager, hiding it.\n",
+             waylandWnd));
+        waylandWnd->HideWaylandWindow();
+        popupList = gVisibleWaylandPopupWindows;
+      } else {
+        LOG(("    nsWindow [%p] is still open.\n", waylandWnd));
+        popupList = popupList->next;
+      }
     } else {
-      LOG(("    nsWindow [%p] is still open.\n", waylandWnd));
       popupList = popupList->next;
     }
   }
@@ -1229,6 +1235,55 @@ bool nsWindow::IsMainMenuWindow() {
   return false;
 }
 
+GtkWindow* nsWindow::GetTopmostWindow() {
+  nsView* view = nsView::GetViewFor(this);
+  if (view) {
+    nsView* parentView = view->GetParent();
+    if (parentView) {
+      nsIWidget* parentWidget = parentView->GetNearestWidget(nullptr);
+      if (parentWidget) {
+        nsWindow* parentnsWindow = static_cast<nsWindow*>(parentWidget);
+        LOG(("  Topmost window: %p [nsWindow]\n", parentnsWindow));
+        return GTK_WINDOW(parentnsWindow->mShell);
+      }
+    }
+  }
+  return nullptr;
+}
+
+GtkWindow* nsWindow::GetCurrentWindow() {
+  GtkWindow* parentGtkWindow = nullptr;
+  // get the last opened window from gVisibleWaylandPopupWindows
+  if (gVisibleWaylandPopupWindows) {
+    nsWindow* parentnsWindow =
+        static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
+    if (parentnsWindow) {
+      LOG(("  Setting parent to last opened window: %p [nsWindow]\n",
+           parentnsWindow));
+      parentGtkWindow = GTK_WINDOW(parentnsWindow->GetGtkWidget());
+    }
+  }
+  // get the topmost window if the last opened windows are empty
+  if (!parentGtkWindow) {
+    parentGtkWindow = GetTopmostWindow();
+  }
+  if (parentGtkWindow && GTK_IS_WINDOW(parentGtkWindow)) {
+    return GTK_WINDOW(parentGtkWindow);
+  } else {
+    LOG(("  Failed to get current window for %p: %p\n", this, parentGtkWindow));
+  }
+  return nullptr;
+}
+
+bool nsWindow::IsWidgetOverflowWindow() {
+  if (this->GetFrame() && this->GetFrame()->GetContent()->GetID()) {
+    nsCString nodeId;
+    this->GetFrame()->GetContent()->GetID()->ToUTF8String(nodeId);
+    return nodeId.Equals("widget-overflow");
+  }
+  return false;
+}
+
 // Wayland keeps strong popup window hierarchy. We need to track active
 // (visible) popup windows and make sure we hide popup on the same level
 // before we open another one on that level. It means that every open
@@ -1247,9 +1302,18 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
   }
 #endif
 
-  // Check if we're already configured.
+  if (!GetFrame()) {
+    LOG(("  Window without frame cannot be configured.\n"));
+    return nullptr;
+  }
+
+  // Check if we're already configured. Popup can be reattached to various
+  // windows, so don't consider them configured. Also the widget-overflow needs
+  // special care because the opened (remote) popups has to be closed before is
+  // it shown again.
   if (gVisibleWaylandPopupWindows &&
-      g_list_find(gVisibleWaylandPopupWindows, this)) {
+      g_list_find(gVisibleWaylandPopupWindows, this) &&
+      mPopupType != ePopupTypeTooltip && !IsWidgetOverflowWindow()) {
     LOG(("  [%p] is already configured.\n", (void*)this));
     return GTK_WIDGET(gtk_window_get_transient_for(GTK_WINDOW(mShell)));
   }
@@ -1257,80 +1321,30 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
   // If we're opening a new window we don't want to attach it to a tooltip
   // as it's short lived temporary window.
   HideWaylandTooltips();
+  // Cleanup already closed menus
+  CleanupWaylandPopups();
 
   GtkWindow* parentGtkWindow = nullptr;
-
-  if (IsMainMenuWindow()) {
-    // Remove and hide already closed popups from the
-    // gVisibleWaylandPopupWindows which were not yet been hidden.
-    CleanupWaylandPopups();
-    // Since the popups are shown by unknown order it can happen that child
-    // popup is shown before parent popup.
-    // We look for the current window parent in nsXULPopupManager since it
-    // always has correct popup hierarchy while gVisibleWaylandPopupWindows may
-    // not.
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    AutoTArray<nsIWidget*, 5> widgetChain;
-    pm->GetSubmenuWidgetChain(&widgetChain);
-    for (unsigned long i = 0; i < widgetChain.Length() - 1; i++) {
-      unsigned long parentIndex = i + 1;
-      if (widgetChain.Length() > parentIndex && widgetChain[i] == this) {
-        nsWindow* parentWindow =
-            static_cast<nsWindow*>(widgetChain[parentIndex]);
-        parentGtkWindow = GTK_WINDOW(parentWindow->GetGtkWidget());
-        LOG(("  [%p] Found %p as parent in nsXULPopupManager.", this,
-             parentWindow));
-        break;
-      }
-    }
-  } else {
-    // Panels usually ends there
-    if (gVisibleWaylandPopupWindows && HasRemoteContent()) {
-      // If the new panel is remote content, we need to close all other popups
-      // before to keep the correct hierarchy because the remote content popup
-      // can replace the overflow-widget panel.
-      HideWaylandOpenedPopups();
-    } else if (gVisibleWaylandPopupWindows) {
-      // If there is any remote content panel currently opened, close all
-      // opened popups to keep the correct hierarchy.
-      GList* popupList = gVisibleWaylandPopupWindows;
-      while (popupList) {
-        nsWindow* waylandWnd = static_cast<nsWindow*>(popupList->data);
-        LOG(("  Checking [%p] IsRemoteContent %d\n", popupList->data,
-             waylandWnd->IsRemoteContent()));
-        if (waylandWnd->IsRemoteContent()) {
-          // close all popups including remote content before showing our panel
-          // Most likely returning from addon panel to overflow-widget.
-          HideWaylandOpenedPopups();
-          break;
-        }
-        popupList = popupList->next;
-      }
-    }
-    // For popups in panels use the last opened popup window as parent,
-    // panels are not stored in nsXULPopupManager.
-    if (gVisibleWaylandPopupWindows) {
-      nsWindow* parentWindow =
-          static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
-      parentGtkWindow = GTK_WINDOW(parentWindow->GetGtkWidget());
-    }
+  if (HasRemoteContent() || IsWidgetOverflowWindow()) {
+    LOG(
+        ("  Hiding all opened popups because the window is remote content or "
+         "overflow-widget"));
+    HideWaylandOpenedPopups();
   }
+
+  parentGtkWindow = GetCurrentWindow();
   if (parentGtkWindow) {
     MOZ_ASSERT(parentGtkWindow != GTK_WINDOW(this->GetGtkWidget()),
                "Cannot set self as parent");
     gtk_window_set_transient_for(GTK_WINDOW(mShell),
                                  GTK_WINDOW(parentGtkWindow));
-  } else {
-    // Fallback to the parent given in nsWindow::Create (most likely the
-    // toplevel window).
-    parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
-    LOG(("  Setting parent from transient: %p [GtkWindow]\n", parentGtkWindow));
+    // Add current window to the visible popup list
+    gVisibleWaylandPopupWindows =
+        g_list_prepend(gVisibleWaylandPopupWindows, this);
+    LOG(("  Parent window for %p: %p [GtkWindow]", this, parentGtkWindow));
   }
-  // Add current window to the visible popup list
-  gVisibleWaylandPopupWindows =
-      g_list_prepend(gVisibleWaylandPopupWindows, this);
 
-  LOG(("  Parent window for %p: %p [GtkWindow]", this, parentGtkWindow));
+  MOZ_ASSERT(parentGtkWindow, "NO parent window for %p: expect popup glitches");
   return GTK_WIDGET(parentGtkWindow);
 }
 
