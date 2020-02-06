@@ -4270,7 +4270,7 @@ class MOZ_RAII AutoFlexItemMainSizeOverride final {
   }
 
   ~AutoFlexItemMainSizeOverride() {
-    mItemFrame->RemoveProperty(nsIFrame::FlexItemMainSizeOverride());
+    mItemFrame->TakeProperty(nsIFrame::FlexItemMainSizeOverride());
   }
 
  private:

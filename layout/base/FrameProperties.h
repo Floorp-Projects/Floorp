@@ -176,7 +176,7 @@ class FrameProperties {
    *
    * In most cases, this shouldn't be used outside of assertions, because if
    * you're doing a lookup anyway it would be far more efficient to call Get()
-   * or Remove() and check the aFoundResult outparam to find out whether the
+   * or Take() and check the aFoundResult outparam to find out whether the
    * property is set. Legitimate non-assertion uses include:
    *
    *   - Checking if a frame property is set in cases where that's all we want
@@ -214,20 +214,19 @@ class FrameProperties {
   }
 
   /**
-   * Remove a property value. This requires a linear search through
-   * the properties of the frame. The old property value is returned
-   * (and not destroyed). If the frame has no such property,
-   * returns zero-filled result, which means null for pointers and
-   * zero for integers and floating point types.
+   * Remove a property value, and return it without destroying it.
+   *
+   * This requires a linear search through the properties of the frame.
+   * If the frame has no such property, returns zero-filled result, which means
+   * null for pointers and zero for integers and floating point types.
    * @param aFoundResult if non-null, receives a value 'true' iff
    * the frame had a value for the property. This lets callers
    * disambiguate a null result, which can mean 'no such property' or
    * 'property value is null'.
    */
   template <typename T>
-  PropertyType<T> Remove(Descriptor<T> aProperty,
-                         bool* aFoundResult = nullptr) {
-    void* ptr = RemoveInternal(aProperty, aFoundResult);
+  PropertyType<T> Take(Descriptor<T> aProperty, bool* aFoundResult = nullptr) {
+    void* ptr = TakeInternal(aProperty, aFoundResult);
     return ReinterpretHelper<T>::FromPointer(ptr);
   }
 
@@ -294,7 +293,7 @@ class FrameProperties {
   inline void* GetInternal(UntypedDescriptor aProperty,
                            bool* aFoundResult) const;
 
-  inline void* RemoveInternal(UntypedDescriptor aProperty, bool* aFoundResult);
+  inline void* TakeInternal(UntypedDescriptor aProperty, bool* aFoundResult);
 
   inline void DeleteInternal(UntypedDescriptor aProperty,
                              const nsIFrame* aFrame);
@@ -406,8 +405,8 @@ inline void FrameProperties::AddInternal(UntypedDescriptor aProperty,
   mProperties.AppendElement(PropertyValue(aProperty, aValue));
 }
 
-inline void* FrameProperties::RemoveInternal(UntypedDescriptor aProperty,
-                                             bool* aFoundResult) {
+inline void* FrameProperties::TakeInternal(UntypedDescriptor aProperty,
+                                           bool* aFoundResult) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aProperty, "Null property?");
 

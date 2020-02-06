@@ -1247,7 +1247,7 @@ void nsTextControlFrame::SetInitialChildList(ChildListID aListID,
       UniquePtr<PresState> fakePresState = NewPresState();
       fakePresState->scrollState() = *contentScrollPos;
       statefulFrame->RestoreState(fakePresState.get());
-      RemoveProperty(ContentScrollPos());
+      TakeProperty(ContentScrollPos());
       delete contentScrollPos;
     }
   } else {
