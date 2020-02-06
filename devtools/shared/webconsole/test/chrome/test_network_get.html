@@ -18,13 +18,14 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
-  attachConsoleToTab(["NetworkActivity"], onAttach);
+  const {state} = await attachConsoleToTab(["NetworkActivity"]);
+  onAttach(state);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   info("test network GET request");
 

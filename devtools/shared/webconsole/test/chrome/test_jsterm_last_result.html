@@ -23,14 +23,12 @@ function evaluateJS(input) {
   return gState.webConsoleFront.evaluateJSAsync(input);
 }
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
-  attachConsoleToTab([], state => {
-    gState = state;
-    const tests = [checkUndefinedResult,checkAdditionResult,checkObjectResult];
-    runTests(tests, testEnd);
-  });
+  gState = (await attachConsoleToTab([])).state;
+  const tests = [checkUndefinedResult,checkAdditionResult,checkObjectResult];
+  runTests(tests, testEnd);
 }
 
 const checkUndefinedResult = async function () {

@@ -17,13 +17,14 @@ SimpleTest.waitForExplicitFinish();
 
 let expectedMessages = [];
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
-  attachConsole(["PageError"], onAttach);
+  const {state} = await attachConsole(["PageError"]);
+  onAttach(state);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   onLogMessage = onLogMessage.bind(null, aState);
   aState.webConsoleFront.on("logMessage", onLogMessage);

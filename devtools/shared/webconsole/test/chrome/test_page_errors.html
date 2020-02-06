@@ -147,13 +147,14 @@ function doPageErrors() {
   }
 }
 
-function startTest() {
+async function startTest() {
   removeEventListener("load", startTest);
 
-  attachConsole(["PageError"], onAttach);
+  const {state} = await attachConsole(["PageError"]);
+  onAttach(state);
 }
 
-function onAttach(state, response) {
+function onAttach(state) {
   onPageError = onPageError.bind(null, state);
   state.webConsoleFront.on("pageError", onPageError);
   doPageErrors();

@@ -112,7 +112,8 @@ const startTest = async function () {
     ]}, resolve);
   });
 
-  attachConsoleToTab(["ConsoleAPI"], onAttach);
+  const {state, response} = await attachConsoleToTab(["ConsoleAPI"]);
+  onAttach(state, response);
 };
 addEventListener("load", startTest);
 
