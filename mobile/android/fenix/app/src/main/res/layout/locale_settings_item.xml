@@ -11,7 +11,7 @@
         android:layout_marginTop="@dimen/locale_item_vertical_margin"
         android:layout_marginBottom="@dimen/locale_item_vertical_margin"
         android:contentDescription="@string/a11y_selected_locale_content_description"
-        android:src="@drawable/mozac_ic_check"
+        app:srcCompat="@drawable/mozac_ic_check"
         android:tint="?primaryText"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
