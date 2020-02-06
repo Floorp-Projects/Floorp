@@ -119,6 +119,11 @@ export const prefs = new PrefsHelper("devtools", {
   logEventBreakpoints: ["Bool", "debugger.log-event-breakpoints"],
 });
 
+// The pref may not be defined. Defaulting to null isn't viable (cursor never blinks).
+// Can't use CodeMirror.defaults here because it's loaded later.
+// Hardcode the fallback value to that of CodeMirror.defaults.cursorBlinkRate.
+prefs.cursorBlinkRate = Services.prefs.getIntPref("ui.caretBlinkTime", 530);
+
 export const features = new PrefsHelper("devtools.debugger.features", {
   asyncStepping: ["Bool", "async-stepping"],
   wasm: ["Bool", "wasm"],
