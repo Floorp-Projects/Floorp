@@ -437,6 +437,9 @@ def target_tasks_fennec_v68(full_task_graph, parameters, graph_config):
         if '-fennec68-' in attributes.get('raptor_try_name'):
             if '-p2' in test_platform and '-arm7' in test_platform:
                 return False
+            if '-youtube-playback-' in attributes.get('raptor_try_name') \
+                    and 'opt' in test_platform:
+                return False
             return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
