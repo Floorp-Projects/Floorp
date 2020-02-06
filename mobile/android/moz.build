@@ -50,6 +50,7 @@ DIRS += [
     'modules',
     'themes/core',
     'themes/geckoview',
+    'geckoview/src/androidTest/assets',
     'app',
     'fonts',
 ]
@@ -61,6 +62,7 @@ TEST_DIRS += [
 TEST_HARNESS_FILES.testing.mochitest.tests.junit += [
     'geckoview/src/androidTest/assets/www/hello.html',
     'geckoview/src/androidTest/assets/www/simple_redirect.sjs',
+    'geckoview/src/androidTest/assets/www/update_manifest.json',
 ]
 
 SPHINX_TREES['/mobile/android'] = 'docs'

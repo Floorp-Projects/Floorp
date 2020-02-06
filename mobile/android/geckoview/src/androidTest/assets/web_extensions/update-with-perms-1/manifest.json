@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "update",
+  "browser_specific_settings": {
+    "gecko": {
+        "id": "update-with-perms@example.com",
+        "update_url": "https://example.org/tests/junit/update_manifest.json"
+    }
+  },
+  "version": "1.0",
+  "description": "Adds a red border to all webpages matching example.com.",
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.example.com/*"],
+      "js": ["borderify.js"]
+    }
+  ]
+}
