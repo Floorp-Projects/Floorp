@@ -8932,6 +8932,11 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
     return nullptr;
   }
 
+  // Clear out our form control state, because the state of controls
+  // in the pre-open() document should not affect the state of
+  // controls that are now going to be written.
+  mLayoutHistoryState = nullptr;
+
   if (shell) {
     // Prepare the docshell and the document viewer for the impending
     // out-of-band document.write()
