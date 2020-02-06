@@ -701,7 +701,12 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
     GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(hint));
     GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aTextValue));
   } else {
-    GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aName));
+    if (role == roles::LINK || role == roles::HEADING) {
+      GECKOBUNDLE_PUT(nodeInfo, "description", jni::StringParam(aName));
+    } else {
+      GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aName));
+    }
+
     if (!aDescription.IsEmpty()) {
       GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(aDescription));
     }
@@ -712,10 +717,6 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
   if (VirtualViewID() != kNoID) {
     GetRoleDescription(role, aAttributes, geckoRole, roleDescription);
   }
-
-  GECKOBUNDLE_PUT(nodeInfo, "roleDescription",
-                  jni::StringParam(roleDescription));
-  GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
 
   GECKOBUNDLE_PUT(nodeInfo, "roleDescription",
                   jni::StringParam(roleDescription));
