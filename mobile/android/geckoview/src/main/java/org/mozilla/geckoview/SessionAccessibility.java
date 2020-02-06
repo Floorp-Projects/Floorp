@@ -391,6 +391,10 @@ public class SessionAccessibility {
                 node.setText(nodeInfo.getString("text"));
             }
 
+            if (nodeInfo.containsKey("description")) {
+                node.setContentDescription(nodeInfo.getString("description"));
+            }
+
             // Add actions
             node.addAction(AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT);
             node.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT);
