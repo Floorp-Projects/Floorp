@@ -289,13 +289,12 @@ var gConnectionsDialog = {
 
       proxyServerURLPref.updateElements();
       proxyPortPref.updateElements();
-      proxyServerURLPref.disabled =
-        proxyTypePref.value != 1 || shareProxiesPref.value;
+      let prefIsShared = proxyPrefs[i] != "socks" && shareProxiesPref.value;
+      proxyServerURLPref.disabled = proxyTypePref.value != 1 || prefIsShared;
       proxyPortPref.disabled = proxyServerURLPref.disabled;
     }
     var socksVersionPref = Preferences.get("network.proxy.socks_version");
-    socksVersionPref.disabled =
-      proxyTypePref.value != 1 || shareProxiesPref.value;
+    socksVersionPref.disabled = proxyTypePref.value != 1;
     this.updateDNSPref();
     return undefined;
   },
