@@ -177,11 +177,11 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
-| installation.adgroup |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |AdGroup  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
-| installation.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Campaign  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
-| installation.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Creative  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
-| installation.network |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Network  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
-| installation.timestamp |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Timestamp  |[1](https://github.com/mozilla-mobile/fenix/pull/8074)||2020-09-01 |
+| installation.adgroup |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |AdGroup  |[1](TODO)||2020-09-01 |
+| installation.campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Campaign  |[1](TODO)||2020-09-01 |
+| installation.creative |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Creative  |[1](TODO)||2020-09-01 |
+| installation.network |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Network  |[1](TODO)||2020-09-01 |
+| installation.timestamp |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |Timestamp  |[1](TODO)||2020-09-01 |
 
 ## metrics
 This is a built-in ping that is assembled out of the box by the Glean SDK.
