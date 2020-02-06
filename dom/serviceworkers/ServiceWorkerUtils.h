@@ -46,9 +46,9 @@ bool ServiceWorkerParentInterceptEnabled();
 bool ServiceWorkerRegistrationDataIsValid(
     const ServiceWorkerRegistrationData& aData);
 
-nsresult ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
-                                             nsIURI* aScopeURI,
-                                             nsIURI* aScriptURI);
+void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
+                                         nsIURI* aScopeURI, nsIURI* aScriptURI,
+                                         ErrorResult& aRv);
 
 }  // namespace dom
 }  // namespace mozilla
