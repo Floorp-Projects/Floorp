@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.ext
 
 import androidx.fragment.app.Fragment
@@ -25,25 +29,24 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
-
 class FragmentTest {
 
-    val navDirections: NavDirections = mockk(relaxed = true)
-    val mockDestination = spyk(NavDestination("hi"))
-    val mockExtras: Extras = mockk(relaxed = true)
-    val mockId = 4
-    val navController = spyk(NavController(testContext))
-    val mockFragment: Fragment = mockk(relaxed = true)
-    val mockOptions: NavOptions = mockk(relaxed = true)
+    private val navDirections: NavDirections = mockk(relaxed = true)
+    private val mockDestination = spyk(NavDestination("hi"))
+    private val mockExtras: Extras = mockk(relaxed = true)
+    private val mockId = 4
+    private val navController = spyk(NavController(testContext))
+    private val mockFragment: Fragment = mockk(relaxed = true)
+    private val mockOptions: NavOptions = mockk(relaxed = true)
 
     @Before
     fun setup() {
         mockkStatic(NavHostFragment::class)
         every { (NavHostFragment.findNavController(mockFragment)) } returns navController
-        every { (NavHostFragment.findNavController(mockFragment).getCurrentDestination()) } returns mockDestination
-        every { (mockDestination.getId()) } returns mockId
-        every { (navController.getCurrentDestination()) } returns mockDestination
-        every { (NavHostFragment.findNavController(mockFragment).getCurrentDestination()?.getId()) } answers { (mockDestination.getId()) }
+        every { (NavHostFragment.findNavController(mockFragment).currentDestination) } returns mockDestination
+        every { (mockDestination.id) } returns mockId
+        every { (navController.currentDestination) } returns mockDestination
+        every { (NavHostFragment.findNavController(mockFragment).currentDestination?.id) } answers { (mockDestination.id) }
     }
 
     @Test
@@ -51,7 +54,7 @@ class FragmentTest {
         every { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, null)) } just Runs
 
         mockFragment.nav(mockId, navDirections)
-        verify { (NavHostFragment.findNavController(mockFragment).getCurrentDestination()) }
+        verify { (NavHostFragment.findNavController(mockFragment).currentDestination) }
         verify { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, null)) }
         confirmVerified(mockFragment)
     }
@@ -61,7 +64,7 @@ class FragmentTest {
         every { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, mockExtras)) } just Runs
 
         mockFragment.nav(mockId, navDirections, mockExtras)
-        verify { (NavHostFragment.findNavController(mockFragment).getCurrentDestination()) }
+        verify { (NavHostFragment.findNavController(mockFragment).currentDestination) }
         verify { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, mockExtras)) }
         confirmVerified(mockFragment)
     }
@@ -71,7 +74,7 @@ class FragmentTest {
         every { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, mockOptions)) } just Runs
 
         mockFragment.nav(mockId, navDirections, mockOptions)
-        verify { (NavHostFragment.findNavController(mockFragment).getCurrentDestination()) }
+        verify { (NavHostFragment.findNavController(mockFragment).currentDestination) }
         verify { (NavHostFragment.findNavController(mockFragment).navigate(navDirections, mockOptions)) }
         confirmVerified(mockFragment)
     }

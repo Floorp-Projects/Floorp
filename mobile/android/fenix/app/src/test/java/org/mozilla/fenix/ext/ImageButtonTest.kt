@@ -1,6 +1,10 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.ext
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
+import android.view.View
 import mozilla.components.support.test.robolectric.testContext
 import org.mozilla.fenix.TestApplication
 import org.junit.Test
@@ -12,23 +16,22 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import android.widget.ImageButton
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class ImageButtonTest {
-    val imageButton = ImageButton(testContext)
+    private val imageButton = ImageButton(testContext)
 
     @Test
     fun `Hide and disable`() {
         imageButton.hideAndDisable()
         assertFalse(imageButton.isEnabled)
-        assertEquals(4, imageButton.visibility)
+        assertEquals(View.INVISIBLE, imageButton.visibility)
     }
 
     @Test
     fun `Show and enable`() {
         imageButton.showAndEnable()
         assertTrue(imageButton.isEnabled)
-        assertEquals(0, imageButton.visibility)
+        assertEquals(View.VISIBLE, imageButton.visibility)
     }
 }

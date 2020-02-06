@@ -4,23 +4,23 @@
 
 package org.mozilla.fenix.ext
 
-import org.mozilla.fenix.TestApplication
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import android.util.Log
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import android.util.Log
 import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.TestApplication
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 
 class LogTest {
 
-    val numCalls = if (org.mozilla.fenix.Config.channel.isDebug) 1 else 0
+    private val numCalls = if (org.mozilla.fenix.Config.channel.isDebug) 1 else 0
 
     @Before
     fun setup() {
