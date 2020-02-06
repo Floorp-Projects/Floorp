@@ -151,7 +151,7 @@ function isCachedRequestMoreAccurateThanServerRequest(newCell, newWifiList) {
   try {
     // Mochitest needs this pref to simulate request failure
     isNetworkRequestCacheEnabled = Services.prefs.getBoolPref(
-      "geo.wifi.debug.requestCache.enabled"
+      "geo.provider.network.debug.requestCache.enabled"
     );
     if (!isNetworkRequestCacheEnabled) {
       gCachedRequest = null;
@@ -252,14 +252,17 @@ WifiGeoPositionObject.prototype = {
 
 function WifiGeoPositionProvider() {
   gLoggingEnabled = Services.prefs.getBoolPref(
-    "geo.wifi.logging.enabled",
+    "geo.provider.network.logging.enabled",
     false
   );
   gLocationRequestTimeout = Services.prefs.getIntPref(
-    "geo.wifi.timeToWaitBeforeSending",
+    "geo.provider.network.timeToWaitBeforeSending",
     5000
   );
-  gWifiScanningEnabled = Services.prefs.getBoolPref("geo.wifi.scan", true);
+  gWifiScanningEnabled = Services.prefs.getBoolPref(
+    "geo.provider.network.scan",
+    true
+  );
 
   this.wifiService = null;
   this.timer = null;
@@ -404,7 +407,7 @@ WifiGeoPositionProvider.prototype = {
     }
 
     // From here on, do a network geolocation request //
-    let url = Services.urlFormatter.formatURLPref("geo.wifi.uri");
+    let url = Services.urlFormatter.formatURLPref("geo.provider.network.url");
     LOG("Sending request");
 
     let xhr = new XMLHttpRequest();
@@ -418,7 +421,7 @@ WifiGeoPositionProvider.prototype = {
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
-    xhr.timeout = Services.prefs.getIntPref("geo.wifi.xhr.timeout");
+    xhr.timeout = Services.prefs.getIntPref("geo.provider.network.timeout");
     xhr.ontimeout = () => {
       LOG("Location request XHR timed out.");
       notifyPositionUnavailable(this.listener);

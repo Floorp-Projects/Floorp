@@ -4030,8 +4030,30 @@ pref("network.psl.onUpdate_notify", false);
   pref("widget.wayland_vsync.enabled", false);
 #endif
 
-// Timeout for outbound network geolocation provider XHR
-pref("geo.wifi.xhr.timeout", 60000);
+// All the Geolocation preferences are here.
+//
+#ifndef EARLY_BETA_OR_EARLIER
+  pref("geo.provider.network.url", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_LOCATION_SERVICE_API_KEY%");
+#else
+  // Use MLS on Nightly and early Beta.
+  pref("geo.provider.network.url", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
+#endif
+
+// Timeout for outbound network geolocation provider.
+pref("geo.provider.network.timeout", 60000);
+
+#ifdef XP_MACOSX
+  pref("geo.provider.use_corelocation", true);
+#endif
+
+// Set to false if things are really broken.
+#ifdef XP_WIN
+  pref("geo.provider.ms-windows-location", true);
+#endif
+
+#if defined(MOZ_WIDGET_GTK) && defined(MOZ_GPSD)
+  pref("geo.provider.use_gpsd", true);
+#endif
 
 // Enable/Disable the device storage API for content
 pref("device.storage.enabled", false);

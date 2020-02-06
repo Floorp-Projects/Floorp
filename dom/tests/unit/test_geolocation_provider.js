@@ -70,11 +70,11 @@ function run_test() {
   httpserver.start(-1);
 
   Services.prefs.setCharPref(
-    "geo.wifi.uri",
+    "geo.provider.network.url",
     "http://localhost:" + httpserver.identity.primaryPort + "/geo"
   );
   Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
-  Services.prefs.setBoolPref("geo.wifi.scan", false);
+  Services.prefs.setBoolPref("geo.provider.network.scan", false);
 
   var obs = Cc["@mozilla.org/observer-service;1"].getService();
   obs = obs.QueryInterface(Ci.nsIObserverService);

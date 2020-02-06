@@ -10,9 +10,12 @@ var BASE_URL =
 function set_geo_wifi_uri(uri, callback) {
   // Disable NetworkGeolocationProvider.js request cache because the cache
   // does not remember from which location service it came from. We expect
-  // different results when we change the provider URL (geo.wifi.uri).
+  // different results when we change the provider URL (geo.provider.network.url).
   set_network_request_cache_enabled(false, () => {
-    SpecialPowers.pushPrefEnv({ set: [["geo.wifi.uri", uri]] }, callback);
+    SpecialPowers.pushPrefEnv(
+      { set: [["geo.provider.network.url", uri]] },
+      callback
+    );
   });
 }
 
@@ -56,7 +59,7 @@ function stop_geolocationProvider(callback) {
 
 function set_network_request_cache_enabled(enabled, callback) {
   SpecialPowers.pushPrefEnv(
-    { set: [["geo.wifi.debug.requestCache.enabled", enabled]] },
+    { set: [["geo.provider.network.debug.requestCache.enabled", enabled]] },
     callback
   );
 }
