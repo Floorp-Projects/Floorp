@@ -2,7 +2,15 @@
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
        xmlns:html="http://www.w3.org/1999/xhtml">
-
+<script>
+customElements.define("shadow-input", class extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.appendChild(document.createElement("input"));
+  }
+});
+</script>
 <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 <!-- Copied from toolkit/content/editMenuCommands.inc.xul -->
 <script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
@@ -32,6 +40,7 @@
 <html:textarea />
 <html:input />
 <search-textbox />
+<html:shadow-input />
 </hbox>
 
 </window>
