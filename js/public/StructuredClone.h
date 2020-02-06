@@ -552,6 +552,11 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
   }
 
   void discardTransferables();
+
+ private:
+  // This internal method exposes the real value of scope_. It's meant to be
+  // used only when starting the writing.
+  JS::StructuredCloneScope scopeForInternalWriting() const { return scope_; }
 };
 
 /**

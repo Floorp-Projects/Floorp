@@ -193,6 +193,10 @@ bool StructuredCloneHolderBase::Write(
     return false;
   }
 
+  // Let's update our scope to the final one. The new one could be more
+  // restrictive of the current one.
+  MOZ_ASSERT(mStructuredCloneScope >= mBuffer->scope());
+  mStructuredCloneScope = mBuffer->scope();
   return true;
 }
 
