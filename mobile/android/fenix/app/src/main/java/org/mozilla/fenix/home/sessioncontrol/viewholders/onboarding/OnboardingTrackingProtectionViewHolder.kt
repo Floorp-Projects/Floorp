@@ -54,8 +54,23 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
             updateTrackingProtectionPolicy()
         }
 
+        view.protection_standard_title.setOnClickListener {
+            standardTrackingProtection.performClick()
+        }
+        view.protection_standard_description.setOnClickListener {
+            standardTrackingProtection.performClick()
+        }
+
         strictTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
+        }
+
+        view.protection_strict_title.setOnClickListener {
+            strictTrackingProtection.performClick()
+        }
+
+        view.protection_strict_description.setOnClickListener {
+            strictTrackingProtection.performClick()
         }
     }
 
