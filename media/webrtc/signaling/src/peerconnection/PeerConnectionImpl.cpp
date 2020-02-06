@@ -1351,62 +1351,14 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
     std::string errorString = mJsepSession->GetLastError();
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
-    mPCObserver->OnSetLocalDescriptionError(
-        *buildJSErrorData(result, errorString), rv);
+    mPCObserver->OnSetDescriptionError(*buildJSErrorData(result, errorString),
+                                       rv);
   } else {
     if (wasRestartingIce) {
       RecordIceRestartStatistics(sdpType);
     }
 
-    auto newSignalingState = GetSignalingState();
-    // Spec says we queue a task for this stuff
-    mThread->Dispatch(NS_NewRunnableFunction(
-        __func__,
-        [this, self = RefPtr<PeerConnectionImpl>(this), newSignalingState] {
-          if (IsClosed()) {
-            return;
-          }
-          JSErrorResult jrv;
-          mPCObserver->SyncTransceivers(jrv);
-          if (NS_WARN_IF(jrv.Failed())) {
-            return;
-          }
-          mPendingRemoteDescription =
-              mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
-          mCurrentRemoteDescription =
-              mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
-          mPendingLocalDescription =
-              mJsepSession->GetLocalDescription(kJsepDescriptionPending);
-          mCurrentLocalDescription =
-              mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
-          mPendingOfferer = mJsepSession->IsPendingOfferer();
-          mCurrentOfferer = mJsepSession->IsCurrentOfferer();
-          if (newSignalingState != mSignalingState) {
-            mSignalingState = newSignalingState;
-            mPCObserver->OnStateChange(PCObserverStateType::SignalingState,
-                                       jrv);
-          }
-          mPCObserver->OnSetLocalDescriptionSuccess(jrv);
-        }));
-
-    // We'd like to handle this in PeerConnectionMedia::UpdateNetworkState.
-    // Unfortunately, if the WiFi switch happens quickly, we never see
-    // that state change.  We need to detect the ice restart here and
-    // reset the PeerConnectionMedia's stun addresses so they are
-    // regathered when PeerConnectionMedia::GatherIfReady is called.
-    if (sdpType == mozilla::kJsepSdpOffer && wasRestartingIce) {
-      mMedia->ResetStunAddrsForIceRestart();
-    }
-
-    // We do this after queueing the above task, to ensure that ICE state
-    // changes don't start happening before sRD finishes.
-    if (sdpType != mozilla::kJsepSdpRollback) {
-      mMedia->EnsureTransports(*mJsepSession);
-    }
-
-    if (mJsepSession->GetState() == kJsepStateStable) {
-      OnOfferAnswerComplete(sdpType == mozilla::kJsepSdpRollback);
-    }
+    OnSetDescriptionSuccess(sdpType == mozilla::kJsepSdpRollback);
   }
 
   return NS_OK;
@@ -1483,8 +1435,8 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
     std::string errorString = mJsepSession->GetLastError();
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
-    mPCObserver->OnSetRemoteDescriptionError(
-        *buildJSErrorData(result, errorString), jrv);
+    mPCObserver->OnSetDescriptionError(*buildJSErrorData(result, errorString),
+                                       jrv);
   } else {
     // Iterate over the JSEP transceivers that were just created
     for (size_t i = originalTransceiverCount;
@@ -1535,51 +1487,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
       RecordIceRestartStatistics(sdpType);
     }
 
-    // Spec says we queue a task for all the stuff that ends up back in JS
-    auto newSignalingState = GetSignalingState();
-    mThread->Dispatch(NS_NewRunnableFunction(
-        __func__,
-        [this, self = RefPtr<PeerConnectionImpl>(this), newSignalingState] {
-          if (IsClosed()) {
-            return;
-          }
-          JSErrorResult jrv;
-          mPCObserver->SyncTransceivers(jrv);
-          if (NS_WARN_IF(jrv.Failed())) {
-            return;
-          }
-          mPendingRemoteDescription =
-              mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
-          mCurrentRemoteDescription =
-              mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
-          mPendingLocalDescription =
-              mJsepSession->GetLocalDescription(kJsepDescriptionPending);
-          mCurrentLocalDescription =
-              mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
-          mPendingOfferer = mJsepSession->IsPendingOfferer();
-          mCurrentOfferer = mJsepSession->IsCurrentOfferer();
-          if (newSignalingState != mSignalingState) {
-            mSignalingState = newSignalingState;
-            mPCObserver->OnStateChange(PCObserverStateType::SignalingState,
-                                       jrv);
-          }
-          mPCObserver->OnSetRemoteDescriptionSuccess(jrv);
-        }));
-
-    // We'd like to handle this in PeerConnectionMedia::UpdateNetworkState.
-    // Unfortunately, if the WiFi switch happens quickly, we never see
-    // that state change.  We need to detect the ice restart here and
-    // reset the PeerConnectionMedia's stun addresses so they are
-    // regathered when PeerConnectionMedia::GatherIfReady is called.
-    if (sdpType == mozilla::kJsepSdpOffer && wasRestartingIce) {
-      mMedia->ResetStunAddrsForIceRestart();
-    }
-
-    // We do this after queueing the above task, to ensure that ICE state
-    // changes don't start happening before sRD finishes.
-    if (mJsepSession->GetState() == kJsepStateStable) {
-      OnOfferAnswerComplete(sdpType == mozilla::kJsepSdpRollback);
-    }
+    OnSetDescriptionSuccess(sdpType == kJsepSdpRollback);
 
     startCallTelem();
   }
@@ -2344,7 +2252,57 @@ void PeerConnectionImpl::ShutdownMedia() {
   mMedia.forget().take()->SelfDestruct();
 }
 
-void PeerConnectionImpl::OnOfferAnswerComplete(bool rollback) {
+void PeerConnectionImpl::OnSetDescriptionSuccess(bool rollback) {
+  // Spec says we queue a task for all the stuff that ends up back in JS
+  auto newSignalingState = GetSignalingState();
+
+  mThread->Dispatch(NS_NewRunnableFunction(
+      __func__,
+      [this, self = RefPtr<PeerConnectionImpl>(this), newSignalingState] {
+        if (IsClosed()) {
+          return;
+        }
+        JSErrorResult jrv;
+        mPCObserver->SyncTransceivers(jrv);
+        if (NS_WARN_IF(jrv.Failed())) {
+          return;
+        }
+        mPendingRemoteDescription =
+            mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
+        mCurrentRemoteDescription =
+            mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
+        mPendingLocalDescription =
+            mJsepSession->GetLocalDescription(kJsepDescriptionPending);
+        mCurrentLocalDescription =
+            mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
+        mPendingOfferer = mJsepSession->IsPendingOfferer();
+        mCurrentOfferer = mJsepSession->IsCurrentOfferer();
+        if (newSignalingState != mSignalingState) {
+          mSignalingState = newSignalingState;
+          mPCObserver->OnStateChange(PCObserverStateType::SignalingState, jrv);
+        }
+        mPCObserver->OnSetDescriptionSuccess(jrv);
+      }));
+
+  // We do this after queueing the above task, to ensure that ICE state
+  // changes don't start happening before sRD finishes.
+  if (!rollback && (newSignalingState == RTCSignalingState::Have_local_offer ||
+                    mSignalingState == RTCSignalingState::Have_remote_offer)) {
+    // We'd like to handle this in PeerConnectionMedia::UpdateNetworkState.
+    // Unfortunately, if the WiFi switch happens quickly, we never see
+    // that state change.  We need to detect the ice restart here and
+    // reset the PeerConnectionMedia's stun addresses so they are
+    // regathered when PeerConnectionMedia::GatherIfReady is called.
+    if (mJsepSession->IsIceRestarting()) {
+      mMedia->ResetStunAddrsForIceRestart();
+    }
+    mMedia->EnsureTransports(*mJsepSession);
+  }
+
+  if (mJsepSession->GetState() != kJsepStateStable) {
+    return;  // The rest of this stuff is done only when offer/answer is done
+  }
+
   // If we're rolling back a local offer, we might need to remove some
   // transports, and stomp some MediaPipeline setup, but nothing further
   // needs to be done.
@@ -2352,7 +2310,7 @@ void PeerConnectionImpl::OnOfferAnswerComplete(bool rollback) {
   if (NS_FAILED(mMedia->UpdateMediaPipelines())) {
     CSFLogError(LOGTAG, "Error Updating MediaPipelines");
     NS_ASSERTION(false,
-                 "Error Updating MediaPipelines in OnOfferAnswerComplete()");
+                 "Error Updating MediaPipelines in OnSetDescriptionSuccess()");
     // XXX what now?  Not much we can do but keep going, without major
     // restructuring
   }

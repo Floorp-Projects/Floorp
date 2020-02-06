@@ -1087,8 +1087,8 @@ class RTCPeerConnection {
     return this._chain(async () => {
       await this._getPermission();
       await new Promise((resolve, reject) => {
-        this._onSetLocalDescriptionSuccess = resolve;
-        this._onSetLocalDescriptionFailure = reject;
+        this._onSetDescriptionSuccess = resolve;
+        this._onSetDescriptionFailure = reject;
         this._impl.setLocalDescription(action, sdp);
       });
       this._negotiationNeeded = false;
@@ -1181,19 +1181,26 @@ class RTCPeerConnection {
         await this._getPermission();
         if (type == "offer" && this.signalingState == "have-local-offer") {
           await new Promise((resolve, reject) => {
-            this._onSetLocalDescriptionSuccess = resolve;
-            this._onSetLocalDescriptionFailure = reject;
+            this._onSetDescriptionSuccess = resolve;
+            this._onSetDescriptionFailure = reject;
             this._impl.setLocalDescription(
               Ci.IPeerConnection.kActionRollback,
               ""
             );
           });
+          this._processTrackAdditionsAndRemovals();
+          this._fireLegacyAddStreamEvents();
+          this._transceivers = this._transceivers.filter(t => !t.shouldRemove);
+          this._updateCanTrickle();
         }
         await new Promise((resolve, reject) => {
-          this._onSetRemoteDescriptionSuccess = resolve;
-          this._onSetRemoteDescriptionFailure = reject;
+          this._onSetDescriptionSuccess = resolve;
+          this._onSetDescriptionFailure = reject;
           this._impl.setRemoteDescription(action, sdp);
         });
+        this._processTrackAdditionsAndRemovals();
+        this._fireLegacyAddStreamEvents();
+        this._transceivers = this._transceivers.filter(t => !t.shouldRemove);
         this._updateCanTrickle();
       })();
 
@@ -1983,25 +1990,12 @@ class PeerConnectionObserver {
     this._dompc._onCreateAnswerFailure(this.newError(error));
   }
 
-  onSetLocalDescriptionSuccess() {
-    this._dompc._onSetLocalDescriptionSuccess();
+  onSetDescriptionSuccess() {
+    this._dompc._onSetDescriptionSuccess();
   }
 
-  onSetRemoteDescriptionSuccess() {
-    this._dompc._processTrackAdditionsAndRemovals();
-    this._dompc._fireLegacyAddStreamEvents();
-    this._dompc._transceivers = this._dompc._transceivers.filter(
-      t => !t.shouldRemove
-    );
-    this._dompc._onSetRemoteDescriptionSuccess();
-  }
-
-  onSetLocalDescriptionError(error) {
-    this._dompc._onSetLocalDescriptionFailure(this.newError(error));
-  }
-
-  onSetRemoteDescriptionError(error) {
-    this._dompc._onSetRemoteDescriptionFailure(this.newError(error));
+  onSetDescriptionError(error) {
+    this._dompc._onSetDescriptionFailure(this.newError(error));
   }
 
   onAddIceCandidateSuccess() {
