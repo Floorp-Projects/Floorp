@@ -116,6 +116,8 @@ HandlerService.prototype = {
         this._store.data.defaultHandlersVersion[
           locale
         ] = prefsDefaultHandlersVersion;
+        // Now save the result:
+        this._store.saveSoon();
       }
     } catch (ex) {
       Cu.reportError(ex);
@@ -151,22 +153,41 @@ HandlerService.prototype = {
       } catch (ex) {}
     }
 
+    // Now, we're going to cheat. Terribly. The idiologically correct way
+    // of implementing the following bit of code would be to fetch the
+    // handler info objects from the protocol service, manipulate those,
+    // and then store each of them.
+    // However, that's expensive. It causes us to talk to the OS about
+    // default apps, which causes the OS to go hit the disk.
+    // All we're trying to do is insert some web apps into the list. We
+    // don't care what's already in the file, we just want to do the
+    // equivalent of appending into the database. So let's just go do that:
     for (let scheme of Object.keys(schemes)) {
-      let protoInfo = gExternalProtocolService.getProtocolHandlerInfo(scheme);
-
-      // cache the possible handlers to avoid extra xpconnect traversals.
-      let possibleHandlers = protoInfo.possibleApplicationHandlers;
-
-      for (let handlerNumber of Object.keys(schemes[scheme])) {
-        let handlerApp = this.handlerAppFromSerializable(
-          schemes[scheme][handlerNumber]
-        );
-        // If there is already a handler registered with the same template
-        // URL, the newly added one will be ignored when saving.
-        possibleHandlers.appendElement(handlerApp);
+      let existingSchemeInfo = this._store.data.schemes[scheme];
+      if (!this._store.data.schemes[scheme]) {
+        // Haven't seen this scheme before. Default to asking which app the
+        // user wants to use:
+        existingSchemeInfo = {
+          // Signal to future readers that we didn't ask the OS anything.
+          // When the entry is first used, get the info from the OS.
+          stubEntry: true,
+          // The first item in the list is the preferred handler, and
+          // there isn't one, so we fill in null:
+          handlers: [null],
+        };
+        this._store.data.schemes[scheme] = existingSchemeInfo;
       }
-
-      this.store(protoInfo);
+      let { handlers } = existingSchemeInfo;
+      for (let handlerNumber of Object.keys(schemes[scheme])) {
+        let newHandler = schemes[scheme][handlerNumber];
+        // If there is already a handler registered with the same template
+        // URL, ignore the new one:
+        let matchingTemplate = handler =>
+          handler && handler.uriTemplate == newHandler.uriTemplate;
+        if (!handlers.some(matchingTemplate)) {
+          handlers.push(newHandler);
+        }
+      }
     }
   },
 
@@ -396,6 +417,9 @@ HandlerService.prototype = {
       }
     }
 
+    // If we're saving *anything*, it stops being a stub:
+    delete storedHandlerInfo.stubEntry;
+
     this._store.saveSoon();
   },
 
@@ -412,26 +436,65 @@ HandlerService.prototype = {
       );
     }
 
-    handlerInfo.preferredAction = storedHandlerInfo.action;
-    handlerInfo.alwaysAskBeforeHandling = !!storedHandlerInfo.ask;
-
-    // If the first item is not null, it is also the preferred handler. Since
-    // we cannot modify the stored array, use a boolean to keep track of this.
-    let isFirstItem = true;
-    for (let handler of storedHandlerInfo.handlers || [null]) {
-      let handlerApp = this.handlerAppFromSerializable(handler || {});
-      if (isFirstItem) {
-        isFirstItem = false;
-        handlerInfo.preferredApplicationHandler = handlerApp;
-      }
-      if (handlerApp) {
-        handlerInfo.possibleApplicationHandlers.appendElement(handlerApp);
+    let isStub = !!storedHandlerInfo.stubEntry;
+    // In the normal case, this is not a stub, so we can just read stored info
+    // and write to the handlerInfo object we were passed.
+    if (!isStub) {
+      handlerInfo.preferredAction = storedHandlerInfo.action;
+      handlerInfo.alwaysAskBeforeHandling = !!storedHandlerInfo.ask;
+    } else {
+      // If we've got a stub, ensure the defaults are still set:
+      gExternalProtocolService.setProtocolHandlerDefaults(
+        handlerInfo,
+        handlerInfo.hasDefaultHandler
+      );
+      if (
+        handlerInfo.preferredAction == Ci.nsIHandlerInfo.alwaysAsk &&
+        handlerInfo.alwaysAskBeforeHandling
+      ) {
+        // `store` will default to `useHelperApp` because `alwaysAsk` is
+        // not one of the 3 recognized options; for compatibility, do
+        // the same here.
+        handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
       }
     }
+    // If it *is* a stub, don't override alwaysAskBeforeHandling or the
+    // preferred actions. Instead, just append the stored handlers, without
+    // overriding the preferred app, and then schedule a task to store proper
+    // info for this handler.
+    this._appendStoredHandlers(handlerInfo, storedHandlerInfo.handlers, isStub);
 
     if (this._isMIMEInfo(handlerInfo) && storedHandlerInfo.extensions) {
       for (let extension of storedHandlerInfo.extensions) {
         handlerInfo.appendExtension(extension);
+      }
+    }
+  },
+
+  /**
+   * Private method to inject stored handler information into an nsIHandlerInfo
+   * instance.
+   * @param handlerInfo           the nsIHandlerInfo instance to write to
+   * @param storedHandlers        the stored handlers
+   * @param keepPreferredApp      whether to keep the handlerInfo's
+   *                              preferredApplicationHandler or override it
+   *                              (default: false, ie override it)
+   */
+  _appendStoredHandlers(handlerInfo, storedHandlers, keepPreferredApp) {
+    // If the first item is not null, it is also the preferred handler. Since
+    // we cannot modify the stored array, use a boolean to keep track of this.
+    let isFirstItem = true;
+    for (let handler of storedHandlers || [null]) {
+      let handlerApp = this.handlerAppFromSerializable(handler || {});
+      if (isFirstItem) {
+        isFirstItem = false;
+        // Do not overwrite the preferred app unless that's allowed
+        if (!keepPreferredApp) {
+          handlerInfo.preferredApplicationHandler = handlerApp;
+        }
+      }
+      if (handlerApp) {
+        handlerInfo.possibleApplicationHandlers.appendElement(handlerApp);
       }
     }
   },
