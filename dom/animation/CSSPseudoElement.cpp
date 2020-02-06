@@ -31,7 +31,7 @@ CSSPseudoElement::CSSPseudoElement(dom::Element* aElement,
 CSSPseudoElement::~CSSPseudoElement() {
   // Element might have been unlinked already, so we have to do null check.
   if (mOriginatingElement) {
-    mOriginatingElement->DeleteProperty(
+    mOriginatingElement->RemoveProperty(
         GetCSSPseudoElementPropertyAtom(mPseudoType));
   }
 }

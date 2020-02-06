@@ -2906,7 +2906,7 @@ void nsPrintJob::TurnScriptingOn(bool aDoTurnOn) {
                        &propThere);
       if (aDoTurnOn) {
         if (propThere != NS_PROPTABLE_PROP_NOT_THERE) {
-          doc->DeleteProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview);
+          doc->RemoveProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview);
           if (go->HasJSGlobal()) {
             xpc::Scriptability::Get(go->GetGlobalJSObjectPreserveColor())
                 .Unblock();

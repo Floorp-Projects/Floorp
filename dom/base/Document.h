@@ -2237,8 +2237,8 @@ class Document : public nsINode,
    */
   int32_t GetDefaultNamespaceID() const { return mDefaultElementType; }
 
-  void DeleteAllProperties();
-  void DeleteAllPropertiesFor(nsINode* aNode);
+  void RemoveAllProperties();
+  void RemoveAllPropertiesFor(nsINode* aNode);
 
   nsPropertyTable& PropertyTable() { return mPropertyTable; }
 

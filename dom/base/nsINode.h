@@ -864,12 +864,12 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   /**
-   * Destroys a property associated with this node. The value is destroyed
-   * using the destruction function given when that value was set.
+   * Removes a property associated with this node. The value is destroyed using
+   * the destruction function given when that value was set.
    *
    * @param aPropertyName  name of property to destroy.
    */
-  void DeleteProperty(const nsAtom* aPropertyName);
+  void RemoveProperty(const nsAtom* aPropertyName);
 
   /**
    * Take a property associated with this node. The value will not be destroyed

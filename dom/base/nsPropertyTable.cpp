@@ -34,7 +34,7 @@ class nsPropertyTable::PropertyList {
 
   // Removes the property associated with the given object, and destroys
   // the property value
-  bool DeletePropertyFor(nsPropertyOwner aObject);
+  bool RemovePropertyFor(nsPropertyOwner aObject);
 
   // Destroy all remaining properties (without removing them)
   void Destroy();
@@ -48,12 +48,12 @@ class nsPropertyTable::PropertyList {
   NSPropertyDtorFunc mDtorFunc;  // property specific value dtor function
   void* mDtorData;               // pointer to pass to dtor
   bool mTransfer;                // whether to transfer in
-                                 // TransferOrDeleteAllPropertiesFor
+                                 // TransferOrRemoveAllPropertiesFor
 
   PropertyList* mNext;
 };
 
-void nsPropertyTable::DeleteAllProperties() {
+void nsPropertyTable::RemoveAllProperties() {
   while (mPropertyList) {
     PropertyList* tmp = mPropertyList;
 
@@ -63,13 +63,13 @@ void nsPropertyTable::DeleteAllProperties() {
   }
 }
 
-void nsPropertyTable::DeleteAllPropertiesFor(nsPropertyOwner aObject) {
+void nsPropertyTable::RemoveAllPropertiesFor(nsPropertyOwner aObject) {
   for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
-    prop->DeletePropertyFor(aObject);
+    prop->RemovePropertyFor(aObject);
   }
 }
 
-nsresult nsPropertyTable::TransferOrDeleteAllPropertiesFor(
+nsresult nsPropertyTable::TransferOrRemoveAllPropertiesFor(
     nsPropertyOwner aObject, nsPropertyTable& aOtherTable) {
   nsresult rv = NS_OK;
   for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
@@ -81,15 +81,15 @@ nsresult nsPropertyTable::TransferOrDeleteAllPropertiesFor(
                                      prop->mDtorFunc, prop->mDtorData,
                                      prop->mTransfer);
         if (NS_FAILED(rv)) {
-          DeleteAllPropertiesFor(aObject);
-          aOtherTable.DeleteAllPropertiesFor(aObject);
+          RemoveAllPropertiesFor(aObject);
+          aOtherTable.RemoveAllPropertiesFor(aObject);
           break;
         }
 
         prop->mObjectValueMap.RemoveEntry(entry);
       }
     } else {
-      prop->DeletePropertyFor(aObject);
+      prop->RemovePropertyFor(aObject);
     }
   }
 
@@ -189,13 +189,15 @@ nsresult nsPropertyTable::SetPropertyInternal(
   return result;
 }
 
-nsresult nsPropertyTable::DeleteProperty(nsPropertyOwner aObject,
+nsresult nsPropertyTable::RemoveProperty(nsPropertyOwner aObject,
                                          const nsAtom* aPropertyName) {
   MOZ_ASSERT(aPropertyName && aObject, "unexpected null param");
 
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
   if (propertyList) {
-    if (propertyList->DeletePropertyFor(aObject)) return NS_OK;
+    if (propertyList->RemovePropertyFor(aObject)) {
+      return NS_OK;
+    }
   }
 
   return NS_PROPTABLE_PROP_NOT_THERE;
@@ -238,7 +240,7 @@ void nsPropertyTable::PropertyList::Destroy() {
   }
 }
 
-bool nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject) {
+bool nsPropertyTable::PropertyList::RemovePropertyFor(nsPropertyOwner aObject) {
   auto entry =
       static_cast<PropertyListMapEntry*>(mObjectValueMap.Search(aObject));
   if (!entry) return false;

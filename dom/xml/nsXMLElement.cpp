@@ -43,7 +43,7 @@ void nsXMLElement::UnbindFromTree(bool aNullParent) {
   if (property) {
     MOZ_ASSERT(GetParent());
     MOZ_ASSERT(GetParent()->IsElement());
-    GetParent()->DeleteProperty(property);
+    GetParent()->RemoveProperty(property);
   }
   Element::UnbindFromTree(aNullParent);
 }

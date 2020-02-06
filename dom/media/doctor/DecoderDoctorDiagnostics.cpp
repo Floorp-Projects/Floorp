@@ -169,8 +169,8 @@ void DecoderDoctorDocumentWatcher::RemovePropertyFromDocument() {
       "DecoderDoctorDocumentWatcher[%p, "
       "doc=%p]::RemovePropertyFromDocument()\n",
       watcher, watcher->mDocument);
-  // This will remove the property and call our DestroyPropertyCallback.
-  mDocument->DeleteProperty(nsGkAtoms::decoderDoctor);
+  // This will call our DestroyPropertyCallback.
+  mDocument->RemoveProperty(nsGkAtoms::decoderDoctor);
 }
 
 // Callback for property destructors. |aObject| is the object
