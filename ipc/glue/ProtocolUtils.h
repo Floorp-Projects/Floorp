@@ -389,7 +389,7 @@ class IToplevelProtocol : public IProtocol {
  protected:
   explicit IToplevelProtocol(const char* aName, ProtocolId aProtoId,
                              Side aSide);
-  ~IToplevelProtocol();
+  ~IToplevelProtocol() = default;
 
  public:
   // Shadow methods on IProtocol which are implemented directly on toplevel
@@ -431,17 +431,12 @@ class IToplevelProtocol : public IProtocol {
   ProcessId OtherPid() const;
   void SetOtherProcessId(base::ProcessId aOtherPid);
 
-  // Toplevel protocol specific methods.
-  void SetTransport(UniquePtr<Transport> aTrans) { mTrans = std::move(aTrans); }
-
-  Transport* GetTransport() const { return mTrans.get(); }
-
   virtual void OnChannelClose() = 0;
   virtual void OnChannelError() = 0;
   virtual void ProcessingError(Result aError, const char* aMsgName) {}
   virtual void OnChannelConnected(int32_t peer_pid) {}
 
-  bool Open(mozilla::ipc::Transport* aTransport, base::ProcessId aOtherPid,
+  bool Open(UniquePtr<Transport> aTransport, base::ProcessId aOtherPid,
             MessageLoop* aThread = nullptr,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
@@ -450,10 +445,6 @@ class IToplevelProtocol : public IProtocol {
 
   bool Open(MessageChannel* aChannel, nsIEventTarget* aEventTarget,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
-
-  bool OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
-                        MessageLoop* aThread = nullptr,
-                        mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
   // Open a toplevel actor such that both ends of the actor's channel are on
   // the same thread. This method should be called on the thread to perform
@@ -556,7 +547,6 @@ class IToplevelProtocol : public IProtocol {
 
   int32_t NextId();
 
-  UniquePtr<Transport> mTrans;
   base::ProcessId mOtherPid;
 
   // NOTE NOTE NOTE
@@ -767,17 +757,17 @@ class Endpoint {
       mMyPid = base::GetCurrentProcId();
     }
 
-    UniquePtr<Transport> t = mozilla::ipc::OpenDescriptor(mTransport, mMode);
-    if (!t) {
+    UniquePtr<Transport> transport =
+        mozilla::ipc::OpenDescriptor(mTransport, mMode);
+    if (!transport) {
       return false;
     }
     if (!aActor->Open(
-            t.get(), mOtherPid, XRE_GetIOMessageLoop(),
+            std::move(transport), mOtherPid, XRE_GetIOMessageLoop(),
             mMode == Transport::MODE_SERVER ? ParentSide : ChildSide)) {
       return false;
     }
     mValid = false;
-    aActor->SetTransport(std::move(t));
     return true;
   }
 

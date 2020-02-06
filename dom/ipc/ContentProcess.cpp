@@ -183,7 +183,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
   }
 
   mContent.Init(IOThreadChild::message_loop(), ParentPid(), *parentBuildID,
-                IOThreadChild::channel(), *childID, *isForBrowser);
+                IOThreadChild::TakeChannel(), *childID, *isForBrowser);
 
   mXREEmbed.Start();
 #if (defined(XP_MACOSX)) && defined(MOZ_SANDBOX)

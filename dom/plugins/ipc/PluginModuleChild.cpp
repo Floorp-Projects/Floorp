@@ -222,7 +222,7 @@ void PluginModuleChild::SetFlashRoamingPath(const std::wstring& aRoamingPath) {
 bool PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
                                       base::ProcessId aParentPid,
                                       MessageLoop* aIOLoop,
-                                      IPC::Channel* aChannel) {
+                                      UniquePtr<IPC::Channel> aChannel) {
   NS_ASSERTION(aChannel, "need a channel");
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
@@ -278,7 +278,7 @@ bool PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
 
   CommonInit();
 
-  if (!Open(aChannel, aParentPid, aIOLoop)) {
+  if (!Open(std::move(aChannel), aParentPid, aIOLoop)) {
     return false;
   }
 
