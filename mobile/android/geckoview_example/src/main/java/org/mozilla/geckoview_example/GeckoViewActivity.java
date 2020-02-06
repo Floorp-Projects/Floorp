@@ -1135,6 +1135,22 @@ public class GeckoViewActivity
             }
             return null;
         }
+
+        @Override
+        public void onMetaViewportFitChange(final GeckoSession session, final String viewportFit) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                return;
+            }
+            WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
+            if (viewportFit.equals("cover")) {
+                layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            } else if (viewportFit.equals("contain")) {
+                layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+            } else {
+                layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT;
+            }
+            getWindow().setAttributes(layoutParams);
+        }
     }
 
     private class ExampleProgressDelegate implements GeckoSession.ProgressDelegate {
