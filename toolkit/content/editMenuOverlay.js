@@ -96,12 +96,12 @@ window.addEventListener(
 window.addEventListener("contextmenu", e => {
   const HTML_NS = "http://www.w3.org/1999/xhtml";
   let needsContextMenu =
-    e.composedTarget.ownerDocument == document &&
+    e.target.ownerDocument == document &&
     !e.defaultPrevented &&
-    e.composedTarget.parentNode.nodeName != "moz-input-box" &&
-    ((["textarea", "input"].includes(e.composedTarget.localName) &&
-      e.composedTarget.namespaceURI == HTML_NS) ||
-      e.composedTarget.closest("search-textbox"));
+    e.target.parentNode.nodeName != "moz-input-box" &&
+    ((["textarea", "input"].includes(e.target.localName) &&
+      e.target.namespaceURI == HTML_NS) ||
+      e.target.closest("search-textbox"));
 
   if (!needsContextMenu) {
     return;
