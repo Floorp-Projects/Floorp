@@ -372,8 +372,9 @@ Contact Us
 ~~~~~~~~~~
 
 The fuzzing team can be reached at
-`fuzzing@mozilla.com <mailto:fuzzing@mozilla.com>`__ or #fuzzing-team
-on Slack and will be happy to help you with any questions about fuzzing
+`fuzzing@mozilla.com <mailto:fuzzing@mozilla.com>`__ or
+`on Matrix <https://chat.mozilla.org/#/room/#fuzzing:mozilla.org>`__
+and will be happy to help you with any questions about fuzzing
 you might have. We can help you find the right method of fuzzing for
 your feature, collaborate on the implementation and provide the
 infrastructure to run it and process the results accordingly.
