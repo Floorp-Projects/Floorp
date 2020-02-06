@@ -2434,7 +2434,7 @@ class MethodDefiner(PropertyDefiner):
             if (stringifier and
                 unforgeable == MemberIsUnforgeable(stringifier, descriptor)):
                 toStringDesc = {
-                    "name": "toString",
+                    "name": GetWebExposedName(stringifier, descriptor),
                     "nativeName": stringifier.identifier.name,
                     "length": 0,
                     "flags": "JSPROP_ENUMERATE",
@@ -7450,11 +7450,13 @@ class CGCallGenerator(CGThing):
     stored in a C++ variable named by resultVar. The caller is responsible for
     declaring the result variable. If the caller doesn't care about the result
     value, resultVar can be omitted.
+
+    context: The context string to pass to MaybeSetPendingException.
     """
     def __init__(self, isFallible, needsCallerType, isChromeOnly,
                  arguments, argsPre, returnType, extendedAttributes, descriptor,
                  nativeMethodName, static, object="self", argsPost=[],
-                 resultVar=None):
+                 resultVar=None, context="nullptr"):
         CGThing.__init__(self)
 
         result, resultOutParam, resultRooter, resultArgs, resultConversion = \
@@ -7636,12 +7638,13 @@ class CGCallGenerator(CGThing):
             else:
                 reporterClass = "binding_danger::OOMReporterInstantiator"
             self.cgRoot.prepend(CGGeneric("%s rv;\n" % reporterClass))
-            self.cgRoot.append(CGGeneric(dedent(
+            self.cgRoot.append(CGGeneric(fill(
                 """
-                if (MOZ_UNLIKELY(rv.MaybeSetPendingException(cx))) {
+                if (MOZ_UNLIKELY(rv.MaybeSetPendingException(cx, ${context}))) {
                   return false;
                 }
-                """)))
+                """,
+                context=context)))
 
         self.cgRoot.append(CGGeneric("MOZ_ASSERT(!JS_IsExceptionPending(cx));\n"))
 
@@ -7958,8 +7961,12 @@ class CGPerSignatureCall(CGThing):
             # Pass in our thisVal
             argsPre.append("args.thisv()")
 
-        ourName = "%s.%s" % (descriptor.interface.identifier.name,
-                             idlNode.identifier.name)
+        if isConstructor:
+            ourName = "%s constructor" % descriptor.interface.identifier.name
+        else:
+            ourName = "%s.%s" % (descriptor.interface.identifier.name,
+                                 GetWebExposedName(idlNode, descriptor))
+
         if idlNode.isMethod():
             argDescription = "argument %(index)d of " + ourName
         elif setter:
@@ -8072,6 +8079,14 @@ class CGPerSignatureCall(CGThing):
                                                           idlNode.maplikeOrSetlikeOrIterable,
                                                           idlNode.identifier.name))
         else:
+            context = ourName
+            if getter:
+                context = context + " getter"
+            elif setter:
+                context = context + " setter"
+            # Callee expects a quoted string for the context if
+            # there's a context.
+            context = '"%s"' % context
             cgThings.append(CGCallGenerator(
                 self.isFallible(),
                 needsCallerType(idlNode),
@@ -8085,7 +8100,7 @@ class CGPerSignatureCall(CGThing):
                 # we're MOZ_CAN_RUN_SCRIPT, but in some cases it's on the stack
                 # and being kept alive via references from JS.
                 object="MOZ_KnownLive(self)",
-                argsPost=argsPost, resultVar=resultVar))
+                argsPost=argsPost, resultVar=resultVar, context=context))
 
         if useCounterName:
             # Generate a telemetry call for when [UseCounter] is used.
@@ -8923,6 +8938,12 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
 
 def MakeNativeName(name):
     return name[0].upper() + IDLToCIdentifier(name[1:])
+
+
+def GetWebExposedName(idlObject, descriptor):
+    if idlObject == descriptor.operations['Stringifier']:
+        return "toString"
+    return idlObject.identifier.name
 
 
 class CGSpecializedMethod(CGAbstractStaticMethod):
