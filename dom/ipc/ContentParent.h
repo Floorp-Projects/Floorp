@@ -673,6 +673,8 @@ class ContentParent final
  protected:
   bool CheckBrowsingContextOwnership(BrowsingContext* aBC,
                                      const char* aOperation) const;
+  bool CheckBrowsingContextEmbedder(BrowsingContext* aBC,
+                                    const char* aOperation) const;
 
   void OnChannelConnected(int32_t pid) override;
 

@@ -109,7 +109,9 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
 
   // If there is no current window global, assume we're about to become it
   // optimistically.
-  mBrowsingContext->SetCurrentInnerWindowId(aInit.innerWindowId());
+  if (!mBrowsingContext->IsDiscarded()) {
+    mBrowsingContext->SetCurrentInnerWindowId(aInit.innerWindowId());
+  }
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {

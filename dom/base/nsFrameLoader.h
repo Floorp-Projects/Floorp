@@ -396,7 +396,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  void SkipBrowsingContextDetach();
+  void SetWillChangeProcess();
 
   void MaybeNotifyCrashed(mozilla::dom::BrowsingContext* aBrowsingContext,
                           mozilla::ipc::MessageChannel* aChannel);
@@ -527,6 +527,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   bool mRemoteBrowserShown : 1;
   bool mIsRemoteFrame : 1;
+  // If true, the FrameLoader will be re-created with the same BrowsingContext,
+  // but for a different process, after it is destroyed.
+  bool mWillChangeProcess : 1;
   bool mObservingOwnerContent : 1;
 
   // When an out-of-process nsFrameLoader crashes, an event is fired on the

@@ -379,7 +379,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mBlankTiming(false),
       mTitleValidForCurrentURI(false),
       mIsFrame(false),
-      mSkipBrowsingContextDetachOnDestroy(false),
+      mWillChangeProcess(false),
       mWatchedByDevtools(false),
       mIsNavigating(false) {
   AssertOriginAttributesMatchPrivateBrowsing();
@@ -4556,7 +4556,7 @@ nsDocShell::Destroy() {
   mCurrentURI = nullptr;
 
   if (mScriptGlobal) {
-    mScriptGlobal->DetachFromDocShell(!mSkipBrowsingContextDetachOnDestroy);
+    mScriptGlobal->DetachFromDocShell(!mWillChangeProcess);
     mScriptGlobal = nullptr;
   }
 
@@ -4568,12 +4568,8 @@ nsDocShell::Destroy() {
     mSessionHistory = nullptr;
   }
 
-  // Either `Detach` our BrowsingContext if this window is closing, or prepare
-  // the BrowsingContext for the switch to continue.
-  if (mSkipBrowsingContextDetachOnDestroy) {
+  if (mWillChangeProcess) {
     mBrowsingContext->PrepareForProcessChange();
-  } else {
-    mBrowsingContext->Detach();
   }
 
   SetTreeOwner(nullptr);
@@ -7263,8 +7259,8 @@ nsresult nsDocShell::RestoreFromHistory() {
   // Order the mContentViewer setup just like Embed does.
   mContentViewer = nullptr;
 
-  if (!mSkipBrowsingContextDetachOnDestroy) {
-    // Move the browsing ontext's children to the cache. If we're
+  if (!mWillChangeProcess) {
+    // Move the browsing context's children to the cache. If we're
     // detaching them, we'll detach them from there.
     mBrowsingContext->CacheChildren();
   }
