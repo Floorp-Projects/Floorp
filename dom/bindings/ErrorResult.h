@@ -75,10 +75,13 @@ namespace binding_detail {
 void ThrowErrorMessage(JSContext* aCx, const unsigned aErrorNumber, ...);
 }  // namespace binding_detail
 
-template <typename... Ts>
-inline bool ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber,
-                              Ts&&... aArgs) {
-  binding_detail::ThrowErrorMessage(aCx, static_cast<unsigned>(aErrorNumber),
+template <ErrNum errorNumber, typename... Ts>
+inline bool ThrowErrorMessage(JSContext* aCx, Ts&&... aArgs) {
+#if defined(DEBUG) && (defined(__clang__) || defined(__GNUC__))
+  static_assert(ErrorFormatNumArgs[errorNumber] == sizeof...(aArgs),
+                "Pass in the right number of arguments");
+#endif
+  binding_detail::ThrowErrorMessage(aCx, static_cast<unsigned>(errorNumber),
                                     std::forward<Ts>(aArgs)...);
   return false;
 }
