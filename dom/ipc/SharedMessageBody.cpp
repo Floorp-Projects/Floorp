@@ -71,13 +71,10 @@ void SharedMessageBody::Read(JSContext* aCx,
     nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
     MOZ_ASSERT(global);
 
-    Maybe<ClientInfo> clientInfo = global->GetClientInfo();
-    if (clientInfo) {
-      Maybe<nsID> agentClusterId = clientInfo->AgentClusterId();
-      if (agentClusterId.isSome() &&
-          mAgentClusterId.value().Equals(agentClusterId.value())) {
-        cloneDataPolicy.allowIntraClusterClonableSharedObjects();
-      }
+    Maybe<nsID> agentClusterId = global->GetAgentClusterId();
+    if (agentClusterId.isSome() &&
+        mAgentClusterId.value().Equals(agentClusterId.value())) {
+      cloneDataPolicy.allowIntraClusterClonableSharedObjects();
     }
   }
 
