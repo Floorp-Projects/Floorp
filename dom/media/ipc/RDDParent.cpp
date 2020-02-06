@@ -89,10 +89,6 @@ bool RDDParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
 
   mozilla::ipc::SetThisProcessName("RDD Process");
 
-#if defined(XP_WIN)
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->StartUntrustedModulesProcessor();
-#endif  // defined(XP_WIN)
   return true;
 }
 
@@ -103,7 +99,8 @@ void CGSShutdownServerConnections();
 #endif
 
 mozilla::ipc::IPCResult RDDParent::RecvInit(
-    nsTArray<GfxVarUpdate>&& vars, const Maybe<FileDescriptor>& aBrokerFd) {
+    nsTArray<GfxVarUpdate>&& vars, const Maybe<FileDescriptor>& aBrokerFd,
+    const bool& aCanRecordReleaseTelemetry) {
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -124,6 +121,12 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
 #  endif  // XP_MACOSX/XP_LINUX
 #endif    // MOZ_SANDBOX
 
+#if defined(XP_WIN)
+  if (aCanRecordReleaseTelemetry) {
+    RefPtr<DllServices> dllSvc(DllServices::Get());
+    dllSvc->StartUntrustedModulesProcessor();
+  }
+#endif  // defined(XP_WIN)
   return IPC_OK();
 }
 
