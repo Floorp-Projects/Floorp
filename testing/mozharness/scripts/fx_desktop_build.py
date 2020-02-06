@@ -50,7 +50,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 # jobs have a minimal `hg pull`.
                 "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
                 "repo_base": "https://hg.mozilla.org",
-                "graph_selector": "/server/collect.cgi",
                 'build_resources_path': '%(upload_path)s/build_resources.json',
                 'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
 
@@ -62,8 +61,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                     'requests==2.8.1',
                 ],
                 'virtualenv_path': 'venv',
-                #
-
             },
             'ConfigClass': BuildingConfig,
         }
