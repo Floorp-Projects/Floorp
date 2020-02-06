@@ -319,6 +319,18 @@
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1080160, 1529352, 1580129]
   },
+  "COMPOSITE_SWAP_TIME" : {
+    "record_in_processes": ["main", "gpu"],
+    "products": ["firefox", "fennec", "geckoview", "geckoview_streaming"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jmuizelaar@mozilla.com"],
+    "expires_in_version": "never",
+    "description": "Time to do swap/present/commit in 100 microseconds",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1612511]
+  },
   "COMPOSITE_FRAME_ROUNDTRIP_TIME" : {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -14531,7 +14543,7 @@
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 50,
-    "description": "WebRender scene swap time in milliseconds"
+    "description": "WebRender scene swap time in miliseconds"
   },
   "WR_FRAMEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],

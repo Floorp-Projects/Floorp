@@ -11,6 +11,7 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderThread.h"
+#include "mozilla/Telemetry.h"
 
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_WINBLUE
@@ -206,6 +207,7 @@ bool DCLayerTree::MaybeUpdateDebugVisualRedrawRegions() {
 void DCLayerTree::CompositorBeginFrame() {}
 
 void DCLayerTree::CompositorEndFrame() {
+  auto start = TimeStamp::Now();
   // Check if the visual tree of surfaces is the same as last frame.
   bool same = mPrevLayers == mCurrentLayers;
 
@@ -229,6 +231,10 @@ void DCLayerTree::CompositorEndFrame() {
   mCurrentLayers.clear();
 
   mCompositionDevice->Commit();
+
+  auto end = TimeStamp::Now();
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::COMPOSITE_SWAP_TIME,
+                                 (end - start).ToMilliseconds() * 10.);
 }
 
 void DCLayerTree::Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset,
