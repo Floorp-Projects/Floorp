@@ -721,7 +721,11 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
       MOZ_ASSERT(false);
       return false;
 #endif
-
+#ifdef MOZ_WAYLAND
+    case ImageFormat::WAYLAND_DMABUF:
+      MOZ_ASSERT(false);
+      return false;
+#endif
     case ImageFormat::CAIRO_SURFACE:
     case ImageFormat::NV_IMAGE:
     case ImageFormat::OVERLAY_IMAGE:

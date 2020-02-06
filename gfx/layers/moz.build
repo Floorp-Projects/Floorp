@@ -300,10 +300,12 @@ if CONFIG['MOZ_WAYLAND']:
     EXPORTS.mozilla.layers += [
         'opengl/WaylandDMABUFTextureClientOGL.h',
         'opengl/WaylandDMABUFTextureHostOGL.h',
+        'WaylandDMABUFSurfaceImage.h',
     ]
     SOURCES += [
         'opengl/WaylandDMABUFTextureClientOGL.cpp',
         'opengl/WaylandDMABUFTextureHostOGL.cpp',
+        'WaylandDMABUFSurfaceImage.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
