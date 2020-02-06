@@ -12,6 +12,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/ImageTracker.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsError.h"
@@ -30,15 +31,56 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace css {
 
+// This is a singleton observer which looks in the `GlobalRequestTable` to look
+// at which loaders to notify.
+struct GlobalImageObserver final : public imgINotificationObserver {
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGINOTIFICATIONOBSERVER
+
+  GlobalImageObserver() = default;
+
+ private:
+  virtual ~GlobalImageObserver() = default;
+};
+
+NS_IMPL_ADDREF(GlobalImageObserver)
+NS_IMPL_RELEASE(GlobalImageObserver)
+
+NS_INTERFACE_MAP_BEGIN(GlobalImageObserver)
+  NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
+NS_INTERFACE_MAP_END
+
+// Data associated with every started load.
+struct ImageTableEntry {
+  // Set of all ImageLoaders that have registered this URL and care for updates
+  // for it.
+  nsTHashtable<nsPtrHashKey<ImageLoader>> mImageLoaders;
+};
+
+using GlobalRequestTable =
+    nsClassHashtable<nsRefPtrHashKey<imgIRequest>, ImageTableEntry>;
+
+// A table of all loads, keyed by their id mapping them to the set of
+// ImageLoaders they have been registered in, and recording their "canonical"
+// image request.
+//
+// We use the load id as the key since we can only access sImages on the
+// main thread, but LoadData objects might be destroyed from other threads,
+// and we don't want to leave dangling pointers around.
+static GlobalRequestTable* sImages = nullptr;
+static StaticRefPtr<GlobalImageObserver> sImageObserver;
+
 /* static */
 void ImageLoader::Init() {
-  sImages = new nsClassHashtable<nsUint64HashKey, ImageTableEntry>();
+  sImages = new GlobalRequestTable();
+  sImageObserver = new GlobalImageObserver();
 }
 
 /* static */
 void ImageLoader::Shutdown() {
   delete sImages;
   sImages = nullptr;
+  sImageObserver = nullptr;
 }
 
 void ImageLoader::DropDocumentReference() {
@@ -48,21 +90,6 @@ void ImageLoader::DropDocumentReference() {
   // on the document being null) as that means the presshell has already
   // been destroyed, and it also calls ClearFrames when it is destroyed.
   ClearFrames(GetPresContext());
-
-  for (auto it = mRegisteredImages.Iter(); !it.Done(); it.Next()) {
-    if (imgRequestProxy* request = it.Data()) {
-      request->CancelAndForgetObserver(NS_BINDING_ABORTED);
-    }
-
-    // Need to check whether the entry exists, since the css::URLValue might
-    // go away before ImageLoader::DropDocumentReference is called.
-    uint64_t imageLoadID = it.Key();
-    if (auto entry = sImages->Lookup(imageLoadID)) {
-      entry.Data()->mImageLoaders.RemoveEntry(this);
-    }
-  }
-
-  mRegisteredImages.Clear();
 
   mDocument = nullptr;
 }
@@ -90,20 +117,31 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
                                           nsIFrame* aFrame, FrameFlags aFlags) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<imgINotificationObserver> observer;
-  aRequest->GetNotificationObserver(getter_AddRefs(observer));
-  if (!observer) {
-    // The request has already been canceled, so ignore it.  This is ok because
-    // we're not going to get any more notifications from a canceled request.
-    return;
+  {
+    nsCOMPtr<imgINotificationObserver> observer;
+    aRequest->GetNotificationObserver(getter_AddRefs(observer));
+    if (!observer) {
+      // The request has already been canceled, so ignore it. This is ok because
+      // we're not going to get any more notifications from a canceled request.
+      return;
+    }
+    MOZ_ASSERT(observer == sImageObserver);
   }
-
-  MOZ_ASSERT(observer == this);
 
   const auto& frameSet =
       mRequestToFrameMap.LookupForAdd(aRequest).OrInsert([=]() {
-        nsPresContext* presContext = GetPresContext();
-        if (presContext) {
+        mDocument->ImageTracker()->Add(aRequest);
+
+        if (auto entry = sImages->Lookup(aRequest)) {
+          DebugOnly<bool> inserted =
+              entry.Data()->mImageLoaders.EnsureInserted(this);
+          MOZ_ASSERT(inserted);
+        } else {
+          MOZ_ASSERT_UNREACHABLE(
+              "Shouldn't be associating images not in sImages");
+        }
+
+        if (nsPresContext* presContext = GetPresContext()) {
           nsLayoutUtils::RegisterImageRequestIfAnimated(presContext, aRequest,
                                                         nullptr);
         }
@@ -204,100 +242,13 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
              "We should only add to one map iff we also add to the other map.");
 }
 
-imgRequestProxy* ImageLoader::RegisterCSSImage(const StyleLoadData& aData) {
-  MOZ_ASSERT(NS_IsMainThread());
-  uint64_t loadId = aData.load_id;
-
-  if (loadId == 0) {
-    MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
-    return nullptr;
-  }
-
-  if (imgRequestProxy* request = mRegisteredImages.GetWeak(loadId)) {
-    // This document already has a request.
-    return request;
-  }
-
-  imgRequestProxy* canonicalRequest = nullptr;
-  {
-    auto entry = sImages->Lookup(loadId);
-    if (entry) {
-      canonicalRequest = entry.Data()->mCanonicalRequest;
-    }
-
-    if (!canonicalRequest) {
-      // The image was blocked or something.
-      return nullptr;
-    }
-
-    entry.Data()->mImageLoaders.PutEntry(this);
-  }
-
-  RefPtr<imgRequestProxy> request;
-
-  // Ignore errors here.  If cloning fails for some reason we'll put a null
-  // entry in the hash and we won't keep trying to clone.
-  mInClone = true;
-  canonicalRequest->SyncClone(this, mDocument, getter_AddRefs(request));
-  mInClone = false;
-
-  MOZ_ASSERT(!mRegisteredImages.Contains(loadId));
-
-  imgRequestProxy* requestWeak = request;
-  mRegisteredImages.Put(loadId, request.forget());
-  return requestWeak;
-}
-
-/* static */
-void ImageLoader::DeregisterCSSImageFromAllLoaders(const StyleLoadData& aData) {
-  uint64_t loadID = aData.load_id;
-  if (loadID == 0) {
-    MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
-    return;
-  }
-
-  if (NS_IsMainThread()) {
-    DeregisterCSSImageFromAllLoaders(loadID);
-  } else {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "css::ImageLoader::DeregisterCSSImageFromAllLoaders",
-        [loadID] { DeregisterCSSImageFromAllLoaders(loadID); }));
-  }
-}
-
-/* static */
-void ImageLoader::DeregisterCSSImageFromAllLoaders(uint64_t aImageLoadID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aImageLoadID != 0);
-
-  if (auto e = sImages->Lookup(aImageLoadID)) {
-    const auto& tableEntry = e.Data();
-    if (imgRequestProxy* request = tableEntry->mCanonicalRequest) {
-      request->CancelAndForgetObserver(NS_BINDING_ABORTED);
-    }
-
-    for (auto iter = tableEntry->mImageLoaders.Iter(); !iter.Done();
-         iter.Next()) {
-      ImageLoader* loader = iter.Get()->GetKey();
-      if (auto e = loader->mRegisteredImages.Lookup(aImageLoadID)) {
-        if (imgRequestProxy* request = e.Data()) {
-          request->CancelAndForgetObserver(NS_BINDING_ABORTED);
-        }
-        e.Remove();
-      }
-    }
-
-    e.Remove();
-  }
-}
-
 void ImageLoader::RemoveRequestToFrameMapping(imgIRequest* aRequest,
                                               nsIFrame* aFrame) {
 #ifdef DEBUG
   {
     nsCOMPtr<imgINotificationObserver> observer;
     aRequest->GetNotificationObserver(getter_AddRefs(observer));
-    MOZ_ASSERT(!observer || observer == this);
+    MOZ_ASSERT(!observer || observer == sImageObserver);
   }
 #endif
 
@@ -320,12 +271,22 @@ void ImageLoader::RemoveRequestToFrameMapping(imgIRequest* aRequest,
     }
 
     if (frameSet->IsEmpty()) {
-      nsPresContext* presContext = GetPresContext();
-      if (presContext) {
-        nsLayoutUtils::DeregisterImageRequest(presContext, aRequest, nullptr);
-      }
+      DeregisterImageRequest(aRequest, GetPresContext());
       entry.Remove();
     }
+  }
+}
+
+void ImageLoader::DeregisterImageRequest(imgIRequest* aRequest,
+                                         nsPresContext* aPresContext) {
+  mDocument->ImageTracker()->Remove(aRequest);
+
+  if (auto entry = sImages->Lookup(aRequest)) {
+    entry.Data()->mImageLoaders.EnsureRemoved(this);
+  }
+
+  if (aPresContext) {
+    nsLayoutUtils::DeregisterImageRequest(aPresContext, aRequest, nullptr);
   }
 }
 
@@ -412,9 +373,7 @@ void ImageLoader::ClearFrames(nsPresContext* aPresContext) {
     }
 #endif
 
-    if (aPresContext) {
-      nsLayoutUtils::DeregisterImageRequest(aPresContext, request, nullptr);
-    }
+    DeregisterImageRequest(request, aPresContext);
   }
 
   mRequestToFrameMap.Clear();
@@ -436,25 +395,12 @@ static CORSMode EffectiveCorsMode(nsIURI* aURI,
 }
 
 /* static */
-void ImageLoader::LoadImage(const StyleComputedImageUrl& aImage,
-                            Document& aLoadingDoc) {
+already_AddRefed<imgRequestProxy> ImageLoader::LoadImage(
+    const StyleComputedImageUrl& aImage, Document& aLoadingDoc) {
   MOZ_ASSERT(NS_IsMainThread());
-  uint64_t loadId = aImage.LoadData().load_id;
-  if (loadId == 0) {
-    MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
-    return;
-  }
-
-  auto lookup = sImages->LookupForAdd(loadId);
-  if (lookup) {
-    // This url has already been loaded.
-    return;
-  }
-  const auto& entry = lookup.OrInsert([]() { return new ImageTableEntry(); });
-
   nsIURI* uri = aImage.GetURI();
   if (!uri) {
-    return;
+    return nullptr;
   }
 
   int32_t loadFlags =
@@ -466,13 +412,27 @@ void ImageLoader::LoadImage(const StyleComputedImageUrl& aImage,
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(
       uri, &aLoadingDoc, &aLoadingDoc, data.Principal(), 0, data.ReferrerInfo(),
-      nullptr, loadFlags, NS_LITERAL_STRING("css"), getter_AddRefs(request));
+      sImageObserver, loadFlags, NS_LITERAL_STRING("css"),
+      getter_AddRefs(request));
 
   if (NS_FAILED(rv) || !request) {
-    return;
+    return nullptr;
   }
 
-  entry->mCanonicalRequest = std::move(request);
+  sImages->LookupForAdd(request).OrInsert([] { return new ImageTableEntry(); });
+  return request.forget();
+}
+
+void ImageLoader::DeregisterImageFromAllLoaders(imgRequestProxy* aImage) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aImage);
+  aImage->CancelAndForgetObserver(NS_BINDING_ABORTED);
+  if (auto lookup = sImages->Lookup(aImage)) {
+    MOZ_DIAGNOSTIC_ASSERT(lookup.Data()->mImageLoaders.IsEmpty(),
+                          "Shouldn't be keeping references to any loader "
+                          "by now");
+    lookup.Remove();
+  }
 }
 
 nsPresContext* ImageLoader::GetPresContext() {
@@ -611,6 +571,8 @@ void ImageLoader::RequestReflowOnFrame(FrameWithFlags* aFwf,
   nsIFrame* frame = aFwf->mFrame;
 
   // Actually request the reflow.
+  //
+  // FIXME(emilio): Why requesting reflow on the _parent_?
   nsIFrame* parent = frame->GetInFlowParent();
   parent->PresShell()->FrameNeedsReflow(parent, IntrinsicDirty::StyleChange,
                                         NS_FRAME_IS_DIRTY);
@@ -618,21 +580,32 @@ void ImageLoader::RequestReflowOnFrame(FrameWithFlags* aFwf,
   // We'll respond to the reflow events by unblocking onload, regardless
   // of whether the reflow was completed or cancelled. The callback will
   // also delete itself when it is called.
-  ImageReflowCallback* unblocker =
-      new ImageReflowCallback(this, frame, aRequest);
+  auto* unblocker = new ImageReflowCallback(this, frame, aRequest);
   parent->PresShell()->PostReflowCallback(unblocker);
 }
 
-NS_IMPL_ADDREF(ImageLoader)
-NS_IMPL_RELEASE(ImageLoader)
-
-NS_INTERFACE_MAP_BEGIN(ImageLoader)
-  NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
-NS_INTERFACE_MAP_END
-
 NS_IMETHODIMP
-ImageLoader::Notify(imgIRequest* aRequest, int32_t aType,
-                    const nsIntRect* aData) {
+GlobalImageObserver::Notify(imgIRequest* aRequest, int32_t aType,
+                            const nsIntRect* aData) {
+  auto entry = sImages->Lookup(aRequest);
+  MOZ_DIAGNOSTIC_ASSERT(entry);
+  if (MOZ_UNLIKELY(!entry)) {
+    return NS_OK;
+  }
+
+  auto& loaders = entry.Data()->mImageLoaders;
+  nsTArray<RefPtr<ImageLoader>> loadersToNotify(loaders.Count());
+  for (auto iter = loaders.Iter(); !iter.Done(); iter.Next()) {
+    loadersToNotify.AppendElement(iter.Get()->GetKey());
+  }
+  for (auto& loader : loadersToNotify) {
+    loader->Notify(aRequest, aType, aData);
+  }
+  return NS_OK;
+}
+
+nsresult ImageLoader::Notify(imgIRequest* aRequest, int32_t aType,
+                             const nsIntRect* aData) {
 #ifdef MOZ_GECKO_PROFILER
   nsCString uriString;
   if (profiler_is_active()) {
@@ -724,7 +697,7 @@ nsresult ImageLoader::OnImageIsAnimated(imgIRequest* aRequest) {
 }
 
 nsresult ImageLoader::OnFrameComplete(imgIRequest* aRequest) {
-  if (!mDocument || mInClone) {
+  if (!mDocument) {
     return NS_OK;
   }
 
@@ -745,7 +718,7 @@ nsresult ImageLoader::OnFrameComplete(imgIRequest* aRequest) {
 }
 
 nsresult ImageLoader::OnFrameUpdate(imgIRequest* aRequest) {
-  if (!mDocument || mInClone) {
+  if (!mDocument) {
     return NS_OK;
   }
 
@@ -760,7 +733,7 @@ nsresult ImageLoader::OnFrameUpdate(imgIRequest* aRequest) {
 }
 
 nsresult ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
-  if (!mDocument || mInClone) {
+  if (!mDocument) {
     return NS_OK;
   }
 
@@ -786,30 +759,6 @@ nsresult ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
   }
 
   return NS_OK;
-}
-
-void ImageLoader::MediaFeatureValuesChangedAllDocuments(
-    const MediaFeatureChange& aChange) {
-  // Inform every CSS image used in the document that media feature values have
-  // changed.  If the same image is used in multiple places, then we can end up
-  // informing them multiple times.  Theme changes are rare though and we don't
-  // bother trying to ensure we only do this once per image.
-  //
-  // Pull the images out into an array and iterate over them, in case the
-  // image notifications do something that ends up modifying the table.
-  nsTArray<nsCOMPtr<imgIContainer>> images;
-  for (auto iter = mRegisteredImages.Iter(); !iter.Done(); iter.Next()) {
-    imgRequestProxy* req = iter.Data();
-    nsCOMPtr<imgIContainer> image;
-    req->GetImage(getter_AddRefs(image));
-    if (!image) {
-      continue;
-    }
-    images.AppendElement(image->Unwrap());
-  }
-  for (imgIContainer* image : images) {
-    image->MediaFeatureValuesChangedAllDocuments(aChange);
-  }
 }
 
 bool ImageLoader::ImageReflowCallback::ReflowFinished() {
@@ -838,9 +787,6 @@ void ImageLoader::ImageReflowCallback::ReflowCallbackCanceled() {
   // Get rid of this callback object.
   delete this;
 }
-
-nsClassHashtable<nsUint64HashKey, ImageLoader::ImageTableEntry>*
-    ImageLoader::sImages = nullptr;
 
 }  // namespace css
 }  // namespace mozilla
