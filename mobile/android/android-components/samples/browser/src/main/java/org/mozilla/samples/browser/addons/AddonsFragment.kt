@@ -121,6 +121,10 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
     }
 
     private fun showPermissionDialog(addon: Addon) {
+        if (isInstallationInProgress) {
+            return
+        }
+
         val dialog = PermissionsDialogFragment.newInstance(
             addon = addon,
             onPositiveButtonClicked = onPositiveButtonClicked
@@ -133,12 +137,17 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
 
     private val onPositiveButtonClicked: ((Addon) -> Unit) = { addon ->
         addonProgressOverlay.visibility = View.VISIBLE
+        isInstallationInProgress = true
+
         requireContext().components.addonManager.installAddon(
             addon,
             onSuccess = {
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.mozac_feature_addons_successfully_installed, it.translatedName),
+                    getString(
+                        R.string.mozac_feature_addons_successfully_installed,
+                        it.translatedName
+                    ),
                     Toast.LENGTH_SHORT
                 ).show()
 
@@ -147,18 +156,28 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 }
 
                 addonProgressOverlay.visibility = View.GONE
+                isInstallationInProgress = false
             },
             onError = { _, _ ->
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.mozac_feature_addons_failed_to_install, addon.translatedName),
+                    getString(
+                        R.string.mozac_feature_addons_failed_to_install,
+                        addon.translatedName
+                    ),
                     Toast.LENGTH_SHORT
                 ).show()
 
                 addonProgressOverlay.visibility = View.GONE
+                isInstallationInProgress = false
             }
         )
     }
+
+    /**
+     * Whether or not an add-on installation is in progress.
+     */
+    private var isInstallationInProgress = false
 
     companion object {
         private const val PERMISSIONS_DIALOG_FRAGMENT_TAG = "ADDONS_PERMISSIONS_DIALOG_FRAGMENT"
