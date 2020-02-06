@@ -21,6 +21,7 @@
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/Telemetry.h"
 #include "FxROutputHandler.h"
 
 #undef NTDDI_VERSION
@@ -450,6 +451,7 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
   InsertGraphicsCommandsFinishedWaitQuery(frameId);
 
   if (!UseCompositor()) {
+    auto start = TimeStamp::Now();
     if (mWidget->AsWindows()->HasFxrOutputHandler()) {
       // There is a Firefox Reality handler for this swapchain. Update this
       // window's contents to the VR window.
@@ -502,6 +504,9 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
     } else {
       mSwapChain->Present(0, 0);
     }
+    auto end = TimeStamp::Now();
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::COMPOSITE_SWAP_TIME,
+                                            (end - start).ToMilliseconds() * 10.);
   }
 
   if (mDisablingNativeCompositor) {
