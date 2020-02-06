@@ -228,49 +228,6 @@ testInitExpr('f64', 13.37, 0.1989, x => +x);
 
 // Import and export
 
-// The test for a Number value dominates the guard against int64.
-assertErrorMessage(() => wasmEvalText(`(module
-                                        (import "globals" "x" (global i64)))`,
-                                      {globals: {x:false}}),
-                   LinkError,
-                   /import object field 'x' is not a Number/);
-
-// The imported value is a Number, so the int64 guard should stop us
-assertErrorMessage(() => wasmEvalText(`(module
-                                        (import "globals" "x" (global i64)))`,
-                                      {globals: {x:42}}),
-                   LinkError,
-                   /cannot pass i64 to or from JS/);
-
-{
-    // We can import and export i64 globals as cells.  They cannot be created
-    // from JS because there's no way to specify a non-zero initial value; that
-    // restriction is tested later.  But we can export one from a module and
-    // import it into another.
-
-    let i = wasmEvalText(`(module
-                           (global (export "g") i64 (i64.const 37))
-                           (global (export "h") (mut i64) (i64.const 37)))`);
-
-    let j = wasmEvalText(`(module
-                           (import "globals" "g" (global i64))
-                           (func (export "f") (result i32)
-                            (i64.eq (global.get 0) (i64.const 37))))`,
-                         {globals: {g: i.exports.g}});
-
-    assertEq(j.exports.f(), 1);
-
-    // We cannot read or write i64 global values from JS.
-
-    let g = i.exports.g;
-
-    assertErrorMessage(() => i.exports.g.value, TypeError, /cannot pass i64 to or from JS/);
-
-    // Mutability check comes before i64 check.
-    assertErrorMessage(() => i.exports.g.value = 12, TypeError, /can't set value of immutable global/);
-    assertErrorMessage(() => i.exports.h.value = 12, TypeError, /cannot pass i64 to or from JS/);
-}
-
 // Test inner
 var initialValue = '0x123456789abcdef0';
 var nextValue = '0x531642753864975F';
@@ -316,12 +273,6 @@ wasmAssert(`(module
     assertEq(new Global({value: "f32"}) instanceof Global, true);
     assertEq(new Global({value: "f64"}) instanceof Global, true);
     assertEq(new Global({value: "i64"}) instanceof Global, true); // No initial value works
-
-    // These types should not work:
-    assertErrorMessage(() => new Global({}),                TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global({value: "fnord"}),  TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global(),                  TypeError, /Global requires at least 1 argument/);
-    assertErrorMessage(() => new Global({value: "i64"}, 0), TypeError, /bad type for a WebAssembly.Global/); // Initial value does not work
 
     // Coercion of init value; ".value" accessor
     assertEq((new Global({value: "i32"}, 3.14)).value, 3);
@@ -500,14 +451,6 @@ wasmAssert(`(module
         assertErrorMessage(() => new Instance(m2, {m: {g: 42}}),
                            LinkError,
                            mutErr);
-
-        let m3 = new Module(wasmTextToBinary(`(module
-                                               (import "m" "g" (global (mut i64))))`));
-
-        // Check against i64 import before matching mutability
-        assertErrorMessage(() => new Instance(m3, {m: {g: 42}}),
-                           LinkError,
-                           i64Err);
     }
 
     // TEST THIS LAST
