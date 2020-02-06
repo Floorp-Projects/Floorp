@@ -349,6 +349,7 @@ void Gecko_SetImageElement(nsStyleImage* image, nsAtom* atom);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
 void Gecko_InitializeImageCropRect(nsStyleImage* image);
 
+const nsStyleImageRequest* Gecko_GetImageRequest(const nsStyleImage* image);
 nsAtom* Gecko_GetImageElement(const nsStyleImage* image);
 
 // list-style-image style.
@@ -360,8 +361,11 @@ void Gecko_SetListStyleImageImageValue(
 void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 
 // cursor style.
-void Gecko_SetCursorArrayCapacity(nsStyleUI*, size_t);
-void Gecko_AppendCursorImage(nsStyleUI*, const mozilla::StyleComputedImageUrl*);
+void Gecko_SetCursorArrayLength(nsStyleUI* ui, size_t len);
+
+void Gecko_SetCursorImageValue(nsCursorImage* aCursor,
+                               const mozilla::StyleComputedImageUrl* url);
+
 void Gecko_CopyCursorArrayFrom(nsStyleUI* dest, const nsStyleUI* src);
 
 // Dirtiness tracking.
@@ -502,7 +506,7 @@ float Gecko_FontStretch_ToFloat(mozilla::FontStretch aStretch);
 void Gecko_FontStretch_SetFloat(mozilla::FontStretch* aStretch,
                                 float aFloatValue);
 
-void Gecko_LoadData_Drop(mozilla::StyleLoadData*);
+void Gecko_LoadData_DeregisterLoad(const mozilla::StyleLoadData*);
 
 float Gecko_FontSlantStyle_ToFloat(mozilla::FontSlantStyle aStyle);
 void Gecko_FontSlantStyle_SetNormal(mozilla::FontSlantStyle*);
