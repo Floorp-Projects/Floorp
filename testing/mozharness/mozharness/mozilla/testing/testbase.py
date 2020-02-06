@@ -117,7 +117,6 @@ class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
     symbols_path = None
     jsshell_url = None
     minidump_stackwalk_path = None
-    default_tools_repo = 'https://hg.mozilla.org/build/tools'
 
     def query_build_dir_url(self, file_name):
         """

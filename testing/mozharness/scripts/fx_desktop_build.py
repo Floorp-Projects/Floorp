@@ -46,8 +46,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 "debug_build": False,
                 # nightly stuff
                 "nightly_build": False,
-                # hg tool stuff
-                "tools_repo": "https://hg.mozilla.org/build/tools",
                 # Seed all clones with mozilla-unified. This ensures subsequent
                 # jobs have a minimal `hg pull`.
                 "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
