@@ -704,15 +704,28 @@ class AddonInternal {
     }
 
     // Add-ons that are in locked install locations, or are pending uninstall
-    // cannot be upgraded or uninstalled
-    if (!this.location.locked && !this.pendingUninstall) {
+    // cannot be uninstalled or upgraded.  One caveat is extensions sideloaded
+    // from non-profile locations. Since Firefox 73(?), new sideloaded extensions
+    // from outside the profile have not been installed so any such extensions
+    // must be from an older profile. Users may uninstall such an extension which
+    // removes the related state from this profile but leaves the actual file alone
+    // (since it is outside this profile and may be in use in other profiles)
+    let changesAllowed = !this.location.locked && !this.pendingUninstall;
+    if (changesAllowed) {
       // System add-on upgrades are triggered through a different mechanism (see updateSystemAddons())
       let isSystem = this.location.isSystem;
       // Add-ons that are installed by a file link cannot be upgraded.
       if (!this.location.isLinkedAddon(this.id) && !isSystem) {
         permissions |= AddonManager.PERM_CAN_UPGRADE;
       }
+    }
 
+    // We allow uninstall of legacy sideloaded extensions, even when in locked locations,
+    // but we do not remove the addon file in that case.
+    let isLegacySideload =
+      this.foreignInstall &&
+      !(this.location.scope & AddonSettings.SCOPES_SIDELOAD);
+    if (changesAllowed || isLegacySideload) {
       permissions |= AddonManager.PERM_API_CAN_UNINSTALL;
       if (!this.location.isBuiltin) {
         permissions |= AddonManager.PERM_CAN_UNINSTALL;
