@@ -1629,6 +1629,46 @@ add_task(async function test_async_resolve_with_trr_server_no_push_part_2() {
   await new DNSListener("push.example.org", "127.0.0.1");
 });
 
+// Verify that AsyncResoleWithTrrServer is not block on confirmationNS of the defaut serveer.
+add_task(async function test_async_resolve_with_trr_server_confirmation_ns() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.clearUserPref("network.trr.useGET");
+  Services.prefs.clearUserPref("network.trr.disable-ECS");
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=1::ffff`
+  );
+  Services.prefs.setCharPref(
+    "network.trr.confirmationNS",
+    "confirm.example.com"
+  );
+
+  // AsyncResoleWithTrrServer will succeed
+  await new DNSListener(
+    "bar_with_trr8.example.com",
+    "3.3.3.3",
+    true,
+    undefined,
+    `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3`
+  );
+
+  // Verify that normal dns fetch will fail
+  try {
+    let [, , inStatus] = await new DNSListener(
+      "wrong.example.com",
+      undefined,
+      false
+    );
+    Assert.ok(
+      !Components.isSuccessCode(inStatus),
+      `${inStatus} should be an error code`
+    );
+  } catch (e) {
+    await new Promise(resolve => do_timeout(200, resolve));
+  }
+});
+
 // verify TRR timings
 add_task(async function test_fetch_time() {
   dns.clearCache(true);
