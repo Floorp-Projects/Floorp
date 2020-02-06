@@ -19,12 +19,6 @@ class WaylandDMABUFTextureData : public TextureData {
   static WaylandDMABUFTextureData* Create(const gfx::IntSize& aSize,
                                           gfx::SurfaceFormat aFormat,
                                           gfx::BackendType aBackend);
-
-  static WaylandDMABUFTextureData* Create(WaylandDMABufSurface* aSurface,
-                                          gfx::BackendType aBackend) {
-    return new WaylandDMABUFTextureData(aSurface, aBackend);
-  }
-
   ~WaylandDMABUFTextureData();
 
   virtual TextureData* CreateSimilar(

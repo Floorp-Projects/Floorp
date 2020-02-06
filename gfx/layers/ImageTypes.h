@@ -89,13 +89,7 @@ enum class ImageFormat {
    * An opaque handle that refers to an Image stored in the GPU
    * process.
    */
-  GPU_VIDEO,
-
-  /**
-   * The WAYLAND_DMABUF format creates a SharedDMABUFImage, which stores YUV
-   * data in DMABUF memory. Used on Wayland by VAAPI decoder.
-   */
-  WAYLAND_DMABUF,
+  GPU_VIDEO
 };
 
 enum class StereoMode {
