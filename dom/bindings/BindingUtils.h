@@ -1285,8 +1285,8 @@ inline bool EnumValueNotFound<true>(JSContext* cx, JS::HandleString str,
   if (!deflated) {
     return false;
   }
-  return ThrowErrorMessage(cx, MSG_INVALID_ENUM_VALUE, sourceDescription,
-                           deflated.get(), type);
+  return ThrowErrorMessage<MSG_INVALID_ENUM_VALUE>(cx, sourceDescription,
+                                                   deflated.get(), type);
 }
 
 template <typename CharT>

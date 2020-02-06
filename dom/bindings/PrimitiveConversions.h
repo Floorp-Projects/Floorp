@@ -198,8 +198,8 @@ inline bool PrimitiveConversionTraits_EnforceRange(JSContext* cx,
                 "This can only be applied to integers!");
 
   if (!mozilla::IsFinite(d)) {
-    return ThrowErrorMessage(cx, MSG_ENFORCE_RANGE_NON_FINITE,
-                             TypeName<T>::value());
+    return ThrowErrorMessage<MSG_ENFORCE_RANGE_NON_FINITE>(
+        cx, TypeName<T>::value());
   }
 
   bool neg = (d < 0);
@@ -207,8 +207,8 @@ inline bool PrimitiveConversionTraits_EnforceRange(JSContext* cx,
   rounded = neg ? -rounded : rounded;
   if (rounded < PrimitiveConversionTraits_Limits<T>::min() ||
       rounded > PrimitiveConversionTraits_Limits<T>::max()) {
-    return ThrowErrorMessage(cx, MSG_ENFORCE_RANGE_OUT_OF_RANGE,
-                             TypeName<T>::value());
+    return ThrowErrorMessage<MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
+        cx, TypeName<T>::value());
   }
 
   *retval = static_cast<T>(rounded);

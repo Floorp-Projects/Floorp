@@ -397,8 +397,8 @@ static bool ConvertKeyframeSequence(JSContext* aCx, dom::Document* aDocument,
     // or null/undefined (which gets treated as a default {} dictionary
     // value).
     if (!value.isObject() && !value.isNullOrUndefined()) {
-      dom::ThrowErrorMessage(aCx, dom::MSG_NOT_OBJECT,
-                             "Element of sequence<Keyframe> argument");
+      dom::ThrowErrorMessage<dom::MSG_NOT_OBJECT>(
+          aCx, "Element of sequence<Keyframe> argument");
       return false;
     }
 
