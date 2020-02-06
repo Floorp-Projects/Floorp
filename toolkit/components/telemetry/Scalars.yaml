@@ -5605,6 +5605,23 @@ corroborate:
     record_in_processes:
       - main
 
+  omnijar_mismatch:
+    bug_numbers:
+      - 1608308
+    description: >-
+          Whether the build IDs of the omni jar (omni.ja) and libxul do not match.
+    expires: "80"
+    kind: boolean
+    notification_emails:
+      - rhelmer@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - main
+
   system_addons_corrupted:
     bug_numbers:
       - 1515712
