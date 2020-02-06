@@ -163,6 +163,8 @@ class TRR : public Runnable,
   nsresult ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec);
   nsresult On200Response(nsIChannel* aChannel);
 
+  bool UseDefaultServer();
+
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
   TimeStamp mStartTime;

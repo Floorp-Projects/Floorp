@@ -180,7 +180,7 @@ nsresult TRR::SendHTTPRequest() {
     // we also don't check the blacklist for TRR only requests
     MOZ_ASSERT(mRec);
 
-    if (gTRRService->IsTRRBlacklisted(mHost, mOriginSuffix, mPB, true)) {
+    if (UseDefaultServer() &&  gTRRService->IsTRRBlacklisted(mHost, mOriginSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
         // count only blacklist for A records to avoid double counts
         Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, true);
@@ -188,7 +188,7 @@ nsresult TRR::SendHTTPRequest() {
       // not really an error but no TRR is issued
       return NS_ERROR_UNKNOWN_HOST;
     } else {
-      if (mType == TRRTYPE_A) {
+      if (UseDefaultServer() && (mType == TRRTYPE_A)) {
         Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, false);
       }
     }
@@ -218,7 +218,7 @@ nsresult TRR::SendHTTPRequest() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString uri;
-    if (!mRec || mRec->mTrrServer.IsEmpty()) {
+    if (UseDefaultServer()) {
       gTRRService->GetURI(uri);
     } else {
       uri = mRec->mTrrServer;
@@ -232,7 +232,7 @@ nsresult TRR::SendHTTPRequest() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString uri;
-    if (!mRec || mRec->mTrrServer.IsEmpty()) {
+    if (UseDefaultServer()) {
       gTRRService->GetURI(uri);
     } else {
       uri = mRec->mTrrServer;
@@ -276,7 +276,7 @@ nsresult TRR::SendHTTPRequest() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString cred;
-  if (!mRec || mRec->mTrrServer.IsEmpty()) {
+  if (UseDefaultServer()) {
     gTRRService->GetCredentials(cred);
   }
   if (!cred.IsEmpty()) {
@@ -511,7 +511,7 @@ TRR::OnPush(nsIHttpChannel* associated, nsIHttpChannel* pushed) {
   if (!mRec) {
     return NS_ERROR_FAILURE;
   }
-  if (!mRec->mTrrServer.IsEmpty()) {
+  if (!UseDefaultServer()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1055,7 +1055,7 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   nsCOMPtr<nsIChannel> channel;
   channel.swap(mChannel);
 
-  if (!mRec || mRec->mTrrServer.IsEmpty()) {
+  if (UseDefaultServer()) {
     // Bad content is still considered "okay" if the HTTP response is okay
     gTRRService->TRRIsOkay(NS_SUCCEEDED(aStatusCode) ? TRRService::OKAY_NORMAL
                                                      : TRRService::OKAY_BAD);
@@ -1082,7 +1082,7 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     rv = httpChannel->GetResponseStatus(&httpStatus);
     if (NS_SUCCEEDED(rv) && httpStatus == 200) {
       rv = On200Response(channel);
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv) && UseDefaultServer()) {
         RecordProcessingTime(channel);
         return rv;
       }
@@ -1186,8 +1186,14 @@ void TRR::Cancel() {
     LOG(("TRR: %p canceling Channel %p %s %d\n", this, mChannel.get(),
          mHost.get(), mType));
     mChannel->Cancel(NS_ERROR_ABORT);
-    gTRRService->TRRIsOkay(TRRService::OKAY_TIMEOUT);
+    if (UseDefaultServer()) {
+      gTRRService->TRRIsOkay(TRRService::OKAY_TIMEOUT);
+    }
   }
+}
+
+bool TRR::UseDefaultServer() {
+  return !mRec || mRec->mTrrServer.IsEmpty();
 }
 
 #undef LOG
