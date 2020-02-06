@@ -237,10 +237,10 @@ mach_override_ptr(
 
 	//	Allocate and target the escape island to the overriding function.
 	BranchIsland	*escapeIsland = NULL;
-	if( !err )
+	if( !err ) {
 		err = allocateBranchIsland( &escapeIsland, originalFunctionAddress );
 		if (err) fprintf(stderr, "err = %x %s:%d\n", err, __FILE__, __LINE__);
-
+	}
 
 #if defined(__ppc__) || defined(__POWERPC__)
 	if( !err )
