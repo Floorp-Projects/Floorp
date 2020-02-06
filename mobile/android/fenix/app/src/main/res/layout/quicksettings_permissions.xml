@@ -12,7 +12,7 @@
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/camerStatus"
+        android:id="@+id/cameraStatus"
         style="@style/QuickSettingsText.PermissionItemEnd"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/quicksettings_item_height"
@@ -32,7 +32,7 @@
         android:text="@string/preference_phone_feature_camera"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/microphoneLabel"
-        app:layout_constraintEnd_toStartOf="@id/camerStatus"
+        app:layout_constraintEnd_toStartOf="@id/cameraStatus"
         app:layout_constraintStart_toStartOf="parent"
         tools:visibility="visible" />
 

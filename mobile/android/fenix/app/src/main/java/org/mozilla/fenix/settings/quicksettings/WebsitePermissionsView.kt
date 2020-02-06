@@ -62,7 +62,7 @@ class WebsitePermissionsView(
         // If more permissions are added into this View we can display them into a list
         // and also use DiffUtil to only update one item in case of a permission change
         bindPermission(state.camera,
-                Pair(view.findViewById(R.id.cameraLabel), view.findViewById(R.id.camerStatus)))
+                Pair(view.findViewById(R.id.cameraLabel), view.findViewById(R.id.cameraStatus)))
         bindPermission(state.location,
                 Pair(view.findViewById(R.id.locationLabel), view.findViewById(R.id.locationStatus)))
         bindPermission(state.microphone,
