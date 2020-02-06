@@ -826,7 +826,19 @@ impl Tile {
         ctx: &TilePreUpdateContext,
     ) {
         self.local_tile_rect = local_tile_rect;
-        self.local_valid_rect = local_tile_rect.intersection(&ctx.local_rect).unwrap();
+        // TODO(gw): In theory, the local tile rect should always have an
+        //           intersection with the overall picture rect. In practice,
+        //           due to some accuracy issues with how fract_offset (and
+        //           fp accuracy) are used in the calling method, this isn't
+        //           always true. In this case, it's safe to set the local
+        //           valid rect to zero, which means it will be clipped out
+        //           and not affect the scene. In future, we should fix the
+        //           accuracy issue above, so that this assumption holds, but
+        //           it shouldn't have any noticeable effect on performance
+        //           or memory usage (textures should never get allocated).
+        self.local_valid_rect = local_tile_rect
+            .intersection(&ctx.local_rect)
+            .unwrap_or_else(PictureRect::zero);
         self.invalidation_reason  = None;
 
         self.world_tile_rect = ctx.pic_to_world_mapper
