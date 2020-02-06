@@ -936,14 +936,6 @@ inline HANDLE RtlGetProcessHeap() {
   return peb->Reserved4[1];
 }
 
-inline PVOID RtlGetThreadLocalStoragePointer() {
-  return ::NtCurrentTeb()->Reserved1[11];
-}
-
-inline void RtlSetThreadLocalStoragePointerForTestingOnly(PVOID aNewValue) {
-  ::NtCurrentTeb()->Reserved1[11] = aNewValue;
-}
-
 inline DWORD RtlGetCurrentThreadId() {
   PTEB teb = ::NtCurrentTeb();
   CLIENT_ID* cid = reinterpret_cast<CLIENT_ID*>(&teb->Reserved1[8]);

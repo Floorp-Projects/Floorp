@@ -11,10 +11,14 @@
 #include "mozilla/NativeNt.h"
 #include "mozilla/ThreadLocal.h"
 
-#include "SafeThreadLocal.h"
-
 namespace mozilla {
 namespace freestanding {
+
+// We cannot fall back to the Tls* APIs because kernel32 might not have been
+// loaded yet.
+#if defined(__MINGW32__) && !defined(HAVE_THREAD_TLS_KEYWORD)
+#  error "This code requires the compiler to have native TLS support"
+#endif  // defined(__MINGW32__) && !defined(HAVE_THREAD_TLS_KEYWORD)
 
 /**
  * This class holds information about a DLL load at a particular frame in the
@@ -81,7 +85,7 @@ class MOZ_RAII ModuleLoadFrame final {
   ModuleLoadInfo mLoadInfo;
 
   // Head of the linked list
-  static SafeThreadLocal<ModuleLoadFrame*> sTopFrame;
+  static MOZ_THREAD_LOCAL(ModuleLoadFrame*) sTopFrame;
 };
 
 }  // namespace freestanding
