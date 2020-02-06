@@ -7,6 +7,7 @@
 
 #include "RTCStatsReport.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PerformanceService.h"
 #include "nsRFPService.h"
 
 namespace mozilla {
@@ -17,8 +18,14 @@ RTCStatsTimestampMaker::RTCStatsTimestampMaker(const GlobalObject* aGlobal) {
       do_QueryInterface(aGlobal->GetAsSupports());
   if (window) {
     mRandomTimelineSeed = window->GetPerformance()->GetRandomTimelineSeed();
-    mStartWallClock = window->GetPerformance()->TimeOrigin();
     mStartMonotonic = window->GetPerformance()->CreationTimeStamp();
+    // Ugh. Performance::TimeOrigin is not constant, which means we need to
+    // emulate this weird behavior so our time stamps are consistent with JS
+    // timeOrigin. This is based on the code here:
+    // https://searchfox.org/mozilla-central/rev/
+    // 053826b10f838f77c27507e5efecc96e34718541/dom/performance/Performance.cpp#111-117
+    mStartWallClockRaw =
+        PerformanceService::GetOrCreate()->TimeOrigin(mStartMonotonic);
   }
 }
 
@@ -28,11 +35,17 @@ DOMHighResTimeStamp RTCStatsTimestampMaker::GetNow() const {
   // main-thread-only. So, we perform the same calculation here. Note that this
   // can be very different from the current wall-clock time because of changes
   // to the wall clock, or monotonic clock drift over long periods of time.
-  TimeStamp nowMonotonic = TimeStamp::NowUnfuzzed();
+  // We are very careful to do exactly what Performance does, to avoid timestamp
+  // discrepancies.
   DOMHighResTimeStamp msSinceStart =
-      (nowMonotonic - mStartMonotonic).ToMilliseconds();
-  DOMHighResTimeStamp rawTime = mStartWallClock + msSinceStart;
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawTime, mRandomTimelineSeed);
+      (TimeStamp::NowUnfuzzed() - mStartMonotonic).ToMilliseconds();
+  // mRandomTimelineSeed is not set in the unit-tests.
+  if (mRandomTimelineSeed) {
+    msSinceStart = nsRFPService::ReduceTimePrecisionAsMSecs(
+        msSinceStart, mRandomTimelineSeed);
+  }
+  return msSinceStart +
+         nsRFPService::ReduceTimePrecisionAsMSecs(mStartWallClockRaw, 0);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCStatsReport, mParent)
