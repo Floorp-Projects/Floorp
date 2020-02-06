@@ -4,6 +4,7 @@
 
 package org.mozilla.samples.glean
 
+import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -13,11 +14,19 @@ import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
 import org.mozilla.samples.glean.library.SamplesGleanLibrary
 
-open class MainActivity : AppCompatActivity() {
+open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.ExperimentUpdateListener {
+
+    private var experimentUpdateReceiver: ExperimentUpdateReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Set up the ExperimentUpdateReceiver to receive experiment updated Intents
+        experimentUpdateReceiver = ExperimentUpdateReceiver(this)
+        val filter = IntentFilter()
+        filter.addAction("org.mozilla.samples.glean.experiments.updated")
+        registerReceiver(experimentUpdateReceiver, filter)
 
         // Generate an event when user clicks on the button.
         buttonGenerateData.setOnClickListener {
@@ -53,16 +62,27 @@ open class MainActivity : AppCompatActivity() {
 
         // Handle logic for the "test-color" experiment on click.
         buttonCheckExperiments.setOnClickListener {
-            textViewExperimentStatus.setBackgroundColor(Color.WHITE)
-            textViewExperimentStatus.text = getString(R.string.experiment_not_active)
+            onExperimentsUpdated()
+        }
+    }
 
-            Experiments.withExperiment("test-color") {
-                val color = when (it) {
-                    "blue" -> Color.BLUE
-                    "red" -> Color.RED
-                    "control" -> Color.DKGRAY
-                    else -> Color.WHITE
-                }
+    /**
+     * This function will be called by the ExperimentUpdateListener interface when the experiments
+     * are updated.
+     */
+    override fun onExperimentsUpdated() {
+        textViewExperimentStatus.setBackgroundColor(Color.WHITE)
+        textViewExperimentStatus.text = getString(R.string.experiment_not_active)
+
+        Experiments.withExperiment("test-color") {
+            val color = when (it) {
+                "blue" -> Color.BLUE
+                "red" -> Color.RED
+                "control" -> Color.DKGRAY
+                else -> Color.WHITE
+            }
+            // Dispatch the UI work back to the appropriate thread
+            this@MainActivity.runOnUiThread {
                 textViewExperimentStatus.setBackgroundColor(color)
                 textViewExperimentStatus.text = getString(R.string.experiment_active_branch, it)
             }
