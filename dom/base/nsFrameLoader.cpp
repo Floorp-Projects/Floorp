@@ -289,8 +289,19 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   // for the BrowsingContext, and cause no end of trouble.
   if (IsTopContent(parentContext, aOwner)) {
     // Create toplevel content without a parent & as Type::Content.
-    return BrowsingContext::CreateDetached(nullptr, aOpener, frameName,
-                                           BrowsingContext::Type::Content);
+    RefPtr<BrowsingContext> bc = BrowsingContext::CreateDetached(
+        nullptr, aOpener, frameName, BrowsingContext::Type::Content);
+
+    // If this is a mozbrowser frame, pretend it's windowless so that it gets
+    // ownership of its BrowsingContext even though it's a top-level content
+    // frame. This is horrible, but will fortunately go away soon.
+    if (nsCOMPtr<nsIMozBrowserFrame> mozbrowser =
+            aOwner->GetAsMozBrowserFrame()) {
+      if (mozbrowser->GetReallyIsBrowser()) {
+        bc->SetWindowless();
+      }
+    }
+    return bc.forget();
   }
 
   auto type = parentContext->IsContent() ? BrowsingContext::Type::Content
