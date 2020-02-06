@@ -32,7 +32,8 @@ class GleanApplication : Application() {
         Glean.initialize(applicationContext, uploadEnabled = true)
 
         // Initialize the Experiments library and pass in the callback that will generate a
-        // broadcast Intent to signal the application that experiments have been updated.
+        // broadcast Intent to signal the application that experiments have been updated. This is
+        // only relevant to the experiments library, aside from recording the experiment in Glean.
         Experiments.initialize(applicationContext) {
             val intent = Intent()
             intent.action = "org.mozilla.samples.glean.experiments.updated"

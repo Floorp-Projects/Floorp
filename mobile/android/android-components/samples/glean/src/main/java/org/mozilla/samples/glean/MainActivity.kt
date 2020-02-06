@@ -16,17 +16,13 @@ import org.mozilla.samples.glean.library.SamplesGleanLibrary
 
 open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.ExperimentUpdateListener {
 
+    // This BroadcastReceiver is not relevant to the Glean SDK, but is relevant to the experiments
+    // library.
     private var experimentUpdateReceiver: ExperimentUpdateReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        // Set up the ExperimentUpdateReceiver to receive experiment updated Intents
-        experimentUpdateReceiver = ExperimentUpdateReceiver(this)
-        val filter = IntentFilter()
-        filter.addAction("org.mozilla.samples.glean.experiments.updated")
-        registerReceiver(experimentUpdateReceiver, filter)
 
         // Generate an event when user clicks on the button.
         buttonGenerateData.setOnClickListener {
@@ -60,6 +56,14 @@ open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.Experime
         SamplesGleanLibrary.recordMetric()
         SamplesGleanLibrary.recordExperiment()
 
+
+        // The following is not relevant to the Glean SDK, but to the experiments library.
+        // Set up the ExperimentUpdateReceiver to receive experiment updated Intents.
+        experimentUpdateReceiver = ExperimentUpdateReceiver(this)
+        val filter = IntentFilter()
+        filter.addAction("org.mozilla.samples.glean.experiments.updated")
+        registerReceiver(experimentUpdateReceiver, filter)
+
         // Handle logic for the "test-color" experiment on click.
         buttonCheckExperiments.setOnClickListener {
             onExperimentsUpdated()
@@ -68,7 +72,7 @@ open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.Experime
 
     /**
      * This function will be called by the ExperimentUpdateListener interface when the experiments
-     * are updated.
+     * are updated.  This is not relevant to the Glean SDK, but to the experiments library.
      */
     override fun onExperimentsUpdated() {
         textViewExperimentStatus.setBackgroundColor(Color.WHITE)

@@ -10,7 +10,8 @@ import android.content.Intent
 
 /**
  * Creates a [BroadcastReceiver] interface through which the MainActivity can receive notifications
- * when the experiments are updated.
+ * when the experiments are updated.  This is not relevant to the Glean SDK and is only important
+ * to the experiments library.
  */
 class ExperimentUpdateReceiver : BroadcastReceiver {
 
