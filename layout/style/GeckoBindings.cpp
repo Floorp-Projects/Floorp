@@ -1115,10 +1115,19 @@ void Gecko_SetGradientImageValue(nsStyleImage* aImage,
   aImage->SetGradientData(UniquePtr<StyleGradient>(aGradient));
 }
 
+static already_AddRefed<nsStyleImageRequest> CreateStyleImageRequest(
+    nsStyleImageRequest::Mode aModeFlags, const StyleComputedImageUrl* aUrl) {
+  RefPtr<nsStyleImageRequest> req = new nsStyleImageRequest(aModeFlags, *aUrl);
+  return req.forget();
+}
+
 void Gecko_SetLayerImageImageValue(nsStyleImage* aImage,
                                    const StyleComputedImageUrl* aUrl) {
   MOZ_ASSERT(aImage && aUrl);
-  aImage->SetImageUrl(*aUrl);
+
+  RefPtr<nsStyleImageRequest> req =
+      CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aUrl);
+  aImage->SetImageRequest(req.forget());
 }
 
 void Gecko_SetImageElement(nsStyleImage* aImage, nsAtom* aAtom) {
@@ -1141,23 +1150,48 @@ void Gecko_InitializeImageCropRect(nsStyleImage* aImage) {
       nsStyleImage::CropRect{zero, zero, zero, zero}));
 }
 
-void Gecko_SetCursorArrayCapacity(nsStyleUI* aUi, size_t aCapacity) {
-  aUi->mCursorImages.Clear();
-  aUi->mCursorImages.SetCapacity(aCapacity);
+void Gecko_SetCursorArrayLength(nsStyleUI* aStyleUI, size_t aLen) {
+  aStyleUI->mCursorImages.Clear();
+  aStyleUI->mCursorImages.SetLength(aLen);
 }
 
-void Gecko_AppendCursorImage(nsStyleUI* aUi,
-                             const StyleComputedImageUrl* aUrl) {
-  aUi->mCursorImages.EmplaceBack(*aUrl);
+void Gecko_SetCursorImageValue(nsCursorImage* aCursor,
+                               const StyleComputedImageUrl* aUrl) {
+  MOZ_ASSERT(aCursor && aUrl);
+
+  aCursor->mImage =
+      CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard, aUrl);
 }
 
 void Gecko_CopyCursorArrayFrom(nsStyleUI* aDest, const nsStyleUI* aSrc) {
   aDest->mCursorImages = aSrc->mCursorImages;
 }
 
+const nsStyleImageRequest* Gecko_GetImageRequest(const nsStyleImage* aImage) {
+  MOZ_ASSERT(aImage);
+  return aImage->ImageRequest();
+}
+
 nsAtom* Gecko_GetImageElement(const nsStyleImage* aImage) {
   MOZ_ASSERT(aImage && aImage->GetType() == eStyleImageType_Element);
   return const_cast<nsAtom*>(aImage->GetElementId());
+}
+
+void Gecko_SetListStyleImageNone(nsStyleList* aList) {
+  aList->mListStyleImage = nullptr;
+}
+
+void Gecko_SetListStyleImageImageValue(nsStyleList* aList,
+                                       const StyleComputedImageUrl* aUrl) {
+  MOZ_ASSERT(aList && aUrl);
+
+  aList->mListStyleImage =
+      CreateStyleImageRequest(nsStyleImageRequest::Mode(0), aUrl);
+}
+
+void Gecko_CopyListStyleImageFrom(nsStyleList* aList,
+                                  const nsStyleList* aSource) {
+  aList->mListStyleImage = aSource->mListStyleImage;
 }
 
 void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
@@ -1843,6 +1877,11 @@ bool Gecko_AssertClassAttrValueIsSane(const nsAttrValue* aValue) {
           aValue->GetStringValue())
           .IsEmpty());
   return true;
+}
+
+void Gecko_LoadData_DeregisterLoad(const StyleLoadData* aData) {
+  MOZ_ASSERT(aData->load_id != 0);
+  ImageLoader::DeregisterCSSImageFromAllLoaders(*aData);
 }
 
 void Gecko_PrintfStderr(const nsCString* aStr) {
