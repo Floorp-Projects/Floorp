@@ -5777,16 +5777,10 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
       scriptLocation, callerAgentClusterId);
 
   JS::CloneDataPolicy clonePolicy;
-
-  if (GetDocGroup() && callerAgentClusterId.isSome() &&
-      GetDocGroup()->AgentClusterId().Equals(callerAgentClusterId.value())) {
+  if (GetDocGroup() && callerInnerWindow &&
+      callerInnerWindow->IsSharedMemoryAllowed()) {
     clonePolicy.allowIntraClusterClonableSharedObjects();
   }
-
-  if (callerInnerWindow && callerInnerWindow->IsSharedMemoryAllowed()) {
-    clonePolicy.allowSharedMemoryObjects();
-  }
-
   event->Write(aCx, aMessage, aTransfer, clonePolicy, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return;

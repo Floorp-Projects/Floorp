@@ -3420,7 +3420,6 @@ bool js::testingFunc_serialize(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       if (StringEqualsLiteral(poli, "allow")) {
-        policy.allowSharedMemoryObjects();
         policy.allowIntraClusterClonableSharedObjects();
       } else if (StringEqualsLiteral(poli, "deny")) {
         // default
@@ -3501,7 +3500,6 @@ static bool Deserialize(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       if (StringEqualsLiteral(poli, "allow")) {
-        policy.allowSharedMemoryObjects();
         policy.allowIntraClusterClonableSharedObjects();
       } else if (StringEqualsLiteral(poli, "deny")) {
         // default

@@ -69,10 +69,6 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
     cloneDataPolicy.allowIntraClusterClonableSharedObjects();
   }
 
-  if (aWorkerPrivate->IsSharedMemoryAllowed()) {
-    cloneDataPolicy.allowSharedMemoryObjects();
-  }
-
   Read(parent, aCx, &messageData, cloneDataPolicy, rv);
 
   if (isTimelineRecording) {

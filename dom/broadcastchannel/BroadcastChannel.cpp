@@ -353,7 +353,10 @@ void BroadcastChannel::PostMessage(JSContext* aCx,
   nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   MOZ_ASSERT(global);
   if (global) {
-    agentClusterId = global->GetAgentClusterId();
+    Maybe<ClientInfo> clientInfo = global->GetClientInfo();
+    if (clientInfo) {
+      agentClusterId = clientInfo->AgentClusterId();
+    }
   }
 
   RefPtr<SharedMessageBody> data = new SharedMessageBody(

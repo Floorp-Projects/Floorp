@@ -332,7 +332,10 @@ void MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   Maybe<nsID> agentClusterId;
   nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   if (global) {
-    agentClusterId = global->GetAgentClusterId();
+    Maybe<ClientInfo> clientInfo = global->GetClientInfo();
+    if (clientInfo) {
+      agentClusterId = clientInfo->AgentClusterId();
+    }
   }
 
   RefPtr<SharedMessageBody> data = new SharedMessageBody(

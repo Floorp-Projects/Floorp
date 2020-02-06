@@ -15,9 +15,7 @@ namespace mozilla {
 namespace dom {
 
 PaintWorkletGlobalScope::PaintWorkletGlobalScope(PaintWorkletImpl* aImpl)
-    : WorkletGlobalScope(aImpl->GetAgentClusterId(),
-                         aImpl->IsSharedMemoryAllowed()),
-      mImpl(aImpl) {}
+    : mImpl(aImpl) {}
 
 bool PaintWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {

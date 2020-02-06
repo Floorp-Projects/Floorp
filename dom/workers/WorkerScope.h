@@ -216,8 +216,6 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
         mozilla::dom::EventCallbackDebuggerNotificationType::Global);
   }
 
-  bool IsSharedMemoryAllowed() const override;
-
   Maybe<ClientInfo> GetClientInfo() const override;
 
   Maybe<ClientState> GetClientState() const;
