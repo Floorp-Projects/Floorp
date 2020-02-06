@@ -56,3 +56,12 @@ job-defaults:
                     .*-devedition/.*: false
                     default: true
             default: false
+    fetches:
+        toolchain:
+            by-test-platform:
+                win.*:
+                    - win32-minidump-stackwalk
+                macosx.*:
+                    - macosx64-minidump-stackwalk
+                default:
+                    - linux64-minidump-stackwalk
