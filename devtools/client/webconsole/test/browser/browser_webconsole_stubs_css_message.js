@@ -6,9 +6,9 @@
 const {
   STUBS_UPDATE_ENV,
   getCleanedPacket,
-  getStubFilePath,
+  getStubFile,
   writeStubsToFile,
-} = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
+} = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-css-message.html";
@@ -21,15 +21,12 @@ add_task(async function() {
   const generatedStubs = await generateCssMessageStubs();
 
   if (isStubsUpdate) {
-    await writeStubsToFile(
-      getStubFilePath(STUB_FILE, env, true),
-      generatedStubs
-    );
+    await writeStubsToFile(env, STUB_FILE, generatedStubs);
     ok(true, `${STUB_FILE} was updated`);
     return;
   }
 
-  const existingStubs = require(getStubFilePath(STUB_FILE));
+  const existingStubs = getStubFile(STUB_FILE);
   const FAILURE_MSG =
     "The cssMessage stubs file needs to be updated by running " +
     "`mach test devtools/client/webconsole/test/browser/" +
