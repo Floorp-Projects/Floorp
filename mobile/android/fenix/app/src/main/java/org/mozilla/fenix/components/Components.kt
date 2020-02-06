@@ -54,7 +54,8 @@ class Components(private val context: Context) {
             useCases.searchUseCases,
             core.client,
             core.customTabsStore,
-            migrationStore
+            migrationStore,
+            core.webAppManifestStorage
         )
     }
 

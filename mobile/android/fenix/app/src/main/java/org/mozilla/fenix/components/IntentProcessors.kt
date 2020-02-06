@@ -11,13 +11,14 @@ import mozilla.components.feature.customtabs.CustomTabIntentProcessor
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.feature.pwa.ManifestStorage
-import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
+import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.migration.MigrationIntentProcessor
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.customtabs.FennecWebAppIntentProcessor
 import org.mozilla.fenix.home.intent.FennecBookmarkShortcutsIntentProcessor
 import org.mozilla.fenix.test.Mockable
 
@@ -32,7 +33,8 @@ class IntentProcessors(
     private val searchUseCases: SearchUseCases,
     private val httpClient: Client,
     private val customTabsStore: CustomTabsServiceStore,
-    private val migrationStore: MigrationStore
+    private val migrationStore: MigrationStore,
+    private val manifestStorage: ManifestStorage
 ) {
     /**
      * Provides intent processing functionality for ACTION_VIEW and ACTION_SEND intents.
@@ -66,8 +68,9 @@ class IntentProcessors(
                 apiKey = BuildConfig.DIGITAL_ASSET_LINKS_TOKEN,
                 store = customTabsStore
             ),
-            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(context)),
-            FennecBookmarkShortcutsIntentProcessor(sessionManager, sessionUseCases.loadUrl)
+            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, manifestStorage),
+            FennecBookmarkShortcutsIntentProcessor(sessionManager, sessionUseCases.loadUrl),
+            FennecWebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, manifestStorage)
         )
     }
 

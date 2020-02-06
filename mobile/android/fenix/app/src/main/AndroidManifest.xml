@@ -59,6 +59,15 @@
             android:exported="true">
         </activity-alias>
 
+        <!-- Activity alias from Fennec used by PWA launchers on the home screen -->
+        <activity-alias
+            android:name="org.mozilla.gecko.LauncherActivity"
+            android:targetActivity=".IntentReceiverActivity">
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.WEBAPP" />
+            </intent-filter>
+        </activity-alias>
+
         <activity
             android:name=".HomeActivity"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
