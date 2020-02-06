@@ -23,7 +23,6 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
-	lgglue.h  \
 	pkcs11ni.h \
 	softoken.h \
 	softoknt.h \
@@ -37,7 +36,6 @@ CSRCS = \
 	fipstest.c \
 	fipstokn.c \
 	kbkdf.c    \
-	lgglue.c   \
 	lowkey.c   \
 	lowpbe.c   \
 	padbuf.c   \
@@ -54,6 +52,11 @@ CSRCS = \
 	tlsprf.c   \
 	jpakesftk.c \
 	$(NULL)
+
+ifndef NSS_DISABLE_DBM
+PRIVATE_EXPORTS += lgglue.h
+CSRCS += lgglue.c
+endif
 
 ifdef SQLITE_UNSAFE_THREADS
 DEFINES += -DSQLITE_UNSAFE_THREADS
