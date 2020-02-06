@@ -33,19 +33,3 @@ add_task(async function test_various_jars() {
   );
   equal(result, true, "Components signed files do verify");
 });
-
-add_task(async function test_telemetry() {
-  Corroborate.reportTelemetry(true, false);
-
-  const scalars = Services.telemetry.getSnapshotForScalars("main", false)
-    .parent;
-
-  ok(
-    "corroborate.omnijar_corrupted" in scalars,
-    "omni jar should be corrupted"
-  );
-  ok(
-    "corroborate.system_addons_corrupted" in scalars,
-    "system addons should not be corrupted"
-  );
-});

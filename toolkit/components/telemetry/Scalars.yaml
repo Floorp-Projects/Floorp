@@ -5586,7 +5586,7 @@ telemetry.test:
       - 'main'
       - 'sync'
 
-# The following section contains counters for corruption of internal JAR and XPI files.
+# The following section contains counters for corruption of internal omni jar files.
 corroborate:
   omnijar_corrupted:
     bug_numbers:
@@ -5610,23 +5610,6 @@ corroborate:
       - 1608308
     description: >-
           Whether the build IDs of the omni jar (omni.ja) and libxul do not match.
-    expires: "80"
-    kind: boolean
-    notification_emails:
-      - rhelmer@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - main
-
-  system_addons_corrupted:
-    bug_numbers:
-      - 1515712
-    description: >-
-      Whether any system add-on (XPI files) were found to be missing or corrupt when checked during startup.
     expires: "80"
     kind: boolean
     notification_emails:
