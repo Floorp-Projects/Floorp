@@ -1112,6 +1112,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
     this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
+    this.handleClearAllImpressionsByProvider = this.handleClearAllImpressionsByProvider.bind(this);
     this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(this);
     this.handleExpressionEval = this.handleExpressionEval.bind(this);
     this.onChangeTargetingParameters = this.onChangeTargetingParameters.bind(this);
@@ -1291,6 +1292,36 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
         stringTargetingParameters: updatedParameters,
         targetingParametersError
       };
+    });
+  }
+
+  handleClearAllImpressionsByProvider() {
+    const providerId = this.state.messageFilter;
+
+    if (!providerId) {
+      return;
+    }
+
+    const userPrefInfo = this.state.userPrefs;
+    const isUserEnabled = providerId in userPrefInfo ? userPrefInfo[providerId] : true;
+    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].sendMessage({
+      type: "DISABLE_PROVIDER",
+      data: providerId
+    });
+
+    if (!isUserEnabled) {
+      _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].sendMessage({
+        type: "SET_PROVIDER_USER_PREF",
+        data: {
+          id: providerId,
+          value: true
+        }
+      });
+    }
+
+    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].sendMessage({
+      type: "ENABLE_PROVIDER",
+      data: providerId
     });
   }
 
@@ -1506,7 +1537,10 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }, "all providers"), this.state.providers.map(provider => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("option", {
       key: provider.id,
       value: provider.id
-    }, provider.id))));
+    }, provider.id))), this.state.messageFilter !== "all" && !this.state.messageFilter.includes("_local_testing") ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "button messages-reset",
+      onClick: this.handleClearAllImpressionsByProvider
+    }, "Reset All") : null);
   }
 
   renderTableHead() {

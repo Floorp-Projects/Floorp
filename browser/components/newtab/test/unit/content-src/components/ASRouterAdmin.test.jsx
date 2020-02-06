@@ -309,6 +309,57 @@ describe("ASRouterAdmin", () => {
 
         assert.lengthOf(wrapper.find(".message-id"), 0);
       });
+      it("should not display Reset All button if provider filter value is set to all or test providers", () => {
+        wrapper.setState({
+          messageFilter: "messageProvider",
+          messages: [
+            {
+              id: "foo",
+              provider: "messageProvider",
+              groups: ["messageProvider"],
+            },
+          ],
+        });
+
+        assert.lengthOf(wrapper.find(".messages-reset"), 1);
+        wrapper.find("select").simulate("change", { target: { value: "all" } });
+
+        assert.lengthOf(wrapper.find(".messages-reset"), 0);
+
+        wrapper
+          .find("select")
+          .simulate("change", { target: { value: "test_local_testing" } });
+        assert.lengthOf(wrapper.find(".messages-reset"), 0);
+      });
+      it("should trigger disable and enable provider on Reset All button click", () => {
+        wrapper.setState({
+          messageFilter: "messageProvider",
+          messages: [
+            {
+              id: "foo",
+              provider: "messageProvider",
+              groups: ["messageProvider"],
+            },
+          ],
+          providerPrefs: [
+            {
+              id: "messageProvider",
+            },
+          ],
+        });
+        wrapper.find(".messages-reset").simulate("click");
+        assert.propertyVal(
+          sendMessageStub.secondCall.args[1],
+          "type",
+          "DISABLE_PROVIDER"
+        );
+
+        assert.propertyVal(
+          sendMessageStub.thirdCall.args[1],
+          "type",
+          "ENABLE_PROVIDER"
+        );
+      });
     });
   });
   describe("#DiscoveryStream", () => {
