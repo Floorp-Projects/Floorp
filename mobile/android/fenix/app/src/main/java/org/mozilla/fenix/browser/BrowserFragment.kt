@@ -62,9 +62,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     ): View {
         val view = super.onCreateView(inflater, container, savedInstanceState)
         view.browserLayout.transitionName = "$TAB_ITEM_TRANSITION_NAME${getSessionById()?.id}"
-
-        startPostponedEnterTransition()
-
         return view
     }
 

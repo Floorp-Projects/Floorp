@@ -86,6 +86,7 @@ import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.FragmentPreDrawManager
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -141,6 +142,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     }
 
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        FragmentPreDrawManager(this).execute {}
         browserInitialized = initializeUI(view) != null
     }
 
