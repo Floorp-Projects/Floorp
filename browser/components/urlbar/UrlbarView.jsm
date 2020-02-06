@@ -856,6 +856,7 @@ class UrlbarView {
 
     let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
+    favicon.setAttribute("data-l10n-id", "urlbar-tip-icon-description");
     item._content.appendChild(favicon);
     item._elements.set("favicon", favicon);
 
@@ -1092,9 +1093,14 @@ class UrlbarView {
       item.result.rowIndex = i;
       item.id = "urlbarView-row-" + i;
       if (item.result.type == UrlbarUtils.RESULT_TYPE.TIP) {
+        let favicon = item._elements.get("favicon");
+        favicon.id = item.id + "-icon";
         let title = item._elements.get("title");
         title.id = item.id + "-title";
-        item._content.setAttribute("aria-labelledby", title.id);
+        item._content.setAttribute(
+          "aria-labelledby",
+          `${favicon.id} ${title.id}`
+        );
         let tipButton = item._elements.get("tipButton");
         tipButton.id = item.id + "-tip-button";
         let helpButton = item._elements.get("helpButton");
