@@ -280,7 +280,7 @@ struct HStringDeleter {
 
 typedef mozilla::UniquePtr<HSTRING, HStringDeleter> HStringUniquePtr;
 
-Result<HStringUniquePtr, HRESULT> ConvertToWindowsString(
+mozilla::Result<HStringUniquePtr, HRESULT> ConvertToWindowsString(
     const nsAString& aStr) {
   HSTRING rawStr;
   HRESULT hr = WindowsCreateString(PromiseFlatString(aStr).get(), aStr.Length(),
@@ -292,7 +292,7 @@ Result<HStringUniquePtr, HRESULT> ConvertToWindowsString(
 }
 
 #ifndef __MINGW32__
-Result<Ok, nsresult> RequestShare(
+mozilla::Result<Ok, nsresult> RequestShare(
     const std::function<HRESULT(IDataRequestedEventArgs* pArgs)>& aCallback) {
   if (!IsWin10OrLater()) {
     return Err(NS_ERROR_FAILURE);
