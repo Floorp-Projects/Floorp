@@ -1023,16 +1023,18 @@ class UrlbarInput {
 
   _afterTabSelectAndFocusChange() {
     // We must have seen both events to proceed safely.
-    if (!this._gotFocusChange || !this._gotTabSelect) {
+    if (!this._gotFocusChange || !this._tabSelectEvent) {
       return;
     }
-    this._gotFocusChange = this._gotTabSelect = false;
+    let event = this._tabSelectEvent;
+    this._gotFocusChange = false;
+    this._tabSelectEvent = null;
 
     this._resetSearchState();
 
     // Switching tabs doesn't always change urlbar focus, so we must try to
     // reopen here too, not just on focus.
-    if (this.view.autoOpen({ event: new CustomEvent("urlbar-reopen") })) {
+    if (this.view.autoOpen({ event })) {
       return;
     }
     // The input may retain focus when switching tabs in which case we
@@ -2055,7 +2057,7 @@ class UrlbarInput {
   }
 
   _on_TabSelect(event) {
-    this._gotTabSelect = true;
+    this._tabSelectEvent = event;
     this._afterTabSelectAndFocusChange();
   }
 

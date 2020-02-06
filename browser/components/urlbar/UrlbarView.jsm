@@ -420,6 +420,12 @@ class UrlbarView {
       return false;
     }
 
+    // TabSwitch is the only case where we requery if the view is open, because
+    // switching tabs doesn't necessarily close the view.
+    if (this.isOpen && queryOptions.event.type != "TabSelect") {
+      return false;
+    }
+
     if (
       this._rows.firstElementChild &&
       this._queryContext.searchString == this.input.value
