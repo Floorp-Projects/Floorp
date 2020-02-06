@@ -222,7 +222,7 @@ function isCachedRequestMoreAccurateThanServerRequest(newCell, newWifiList) {
   return false;
 }
 
-function WifiGeoCoordsObject(lat, lon, acc) {
+function NetworkGeoCoordsObject(lat, lon, acc) {
   this.latitude = lat;
   this.longitude = lon;
   this.accuracy = acc;
@@ -236,21 +236,21 @@ function WifiGeoCoordsObject(lat, lon, acc) {
   this.speed = NaN;
 }
 
-WifiGeoCoordsObject.prototype = {
+NetworkGeoCoordsObject.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGeoPositionCoords]),
 };
 
-function WifiGeoPositionObject(lat, lng, acc) {
-  this.coords = new WifiGeoCoordsObject(lat, lng, acc);
+function NetworkGeoPositionObject(lat, lng, acc) {
+  this.coords = new NetworkGeoCoordsObject(lat, lng, acc);
   this.address = null;
   this.timestamp = Date.now();
 }
 
-WifiGeoPositionObject.prototype = {
+NetworkGeoPositionObject.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGeoPosition]),
 };
 
-function WifiGeoPositionProvider() {
+function NetworkGeolocationProvider() {
   gLoggingEnabled = Services.prefs.getBoolPref(
     "geo.provider.network.logging.enabled",
     false
@@ -269,7 +269,7 @@ function WifiGeoPositionProvider() {
   this.started = false;
 }
 
-WifiGeoPositionProvider.prototype = {
+NetworkGeolocationProvider.prototype = {
   classID: Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIGeolocationProvider,
@@ -284,7 +284,8 @@ WifiGeoPositionProvider.prototype = {
       this.timer.cancel();
       this.timer = null;
     }
-    // wifi thread triggers WifiGeoPositionProvider to proceed, with no wifi, do manual timeout
+    // Wifi thread triggers NetworkGeolocationProvider to proceed. With no wifi,
+    // do manual timeout.
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this.timer.initWithCallback(
       this,
@@ -445,7 +446,7 @@ WifiGeoPositionProvider.prototype = {
         return;
       }
 
-      let newLocation = new WifiGeoPositionObject(
+      let newLocation = new NetworkGeoPositionObject(
         xhr.response.location.lat,
         xhr.response.location.lng,
         xhr.response.accuracy
@@ -473,4 +474,4 @@ WifiGeoPositionProvider.prototype = {
   },
 };
 
-var EXPORTED_SYMBOLS = ["WifiGeoPositionProvider"];
+var EXPORTED_SYMBOLS = ["NetworkGeolocationProvider"];
