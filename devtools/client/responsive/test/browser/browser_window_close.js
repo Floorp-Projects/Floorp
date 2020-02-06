@@ -3,8 +3,6 @@
 
 "use strict";
 
-const Types = require("devtools/client/responsive/types");
-
 add_task(async function() {
   const newWindowPromise = BrowserTestUtils.waitForNewWindow();
   window.open("data:text/html;charset=utf-8,", "_blank", "noopener,all");
@@ -14,14 +12,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(newWindow.gBrowser.selectedBrowser);
 
   const tab = newWindow.gBrowser.selectedTab;
-  const { ui } = await openRDM(tab);
-  const { store } = ui.toolWindow;
-  await waitUntilState(
-    store,
-    state =>
-      state.viewports.length == 1 &&
-      state.devices.listState == Types.loadableState.LOADED
-  );
+  await openRDM(tab);
 
   // Close the window on a tab with an active responsive design UI and
   // wait for the UI to gracefully shutdown.  This has leaked the window

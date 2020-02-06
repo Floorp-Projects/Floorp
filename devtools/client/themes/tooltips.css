@@ -457,7 +457,6 @@ strong {
   padding-inline-start: 16px;
 }
 
-.menu-button--iconic::before,
 .tooltip-container[type="doorhanger"] .menuitem > .command.iconic > .label::before {
   content: " ";
   display: inline-block;
@@ -471,7 +470,6 @@ strong {
   fill: currentColor;
   background-image: var(--menuitem-icon-image);
   background-size: contain;
-  background-repeat: no-repeat;
   /*
    * The icons in the sidebar menu have opacity: 0.8 here, but those in the
    * hamburger menu don't. For now we match the hamburger menu styling,

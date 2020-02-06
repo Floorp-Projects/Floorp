@@ -58,10 +58,6 @@ class MenuButton extends PureComponent {
       // A text content for the button.
       label: PropTypes.string,
 
-      // URL of the icon to associate with the MenuButton. (Optional)
-      // e.g. chrome://devtools/skin/image/foo.svg
-      icon: PropTypes.string,
-
       // An optional ID to assign to the menu's container tooltip object.
       menuId: PropTypes.string,
 
@@ -420,16 +416,6 @@ class MenuButton extends PureComponent {
 
     if (this.props.menuId) {
       buttonProps["aria-controls"] = this.props.menuId;
-    }
-
-    if (this.props.icon) {
-      const iconClass = "menu-button--iconic";
-      buttonProps.className = buttonProps.className
-        ? `${buttonProps.className} ${iconClass}`
-        : iconClass;
-      buttonProps.style = {
-        "--menuitem-icon-image": "url(" + this.props.icon + ")",
-      };
     }
 
     if (this.state.isMenuInitialized) {
