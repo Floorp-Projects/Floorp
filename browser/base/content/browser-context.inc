@@ -233,11 +233,32 @@
                 data-l10n-id="main-context-menu-view-background-image"
                 oncommand="gContextMenu.viewBGImage(event);"
                 onclick="checkForMiddleClick(this, event);"/>
+      <menu id="fill-login"
+            label="&fillLoginMenu.label;"
+            label-login="&fillLoginMenu.label;"
+            label-password="&fillPasswordMenu.label;"
+            label-username="&fillUsernameMenu.label;"
+            accesskey="&fillLoginMenu.accesskey;"
+            accesskey-login="&fillLoginMenu.accesskey;"
+            accesskey-password="&fillPasswordMenu.accesskey;"
+            accesskey-username="&fillUsernameMenu.accesskey;"
+            hidden="true">
+        <menupopup id="fill-login-popup">
+          <menuitem id="fill-login-no-logins"
+                    label="&noLoginSuggestions.label;"
+                    disabled="true"
+                    hidden="true"/>
+          <menuseparator id="saved-logins-separator"/>
+          <menuitem id="fill-login-saved-passwords"
+                    label="&viewSavedLogins.label;"
+                    oncommand="gContextMenu.openPasswordManager();"/>
+        </menupopup>
+      </menu>
      <menuitem id="fill-login-generated-password"
                data-l10n-id="main-context-menu-generate-new-password"
                hidden="true"
                oncommand="gContextMenu.useGeneratedPassword();"/>
-      <menuseparator id="generated-password-separator"/>
+      <menuseparator id="fill-login-and-generated-password-separator"/>
       <menuitem id="context-undo"
                 data-l10n-id="text-action-undo"
                 command="cmd_undo"/>
@@ -354,28 +375,6 @@
       <menuitem hidden="true" id="context-bidi-page-direction-toggle"
                 data-l10n-id="main-context-menu-bidi-switch-page"
                 oncommand="gContextMenu.switchPageDirection();"/>
-      <menuseparator id="fill-login-separator" hidden="true"/>
-      <menu id="fill-login"
-            label="&fillLoginMenu.label;"
-            label-login="&fillLoginMenu.label;"
-            label-password="&fillPasswordMenu.label;"
-            label-username="&fillUsernameMenu.label;"
-            accesskey="&fillLoginMenu.accesskey;"
-            accesskey-login="&fillLoginMenu.accesskey;"
-            accesskey-password="&fillPasswordMenu.accesskey;"
-            accesskey-username="&fillUsernameMenu.accesskey;"
-            hidden="true">
-        <menupopup id="fill-login-popup">
-          <menuitem id="fill-login-no-logins"
-                    label="&noLoginSuggestions.label;"
-                    disabled="true"
-                    hidden="true"/>
-          <menuseparator id="saved-logins-separator"/>
-          <menuitem id="fill-login-saved-passwords"
-                    label="&viewSavedLogins.label;"
-                    oncommand="gContextMenu.openPasswordManager();"/>
-        </menupopup>
-      </menu>
       <menuseparator id="inspect-separator" hidden="true"/>
       <menuitem id="context-inspect"
                 hidden="true"
