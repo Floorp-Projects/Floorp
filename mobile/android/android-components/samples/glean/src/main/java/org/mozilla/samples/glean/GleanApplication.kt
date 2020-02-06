@@ -6,7 +6,6 @@ package org.mozilla.samples.glean
 
 import android.app.Application
 import android.content.Intent
-import mozilla.components.service.experiments.Configuration
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.experiments.Experiments
 import mozilla.components.support.base.log.Log

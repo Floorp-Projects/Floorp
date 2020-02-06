@@ -17,15 +17,29 @@ class ExperimentUpdateReceiver : BroadcastReceiver {
 
     private var listener: ExperimentUpdateListener
 
+    /**
+     * Secondary constructor which allows the listener to be passed in
+     *
+     * @param listener: The listener to notify when the experiment is updated.
+     */
     constructor(listener: ExperimentUpdateListener) : super() {
         this.listener = listener
     }
 
-    override fun onReceive(p0: Context?, p1: Intent?) {
+    /**
+     * When the broadcast notification is received, calls the `onExperimentUpdated` on the listener
+     */
+    override fun onReceive(context: Context?, intent: Intent?) {
         listener.onExperimentsUpdated()
     }
 
+    /**
+     * Public interface for the listener to implement
+     */
     interface ExperimentUpdateListener {
+        /**
+         * Callback function that will be invoked when the experiments are updated.
+         */
         fun onExperimentsUpdated()
     }
 }

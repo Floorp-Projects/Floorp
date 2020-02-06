@@ -14,6 +14,9 @@ import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
 import org.mozilla.samples.glean.library.SamplesGleanLibrary
 
+/**
+ * Main Activity of the glean-sample-app
+ */
 open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.ExperimentUpdateListener {
 
     // This BroadcastReceiver is not relevant to the Glean SDK, but is relevant to the experiments
@@ -55,7 +58,6 @@ open class MainActivity : AppCompatActivity(), ExperimentUpdateReceiver.Experime
         // Update some metrics from a third-party library
         SamplesGleanLibrary.recordMetric()
         SamplesGleanLibrary.recordExperiment()
-
 
         // The following is not relevant to the Glean SDK, but to the experiments library.
         // Set up the ExperimentUpdateReceiver to receive experiment updated Intents.
