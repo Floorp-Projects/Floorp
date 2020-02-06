@@ -223,10 +223,12 @@
     <key keycode="VK_F11" command="View:FullScreen"/>
 #endif
     <key id="key_toggleReaderMode"
-         data-l10n-id="reader-mode-toggle-shortcut"
          command="View:ReaderView"
 #ifndef XP_WIN
          modifiers="accel,alt"
+         data-l10n-id="reader-mode-toggle-shortcut-win"
+#else
+         data-l10n-id="reader-mode-toggle-shortcut-other"
 #endif
          disabled="true"/>
 

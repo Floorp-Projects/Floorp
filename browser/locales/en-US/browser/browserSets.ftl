@@ -113,14 +113,11 @@ history-sidebar-shortcut =
 full-screen-shortcut =
     .key = F
 
-# Verify what shortcut for that operation
-# are recommended by the Human Interface Guidelines
-# of each platform for your locale.
-reader-mode-toggle-shortcut =
-    .key = { PLATFORM() ->
-        [windows] VK_F9
-       *[other] R
-    }
+reader-mode-toggle-shortcut-windows =
+    .keycode = VK_F9
+
+reader-mode-toggle-shortcut-other =
+    .key = R
 
 picture-in-picture-toggle-shortcut =
     .key = ]
