@@ -403,6 +403,11 @@ raptor-unity-webgl-firefox:
     variants: ["fission"]
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try']
+            default: ['try', 'mozilla-central']
+    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
