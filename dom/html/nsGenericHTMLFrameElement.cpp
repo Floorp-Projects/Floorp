@@ -341,7 +341,7 @@ void nsGenericHTMLFrameElement::AfterMaybeChangeAttr(
     } else if (aName == nsGkAtoms::name) {
       // Propagate "name" to the browsing context per HTML5.
       RefPtr<BrowsingContext> bc =
-          mFrameLoader ? mFrameLoader->GetBrowsingContext() : nullptr;
+          mFrameLoader ? mFrameLoader->GetExtantBrowsingContext() : nullptr;
       if (bc) {
         if (aValue) {
           bc->SetName(aValue->String());
