@@ -8,14 +8,15 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers
@@ -31,13 +32,17 @@ class SettingsSubMenuSearchRobot {
     fun verifyShowClipboardSuggestions() = assertShowClipboardSuggestions()
     fun verifySearchBrowsingHistory() = assertSearchBrowsingHistory()
     fun verifySearchBookmarks() = assertSearchBookmarks()
+    fun changeDefaultSearchEngine(searchEngineName: String) =
+        selectDefaultSearchEngine(searchEngineName)
+
+    fun disableShowSearchSuggestions() = toggleShowSearchSuggestions()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
-            goBackButton().perform(ViewActions.click())
+            goBackButton().perform(click())
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
@@ -46,24 +51,24 @@ class SettingsSubMenuSearchRobot {
 }
 
 private fun assertDefaultSearchEngineHeader() =
-    onView(ViewMatchers.withText("Default search engine"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(withText("Default search engine"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertSearchEngineList() {
-    onView(ViewMatchers.withText("Google"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(ViewMatchers.withText("Amazon.com"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(ViewMatchers.withText("Bing"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(ViewMatchers.withText("DuckDuckGo"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(ViewMatchers.withText("Twitter"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(ViewMatchers.withText("Wikipedia"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(ViewMatchers.withText("Add search engine"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(withText("Google"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText("Amazon.com"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText("Bing"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText("DuckDuckGo"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText("Twitter"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText("Wikipedia"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText("Add search engine"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertShowSearchSuggestions() {
@@ -72,8 +77,8 @@ private fun assertShowSearchSuggestions() {
             hasDescendant(withText("Show search suggestions"))
         )
     )
-    onView(ViewMatchers.withText("Show search suggestions"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(withText("Show search suggestions"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertShowSearchShortcuts() {
@@ -82,8 +87,8 @@ private fun assertShowSearchShortcuts() {
             hasDescendant(withText("Show search shortcuts"))
         )
     )
-    onView(ViewMatchers.withText("Show search shortcuts"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(withText("Show search shortcuts"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertShowClipboardSuggestions() {
@@ -92,8 +97,8 @@ private fun assertShowClipboardSuggestions() {
             hasDescendant(withText("Show clipboard suggestions"))
         )
     )
-    onView(ViewMatchers.withText("Show clipboard suggestions"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(withText("Show clipboard suggestions"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertSearchBrowsingHistory() {
@@ -102,8 +107,8 @@ private fun assertSearchBrowsingHistory() {
             hasDescendant(withText("Search browsing history"))
         )
     )
-    onView(ViewMatchers.withText("Search browsing history"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(withText("Search browsing history"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertSearchBookmarks() {
@@ -112,9 +117,30 @@ private fun assertSearchBookmarks() {
             hasDescendant(withText("Search bookmarks"))
         )
     )
-    onView(ViewMatchers.withText("Search bookmarks"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(withText("Search bookmarks"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun selectDefaultSearchEngine(searchEngine: String) {
+    onView(withText(searchEngine))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .perform(click())
+}
+
+private fun selectDuckDuckGoAsSearchEngine() {
+    selectDefaultSearchEngine("DuckDuckGo")
+}
+
+private fun toggleShowSearchSuggestions() {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText("Show search suggestions"))
+        )
+    )
+
+    onView(withText("Show search suggestions"))
+        .perform(click())
 }
 
 private fun goBackButton() =
-    onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+    onView(CoreMatchers.allOf(withContentDescription("Navigate up")))

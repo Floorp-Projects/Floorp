@@ -39,8 +39,10 @@ class SearchRobot {
     fun verifyBrowserToolbar() = assertBrowserToolbarEditView()
     fun verifyScanButton() = assertScanButton()
     fun verifySearchWithText() = assertSearchWithText()
-    fun verifyDuckDuckGoResults() = assertDuckDuckGoResults()
-    fun verifyDuckDuckGoURL() = assertDuckDuckGoURL()
+    fun verifySearchEngineResults(searchEngineName: String) =
+        assertSearchEngineResults(searchEngineName)
+
+    fun verifySearchEngineURL(searchEngineName: String) = assertSearchEngineURL(searchEngineName)
     fun verifySearchSettings() = assertSearchSettings()
     fun verifySearchBarEmpty() = assertSearchBarEmpty()
 
@@ -60,13 +62,21 @@ class SearchRobot {
         browserToolbarEditView().perform(typeText(searchTerm))
     }
 
-    fun clickDuckDuckGoEngineButton() {
-        duckDuckGoEngineButton().perform(click())
+    fun clickSearchEngineButton(searchEngineName: String) {
+        searchEngineButton(searchEngineName).perform(click())
     }
 
-    fun clickDuckDuckGoResult() {
-        mDevice.waitNotNull(Until.findObjects(By.text("DuckDuckGo")), TestAssetHelper.waitingTime)
-        awesomeBar().perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
+    fun clickSearchEngineResult(searchEngineName: String) {
+        mDevice.waitNotNull(
+            Until.findObjects(By.text(searchEngineName)),
+            TestAssetHelper.waitingTime
+        )
+        awesomeBar().perform(
+            RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
+                0,
+                click()
+            )
+        )
     }
 
     fun scrollToSearchEngineSettings(): UiScrollable {
@@ -88,7 +98,7 @@ class SearchRobot {
 
         fun openBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitForIdle()
-            browserToolbarEditView().perform(typeText("Mozilla\n"))
+            browserToolbarEditView().perform(typeText("mozilla\n"))
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -98,11 +108,12 @@ class SearchRobot {
 
 private fun awesomeBar() = onView(withId(R.id.awesomeBar))
 
-private fun browserToolbarEditView() = onView(Matchers.allOf(withId(R.id.mozac_browser_toolbar_edit_url_view)))
+private fun browserToolbarEditView() =
+    onView(Matchers.allOf(withId(R.id.mozac_browser_toolbar_edit_url_view)))
 
-private fun duckDuckGoEngineButton(): ViewInteraction {
-    mDevice.waitNotNull(Until.findObject(By.text("DuckDuckGo")), TestAssetHelper.waitingTime)
-    return onView(Matchers.allOf(withText("DuckDuckGo")))
+private fun searchEngineButton(searchEngineName: String): ViewInteraction {
+    mDevice.waitNotNull(Until.findObject(By.text(searchEngineName)), TestAssetHelper.waitingTime)
+    return onView(Matchers.allOf(withText(searchEngineName)))
 }
 
 private fun denyPermissionButton(): UiObject {
@@ -122,14 +133,18 @@ private fun scanButton(): ViewInteraction {
 
 private fun clearButton() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
 
-private fun assertDuckDuckGoURL() {
-    mDevice.waitNotNull(Until.findObject(By.textContains("https://duckduckgo.com/?q=mozilla")), TestAssetHelper.waitingTime)
-    onView(allOf(withText(startsWith("https://duckduckgo.com"))))
+private fun assertSearchEngineURL(searchEngineName: String) {
+    mDevice.waitNotNull(
+        Until.findObject(By.textContains("https://${searchEngineName.toLowerCase()}.com/?q=mozilla")),
+        TestAssetHelper.waitingTime
+    )
+    onView(allOf(withText(startsWith("https://${searchEngineName.toLowerCase()}.com"))))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
-private fun assertDuckDuckGoResults() {
-    val count = mDevice.wait(Until.findObjects(By.text(("DuckDuckGo"))), TestAssetHelper.waitingTime)
+private fun assertSearchEngineResults(searchEngineName: String) {
+    val count =
+        mDevice.wait(Until.findObjects(By.text((searchEngineName))), TestAssetHelper.waitingTime)
     assert(count.size > 1)
 }
 

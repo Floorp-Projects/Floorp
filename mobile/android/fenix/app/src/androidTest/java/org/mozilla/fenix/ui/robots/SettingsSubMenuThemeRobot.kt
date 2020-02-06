@@ -6,7 +6,9 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.os.Build
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.matcher.ViewMatchers
@@ -25,7 +27,8 @@ class SettingsSubMenuThemeRobot {
 
     fun verifyThemes() = assertThemes()
 
-    fun verifyLightThemeApplied(expected: Boolean) = assertFalse("Light theme not selected", expected)
+    fun verifyLightThemeApplied(expected: Boolean) =
+        assertFalse("Light theme not selected", expected)
 
     fun verifyDarkThemeApplied(expected: Boolean) = assertTrue("Dark theme not selected", expected)
 
@@ -47,18 +50,23 @@ class SettingsSubMenuThemeRobot {
 }
 
 private fun assertThemes() {
-    onView(withText("Light"))
+    lightModeToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(withText("Dark"))
+    darkModeToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    // Conditionally unavailable on API 25
-    // onView(ViewMatchers.withText("Follow device theme"))
-    //    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    deviceModeToggle()
+        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
-
-private fun goBackButton() =
-    onView(allOf(ViewMatchers.withContentDescription("Navigate up")))
 
 private fun darkModeToggle() = onView(withText("Dark"))
 
 private fun lightModeToggle() = onView(withText("Light"))
+
+private fun deviceModeToggle(): ViewInteraction {
+    val followDeviceThemeText =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) "Follow device theme" else "Set by Battery Saver"
+    return onView(withText(followDeviceThemeText))
+}
+
+private fun goBackButton() =
+    onView(allOf(ViewMatchers.withContentDescription("Navigate up")))

@@ -10,12 +10,17 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Ignore
+import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.getLoremIpsumAsset
+import org.mozilla.fenix.ui.robots.checkTextSizeOnWebsite
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
  *  Tests for verifying the main three dot menu options
@@ -29,7 +34,7 @@ class SettingsBasicsTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
+    val activityIntentTestRule = HomeActivityIntentTestRule()
 
     @Before
     fun setUp() {
@@ -45,7 +50,8 @@ class SettingsBasicsTest {
     }
 
     private fun getUiTheme(): Boolean {
-        val mode = activityTestRule.activity.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+        val mode =
+            activityIntentTestRule.activity.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
 
         return when (mode) {
             Configuration.UI_MODE_NIGHT_YES -> true // dark theme is set
@@ -68,6 +74,7 @@ class SettingsBasicsTest {
             verifySearchEngineList()
             verifyShowSearchSuggestions()
             verifyShowSearchShortcuts()
+
             verifyShowClipboardSuggestions()
             verifySearchBrowsingHistory()
             verifySearchBookmarks()
@@ -76,7 +83,7 @@ class SettingsBasicsTest {
             verifyThemes()
         }.goBack {
         }.openAccessibilitySubMenu {
-            verifyAutomaticFontSizing()
+            verifyAutomaticFontSizingMenuItems()
         }.goBack {
             // drill down to submenu
         }.openDefaultBrowserSubMenu {
@@ -86,49 +93,75 @@ class SettingsBasicsTest {
         }
     }
 
-    @Ignore("This is a stub test, ignore for now")
     @Test
     fun selectNewDefaultSearchEngine() {
-        // Open 3dot (main) menu
-        // Select settings
-        // Select "Search engine"
-        // Choose: DuckDuckGo
-        // Back arrow to Home
-        // Verify DuckDuckGo icon in Navigation bar
+        // Goes through the settings and changes the default search engine, then verifies it has changed.
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            changeDefaultSearchEngine("DuckDuckGo")
+        }.goBack {
+        }.goBack {
+            verifyDefaultSearchEngine("DuckDuckGo")
+        }
     }
 
-    @Ignore("This is a stub test, ignore for now")
+    @Ignore("This test works locally, fails on firebase. https://github.com/mozilla-mobile/fenix/issues/8174")
     @Test
     fun toggleSearchSuggestions() {
-        // Enter: "mozilla" in navigation bar
-        // Verify more than one suggesion provided
-        // Open 3dot (main) menu
-        // Select settings
-        // Select "Search engine"
-        // Toggle 'Show search suggestions' to 'off'
-        // Back arrow twice to home screen
-        // Enter: "mozilla" in navigation bar
-        // Verify no suggestions provided
+        // Goes through the settings and changes the search suggestion toggle, then verifies it changes.
+        homeScreen {
+        }.openNavigationToolbar {
+            verifySearchSuggestionsAreMoreThan(1, "mozilla")
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            disableShowSearchSuggestions()
+        }.goBack {
+        }.goBack {
+        }.openNavigationToolbar {
+            verifySearchSuggestionsAreEqualTo(0, "mozilla")
+        }
     }
 
-    @Ignore("This is a stub test, ignore for now")
     @Test
     fun toggleShowVisitedSitesAndBookmarks() {
-        // Visit 3 static sites
-        // Bookmark 2 of them
-        // Open 3dot (main) menu
-        // Enter navigation bar and verify visited sites appear
-        // Verify bookmarks exist
-        // Open 3dot (main) menu
-        // Select settings
-        // Select "Search engine"
-        // Toggle off "Show visited sites and bookmarks"
-        // Back arrow twice to home screen
-        // Verify history and bookmarks are gone
+        // Bookmarks a few websites, toggles the history and bookmarks setting to off, then verifies if the visited and bookmarked websites do not show in the suggestions.
+        val page1 = getGenericAsset(mockWebServer, 1)
+        val page2 = getGenericAsset(mockWebServer, 2)
+        val page3 = getGenericAsset(mockWebServer, 3)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(page1.url) {
+            verifyPageContent(page1.content)
+        }.openThreeDotMenu {
+            clickAddBookmarkButton()
+        }
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(page2.url) {
+            verifyPageContent(page2.content)
+        }.openThreeDotMenu {
+            clickAddBookmarkButton()
+        }
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(page3.url) {
+            verifyPageContent(page3.content)
+        }
+
+        navigationToolbar {
+            verifyNoHistoryBookmarks()
+        }
+
     }
 
     @Test
     fun changeThemeSetting() {
+        // Goes through the settings and changes the default search engine, then verifies it changes.
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -141,40 +174,48 @@ class SettingsBasicsTest {
         }
     }
 
-    @Ignore("This is a stub test, ignore for now")
     @Test
     fun changeAccessibiltySettings() {
-        // Open 3dot (main) menu
-        // Select settings
-        // Select Accessibility
-        // Verify header:  "Automatic Font Sizing"
-        // Verify description: "Font size will match your Android settings. Disable to manage font size here"
-        // Verify toggle is set to 'on' by default
-        // Toggle font size to off
-        // Verify that new sub-menu items appear....
-        // Verify header: "Font Size"
-        // Verify description: "Make text on websites larger or smaller"
-        // Verify slider bar exists
-        // Verify slider bar default value set to 100%
-        // Verify sample text "The quick brown fox..." appears 4 times
-        // Move slider bar to 180%
-        // Verify that text grows to 180%
-        // Back error twice to home screen
-        // Open static website in navigation bar
-        // Verify that text is now at 180%
-        // Select settings
-        // Select Accessibility
-        // Toggle font size back to 'off'
-        // Verify that "Font Size" header, description, slider bar and sample text all disappear
+        // Goes through the settings and changes the default text on a webpage, then verifies if the text has changed.
+        val fenixApp = activityIntentTestRule.activity.applicationContext as FenixApplication
+        val webpage = getLoremIpsumAsset(mockWebServer).url
+
+        // This value will represent the text size percentage the webpage will scale to. The default value is 100%.
+        val textSizePercentage = 180
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAccessibilitySubMenu {
+            clickFontSizingSwitch()
+            verifyNewMenuItems()
+            changeTextSizeSlider(textSizePercentage)
+            verifyTextSizePercentage(textSizePercentage)
+        }.goBack {
+        }.goBack {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(webpage) {
+            checkTextSizeOnWebsite(textSizePercentage, fenixApp.components)
+        }.openHomeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAccessibilitySubMenu {
+            clickFontSizingSwitch()
+            verifyNewMenuItemsAreGone()
+        }
     }
 
-    @Ignore("This is a stub test, ignore for now")
     @Test
     fun changeDefaultBrowserSetting() {
-        // Open 3dot (main) menu
-        // Select settings
-        // Verify that "Set as default browser toggle is set to 'off' (default)
-        // Turn default browser toggle 'on'
-        // Verify that Andrdoid "Default Apps" menu appears
+        // Opens settings and toggles the default browser setting to on. The device settings open and allows the user to set a default browser.
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openDefaultBrowserSubMenu {
+            verifyDefaultBrowserIsDisabled()
+            clickDefaultBrowserSwitch()
+            verifyAndroidDefaultAppsMenuAppears()
+        }
+
     }
 }

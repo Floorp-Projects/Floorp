@@ -10,26 +10,49 @@ import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import org.hamcrest.CoreMatchers.not
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.helpers.assertions.AwesomeBarAssertion.Companion.suggestionsAreEqualTo
+import org.mozilla.fenix.helpers.assertions.AwesomeBarAssertion.Companion.suggestionsAreGreaterThan
 
 /**
  * Implementation of Robot Pattern for the URL toolbar.
  */
 class NavigationToolbarRobot {
+
+    fun verifySearchSuggestionsAreMoreThan(suggestionSize: Int, searchTerm: String) =
+        assertSuggestionsAreMoreThan(suggestionSize, searchTerm)
+
+    fun verifySearchSuggestionsAreEqualTo(suggestionSize: Int, searchTerm: String) =
+        assertSuggestionsAreEqualTo(suggestionSize, searchTerm)
+
+    fun verifyNoHistoryBookmarks() = assertNoHistoryBookmarks()
+
     class Transition {
 
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-        fun enterURLAndEnterToBrowser(url: Uri, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/toolbar")), waitingTime)
+        fun enterURLAndEnterToBrowser(
+            url: Uri,
+            interact: BrowserRobot.() -> Unit
+        ): BrowserRobot.Transition {
+            mDevice.waitNotNull(
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/toolbar")),
+                waitingTime
+            )
             urlBar().click()
             awesomeBar().perform(replaceText(url.toString()), pressImeActionButton())
 
@@ -45,7 +68,10 @@ class NavigationToolbarRobot {
             return ThreeDotMenuMainRobot.Transition()
         }
 
-        fun openNewTabAndEnterToBrowser(url: Uri, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun openNewTabAndEnterToBrowser(
+            url: Uri,
+            interact: BrowserRobot.() -> Unit
+        ): BrowserRobot.Transition {
             mDevice.waitNotNull(Until.findObject(By.descContains("Add tab")), waitingTime)
             newTab().click()
             awesomeBar().perform(replaceText(url.toString()), pressImeActionButton())
@@ -75,6 +101,13 @@ class NavigationToolbarRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            goBackButton()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
     }
 }
 
@@ -83,10 +116,34 @@ fun navigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationTo
     return NavigationToolbarRobot.Transition()
 }
 
-private fun dismissOnboardingButton() = onView(ViewMatchers.withId(R.id.close_onboarding))
-private fun urlBar() = onView(ViewMatchers.withId(R.id.toolbar))
-private fun awesomeBar() = onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view))
-private fun threeDotButton() = onView(ViewMatchers.withContentDescription("Menu"))
-private fun newTab() = onView(ViewMatchers.withContentDescription("Add tab"))
-private fun fillLinkButton() = onView(ViewMatchers.withId(R.id.clipboard_url))
-private fun clearAddressBar() = onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_clear_view))
+private fun assertSuggestionsAreEqualTo(suggestionSize: Int, searchTerm: String) {
+    mDevice.waitForIdle()
+    awesomeBar().perform(typeText(searchTerm))
+
+    mDevice.waitForIdle()
+    onView(withId(R.id.awesomeBar)).check(suggestionsAreEqualTo(suggestionSize))
+}
+
+private fun assertSuggestionsAreMoreThan(suggestionSize: Int, searchTerm: String) {
+    mDevice.waitForIdle()
+    awesomeBar().perform(typeText(searchTerm))
+
+    mDevice.waitForIdle()
+    onView(withId(R.id.awesomeBar)).check(suggestionsAreGreaterThan(suggestionSize))
+}
+
+private fun assertNoHistoryBookmarks() {
+    onView(withId(R.id.container))
+        .check(matches(not(hasDescendant(withText("Test_Page_1")))))
+        .check(matches(not(hasDescendant(withText("Test_Page_2")))))
+        .check(matches(not(hasDescendant(withText("Test_Page_3")))))
+}
+
+private fun dismissOnboardingButton() = onView(withId(R.id.close_onboarding))
+private fun urlBar() = onView(withId(R.id.toolbar))
+private fun awesomeBar() = onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
+private fun threeDotButton() = onView(withContentDescription("Menu"))
+private fun newTab() = onView(withContentDescription("Add tab"))
+private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
+private fun clearAddressBar() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
+private fun goBackButton() = mDevice.pressBack()

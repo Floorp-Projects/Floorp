@@ -7,6 +7,7 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.recyclerview.widget.RecyclerView
+import android.graphics.Bitmap
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
@@ -14,12 +15,12 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
-import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -34,6 +35,8 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.components.Search
+import org.mozilla.fenix.helpers.withBitmapDrawable
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -53,6 +56,7 @@ class HomeScreenRobot {
     fun verifyHomeWordmark() = assertHomeWordmark()
     fun verifyHomeToolbar() = assertHomeToolbar()
     fun verifyHomeComponent() = assertHomeComponent()
+    fun verifyDefaultSearchEngine(searchEngine: String) = verifySearchEngineIcon(searchEngine)
 
     // First Run elements
     fun verifyWelcomeHeader() = assertWelcomeHeader()
@@ -81,6 +85,7 @@ class HomeScreenRobot {
 
     // Private mode elements
     fun verifyPrivateSessionHeader() = assertPrivateSessionHeader()
+
     fun verifyPrivateSessionMessage(visible: Boolean = true) = assertPrivateSessionMessage(visible)
     fun verifyPrivateTabsCloseTabsButton() = assertPrivateTabsCloseTabsButton()
 
@@ -114,7 +119,6 @@ class HomeScreenRobot {
 
     fun typeCollectionName(name: String) {
         mDevice.wait(Until.findObject(By.res("name_collection_edittext")), waitingTime)
-
         collectionNameTextField().perform(ViewActions.replaceText(name))
         collectionNameTextField().perform(ViewActions.pressImeActionButton())
     }
@@ -206,6 +210,13 @@ class HomeScreenRobot {
             HomeScreenRobot().interact()
             return Transition()
         }
+
+        fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
+
+            assertNavigationToolbar().perform(click())
+            NavigationToolbarRobot().interact()
+            return NavigationToolbarRobot.Transition()
+        }
     }
 }
 
@@ -215,6 +226,7 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 }
 
 val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 
 private fun navigationToolbar() =
     onView(CoreMatchers.allOf(withText("Search or enter address")))
@@ -278,6 +290,19 @@ private fun assertHomeComponent() = onView(ViewMatchers.withResourceName("sessio
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
+
+private fun verifySearchEngineIcon(searchEngineIcon: Bitmap, searchEngineName: String) {
+    onView(withId(R.id.search_engine_icon))
+        .check(matches(withBitmapDrawable(searchEngineIcon, searchEngineName)))
+}
+
+private fun getSearchEngine(searchEngineName: String) =
+    Search(appContext).searchEngineManager.getDefaultSearchEngine(appContext, searchEngineName)
+
+private fun verifySearchEngineIcon(searchEngineName: String) {
+    val ddgSearchEngine = getSearchEngine(searchEngineName)
+    verifySearchEngineIcon(ddgSearchEngine.icon, ddgSearchEngine.name)
+}
 
 // First Run elements
 private fun assertWelcomeHeader() =
@@ -418,7 +443,8 @@ private fun assertExistingOpenTabs(title: String) =
 
 private fun tabsListThreeDotButton() = onView(allOf(withId(R.id.tabs_overflow_button)))
 
-private fun collectionThreeDotButton() = onView(allOf(withId(R.id.collection_overflow_button)))
+private fun collectionThreeDotButton() =
+    onView(allOf(withId(R.id.collection_overflow_button)))
 
 private fun collectionNameTextField() =
     onView(allOf(ViewMatchers.withResourceName("name_collection_edittext")))

@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.helpers
 
+import android.graphics.Bitmap
 import android.view.View
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.Matcher
+import org.mozilla.fenix.helpers.matchers.BitmapDrawableMatcher
 import androidx.test.espresso.matcher.ViewMatchers.isChecked as espressoIsChecked
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled as espressoIsEnabled
 import androidx.test.espresso.matcher.ViewMatchers.isSelected as espressoIsSelected
@@ -30,3 +32,5 @@ private fun maybeInvertMatcher(matcher: Matcher<View>, useUnmodifiedMatcher: Boo
     useUnmodifiedMatcher -> matcher
     else -> not(matcher)
 }
+
+fun withBitmapDrawable(bitmap: Bitmap, name: String): Matcher<View>? = BitmapDrawableMatcher(bitmap, name)

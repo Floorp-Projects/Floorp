@@ -52,11 +52,11 @@ class SearchTest {
         homeScreen {
         }.openSearch {
             verifySearchWithText()
-            clickDuckDuckGoEngineButton()
+            clickSearchEngineButton("DuckDuckGo")
             typeSearch("mozilla")
-            verifyDuckDuckGoResults()
-            clickDuckDuckGoResult()
-            verifyDuckDuckGoURL()
+            verifySearchEngineResults("DuckDuckGo")
+            clickSearchEngineResult("DuckDuckGo")
+            verifySearchEngineURL("DuckDuckGo")
         }
     }
 
