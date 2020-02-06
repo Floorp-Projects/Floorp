@@ -404,21 +404,11 @@ bool nsAccUtils::MustPrune(AccessibleOrProxy aAccessible) {
     return true;
   }
 
-#if defined(ANDROID)
-  if (role == roles::LINK) {
-    // Always prune links in Android
-    return true;
-  }
-#endif
-
   if (role != roles::MENUITEM && role != roles::COMBOBOX_OPTION &&
       role != roles::OPTION && role != roles::ENTRY &&
       role != roles::FLAT_EQUATION && role != roles::PASSWORD_TEXT &&
       role != roles::PUSHBUTTON && role != roles::TOGGLE_BUTTON &&
       role != roles::GRAPHIC && role != roles::PROGRESSBAR &&
-#if defined(ANDROID)
-      role != roles::HEADING &&
-#endif
       role != roles::SEPARATOR) {
     // If it doesn't match any of these roles, don't prune its children.
     return false;
