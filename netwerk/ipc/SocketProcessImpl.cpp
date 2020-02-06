@@ -83,7 +83,7 @@ bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
 
   return mSocketProcessChild.Init(ParentPid(), parentBuildID,
                                   IOThreadChild::message_loop(),
-                                  IOThreadChild::channel());
+                                  IOThreadChild::TakeChannel());
 }
 
 void SocketProcessImpl::CleanUp() { mSocketProcessChild.CleanUp(); }

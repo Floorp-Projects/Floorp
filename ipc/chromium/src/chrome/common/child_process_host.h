@@ -46,8 +46,8 @@ class ChildProcessHost : public IPC::Channel::Listener {
   bool opening_channel() { return opening_channel_; }
   const std::wstring& channel_id() { return channel_id_; }
 
-  const IPC::Channel& channel() const { return *channel_; }
   IPC::Channel* channelp() const { return channel_.get(); }
+  mozilla::UniquePtr<IPC::Channel> TakeChannel() { return std::move(channel_); }
 
  private:
   // By using an internal class as the IPC::Channel::Listener, we can intercept

@@ -118,6 +118,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
 
   virtual bool CanShutdown() override { return true; }
 
+  using ChildProcessHost::TakeChannel;
   IPC::Channel* GetChannel() { return channelp(); }
   std::wstring GetChannelId() { return channel_id(); }
 

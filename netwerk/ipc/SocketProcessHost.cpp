@@ -180,7 +180,7 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
   if (aSucceeded) {
     mSocketProcessParent = MakeUnique<SocketProcessParent>(this);
     DebugOnly<bool> rv = mSocketProcessParent->Open(
-        GetChannel(), base::GetProcId(GetChildProcessHandle()));
+        TakeChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
     nsCOMPtr<nsIIOService> ioService(do_GetIOService());

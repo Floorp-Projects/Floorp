@@ -154,7 +154,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
   //
   // Returns true if the transport layer was successfully connected,
   // i.e., mChannelState == ChannelConnected.
-  bool Open(Transport* aTransport, MessageLoop* aIOLoop = 0,
+  bool Open(UniquePtr<Transport> aTransport, MessageLoop* aIOLoop = 0,
             Side aSide = UnknownSide);
 
   // "Open" a connection to another thread in the same process.

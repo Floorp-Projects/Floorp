@@ -22,8 +22,8 @@ RemoteSandboxBrokerChild::~RemoteSandboxBrokerChild() {}
 
 bool RemoteSandboxBrokerChild::Init(base::ProcessId aParentPid,
                                     MessageLoop* aIOLoop,
-                                    IPC::Channel* aChannel) {
-  if (NS_WARN_IF(!Open(aChannel, aParentPid, aIOLoop))) {
+                                    UniquePtr<IPC::Channel> aChannel) {
+  if (NS_WARN_IF(!Open(std::move(aChannel), aParentPid, aIOLoop))) {
     return false;
   }
   CrashReporterClient::InitSingleton(this);

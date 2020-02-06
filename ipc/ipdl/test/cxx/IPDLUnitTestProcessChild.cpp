@@ -16,7 +16,7 @@ namespace mozilla {
 namespace _ipdltest {
 
 bool IPDLUnitTestProcessChild::Init(int aArgc, char* aArgv[]) {
-  IPDLUnitTestChildInit(IOThreadChild::channel(), ParentPid(),
+  IPDLUnitTestChildInit(IOThreadChild::TakeChannel(), ParentPid(),
                         IOThreadChild::message_loop());
 
   return true;

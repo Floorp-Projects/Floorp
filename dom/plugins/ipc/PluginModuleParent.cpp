@@ -486,7 +486,7 @@ void PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded) {
     return;
   }
 
-  Open(mSubprocess->GetChannel(),
+  Open(mSubprocess->TakeChannel(),
        base::GetProcId(mSubprocess->GetChildProcessHandle()));
 
   // Request Windows message deferral behavior on our channel. This

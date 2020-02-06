@@ -31,7 +31,7 @@ class GPUParent final : public PGPUParent {
   static void GetGPUProcessName(nsACString& aStr);
 
   bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
-            MessageLoop* aIOLoop, IPC::Channel* aChannel);
+            MessageLoop* aIOLoop, UniquePtr<IPC::Channel> aChannel);
   void NotifyDeviceReset();
 
   already_AddRefed<PAPZInputBridgeParent> AllocPAPZInputBridgeParent(

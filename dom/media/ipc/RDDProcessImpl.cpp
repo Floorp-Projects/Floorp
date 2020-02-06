@@ -74,7 +74,7 @@ bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
   }
 
   return mRDD.Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
-                   IOThreadChild::channel());
+                   IOThreadChild::TakeChannel());
 }
 
 void RDDProcessImpl::CleanUp() { NS_ShutdownXPCOM(nullptr); }

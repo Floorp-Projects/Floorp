@@ -74,7 +74,7 @@ bool GPUProcessImpl::Init(int aArgc, char* aArgv[]) {
   }
 
   return mGPU.Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
-                   IOThreadChild::channel());
+                   IOThreadChild::TakeChannel());
 }
 
 void GPUProcessImpl::CleanUp() { NS_ShutdownXPCOM(nullptr); }

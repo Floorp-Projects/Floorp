@@ -12,6 +12,7 @@
 #include "base/message_loop.h"
 
 #include "mozilla/WeakPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/Transport.h"
 
 namespace mozilla {
@@ -75,7 +76,7 @@ class ProcessLink : public MessageLink, public Transport::Listener {
   // listener as well). Once the channel is closed (either via normal shutdown
   // or a pipe error) the chain will be destroyed and the original listener
   // will again be registered.
-  void Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide);
+  void Open(UniquePtr<Transport> aTransport, MessageLoop* aIOLoop, Side aSide);
 
   // Run on the I/O thread, only when using inter-process link.
   // These methods acquire the monitor and forward to the
@@ -96,7 +97,7 @@ class ProcessLink : public MessageLink, public Transport::Listener {
   void OnChannelConnectError();
 
  protected:
-  Transport* mTransport;
+  UniquePtr<Transport> mTransport;
   MessageLoop* mIOLoop;                    // thread where IO happens
   Transport::Listener* mExistingListener;  // channel's previous listener
 };
