@@ -53,15 +53,13 @@ function run_test() {
 
   // Make BadCertAndPinningServer aware of the intermediate.
   add_test(() => {
-    // NB: missing-intermediate.der won't be regenerated when
-    // missing-intermediate.pem is. Hopefully by that time we can just use
-    // missing-intermediate.pem directly.
     let args = [
       "-A",
       "-n",
       "manually-added-missing-intermediate",
       "-i",
-      "test_missing_intermediate/missing-intermediate.der",
+      "test_missing_intermediate/missing-intermediate.pem",
+      "-a",
       "-t",
       ",,",
     ];
