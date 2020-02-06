@@ -4909,6 +4909,10 @@ JS_PUBLIC_API bool JS_IsExceptionPending(JSContext* cx) {
   return (bool)cx->isExceptionPending();
 }
 
+JS_PUBLIC_API bool JS_IsThrowingOutOfMemory(JSContext* cx) {
+  return cx->isThrowingOutOfMemory();
+}
+
 JS_PUBLIC_API bool JS_GetPendingException(JSContext* cx,
                                           MutableHandleValue vp) {
   AssertHeapIsIdle();
