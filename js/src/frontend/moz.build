@@ -23,6 +23,7 @@ GeneratedFile('ReservedWordsGenerated.h', script='GenerateReservedWords.py',
 
 UNIFIED_SOURCES += [
     'AbstractScope.cpp',
+    'BCEScriptStencil.cpp',
     'BytecodeCompiler.cpp',
     'BytecodeControlStructures.cpp',
     'BytecodeEmitter.cpp',

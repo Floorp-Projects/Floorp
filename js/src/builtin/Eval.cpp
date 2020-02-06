@@ -119,7 +119,7 @@ class EvalScriptGuard {
   }
 
   void setNewScript(JSScript* script) {
-    // JSScript::initFromEmitter has already called js_CallNewScriptHook.
+    // JSScript::fullyInitFromStencil has already called js_CallNewScriptHook.
     MOZ_ASSERT(!script_ && script);
     script_ = script;
   }

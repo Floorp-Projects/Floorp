@@ -26,6 +26,8 @@ class Scope;
 
 namespace frontend {
 
+struct BytecodeEmitter;
+
 // A scope that introduces bindings.
 class EmitterScope : public Nestable<EmitterScope> {
   // The cache of bound names that may be looked up in the

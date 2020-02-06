@@ -27,6 +27,7 @@
 
 #include "ds/Nestable.h"  // Nestable
 #include "frontend/AbstractScope.h"
+#include "frontend/BCEScriptStencil.h"           // BCEScriptStencil
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl
 #include "frontend/CallOrNewEmitter.h"           // CallOrNewEmitter
 #include "frontend/CForEmitter.h"                // CForEmitter
@@ -2481,10 +2482,26 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!JSScript::fullyInitFromEmitter(cx, script, this)) {
+  uint32_t nslots;
+  if (!getNslots(&nslots)) {
+    return false;
+  }
+  BCEScriptStencil stencil(*this, nslots);
+  if (!JSScript::fullyInitFromStencil(cx, script, stencil)) {
     return false;
   }
 
+  return true;
+}
+
+bool BytecodeEmitter::getNslots(uint32_t* nslots) {
+  uint64_t nslots64 =
+      maxFixedSlots + static_cast<uint64_t>(bytecodeSection().maxStackDepth());
+  if (nslots64 > UINT32_MAX) {
+    reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
+    return false;
+  }
+  *nslots = nslots64;
   return true;
 }
 
