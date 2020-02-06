@@ -721,12 +721,12 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
       MOZ_ASSERT(false);
       return false;
 #endif
-
     case ImageFormat::CAIRO_SURFACE:
     case ImageFormat::NV_IMAGE:
     case ImageFormat::OVERLAY_IMAGE:
     case ImageFormat::SHARED_RGB:
     case ImageFormat::TEXTURE_WRAPPER:
+    case ImageFormat::WAYLAND_DMABUF:
       return false;  // todo
   }
   return false;
