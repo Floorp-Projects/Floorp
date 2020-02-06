@@ -10,7 +10,7 @@
 
 const {
   parsePacketsWithFronts,
-} = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
+} = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
 const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
 const {
   ConsoleMessage,

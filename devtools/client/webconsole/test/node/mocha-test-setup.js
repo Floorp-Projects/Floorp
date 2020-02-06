@@ -104,6 +104,11 @@ requireHacker.global_hook("default", (path, module) => {
     react: () => getModule("devtools/client/shared/vendor/react-dev"),
     "devtools/client/shared/vendor/react": () =>
       getModule("devtools/client/shared/vendor/react-dev"),
+    "chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers": () =>
+      getModule(
+        "devtools/client/webconsole/test/browser/stub-generator-helpers"
+      ),
+
     chrome: () =>
       `module.exports = { Cc: {}, Ci: {}, Cu: {}, components: {stack: {caller: ""}} }`,
     ChromeUtils: () => `module.exports = { import: () => ({}) }`,
