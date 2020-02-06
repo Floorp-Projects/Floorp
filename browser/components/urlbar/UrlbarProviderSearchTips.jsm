@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
@@ -76,10 +75,6 @@ const SUPPORTED_ENGINES = new Map([
 
 // The maximum number of times we'll show a tip across all sessions.
 const MAX_SHOWN_COUNT = 4;
-
-// Amount of time to wait before showing a tip after selecting a tab or
-// navigating to a page where we should show a tip.
-const SHOW_TIP_DELAY_MS = 200;
 
 // We won't show a tip if the browser has been updated in the past
 // LAST_UPDATE_THRESHOLD_MS.
@@ -308,6 +303,15 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
+    if (this._maybeShowTipForUrlInstance != instance) {
+      return;
+    }
+
+    this.currentTip = tip;
+    if (!this.isActive()) {
+      return;
+    }
+
     // At this point, we're showing a tip.
     this.showedTipInCurrentSession = true;
 
@@ -318,19 +322,8 @@ class ProviderSearchTips extends UrlbarProvider {
     );
 
     // Start a search.
-    setTimeout(() => {
-      if (this._maybeShowTipForUrlInstance != instance) {
-        return;
-      }
-
-      this.currentTip = tip;
-      if (!this.isActive()) {
-        return;
-      }
-
-      let window = BrowserWindowTracker.getTopWindow();
-      window.gURLBar.search("", { focus: tip == TIPS.ONBOARD });
-    }, SHOW_TIP_DELAY_MS);
+    let window = BrowserWindowTracker.getTopWindow();
+    window.gURLBar.search("", { focus: tip == TIPS.ONBOARD });
   }
 }
 
