@@ -21,28 +21,32 @@ add_task(async function() {
 
   const highlighter = await front.getHighlighterByType("RulersHighlighter");
 
-  await isShown(highlighter, inspector, testActor);
+  await isVisibleAfterShow(highlighter, inspector, testActor);
   await hasRightLabelsContent(highlighter, inspector, testActor);
   await resizeInspector(highlighter, inspector, testActor);
   await hasRightLabelsContent(highlighter, inspector, testActor);
+  await isHiddenAfterHide(highlighter, inspector, testActor);
 
   await highlighter.finalize();
 });
 
-async function isShown(highlighterFront, inspector, testActor) {
+async function isVisibleAfterShow(highlighterFront, inspector, testActor) {
   info("Checking that the viewport infobar is displayed");
   // the rulers doesn't need any node, but as highligher it seems mandatory
   // ones, so the body is given
   const body = await getNodeFront("body", inspector);
   await highlighterFront.show(body);
 
-  const hidden = await testActor.getHighlighterNodeAttribute(
-    `${ID}viewport-infobar-container`,
-    "hidden",
-    highlighterFront
-  );
+  const hidden = await isViewportInfobarHidden(highlighterFront, testActor);
+  ok(!hidden, "viewport infobar is visible after show");
+}
 
-  isnot(hidden, "true", "viewport infobar is visible after show");
+async function isHiddenAfterHide(highlighterFront, inspector, testActor) {
+  info("Checking that the viewport infobar is hidden after disabling");
+  await highlighterFront.hide();
+
+  const hidden = await isViewportInfobarHidden(highlighterFront, testActor);
+  ok(hidden, "viewport infobar is hidden after hide");
 }
 
 async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
@@ -67,4 +71,13 @@ async function resizeInspector(highlighterFront, inspector, testActor) {
   );
   const toolbox = inspector.toolbox;
   await toolbox.switchHost(Toolbox.HostType.RIGHT);
+}
+
+async function isViewportInfobarHidden(highlighterFront, testActor) {
+  const hidden = await testActor.getHighlighterNodeAttribute(
+    `${ID}viewport-infobar-container`,
+    "hidden",
+    highlighterFront
+  );
+  return hidden === "true";
 }
