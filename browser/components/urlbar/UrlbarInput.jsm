@@ -1719,6 +1719,7 @@ class UrlbarInput {
     });
 
     this.removeAttribute("focused");
+    this.controller.allowTabbingResults = false;
     this.endLayoutExtend();
 
     if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
@@ -1827,6 +1828,7 @@ class UrlbarInput {
 
         this._focusedViaMousedown = !this.focused;
         this._preventClickSelectsAll = this.focused;
+        this.controller.allowTabbingResults = true;
 
         if (event.target != this.inputField) {
           this.focus();

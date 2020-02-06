@@ -320,11 +320,16 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 #ifdef NIGHTLY_BUILD
   // Whether the quantum bar displays design update 1.
   pref("browser.urlbar.update1", true);
+  // If true, we do not allow the TAB key to cycle through results when the
+  // Urlbar was focused with the keyboard. Instead, Tab will focus the next
+  // focusable toolbar element after the Urlbar.
+  pref("browser.urlbar.update1.restrictTabAfterKeyboardFocus", true);
   // Whether the urlbar should strip https from urls in the view.
   pref("browser.urlbar.update1.view.stripHttps", true);
   pref("browser.urlbar.openViewOnFocus", true);
 #else
   pref("browser.urlbar.update1", false);
+  pref("browser.urlbar.update1.restrictTabAfterKeyboardFocus", false);
   pref("browser.urlbar.update1.view.stripHttps", false);
   pref("browser.urlbar.openViewOnFocus", false);
 #endif
