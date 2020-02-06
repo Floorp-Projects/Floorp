@@ -119,7 +119,7 @@ XPCWrappedNativeProto* XPCWrappedNativeProto::GetNewOrUsed(
 
   proto = new XPCWrappedNativeProto(scope, classInfo, set.forget());
 
-  if (!proto || !proto->Init(cx, scriptable)) {
+  if (!proto->Init(cx, scriptable)) {
     delete proto.get();
     return nullptr;
   }
