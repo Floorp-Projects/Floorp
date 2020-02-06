@@ -20,9 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1372069
       SpecialPowers.pushPrefEnv({"set":
         [
           ["privacy.resistFingerprinting", true],
-          ["geo.prompt.testing",           true],
-          ["geo.prompt.testing.allow",     true],
-          ["geo.wifi.uri",         BASE_GEO_URL],
+          ["geo.prompt.testing", true],
+          ["geo.prompt.testing.allow", true],
+          ["geo.provider.network.url", BASE_GEO_URL],
         ],
       }, doTest_getCurrentPosition);
     }, window);
