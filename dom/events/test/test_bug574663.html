@@ -47,26 +47,15 @@ function waitForPaint(win, utils, callback) {
   }
 }
 
-function forceScrollAndWait(scrollbox, callback) {
-  let win = scrollbox.ownerDocument.defaultView;
-  let utils = SpecialPowers.getDOMWindowUtils(win);
-
-  utils.advanceTimeAndRefresh(1000);
-
-  let postApzFlush = function() {
-    SpecialPowers.Services.obs.removeObserver(postApzFlush, "apz-repaints-flushed");
-    waitForPaint(win, utils, callback);
-  }
-  SpecialPowers.Services.obs.addObserver(postApzFlush, "apz-repaints-flushed");
-  if (!utils.flushApzRepaints()) {
-    postApzFlush();
-  }
-}
-
+// This is a magic number representing how many device pixels we are attempting to
+// scroll or zoom.  We use it for sending the wheel events, and for checking the
+// outcome of the events that are expected to trigger scrolling.
 var kDelta = 3;
 
 function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback) {
   var win = scrollbox.ownerDocument.defaultView;
+  let winUtils = SpecialPowers.getDOMWindowUtils(win);
+
   let event = {
     deltaMode: WheelEvent.DOM_DELTA_PIXEL,
     deltaY: direction * kDelta,
@@ -74,25 +63,33 @@ function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback
     ctrlKey: ctrl,
     isMomentum: momentum
   };
-  let received = 0;
-  let deltaY = 0;
-  var onwheel = function(e) {
-    deltaY += e.deltaY;
-    if (++received == 2) {
-      // We have captured all the outstanding wheel events. Wait for the
-      // animation to add itself to the refresh driver.
-      scrollbox.removeEventListener("wheel", onwheel);
-      setTimeout(function() {
-        forceScrollAndWait(scrollbox, callback);
-      }, 0);
-    }
-  };
-  scrollbox.addEventListener("wheel", onwheel);
+
+  // Construct a promise that will resolve when either scroll or zoom has changed.
+  // --- Intermittent Warning ---
+  // Two wheel events are sent, but our promise resolves when any change has been
+  // made to scroll or zoom. That makes it possible that the effect of the second
+  // event may not yet be applied when the promise resolves, which will lead to a
+  // failure when checking the expected value for scrolling. This was done
+  // intentionally, because attempting to wait after both events yields problems
+  // when the second event has no effect, which does happen in testing. It's
+  // not clear why this is happening. Since the testing pattern is scroll (twice),
+  // then scroll back (twice), it's possible that the first scroll back event is
+  // sufficient to return the scrollbox to its minimal scrollTop position, and
+  // therefore the second event doesn't scroll any further.
+  const initialZoom = winUtils.fullZoom;
+  const initialScroll = scrollbox.scrollTop;
+
+  const effectOfWheelEvent = SimpleTest.promiseWaitForCondition(() => {
+    return ((winUtils.fullZoom != initialZoom) || (scrollbox.scrollTop != initialScroll));
+  }, "Mouse wheel should have caused us to either zoom or scroll.");
 
   synthesizeWheel(scrollbox, 10, 10, event, win);
+
   // then additional pixel scroll
   event.lineOrPageDeltaY = 0;
   synthesizeWheel(scrollbox, 10, 10, event, win);
+
+  effectOfWheelEvent.then(callback);
 }
 
 function runTest() {
