@@ -411,3 +411,37 @@ add_task(async function test_allowAutofill() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_clicks_after_autofill() {
+  info(
+    "Check that clickin on an autofilled input field doesn't requery, causing loss of the caret position"
+  );
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  info("autofill in tab2, switch to tab1, then back to tab2 with the mouse");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus,
+    value: "e",
+    fireInputEvent: true,
+  });
+  Assert.equal(win.gURLBar.value, "example.com/", "Should have autofilled");
+
+  // Check single click.
+  let input = win.gURLBar.inputField;
+  EventUtils.synthesizeMouse(input, 30, 10, {}, win);
+  // Wait a bit, in case of a mistake this would run a query, otherwise not.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 300));
+  Assert.ok(win.gURLBar.selectionStart < win.gURLBar.value.length);
+  Assert.equal(win.gURLBar.selectionStart, win.gURLBar.selectionEnd);
+
+  // Check double click.
+  EventUtils.synthesizeMouse(input, 30, 10, { clickCount: 2 }, win);
+  // Wait a bit, in case of a mistake this would run a query, otherwise not.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 300));
+  Assert.ok(win.gURLBar.selectionStart < win.gURLBar.value.length);
+  Assert.ok(win.gURLBar.selectionEnd > win.gURLBar.selectionStart);
+
+  await BrowserTestUtils.closeWindow(win);
+});

@@ -669,9 +669,8 @@ class TelemetryEvent {
       "input",
       "keydown",
       "mousedown",
-      "TabSelect",
+      "tabswitch",
       "focus",
-      "urlbar-reopen",
     ];
     if (!validEvents.includes(event.type)) {
       Cu.reportError("Can't start recording from event type: " + event.type);
