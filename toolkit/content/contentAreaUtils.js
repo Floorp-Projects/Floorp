@@ -1197,7 +1197,9 @@ function getDefaultFileName(
       } catch (e) {}
     }
     if (fileName) {
-      return validateFileName(fileName);
+      return validateFileName(
+        Services.textToSubURI.unEscapeURIForUI("UTF-8", fileName)
+      );
     }
   }
 

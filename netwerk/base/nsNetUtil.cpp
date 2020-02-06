@@ -63,6 +63,7 @@
 #include "nsIIncrementalStreamLoader.h"
 #include "nsStringStream.h"
 #include "nsSyncStreamListener.h"
+#include "nsITextToSubURI.h"
 #include "nsIURIWithSpecialOrigin.h"
 #include "nsIViewSourceChannel.h"
 #include "nsInterfaceRequestorAgg.h"
@@ -2673,6 +2674,19 @@ nsresult NS_GetFilenameFromDisposition(nsAString& aFilename,
   }
 
   if (aFilename.IsEmpty()) return NS_ERROR_NOT_AVAILABLE;
+
+  // Filename may still be percent-encoded. Fix:
+  if (aFilename.FindChar('%') != -1) {
+    nsCOMPtr<nsITextToSubURI> textToSubURI =
+        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString unescaped;
+      textToSubURI->UnEscapeURIForUI(NS_LITERAL_CSTRING("UTF-8"),
+                                     NS_ConvertUTF16toUTF8(aFilename),
+                                     unescaped);
+      aFilename.Assign(unescaped);
+    }
+  }
 
   return NS_OK;
 }
