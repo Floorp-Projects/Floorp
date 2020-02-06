@@ -1914,6 +1914,14 @@ BrowserGlue.prototype = {
 
     if (AppConstants.MOZ_CRASHREPORTER) {
       UnsubmittedCrashHandler.init();
+      UnsubmittedCrashHandler.scheduleCheckForUnsubmittedCrashReports();
+    }
+
+    if (AppConstants.ASAN_REPORTER) {
+      var { AsanReporter } = ChromeUtils.import(
+        "resource:///modules/AsanReporter.jsm"
+      );
+      AsanReporter.init();
     }
 
     Sanitizer.onStartup();
@@ -1967,158 +1975,208 @@ BrowserGlue.prototype = {
    * to the other ones scheduled together.
    */
   _scheduleStartupIdleTasks() {
-    Services.tm.idleDispatchToMainThread(async () => {
-      await ContextualIdentityService.load();
-      Discovery.update();
-    });
+    const idleTasks = [
+      // It's important that SafeBrowsing is initialized reasonably
+      // early, so we use a maximum timeout for it.
+      {
+        task: () => {
+          SafeBrowsing.init();
+        },
+        timeout: 5000,
+      },
 
-    // Begin listening for incoming push messages.
-    Services.tm.idleDispatchToMainThread(() => {
-      try {
-        PushService.wrappedJSObject.ensureReady();
-      } catch (ex) {
-        // NS_ERROR_NOT_AVAILABLE will get thrown for the PushService getter
-        // if the PushService is disabled.
-        if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
-          throw ex;
-        }
+      {
+        task: async () => {
+          await ContextualIdentityService.load();
+          Discovery.update();
+        },
+      },
+
+      // Begin listening for incoming push messages.
+      {
+        task: () => {
+          try {
+            PushService.wrappedJSObject.ensureReady();
+          } catch (ex) {
+            // NS_ERROR_NOT_AVAILABLE will get thrown for the PushService
+            // getter if the PushService is disabled.
+            if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+              throw ex;
+            }
+          }
+        },
+      },
+
+      {
+        task: () => {
+          this._recordContentBlockingTelemetry();
+        },
+      },
+
+      {
+        task: () => {
+          this._recordDataSanitizationPrefs();
+        },
+      },
+
+      {
+        task: () => {
+          let siteSpecific = Services.prefs.getBoolPref(
+            "browser.zoom.siteSpecific",
+            false
+          );
+          Services.telemetry.scalarSet("a11y.sitezoom", siteSpecific);
+        },
+      },
+
+      // Load the Login Manager data from disk off the main thread, some time
+      // after startup.  If the data is required before this runs, for example
+      // because a restored page contains a password field, it will be loaded on
+      // the main thread, and this initialization request will be ignored.
+      {
+        task: () => {
+          try {
+            Services.logins;
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+        },
+        timeout: 3000,
+      },
+
+      // Add breach alerts pref observer reasonably early so the pref flip works
+      {
+        task: () => {
+          this._addBreachAlertsPrefObserver();
+        },
+      },
+
+      {
+        condition: AppConstants.platform == "win",
+        task: () => {
+          // For Windows 7, initialize the jump list module.
+          const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
+          if (
+            WINTASKBAR_CONTRACTID in Cc &&
+            Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available
+          ) {
+            let temp = {};
+            ChromeUtils.import(
+              "resource:///modules/WindowsJumpLists.jsm",
+              temp
+            );
+            temp.WinTaskbarJumpList.startup();
+          }
+        },
+      },
+
+      {
+        task: () => {
+          this._checkForDefaultBrowser();
+        },
+      },
+
+      {
+        task: () => {
+          let { setTimeout } = ChromeUtils.import(
+            "resource://gre/modules/Timer.jsm"
+          );
+          setTimeout(function() {
+            Services.tm.idleDispatchToMainThread(
+              Services.startup.trackStartupCrashEnd
+            );
+          }, STARTUP_CRASHES_END_DELAY_MS);
+        },
+      },
+
+      {
+        task: () => {
+          let handlerService = Cc[
+            "@mozilla.org/uriloader/handler-service;1"
+          ].getService(Ci.nsIHandlerService);
+          handlerService.asyncInit();
+        },
+      },
+
+      {
+        condition: AppConstants.platform == "win",
+        task: () => {
+          JawsScreenReaderVersionCheck.onWindowsRestored();
+        },
+      },
+
+      {
+        task: () => {
+          RFPHelper.init();
+        },
+      },
+
+      {
+        task: () => {
+          Blocklist.loadBlocklistAsync();
+        },
+      },
+
+      {
+        condition:
+          Services.prefs.getIntPref(
+            "browser.livebookmarks.migrationAttemptsLeft",
+            0
+          ) > 0,
+        task: () => {
+          LiveBookmarkMigrator.migrate().catch(Cu.reportError);
+        },
+      },
+
+      {
+        task: () => {
+          TabUnloader.init();
+        },
+      },
+
+      {
+        condition: Services.prefs.getBoolPref("corroborator.enabled", false),
+        task: () => {
+          Corroborate.init().catch(Cu.reportError);
+        },
+      },
+
+      // request startup of Chromium remote debugging protocol
+      // (observer will only be notified when --remote-debugger is passed)
+      {
+        condition: AppConstants.ENABLE_REMOTE_AGENT,
+        task: () => {
+          Services.obs.notifyObservers(null, "remote-startup-requested");
+        },
+      },
+
+      // Marionette needs to be initialized as very last step
+      {
+        task: () => {
+          Services.obs.notifyObservers(null, "marionette-startup-requested");
+        },
+      },
+    ];
+
+    for (let task of idleTasks) {
+      if ("condition" in task && !task.condition) {
+        continue;
       }
-    });
 
-    Services.tm.idleDispatchToMainThread(() => {
-      this._recordContentBlockingTelemetry();
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
-      this._recordDataSanitizationPrefs();
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
-      let siteSpecific = Services.prefs.getBoolPref(
-        "browser.zoom.siteSpecific",
-        false
+      ChromeUtils.idleDispatch(
+        () => {
+          if (!Services.startup.shuttingDown) {
+            Services.profiler.AddMarker("startupIdleTask");
+            try {
+              task.task();
+            } catch (ex) {
+              Cu.reportError(ex);
+            }
+          }
+        },
+        task.timeout ? { timeout: task.timeout } : undefined
       );
-      Services.telemetry.scalarSet("a11y.sitezoom", siteSpecific);
-    });
-
-    // Load the Login Manager data from disk off the main thread, some time
-    // after startup.  If the data is required before this runs, for example
-    // because a restored page contains a password field, it will be loaded on
-    // the main thread, and this initialization request will be ignored.
-    Services.tm.idleDispatchToMainThread(() => {
-      try {
-        Services.logins;
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-    }, 3000);
-
-    // Add breach alerts pref observer reasonably early so the pref flip works
-    Services.tm.idleDispatchToMainThread(() => {
-      this._addBreachAlertsPrefObserver();
-    });
-
-    // It's important that SafeBrowsing is initialized reasonably
-    // early, so we use a maximum timeout for it.
-    Services.tm.idleDispatchToMainThread(() => {
-      SafeBrowsing.init();
-    }, 5000);
-
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      UnsubmittedCrashHandler.scheduleCheckForUnsubmittedCrashReports();
     }
-
-    if (AppConstants.ASAN_REPORTER) {
-      var { AsanReporter } = ChromeUtils.import(
-        "resource:///modules/AsanReporter.jsm"
-      );
-      AsanReporter.init();
-    }
-
-    if (AppConstants.platform == "win") {
-      Services.tm.idleDispatchToMainThread(() => {
-        // For Windows 7, initialize the jump list module.
-        const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
-        if (
-          WINTASKBAR_CONTRACTID in Cc &&
-          Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available
-        ) {
-          let temp = {};
-          ChromeUtils.import("resource:///modules/WindowsJumpLists.jsm", temp);
-          temp.WinTaskbarJumpList.startup();
-        }
-      });
-    }
-
-    Services.tm.idleDispatchToMainThread(() => {
-      this._checkForDefaultBrowser();
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
-      let { setTimeout } = ChromeUtils.import(
-        "resource://gre/modules/Timer.jsm"
-      );
-      setTimeout(function() {
-        Services.tm.idleDispatchToMainThread(
-          Services.startup.trackStartupCrashEnd
-        );
-      }, STARTUP_CRASHES_END_DELAY_MS);
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
-      let handlerService = Cc[
-        "@mozilla.org/uriloader/handler-service;1"
-      ].getService(Ci.nsIHandlerService);
-      handlerService.asyncInit();
-    });
-
-    if (AppConstants.platform == "win") {
-      Services.tm.idleDispatchToMainThread(() => {
-        JawsScreenReaderVersionCheck.onWindowsRestored();
-      });
-    }
-
-    Services.tm.idleDispatchToMainThread(() => {
-      RFPHelper.init();
-    });
-
-    ChromeUtils.idleDispatch(() => {
-      Blocklist.loadBlocklistAsync();
-    });
-
-    if (
-      Services.prefs.getIntPref(
-        "browser.livebookmarks.migrationAttemptsLeft",
-        0
-      ) > 0
-    ) {
-      Services.tm.idleDispatchToMainThread(() => {
-        LiveBookmarkMigrator.migrate().catch(Cu.reportError);
-      });
-    }
-
-    Services.tm.idleDispatchToMainThread(() => {
-      TabUnloader.init();
-    });
-
-    Services.tm.idleDispatchToMainThread(() => {
-      if (Services.prefs.getBoolPref("corroborator.enabled", false)) {
-        Corroborate.init().catch(Cu.reportError);
-      }
-    });
-
-    // request startup of Chromium remote debugging protocol
-    // (observer will only be notified when --remote-debugger is passed)
-    if (AppConstants.ENABLE_REMOTE_AGENT) {
-      Services.tm.idleDispatchToMainThread(() => {
-        Services.obs.notifyObservers(null, "remote-startup-requested");
-      });
-    }
-
-    // Marionette needs to be initialized as very last step
-    Services.tm.idleDispatchToMainThread(() => {
-      Services.obs.notifyObservers(null, "marionette-startup-requested");
-    });
   },
 
   /**
@@ -2133,46 +2191,61 @@ BrowserGlue.prototype = {
    * value, this is unlikely.
    */
   _scheduleArbitrarilyLateIdleTasks() {
-    Services.tm.idleDispatchToMainThread(() => {
-      this._sendMediaTelemetry();
-    });
+    const idleTasks = [
+      () => {
+        this._sendMediaTelemetry();
+      },
 
-    Services.tm.idleDispatchToMainThread(() => {
-      // Telemetry for master-password - we do this after a delay as it
-      // can cause IO if NSS/PSM has not already initialized.
-      let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
-        Ci.nsIPK11TokenDB
-      );
-      let token = tokenDB.getInternalKeyToken();
-      let mpEnabled = token.hasPassword;
-      if (mpEnabled) {
-        Services.telemetry
-          .getHistogramById("MASTER_PASSWORD_ENABLED")
-          .add(mpEnabled);
-      }
-    });
+      () => {
+        // Telemetry for master-password - we do this after a delay as it
+        // can cause IO if NSS/PSM has not already initialized.
+        let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+          Ci.nsIPK11TokenDB
+        );
+        let token = tokenDB.getInternalKeyToken();
+        let mpEnabled = token.hasPassword;
+        if (mpEnabled) {
+          Services.telemetry
+            .getHistogramById("MASTER_PASSWORD_ENABLED")
+            .add(mpEnabled);
+        }
+      },
 
-    Services.tm.idleDispatchToMainThread(() => {
-      let obj = {};
-      ChromeUtils.import("resource://gre/modules/GMPInstallManager.jsm", obj);
-      this._gmpInstallManager = new obj.GMPInstallManager();
-      // We don't really care about the results, if someone is interested they
-      // can check the log.
-      this._gmpInstallManager.simpleCheckAndInstall().catch(() => {});
-    });
+      () => {
+        let obj = {};
+        ChromeUtils.import("resource://gre/modules/GMPInstallManager.jsm", obj);
+        this._gmpInstallManager = new obj.GMPInstallManager();
+        // We don't really care about the results, if someone is interested they
+        // can check the log.
+        this._gmpInstallManager.simpleCheckAndInstall().catch(() => {});
+      },
 
-    Services.tm.idleDispatchToMainThread(() => {
-      RemoteSettings.init();
-      this._addBreachesSyncHandler();
-    });
+      () => {
+        RemoteSettings.init();
+        this._addBreachesSyncHandler();
+      },
 
-    Services.tm.idleDispatchToMainThread(() => {
-      PublicSuffixList.init();
-    });
+      () => {
+        PublicSuffixList.init();
+      },
 
-    Services.tm.idleDispatchToMainThread(() => {
-      RemoteSecuritySettings.init();
-    });
+      () => {
+        RemoteSecuritySettings.init();
+      },
+    ];
+
+    for (let task of idleTasks) {
+      ChromeUtils.idleDispatch(() => {
+        if (!Services.startup.shuttingDown) {
+          Services.profiler.AddMarker("startupLateIdleTask");
+          try {
+            task();
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+        }
+      });
+    }
   },
 
   _addBreachesSyncHandler() {
