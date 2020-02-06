@@ -1181,7 +1181,7 @@ void nsBulletFrame::SetFontSizeInflation(float aInflation) {
   if (aInflation == 1.0f) {
     if (HasFontSizeInflation()) {
       RemoveStateBits(BULLET_FRAME_HAS_FONT_INFLATION);
-      DeleteProperty(FontSizeInflationProperty());
+      RemoveProperty(FontSizeInflationProperty());
     }
     return;
   }

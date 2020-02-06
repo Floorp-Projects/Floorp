@@ -1058,7 +1058,7 @@ void ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
                  "We assume that changing the 'position' property causes "
                  "frame reconstruction.  If that ever changes, this code "
                  "should call "
-                 "aFrame->DeleteProperty(nsIFrame::NormalPositionProperty())");
+                 "aFrame->RemoveProperty(nsIFrame::NormalPositionProperty())");
     return;
   }
 
@@ -2518,7 +2518,7 @@ static void UpdateProp(nsIFrame* aFrame,
       aFrame->AddProperty(aProperty, new nsMargin(aNewValue));
     }
   } else {
-    aFrame->DeleteProperty(aProperty);
+    aFrame->RemoveProperty(aProperty);
   }
 }
 
@@ -2533,7 +2533,7 @@ void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
   // Since we are in reflow, we don't need to store these properties anymore
   // unless they are dependent on width, in which case we store the new value.
   nsPresContext* presContext = mFrame->PresContext();
-  mFrame->DeleteProperty(nsIFrame::UsedBorderProperty());
+  mFrame->RemoveProperty(nsIFrame::UsedBorderProperty());
 
   // Compute margins from the specified margin style information. These
   // become the default computed values, and may be adjusted below

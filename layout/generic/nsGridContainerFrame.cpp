@@ -3687,7 +3687,7 @@ void nsGridContainerFrame::InitImplicitNamedAreas(
   Add(aStyle->mGridTemplateColumns, IsSubgrid(eLogicalAxisInline));
   Add(aStyle->mGridTemplateRows, IsSubgrid(eLogicalAxisBlock));
   if (areas && areas->count() == 0) {
-    DeleteProperty(ImplicitNamedAreasProperty());
+    RemoveProperty(ImplicitNamedAreasProperty());
   }
 }
 
@@ -4656,7 +4656,7 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
     aChild->SetProperty(nsIFrame::BClampMarginBoxMinSizeProperty(),
                         aBMinSizeClamp);
   } else {
-    aChild->DeleteProperty(nsIFrame::BClampMarginBoxMinSizeProperty());
+    aChild->RemoveProperty(nsIFrame::BClampMarginBoxMinSizeProperty());
   }
   ReflowInput childRI(pc, *rs, aChild, aAvailableSize, Some(aCBSize), riFlags);
 
@@ -4682,7 +4682,7 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
   nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
                                       LogicalPoint(wm), nsSize(), flags);
 #ifdef DEBUG
-  parent->DeleteProperty(nsContainerFrame::DebugReflowingWithInfiniteISize());
+  parent->RemoveProperty(nsContainerFrame::DebugReflowingWithInfiniteISize());
 #endif
   return childSize.BSize(wm);
 }
@@ -6342,7 +6342,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
       if (baselineAdjust != nscoord(0)) {
         aChild->SetProperty(aProp, baselineAdjust);
       } else {
-        aChild->DeleteProperty(aProp);
+        aChild->RemoveProperty(aProp);
       }
     };
     SetProp(eLogicalAxisBlock,
@@ -6394,7 +6394,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
       aChild->SetProperty(BClampMarginBoxMinSizeProperty(),
                           childCBSize.BSize(childWM));
     } else {
-      aChild->DeleteProperty(BClampMarginBoxMinSizeProperty());
+      aChild->RemoveProperty(BClampMarginBoxMinSizeProperty());
     }
 
     if ((aGridItemInfo->mState[childIAxis] & ItemState::eApplyAutoMinSize)) {
@@ -6449,7 +6449,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
     if (stretch) {
       aChild->SetProperty(FragStretchBSizeProperty(), *aStretchBSize);
     } else {
-      aChild->DeleteProperty(FragStretchBSizeProperty());
+      aChild->RemoveProperty(FragStretchBSizeProperty());
     }
   }
 
@@ -7177,7 +7177,7 @@ void nsGridContainerFrame::NormalizeChildLists() {
           f = next;
         }
         if (overflowContainers->IsEmpty()) {
-          DeleteProperty(OverflowContainersProperty());
+          RemoveProperty(OverflowContainersProperty());
         }
         MergeSortedExcessOverflowContainers(moveToEOC);
       }
@@ -7766,7 +7766,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
           gridReflowInput.mGridStyle->mGridTemplateAreas.AsAreas()->areas);
       SetProperty(ExplicitNamedAreasProperty(), areas);
     } else {
-      DeleteProperty(ExplicitNamedAreasProperty());
+      RemoveProperty(ExplicitNamedAreasProperty());
     }
   }
 
@@ -7808,7 +7808,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       sharedGridData->mGenerateComputedGridInfo =
           HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
     } else if (sharedGridData && !GetNextInFlow()) {
-      DeleteProperty(SharedGridData::Prop());
+      RemoveProperty(SharedGridData::Prop());
     }
   }
 
@@ -7822,7 +7822,7 @@ void nsGridContainerFrame::UpdateSubgridFrameState() {
   if (newBits != oldBits) {
     RemoveStateBits(kIsSubgridBits);
     if (!newBits) {
-      DeleteProperty(Subgrid::Prop());
+      RemoveProperty(Subgrid::Prop());
     } else {
       AddStateBits(newBits);
     }

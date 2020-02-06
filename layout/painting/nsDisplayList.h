@@ -230,7 +230,7 @@ struct AnimatedGeometryRoot {
 
   ~AnimatedGeometryRoot() {
     if (mFrame && mIsRetained) {
-      mFrame->DeleteProperty(AnimatedGeometryRootCache());
+      mFrame->RemoveProperty(AnimatedGeometryRootCache());
     }
   }
 };
@@ -327,7 +327,7 @@ struct ActiveScrolledRoot {
   ~ActiveScrolledRoot() {
     if (mScrollableFrame && mRetained) {
       nsIFrame* f = do_QueryFrame(mScrollableFrame);
-      f->DeleteProperty(ActiveScrolledRootCache());
+      f->RemoveProperty(ActiveScrolledRootCache());
     }
   }
 

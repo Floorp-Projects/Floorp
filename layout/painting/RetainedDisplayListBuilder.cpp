@@ -1390,8 +1390,8 @@ static void ClearFrameProps(nsTArray<nsIFrame*>& aFrames) {
   for (nsIFrame* f : aFrames) {
     if (f->HasOverrideDirtyRegion()) {
       f->SetHasOverrideDirtyRegion(false);
-      f->DeleteProperty(nsDisplayListBuilder::DisplayListBuildingRect());
-      f->DeleteProperty(
+      f->RemoveProperty(nsDisplayListBuilder::DisplayListBuildingRect());
+      f->RemoveProperty(
           nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
     }
 

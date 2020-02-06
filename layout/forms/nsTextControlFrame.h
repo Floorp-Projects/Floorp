@@ -326,7 +326,7 @@ class nsTextControlFrame : public nsContainerFrame,
   SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
                         SelectionDirection aDirection = eNone);
 
-  void FinishedInitializer() { DeleteProperty(TextControlInitializer()); }
+  void FinishedInitializer() { RemoveProperty(TextControlInitializer()); }
 
   const nsAString& CachedValue() const { return mCachedValue; }
 

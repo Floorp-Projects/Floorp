@@ -1869,7 +1869,7 @@ void nsTableRowGroupFrame::ClearRowCursor() {
   }
 
   RemoveStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
-  DeleteProperty(RowCursorProperty());
+  RemoveProperty(RowCursorProperty());
 }
 
 nsTableRowGroupFrame::FrameCursorData* nsTableRowGroupFrame::SetupRowCursor() {

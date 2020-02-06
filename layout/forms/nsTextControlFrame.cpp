@@ -135,7 +135,7 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                      PostDestroyData& aPostDestroyData) {
   mScrollEvent.Revoke();
 
-  DeleteProperty(TextControlInitializer());
+  RemoveProperty(TextControlInitializer());
 
   // Unbind the text editor state object from the frame.  The editor will live
   // on, but things like controllers will be released.
