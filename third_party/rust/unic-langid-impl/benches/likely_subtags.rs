@@ -48,15 +48,15 @@ static STRINGS: &[&str] = &[
     "und-Arab-FO",
 ];
 
-fn add_likely_subtags_bench(c: &mut Criterion) {
-    c.bench_function("add_likely_subtags", move |b| {
+fn maximize_bench(c: &mut Criterion) {
+    c.bench_function("maximize", move |b| {
         b.iter(|| {
             let langids: Vec<LanguageIdentifier> = STRINGS
                 .iter()
                 .map(|s| -> LanguageIdentifier { s.parse().unwrap() })
                 .collect();
             for mut s in langids {
-                s.add_likely_subtags();
+                s.maximize();
                 let _ = black_box(s.to_string());
             }
         })
@@ -82,14 +82,14 @@ fn extract_input(s: &str) -> (Option<TinyStr8>, Option<TinyStr4>, Option<TinyStr
     (lang, script, region)
 }
 
-fn raw_add_likely_subtags_bench(c: &mut Criterion) {
+fn raw_maximize_bench(c: &mut Criterion) {
     let entries: Vec<(Option<TinyStr8>, Option<TinyStr4>, Option<TinyStr4>)> =
         STRINGS.iter().map(|s| extract_input(s)).collect();
 
-    c.bench_function("raw_add_likely_subtags", move |b| {
+    c.bench_function("raw_maximize", move |b| {
         b.iter(|| {
             for (lang, script, region) in &entries {
-                let _ = unic_langid_impl::likelysubtags::add_likely_subtags(
+                let _ = unic_langid_impl::likelysubtags::maximize(
                     lang.clone(),
                     script.clone(),
                     region.clone(),
@@ -99,9 +99,5 @@ fn raw_add_likely_subtags_bench(c: &mut Criterion) {
     });
 }
 
-criterion_group!(
-    benches,
-    add_likely_subtags_bench,
-    raw_add_likely_subtags_bench
-);
+criterion_group!(benches, maximize_bench, raw_maximize_bench,);
 criterion_main!(benches);

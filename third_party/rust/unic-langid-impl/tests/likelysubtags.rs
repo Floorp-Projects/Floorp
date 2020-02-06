@@ -1,5 +1,5 @@
 use tinystr::{TinyStr4, TinyStr8};
-use unic_langid_impl::likelysubtags::{add_likely_subtags, remove_likely_subtags, CLDR_VERSION};
+use unic_langid_impl::likelysubtags::{maximize, minimize, CLDR_VERSION};
 
 static STRINGS: &[(&str, Option<&str>)] = &[
     ("en-US", Some("en-Latn-US")),
@@ -77,10 +77,10 @@ fn extract_output(
 }
 
 #[test]
-fn add_likely_subtags_test() {
+fn maximize_test() {
     for i in STRINGS {
         let chunks = extract_input(i.0);
-        let result = add_likely_subtags(chunks.0, chunks.1, chunks.2);
+        let result = maximize(chunks.0, chunks.1, chunks.2);
         assert_eq!(extract_output(i.1), result);
     }
 }
@@ -91,15 +91,15 @@ fn version_works() {
 }
 
 #[test]
-fn remove_likely_subtags_test() {
+fn minimize_test() {
     let lang: TinyStr8 = "zh".parse().unwrap();
     let script: TinyStr4 = "Hant".parse().unwrap();
-    let result = remove_likely_subtags(Some(lang), Some(script), None);
+    let result = minimize(Some(lang), Some(script), None);
     assert_eq!(result, Some(extract_input("zh-TW")));
 
     let lang: TinyStr8 = "en".parse().unwrap();
     let script: TinyStr4 = "Latn".parse().unwrap();
     let region: TinyStr4 = "US".parse().unwrap();
-    let result = remove_likely_subtags(Some(lang), Some(script), Some(region));
+    let result = minimize(Some(lang), Some(script), Some(region));
     assert_eq!(result, Some(extract_input("en")));
 }
