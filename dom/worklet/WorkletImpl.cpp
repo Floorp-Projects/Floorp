@@ -14,6 +14,7 @@
 #include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkletBinding.h"
+#include "nsGlobalWindowInner.h"
 
 namespace mozilla {
 
@@ -44,6 +45,9 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
   if (aWindow->GetDocGroup()) {
     mAgentClusterId.emplace(aWindow->GetDocGroup()->AgentClusterId());
   }
+
+  mSharedMemoryAllowed =
+      nsGlobalWindowInner::Cast(aWindow)->IsSharedMemoryAllowed();
 }
 
 WorkletImpl::~WorkletImpl() {

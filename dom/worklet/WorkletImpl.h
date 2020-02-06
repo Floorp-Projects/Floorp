@@ -77,6 +77,8 @@ class WorkletImpl {
 
   const Maybe<nsID>& GetAgentClusterId() const { return mAgentClusterId; }
 
+  bool IsSharedMemoryAllowed() const { return mSharedMemoryAllowed; }
+
  protected:
   WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
   virtual ~WorkletImpl();
@@ -98,6 +100,8 @@ class WorkletImpl {
   RefPtr<dom::WorkletGlobalScope> mGlobalScope;
 
   Maybe<nsID> mAgentClusterId;
+
+  bool mSharedMemoryAllowed;
 };
 
 }  // namespace mozilla
