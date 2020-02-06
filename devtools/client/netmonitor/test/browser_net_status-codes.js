@@ -270,7 +270,7 @@ add_task(async function() {
     is(labels[0].textContent, "sts", "The param name was incorrect.");
     is(
       values[0].textContent,
-      statusParamValue,
+      `"${statusParamValue}"`,
       "The param value was incorrect."
     );
 

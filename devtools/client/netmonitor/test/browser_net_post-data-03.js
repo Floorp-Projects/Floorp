@@ -113,7 +113,7 @@ add_task(async function() {
   );
   is(
     values[0].textContent,
-    "bar",
+    `"bar"`,
     "The first payload param value was incorrect."
   );
   is(
@@ -123,7 +123,7 @@ add_task(async function() {
   );
   is(
     values[1].textContent,
-    "123",
+    `"123"`,
     "The second payload param value was incorrect."
   );
 
