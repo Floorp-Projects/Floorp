@@ -22,7 +22,7 @@ implementation "org.mozilla.components:service-experiments:{latest-version}"
 In order to use the library, first you have to initialize it by calling `Experiments.initialize()`. 
 You do this once per app launch (typically in your `Application` class `onCreate` method). You 
 simply have to call `Experiments.initialize()` and provide the `applicationContext` (and optionally 
-a `Configuration` object), like this:
+a `Configuration` object and callback for when the experiments are updated), like this:
 
 ```Kotlin
 class SampleApp : Application() {
@@ -30,7 +30,11 @@ class SampleApp : Application() {
         Experiments.initialize(
             applicationContext,
             configuration // This is optional, e.g. for overriding the fetch client.
-        )
+        ) {
+            // This is an optional callback that can be provided to inform the application
+            // when the experiments are updated, so that they can check `withExperiment`, etc.
+            doSomething()
+        }
     }
 }
 ```
@@ -45,6 +49,9 @@ The library updates its list of experiments automatically and asynchronously fro
 initialization. As this is asynchronous, it will not have immediate effect.
 
 Afterwards, the list of experiments will be updated in the background every 6 hours.
+
+A consuming application may provide a callback function to the `initialize` function in order to
+receive notification when the experiments have been updated, taking the form of `() -> Unit`.
 
 ### Checking if a user is part of an experiment
 

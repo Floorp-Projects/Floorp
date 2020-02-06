@@ -42,6 +42,8 @@ open class ExperimentsInternalAPI internal constructor() {
 
     private lateinit var context: Context
 
+    private var experimentsUpdatedCallback: (() -> Unit)? = null
+
     /**
      * Initialize the experiments library.
      *
@@ -56,7 +58,8 @@ open class ExperimentsInternalAPI internal constructor() {
      */
     fun initialize(
         applicationContext: Context,
-        configuration: Configuration = Configuration()
+        configuration: Configuration = Configuration(),
+        onExperimentsUpdated: (() -> Unit)? = null
     ) {
         if (isInitialized) {
             logger.error("Experiments library should not be initialized multiple times")
@@ -64,6 +67,8 @@ open class ExperimentsInternalAPI internal constructor() {
         }
 
         this.configuration = configuration
+
+        experimentsUpdatedCallback = onExperimentsUpdated
 
         experimentsResult = ExperimentsSnapshot(listOf(), null)
         experimentsLoaded = false
@@ -169,6 +174,10 @@ open class ExperimentsInternalAPI internal constructor() {
             logger.info("onExperimentsUpdated - no experiment currently active, looking for match")
             findAndStartActiveExperiment()
         }
+
+        // Invoke the callback provided to `initialize()` to report updated experiment status to
+        // the consuming application.
+        experimentsUpdatedCallback?.invoke()
     }
 
     /**
