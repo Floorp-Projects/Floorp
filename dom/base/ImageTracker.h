@@ -56,6 +56,7 @@ class ImageTracker {
   void SetAnimatingState(bool aAnimating);
 
   void RequestDiscardAll();
+
   void MediaFeatureValuesChangedAllDocuments(const MediaFeatureChange&);
 
  private:

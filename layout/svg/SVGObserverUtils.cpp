@@ -876,16 +876,17 @@ void SVGMaskObserverList::ResolveImage(uint32_t aIndex) {
   const nsStyleSVGReset* svgReset = mFrame->StyleSVGReset();
   MOZ_ASSERT(aIndex < svgReset->mMask.mImageCount);
 
-  auto& image =
+  nsStyleImage& image =
       const_cast<nsStyleImage&>(svgReset->mMask.mLayers[aIndex].mImage);
 
   if (!image.IsResolved()) {
     MOZ_ASSERT(image.GetType() == nsStyleImageType::eStyleImageType_Image);
     image.ResolveImage(*mFrame->PresContext()->Document(), nullptr);
 
-    Document* doc = mFrame->PresContext()->Document();
+    mozilla::css::ImageLoader* imageLoader =
+        mFrame->PresContext()->Document()->StyleImageLoader();
     if (imgRequestProxy* req = image.GetImageData()) {
-      doc->StyleImageLoader()->AssociateRequestToFrame(req, mFrame, 0);
+      imageLoader->AssociateRequestToFrame(req, mFrame, 0);
     }
   }
 }
