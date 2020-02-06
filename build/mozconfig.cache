@@ -68,7 +68,7 @@ if test -n "$bucket"; then
     if test "$cloud" = "google"; then
         mk_add_options "export SCCACHE_GCS_BUCKET=$bucket"
         mk_add_options "export SCCACHE_GCS_RW_MODE=READ_WRITE"
-        mk_add_options "export SCCACHE_GCS_CREDENTIALS_URL=http://taskcluster/auth/v1/gcp/credentials/$SCCACHE_GCS_PROJECT/sccache-l${MOZ_SCM_LEVEL}-${region}@$SCCACHE_GCS_PROJECT.iam.gserviceaccount.com"
+        mk_add_options "export SCCACHE_GCS_CREDENTIALS_URL=http://taskcluster/auth/v1/gcp/credentials/$SCCACHE_GCS_PROJECT/${bucket}@$SCCACHE_GCS_PROJECT.iam.gserviceaccount.com"
     elif [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
         mk_add_options "export SCCACHE_GCS_BUCKET=$bucket"
     else
