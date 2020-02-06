@@ -77,7 +77,7 @@ nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
     // is detached from any browser window or tab.
 
     // Create a new BrowsingContext to create our DocShell in.
-    RefPtr<BrowsingContext> bc = BrowsingContext::Create(
+    RefPtr<BrowsingContext> bc = BrowsingContext::CreateWindowless(
         /* aParent */ nullptr,
         /* aOpener */ nullptr, EmptyString(),
         aDocShell->ItemType() == nsIDocShellTreeItem::typeContent
