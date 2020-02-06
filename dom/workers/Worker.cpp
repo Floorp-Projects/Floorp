@@ -103,18 +103,15 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   }
 
   JS::CloneDataPolicy clonePolicy;
-  // DedicatedWorkers are always part of the same agent cluster.
-  clonePolicy.allowIntraClusterClonableSharedObjects();
-
   if (NS_IsMainThread()) {
     nsGlobalWindowInner* win = nsContentUtils::CallerInnerWindow();
     if (win && win->IsSharedMemoryAllowed()) {
-      clonePolicy.allowSharedMemoryObjects();
+      clonePolicy.allowIntraClusterClonableSharedObjects();
     }
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     if (worker && worker->IsSharedMemoryAllowed()) {
-      clonePolicy.allowSharedMemoryObjects();
+      clonePolicy.allowIntraClusterClonableSharedObjects();
     }
   }
 

@@ -36,11 +36,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
   NS_INTERFACE_MAP_ENTRY(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
-WorkletGlobalScope::WorkletGlobalScope(const Maybe<nsID>& aAgentClusterId,
-                                       bool aSharedMemoryAllowed)
-    : mCreationTimeStamp(TimeStamp::Now()),
-      mAgentClusterId(aAgentClusterId),
-      mSharedMemoryAllowed(aSharedMemoryAllowed) {}
+WorkletGlobalScope::WorkletGlobalScope()
+    : mCreationTimeStamp(TimeStamp::Now()) {}
 
 WorkletGlobalScope::~WorkletGlobalScope() = default;
 

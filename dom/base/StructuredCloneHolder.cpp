@@ -177,10 +177,10 @@ bool StructuredCloneHolderBase::Write(JSContext* aCx,
   return Write(aCx, aValue, JS::UndefinedHandleValue, JS::CloneDataPolicy());
 }
 
-bool StructuredCloneHolderBase::Write(
-    JSContext* aCx, JS::Handle<JS::Value> aValue,
-    JS::Handle<JS::Value> aTransfer,
-    const JS::CloneDataPolicy& aCloneDataPolicy) {
+bool StructuredCloneHolderBase::Write(JSContext* aCx,
+                                      JS::Handle<JS::Value> aValue,
+                                      JS::Handle<JS::Value> aTransfer,
+                                      JS::CloneDataPolicy aCloneDataPolicy) {
   MOZ_ASSERT(!mBuffer, "Double Write is not allowed");
   MOZ_ASSERT(!mClearCalled, "This method cannot be called after Clear.");
 
@@ -193,10 +193,6 @@ bool StructuredCloneHolderBase::Write(
     return false;
   }
 
-  // Let's update our scope to the final one. The new one could be more
-  // restrictive of the current one.
-  MOZ_ASSERT(mStructuredCloneScope >= mBuffer->scope());
-  mStructuredCloneScope = mBuffer->scope();
   return true;
 }
 
@@ -205,9 +201,9 @@ bool StructuredCloneHolderBase::Read(JSContext* aCx,
   return Read(aCx, aValue, JS::CloneDataPolicy());
 }
 
-bool StructuredCloneHolderBase::Read(
-    JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
-    const JS::CloneDataPolicy& aCloneDataPolicy) {
+bool StructuredCloneHolderBase::Read(JSContext* aCx,
+                                     JS::MutableHandle<JS::Value> aValue,
+                                     JS::CloneDataPolicy aCloneDataPolicy) {
   MOZ_ASSERT(mBuffer, "Read() without Write() is not allowed.");
   MOZ_ASSERT(!mClearCalled, "This method cannot be called after Clear.");
 
@@ -272,10 +268,10 @@ void StructuredCloneHolder::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
 
 void StructuredCloneHolder::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                   JS::Handle<JS::Value> aTransfer,
-                                  const JS::CloneDataPolicy& aCloneDataPolicy,
+                                  JS::CloneDataPolicy cloneDataPolicy,
                                   ErrorResult& aRv) {
   if (!StructuredCloneHolderBase::Write(aCx, aValue, aTransfer,
-                                        aCloneDataPolicy)) {
+                                        cloneDataPolicy)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
@@ -289,7 +285,7 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
 
 void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
                                  JS::MutableHandle<JS::Value> aValue,
-                                 const JS::CloneDataPolicy& aCloneDataPolicy,
+                                 JS::CloneDataPolicy aCloneDataPolicy,
                                  ErrorResult& aRv) {
   MOZ_ASSERT(aGlobal);
 
@@ -312,10 +308,12 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
   }
 }
 
-void StructuredCloneHolder::ReadFromBuffer(
-    nsIGlobalObject* aGlobal, JSContext* aCx, JSStructuredCloneData& aBuffer,
-    JS::MutableHandle<JS::Value> aValue,
-    const JS::CloneDataPolicy& aCloneDataPolicy, ErrorResult& aRv) {
+void StructuredCloneHolder::ReadFromBuffer(nsIGlobalObject* aGlobal,
+                                           JSContext* aCx,
+                                           JSStructuredCloneData& aBuffer,
+                                           JS::MutableHandle<JS::Value> aValue,
+                                           JS::CloneDataPolicy aCloneDataPolicy,
+                                           ErrorResult& aRv) {
   ReadFromBuffer(aGlobal, aCx, aBuffer, JS_STRUCTURED_CLONE_VERSION, aValue,
                  aCloneDataPolicy, aRv);
 }
@@ -323,7 +321,7 @@ void StructuredCloneHolder::ReadFromBuffer(
 void StructuredCloneHolder::ReadFromBuffer(
     nsIGlobalObject* aGlobal, JSContext* aCx, JSStructuredCloneData& aBuffer,
     uint32_t aAlgorithmVersion, JS::MutableHandle<JS::Value> aValue,
-    const JS::CloneDataPolicy& aCloneDataPolicy, ErrorResult& aRv) {
+    JS::CloneDataPolicy aCloneDataPolicy, ErrorResult& aRv) {
   MOZ_ASSERT(!mBuffer, "ReadFromBuffer() must be called without a Write().");
 
   mozilla::AutoRestore<nsIGlobalObject*> guard(mGlobal);
