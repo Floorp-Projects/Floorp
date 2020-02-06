@@ -2,7 +2,7 @@
 
 # CorruptAccountState
 
-`data class CorruptAccountState : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L86)
+`data class CorruptAccountState : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L96)
 
 Failed to process Fennec's auth state due to an exception [e](e.md).
 

@@ -2,7 +2,7 @@
 
 # UNAUTHORIZED
 
-`UNAUTHORIZED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L17)
+`UNAUTHORIZED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L18)
 
 ### Inherited Properties
 

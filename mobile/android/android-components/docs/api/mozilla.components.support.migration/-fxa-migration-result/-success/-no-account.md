@@ -2,7 +2,7 @@
 
 # NoAccount
 
-`object NoAccount : `[`Success`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L58)
+`object NoAccount : `[`Success`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L59)
 
 No Fennec account found.
 

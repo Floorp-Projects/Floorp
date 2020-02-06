@@ -2,7 +2,7 @@
 
 # CustomServerConfigPresent
 
-`data class CustomServerConfigPresent : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L118)
+`data class CustomServerConfigPresent : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L128)
 
 Encountered a Fennec with customized token/idp server endpoints.
 

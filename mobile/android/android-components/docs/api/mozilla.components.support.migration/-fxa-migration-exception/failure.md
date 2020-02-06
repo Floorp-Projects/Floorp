@@ -2,7 +2,7 @@
 
 # failure
 
-`val failure: `[`Failure`](../-fxa-migration-result/-failure/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L43)
+`val failure: `[`Failure`](../-fxa-migration-result/-failure/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L44)
 
 Wrapped [FxaMigrationResult](../-fxa-migration-result/index.md) indicating exact failure reason.
 

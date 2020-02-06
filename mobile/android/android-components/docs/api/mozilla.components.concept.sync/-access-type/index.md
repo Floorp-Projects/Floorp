@@ -2,7 +2,7 @@
 
 # AccessType
 
-`enum class AccessType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L26)
+`enum class AccessType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L27)
 
 The access-type determines whether the code can be exchanged for a refresh token for
 offline use or not.

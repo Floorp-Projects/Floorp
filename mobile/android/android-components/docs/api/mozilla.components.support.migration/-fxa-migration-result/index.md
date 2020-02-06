@@ -2,7 +2,7 @@
 
 # FxaMigrationResult
 
-`sealed class FxaMigrationResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L50)
+`sealed class FxaMigrationResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L51)
 
 Result of an FxA migration.
 

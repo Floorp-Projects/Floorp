@@ -23,6 +23,7 @@
 | [DeviceEventsObserver](-device-events-observer/index.md) | `interface DeviceEventsObserver`<br>Allows monitoring events targeted at the current device. |
 | [DevicePushSubscription](-device-push-subscription/index.md) | `data class DevicePushSubscription`<br>Describes an Autopush-compatible push channel subscription. |
 | [DeviceType](-device-type/index.md) | `enum class DeviceType`<br>Describes a type of the physical device in the constellation. |
+| [InFlightMigrationState](-in-flight-migration-state/index.md) | `enum class InFlightMigrationState`<br>Represents a specific type of an "in-flight" migration state that could result from intermittent issues during [OAuthAccount.migrateFromSessionTokenAsync](-o-auth-account/migrate-from-session-token-async.md) or [OAuthAccount.copyFromSessionTokenAsync](-o-auth-account/copy-from-session-token-async.md). |
 | [LockableStore](-lockable-store/index.md) | `interface LockableStore : `[`SyncableStore`](-syncable-store/index.md)<br>An extension of [SyncableStore](-syncable-store/index.md) that can be locked/unlocked using an encryption key. |
 | [OAuthAccount](-o-auth-account/index.md) | `interface OAuthAccount : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>Facilitates testing consumers of FirefoxAccount. |
 | [OAuthScopedKey](-o-auth-scoped-key/index.md) | `data class OAuthScopedKey`<br>Scoped key data. |

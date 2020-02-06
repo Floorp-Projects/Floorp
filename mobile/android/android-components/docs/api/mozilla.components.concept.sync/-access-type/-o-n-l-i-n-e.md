@@ -2,7 +2,7 @@
 
 # ONLINE
 
-`ONLINE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L27)
+`ONLINE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L28)
 
 ### Inherited Properties
 
