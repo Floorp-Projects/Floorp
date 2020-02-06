@@ -2665,10 +2665,8 @@ void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
           WebRenderUserDataKey(data->GetDisplayItemKey(), data->GetType()));
 
       if (!userDataTable->Count()) {
-        // Using TakeProperty as we delete the property manually on the line
-        // below.
-        Unused << frame->TakeProperty(WebRenderUserDataProperty::Key());
-        delete userDataTable;
+        frame->RemoveProperty(WebRenderUserDataProperty::Key());
+        userDataTable = nullptr;
       }
 
       if (data->GetType() == WebRenderUserData::UserDataType::eCanvas) {
