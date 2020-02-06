@@ -28,6 +28,7 @@ TEST_DIRS += [
     'test_delegated_credentials_weak',
     'test_ev_certs',
     'test_intermediate_basic_usage_constraints',
+    'test_intermediate_preloads',
     'test_keysize',
     'test_keysize_ev',
     'test_missing_intermediate',
