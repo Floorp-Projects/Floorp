@@ -8,8 +8,6 @@ import android.view.View
 import android.widget.Switch
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.*
-import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.description_text
-import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.header_text
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings

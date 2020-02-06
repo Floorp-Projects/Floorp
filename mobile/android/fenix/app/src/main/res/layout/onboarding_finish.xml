@@ -8,7 +8,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
     android:background="@drawable/onboarding_button_background"
-    android:backgroundTint="?accent"
+    android:backgroundTint="@color/onboarding_card_icon"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center"

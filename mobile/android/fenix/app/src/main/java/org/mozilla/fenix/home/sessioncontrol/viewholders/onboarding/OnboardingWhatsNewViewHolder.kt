@@ -8,16 +8,14 @@ import android.text.SpannableString
 import android.text.style.UnderlineSpan
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.header_text
 import kotlinx.android.synthetic.main.onboarding_whats_new.view.*
-import kotlinx.android.synthetic.main.onboarding_whats_new.view.description_text
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.SupportUtils
 
 class OnboardingWhatsNewViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
-        view.header_text.setOnboardingIcon(R.drawable.ic_whats_new, R.color.accent_bright_dark_theme)
+        view.header_text.setOnboardingIcon(R.drawable.ic_whats_new)
 
         val appName = view.context.getString(R.string.app_name)
         view.description_text.text = view.context.getString(R.string.onboarding_whats_new_description, appName)

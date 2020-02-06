@@ -212,6 +212,7 @@
     <color name="onboarding_card_primary_text_dark">#FFFFFF</color>
     <color name="onboarding_card_button_background_dark">#F9F9FB</color>
     <color name="onboarding_card_button_text_dark">#312A65</color>
+    <color name="onboarding_card_icon">@color/accent_bright_light_theme</color>
 
     <!-- Share UI -->
     <color name="default_share_background">#E3E2E3</color>

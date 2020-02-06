@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.widget.TextView
-import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
@@ -16,12 +15,10 @@ import org.mozilla.fenix.ext.setBounds
 /**
  * Sets the drawableStart of a header in an onboarding card.
  */
-fun TextView.setOnboardingIcon(@DrawableRes id: Int, @ColorRes tint: Int? = null) {
+fun TextView.setOnboardingIcon(@DrawableRes id: Int) {
     val icon = AppCompatResources.getDrawable(context, id)
     val size = context.resources.getDimensionPixelSize(R.dimen.onboarding_header_icon_height_width)
     icon?.setBounds(size)
-    tint?.let {
-        icon?.setTint(ContextCompat.getColor(context, tint))
-    }
+    icon?.setTint(ContextCompat.getColor(context, R.color.onboarding_card_icon))
     putCompoundDrawablesRelative(start = icon)
 }
