@@ -76,9 +76,9 @@ class NeckoChild : public PNeckoChild {
 
   /* Predictor Messsages */
   mozilla::ipc::IPCResult RecvPredOnPredictPrefetch(
-      nsIURI* aURI, const uint32_t& aHttpStatus);
-  mozilla::ipc::IPCResult RecvPredOnPredictPreconnect(nsIURI* aURI);
-  mozilla::ipc::IPCResult RecvPredOnPredictDNS(nsIURI* aURI);
+      const URIParams& aURI, const uint32_t& aHttpStatus);
+  mozilla::ipc::IPCResult RecvPredOnPredictPreconnect(const URIParams& aURI);
+  mozilla::ipc::IPCResult RecvPredOnPredictDNS(const URIParams& aURI);
 
   mozilla::ipc::IPCResult RecvSpeculativeConnectRequest();
   mozilla::ipc::IPCResult RecvNetworkChangeNotification(nsCString const& type);
