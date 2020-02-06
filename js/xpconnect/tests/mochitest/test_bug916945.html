@@ -28,6 +28,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916945
 
     // Setting the 'name' attribute should propagate to the docshell.
     var ifrB = document.getElementById('ifrB');
+    await SpecialPowers.spawn(ifrB, [], () => {
+      Assert.equal(this.content.name, 'winB',
+                   'initial attribute value propagates to the docshell');
+    });
+
     ifrB.setAttribute('name', 'foo');
     await SpecialPowers.spawn(ifrB, [], () => {
       Assert.equal(this.content.name, 'foo',
@@ -45,6 +50,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916945
     // When the frame element attribute and docshell name don't match, nothing is returned.
     ok(!('foo' in window), "frame element name not resolved if it doesn't match the docshell");
     ok(!('bar' in window), "docshell name not resolved if it doesn't match the frame element");
+
+    // This shouldn't assert.
+    function listener() {
+      document.body.appendChild(ifrA);
+      ifrA.name = "";
+    }
+    ifrA.addEventListener("DOMNodeInserted", listener, {once: true});
+    document.body.appendChild(ifrA);
 
     SimpleTest.finish();
   }
