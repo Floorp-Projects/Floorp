@@ -116,6 +116,8 @@ interface PeerConnectionImpl  {
   readonly attribute DOMString pendingLocalDescription;
   readonly attribute DOMString currentRemoteDescription;
   readonly attribute DOMString pendingRemoteDescription;
+  readonly attribute boolean? currentOfferer;
+  readonly attribute boolean? pendingOfferer;
 
   readonly attribute RTCIceConnectionState iceConnectionState;
   readonly attribute RTCIceGatheringState iceGatheringState;
