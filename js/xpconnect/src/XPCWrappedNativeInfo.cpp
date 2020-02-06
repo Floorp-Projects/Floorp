@@ -252,9 +252,6 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
 
   if (totalCount > MAX_LOCAL_MEMBER_COUNT) {
     members = new XPCNativeMember[totalCount];
-    if (!members) {
-      return nullptr;
-    }
   } else {
     members = local_members;
   }
