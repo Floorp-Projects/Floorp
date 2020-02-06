@@ -69,8 +69,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for device 1 and 2 in device selector");
 
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const deviceItem1 = findMenuItem(menuItems, device1.name);
-    const deviceItem2 = findMenuItem(menuItems, device2.name);
+    const deviceItem1 = menuItems.find(
+      i => i.getAttribute("label") === device1.name
+    );
+    const deviceItem2 = menuItems.find(
+      i => i.getAttribute("label") === device2.name
+    );
     ok(deviceItem1, "Test device 1 menu item added to device selector");
     ok(deviceItem2, "Test device 2 menu item added to device selector");
   });
@@ -96,8 +100,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   info("Ensure device 2 is no longer in device selector");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const deviceItem1 = findMenuItem(menuItems, device1.name);
-    const deviceItem2 = findMenuItem(menuItems, device2.name);
+    const deviceItem1 = menuItems.find(
+      i => i.getAttribute("label") === device1.name
+    );
+    const deviceItem2 = menuItems.find(
+      i => i.getAttribute("label") === device2.name
+    );
     ok(deviceItem1, "Test device 1 menu item exists");
     ok(!deviceItem2, "Test device 2 menu item removed");
   });
@@ -119,8 +127,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   info("Ensure device 1 is still in device selector");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const deviceItem1 = findMenuItem(menuItems, device1.name);
-    const deviceItem2 = findMenuItem(menuItems, device2.name);
+    const deviceItem1 = menuItems.find(
+      i => i.getAttribute("label") === device1.name
+    );
+    const deviceItem2 = menuItems.find(
+      i => i.getAttribute("label") === device2.name
+    );
     ok(deviceItem1, "Test device 1 menu item exists");
     ok(!deviceItem2, "Test device 2 option removed");
   });

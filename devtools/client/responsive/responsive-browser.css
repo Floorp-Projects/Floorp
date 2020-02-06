@@ -20,11 +20,10 @@
   border: none;
   position: absolute;
   width: 100%;
-  /* In order to put the HTML menu above the browser element. */
-  z-index: 1;
 }
 
 .browserContainer.responsive-mode .browserStack.device-modal-opened > .rdm-toolbar {
+  z-index: 1;
   height: 100%;
 }
 

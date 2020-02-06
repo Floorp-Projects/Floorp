@@ -4,35 +4,27 @@
 
 "use strict";
 
-const Services = require("Services");
 const {
   createFactory,
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { hr } = dom;
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { getStr } = require("devtools/client/responsive/utils/l10n");
 const { parseUserAgent } = require("devtools/client/responsive/utils/ua");
 const Types = require("devtools/client/responsive/types");
 
-const MenuButton = createFactory(
-  require("devtools/client/shared/components/menu/MenuButton")
+const DeviceInfo = createFactory(
+  require("devtools/client/responsive/components/DeviceInfo")
 );
 
-loader.lazyGetter(this, "MenuItem", () => {
-  const menuItemClass = require("devtools/client/shared/components/menu/MenuItem");
-  const menuItem = createFactory(menuItemClass);
-  menuItem.DUMMY_ICON = menuItemClass.DUMMY_ICON;
-  return menuItem;
-});
-
-loader.lazyGetter(this, "MenuList", () => {
-  return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
-  );
-});
+loader.lazyRequireGetter(
+  this,
+  "showMenu",
+  "devtools/client/shared/components/menu/utils",
+  true
+);
 
 class DeviceSelector extends PureComponent {
   static get propTypes() {
@@ -46,28 +38,88 @@ class DeviceSelector extends PureComponent {
     };
   }
 
-  getMenuProps(device) {
-    if (!device) {
-      return { icon: null, label: null, tooltip: null };
-    }
+  constructor(props) {
+    super(props);
+    this.onShowDeviceMenu = this.onShowDeviceMenu.bind(this);
+  }
 
-    const { browser, os } = parseUserAgent(device.userAgent);
-    let label = device.name;
-    if (os) {
-      label += ` ${os.name}`;
-      if (os.version) {
-        label += ` ${os.version}`;
+  onShowDeviceMenu(event) {
+    const {
+      devices,
+      onChangeDevice,
+      doResizeViewport,
+      onUpdateDeviceModal,
+      selectedDevice,
+      viewportId,
+    } = this.props;
+
+    const menuItems = [];
+
+    for (const type of devices.types) {
+      for (const device of devices[type]) {
+        if (device.displayed) {
+          const { browser, os } = parseUserAgent(device.userAgent);
+          let label = device.name;
+          if (os) {
+            label += ` ${os.name}`;
+            if (os.version) {
+              label += ` ${os.version}`;
+            }
+          }
+          const image = browser
+            ? `chrome://devtools/skin/images/browsers/${browser.name.toLowerCase()}.svg`
+            : " ";
+
+          menuItems.push({
+            label,
+            image,
+            type: "checkbox",
+            checked: selectedDevice === device.name,
+            click: () => {
+              doResizeViewport(viewportId, device.width, device.height);
+              onChangeDevice(viewportId, device, type);
+            },
+          });
+        }
       }
     }
 
-    let icon = null;
-    let tooltip = label;
-    if (browser) {
-      icon = `chrome://devtools/skin/images/browsers/${browser.name.toLowerCase()}.svg`;
-      tooltip += ` ${browser.name} ${browser.version}`;
+    menuItems.sort(function(a, b) {
+      return a.label.localeCompare(b.label);
+    });
+
+    if (menuItems.length > 0) {
+      menuItems.push("-");
     }
 
-    return { icon, label, tooltip };
+    menuItems.push({
+      label: getStr("responsive.editDeviceList2"),
+      click: () => onUpdateDeviceModal(true, viewportId),
+    });
+
+    showMenu(menuItems, {
+      button: event.target,
+    });
+  }
+
+  createTitle(device) {
+    if (!device) {
+      return null;
+    }
+
+    const { browser, os } = parseUserAgent(device.userAgent);
+    let title = device.name;
+    if (os) {
+      title += ` ${os.name}`;
+      if (os.version) {
+        title += ` ${os.version}`;
+      }
+    }
+    if (browser) {
+      title += ` ${browser.name} ${browser.version}`;
+    }
+
+    return title;
   }
 
   getSelectedDevice() {
@@ -88,99 +140,24 @@ class DeviceSelector extends PureComponent {
     return null;
   }
 
-  renderMenuList() {
-    const {
-      devices,
-      onChangeDevice,
-      doResizeViewport,
-      onUpdateDeviceModal,
-      selectedDevice,
-      viewportId,
-    } = this.props;
-
-    const menuItems = [];
-
-    for (const type of devices.types) {
-      for (const device of devices[type]) {
-        if (device.displayed) {
-          const { icon, label, tooltip } = this.getMenuProps(device);
-
-          menuItems.push(
-            MenuItem({
-              key: label,
-              className: "device-selector-item",
-              checked: selectedDevice === device.name,
-              label,
-              icon: icon || MenuItem.DUMMY_ICON,
-              tooltip,
-              onClick: () => {
-                doResizeViewport(viewportId, device.width, device.height);
-                onChangeDevice(viewportId, device, type);
-              },
-            })
-          );
-        }
-      }
-    }
-
-    menuItems.sort(function(a, b) {
-      return a.props.label.localeCompare(b.props.label);
-    });
-
-    if (menuItems.length > 0) {
-      menuItems.push(hr({ key: "separator" }));
-    }
-
-    menuItems.push(
-      MenuItem({
-        key: "edit-device",
-        label: getStr("responsive.editDeviceList2"),
-        onClick: () => onUpdateDeviceModal(true, viewportId),
-      })
-    );
-
-    return MenuList({}, menuItems);
-  }
-
   render() {
     const { devices } = this.props;
-    const selectedDevice = this.getSelectedDevice();
-    let { icon, label, tooltip } = this.getMenuProps(selectedDevice);
 
-    if (!selectedDevice) {
-      label = getStr("responsive.responsiveMode");
-    }
+    const device = this.getSelectedDevice();
+    const title = this.createTitle(device);
 
-    // MenuButton is expected to be used in the toolbox document usually,
-    // but since RDM's frame also loads theme-switching.js, we can create
-    // MenuButtons (& HTMLTooltips) in the RDM frame document.
-    let toolboxDoc = null;
-    if (Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
-      toolboxDoc = window.document;
-    } else if (window.parent) {
-      toolboxDoc = window.parent.document;
-    } else {
-      // Main process content in old RDM.
-      // However, actually, this case is a possibility to run through only
-      // from browser_tab_remoteness_change.js test.
-      console.error(
-        "Unable to find a proper document to create the device-selector MenuButton for RDM"
-      );
-      return null;
-    }
-
-    return MenuButton(
+    return dom.button(
       {
         id: "device-selector",
-        menuId: "device-selector-menu",
-        toolboxDoc,
         className: "devtools-button devtools-dropdown-button",
-        label,
-        icon,
-        title: tooltip,
         disabled: devices.listState !== Types.loadableState.LOADED,
+        title,
+        onClick: this.onShowDeviceMenu,
       },
-      () => this.renderMenuList()
+      dom.span(
+        { className: "title" },
+        device ? DeviceInfo({ device }) : getStr("responsive.responsiveMode")
+      )
     );
   }
 }
