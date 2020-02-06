@@ -1800,7 +1800,7 @@ installation:
    bugs:
      - https://github.com/mozilla-mobile/fenix/issues/7295
    data_reviews:
-     - https://github.com/mozilla-mobile/fenix/pull/8074
+     - TODO
    notification_emails:
      - fenix-core@mozilla.com
    expires: "2020-09-01"
@@ -1813,7 +1813,7 @@ installation:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/8074
+      - TODO
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
@@ -1826,7 +1826,7 @@ installation:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/8074
+      - TODO
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
@@ -1839,7 +1839,7 @@ installation:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/8074
+      - TODO
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
@@ -1852,7 +1852,7 @@ installation:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/7295
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/8074
+      - TODO
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"

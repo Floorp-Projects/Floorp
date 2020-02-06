@@ -24,8 +24,8 @@ installation:
     Intended for counting user installs.
   include_client_id: false
   bugs:
-    - 7295
+    - https://github.com/mozilla-mobile/fenix/issues/7295
   data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+      - TODO
   notification_emails:
       - fenix-core@mozilla.com
