@@ -16,6 +16,8 @@
 #  include "mozilla/SandboxBrokerPolicyFactory.h"
 #endif
 
+#include "mozilla/Telemetry.h"
+
 #if defined(XP_WIN)
 #  include "mozilla/WinDllServices.h"
 #endif
@@ -56,7 +58,7 @@ bool RDDChild::Init() {
 
   nsTArray<GfxVarUpdate> updates = gfxVars::FetchNonDefaultVars();
 
-  SendInit(updates, brokerFd);
+  SendInit(updates, brokerFd, Telemetry::CanRecordReleaseData());
 
 #ifdef MOZ_GECKO_PROFILER
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
