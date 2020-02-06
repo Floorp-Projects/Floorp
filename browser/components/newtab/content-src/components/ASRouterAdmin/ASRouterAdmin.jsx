@@ -460,6 +460,9 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
     this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
+    this.handleClearAllImpressionsByProvider = this.handleClearAllImpressionsByProvider.bind(
+      this
+    );
     this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(
       this
     );
@@ -619,6 +622,32 @@ export class ASRouterAdminInner extends React.PureComponent {
         stringTargetingParameters: updatedParameters,
         targetingParametersError,
       };
+    });
+  }
+
+  handleClearAllImpressionsByProvider() {
+    const providerId = this.state.messageFilter;
+    if (!providerId) {
+      return;
+    }
+    const userPrefInfo = this.state.userPrefs;
+
+    const isUserEnabled =
+      providerId in userPrefInfo ? userPrefInfo[providerId] : true;
+
+    ASRouterUtils.sendMessage({
+      type: "DISABLE_PROVIDER",
+      data: providerId,
+    });
+    if (!isUserEnabled) {
+      ASRouterUtils.sendMessage({
+        type: "SET_PROVIDER_USER_PREF",
+        data: { id: providerId, value: true },
+      });
+    }
+    ASRouterUtils.sendMessage({
+      type: "ENABLE_PROVIDER",
+      data: providerId,
     });
   }
 
@@ -872,6 +901,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     if (!this.state.providers) {
       return null;
     }
+
     return (
       <p>
         {/* eslint-disable-next-line prettier/prettier */}
@@ -887,6 +917,15 @@ export class ASRouterAdminInner extends React.PureComponent {
             </option>
           ))}
         </select>
+        {this.state.messageFilter !== "all" &&
+        !this.state.messageFilter.includes("_local_testing") ? (
+          <button
+            className="button messages-reset"
+            onClick={this.handleClearAllImpressionsByProvider}
+          >
+            Reset All
+          </button>
+        ) : null}
       </p>
     );
   }
