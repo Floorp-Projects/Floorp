@@ -3674,7 +3674,7 @@ class nsIFrame : public nsQueryFrame {
   }
 
   template <typename T>
-  FrameProperties::PropertyType<T> TakeProperty(
+  MOZ_MUST_USE FrameProperties::PropertyType<T> TakeProperty(
       FrameProperties::Descriptor<T> aProperty, bool* aFoundResult = nullptr) {
     return mProperties.Take(aProperty, aFoundResult);
   }
