@@ -758,7 +758,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
 #endif
 
   if (mCurrentSpan == mRootSpan) {
-    pfd->mFrame->DeleteProperty(nsIFrame::LineBaselineOffset());
+    pfd->mFrame->RemoveProperty(nsIFrame::LineBaselineOffset());
   } else {
 #ifdef DEBUG
     bool hasLineOffset;

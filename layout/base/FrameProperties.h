@@ -231,13 +231,13 @@ class FrameProperties {
   }
 
   /**
-   * Remove and destroy a property value. This requires a linear search
-   * through the properties of the frame. If the frame has no such
-   * property, nothing happens.
+   * Remove and destroy a property value. This requires a linear search through
+   * the properties of the frame. If the frame has no such property, nothing
+   * happens.
    */
   template <typename T>
-  void Delete(Descriptor<T> aProperty, const nsIFrame* aFrame) {
-    DeleteInternal(aProperty, aFrame);
+  void Remove(Descriptor<T> aProperty, const nsIFrame* aFrame) {
+    RemoveInternal(aProperty, aFrame);
   }
 
   /**
@@ -261,7 +261,7 @@ class FrameProperties {
   /**
    * Remove and destroy all property values for the frame.
    */
-  void DeleteAll(const nsIFrame* aFrame) {
+  void RemoveAll(const nsIFrame* aFrame) {
     nsTArray<PropertyValue> toDelete;
     toDelete.SwapElements(mProperties);
     for (auto& prop : toDelete) {
@@ -295,7 +295,7 @@ class FrameProperties {
 
   inline void* TakeInternal(UntypedDescriptor aProperty, bool* aFoundResult);
 
-  inline void DeleteInternal(UntypedDescriptor aProperty,
+  inline void RemoveInternal(UntypedDescriptor aProperty,
                              const nsIFrame* aFrame);
 
   template <typename T>
@@ -428,7 +428,7 @@ inline void* FrameProperties::TakeInternal(UntypedDescriptor aProperty,
   return result;
 }
 
-inline void FrameProperties::DeleteInternal(UntypedDescriptor aProperty,
+inline void FrameProperties::RemoveInternal(UntypedDescriptor aProperty,
                                             const nsIFrame* aFrame) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aProperty, "Null property?");

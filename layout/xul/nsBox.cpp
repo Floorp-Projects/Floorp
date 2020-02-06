@@ -39,9 +39,9 @@ nsresult nsBox::BeginXULLayout(nsBoxLayoutState& aState) {
 
   // Another copy-over from ReflowInput.
   // Since we are in reflow, we don't need to store these properties anymore.
-  DeleteProperty(UsedBorderProperty());
-  DeleteProperty(UsedPaddingProperty());
-  DeleteProperty(UsedMarginProperty());
+  RemoveProperty(UsedBorderProperty());
+  RemoveProperty(UsedPaddingProperty());
+  RemoveProperty(UsedMarginProperty());
 
   return NS_OK;
 }

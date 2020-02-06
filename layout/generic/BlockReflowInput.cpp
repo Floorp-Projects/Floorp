@@ -973,7 +973,7 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
     }
   } else if (invalidationData) {
     invalidationData = nullptr;
-    aFloat->DeleteProperty(ShapeInvalidationDataProperty());
+    aFloat->RemoveProperty(ShapeInvalidationDataProperty());
   }
 
   if (!reflowStatus.IsFullyComplete()) {

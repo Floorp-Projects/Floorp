@@ -158,7 +158,7 @@ void nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(
 void nsMathMLContainerFrame::ClearSavedChildMetrics() {
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    childFrame->DeleteProperty(HTMLReflowOutputProperty());
+    childFrame->RemoveProperty(HTMLReflowOutputProperty());
     childFrame = childFrame->GetNextSibling();
   }
 }

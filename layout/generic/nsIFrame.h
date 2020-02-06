@@ -3680,11 +3680,11 @@ class nsIFrame : public nsQueryFrame {
   }
 
   template <typename T>
-  void DeleteProperty(FrameProperties::Descriptor<T> aProperty) {
-    mProperties.Delete(aProperty, this);
+  void RemoveProperty(FrameProperties::Descriptor<T> aProperty) {
+    mProperties.Remove(aProperty, this);
   }
 
-  void DeleteAllProperties() { mProperties.DeleteAll(this); }
+  void RemoveAllProperties() { mProperties.RemoveAll(this); }
 
   // nsIFrames themselves are in the nsPresArena, and so are not measured here.
   // Instead, this measures heap-allocated things hanging off the nsIFrame, and

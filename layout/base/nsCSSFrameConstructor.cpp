@@ -10359,7 +10359,7 @@ void nsCSSFrameConstructor::RemoveLetterFrames(PresShell* aPresShell,
                                                nsContainerFrame* aBlockFrame) {
   aBlockFrame =
       static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
-  aBlockFrame->DeleteProperty(nsContainerFrame::FirstLetterProperty());
+  aBlockFrame->RemoveProperty(nsContainerFrame::FirstLetterProperty());
   nsContainerFrame* continuation = aBlockFrame;
 
   bool stopLooking = false;

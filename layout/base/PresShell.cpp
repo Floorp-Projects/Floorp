@@ -2069,7 +2069,7 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
     mDirtyRoots.Remove(aFrame);
 
     // Remove frame properties
-    aFrame->DeleteAllProperties();
+    aFrame->RemoveAllProperties();
 
     if (aFrame == mCurrentEventFrame) {
       mCurrentEventContent = aFrame->GetContent();

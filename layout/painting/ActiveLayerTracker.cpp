@@ -198,7 +198,7 @@ void LayerActivityTracker::NotifyExpired(LayerActivity* aObject) {
       f->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
     }
     f->RemoveStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY);
-    f->DeleteProperty(LayerActivityProperty());
+    f->RemoveProperty(LayerActivityProperty());
   } else {
     c->DeleteProperty(nsGkAtoms::LayerActivity);
   }
