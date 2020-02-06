@@ -123,7 +123,7 @@ NTSTATUS ModuleLoadFrame::SetLoadStatus(NTSTATUS aNtStatus,
   return STATUS_SUCCESS;
 }
 
-MOZ_THREAD_LOCAL(ModuleLoadFrame*) ModuleLoadFrame::sTopFrame;
+SafeThreadLocal<ModuleLoadFrame*> ModuleLoadFrame::sTopFrame;
 
 }  // namespace freestanding
 }  // namespace mozilla

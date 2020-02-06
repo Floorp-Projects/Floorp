@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/NativeNt.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
 
 #include <stdio.h>
@@ -21,6 +22,8 @@ const wchar_t kNonHex12[] = L"Foo.ABCDEFG12345.dll";
 const wchar_t kHex13[] = L"Foo.ABCDEF0123456.dll";
 const wchar_t kHex11[] = L"Foo.ABCDEF01234.dll";
 const wchar_t kPrefixedHex16[] = L"Pabcdef0123456789.dll";
+const uint32_t kTlsDataValue = 1234;
+static MOZ_THREAD_LOCAL(uint32_t) sTlsData;
 
 const char kFailFmt[] =
     "TEST-FAILED | NativeNt | %s(%s) should have returned %s but did not\n";
@@ -37,6 +40,15 @@ const char kFailFmt[] =
 
 using namespace mozilla;
 using namespace mozilla::nt;
+
+// Need a non-inline function to bypass compiler optimization that the thread
+// local storage pointer is cached in a register before accessing a thread-local
+// variable.
+MOZ_NEVER_INLINE PVOID SwapThreadLocalStoragePointer(PVOID aNewValue) {
+  auto oldValue = RtlGetThreadLocalStoragePointer();
+  RtlSetThreadLocalStoragePointerForTestingOnly(aNewValue);
+  return oldValue;
+}
 
 int main(int argc, char* argv[]) {
   UNICODE_STRING normal;
@@ -92,6 +104,31 @@ int main(int argc, char* argv[]) {
     printf("TEST-FAILED | NativeNt | RtlGetProcessHeap() is broken\n");
     return 1;
   }
+
+#ifdef HAVE_SEH_EXCEPTIONS
+  PVOID origTlsHead = nullptr;
+  bool isExceptionThrown = false;
+  MOZ_SEH_TRY {
+    // Need to call SwapThreadLocalStoragePointer inside __try to make sure
+    // accessing sTlsData is caught by SEH.  This is due to clang's design.
+    // https://bugs.llvm.org/show_bug.cgi?id=44174.
+    origTlsHead = SwapThreadLocalStoragePointer(nullptr);
+    sTlsData.set(~kTlsDataValue);
+  }
+  MOZ_SEH_EXCEPT(GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
+                     ? EXCEPTION_EXECUTE_HANDLER
+                     : EXCEPTION_CONTINUE_SEARCH) {
+    isExceptionThrown = true;
+  }
+  SwapThreadLocalStoragePointer(origTlsHead);
+  sTlsData.set(kTlsDataValue);
+  if (!isExceptionThrown || sTlsData.get() != kTlsDataValue) {
+    printf(
+        "TEST-FAILED | NativeNt | RtlGetThreadLocalStoragePointer() is "
+        "broken\n");
+    return 1;
+  }
+#endif
 
   if (RtlGetCurrentThreadId() != ::GetCurrentThreadId()) {
     printf("TEST-FAILED | NativeNt | RtlGetCurrentThreadId() is broken\n");
