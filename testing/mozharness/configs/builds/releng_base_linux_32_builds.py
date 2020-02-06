@@ -46,10 +46,6 @@ config = {
         'PATH': '/usr/local/bin:\
 /bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
     },
-    "check_test_env": {
-        'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',
-        'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
-    },
     'mozconfig_platform': 'linux32',
     'mozconfig_variant': 'nightly',
     #########################################################################
