@@ -78,8 +78,7 @@ void PromiseDebugging::GetState(GlobalObject& aGlobal,
   // CheckedUnwrapStatic is fine, since we're looking for promises only.
   JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
-    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
-        NS_LITERAL_STRING("Argument of PromiseDebugging.getState"));
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>();
     return;
   }
   switch (JS::GetPromiseState(obj)) {
@@ -105,8 +104,7 @@ void PromiseDebugging::GetPromiseID(GlobalObject& aGlobal,
   // CheckedUnwrapStatic is fine, since we're looking for promises only.
   JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
-    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
-        NS_LITERAL_STRING("Argument of PromiseDebugging.getState"));
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>();
     return;
   }
   uint64_t promiseID = JS::GetPromiseID(obj);
@@ -123,8 +121,7 @@ void PromiseDebugging::GetAllocationStack(GlobalObject& aGlobal,
   // CheckedUnwrapStatic is fine, since we're looking for promises only.
   JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
-    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
-        NS_LITERAL_STRING("Argument of PromiseDebugging.getAllocationStack"));
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>();
     return;
   }
   aStack.set(JS::GetPromiseAllocationSite(obj));
@@ -139,8 +136,7 @@ void PromiseDebugging::GetRejectionStack(GlobalObject& aGlobal,
   // CheckedUnwrapStatic is fine, since we're looking for promises only.
   JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
-    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
-        NS_LITERAL_STRING("Argument of PromiseDebugging.getRejectionStack"));
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>();
     return;
   }
   aStack.set(JS::GetPromiseResolutionSite(obj));
@@ -155,8 +151,7 @@ void PromiseDebugging::GetFullfillmentStack(GlobalObject& aGlobal,
   // CheckedUnwrapStatic is fine, since we're looking for promises only.
   JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
-    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
-        NS_LITERAL_STRING("Argument of PromiseDebugging.getFulfillmentStack"));
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>();
     return;
   }
   aStack.set(JS::GetPromiseResolutionSite(obj));

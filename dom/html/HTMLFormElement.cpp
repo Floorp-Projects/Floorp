@@ -301,7 +301,7 @@ void HTMLFormElement::RequestSubmit(nsGenericHTMLElement* aSubmitter,
 
     // 1.1. If submitter is not a submit button, then throw a TypeError.
     if (!fc || !fc->IsSubmitControl()) {
-      aRv.ThrowTypeError<MSG_NOT_SUBMIT_BUTTON>();
+      aRv.ThrowTypeError(u"The submitter is not a submit button.");
       return;
     }
 

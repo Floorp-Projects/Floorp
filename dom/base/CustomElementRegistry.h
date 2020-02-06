@@ -469,7 +469,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
   ~CustomElementRegistry();
 
   bool JSObjectToAtomArray(JSContext* aCx, JS::Handle<JSObject*> aConstructor,
-                           const char16_t* aName,
+                           const nsString& aName,
                            nsTArray<RefPtr<nsAtom>>& aArray, ErrorResult& aRv);
 
   static UniquePtr<CustomElementCallback> CreateCustomElementCallback(

@@ -1974,11 +1974,11 @@ add_task(async function test_invalid_uri_spec_throws() {
   );
   Assert.throws(
     () => PT.Tag({ tag: "TheTag", urls: ["invalid uri spec"] }),
-    /TypeError: invalid uri spec is not a valid URL/
+    /TypeError: URL constructor: invalid uri spec is not a valid URL/
   );
   Assert.throws(
     () => PT.Tag({ tag: "TheTag", urls: ["about:blank", "invalid uri spec"] }),
-    /TypeError: invalid uri spec is not a valid URL/
+    /TypeError: URL constructor: invalid uri spec is not a valid URL/
   );
 });
 

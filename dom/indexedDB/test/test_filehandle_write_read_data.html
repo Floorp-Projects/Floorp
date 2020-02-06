@@ -15,7 +15,7 @@
     const name = window.location.pathname;
 
     var testString = "Lorem ipsum his ponderum delicatissimi ne, at noster dolores urbanitas pro, cibo elaboraret no his. Ea dicunt maiorum usu. Ad appareat facilisis mediocritatem eos. Tale graeci mentitum in eos, hinc insolens at nam. Graecis nominavi aliquyam eu vix. Id solet assentior sadipscing pro. Et per atqui graecis, usu quot viris repudiandae ei, mollis evertitur an nam. At nam dolor ignota, liber labore omnesque ea mei, has movet voluptaria in. Vel an impetus omittantur. Vim movet option salutandi ex, ne mei ignota corrumpit. Mucius comprehensam id per. Est ea putant maiestatis.";
-    var typeErrString = "TypeError: Data size for read is too large.";
+    var typeErrMessage = "Data size for read is too large.";
     var uint32Max = 0xFFFFFFFF;
 
     for (let i = 0; i < 5; i++) {
@@ -64,7 +64,9 @@
       ok(false, "Should have thrown!");
     } catch (e) {
       ok(e instanceof TypeError, "Got TypeError");
-      ok(e == typeErrString, "Correct error string");
+      is(e.name, "TypeError", "Correct error name");
+      is(e.message, "IDBFileHandle.readAsText: " + typeErrMessage,
+         "Correct error mesage");
     }
 
     let resultString = event.target.result;
@@ -87,7 +89,9 @@
       ok(false, "Should have thrown!");
     } catch (e) {
       ok(e instanceof TypeError, "Got TypeError");
-      ok(e == typeErrString, "Correct error string");
+      is(e.name, "TypeError", "Correct error name");
+      is(e.message, "IDBFileHandle.readAsArrayBuffer: " + typeErrMessage,
+         "Correct error message");
     }
 
     let resultBuffer = event.target.result;

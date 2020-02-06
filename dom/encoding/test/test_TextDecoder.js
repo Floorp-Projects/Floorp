@@ -159,7 +159,9 @@ function testConstructorFatalOption(data, expectedString) {
 
 function testConstructorEncodingOption(aData, aExpectedString) {
   function errorMessage(encoding) {
-    return `The given encoding '${String(encoding).trim()}' is not supported.`;
+    return `TextDecoder constructor: The given encoding '${String(
+      encoding
+    ).trim()}' is not supported.`;
   }
 
   // valid encoding passed
