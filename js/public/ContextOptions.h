@@ -28,7 +28,7 @@ class JS_PUBLIC_API ContextOptions {
         wasmGc_(false),
         testWasmAwaitTier2_(false),
 #ifdef ENABLE_WASM_BIGINT
-        enableWasmBigInt_(false),
+        enableWasmBigInt_(true),
 #endif
         throwOnAsmJSValidationFailure_(false),
         disableIon_(false),

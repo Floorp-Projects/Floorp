@@ -67,16 +67,6 @@ wasmValidateText('(module (func (result i32) (param i32) (i32.const 42)))');
 wasmValidateText('(module (func (param f32)))');
 wasmValidateText('(module (func (param f64)))');
 
-var f = wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))').exports[""];
-assertErrorMessage(f, TypeError, /i64/);
-var f = wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))').exports[""];
-assertErrorMessage(f, TypeError, /i64/);
-
-var f = wasmEvalText('(module (import $imp "a" "b" (param i64) (result i32)) (func $f (result i32) (call $imp (i64.const 0))) (export "" $f))', {a:{b:()=>{}}}).exports[""];
-assertErrorMessage(f, TypeError, /i64/);
-var f = wasmEvalText('(module (import $imp "a" "b" (result i64)) (func $f (result i64) (call $imp)) (export "" $f))', {a:{b:()=>{}}}).exports[""];
-assertErrorMessage(f, TypeError, /i64/);
-
 wasmFullPassI64('(module (func $run (result i64) (i64.const 123)))', 123);
 wasmFullPassI64('(module (func $run (param i64) (result i64) (local.get 0)))',
                 '0x123400007fffffff',
