@@ -270,7 +270,76 @@ const TESTS = {
     emitter.emit("test");
     equal(called, false, "event listener wasn't called");
   },
+
+  async testEmitAsync() {
+    const emitter = getEventEmitter();
+
+    let resolve1, resolve2;
+    emitter.once("test", async () => {
+      return new Promise(r => {
+        resolve1 = r;
+      });
+    });
+
+    // Adding a listener which doesn't return a promise should trigger a console warning.
+    emitter.once("test", () => {});
+
+    emitter.once("test", async () => {
+      return new Promise(r => {
+        resolve2 = r;
+      });
+    });
+
+    info("Emit an event and wait for all listener resolutions");
+    const onConsoleWarning = onConsoleWarningLogged(
+      "Listener for event 'test' did not return a promise."
+    );
+    const onEmitted = emitter.emitAsync("test");
+    let resolved = false;
+    onEmitted.then(() => {
+      info("emitAsync just resolved");
+      resolved = true;
+    });
+
+    info("Waiting for warning message about the second listener");
+    await onConsoleWarning;
+
+    // Spin the event loop, to ensure that emitAsync did not resolved too early
+    await new Promise(r => Services.tm.dispatchToMainThread(r));
+
+    ok(resolve1, "event listener has been called");
+    ok(!resolved, "but emitAsync hasn't resolved yet");
+
+    info("Resolve the first listener function");
+    resolve1();
+    ok(!resolved, "emitAsync isn't resolved until all listener resolve");
+
+    info("Resolve the second listener function");
+    resolve2();
+
+    // emitAsync is only resolved in the next event loop
+    await new Promise(r => Services.tm.dispatchToMainThread(r));
+    ok(resolved, "once we resolve all the listeners, emitAsync is resolved");
+  },
 };
+
+// Wait for the next call to console.warn which includes
+// the text passed as argument
+function onConsoleWarningLogged(warningMessage) {
+  return new Promise(resolve => {
+    const observer = {
+      observe(subject) {
+        // This is the first argument passed to console.warn()
+        const message = subject.wrappedJSObject.arguments[0];
+        if (message.includes(warningMessage)) {
+          Services.obs.removeObserver(observer, "console-api-log-event");
+          resolve();
+        }
+      },
+    };
+    Services.obs.addObserver(observer, "console-api-log-event");
+  });
+}
 
 /**
  * Create a runnable tests based on the tests descriptor given.
