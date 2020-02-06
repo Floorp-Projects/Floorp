@@ -195,7 +195,7 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
     if (MOZ_LIKELY(frame)) {
       frame->DestroyFrom(aDestructRoot, aPostDestroyData);
     } else {
-      RemoveProperty(aProp);
+      TakeProperty(aProp);
       frameList->Delete(aPresShell);
       return;
     }
@@ -1244,7 +1244,7 @@ static bool TryRemoveFrame(nsIFrame* aFrame,
   if (list && list->StartRemoveFrame(aChildToRemove)) {
     // aChildToRemove *may* have been removed from this list.
     if (list->IsEmpty()) {
-      aFrame->RemoveProperty(aProp);
+      aFrame->TakeProperty(aProp);
       list->Delete(aFrame->PresShell());
     }
     return true;
@@ -1432,7 +1432,7 @@ nsFrameList* nsContainerFrame::GetPropTableFrames(
 
 nsFrameList* nsContainerFrame::RemovePropTableFrames(
     FrameListPropertyDescriptor aProperty) {
-  return RemoveProperty(aProperty);
+  return TakeProperty(aProperty);
 }
 
 void nsContainerFrame::SetPropTableFrames(

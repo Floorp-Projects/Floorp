@@ -1037,7 +1037,7 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
   // property table in an inconsistent state. So we remove it from the table and
   // then destroy it. (bug 1530657)
   WebRenderUserDataTable* userDataTable =
-      RemoveProperty(WebRenderUserDataProperty::Key());
+      TakeProperty(WebRenderUserDataProperty::Key());
   if (userDataTable) {
     for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
       iter.UserData()->RemoveFromTable();
@@ -1048,7 +1048,7 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
   FrameLayerBuilder::RemoveFrameFromLayerManager(this, DisplayItemData());
   DisplayItemData().Clear();
 
-  DisplayItemArray* items = RemoveProperty(DisplayItems());
+  DisplayItemArray* items = TakeProperty(DisplayItems());
   if (items) {
     for (nsDisplayItemBase* i : *items) {
       if (i->GetDependentFrame() == this && !i->HasDeletedFrame()) {
@@ -2185,7 +2185,7 @@ void nsIFrame::DisableVisibilityTracking() {
   }
 
   bool isSet = false;
-  uint32_t visibleCount = RemoveProperty(VisibilityStateProperty(), &isSet);
+  uint32_t visibleCount = TakeProperty(VisibilityStateProperty(), &isSet);
 
   MOZ_ASSERT(isSet,
              "Should have a VisibilityStateProperty value "

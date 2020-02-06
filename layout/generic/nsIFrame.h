@@ -3674,9 +3674,9 @@ class nsIFrame : public nsQueryFrame {
   }
 
   template <typename T>
-  FrameProperties::PropertyType<T> RemoveProperty(
+  FrameProperties::PropertyType<T> TakeProperty(
       FrameProperties::Descriptor<T> aProperty, bool* aFoundResult = nullptr) {
-    return mProperties.Remove(aProperty, aFoundResult);
+    return mProperties.Take(aProperty, aFoundResult);
   }
 
   template <typename T>
