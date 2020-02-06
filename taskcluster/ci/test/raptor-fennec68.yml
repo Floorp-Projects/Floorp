@@ -325,3 +325,20 @@ raptor-scn-power-idle-bg-fennec68:
             - --binary=org.mozilla.firefox
             - --power-test
             - --host HOST_IP
+
+raptor-youtube-playback-fennec68:
+    description: "Raptor YouTube Playback on Fennec68"
+    try-name: raptor-youtube-playback-fennec68
+    treeherder-symbol: Rap(ytp)
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-g5.*/pgo: ['mozilla-central']
+            default: []
+    max-run-time: 3600
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
