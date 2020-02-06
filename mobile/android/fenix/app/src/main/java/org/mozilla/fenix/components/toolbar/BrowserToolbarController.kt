@@ -146,15 +146,15 @@ class DefaultBrowserToolbarController(
                     currentSession?.let {
                         topSiteStorage.addTopSite(it.title, it.url)
                     }
-
-                    activity.getRootView()?.let {
-
-                        val appName = it.context.getString(R.string.app_name)
-                        FenixSnackbar.makeWithToolbarPadding(it, Snackbar.LENGTH_SHORT)
-                            .setText(it.context.getString(
-                                R.string.snackbar_added_to_firefox_home,
-                                appName
-                            ))
+                    MainScope().launch {
+                        val appName = swipeRefresh.context.getString(R.string.app_name)
+                        FenixSnackbar.makeWithToolbarPadding(swipeRefresh, Snackbar.LENGTH_SHORT)
+                            .setText(
+                                swipeRefresh.context.getString(
+                                    R.string.snackbar_added_to_firefox_home,
+                                    appName
+                                )
+                            )
                             .show()
                     }
                 }
@@ -174,7 +174,12 @@ class DefaultBrowserToolbarController(
             }
             ToolbarMenu.Item.Share -> {
                 val directions = NavGraphDirections.actionGlobalShareFragment(
-                    data = arrayOf(ShareData(url = currentSession?.url, title = currentSession?.title)),
+                    data = arrayOf(
+                        ShareData(
+                            url = currentSession?.url,
+                            title = currentSession?.title
+                        )
+                    ),
                     showPage = true
                 )
                 navController.navigate(directions)
@@ -219,16 +224,17 @@ class DefaultBrowserToolbarController(
                     .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENTIFIER))
 
                 currentSession?.let { currentSession ->
-                    val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
-                        previousFragmentId = R.id.browserFragment,
-                        tabIds = arrayOf(currentSession.id),
-                        selectedTabIds = arrayOf(currentSession.id),
-                        saveCollectionStep = if (tabCollectionStorage.cachedTabCollections.isEmpty()) {
-                            SaveCollectionStep.NameCollection
-                        } else {
-                            SaveCollectionStep.SelectCollection
-                        }
-                    )
+                    val directions =
+                        BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
+                            previousFragmentId = R.id.browserFragment,
+                            tabIds = arrayOf(currentSession.id),
+                            selectedTabIds = arrayOf(currentSession.id),
+                            saveCollectionStep = if (tabCollectionStorage.cachedTabCollections.isEmpty()) {
+                                SaveCollectionStep.NameCollection
+                            } else {
+                                SaveCollectionStep.SelectCollection
+                            }
+                        )
                     navController.nav(R.id.browserFragment, directions)
                 }
             }
