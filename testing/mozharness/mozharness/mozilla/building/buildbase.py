@@ -754,13 +754,6 @@ items from that key's value."
         self._run_tooltool()
         self._create_mozbuild_dir()
         self._ensure_upload_path()
-        mach_props = os.path.join(
-            self.query_abs_dirs()['abs_obj_dir'],
-            'dist',
-            'mach_build_properties.json')
-        if os.path.exists(mach_props):
-            self.info("Removing previous mach property file: %s" % mach_props)
-            self.rmtree(mach_props)
 
     def build(self):
         """builds application."""
