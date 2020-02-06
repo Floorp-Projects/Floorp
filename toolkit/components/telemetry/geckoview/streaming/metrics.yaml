@@ -10,6 +10,36 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
 geckoview:
+  version:
+    description: >
+      The version of the Gecko engine, example: 74.0a1
+    type: string
+    lifetime: application
+    gecko_datapoint: gecko.version
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240#c2
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - ktaeleman@mozilla.com
+    expires: never
+
+  build_id:
+    description: >
+      The Buildid of the Gecko engine, example: 20200205124310
+    type: string
+    lifetime: application
+    gecko_datapoint: gecko.build_id
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240#c2
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - ktaeleman@mozilla.com
+    expires: never
+
   page_load_progress_time:
     type: timing_distribution
     time_unit: millisecond

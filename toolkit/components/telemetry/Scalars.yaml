@@ -480,6 +480,42 @@ browser.usage:
       - 'main'
       - 'content'
 
+gecko:
+  version:
+    bug_numbers:
+      - 1611240
+    description: >
+      The version of the Gecko engine, example: '74.0a1'.
+      It consists of the major and minor version, followed by the release life cycle phase.
+      'a' stands for alpha or nightly, 'b' stands for beta.
+      The number behind the release life cycle phase indicates minor releases within the phase.
+    expires: never
+    kind: string
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - ktaeleman@mozilla.com
+    products:
+      - 'geckoview_streaming'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+  build_id:
+    bug_numbers:
+      - 1611240
+    description: >
+      The build id of the Gecko engine, example: '20200205124310'.
+      It contains the time the build was created and is used as a unique id for the build.
+    expires: never
+    kind: string
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - ktaeleman@mozilla.com
+    products:
+      - 'geckoview_streaming'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+
 extensions.updates:
   rdf:
     bug_numbers:
