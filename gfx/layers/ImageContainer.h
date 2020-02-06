@@ -167,6 +167,8 @@ class SharedRGBImage;
 class SurfaceTextureImage;
 #elif defined(XP_MACOSX)
 class MacIOSurfaceImage;
+#elif MOZ_WAYLAND
+class WaylandDMABUFSurfaceImage;
 #endif
 
 /**
@@ -227,6 +229,11 @@ class Image {
   virtual MacIOSurfaceImage* AsMacIOSurfaceImage() { return nullptr; }
 #endif
   virtual PlanarYCbCrImage* AsPlanarYCbCrImage() { return nullptr; }
+#ifdef MOZ_WAYLAND
+  virtual WaylandDMABUFSurfaceImage* AsWaylandDMABUFSurfaceImage() {
+    return nullptr;
+  }
+#endif
 
   virtual NVImage* AsNVImage() { return nullptr; }
 
