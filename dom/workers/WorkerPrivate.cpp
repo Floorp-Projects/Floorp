@@ -4039,11 +4039,13 @@ void WorkerPrivate::PostMessageToParent(
   }
 
   JS::CloneDataPolicy clonePolicy;
-  if (IsSharedMemoryAllowed()) {
-    clonePolicy.allowIntraClusterClonableSharedObjects();
-  }
 
-  // TODO: what about cloneDataPolicy.allowSharedMemoryObjects()
+  // Parent and dedicated workers are always part of the same cluster.
+  clonePolicy.allowIntraClusterClonableSharedObjects();
+
+  if (IsSharedMemoryAllowed()) {
+    clonePolicy.allowSharedMemoryObjects();
+  }
 
   runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
 
@@ -5072,8 +5074,6 @@ const nsAString& WorkerPrivate::Id() {
 }
 
 bool WorkerPrivate::IsSharedMemoryAllowed() const {
-  AssertIsOnWorkerThread();
-
   if (StaticPrefs::
           dom_postMessage_sharedArrayBuffer_bypassCOOP_COEP_insecure_enabled()) {
     return true;
@@ -5083,8 +5083,6 @@ bool WorkerPrivate::IsSharedMemoryAllowed() const {
 }
 
 bool WorkerPrivate::CrossOriginIsolated() const {
-  AssertIsOnWorkerThread();
-
   if (!StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP()) {
     return false;
   }

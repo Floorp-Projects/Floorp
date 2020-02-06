@@ -179,7 +179,9 @@ PostMessageEvent::Run() {
     cloneDataPolicy.allowIntraClusterClonableSharedObjects();
   }
 
-  // TODO: what about cloneDataPolicy.allowSharedMemoryObjects()
+  if (targetWindow->IsSharedMemoryAllowed()) {
+    cloneDataPolicy.allowSharedMemoryObjects();
+  }
 
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
