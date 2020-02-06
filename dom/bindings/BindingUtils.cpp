@@ -105,9 +105,9 @@ const JSErrorFormatString ErrorFormatString[] = {
 #undef MSG_DEF
 };
 
-#define MSG_DEF(_name, _argc, _exn, _str)      \
-  static_assert(                               \
-      _argc < JS::MaxNumErrorArguments, #_name \
+#define MSG_DEF(_name, _argc, _exn, _str)        \
+  static_assert(                                 \
+      (_argc) < JS::MaxNumErrorArguments, #_name \
       " must only have as many error arguments as the JS engine can support");
 #include "mozilla/dom/Errors.msg"
 #undef MSG_DEF
@@ -240,7 +240,7 @@ bool TErrorResult<CleanupPolicy>::DeserializeMessage(const IPC::Message* aMsg,
 
 template <typename CleanupPolicy>
 void TErrorResult<CleanupPolicy>::SetPendingExceptionWithMessage(
-    JSContext* aCx) {
+    JSContext* aCx, const char* context) {
   AssertInOwningThread();
   MOZ_ASSERT(mUnionState == HasMessage);
   MOZ_ASSERT(mExtra.mMessage,
@@ -382,11 +382,19 @@ void TErrorResult<CleanupPolicy>::ThrowDOMException(nsresult rv,
 }
 
 template <typename CleanupPolicy>
-void TErrorResult<CleanupPolicy>::SetPendingDOMException(JSContext* cx) {
+void TErrorResult<CleanupPolicy>::SetPendingDOMException(JSContext* cx,
+                                                         const char* context) {
   AssertInOwningThread();
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
   MOZ_ASSERT(mExtra.mDOMExceptionInfo,
              "SetPendingDOMException() can be called only once");
+
+  if (context && !mExtra.mDOMExceptionInfo->mMessage.IsEmpty()) {
+    // Prepend our context and ": "; see API documentation.
+    nsAutoCString prefix(context);
+    prefix.AppendLiteral(": ");
+    mExtra.mDOMExceptionInfo->mMessage.Insert(prefix, 0);
+  }
 
   dom::Throw(cx, mExtra.mDOMExceptionInfo->mRv,
              mExtra.mDOMExceptionInfo->mMessage);
@@ -552,7 +560,8 @@ void TErrorResult<CleanupPolicy>::SuppressException() {
 }
 
 template <typename CleanupPolicy>
-void TErrorResult<CleanupPolicy>::SetPendingException(JSContext* cx) {
+void TErrorResult<CleanupPolicy>::SetPendingException(JSContext* cx,
+                                                      const char* context) {
   AssertInOwningThread();
   if (IsUncatchableException()) {
     // Nuke any existing exception on cx, to make sure we're uncatchable.
@@ -569,7 +578,7 @@ void TErrorResult<CleanupPolicy>::SetPendingException(JSContext* cx) {
     return;
   }
   if (IsErrorWithMessage()) {
-    SetPendingExceptionWithMessage(cx);
+    SetPendingExceptionWithMessage(cx, context);
     return;
   }
   if (IsJSException()) {
@@ -577,7 +586,7 @@ void TErrorResult<CleanupPolicy>::SetPendingException(JSContext* cx) {
     return;
   }
   if (IsDOMException()) {
-    SetPendingDOMException(cx);
+    SetPendingDOMException(cx, context);
     return;
   }
   SetPendingGenericErrorException(cx);

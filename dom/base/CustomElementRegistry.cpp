@@ -1097,7 +1097,7 @@ static void DoUpgrade(Element* aElement, CustomElementDefinition* aDefinition,
                       ErrorResult& aRv) {
   if (aDefinition->mDisableShadow && aElement->GetShadowRoot()) {
     aRv.ThrowNotSupportedError(nsPrintfCString(
-        "Custom element upgrade to '%s' is disabled due to shadow root "
+        "Custom element upgrade to '%s' is disabled because a shadow root "
         "already exists",
         NS_ConvertUTF16toUTF8(aDefinition->mType->GetUTF16String()).get()));
     return;

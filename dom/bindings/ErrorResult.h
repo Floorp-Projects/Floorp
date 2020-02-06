@@ -232,14 +232,19 @@ class TErrorResult {
   //
   // After this call, the TErrorResult will no longer return true from Failed(),
   // since the exception will have moved to the JSContext.
+  //
+  // If "context" is not null and our exception has a useful message string, the
+  // string "%s: ", with the value of "context" replacing %s, will be prepended
+  // to the message string.  The passed-in string must be ASCII.
   MOZ_MUST_USE
-  bool MaybeSetPendingException(JSContext* cx) {
+  bool MaybeSetPendingException(JSContext* cx,
+                                const char* description = nullptr) {
     WouldReportJSException();
     if (!Failed()) {
       return false;
     }
 
-    SetPendingException(cx);
+    SetPendingException(cx, description);
     return true;
   }
 
@@ -498,13 +503,15 @@ class TErrorResult {
   void ClearUnionData();
 
   // Implementation of MaybeSetPendingException for the case when we're a
-  // failure result.
-  void SetPendingException(JSContext* cx);
+  // failure result.  See documentation of MaybeSetPendingException for the
+  // "context" argument.
+  void SetPendingException(JSContext* cx, const char* context);
 
-  // Methods for setting various specific kinds of pending exceptions.
-  void SetPendingExceptionWithMessage(JSContext* cx);
+  // Methods for setting various specific kinds of pending exceptions.  See
+  // documentation of MaybeSetPendingException for the "context" argument.
+  void SetPendingExceptionWithMessage(JSContext* cx, const char* context);
   void SetPendingJSException(JSContext* cx);
-  void SetPendingDOMException(JSContext* cx);
+  void SetPendingDOMException(JSContext* cx, const char* context);
   void SetPendingGenericErrorException(JSContext* cx);
 
   MOZ_ALWAYS_INLINE void AssertReportedOrSuppressed() {
@@ -796,8 +803,8 @@ class OOMReporterInstantiator : public OOMReporter {
   // We want to be able to call MaybeSetPendingException from codegen.  The one
   // on OOMReporter is not callable directly, because it comes from a private
   // superclass.  But we're a friend, so _we_ can call it.
-  bool MaybeSetPendingException(JSContext* cx) {
-    return OOMReporter::MaybeSetPendingException(cx);
+  bool MaybeSetPendingException(JSContext* cx, const char* context = nullptr) {
+    return OOMReporter::MaybeSetPendingException(cx, context);
   }
 };
 }  // namespace binding_danger

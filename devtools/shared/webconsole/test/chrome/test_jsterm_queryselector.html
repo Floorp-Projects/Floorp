@@ -93,14 +93,14 @@ const checkQuerySelectorException = async function () {
   const response = await evaluateJS("$(':foo')");
   checkObject(response, {
     input: "$(':foo')",
-    exceptionMessage: "SyntaxError: ':foo' is not a valid selector",
+    exceptionMessage: "SyntaxError: Document.querySelector: ':foo' is not a valid selector",
     exception: {
       type: "object",
       class: "DOMException",
       preview: {
         kind: "DOMException",
         name: "SyntaxError",
-        message: "':foo' is not a valid selector"
+        message: "Document.querySelector: ':foo' is not a valid selector"
       }
     }
   });
@@ -112,14 +112,14 @@ const checkQuerySelectorAllException = async function () {
   const response = await evaluateJS("$$(':foo')");
   checkObject(response, {
     input: "$$(':foo')",
-    exceptionMessage: "SyntaxError: ':foo' is not a valid selector",
+    exceptionMessage: "SyntaxError: Document.querySelectorAll: ':foo' is not a valid selector",
     exception: {
       type: "object",
       class: "DOMException",
       preview: {
         kind: "DOMException",
         name: "SyntaxError",
-        message: "':foo' is not a valid selector"
+        message: "Document.querySelectorAll: ':foo' is not a valid selector"
       }
     }
   });
