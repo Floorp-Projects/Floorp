@@ -1838,7 +1838,7 @@ void nsDisplayListBuilder::ResetMarkedFramesForDisplayList(
 
   firstFrameForShell = CurrentPresShellState()->mFirstFrameWithOOFData;
   for (uint32_t i = firstFrameForShell; i < mFramesWithOOFData.Length(); ++i) {
-    mFramesWithOOFData[i]->DeleteProperty(OutOfFlowDisplayDataProperty());
+    mFramesWithOOFData[i]->RemoveProperty(OutOfFlowDisplayDataProperty());
   }
   mFramesWithOOFData.SetLength(firstFrameForShell);
 }

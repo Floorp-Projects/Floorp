@@ -205,7 +205,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(BoxMetricsProperty, nsBoxLayoutMetrics)
 
 static void InitBoxMetrics(nsIFrame* aFrame, bool aClear) {
   if (aClear) {
-    aFrame->DeleteProperty(BoxMetricsProperty());
+    aFrame->RemoveProperty(BoxMetricsProperty());
   }
 
   nsBoxLayoutMetrics* metrics = new nsBoxLayoutMetrics();
@@ -353,7 +353,7 @@ void nsIFrame::MarkAsNotAbsoluteContainingBlock() {
                "Should have NS_FRAME_HAS_ABSPOS_CHILDREN state bit");
   MOZ_ASSERT(HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN));
   RemoveStateBits(NS_FRAME_HAS_ABSPOS_CHILDREN);
-  DeleteProperty(AbsoluteContainingBlockProperty());
+  RemoveProperty(AbsoluteContainingBlockProperty());
 }
 
 bool nsIFrame::CheckAndClearPaintedState() {
@@ -872,9 +872,9 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
     }
   }
 
-  // Delete all properties attached to the frame, to ensure any property
+  // Remove all properties attached to the frame, to ensure any property
   // destructors that need the frame pointer are handled properly.
-  DeleteAllProperties();
+  RemoveAllProperties();
 
   // Must retrieve the object ID before calling destructors, so the
   // vtable is still valid.
@@ -978,7 +978,7 @@ bool nsIFrame::RemoveDisplayItem(nsDisplayItemBase* aItem) {
   }
   bool result = items->RemoveElement(aItem);
   if (items->IsEmpty()) {
-    DeleteProperty(DisplayItems());
+    RemoveProperty(DisplayItems());
   }
   return result;
 }
@@ -1265,7 +1265,7 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     if (disp->mPosition != oldDisp->mPosition) {
       if (!disp->IsRelativelyPositionedStyle() &&
           oldDisp->IsRelativelyPositionedStyle()) {
-        DeleteProperty(NormalPositionProperty());
+        RemoveProperty(NormalPositionProperty());
       }
 
       handleStickyChange = disp->mPosition == NS_STYLE_POSITION_STICKY ||
@@ -1380,10 +1380,10 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
         SetProperty(nsIFrame::OffsetPathCache(), path.forget().take());
       } else {
         // May have an old cached path, so we have to delete it.
-        DeleteProperty(nsIFrame::OffsetPathCache());
+        RemoveProperty(nsIFrame::OffsetPathCache());
       }
     } else if (oldPath) {
-      DeleteProperty(nsIFrame::OffsetPathCache());
+      RemoveProperty(nsIFrame::OffsetPathCache());
     }
   }
 
@@ -7244,7 +7244,7 @@ static void InvalidateFrameInternal(nsIFrame* aFrame, bool aHasDisplayItem,
     SchedulePaintInternal(displayRoot, aFrame);
   }
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
-    aFrame->DeleteProperty(nsIFrame::InvalidationRect());
+    aFrame->RemoveProperty(nsIFrame::InvalidationRect());
     aFrame->RemoveStateBits(NS_FRAME_HAS_INVALID_RECT);
   }
 }
@@ -9201,7 +9201,7 @@ bool nsIFrame::ClearOverflowRects() {
     return false;
   }
   if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
-    DeleteProperty(OverflowAreasProperty());
+    RemoveProperty(OverflowAreasProperty());
   }
   mOverflow.mType = NS_FRAME_OVERFLOW_NONE;
   return true;
@@ -9503,14 +9503,14 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
         *initial = aOverflowAreas;
       }
     } else {
-      DeleteProperty(nsIFrame::InitialOverflowProperty());
+      RemoveProperty(nsIFrame::InitialOverflowProperty());
     }
 #ifdef DEBUG
     SetProperty(nsIFrame::DebugInitialOverflowPropertyApplied(), true);
 #endif
   } else {
 #ifdef DEBUG
-    DeleteProperty(nsIFrame::DebugInitialOverflowPropertyApplied());
+    RemoveProperty(nsIFrame::DebugInitialOverflowPropertyApplied());
 #endif
   }
 
@@ -9654,7 +9654,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       }
     }
   } else {
-    DeleteProperty(nsIFrame::PreTransformOverflowAreasProperty());
+    RemoveProperty(nsIFrame::PreTransformOverflowAreasProperty());
   }
 
   /* Revert the size change in case some caller is depending on this. */

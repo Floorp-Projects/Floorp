@@ -1754,7 +1754,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedFlexMeasuringReflow,
 
 void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
     nsIFrame* aItemFrame) {
-  aItemFrame->DeleteProperty(CachedFlexMeasuringReflow());
+  aItemFrame->RemoveProperty(CachedFlexMeasuringReflow());
 }
 
 const CachedMeasuringReflowResult&
@@ -4270,7 +4270,7 @@ class MOZ_RAII AutoFlexItemMainSizeOverride final {
   }
 
   ~AutoFlexItemMainSizeOverride() {
-    mItemFrame->DeleteProperty(nsIFrame::FlexItemMainSizeOverride());
+    mItemFrame->RemoveProperty(nsIFrame::FlexItemMainSizeOverride());
   }
 
  private:

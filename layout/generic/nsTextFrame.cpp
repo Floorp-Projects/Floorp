@@ -2987,7 +2987,7 @@ gfxSkipCharsIterator nsTextFrame::EnsureTextRun(
     }
     TabWidthStore* tabWidths = GetProperty(TabWidthProperty());
     if (tabWidths && tabWidths->mValidForContentOffset != GetContentOffset()) {
-      DeleteProperty(TabWidthProperty());
+      RemoveProperty(TabWidthProperty());
     }
   }
 
@@ -3594,7 +3594,7 @@ void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
 
   if (!mTabWidths) {
     // Delete any stale property that may be left on the frame
-    mFrame->DeleteProperty(TabWidthProperty());
+    mFrame->RemoveProperty(TabWidthProperty());
     mTabWidthsAnalyzedLimit =
         std::max(mTabWidthsAnalyzedLimit, aRange.end - startOffset);
   }
@@ -4320,7 +4320,7 @@ void nsTextFrame::ClearFrameOffsetCache() {
       // means that the primary frame is already dead if we're a continuing text
       // frame, in which case, all of its properties are gone, and we don't need
       // to worry about deleting this property here.
-      primaryFrame->DeleteProperty(OffsetToFrameProperty());
+      primaryFrame->RemoveProperty(OffsetToFrameProperty());
     }
     RemoveStateBits(TEXT_IN_OFFSET_CACHE);
   }
@@ -4674,7 +4674,7 @@ bool nsTextFrame::RemoveTextRun(gfxTextRun* aTextRun) {
   }
   if ((GetStateBits() & TEXT_HAS_FONT_INFLATION) &&
       GetProperty(UninflatedTextRunProperty()) == aTextRun) {
-    DeleteProperty(UninflatedTextRunProperty());
+    RemoveProperty(UninflatedTextRunProperty());
     return true;
   }
   return false;
@@ -4703,7 +4703,7 @@ void nsTextFrame::DisconnectTextRuns() {
              "disconnect");
   mTextRun = nullptr;
   if ((GetStateBits() & TEXT_HAS_FONT_INFLATION)) {
-    DeleteProperty(UninflatedTextRunProperty());
+    RemoveProperty(UninflatedTextRunProperty());
   }
 }
 
@@ -5223,7 +5223,7 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
                                        PropertyProvider& aProvider) {
   const nsStyleText* styleText = StyleText();
   if (!styleText->HasEffectiveTextEmphasis()) {
-    DeleteProperty(EmphasisMarkProperty());
+    RemoveProperty(EmphasisMarkProperty());
     return nsRect();
   }
 
@@ -8244,7 +8244,7 @@ void nsTextFrame::SetFontSizeInflation(float aInflation) {
   if (aInflation == 1.0f) {
     if (HasFontSizeInflation()) {
       RemoveStateBits(TEXT_HAS_FONT_INFLATION);
-      DeleteProperty(FontSizeInflationProperty());
+      RemoveProperty(FontSizeInflationProperty());
     }
     return;
   }
@@ -8975,7 +8975,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // reflow request from CharacterDataChanged (since we're reflowing now).
   RemoveStateBits(TEXT_REFLOW_FLAGS | TEXT_WHITESPACE_FLAGS);
   mReflowRequestedForCharDataChange = false;
-  DeleteProperty(WebRenderTextBounds());
+  RemoveProperty(WebRenderTextBounds());
   // Temporarily map all possible content while we construct our new textrun.
   // so that when doing reflow our styles prevail over any part of the
   // textrun we look at. Note that next-in-flows may be mapping the same
@@ -9383,7 +9383,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     gfxFloat em = fm->EmHeight();
     // Compress the characters in horizontal axis if necessary.
     if (width <= em) {
-      DeleteProperty(TextCombineScaleFactorProperty());
+      RemoveProperty(TextCombineScaleFactorProperty());
     } else {
       SetProperty(TextCombineScaleFactorProperty(), em / width);
       finalSize.ISize(wm) = em;
@@ -9641,7 +9641,7 @@ nsTextFrame::TrimOutput nsTextFrame::TrimTrailingWhiteSpace(
 
 nsOverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
                                                bool aIncludeShadows) {
-  DeleteProperty(WebRenderTextBounds());
+  RemoveProperty(WebRenderTextBounds());
 
   nsRect bounds(nsPoint(0, 0), GetSize());
   nsOverflowAreas result(bounds, bounds);
