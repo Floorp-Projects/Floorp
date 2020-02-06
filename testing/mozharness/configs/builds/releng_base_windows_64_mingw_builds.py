@@ -40,10 +40,6 @@ config = {
         # 32 bit specific
         'PATH': '/usr/local/bin:/bin:/usr/bin',
     },
-    "check_test_env": {
-        'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',
-        'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
-    },
     'mozconfig_platform': 'win64',
     'mozconfig_variant': 'mingw32',
     #########################################################################

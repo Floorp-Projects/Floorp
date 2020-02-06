@@ -47,10 +47,6 @@ config = {
                 '/sbin'
         ##
     },
-    "check_test_env": {
-        'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux64/minidump_stackwalk',
-        'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
-    },
     'mozconfig_platform': 'linux64',
     'mozconfig_variant': 'nightly',
     #########################################################################
