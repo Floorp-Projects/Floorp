@@ -72,7 +72,13 @@ class CustomTabsIntegration(
         // See #5334
         if (isPrivate) {
             sessionManager.findSessionById(sessionId)?.apply {
-                customTabConfig = customTabConfig?.copy(toolbarColor = null)
+                val config = customTabConfig
+                customTabConfig = config?.copy(
+                    // Don't set toolbar background automatically
+                    toolbarColor = null,
+                    // Force tinting the action button
+                    actionButtonConfig = config.actionButtonConfig?.copy(tint = true)
+                )
             }
 
             toolbar.background = AppCompatResources.getDrawable(
