@@ -27,14 +27,15 @@ function evaluateJS(input, options = {}) {
   return gState.webConsoleFront.evaluateJSAsync(input, options);
 } 
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsoleToTab(["PageError"], onAttach);
+  const {state} = await attachConsoleToTab(["PageError"]);
+  onAttach(state);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   top.foobarObject = Object.create(null);
   top.foobarObject.foo = 1;

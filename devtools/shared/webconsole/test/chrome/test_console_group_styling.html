@@ -14,11 +14,7 @@ window.onload = async function () {
   SimpleTest.waitForExplicitFinish();
   let state;
   try {
-    const onAttachConsole = new Promise(resolve => attachConsole(
-      ["ConsoleAPI"],
-      (consoleState, response) => resolve(consoleState)
-    ));
-    state = await onAttachConsole;
+    state = (await attachConsole(["ConsoleAPI"])).state
     const consoleFront = state.webConsoleFront;
 
     await testSingleCustomStyleGroup(consoleFront);

@@ -81,11 +81,12 @@ function doConsoleCalls(aState)
   ];
 }
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsoleToTab(["ConsoleAPI"], onAttach);
+  const {state, response} = await attachConsoleToTab(["ConsoleAPI"]);
+  onAttach(state, response);
 }
 
 function onAttach(aState, aResponse)

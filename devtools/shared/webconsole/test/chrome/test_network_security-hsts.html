@@ -38,7 +38,7 @@ const TEST_CASES = [
   }
 ];
 
-function startTest()
+async function startTest()
 {
 
   SimpleTest.registerCleanupFunction(() => {
@@ -54,10 +54,11 @@ function startTest()
 
   info("Test detection of HTTP Strict Transport Security.");
   removeEventListener("load", startTest);
-  attachConsoleToTab(["NetworkActivity"], onAttach);
+  const {state} = await attachConsoleToTab(["NetworkActivity"]);
+  onAttach(state);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   onNetworkEventUpdate = onNetworkEventUpdate.bind(null, aState);
   aState.dbgClient.on("networkEventUpdate", onNetworkEventUpdate);

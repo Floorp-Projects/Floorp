@@ -20,14 +20,15 @@ SimpleTest.waitForExplicitFinish();
 
 let gState;
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsoleToTab([], onAttach);
+  const {state} = await attachConsoleToTab([]);
+  onAttach(state);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   top.foobarObject = Object.create(null);
   top.foobarObject.bug609872 = "parent";

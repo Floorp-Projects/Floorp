@@ -51,14 +51,15 @@ function addIframe(aStatus)
   document.body.appendChild(iframe);
 }
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsole(["FileActivity"], onAttach);
+  const {state} = await attachConsole(["FileActivity"]);
+  onAttach(state);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   gState = aState;
   gState.webConsoleFront.on("fileActivity", onFileActivity);

@@ -22,25 +22,23 @@ function evaluateJS(input) {
   return gState.webConsoleFront.evaluateJSAsync(input);
 }
 
-function startTest() {
+async function startTest() {
   info ("Content window opened, attaching console to it");
 
   const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
   ok (!gWin.document.nodePrincipal.equals(systemPrincipal),
       "The test document is not using the system principal");
 
-  attachConsoleToTab([], state => {
-    gState = state;
-    const tests = [
-      setupWindow,
-      checkQuerySelector,
-      checkQuerySelectorAll,
-      checkQuerySelectorAllNotExist,
-      checkQuerySelectorException,
-      checkQuerySelectorAllException
-    ];
-    runTests(tests, testEnd);
-  });
+  gState = (await attachConsoleToTab([])).state;
+  const tests = [
+    setupWindow,
+    checkQuerySelector,
+    checkQuerySelectorAll,
+    checkQuerySelectorAllNotExist,
+    checkQuerySelectorException,
+    checkQuerySelectorAllException
+  ];
+  runTests(tests, testEnd);
 }
 
 const setupWindow = async function () {

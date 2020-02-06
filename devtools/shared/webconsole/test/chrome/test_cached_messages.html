@@ -111,7 +111,7 @@ let consoleAPICalls = 0;
 let pageErrors = 0;
 
 const handlers = {
-  onConsoleAPICall: function onConsoleAPICall(message) {
+  onConsoleAPICall: async function onConsoleAPICall(message) {
     for (const msg of expectedConsoleCalls) {
       if (msg.functionName == message.functionName &&
           msg.filename.test(message.filename)) {
@@ -120,11 +120,11 @@ const handlers = {
       }
     }
     if (consoleAPICalls == expectedConsoleCalls.length) {
-      checkConsoleAPICache();
+      await checkConsoleAPICache();
     }
   },
 
-  onConsoleServiceMessage: function onConsoleServiceMessage(message) {
+  onConsoleServiceMessage: async function onConsoleServiceMessage(message) {
     if (!(message instanceof Ci.nsIScriptError)) {
       return;
     }
@@ -136,7 +136,7 @@ const handlers = {
       }
     }
     if (pageErrors == expectedPageErrors.length) {
-      testPageErrors();
+      await testPageErrors();
     }
   },
 };
@@ -150,15 +150,12 @@ function startTest() {
   doConsoleCalls();
 }
 
-function checkConsoleAPICache() {
+async function checkConsoleAPICache() {
   consoleAPIListener.destroy();
   consoleAPIListener = null;
-  attachConsole(["ConsoleAPI"], onAttach1);
-}
-
-function onAttach1(state, response) {
-  state.webConsoleFront.getCachedMessages(["ConsoleAPI"])
-    .then(onCachedConsoleAPI.bind(null, state));
+  const {state} = await attachConsole(["ConsoleAPI"]);
+  const response = await state.webConsoleFront.getCachedMessages(["ConsoleAPI"]);
+  onCachedConsoleAPI(state, response);
 }
 
 function onCachedConsoleAPI(state, response) {
@@ -188,15 +185,12 @@ function onCachedConsoleAPI(state, response) {
   });
 }
 
-function testPageErrors() {
+async function testPageErrors() {
   consoleServiceListener.destroy();
   consoleServiceListener = null;
-  attachConsole(["PageError"], onAttach2);
-}
-
-function onAttach2(state, response) {
-  state.webConsoleFront.getCachedMessages(["PageError"])
-    .then(onCachedPageErrors.bind(null, state));
+  const {state} = await attachConsole(["PageError"]);
+  const response = await state.webConsoleFront.getCachedMessages(["PageError"]);
+  onCachedPageErrors(state, response);
 }
 
 function onCachedPageErrors(state, response) {

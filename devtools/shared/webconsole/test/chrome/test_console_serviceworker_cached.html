@@ -61,15 +61,11 @@ const startTest = async function () {
   const swr = await withActiveServiceWorker(tab1.linkedBrowser.contentWindow,
                                 SERVICE_WORKER_URL);
 
-  await new Promise(resolve => {
-    info("Attaching console to tab 1");
-    attachConsoleToTab(["ConsoleAPI"], function(state) {
-      state.webConsoleFront.getCachedMessages(["ConsoleAPI"]).then(function(calls) {
-        checkConsoleAPICalls(calls.messages, firstTabExpectedCalls);
-        closeDebugger(state, resolve);
-      });
-    });
-  });
+  info("Attaching console to tab 1");
+  let {state} = await attachConsoleToTab(["ConsoleAPI"]);
+  let calls = await state.webConsoleFront.getCachedMessages(["ConsoleAPI"]);
+  checkConsoleAPICalls(calls.messages, firstTabExpectedCalls);
+  await closeDebugger(state);
 
   // Because this tab is being added after the original messages happened,
   // they shouldn't show up in a call to getCachedMessages.
@@ -77,15 +73,11 @@ const startTest = async function () {
   info("Adding a new tab at the same URL");
 
   await addTab(FRAME_URL);
-  await new Promise(resolve => {
-    info("Attaching console to tab 2");
-    attachConsoleToTab(["ConsoleAPI"], function(state) {
-      state.webConsoleFront.getCachedMessages(["ConsoleAPI"]).then(function(calls) {
-        checkConsoleAPICalls(calls.messages, secondTabExpectedCalls);
-        closeDebugger(state, resolve);
-      });
-    });
-  });
+  info("Attaching console to tab 2");
+  state = (await attachConsoleToTab(["ConsoleAPI"])).state;
+  calls = await state.webConsoleFront.getCachedMessages(["ConsoleAPI"]);
+  checkConsoleAPICalls(calls.messages, secondTabExpectedCalls);
+  await closeDebugger(state);
 
   await swr.unregister();
 

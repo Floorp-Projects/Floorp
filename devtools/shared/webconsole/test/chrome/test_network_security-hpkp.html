@@ -42,7 +42,7 @@ const TEST_CASES = [
   }
 ];
 
-function startTest() {
+async function startTest() {
   Services.prefs.setBoolPref(HPKP_ENABLED_PREF, true);
   Services.prefs.setBoolPref(PROCESS_HPKP_FROM_NON_BUILTIN_ROOTS_PREF, true);
   SimpleTest.registerCleanupFunction(() => {
@@ -62,10 +62,11 @@ function startTest() {
 
   info("Test detection of Public Key Pinning.");
   removeEventListener("load", startTest);
-  attachConsoleToTab(["NetworkActivity"], onAttach);
+  const {state} = await attachConsoleToTab(["NetworkActivity"]);
+  onAttach(state);
 }
 
-function onAttach(state, response) {
+function onAttach(state) {
   onNetworkEventUpdate = onNetworkEventUpdate.bind(null, state);
   state.dbgClient.on("networkEventUpdate", onNetworkEventUpdate);
 
