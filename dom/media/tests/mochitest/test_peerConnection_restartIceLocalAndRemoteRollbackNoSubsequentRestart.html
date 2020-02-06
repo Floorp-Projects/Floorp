@@ -17,15 +17,6 @@
 
     addRenegotiation(test.chain,
       [
-        // causes a full, normal ice restart
-        function PC_LOCAL_SET_OFFER_OPTION(test) {
-          test.setOfferOptions({ iceRestart: true });
-        }
-      ]
-    );
-
-    test.chain.replaceAfter('PC_REMOTE_CREATE_ANSWER',
-      [
         function PC_LOCAL_SETUP_ICE_HANDLER(test) {
           test.pcLocal.setupIceCandidateHandler(test);
           if (test.testOptions.steeplechase) {
@@ -43,6 +34,15 @@
           }
         },
 
+        // causes a full, normal ice restart
+        function PC_LOCAL_SET_OFFER_OPTION(test) {
+          test.setOfferOptions({ iceRestart: true });
+        }
+      ]
+    );
+
+    test.chain.replaceAfter('PC_REMOTE_CREATE_ANSWER',
+      [
         function PC_REMOTE_ROLLBACK(test) {
           return test.setRemoteDescription(test.pcRemote, { type: "rollback" },
                                            STABLE);
