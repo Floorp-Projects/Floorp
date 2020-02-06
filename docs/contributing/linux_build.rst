@@ -58,14 +58,11 @@ Bugzilla account
 here. <https://bugzilla.mozilla.org/createaccount.cgi>`__
 
 As well as Bugzilla, much of Mozilla’s internal communication
-happens over IRC. You can download `Limechat here for
-mac <http://limechat.net/mac/>`__, `HexChat here for Windows and
-Linux <https://hexchat.github.io/index.html>`__ and learn how to
-`connect to Mozilla with IRC
-here <https://wiki.mozilla.org/IRC>`__. If you’re just getting
-started or have questions about getting set up you can join us in
-the `#introduction` channel, where some of our community
-members hang out to try and help new contributors get rolling.
+happens over Riot/Matrix. The instance is available on https://chat.mozilla.org/.
+
+If you’re just getting started or have questions about getting set up you can join us in
+the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ channel,
+where some of our community members hang out to try and help new contributors get rolling.
 
 Let’s Build Firefox
 -------------------
@@ -213,7 +210,6 @@ distributions ship with an outdated list of root certificates. In this
 case, you should upgrade your Linux distribution or use your browser to
 download the file. That ensures that you will get it from the right
 source.
-
 If you get an error from this process, consider `filing a
 bug <https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Build%20Config>`__
 saying that the bootstrapper didn't work and `contact Mike

@@ -12,7 +12,7 @@ Post it as a comment and add relevant steps in part 3.
 
    1. Comment here on the bug that you want to volunteer to help. I (or someone else) will assign it to you.
    2. [Download and build the Firefox source code](https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build)
-      * If you have any problems, please ask on [IRC](https://wiki.mozilla.org/Irc) in the `#introduction` channel. They're there to help you get started.
+      * If you have any problems, please ask on [Riot/Matrix](https://chat.mozilla.org/#/room/#introduction:mozilla.org) in the `introduction` channel. They're there to help you get started.
       * You can also read the [Developer Guide](https://developer.mozilla.org/docs/Mozilla/Developer_guide/Introduction), which has answers to most development questions:
    3. Start working on this bug. <SPECIFIC STEPS RELEVANT TO THIS BUG>
       * If you have any problems with this bug, please comment on this bug and set the needinfo flag for me. Also, you can find me and my teammates on the #telemetry channel on [IRC](https://wiki.mozilla.org/Irc) most hours of most days.
