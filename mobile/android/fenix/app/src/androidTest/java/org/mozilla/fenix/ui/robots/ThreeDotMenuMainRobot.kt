@@ -6,17 +6,21 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasFocus
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -75,6 +79,7 @@ class ThreeDotMenuMainRobot {
     fun verifySendToDeviceTitle() = assertSendToDeviceTitle()
     fun verifyShareALinkTitle() = assertShareALinkTitle()
     fun verifyWhatsNewButton() = assertWhatsNewButton()
+    fun verifyAddFirefoxHome() = assertAddToFirefoxHome()
 
     class Transition {
 
@@ -185,11 +190,20 @@ class ThreeDotMenuMainRobot {
             return BrowserRobot.Transition()
         }
 
-        fun typeCollectionName(name: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/name_collection_edittext")), waitingTime)
+        fun typeCollectionName(
+            name: String,
+            interact: BrowserRobot.() -> Unit
+        ): BrowserRobot.Transition {
+            mDevice.wait(
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/name_collection_edittext")),
+                waitingTime
+            )
 
             collectionNameTextField().check(matches(hasFocus()))
-            collectionNameTextField().perform(ViewActions.replaceText(name), ViewActions.pressImeActionButton())
+            collectionNameTextField().perform(
+                ViewActions.replaceText(name),
+                ViewActions.pressImeActionButton()
+            )
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -208,6 +222,13 @@ class ThreeDotMenuMainRobot {
             ReaderViewRobot().interact()
             return ReaderViewRobot.Transition()
         }
+
+        fun addToFirefoxHome(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            addToFirefoxHomeButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -215,8 +236,13 @@ private fun threeDotMenuRecyclerViewExists() {
     onView(withId(R.id.mozac_browser_menu_recyclerView)).check(matches(isDisplayed()))
 }
 
-private fun settingsButton() = onView(allOf(withText(R.string.settings),
-    withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+private fun settingsButton() = onView(
+    allOf(
+        withText(R.string.settings),
+        withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+    )
+)
+
 private fun assertSettingsButton() = settingsButton()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
@@ -264,8 +290,12 @@ private fun shareButton() = onView(ViewMatchers.withContentDescription("Share"))
 private fun assertShareButton() = shareButton()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun browserViewSaveCollectionButton() = onView(allOf(withText("Save to Collection"),
-    withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+private fun browserViewSaveCollectionButton() = onView(
+    allOf(
+        withText("Save to Collection"),
+        withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+    )
+)
 
 private fun saveCollectionButton() = onView(allOf(withText("Save to collection")))
 private fun assertSaveCollectionButton() = saveCollectionButton()
@@ -300,7 +330,10 @@ private fun assertShareALinkTitle() = ShareALinkTitle()
 private fun whatsNewButton() = onView(
     allOf(
         withText("What’s New"),
-    withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+    )
+)
+
 private fun assertWhatsNewButton() = whatsNewButton()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
@@ -309,8 +342,22 @@ private fun assertReaderViewToggle(visible: Boolean) = readerViewToggle()
     .check(
         if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
     )
-private fun readerViewAppearanceToggle() = onView(allOf(withText(R.string.browser_menu_read_appearance)))
+
+private fun readerViewAppearanceToggle() =
+    onView(allOf(withText(R.string.browser_menu_read_appearance)))
+
 private fun assertReaderViewAppearanceButton(visible: Boolean) = readerViewAppearanceToggle()
     .check(
         if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
     )
+
+private fun addToFirefoxHomeButton() =
+    onView(allOf(withText(R.string.browser_menu_add_to_top_sites)))
+private fun assertAddToFirefoxHome() {
+    onView(withId(R.id.mozac_browser_menu_recyclerView))
+        .perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                hasDescendant(withText(R.string.browser_menu_add_to_top_sites))
+            )
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}

@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
@@ -15,6 +16,7 @@ import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.BundleMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -25,17 +27,24 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.Constants.LongClickDuration
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.helpers.Constants.LongClickDuration
 
 class BrowserRobot {
 
     fun verifyBrowserScreen() {
         onView(ViewMatchers.withResourceName("browserLayout"))
             .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
+
+    fun verifyCurrentPrivateSession(context: Context) {
+        val session = context.components.core.sessionManager.selectedSession
+        assertTrue("Current session is private", session?.private!!)
     }
 
     fun verifyUrl(url: String) {
@@ -76,6 +85,10 @@ class BrowserRobot {
     fun verifySnackBarText(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(Until.findObject(By.text(expectedText)), TestAssetHelper.waitingTime)
+
+        onView(withText(expectedText)).check(
+            matches(isCompletelyDisplayed())
+        )
     }
 
     fun verifyLinkContextMenuItems(containsURL: Uri) {
@@ -324,4 +337,4 @@ fun dismissTrackingOnboarding() {
 
 fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 
-private fun tabsCounter() = onView(withId(R.id.counter_box))
+private fun tabsCounter() = onView(withId(R.id.mozac_browser_toolbar_browser_actions))
