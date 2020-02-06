@@ -1266,11 +1266,11 @@ void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
 }
 
 bool ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp) {
-  return ThrowErrorMessage(cx, MSG_ILLEGAL_CONSTRUCTOR);
+  return ThrowErrorMessage<MSG_ILLEGAL_CONSTRUCTOR>(cx);
 }
 
 bool ThrowConstructorWithoutNew(JSContext* cx, const char* name) {
-  return ThrowErrorMessage(cx, MSG_CONSTRUCTOR_WITHOUT_NEW, name);
+  return ThrowErrorMessage<MSG_CONSTRUCTOR_WITHOUT_NEW>(cx, name);
 }
 
 inline const NativePropertyHooks* GetNativePropertyHooksFromConstructorFunction(
@@ -2457,7 +2457,7 @@ bool GetContentGlobalForJSImplementedObject(JSContext* cx,
   }
 
   if (!domImplVal.isObject()) {
-    ThrowErrorMessage(cx, MSG_NOT_OBJECT, "Value");
+    ThrowErrorMessage<MSG_NOT_OBJECT>(cx, "Value");
     return false;
   }
 
@@ -2630,7 +2630,7 @@ bool ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       char badCharArray[6];
       static_assert(sizeof(char16_t) <= 2, "badCharArray too small");
       SprintfLiteral(badCharArray, "%d", badChar);
-      ThrowErrorMessage(cx, MSG_INVALID_BYTESTRING, index, badCharArray);
+      ThrowErrorMessage<MSG_INVALID_BYTESTRING>(cx, index, badCharArray);
       return false;
     }
   } else {
