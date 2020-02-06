@@ -3635,6 +3635,19 @@ public class GeckoSession implements Parcelable {
              * True if there was an active user gesture when the load was requested.
              */
             public final boolean hasUserGesture;
+
+            @Override
+            public String toString() {
+                final StringBuilder out = new StringBuilder("LoadRequest { ");
+                out
+                    .append("uri: " + uri)
+                    .append(", triggerUri: " + triggerUri)
+                    .append(", target: " + target)
+                    .append(", isRedirect: " + isRedirect)
+                    .append(", hasUserGesture: " + hasUserGesture)
+                    .append(" }");
+                return out.toString();
+            }
         }
 
         /**
