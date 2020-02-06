@@ -150,6 +150,11 @@ void ClearBlobImageResources(WrIdNamespace aNamespace) {
   }
 }
 
+bool HasFontData(WrFontKey aKey) {
+  StaticMutexAutoLock lock(sFontDataTableLock);
+  return sFontDataTable.find(aKey) != sFontDataTable.end();
+}
+
 void AddFontData(WrFontKey aKey, const uint8_t* aData, size_t aSize,
                  uint32_t aIndex, const ArcVecU8* aVec) {
   StaticMutexAutoLock lock(sFontDataTableLock);

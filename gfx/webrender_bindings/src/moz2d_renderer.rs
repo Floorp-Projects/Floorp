@@ -705,6 +705,7 @@ use bindings::{WrFontKey, WrFontInstanceKey, WrIdNamespace};
 
 #[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &Arc<Vec> to an extern function
 extern "C" {
+    fn HasFontData(key: WrFontKey) -> bool;
     fn AddFontData(key: WrFontKey, data: *const u8, size: usize, index: u32, vec: &ArcVecU8);
     fn AddNativeFontHandle(key: WrFontKey, handle: *mut c_void, index: u32);
     fn DeleteFontData(key: WrFontKey);
@@ -771,13 +772,15 @@ impl Moz2dBlobImageHandler {
                 if let Some(instance) = resources.get_font_instance_data(font.font_instance_key) {
                     if !unscaled_fonts.contains(&instance.font_key) {
                         unscaled_fonts.push(instance.font_key);
-                        let template = resources.get_font_data(instance.font_key);
-                        match template {
-                            &FontTemplate::Raw(ref data, ref index) => {
-                                unsafe { AddFontData(instance.font_key, data.as_ptr(), data.len(), *index, data); }
-                            }
-                            &FontTemplate::Native(ref handle) => {
-                                process_native_font_handle(instance.font_key, handle);
+                        if !unsafe { HasFontData(instance.font_key) } {
+                            let template = resources.get_font_data(instance.font_key);
+                            match template {
+                                &FontTemplate::Raw(ref data, ref index) => {
+                                    unsafe { AddFontData(instance.font_key, data.as_ptr(), data.len(), *index, data); }
+                                }
+                                &FontTemplate::Native(ref handle) => {
+                                    process_native_font_handle(instance.font_key, handle);
+                                }
                             }
                         }
                     }
