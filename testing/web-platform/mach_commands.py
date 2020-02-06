@@ -101,11 +101,13 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             kwargs["webdriver_binary"] = self.get_binary_path("geckodriver", validate_exists=False)
 
 
-        if mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1":
+        if kwargs["install_fonts"] is None:
+            kwargs["install_fonts"] = True
+
+        if kwargs["install_fonts"] and mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1":
             # On Windows 7 --install-fonts fails, so fall back to a Firefox-specific codepath
             self.setup_fonts_firefox()
-        else:
-            kwargs["install_fonts"] = True
+            kwargs["install_fonts"] = False
 
         kwargs = wptcommandline.check_args(kwargs)
 
