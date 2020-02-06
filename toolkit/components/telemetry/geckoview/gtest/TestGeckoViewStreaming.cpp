@@ -211,4 +211,22 @@ TEST_F(TelemetryStreamingFixture, ExpiredHistogram) {
   Telemetry::Accumulate(kExpiredHistogram, kSample);
 }
 
+TEST_F(TelemetryStreamingFixture, SendOnAppBackground) {
+  NS_NAMED_LITERAL_CSTRING(kBoolScalarName, "telemetry.test.boolean_kind");
+  const bool kBoolScalarValue = true;
+  const char* kApplicationBackgroundTopic = "application-background";
+
+  auto md = MakeRefPtr<MockDelegate>();
+  EXPECT_CALL(
+      *md, ReceiveBoolScalarValue(Eq(kBoolScalarName), Eq(kBoolScalarValue)));
+
+  GeckoViewStreamingTelemetry::RegisterDelegate(md);
+  Telemetry::ScalarSet(ScalarID::TELEMETRY_TEST_BOOLEAN_KIND, kBoolScalarValue);
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  ASSERT_TRUE(!!os)
+  << "Observer Service unavailable?!?!";
+  os->NotifyObservers(nullptr, kApplicationBackgroundTopic, nullptr);
+}
+
 }  // namespace

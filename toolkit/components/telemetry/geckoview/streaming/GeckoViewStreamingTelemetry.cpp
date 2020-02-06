@@ -7,10 +7,12 @@
 #include "GeckoViewStreamingTelemetry.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/TimeStamp.h"
 #include "nsDataHashtable.h"
+#include "nsIObserverService.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
@@ -24,6 +26,12 @@ using mozilla::TimeStamp;
 // (presumably) do something with the data. Expected to be used to route data
 // up to the Android Components layer to be translated into Glean metrics.
 namespace GeckoViewStreamingTelemetry {
+
+class LifecycleObserver;
+void SendBatch(const StaticMutexAutoLock& aLock);
+
+// Topic on which we flush the batch.
+static const char* const kApplicationBackgroundTopic = "application-background";
 
 static StaticMutexNotRecorded gMutex;
 
@@ -45,8 +53,33 @@ typedef nsDataHashtable<nsCStringHashKey, uint32_t> UintScalarBatch;
 UintScalarBatch gUintScalars;
 // The delegate to receive the samples and values.
 StaticRefPtr<StreamingTelemetryDelegate> gDelegate;
+// Lifecycle observer used to flush the batch when backgrounded.
+StaticRefPtr<LifecycleObserver> gObserver;
 
 // -- End of gMutex-protected thread-unsafe-accessed data
+
+class LifecycleObserver final : public nsIObserver {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  LifecycleObserver() = default;
+
+ protected:
+  ~LifecycleObserver() = default;
+};
+
+NS_IMPL_ISUPPORTS(LifecycleObserver, nsIObserver);
+
+NS_IMETHODIMP
+LifecycleObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                           const char16_t* aData) {
+  if (!strcmp(aTopic, kApplicationBackgroundTopic)) {
+    StaticMutexAutoLock lock(gMutex);
+    SendBatch(lock);
+  }
+  return NS_OK;
+}
 
 void RegisterDelegate(const RefPtr<StreamingTelemetryDelegate>& aDelegate) {
   StaticMutexAutoLock lock(gMutex);
@@ -154,6 +187,13 @@ void SendBatch(const StaticMutexAutoLock& aLock) {
 
 // Can be called on any thread.
 void BatchCheck(const StaticMutexAutoLock& aLock) {
+  if (!gObserver) {
+    gObserver = new LifecycleObserver();
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->AddObserver(gObserver, kApplicationBackgroundTopic, false);
+    }
+  }
   if (gBatchBegan.IsNull()) {
     gBatchBegan = TimeStamp::Now();
   }
