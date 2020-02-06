@@ -1032,7 +1032,9 @@ class UrlbarInput {
 
     // Switching tabs doesn't always change urlbar focus, so we must try to
     // reopen here too, not just on focus.
-    if (this.view.autoOpen({ event: new CustomEvent("urlbar-reopen") })) {
+    // We don't use the original TabSelect event because caching it causes
+    // leaks on MacOS.
+    if (this.view.autoOpen({ event: new CustomEvent("tabswitch") })) {
       return;
     }
     // The input may retain focus when switching tabs in which case we
