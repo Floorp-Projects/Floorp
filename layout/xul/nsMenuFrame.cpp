@@ -239,7 +239,7 @@ nsFrameList* nsMenuFrame::GetPopupList() const {
 
 void nsMenuFrame::DestroyPopupList() {
   NS_ASSERTION(HasPopup(), "huh?");
-  nsFrameList* prop = RemoveProperty(PopupListProperty());
+  nsFrameList* prop = TakeProperty(PopupListProperty());
   NS_ASSERTION(prop && prop->IsEmpty(),
                "popup list must exist and be empty when destroying");
   RemoveStateBits(NS_STATE_MENU_HAS_POPUP_LIST);

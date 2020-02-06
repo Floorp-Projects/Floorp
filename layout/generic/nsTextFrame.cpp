@@ -9383,7 +9383,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     gfxFloat em = fm->EmHeight();
     // Compress the characters in horizontal axis if necessary.
     if (width <= em) {
-      RemoveProperty(TextCombineScaleFactorProperty());
+      TakeProperty(TextCombineScaleFactorProperty());
     } else {
       SetProperty(TextCombineScaleFactorProperty(), em / width);
       finalSize.ISize(wm) = em;

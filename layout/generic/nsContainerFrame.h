@@ -839,7 +839,7 @@ inline nsFrameList* nsContainerFrame::GetOverflowFrames() const {
 }
 
 inline nsFrameList* nsContainerFrame::StealOverflowFrames() {
-  nsFrameList* list = RemoveProperty(OverflowProperty());
+  nsFrameList* list = TakeProperty(OverflowProperty());
   NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
   return list;
 }
