@@ -107,7 +107,7 @@ void StructuredCloneData::Read(JSContext* aCx,
 
 void StructuredCloneData::Read(JSContext* aCx,
                                JS::MutableHandle<JS::Value> aValue,
-                               JS::CloneDataPolicy aCloneDataPolicy,
+                               const JS::CloneDataPolicy& aCloneDataPolicy,
                                ErrorResult& aRv) {
   MOZ_ASSERT(mInitialized);
 
@@ -119,16 +119,16 @@ void StructuredCloneData::Read(JSContext* aCx,
 
 void StructuredCloneData::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                 ErrorResult& aRv) {
-  Write(aCx, aValue, JS::UndefinedHandleValue, aRv);
+  Write(aCx, aValue, JS::UndefinedHandleValue, JS::CloneDataPolicy(), aRv);
 }
 
 void StructuredCloneData::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                 JS::Handle<JS::Value> aTransfer,
+                                const JS::CloneDataPolicy& aCloneDataPolicy,
                                 ErrorResult& aRv) {
   MOZ_ASSERT(!mInitialized);
 
-  StructuredCloneHolder::Write(aCx, aValue, aTransfer, JS::CloneDataPolicy(),
-                               aRv);
+  StructuredCloneHolder::Write(aCx, aValue, aTransfer, aCloneDataPolicy, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

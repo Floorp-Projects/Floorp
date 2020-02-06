@@ -562,7 +562,7 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
 JS_PUBLIC_API bool JS_ReadStructuredClone(
     JSContext* cx, JSStructuredCloneData& data, uint32_t version,
     JS::StructuredCloneScope scope, JS::MutableHandleValue vp,
-    JS::CloneDataPolicy cloneDataPolicy,
+    const JS::CloneDataPolicy& cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure);
 
 /**
@@ -575,7 +575,7 @@ JS_PUBLIC_API bool JS_ReadStructuredClone(
  */
 JS_PUBLIC_API bool JS_WriteStructuredClone(
     JSContext* cx, JS::HandleValue v, JSStructuredCloneData* data,
-    JS::StructuredCloneScope scope, JS::CloneDataPolicy cloneDataPolicy,
+    JS::StructuredCloneScope scope, const JS::CloneDataPolicy& cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure,
     JS::HandleValue transferable);
 
@@ -651,7 +651,7 @@ class JS_PUBLIC_API JSAutoStructuredCloneBuffer {
   }
 
   bool read(JSContext* cx, JS::MutableHandleValue vp,
-            JS::CloneDataPolicy cloneDataPolicy = JS::CloneDataPolicy(),
+            const JS::CloneDataPolicy& cloneDataPolicy = JS::CloneDataPolicy(),
             const JSStructuredCloneCallbacks* optionalCallbacks = nullptr,
             void* closure = nullptr);
 
@@ -660,7 +660,7 @@ class JS_PUBLIC_API JSAutoStructuredCloneBuffer {
              void* closure = nullptr);
 
   bool write(JSContext* cx, JS::HandleValue v, JS::HandleValue transferable,
-             JS::CloneDataPolicy cloneDataPolicy,
+             const JS::CloneDataPolicy& cloneDataPolicy,
              const JSStructuredCloneCallbacks* optionalCallbacks = nullptr,
              void* closure = nullptr);
 
