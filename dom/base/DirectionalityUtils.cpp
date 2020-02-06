@@ -538,7 +538,7 @@ class nsTextNodeDirectionalityMap {
 
     mElements.Remove(aElement);
     aElement->ClearHasDirAutoSet();
-    aElement->DeleteProperty(nsGkAtoms::dirAutoSetBy);
+    aElement->RemoveProperty(nsGkAtoms::dirAutoSetBy);
   }
 
   void RemoveEntryForProperty(Element* aElement) {
@@ -604,7 +604,7 @@ class nsTextNodeDirectionalityMap {
       nsTextNodeDirectionalityMap::AddEntryToMap(newTextNode, rootNode);
     } else {
       rootNode->ClearHasDirAutoSet();
-      rootNode->DeleteProperty(nsGkAtoms::dirAutoSetBy);
+      rootNode->RemoveProperty(nsGkAtoms::dirAutoSetBy);
     }
     return OpRemove;
   }
@@ -633,7 +633,7 @@ class nsTextNodeDirectionalityMap {
     mElements.EnumerateEntries(TakeEntries, &entries);
     for (Element* el : entries) {
       el->ClearHasDirAutoSet();
-      el->DeleteProperty(nsGkAtoms::dirAutoSetBy);
+      el->RemoveProperty(nsGkAtoms::dirAutoSetBy);
     }
   }
 

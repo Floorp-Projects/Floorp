@@ -79,7 +79,7 @@ class ManualNACPtr final {
     if (nac) {
       nac->RemoveElement(aAnonymousContent);
       if (nac->IsEmpty()) {
-        parentContent->DeleteProperty(nsGkAtoms::manualNACProperty);
+        parentContent->RemoveProperty(nsGkAtoms::manualNACProperty);
       }
     }
 

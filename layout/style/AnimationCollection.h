@@ -52,7 +52,7 @@ class AnimationCollection
     mCalledDestroy = true;
 
     // This will call our destructor.
-    mElement->DeleteProperty(mElementProperty);
+    mElement->RemoveProperty(mElementProperty);
   }
 
   static void PropertyDtor(void* aObject, nsAtom* aPropertyName,
@@ -92,7 +92,7 @@ class AnimationCollection
   static nsAtom* GetPropertyAtomForPseudoType(PseudoStyleType aPseudoType);
 
   // We distinguish between destroying this by calling Destroy() vs directly
-  // calling DeleteProperty on an element.
+  // calling RemoveProperty on an element.
   //
   // The former case represents regular updating due to style changes and should
   // trigger subsequent restyles.

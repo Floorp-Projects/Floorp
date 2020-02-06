@@ -554,8 +554,7 @@ void XULKeySetGlobalKeyListener::DetachKeyHandler(Element* aElementTarget) {
 
   static_cast<XULKeySetGlobalKeyListener*>(handler)
       ->RemoveKeyboardEventListenersFrom(manager);
-
-  aElementTarget->DeleteProperty(nsGkAtoms::listener);
+  aElementTarget->RemoveProperty(nsGkAtoms::listener);
 }
 
 XULKeySetGlobalKeyListener::XULKeySetGlobalKeyListener(Element* aElement,

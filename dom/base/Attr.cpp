@@ -118,7 +118,7 @@ nsresult Attr::SetOwnerDocument(Document* aDocument) {
 
   Document* doc = OwnerDoc();
   NS_ASSERTION(doc != aDocument, "bad call to Attr::SetOwnerDocument");
-  doc->DeleteAllPropertiesFor(this);
+  doc->RemoveAllPropertiesFor(this);
 
   RefPtr<dom::NodeInfo> newNodeInfo = aDocument->NodeInfoManager()->GetNodeInfo(
       mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
