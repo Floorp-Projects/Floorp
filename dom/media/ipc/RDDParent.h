@@ -25,7 +25,8 @@ class RDDParent final : public PRDDParent {
             MessageLoop* aIOLoop, IPC::Channel* aChannel);
 
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
-                                   const Maybe<ipc::FileDescriptor>& aBrokerFd);
+                                   const Maybe<ipc::FileDescriptor>& aBrokerFd,
+                                   const bool& aCanRecordReleaseTelemetry);
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<PProfilerChild>&& aEndpoint);
 
