@@ -450,10 +450,10 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create a BrowsingContext for our windowless browser.
-  RefPtr<BrowsingContext> browsingContext =
-      BrowsingContext::Create(nullptr, nullptr, EmptyString(),
-                              aIsChrome ? BrowsingContext::Type::Chrome
-                                        : BrowsingContext::Type::Content);
+  RefPtr<BrowsingContext> browsingContext = BrowsingContext::CreateWindowless(
+      nullptr, nullptr, EmptyString(),
+      aIsChrome ? BrowsingContext::Type::Chrome
+                : BrowsingContext::Type::Content);
 
   /* Next, we create an instance of nsWebBrowser. Instances of this class have
    * an associated doc shell, which is what we're interested in.

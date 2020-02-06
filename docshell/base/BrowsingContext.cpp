@@ -208,6 +208,20 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
   return bc.forget();
 }
 
+already_AddRefed<BrowsingContext> BrowsingContext::CreateWindowless(
+    BrowsingContext* aParent, BrowsingContext* aOpener, const nsAString& aName,
+    Type aType) {
+  RefPtr<BrowsingContext> bc(CreateDetached(aParent, aOpener, aName, aType));
+  bc->mWindowless = true;
+  bc->EnsureAttached();
+  return bc.forget();
+}
+
+void BrowsingContext::SetWindowless() {
+  MOZ_DIAGNOSTIC_ASSERT(!mEverAttached);
+  mWindowless = true;
+}
+
 void BrowsingContext::EnsureAttached() {
   if (!mEverAttached) {
     Register(this);
@@ -239,9 +253,9 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
     // If the new BrowsingContext has a parent, it is a sub-frame embedded in
-    // whatever process sent the message. If it doesn't, it is a new window or
-    // tab, and will be embedded in the parent process.
-    uint64_t embedderProcessId = parent ? originId : 0;
+    // whatever process sent the message. If it doesn't, and is not windowless,
+    // it is a new window or tab, and will be embedded in the parent process.
+    uint64_t embedderProcessId = (aInit.mWindowless || parent) ? originId : 0;
     context = new CanonicalBrowsingContext(parent, aGroup, aInit.mId, originId,
                                            embedderProcessId, Type::Content,
                                            std::move(aInit.mFields));
@@ -249,6 +263,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
     context = new BrowsingContext(parent, aGroup, aInit.mId, Type::Content,
                                   std::move(aInit.mFields));
   }
+
+  context->mWindowless = aInit.mWindowless;
 
   Register(context);
 
@@ -273,6 +289,7 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mEverAttached(false),
       mIsInProcess(false),
       mIsDiscarded(false),
+      mWindowless(false),
       mDanglingRemoteOuterProxies(false),
       mPendingInitialization(false) {
   MOZ_RELEASE_ASSERT(!mParent || mParent->Group() == mGroup);
@@ -1235,6 +1252,7 @@ BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
   init.mId = Id();
   init.mParentId = mParent ? mParent->Id() : 0;
   init.mCached = IsCached();
+  init.mWindowless = mWindowless;
   init.mFields = mFields.Fields();
   return init;
 }
@@ -1555,6 +1573,7 @@ void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
   WriteIPDLParam(aMessage, aActor, aInit.mId);
   WriteIPDLParam(aMessage, aActor, aInit.mParentId);
   WriteIPDLParam(aMessage, aActor, aInit.mCached);
+  WriteIPDLParam(aMessage, aActor, aInit.mWindowless);
   WriteIPDLParam(aMessage, aActor, aInit.mFields);
 }
 
@@ -1565,6 +1584,7 @@ bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
   if (!ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mId) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mParentId) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mCached) ||
+      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mWindowless) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mFields)) {
     return false;
   }
