@@ -205,7 +205,7 @@ dependencies = [
  "cranelift-wasm",
  "env_logger",
  "log",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
 ]
 
 [[package]]
@@ -715,7 +715,7 @@ dependencies = [
  "cranelift-codegen-shared",
  "cranelift-entity 0.56.0",
  "log",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "target-lexicon 0.10.0",
  "thiserror",
 ]
@@ -751,7 +751,7 @@ source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20a
 dependencies = [
  "cranelift-codegen",
  "log",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "target-lexicon 0.10.0",
 ]
 
@@ -844,7 +844,7 @@ dependencies = [
  "phf",
  "proc-macro2",
  "quote",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "syn",
 ]
 
@@ -1217,7 +1217,7 @@ name = "fallible"
 version = "0.0.1"
 dependencies = [
  "hashglobe",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
 ]
 
 [[package]]
@@ -1408,7 +1408,7 @@ dependencies = [
  "parking_lot",
  "selectors",
  "servo_arc",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "style",
  "style_traits",
  "to_shmem",
@@ -2221,7 +2221,7 @@ dependencies = [
  "selectors",
  "servo_arc",
  "smallbitvec",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "thin-slice",
  "void",
 ]
@@ -2601,7 +2601,7 @@ dependencies = [
  "neqo-qpack",
  "neqo-transport",
  "num-traits",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
 ]
 
 [[package]]
@@ -2625,7 +2625,7 @@ dependencies = [
  "neqo-common",
  "neqo-crypto",
  "rand",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
 ]
 
 [[package]]
@@ -3620,7 +3620,7 @@ dependencies = [
  "phf_codegen",
  "precomputed-hash",
  "servo_arc",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "thin-slice",
  "to_shmem",
  "to_shmem_derive",
@@ -3817,9 +3817,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.0.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ecf3b85f68e8abaa7555aa5abdb1153079387e60b718283d732f03897fcfc86"
+checksum = "5c2fb2ec9bcd216a5b0d0ccf31ab17b5ed1d627960edff65bbe95d3ce221cefc"
 
 [[package]]
 name = "socket2"
@@ -3941,7 +3941,7 @@ dependencies = [
  "serde",
  "servo_arc",
  "smallbitvec",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "static_prefs",
  "style_derive",
  "style_traits",
@@ -4002,7 +4002,7 @@ dependencies = [
  "num-traits",
  "selectors",
  "size_of_test",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "style",
  "style_traits",
  "to_shmem",
@@ -4184,7 +4184,7 @@ dependencies = [
  "cssparser",
  "servo_arc",
  "smallbitvec",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "thin-slice",
 ]
 
@@ -4730,7 +4730,7 @@ dependencies = [
  "peek-poke 0.2.0 (git+https://github.com/kvark/peek-poke?rev=969bd7fe2be1a83f87916dc8b388c63cfd457075)",
  "rendy-descriptor",
  "rendy-memory",
- "smallvec 1.0.0",
+ "smallvec 1.2.0",
  "vec_map",
 ]
 
