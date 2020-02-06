@@ -9,11 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.core.StringEndsWith.endsWith
 import org.hamcrest.core.IsEqual.equalTo
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -1008,5 +1004,240 @@ class WebExtensionTest : BaseSessionTest() {
         }
 
         fail("The above code should throw.")
+    }
+
+    // Test the basic update extension flow with no new permissions.
+    @Test
+    fun update() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        // First let's check that the color of the border is empty before loading
+        // the WebExtension
+        assertBodyBorderEqualTo("")
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                assertEquals(extension.metaData!!.version, "1.0")
+
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val update1 = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/update-1.xpi"))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was applied by checking the border color
+        assertBodyBorderEqualTo("red")
+
+        val update2 = sessionRule.waitForResult(controller.update(update1));
+        assertEquals(update2.metaData!!.version, "2.0")
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that updated extension changed the border color.
+        assertBodyBorderEqualTo("blue")
+
+        // Unregister WebExtension and check again
+        sessionRule.waitForResult(controller.uninstall(update2))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was not applied after being unregistered
+        assertBodyBorderEqualTo("")
+    }
+
+    // Test extension updating when the new extension has different permissions.
+    @Test
+    fun updateWithPerms() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        // First let's check that the color of the border is empty before loading
+        // the WebExtension
+        assertBodyBorderEqualTo("")
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                assertEquals(extension.metaData!!.version, "1.0")
+
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val update1 = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/update-with-perms-1.xpi"))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was applied by checking the border color
+        assertBodyBorderEqualTo("red")
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onUpdatePrompt(currentlyInstalled: WebExtension,
+                                        updatedExtension: WebExtension,
+                                        newPermissions: Array<String>,
+                                        newOrigins: Array<String>): GeckoResult<AllowOrDeny> {
+                assertEquals(currentlyInstalled.metaData!!.version, "1.0")
+                assertEquals(updatedExtension.metaData!!.version, "2.0")
+                assertEquals(newPermissions.size, 1)
+                assertEquals(newPermissions[0], "tabs")
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+            }
+        })
+
+        val update2 = sessionRule.waitForResult(controller.update(update1));
+        assertEquals(update2.metaData!!.version, "2.0")
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that updated extension changed the border color.
+        assertBodyBorderEqualTo("blue")
+
+        // Unregister WebExtension and check again
+        sessionRule.waitForResult(controller.uninstall(update2))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was not applied after being unregistered
+        assertBodyBorderEqualTo("")
+    }
+
+    // Ensure update extension works as expected when there is no update available.
+    @Test
+    fun updateNotAvailable() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        // First let's check that the color of the border is empty before loading
+        // the WebExtension
+        assertBodyBorderEqualTo("")
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                assertEquals(extension.metaData!!.version, "2.0")
+
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val update1 = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/update-2.xpi"))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was applied by checking the border color
+        assertBodyBorderEqualTo("blue")
+
+        val update2 = sessionRule.waitForResult(controller.update(update1))
+        assertNull(update2);
+
+        // Unregister WebExtension and check again
+        sessionRule.waitForResult(controller.uninstall(update1))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was not applied after being unregistered
+        assertBodyBorderEqualTo("")
+    }
+
+    // Test denying an extension update.
+    @Test
+    fun updateDenyPerms() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        // First let's check that the color of the border is empty before loading
+        // the WebExtension
+        assertBodyBorderEqualTo("")
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                assertEquals(extension.metaData!!.version, "1.0")
+
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val update1 = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/update-with-perms-1.xpi"))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was applied by checking the border color
+        assertBodyBorderEqualTo("red")
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onUpdatePrompt(currentlyInstalled: WebExtension,
+                                        updatedExtension: WebExtension,
+                                        newPermissions: Array<String>,
+                                        newOrigins: Array<String>): GeckoResult<AllowOrDeny> {
+                assertEquals(currentlyInstalled.metaData!!.version, "1.0")
+                assertEquals(updatedExtension.metaData!!.version, "2.0")
+                return GeckoResult.fromValue(AllowOrDeny.DENY);
+            }
+        })
+
+
+        sessionRule.waitForResult(controller.update(update1).accept({
+            // We should not be able to update the extension.
+            assertTrue(false)
+        }, { exception ->
+            assertTrue(exception is WebExtension.InstallException)
+            val installException = exception as WebExtension.InstallException
+            assertEquals(installException.code, WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED)
+        }));
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that updated extension changed the border color.
+        assertBodyBorderEqualTo("red")
+
+        // Unregister WebExtension and check again
+        sessionRule.waitForResult(controller.uninstall(update1))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was not applied after being unregistered
+        assertBodyBorderEqualTo("")
     }
 }

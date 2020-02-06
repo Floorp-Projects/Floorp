@@ -298,13 +298,13 @@ class ExtensionInstallListener {
   }
 
   onDownloadCancelled(aInstall) {
-    const { error: installError } = aInstall;
-    this.resolve({ installError });
+    const { error: installError, state } = aInstall;
+    this.resolve({ installError, state });
   }
 
   onDownloadFailed(aInstall) {
-    const { error: installError } = aInstall;
-    this.resolve({ installError });
+    const { error: installError, state } = aInstall;
+    this.resolve({ installError, state });
   }
 
   onDownloadEnded() {
@@ -312,13 +312,13 @@ class ExtensionInstallListener {
   }
 
   onInstallCancelled(aInstall) {
-    const { error: installError } = aInstall;
-    this.resolve({ installError });
+    const { error: installError, state } = aInstall;
+    this.resolve({ installError, state });
   }
 
   onInstallFailed(aInstall) {
-    const { error: installError } = aInstall;
-    this.resolve({ installError });
+    const { error: installError, state } = aInstall;
+    this.resolve({ installError, state });
   }
 
   onInstallEnded(aInstall, aAddon) {
@@ -405,6 +405,37 @@ class MobileWindowTracker extends EventEmitter {
 }
 
 var mobileWindowTracker = new MobileWindowTracker();
+
+async function updatePromptHandler(aInfo) {
+  const oldPerms = aInfo.existingAddon.userPermissions;
+  if (!oldPerms) {
+    // Updating from a legacy add-on, let it proceed
+    return;
+  }
+
+  const newPerms = aInfo.addon.userPermissions;
+
+  const difference = Extension.comparePermissions(oldPerms, newPerms);
+
+  // If there are no new permissions, just proceed
+  if (!difference.origins.length && !difference.permissions.length) {
+    return;
+  }
+
+  const currentlyInstalled = exportExtension(aInfo.existingAddon, oldPerms);
+  const updatedExtension = exportExtension(aInfo.addon, newPerms);
+  const response = await EventDispatcher.instance.sendRequestForResult({
+    type: "GeckoView:WebExtension:UpdatePrompt",
+    currentlyInstalled,
+    updatedExtension,
+    newPermissions: difference.permissions,
+    newOrigins: difference.origins,
+  });
+
+  if (!response.allow) {
+    throw new Error("Extension update rejected.");
+  }
+}
 
 var GeckoViewWebExtension = {
   async registerWebExtension(aId, aUri, allowContentMessaging, aCallback) {
@@ -562,6 +593,39 @@ var GeckoViewWebExtension = {
       extension.userPermissions,
       /* aSourceURI */ null
     );
+  },
+
+  /**
+   * @return A promise resolved with either an AddonInstall object if an update
+   * is available or null if no update is found.
+   */
+  checkForUpdate(aAddon) {
+    return new Promise(resolve => {
+      const listener = {
+        onUpdateAvailable(aAddon, install) {
+          install.promptHandler = updatePromptHandler;
+          resolve(install);
+        },
+        onNoUpdateAvailable() {
+          resolve(null);
+        },
+      };
+      aAddon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+    });
+  },
+
+  async updateWebExtension(aId) {
+    const extension = await this.extensionById(aId);
+
+    const install = await this.checkForUpdate(extension);
+    if (!install) {
+      return null;
+    }
+    const promise = new Promise(resolve => {
+      install.addListener(new ExtensionInstallListener(resolve));
+    });
+    install.install();
+    return promise;
   },
 
   /* eslint-disable complexity */
@@ -749,8 +813,18 @@ var GeckoViewWebExtension = {
       }
 
       case "GeckoView:WebExtension:Update": {
-        // TODO
-        aCallback.onError(`Not implemented`);
+        try {
+          const { webExtensionId } = aData;
+          const result = await this.updateWebExtension(webExtensionId);
+          if (result === null || result.extension) {
+            aCallback.onSuccess(result);
+          } else {
+            aCallback.onError(result);
+          }
+        } catch (ex) {
+          debug`Failed update ${ex}`;
+          aCallback.onError(`Unexpected error: ${ex}`);
+        }
         break;
       }
     }

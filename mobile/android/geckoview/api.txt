@@ -1530,6 +1530,7 @@ package org.mozilla.geckoview {
     field public static final int ERROR_NETWORK_FAILURE = -1;
     field public static final int ERROR_SIGNEDSTATE_REQUIRED = -5;
     field public static final int ERROR_UNEXPECTED_ADDON_TYPE = -6;
+    field public static final int ERROR_USER_CANCELED = -100;
   }
 
   @UiThread public static interface WebExtension.MessageDelegate {
@@ -1603,6 +1604,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void setTabActive(@NonNull GeckoSession, boolean);
     method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
     method @NonNull @AnyThread public GeckoResult<Void> uninstall(@NonNull WebExtension);
+    method @AnyThread @NonNull public GeckoResult<WebExtension> update(@NonNull WebExtension);
   }
 
   public static class WebExtensionController.EnableSource {
@@ -1613,6 +1615,7 @@ package org.mozilla.geckoview {
 
   @UiThread public static interface WebExtensionController.PromptDelegate {
     method @Nullable default public GeckoResult<AllowOrDeny> onInstallPrompt(@NonNull WebExtension);
+    method @Nullable default public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension, @NonNull WebExtension, @NonNull String[], @NonNull String[]);
   }
 
   public static interface WebExtensionController.TabDelegate {
