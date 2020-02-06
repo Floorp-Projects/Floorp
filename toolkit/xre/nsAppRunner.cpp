@@ -4517,6 +4517,12 @@ nsresult XREMain::XRE_mainRun() {
   }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
 
+  // Send Telemetry about Gecko version and buildid
+  Telemetry::ScalarSet(Telemetry::ScalarID::GECKO_VERSION,
+                       NS_ConvertASCIItoUTF16(gAppData->version));
+  Telemetry::ScalarSet(Telemetry::ScalarID::GECKO_BUILD_ID,
+                       NS_ConvertASCIItoUTF16(gAppData->buildID));
+
 #if defined(MOZ_SANDBOX) && defined(XP_LINUX)
   // If we're on Linux, we now have information about the OS capabilities
   // available to us.
