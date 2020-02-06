@@ -457,6 +457,7 @@ strong {
   padding-inline-start: 16px;
 }
 
+.menu-button--iconic::before,
 .tooltip-container[type="doorhanger"] .menuitem > .command.iconic > .label::before {
   content: " ";
   display: inline-block;
