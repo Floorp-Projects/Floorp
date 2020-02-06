@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
 #include "builtin/ModuleObject.h"          // ModuleObject
+#include "frontend/BCEScriptStencil.h"     // BCEScriptStencil
 #include "frontend/BytecodeEmitter.h"      // BytecodeEmitter
 #include "frontend/ModuleSharedContext.h"  // ModuleSharedContext
 #include "frontend/NameAnalysisTypes.h"    // NameLocation
@@ -744,7 +745,12 @@ bool FunctionScriptEmitter::initScript(
     const FieldInitializers& fieldInitializers) {
   MOZ_ASSERT(state_ == State::EndBody);
 
-  if (!JSScript::fullyInitFromEmitter(bce_->cx, bce_->script, bce_)) {
+  uint32_t nslots;
+  if (!bce_->getNslots(&nslots)) {
+    return false;
+  }
+  BCEScriptStencil stencil(*bce_, nslots);
+  if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->script, stencil)) {
     return false;
   }
 

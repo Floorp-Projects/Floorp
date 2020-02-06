@@ -4265,9 +4265,11 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
   return new (raw) PrivateScriptData(ngcthings);
 }
 
-/* static */ bool PrivateScriptData::InitFromEmitter(
-    JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
-  uint32_t ngcthings = bce->perScriptData().gcThingList().length();
+/* static */
+bool PrivateScriptData::InitFromStencil(
+    JSContext* cx, js::HandleScript script,
+    const frontend::ScriptStencil& stencil) {
+  uint32_t ngcthings = stencil.ngcthings;
 
   // Create and initialize PrivateScriptData
   if (!JSScript::createPrivateScriptData(cx, script, ngcthings)) {
@@ -4276,8 +4278,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
-    if (!bce->perScriptData().gcThingList().finish(cx, bce->compilationInfo,
-                                                   data->gcthings())) {
+    if (!stencil.finishGCThings(cx, data->gcthings())) {
       return false;
     }
   }
@@ -4429,39 +4430,6 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
   return true;
 }
 
-static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
-  for (frontend::AtomIndexMap::Range r = indices.all(); !r.empty();
-       r.popFront()) {
-    JSAtom* atom = r.front().key();
-    uint32_t index = r.front().value();
-    MOZ_ASSERT(index < indices.count());
-    atoms[index].init(atom);
-  }
-}
-
-static bool NeedsFunctionEnvironmentObjects(frontend::BytecodeEmitter* bce) {
-  // See JSFunction::needsCallObject()
-  js::AbstractScope bodyScope = bce->bodyScope();
-  if (bodyScope.kind() == js::ScopeKind::Function) {
-    if (bodyScope.hasEnvironment()) {
-      return true;
-    }
-  }
-
-  // See JSScript::maybeNamedLambdaScope()
-  js::AbstractScope outerScope = bce->outermostScope();
-  if (outerScope.kind() == js::ScopeKind::NamedLambda ||
-      outerScope.kind() == js::ScopeKind::StrictNamedLambda) {
-    MOZ_ASSERT(bce->sc->asFunctionBox()->isNamedLambda());
-
-    if (outerScope.hasEnvironment()) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
   setFlag(ImmutableFlags::FunHasExtensibleScope, funbox->hasExtensibleScope());
   setFlag(ImmutableFlags::NeedsHomeObject, funbox->needsHomeObject());
@@ -4489,8 +4457,8 @@ void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
 }
 
 /* static */
-bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
-                                    frontend::BytecodeEmitter* bce) {
+bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
+                                    const frontend::ScriptStencil& stencil) {
   MOZ_ASSERT(!script->data_, "JSScript already initialized");
 
   // If initialization fails, we must call BaseScript::freeSharedData in order
@@ -4500,46 +4468,37 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
       mozilla::MakeScopeExit([&] { script->freeSharedData(); });
 
   /* The counts of indexed things must be checked during code generation. */
-  MOZ_ASSERT(bce->perScriptData().atomIndices()->count() <= INDEX_LIMIT);
-  MOZ_ASSERT(bce->perScriptData().gcThingList().length() <= INDEX_LIMIT);
-
-  uint64_t nslots =
-      bce->maxFixedSlots +
-      static_cast<uint64_t>(bce->bytecodeSection().maxStackDepth());
-  if (nslots > UINT32_MAX) {
-    bce->reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
-    return false;
-  }
-
-  MOZ_ASSERT(script->lineno_ == bce->firstLine);
-  MOZ_ASSERT(script->column_ == bce->firstColumn);
+  MOZ_ASSERT(stencil.natoms <= INDEX_LIMIT);
+  MOZ_ASSERT(stencil.ngcthings <= INDEX_LIMIT);
+  MOZ_ASSERT(script->lineno_ == stencil.lineno);
+  MOZ_ASSERT(script->column_ == stencil.column);
 
   // Initialize script flags from BytecodeEmitter
-  script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
+  script->setFlag(ImmutableFlags::Strict, stencil.strict);
   script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
-                  bce->sc->bindingsAccessedDynamically());
-  script->setFlag(ImmutableFlags::HasCallSiteObj, bce->sc->hasCallSiteObj());
-  script->setFlag(ImmutableFlags::IsForEval, bce->sc->isEvalContext());
-  script->setFlag(ImmutableFlags::IsModule, bce->sc->isModuleContext());
-  script->setFlag(ImmutableFlags::IsFunction, bce->sc->isFunctionBox());
+                  stencil.bindingsAccessedDynamically);
+  script->setFlag(ImmutableFlags::HasCallSiteObj, stencil.hasCallSiteObj);
+  script->setFlag(ImmutableFlags::IsForEval, stencil.isForEval);
+  script->setFlag(ImmutableFlags::IsModule, stencil.isModule);
+  script->setFlag(ImmutableFlags::IsFunction, stencil.isFunction);
   script->setFlag(ImmutableFlags::HasNonSyntacticScope,
-                  bce->outermostScope().hasOnChain(ScopeKind::NonSyntactic));
+                  stencil.hasNonSyntacticScope);
   script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
-                  NeedsFunctionEnvironmentObjects(bce));
-  script->setFlag(ImmutableFlags::HasModuleGoal, bce->sc->hasModuleGoal());
+                  stencil.needsFunctionEnvironmentObjects);
+  script->setFlag(ImmutableFlags::HasModuleGoal, stencil.hasModuleGoal);
 
   // Initialize script flags from FunctionBox
-  if (bce->sc->isFunctionBox()) {
-    script->initFromFunctionBox(bce->sc->asFunctionBox());
+  if (stencil.isFunction) {
+    script->initFromFunctionBox(stencil.functionBox);
   }
 
   // Create and initialize PrivateScriptData
-  if (!PrivateScriptData::InitFromEmitter(cx, script, bce)) {
+  if (!PrivateScriptData::InitFromStencil(cx, script, stencil)) {
     return false;
   }
 
   // Create and initialize RuntimeScriptData/ImmutableScriptData
-  if (!RuntimeScriptData::InitFromEmitter(cx, script, bce, nslots)) {
+  if (!RuntimeScriptData::InitFromStencil(cx, script, stencil)) {
     return false;
   }
   if (!script->shareScriptData(cx)) {
@@ -4549,8 +4508,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   // NOTE: JSScript is now constructed and should be linked in.
 
   // Link JSFunction to this JSScript.
-  if (bce->sc->isFunctionBox()) {
-    JSFunction* fun = bce->sc->asFunctionBox()->function();
+  if (stencil.isFunction) {
+    JSFunction* fun = stencil.functionBox->function();
     if (fun->isInterpretedLazy()) {
       fun->setUnlazifiedScript(script);
     } else {
@@ -4562,7 +4521,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   // Part of the parse result – the scope containing each inner function – must
   // be stored in the inner function itself. Do this now that compilation is
   // complete and can no longer fail.
-  bce->perScriptData().gcThingList().finishInnerFunctions();
+  stencil.finishInnerFunctions();
 
 #ifdef JS_STRUCTURED_SPEW
   // We want this to happen after line number initialization to allow filtering
@@ -5206,25 +5165,25 @@ JSScript* js::CloneScriptIntoFunction(
   return dst;
 }
 
-/* static */ bool ImmutableScriptData::InitFromEmitter(
-    JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce,
-    uint32_t nslots) {
-  size_t codeLength = bce->bytecodeSection().code().length();
+/* static */
+bool ImmutableScriptData::InitFromStencil(
+    JSContext* cx, js::HandleScript script,
+    const frontend::ScriptStencil& stencil) {
+  size_t codeLength = stencil.code.Length();
   MOZ_RELEASE_ASSERT(codeLength <= frontend::MaxBytecodeLength);
 
   // There are 1-4 copies of SN_MAKE_TERMINATOR appended after the source
   // notes. These are a combination of sentinel and padding values.
   static_assert(frontend::MaxSrcNotesLength <= UINT32_MAX - CodeNoteAlign,
                 "Length + CodeNoteAlign shouldn't overflow UINT32_MAX");
-  size_t noteLength = bce->bytecodeSection().notes().length();
+  size_t noteLength = stencil.notes.Length();
   MOZ_RELEASE_ASSERT(noteLength <= frontend::MaxSrcNotesLength);
 
   size_t nullLength = ComputeNotePadding(codeLength, noteLength);
 
-  uint32_t numResumeOffsets =
-      bce->bytecodeSection().resumeOffsetList().length();
-  uint32_t numScopeNotes = bce->bytecodeSection().scopeNoteList().length();
-  uint32_t numTryNotes = bce->bytecodeSection().tryNoteList().length();
+  uint32_t numResumeOffsets = stencil.numResumeOffsets;
+  uint32_t numScopeNotes = stencil.numScopeNotes;
+  uint32_t numTryNotes = stencil.numTryNotes;
 
   // Allocate ImmutableScriptData
   if (!script->createImmutableScriptData(
@@ -5235,47 +5194,44 @@ JSScript* js::CloneScriptIntoFunction(
   js::ImmutableScriptData* data = script->immutableScriptData();
 
   // Initialize POD fields
-  data->mainOffset = bce->mainOffset();
-  data->nfixed = bce->maxFixedSlots;
-  data->nslots = nslots;
-  data->bodyScopeIndex = bce->bodyScopeIndex;
-  data->numICEntries = bce->bytecodeSection().numICEntries();
-  data->numBytecodeTypeSets =
-      std::min<uint32_t>(uint32_t(JSScript::MaxBytecodeTypeSets),
-                         bce->bytecodeSection().numTypeSets());
+  data->mainOffset = stencil.mainOffset;
+  data->nfixed = stencil.nfixed;
+  data->nslots = stencil.nslots;
+  data->bodyScopeIndex = stencil.bodyScopeIndex;
+  data->numICEntries = stencil.numICEntries;
+  data->numBytecodeTypeSets = std::min<uint32_t>(
+      uint32_t(JSScript::MaxBytecodeTypeSets), stencil.numBytecodeTypeSets);
 
-  if (bce->sc->isFunctionBox()) {
-    data->funLength = bce->sc->asFunctionBox()->length;
+  if (stencil.isFunction) {
+    data->funLength = stencil.functionBox->length;
   }
 
   // Initialize trailing arrays
-  std::copy_n(bce->bytecodeSection().code().begin(), codeLength, data->code());
-  std::copy_n(bce->bytecodeSection().notes().begin(), noteLength,
-              data->notes());
+  std::copy_n(stencil.code.data(), codeLength, data->code());
+  std::copy_n(stencil.notes.data(), noteLength, data->notes());
   std::fill_n(data->notes() + noteLength, nullLength, SRC_NULL);
 
-  bce->bytecodeSection().resumeOffsetList().finish(data->resumeOffsets());
-  bce->bytecodeSection().scopeNoteList().finish(data->scopeNotes());
-  bce->bytecodeSection().tryNoteList().finish(data->tryNotes());
+  stencil.finishResumeOffsets(data->resumeOffsets());
+  stencil.finishScopeNotes(data->scopeNotes());
+  stencil.finishTryNotes(data->tryNotes());
 
   return true;
 }
 
-/* static */ bool RuntimeScriptData::InitFromEmitter(
-    JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce,
-    uint32_t nslots) {
-  uint32_t natoms = bce->perScriptData().atomIndices()->count();
-
+/* static */
+bool RuntimeScriptData::InitFromStencil(
+    JSContext* cx, js::HandleScript script,
+    const frontend::ScriptStencil& stencil) {
   // Allocate RuntimeScriptData
-  if (!script->createScriptData(cx, natoms)) {
+  if (!script->createScriptData(cx, stencil.natoms)) {
     return false;
   }
   js::RuntimeScriptData* data = script->sharedData();
 
   // Initialize trailing arrays
-  InitAtomMap(*bce->perScriptData().atomIndices(), data->atoms());
+  stencil.initAtomMap(data->atoms());
 
-  return ImmutableScriptData::InitFromEmitter(cx, script, bce, nslots);
+  return ImmutableScriptData::InitFromStencil(cx, script, stencil);
 }
 
 void RuntimeScriptData::traceChildren(JSTracer* trc) {

@@ -33,6 +33,7 @@ namespace js {
 
 namespace frontend {
 
+struct BytecodeEmitter;
 class EitherParser;
 
 template <typename Unit>
