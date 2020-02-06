@@ -9,7 +9,8 @@ This aims to be a simple tutorial for lazy copy and paste.
 Each section in this tutorial links to more detailed documentation on the topic.
 
 The whole process is a bit long, it will take time to get things right.
-If at any point you are stuck, please don't feel shy to ask on IRC at irc.mozilla.org in `#introduction <https://kiwiirc.com/nextclient/irc.mozilla.org:6697/introduction>`__ channel.
+If at any point you are stuck, please don't feel shy to ask on Riot/Matrix at `https://chat.mozilla.org <https://chat.mozilla.org>`__
+in `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ channel.
 
 Clone the sources
 -----------------
