@@ -49,10 +49,9 @@ nsPrintObject::~nsPrintObject() {
 
   DestroyPresentation();
   if (mDidCreateDocShell && mDocShell) {
-    nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(mDocShell));
-    if (baseWin) {
-      baseWin->Destroy();
-    }
+    RefPtr<BrowsingContext> bc(mDocShell->GetBrowsingContext());
+    nsDocShell::Cast(mDocShell)->Destroy();
+    bc->Detach();
   }
   mDocShell = nullptr;
   mTreeOwner = nullptr;  // mTreeOwner must be released after mDocShell;

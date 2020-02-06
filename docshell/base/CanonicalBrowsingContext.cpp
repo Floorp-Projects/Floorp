@@ -33,12 +33,14 @@ extern mozilla::LazyLogModule gUserInteractionPRLog;
 CanonicalBrowsingContext::CanonicalBrowsingContext(BrowsingContext* aParent,
                                                    BrowsingContextGroup* aGroup,
                                                    uint64_t aBrowsingContextId,
-                                                   uint64_t aProcessId,
+                                                   uint64_t aOwnerProcessId,
+                                                   uint64_t aEmbedderProcessId,
                                                    BrowsingContext::Type aType,
                                                    FieldTuple&& aFields)
     : BrowsingContext(aParent, aGroup, aBrowsingContextId, aType,
                       std::move(aFields)),
-      mProcessId(aProcessId) {
+      mProcessId(aOwnerProcessId),
+      mEmbedderProcessId(aEmbedderProcessId) {
   // You are only ever allowed to create CanonicalBrowsingContexts in the
   // parent process.
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
@@ -341,28 +343,22 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Complete(
     MOZ_DIAGNOSTIC_ASSERT(oldBrowser != embedderBrowser);
     MOZ_DIAGNOSTIC_ASSERT(oldBrowser->GetBrowserBridgeParent());
 
-    oldBrowser->SendSkipBrowsingContextDetach(
-        [resetInFlightId](bool aSuccess) { resetInFlightId(); },
-        [resetInFlightId](mozilla::ipc::ResponseRejectReason aReason) {
-          resetInFlightId();
-        });
+    auto callback = [resetInFlightId](auto) { resetInFlightId(); };
+    oldBrowser->SendWillChangeProcess(callback, callback);
     oldBrowser->Destroy();
   }
 
   // Tell the embedder process a remoteness change is in-process. When this is
   // acknowledged, reset the in-flight ID if it used to be an in-process load.
-  embedderWindow->SendMakeFrameRemote(
-      target, std::move(endpoint), tabId,
-      [wasRemote, resetInFlightId](bool aSuccess) {
-        if (!wasRemote) {
-          resetInFlightId();
-        }
-      },
-      [wasRemote, resetInFlightId](mozilla::ipc::ResponseRejectReason aReason) {
-        if (!wasRemote) {
-          resetInFlightId();
-        }
-      });
+  {
+    auto callback = [wasRemote, resetInFlightId](auto) {
+      if (!wasRemote) {
+        resetInFlightId();
+      }
+    };
+    embedderWindow->SendMakeFrameRemote(target, std::move(endpoint), tabId,
+                                        callback, callback);
+  }
 
   // FIXME: We should get the correct principal for the to-be-created window so
   // we can avoid creating unnecessary extra windows in the new process.
@@ -468,7 +464,7 @@ CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
 
       RefPtr<CanonicalBrowsingContext> target(this);
       SetInFlightProcessId(OwnerProcessId());
-      oldBrowser->SendSkipBrowsingContextDetach(
+      oldBrowser->SendWillChangeProcess(
           [target](bool aSuccess) { target->SetInFlightProcessId(0); },
           [target](mozilla::ipc::ResponseRejectReason aReason) {
             target->SetInFlightProcessId(0);
