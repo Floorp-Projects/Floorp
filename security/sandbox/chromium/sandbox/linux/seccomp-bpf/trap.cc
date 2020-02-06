@@ -164,11 +164,18 @@ void Trap::SigSys(int nr, LinuxSigInfo* info, ucontext_t* ctx) {
   }
 
 
-  // Obtain the siginfo information that is specific to SIGSYS. Unfortunately,
-  // most versions of glibc don't include this information in siginfo_t. So,
-  // we need to explicitly copy it into a arch_sigsys structure.
+  // Obtain the siginfo information that is specific to SIGSYS.
   struct arch_sigsys sigsys;
+#if defined(si_call_addr) && !defined(__native_client_nonsfi__)
+  sigsys.ip = info->si_call_addr;
+  sigsys.nr = info->si_syscall;
+  sigsys.arch = info->si_arch;
+#else
+  // If the version of glibc doesn't include this information in
+  // siginfo_t (older than 2.17), we need to explicitly copy it
+  // into an arch_sigsys structure.
   memcpy(&sigsys, &info->_sifields, sizeof(sigsys));
+#endif
 
 #if defined(__mips__)
   // When indirect syscall (syscall(__NR_foo, ...)) is made on Mips, the
