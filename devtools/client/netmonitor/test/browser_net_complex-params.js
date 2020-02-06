@@ -193,7 +193,7 @@ add_task(async function() {
     );
     is(
       values[0].textContent,
-      queryStringParamValue,
+      `"${queryStringParamValue}"`,
       "The first query string param value was incorrect."
     );
 
@@ -204,7 +204,7 @@ add_task(async function() {
     );
     is(
       values[1].textContent,
-      formDataParamValue,
+      `"${formDataParamValue}"`,
       "The first form data param value was incorrect."
     );
   }
@@ -270,7 +270,7 @@ add_task(async function() {
     );
     is(
       values[0].textContent,
-      queryStringParamValue,
+      `"${queryStringParamValue}"`,
       "The first query string param value was incorrect."
     );
 
@@ -412,14 +412,18 @@ add_task(async function() {
           );
           is(
             value.textContent,
-            expValue[i],
+            `"${expValue[i]}"`,
             "Check that multi-value parameter value matches."
           );
           is(label.dataset.level, 2, "Check that parameter is nested.");
         }
       } else {
         is(label.textContent, expKey, "Check that parameter name matches.");
-        is(value.textContent, expValue, "Check that parameter value matches.");
+        is(
+          value.textContent,
+          `"${expValue}"`,
+          "Check that parameter value matches."
+        );
       }
     }
   }

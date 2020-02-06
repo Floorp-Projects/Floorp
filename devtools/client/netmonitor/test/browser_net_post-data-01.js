@@ -154,7 +154,7 @@ add_task(async function() {
     );
     is(
       values[0].textContent,
-      "bar",
+      `"bar"`,
       "The first query param value was incorrect."
     );
     is(
@@ -164,7 +164,7 @@ add_task(async function() {
     );
     is(
       values[1].textContent,
-      "42",
+      `"42"`,
       "The second query param value was incorrect."
     );
     is(
@@ -174,7 +174,7 @@ add_task(async function() {
     );
     is(
       values[2].textContent,
-      type,
+      `"${type}"`,
       "The third query param value was incorrect."
     );
 
@@ -192,7 +192,7 @@ add_task(async function() {
       );
       is(
         values[3].textContent,
-        "bar",
+        `"bar"`,
         "The first post param value was incorrect."
       );
       is(
@@ -202,7 +202,7 @@ add_task(async function() {
       );
       is(
         values[4].textContent,
-        "123",
+        `"123"`,
         "The second post param value was incorrect."
       );
     } else {

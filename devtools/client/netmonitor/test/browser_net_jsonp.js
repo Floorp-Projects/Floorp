@@ -72,7 +72,7 @@ add_task(async function() {
   );
   await wait;
 
-  testResponseTab("$_0123Fun", "Hello JSONP!");
+  testResponseTab("$_0123Fun", `"Hello JSONP!"`);
 
   info("Testing second request");
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
@@ -83,7 +83,7 @@ add_task(async function() {
   );
   await wait;
 
-  testResponseTab("$_4567Sad", "Hello weird JSONP!");
+  testResponseTab("$_4567Sad", `"Hello weird JSONP!"`);
 
   await teardown(monitor);
 

@@ -82,7 +82,7 @@ add_task(async function() {
   );
   is(
     values[0].textContent,
-    "This is a base 64 string.",
+    `"This is a base 64 string."`,
     "The first json property value was incorrect."
   );
 
