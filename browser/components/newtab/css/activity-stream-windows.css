@@ -1717,7 +1717,8 @@ main {
   .asrouter-admin h1 {
     font-weight: 200;
     font-size: 32px; }
-  .asrouter-admin h2 .button {
+  .asrouter-admin h2 .button,
+  .asrouter-admin p .button {
     font-size: 14px;
     padding: 6px 12px;
     margin-inline-start: 5px;
