@@ -35,6 +35,7 @@ export function createEditor() {
       "Cmd-G": false,
       "Ctrl-G": false,
     },
+    cursorBlinkRate: prefs.cursorBlinkRate,
   });
 }
 
