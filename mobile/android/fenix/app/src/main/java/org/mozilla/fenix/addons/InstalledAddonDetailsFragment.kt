@@ -35,12 +35,9 @@ class InstalledAddonDetailsFragment : Fragment() {
             addon = AddonDetailsFragmentArgs.fromBundle(requireNotNull(arguments)).addon
         }
 
-        return inflater.inflate(R.layout.fragment_installed_add_on_details, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        bind(view)
+        return inflater.inflate(R.layout.fragment_installed_add_on_details, container, false).also {
+            bind(it)
+        }
     }
 
     private fun bind(view: View) {
@@ -59,12 +56,14 @@ class InstalledAddonDetailsFragment : Fragment() {
         switch.setState(addon.isEnabled())
         switch.setOnCheckedChangeListener { v, isChecked ->
             val addonManager = v.context.components.addonManager
+            switch.isClickable = false
             if (isChecked) {
                 addonManager.enableAddon(
                     addon,
                     onSuccess = {
                         runIfFragmentIsAttached {
-                            switch.setState(true)
+                            switch.isClickable = true
+                            switch.setText(R.string.mozac_feature_addons_settings_on)
                             this.addon = it
                             showSnackBar(
                                 view,
@@ -77,6 +76,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     },
                     onError = {
                         runIfFragmentIsAttached {
+                            switch.isClickable = true
                             showSnackBar(
                                 view,
                                 getString(
@@ -92,7 +92,8 @@ class InstalledAddonDetailsFragment : Fragment() {
                     addon,
                     onSuccess = {
                         runIfFragmentIsAttached {
-                            switch.setState(false)
+                            switch.isClickable = true
+                            switch.setText(R.string.mozac_feature_addons_settings_off)
                             this.addon = it
                             showSnackBar(
                                 view,
@@ -105,6 +106,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     },
                     onError = {
                         runIfFragmentIsAttached {
+                            switch.isClickable = true
                             showSnackBar(
                                 view,
                                 getString(
