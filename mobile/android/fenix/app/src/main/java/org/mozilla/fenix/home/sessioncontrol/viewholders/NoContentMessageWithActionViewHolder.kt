@@ -8,9 +8,7 @@ import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.no_content_message_with_action.view.button_icon
-import kotlinx.android.synthetic.main.no_content_message_with_action.view.button_layout
-import kotlinx.android.synthetic.main.no_content_message_with_action.view.button_text
+import kotlinx.android.synthetic.main.no_content_message_with_action.view.*
 import org.mozilla.fenix.R
 
 class NoContentMessageWithActionViewHolder(

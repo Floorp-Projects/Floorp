@@ -5,8 +5,10 @@
 package org.mozilla.fenix.components.searchengine
 
 import android.graphics.Bitmap
+import android.util.Base64
 import android.util.Log
 import org.w3c.dom.Document
+import java.io.ByteArrayOutputStream
 import java.io.StringWriter
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
@@ -16,8 +18,6 @@ import javax.xml.transform.TransformerException
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
-import android.util.Base64
-import java.io.ByteArrayOutputStream
 
 private const val BITMAP_COMPRESS_QUALITY = 100
 private fun Bitmap.toBase64(): String {

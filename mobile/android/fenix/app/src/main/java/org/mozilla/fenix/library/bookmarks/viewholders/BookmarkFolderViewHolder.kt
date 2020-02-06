@@ -5,8 +5,8 @@
 package org.mozilla.fenix.library.bookmarks.viewholders
 
 import android.view.View
-import androidx.core.content.ContextCompat
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.hideAndDisable

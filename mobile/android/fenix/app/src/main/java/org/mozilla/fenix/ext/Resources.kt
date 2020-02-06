@@ -12,8 +12,6 @@ import android.text.SpannableString
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import androidx.annotation.StringRes
 import java.util.Formatter
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 // Credit to Michael Spitsin https://medium.com/@programmerr47/working-with-spans-in-android-ca4ab1327bc4
 @Suppress("SpreadOperator")

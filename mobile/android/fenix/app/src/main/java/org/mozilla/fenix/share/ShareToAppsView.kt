@@ -8,10 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.share_to_apps.appsList
-import kotlinx.android.synthetic.main.share_to_apps.progressBar
-import kotlinx.android.synthetic.main.share_to_apps.recentAppsContainer
-import kotlinx.android.synthetic.main.share_to_apps.recentAppsList
+import kotlinx.android.synthetic.main.share_to_apps.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.share.listadapters.AppShareAdapter
 import org.mozilla.fenix.share.listadapters.AppShareOption

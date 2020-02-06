@@ -17,7 +17,6 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
-import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
 /**

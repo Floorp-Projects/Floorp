@@ -15,7 +15,6 @@ import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.stringSetPreference
 import org.mozilla.fenix.ext.components
-import java.lang.Exception
 
 /**
  * SearchEngineProvider implementation to load user entered custom search engines.

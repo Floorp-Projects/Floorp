@@ -11,9 +11,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.locale_settings_item.view.locale_selected_icon
-import kotlinx.android.synthetic.main.locale_settings_item.view.locale_subtitle_text
-import kotlinx.android.synthetic.main.locale_settings_item.view.locale_title_text
+import kotlinx.android.synthetic.main.locale_settings_item.view.*
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.R
 import java.util.Locale

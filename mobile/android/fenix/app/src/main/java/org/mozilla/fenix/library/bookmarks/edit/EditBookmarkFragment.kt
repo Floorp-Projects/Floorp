@@ -20,11 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkNameEdit
-import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkParentFolderSelector
-import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkUrlEdit
-import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkUrlLabel
-import kotlinx.android.synthetic.main.fragment_edit_bookmark.progress_bar_bookmark
+import kotlinx.android.synthetic.main.fragment_edit_bookmark.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch

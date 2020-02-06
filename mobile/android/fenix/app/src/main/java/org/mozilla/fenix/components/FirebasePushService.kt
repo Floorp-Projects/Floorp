@@ -5,12 +5,12 @@
 package org.mozilla.fenix.components
 
 import android.annotation.SuppressLint
-import com.google.firebase.messaging.RemoteMessage
 import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
 import com.leanplum.LeanplumPushFirebaseMessagingService
 import mozilla.components.concept.push.PushService
-import mozilla.components.lib.push.firebase.AbstractFirebasePushService
 import mozilla.components.feature.push.AutoPushFeature
+import mozilla.components.lib.push.firebase.AbstractFirebasePushService
 
 /**
  * A wrapper class that only exists to delegate to [FirebaseMessagingService] instances.

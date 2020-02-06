@@ -7,8 +7,8 @@ package org.mozilla.fenix.onboarding
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 
 class FenixOnboarding(context: Context) {
     private val metrics = context.components.analytics.metrics

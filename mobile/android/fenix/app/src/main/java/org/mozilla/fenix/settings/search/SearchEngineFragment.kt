@@ -6,8 +6,8 @@ package org.mozilla.fenix.settings.search
 
 import android.os.Bundle
 import androidx.navigation.fragment.findNavController
-import androidx.preference.Preference
 import androidx.preference.CheckBoxPreference
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R

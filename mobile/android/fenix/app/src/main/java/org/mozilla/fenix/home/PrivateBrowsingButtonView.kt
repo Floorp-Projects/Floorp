@@ -6,9 +6,9 @@ package org.mozilla.fenix.home
 
 import android.view.View
 import androidx.annotation.StringRes
+import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.R
 
 /**
  * Sets up the private browsing toggle button on the [HomeFragment].

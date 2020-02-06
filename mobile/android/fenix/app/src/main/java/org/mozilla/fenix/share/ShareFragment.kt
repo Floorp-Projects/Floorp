@@ -16,11 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_share.view.appsShareLayout
-import kotlinx.android.synthetic.main.fragment_share.view.closeSharingContent
-import kotlinx.android.synthetic.main.fragment_share.view.closeSharingScrim
-import kotlinx.android.synthetic.main.fragment_share.view.devicesShareLayout
-import kotlinx.android.synthetic.main.fragment_share.view.shareWrapper
+import kotlinx.android.synthetic.main.fragment_share.view.*
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.concept.engine.prompt.PromptRequest

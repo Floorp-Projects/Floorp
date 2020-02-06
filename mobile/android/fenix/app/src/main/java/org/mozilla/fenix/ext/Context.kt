@@ -15,14 +15,11 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.AttrRes
-import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.Log.Priority.WARN
-import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FenixApplication
@@ -100,12 +97,6 @@ fun Context.share(text: String, subject: String = ""): Boolean {
  */
 fun Context.getRootView(): View? =
     asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as? ViewGroup
-
-/**
- * Returns the color int corresponding to the attribute.
- */
-@ColorInt
-fun Context.getColorFromAttr(@AttrRes attr: Int) = getColorFromAttr(attr)
 
 fun Context.settings(isCrashReportEnabledInBuild: Boolean = BuildConfig.CRASH_REPORTING && Config.channel.isReleased) =
     Settings.getInstance(this, isCrashReportEnabledInBuild)

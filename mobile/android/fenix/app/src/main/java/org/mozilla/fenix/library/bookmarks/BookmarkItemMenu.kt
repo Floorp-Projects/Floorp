@@ -10,8 +10,8 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
-import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.library.LibraryItemMenu
+import org.mozilla.fenix.theme.ThemeManager
 
 class BookmarkItemMenu(
     private val context: Context,

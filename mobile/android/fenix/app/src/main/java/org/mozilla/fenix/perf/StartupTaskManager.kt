@@ -5,7 +5,6 @@
 package org.mozilla.fenix.utils
 
 import org.mozilla.gecko.util.ThreadUtils
-import java.lang.IllegalStateException
 
 typealias StartupTask = () -> Unit
 

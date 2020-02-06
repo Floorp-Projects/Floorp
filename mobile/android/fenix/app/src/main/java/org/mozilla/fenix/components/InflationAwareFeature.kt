@@ -3,8 +3,8 @@ package org.mozilla.fenix.components
 import android.view.View
 import android.view.ViewStub
 import androidx.annotation.UiThread
-import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 import java.lang.ref.WeakReference
 
 /**

@@ -9,8 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.component_locale_settings.view.locale_list
-import kotlinx.android.synthetic.main.component_locale_settings.view.toolbar_container
+import kotlinx.android.synthetic.main.component_locale_settings.view.*
 import org.mozilla.fenix.R
 import java.util.Locale
 

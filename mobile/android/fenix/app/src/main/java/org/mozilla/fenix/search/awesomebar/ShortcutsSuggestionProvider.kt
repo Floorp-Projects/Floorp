@@ -5,8 +5,8 @@
 package org.mozilla.fenix.search.awesomebar
 
 import android.content.Context
-import androidx.core.graphics.drawable.toBitmap
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
 import org.mozilla.fenix.R

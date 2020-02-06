@@ -7,8 +7,8 @@ package org.mozilla.fenix.library.history
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.paging.PagedList
 import androidx.paging.LivePagedListBuilder
+import androidx.paging.PagedList
 import org.mozilla.fenix.components.history.PagedHistoryProvider
 
 class HistoryViewModel(historyProvider: PagedHistoryProvider) : ViewModel() {

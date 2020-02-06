@@ -12,7 +12,6 @@ import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
-import kotlinx.android.synthetic.main.fragment_home.*
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.Components
 
