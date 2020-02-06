@@ -1,0 +1,28 @@
+{
+  "addons": {
+    "update@example.com": {
+      "updates": [
+        {
+          "version": "1.0",
+          "update_link": "https://example.org/tests/junit/update-1.xpi"
+        },
+        {
+          "version": "2.0",
+          "update_link": "https://example.org/tests/junit/update-2.xpi"
+        }
+      ]
+    },
+    "update-with-perms@example.com": {
+      "updates": [
+        {
+          "version": "1.0",
+          "update_link": "https://example.org/tests/junit/update-with-perms-1.xpi"
+        },
+        {
+          "version": "2.0",
+          "update_link": "https://example.org/tests/junit/update-with-perms-2.xpi"
+        }
+      ]
+    }
+  }
+}
