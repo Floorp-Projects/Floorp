@@ -411,6 +411,13 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
    */
   stopTrackingMouseOverVideos() {
     let state = this.docState;
+    // We initialize `mousemoveDeferredTask` in `beginTrackingMouseOverVideos`.
+    // If it doesn't exist, that can't have happened. Nothing else ever sets
+    // this value (though we arm/disarm in various places). So we don't need
+    // to do anything else here and can return early.
+    if (!state.mousemoveDeferredTask) {
+      return;
+    }
     state.mousemoveDeferredTask.disarm();
     this.document.removeEventListener("mousemove", this, {
       mozSystemGroup: true,
