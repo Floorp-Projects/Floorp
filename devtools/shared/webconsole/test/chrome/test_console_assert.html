@@ -14,9 +14,7 @@ window.onload = async function () {
   SimpleTest.waitForExplicitFinish();
   let state;
   try {
-    state = await new Promise(resolve =>
-      attachConsole(["ConsoleAPI"], resolve)
-    );
+    state = (await attachConsole(["ConsoleAPI"])).state;
     const {webConsoleFront} = state;
 
     await testFalseAssert(webConsoleFront);

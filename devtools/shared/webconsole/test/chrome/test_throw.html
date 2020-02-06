@@ -16,10 +16,11 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
-  attachConsoleToTab([], onAttach);
+  const {state} = await attachConsoleToTab([]);
+  onAttach(state);
 }
 
 function onAttach(aState)

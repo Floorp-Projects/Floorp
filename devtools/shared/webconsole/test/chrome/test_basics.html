@@ -16,62 +16,44 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsoleToTab(["PageError"], onStartPageError);
-}
+  let {state, response} = await attachConsoleToTab(["PageError"]);
+  is(response.startedListeners.length, 1, "startedListeners.length");
+  is(response.startedListeners[0], "PageError", "startedListeners: PageError");
+  ok(response.nativeConsoleAPI, "nativeConsoleAPI");
 
-function onStartPageError(aState, aResponse)
-{
-  is(aResponse.startedListeners.length, 1, "startedListeners.length");
-  is(aResponse.startedListeners[0], "PageError", "startedListeners: PageError");
-  ok(aResponse.nativeConsoleAPI, "nativeConsoleAPI");
+  await closeDebugger(state);
+  top.console_ = top.console;
+  top.console = { lolz: "foo" };
+  ({state, response} = await attachConsoleToTab(["PageError", "ConsoleAPI", "foo"]));
 
-  closeDebugger(aState, function() {
-    top.console_ = top.console;
-    top.console = { lolz: "foo" };
-    attachConsoleToTab(["PageError", "ConsoleAPI", "foo"],
-                  onStartPageErrorAndConsoleAPI);
-  });
-}
-
-function onStartPageErrorAndConsoleAPI(aState, aResponse)
-{
-  const startedListeners = aResponse.startedListeners;
+  const startedListeners = response.startedListeners;
   is(startedListeners.length, 2, "startedListeners.length");
   isnot(startedListeners.indexOf("PageError"), -1, "startedListeners: PageError");
   isnot(startedListeners.indexOf("ConsoleAPI"), -1,
         "startedListeners: ConsoleAPI");
   is(startedListeners.indexOf("foo"), -1, "startedListeners: no foo");
-  ok(!aResponse.nativeConsoleAPI, "!nativeConsoleAPI");
+  ok(!response.nativeConsoleAPI, "!nativeConsoleAPI");
 
   top.console = top.console_;
-  aState.webConsoleFront.stopListeners(["ConsoleAPI", "foo"])
-    .then(onStopConsoleAPI.bind(null, aState));
-}
+  response = await state.webConsoleFront.stopListeners(["ConsoleAPI", "foo"]);
 
-function onStopConsoleAPI(aState, aResponse)
-{
-  is(aResponse.stoppedListeners.length, 1, "stoppedListeners.length");
-  is(aResponse.stoppedListeners[0], "ConsoleAPI", "stoppedListeners: ConsoleAPI");
+  is(response.stoppedListeners.length, 1, "stoppedListeners.length");
+  is(response.stoppedListeners[0], "ConsoleAPI", "stoppedListeners: ConsoleAPI");
+  await closeDebugger(state);
+  ({state, response} = await attachConsoleToTab(["ConsoleAPI"]));
 
-  closeDebugger(aState, function() {
-    attachConsoleToTab(["ConsoleAPI"], onStartConsoleAPI);
-  });
-}
-
-function onStartConsoleAPI(aState, aResponse)
-{
-  is(aResponse.startedListeners.length, 1, "startedListeners.length");
-  is(aResponse.startedListeners[0], "ConsoleAPI", "startedListeners: ConsoleAPI");
-  ok(aResponse.nativeConsoleAPI, "nativeConsoleAPI");
+  is(response.startedListeners.length, 1, "startedListeners.length");
+  is(response.startedListeners[0], "ConsoleAPI", "startedListeners: ConsoleAPI");
+  ok(response.nativeConsoleAPI, "nativeConsoleAPI");
 
   top.console = top.console_;
   delete top.console_;
 
-  closeDebugger(aState, function() {
+  closeDebugger(state, function() {
     SimpleTest.finish();
   });
 }

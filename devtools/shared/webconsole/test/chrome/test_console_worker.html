@@ -32,11 +32,7 @@ const expectedConsoleAPICalls = [
 ];
 
 window.onload = async function () {
-  const {state} = await new Promise(resolve => {
-    attachConsoleToWorker(["ConsoleAPI"], (s) => {
-      resolve({state: s})
-    });
-  });
+  const {state} = await attachConsoleToWorker(["ConsoleAPI"]);
 
   await testCachedMessages(state);
   await testConsoleAPI(state);

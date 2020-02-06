@@ -117,14 +117,15 @@ function doConsoleCalls(aState)
   ];
 }
 
-function startTest()
+async function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsoleToTab(["ConsoleAPI"], onAttach);
+  const {state} = await attachConsoleToTab(["ConsoleAPI"]);
+  onAttach(state);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   onConsoleAPICall = onConsoleAPICall.bind(null, aState);
   aState.webConsoleFront.on("consoleAPICall", onConsoleAPICall);

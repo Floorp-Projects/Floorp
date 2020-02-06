@@ -35,26 +35,14 @@ async function connectToDebugger() {
   return client;
 }
 
-async function attachConsole(listeners, callback) {
-  const { state, response } = await _attachConsole(listeners);
-  if (callback) {
-    return callback(state, response);
-  }
-  return { state, response };
+function attachConsole(listeners) {
+  return _attachConsole(listeners);
 }
-async function attachConsoleToTab(listeners, callback) {
-  const { state, response } = await _attachConsole(listeners, true);
-  if (callback) {
-    return callback(state, response);
-  }
-  return { state, response };
+function attachConsoleToTab(listeners) {
+  return _attachConsole(listeners, true);
 }
-async function attachConsoleToWorker(listeners, callback) {
-  const { state, response } = await _attachConsole(listeners, true, true);
-  if (callback) {
-    return callback(state, response);
-  }
-  return { state, response };
+function attachConsoleToWorker(listeners) {
+  return _attachConsole(listeners, true, true);
 }
 
 var _attachConsole = async function(listeners, attachToTab, attachToWorker) {

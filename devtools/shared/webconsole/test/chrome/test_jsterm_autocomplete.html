@@ -26,11 +26,11 @@
 
   async function startTest() {
     // First run the tests with a tab as a target.
-    let state = await new Promise(resolve => attachConsoleToTab(["PageError"], resolve));
+    let {state} = await attachConsoleToTab(["PageError"]);
     await performTests({state, isWorker: false});
 
     // Then run the tests with a worker as a target.
-    state = await new Promise(resolve => attachConsoleToWorker(["PageError"], resolve));
+    state = (await attachConsoleToWorker(["PageError"])).state;
     await performTests({state, isWorker: true});
 
     SimpleTest.finish();
