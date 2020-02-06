@@ -2,7 +2,7 @@
 
 # UnsupportedVersions
 
-`data class UnsupportedVersions : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L95)
+`data class UnsupportedVersions : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L105)
 
 Encountered an unsupported version of Fennec's auth state.
 

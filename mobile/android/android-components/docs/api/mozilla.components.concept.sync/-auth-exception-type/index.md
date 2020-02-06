@@ -2,7 +2,7 @@
 
 # AuthExceptionType
 
-`enum class AuthExceptionType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L14)
+`enum class AuthExceptionType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L15)
 
 An auth-related exception type, for use with [AuthException](../-auth-exception/index.md).
 

@@ -2,7 +2,7 @@
 
 # deviceConstellation
 
-`abstract fun deviceConstellation(): `[`DeviceConstellation`](../-device-constellation/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L181)
+`abstract fun deviceConstellation(): `[`DeviceConstellation`](../-device-constellation/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L224)
 
 Returns the device constellation for the current account
 

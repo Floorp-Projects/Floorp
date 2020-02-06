@@ -13,6 +13,8 @@ States of the [FxaAccountManager](../-fxa-account-manager/index.md).
 | [Start](-start.md) |  |
 | [NotAuthenticated](-not-authenticated.md) |  |
 | [AuthenticationProblem](-authentication-problem.md) |  |
+| [CanAutoRetryAuthenticationViaTokenCopy](-can-auto-retry-authentication-via-token-copy.md) |  |
+| [CanAutoRetryAuthenticationViaTokenReuse](-can-auto-retry-authentication-via-token-reuse.md) |  |
 | [AuthenticatedNoProfile](-authenticated-no-profile.md) |  |
 | [AuthenticatedWithProfile](-authenticated-with-profile.md) |  |
 

@@ -2,7 +2,7 @@
 
 # Keystore
 
-`open class Keystore` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L145)
+`open class Keystore` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L147)
 
 Manages data protection using a system-isolated cryptographic key.
 

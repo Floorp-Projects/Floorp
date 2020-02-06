@@ -2,7 +2,7 @@
 
 # Existing
 
-`object Existing : `[`AuthType`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L218)
+`object Existing : `[`AuthType`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L261)
 
 Account restored from hydrated state on disk.
 

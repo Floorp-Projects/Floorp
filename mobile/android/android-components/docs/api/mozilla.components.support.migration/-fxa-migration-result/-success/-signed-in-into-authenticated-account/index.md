@@ -2,7 +2,7 @@
 
 # SignedInIntoAuthenticatedAccount
 
-`data class SignedInIntoAuthenticatedAccount : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L72)
+`data class SignedInIntoAuthenticatedAccount : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L73)
 
 Successfully signed-in with an authenticated Fennec account.
 

@@ -2,7 +2,7 @@
 
 # createEncryptCipher
 
-`open fun createEncryptCipher(): `[`Cipher`](https://developer.android.com/reference/javax/crypto/Cipher.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L264)
+`open fun createEncryptCipher(): `[`Cipher`](https://developer.android.com/reference/javax/crypto/Cipher.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L276)
 
 Create a cipher initialized for encrypting data with the managed key.
 

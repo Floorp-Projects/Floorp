@@ -2,7 +2,7 @@
 
 # Migration
 
-`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L55)
+`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L58)
 
 Supported Fennec migrations and their current versions.
 
@@ -17,6 +17,7 @@ Supported Fennec migrations and their current versions.
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
 | [Logins](-logins.md) | `object Logins : `[`Migration`](./index.md)<br>Migrates logins. |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |
+| [SearchEngine](-search-engine.md) | `object SearchEngine : `[`Migration`](./index.md)<br>Migrates Fennec's default search engine. |
 | [Settings](-settings.md) | `object Settings : `[`Migration`](./index.md)<br>Migrates all Fennec settings backed by SharedPreferences. |
 | [TelemetryIdentifiers](-telemetry-identifiers.md) | `object TelemetryIdentifiers : `[`Migration`](./index.md)<br>Migrates Fennec's telemetry identifiers. |
 
@@ -43,5 +44,6 @@ Supported Fennec migrations and their current versions.
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
 | [Logins](-logins.md) | `object Logins : `[`Migration`](./index.md)<br>Migrates logins. |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |
+| [SearchEngine](-search-engine.md) | `object SearchEngine : `[`Migration`](./index.md)<br>Migrates Fennec's default search engine. |
 | [Settings](-settings.md) | `object Settings : `[`Migration`](./index.md)<br>Migrates all Fennec settings backed by SharedPreferences. |
 | [TelemetryIdentifiers](-telemetry-identifiers.md) | `object TelemetryIdentifiers : `[`Migration`](./index.md)<br>Migrates Fennec's telemetry identifiers. |

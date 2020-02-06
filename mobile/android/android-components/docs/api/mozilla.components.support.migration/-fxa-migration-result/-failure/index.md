@@ -2,7 +2,7 @@
 
 # Failure
 
-`sealed class Failure : `[`FxaMigrationResult`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L82)
+`sealed class Failure : `[`FxaMigrationResult`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L92)
 
 Failure variants of an FxA migration.
 

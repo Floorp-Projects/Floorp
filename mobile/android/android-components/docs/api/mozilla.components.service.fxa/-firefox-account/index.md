@@ -2,7 +2,7 @@
 
 # FirefoxAccount
 
-`class FirefoxAccount : `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L27)
+`class FirefoxAccount : `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L29)
 
 FirefoxAccount represents the authentication state of a client.
 
@@ -31,8 +31,10 @@ FirefoxAccount represents the authentication state of a client.
 | [getProfileAsync](get-profile-async.md) | `fun getProfileAsync(ignoreCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): <ERROR CLASS>`<br>Fetches the profile object for the current client either from the existing cached state or from the server (requires the client to have access to the profile scope). |
 | [getSessionToken](get-session-token.md) | `fun getSessionToken(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Returns session token for an authenticated account. |
 | [getTokenServerEndpointURL](get-token-server-endpoint-u-r-l.md) | `fun getTokenServerEndpointURL(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Fetches the token server endpoint, for authentication using the SAML bearer flow. |
+| [isInMigrationState](is-in-migration-state.md) | `fun isInMigrationState(): `[`InFlightMigrationState`](../../mozilla.components.concept.sync/-in-flight-migration-state/index.md)<br>Checks if there's a migration in-flight. An in-flight migration means that we've tried to migrate via either [migrateFromSessionTokenAsync](../../mozilla.components.concept.sync/-o-auth-account/migrate-from-session-token-async.md) or [copyFromSessionTokenAsync](../../mozilla.components.concept.sync/-o-auth-account/copy-from-session-token-async.md), and failed for intermittent (e.g. network) reasons. When an in-flight migration is present, we can retry using [retryMigrateFromSessionTokenAsync](../../mozilla.components.concept.sync/-o-auth-account/retry-migrate-from-session-token-async.md). |
 | [migrateFromSessionTokenAsync](migrate-from-session-token-async.md) | `fun migrateFromSessionTokenAsync(sessionToken: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, kSync: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, kXCS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): <ERROR CLASS>`<br>Attempts to migrate from an existing session token without user input. Passed-in session token will be reused. |
 | [registerPersistenceCallback](register-persistence-callback.md) | `fun registerPersistenceCallback(callback: `[`StatePersistenceCallback`](../../mozilla.components.concept.sync/-state-persistence-callback/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers a callback for when the account state gets persisted |
+| [retryMigrateFromSessionTokenAsync](retry-migrate-from-session-token-async.md) | `fun retryMigrateFromSessionTokenAsync(): Deferred<<ERROR CLASS>?>`<br>Retries an in-flight migration attempt. |
 | [toJSONString](to-j-s-o-n-string.md) | `fun toJSONString(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Serializes the current account's authentication state as a JSON string, for persistence in the Android KeyStore/shared preferences. The authentication state can be restored using [FirefoxAccount.fromJSONString](#). |
 
 ### Companion Object Functions

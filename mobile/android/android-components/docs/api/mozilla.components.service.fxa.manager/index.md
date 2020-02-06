@@ -8,6 +8,7 @@
 |---|---|
 | [AccountState](-account-state/index.md) | `enum class AccountState`<br>States of the [FxaAccountManager](-fxa-account-manager/index.md). |
 | [FxaAccountManager](-fxa-account-manager/index.md) | `open class FxaAccountManager : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountObserver`](../mozilla.components.concept.sync/-account-observer/index.md)`>`<br>An account manager which encapsulates various internal details of an account lifecycle and provides an observer interface along with a public API for interacting with an account. The internal state machine abstracts over state space as exposed by the fxaclient library, not the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us. |
+| [SignInWithShareableAccountResult](-sign-in-with-shareable-account-result/index.md) | `enum class SignInWithShareableAccountResult`<br>Describes a result of running [FxaAccountManager.signInWithShareableAccountAsync](-fxa-account-manager/sign-in-with-shareable-account-async.md). |
 | [SyncEnginesStorage](-sync-engines-storage/index.md) | `class SyncEnginesStorage`<br>Storage layer for the enabled/disabled state of [SyncEngine](../mozilla.components.service.fxa/-sync-engine/index.md). |
 
 ### Properties

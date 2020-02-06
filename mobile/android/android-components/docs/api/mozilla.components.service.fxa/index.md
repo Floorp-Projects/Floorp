@@ -38,6 +38,7 @@
 | [mozilla.appservices.fxaclient.Device](mozilla.appservices.fxaclient.-device/index.md) |  |
 | [mozilla.appservices.fxaclient.Device.Capability](mozilla.appservices.fxaclient.-device.-capability/index.md) |  |
 | [mozilla.appservices.fxaclient.Device.PushSubscription](mozilla.appservices.fxaclient.-device.-push-subscription/index.md) |  |
+| [mozilla.appservices.fxaclient.MigrationState](mozilla.appservices.fxaclient.-migration-state/index.md) |  |
 | [mozilla.appservices.fxaclient.Profile](mozilla.appservices.fxaclient.-profile/index.md) |  |
 | [mozilla.appservices.fxaclient.ScopedKey](mozilla.appservices.fxaclient.-scoped-key/index.md) |  |
 | [mozilla.appservices.fxaclient.TabHistoryEntry](mozilla.appservices.fxaclient.-tab-history-entry/index.md) |  |

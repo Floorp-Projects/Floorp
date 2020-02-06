@@ -2,7 +2,7 @@
 
 # UnauthenticatedAccount
 
-`data class UnauthenticatedAccount : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L63)
+`data class UnauthenticatedAccount : `[`Success`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L64)
 
 Encountered a Fennec auth state that can't be used to automatically log-in.
 

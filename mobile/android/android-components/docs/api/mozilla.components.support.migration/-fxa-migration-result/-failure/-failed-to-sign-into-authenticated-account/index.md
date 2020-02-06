@@ -2,7 +2,7 @@
 
 # FailedToSignIntoAuthenticatedAccount
 
-`data class FailedToSignIntoAuthenticatedAccount : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L109)
+`data class FailedToSignIntoAuthenticatedAccount : `[`Failure`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecFxaMigration.kt#L119)
 
 Failed to sign in into an authenticated account. Currently, this could be either due to network failures,
 invalid credentials, or server-side issues.
