@@ -1146,7 +1146,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
   }
 
   ipc::StructuredCloneData message;
-  message.Write(aCx, aMessage, transferArray, JS::CloneDataPolicy(), aError);
+  message.Write(aCx, aMessage, transferArray, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return;
   }

@@ -205,7 +205,7 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   }
 
   RefPtr<ServiceWorkerCloneData> data = new ServiceWorkerCloneData();
-  data->Write(aCx, aMessage, transferable, JS::CloneDataPolicy(), aRv);
+  data->Write(aCx, aMessage, transferable, aRv);
   if (aRv.Failed()) {
     return;
   }

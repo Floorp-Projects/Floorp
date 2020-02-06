@@ -182,14 +182,6 @@ Maybe<ClientInfo> nsIGlobalObject::GetClientInfo() const {
   return Maybe<ClientInfo>();
 }
 
-Maybe<nsID> nsIGlobalObject::GetAgentClusterId() const {
-  Maybe<ClientInfo> ci = GetClientInfo();
-  if (ci.isSome()) {
-    return ci.value().AgentClusterId();
-  }
-  return Nothing();
-}
-
 Maybe<ServiceWorkerDescriptor> nsIGlobalObject::GetController() const {
   // By default globals do not have a service worker controller.  Only real
   // window and worker globals can currently be controlled as a client.

@@ -102,7 +102,7 @@ class StructuredCloneHolderBase {
   // of cloning policy.
   bool Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
              JS::Handle<JS::Value> aTransfer,
-             const JS::CloneDataPolicy& aCloneDataPolicy);
+             JS::CloneDataPolicy aCloneDataPolicy);
 
   // If Write() has been called, this method retrieves data and stores it into
   // aValue.
@@ -110,7 +110,7 @@ class StructuredCloneHolderBase {
 
   // Like Read() but it supports handling of clone policy.
   bool Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
-            const JS::CloneDataPolicy& aCloneDataPolicy);
+            JS::CloneDataPolicy aCloneDataPolicy);
 
   bool HasData() const { return !!mBuffer; }
 
@@ -164,20 +164,18 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   // Normally you should just use Write() and Read().
 
-  virtual void Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                     ErrorResult& aRv);
+  void Write(JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-  virtual void Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                     JS::Handle<JS::Value> aTransfer,
-                     const JS::CloneDataPolicy& aCloneDataPolicy,
-                     ErrorResult& aRv);
+  void Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
+             JS::Handle<JS::Value> aTransfer,
+             JS::CloneDataPolicy aCloneDataPolicy, ErrorResult& aRv);
 
   void Read(nsIGlobalObject* aGlobal, JSContext* aCx,
             JS::MutableHandle<JS::Value> aValue, ErrorResult& aRv);
 
   void Read(nsIGlobalObject* aGlobal, JSContext* aCx,
             JS::MutableHandle<JS::Value> aValue,
-            const JS::CloneDataPolicy& aCloneDataPolicy, ErrorResult& aRv);
+            JS::CloneDataPolicy aCloneDataPolicy, ErrorResult& aRv);
 
   // Call this method to know if this object is keeping some DOM object alive.
   bool HasClonedDOMObjects() const {
@@ -297,15 +295,13 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   void ReadFromBuffer(nsIGlobalObject* aGlobal, JSContext* aCx,
                       JSStructuredCloneData& aBuffer,
                       JS::MutableHandle<JS::Value> aValue,
-                      const JS::CloneDataPolicy& aCloneDataPolicy,
-                      ErrorResult& aRv);
+                      JS::CloneDataPolicy aCloneDataPolicy, ErrorResult& aRv);
 
   void ReadFromBuffer(nsIGlobalObject* aGlobal, JSContext* aCx,
                       JSStructuredCloneData& aBuffer,
                       uint32_t aAlgorithmVersion,
                       JS::MutableHandle<JS::Value> aValue,
-                      const JS::CloneDataPolicy& aCloneDataPolicy,
-                      ErrorResult& aRv);
+                      JS::CloneDataPolicy aCloneDataPolicy, ErrorResult& aRv);
 
   void SameProcessScopeRequired(bool* aSameProcessScopeRequired);
 

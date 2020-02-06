@@ -179,10 +179,6 @@ PostMessageEvent::Run() {
     cloneDataPolicy.allowIntraClusterClonableSharedObjects();
   }
 
-  if (targetWindow->IsSharedMemoryAllowed()) {
-    cloneDataPolicy.allowSharedMemoryObjects();
-  }
-
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
     mHolder.ref<StructuredCloneHolder>().Read(
@@ -194,7 +190,6 @@ PostMessageEvent::Run() {
     holder = &mHolder.ref<ipc::StructuredCloneData>();
   }
   if (NS_WARN_IF(rv.Failed())) {
-    JS_ClearPendingException(cx);
     DispatchError(cx, targetWindow, eventTarget);
     return NS_OK;
   }

@@ -177,19 +177,12 @@ class StructuredCloneData : public StructuredCloneHolder {
             ErrorResult& aRv);
 
   void Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
-            const JS::CloneDataPolicy& aCloneDataPolicy, ErrorResult& aRv);
+            JS::CloneDataPolicy aCloneDataPolicy, ErrorResult& aRv);
 
-  // Write with no transfer objects and with the default CloneDataPolicy.  With
-  // a default CloneDataPolicy, read and write will not be considered as part of
-  // the same agent cluster and shared memory objects will not be supported.
-  void Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
-             ErrorResult& aRv) override;
+  void Write(JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-  // The most generic Write method, with tansfers and CloneDataPolicy.
   void Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
-             JS::Handle<JS::Value> aTransfers,
-             const JS::CloneDataPolicy& aCloneDataPolicy,
-             ErrorResult& aRv) override;
+             JS::Handle<JS::Value> aTransfers, ErrorResult& aRv);
 
   // Actor-varying methods to convert the structured clone stored in this holder
   // by a previous call to Write() into ClonedMessageData IPC representation.

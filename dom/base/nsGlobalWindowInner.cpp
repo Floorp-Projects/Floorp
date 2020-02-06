@@ -2396,6 +2396,9 @@ bool nsGlobalWindowInner::CrossOriginIsolated() const {
   if (!cc ||
       !StringBeginsWith(cc->GetRemoteType(),
                         NS_LITERAL_STRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX))) {
+#if !defined(ANDROID)
+    MOZ_DIAGNOSTIC_ASSERT(false, "COOP+COEP not in webCOOP+COEP process");
+#endif
     return false;
   }
 
@@ -2558,9 +2561,9 @@ void nsGlobalWindowInner::HintIsLoading(bool aIsLoading) {
   // Hint to tell the JS GC to use modified triggers during pageload.
   if (mHintedWasLoading != aIsLoading) {
     using namespace js::gc;
-    SetPerformanceHint(danger::GetJSContext(), aIsLoading
-                                                   ? PerformanceHint::InPageLoad
-                                                   : PerformanceHint::Normal);
+    SetPerformanceHint(
+        danger::GetJSContext(),
+        aIsLoading ? PerformanceHint::InPageLoad : PerformanceHint::Normal);
     mHintedWasLoading = aIsLoading;
   }
 }

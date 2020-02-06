@@ -387,7 +387,7 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
   JS::RootedValue v(aCx, aValue);
   JS::RootedValue t(aCx, aTransfer);
   ErrorResult rv;
-  aData.Write(aCx, v, t, JS::CloneDataPolicy(), rv);
+  aData.Write(aCx, v, t, rv);
   if (!rv.Failed()) {
     return true;
   }
