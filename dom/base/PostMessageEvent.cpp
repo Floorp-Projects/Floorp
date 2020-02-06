@@ -194,6 +194,7 @@ PostMessageEvent::Run() {
     holder = &mHolder.ref<ipc::StructuredCloneData>();
   }
   if (NS_WARN_IF(rv.Failed())) {
+    JS_ClearPendingException(cx);
     DispatchError(cx, targetWindow, eventTarget);
     return NS_OK;
   }
