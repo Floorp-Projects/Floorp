@@ -7,6 +7,11 @@
 #define mozilla_widget_WindowsUIUtils_h__
 
 #include "nsIWindowsUIUtils.h"
+#include "nsString.h"
+#include "mozilla/MozPromise.h"
+
+typedef mozilla::MozPromise<bool, nsresult, /* IsExclusive */ true>
+    SharePromise;
 
 enum TabletModeState { eTabletModeUnknown = 0, eTabletModeOff, eTabletModeOn };
 
@@ -16,6 +21,9 @@ class WindowsUIUtils final : public nsIWindowsUIUtils {
   NS_DECL_NSIWINDOWSUIUTILS
 
   WindowsUIUtils();
+
+  static RefPtr<SharePromise> Share(nsAutoString aTitle, nsAutoString aText,
+                                    nsAutoString aUrl);
 
  protected:
   ~WindowsUIUtils();
