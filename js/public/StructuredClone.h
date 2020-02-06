@@ -206,20 +206,20 @@ enum TransferableOwnership {
 
 class CloneDataPolicy {
   bool allowIntraClusterClonableSharedObjects_;
+  bool allowSharedMemoryObjects_;
 
  public:
   // The default is to deny all policy-controlled aspects.
 
-  CloneDataPolicy() : allowIntraClusterClonableSharedObjects_(false) {}
+  CloneDataPolicy()
+      : allowIntraClusterClonableSharedObjects_(false),
+        allowSharedMemoryObjects_(false) {}
 
-  // In the JS engine, SharedArrayBuffers and WASM modules can only be cloned
-  // intra-process because the shared memory areas are allocated in
-  // process-private memory.  Clients should therefore deny SharedArrayBuffers
-  // when cloning data that are to be transmitted inter-process.
-  //
-  // Clients should also deny SharedArrayBuffers and WASM modules when cloning
-  // data that are to be transmitted intra-process if policy needs dictate such
-  // denial.
+  // SharedArrayBuffers and WASM modules can only be cloned intra-process
+  // because the shared memory areas are allocated in process-private memory or
+  // because there are security issues of sharing them cross agent clusters.
+  // y default, we don't allow shared-memory and intra-cluster objects. Clients
+  // should therefore enable these 2 clone features when needed.
 
   void allowIntraClusterClonableSharedObjects() {
     allowIntraClusterClonableSharedObjects_ = true;
@@ -227,6 +227,12 @@ class CloneDataPolicy {
 
   bool areIntraClusterClonableSharedObjectsAllowed() const {
     return allowIntraClusterClonableSharedObjects_;
+  }
+
+  void allowSharedMemoryObjects() { allowSharedMemoryObjects_ = true; }
+
+  bool areSharedMemoryObjectsAllowed() const {
+    return allowSharedMemoryObjects_;
   }
 };
 
