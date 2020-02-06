@@ -12,9 +12,9 @@ use unic_langid::LanguageIdentifier;
 
 let loc: LanguageIdentifier = "en-US".parse().expect("Parsing failed.");
 
-assert_eq!(loc.get_language(), "en");
-assert_eq!(loc.get_script(), None);
-assert_eq!(loc.get_region(), Some("US"));
+assert_eq!(loc.language(), "en");
+assert_eq!(loc.script(), None);
+assert_eq!(loc.region(), Some("US"));
 
 loc.set_script(Some("latn"));
 

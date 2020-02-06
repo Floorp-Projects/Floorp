@@ -47,24 +47,25 @@ fn language_identifier_construct_bench(c: &mut Criterion) {
             })
         }),
         Fun::new("from_parts", |b, langids: &Vec<LanguageIdentifier>| {
-            let entries: Vec<(Option<&str>, Option<&str>, Option<&str>, Vec<&str>)> = langids
-                .iter()
-                .map(|langid| {
-                    let lang = Some(langid.get_language()).and_then(|s| {
-                        if s == "und" {
-                            None
-                        } else {
-                            Some(s)
-                        }
-                    });
-                    (
-                        lang,
-                        langid.get_script(),
-                        langid.get_region(),
-                        langid.get_variants().collect::<Vec<_>>(),
-                    )
-                })
-                .collect();
+            let entries: Vec<(Option<&str>, Option<&str>, Option<&str>, Vec<&str>)> =
+                langids
+                    .iter()
+                    .map(|langid| {
+                        let lang = Some(langid.language()).and_then(|s| {
+                            if s == "und" {
+                                None
+                            } else {
+                                Some(s)
+                            }
+                        });
+                        (
+                            lang,
+                            langid.script(),
+                            langid.region(),
+                            langid.variants().collect::<Vec<_>>(),
+                        )
+                    })
+                    .collect();
             b.iter(|| {
                 for (language, script, region, variants) in &entries {
                     let _ = LanguageIdentifier::from_parts(*language, *script, *region, variants);
@@ -80,16 +81,16 @@ fn language_identifier_construct_bench(c: &mut Criterion) {
                     .collect::<Vec<_>>();
                 b.iter(|| {
                     for (language, script, region, variants) in &entries {
-                        let _ = unsafe {
-                            LanguageIdentifier::from_raw_parts_unchecked(
-                                language.map(|l| TinyStr8::new_unchecked(l)),
-                                script.map(|s| TinyStr4::new_unchecked(s)),
-                                region.map(|r| TinyStr4::new_unchecked(r)),
-                                variants.as_ref().map(|v| {
-                                    v.into_iter().map(|v| TinyStr8::new_unchecked(*v)).collect()
-                                }),
-                            )
-                        };
+                        let _ = LanguageIdentifier::from_raw_parts_unchecked(
+                            language.map(|l| unsafe { TinyStr8::new_unchecked(l) }),
+                            script.map(|s| unsafe { TinyStr4::new_unchecked(s) }),
+                            region.map(|r| unsafe { TinyStr4::new_unchecked(r) }),
+                            variants.as_ref().map(|v| {
+                                v.into_iter()
+                                    .map(|v| unsafe { TinyStr8::new_unchecked(*v) })
+                                    .collect()
+                            }),
+                        );
                     }
                 })
             },

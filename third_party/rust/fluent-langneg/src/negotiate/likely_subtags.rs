@@ -5,11 +5,11 @@ static REGION_MATCHING_KEYS: &[&str] = &[
 ];
 
 pub trait MockLikelySubtags {
-    fn add_likely_subtags(&mut self) -> bool;
+    fn maximize(&mut self) -> bool;
 }
 
 impl MockLikelySubtags for LanguageIdentifier {
-    fn add_likely_subtags(&mut self) -> bool {
+    fn maximize(&mut self) -> bool {
         let extended = match self.to_string().as_str() {
             "en" => "en-Latn-US",
             "fr" => "fr-Latn-FR",
@@ -19,7 +19,7 @@ impl MockLikelySubtags for LanguageIdentifier {
             "zh-GB" => "zh-Hant-GB",
             "zh-US" => "zh-Hant-US",
             _ => {
-                let lang = self.get_language();
+                let lang = self.language();
 
                 for subtag in REGION_MATCHING_KEYS {
                     if lang == *subtag {
@@ -31,13 +31,13 @@ impl MockLikelySubtags for LanguageIdentifier {
             }
         };
         let langid: LanguageIdentifier = extended.parse().expect("Failed to parse langid.");
-        self.set_language(langid.get_language()).unwrap();
-        if let Some(subtag) = langid.get_script() {
+        self.set_language(langid.language()).unwrap();
+        if let Some(subtag) = langid.script() {
             self.set_script(subtag).unwrap();
         } else {
             self.clear_script();
         }
-        if let Some(subtag) = langid.get_region() {
+        if let Some(subtag) = langid.region() {
             self.set_region(subtag).unwrap();
         } else {
             self.clear_region();

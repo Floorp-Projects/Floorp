@@ -6,7 +6,7 @@ use tinystr::TinyStr8;
 use unic_langid_impl::CharacterDirection;
 use unic_langid_impl::LanguageIdentifier;
 
-fn get_langid_to_direction_map(path: &str) -> HashMap<LanguageIdentifier, CharacterDirection> {
+fn langid_to_direction_map(path: &str) -> HashMap<LanguageIdentifier, CharacterDirection> {
     let mut result = HashMap::new();
     for entry in fs::read_dir(path).unwrap() {
         let entry = entry.unwrap();
@@ -40,7 +40,7 @@ fn check_all_variants_rtl(
     lang: &str,
 ) -> bool {
     for (langid, dir) in map.iter() {
-        if langid.get_language() == lang && dir != &CharacterDirection::RTL {
+        if langid.language() == lang && dir != &CharacterDirection::RTL {
             return false;
         }
     }
@@ -49,7 +49,7 @@ fn check_all_variants_rtl(
 
 fn main() {
     let path = "./data/cldr-misc-modern/main/";
-    let map = get_langid_to_direction_map(path);
+    let map = langid_to_direction_map(path);
 
     let mut result = vec![];
 
@@ -58,7 +58,7 @@ fn main() {
             continue;
         }
 
-        let lang = langid.get_language().to_string();
+        let lang = langid.language().to_string();
 
         assert!(
             check_all_variants_rtl(&map, &lang),

@@ -66,7 +66,7 @@ pub fn parse_language_identifier_from_iter<'a>(
     let variants = if variants.is_empty() {
         None
     } else {
-        variants.sort();
+        variants.sort_unstable();
         variants.dedup();
         Some(variants.into_boxed_slice())
     };
