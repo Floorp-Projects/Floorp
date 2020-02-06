@@ -126,7 +126,7 @@ CanonicalBrowsingContext* BrowsingContext::Canonical() {
 }
 
 /* static */
-already_AddRefed<BrowsingContext> BrowsingContext::Create(
+already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     BrowsingContext* aParent, BrowsingContext* aOpener, const nsAString& aName,
     Type aType) {
   MOZ_DIAGNOSTIC_ASSERT(!aParent || aParent->mType == aType);
@@ -197,12 +197,24 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
 
   context->mFields.SetWithoutSyncing<IDX_IsActive>(true);
 
-  Register(context);
-
-  // Attach the browsing context to the tree.
-  context->Attach();
-
   return context.forget();
+}
+
+already_AddRefed<BrowsingContext> BrowsingContext::Create(
+    BrowsingContext* aParent, BrowsingContext* aOpener, const nsAString& aName,
+    Type aType) {
+  RefPtr<BrowsingContext> bc(CreateDetached(aParent, aOpener, aName, aType));
+  bc->EnsureAttached();
+  return bc.forget();
+}
+
+void BrowsingContext::EnsureAttached() {
+  if (!mEverAttached) {
+    Register(this);
+
+    // Attach the browsing context to the tree.
+    Attach();
+  }
 }
 
 /* static */
@@ -242,6 +254,10 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
 
   // Caller handles attaching us to the tree.
 
+  if (aInit.mCached) {
+    context->mEverAttached = true;
+  }
+
   return context.forget();
 }
 
@@ -254,6 +270,7 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mBrowsingContextId(aBrowsingContextId),
       mGroup(aGroup),
       mParent(aParent),
+      mEverAttached(false),
       mIsInProcess(false),
       mIsDiscarded(false),
       mDanglingRemoteOuterProxies(false),
@@ -266,6 +283,7 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
 void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   // XXX(nika): We should communicate that we are now an active BrowsingContext
   // process to the parent & do other validation here.
+  MOZ_DIAGNOSTIC_ASSERT(mEverAttached);
   MOZ_RELEASE_ASSERT(aDocShell->GetBrowsingContext() == this);
   mDocShell = aDocShell;
   mDanglingRemoteOuterProxies = !mIsInProcess;
@@ -336,6 +354,9 @@ void BrowsingContext::Embed() {
 }
 
 void BrowsingContext::Attach(bool aFromIPC) {
+  MOZ_DIAGNOSTIC_ASSERT(!mEverAttached);
+  mEverAttached = true;
+
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: Connecting 0x%08" PRIx64 " to 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
@@ -369,6 +390,8 @@ void BrowsingContext::Attach(bool aFromIPC) {
 }
 
 void BrowsingContext::Detach(bool aFromIPC) {
+  MOZ_DIAGNOSTIC_ASSERT(mEverAttached);
+
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: Detaching 0x%08" PRIx64 " from 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
@@ -760,6 +783,7 @@ JSObject* BrowsingContext::WrapObject(JSContext* aCx,
 bool BrowsingContext::WriteStructuredClone(JSContext* aCx,
                                            JSStructuredCloneWriter* aWriter,
                                            StructuredCloneHolder* aHolder) {
+  MOZ_DIAGNOSTIC_ASSERT(mEverAttached);
   return (JS_WriteUint32Pair(aWriter, SCTAG_DOM_BROWSING_CONTEXT, 0) &&
           JS_WriteUint32Pair(aWriter, uint32_t(Id()), uint32_t(Id() >> 32)));
 }
@@ -1204,6 +1228,7 @@ void BrowsingContext::SendCommitTransaction(ContentChild* aChild,
 }
 
 BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
+  MOZ_DIAGNOSTIC_ASSERT(mEverAttached);
   MOZ_DIAGNOSTIC_ASSERT(mType == Type::Content);
 
   IPCInitializer init;
@@ -1462,6 +1487,7 @@ namespace ipc {
 
 void IPDLParamTraits<dom::BrowsingContext*>::Write(
     IPC::Message* aMsg, IProtocol* aActor, dom::BrowsingContext* aParam) {
+  MOZ_DIAGNOSTIC_ASSERT(!aParam || aParam->EverAttached());
   uint64_t id = aParam ? aParam->Id() : 0;
   WriteIPDLParam(aMsg, aActor, id);
   if (!aParam) {

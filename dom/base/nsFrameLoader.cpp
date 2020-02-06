@@ -281,16 +281,23 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   nsAutoString frameName;
   GetFrameName(aOwner, frameName);
 
+  // Create our BrowsingContext without immediately attaching it. It's possible
+  // that no DocShell or remote browser will ever be created for this
+  // FrameLoader, particularly if the document that we were created for is not
+  // currently active. And in that latter case, if we try to attach our BC now,
+  // it will wind up attached as a child of the currently active inner window
+  // for the BrowsingContext, and cause no end of trouble.
   if (IsTopContent(parentContext, aOwner)) {
     // Create toplevel content without a parent & as Type::Content.
-    return BrowsingContext::Create(nullptr, aOpener, frameName,
-                                   BrowsingContext::Type::Content);
+    return BrowsingContext::CreateDetached(nullptr, aOpener, frameName,
+                                           BrowsingContext::Type::Content);
   }
 
   auto type = parentContext->IsContent() ? BrowsingContext::Type::Content
                                          : BrowsingContext::Type::Chrome;
 
-  return BrowsingContext::Create(parentContext, aOpener, frameName, type);
+  return BrowsingContext::CreateDetached(parentContext, aOpener, frameName,
+                                         type);
 }
 
 static bool InitialLoadIsRemote(Element* aOwner) {
@@ -1899,7 +1906,7 @@ void nsFrameLoader::DestroyDocShell() {
     GetDocShell()->Destroy();
   }
 
-  if (!mWillChangeProcess) {
+  if (!mWillChangeProcess && mBrowsingContext->EverAttached()) {
     mBrowsingContext->Detach();
   }
 
@@ -2018,6 +2025,8 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   if (NS_WARN_IF(!parentDocShell)) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  mBrowsingContext->EnsureAttached();
 
   // nsDocShell::Create will attach itself to the passed browsing
   // context inside of nsDocShell::Create
@@ -2507,6 +2516,8 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   if (!parentDocShell) {
     return false;
   }
+
+  mBrowsingContext->EnsureAttached();
 
   RefPtr<ContentParent> openerContentParent;
   RefPtr<nsIPrincipal> openerContentPrincipal;

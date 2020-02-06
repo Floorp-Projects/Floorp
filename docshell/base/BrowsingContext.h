@@ -155,6 +155,17 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
                                                   const nsAString& aName,
                                                   Type aType);
 
+  // Same as the above, but does not immediately attach the browsing context.
+  // `EnsureAttached()` must be called before the BrowsingContext is used for a
+  // DocShell, BrowserParent, or BrowserBridgeChild.
+  static already_AddRefed<BrowsingContext> CreateDetached(
+      BrowsingContext* aParent, BrowsingContext* aOpener,
+      const nsAString& aName, Type aType);
+
+  void EnsureAttached();
+
+  bool EverAttached() const { return mEverAttached; }
+
   // Cast this object to a canonical browsing context, and return it.
   CanonicalBrowsingContext* Canonical();
 
@@ -633,6 +644,9 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   // objectMoved hook and clear it from its finalize hook.
   JS::Heap<JSObject*> mWindowProxy;
   LocationProxy mLocation;
+
+  // True if Attach() has been called on this BrowsingContext already.
+  bool mEverAttached : 1;
 
   // Is the most recent Document in this BrowsingContext loaded within this
   // process? This may be true with a null mDocShell after the Window has been
