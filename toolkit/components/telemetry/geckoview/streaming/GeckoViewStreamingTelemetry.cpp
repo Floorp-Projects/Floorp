@@ -10,9 +10,11 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_toolkit.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/TimeStamp.h"
 #include "nsDataHashtable.h"
 #include "nsIObserverService.h"
+#include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
@@ -20,6 +22,8 @@ using mozilla::Runnable;
 using mozilla::StaticMutexAutoLock;
 using mozilla::StaticMutexNotRecorded;
 using mozilla::StaticRefPtr;
+using mozilla::SystemGroup;
+using mozilla::TaskCategory;
 using mozilla::TimeStamp;
 
 // Batches and streams Telemetry samples to a JNI delegate which will
@@ -57,6 +61,10 @@ StaticRefPtr<StreamingTelemetryDelegate> gDelegate;
 StaticRefPtr<LifecycleObserver> gObserver;
 
 // -- End of gMutex-protected thread-unsafe-accessed data
+
+// Timer that ensures data in the batch never gets too stale.
+// This timer may only be manipulated on the Main Thread.
+StaticRefPtr<nsITimer> gJICTimer;
 
 class LifecycleObserver final : public nsIObserver {
  public:
@@ -105,6 +113,10 @@ class SendBatchRunnable : public Runnable {
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mDelegate);
+
+    if (gJICTimer) {
+      gJICTimer->Cancel();
+    }
 
     for (auto iter = mBatch.Iter(); !iter.Done(); iter.Next()) {
       const nsCString& histogramName = PromiseFlatCString(iter.Key());
@@ -195,7 +207,29 @@ void BatchCheck(const StaticMutexAutoLock& aLock) {
     }
   }
   if (gBatchBegan.IsNull()) {
+    // Time to begin a new batch.
     gBatchBegan = TimeStamp::Now();
+    // Set a just-in-case timer to enforce an upper-bound on batch staleness.
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "GeckoviewStreamingTelemetry::ArmTimer", []() -> void {
+          if (!gJICTimer) {
+            gJICTimer =
+                NS_NewTimer(SystemGroup::EventTargetFor(TaskCategory::Other))
+                    .take();
+          }
+          if (gJICTimer) {
+            gJICTimer->InitWithNamedFuncCallback(
+                [](nsITimer*, void*) -> void {
+                  StaticMutexAutoLock locker(gMutex);
+                  SendBatch(locker);
+                },
+                nullptr,
+                mozilla::StaticPrefs::
+                    toolkit_telemetry_geckoview_maxBatchStalenessMS(),
+                nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                "GeckoviewStreamingTelemetry::SendBatch");
+          }
+        }));
   }
   double batchDurationMs = (TimeStamp::Now() - gBatchBegan).ToMilliseconds();
   if (batchDurationMs >

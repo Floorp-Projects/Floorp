@@ -246,8 +246,15 @@ GeckoView
 
 ``toolkit.telemetry.geckoview.batchDurationMS``
 
-   The duration in milliseconds over which `GeckoView Streaming Telemetry <../internals/geckoview-streaming>` will batch accumulations before passing it on to its delegate.
+   The duration in milliseconds over which :doc:`GeckoView Streaming Telemetry <../internals/geckoview-streaming>` will batch accumulations before passing it on to its delegate.
    Defaults to 5000.
+
+``toolkit.telemetry.geckoview.maxBatchStalenessMS``
+
+   The maximum time (in milliseconds) between flushes of the
+   :doc:`GeckoView Streaming Telemetry <../internals/geckoview-streaming>`
+   batch to its delegate.
+   Defaults to 60000.
 
 Testing
 -------

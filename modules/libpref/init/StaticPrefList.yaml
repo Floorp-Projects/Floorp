@@ -7958,6 +7958,11 @@
   value: 5000
   mirror: always
 
+- name: toolkit.telemetry.geckoview.maxBatchStalenessMS
+  type: RelaxedAtomicUint32
+  value: 60000
+  mirror: always
+
 - name: toolkit.telemetry.geckoview.streaming
   type: RelaxedAtomicBool
   value: false
