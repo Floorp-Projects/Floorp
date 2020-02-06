@@ -415,7 +415,8 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   // we'll use on this FlexItem instead of the child frame's real writing mode.
   // This is fine - it doesn't matter what writing mode we use for a
   // strut, since it won't render any content and we already know its size.)
-  FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize, WritingMode aContainerWM);
+  FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize, WritingMode aContainerWM,
+           const FlexboxAxisTracker& aAxisTracker);
 
   // Accessors
   nsIFrame* Frame() const { return mFrame; }
@@ -827,7 +828,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   const WritingMode mCBWM;
 
   // The flex container's main axis in flex container's writing mode.
-  const LogicalAxis mMainAxis = eLogicalAxisInline;
+  const LogicalAxis mMainAxis;
 
   // Stored in flex container's writing mode.
   const LogicalMargin mBorderPadding;
@@ -2003,10 +2004,12 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
 // with visibility:collapse. The strut has 0 main-size, and it only exists to
 // impose a minimum cross size on whichever FlexLine it ends up in.
 FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
-                   WritingMode aContainerWM)
+                   WritingMode aContainerWM,
+                   const FlexboxAxisTracker& aAxisTracker)
     : mFrame(aChildFrame),
       mWM(aContainerWM),
       mCBWM(aContainerWM),
+      mMainAxis(aAxisTracker.MainAxis()),
       mBorderPadding(mCBWM),
       mMargin(mCBWM),
       mCrossSize(aCrossSize),
@@ -3788,13 +3791,14 @@ void nsFlexContainerFrame::GenerateFlexLines(
          childFrame->StyleVisibility()->mVisible)) {
       // Legacy visibility:collapse behavior: make a 0-sized strut. (No need to
       // bother with aStruts and remembering cross size.)
-      item = MakeUnique<FlexItem>(childFrame, 0, aReflowInput.GetWritingMode());
+      item = MakeUnique<FlexItem>(childFrame, 0, aReflowInput.GetWritingMode(),
+                                  aAxisTracker);
     } else if (nextStrutIdx < aStruts.Length() &&
                aStruts[nextStrutIdx].mItemIdx == itemIdxInContainer) {
       // Use the simplified "strut" FlexItem constructor:
       item = MakeUnique<FlexItem>(childFrame,
                                   aStruts[nextStrutIdx].mStrutCrossSize,
-                                  aReflowInput.GetWritingMode());
+                                  aReflowInput.GetWritingMode(), aAxisTracker);
       nextStrutIdx++;
     } else {
       item = GenerateFlexItemForChild(aPresContext, childFrame, aReflowInput,
