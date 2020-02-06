@@ -871,7 +871,7 @@ nsFrameConstructorState::~nsFrameConstructorState() {
   MOZ_COUNT_DTOR(nsFrameConstructorState);
   ProcessFrameInsertionsForAllLists();
   for (auto& content : Reversed(mGeneratedContentWithInitializer)) {
-    content->DeleteProperty(nsGkAtoms::genConInitializerProperty);
+    content->RemoveProperty(nsGkAtoms::genConInitializerProperty);
   }
 }
 

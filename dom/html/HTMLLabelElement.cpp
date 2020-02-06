@@ -110,7 +110,7 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           bool dragSelect = false;
           if (mouseDownPoint) {
             LayoutDeviceIntPoint dragDistance = *mouseDownPoint;
-            DeleteProperty(nsGkAtoms::labelMouseDownPtProperty);
+            RemoveProperty(nsGkAtoms::labelMouseDownPtProperty);
 
             dragDistance -= mouseEvent->mRefPoint;
             const int CLICK_DISTANCE = 2;

@@ -1239,14 +1239,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
       nsStaticAtom* const* props =
           Element::HTMLSVGPropertiesToTraverseAndUnlink();
       for (uint32_t i = 0; props[i]; ++i) {
-        tmp->DeleteProperty(props[i]);
+        tmp->RemoveProperty(props[i]);
       }
     }
 
     if (tmp->MayHaveAnimations()) {
       nsAtom** effectProps = EffectSet::GetEffectSetPropertyAtoms();
       for (uint32_t i = 0; effectProps[i]; ++i) {
-        tmp->DeleteProperty(effectProps[i]);
+        tmp->RemoveProperty(effectProps[i]);
       }
     }
   }

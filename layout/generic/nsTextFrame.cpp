@@ -4294,11 +4294,11 @@ void nsTextFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // Remove any NewlineOffsetProperty or InFlowContentLengthProperty since they
   // might be invalid if the content was modified while there was no frame
   if (aContent->HasFlag(NS_HAS_NEWLINE_PROPERTY)) {
-    aContent->DeleteProperty(nsGkAtoms::newline);
+    aContent->RemoveProperty(nsGkAtoms::newline);
     aContent->UnsetFlags(NS_HAS_NEWLINE_PROPERTY);
   }
   if (aContent->HasFlag(NS_HAS_FLOWLENGTH_PROPERTY)) {
-    aContent->DeleteProperty(nsGkAtoms::flowlength);
+    aContent->RemoveProperty(nsGkAtoms::flowlength);
     aContent->UnsetFlags(NS_HAS_FLOWLENGTH_PROPERTY);
   }
 
@@ -4730,11 +4730,11 @@ void nsTextFrame::NotifyNativeAnonymousTextnodeChange(uint32_t aOldLength) {
 nsresult nsTextFrame::CharacterDataChanged(
     const CharacterDataChangeInfo& aInfo) {
   if (mContent->HasFlag(NS_HAS_NEWLINE_PROPERTY)) {
-    mContent->DeleteProperty(nsGkAtoms::newline);
+    mContent->RemoveProperty(nsGkAtoms::newline);
     mContent->UnsetFlags(NS_HAS_NEWLINE_PROPERTY);
   }
   if (mContent->HasFlag(NS_HAS_FLOWLENGTH_PROPERTY)) {
-    mContent->DeleteProperty(nsGkAtoms::flowlength);
+    mContent->RemoveProperty(nsGkAtoms::flowlength);
     mContent->UnsetFlags(NS_HAS_FLOWLENGTH_PROPERTY);
   }
 
@@ -9519,7 +9519,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       cachedNewlineOffset->mNewlineOffset = contentNewLineOffset;
     }
   } else if (cachedNewlineOffset) {
-    mContent->DeleteProperty(nsGkAtoms::newline);
+    mContent->RemoveProperty(nsGkAtoms::newline);
     mContent->UnsetFlags(NS_HAS_NEWLINE_PROPERTY);
   }
 
@@ -10021,7 +10021,7 @@ void nsTextFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
 void nsTextFrame::AdjustOffsetsForBidi(int32_t aStart, int32_t aEnd) {
   AddStateBits(NS_FRAME_IS_BIDI);
   if (mContent->HasFlag(NS_HAS_FLOWLENGTH_PROPERTY)) {
-    mContent->DeleteProperty(nsGkAtoms::flowlength);
+    mContent->RemoveProperty(nsGkAtoms::flowlength);
     mContent->UnsetFlags(NS_HAS_FLOWLENGTH_PROPERTY);
   }
 

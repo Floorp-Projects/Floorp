@@ -455,7 +455,7 @@ void Element::UnlockStyleStates(EventStates aStates) {
   locks->mLocks &= ~aStates;
 
   if (locks->mLocks.IsEmpty()) {
-    DeleteProperty(nsGkAtoms::lockedStyleStates);
+    RemoveProperty(nsGkAtoms::lockedStyleStates);
     ClearHasLockedStyleStates();
     delete locks;
   } else {
@@ -469,7 +469,7 @@ void Element::UnlockStyleStates(EventStates aStates) {
 void Element::ClearStyleStateLocks() {
   StyleStateLocks locks = LockedStyleStates();
 
-  DeleteProperty(nsGkAtoms::lockedStyleStates);
+  RemoveProperty(nsGkAtoms::lockedStyleStates);
   ClearHasLockedStyleStates();
 
   NotifyStyleStateChange(locks.mLocks);
@@ -1735,14 +1735,14 @@ void Element::UnbindFromTree(bool aNullParent) {
   //
   // FIXME (Bug 522599): Need a test for this.
   if (MayHaveAnimations()) {
-    DeleteProperty(nsGkAtoms::transitionsOfBeforeProperty);
-    DeleteProperty(nsGkAtoms::transitionsOfAfterProperty);
-    DeleteProperty(nsGkAtoms::transitionsOfMarkerProperty);
-    DeleteProperty(nsGkAtoms::transitionsProperty);
-    DeleteProperty(nsGkAtoms::animationsOfBeforeProperty);
-    DeleteProperty(nsGkAtoms::animationsOfAfterProperty);
-    DeleteProperty(nsGkAtoms::animationsOfMarkerProperty);
-    DeleteProperty(nsGkAtoms::animationsProperty);
+    RemoveProperty(nsGkAtoms::transitionsOfBeforeProperty);
+    RemoveProperty(nsGkAtoms::transitionsOfAfterProperty);
+    RemoveProperty(nsGkAtoms::transitionsOfMarkerProperty);
+    RemoveProperty(nsGkAtoms::transitionsProperty);
+    RemoveProperty(nsGkAtoms::animationsOfBeforeProperty);
+    RemoveProperty(nsGkAtoms::animationsOfAfterProperty);
+    RemoveProperty(nsGkAtoms::animationsOfMarkerProperty);
+    RemoveProperty(nsGkAtoms::animationsProperty);
     if (document) {
       if (nsPresContext* presContext = document->GetPresContext()) {
         // We have to clear all pending restyle requests for the animations on

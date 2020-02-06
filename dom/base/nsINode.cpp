@@ -215,8 +215,8 @@ nsresult nsINode::SetProperty(nsAtom* aPropertyName, void* aValue,
   return rv;
 }
 
-void nsINode::DeleteProperty(const nsAtom* aPropertyName) {
-  OwnerDoc()->PropertyTable().DeleteProperty(this, aPropertyName);
+void nsINode::RemoveProperty(const nsAtom* aPropertyName) {
+  OwnerDoc()->PropertyTable().RemoveProperty(this, aPropertyName);
 }
 
 void* nsINode::TakeProperty(const nsAtom* aPropertyName, nsresult* aStatus) {
@@ -621,13 +621,13 @@ void nsINode::LastRelease() {
     // Delete all properties before tearing down the document. Some of the
     // properties are bound to nsINode objects and the destructor functions of
     // the properties may want to use the owner document of the nsINode.
-    AsDocument()->DeleteAllProperties();
+    AsDocument()->RemoveAllProperties();
   } else {
     if (HasProperties()) {
       // Strong reference to the document so that deleting properties can't
       // delete the document.
       nsCOMPtr<Document> document = OwnerDoc();
-      document->DeleteAllPropertiesFor(this);
+      document->RemoveAllPropertiesFor(this);
     }
 
     // I wonder whether it's faster to do the HasFlag check first....
@@ -1380,8 +1380,8 @@ void nsINode::Unlink(nsINode* tmp) {
   }
 
   if (tmp->HasProperties()) {
-    tmp->DeleteProperty(nsGkAtoms::keepobjectsalive);
-    tmp->DeleteProperty(nsGkAtoms::accessiblenode);
+    tmp->RemoveProperty(nsGkAtoms::keepobjectsalive);
+    tmp->RemoveProperty(nsGkAtoms::accessiblenode);
   }
 }
 

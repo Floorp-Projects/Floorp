@@ -137,7 +137,7 @@ void EffectSet::DestroyEffectSet(dom::Element* aElement,
              "Should not destroy an effect set while it is being enumerated");
   effectSet = nullptr;
 
-  aElement->DeleteProperty(propName);
+  aElement->RemoveProperty(propName);
 }
 
 void EffectSet::UpdateAnimationGeneration(nsPresContext* aPresContext) {

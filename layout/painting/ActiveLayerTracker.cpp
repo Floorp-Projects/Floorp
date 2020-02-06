@@ -200,7 +200,7 @@ void LayerActivityTracker::NotifyExpired(LayerActivity* aObject) {
     f->RemoveStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY);
     f->RemoveProperty(LayerActivityProperty());
   } else {
-    c->DeleteProperty(nsGkAtoms::LayerActivity);
+    c->RemoveProperty(nsGkAtoms::LayerActivity);
   }
 }
 
