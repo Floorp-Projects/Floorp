@@ -130,6 +130,21 @@ data class Addon(
      */
     fun isDisabledAsUnsupported() = installedState?.disabledAsUnsupported == true
 
+    /**
+     * Returns a copy of this [Addon] containing only translations (description,
+     * name, summary) of the provided locales. All other translations
+     * will be removed.
+     *
+     * @param locales list of locales to keep.
+     * @return copy of the addon with all other translations removed.
+     */
+    fun filterTranslations(locales: List<String>): Addon {
+        val descriptions = translatableDescription.filterKeys { locales.contains(it) }
+        val names = translatableName.filterKeys { locales.contains(it) }
+        val summaries = translatableSummary.filterKeys { locales.contains(it) }
+        return copy(translatableName = names, translatableDescription = descriptions, translatableSummary = summaries)
+    }
+
     companion object {
         /**
          * A map of permissions to translation string ids.

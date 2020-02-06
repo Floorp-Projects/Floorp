@@ -12,6 +12,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.ui.translate
 import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components

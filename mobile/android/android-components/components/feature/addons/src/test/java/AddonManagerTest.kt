@@ -165,6 +165,36 @@ class AddonManagerTest {
     }
 
     @Test
+    fun `getAddons - filters unneeded locales`() = runBlocking {
+        val addon = Addon(
+            id = "addon1",
+            translatableName = mapOf("en-US" to "name", "invalid1" to "Name", "invalid2" to "nombre"),
+            translatableDescription = mapOf("en-US" to "description", "invalid1" to "Beschreibung", "invalid2" to "descripción"),
+            translatableSummary = mapOf("en-US" to "summary", "invalid1" to "Kurzfassung", "invalid2" to "resumen")
+        )
+
+        val store = BrowserStore()
+
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(emptyList())
+        }
+
+        val addonsProvider: AddonsProvider = mock()
+        whenever(addonsProvider.getAvailableAddons(anyBoolean())).thenReturn(listOf(addon))
+        WebExtensionSupport.initialize(engine, store)
+
+        val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
+        assertEquals(1, addons[0].translatableName.size)
+        assertTrue(addons[0].translatableName.contains("en-US"))
+        assertEquals(1, addons[0].translatableDescription.size)
+        assertTrue(addons[0].translatableDescription.contains("en-US"))
+        assertEquals(1, addons[0].translatableSummary.size)
+        assertTrue(addons[0].translatableSummary.contains("en-US"))
+    }
+
+    @Test
     fun `updateAddon - when a extension is updated successfully`() {
         val store = spy(
             BrowserStore(
