@@ -33,7 +33,6 @@ class LSPAnnotationGatherer : public Runnable {
 
   void Annotate();
   nsCString mString;
-  nsCOMPtr<nsIThread> mThread;
 };
 
 void LSPAnnotationGatherer::Annotate() {
@@ -43,15 +42,10 @@ void LSPAnnotationGatherer::Annotate() {
   if (cr && NS_SUCCEEDED(cr->GetEnabled(&enabled)) && enabled) {
     cr->AnnotateCrashReport(NS_LITERAL_CSTRING("Winsock_LSP"), mString);
   }
-  mThread->AsyncShutdown();
 }
 
 NS_IMETHODIMP
 LSPAnnotationGatherer::Run() {
-  NS_SetCurrentThreadName("LSP Annotator");
-
-  mThread = NS_GetCurrentThread();
-
   DWORD size = 0;
   int err;
   // Get the size of the buffer we need
@@ -133,9 +127,8 @@ LSPAnnotationGatherer::Run() {
 }
 
 void LSPAnnotate() {
-  nsCOMPtr<nsIThread> thread;
-  nsCOMPtr<nsIRunnable> runnable = do_QueryObject(new LSPAnnotationGatherer());
-  NS_NewNamedThread("LSP Annotate", getter_AddRefs(thread), runnable);
+  nsCOMPtr<nsIRunnable> runnable(new LSPAnnotationGatherer());
+  NS_DispatchBackgroundTask(runnable.forget());
 }
 
 }  // namespace crashreporter
