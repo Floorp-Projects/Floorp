@@ -1049,7 +1049,7 @@ impl ThreadListener for GeckoProfilerThreadListener {
 pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
+pub extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
     // Clamp the number of workers between 1 and 8. We get diminishing returns
     // with high worker counts and extra overhead because of rayon and font
     // management.
@@ -1060,13 +1060,13 @@ pub unsafe extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThread
     let worker = rayon::ThreadPoolBuilder::new()
         .thread_name(move |idx|{ format!("WRWorker{}#{}", priority_tag, idx) })
         .num_threads(num_threads)
-        .start_handler(move |idx| {
+        .start_handler(move |idx| unsafe {
             wr_register_thread_local_arena();
             let name = format!("WRWorker{}#{}",priority_tag, idx);
             register_thread_with_profiler(name.clone());
             gecko_profiler_register_thread(CString::new(name).unwrap().as_ptr());
         })
-        .exit_handler(|_idx| {
+        .exit_handler(|_idx| unsafe {
             gecko_profiler_unregister_thread();
         })
         .build();
