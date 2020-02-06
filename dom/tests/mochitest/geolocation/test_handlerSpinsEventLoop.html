@@ -57,7 +57,7 @@ function check() {
 var timeoutPassed = false;
 var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 function test1() {
-  SpecialPowers.pushPrefEnv({"set": [["geo.wifi.timeToWaitBeforeSending", 10]]}, function() {
+  SpecialPowers.pushPrefEnv({"set": [["geo.provider.network.timeToWaitBeforeSending", 10]]}, function() {
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {timeout: 500});
     timer.initWithCallback(timer => {
       timeoutPassed = true;

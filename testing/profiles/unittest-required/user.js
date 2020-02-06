@@ -128,10 +128,10 @@ user_pref("general.useragent.updates.url", "https://example.com/0/%APP_ID%");
 // Always use network provider for geolocation tests
 // so we bypass the OSX dialog raised by the corelocation provider
 user_pref("geo.provider.testing", true);
-user_pref("geo.wifi.logging.enabled", true);
-user_pref("geo.wifi.scan", false);
-user_pref("geo.wifi.timeToWaitBeforeSending", 2000);
-user_pref("geo.wifi.uri", "http://{server}/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
+user_pref("geo.provider.network.logging.enabled", true);
+user_pref("geo.provider.network.scan", false);
+user_pref("geo.provider.network.timeToWaitBeforeSending", 2000);
+user_pref("geo.provider.network.url", "http://{server}/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("gfx.logging.level", 1);
 // We don't want to hit the real Firefox Accounts server for tests.  We don't

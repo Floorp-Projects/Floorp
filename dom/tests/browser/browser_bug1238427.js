@@ -18,7 +18,10 @@ add_task(async function() {
 
   // Make the geolocation provider responder very slowly to ensure that
   // it does not reply before we close the tab.
-  Services.prefs.setCharPref("geo.wifi.uri", BASE_GEO_URL + "?delay=100000");
+  Services.prefs.setCharPref(
+    "geo.provider.network.url",
+    BASE_GEO_URL + "?delay=100000"
+  );
 
   // Open the test URI and close it. The test harness will make sure that the
   // page is cleaned up after some GCs. If geolocation is not shut down properly,

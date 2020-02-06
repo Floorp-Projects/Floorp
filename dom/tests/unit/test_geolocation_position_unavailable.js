@@ -21,8 +21,8 @@ function run_test() {
     // needs a place where it can store databases.
     do_get_profile();
 
-    Services.prefs.setBoolPref("geo.wifi.scan", false);
-    Services.prefs.setCharPref("geo.wifi.uri", "UrlNotUsedHere:");
+    Services.prefs.setBoolPref("geo.provider.network.scan", false);
+    Services.prefs.setCharPref("geo.provider.network.url", "UrlNotUsedHere:");
     Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   }
 

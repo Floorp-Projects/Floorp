@@ -1391,28 +1391,6 @@ pref("security.cert_pinning.enforcement_level", 1);
 // before content.
 pref("dom.debug.propagate_gesture_events_through_content", false);
 
-// All the Geolocation preferences are here.
-//
-#ifndef EARLY_BETA_OR_EARLIER
-  pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_LOCATION_SERVICE_API_KEY%");
-#else
-  // Use MLS on Nightly and early Beta.
-  pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
-#endif
-
-#ifdef XP_MACOSX
-  pref("geo.provider.use_corelocation", true);
-#endif
-
-// Set to false if things are really broken.
-#ifdef XP_WIN
-  pref("geo.provider.ms-windows-location", true);
-#endif
-
-#if defined(MOZ_WIDGET_GTK) && defined(MOZ_GPSD)
-  pref("geo.provider.use_gpsd", true);
-#endif
-
 // CustomizableUI debug logging.
 pref("browser.uiCustomization.debug", false);
 
