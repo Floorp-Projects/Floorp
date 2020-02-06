@@ -10,7 +10,7 @@
 
 <script id='myWorker' type='text/worker'>
 self.onmessage = e => {
-  e.ports[0].onmessage = ee => postMessage(ee.data);
+  e.ports[0].onmessage = ee => e.ports[0].postMessage(ee.data);
 };
 </script>
 
@@ -44,8 +44,15 @@ function create_wasmModule() {
   });
 }
 
-function test_simple() {
-  info("MessagePort without disentangling");
+function enable_sab() {
+  SpecialPowers.pushPrefEnv(
+    {"set": [
+      ["dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled", true],
+    ]}, next);
+}
+
+function test_wasm() {
+  info("MessagePort + WASM without disentangling");
 
   if (!wasmModule) {
     next();
@@ -60,8 +67,8 @@ function test_simple() {
   };
 }
 
-function test_worker() {
-  info("MessagePort sent to a worker");
+function test_wasm_worker() {
+  info("MessagePort + WASM sent to a worker");
 
   if (!wasmModule) {
     next();
@@ -70,21 +77,48 @@ function test_worker() {
 
   const mc = new MessageChannel();
   mc.port1.postMessage({ wasmModule });
+  mc.port1.onmessage = e => {
+    ok(e.data.wasmModule instanceof WebAssembly.Module, "WasmModule received");
+    next();
+  };
 
   const blob = new Blob([document.getElementById('myWorker').textContent]);
   const w = new Worker(URL.createObjectURL(blob));
   w.postMessage(42, [ mc.port2 ]);
-  w.onmessage = e => {
-    ok(e.data.wasmModule instanceof WebAssembly.Module, "WasmModule received");
+}
+
+function test_sab() {
+  info("MessagePort + SAB without disentangling");
+
+  const mc = new MessageChannel();
+  mc.port1.postMessage({sab: new SharedArrayBuffer(1024)});
+  mc.port2.onmessage = e => {
+    ok(e.data.sab instanceof SharedArrayBuffer, "SAB received");
     next();
   };
 }
 
+function test_sab_worker() {
+  info("MessagePort + SAB sent to a worker");
+
+  const mc = new MessageChannel();
+  mc.port1.postMessage({sab: new SharedArrayBuffer(1024)});
+  mc.port1.onmessage = e => {
+    ok(e.data.sab instanceof SharedArrayBuffer, "SAB received");
+    next();
+  };
+
+  const blob = new Blob([document.getElementById('myWorker').textContent]);
+  const w = new Worker(URL.createObjectURL(blob));
+  w.postMessage(42, [ mc.port2 ]);
+}
+
 const tests = [
+  enable_sab,
   create_wasmModule,
 
-  test_simple,
-  test_worker,
+  test_wasm,
+  test_wasm_worker,
 ];
 
 function next() {
