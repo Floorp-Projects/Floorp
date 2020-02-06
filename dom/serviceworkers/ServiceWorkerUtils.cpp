@@ -34,69 +34,103 @@ bool ServiceWorkerRegistrationDataIsValid(
 
 namespace {
 
-nsresult CheckForSlashEscapedCharsInPath(nsIURI* aURI) {
+void CheckForSlashEscapedCharsInPath(nsIURI* aURI, const char* aURLDescription,
+                                     ErrorResult& aRv) {
   MOZ_ASSERT(aURI);
 
   // A URL that can't be downcast to a standard URL is an invalid URL and should
   // be treated as such and fail with SecurityError.
   nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
   if (NS_WARN_IF(!url)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    // This really should not happen, since the caller checks that we
+    // have an http: or https: URL!
+    aRv.ThrowInvalidStateError("http: or https: URL without a concept of path");
+    return;
   }
 
   nsAutoCString path;
   nsresult rv = url->GetFilePath(path);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    // Again, should not happen.
+    aRv.ThrowInvalidStateError("http: or https: URL without a concept of path");
+    return;
   }
 
   ToLowerCase(path);
   if (path.Find("%2f") != kNotFound || path.Find("%5c") != kNotFound) {
-    return NS_ERROR_DOM_TYPE_ERR;
+    nsPrintfCString err("%s contains %%2f or %%5c", aURLDescription);
+    aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
   }
-
-  return NS_OK;
 }
 
 }  // anonymous namespace
 
-nsresult ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
-                                             nsIURI* aScopeURI,
-                                             nsIURI* aScriptURI) {
+void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
+                                         nsIURI* aScopeURI, nsIURI* aScriptURI,
+                                         ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aScopeURI);
   MOZ_DIAGNOSTIC_ASSERT(aScriptURI);
 
   nsCOMPtr<nsIPrincipal> principal = aClientInfo.GetPrincipal();
-  NS_ENSURE_TRUE(principal, NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (NS_WARN_IF(!principal)) {
+    aRv.ThrowInvalidStateError("Can't make security decisions about Client");
+    return;
+  }
 
-  bool isHttp = aScriptURI->SchemeIs("http");
-  bool isHttps = aScriptURI->SchemeIs("https");
-  NS_ENSURE_TRUE(isHttp || isHttps, NS_ERROR_DOM_SECURITY_ERR);
+  // https://w3c.github.io/ServiceWorker/#start-register-algorithm step 3.
+  if (!aScriptURI->SchemeIs("http") && !aScriptURI->SchemeIs("https")) {
+    aRv.ThrowTypeError(u"Script URL's scheme is not 'http' or 'https'");
+    return;
+  }
 
-  nsresult rv = CheckForSlashEscapedCharsInPath(aScopeURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // https://w3c.github.io/ServiceWorker/#start-register-algorithm step 4.
+  CheckForSlashEscapedCharsInPath(aScriptURI, "script URL", aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 
-  rv = CheckForSlashEscapedCharsInPath(aScriptURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // https://w3c.github.io/ServiceWorker/#start-register-algorithm step 8.
+  if (!aScopeURI->SchemeIs("http") && !aScopeURI->SchemeIs("https")) {
+    aRv.ThrowTypeError(u"Scope URL's scheme is not 'http' or 'https'");
+    return;
+  }
 
+  // https://w3c.github.io/ServiceWorker/#start-register-algorithm step 9.
+  CheckForSlashEscapedCharsInPath(aScopeURI, "scope URL", aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  // The refs should really be empty coming in here, but if someone
+  // injects bad data into IPC, who knows.  So let's revalidate that.
   nsAutoCString ref;
   Unused << aScopeURI->GetRef(ref);
-  NS_ENSURE_TRUE(ref.IsEmpty(), NS_ERROR_DOM_SECURITY_ERR);
+  if (NS_WARN_IF(!ref.IsEmpty())) {
+    aRv.ThrowSecurityError("Non-empty fragment on scope URL");
+    return;
+  }
 
   Unused << aScriptURI->GetRef(ref);
-  NS_ENSURE_TRUE(ref.IsEmpty(), NS_ERROR_DOM_SECURITY_ERR);
+  if (NS_WARN_IF(!ref.IsEmpty())) {
+    aRv.ThrowSecurityError("Non-empty fragment on script URL");
+    return;
+  }
 
   // Unfortunately we don't seem to have an obvious window id here; in
   // particular ClientInfo does not have one.
-  rv = principal->CheckMayLoadWithReporting(
+  nsresult rv = principal->CheckMayLoadWithReporting(
       aScopeURI, false /* allowIfInheritsPrincipal */, 0 /* innerWindowID */);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.ThrowSecurityError("Scope URL is not same-origin with Client");
+    return;
+  }
 
   rv = principal->CheckMayLoadWithReporting(
       aScriptURI, false /* allowIfInheritsPrincipal */, 0 /* innerWindowID */);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
-
-  return NS_OK;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.ThrowSecurityError("Script URL is not same-origin with Client");
+    return;
+  }
 }
 
 }  // namespace dom

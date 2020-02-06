@@ -824,21 +824,26 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::Register(
   nsCOMPtr<nsIURI> scopeURI;
   nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScopeURL);
   if (NS_FAILED(rv)) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(
-        CopyableErrorResult(rv), __func__);
+    // Odd, since it was serialiazed from an nsIURI.
+    CopyableErrorResult err;
+    err.ThrowInvalidStateError("Scope URL cannot be parsed");
+    return ServiceWorkerRegistrationPromise::CreateAndReject(err, __func__);
   }
 
   nsCOMPtr<nsIURI> scriptURI;
   rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL);
   if (NS_FAILED(rv)) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(
-        CopyableErrorResult(rv), __func__);
+    // Odd, since it was serialiazed from an nsIURI.
+    CopyableErrorResult err;
+    err.ThrowInvalidStateError("Script URL cannot be parsed");
+    return ServiceWorkerRegistrationPromise::CreateAndReject(err, __func__);
   }
 
-  rv = ServiceWorkerScopeAndScriptAreValid(aClientInfo, scopeURI, scriptURI);
-  if (NS_FAILED(rv)) {
+  IgnoredErrorResult err;
+  ServiceWorkerScopeAndScriptAreValid(aClientInfo, scopeURI, scriptURI, err);
+  if (err.Failed()) {
     return ServiceWorkerRegistrationPromise::CreateAndReject(
-        CopyableErrorResult(rv), __func__);
+        CopyableErrorResult(std::move(err)), __func__);
   }
 
   // If the previous validation step passed then we must have a principal.

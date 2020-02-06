@@ -295,8 +295,8 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
   }
   scopeURI = cloneWithoutRef.forget();
 
-  aRv = ServiceWorkerScopeAndScriptAreValid(clientInfo.ref(), scopeURI,
-                                            scriptURI);
+  ServiceWorkerScopeAndScriptAreValid(clientInfo.ref(), scopeURI, scriptURI,
+                                      aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
