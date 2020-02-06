@@ -259,7 +259,7 @@ add_task(async function() {
         );
         is(
           values[0].textContent,
-          "Hello JSON!",
+          `"Hello JSON!"`,
           "The first json property value was incorrect."
         );
         break;

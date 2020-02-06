@@ -207,6 +207,7 @@ class ParamsPanel extends Component {
         sectionNames: SECTION_NAMES,
         openLink,
         targetSearchResult,
+        useQuotes: true,
       })
     );
   }

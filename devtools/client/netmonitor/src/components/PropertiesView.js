@@ -84,6 +84,7 @@ class PropertiesView extends Component {
       cropLimit: PropTypes.number,
       targetSearchResult: PropTypes.object,
       resetTargetSearchResult: PropTypes.func,
+      useQuotes: PropTypes.bool,
     };
   }
 
@@ -95,6 +96,7 @@ class PropertiesView extends Component {
       filterPlaceHolder: "",
       sectionNames: [],
       cropLimit: 1024,
+      useQuotes: false,
     };
   }
 
@@ -275,6 +277,7 @@ class PropertiesView extends Component {
       openLink,
       provider,
       selected,
+      useQuotes,
     } = this.props;
 
     return div(
@@ -303,7 +306,7 @@ class PropertiesView extends Component {
         },
         enableInput,
         expandableStrings,
-        useQuotes: false,
+        useQuotes,
         expandedNodes:
           expandedNodes ||
           TreeViewClass.getExpandedNodes(object, {

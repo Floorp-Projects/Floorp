@@ -71,7 +71,7 @@ add_task(async function() {
   is(labels[0].textContent, "foo", "The first query param name was incorrect.");
   is(
     values[0].textContent,
-    "bar",
+    `"bar"`,
     "The first query param value was incorrect."
   );
   is(
@@ -81,7 +81,7 @@ add_task(async function() {
   );
   is(
     values[1].textContent,
-    "123",
+    `"123"`,
     "The second query param value was incorrect."
   );
 
