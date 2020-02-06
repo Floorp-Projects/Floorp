@@ -35,6 +35,7 @@
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/GeckoBindings.h"
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
@@ -68,19 +69,6 @@ struct AssertSizeIsLessThan {
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-static bool DefinitelyEqualImages(const nsStyleImageRequest* aRequest1,
-                                  const nsStyleImageRequest* aRequest2) {
-  if (aRequest1 == aRequest2) {
-    return true;
-  }
-
-  if (!aRequest1 || !aRequest2) {
-    return false;
-  }
-
-  return aRequest1->DefinitelyEquals(*aRequest2);
-}
-
 bool StyleCssUrlData::operator==(const StyleCssUrlData& aOther) const {
   // This very intentionally avoids comparing LoadData and such.
   const auto& extra = extra_data.get();
@@ -95,11 +83,7 @@ bool StyleCssUrlData::operator==(const StyleCssUrlData& aOther) const {
   return serialization == aOther.serialization;
 }
 
-StyleLoadData::~StyleLoadData() {
-  if (load_id != 0) {
-    css::ImageLoader::DeregisterCSSImageFromAllLoaders(*this);
-  }
-}
+StyleLoadData::~StyleLoadData() { Gecko_LoadData_Drop(this); }
 
 already_AddRefed<nsIURI> StyleComputedUrl::ResolveLocalRef(nsIURI* aURI) const {
   nsCOMPtr<nsIURI> result = GetURI();
@@ -122,56 +106,124 @@ already_AddRefed<nsIURI> StyleComputedUrl::ResolveLocalRef(
   return ResolveLocalRef(aContent->GetBaseURI());
 }
 
-already_AddRefed<imgRequestProxy> StyleComputedUrl::LoadImage(
-    Document& aDocument) {
+void StyleComputedUrl::ResolveImage(Document& aDocument,
+                                    const StyleComputedUrl* aOldImage) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+  StyleLoadData& data = LoadData();
+
+  MOZ_ASSERT(!(data.flags & StyleLoadDataFlags::TRIED_TO_RESOLVE_IMAGE));
+
+  data.flags |= StyleLoadDataFlags::TRIED_TO_RESOLVE_IMAGE;
 
   nsIURI* docURI = aDocument.GetDocumentURI();
   if (HasRef()) {
     bool isEqualExceptRef = false;
     nsIURI* imageURI = GetURI();
     if (!imageURI) {
-      return nullptr;
+      return;
     }
 
     if (NS_SUCCEEDED(imageURI->EqualsExceptRef(docURI, &isEqualExceptRef)) &&
         isEqualExceptRef) {
       // Prevent loading an internal resource.
-      return nullptr;
+      return;
     }
   }
 
-  static uint64_t sNextLoadID = 1;
+  MOZ_ASSERT(NS_IsMainThread());
 
-  StyleLoadData& data = LoadData();
-  if (data.load_id == 0) {
-    data.load_id = sNextLoadID++;
+  // TODO(emilio, bug 1440442): This is a hackaround to avoid flickering due the
+  // lack of non-http image caching in imagelib (bug 1406134), which causes
+  // stuff like bug 1439285. Cleanest fix if that doesn't get fixed is bug
+  // 1440305, but that seems too risky, and a lot of work to do before 60.
+  //
+  // Once that's fixed, the "old style" argument to TriggerImageLoads can go
+  // away.
+  const bool reuseProxy = nsContentUtils::IsChromeDoc(&aDocument) &&
+                          aOldImage && aOldImage->IsImageResolved() &&
+                          *this == *aOldImage;
+
+  RefPtr<imgRequestProxy> request;
+  if (reuseProxy) {
+    request = aOldImage->LoadData().resolved_image;
+  } else {
+    // NB: If aDocument is not the original document, we may not be able to load
+    // images from aDocument.  Instead we do the image load from the original
+    // doc and clone it to aDocument.
+    Document* loadingDoc = aDocument.GetOriginalDocument();
+    const bool isPrint = !!loadingDoc;
+    if (!loadingDoc) {
+      loadingDoc = &aDocument;
+    }
+
+    // Kick off the load in the loading document.
+    request = css::ImageLoader::LoadImage(*this, *loadingDoc);
+
+    if (isPrint && request) {
+      RefPtr<imgRequestProxy> ret;
+      request->GetStaticRequest(&aDocument, getter_AddRefs(ret));
+      request = std::move(ret);
+    }
   }
 
-  // NB: If aDocument is not the original document, we may not be able to load
-  // images from aDocument.  Instead we do the image load from the original doc
-  // and clone it to aDocument.
-  Document* loadingDoc = aDocument.GetOriginalDocument();
-  const bool isPrint = !!loadingDoc;
-  if (!loadingDoc) {
-    loadingDoc = &aDocument;
-  }
-
-  // Kick off the load in the loading document.
-  css::ImageLoader::LoadImage(*this, *loadingDoc);
-
-  // Register the image in the document that's using it.
-  imgRequestProxy* request =
-      aDocument.StyleImageLoader()->RegisterCSSImage(data);
   if (!request) {
-    return nullptr;
+    return;
   }
-  if (!isPrint) {
-    return do_AddRef(request);
+
+  data.resolved_image = request.forget().take();
+
+  // Boost priority now that we know the image is present in the ComputedStyle
+  // of some frame.
+  data.resolved_image->BoostPriority(imgIRequest::CATEGORY_FRAME_STYLE);
+}
+
+/**
+ * Runnable to release the image request's mRequestProxy
+ * and mImageTracker on the main thread, and to perform
+ * any necessary unlocking and untracking of the image.
+ */
+class StyleImageRequestCleanupTask final : public mozilla::Runnable {
+ public:
+  explicit StyleImageRequestCleanupTask(StyleLoadData& aData)
+      : mozilla::Runnable("StyleImageRequestCleanupTask"),
+        mRequestProxy(dont_AddRef(aData.resolved_image)) {
+    MOZ_ASSERT(mRequestProxy);
+    aData.resolved_image = nullptr;
   }
-  RefPtr<imgRequestProxy> ret;
-  request->GetStaticRequest(&aDocument, getter_AddRefs(ret));
-  return ret.forget();
+
+  NS_IMETHOD Run() final {
+    MOZ_ASSERT(NS_IsMainThread());
+    css::ImageLoader::DeregisterImageFromAllLoaders(mRequestProxy);
+    return NS_OK;
+  }
+
+ protected:
+  virtual ~StyleImageRequestCleanupTask() {
+    MOZ_ASSERT(!mRequestProxy || NS_IsMainThread(),
+               "mRequestProxy destructor need to run on the main thread!");
+  }
+
+ private:
+  // Since we always dispatch this runnable to the main thread, these will be
+  // released on the main thread when the runnable itself is released.
+  RefPtr<imgRequestProxy> mRequestProxy;
+};
+
+// This is defined here for parallelism with LoadURI.
+void Gecko_LoadData_Drop(StyleLoadData* aData) {
+  if (aData->resolved_image) {
+    auto task = MakeRefPtr<StyleImageRequestCleanupTask>(*aData);
+    if (NS_IsMainThread()) {
+      task->Run();
+    } else {
+      // if Resolve was not called at some point, mDocGroup is not set.
+      SystemGroup::Dispatch(TaskCategory::Other, task.forget());
+    }
+  }
+
+  // URIs are safe to refcount from any thread.
+  NS_IF_RELEASE(aData->resolved_uri);
 }
 
 // --------------------
@@ -562,6 +614,7 @@ nsChangeHint nsStyleOutline::CalcDifference(
 nsStyleList::nsStyleList(const Document& aDocument)
     : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
       mQuotes(StyleQuotes::Auto()),
+      mListStyleImage(StyleImageUrlOrNone::None()),
       mImageRegion(StyleClipRectOrAuto::Auto()),
       mMozListReversed(StyleMozListReversed::False) {
   MOZ_COUNT_CTOR(nsStyleList);
@@ -574,9 +627,9 @@ nsStyleList::~nsStyleList() { MOZ_COUNT_DTOR(nsStyleList); }
 
 nsStyleList::nsStyleList(const nsStyleList& aSource)
     : mListStylePosition(aSource.mListStylePosition),
-      mListStyleImage(aSource.mListStyleImage),
       mCounterStyle(aSource.mCounterStyle),
       mQuotes(aSource.mQuotes),
+      mListStyleImage(aSource.mListStyleImage),
       mImageRegion(aSource.mImageRegion),
       mMozListReversed(aSource.mMozListReversed) {
   MOZ_COUNT_CTOR(nsStyleList);
@@ -586,9 +639,12 @@ void nsStyleList::TriggerImageLoads(Document& aDocument,
                                     const nsStyleList* aOldStyle) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mListStyleImage && !mListStyleImage->IsResolved()) {
-    mListStyleImage->Resolve(
-        aDocument, aOldStyle ? aOldStyle->mListStyleImage.get() : nullptr);
+  if (mListStyleImage.IsUrl() && !mListStyleImage.AsUrl().IsImageResolved()) {
+    auto* oldUrl = aOldStyle && aOldStyle->mListStyleImage.IsUrl()
+                       ? &aOldStyle->mListStyleImage.AsUrl()
+                       : nullptr;
+    const_cast<StyleComputedImageUrl&>(mListStyleImage.AsUrl())
+        .ResolveImage(aDocument, oldUrl);
   }
 }
 
@@ -624,7 +680,7 @@ nsChangeHint nsStyleList::CalcDifference(
   }
   // list-style-image and -moz-image-region may affect some XUL elements
   // regardless of display value, so we still need to check them.
-  if (!DefinitelyEqualImages(mListStyleImage, aNewData.mListStyleImage)) {
+  if (mListStyleImage != aNewData.mListStyleImage) {
     return NS_STYLE_HINT_REFLOW;
   }
   if (mImageRegion != aNewData.mImageRegion) {
@@ -639,11 +695,11 @@ nsChangeHint nsStyleList::CalcDifference(
 }
 
 already_AddRefed<nsIURI> nsStyleList::GetListStyleImageURI() const {
-  if (!mListStyleImage) {
+  if (!mListStyleImage.IsUrl()) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIURI> uri = mListStyleImage->GetImageURI();
+  nsCOMPtr<nsIURI> uri = mListStyleImage.AsUrl().GetURI();
   return uri.forget();
 }
 
@@ -1523,154 +1579,6 @@ bool StyleGradient::IsOpaque() const {
 }
 
 // --------------------
-// nsStyleImageRequest
-
-/**
- * Runnable to release the nsStyleImageRequest's mRequestProxy
- * and mImageTracker on the main thread, and to perform
- * any necessary unlocking and untracking of the image.
- */
-class StyleImageRequestCleanupTask : public mozilla::Runnable {
- public:
-  typedef nsStyleImageRequest::Mode Mode;
-
-  StyleImageRequestCleanupTask(Mode aModeFlags,
-                               already_AddRefed<imgRequestProxy> aRequestProxy,
-                               already_AddRefed<ImageTracker> aImageTracker)
-      : mozilla::Runnable("StyleImageRequestCleanupTask"),
-        mModeFlags(aModeFlags),
-        mRequestProxy(aRequestProxy),
-        mImageTracker(aImageTracker) {}
-
-  NS_IMETHOD Run() final {
-    MOZ_ASSERT(!mRequestProxy || NS_IsMainThread(),
-               "If mRequestProxy is non-null, we need to run on main thread!");
-
-    if (!mRequestProxy) {
-      return NS_OK;
-    }
-
-    if (mModeFlags & Mode::Track) {
-      MOZ_ASSERT(mImageTracker);
-      mImageTracker->Remove(mRequestProxy);
-    } else {
-      mRequestProxy->UnlockImage();
-    }
-
-    if (mModeFlags & Mode::Discard) {
-      mRequestProxy->RequestDiscard();
-    }
-
-    return NS_OK;
-  }
-
- protected:
-  virtual ~StyleImageRequestCleanupTask() {
-    MOZ_ASSERT((!mRequestProxy && !mImageTracker) || NS_IsMainThread(),
-               "mRequestProxy and mImageTracker's destructor need to run "
-               "on the main thread!");
-  }
-
- private:
-  Mode mModeFlags;
-  // Since we always dispatch this runnable to the main thread, these will be
-  // released on the main thread when the runnable itself is released.
-  RefPtr<imgRequestProxy> mRequestProxy;
-  RefPtr<ImageTracker> mImageTracker;
-};
-
-nsStyleImageRequest::nsStyleImageRequest(Mode aModeFlags,
-                                         const StyleComputedImageUrl& aImageURL)
-    : mImageURL(aImageURL), mModeFlags(aModeFlags), mResolved(false) {}
-
-nsStyleImageRequest::~nsStyleImageRequest() {
-  // We may or may not be being destroyed on the main thread.  To clean
-  // up, we must untrack and unlock the image (depending on mModeFlags),
-  // and release mRequestProxy and mImageTracker, all on the main thread.
-  {
-    RefPtr<StyleImageRequestCleanupTask> task =
-        new StyleImageRequestCleanupTask(mModeFlags, mRequestProxy.forget(),
-                                         mImageTracker.forget());
-    if (NS_IsMainThread()) {
-      task->Run();
-    } else {
-      if (mDocGroup) {
-        mDocGroup->Dispatch(TaskCategory::Other, task.forget());
-      } else {
-        // if Resolve was not called at some point, mDocGroup is not set.
-        SystemGroup::Dispatch(TaskCategory::Other, task.forget());
-      }
-    }
-  }
-
-  MOZ_ASSERT(!mRequestProxy);
-  MOZ_ASSERT(!mImageTracker);
-}
-
-void nsStyleImageRequest::Resolve(Document& aDocument,
-                                  const nsStyleImageRequest* aOldImageRequest) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IsResolved(), "already resolved");
-
-  mResolved = true;
-
-  // TODO(emilio, bug 1440442): This is a hackaround to avoid flickering due the
-  // lack of non-http image caching in imagelib (bug 1406134), which causes
-  // stuff like bug 1439285. Cleanest fix if that doesn't get fixed is bug
-  // 1440305, but that seems too risky, and a lot of work to do before 60.
-  //
-  // Once that's fixed, the "old style" argument to TriggerImageLoads can go
-  // away.
-  if (nsContentUtils::IsChromeDoc(&aDocument) && aOldImageRequest &&
-      aOldImageRequest->IsResolved() && DefinitelyEquals(*aOldImageRequest)) {
-    MOZ_ASSERT(aOldImageRequest->mDocGroup == aDocument.GetDocGroup());
-    MOZ_ASSERT(mModeFlags == aOldImageRequest->mModeFlags);
-
-    mDocGroup = aOldImageRequest->mDocGroup;
-    mImageURL = aOldImageRequest->mImageURL;
-
-    mRequestProxy = aOldImageRequest->mRequestProxy;
-  } else {
-    mDocGroup = aDocument.GetDocGroup();
-    mRequestProxy = mImageURL.LoadImage(aDocument);
-  }
-
-  if (!mRequestProxy) {
-    // The URL resolution or image load failed.
-    return;
-  }
-
-  // Boost priority now that we know the image is present in the ComputedStyle
-  // of some frame.
-  mRequestProxy->BoostPriority(imgIRequest::CATEGORY_FRAME_STYLE);
-
-  if (mModeFlags & Mode::Track) {
-    mImageTracker = aDocument.ImageTracker();
-  }
-
-  MaybeTrackAndLock();
-}
-
-void nsStyleImageRequest::MaybeTrackAndLock() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsResolved());
-  MOZ_ASSERT(mRequestProxy);
-
-  if (mModeFlags & Mode::Track) {
-    MOZ_ASSERT(mImageTracker);
-    mImageTracker->Add(mRequestProxy);
-  } else {
-    MOZ_ASSERT(!mImageTracker);
-    mRequestProxy->LockImage();
-  }
-}
-
-bool nsStyleImageRequest::DefinitelyEquals(
-    const nsStyleImageRequest& aOther) const {
-  return mImageURL == aOther.mImageURL;
-}
-
-// --------------------
 // CachedBorderImageData
 //
 void CachedBorderImageData::SetCachedSVGViewportSize(
@@ -1720,8 +1628,7 @@ imgIContainer* CachedBorderImageData::GetSubImage(uint8_t aIndex) {
 // nsStyleImage
 //
 
-nsStyleImage::nsStyleImage()
-    : mType(eStyleImageType_Null), mImage(nullptr), mCropRect(nullptr) {
+nsStyleImage::nsStyleImage() : mCropRect(nullptr), mType(eStyleImageType_Null) {
   MOZ_COUNT_CTOR(nsStyleImage);
 }
 
@@ -1733,7 +1640,7 @@ nsStyleImage::~nsStyleImage() {
 }
 
 nsStyleImage::nsStyleImage(const nsStyleImage& aOther)
-    : mType(eStyleImageType_Null), mCropRect(nullptr) {
+    : mCropRect(nullptr), mType(eStyleImageType_Null) {
   // We need our own copy constructor because we don't want
   // to copy the reference count
   MOZ_COUNT_CTOR(nsStyleImage);
@@ -1752,7 +1659,7 @@ void nsStyleImage::DoCopy(const nsStyleImage& aOther) {
   SetNull();
 
   if (aOther.mType == eStyleImageType_Image) {
-    SetImageRequest(do_AddRef(aOther.mImage));
+    SetImageUrl(aOther.mImage);
   } else if (aOther.mType == eStyleImageType_Gradient) {
     SetGradientData(MakeUnique<StyleGradient>(*aOther.mGradient));
   } else if (aOther.mType == eStyleImageType_Element) {
@@ -1771,7 +1678,7 @@ void nsStyleImage::SetNull() {
     delete mGradient;
     mGradient = nullptr;
   } else if (mType == eStyleImageType_Image) {
-    NS_RELEASE(mImage);
+    mImage.~StyleComputedImageUrl();
   } else if (mType == eStyleImageType_Element) {
     NS_RELEASE(mElementId);
   }
@@ -1780,18 +1687,14 @@ void nsStyleImage::SetNull() {
   mCropRect = nullptr;
 }
 
-void nsStyleImage::SetImageRequest(
-    already_AddRefed<nsStyleImageRequest> aImage) {
-  RefPtr<nsStyleImageRequest> image = aImage;
-
+void nsStyleImage::SetImageUrl(const StyleComputedImageUrl& aImage) {
   if (mType != eStyleImageType_Null) {
     SetNull();
   }
 
-  if (image) {
-    mImage = image.forget().take();
-    mType = eStyleImageType_Image;
-  }
+  new (&mImage) StyleComputedImageUrl(aImage);
+  mType = eStyleImageType_Image;
+
   if (mCachedBIData) {
     mCachedBIData->PurgeCachedImages();
   }
@@ -1835,22 +1738,6 @@ static int32_t ConvertToPixelCoord(const StyleNumberOrPercentage& aCoord,
   MOZ_ASSERT(pixelValue >= 0, "we ensured non-negative while parsing");
   pixelValue = std::min(pixelValue, double(INT32_MAX));  // avoid overflow
   return NS_lround(pixelValue);
-}
-
-already_AddRefed<nsIURI> nsStyleImageRequest::GetImageURI() const {
-  nsCOMPtr<nsIURI> uri;
-
-  if (mRequestProxy) {
-    mRequestProxy->GetURI(getter_AddRefs(uri));
-    if (uri) {
-      return uri.forget();
-    }
-  }
-
-  // If we had some problem resolving the mRequestProxy, use the URL stored
-  // in the mImageURL.
-  uri = mImageURL.GetURI();
-  return uri.forget();
 }
 
 bool nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
@@ -2009,7 +1896,7 @@ bool nsStyleImage::operator==(const nsStyleImage& aOther) const {
   }
 
   if (mType == eStyleImageType_Image) {
-    return DefinitelyEqualImages(mImage, aOther.mImage);
+    return mImage == aOther.mImage;
   }
 
   if (mType == eStyleImageType_Gradient) {
@@ -2046,12 +1933,12 @@ already_AddRefed<nsIURI> nsStyleImage::GetImageURI() const {
     return nullptr;
   }
 
-  nsCOMPtr<nsIURI> uri = mImage->GetImageURI();
+  nsCOMPtr<nsIURI> uri = mImage.GetURI();
   return uri.forget();
 }
 
 const StyleComputedImageUrl* nsStyleImage::GetURLValue() const {
-  return mType == eStyleImageType_Image ? &mImage->GetImageValue() : nullptr;
+  return mType == eStyleImageType_Image ? &mImage : nullptr;
 }
 
 // --------------------
@@ -3253,6 +3140,35 @@ nsChangeHint nsStyleContent::CalcDifference(
   return nsChangeHint(0);
 }
 
+void nsStyleContent::TriggerImageLoads(Document& aDoc,
+                                       const nsStyleContent* aOld) {
+  if (!mContent.IsItems()) {
+    return;
+  }
+
+  Span<const StyleContentItem> oldItems;
+  if (aOld && aOld->mContent.IsItems()) {
+    oldItems = aOld->mContent.AsItems().AsSpan();
+  }
+
+  auto items = mContent.AsItems().AsSpan();
+
+  for (size_t i = 0; i < items.Length(); ++i) {
+    auto& item = items[i];
+    if (!item.IsUrl()) {
+      continue;
+    }
+    auto& url = item.AsUrl();
+    if (url.IsImageResolved()) {
+      continue;
+    }
+    auto* oldUrl = i < oldItems.Length() && oldItems[i].IsUrl()
+                       ? &oldItems[i].AsUrl()
+                       : nullptr;
+    const_cast<StyleComputedImageUrl&>(url).ResolveImage(aDoc, oldUrl);
+  }
+}
+
 // --------------------
 // nsStyleTextReset
 //
@@ -3501,8 +3417,8 @@ LogicalSide nsStyleText::TextEmphasisSide(WritingMode aWM) const {
 // nsStyleUI
 //
 
-nsCursorImage::nsCursorImage()
-    : mHaveHotspot(false), mHotspotX(0.0f), mHotspotY(0.0f) {}
+nsCursorImage::nsCursorImage(const StyleComputedImageUrl& aImage)
+    : mHaveHotspot(false), mHotspotX(0.0f), mHotspotY(0.0f), mImage(aImage) {}
 
 nsCursorImage::nsCursorImage(const nsCursorImage& aOther)
     : mHaveHotspot(aOther.mHaveHotspot),
@@ -3528,8 +3444,7 @@ bool nsCursorImage::operator==(const nsCursorImage& aOther) const {
       aOther.mHaveHotspot || (aOther.mHotspotX == 0 && aOther.mHotspotY == 0),
       "expected mHotspot{X,Y} to be 0 when mHaveHotspot is false");
   return mHaveHotspot == aOther.mHaveHotspot && mHotspotX == aOther.mHotspotX &&
-         mHotspotY == aOther.mHotspotY &&
-         DefinitelyEqualImages(mImage, aOther.mImage);
+         mHotspotY == aOther.mHotspotY && mImage == aOther.mImage;
 }
 
 nsStyleUI::nsStyleUI(const Document& aDocument)
@@ -3564,13 +3479,13 @@ void nsStyleUI::TriggerImageLoads(Document& aDocument,
   for (size_t i = 0; i < mCursorImages.Length(); ++i) {
     nsCursorImage& cursor = mCursorImages[i];
 
-    if (cursor.mImage && !cursor.mImage->IsResolved()) {
+    if (!cursor.mImage.IsImageResolved()) {
       const nsCursorImage* oldCursor =
           (aOldStyle && aOldStyle->mCursorImages.Length() > i)
               ? &aOldStyle->mCursorImages[i]
               : nullptr;
-      cursor.mImage->Resolve(aDocument,
-                             oldCursor ? oldCursor->mImage.get() : nullptr);
+      cursor.mImage.ResolveImage(aDocument,
+                                 oldCursor ? &oldCursor->mImage : nullptr);
     }
   }
 }
