@@ -1,14 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.search.awesomebar
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
-   License, v. 2.0. If a copy of the MPL was not distributed with this
-   file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-import android.graphics.PorterDuff.Mode.SRC_IN
-import android.graphics.PorterDuffColorFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
@@ -25,12 +26,12 @@ import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
 
@@ -124,56 +125,56 @@ class AwesomeBarView(
     init {
         view.itemAnimator = null
 
-        with(container.context) {
-            val primaryTextColor = getColorFromAttr(R.attr.primaryText)
+        val context = container.context
+        val components = context.components
+        val primaryTextColor = context.getColorFromAttr(R.attr.primaryText)
 
-            val draw = getDrawable(R.drawable.ic_link)!!
-            draw.setColorFilter(primaryTextColor, SRC_IN)
+        val draw = getDrawable(context, R.drawable.ic_link)!!
+        draw.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
 
-            sessionProvider =
-                SessionSuggestionProvider(
-                    components.core.sessionManager,
-                    selectTabUseCase,
-                    components.core.icons,
-                    excludeSelectedSession = true
-                )
+        sessionProvider =
+            SessionSuggestionProvider(
+                components.core.sessionManager,
+                selectTabUseCase,
+                components.core.icons,
+                excludeSelectedSession = true
+            )
 
-            historyStorageProvider =
-                HistoryStorageSuggestionProvider(
-                    components.core.historyStorage,
-                    loadUrlUseCase,
-                    components.core.icons
-                )
+        historyStorageProvider =
+            HistoryStorageSuggestionProvider(
+                components.core.historyStorage,
+                loadUrlUseCase,
+                components.core.icons
+            )
 
-            bookmarksStorageSuggestionProvider =
-                BookmarksStorageSuggestionProvider(
-                    components.core.bookmarksStorage,
-                    loadUrlUseCase,
-                    components.core.icons
-                )
+        bookmarksStorageSuggestionProvider =
+            BookmarksStorageSuggestionProvider(
+                components.core.bookmarksStorage,
+                loadUrlUseCase,
+                components.core.icons
+            )
 
-            val searchDrawable = getDrawable(R.drawable.ic_search)!!
-            searchDrawable.setColorFilter(primaryTextColor, SRC_IN)
+        val searchDrawable = getDrawable(context, R.drawable.ic_search)!!
+        searchDrawable.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
 
-            defaultSearchSuggestionProvider =
-                SearchSuggestionProvider(
-                    context = this,
-                    searchEngineManager = components.search.searchEngineManager,
-                    searchUseCase = searchUseCase,
-                    fetchClient = components.core.client,
-                    mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                    limit = 3,
-                    icon = searchDrawable.toBitmap()
-                )
+        defaultSearchSuggestionProvider =
+            SearchSuggestionProvider(
+                context = context,
+                searchEngineManager = components.search.searchEngineManager,
+                searchUseCase = searchUseCase,
+                fetchClient = components.core.client,
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                limit = 3,
+                icon = searchDrawable.toBitmap()
+            )
 
-            shortcutsEnginePickerProvider =
-                ShortcutsSuggestionProvider(
-                    components.search.provider,
-                    this,
-                    interactor::onSearchShortcutEngineSelected,
-                    interactor::onClickSearchEngineSettings
-                )
-        }
+        shortcutsEnginePickerProvider =
+            ShortcutsSuggestionProvider(
+                searchEngineProvider = components.search.provider,
+                context = context,
+                selectShortcutEngine = interactor::onSearchShortcutEngineSelected,
+                selectShortcutEngineSettings = interactor::onClickSearchEngineSettings
+            )
 
         searchSuggestionProviderMap = HashMap()
         search_shortcuts_button.setOnClickListener {
@@ -324,25 +325,23 @@ class AwesomeBarView(
     }
 
     private fun getSuggestionProviderForEngine(engine: SearchEngine): SearchSuggestionProvider? {
-        if (!searchSuggestionProviderMap.containsKey(engine)) {
-            with(container.context) {
-                val draw = getDrawable(R.drawable.ic_search)
-                draw?.colorFilter =
-                    PorterDuffColorFilter(getColorFromAttr(R.attr.primaryText), SRC_IN)
+        return searchSuggestionProviderMap.getOrPut(engine) {
+            val context = container.context
+            val components = context.components
+            val primaryTextColor = context.getColorFromAttr(R.attr.primaryText)
 
-                searchSuggestionProviderMap.put(
-                    engine, SearchSuggestionProvider(
-                        components.search.provider.installedSearchEngines(this).list.find { it.name == engine.name }
-                            ?: components.search.provider.getDefaultEngine(this),
-                        shortcutSearchUseCase,
-                        components.core.client,
-                        limit = 3,
-                        mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                        icon = draw?.toBitmap()
-                    )
-                )
-            }
+            val draw = getDrawable(context, R.drawable.ic_search)
+            draw?.colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
+
+            SearchSuggestionProvider(
+                components.search.provider.installedSearchEngines(context).list.find { it.name == engine.name }
+                    ?: components.search.provider.getDefaultEngine(context),
+                shortcutSearchUseCase,
+                components.core.client,
+                limit = 3,
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                icon = draw?.toBitmap()
+            )
         }
-        return searchSuggestionProviderMap[engine]
     }
 }

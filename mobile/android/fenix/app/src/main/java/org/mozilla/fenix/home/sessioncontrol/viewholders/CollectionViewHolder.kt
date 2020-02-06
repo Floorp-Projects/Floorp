@@ -5,9 +5,10 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.content.Context
-import android.graphics.PorterDuff.Mode.SRC_IN
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.collection_home_list_row.*
@@ -89,7 +90,7 @@ class CollectionViewHolder(
             view.collection_description.visibility = View.VISIBLE
         }
 
-        view.collection_icon.setColorFilter(
+        view.collection_icon.colorFilter = createBlendModeColorFilterCompat(
             collection.getIconColor(view.context),
             SRC_IN
         )

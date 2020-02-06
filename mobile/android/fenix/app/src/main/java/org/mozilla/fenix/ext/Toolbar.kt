@@ -5,13 +5,13 @@
 package org.mozilla.fenix.ext
 
 import android.graphics.ColorFilter
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.widget.ActionMenuView
 import android.widget.ImageButton
 import androidx.annotation.ColorInt
 import androidx.appcompat.view.menu.ActionMenuItemView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.view.forEach
 
 /**
@@ -22,7 +22,7 @@ fun Toolbar.setToolbarColors(@ColorInt foreground: Int, @ColorInt background: In
         setBackgroundColor(background)
         setTitleTextColor(foreground)
 
-        val colorFilter = PorterDuffColorFilter(foreground, PorterDuff.Mode.SRC_IN)
+        val colorFilter = createBlendModeColorFilterCompat(foreground, SRC_IN)
         overflowIcon?.colorFilter = colorFilter
         forEach { child ->
             when (child) {
@@ -33,7 +33,7 @@ fun Toolbar.setToolbarColors(@ColorInt foreground: Int, @ColorInt background: In
     }
 }
 
-private fun themeActionMenuView(item: ActionMenuView, colorFilter: ColorFilter) {
+private fun themeActionMenuView(item: ActionMenuView, colorFilter: ColorFilter?) {
     item.forEach { innerChild ->
         if (innerChild is ActionMenuItemView) {
             innerChild.compoundDrawables.forEach { drawable ->

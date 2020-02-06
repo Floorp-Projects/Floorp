@@ -5,10 +5,11 @@
 package org.mozilla.fenix.share.viewholders
 
 import android.content.Context
-import android.graphics.PorterDuff
 import android.view.View
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getColor
+import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.account_share_list_item.view.*
 import mozilla.components.concept.sync.DeviceType
@@ -51,8 +52,8 @@ class AccountDeviceViewHolder(
 
         itemView.deviceIcon.apply {
             setImageResource(drawableRes)
-            background.setColorFilter(ContextCompat.getColor(context, colorRes), PorterDuff.Mode.SRC_IN)
-            drawable.setTint(ContextCompat.getColor(context, R.color.device_foreground))
+            background.colorFilter = createBlendModeColorFilterCompat(getColor(context, colorRes), SRC_IN)
+            drawable.setTint(getColor(context, R.color.device_foreground))
         }
         itemView.isClickable = option != SyncShareOption.Offline
         itemView.deviceName.text = name
