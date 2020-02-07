@@ -799,7 +799,7 @@ class nsFrameSelection final {
       mozilla::dom::Selection* aSel);
 
   // Table selection support.
-  nsITableCellLayout* GetCellLayout(nsIContent* aCellContent) const;
+  static nsITableCellLayout* GetCellLayout(nsIContent* aCellContent);
 
   nsresult SelectBlockOfCells(nsIContent* aStartNode, nsIContent* aEndNode);
   nsresult SelectRowOrColumn(nsIContent* aCellContent,
@@ -809,8 +809,8 @@ class nsFrameSelection final {
                          int32_t aEndColumnIndex,
                          bool aRemoveOutsideOfCellRange);
 
-  nsresult GetCellIndexes(nsIContent* aCell, int32_t& aRowIndex,
-                          int32_t& aColIndex);
+  static nsresult GetCellIndexes(nsIContent* aCell, int32_t& aRowIndex,
+                                 int32_t& aColIndex);
 
   // Get our first range, if its first selected node is a cell.  If this does
   // not return null, then the first node in the returned range is a cell
