@@ -13,6 +13,7 @@ import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.hideToolbar
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 
@@ -37,16 +38,27 @@ class CrashReporterFragment : Fragment(R.layout.fragment_crash_reporter) {
             settings = requireContext().settings()
         )
 
-        restoreTabButton.setOnClickListener {
-            controller.handleCloseAndRestore(sendCrashCheckbox.isChecked)
+        restoreTabButton.apply {
+            increaseTapArea(TAP_INCREASE_DP)
+            setOnClickListener {
+                controller.handleCloseAndRestore(sendCrashCheckbox.isChecked)
+            }
         }
-        closeTabButton.setOnClickListener {
-            controller.handleCloseAndRemove(sendCrashCheckbox.isChecked)
+
+        closeTabButton.apply {
+            increaseTapArea(TAP_INCREASE_DP)
+            setOnClickListener {
+                controller.handleCloseAndRemove(sendCrashCheckbox.isChecked)
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
         hideToolbar()
+    }
+
+    companion object {
+        private const val TAP_INCREASE_DP = 12
     }
 }
