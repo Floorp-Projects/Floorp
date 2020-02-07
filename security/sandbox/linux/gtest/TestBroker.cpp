@@ -22,7 +22,6 @@
 #include <unistd.h>
 
 #include "mozilla/Atomics.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/FileDescriptor.h"
