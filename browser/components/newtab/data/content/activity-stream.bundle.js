@@ -1716,24 +1716,6 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     return "n/a";
   }
 
-  renderPocketStory(story) {
-    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", {
-      className: "message-item",
-      key: story.guid
-    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
-      className: "message-id"
-    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, story.guid, " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
-      className: "message-summary"
-    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("pre", null, JSON.stringify(story, null, 2))));
-  }
-
-  renderPocketStories() {
-    const {
-      rows
-    } = this.props.Sections.find(Section => Section.id === "topstories") || {};
-    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, rows && rows.map(story => this.renderPocketStory(story))));
-  }
-
   renderDiscoveryStream() {
     const {
       config
@@ -1878,9 +1860,6 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
           onChange: this.toggleGroups
         })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, this._getGroupImpressionsCount(id, frequency)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, JSON.stringify(frequency, null, 2))))));
 
-      case "pocket":
-        return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Pocket"), this.renderPocketStories());
-
       case "ds":
         return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Discovery Stream"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DiscoveryStreamAdmin, {
           state: {
@@ -1917,8 +1896,6 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }, "Targeting")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       href: "#devtools-groups"
     }, "Message Groups")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
-      href: "#devtools-pocket"
-    }, "Pocket")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       href: "#devtools-ds"
     }, "Discovery Stream")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       href: "#devtools-errors"

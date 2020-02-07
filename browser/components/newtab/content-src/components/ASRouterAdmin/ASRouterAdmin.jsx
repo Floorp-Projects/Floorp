@@ -1199,34 +1199,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     return "n/a";
   }
 
-  renderPocketStory(story) {
-    return (
-      <tr className="message-item" key={story.guid}>
-        <td className="message-id">
-          <span>
-            {story.guid} <br />
-          </span>
-        </td>
-        <td className="message-summary">
-          <pre>{JSON.stringify(story, null, 2)}</pre>
-        </td>
-      </tr>
-    );
-  }
-
-  renderPocketStories() {
-    const { rows } =
-      this.props.Sections.find(Section => Section.id === "topstories") || {};
-
-    return (
-      <table>
-        <tbody>
-          {rows && rows.map(story => this.renderPocketStory(story))}
-        </tbody>
-      </table>
-    );
-  }
-
   renderDiscoveryStream() {
     const { config } = this.props.DiscoveryStream;
 
@@ -1525,13 +1497,6 @@ export class ASRouterAdminInner extends React.PureComponent {
             </table>
           </React.Fragment>
         );
-      case "pocket":
-        return (
-          <React.Fragment>
-            <h2>Pocket</h2>
-            {this.renderPocketStories()}
-          </React.Fragment>
-        );
       case "ds":
         return (
           <React.Fragment>
@@ -1598,9 +1563,6 @@ export class ASRouterAdminInner extends React.PureComponent {
             </li>
             <li>
               <a href="#devtools-groups">Message Groups</a>
-            </li>
-            <li>
-              <a href="#devtools-pocket">Pocket</a>
             </li>
             <li>
               <a href="#devtools-ds">Discovery Stream</a>
