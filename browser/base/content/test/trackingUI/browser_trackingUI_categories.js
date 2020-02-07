@@ -108,6 +108,30 @@ add_task(async function testCookieCategoryLabel() {
 
     Services.prefs.setIntPref(
       TPC_PREF,
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+    );
+    await TestUtils.waitForCondition(
+      () => categoryItem.classList.contains("blocked"),
+      "The category label has updated correctly"
+    );
+    ok(categoryItem.classList.contains("blocked"));
+    await TestUtils.waitForCondition(
+      () =>
+        categoryLabel.textContent ==
+        gNavigatorBundle.getString(
+          "contentBlocking.cookies.blockingTrackers3.label"
+        ),
+      "The category label has updated correctly"
+    );
+    ok(
+      categoryLabel.textContent ==
+        gNavigatorBundle.getString(
+          "contentBlocking.cookies.blockingTrackers3.label"
+        )
+    );
+
+    Services.prefs.setIntPref(
+      TPC_PREF,
       Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN
     );
     await TestUtils.waitForCondition(
