@@ -2573,7 +2573,7 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
 
   REPORT_BYTES(
       NS_LITERAL_CSTRING("explicit/js-non-window/helper-thread/wasm-compile"),
-      KIND_HEAP, gStats.helperThread.parseTask,
+      KIND_HEAP, gStats.helperThread.wasmCompile,
       "The memory used by Wasm compilations waiting in HelperThreadState.");
 }
 
