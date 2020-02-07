@@ -1818,21 +1818,17 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
 
   const bool scriptHasIonScript = script->hasIonScript();
 
-  IonBuilder* builder =
-      alloc->new_<IonBuilder>((JSContext*)nullptr, *mirGen, info, constraints,
-                              inspector, baselineFrameInspector);
-  if (!builder) {
-    return AbortReason::Alloc;
-  }
+  IonBuilder builder((JSContext*)nullptr, *mirGen, info, constraints, inspector,
+                     baselineFrameInspector);
 
   if (cx->runtime()->gc.storeBuffer().cancelIonCompilations()) {
-    builder->mirGen().setNotSafeForMinorGC();
+    mirGen->setNotSafeForMinorGC();
   }
 
-  MOZ_ASSERT(recompile == builder->script()->hasIonScript());
-  MOZ_ASSERT(builder->script()->canIonCompile());
+  MOZ_ASSERT(recompile == builder.script()->hasIonScript());
+  MOZ_ASSERT(builder.script()->canIonCompile());
 
-  RootedScript builderScript(cx, builder->script());
+  RootedScript builderScript(cx, builder.script());
 
   if (recompile) {
     builderScript->ionScript()->setRecompiling();
@@ -1843,8 +1839,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
   AbortReasonOr<Ok> buildResult = Ok();
   {
     AutoEnterAnalysis enter(cx);
-    buildResult = builder->build();
-    builder->clearForBackEnd();
+    buildResult = builder.build();
   }
 
   if (buildResult.isErr()) {
@@ -1854,7 +1849,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
       // Some group was accessed which has associated preliminary objects
       // to analyze. Do this now and we will try to build again shortly.
       const IonBuilder::ObjectGroupVector& groups =
-          builder->abortedPreliminaryGroups();
+          builder.abortedPreliminaryGroups();
       for (size_t i = 0; i < groups.length(); i++) {
         ObjectGroup* group = groups[i];
         AutoRealm ar(cx, group);
@@ -1873,12 +1868,12 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
       }
     }
 
-    if (builder->hadActionableAbort()) {
+    if (builder.hadActionableAbort()) {
       JSScript* abortScript;
       jsbytecode* abortPc;
       const char* abortMessage;
-      builder->actionableAbortLocationAndMessage(&abortScript, &abortPc,
-                                                 &abortMessage);
+      builder.actionableAbortLocationAndMessage(&abortScript, &abortPc,
+                                                &abortMessage);
       TrackIonAbort(cx, abortScript, abortPc, abortMessage);
     }
 
