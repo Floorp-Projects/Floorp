@@ -1504,7 +1504,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
                                            //         mDisplay
   mozilla::StyleContain mContain;
   mozilla::StyleAppearance mAppearance;
-  uint8_t mPosition;  // NS_STYLE_POSITION_*
+  mozilla::StylePositionProperty mPosition;
 
   mozilla::StyleFloat mFloat;
   mozilla::StyleClear mBreakType;
@@ -1691,20 +1691,20 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   bool IsFloatingStyle() const { return mozilla::StyleFloat::None != mFloat; }
 
   bool IsAbsolutelyPositionedStyle() const {
-    return NS_STYLE_POSITION_ABSOLUTE == mPosition ||
-           NS_STYLE_POSITION_FIXED == mPosition;
+    return mozilla::StylePositionProperty::Absolute == mPosition ||
+           mozilla::StylePositionProperty::Fixed == mPosition;
   }
 
   bool IsRelativelyPositionedStyle() const {
-    return NS_STYLE_POSITION_RELATIVE == mPosition ||
-           NS_STYLE_POSITION_STICKY == mPosition;
+    return mozilla::StylePositionProperty::Relative == mPosition ||
+           mozilla::StylePositionProperty::Sticky == mPosition;
   }
   bool IsStickyPositionedStyle() const {
-    return NS_STYLE_POSITION_STICKY == mPosition;
+    return mozilla::StylePositionProperty::Sticky == mPosition;
   }
   bool IsPositionForcingStackingContext() const {
-    return NS_STYLE_POSITION_STICKY == mPosition ||
-           NS_STYLE_POSITION_FIXED == mPosition;
+    return mozilla::StylePositionProperty::Sticky == mPosition ||
+           mozilla::StylePositionProperty::Fixed == mPosition;
   }
 
   static bool IsRubyDisplayType(mozilla::StyleDisplay aDisplay) {

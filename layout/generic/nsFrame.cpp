@@ -789,7 +789,7 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   SVGObserverUtils::InvalidateDirectRenderingObservers(this);
 
-  if (StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY) {
+  if (StyleDisplay()->mPosition == StylePositionProperty::Sticky) {
     StickyScrollContainer* ssc =
         StickyScrollContainer::GetStickyScrollContainerForFrame(this);
     if (ssc) {
@@ -1268,11 +1268,11 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
         RemoveProperty(NormalPositionProperty());
       }
 
-      handleStickyChange = disp->mPosition == NS_STYLE_POSITION_STICKY ||
-                           oldDisp->mPosition == NS_STYLE_POSITION_STICKY;
+      handleStickyChange = disp->mPosition == StylePositionProperty::Sticky ||
+                           oldDisp->mPosition == StylePositionProperty::Sticky;
     }
   } else {  // !aOldComputedStyle
-    handleStickyChange = disp->mPosition == NS_STYLE_POSITION_STICKY;
+    handleStickyChange = disp->mPosition == StylePositionProperty::Sticky;
   }
 
   if (handleStickyChange && !HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) &&
@@ -1284,7 +1284,7 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     // StickyScrollContainer will remove them later.
     if (auto* ssc =
             StickyScrollContainer::GetStickyScrollContainerForFrame(this)) {
-      if (disp->mPosition == NS_STYLE_POSITION_STICKY) {
+      if (disp->mPosition == StylePositionProperty::Sticky) {
         ssc->AddFrame(this);
       } else {
         ssc->RemoveFrame(this);
@@ -3255,13 +3255,13 @@ void nsIFrame::BuildDisplayListForStackingContext(
   }
 
   bool useStickyPosition =
-      disp->mPosition == NS_STYLE_POSITION_STICKY &&
+      disp->mPosition == StylePositionProperty::Sticky &&
       IsScrollFrameActive(
           aBuilder,
           nsLayoutUtils::GetNearestScrollableFrame(
               GetParent(), nsLayoutUtils::SCROLLABLE_SAME_DOC |
                                nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN));
-  bool useFixedPosition = disp->mPosition == NS_STYLE_POSITION_FIXED &&
+  bool useFixedPosition = disp->mPosition == StylePositionProperty::Fixed &&
                           (nsLayoutUtils::IsFixedPosFrameInDisplayPort(this) ||
                            BuilderHasScrolledClip(aBuilder));
 

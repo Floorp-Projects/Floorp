@@ -5000,7 +5000,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       if (itemType == DisplayItemType::TYPE_FIXED_POSITION) {
         newLayerEntry->mIsFixedToRootScrollFrame =
             item->Frame()->StyleDisplay()->mPosition ==
-                NS_STYLE_POSITION_FIXED &&
+                StylePositionProperty::Fixed &&
             nsLayoutUtils::IsReallyFixedPos(item->Frame());
       }
 
