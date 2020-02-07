@@ -214,15 +214,26 @@ function* testSteps() {
 
   const metadataFileName = ".metadata";
 
+  const packages = [
+    // Storage used by 26-35 (storage/persistent/ directory, tracked only
+    // timestamp in .metadata for persistent storage and isApp not tracked in
+    // .metadata for temporary storage).
+    "persistentStorageDirectory_profile",
+    "../persistentStorageDirectory_shared",
+  ];
+
   let metadataBuffers = [];
 
   clear(continueToNextStepSync);
   yield undefined;
 
-  // Storage used by 26-35 (storage/persistent/ directory, tracked only
-  // timestamp in .metadata for persistent storage and isApp not tracked in
-  // .metadata for temporary storage).
-  installPackage("persistentStorageDirectory_profile");
+  info("Installing packages");
+
+  installPackages(packages);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInstall");
 
   info("Checking origin directories");
 
@@ -266,6 +277,15 @@ function* testSteps() {
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInit");
+
+  // TODO: Remove this block once temporary storage initialization is able to
+  //       ignore unknown directories.
+  getRelativeFile("storage/default/invalid+++example.com").remove(false);
+  getRelativeFile("storage/temporary/invalid+++example.com").remove(false);
 
   for (let origin of origins) {
     if (!origin.newPath || origin.newPath != origin.oldPath) {
