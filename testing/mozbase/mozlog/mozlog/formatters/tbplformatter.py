@@ -104,27 +104,40 @@ class TbplFormatter(BaseFormatter):
     def crash(self, data):
         id = data["test"] if "test" in data else "pid: %s" % data["process"]
 
-        signature = data["signature"] if data["signature"] else "unknown top frame"
-        rv = ["PROCESS-CRASH | %s | application crashed [%s]" % (id, signature)]
+        if data.get("java_stack"):
+            # use "<exception> at <top frame>" as a crash signature for java exception
+            sig = data["java_stack"].split("\n")
+            sig = " ".join(sig[0:2])
+            rv = ["PROCESS-CRASH | %s | %s\n[%s]" % (id, sig, data["java_stack"])]
 
-        if data.get("reason"):
-            rv.append("Mozilla crash reason: %s" % data["reason"])
+            if data.get("reason"):
+                rv.append("Mozilla crash reason: %s" % data["reason"])
 
-        if data.get("minidump_path"):
-            rv.append("Crash dump filename: %s" % data["minidump_path"])
+            if data.get("minidump_path"):
+                rv.append("Crash dump filename: %s" % data["minidump_path"])
 
-        if data.get("stackwalk_stderr"):
-            rv.append("stderr from minidump_stackwalk:")
-            rv.append(data["stackwalk_stderr"])
-        elif data.get("stackwalk_stdout"):
-            rv.append(data["stackwalk_stdout"])
+        else:
+            signature = data["signature"] if data["signature"] else "unknown top frame"
+            rv = ["PROCESS-CRASH | %s | application crashed [%s]" % (id, signature)]
 
-        if data.get("stackwalk_returncode", 0) != 0:
-            rv.append("minidump_stackwalk exited with return code %d" %
-                      data["stackwalk_returncode"])
+            if data.get("reason"):
+                rv.append("Mozilla crash reason: %s" % data["reason"])
 
-        if data.get("stackwalk_errors"):
-            rv.extend(data.get("stackwalk_errors"))
+            if data.get("minidump_path"):
+                rv.append("Crash dump filename: %s" % data["minidump_path"])
+
+            if data.get("stackwalk_stderr"):
+                rv.append("stderr from minidump_stackwalk:")
+                rv.append(data["stackwalk_stderr"])
+            elif data.get("stackwalk_stdout"):
+                rv.append(data["stackwalk_stdout"])
+
+            if data.get("stackwalk_returncode", 0) != 0:
+                rv.append("minidump_stackwalk exited with return code %d" %
+                          data["stackwalk_returncode"])
+
+            if data.get("stackwalk_errors"):
+                rv.extend(data.get("stackwalk_errors"))
 
         rv = "\n".join(rv)
         if not rv[-1] == "\n":

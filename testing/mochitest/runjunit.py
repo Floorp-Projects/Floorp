@@ -318,10 +318,6 @@ class JUnitTestRunner(MochitestDesktop):
         return 1 if self.fail_count else 0
 
     def check_for_crashes(self):
-        logcat = self.device.get_logcat()
-        if logcat:
-            if mozcrash.check_for_java_exception(logcat, self.current_full_name):
-                return True
         symbols_path = self.options.symbolsPath
         try:
             dump_dir = tempfile.mkdtemp()
