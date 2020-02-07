@@ -12,11 +12,13 @@ import android.widget.RatingBar
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
@@ -24,6 +26,9 @@ import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.ui.CustomViewHolder.AddonViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.SectionViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.UnsupportedSectionViewHolder
+import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import java.io.IOException
 
 private const val VIEW_HOLDER_TYPE_SECTION = 0
 private const val VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION = 1
@@ -47,6 +52,7 @@ class AddonsManagerAdapter(
     private val scope = CoroutineScope(Dispatchers.IO)
     private val items: List<Any>
     private val unsupportedAddons = ArrayList<Addon>()
+    private val logger = Logger("AddonsManagerAdapter")
 
     init {
         items = createListWithSections(addons)
@@ -191,13 +197,26 @@ class AddonsManagerAdapter(
             }
         }
 
-        scope.launch {
-            val iconBitmap = addonCollectionProvider.getAddonIconBitmap(addon)
+        fetchIcon(addon, holder.iconView)
+    }
 
-            iconBitmap?.let {
-                MainScope().launch {
-                    holder.iconView.setImageBitmap(it)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun fetchIcon(addon: Addon, iconView: ImageView, scope: CoroutineScope = this.scope): Job {
+        return scope.launch {
+            try {
+                val iconBitmap = addonCollectionProvider.getAddonIconBitmap(addon)
+                iconBitmap?.let {
+                    scope.launch(Main) {
+                        iconView.setImageBitmap(it)
+                    }
                 }
+            } catch (e: IOException) {
+                scope.launch(Main) {
+                    val context = iconView.context
+                    val att = context.theme.resolveAttribute(android.R.attr.textColorPrimary)
+                    iconView.setColorFilter(ContextCompat.getColor(context, att))
+                }
+                logger.error("Attempt to fetch the ${addon.id} icon failed", e)
             }
         }
     }
