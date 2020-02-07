@@ -961,12 +961,11 @@ nsresult ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
   NS_ASSERTION(*aXPOffset <= aContent->TextLength(), "offset is out of range.");
 
   MOZ_DIAGNOSTIC_ASSERT(mDocument->GetPresShell());
-  RefPtr<nsFrameSelection> fs = mDocument->GetPresShell()->FrameSelection();
   int32_t offsetInFrame;
   CaretAssociationHint hint =
       aForward ? CARET_ASSOCIATE_BEFORE : CARET_ASSOCIATE_AFTER;
-  nsIFrame* frame = fs->GetFrameForNodeOffset(aContent, int32_t(*aXPOffset),
-                                              hint, &offsetInFrame);
+  nsIFrame* frame = nsFrameSelection::GetFrameForNodeOffset(
+      aContent, int32_t(*aXPOffset), hint, &offsetInFrame);
   if (frame) {
     int32_t startOffset, endOffset;
     nsresult rv = frame->GetOffsets(startOffset, endOffset);

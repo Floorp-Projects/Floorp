@@ -627,7 +627,7 @@ nsresult nsCaret::GetCaretFrameForNodeOffset(
   nsIFrame* theFrame = nullptr;
   int32_t theFrameOffset = 0;
 
-  theFrame = aFrameSelection->GetFrameForNodeOffset(
+  theFrame = nsFrameSelection::GetFrameForNodeOffset(
       aContentNode, aOffset, aFrameHint, &theFrameOffset);
   if (!theFrame) return NS_ERROR_FAILURE;
 
