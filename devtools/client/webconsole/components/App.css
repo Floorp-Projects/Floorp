@@ -138,6 +138,18 @@ body {
   flex-grow: 1;
 }
 
+/* When eager evaluation is enabled, we want the input + eager evaluation result to be 40px
+   at most, so we lower the minimum height of the input */
+.webconsole-app.eager-evaluation .jsterm-input-container {
+  min-height: 22px;
+  padding-block-start: 0;
+}
+
+.webconsole-app.eager-evaluation .webconsole-input-openEditorButton {
+  padding-block: 0;
+   height: 22px;
+}
+
 .webconsole-app:not(.jsterm-editor) .jsterm-input-container {
   direction: ltr;
 }
@@ -386,16 +398,11 @@ body {
   border-block-start: 1px solid var(--theme-splitter-color);
   padding-inline-start: 2px;
   align-items: center;
-  padding-bottom: 0;
+  padding-block: 5px;
 }
 
 .jsterm-editor .eager-evaluation-result:empty {
   display: none;
-}
-
-.jsterm-editor .eager-evaluation-result > .icon {
-  margin-block: 0;
-  align-self: unset;
 }
 
 .jsterm-editor .editor-resizer {

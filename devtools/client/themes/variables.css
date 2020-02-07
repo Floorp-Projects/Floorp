@@ -145,6 +145,7 @@
   /* Icon colors */
   --theme-icon-color: rgba(12, 12, 13, 0.8);
   --theme-icon-dimmed-color: rgba(135, 135, 137, 0.9);
+  --theme-icon-extreme-dimmed-color: var(--grey-30);
   --theme-icon-checked-color: var(--blue-60);
   --theme-icon-error-color: var(--red-60);
   --theme-icon-warning-color: var(--yellow-65);
@@ -266,6 +267,7 @@
   /* Icon colors */
   --theme-icon-color: rgba(249, 249, 250, 0.7);
   --theme-icon-dimmed-color: rgba(147, 147, 149, 0.9);
+  --theme-icon-extreme-dimmed-color: var(--grey-50);
   --theme-icon-checked-color: var(--blue-30);
   --theme-icon-error-color: var(--red-40);
   --theme-icon-warning-color: var(--yellow-60);

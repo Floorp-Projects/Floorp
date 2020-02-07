@@ -5,6 +5,7 @@
 
 DevToolsModules(
     'ConfirmDialog.js',
+    'EagerEvaluation.css',
     'EagerEvaluation.js',
     'EditorToolbar.js',
     'JSTerm.js',
