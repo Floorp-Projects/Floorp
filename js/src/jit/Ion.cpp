@@ -424,7 +424,6 @@ void jit::FreeIonCompileTask(IonCompileTask* task) {
   // destroy the task and all other data accumulated during compilation,
   // except any final codegen (which includes an assembler and needs to be
   // explicitly destroyed).
-  MOZ_ASSERT(!task->hasPendingEdgesMap(), "Should not leak malloc memory");
   js_delete(task->backgroundCodegen());
   js_delete(task->alloc().lifoAlloc());
 }
@@ -1817,6 +1816,8 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     return AbortReason::Alloc;
   }
 
+  const bool scriptHasIonScript = script->hasIonScript();
+
   IonBuilder* builder =
       alloc->new_<IonBuilder>((JSContext*)nullptr, *mirGen, info, constraints,
                               inspector, baselineFrameInspector);
@@ -1899,12 +1900,13 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
             builderScript->filename(), builderScript->lineno(),
             builderScript->column());
 
-    IonCompileTask* task = alloc->new_<IonCompileTask>(builder);
+    IonCompileTask* task =
+        alloc->new_<IonCompileTask>(*mirGen, scriptHasIonScript, constraints);
     if (!task) {
       return AbortReason::Alloc;
     }
 
-    if (!CreateMIRRootList(*builder)) {
+    if (!CreateMIRRootList(*task)) {
       return AbortReason::Alloc;
     }
 

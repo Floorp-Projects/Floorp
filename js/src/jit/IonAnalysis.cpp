@@ -5148,11 +5148,11 @@ void MRootList::trace(JSTracer* trc) {
 #undef TRACE_ROOTS
 }
 
-MOZ_MUST_USE bool jit::CreateMIRRootList(IonBuilder& builder) {
-  MOZ_ASSERT(!builder.mirGen().outerInfo().isAnalysis());
+MOZ_MUST_USE bool jit::CreateMIRRootList(IonCompileTask& task) {
+  MOZ_ASSERT(!task.mirGen().outerInfo().isAnalysis());
 
-  TempAllocator& alloc = builder.alloc();
-  MIRGraph& graph = builder.mirGen().graph();
+  TempAllocator& alloc = task.alloc();
+  MIRGraph& graph = task.mirGen().graph();
 
   MRootList* roots = new (alloc.fallible()) MRootList(alloc);
   if (!roots) {
@@ -5179,7 +5179,7 @@ MOZ_MUST_USE bool jit::CreateMIRRootList(IonBuilder& builder) {
     }
   }
 
-  builder.setRootList(*roots);
+  task.setRootList(*roots);
   return true;
 }
 
