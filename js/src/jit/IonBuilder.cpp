@@ -137,11 +137,9 @@ IonBuilder::IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
                        BaselineInspector* inspector,
                        BaselineFrameInspector* baselineFrame,
                        size_t inliningDepth, uint32_t loopDepth)
-    : backgroundCodegen_(nullptr),
-      actionableAbortScript_(nullptr),
+    : actionableAbortScript_(nullptr),
       actionableAbortPc_(nullptr),
       actionableAbortMessage_(nullptr),
-      rootList_(nullptr),
       analysisContext(analysisContext),
       baselineFrame_(baselineFrame),
       constraints_(constraints),
@@ -179,7 +177,6 @@ IonBuilder::IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
       inlineCallInfo_(nullptr),
       maybeFallbackFunctionGetter_(nullptr) {
   script_ = info_->script();
-  scriptHasIonScript_ = script_->hasIonScript();
   pc = info_->startPC();
 
   // The script must have a JitScript. Compilation requires a BaselineScript
@@ -1196,9 +1193,8 @@ void IonCompileTask::runTask() {
   AutoTraceLog logScript(logger, event);
   AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
-  MIRGenerator& mirGen = builder_->mirGen();
-  jit::JitContext jctx(mirGen.realm->runtime(), mirGen.realm, &alloc());
-  builder_->setBackgroundCodegen(jit::CompileBackEnd(&mirGen));
+  jit::JitContext jctx(mirGen_.realm->runtime(), mirGen_.realm, &alloc());
+  setBackgroundCodegen(jit::CompileBackEnd(&mirGen_));
 }
 
 void IonBuilder::rewriteParameter(uint32_t slotIdx, MDefinition* param) {
@@ -14362,8 +14358,8 @@ MDefinition* IonBuilder::convertToBoolean(MDefinition* input) {
   return result;
 }
 
-void IonBuilder::trace(JSTracer* trc) {
-  if (!realm->runtime()->runtimeMatches(trc->runtime())) {
+void IonCompileTask::trace(JSTracer* trc) {
+  if (!mirGen_.runtime->runtimeMatches(trc->runtime())) {
     return;
   }
 
@@ -14371,13 +14367,18 @@ void IonBuilder::trace(JSTracer* trc) {
   rootList_->trace(trc);
 }
 
-size_t IonBuilder::sizeOfExcludingThis(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  // See js::jit::FreeIonBuilder.
-  // The IonBuilder and most of its contents live in the LifoAlloc we point
-  // to. Note that this is only true for background IonBuilders.
+IonCompileTask::IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
+                               CompilerConstraintList* constraints)
+    : mirGen_(mirGen),
+      constraints_(constraints),
+      scriptHasIonScript_(scriptHasIonScript) {}
 
-  size_t result = alloc_->lifoAlloc()->sizeOfIncludingThis(mallocSizeOf);
+size_t IonCompileTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+  // See js::jit::FreeIonCompileTask.
+  // The IonCompileTask and most of its contents live in the LifoAlloc we point
+  // to.
+
+  size_t result = alloc().lifoAlloc()->sizeOfIncludingThis(mallocSizeOf);
 
   if (backgroundCodegen_) {
     result += mallocSizeOf(backgroundCodegen_);
