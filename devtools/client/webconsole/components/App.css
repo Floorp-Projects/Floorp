@@ -235,6 +235,8 @@ body {
      * |                          ↔                          ↔                 |
      * |                          ↔                          ↔                 |
      * +--------------------------↔                          ↔                 |
+     * |    [Eager evaluation]    ↔                          ↔                 |
+     * +--------------------------↔                          ↔                 |
      * |  [Reverse search input]  ↔                          ↔                 |
      * +-----------------------------------------------------+-----------------+
      *
@@ -247,12 +249,14 @@ body {
                        "editor-toolbar    filter-toolbar             sidebar"
                        "editor            filter-toolbar-secondary   sidebar"
                        "editor            output                     sidebar"
+                       "eager-evaluation  output                     sidebar"
                        "reverse-search    output                     sidebar";
   grid-template-rows:
     auto
     var(--primary-toolbar-height)
     auto
     1fr
+    auto
     auto;
   grid-template-columns: minmax(150px, auto) minmax(200px, 1fr) minmax(0, auto);
 }
@@ -370,6 +374,28 @@ body {
   font-size: var(--theme-code-font-size);
   line-height: var(--theme-code-line-height);
   background-image: none;
+}
+
+.jsterm-editor .eager-evaluation-result {
+  grid-area: eager-evaluation;
+  /* The next 2 lines make it so the element isn't impacting the grid column size, but
+    will still take the whole available space. */
+  min-width: 100%;
+  width: 0;
+  border-inline-end: 1px solid var(--theme-splitter-color);
+  border-block-start: 1px solid var(--theme-splitter-color);
+  padding-inline-start: 2px;
+  align-items: center;
+  padding-bottom: 0;
+}
+
+.jsterm-editor .eager-evaluation-result:empty {
+  display: none;
+}
+
+.jsterm-editor .eager-evaluation-result > .icon {
+  margin-block: 0;
+  align-self: unset;
 }
 
 .jsterm-editor .editor-resizer {
