@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.AddonPermissionsAdapter
+import mozilla.components.feature.addons.ui.translate
 import org.mozilla.samples.browser.R
 
 private const val LEARN_MORE_URL =

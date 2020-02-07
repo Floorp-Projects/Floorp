@@ -111,7 +111,6 @@ class AddonTest {
             permissions = emptyList(),
             createdAt = "",
             updatedAt = ""
-
         )
         assertFalse(addon.isEnabled())
 
@@ -120,5 +119,31 @@ class AddonTest {
 
         val enabledAddon = addon.copy(installedState = Addon.InstalledState("id", "1.0", "", enabled = true))
         assertTrue(enabledAddon.isEnabled())
+    }
+
+    @Test
+    fun `filterTranslations - only keeps specified translations`() {
+        val addon = Addon(
+            id = "id",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "downloadUrl",
+            version = "version",
+            permissions = emptyList(),
+            createdAt = "",
+            updatedAt = "",
+            translatableName = mapOf("en-US" to "name", "de" to "Name", "es" to "nombre"),
+            translatableDescription = mapOf("en-US" to "description", "de" to "Beschreibung", "es" to "descripción"),
+            translatableSummary = mapOf("en-US" to "summary", "de" to "Kurzfassung", "es" to "resumen")
+        )
+
+        val addonEn = addon.filterTranslations(listOf("en-US"))
+        assertEquals(1, addonEn.translatableName.size)
+        assertTrue(addonEn.translatableName.contains("en-US"))
+
+        val addonEs = addon.filterTranslations(listOf("en-US", "es"))
+        assertEquals(2, addonEs.translatableName.size)
+        assertTrue(addonEs.translatableName.contains("en-US"))
+        assertTrue(addonEs.translatableName.contains("es"))
     }
 }

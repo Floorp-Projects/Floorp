@@ -45,12 +45,17 @@ class AddonManager(
             // Make sure extension support is initialized, i.e. the state of all installed extensions is known.
             WebExtensionSupport.awaitInitialization()
 
-            // Get all available/supported addons from provider and add state if installed.
-            val supportedAddons = addonsProvider.getAvailableAddons().map { addon ->
-                installedExtensions[addon.id]?.let {
-                    addon.copy(installedState = it.toInstalledState())
-                } ?: addon
-            }
+            // Get all available/supported addons from provider and add state if
+            // installed. NB: We're keeping only the translations of the default
+            // lang and the en-US fallback.
+            val locales = listOf(Locale.getDefault().language, "en-US")
+            val supportedAddons = addonsProvider.getAvailableAddons()
+                .map { addon -> addon.filterTranslations(locales) }
+                .map { addon ->
+                    installedExtensions[addon.id]?.let {
+                        addon.copy(installedState = it.toInstalledState())
+                    } ?: addon
+                }
 
             val supportedAddonIds = supportedAddons.map { it.id }
 
