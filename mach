@@ -35,7 +35,6 @@ py2commands="
     empty-makefiles
     file-info
     firefox-ui-functional
-    fluent-migration-test
     geckodriver
     geckodriver-test
     geckoview-junit
