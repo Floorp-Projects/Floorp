@@ -248,7 +248,8 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
 
   switch (result) {
     case PositionChangedResult::NotChanged:
-    case PositionChangedResult::Changed:
+    case PositionChangedResult::Position:
+    case PositionChangedResult::Zoom:
       if (!aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
         if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
           mFirstCaret->SetAppearance(Appearance::Normal);
@@ -283,7 +284,7 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
 
   mSecondCaret->SetAppearance(Appearance::None);
 
-  mIsCaretPositionChanged = (result == PositionChangedResult::Changed);
+  mIsCaretPositionChanged = (result == PositionChangedResult::Position);
 
   if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) && !mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
@@ -314,7 +315,8 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
 
     switch (result) {
       case PositionChangedResult::NotChanged:
-      case PositionChangedResult::Changed:
+      case PositionChangedResult::Position:
+      case PositionChangedResult::Zoom:
         if (!aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
           aCaret->SetAppearance(Appearance::Normal);
         }
@@ -333,8 +335,8 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
       updateSingleCaret(mSecondCaret.get(), endFrame, endOffset);
 
   mIsCaretPositionChanged =
-      firstCaretResult == PositionChangedResult::Changed ||
-      secondCaretResult == PositionChangedResult::Changed;
+      firstCaretResult == PositionChangedResult::Position ||
+      secondCaretResult == PositionChangedResult::Position;
 
   if (mIsCaretPositionChanged) {
     // Flush layout to make the carets intersection correct.
