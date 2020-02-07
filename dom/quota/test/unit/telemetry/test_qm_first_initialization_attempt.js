@@ -421,7 +421,10 @@ const testcases = [
       installPackage("version2_2_profile");
 
       if (!expectedInitResult) {
-        installPackage("version2_2_make_it_unusable");
+        installPackage(
+          "version2_2_make_it_unusable",
+          /* allowFileOverwrites */ true
+        );
       }
     },
     initFunction: init,
