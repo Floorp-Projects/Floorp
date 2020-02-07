@@ -17,7 +17,12 @@ import mozilla.components.lib.state.Store
  * @property password Password that's saved for this site
  */
 @Parcelize
-data class SavedLoginsItem(val url: String, val userName: String?, val password: String?) :
+data class SavedLoginsItem(
+    val url: String,
+    val userName: String?,
+    val password: String?,
+    val id: String
+) :
     Parcelable
 
 /**

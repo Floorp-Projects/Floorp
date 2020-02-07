@@ -19,7 +19,7 @@ class SavedLoginsInteractorTest {
             learnMore
         )
 
-        val item = SavedLoginsItem("mozilla.org", "username", "password")
+        val item = SavedLoginsItem("mozilla.org", "username", "password", "id")
         interactor.itemClicked(item)
 
         verify {

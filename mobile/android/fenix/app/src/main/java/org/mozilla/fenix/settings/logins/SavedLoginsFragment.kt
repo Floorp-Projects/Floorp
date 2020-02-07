@@ -13,12 +13,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_saved_logins.view.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.appservices.logins.ServerPassword
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -58,7 +62,7 @@ class SavedLoginsFragment : Fragment() {
         }
         savedLoginsInteractor = SavedLoginsInteractor(::itemClicked, ::openLearnMore)
         savedLoginsView = SavedLoginsView(view.savedLoginsLayout, savedLoginsInteractor)
-        lifecycleScope.launch(Main) { loadAndMapLogins() }
+        loadAndMapLogins()
         return view
     }
 
@@ -98,16 +102,27 @@ class SavedLoginsFragment : Fragment() {
         )
     }
 
-    private suspend fun loadAndMapLogins() {
-        val syncedLogins = withContext(IO) {
-            requireContext().components.core.syncablePasswordsStorage.withUnlocked {
-                it.list().await().map { item ->
-                    SavedLoginsItem(item.hostname, item.username, item.password)
+    private fun loadAndMapLogins() {
+        var deferredLogins: Deferred<List<ServerPassword>>? = null
+        val fetchLoginsJob = lifecycleScope.launch(IO) {
+            deferredLogins = async {
+                requireContext().components.core.syncablePasswordsStorage.withUnlocked {
+                    it.list().await()
+                }
+            }
+            val logins = deferredLogins?.await()
+            logins?.let {
+                withContext(Main) {
+                    savedLoginsStore.dispatch(SavedLoginsFragmentAction.UpdateLogins(logins.map { item ->
+                        SavedLoginsItem(item.hostname, item.username, item.password, item.id)
+                    }))
                 }
             }
         }
-        withContext(Main) {
-            savedLoginsStore.dispatch(SavedLoginsFragmentAction.UpdateLogins(syncedLogins))
+        fetchLoginsJob.invokeOnCompletion {
+            if (it is CancellationException) {
+                deferredLogins?.cancel()
+            }
         }
     }
 }

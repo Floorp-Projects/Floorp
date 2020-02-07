@@ -7,15 +7,26 @@ package org.mozilla.fenix.settings.logins
 import android.content.Context
 import android.os.Bundle
 import android.text.InputType
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_saved_login_site_info.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -28,6 +39,11 @@ import org.mozilla.fenix.ext.showToolbar
 class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_info) {
 
     private val args by navArgs<SavedLoginSiteInfoFragmentArgs>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
     override fun onPause() {
         // If we pause this fragment, we want to pop users back to reauth
@@ -62,16 +78,61 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
         )
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.login_edit, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+        R.id.delete_login_button -> {
+            deleteLogin()
+            true
+        }
+        else -> false
+    }
+
+    private fun deleteLogin() {
+        var deleteLoginJob: Deferred<Boolean>? = null
+        val deleteJob = lifecycleScope.launch(IO) {
+            deleteLoginJob = async {
+                requireContext().components.core.syncablePasswordsStorage.withUnlocked {
+                    it.delete(args.savedLoginItem.id).await()
+                }
+            }
+            deleteLoginJob?.await()
+            withContext(Main) {
+                findNavController().popBackStack(R.id.savedLoginsFragment, false)
+            }
+        }
+        deleteJob.invokeOnCompletion {
+            if (it is CancellationException) {
+                deleteLoginJob?.cancel()
+            }
+        }
+    }
+
     private fun togglePasswordReveal(context: Context) {
         if (passwordInfoText.inputType == InputType.TYPE_TEXT_VARIATION_PASSWORD or InputType.TYPE_CLASS_TEXT) {
             context.components.analytics.metrics.track(Event.ViewLoginPassword)
             passwordInfoText.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-            revealPasswordItem.setImageDrawable(getDrawable(context, R.drawable.mozac_ic_password_hide))
-            revealPasswordItem.contentDescription = context.getString(R.string.saved_login_hide_password)
+            revealPasswordItem.setImageDrawable(
+                getDrawable(
+                    context,
+                    R.drawable.mozac_ic_password_hide
+                )
+            )
+            revealPasswordItem.contentDescription =
+                context.getString(R.string.saved_login_hide_password)
         } else {
-            passwordInfoText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            revealPasswordItem.setImageDrawable(getDrawable(context, R.drawable.mozac_ic_password_reveal))
-            revealPasswordItem.contentDescription = context.getString(R.string.saved_login_reveal_password)
+            passwordInfoText.inputType =
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            revealPasswordItem.setImageDrawable(
+                getDrawable(
+                    context,
+                    R.drawable.mozac_ic_password_reveal
+                )
+            )
+            revealPasswordItem.contentDescription =
+                context.getString(R.string.saved_login_reveal_password)
         }
         // For the new type to take effect you need to reset the text
         passwordInfoText.text = args.savedLoginItem.password
