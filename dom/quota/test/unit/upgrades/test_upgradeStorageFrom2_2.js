@@ -8,6 +8,12 @@
  */
 
 async function testSteps() {
+  const packages = [
+    // Storage used by FF 68-69 (storage version 2.2).
+    "version2_2_profile",
+    "../defaultStorageDirectory_shared",
+  ];
+
   function verifyDatabaseTable(shouldExist) {
     let file = getRelativeFile("storage.sqlite");
     let conn = Services.storage.openUnsharedDatabase(file);
@@ -27,8 +33,13 @@ async function testSteps() {
   let request = clear();
   await requestFinished(request);
 
-  // Storage used by FF 68-69 (storage version 2.2).
-  installPackage("version2_2_profile");
+  info("Installing packages");
+
+  installPackages(packages);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInstall");
 
   verifyDatabaseTable(/* shouldExist */ false);
 
@@ -37,6 +48,10 @@ async function testSteps() {
   // Initialize to trigger storage upgrade from version 2.2
   request = init();
   await requestFinished(request);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInit");
 
   request = reset();
   await requestFinished(request);
