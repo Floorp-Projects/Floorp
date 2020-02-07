@@ -656,11 +656,8 @@ function bindCommands(isCmd, dbgWindow, bindSelf, frame, helpers) {
   }
   // Check if the Debugger.Frame or Debugger.Object for the global include any of the
   // helper function we set. We will not overwrite these functions with the Web Console
-  // commands. The exception being "print" which should exist everywhere as
-  // `window.print`, and that we don't want to trigger from the console.
-  const availableHelpers = [
-    ...WebConsoleCommands._originalCommands.keys(),
-  ].filter(h => h !== "print");
+  // commands.
+  const availableHelpers = [...WebConsoleCommands._originalCommands.keys()];
 
   let helpersToDisable = [];
   const helperCache = {};
