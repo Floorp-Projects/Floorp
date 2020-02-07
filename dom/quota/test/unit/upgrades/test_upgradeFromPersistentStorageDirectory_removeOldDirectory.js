@@ -13,16 +13,25 @@ async function testSteps() {
   const persistence = "default";
   const lastAccessed = 0x0005330925e07841;
 
+  const packages = [
+    // Storage used by FF 36-48 (storage/default/ directory and re-created
+    // storage/persistent/ directory by an older FF).
+    "persistentAndDefaultStorageDirectory_profile",
+    "../defaultStorageDirectory_shared",
+  ];
+
   info("Clearing");
 
   let request = clear();
   await requestFinished(request);
 
-  info("Installing package");
+  info("Installing packages");
 
-  // Storage used by FF 36-48 (storage/default/ directory and re-created
-  // storage/persistent/ directory by an older FF).
-  installPackage("persistentAndDefaultStorageDirectory_profile");
+  installPackages(packages);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInstall");
 
   info("Checking directories");
 
@@ -38,6 +47,16 @@ async function testSteps() {
 
   request = init();
   await requestFinished(request);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInit");
+
+  // TODO: Remove this block once temporary storage initialization and getting
+  //       usage is able to ignore unknown directories.
+  getRelativeFile("storage/default/invalid+++example.com").remove(false);
+  getRelativeFile("storage/permanent/invalid+++example.com").remove(false);
+  getRelativeFile("storage/temporary/invalid+++example.com").remove(false);
 
   info("Checking directories");
 

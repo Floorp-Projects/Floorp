@@ -28,15 +28,24 @@ function* testSteps() {
     },
   ];
 
+  const packages = [
+    // Storage used by FF 49-54 (storage version 1.0 with apps data).
+    "version1_0_appsData_profile",
+    "../defaultStorageDirectory_shared",
+  ];
+
   info("Clearing");
 
   clear(continueToNextStepSync);
   yield undefined;
 
-  info("Installing package");
+  info("Installing packages");
 
-  // Storage used by FF 49-54 (storage version 1.0 with apps data).
-  installPackage("version1_0_appsData_profile");
+  installPackages(packages);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInstall");
 
   info("Checking origin directories");
 
@@ -53,6 +62,16 @@ function* testSteps() {
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInit");
+
+  // TODO: Remove this block once getting usage is able to ignore unknown
+  //       directories.
+  getRelativeFile("storage/default/invalid+++example.com").remove(false);
+  getRelativeFile("storage/permanent/invalid+++example.com").remove(false);
+  getRelativeFile("storage/temporary/invalid+++example.com").remove(false);
 
   info("Checking origin directories");
 

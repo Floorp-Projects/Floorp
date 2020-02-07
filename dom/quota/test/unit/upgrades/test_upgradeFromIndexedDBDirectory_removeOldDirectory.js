@@ -12,16 +12,25 @@ async function testSteps() {
   const url = "http://www.mozilla.org";
   const persistence = "default";
 
+  const packages = [
+    // Storage used by FF 26-35 (storage/persistent/ directory and re-created
+    // indexedDB directory by an older FF).
+    "indexedDBAndPersistentStorageDirectory_profile",
+    "../persistentStorageDirectory_shared",
+  ];
+
   info("Clearing");
 
   let request = clear();
   await requestFinished(request);
 
-  info("Installing package");
+  info("Installing packages");
 
-  // Storage used by FF 26-35 (storage/persistent/ directory and re-created
-  // indexedDB directory by an older FF).
-  installPackage("indexedDBAndPersistentStorageDirectory_profile");
+  installPackages(packages);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInstall");
 
   info("Checking directories");
 
@@ -37,6 +46,15 @@ async function testSteps() {
 
   request = init();
   await requestFinished(request);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInit");
+
+  // TODO: Remove this block once temporary storage initialization is able to
+  //       ignore unknown directories.
+  getRelativeFile("storage/default/invalid+++example.com").remove(false);
+  getRelativeFile("storage/temporary/invalid+++example.com").remove(false);
 
   info("Checking directories");
 
