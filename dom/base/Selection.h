@@ -712,13 +712,6 @@ class Selection final : public nsSupportsWeakReference,
    */
   void SelectFramesInAllRanges(nsPresContext* aPresContext);
 
-  /**
-   * Test whether the supplied range points to a single table element.
-   * Result is one of the TableSelection constants. "None" means
-   * a table element isn't selected.
-   */
-  nsresult GetTableSelectionType(nsRange* aRange,
-                                 TableSelection* aTableSelectionType);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult GetTableCellLocationFromRange(nsRange* aRange,
                                          TableSelection* aSelectionType,

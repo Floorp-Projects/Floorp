@@ -410,6 +410,63 @@ void Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel,
   }
 }
 
+/**
+ * Test whether the supplied range points to a single table element.
+ * Result is one of the TableSelection constants. "None" means
+ * a table element isn't selected.
+ */
+// TODO: Figure out TableSelection::Column and TableSelection::AllCells
+static nsresult GetTableSelectionType(nsRange* aRange,
+                                      TableSelection* aTableSelectionType) {
+  if (!aRange || !aTableSelectionType) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aTableSelectionType = TableSelection::None;
+
+  nsINode* startNode = aRange->GetStartContainer();
+  if (!startNode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsINode* endNode = aRange->GetEndContainer();
+  if (!endNode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Not a single selected node
+  if (startNode != endNode) {
+    return NS_OK;
+  }
+
+  nsIContent* child = aRange->GetChildAtStartOffset();
+
+  // Not a single selected node
+  if (!child || child->GetNextSibling() != aRange->GetChildAtEndOffset()) {
+    return NS_OK;
+  }
+
+  nsIContent* startContent = static_cast<nsIContent*>(startNode);
+  if (!(startNode->IsElement() && startContent->IsHTMLElement())) {
+    // Implies a check for being an element; if we ever make this work
+    // for non-HTML, need to keep checking for elements.
+    return NS_OK;
+  }
+
+  if (startContent->IsHTMLElement(nsGkAtoms::tr)) {
+    *aTableSelectionType = TableSelection::Cell;
+  } else  // check to see if we are selecting a table or row (column and all
+          // cells not done yet)
+  {
+    if (child->IsHTMLElement(nsGkAtoms::table))
+      *aTableSelectionType = TableSelection::Table;
+    else if (child->IsHTMLElement(nsGkAtoms::tr))
+      *aTableSelectionType = TableSelection::Row;
+  }
+
+  return NS_OK;
+}
+
 nsresult Selection::GetTableCellLocationFromRange(
     nsRange* aRange, TableSelection* aSelectionType, int32_t* aRow,
     int32_t* aCol) {
@@ -491,53 +548,6 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
 
   *aDidAddRange = true;
   return AddRangesForSelectableNodes(aRange, aOutIndex);
-}
-
-// TODO: Figure out TableSelection::Column and TableSelection::AllCells
-nsresult Selection::GetTableSelectionType(nsRange* aRange,
-                                          TableSelection* aTableSelectionType) {
-  if (!aRange || !aTableSelectionType) return NS_ERROR_NULL_POINTER;
-
-  *aTableSelectionType = TableSelection::None;
-
-  // Must have access to frame selection to get cell info
-  if (!mFrameSelection) return NS_OK;
-
-  nsINode* startNode = aRange->GetStartContainer();
-  if (!startNode) return NS_ERROR_FAILURE;
-
-  nsINode* endNode = aRange->GetEndContainer();
-  if (!endNode) return NS_ERROR_FAILURE;
-
-  // Not a single selected node
-  if (startNode != endNode) return NS_OK;
-
-  nsIContent* child = aRange->GetChildAtStartOffset();
-
-  // Not a single selected node
-  if (!child || child->GetNextSibling() != aRange->GetChildAtEndOffset()) {
-    return NS_OK;
-  }
-
-  nsIContent* startContent = static_cast<nsIContent*>(startNode);
-  if (!(startNode->IsElement() && startContent->IsHTMLElement())) {
-    // Implies a check for being an element; if we ever make this work
-    // for non-HTML, need to keep checking for elements.
-    return NS_OK;
-  }
-
-  if (startContent->IsHTMLElement(nsGkAtoms::tr)) {
-    *aTableSelectionType = TableSelection::Cell;
-  } else  // check to see if we are selecting a table or row (column and all
-          // cells not done yet)
-  {
-    if (child->IsHTMLElement(nsGkAtoms::table))
-      *aTableSelectionType = TableSelection::Table;
-    else if (child->IsHTMLElement(nsGkAtoms::tr))
-      *aTableSelectionType = TableSelection::Row;
-  }
-
-  return NS_OK;
 }
 
 Selection::Selection()
