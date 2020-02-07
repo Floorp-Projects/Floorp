@@ -36,6 +36,8 @@ newtab-unit-tests:
 debugger-tests:
     description: devtools debugger unit tests and flow type checks
     platform: linux64/opt
+    attributes:
+        code-review: true
     treeherder:
         symbol: node(debugger)
         kind: test
