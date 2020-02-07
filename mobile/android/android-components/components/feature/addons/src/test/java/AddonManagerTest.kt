@@ -211,7 +211,7 @@ class AddonManagerTest {
         // Verifying we updated the extension in the store
         verify(store, times(2)).dispatch(actionCaptor.capture())
         assertEquals(
-            WebExtensionState(updatedExt.id, updatedExt.url),
+            WebExtensionState(updatedExt.id, updatedExt.url, updatedExt.getMetadata()?.name, updatedExt.isEnabled()),
             actionCaptor.allValues.last().updatedExtension
         )
 
