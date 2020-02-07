@@ -14,7 +14,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.quicksettings_website_info.view.*
-import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
 /**
@@ -63,6 +62,6 @@ class WebsiteInfoView(
         val icon = AppCompatResources.getDrawable(view.context, iconRes)
         icon?.setTint(ContextCompat.getColor(view.context, iconTintRes))
         view.securityInfo.setText(securityInfoRes)
-        view.securityInfo.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)
+        view.securityInfoIcon.setImageResource(iconRes)
     }
 }

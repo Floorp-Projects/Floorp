@@ -297,7 +297,6 @@
     <style name="QuickSettingsSmallText">
         <item name="android:textColor">@color/photonGrey60</item>
         <item name="android:textSize">12sp</item>
-        <item name="android:paddingStart">48dp</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:gravity">top</item>
         <item name="android:layout_alignParentStart">true</item>

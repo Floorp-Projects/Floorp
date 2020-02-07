@@ -29,27 +29,44 @@
         android:paddingTop="8dp"
         tools:text="https://wikipedia.org" />
 
-    <TextView
-        android:id="@+id/securityInfo"
-        style="@style/QuickSettingsText.Icon"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/quicksettings_item_height"
-        android:paddingTop="8dp"
-        tools:drawableStart="@drawable/mozac_ic_lock"
-        tools:drawableTint="@color/photonGreen50"
-        tools:text="Secure connection" />
-
-    <TextView
-        android:id="@+id/certificateInfo"
-        style="@style/QuickSettingsSmallText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:paddingTop="0dp"
-        android:paddingBottom="2dp"
-        tools:text="Verified By:" />
+        android:orientation="horizontal"
+        style="@style/QuickSettingsText"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+        <ImageView
+            android:id="@+id/securityInfoIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
+            android:src="@drawable/mozac_ic_lock"
+            android:tint="@color/photonGreen50"
+            android:paddingEnd="8dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/securityInfo"
+                style="@style/QuickSettingsText"
+                android:layout_width="match_parent"
+                android:paddingStart="0dp"
+                android:layout_height="wrap_content"
+                tools:text="Secure connection" />
 
-
+            <TextView
+                android:id="@+id/certificateInfo"
+                style="@style/QuickSettingsSmallText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:paddingTop="0dp"
+                android:paddingBottom="2dp"
+                tools:text="Verified By: E-Corp" />
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>
