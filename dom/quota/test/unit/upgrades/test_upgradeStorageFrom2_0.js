@@ -16,27 +16,38 @@ function* testSteps() {
   ];
   const paddingFilePath = "cache/.padding";
 
+  const packages = [
+    // Storage used by FF 55-56 (storage version 2.0).
+    // The profile contains two cache storages:
+    // - storage/default/chrome/cache,
+    // - storage/default/http+++www.mozilla.org/cache
+    // The file create_cache.js in the package was run locally, specifically it
+    // was temporarily added to xpcshell.ini and then executed:
+    //   mach xpcshell-test --interactive dom/quota/test/unit/create_cache.js
+    // Note: it only creates the directory "storage/default/chrome/cache".
+    // To make it become the profile in the test, two more manual steps are
+    // needed.
+    // 1. Remove the folder "storage/temporary".
+    // 2. Copy the content under the "storage/default/chrome" to
+    //    "storage/default/http+++www.mozilla.org".
+    // 3. Manually create an asmjs folder under the
+    //    "storage/default/http+++www.mozilla.org/".
+    "version2_0_profile",
+    "../defaultStorageDirectory_shared",
+  ];
+
   info("Clearing");
 
   clear(continueToNextStepSync);
   yield undefined;
 
-  // Storage used by FF 55-56 (storage version 2.0).
-  // The profile contains two cache storages:
-  // - storage/default/chrome/cache,
-  // - storage/default/http+++www.mozilla.org/cache
-  // The file create_cache.js in the package was run locally, specifically it
-  // was temporarily added to xpcshell.ini and then executed:
-  //   mach xpcshell-test --interactive dom/quota/test/unit/create_cache.js
-  // Note: it only creates the directory "storage/default/chrome/cache".
-  // To make it become the profile in the test, two more manual steps are
-  // needed.
-  // 1. Remove the folder "storage/temporary".
-  // 2. Copy the content under the "storage/default/chrome" to
-  //    "storage/default/http+++www.mozilla.org".
-  // 3. Manually create an asmjs folder under the
-  //    "storage/default/http+++www.mozilla.org/".
-  installPackage("version2_0_profile");
+  info("Installing packages");
+
+  installPackages(packages);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInstall");
 
   info("Checking padding files before upgrade (storage version 2.0)");
 
@@ -53,6 +64,10 @@ function* testSteps() {
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInit");
 
   info("Checking padding files after upgrade");
 

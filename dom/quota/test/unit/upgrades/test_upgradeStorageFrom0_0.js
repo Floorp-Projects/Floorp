@@ -33,14 +33,25 @@ function* testSteps() {
   const metadataFileName = ".metadata";
   const metadata2FileName = ".metadata-v2";
 
+  const packages = [
+    // Storage used by FF 36-48 (storage/default/ directory, but no
+    // storage.sqlite and no .metadata-v2 files).
+    "version0_0_profile",
+    "../defaultStorageDirectory_shared",
+  ];
+
   info("Clearing");
 
   clear(continueToNextStepSync);
   yield undefined;
 
-  // Storage used by FF 36-48 (storage/default/ directory, but no
-  // storage.sqlite and no .metadata-v2 files).
-  installPackage("version0_0_profile");
+  info("Installing packages");
+
+  installPackages(packages);
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInstall");
 
   info("Checking storage file");
 
@@ -76,6 +87,15 @@ function* testSteps() {
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
+
+  info("Verifying storage");
+
+  verifyStorage(packages, "afterInit");
+
+  // TODO: Remove this block once temporary storage initialization is able to
+  //       ignore unknown directories.
+  getRelativeFile("storage/default/invalid+++example.com").remove(false);
+  getRelativeFile("storage/temporary/invalid+++example.com").remove(false);
 
   exists = storageFile.exists();
   ok(exists, "Storage file does exist");
