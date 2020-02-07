@@ -2272,7 +2272,7 @@ void EventStateManager::DoScrollZoom(nsIFrame* aTargetFrame,
 static nsIFrame* GetParentFrameToScroll(nsIFrame* aFrame) {
   if (!aFrame) return nullptr;
 
-  if (aFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
+  if (aFrame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
       nsLayoutUtils::IsReallyFixedPos(aFrame))
     return aFrame->PresContext()->GetPresShell()->GetRootScrollFrame();
 

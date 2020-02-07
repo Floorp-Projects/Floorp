@@ -432,11 +432,13 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_MATHML_DISPLAYSTYLE_BLOCK 1
 
 // See nsStyleDisplay.mPosition
-#define NS_STYLE_POSITION_STATIC 0
-#define NS_STYLE_POSITION_RELATIVE 1
-#define NS_STYLE_POSITION_ABSOLUTE 2
-#define NS_STYLE_POSITION_FIXED 3
-#define NS_STYLE_POSITION_STICKY 4
+enum class StylePositionProperty : uint8_t {
+  Static,
+  Relative,
+  Absolute,
+  Fixed,
+  Sticky,
+};
 
 // See nsStyleEffects.mClip, mClipFlags
 #define NS_STYLE_CLIP_AUTO 0x00
@@ -623,8 +625,8 @@ enum class StyleTableLayout : uint8_t {
 };
 
 enum class StyleEmptyCells : uint8_t {
-    Hide,
-    Show,
+  Hide,
+  Show,
 };
 
 // Constants for the caption-side property. Note that despite having "physical"

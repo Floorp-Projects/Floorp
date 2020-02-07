@@ -939,7 +939,7 @@ bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
     case eCSSProperty_bottom:
     case eCSSProperty_left:
       // Doing better than this is actually hard.
-      return style->StyleDisplay()->mPosition != NS_STYLE_POSITION_STATIC;
+      return style->StyleDisplay()->mPosition != StylePositionProperty::Static;
     case eCSSProperty_padding_top:
     case eCSSProperty_padding_right:
     case eCSSProperty_padding_bottom:
@@ -1983,25 +1983,25 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetOffsetWidthFor(
     mozilla::Side aSide) {
   const nsStyleDisplay* display = StyleDisplay();
 
-  uint8_t position = display->mPosition;
+  mozilla::StylePositionProperty position = display->mPosition;
   if (!mOuterFrame) {
     // GetNonStaticPositionOffset or GetAbsoluteOffset don't handle elements
     // without frames in any sensible way. GetStaticOffset, however, is perfect
     // for that case.
-    position = NS_STYLE_POSITION_STATIC;
+    position = StylePositionProperty::Static;
   }
 
   switch (position) {
-    case NS_STYLE_POSITION_STATIC:
+    case StylePositionProperty::Static:
       return GetStaticOffset(aSide);
-    case NS_STYLE_POSITION_STICKY:
+    case StylePositionProperty::Sticky:
       return GetNonStaticPositionOffset(
           aSide, false, &nsComputedDOMStyle::GetScrollFrameContentWidth,
           &nsComputedDOMStyle::GetScrollFrameContentHeight);
-    case NS_STYLE_POSITION_ABSOLUTE:
-    case NS_STYLE_POSITION_FIXED:
+    case StylePositionProperty::Absolute:
+    case StylePositionProperty::Fixed:
       return GetAbsoluteOffset(aSide);
-    case NS_STYLE_POSITION_RELATIVE:
+    case StylePositionProperty::Relative:
       return GetNonStaticPositionOffset(
           aSide, true, &nsComputedDOMStyle::GetCBContentWidth,
           &nsComputedDOMStyle::GetCBContentHeight);

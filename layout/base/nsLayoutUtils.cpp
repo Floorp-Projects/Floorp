@@ -2018,7 +2018,7 @@ bool nsLayoutUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame) {
   // their pages!
   nsIFrame* parent = aFrame->GetParent();
   if (!parent || parent->GetParent() ||
-      aFrame->StyleDisplay()->mPosition != NS_STYLE_POSITION_FIXED) {
+      aFrame->StyleDisplay()->mPosition != StylePositionProperty::Fixed) {
     return false;
   }
   return ViewportHasDisplayPort(aFrame->PresContext());
@@ -2076,7 +2076,7 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame,
       }
     }
     if ((aFlags & SCROLLABLE_FIXEDPOS_FINDS_ROOT) &&
-        f->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
+        f->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
         nsLayoutUtils::IsReallyFixedPos(f)) {
       return f->PresShell()->GetRootScrollFrameAsScrollable();
     }
@@ -7467,7 +7467,7 @@ nsDeviceContext* nsLayoutUtils::GetDeviceContextForScreenInfo(
 
 /* static */
 bool nsLayoutUtils::IsReallyFixedPos(const nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED,
+  MOZ_ASSERT(aFrame->StyleDisplay()->mPosition == StylePositionProperty::Fixed,
              "IsReallyFixedPos called on non-'position:fixed' frame");
   return MayBeReallyFixedPos(aFrame);
 }

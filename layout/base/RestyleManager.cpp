@@ -681,7 +681,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
 
   const nsStyleDisplay* display = aFrame->StyleDisplay();
   // Changes to the offsets of a non-positioned element can safely be ignored.
-  if (display->mPosition == NS_STYLE_POSITION_STATIC) {
+  if (display->mPosition == StylePositionProperty::Static) {
     return true;
   }
 
@@ -721,7 +721,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
       return false;
     }
     // Move the frame
-    if (display->mPosition == NS_STYLE_POSITION_STICKY) {
+    if (display->mPosition == StylePositionProperty::Sticky) {
       // Update sticky positioning for an entire element at once, starting with
       // the first continuation or ib-split sibling.
       // It's rare that the frame we already have isn't already the first
@@ -739,7 +739,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
         ssc->PositionContinuations(firstContinuation);
       }
     } else {
-      MOZ_ASSERT(NS_STYLE_POSITION_RELATIVE == display->mPosition,
+      MOZ_ASSERT(StylePositionProperty::Relative == display->mPosition,
                  "Unexpected type of positioning");
       for (nsIFrame* cont = aFrame; cont;
            cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
@@ -936,7 +936,7 @@ static bool ContainingBlockChangeAffectsDescendants(
           const bool isContainingBlock =
               aIsFixedPosContainingBlock ||
               (aIsAbsPosContainingBlock &&
-               display->mPosition == NS_STYLE_POSITION_ABSOLUTE);
+               display->mPosition == StylePositionProperty::Absolute);
           // NOTE(emilio): aPossiblyChangingContainingBlock is guaranteed to be
           // a first continuation, see the assertion in the caller.
           nsIFrame* parent = outOfFlow->GetParent()->FirstContinuation();

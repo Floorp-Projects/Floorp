@@ -174,7 +174,7 @@ void AccessibleCaret::EnsureApzAware() {
 bool AccessibleCaret::IsInPositionFixedSubtree() const {
   for (nsIFrame* f = mImaginaryCaretReferenceFrame.GetFrame(); f;
        f = f->GetParent()) {
-    if (f->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
+    if (f->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
         nsLayoutUtils::IsReallyFixedPos(f)) {
       return true;
     }

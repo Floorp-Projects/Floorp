@@ -2673,7 +2673,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOriginalDisplay(StyleDisplay::Inline),
       mContain(StyleContain::NONE),
       mAppearance(StyleAppearance::None),
-      mPosition(NS_STYLE_POSITION_STATIC),
+      mPosition(StylePositionProperty::Static),
       mFloat(StyleFloat::None),
       mBreakType(StyleClear::None),
       mBreakInside(StyleBreakWithin::Auto),

@@ -968,21 +968,21 @@ nsContainerFrame* nsFrameConstructorState::GetGeometricParent(
                "-moz-top-layer should be either none or top");
     MOZ_ASSERT(aStyleDisplay.IsAbsolutelyPositionedStyle(),
                "Top layer items should always be absolutely positioned");
-    if (aStyleDisplay.mPosition == NS_STYLE_POSITION_FIXED) {
+    if (aStyleDisplay.mPosition == StylePositionProperty::Fixed) {
       MOZ_ASSERT(mTopLayerFixedList.containingBlock, "No root frame?");
       return mTopLayerFixedList.containingBlock;
     }
-    MOZ_ASSERT(aStyleDisplay.mPosition == NS_STYLE_POSITION_ABSOLUTE);
+    MOZ_ASSERT(aStyleDisplay.mPosition == StylePositionProperty::Absolute);
     MOZ_ASSERT(mTopLayerAbsoluteList.containingBlock);
     return mTopLayerAbsoluteList.containingBlock;
   }
 
-  if (aStyleDisplay.mPosition == NS_STYLE_POSITION_ABSOLUTE &&
+  if (aStyleDisplay.mPosition == StylePositionProperty::Absolute &&
       mAbsoluteList.containingBlock) {
     return mAbsoluteList.containingBlock;
   }
 
-  if (aStyleDisplay.mPosition == NS_STYLE_POSITION_FIXED &&
+  if (aStyleDisplay.mPosition == StylePositionProperty::Fixed &&
       GetFixedList().containingBlock) {
     return GetFixedList().containingBlock;
   }
@@ -1045,18 +1045,18 @@ AbsoluteFrameList* nsFrameConstructorState::GetOutOfFlowFrameList(
     const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
     if (disp->mTopLayer != StyleTopLayer::None) {
       *aPlaceholderType = PLACEHOLDER_FOR_TOPLAYER;
-      if (disp->mPosition == NS_STYLE_POSITION_FIXED) {
+      if (disp->mPosition == StylePositionProperty::Fixed) {
         *aPlaceholderType |= PLACEHOLDER_FOR_FIXEDPOS;
         return &mTopLayerFixedList;
       }
       *aPlaceholderType |= PLACEHOLDER_FOR_ABSPOS;
       return &mTopLayerAbsoluteList;
     }
-    if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
+    if (disp->mPosition == StylePositionProperty::Absolute) {
       *aPlaceholderType = PLACEHOLDER_FOR_ABSPOS;
       return &mAbsoluteList;
     }
-    if (disp->mPosition == NS_STYLE_POSITION_FIXED) {
+    if (disp->mPosition == StylePositionProperty::Fixed) {
       *aPlaceholderType = PLACEHOLDER_FOR_FIXEDPOS;
       return &GetFixedList();
     }
