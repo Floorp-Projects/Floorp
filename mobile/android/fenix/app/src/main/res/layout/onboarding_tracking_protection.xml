@@ -42,6 +42,16 @@
         app:layout_constraintTop_toBottomOf="@id/header_text"
         tools:text="@string/onboarding_tracking_protection_description1" />
 
+    <View
+        android:id="@+id/clickable_region_standard"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:foreground="@drawable/rounded_ripple"
+        app:layout_constraintBottom_toBottomOf="@id/protection_standard_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tracking_protection_standard_option" />
+
     <org.mozilla.fenix.onboarding.OnboardingRadioButton
         android:id="@+id/tracking_protection_standard_option"
         android:layout_width="wrap_content"
@@ -75,6 +85,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/protection_standard_title"
         app:layout_constraintTop_toBottomOf="@id/protection_standard_title" />
+
+    <View
+        android:id="@+id/clickable_region_strict"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:foreground="@drawable/rounded_ripple"
+        app:layout_constraintBottom_toBottomOf="@id/protection_strict_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tracking_protection_strict_default" />
 
     <org.mozilla.fenix.onboarding.OnboardingRadioButton
         android:id="@+id/tracking_protection_strict_default"
@@ -112,5 +132,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/protection_strict_title"
         app:layout_constraintTop_toBottomOf="@id/protection_strict_title" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
