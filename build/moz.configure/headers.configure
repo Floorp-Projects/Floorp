@@ -27,6 +27,7 @@ check_headers(
     'unistd.h',
     'nl_types.h',
     'cpuid.h',
+    'fts.h',
 )
 
 # These are all the places some variant of statfs can be hiding.

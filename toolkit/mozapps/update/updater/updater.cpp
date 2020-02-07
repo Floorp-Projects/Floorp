@@ -3943,86 +3943,115 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
   return rv;
 }
 
-#elif defined(SOLARIS)
+#elif defined(HAVE_FTS_H)
   int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
     int rv = OK;
-    NS_tchar foundpath[MAXPATHLEN];
-    struct {
-      dirent dent_buffer;
-      char chars[MAXNAMLEN];
-    } ent_buf;
-    struct dirent* ent;
+    FTS* ftsdir;
+    FTSENT* ftsdirEntry;
     mozilla::UniquePtr<NS_tchar[]> searchpath(get_full_path(dirpath));
 
-    DIR* dir = opendir(searchpath.get());
-    if (!dir) {
-      LOG(("add_dir_entries error on opendir: " LOG_S ", err: %d",
-           searchpath.get(), errno));
+    // Remove the trailing slash so the paths don't contain double slashes. The
+    // existence of the slash has already been checked in DoUpdate.
+    searchpath[NS_tstrlen(searchpath.get()) - 1] = NS_T('\0');
+    char* const pathargv[] = {searchpath.get(), nullptr};
+
+    // FTS_NOCHDIR is used so relative paths from the destination directory are
+    // returned.
+    if (!(ftsdir = fts_open(pathargv,
+                            FTS_PHYSICAL | FTS_NOSTAT | FTS_XDEV | FTS_NOCHDIR,
+                            nullptr))) {
       return UNEXPECTED_FILE_OPERATION_ERROR;
     }
 
-    while (readdir_r(dir, (dirent*)&ent_buf, &ent) == 0 && ent) {
-      if ((strcmp(ent->d_name, ".") == 0) || (strcmp(ent->d_name, "..") == 0)) {
-        continue;
-      }
+    while ((ftsdirEntry = fts_read(ftsdir)) != nullptr) {
+      NS_tchar foundpath[MAXPATHLEN];
+      NS_tchar* quotedpath = nullptr;
+      mozilla::UniquePtr<Action> action;
 
-      NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
-                   NS_T("%s%s"), searchpath.get(), ent->d_name);
-      struct stat64 st_buf;
-      int test = stat64(foundpath, &st_buf);
-      if (test) {
-        closedir(dir);
-        return UNEXPECTED_FILE_OPERATION_ERROR;
-      }
-      if (S_ISDIR(st_buf.st_mode)) {
-        NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
-                     NS_T("%s/"), foundpath);
-        // Recurse into the directory.
-        rv = add_dir_entries(foundpath, list);
-        if (rv) {
-          LOG(("add_dir_entries error: " LOG_S ", err: %d", foundpath, rv));
-          closedir(dir);
-          return rv;
-        }
-      } else {
-        // Add the file to be removed to the ActionList.
-        NS_tchar* quotedpath = get_quoted_path(get_relative_path(foundpath));
-        if (!quotedpath) {
-          closedir(dir);
-          return PARSE_ERROR;
-        }
+      switch (ftsdirEntry->fts_info) {
+        // Filesystem objects that shouldn't be in the application's directories
+        case FTS_SL:
+        case FTS_SLNONE:
+        case FTS_DEFAULT:
+          LOG(("add_dir_entries: found a non-standard file: " LOG_S,
+               ftsdirEntry->fts_path));
+          // Fall through and try to remove as a file
+          [[fallthrough]];
 
-        mozilla::UniquePtr<Action> action(new RemoveFile());
-        rv = action->Parse(quotedpath);
-        if (rv) {
-          LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d",
-               quotedpath, rv));
+        // Files
+        case FTS_F:
+        case FTS_NSOK:
+          // Add the file to be removed to the ActionList.
+          NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
+                       NS_T("%s"), ftsdirEntry->fts_accpath);
+          quotedpath = get_quoted_path(get_relative_path(foundpath));
+          if (!quotedpath) {
+            rv = UPDATER_QUOTED_PATH_MEM_ERROR;
+            break;
+          }
+          action.reset(new RemoveFile());
+          rv = action->Parse(quotedpath);
           free(quotedpath);
-          closedir(dir);
-          return rv;
-        }
-        free(quotedpath);
+          if (!rv) {
+            list->Append(action.release());
+          }
+          break;
 
-        list->Append(action.release());
+        // Directories
+        case FTS_DP:
+          // Add the directory to be removed to the ActionList.
+          NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
+                       NS_T("%s/"), ftsdirEntry->fts_accpath);
+          quotedpath = get_quoted_path(get_relative_path(foundpath));
+          if (!quotedpath) {
+            rv = UPDATER_QUOTED_PATH_MEM_ERROR;
+            break;
+          }
+
+          action.reset(new RemoveDir());
+          rv = action->Parse(quotedpath);
+          free(quotedpath);
+          if (!rv) {
+            list->Append(action.release());
+          }
+          break;
+
+        // Errors
+        case FTS_DNR:
+        case FTS_NS:
+          // ENOENT is an acceptable error for FTS_DNR and FTS_NS and means that
+          // we're racing with ourselves. Though strange, the entry will be
+          // removed anyway.
+          if (ENOENT == ftsdirEntry->fts_errno) {
+            rv = OK;
+            break;
+          }
+          [[fallthrough]];
+
+        case FTS_ERR:
+          rv = UNEXPECTED_FILE_OPERATION_ERROR;
+          LOG(("add_dir_entries: fts_read() error: " LOG_S ", err: %d",
+               ftsdirEntry->fts_path, ftsdirEntry->fts_errno));
+          break;
+
+        case FTS_DC:
+          rv = UNEXPECTED_FILE_OPERATION_ERROR;
+          LOG(("add_dir_entries: fts_read() returned FT_DC: " LOG_S,
+               ftsdirEntry->fts_path));
+          break;
+
+        default:
+          // FTS_D is ignored and FTS_DP is used instead (post-order).
+          rv = OK;
+          break;
+      }
+
+      if (rv != OK) {
+        break;
       }
     }
-    closedir(dir);
 
-    // Add the directory to be removed to the ActionList.
-    NS_tchar* quotedpath = get_quoted_path(get_relative_path(dirpath));
-    if (!quotedpath) {
-      return PARSE_ERROR;
-    }
-
-    mozilla::UniquePtr<Action> action(new RemoveDir());
-    rv = action->Parse(quotedpath);
-    if (rv) {
-      LOG(("add_dir_entries Parse error on close: " LOG_S ", err: %d",
-           quotedpath, rv));
-    } else {
-      list->Append(action.release());
-    }
-    free(quotedpath);
+    fts_close(ftsdir);
 
     return rv;
   }
@@ -4031,115 +4060,87 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
 
 int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
   int rv = OK;
-  FTS* ftsdir;
-  FTSENT* ftsdirEntry;
+  NS_tchar foundpath[MAXPATHLEN];
+  struct {
+    dirent dent_buffer;
+    char chars[MAXNAMLEN];
+  } ent_buf;
+  struct dirent* ent;
   mozilla::UniquePtr<NS_tchar[]> searchpath(get_full_path(dirpath));
 
-  // Remove the trailing slash so the paths don't contain double slashes. The
-  // existence of the slash has already been checked in DoUpdate.
-  searchpath[NS_tstrlen(searchpath.get()) - 1] = NS_T('\0');
-  char* const pathargv[] = {searchpath.get(), nullptr};
-
-  // FTS_NOCHDIR is used so relative paths from the destination directory are
-  // returned.
-  if (!(ftsdir = fts_open(pathargv,
-                          FTS_PHYSICAL | FTS_NOSTAT | FTS_XDEV | FTS_NOCHDIR,
-                          nullptr))) {
+  DIR* dir = opendir(searchpath.get());
+  if (!dir) {
+    LOG(("add_dir_entries error on opendir: " LOG_S ", err: %d",
+         searchpath.get(), errno));
     return UNEXPECTED_FILE_OPERATION_ERROR;
   }
 
-  while ((ftsdirEntry = fts_read(ftsdir)) != nullptr) {
-    NS_tchar foundpath[MAXPATHLEN];
-    NS_tchar* quotedpath = nullptr;
-    mozilla::UniquePtr<Action> action;
-
-    switch (ftsdirEntry->fts_info) {
-      // Filesystem objects that shouldn't be in the application's directories
-      case FTS_SL:
-      case FTS_SLNONE:
-      case FTS_DEFAULT:
-        LOG(("add_dir_entries: found a non-standard file: " LOG_S,
-             ftsdirEntry->fts_path));
-        // Fall through and try to remove as a file
-        [[fallthrough]];
-
-      // Files
-      case FTS_F:
-      case FTS_NSOK:
-        // Add the file to be removed to the ActionList.
-        NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
-                     NS_T("%s"), ftsdirEntry->fts_accpath);
-        quotedpath = get_quoted_path(get_relative_path(foundpath));
-        if (!quotedpath) {
-          rv = UPDATER_QUOTED_PATH_MEM_ERROR;
-          break;
-        }
-        action.reset(new RemoveFile());
-        rv = action->Parse(quotedpath);
-        free(quotedpath);
-        if (!rv) {
-          list->Append(action.release());
-        }
-        break;
-
-      // Directories
-      case FTS_DP:
-        // Add the directory to be removed to the ActionList.
-        NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
-                     NS_T("%s/"), ftsdirEntry->fts_accpath);
-        quotedpath = get_quoted_path(get_relative_path(foundpath));
-        if (!quotedpath) {
-          rv = UPDATER_QUOTED_PATH_MEM_ERROR;
-          break;
-        }
-
-        action.reset(new RemoveDir());
-        rv = action->Parse(quotedpath);
-        free(quotedpath);
-        if (!rv) {
-          list->Append(action.release());
-        }
-        break;
-
-      // Errors
-      case FTS_DNR:
-      case FTS_NS:
-        // ENOENT is an acceptable error for FTS_DNR and FTS_NS and means that
-        // we're racing with ourselves. Though strange, the entry will be
-        // removed anyway.
-        if (ENOENT == ftsdirEntry->fts_errno) {
-          rv = OK;
-          break;
-        }
-        [[fallthrough]];
-
-      case FTS_ERR:
-        rv = UNEXPECTED_FILE_OPERATION_ERROR;
-        LOG(("add_dir_entries: fts_read() error: " LOG_S ", err: %d",
-             ftsdirEntry->fts_path, ftsdirEntry->fts_errno));
-        break;
-
-      case FTS_DC:
-        rv = UNEXPECTED_FILE_OPERATION_ERROR;
-        LOG(("add_dir_entries: fts_read() returned FT_DC: " LOG_S,
-             ftsdirEntry->fts_path));
-        break;
-
-      default:
-        // FTS_D is ignored and FTS_DP is used instead (post-order).
-        rv = OK;
-        break;
+  while (readdir_r(dir, (dirent*)&ent_buf, &ent) == 0 && ent) {
+    if ((strcmp(ent->d_name, ".") == 0) || (strcmp(ent->d_name, "..") == 0)) {
+      continue;
     }
 
-    if (rv != OK) {
-      break;
+    NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
+                 NS_T("%s%s"), searchpath.get(), ent->d_name);
+    struct stat64 st_buf;
+    int test = stat64(foundpath, &st_buf);
+    if (test) {
+      closedir(dir);
+      return UNEXPECTED_FILE_OPERATION_ERROR;
+    }
+    if (S_ISDIR(st_buf.st_mode)) {
+      NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
+                   NS_T("%s%s/"), dirpath, ent->d_name);
+      // Recurse into the directory.
+      rv = add_dir_entries(foundpath, list);
+      if (rv) {
+        LOG(("add_dir_entries error: " LOG_S ", err: %d", foundpath, rv));
+        closedir(dir);
+        return rv;
+      }
+    } else {
+      // Add the file to be removed to the ActionList.
+      NS_tchar* quotedpath = get_quoted_path(get_relative_path(foundpath));
+      if (!quotedpath) {
+        closedir(dir);
+        return PARSE_ERROR;
+      }
+
+      mozilla::UniquePtr<Action> action(new RemoveFile());
+      rv = action->Parse(quotedpath);
+      if (rv) {
+        LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d",
+             quotedpath, rv));
+        free(quotedpath);
+        closedir(dir);
+        return rv;
+      }
+      free(quotedpath);
+
+      list->Append(action.release());
     }
   }
+  closedir(dir);
 
-  fts_close(ftsdir);
+  // Add the directory to be removed to the ActionList.
+  NS_tchar* quotedpath = get_quoted_path(get_relative_path(dirpath));
+  if (!quotedpath) {
+    return PARSE_ERROR;
+  }
+
+  mozilla::UniquePtr<Action> action(new RemoveDir());
+  rv = action->Parse(quotedpath);
+  if (rv) {
+    LOG(("add_dir_entries Parse error on close: " LOG_S ", err: %d", quotedpath,
+         rv));
+  } else {
+    list->Append(action.release());
+  }
+  free(quotedpath);
 
   return rv;
 }
+
 #endif
 
 /*
