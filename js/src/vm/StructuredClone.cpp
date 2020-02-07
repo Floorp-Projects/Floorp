@@ -470,8 +470,6 @@ struct JSStructuredCloneWriter {
                                    const JSStructuredCloneCallbacks* cb,
                                    void* cbClosure, const Value& tVal)
       : out(cx, scope),
-        callbacks(cb),
-        closure(cbClosure),
         objs(out.context()),
         counts(out.context()),
         objectEntries(out.context()),
@@ -528,13 +526,6 @@ struct JSStructuredCloneWriter {
   inline void checkStack();
 
   SCOutput out;
-
-  // The user defined callbacks that will be used to signal cloning, in some
-  // cases.
-  const JSStructuredCloneCallbacks* callbacks;
-
-  // Any value passed to the callbacks.
-  void* closure;
 
   // Vector of objects with properties remaining to be written.
   //
@@ -1304,19 +1295,10 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
 
   intptr_t p = reinterpret_cast<intptr_t>(rawbuf);
   uint32_t byteLength = sharedArrayBuffer->byteLength();
-  if (!(out.writePair(SCTAG_SHARED_ARRAY_BUFFER_OBJECT,
-                      static_cast<uint32_t>(sizeof(p))) &&
-        out.writeBytes(&byteLength, sizeof(byteLength)) &&
-        out.writeBytes(&p, sizeof(p)))) {
-    return false;
-  }
-
-  if (callbacks && callbacks->sabCloned &&
-      !callbacks->sabCloned(context(), /*receiving=*/false, closure)) {
-    return false;
-  }
-
-  return true;
+  return out.writePair(SCTAG_SHARED_ARRAY_BUFFER_OBJECT,
+                       static_cast<uint32_t>(sizeof(p))) &&
+         out.writeBytes(&byteLength, sizeof(byteLength)) &&
+         out.writeBytes(&p, sizeof(p));
 }
 
 bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
@@ -2299,12 +2281,6 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
 
   JSObject* obj = SharedArrayBufferObject::New(context(), rawbuf, byteLength);
   if (!obj) {
-    rawbuf->dropReference();
-    return false;
-  }
-
-  if (callbacks && callbacks->sabCloned &&
-      !callbacks->sabCloned(context(), /*receiving=*/true, closure)) {
     rawbuf->dropReference();
     return false;
   }
