@@ -501,8 +501,15 @@ class ProviderInterventions extends UrlbarProvider {
     }
 
     // The update tips depend on the app's update status, so check for updates
-    // now (if we haven't already checked within the update-check period).
-    this.checkForBrowserUpdate();
+    // now (if we haven't already checked within the update-check period).  If
+    // we're running in an xpcshell test, then checkForBrowserUpdate's attempt
+    // to use appUpdater will throw an exception because it won't be available.
+    // In that case, return false to disable the provider.
+    try {
+      this.checkForBrowserUpdate();
+    } catch (ex) {
+      return false;
+    }
 
     // Determine the tip to show, if any. If there are multiple top-score docs,
     // prefer them in the following order.
