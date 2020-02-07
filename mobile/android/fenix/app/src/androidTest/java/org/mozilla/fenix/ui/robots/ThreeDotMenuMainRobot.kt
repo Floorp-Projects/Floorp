@@ -8,6 +8,7 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasFocus
@@ -43,6 +44,8 @@ class ThreeDotMenuMainRobot {
     fun verifyRefreshButton() = assertRefreshButton()
     fun verifyCloseAllTabsButton() = assertCloseAllTabsButton()
     fun verifyShareButton() = assertShareButton()
+    fun verifyReaderViewToggle(visible: Boolean) = assertReaderViewToggle(visible)
+    fun verifyReaderViewAppearance(visible: Boolean) = assertReaderViewAppearanceButton(visible)
     fun clickShareButton() {
         shareButton().click()
         mDevice.waitNotNull(Until.findObject(By.text("SHARE A LINK")), waitingTime)
@@ -191,6 +194,20 @@ class ThreeDotMenuMainRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun toggleReaderView(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
+            readerViewToggle().click()
+
+            NavigationToolbarRobot().interact()
+            return NavigationToolbarRobot.Transition()
+        }
+
+        fun openReaderViewAppearance(interact: ReaderViewRobot.() -> Unit): ReaderViewRobot.Transition {
+            readerViewAppearanceToggle().click()
+
+            ReaderViewRobot().interact()
+            return ReaderViewRobot.Transition()
+        }
     }
 }
 
@@ -286,3 +303,14 @@ private fun whatsNewButton() = onView(
     withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 private fun assertWhatsNewButton() = whatsNewButton()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun readerViewToggle() = onView(allOf(withText(R.string.browser_menu_read)))
+private fun assertReaderViewToggle(visible: Boolean) = readerViewToggle()
+    .check(
+        if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
+    )
+private fun readerViewAppearanceToggle() = onView(allOf(withText(R.string.browser_menu_read_appearance)))
+private fun assertReaderViewAppearanceButton(visible: Boolean) = readerViewAppearanceToggle()
+    .check(
+        if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)) else ViewAssertions.doesNotExist()
+    )

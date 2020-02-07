@@ -6,8 +6,11 @@ package org.mozilla.fenix.helpers
 
 import android.graphics.Bitmap
 import android.view.View
+import android.view.ViewGroup
 import org.hamcrest.CoreMatchers.not
+import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.hamcrest.TypeSafeMatcher
 import org.mozilla.fenix.helpers.matchers.BitmapDrawableMatcher
 import androidx.test.espresso.matcher.ViewMatchers.isChecked as espressoIsChecked
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled as espressoIsEnabled
@@ -34,3 +37,22 @@ private fun maybeInvertMatcher(matcher: Matcher<View>, useUnmodifiedMatcher: Boo
 }
 
 fun withBitmapDrawable(bitmap: Bitmap, name: String): Matcher<View>? = BitmapDrawableMatcher(bitmap, name)
+
+fun nthChildOf(
+    parentMatcher: Matcher<View>,
+    childPosition: Int
+): Matcher<View> {
+    return object : TypeSafeMatcher<View>() {
+        override fun describeTo(description: Description) {
+            description.appendText("Position is $childPosition")
+        }
+
+        public override fun matchesSafely(view: View): Boolean {
+            if (view.parent !is ViewGroup) {
+                return parentMatcher.matches(view.parent)
+            }
+            val group = view.parent as ViewGroup
+            return parentMatcher.matches(view.parent) && group.getChildAt(childPosition) == view
+        }
+    }
+}
