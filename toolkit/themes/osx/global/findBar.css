@@ -25,10 +25,8 @@ label.findbar-find-fast:-moz-lwtheme {
 }
 
 .findbar-closebutton {
-  margin-inline-start: 4px;
-  margin-inline-end: 0;
-  padding-inline-start: 0;
-  padding-inline-end: 8px;
+  margin-inline: 4px 0;
+  padding-inline: 0 8px;
   border: none;
   /* make sure the closebutton is displayed as the first element in the bar: */
   -moz-box-ordinal-group: 0;

@@ -28,9 +28,8 @@ findbar[noanim] {
 }
 
 .findbar-container {
+  padding-block: 4px;
   padding-inline-start: 8px;
-  padding-top: 4px;
-  padding-bottom: 4px;
 }
 
 .findbar-closebutton {
@@ -139,12 +138,14 @@ html|input.findbar-textbox.minimal {
 
 .findbar-highlight,
 .findbar-case-sensitive,
+.findbar-match-diacritics,
 .findbar-entire-word {
   margin-inline-start: 5px;
 }
 
 .findbar-highlight > .toolbarbutton-icon,
 .findbar-case-sensitive > .toolbarbutton-icon,
+.findbar-match-diacritics > .toolbarbutton-icon,
 .findbar-entire-word > .toolbarbutton-icon {
   display: none;
 }
