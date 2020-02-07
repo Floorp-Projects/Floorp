@@ -386,7 +386,7 @@
           win = win.opener;
         }
       }
-      win.open(href);
+      win.open(href, "_blank", "noopener");
     }
   }
 
