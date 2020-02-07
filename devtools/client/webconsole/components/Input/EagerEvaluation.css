@@ -1,0 +1,57 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.eager-evaluation-result {
+  direction: ltr;
+  display: flex;
+  min-height: 16px;
+  overflow-y: hidden;
+  flex-grow: 1;
+  flex-shrink: 0;
+  font-size: 10px;
+  padding-bottom: 2px;
+  padding-inline-end: 2px;
+  background-color: var(--console-input-background);
+}
+
+.eager-evaluation-result > .icon {
+  background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
+  color: var(--theme-icon-extreme-dimmed-color);
+  margin: -1px 8px 0 10px;
+}
+
+/* Colors override */
+.theme-light .eager-evaluation-result{
+  --object-color: var(--grey-50);
+  --location-color: var(--grey-43);
+  --null-color: var(--grey-43);
+}
+
+.theme-dark .eager-evaluation-result{
+  --object-color: var(--grey-43);
+  --location-color: #787878;
+  --null-color: #787878;
+}
+
+.eager-evaluation-result .objectBox-function .param {
+  color: var(--null-color);
+}
+
+/* Object property label */
+.eager-evaluation-result .nodeName {
+  color: var(--object-color);
+}
+
+/* Style the reps result */
+.eager-evaluation-result > :last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre !important;
+}
+
+/* Editor mode specifics */
+.jsterm-editor .eager-evaluation-result > .icon {
+  margin-block: 0;
+  align-self: unset;
+}
