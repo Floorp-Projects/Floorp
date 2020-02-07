@@ -617,6 +617,16 @@ static void ReportDataCloneError(JSContext* cx,
                                 JSMSG_SC_SHMEM_TRANSFERABLE);
       break;
 
+    case JS_SCERR_TYPED_ARRAY_DETACHED:
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TYPED_ARRAY_DETACHED);
+      break;
+
+    case JS_SCERR_WASM_NO_TRANSFER:
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_WASM_NO_TRANSFER);
+      break;
+
     default:
       MOZ_CRASH("Unkown errorId");
       break;
@@ -1866,14 +1876,12 @@ bool JSStructuredCloneWriter::transferOwnership() {
       JSAutoRealm ar(cx, arrayBuffer);
 
       if (arrayBuffer->isDetached()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_TYPED_ARRAY_DETACHED);
+        reportDataCloneError(JS_SCERR_TYPED_ARRAY_DETACHED);
         return false;
       }
 
       if (arrayBuffer->isPreparedForAsmJS()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_WASM_NO_TRANSFER);
+        reportDataCloneError(JS_SCERR_WASM_NO_TRANSFER);
         return false;
       }
 
