@@ -3,6 +3,10 @@ const INITIAL_URL = `about:blank`;
 const FORM_URL = `https://example.org${TEST_URL_PATH}form_basic.html`;
 const FORMLESS_URL = `https://example.org${TEST_URL_PATH}formless_basic.html`;
 const testUrls = [FORM_URL, FORMLESS_URL];
+const BRAND_BUNDLE = Services.strings.createBundle(
+  "chrome://branding/locale/brand.properties"
+);
+const BRAND_FULL_NAME = BRAND_BUNDLE.GetStringFromName("brandFullName");
 
 async function getDocumentVisibilityState(browser) {
   let visibility = await SpecialPowers.spawn(browser, [], async function() {
@@ -15,7 +19,8 @@ async function getDocumentVisibilityState(browser) {
 function observeMasterPasswordDialog(window, result) {
   let closedPromise;
   function topicObserver(subject) {
-    if (subject.Dialog.args.title == "Password Required") {
+    let expected = "Password Required - " + BRAND_FULL_NAME;
+    if (subject.Dialog.args.title == expected) {
       result.wasShown = true;
       subject.Dialog.ui.button1.click();
       closedPromise = BrowserTestUtils.waitForEvent(

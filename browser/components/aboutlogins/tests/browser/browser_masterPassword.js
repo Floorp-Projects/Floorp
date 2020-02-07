@@ -2,6 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
+const BRAND_BUNDLE = Services.strings.createBundle(
+  "chrome://branding/locale/brand.properties"
+);
+const BRAND_FULL_NAME = BRAND_BUNDLE.GetStringFromName("brandFullName");
 
 /**
  * Waits for the master password prompt and performs an action.
@@ -12,11 +16,8 @@ function waitForMPDialog(action) {
   let dialogShown = TestUtils.topicObserved("common-dialog-loaded");
   return dialogShown.then(function([subject]) {
     let dialog = subject.Dialog;
-    is(
-      dialog.args.title,
-      "Password Required",
-      "Dialog is the Master Password dialog"
-    );
+    let expected = "Password Required - " + BRAND_FULL_NAME;
+    is(dialog.args.title, expected, "Dialog is the Master Password dialog");
     if (action == "authenticate") {
       SpecialPowers.wrap(dialog.ui.password1Textbox).setUserInput(
         LoginTestUtils.masterPassword.masterPassword
