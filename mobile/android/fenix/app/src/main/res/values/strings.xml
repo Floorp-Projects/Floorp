@@ -658,6 +658,10 @@
     <string name="share_link_subheader">Share a link</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Send to device</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">All actions</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Recently used</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sign in to Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
