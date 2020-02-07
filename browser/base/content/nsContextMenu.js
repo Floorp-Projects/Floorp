@@ -984,12 +984,10 @@ class nsContextMenu {
       let insertBeforeElement = document.getElementById("fill-login-no-logins");
       popup.insertBefore(fragment, insertBeforeElement);
     } finally {
+      this.showItem("fill-login-separator", showFill);
       this.showItem("fill-login", showFill);
       this.showItem("fill-login-generated-password", showGenerate);
-      this.showItem(
-        "fill-login-and-generated-password-separator",
-        showFill || showGenerate
-      );
+      this.showItem("generated-password-separator", showGenerate);
     }
   }
 
