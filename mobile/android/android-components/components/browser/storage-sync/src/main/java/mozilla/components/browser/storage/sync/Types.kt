@@ -5,7 +5,13 @@
 @file:Suppress("MatchingDeclarationName")
 package mozilla.components.browser.storage.sync
 
+import mozilla.appservices.places.BookmarkFolder
+import mozilla.appservices.places.BookmarkItem
+import mozilla.appservices.places.BookmarkSeparator
+import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.SyncAuthInfo
+import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 
@@ -60,4 +66,19 @@ internal fun mozilla.appservices.places.VisitInfo.into(): VisitInfo {
         visitTime = this.visitTime,
         visitType = this.visitType.into()
     )
+}
+
+internal fun BookmarkTreeNode.asBookmarkNode(): BookmarkNode {
+    return when (this) {
+        is BookmarkItem -> {
+            BookmarkNode(BookmarkNodeType.ITEM, this.guid, this.parentGUID, this.position, this.title, this.url, null)
+        }
+        is BookmarkFolder -> {
+            BookmarkNode(BookmarkNodeType.FOLDER, this.guid, this.parentGUID, this.position, this.title, null,
+                this.children?.map(BookmarkTreeNode::asBookmarkNode))
+        }
+        is BookmarkSeparator -> {
+            BookmarkNode(BookmarkNodeType.SEPARATOR, this.guid, this.parentGUID, this.position, null, null, null)
+        }
+    }
 }

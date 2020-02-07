@@ -6,16 +6,11 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import kotlinx.coroutines.withContext
-import mozilla.appservices.places.BookmarkFolder
-import mozilla.appservices.places.BookmarkItem
-import mozilla.appservices.places.BookmarkSeparator
-import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.BookmarkUpdateInfo
 import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.PlacesException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
@@ -40,9 +35,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun getTree(guid: String, recursive: Boolean): BookmarkNode? {
         return withContext(scope.coroutineContext) {
-            reader.getBookmarksTree(guid, recursive)?.let {
-                asBookmarkNode(it)
-            }
+            reader.getBookmarksTree(guid, recursive)?.asBookmarkNode()
         }
     }
 
@@ -54,7 +47,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun getBookmark(guid: String): BookmarkNode? {
         return withContext(scope.coroutineContext) {
-            asBookmarkNode(reader.getBookmark(guid))
+            reader.getBookmark(guid)?.asBookmarkNode()
         }
     }
 
@@ -66,7 +59,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun getBookmarksWithUrl(url: String): List<BookmarkNode> {
         return withContext(scope.coroutineContext) {
-            reader.getBookmarksWithURL(url).mapNotNull(::asBookmarkNode)
+            reader.getBookmarksWithURL(url).map { it.asBookmarkNode() }
         }
     }
 
@@ -79,7 +72,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun searchBookmarks(query: String, limit: Int): List<BookmarkNode> {
         return withContext(scope.coroutineContext) {
-            reader.searchBookmarks(query, limit).mapNotNull(::asBookmarkNode)
+            reader.searchBookmarks(query, limit).map { it.asBookmarkNode() }
         }
     }
 
@@ -156,23 +149,6 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
         writer.deleteBookmarkNode(guid)
     }
 
-    private fun asBookmarkNode(node: BookmarkTreeNode?): BookmarkNode? {
-        return node?.let {
-            when (it) {
-                is BookmarkItem -> {
-                    BookmarkNode(BookmarkNodeType.ITEM, it.guid, it.parentGUID, it.position, it.title, it.url, null)
-                }
-                is BookmarkFolder -> {
-                    BookmarkNode(BookmarkNodeType.FOLDER, it.guid, it.parentGUID, it.position, it.title, null,
-                            it.children?.mapNotNull(::asBookmarkNode))
-                }
-                is BookmarkSeparator -> {
-                    BookmarkNode(BookmarkNodeType.SEPARATOR, it.guid, it.parentGUID, it.position, null, null, null)
-                }
-            }
-        }
-    }
-
     /**
      * Runs syncBookmarks() method on the places Connection
      *
@@ -197,6 +173,16 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
     @Throws(PlacesException::class)
     fun importFromFennec(dbPath: String): JSONObject {
         return places.importBookmarksFromFennec(dbPath)
+    }
+
+    /**
+     * Read pinned sites from Fennec's browser.db file.
+     *
+     * @param dbPath Absolute path to Fennec's browser.db file.
+     * @return A list of [BookmarkNode] which represent pinned sites.
+     */
+    fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
+        return places.readPinnedSitesFromFennec(dbPath)
     }
 
     /**
