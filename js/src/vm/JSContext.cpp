@@ -50,7 +50,7 @@
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"
 #include "util/Windows.h"
-#include "vm/BytecodeUtil.h" // JSDVG_IGNORE_STACK
+#include "vm/BytecodeUtil.h"  // JSDVG_IGNORE_STACK
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
@@ -305,6 +305,12 @@ JS_FRIEND_API void js::ReportOutOfMemory(JSContext* cx) {
   /* Report the oom. */
   if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback) {
     oomCallback(cx, cx->runtime()->oomCallbackData);
+  }
+
+  // If we OOM early in process startup, this may be unavailable so just return
+  // instead of crashing unexpectedly.
+  if (MOZ_UNLIKELY(!cx->runtime()->hasInitializedSelfHosting())) {
+    return;
   }
 
   RootedValue oomMessage(cx, StringValue(cx->names().outOfMemory));
