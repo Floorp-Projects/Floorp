@@ -15,17 +15,25 @@ promise_test(async t => {
   t.add_cleanup(() => pc2.close());
   pc1.addTrack(track, new MediaStream());
   await pc1.setLocalDescription(await pc1.createOffer());
-  await pc2.setRemoteDescription(pc1.localDescription);
-  const signalingStateChangeResolver = new Resolver();
+  const events = [];
   pc2.onsignalingstatechange = t.step_func(e => {
-    const transceiver = pc2.getTransceivers()[0];
-    assert_equals(pc2.signalingState, "stable");
+    const [transceiver] = pc2.getTransceivers();
+    assert_equals(transceiver.currentDirection, null);
+    events.push(pc2.signalingState);
+  });
+  await pc2.setRemoteDescription(pc1.localDescription);
+  assert_equals(events.length, 1, "event fired");
+  assert_equals(events[0], "have-remote-offer");
+
+  pc2.onsignalingstatechange = t.step_func(e => {
+    const [transceiver] = pc2.getTransceivers();
     assert_equals(transceiver.currentDirection, "recvonly");
-    signalingStateChangeResolver.resolve();
+    events.push(pc2.signalingState);
   });
   await pc2.setLocalDescription(await pc2.createAnswer());
-  await signalingStateChangeResolver;
-});
+  assert_equals(events.length, 2, "event fired");
+  assert_equals(events[1], "stable");
+}, 'Negotiation methods fire signalingstatechange events');
 
 promise_test(async t => {
   const pc1 = new RTCPeerConnection();
