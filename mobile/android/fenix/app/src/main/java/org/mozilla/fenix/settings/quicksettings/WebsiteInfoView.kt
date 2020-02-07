@@ -51,7 +51,7 @@ class WebsiteInfoView(
     }
 
     private fun bindCertificateName(cert: String) {
-        val certificateLabel = view.context.getString(R.string.verified_by) + " " + cert
+        val certificateLabel = view.context.getString(R.string.certificate_info_verified_by, cert)
         view.certificateInfo.text = certificateLabel
     }
 
