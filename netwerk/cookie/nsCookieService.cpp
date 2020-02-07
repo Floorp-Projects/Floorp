@@ -2194,7 +2194,8 @@ void nsCookieService::SetCookieStringInternal(
   uint32_t rejectedReason = aRejectedReason;
   nsAutoCString hostFromURI;
   aHostURI->GetHost(hostFromURI);
-  CountCookiesFromHost(hostFromURI, &priorCookieCount);
+  CountCookiesFromHostInternal(hostFromURI, aOriginAttrs.mPrivateBrowsingId,
+                               &priorCookieCount);
   CookieStatus cookieStatus = CheckPrefs(
       cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
       aIsSocialTrackingResource, aFirstPartyStorageAccessGranted, aCookieHeader,
@@ -2990,7 +2991,8 @@ void nsCookieService::GetCookiesForURI(
   // check default prefs
   uint32_t rejectedReason = aRejectedReason;
   uint32_t priorCookieCount = 0;
-  CountCookiesFromHost(hostFromURI, &priorCookieCount);
+  CountCookiesFromHostInternal(hostFromURI, aOriginAttrs.mPrivateBrowsingId,
+                               &priorCookieCount);
   CookieStatus cookieStatus = CheckPrefs(
       cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
       aIsSocialTrackingResource, aFirstPartyStorageAccessGranted, VoidCString(),
@@ -4566,6 +4568,15 @@ void nsCookieService::FindStaleCookies(nsCookieEntry* aEntry,
 NS_IMETHODIMP
 nsCookieService::CountCookiesFromHost(const nsACString& aHost,
                                       uint32_t* aCountFromHost) {
+  return CountCookiesFromHostInternal(aHost, 0, aCountFromHost);
+}
+
+nsresult nsCookieService::CountCookiesFromHostInternal(
+    const nsACString& aHost, uint32_t aPrivateBrowsingId,
+    uint32_t* aCountFromHost) {
+  AutoRestore<DBState*> savePrevDBState(mDBState);
+  mDBState = (aPrivateBrowsingId > 0) ? mPrivateDBState : mDefaultDBState;
+
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
@@ -4582,7 +4593,9 @@ nsCookieService::CountCookiesFromHost(const nsACString& aHost,
   rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCookieKey key(baseDomain, OriginAttributes());
+  OriginAttributes attrs;
+  attrs.mPrivateBrowsingId = aPrivateBrowsingId;
+  nsCookieKey key(baseDomain, attrs);
 
   // Return a count of all cookies, including expired.
   nsCookieEntry* entry = mDBState->hostTable.GetEntry(key);
