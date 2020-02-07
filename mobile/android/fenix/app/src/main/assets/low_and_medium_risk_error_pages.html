@@ -59,10 +59,10 @@ function toggleAdvancedAndScroll() {
     const badCertAdvancedPanel = document.getElementById("badCertAdvancedPanel");
 
     // We know that the button is being displayed
-    if (badCertAdvancedPanel.classList.has("hidden")) {
+    if (badCertAdvancedPanel.style.display === "block") {
         horizontalLine.classList.remove("hidden");
         advancedPanelAcceptButton.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
-    } else if (badCertAdvancedPanel.classList.has("hidden")) {
+    } else {
         horizontalLine.classList.add("hidden");
     }
 }
