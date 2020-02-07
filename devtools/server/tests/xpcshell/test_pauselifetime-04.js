@@ -8,35 +8,26 @@
  * times returns the same actor.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_pause_frame();
-    },
-    { waitForFinish: true }
-  )
-);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evaluateTestCode(debuggee),
+      threadFront
+    );
 
-function test_pause_frame() {
-  gThreadFront.once("paused", function(packet) {
     const args = packet.frame.arguments;
     const objActor1 = args[0].actor;
 
-    gThreadFront.getFrames(0, 1).then(function(response) {
-      const frame = response.frames[0];
-      Assert.equal(objActor1, frame.arguments[0].actor);
-      gThreadFront.resume().then(function() {
-        threadFrontTestFinished();
-      });
-    });
-  });
+    const response = await threadFront.getFrames(0, 1);
+    const frame = response.frames[0];
+    Assert.equal(objActor1, frame.arguments[0].actor);
 
-  gDebuggee.eval(
+    threadFront.resume();
+  })
+);
+
+function evaluateTestCode(debuggee) {
+  debuggee.eval(
     "(" +
       function() {
         function stopMe(obj) {
