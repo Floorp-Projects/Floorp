@@ -125,14 +125,6 @@ class MIRGenerator {
   void setNeedsStaticStackAlignment() { needsStaticStackAlignment_ = true; }
   bool needsStaticStackAlignment() const { return needsStaticStackAlignment_; }
 
-  typedef Vector<ObjectGroup*, 0, JitAllocPolicy> ObjectGroupVector;
-
-  // When aborting with AbortReason::PreliminaryObjects, all groups with
-  // preliminary objects which haven't been analyzed yet.
-  const ObjectGroupVector& abortedPreliminaryGroups() const {
-    return abortedPreliminaryGroups_;
-  }
-
  public:
   CompileRealm* realm;
   CompileRuntime* runtime;
@@ -143,7 +135,6 @@ class MIRGenerator {
   TempAllocator* alloc_;
   MIRGraph* graph_;
   AbortReasonOr<Ok> offThreadStatus_;
-  ObjectGroupVector abortedPreliminaryGroups_;
   mozilla::Atomic<bool, mozilla::Relaxed,
                   mozilla::recordreplay::Behavior::DontPreserve>
       cancelBuild_;
@@ -156,8 +147,6 @@ class MIRGenerator {
   bool instrumentedProfilingIsCached_;
   bool safeForMinorGC_;
   bool stringsCanBeInNursery_;
-
-  void addAbortedPreliminaryGroup(ObjectGroup* group);
 
   uint32_t minWasmHeapLength_;
 
