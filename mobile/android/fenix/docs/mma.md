@@ -144,6 +144,11 @@ User Attributes
     <td>A boolean indicating that the user has at least one search widget placed on the home screen</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/4694#issuecomment-520591275">#4694</a></td>
   </tr>
+  <tr>
+    <td>`fenix`</td>
+    <td>A boolean indicating that this is a Fenix installation</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/8208">#8208</a></td>
+  </tr>
 </table>
 
 Events
