@@ -78,7 +78,7 @@ const JOIN_CONTENT = {
     text: { string_id: `onboarding-benefit-${id}-text` },
   })),
   learn: {
-    text: { string_id: "onboarding-welcome-learn-more" },
+    text: { string_id: "onboarding-welcome-modal-family-learn-more" },
     url: "https://www.mozilla.org/firefox/accounts/",
   },
   form: {
