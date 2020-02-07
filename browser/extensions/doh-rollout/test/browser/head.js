@@ -130,6 +130,16 @@ async function restartAddon() {
   await addon.reload();
 }
 
+async function disableAddon() {
+  let addon = await AddonManager.getAddonByID(ADDON_ID);
+  await addon.disable({ allowSystemAddons: true });
+}
+
+async function enableAddon() {
+  let addon = await AddonManager.getAddonByID(ADDON_ID);
+  await addon.enable({ allowSystemAddons: true });
+}
+
 async function resetPrefsAndRestartAddon() {
   let addon = await AddonManager.getAddonByID(ADDON_ID);
   await addon.disable({ allowSystemAddons: true });
