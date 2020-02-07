@@ -49,9 +49,16 @@ class ProcessWithRetry(Process):
         return -1
 
 
+def kill(pid, signal):
+    if pid == 1234:
+        return
+    return os.kill(pid, signal)
+
+
 @mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy")
 @mock.patch("mozproxy.backends.mitm.mitm.ProcessHandler", new=Process)
 @mock.patch("mozproxy.utils.ProcessHandler", new=Process)
+@mock.patch("os.kill", new=kill)
 def test_mitm(*args):
     bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
     pageset_name = "mitm4-linux-firefox-amazon.manifest"
@@ -83,6 +90,7 @@ def test_mitm(*args):
 @mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy")
 @mock.patch("mozproxy.backends.mitm.mitm.ProcessHandler", new=Process)
 @mock.patch("mozproxy.utils.ProcessHandler", new=Process)
+@mock.patch("os.kill", new=kill)
 def test_playback_setup_failed(*args):
     class SetupFailed(Exception):
         pass
@@ -128,6 +136,7 @@ def test_playback_setup_failed(*args):
 @mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy")
 @mock.patch("mozproxy.backends.mitm.mitm.ProcessHandler", new=ProcessWithRetry)
 @mock.patch("mozproxy.utils.ProcessHandler", new=ProcessWithRetry)
+@mock.patch("os.kill", new=kill)
 def test_mitm_with_retry(*args):
     bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
     pageset_name = "mitm4-linux-firefox-amazon.manifest"
