@@ -689,7 +689,7 @@ async function doFillGeneratedPasswordContextMenuItem(browser, passwordInput) {
     "fill-login-generated-password"
   );
   let generatedPasswordSeparator = document.getElementById(
-    "generated-password-separator"
+    "fill-login-and-generated-password-separator"
   );
 
   ok(
