@@ -713,9 +713,9 @@ class Selection final : public nsSupportsWeakReference,
   void SelectFramesInAllRanges(nsPresContext* aPresContext);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult GetTableCellLocationFromRange(nsRange* aRange,
-                                         TableSelection* aSelectionType,
-                                         int32_t* aRow, int32_t* aCol);
+  static nsresult GetTableCellLocationFromRange(nsRange* aRange,
+                                                TableSelection* aSelectionType,
+                                                int32_t* aRow, int32_t* aCol);
 
   /**
    * @param aOutIndex points to the index of the range in mRanges. If
