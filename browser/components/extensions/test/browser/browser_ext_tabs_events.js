@@ -77,16 +77,24 @@ add_task(async function test_tab_events_incognito_monitored() {
     }
 
     try {
-      let windows = await Promise.all([
-        browser.windows.create({ url: "about:blank", incognito }),
-        browser.windows.create({ url: "about:blank", incognito }),
-      ]);
+      let firstWindow = await browser.windows.create({
+        url: "about:blank",
+        incognito,
+      });
+      let otherWindow = await browser.windows.create({
+        url: "about:blank",
+        incognito,
+      });
 
-      let windowId = windows[0].id;
-      let otherWindowId = windows[1].id;
+      let windowId = firstWindow.id;
+      let otherWindowId = otherWindow.id;
 
-      let created = await expectEvents(["onCreated", "onCreated"]);
-      let initialTab = created[1].tab;
+      // Wait for a tab in each window
+      await expectEvents(["onCreated", "onCreated"]);
+      let initialTab = (await browser.tabs.query({
+        active: true,
+        windowId: otherWindowId,
+      }))[0];
 
       browser.test.log("Create tab in window 1");
       let tab = await browser.tabs.create({
@@ -98,7 +106,7 @@ add_task(async function test_tab_events_incognito_monitored() {
       browser.test.assertEq(0, oldIndex, "Tab has the expected index");
       browser.test.assertEq(tab.incognito, incognito, "Tab is incognito");
 
-      [created] = await expectEvents(["onCreated"]);
+      let [created] = await expectEvents(["onCreated"]);
       browser.test.assertEq(tab.id, created.tab.id, "Got expected tab ID");
       browser.test.assertEq(
         oldIndex,
@@ -159,7 +167,11 @@ add_task(async function test_tab_events_incognito_monitored() {
       await browser.tabs.remove(tab.id);
       let [removed] = await expectEvents(["onRemoved"]);
 
-      browser.test.assertEq(tab.id, removed.tabId, "Expected removed tab ID");
+      browser.test.assertEq(
+        tab.id,
+        removed.tabId,
+        "Expected removed tab ID for tabs.remove"
+      );
       browser.test.assertEq(
         otherWindowId,
         removed.windowId,
@@ -178,7 +190,7 @@ add_task(async function test_tab_events_incognito_monitored() {
       browser.test.assertEq(
         initialTab.id,
         removed.tabId,
-        "Expected removed tab ID"
+        "Expected removed tab ID for windows.remove"
       );
       browser.test.assertEq(
         otherWindowId,
@@ -408,7 +420,7 @@ add_task(async function testTabEventsSize() {
 
   await extension.unload();
   SpecialPowers.clearUserPref(RESOLUTION_PREF);
-});
+}).skip(); // Bug 1614075 perma-fail comparing devicePixelRatio
 
 add_task(async function testTabRemovalEvent() {
   async function background() {
