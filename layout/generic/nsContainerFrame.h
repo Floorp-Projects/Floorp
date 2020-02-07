@@ -159,11 +159,6 @@ class nsContainerFrame : public nsSplittableFrame {
                                     nsIFrame* aNewParentFrame);
 
   // Set the view's size and position after its frame has been reflowed.
-  //
-  // Flags:
-  // NoMoveView - don't position the frame's view. Set this if you
-  //    don't want to automatically sync the frame and view
-  // NoSizeView - don't size the view
   static void SyncFrameViewAfterReflow(
       nsPresContext* aPresContext, nsIFrame* aFrame, nsView* aView,
       const nsRect& aVisualOverflowArea,
@@ -210,19 +205,18 @@ class nsContainerFrame : public nsSplittableFrame {
       const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
 
   /**
-   * Positions aChildFrame and its view (if requested), and then calls Reflow().
-   * If the reflow status after reflowing the child is FULLY_COMPLETE then any
+   * Positions aKidFrame and its view (if requested), and then calls Reflow().
+   * If the reflow status after reflowing the child is FullyComplete then any
    * next-in-flows are deleted using DeleteNextInFlowChild().
    *
-   * @param aContainerSize  size of the border-box of the containing frame
+   * @param aWM Containing frame's writing-mode.
+   * @param aPos Position of the aKidFrame to be moved.
+   * @param aContainerSize Size of the border-box of the containing frame.
    *
-   * Flags:
-   * NoMoveView - don't position the frame's view. Set this if you
-   *    don't want to automatically sync the frame and view
-   * NoMoveFrame - don't move the frame. aPos is ignored in this
-   *    case. Also implies NoMoveView
+   * Note: If ReflowChildFlags::NoMoveFrame is requested, both aPos and
+   * aContainerSize are ignored.
    */
-  void ReflowChild(nsIFrame* aChildFrame, nsPresContext* aPresContext,
+  void ReflowChild(nsIFrame* aKidFrame, nsPresContext* aPresContext,
                    ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
                    const mozilla::WritingMode& aWM,
                    const mozilla::LogicalPoint& aPos,
@@ -240,14 +234,13 @@ class nsContainerFrame : public nsSplittableFrame {
    * - sets the view's visibility, opacity, content transparency, and clip
    * - invoked the DidReflow() function
    *
-   * @param aContainerSize  size of the border-box of the containing frame
+   * @param aWM Containing frame's writing-mode.
+   * @param aPos Position of the aKidFrame to be positioned.
+   * @param aContainerSize Size of the border-box of the containing frame.
    *
-   * Flags:
-   * NoMoveFrame - don't move the frame. aPos is ignored in this
-   *    case. Also implies NoMoveView
-   * NoMoveView - don't position the frame's view. Set this if you
-   *    don't want to automatically sync the frame and view
-   * NoSizeView - don't size the frame's view
+   * Note: If ReflowChildFlags::NoMoveFrame is requested, both aPos and
+   * aContainerSize are ignored unless
+   * ReflowChildFlags::ApplyRelativePositioning is requested.
    */
   static void FinishReflowChild(
       nsIFrame* aKidFrame, nsPresContext* aPresContext,

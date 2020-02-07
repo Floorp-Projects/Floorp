@@ -2570,13 +2570,22 @@ class nsIFrame : public nsQueryFrame {
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) = 0;
 
-  // Option flags for ReflowChild() and FinishReflowChild()
-  // member functions
+  // Option flags for ReflowChild(), FinishReflowChild(), and
+  // SyncFrameViewAfterReflow().
   enum class ReflowChildFlags : uint32_t {
     Default = 0,
+
+    // Don't position the frame's view. Set this if you don't want to
+    // automatically sync the frame and view.
     NoMoveView = 1 << 0,
+
+    // Don't move the frame. Also implies NoMoveView.
     NoMoveFrame = (1 << 1) | NoMoveView,
+
+    // Don't size the frame's view.
     NoSizeView = 1 << 2,
+
+    // TODO: This flag is not used. Will be removed.
     NoVisibility = 1 << 3,
 
     // Only applies to ReflowChild; if true, don't delete the next-in-flow, even
