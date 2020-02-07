@@ -28,6 +28,7 @@ import org.mockito.Mockito.verify
 import java.io.IOException
 import java.util.Date
 import java.io.InputStream
+import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class AddonCollectionProviderTest {
@@ -132,7 +133,10 @@ class AddonCollectionProviderTest {
 
             // Authors
             assertTrue(addon.authors.isEmpty())
-            verify(mockedClient).fetch(Request(url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/7e8d6dc651b54ab385fb8791bf9dac/addons"))
+            verify(mockedClient).fetch(Request(
+                url = "https://addons.mozilla.org/api/v4/accounts/account/mozilla/collections/7e8d6dc651b54ab385fb8791bf9dac/addons",
+                readTimeout = Pair(READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            ))
 
             // Ratings
             assertNull(addon.rating)

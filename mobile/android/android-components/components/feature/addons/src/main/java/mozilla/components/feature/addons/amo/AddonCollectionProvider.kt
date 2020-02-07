@@ -24,12 +24,14 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 internal const val API_VERSION = "api/v4"
 internal const val DEFAULT_SERVER_URL = "https://addons.mozilla.org"
 internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
 internal const val COLLECTION_FILE_NAME = "mozilla_components_addon_collection_%s.json"
 internal const val MINUTE_IN_MS = 60 * 1000
+internal const val READ_TIMEOUT_IN_SECONDS = 20L
 
 /**
  * Provide access to the collections AMO API.
@@ -74,7 +76,10 @@ class AddonCollectionProvider(
         }
 
         return cachedAddons ?: client.fetch(
-                Request(url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons")
+                Request(
+                    url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons",
+                    readTimeout = Pair(READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+                )
             )
             .use { response ->
                 if (response.isSuccess) {
