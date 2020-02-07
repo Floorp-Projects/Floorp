@@ -123,6 +123,7 @@ rusty-enums = [
     "mozilla::StyleUserSelect",
     "mozilla::StyleImageLayerRepeat",
     "mozilla::StyleImageLayerAttachment",
+    "mozilla::StylePositionProperty",
     "mozilla::StyleBoxDecorationBreak",
     "mozilla::StyleBorderStyle",
     "mozilla::StyleRuleInclusion",
