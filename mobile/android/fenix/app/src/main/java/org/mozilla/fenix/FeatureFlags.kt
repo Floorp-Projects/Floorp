@@ -25,11 +25,6 @@ object FeatureFlags {
     const val mediaIntegration = true
 
     /**
-     * Gives option in Settings to disable auto play media
-     */
-    val autoPlayMedia = Config.channel.isNightlyOrDebug
-
-    /**
      * Allows Progressive Web Apps to be installed to the device home screen.
      */
     val progressiveWebApps = Config.channel.isNightlyOrDebug

@@ -22,7 +22,6 @@ import mozilla.components.support.ktx.android.content.longPreference
 import mozilla.components.support.ktx.android.content.stringPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
@@ -128,10 +127,9 @@ class Settings private constructor(
         default = true
     )
 
-    // If autoPlayMedia is flagged OFF, default to true here
     val isAutoPlayEnabled = getSitePermissionsPhoneFeatureAction(
         PhoneFeature.AUTOPLAY, Action.BLOCKED
-    ) != Action.BLOCKED || !FeatureFlags.autoPlayMedia
+    ) != Action.BLOCKED
 
     private var trackingProtectionOnboardingShownThisSession = false
 

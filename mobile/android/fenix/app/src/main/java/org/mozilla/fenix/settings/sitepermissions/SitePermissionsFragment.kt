@@ -9,7 +9,6 @@ import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
@@ -36,18 +35,6 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         bindCategoryPhoneFeatures()
         bindExceptions()
-
-        if (FeatureFlags.autoPlayMedia) {
-            displayAutoplayPreference()
-        }
-    }
-
-    private fun displayAutoplayPreference() {
-        findPreference<Preference>(
-            getPreferenceKey(R.string.pref_key_browser_feature_autoplay)
-        )?.apply {
-            isVisible = true
-        }
     }
 
     private fun bindExceptions() {
