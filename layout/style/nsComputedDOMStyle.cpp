@@ -2473,9 +2473,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetTransformValue(
    * using the named transforms.  Until a real solution is found, we'll just
    * use this approach.
    */
-  nsStyleTransformMatrix::TransformReferenceBox refBox(mInnerFrame,
-                                                       nsSize(0, 0));
-
+  nsStyleTransformMatrix::TransformReferenceBox refBox(mInnerFrame, nsRect());
   gfx::Matrix4x4 matrix = nsStyleTransformMatrix::ReadTransforms(
       aTransform, refBox, float(mozilla::AppUnitsPerCSSPixel()));
 

@@ -14,6 +14,10 @@
 
 class nsIFrame;
 
+namespace nsStyleTransformMatrix {
+class TransformReferenceBox;
+}
+
 namespace mozilla {
 
 using RayFunction = StyleRayFunction<StyleAngle>;
@@ -154,23 +158,33 @@ struct OffsetPathData {
 // processing motion path in the [motion-1].
 // https://drafts.fxtf.org/motion-1/
 class MotionPathUtils final {
+  using TransformReferenceBox = nsStyleTransformMatrix::TransformReferenceBox;
+
  public:
+  // SVG frames (unlike other frames) have a reference box that can be (and
+  // typically is) offset from the TopLeft() of the frame.
+  //
+  // In motion path, we have to make sure the object is aligned with offset-path
+  // when using content area, so we should tweak the anchor point by a given
+  // offset.
+  static CSSPoint ComputeAnchorPointAdjustment(const nsIFrame& aFrame);
+
   /**
    * Generate the motion path transform result. This function may be called on
    * the compositor thread.
-   **/
+   */
   static Maybe<ResolvedMotionPathData> ResolveMotionPath(
       const OffsetPathData& aPath, const LengthPercentage& aDistance,
       const StyleOffsetRotate& aRotate, const StylePositionOrAuto& aAnchor,
-      const CSSPoint& aTransformOrigin, const CSSSize& aFrameSize,
-      const Maybe<CSSPoint>& aFramePosition);
+      const CSSPoint& aTransformOrigin, TransformReferenceBox&,
+      const CSSPoint& aAnchorPointAdjustment);
 
   /**
    * Generate the motion path transform result with |nsIFrame|. This is only
    * called in the main thread.
-   **/
+   */
   static Maybe<ResolvedMotionPathData> ResolveMotionPath(
-      const nsIFrame* aFrame);
+      const nsIFrame* aFrame, TransformReferenceBox&);
 
   /**
    * Generate the motion path transfrom result with styles and
@@ -181,7 +195,7 @@ class MotionPathUtils final {
       const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
       const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
       const Maybe<layers::MotionPathData>& aMotionPathData,
-      const CSSSize& aFrameSize, gfx::Path* aCachedMotionPath);
+      TransformReferenceBox&, gfx::Path* aCachedMotionPath);
 
   /**
    * Normalize StyleSVGPathData.
