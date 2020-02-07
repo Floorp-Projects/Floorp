@@ -91,7 +91,7 @@ jobs:
         shipping-phase: build
         shipping-product: firefox
         treeherder:
-            platform: macosx64-shippable/opt
+            platform: osx-shippable/opt
         worker-type: b-linux
         worker:
             max-run-time: 7200

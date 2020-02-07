@@ -120,7 +120,7 @@ jobs:
             tooltool-downloads: internal
             command: '$HOME/checkouts/gecko/taskcluster/scripts/misc/wrench-macos-build.sh'
         treeherder:
-            platform: macosx64-qr/opt
+            platform: osx-cross/opt
             symbol: WR(B)
         when:
             files-changed:
@@ -150,7 +150,7 @@ jobs:
                 export WRENCH_BINARY=$PWD/wrench-macos/bin/wrench &&
                 ci-scripts/macos-release-tests.sh
         treeherder:
-            platform: macosx64-qr/opt
+            platform: macosx1014-64-qr/opt
             symbol: WR(wrench)
         when:
             files-changed:
@@ -180,7 +180,7 @@ jobs:
             tooltool-downloads: internal
             command: '$HOME/checkouts/gecko/taskcluster/scripts/misc/wr-cargotest-macos-build.sh'
         treeherder:
-            platform: macosx64-qr/debug
+            platform: osx-cross/debug
             symbol: WR(B)
         when:
             files-changed:
@@ -209,7 +209,7 @@ jobs:
                 cd target &&
                 for i in debug/*; do $i; done
         treeherder:
-            platform: macosx64-qr/debug
+            platform: macosx1014-64-qr/debug
             symbol: WR(cargotest)
         when:
             files-changed:
