@@ -1806,7 +1806,9 @@ class RTCPeerConnection {
     if (state != this._iceConnectionState) {
       this._iceConnectionState = state;
       _globalPCList.notifyLifecycleObservers(this, "iceconnectionstatechange");
-      this.dispatchEvent(new this._win.Event("iceconnectionstatechange"));
+      if (!this._closed) {
+        this.dispatchEvent(new this._win.Event("iceconnectionstatechange"));
+      }
     }
   }
 
