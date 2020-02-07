@@ -157,6 +157,7 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileRealm* realm,
       loopDepth_(loopDepth),
       loopStack_(*temp),
       trackedOptimizationSites_(*temp),
+      abortedPreliminaryGroups_(*temp),
       lexicalCheck_(nullptr),
       callerResumePoint_(nullptr),
       callerBuilder_(nullptr),
@@ -14309,6 +14310,18 @@ MDefinition* IonBuilder::getCallee() {
   }
 
   return inlineCallInfo_->fun();
+}
+
+void IonBuilder::addAbortedPreliminaryGroup(ObjectGroup* group) {
+  for (size_t i = 0; i < abortedPreliminaryGroups_.length(); i++) {
+    if (group == abortedPreliminaryGroups_[i]) {
+      return;
+    }
+  }
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  if (!abortedPreliminaryGroups_.append(group)) {
+    oomUnsafe.crash("addAbortedPreliminaryGroup");
+  }
 }
 
 AbortReasonOr<MDefinition*> IonBuilder::addLexicalCheck(MDefinition* input) {

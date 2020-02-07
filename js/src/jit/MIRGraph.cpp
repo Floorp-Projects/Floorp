@@ -28,7 +28,6 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
       alloc_(alloc),
       graph_(graph),
       offThreadStatus_(Ok()),
-      abortedPreliminaryGroups_(*alloc_),
       cancelBuild_(false),
       wasmMaxStackArgBytes_(0),
       needsOverrecursedCheck_(false),
@@ -81,18 +80,6 @@ mozilla::GenericErrorResult<AbortReason> MIRGenerator::abort(
   auto forward = abortFmt(r, message, ap);
   va_end(ap);
   return forward;
-}
-
-void MIRGenerator::addAbortedPreliminaryGroup(ObjectGroup* group) {
-  for (size_t i = 0; i < abortedPreliminaryGroups_.length(); i++) {
-    if (group == abortedPreliminaryGroups_[i]) {
-      return;
-    }
-  }
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!abortedPreliminaryGroups_.append(group)) {
-    oomUnsafe.crash("addAbortedPreliminaryGroup");
-  }
 }
 
 void MIRGraph::addBlock(MBasicBlock* block) {
