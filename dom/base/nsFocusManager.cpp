@@ -3401,15 +3401,16 @@ nsresult nsFocusManager::GetNextTabbableContent(
       }
     }
 
+    nsIContent* oldTopLevelScopeOwner = nullptr;
     // Walk frames to find something tabbable matching aCurrentTabIndex
     while (frame) {
       // Try to find the topmost scope owner, since we want to skip the node
       // that is not owned by document in frame traversal.
       nsIContent* currentContent = frame->GetContent();
-      nsIContent* oldTopLevelScopeOwner = currentTopLevelScopeOwner;
-      if (!aForward || currentTopLevelScopeOwner != currentContent) {
-        currentTopLevelScopeOwner = GetTopLevelScopeOwner(currentContent);
+      if (currentTopLevelScopeOwner) {
+        oldTopLevelScopeOwner = currentTopLevelScopeOwner;
       }
+      currentTopLevelScopeOwner = GetTopLevelScopeOwner(currentContent);
       if (currentTopLevelScopeOwner &&
           currentTopLevelScopeOwner == oldTopLevelScopeOwner) {
         // We're within non-document scope, continue.
