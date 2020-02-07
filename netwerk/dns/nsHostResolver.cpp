@@ -1879,6 +1879,9 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
     } else {
       if (addrRec->addr_info && newRRSet) {
         addrRec->addr_info->ttl = newRRSet->ttl;
+        // Update trr timings
+        addrRec->addr_info->SetTrrFetchDuration(newRRSet->GetTrrFetchDuration());
+        addrRec->addr_info->SetTrrFetchDurationNetworkOnly(newRRSet->GetTrrFetchDurationNetworkOnly());
       }
       old_addr_info = newRRSet.forget();
     }
