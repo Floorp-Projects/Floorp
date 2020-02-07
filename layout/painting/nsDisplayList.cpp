@@ -3938,8 +3938,17 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
       mLayer(aInitData.layer),
       mIsRasterImage(aInitData.isRasterImage),
       mShouldFixToViewport(aInitData.shouldFixToViewport),
-      mImageFlags(0) {
+      mImageFlags(0),
+      mAssociatedImage(false) {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
+
+  if (mBackgroundStyle && mBackgroundStyle != aFrame->Style()) {
+    MOZ_ASSERT(aFrame->IsCanvasFrame() || aFrame->IsTableCellFrame());
+    auto& layer = mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
+    if (aFrame->AssociateImage(layer.mImage)) {
+      mAssociatedImage = true;
+    }
+  }
 
   mBounds = GetBoundsInternal(aInitData.builder, aFrameForBounds);
   if (mShouldFixToViewport) {
@@ -3956,10 +3965,25 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
   }
 }
 
+void nsDisplayBackgroundImage::DisassociateImage() {
+  MOZ_ASSERT(mAssociatedImage);
+  MOZ_ASSERT(mFrame);
+
+  if (mFrame->HasImageRequest()) {
+    // We need to check HasImageRequest because the frame may already have
+    // cleared all its requests in some other way before us.
+    auto& layer = mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
+    mFrame->DisassociateImage(layer.mImage);
+  }
+
+  mAssociatedImage = false;
+}
+
 nsDisplayBackgroundImage::~nsDisplayBackgroundImage() {
-#ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_DTOR(nsDisplayBackgroundImage);
-#endif
+  if (mAssociatedImage) {
+    DisassociateImage();
+  }
   if (mDependentFrame) {
     mDependentFrame->RemoveDisplayItem(this);
   }

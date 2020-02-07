@@ -3387,13 +3387,12 @@ nsCSSBorderImageRenderer::CreateBorderImageRenderer(
     return Nothing();
   }
 
-  // Ensure we get invalidated for loads and animations of the image.
-  // We need to do this here because this might be the only code that
-  // knows about the association of the style data with the frame.
-  // XXX We shouldn't really... since if anybody is passing in a
-  // different style, they'll potentially have the wrong size for the
-  // border too.
-  aForFrame->AssociateImage(aStyleBorder.mBorderImageSource, aPresContext, 0);
+  // We should always get here with the frame's border, but we may construct an
+  // nsStyleBorder from the stack to deal with :visited. We copy the border
+  // image and such from the non-visited one, so there's no need to do anything
+  // with it.
+  MOZ_ASSERT(&aStyleBorder == aForFrame->StyleBorder() ||
+             aForFrame->Style()->GetStyleIfVisited());
 
   nsCSSBorderImageRenderer renderer(aForFrame, aBorderArea, aStyleBorder,
                                     aSkipSides, imgRenderer);

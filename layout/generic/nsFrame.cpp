@@ -5524,9 +5524,24 @@ nsIFrame::ContentOffsets nsFrame::CalcContentOffsetsFromFramePoint(
   return OffsetsForSingleFrame(this, aPoint);
 }
 
-void nsIFrame::AssociateImage(const nsStyleImage& aImage,
-                              nsPresContext* aPresContext,
-                              uint32_t aImageLoaderFlags) {
+bool nsIFrame::AssociateImage(const nsStyleImage& aImage) {
+  if (aImage.GetType() != eStyleImageType_Image) {
+    return false;
+  }
+
+  imgRequestProxy* req = aImage.GetImageData();
+  if (!req) {
+    return false;
+  }
+
+  mozilla::css::ImageLoader* loader =
+      PresContext()->Document()->StyleImageLoader();
+
+  loader->AssociateRequestToFrame(req, this, 0);
+  return true;
+}
+
+void nsIFrame::DisassociateImage(const nsStyleImage& aImage) {
   if (aImage.GetType() != eStyleImageType_Image) {
     return;
   }
@@ -5535,11 +5550,11 @@ void nsIFrame::AssociateImage(const nsStyleImage& aImage,
   if (!req) {
     return;
   }
-  mozilla::css::ImageLoader* loader =
-      aPresContext->Document()->StyleImageLoader();
 
-  // If this fails there's not much we can do ...
-  loader->AssociateRequestToFrame(req, this, aImageLoaderFlags);
+  mozilla::css::ImageLoader* loader =
+      PresContext()->Document()->StyleImageLoader();
+
+  loader->DisassociateRequestFromFrame(req, this);
 }
 
 Maybe<nsIFrame::Cursor> nsIFrame::GetCursor(const nsPoint&) {
