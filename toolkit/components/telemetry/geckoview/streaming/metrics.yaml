@@ -79,7 +79,8 @@ geckoview:
     time_unit: millisecond
     gecko_datapoint: GV_PAGE_RELOAD_MS
     description: >
-      Time taken to reload a page. This includes all static contents, no dynamic content.
+      Time taken to reload a page.
+      This includes all static contents, no dynamic content.
       Loading of about: pages is not counted.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1549519
@@ -472,7 +473,7 @@ gfx.display:
     lifetime: application
     gecko_datapoint: gfx.display.count
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -487,7 +488,7 @@ gfx.display:
     lifetime: application
     gecko_datapoint: gfx.display.primary_width
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -502,7 +503,7 @@ gfx.display:
     lifetime: application
     gecko_datapoint: gfx.display.primary_height
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -517,7 +518,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.description
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -531,7 +532,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.vendor_id
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -545,7 +546,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.device_id
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -555,12 +556,13 @@ gfx.adapter.primary:
   device_id_last_seen:
     description: >
       Graphics adapter device identification last seen
-      This is a temporary workaround for some early telemetry system issues. See Bug 1601091 for more information
+      This is a temporary workaround for some early telemetry system issues.
+      See Bug 1601091 for more information
     type: string
     lifetime: user
     gecko_datapoint: gfx.adapter.device_id_last_seen
     bugs:
-      - 1601091
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1601091
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -574,7 +576,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.subsystem_id
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -589,7 +591,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.ram
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -603,7 +605,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.driver_files
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -617,7 +619,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.driver_vendor
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -631,7 +633,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.driver_version
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -645,7 +647,7 @@ gfx.adapter.primary:
     lifetime: application
     gecko_datapoint: gfx.adapter.driver_date
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -656,12 +658,13 @@ gfx.adapter.primary:
 gfx.status:
   compositor:
     description: >
-      Name of the graphics compositor in use. possible values are "opengl, d3d11, client, webrender or basic"
+      Name of the graphics compositor in use.
+      Possible values are "opengl, d3d11, client, webrender or basic"
     type: string
     lifetime: application
     gecko_datapoint: gfx.compositor
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -670,13 +673,15 @@ gfx.status:
     expires: never
   compositor_last_seen:
     description: >
-      Name of the graphics compositor last seen in use. possible values are "opengl, d3d11, client, webrender or basic"
-      This is a temporary workaround for some early telemetry system issues. See Bug 1601091 for more information
+      Name of the graphics compositor last seen in use.
+      Possible values are "opengl, d3d11, client, webrender or basic"
+      This is a temporary workaround for some early telemetry system issues.
+      See Bug 1601091 for more information
     type: string
     lifetime: user
     gecko_datapoint: gfx.compositor_last_seen
     bugs:
-      - 1601091
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1601091
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -685,12 +690,13 @@ gfx.status:
     expires: "2020-04-01"
   headless:
     description: >
-      Boolean indicated whether graphics is running in headless (no display) mode
+      Boolean indicated whether graphics is running in
+      headless (no display) mode
     type: boolean
     lifetime: application
     gecko_datapoint: gfx.headless
     bugs:
-      - 1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -756,8 +762,8 @@ network:
     time_unit: millisecond
     gecko_datapoint: HTTP_PAGE_TLS_HANDSHAKE
     description: >
-      In the HTTP page channel, time from after the TCP SYN packet is received to the
-      secure connection is established and ready for HTTP.
+      In the HTTP page channel, time from after the TCP SYN packet is
+      received to the secure connection is established and ready for HTTP.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=772589
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
@@ -773,8 +779,8 @@ network:
     time_unit: millisecond
     gecko_datapoint: HTTP_PAGE_TCP_CONNECTION_2
     description: >
-      In the HTTP page channel, time from the TCP SYN packet is received to the connection
-      is established and ready for HTTP.
+      In the HTTP page channel, time from the TCP SYN packet is received to
+      the connection is established and ready for HTTP.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=772589
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
@@ -790,7 +796,8 @@ network:
     time_unit: millisecond
     gecko_datapoint: HTTP_PAGE_DNS_ISSUE_TIME
     description: >
-      In the HTTP page channel, time from connection open to the DNS request being issued.
+      In the HTTP page channel, time from connection open to the DNS request
+      being issued.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
     data_reviews:
@@ -805,7 +812,8 @@ network:
     time_unit: millisecond
     gecko_datapoint: HTTP_PAGE_DNS_LOOKUP_TIME
     description: >
-      In the HTTP page channel, time from the DNS request being issued to the response.
+      In the HTTP page channel, time from the DNS request being issued to
+      the response.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
     data_reviews:
@@ -852,7 +860,8 @@ performance.time:
     time_unit: millisecond
     gecko_datapoint: TIME_TO_RESPONSE_START_MS
     description: >
-      Time from navigationStart to responseStart as per the W3C Performance Timing API.
+      Time from navigationStart to responseStart as per the W3C
+      Performance Timing API.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
@@ -870,7 +879,8 @@ performance.time:
     time_unit: millisecond
     gecko_datapoint: TIME_TO_DOM_INTERACTIVE_MS
     description: >
-      Time from navigationStart to domInteractive as per the W3C Performance Timing API.
+      Time from navigationStart to domInteractive as per the W3C
+      Performance Timing API.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?1344893
       - https://bugzilla.mozilla.org/show_bug.cgi?1489524
@@ -887,8 +897,8 @@ performance.time:
     time_unit: millisecond
     gecko_datapoint: TIME_TO_DOM_CONTENT_LOADED_START_MS
     description: >
-      Time from navigationStart to domContentLoadedEventStart as per the W3C Performance
-      Timing API.
+      Time from navigationStart to domContentLoadedEventStart as per
+      the W3C Performance Timing API.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
@@ -904,8 +914,8 @@ performance.time:
     time_unit: millisecond
     gecko_datapoint: TIME_TO_DOM_CONTENT_LOADED_END_MS
     description: >
-      Time from navigationStart to domContentLoadedEventEnd as per the W3C Performance
-      Timing API.
+      Time from navigationStart to domContentLoadedEventEnd as per
+      the W3C Performance Timing API.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
@@ -923,7 +933,8 @@ performance.time:
     time_unit: millisecond
     gecko_datapoint: TIME_TO_DOM_COMPLETE_MS
     description: >
-      Time from navigationStart to domComplete as per the W3C Performance Timing API.
+      Time from navigationStart to domComplete as per the W3C Performance
+      Timing API.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
@@ -940,7 +951,8 @@ performance.time:
     time_unit: millisecond
     gecko_datapoint: TIME_TO_LOAD_EVENT_START_MS
     description: >
-      Time from navigationStart to loadEventStart as per the W3C Performance Timing API.
+      Time from navigationStart to loadEventStart as per the W3C Performance
+      Timing API.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
@@ -956,7 +968,8 @@ performance.time:
     time_unit: millisecond
     gecko_datapoint: TIME_TO_LOAD_EVENT_END_MS
     description: >
-      Time from navigationStart to loadEventEnd as per the W3C Performance Timing API.
+      Time from navigationStart to loadEventEnd as per the W3C Performance
+      Timing API.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
@@ -975,11 +988,12 @@ performance.page:
     time_unit: millisecond
     gecko_datapoint: TIME_TO_NON_BLANK_PAINT_MS
     description: >
-      The time between navigationStart and the first non-blank paint of a foreground root
-      content document, in milliseconds. This only records documents that were in an
-      active docshell throughout the whole time between navigation start and non-blank
-      paint. The non-blank paint timestamp is taken during display list building and does
-      not include rasterization or compositing of that paint.
+      The time between navigationStart and the first non-blank paint of a
+      foreground root content document, in milliseconds. This only records
+      documents that were in an active docshell throughout the whole time
+      between navigation start and non-blank paint. The non-blank paint
+      timestamp is taken during display list building and does not include
+      rasterization or compositing of that paint.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1307242
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
@@ -1013,8 +1027,8 @@ performance.interaction:
     time_unit: millisecond
     gecko_datapoint: KEYPRESS_PRESENT_LATENCY
     description: >
-      Time between receiving a keypress event in the event loop and compositing its
-      result onto the screen.
+      Time between receiving a keypress event in the event loop and compositing
+      its result onto the screen.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1506537
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
@@ -1030,7 +1044,8 @@ performance.interaction:
     time_unit: millisecond
     gecko_datapoint: FX_TAB_SWITCH_COMPOSITE_E10S_MS
     description: >
-      Time between tab selection and first composite of the tab content onto the screen.
+      Time between tab selection and first composite of the tab content onto the
+      screen.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1481704
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1529352
