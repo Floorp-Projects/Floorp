@@ -1037,6 +1037,7 @@ items from that key's value."
             'name': 'sccache hit rate',
             'value': hits,
             'subtests': [],
+            'alertThreshold': 50.0,
             'lowerIsBetter': False
         }
 
