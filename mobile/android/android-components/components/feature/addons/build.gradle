@@ -53,6 +53,7 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.androidx_work_testing
+    testImplementation Dependencies.testing_coroutines
 }
 
 apply from: '../../../publish.gradle'
