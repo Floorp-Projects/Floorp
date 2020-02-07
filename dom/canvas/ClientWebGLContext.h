@@ -2144,8 +2144,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   already_AddRefed<dom::Promise> MakeXRCompatible(ErrorResult& aRv);
 
  protected:
-  bool IsHostOOP() const { return bool{mNotLost->outOfProcess}; }
-
   bool ShouldResistFingerprinting() const;
 
   // Prepare the context for capture before compositing
