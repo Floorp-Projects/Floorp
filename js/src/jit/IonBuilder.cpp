@@ -1080,8 +1080,6 @@ AbortReasonOr<Ok> IonBuilder::buildInline(IonBuilder* callerBuilder,
     failedLexicalCheck_ = true;
   }
 
-  safeForMinorGC_ = callerBuilder->safeForMinorGC_;
-
   // Generate single entrance block.
   MBasicBlock* entry;
   MOZ_TRY_VAR(entry, newBlock(info().firstStackSlot(), pc));
@@ -14253,11 +14251,7 @@ void IonBuilder::checkNurseryCell(gc::Cell* cell) {
   // function or should come from a type set (which has a similar barrier).
   if (cell && IsInsideNursery(cell)) {
     realm->zone()->setMinorGCShouldCancelIonCompilations();
-    IonBuilder* builder = this;
-    while (builder) {
-      builder->setNotSafeForMinorGC();
-      builder = builder->callerBuilder_;
-    }
+    outermostBuilder()->setNotSafeForMinorGC();
   }
 }
 
