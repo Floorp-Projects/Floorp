@@ -2003,11 +2003,30 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
-   * Ensure that aImage gets notifed when the underlying image request loads
-   * or animates.
+   * Ensure that `this` gets notifed when `aImage`s underlying image request
+   * loads or animates.
+   *
+   * This in practice is only needed for the canvas frame and table cell
+   * backgrounds, which are the only cases that should paint a background that
+   * isn't its own. The canvas paints the background from the root element or
+   * body, and the table cell paints the background for its row.
+   *
+   * For regular frames, this is done in DidSetComputedStyle.
+   *
+   * NOTE: It's unclear if we even actually _need_ this for the second case, as
+   * invalidating the row should invalidate all the cells. For the canvas case
+   * this is definitely needed as it paints the background from somewhere "down"
+   * in the frame tree.
+   *
+   * Returns whether the image was in fact associated with the frame.
    */
-  void AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext,
-                      uint32_t aImageLoaderFlags);
+  MOZ_MUST_USE bool AssociateImage(const nsStyleImage&);
+
+  /**
+   * This needs to be called if the above caller returned true, once the above
+   * caller doesn't care about getting notified anymore.
+   */
+  void DisassociateImage(const nsStyleImage&);
 
   enum class AllowCustomCursorImage {
     No,
