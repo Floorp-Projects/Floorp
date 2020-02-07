@@ -442,6 +442,9 @@ void ImageLoader::UnloadImage(imgRequestProxy* aImage) {
   }
 
   aImage->CancelAndForgetObserver(NS_BINDING_ABORTED);
+  MOZ_DIAGNOSTIC_ASSERT(lookup.Data()->mImageLoaders.IsEmpty(),
+                        "Shouldn't be keeping references to any loader "
+                        "by now");
   lookup.Remove();
 }
 

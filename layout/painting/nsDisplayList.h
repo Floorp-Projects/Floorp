@@ -4652,6 +4652,9 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
     if (aFrame == mDependentFrame) {
       mDependentFrame = nullptr;
     }
+    if (mAssociatedImage && aFrame == mFrame) {
+      DisassociateImage();
+    }
     nsDisplayImageContainer::RemoveFrame(aFrame);
   }
 
@@ -4663,6 +4666,8 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
                                      nsDisplayListBuilder* aBuilder);
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aFrameForBounds = nullptr);
+
+  void DisassociateImage();
 
   void PaintInternal(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                      const nsRect& aBounds, nsRect* aClipRect);
@@ -4692,6 +4697,7 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
   /* Whether the image should be treated as fixed to the viewport. */
   bool mShouldFixToViewport;
   uint32_t mImageFlags;
+  bool mAssociatedImage;
 };
 
 enum class TableType : uint8_t {
