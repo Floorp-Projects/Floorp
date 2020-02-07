@@ -600,25 +600,6 @@ WebConsoleCommands._registerOriginal("inspect", function(
 });
 
 /**
- * Print the String representation of a value to the output, as-is.
- *
- * @param any value
- *        A value you want to output as a string.
- * @return void
- */
-WebConsoleCommands._registerOriginal("print", function(owner, value) {
-  owner.helperResult = { rawOutput: true };
-  if (typeof value === "symbol") {
-    return Symbol.prototype.toString.call(value);
-  }
-  // Waiving Xrays here allows us to see a closer representation of the
-  // underlying object. This may execute arbitrary content code, but that
-  // code will run with content privileges, and the result will be rendered
-  // inert by coercing it to a String.
-  return String(Cu.waiveXrays(value));
-});
-
-/**
  * Copy the String representation of a value to the clipboard.
  *
  * @param any value
