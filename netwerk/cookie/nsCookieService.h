@@ -338,6 +338,10 @@ class nsCookieService final : public nsICookieService,
       const mozilla::OriginAttributesPattern& aPattern,
       const nsCString& aBaseDomain);
 
+  nsresult CountCookiesFromHostInternal(const nsACString& aHost,
+                                        uint32_t aPrivateBrowsingId,
+                                        uint32_t* aCountFromHost);
+
  protected:
   nsresult RemoveCookiesFromExactHost(
       const nsACString& aHost,
