@@ -2065,7 +2065,7 @@ const nsIFrame* nsDisplayListBuilder::FindReferenceFrameFor(
 static bool IsStickyFrameActive(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame, nsIFrame* aParent) {
   MOZ_ASSERT(aFrame->StyleDisplay()->mPosition ==
-             static_cast<uint8_t>(StylePositionProperty::Sticky));
+             StylePositionProperty::Sticky);
 
   // Find the nearest scrollframe.
   nsIScrollableFrame* sf = nsLayoutUtils::GetNearestScrollableFrame(
