@@ -257,10 +257,6 @@ a {
   fill: currentColor;
 }
 
-.eager-evaluation-result > .icon {
-  margin: 3px 8px 0 10px;
-}
-
 /* Icon on unindented row should be centered within the left gutter */
 .message > .indent[data-indent="0"] + .icon {
   width: 24px;
@@ -273,8 +269,7 @@ a {
   background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
 }
 
-.message.result > .icon,
-.eager-evaluation-result > .icon {
+.message.result > .icon {
   color: var(--theme-icon-dimmed-color);
   background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
 }
@@ -502,25 +497,6 @@ html #webconsole-notificationbox {
 
 .webconsole-app .jsterm-input-container > .CodeMirror-focused {
   fill: var(--theme-icon-checked-color);
-}
-
-.eager-evaluation-result {
-  direction: ltr;
-  display: flex;
-  background-color: var(--console-input-background);
-  line-height: 20px;
-  overflow-y: hidden;
-  flex-grow: 1;
-  flex-shrink: 0;
-  padding-bottom: 5px;
-  min-height: 25px;
-}
-
-/* Style the reps result */
-.eager-evaluation-result :last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: pre !important;
 }
 
 .webconsole-app .cm-auto-complete-shadow-text::after {
