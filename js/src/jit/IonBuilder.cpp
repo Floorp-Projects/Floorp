@@ -193,11 +193,6 @@ IonBuilder::IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
   }
 }
 
-void IonBuilder::clearForBackEnd() {
-  MOZ_ASSERT(!analysisContext);
-  baselineFrame_ = nullptr;
-}
-
 mozilla::GenericErrorResult<AbortReason> IonBuilder::abort(AbortReason r) {
   auto res = mirGen_.abort(r);
 #ifdef DEBUG
@@ -1667,11 +1662,6 @@ AbortReasonOr<Ok> IonBuilder::traverseBytecode() {
   // See the "Control Flow handling in IonBuilder" comment in IonBuilder.h for
   // more information.
 
-  // IonBuilder's destructor is not called, so make sure pendingEdges_ is not
-  // holding onto malloc memory when we return.
-  pendingEdges_.emplace();
-  auto freeMemory = mozilla::MakeScopeExit([&] { pendingEdges_.reset(); });
-
   MOZ_TRY(startTraversingBlock(current));
 
   const jsbytecode* const codeEnd = script()->codeEnd();
@@ -1784,7 +1774,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_goto(bool* restarted) {
 
 AbortReasonOr<Ok> IonBuilder::addPendingEdge(const PendingEdge& edge,
                                              jsbytecode* target) {
-  PendingEdgesMap::AddPtr p = pendingEdges_->lookupForAdd(target);
+  PendingEdgesMap::AddPtr p = pendingEdges_.lookupForAdd(target);
   if (p) {
     if (!p->value().append(edge)) {
       return abort(AbortReason::Alloc);
@@ -1797,7 +1787,7 @@ AbortReasonOr<Ok> IonBuilder::addPendingEdge(const PendingEdge& edge,
                 "Appending one element should be infallible");
   MOZ_ALWAYS_TRUE(edges.append(edge));
 
-  if (!pendingEdges_->add(p, target, std::move(edges))) {
+  if (!pendingEdges_.add(p, target, std::move(edges))) {
     return abort(AbortReason::Alloc);
   }
   return Ok();
@@ -2659,7 +2649,7 @@ AbortReasonOr<Ok> IonBuilder::restartLoop(MBasicBlock* header) {
   nextpc = GetNextPc(loopHead);
 
   // Remove loop header and dead blocks from pendingBlocks.
-  for (PendingEdgesMap::Range r = pendingEdges_->all(); !r.empty();
+  for (PendingEdgesMap::Range r = pendingEdges_.all(); !r.empty();
        r.popFront()) {
     PendingEdges& blocks = r.front().value();
     for (size_t i = blocks.length(); i > 0; i--) {
@@ -3269,14 +3259,14 @@ AbortReasonOr<Ok> IonBuilder::visitTry() {
 }
 
 AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
-  PendingEdgesMap::Ptr p = pendingEdges_->lookup(pc);
+  PendingEdgesMap::Ptr p = pendingEdges_.lookup(pc);
   if (!p) {
     // No (reachable) jumps so this is just a no-op.
     return Ok();
   }
 
   PendingEdges edges(std::move(p->value()));
-  pendingEdges_->remove(p);
+  pendingEdges_.remove(p);
 
   // Loop-restarts may clear the list rather than remove the map entry entirely.
   // This is to reduce allocator churn since it is likely the list will be

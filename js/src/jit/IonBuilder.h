@@ -169,7 +169,7 @@ class LoopState {
 };
 using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
-class IonBuilder {
+class MOZ_STACK_CLASS IonBuilder {
  public:
   IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
              CompileInfo* info, CompilerConstraintList* constraints,
@@ -1127,7 +1127,6 @@ class IonBuilder {
  public:
   using ObjectGroupVector = Vector<ObjectGroup*, 0, JitAllocPolicy>;
 
-  void clearForBackEnd();
   void checkNurseryCell(gc::Cell* cell);
   JSObject* checkNurseryObject(JSObject* obj);
 
@@ -1189,7 +1188,7 @@ class IonBuilder {
 
   uint32_t loopDepth_;
 
-  mozilla::Maybe<PendingEdgesMap> pendingEdges_;
+  PendingEdgesMap pendingEdges_;
   LoopStateStack loopStack_;
 
   Vector<BytecodeSite*, 0, JitAllocPolicy> trackedOptimizationSites_;
@@ -1391,8 +1390,6 @@ class IonBuilder {
   const ObjectGroupVector& abortedPreliminaryGroups() const {
     return abortedPreliminaryGroups_;
   }
-
-  bool hasPendingEdgesMap() const { return pendingEdges_.isSome(); }
 };
 
 class CallInfo {
