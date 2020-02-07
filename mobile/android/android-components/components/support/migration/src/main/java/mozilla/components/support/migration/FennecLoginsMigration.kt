@@ -24,6 +24,43 @@ import javax.crypto.spec.DESedeKeySpec
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+@Suppress("MagicNumber")
+fun ByteArray.getEncodingLength(offset: Int): Int {
+    // First byte indicates type.
+    // Second byte is length of the octet string.
+    // There are two definite forms of specifying length: short and long.
+    // The short form consists of a single octet in which bit 8 is 0, and bits 1–7 encode the length
+    // (which may be 0) as a number of octets.
+    // The long form consist of 1 initial octet followed by 1 or more subsequent octets, containing the length.
+    // In the initial octet, bit 8 is 1, and bits 1–7 (excluding the values 0 and 127) encode the number of octets
+    // that follow.
+    // +1 to skip the 'type' byte.
+    val length = this[offset + 1].toInt() and 0xFF // bitmask 1111 1111
+    val numOctets = if ((length and 0x80) != 0) { // bitmask 1000 0000
+        length and 0x7F // bitmask 0111 1111
+    } else {
+        return length
+    }
+
+    // Example #1: we have an encoding that begins as [30 81 EB ...].
+    // 30 means it's a sequence. 81 in binary is 10000001, so we're dealing with a long form and need to count
+    // number of additional octets. We do that by 0x81 & 0x7F, or in binary 01111111 & 10000001 = 00000001,
+    // meaning we have one additional length octet. That octet is EB, which in decimal is 235 - meaning, we have a
+    // sequence whose content is 235 bytes long.
+
+    // Example #2: we may have an octet string 1032 in length.
+    // It will be encoded like this: [04 82 04 08 ...string octets....]
+    // 04 is the type tag indicating octet string.
+    // 82 in binary is 10000010, indicating that there are 2 more octets that encode length of the string.
+    // So we take next two octets together: 04 08. In decimal that's 1032, which is the string length.
+    return when (numOctets) {
+        1 -> this[offset + 2].toInt() and 0xFF
+        2 -> (this[offset + 2].toInt() and 0xFF shl 8) or (this[offset + 3].toInt() and 0xFF)
+        3 -> (this[offset + 2].toInt() and 0xFF shl 16) or (this[offset + 3].toInt() and 0xFF shl 8) or (this[offset + 4].toInt() and 0xFF)
+        else -> throw IllegalStateException("Unsupported number of octets: $numOctets")
+    }
+}
+
 internal class LoginMigrationException(val failure: LoginsMigrationResult.Failure) : Exception(failure.toString())
 
 internal sealed class LoginsMigrationResult {
@@ -480,43 +517,6 @@ internal object FennecLoginsMigration {
             totalLength = 1 + lengthOffset + length, // type byte, length byte(s), length itself
             data = this.copyOfRange(offset + 1 + lengthOffset, offset + 1 + lengthOffset + length)
         )
-    }
-
-    @Suppress("MagicNumber")
-    private fun ByteArray.getEncodingLength(offset: Int): Int {
-        // First byte indicates type.
-        // Second byte is length of the octet string.
-        // There are two definite forms of specifying length: short and long.
-        // The short form consists of a single octet in which bit 8 is 0, and bits 1–7 encode the length
-        // (which may be 0) as a number of octets.
-        // The long form consist of 1 initial octet followed by 1 or more subsequent octets, containing the length.
-        // In the initial octet, bit 8 is 1, and bits 1–7 (excluding the values 0 and 127) encode the number of octets
-        // that follow.
-        // +1 to skip the 'type' byte.
-        val length = this[offset + 1].toInt() and 0xFF // bitmask 1111 1111
-        val numOctets = if ((length and 0x80) != 0) { // bitmask 1000 0000
-            length and 0x7F // bitmask 0111 1111
-        } else {
-            return length
-        }
-
-        // Example #1: we have an encoding that begins as [30 81 EB ...].
-        // 30 means it's a sequence. 81 in binary is 10000001, so we're dealing with a long form and need to count
-        // number of additional octets. We do that by 0x81 & 0x7F, or in binary 01111111 & 10000001 = 00000001,
-        // meaning we have one additional length octet. That octet is EB, which in decimal is 235 - meaning, we have a
-        // sequence whose content is 235 bytes long.
-
-        // Example #2: we may have an octet string 1032 in length.
-        // It will be encoded like this: [04 82 04 08 ...string octets....]
-        // 04 is the type tag indicating octet string.
-        // 82 in binary is 10000010, indicating that there are 2 more octets that encode length of the string.
-        // So we take next two octets together: 04 08. In decimal that's 1032, which is the string length.
-        return when (numOctets) {
-            1 -> this[offset + 2].toInt() and 0xFF
-            2 -> this[offset + 2].toInt() shl 8 or this[offset + 3].toInt()
-            3 -> (this[offset + 2].toInt() shl 8 or this[offset + 3].toInt()) shl 8 or this[offset + 4].toInt()
-            else -> throw IllegalStateException("Unsupported number of octets: $numOctets")
-        }
     }
 
     /**
