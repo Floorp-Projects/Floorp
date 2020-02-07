@@ -76,26 +76,26 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
         lifecycleScope.launch(IO) {
             try {
                 val addons = requireContext().components.addonManager.getAddons()
-
                 lifecycleScope.launch(Dispatchers.Main) {
-                    val adapter = AddonsManagerAdapter(
-                        requireContext().components.addonCollectionProvider,
-                        this@AddonsManagementFragment,
-                        addons
-                    )
-                    view.add_ons_progress_bar.isVisible = false
-                    view.add_ons_empty_message.isVisible = false
+                    runIfFragmentIsAttached {
+                        val adapter = AddonsManagerAdapter(
+                            requireContext().components.addonCollectionProvider,
+                            this@AddonsManagementFragment,
+                            addons
+                        )
+                        view.add_ons_progress_bar.isVisible = false
+                        view.add_ons_empty_message.isVisible = false
 
-                    recyclerView.adapter = adapter
+                        recyclerView.adapter = adapter
+                    }
                 }
             } catch (e: AddonManagerException) {
                 lifecycleScope.launch(Dispatchers.Main) {
-                    showSnackBar(
-                        view,
-                        getString(R.string.mozac_feature_addons_failed_to_query_add_ons)
-                    )
-                    view.add_ons_progress_bar.isVisible = false
-                    view.add_ons_empty_message.isVisible = true
+                    runIfFragmentIsAttached {
+                        showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_query_add_ons))
+                        view.add_ons_progress_bar.isVisible = false
+                        view.add_ons_empty_message.isVisible = true
+                    }
                 }
             }
         }
@@ -165,13 +165,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
             },
             onError = { _, _ ->
                 this@AddonsManagementFragment.view?.let { view ->
-                    showSnackBar(
-                        view,
-                        getString(
-                            R.string.mozac_feature_addons_failed_to_install,
-                            addon.translatedName
-                        )
-                    )
+                    showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_install, addon.translatedName))
                     addonProgressOverlay?.visibility = View.GONE
                     isInstallationInProgress = false
                 }
