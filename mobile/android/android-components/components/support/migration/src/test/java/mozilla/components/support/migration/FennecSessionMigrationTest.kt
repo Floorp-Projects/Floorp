@@ -59,7 +59,7 @@ class FennecSessionMigrationTest {
         }
 
         snapshot.sessions[4].also {
-            assertEquals("about:reader?url=https%3A%2F%2Fwww.theverge.com%2F2019%2F9%2F18%2F20871860%2Fhuawei-mate-30-photos-videos-leak-watch-gt-2-fitness-band-tv-android-tablet-harmony-os",
+            assertEquals("https://www.theverge.com/2019/9/18/20871860/huawei-mate-30-photos-videos-leak-watch-gt-2-fitness-band-tv-android-tablet-harmony-os",
                 it.session.url)
 
             assertEquals("Huawei’s Thursday event lineup apparently leaks in full",
@@ -125,8 +125,6 @@ class FennecSessionMigrationTest {
         val result = FennecSessionMigration.migrate(profilePath, mock())
 
         assertTrue(result is Result.Success)
-
-        assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
         assertEquals(2, snapshot.sessions.size)
         assertEquals(1, snapshot.selectedSessionIndex)
@@ -155,10 +153,59 @@ class FennecSessionMigrationTest {
         val result = FennecSessionMigration.migrate(profilePath, mock())
 
         assertTrue(result is Result.Success)
-
-        assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
         assertEquals(21, snapshot.sessions.size)
         assertEquals(12, snapshot.selectedSessionIndex)
+    }
+
+    /**
+     * We expect in this test run to:
+     * - Filter out the about:home tab.
+     * - Rewrite the about:reader tab to its original URL.
+     * - Rewrite the selected index after about:home was filtered out.
+     */
+    @Test
+    fun `about-home and about-reader URLs`() {
+        val profilePath = File(getTestPath("sessions"), "about-urls")
+
+        val result = FennecSessionMigration.migrate(profilePath, mock())
+
+        assertTrue(result is Result.Success)
+        val snapshot = (result as Result.Success).value
+        assertEquals(2, snapshot.sessions.size)
+        assertEquals(1, snapshot.selectedSessionIndex)
+
+        snapshot.sessions[0].also {
+            assertEquals("https://www.spiegel.de/",
+                it.session.url)
+
+            assertEquals("DER SPIEGEL | Online-Nachrichten",
+                it.session.title)
+        }
+
+        snapshot.sessions[1].also {
+            assertEquals("https://www.spiegel.de/politik/deutschland/fdp-parteivorstand-spricht-lindner-nach-kemmerich-wahl-vertrauen-aus-a-47e0a21c-7617-4549-b6dc-716c0363cbc2",
+                it.session.url)
+
+            assertEquals("FDP-Parteivorstand spricht Lindner Vertrauen aus - DER SPIEGEL - Politik",
+                it.session.title)
+        }
+    }
+
+    /**
+     * We expect in this test run to:
+     * - Filter out the single about:home tab.
+     * - Reset the selected index to -1.
+     */
+    @Test
+    fun `only about-home`() {
+        val profilePath = File(getTestPath("sessions"), "only-about-home")
+
+        val result = FennecSessionMigration.migrate(profilePath, mock())
+
+        assertTrue(result is Result.Success)
+        val snapshot = (result as Result.Success).value
+        assertEquals(0, snapshot.sessions.size)
+        assertEquals(-1, snapshot.selectedSessionIndex)
     }
 }
