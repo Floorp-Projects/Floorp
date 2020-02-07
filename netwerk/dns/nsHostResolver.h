@@ -85,12 +85,10 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
 
   // Returns the TRR mode encoded by the flags
   nsIRequest::TRRMode TRRMode();
-  // Returns a TRR mode that takes into account if the TRR service is disabled,
-  // parental controls are on, domain matches exclusion list, etc.
-  nsIRequest::TRRMode EffectiveTRRMode();
 
  protected:
   friend class nsHostResolver;
+  friend class mozilla::net::TRR;
 
   explicit nsHostRecord(const nsHostKey& key);
   virtual ~nsHostRecord() = default;
@@ -144,7 +142,12 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   // but a request to refresh it will be made.
   mozilla::TimeStamp mGraceStart;
 
-  mozilla::net::ResolverMode mResolverMode;
+  // The computed TRR mode that is actually used by the request.
+  // It is set in nsHostResolver::NameLookup and is based on the mode of the
+  // default resolver and the TRRMode encoded in the flags.
+  // The mode into account if the TRR service is disabled,
+  // parental controls are on, domain matches exclusion list, etc.
+  nsIRequest::TRRMode mEffectiveTRRMode;
 
   uint16_t mResolving;  // counter of outstanding resolving calls
 
@@ -498,7 +501,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                                     uint32_t aTtl, bool pb) override;
   nsresult GetHostRecord(const nsACString& host, const nsACString& trrServer,
                          uint16_t type, uint16_t flags, uint16_t af, bool pb,
-                         const nsCString& originSuffix, nsHostRecord** result) override;
+                         const nsCString& originSuffix,
+                         nsHostRecord** result) override;
   nsresult TrrLookup_unlocked(nsHostRecord*,
                               mozilla::net::TRR* pushedTRR = nullptr) override;
 
