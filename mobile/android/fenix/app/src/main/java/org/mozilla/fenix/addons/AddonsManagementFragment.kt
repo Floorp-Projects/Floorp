@@ -30,7 +30,12 @@ import org.mozilla.fenix.ext.showToolbar
  * Fragment use for managing add-ons.
  */
 @Suppress("TooManyFunctions")
-class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management), AddonsManagerAdapterDelegate {
+class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
+    AddonsManagerAdapterDelegate {
+    /**
+     * Whether or not an add-on installation is in progress.
+     */
+    private var isInstallationInProgress = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -85,7 +90,10 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                 }
             } catch (e: AddonManagerException) {
                 lifecycleScope.launch(Dispatchers.Main) {
-                    showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_query_add_ons))
+                    showSnackBar(
+                        view,
+                        getString(R.string.mozac_feature_addons_failed_to_query_add_ons)
+                    )
                     view.add_ons_progress_bar.isVisible = false
                     view.add_ons_empty_message.isVisible = true
                 }
@@ -126,7 +134,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
     }
 
     private fun showPermissionDialog(addon: Addon) {
-        if (!hasExistingPermissionDialogFragment()) {
+        if (!isInstallationInProgress && !hasExistingPermissionDialogFragment()) {
             val dialog = PermissionsDialogFragment.newInstance(
                 addon = addon,
                 onPositiveButtonClicked = onPositiveButtonClicked
@@ -137,6 +145,8 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
 
     private val onPositiveButtonClicked: ((Addon) -> Unit) = { addon ->
         addonProgressOverlay.visibility = View.VISIBLE
+        isInstallationInProgress = true
+
         requireContext().components.addonManager.installAddon(
             addon,
             onSuccess = {
@@ -150,12 +160,20 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                     )
                     bindRecyclerView(view)
                     addonProgressOverlay?.visibility = View.GONE
+                    isInstallationInProgress = false
                 }
             },
             onError = { _, _ ->
                 this@AddonsManagementFragment.view?.let { view ->
-                    showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_install, addon.translatedName))
+                    showSnackBar(
+                        view,
+                        getString(
+                            R.string.mozac_feature_addons_failed_to_install,
+                            addon.translatedName
+                        )
+                    )
                     addonProgressOverlay?.visibility = View.GONE
+                    isInstallationInProgress = false
                 }
             }
         )
