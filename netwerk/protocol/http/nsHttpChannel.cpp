@@ -169,8 +169,62 @@ static uint32_t sRCWNMaxWaitMs = 500;
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
-void AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss) {
-  Telemetry::Accumulate(Telemetry::HTTP_CACHE_DISPOSITION_2_V2, hitOrMiss);
+void AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss,
+                                 nsIChannel* aChannel) {
+  nsCString key("UNKNOWN");
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  Unused << aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+
+  nsAutoCString contentType;
+  if (NS_SUCCEEDED(aChannel->GetContentType(contentType))) {
+    if (nsContentUtils::IsJavascriptMIMEType(
+            NS_ConvertUTF8toUTF16(contentType))) {
+      key.AssignLiteral("JAVASCRIPT");
+    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/css")) ||
+               (loadInfo && loadInfo->GetExternalContentPolicyType() ==
+                                nsIContentPolicy::TYPE_STYLESHEET)) {
+      key.AssignLiteral("STYLESHEET");
+    } else if (StringBeginsWith(contentType,
+                                NS_LITERAL_CSTRING("application/wasm"))) {
+      key.AssignLiteral("WASM");
+    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
+      key.AssignLiteral("IMAGE");
+    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("video/"))) {
+      key.AssignLiteral("MEDIA");
+    } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("audio/"))) {
+      key.AssignLiteral("MEDIA");
+    } else if (!StringBeginsWith(contentType,
+                                 NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE))) {
+      key.AssignLiteral("OTHER");
+    }
+  }
+
+  Telemetry::LABELS_HTTP_CACHE_DISPOSITION_3 label =
+      Telemetry::LABELS_HTTP_CACHE_DISPOSITION_3::Unresolved;
+  switch (hitOrMiss) {
+    case kCacheUnresolved:
+      label = Telemetry::LABELS_HTTP_CACHE_DISPOSITION_3::Unresolved;
+      break;
+    case kCacheHit:
+      label = Telemetry::LABELS_HTTP_CACHE_DISPOSITION_3::Hit;
+      break;
+    case kCacheHitViaReval:
+      label = Telemetry::LABELS_HTTP_CACHE_DISPOSITION_3::HitViaReval;
+      break;
+    case kCacheMissedViaReval:
+      label = Telemetry::LABELS_HTTP_CACHE_DISPOSITION_3::MissedViaReval;
+      break;
+    case kCacheMissed:
+      label = Telemetry::LABELS_HTTP_CACHE_DISPOSITION_3::Missed;
+      break;
+    case kCacheUnknown:
+      label = Telemetry::LABELS_HTTP_CACHE_DISPOSITION_3::Unknown;
+      break;
+  }
+
+  Telemetry::AccumulateCategoricalKeyed(key, label);
+  Telemetry::AccumulateCategoricalKeyed(NS_LITERAL_CSTRING("ALL"), label);
 }
 
 // Computes and returns a SHA1 hash of the input buffer. The input buffer
@@ -800,7 +854,7 @@ nsresult nsHttpChannel::ContinueConnect() {
         event->Revoke();
       }
 
-      AccumulateCacheHitTelemetry(kCacheHit);
+      AccumulateCacheHitTelemetry(kCacheHit, this);
       mCacheDisposition = kCacheHit;
 
       return rv;
@@ -1761,8 +1815,8 @@ void nsHttpChannel::SetCachedContentType() {
           NS_ConvertUTF8toUTF16(contentTypeStr))) {
     contentType = nsICacheEntry::CONTENT_TYPE_JAVASCRIPT;
   } else if (StringBeginsWith(contentTypeStr, NS_LITERAL_CSTRING("text/css")) ||
-             mLoadInfo->GetExternalContentPolicyType() ==
-                 nsIContentPolicy::TYPE_STYLESHEET) {
+             (mLoadInfo && mLoadInfo->GetExternalContentPolicyType() ==
+                               nsIContentPolicy::TYPE_STYLESHEET)) {
     contentType = nsICacheEntry::CONTENT_TYPE_STYLESHEET;
   } else if (StringBeginsWith(contentTypeStr,
                               NS_LITERAL_CSTRING("application/wasm"))) {
@@ -2926,7 +2980,7 @@ void nsHttpChannel::UpdateCacheDisposition(bool aSuccessfulReval,
     } else {
       cacheDisposition = kCacheMissedViaReval;
     }
-    AccumulateCacheHitTelemetry(cacheDisposition);
+    AccumulateCacheHitTelemetry(cacheDisposition, this);
     mCacheDisposition = cacheDisposition;
 
     Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_VERSION,
