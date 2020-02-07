@@ -664,6 +664,8 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
     const nsTArray<RefPtr<RawServoAnimationValue>>& aValues,
     const CompositorAnimationData& aAnimationData,
     gfx::Path* aCachedMotionPath) {
+  using nsStyleTransformMatrix::TransformReferenceBox;
+
   // This is a bit silly just to avoid the transform list copy from the
   // animation transform list.
   auto noneTranslate = StyleTranslate::None();
@@ -723,10 +725,10 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
 
   MOZ_ASSERT(aAnimationData.mTransform);
   const TransformData& transformData = *aAnimationData.mTransform;
-
+  TransformReferenceBox refBox(nullptr, transformData.bounds());
   Maybe<ResolvedMotionPathData> motion = MotionPathUtils::ResolveMotionPath(
-      path, distance, offsetRotate, anchor, aAnimationData.mMotionPath,
-      CSSSize::FromAppUnits(transformData.bounds().Size()), aCachedMotionPath);
+      path, distance, offsetRotate, anchor, aAnimationData.mMotionPath, refBox,
+      aCachedMotionPath);
 
   // We expect all our transform data to arrive in device pixels
   gfx::Point3D transformOrigin = transformData.transformOrigin();
@@ -736,8 +738,8 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
       motion, transformOrigin);
 
   return nsDisplayTransform::GetResultingTransformMatrix(
-      props, transformData.origin(), transformData.appUnitsPerDevPixel(), 0,
-      &transformData.bounds());
+      props, refBox, transformData.origin(),
+      transformData.appUnitsPerDevPixel(), 0);
 }
 
 }  // namespace layers

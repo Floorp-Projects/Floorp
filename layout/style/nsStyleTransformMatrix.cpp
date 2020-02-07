@@ -116,11 +116,11 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
   mHeight = rect.Height();
 }
 
-void TransformReferenceBox::Init(const nsSize& aDimensions) {
+void TransformReferenceBox::Init(const nsRect& aDimensions) {
   MOZ_ASSERT(!mFrame && !mIsCached);
 
-  mX = 0;
-  mY = 0;
+  mX = aDimensions.x;
+  mY = aDimensions.y;
   mWidth = aDimensions.width;
   mHeight = aDimensions.height;
   mIsCached = true;

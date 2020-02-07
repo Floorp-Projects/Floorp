@@ -19,6 +19,8 @@
 
 namespace mozilla {
 
+using nsStyleTransformMatrix::TransformReferenceBox;
+
 RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
   // We use GetContainingBlock() for now. TYLin said this function is buggy in
   // modern CSS layout, but is ok for most cases.
@@ -192,7 +194,7 @@ static CSSCoord ComputeRayUsedDistance(const RayFunction& aRay,
                                        const StyleOffsetRotate& aRotate,
                                        const StylePositionOrAuto& aAnchor,
                                        const CSSPoint& aTransformOrigin,
-                                       const CSSSize& aSize,
+                                       TransformReferenceBox& aRefBox,
                                        const CSSCoord& aPathLength) {
   CSSCoord usedDistance = aDistance.ResolveToCSSPixels(aPathLength);
   if (!aRay.contain) {
@@ -208,16 +210,18 @@ static CSSCoord ComputeRayUsedDistance(const RayFunction& aRay,
   // "Contained within the path" means the rectangle is inside a circle whose
   // radius is |aPathLength|.
   CSSPoint usedAnchor = aTransformOrigin;
+  CSSSize size =
+      CSSPixel::FromAppUnits(nsSize(aRefBox.Width(), aRefBox.Height()));
   if (!aAnchor.IsAuto()) {
     const StylePosition& anchor = aAnchor.AsPosition();
-    usedAnchor.x = anchor.horizontal.ResolveToCSSPixels(aSize.width);
-    usedAnchor.y = anchor.vertical.ResolveToCSSPixels(aSize.height);
+    usedAnchor.x = anchor.horizontal.ResolveToCSSPixels(size.width);
+    usedAnchor.y = anchor.vertical.ResolveToCSSPixels(size.height);
   }
   AutoTArray<gfx::Point, 4> vertices = {
       {-usedAnchor.x, -usedAnchor.y},
-      {aSize.width - usedAnchor.x, -usedAnchor.y},
-      {aSize.width - usedAnchor.x, aSize.height - usedAnchor.y},
-      {-usedAnchor.x, aSize.height - usedAnchor.y}};
+      {size.width - usedAnchor.x, -usedAnchor.y},
+      {size.width - usedAnchor.x, size.height - usedAnchor.y},
+      {-usedAnchor.x, size.height - usedAnchor.y}};
 
   ApplyRotationAndMoveRayToXAxis(aRotate, aRay.angle, vertices);
 
@@ -330,11 +334,31 @@ static CSSCoord ComputeRayUsedDistance(const RayFunction& aRay,
 }
 
 /* static */
+CSSPoint MotionPathUtils::ComputeAnchorPointAdjustment(const nsIFrame& aFrame) {
+  if (!aFrame.HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
+    return {};
+  }
+
+  auto transformBox = aFrame.StyleDisplay()->mTransformBox;
+  if (transformBox == StyleGeometryBox::ViewBox ||
+      transformBox == StyleGeometryBox::BorderBox) {
+    return {};
+  }
+
+  if (aFrame.IsFrameOfType(nsIFrame::eSVGContainer)) {
+    nsRect boxRect = nsLayoutUtils::ComputeGeometryBox(
+        const_cast<nsIFrame*>(&aFrame), StyleGeometryBox::FillBox);
+    return CSSPoint::FromAppUnits(boxRect.TopLeft());
+  }
+  return CSSPoint::FromAppUnits(aFrame.GetPosition());
+}
+
+/* static */
 Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     const OffsetPathData& aPath, const LengthPercentage& aDistance,
     const StyleOffsetRotate& aRotate, const StylePositionOrAuto& aAnchor,
-    const CSSPoint& aTransformOrigin, const CSSSize& aFrameSize,
-    const Maybe<CSSPoint>& aFramePosition) {
+    const CSSPoint& aTransformOrigin, TransformReferenceBox& aRefBox,
+    const CSSPoint& aAnchorPointAdjustment) {
   if (aPath.IsNone()) {
     return Nothing();
   }
@@ -383,7 +407,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
         ComputeRayPathLength(ray.mRay->size, ray.mRay->angle, ray.mData);
     CSSCoord usedDistance =
         ComputeRayUsedDistance(*ray.mRay, aDistance, aRotate, aAnchor,
-                               aTransformOrigin, aFrameSize, pathLength);
+                               aTransformOrigin, aRefBox, pathLength);
 
     // 0deg pointing up and positive angles representing clockwise rotation.
     directionAngle =
@@ -415,21 +439,14 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
   if (!aAnchor.IsAuto()) {
     const auto& pos = aAnchor.AsPosition();
     anchorPoint = nsStyleTransformMatrix::Convert2DPosition(
-        pos.horizontal, pos.vertical, aFrameSize);
+        pos.horizontal, pos.vertical, aRefBox);
     // We need this value to shift the origin from transform-origin to
     // offset-anchor (and vice versa).
     // See nsStyleTransformMatrix::ReadTransform for more details.
     shift = (anchorPoint - aTransformOrigin).ToUnknownPoint();
   }
 
-  // SVG frames (unlike other frames) have a reference box that can be (and
-  // typically is) offset from the TopLeft() of the frame.
-  // In motion path, we have to make sure the object is aligned with offset-path
-  // when using content area, so we should tweak the anchor point by the offset.
-  if (aFramePosition) {
-    anchorPoint.x += aFramePosition->x;
-    anchorPoint.y += aFramePosition->y;
-  }
+  anchorPoint += aAnchorPointAdjustment;
 
   return Some(ResolvedMotionPathData{point - anchorPoint.ToUnknownPoint(),
                                      angle, shift});
@@ -450,45 +467,30 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
     case StyleOffsetPath::Tag::Ray:
       return OffsetPathData::Ray(path.AsRay(), RayReferenceData(aFrame));
     case StyleOffsetPath::Tag::None:
+      return OffsetPathData::None();
     default:
+      MOZ_ASSERT_UNREACHABLE("Unknown offset-path");
       return OffsetPathData::None();
   }
 }
 
 /* static*/
 Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
-    const nsIFrame* aFrame) {
+    const nsIFrame* aFrame, TransformReferenceBox& aRefBox) {
   MOZ_ASSERT(aFrame);
 
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-
-  // Note: This may need to be updated if we support more transform-box.
-  Maybe<CSSPoint> tweakForSVG;
-  if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) &&
-      display->mTransformBox != StyleGeometryBox::ViewBox &&
-      display->mTransformBox != StyleGeometryBox::BorderBox) {
-    if (aFrame->IsFrameOfType(nsIFrame::eSVGContainer)) {
-      nsRect boxRect = nsLayoutUtils::ComputeGeometryBox(
-          const_cast<nsIFrame*>(aFrame), StyleGeometryBox::FillBox);
-      tweakForSVG = Some(CSSPoint::FromAppUnits(nsPoint{boxRect.x, boxRect.y}));
-    } else {
-      tweakForSVG = Some(CSSPoint::FromAppUnits(aFrame->GetPosition()));
-    }
-  }
-
-  nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
 
   // FIXME: It's possible to refactor the calculation of transform-origin, so we
   // could calculate from the caller, and reuse the value in nsDisplayList.cpp.
   CSSPoint transformOrigin = nsStyleTransformMatrix::Convert2DPosition(
       display->mTransformOrigin.horizontal, display->mTransformOrigin.vertical,
-      refBox);
+      aRefBox);
 
-  return ResolveMotionPath(
-      GenerateOffsetPathData(aFrame), display->mOffsetDistance,
-      display->mOffsetRotate, display->mOffsetAnchor, transformOrigin,
-      CSSSize::FromAppUnits(nsSize(refBox.Width(), refBox.Height())),
-      tweakForSVG);
+  return ResolveMotionPath(GenerateOffsetPathData(aFrame),
+                           display->mOffsetDistance, display->mOffsetRotate,
+                           display->mOffsetAnchor, transformOrigin, aRefBox,
+                           ComputeAnchorPointAdjustment(*aFrame));
 }
 
 static OffsetPathData GenerateOffsetPathData(
@@ -520,7 +522,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
     const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
     const Maybe<layers::MotionPathData>& aMotionPathData,
-    const CSSSize& aFrameSize, gfx::Path* aCachedMotionPath) {
+    TransformReferenceBox& aRefBox, gfx::Path* aCachedMotionPath) {
   if (!aPath) {
     return Nothing();
   }
@@ -530,18 +532,13 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
   auto zeroOffsetDistance = LengthPercentage::Zero();
   auto autoOffsetRotate = StyleOffsetRotate{true, StyleAngle::Zero()};
   auto autoOffsetAnchor = StylePositionOrAuto::Auto();
-  Maybe<CSSPoint> framePosition = Some(aMotionPathData->framePosition());
-
-  return MotionPathUtils::ResolveMotionPath(
+  return ResolveMotionPath(
       GenerateOffsetPathData(*aPath, aMotionPathData->rayReferenceData(),
                              aCachedMotionPath),
       aDistance ? *aDistance : zeroOffsetDistance,
       aRotate ? *aRotate : autoOffsetRotate,
-      aAnchor ? *aAnchor : autoOffsetAnchor, aMotionPathData->origin(),
-      aFrameSize,
-      // The frame position is (0, 0) if we don't have to tweak, so using
-      // Some() is fine.
-      Some(aMotionPathData->framePosition()));
+      aAnchor ? *aAnchor : autoOffsetAnchor, aMotionPathData->origin(), aRefBox,
+      aMotionPathData->anchorAdjustment());
 }
 
 /* static */

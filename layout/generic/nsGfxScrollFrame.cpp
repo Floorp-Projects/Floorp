@@ -31,6 +31,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsStyleTransformMatrix.h"
 #include "mozilla/PresState.h"
 #include "nsContentUtils.h"
 #include "nsHTMLDocument.h"
@@ -96,6 +97,7 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
+using nsStyleTransformMatrix::TransformReferenceBox;
 
 static uint32_t GetOverflowChange(const nsRect& aCurScrolledRect,
                                   const nsRect& aPrevScrolledRect) {
@@ -981,17 +983,25 @@ static void GetScrollableOverflowForPerspective(
         // Compute the overflow rect for this leaf transform frame in the
         // coordinate space of the scrolled frame.
         nsPoint scrollPos = aScrolledFrame->GetPosition();
-        nsRect preScroll = nsDisplayTransform::TransformRect(
-            child->GetScrollableOverflowRectRelativeToSelf(), child);
+        nsRect preScroll, postScroll;
+        {
+          // TODO: Can we reuse the reference box?
+          TransformReferenceBox refBox(child);
+          preScroll = nsDisplayTransform::TransformRect(
+              child->GetScrollableOverflowRectRelativeToSelf(), child, refBox);
+        }
 
         // Temporarily override the scroll position of the scrolled frame by
         // 10 CSS pixels, and then recompute what the overflow rect would be.
         // This scroll position may not be valid, but that shouldn't matter
         // for our calculations.
-        aScrolledFrame->SetPosition(scrollPos + nsPoint(600, 600));
-        nsRect postScroll = nsDisplayTransform::TransformRect(
-            child->GetScrollableOverflowRectRelativeToSelf(), child);
-        aScrolledFrame->SetPosition(scrollPos);
+        {
+          aScrolledFrame->SetPosition(scrollPos + nsPoint(600, 600));
+          TransformReferenceBox refBox(child);
+          postScroll = nsDisplayTransform::TransformRect(
+              child->GetScrollableOverflowRectRelativeToSelf(), child, refBox);
+          aScrolledFrame->SetPosition(scrollPos);
+        }
 
         // Compute how many app units the overflow rects moves by when we adjust
         // the scroll position by 1 app unit.
