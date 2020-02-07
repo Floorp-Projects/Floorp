@@ -2148,7 +2148,7 @@ pref("devtools.webconsole.input.autocomplete",true);
 
 // Set to true to eagerly show the results of webconsole terminal evaluations
 // when they don't have side effects.
-#if defined(NIGHTLY_BUILD)
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
   pref("devtools.webconsole.input.eagerEvaluation", true);
 #else
   pref("devtools.webconsole.input.eagerEvaluation", false);
