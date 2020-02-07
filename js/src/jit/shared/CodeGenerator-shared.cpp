@@ -58,7 +58,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
 #endif
       lastOsiPointOffset_(0),
       safepoints_(graph->totalSlotCount(),
-                  (gen->info().nargs() + 1) * sizeof(Value)),
+                  (gen->outerInfo().nargs() + 1) * sizeof(Value)),
       returnLabel_(),
       nativeToBytecodeMap_(nullptr),
       nativeToBytecodeMapSize_(0),
@@ -122,7 +122,7 @@ bool CodeGeneratorShared::generatePrologue() {
     masm.profilerEnterFrame(masm.getStackPointer(), CallTempReg0);
   }
 
-  if (gen->info().trackRecordReplayProgress()) {
+  if (gen->outerInfo().trackRecordReplayProgress()) {
     masm.inc64(
         AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
   }
@@ -287,7 +287,7 @@ bool CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite* site) {
 
 void CodeGeneratorShared::dumpNativeToBytecodeEntries() {
 #ifdef JS_JITSPEW
-  InlineScriptTree* topTree = gen->info().inlineScriptTree();
+  InlineScriptTree* topTree = gen->outerInfo().inlineScriptTree();
   JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%u:%u\n",
                topTree->script()->filename(), topTree->script()->lineno(),
                topTree->script()->column());
@@ -690,7 +690,7 @@ bool CodeGeneratorShared::encodeSafepoints() {
 
 bool CodeGeneratorShared::createNativeToBytecodeScriptList(JSContext* cx) {
   js::Vector<JSScript*, 0, SystemAllocPolicy> scriptList;
-  InlineScriptTree* tree = gen->info().inlineScriptTree();
+  InlineScriptTree* tree = gen->outerInfo().inlineScriptTree();
   for (;;) {
     // Add script from current tree.
     bool found = false;

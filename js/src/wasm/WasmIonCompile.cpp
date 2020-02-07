@@ -123,7 +123,7 @@ class FunctionCompiler {
         lastReadCallSite_(0),
         alloc_(mirGen.alloc()),
         graph_(mirGen.graph()),
-        info_(mirGen.info()),
+        info_(mirGen.outerInfo()),
         mirGen_(mirGen),
         curBlock_(nullptr),
         maxStackArgBytes_(0),

@@ -133,7 +133,7 @@ BaselineFrameInspector* jit::NewBaselineFrameInspector(TempAllocator* temp,
 }
 
 IonBuilder::IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
-                       CompilerConstraintList* constraints,
+                       CompileInfo* info, CompilerConstraintList* constraints,
                        BaselineInspector* inspector,
                        BaselineFrameInspector* baselineFrame,
                        size_t inliningDepth, uint32_t loopDepth)
@@ -148,7 +148,7 @@ IonBuilder::IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
       mirGen_(mirGen),
       tiOracle_(this, constraints),
       realm(mirGen.realm),
-      info_(&mirGen.info()),
+      info_(info),
       optimizationInfo_(&mirGen.optimizationInfo()),
       alloc_(&mirGen.alloc()),
       graph_(&mirGen.graph()),
@@ -4342,10 +4342,8 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   AutoAccumulateReturns aar(graph(), returns);
 
   // Build the graph.
-  MIRGenerator mirGen(realm, mirGen_.options, &alloc(), &graph(), info,
-                      &optimizationInfo());
-  IonBuilder inlineBuilder(analysisContext, mirGen, constraints(), &inspector,
-                           nullptr, inliningDepth_ + 1, loopDepth_);
+  IonBuilder inlineBuilder(analysisContext, mirGen_, info, constraints(),
+                           &inspector, nullptr, inliningDepth_ + 1, loopDepth_);
   AbortReasonOr<Ok> result =
       inlineBuilder.buildInline(this, outerResumePoint, callInfo);
   if (result.isErr()) {
@@ -14255,7 +14253,7 @@ void IonBuilder::checkNurseryCell(gc::Cell* cell) {
   // function or should come from a type set (which has a similar barrier).
   if (cell && IsInsideNursery(cell)) {
     realm->zone()->setMinorGCShouldCancelIonCompilations();
-    outermostBuilder()->mirGen().setNotSafeForMinorGC();
+    mirGen().setNotSafeForMinorGC();
   }
 }
 
