@@ -89,6 +89,13 @@ endif
 
 rustflags_override = $(MOZ_RUST_DEFAULT_FLAGS) $(rustflags_neon)
 
+ifdef DEVELOPER_OPTIONS
+# By default the Rust compiler will perform a limited kind of ThinLTO on each
+# crate. For local builds this additional optimization is not worth the
+# increase in compile time so we opt out of it.
+rustflags_override += -Clto=off
+endif
+
 ifdef MOZ_USING_SCCACHE
 export RUSTC_WRAPPER=$(CCACHE)
 endif
