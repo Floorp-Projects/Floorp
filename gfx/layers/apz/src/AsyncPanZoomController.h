@@ -1143,6 +1143,9 @@ class AsyncPanZoomController {
    * amount.
    * The transform can have both scroll and zoom components; the caller can
    * request just one or the other, or both, via the |aComponents| parameter.
+   * When only the eLayout component is requested, the returned translation
+   * should really be a LayerPoint, rather than a ParentLayerPoint, as it will
+   * not be scaled by the asynchronous zoom.
    */
   AsyncTransform GetCurrentAsyncTransform(
       AsyncTransformConsumer aMode,
@@ -1167,6 +1170,11 @@ class AsyncPanZoomController {
   ParentLayerRect GetCompositionBounds() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mScrollMetadata.GetMetrics().GetCompositionBounds();
+  }
+
+  LayoutDeviceToLayerScale2D GetCumulativeResolution() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    return mScrollMetadata.GetMetrics().GetCumulativeResolution();
   }
 
  private:
