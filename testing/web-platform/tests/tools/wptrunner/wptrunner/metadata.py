@@ -545,7 +545,7 @@ def create_test_tree(metadata_path, test_manifest):
             if dir_id in id_test_map:
                 break
 
-            test_file_data = TestFileData(intern(test_manifest.url_base),
+            test_file_data = TestFileData(intern(ensure_str(test_manifest.url_base)),
                                           None,
                                           metadata_path,
                                           dir_meta_path,
