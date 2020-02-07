@@ -532,6 +532,7 @@ var ThirdPartyCookies = {
     // of the Preferences UI.
     Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, // Block all third-party cookies
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, // Block third-party cookies from trackers
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, // Block trackers and patition third-party trackers
     Ci.nsICookieService.BEHAVIOR_REJECT, // Block all cookies
   ],
 
@@ -645,6 +646,7 @@ var ThirdPartyCookies = {
           label = "contentBlocking.cookies.blockingUnvisited2.label";
           break;
         case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+        case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
           label = "contentBlocking.cookies.blockingTrackers3.label";
           break;
         default:
@@ -681,8 +683,11 @@ var ThirdPartyCookies = {
     }
 
     if (
-      this.behaviorPref == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ||
-      this.behaviorPref == Ci.nsICookieService.BEHAVIOR_ACCEPT
+      [
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+        Ci.nsICookieService.BEHAVIOR_ACCEPT,
+      ].includes(this.behaviorPref)
     ) {
       return (
         (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_TRACKER) != 0 ||
@@ -761,6 +766,7 @@ var ThirdPartyCookies = {
         this.subViewHeading.hidden = true;
         break;
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
         title = "protections.blocking.cookies.trackers.title";
         break;
       default:
@@ -997,7 +1003,11 @@ var SocialTracking = {
       this.PREF_COOKIE_BEHAVIOR,
       false,
       this.updateCategoryItem.bind(this),
-      val => val == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+      val =>
+        [
+          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+        ].includes(val)
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
