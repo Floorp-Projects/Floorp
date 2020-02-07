@@ -9,10 +9,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
@@ -128,14 +126,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private fun updateEngineBottomMargin() {
-        val browserEngine = swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
-
-        browserEngine.bottomMargin = if (requireContext().settings().shouldUseBottomToolbar) {
-            requireContext().resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-        } else {
-            0
-        }
-
         val toolbarSessionObserver = TrackingProtectionOverlay(
             context = requireContext(),
             settings = requireContext().settings()

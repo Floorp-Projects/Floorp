@@ -21,6 +21,7 @@ import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_
 import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -180,6 +181,11 @@ class ToolbarView(
 fun BrowserToolbar.setScrollFlagsForTopToolbar() {
     // Don't set scroll flags for bottom toolbar
     if (context.settings().shouldUseBottomToolbar) {
+        if (layoutParams is CoordinatorLayout.LayoutParams) {
+            (layoutParams as CoordinatorLayout.LayoutParams).apply {
+                behavior = BrowserToolbarBottomBehavior(context, null)
+            }
+        }
         return
     }
 

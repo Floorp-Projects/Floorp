@@ -8,7 +8,6 @@ import android.content.Context
 import android.view.View
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
-import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
@@ -67,7 +66,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         toolbar = toolbar,
                         sessionId = customTabSessionId,
                         activity = activity,
-                        engineLayout = view.swipeRefresh,
                         onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) },
                         isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate,
                         shouldReverseItems = !activity.settings().shouldUseBottomToolbar
@@ -92,8 +90,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         toolbar,
                         customTabSessionId,
                         trustedScopes
-                    ) { toolbarVisible ->
-                        updateLayoutMargins(inFullScreen = !toolbarVisible)
+                    ) {
                     },
                     owner = this,
                     view = toolbar
