@@ -210,7 +210,7 @@ function listOrigins(callback) {
   return request;
 }
 
-function installPackage(packageName) {
+function installPackage(packageName, allowFileOverwrites) {
   let directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(
     Ci.nsIProperties
   );
@@ -238,6 +238,10 @@ function installPackage(packageName) {
         file.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
       }
     } else {
+      if (!allowFileOverwrites && file.exists()) {
+        throw new Error("File already exists!");
+      }
+
       let istream = zipReader.getInputStream(entryName);
 
       var ostream = Cc[
