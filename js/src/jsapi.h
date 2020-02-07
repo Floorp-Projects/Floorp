@@ -283,6 +283,9 @@ namespace JS {
  * Initialize the runtime's self-hosted code. Embeddings should call this
  * exactly once per runtime/context, before the first JS_NewGlobalObject
  * call.
+ *
+ * NOTE: This may not set a pending exception in the case of OOM since this
+ *       runs very early in startup.
  */
 JS_PUBLIC_API bool InitSelfHostedCode(JSContext* cx);
 
