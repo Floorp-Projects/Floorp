@@ -759,7 +759,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
                                                    bool* success);
   MOZ_MUST_USE bool splitAcrossCalls(LiveBundle* bundle);
 
-  bool compilingWasm() { return mir->info().compilingWasm(); }
+  bool compilingWasm() { return mir->outerInfo().compilingWasm(); }
 
   void dumpVregs();
 };

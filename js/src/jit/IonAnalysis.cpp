@@ -4598,7 +4598,7 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
 
   MIRGenerator mirGen(CompileRealm::get(cx->realm()), options, &temp, &graph,
                       &info, optimizationInfo);
-  IonBuilder builder(cx, mirGen, constraints, &inspector,
+  IonBuilder builder(cx, mirGen, &info, constraints, &inspector,
                      /* baselineFrame = */ nullptr);
 
   AbortReasonOr<Ok> buildResult = builder.build();
@@ -4858,7 +4858,7 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
 
   MIRGenerator mirGen(CompileRealm::get(cx->realm()), options, &temp, &graph,
                       &info, optimizationInfo);
-  IonBuilder builder(nullptr, mirGen, constraints, &inspector,
+  IonBuilder builder(nullptr, mirGen, &info, constraints, &inspector,
                      /* baselineFrame = */ nullptr);
 
   AbortReasonOr<Ok> buildResult = builder.build();
@@ -5149,7 +5149,7 @@ void MRootList::trace(JSTracer* trc) {
 }
 
 MOZ_MUST_USE bool jit::CreateMIRRootList(IonBuilder& builder) {
-  MOZ_ASSERT(!builder.mirGen().info().isAnalysis());
+  MOZ_ASSERT(!builder.mirGen().outerInfo().isAnalysis());
 
   TempAllocator& alloc = builder.alloc();
   MIRGraph& graph = builder.mirGen().graph();
