@@ -3110,13 +3110,26 @@
     "kind": "boolean",
     "description": "Fraction of sockets that used a nsConnectionEntry with history - size 300."
   },
-  "HTTP_CACHE_DISPOSITION_2_V2": {
+  "HTTP_CACHE_DISPOSITION_3": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "products": ["firefox", "geckoview"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1611185],
     "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 5,
-    "description": "HTTP Cache v2 Hit, Reval, Failed-Reval, Miss"
+    "kind": "categorical",
+    "labels": ["Unresolved", "Hit", "HitViaReval", "MissedViaReval", "Missed", "Unknown"],
+    "keyed": true,
+    "keys": [
+      "ALL",
+      "UNKNOWN",
+      "OTHER",
+      "JAVASCRIPT",
+      "IMAGE",
+      "MEDIA",
+      "STYLESHEET",
+      "WASM"
+    ],
+    "description": "HTTP Cache v2 hit/miss stats keyed by content type."
   },
   "HTTP_CACHE_ENTRY_RELOAD_TIME": {
     "record_in_processes": ["main", "content"],
