@@ -34,9 +34,10 @@ cpp:
     #include "mozilla/ArrayUtils.h"
     #include "mozilla/Casting.h"
     #include "mozilla/Maybe.h"
-    #include <utility>
     #include "mozilla/PodOperations.h"
     #include "mozilla/Vector.h"
+
+    #include <utility>
 
     #include "frontend/BinAST-macros.h"
     #include "frontend/BinASTTokenReaderContext.h"
@@ -53,8 +54,7 @@ cpp:
     using JS::RegExpFlag;
     using JS::RegExpFlags;
 
-    namespace js {
-    namespace frontend {
+    namespace js::frontend {
 
     // Compare a bunch of `uint8_t` values (as returned by the tokenizer_) with
     // a string literal (and ONLY a string literal).
@@ -71,8 +71,7 @@ cpp:
     template class BinASTParser<BinASTTokenReaderContext>;
     template class BinASTParser<BinASTTokenReaderMultipart>;
 
-    } // namespace frontend
-    } // namespace js
+    } // namespace js::frontend
 
 hpp:
   # Rules for generating BinASTParser.h
@@ -691,17 +690,17 @@ BreakStatement:
 
 CallExpression:
   build: |
-    auto op = JSOP_CALL;
+    auto op = JSOp::Call;
 
     // Try to optimize funcall and funapply at the bytecode level
     if (PropertyName* prop = handler_.maybeDottedProperty(callee)) {
       if (prop == cx_->names().apply) {
-        op = JSOP_FUNAPPLY;
+        op = JSOp::FunApply;
         if (pc_->isFunctionBox()) {
           pc_->functionBox()->usesApply = true;
         }
       } else if (prop == cx_->names().call) {
-        op = JSOP_FUNCALL;
+        op = JSOp::FunCall;
       }
     }
 
@@ -714,7 +713,7 @@ CallExpression:
           return raiseMissingDirectEvalInAssertedScope();
         }
 
-        op = pc_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
+        op = pc_->sc()->strict() ? JSOp::StrictEval : JSOp::Eval;
       }
     }
 
