@@ -439,7 +439,6 @@ void nsComboboxControlFrame::ReflowDropdown(nsPresContext* aPresContext,
   // dropped down
   ReflowChildFlags flags = mDroppedDown ? ReflowChildFlags::Default
                                         : ReflowChildFlags::NoMoveFrame |
-                                              ReflowChildFlags::NoVisibility |
                                               ReflowChildFlags::NoSizeView;
 
   // XXX Can this be different from the dropdown's writing mode?
