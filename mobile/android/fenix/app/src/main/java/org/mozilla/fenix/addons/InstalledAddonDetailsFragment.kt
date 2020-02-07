@@ -9,9 +9,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Switch
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
+import kotlinx.android.synthetic.main.activity_addons.view.*
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translate
@@ -64,6 +66,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                         runIfFragmentIsAttached {
                             switch.isClickable = true
                             switch.setText(R.string.mozac_feature_addons_settings_on)
+                            view.settings.isVisible = true
                             this.addon = it
                             showSnackBar(
                                 view,
@@ -94,6 +97,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                         runIfFragmentIsAttached {
                             switch.isClickable = true
                             switch.setText(R.string.mozac_feature_addons_settings_off)
+                            view.settings.isVisible = false
                             this.addon = it
                             showSnackBar(
                                 view,
@@ -123,7 +127,7 @@ class InstalledAddonDetailsFragment : Fragment() {
 
     private fun bindSettings(view: View) {
         view.settings.apply {
-            isEnabled = addon.installedState?.optionsPageUrl != null
+            isVisible = !addon.installedState?.optionsPageUrl.isNullOrEmpty()
             setOnClickListener {
                 val directions =
                     InstalledAddonDetailsFragmentDirections.actionInstalledAddonFragmentToAddonInternalSettingsFragment(
