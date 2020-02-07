@@ -9,6 +9,7 @@
     <attr name="contrastText" format="reference" />
     <attr name="accent" format="reference" />
     <attr name="accentBright" format="reference" />
+    <attr name="aboutLink" format="reference" />
     <attr name="accentHighContrast" format="reference" />
     <attr name="accentUsedOnDarkBackground" format="reference" />
     <attr name="tabRing" format="reference" />
