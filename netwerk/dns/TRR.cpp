@@ -175,7 +175,7 @@ nsresult TRR::SendHTTPRequest() {
   }
 
   if (((mType == TRRTYPE_A) || (mType == TRRTYPE_AAAA)) &&
-      mRec->EffectiveTRRMode() != nsIRequest::TRR_ONLY_MODE) {
+      mRec->mEffectiveTRRMode != nsIRequest::TRR_ONLY_MODE) {
     // let NS resolves skip the blacklist check
     // we also don't check the blacklist for TRR only requests
     MOZ_ASSERT(mRec);
@@ -485,6 +485,12 @@ nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
       getter_AddRefs(hostRecord));
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  // Since we don't ever call nsHostResolver::NameLookup for this record,
+  // we need to copy the trr mode from the previous record
+  if (hostRecord->mEffectiveTRRMode == nsIRequest::TRR_DEFAULT_MODE) {
+    hostRecord->mEffectiveTRRMode = pushedRec->mEffectiveTRRMode;
   }
 
   rv = mHostResolver->TrrLookup_unlocked(hostRecord, this);
@@ -942,12 +948,14 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
     nsCOMPtr<nsITimedChannel> timedChan = do_QueryInterface(aChannel);
     if (timedChan) {
       TimeStamp asyncOpen, start, end;
-      if (NS_SUCCEEDED(timedChan->GetAsyncOpen(&asyncOpen)) && !asyncOpen.IsNull()) {
-        ai->SetTrrFetchDuration((TimeStamp::Now() - asyncOpen).ToMilliseconds());
+      if (NS_SUCCEEDED(timedChan->GetAsyncOpen(&asyncOpen)) &&
+          !asyncOpen.IsNull()) {
+        ai->SetTrrFetchDuration(
+            (TimeStamp::Now() - asyncOpen).ToMilliseconds());
       }
       if (NS_SUCCEEDED(timedChan->GetRequestStart(&start)) &&
-          NS_SUCCEEDED(timedChan->GetResponseEnd(&end)) &&
-          !start.IsNull() && !end.IsNull()) {
+          NS_SUCCEEDED(timedChan->GetResponseEnd(&end)) && !start.IsNull() &&
+          !end.IsNull()) {
         ai->SetTrrFetchDurationNetworkOnly((end - start).ToMilliseconds());
       }
     }
