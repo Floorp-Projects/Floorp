@@ -143,7 +143,7 @@ const JSStructuredCloneCallbacks StructuredCloneHolder::sCallbacks = {
     StructuredCloneCallbacksRead,          StructuredCloneCallbacksWrite,
     StructuredCloneCallbacksError,         StructuredCloneCallbacksReadTransfer,
     StructuredCloneCallbacksWriteTransfer, StructuredCloneCallbacksFreeTransfer,
-    StructuredCloneCallbacksCanTransfer,
+    StructuredCloneCallbacksCanTransfer,   nullptr,
 };
 
 // StructuredCloneHolderBase class
