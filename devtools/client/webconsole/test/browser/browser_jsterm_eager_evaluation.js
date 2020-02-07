@@ -99,6 +99,17 @@ add_task(async function() {
 
   setInputValue(hud, "'> ' + $_");
   await waitForEagerEvaluationResult(hud, `"> result: 7"`);
+
+  info("Switch to editor mode");
+  await toggleLayout(hud);
+  await waitForEagerEvaluationResult(hud, `"> result: 7"`);
+  ok(true, "eager evaluation is still displayed in editor mode");
+
+  setInputValue(hud, "4 + 7");
+  await waitForEagerEvaluationResult(hud, "11");
+
+  // go back to inline layout.
+  await toggleLayout(hud);
 });
 
 // Test that the currently selected autocomplete result is eagerly evaluated.

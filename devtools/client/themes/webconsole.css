@@ -516,11 +516,11 @@ html #webconsole-notificationbox {
   min-height: 25px;
 }
 
-.eager-evaluation-result .objectBox {
-  height: 18px;
+/* Style the reps result */
+.eager-evaluation-result :last-child {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: pre;
+  white-space: pre !important;
 }
 
 .webconsole-app .cm-auto-complete-shadow-text::after {
