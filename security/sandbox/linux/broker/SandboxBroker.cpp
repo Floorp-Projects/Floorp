@@ -628,6 +628,8 @@ void SandboxBroker::ThreadMain(void) {
   SprintfLiteral(threadName, "FS Broker %d", mChildPid);
   PlatformThread::SetName(threadName);
 
+  AUTO_PROFILER_REGISTER_THREAD(threadName);
+
   // Permissive mode can only be enabled through an environment variable,
   // therefore it is sufficient to fetch the value once
   // before the main thread loop starts
