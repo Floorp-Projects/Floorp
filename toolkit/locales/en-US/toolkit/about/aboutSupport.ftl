@@ -93,6 +93,8 @@ graphics-crash-guards-title = Crash Guard Disabled Features
 graphics-workarounds-title = Workarounds
 # Windowing system in use on Linux (e.g. X11, Wayland).
 graphics-window-protocol = Window Protocol
+# Desktop environment in use on Linux (e.g. GNOME, KDE, XFCE, etc).
+graphics-desktop-environment = Desktop Environment
 place-database-title = Places Database
 place-database-integrity = Integrity
 place-database-verify-integrity = Verify Integrity
