@@ -19,7 +19,6 @@
 #include <unistd.h>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/NullPtr.h"
 #include "base/strings/safe_sprintf.h"
 
 namespace mozilla {
