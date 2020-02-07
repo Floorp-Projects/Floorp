@@ -1686,10 +1686,9 @@ gfxMatrix nsSVGUtils::GetTransformMatrixInUserSpace(const nsIFrame* aFrame) {
     return {};
   }
 
+  nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
   nsDisplayTransform::FrameTransformProperties properties{
-      aFrame, AppUnitsPerCSSPixel(), nullptr};
-  nsStyleTransformMatrix::TransformReferenceBox refBox;
-  refBox.Init(aFrame);
+      aFrame, refBox, AppUnitsPerCSSPixel()};
 
   // SVG elements can have x/y offset, their default transform origin
   // is the origin of user space, not the top left point of the frame.
