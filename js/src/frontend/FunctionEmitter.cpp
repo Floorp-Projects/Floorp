@@ -45,16 +45,7 @@ bool FunctionEmitter::interpretedCommon() {
   // case, if the lambda runs multiple times then CloneFunctionObject will
   // make a deep clone of its contents.
   bool singleton = bce_->checkRunOnceContext();
-  if (!funbox_->setTypeForScriptedFunction(bce_->cx, singleton)) {
-    return false;
-  }
-
-  SharedContext* outersc = bce_->sc;
-  if (outersc->isFunctionBox()) {
-    outersc->asFunctionBox()->setHasInnerFunctions();
-  }
-
-  return true;
+  return funbox_->setTypeForScriptedFunction(bce_->cx, singleton);
 }
 
 bool FunctionEmitter::prepareForNonLazy() {
