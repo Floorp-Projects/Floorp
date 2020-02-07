@@ -3906,7 +3906,7 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
           return PARSE_ERROR;
         }
 
-        Action* action = new RemoveFile();
+        mozilla::UniquePtr<Action> action(new RemoveFile());
         rv = action->Parse(quotedpath);
         if (rv) {
           LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d",
@@ -3916,7 +3916,7 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
         }
         free(quotedpath);
 
-        list->Append(action);
+        list->Append(action.release());
       }
     } while (FindNextFileW(hFindFile, &finddata) != 0);
 
@@ -3928,13 +3928,13 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
         return PARSE_ERROR;
       }
 
-      Action* action = new RemoveDir();
+      mozilla::UniquePtr<Action> action(new RemoveDir());
       rv = action->Parse(quotedpath);
       if (rv) {
         LOG(("add_dir_entries Parse error on close: " LOG_S ", err: %d",
              quotedpath, rv));
       } else {
-        list->Append(action);
+        list->Append(action.release());
       }
       free(quotedpath);
     }
@@ -3992,7 +3992,7 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
           return PARSE_ERROR;
         }
 
-        Action* action = new RemoveFile();
+        mozilla::UniquePtr<Action> action(new RemoveFile());
         rv = action->Parse(quotedpath);
         if (rv) {
           LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d",
@@ -4003,7 +4003,7 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
         }
         free(quotedpath);
 
-        list->Append(action);
+        list->Append(action.release());
       }
     }
     closedir(dir);
@@ -4014,13 +4014,13 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
       return PARSE_ERROR;
     }
 
-    Action* action = new RemoveDir();
+    mozilla::UniquePtr<Action> action(new RemoveDir());
     rv = action->Parse(quotedpath);
     if (rv) {
       LOG(("add_dir_entries Parse error on close: " LOG_S ", err: %d",
            quotedpath, rv));
     } else {
-      list->Append(action);
+      list->Append(action.release());
     }
     free(quotedpath);
 
@@ -4051,7 +4051,7 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
   while ((ftsdirEntry = fts_read(ftsdir)) != nullptr) {
     NS_tchar foundpath[MAXPATHLEN];
     NS_tchar* quotedpath = nullptr;
-    Action* action = nullptr;
+    mozilla::UniquePtr<Action> action;
 
     switch (ftsdirEntry->fts_info) {
       // Filesystem objects that shouldn't be in the application's directories
@@ -4074,17 +4074,16 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
           rv = UPDATER_QUOTED_PATH_MEM_ERROR;
           break;
         }
-        action = new RemoveFile();
+        action.reset(new RemoveFile());
         rv = action->Parse(quotedpath);
         free(quotedpath);
         if (!rv) {
-          list->Append(action);
+          list->Append(action.release());
         }
         break;
 
       // Directories
       case FTS_DP:
-        rv = OK;
         // Add the directory to be removed to the ActionList.
         NS_tsnprintf(foundpath, sizeof(foundpath) / sizeof(foundpath[0]),
                      NS_T("%s/"), ftsdirEntry->fts_accpath);
@@ -4094,11 +4093,11 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
           break;
         }
 
-        action = new RemoveDir();
+        action.reset(new RemoveDir());
         rv = action->Parse(quotedpath);
         free(quotedpath);
         if (!rv) {
-          list->Append(action);
+          list->Append(action.release());
         }
         break;
 
