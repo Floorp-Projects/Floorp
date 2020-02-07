@@ -15,9 +15,16 @@ import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import kotlinx.android.synthetic.main.activity_addons.view.*
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translate
 import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
@@ -27,6 +34,7 @@ import org.mozilla.fenix.ext.showToolbar
  */
 class InstalledAddonDetailsFragment : Fragment() {
     private lateinit var addon: Addon
+    private var scope: CoroutineScope? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,6 +48,31 @@ class InstalledAddonDetailsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_installed_add_on_details, container, false).also {
             bind(it)
         }
+    }
+
+    @UseExperimental(ExperimentalCoroutinesApi::class)
+    override fun onStart() {
+        super.onStart()
+        scope = requireContext().components.core.store.flowScoped { flow ->
+            flow.ifChanged { it.extensions }
+                .map { it.extensions.filterValues { extension -> extension.id == addon.id } }
+                .ifChanged()
+                .collect {
+                    val addonState = it[addon.id]
+                    if (addonState != null && addonState.enabled != addon.isEnabled()) {
+                        view?.let { view ->
+                            val newState = addon.installedState?.copy(enabled = addonState.enabled)
+                            this.addon = addon.copy(installedState = newState)
+                            view.enable_switch.setState(addon.isEnabled())
+                        }
+                    }
+                }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        scope?.cancel()
     }
 
     private fun bind(view: View) {
