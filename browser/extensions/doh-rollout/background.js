@@ -650,6 +650,13 @@ const setup = {
   });
 
   if (await rollout.getSetting(DOH_ENABLED_PREF, false)) {
-    setup.start();
+    await setup.start();
+  } else if (
+    (await rollout.getSetting(DOH_DONE_FIRST_RUN_PREF, false)) &&
+    (await stateManager.shouldRunHeuristics())
+  ) {
+    // We previously had turned on DoH, and now after a restart we've been
+    // rolled back. Reset TRR mode.
+    await stateManager.setState("disabled");
   }
 })();
