@@ -8715,9 +8715,8 @@ void GCRuntime::setPerformanceHint(PerformanceHint hint) {
     return;
   }
 
-  schedulingState.inPageLoad = inPageLoad;
-
   AutoLockGC lock(this);
+  schedulingState.inPageLoad = inPageLoad;
   atomsZone->updateGCThresholds(*this, invocationKind, lock);
   maybeAllocTriggerZoneGC(atomsZone);
 }
