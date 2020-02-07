@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1273687
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1430164</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <iframe id="t" src="https://example.com"></iframe>
+  <iframe id="i" src="http://example.com"></iframe>
+  <script type="application/javascript">
+  /** Test for Bug 1273687 **/
+  SimpleTest.waitForExplicitFinish();
+
+  window.onload = () => {
+    runTest(t, true);
+    runTest(i, false);
+
+    // Check we can inherit the system principal
+    var s = new Cu.Sandbox(window, { wantGlobalProperties: ["isSecureContext"] } );
+    s.ok = ok;
+    Cu.evalInSandbox('ok(isSecureContext)', s);
+
+    // Check options insecure works
+    let sb = new Cu.Sandbox('https://www.example.com',
+                            { forceSecureContext: false,
+                              wantGlobalProperties:
+                              ["isSecureContext"]
+                            });
+    ok(!Cu.evalInSandbox('isSecureContext', sb));
+
+    // Check options secure works
+    let sb2 = new Cu.Sandbox('https://www.example.com',
+                            { forceSecureContext: true,
+                              wantGlobalProperties:
+                              ["isSecureContext"]
+                            });
+    ok(Cu.evalInSandbox('isSecureContext', sb2));
+    SimpleTest.finish();
+  };
+
+  // Check dom window inheritance works
+  function runTest(ifr, expectIsSecureContext) {
+    let frameWin = ifr.contentWindow;
+    let s = new Cu.Sandbox(frameWin, { wantGlobalProperties: ["isSecureContext"] });
+    is(expectIsSecureContext, Cu.evalInSandbox('isSecureContext', s));
+
+    // Ensure the implementation of 'wantGlobalProperties' matches the DOM window prototype
+    let s2 = new Cu.Sandbox(frameWin, { sandboxPrototype: frameWin });
+    is(expectIsSecureContext, Cu.evalInSandbox('isSecureContext', s2));
+  }
+  </script>
+</head>
+</html>

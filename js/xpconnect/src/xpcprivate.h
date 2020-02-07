@@ -2262,6 +2262,7 @@ struct GlobalProperties {
   bool crypto : 1;
   bool fetch : 1;
   bool indexedDB : 1;
+  bool isSecureContext : 1;
   bool rtcIdentityProvider : 1;
 
  private:
@@ -2309,6 +2310,7 @@ class MOZ_STACK_CLASS SandboxOptions : public OptionsBase {
         isWebExtensionContentScript(false),
         proto(cx),
         sameZoneAs(cx),
+        forceSecureContext(false),
         freshCompartment(false),
         freshZone(false),
         isUAWidgetScope(false),
@@ -2328,6 +2330,7 @@ class MOZ_STACK_CLASS SandboxOptions : public OptionsBase {
   JS::RootedObject proto;
   nsCString sandboxName;
   JS::RootedObject sameZoneAs;
+  bool forceSecureContext;
   bool freshCompartment;
   bool freshZone;
   bool isUAWidgetScope;
