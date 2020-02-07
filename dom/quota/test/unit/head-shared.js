@@ -9,15 +9,7 @@ const NS_ERROR_UNEXPECTED = Cr.NS_ERROR_UNEXPECTED;
 const NS_ERROR_STORAGE_BUSY = Cr.NS_ERROR_STORAGE_BUSY;
 const NS_ERROR_FILE_NO_DEVICE_SPACE = Cr.NS_ERROR_FILE_NO_DEVICE_SPACE;
 
-const loggingEnabled = false;
-
 Cu.import("resource://gre/modules/Services.jsm");
-
-function log(msg) {
-  if (loggingEnabled) {
-    info(msg);
-  }
-}
 
 function is(a, b, msg) {
   Assert.equal(a, b, msg);
@@ -218,10 +210,15 @@ function listOrigins(callback) {
   return request;
 }
 
-function installPackage(packageRelativePath, allowFileOverwrites) {
-  let currentDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+function installPackage(packageName) {
+  let directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(
+    Ci.nsIProperties
+  );
 
-  let packageFile = getRelativeFile(packageRelativePath + ".zip", currentDir);
+  let currentDir = directoryService.get("CurWorkD", Ci.nsIFile);
+
+  let packageFile = currentDir.clone();
+  packageFile.append(packageName + ".zip");
 
   let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
     Ci.nsIZipReader
@@ -241,10 +238,6 @@ function installPackage(packageRelativePath, allowFileOverwrites) {
         file.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
       }
     } else {
-      if (!allowFileOverwrites && file.exists()) {
-        throw new Error("File already exists!");
-      }
-
       let istream = zipReader.getInputStream(entryName);
 
       var ostream = Cc[
@@ -275,23 +268,17 @@ function getProfileDir() {
   return directoryService.get("ProfD", Ci.nsIFile);
 }
 
-// Given a "/"-delimited path relative to a base file (or the profile
-// directory if a base file is not provided) return an nsIFile representing the
-// path.  This does not test for the existence of the file or parent
-// directories.  It is safe even on Windows where the directory separator is
-// not "/", but make sure you're not passing in a "\"-delimited path.
-function getRelativeFile(relativePath, baseFile) {
-  if (!baseFile) {
-    baseFile = getProfileDir();
-  }
+// Given a "/"-delimited path relative to the profile directory,
+// return an nsIFile representing the path.  This does not test
+// for the existence of the file or parent directories.
+// It is safe even on Windows where the directory separator is not "/",
+// but make sure you're not passing in a "\"-delimited path.
+function getRelativeFile(relativePath) {
+  let profileDir = getProfileDir();
 
-  let file = baseFile.clone();
+  let file = profileDir.clone();
   relativePath.split("/").forEach(function(component) {
-    if (component == "..") {
-      file = file.parent;
-    } else {
-      file.append(component);
-    }
+    file.append(component);
   });
 
   return file;
@@ -411,264 +398,3 @@ var SpecialPowers = {
     );
   },
 };
-
-function installPackages(packageRelativePaths) {
-  if (packageRelativePaths.length != 2) {
-    throw new Error("Unsupported number of package relative paths");
-  }
-
-  for (const packageRelativePath of packageRelativePaths) {
-    installPackage(packageRelativePath);
-  }
-}
-
-// Take current storage structure on disk and compare it with the expected
-// structure. The expected structure is defined in JSON and consists of a per
-// test package definition and a shared package definition. The shared package
-// definition should contain unknown stuff which needs to be properly handled
-// in all situations.
-function verifyStorage(packageDefinitionRelativePaths, key) {
-  if (packageDefinitionRelativePaths.length != 2) {
-    throw new Error("Unsupported number of package definition relative paths");
-  }
-
-  function verifyEntries(entries, name, indent = "") {
-    log(`${indent}Verifying ${name} entries`);
-
-    indent += "  ";
-
-    for (const entry of entries) {
-      const maybeName = entry.name;
-
-      log(`${indent}Verifying entry ${maybeName}`);
-
-      let hasName = false;
-      let hasDir = false;
-      let hasEntries = false;
-
-      for (const property in entry) {
-        switch (property) {
-          case "note":
-          case "todo":
-            break;
-
-          case "name":
-            hasName = true;
-            break;
-
-          case "dir":
-            hasDir = true;
-            break;
-
-          case "entries":
-            hasEntries = true;
-            break;
-
-          default:
-            throw new Error(`Unknown property ${property}`);
-        }
-      }
-
-      if (!hasName) {
-        throw new Error("An entry must have the name property");
-      }
-
-      if (!hasDir) {
-        throw new Error("An entry must have the dir property");
-      }
-
-      if (hasEntries && !entry.dir) {
-        throw new Error("An entry can't have entries if it's not a directory");
-      }
-
-      if (hasEntries) {
-        verifyEntries(entry.entries, entry.name, indent);
-      }
-    }
-  }
-
-  function getCurrentEntries() {
-    log("Getting current entries");
-
-    function getEntryForFile(file) {
-      let entry = {
-        name: file.leafName,
-        dir: file.isDirectory(),
-      };
-
-      if (file.isDirectory()) {
-        const enumerator = file.directoryEntries;
-        let nextFile;
-        while ((nextFile = enumerator.nextFile)) {
-          if (!entry.entries) {
-            entry.entries = [];
-          }
-          entry.entries.push(getEntryForFile(nextFile));
-        }
-      }
-
-      return entry;
-    }
-
-    let entries = [];
-
-    let file = getRelativeFile("indexedDB");
-    if (file.exists()) {
-      entries.push(getEntryForFile(file));
-    }
-
-    file = getRelativeFile("storage");
-    if (file.exists()) {
-      entries.push(getEntryForFile(file));
-    }
-
-    file = getRelativeFile("storage.sqlite");
-    if (file.exists()) {
-      entries.push(getEntryForFile(file));
-    }
-
-    verifyEntries(entries, "current");
-
-    return entries;
-  }
-
-  function getEntriesFromPackageDefinition(
-    packageDefinitionRelativePath,
-    key
-  ) {
-    log(`Getting ${key} entries from ${packageDefinitionRelativePath}`);
-
-    const currentDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
-    const file = getRelativeFile(
-      packageDefinitionRelativePath + ".json",
-      currentDir
-    );
-
-    const fileInputStream = Cc[
-      "@mozilla.org/network/file-input-stream;1"
-    ].createInstance(Ci.nsIFileInputStream);
-    fileInputStream.init(file, -1, -1, 0);
-
-    const scriptableInputStream = Cc[
-      "@mozilla.org/scriptableinputstream;1"
-    ].createInstance(Ci.nsIScriptableInputStream);
-    scriptableInputStream.init(fileInputStream);
-
-    const data = scriptableInputStream.readBytes(
-      scriptableInputStream.available()
-    );
-
-    const obj = JSON.parse(data);
-
-    const result = obj.find(({ key: elementKey }) => elementKey == key);
-
-    if (!result) {
-      throw new Error("The file doesn't contain an element for given key");
-    }
-
-    if (!result.entries) {
-      throw new Error("The element doesn't have the entries property");
-    }
-
-    verifyEntries(result.entries, key);
-
-    return result.entries;
-  }
-
-  function addSharedEntries(expectedEntries, sharedEntries, name, indent = "") {
-    log(`${indent}Checking common ${name} entries`);
-
-    indent += "  ";
-
-    for (const sharedEntry of sharedEntries) {
-      const expectedEntry = expectedEntries.find(
-        ({ name }) => name == sharedEntry.name
-      );
-
-      if (expectedEntry) {
-        log(`${indent}Checking common entry ${sharedEntry.name}`);
-
-        if (!expectedEntry.dir || !sharedEntry.dir) {
-          throw new Error("A common entry must be a directory");
-        }
-
-        if (sharedEntry.entries) {
-          if (!expectedEntry.entries) {
-            expectedEntry.entries = [];
-          }
-
-          addSharedEntries(
-            expectedEntry.entries,
-            sharedEntry.entries,
-            sharedEntry.name,
-            indent
-          );
-        }
-      } else {
-        log(`${indent}Adding entry ${sharedEntry.name}`);
-        expectedEntries.push(sharedEntry);
-      }
-    }
-  }
-
-  function compareEntries(currentEntries, expectedEntries, name, indent = "") {
-    log(`${indent}Comparing ${name} entries`);
-
-    indent += "  ";
-
-    if (currentEntries.length != expectedEntries.length) {
-      throw new Error("Entries must have the same length");
-    }
-
-    for (const currentEntry of currentEntries) {
-      log(`${indent}Comparing entry ${currentEntry.name}`);
-
-      const expectedEntry = expectedEntries.find(
-        ({ name }) => name == currentEntry.name
-      );
-
-      if (!expectedEntry) {
-        throw new Error("Cannot find a matching entry");
-      }
-
-      if (expectedEntry.dir != currentEntry.dir) {
-        throw new Error("The dir property doesn't match");
-      }
-
-      if (
-        (expectedEntry.entries && !currentEntry.entries) ||
-        (!expectedEntry.entries && currentEntry.entries)
-      ) {
-        throw new Error("The entries property doesn't match");
-      }
-
-      if (expectedEntry.entries) {
-        compareEntries(
-          currentEntry.entries,
-          expectedEntry.entries,
-          currentEntry.name,
-          indent
-        );
-      }
-    }
-  }
-
-  const currentEntries = getCurrentEntries();
-
-  log("Stringified current entries: " + JSON.stringify(currentEntries));
-
-  const expectedEntries = getEntriesFromPackageDefinition(
-    packageDefinitionRelativePaths[0],
-    key
-  );
-  const sharedEntries = getEntriesFromPackageDefinition(
-    packageDefinitionRelativePaths[1],
-    key
-  );
-
-  addSharedEntries(expectedEntries, sharedEntries, key);
-
-  log("Stringified expected entries: " + JSON.stringify(expectedEntries));
-
-  compareEntries(currentEntries, expectedEntries, key);
-}

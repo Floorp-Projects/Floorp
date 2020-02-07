@@ -33,25 +33,14 @@ async function testSteps() {
     "storage/default/https+++example.com/idb/UUID123.tmp",
   ];
 
-  const packages = [
-    // Storage used by FF 57-67 (storage version 2.1 with obsolete origins, a
-    // deprecated client and an unknown temporary file).
-    "version2_1_profile",
-    "../defaultStorageDirectory_shared",
-  ];
-
   info("Clearing");
 
   let request = clear();
   await requestFinished(request);
 
-  info("Installing packages");
-
-  installPackages(packages);
-
-  info("Verifying storage");
-
-  verifyStorage(packages, "afterInstall");
+  // Storage used by FF 57-67 (storage version 2.1 with obsolete origins, a
+  // deprecated client and an unknown temporary file).
+  installPackage("version2_1_profile");
 
   info("Checking files and directories before upgrade (storage version 2.1)");
 
@@ -66,10 +55,6 @@ async function testSteps() {
   // Initialize to trigger storage upgrade from version 2.1
   request = init();
   await requestFinished(request);
-
-  info("Verifying storage");
-
-  verifyStorage(packages, "afterInit");
 
   info("Checking files and directories after upgrade");
 
