@@ -329,19 +329,6 @@ typedef bool (*CanTransferStructuredCloneOp)(JSContext* cx,
                                              bool* sameProcessScopeRequired,
                                              void* closure);
 
-/**
- * Called when a SharedArrayBuffer (including one owned by a Wasm memory object)
- * has been processed in context `cx` by structured cloning.  If `receiving` is
- * true then the SAB has been received from a channel and a new SAB object has
- * been created; if false then an existing SAB has been serialized onto a
- * channel.
- *
- * If the callback returns false then the clone operation (read or write) will
- * signal a failure.
- */
-typedef bool (*SharedArrayBufferClonedOp)(JSContext* cx, bool receiving,
-                                          void* closure);
-
 struct JSStructuredCloneCallbacks {
   ReadStructuredCloneOp read;
   WriteStructuredCloneOp write;
@@ -350,7 +337,6 @@ struct JSStructuredCloneCallbacks {
   TransferStructuredCloneOp writeTransfer;
   FreeTransferStructuredCloneOp freeTransfer;
   CanTransferStructuredCloneOp canTransfer;
-  SharedArrayBufferClonedOp sabCloned;
 };
 
 enum OwnTransferablePolicy {
