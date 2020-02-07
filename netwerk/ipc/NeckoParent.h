@@ -208,13 +208,12 @@ class NeckoParent : public PNeckoParent {
 
   /* Predictor Messages */
   mozilla::ipc::IPCResult RecvPredPredict(
-      const Maybe<ipc::URIParams>& aTargetURI,
-      const Maybe<ipc::URIParams>& aSourceURI,
+      nsIURI* aTargetURI, nsIURI* aSourceURI,
       const PredictorPredictReason& aReason,
       const OriginAttributes& aOriginAttributes, const bool& hasVerifier);
 
   mozilla::ipc::IPCResult RecvPredLearn(
-      const ipc::URIParams& aTargetURI, const Maybe<ipc::URIParams>& aSourceURI,
+      nsIURI* aTargetURI, nsIURI* aSourceURI,
       const PredictorPredictReason& aReason,
       const OriginAttributes& aOriginAttributes);
   mozilla::ipc::IPCResult RecvPredReset();

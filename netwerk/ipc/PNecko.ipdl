@@ -95,10 +95,10 @@ parent:
   async PWebSocketEventListener(uint64_t aInnerWindowID);
 
   /* Predictor Methods */
-  async PredPredict(URIParams? targetURI, URIParams? sourceURI,
+  async PredPredict(nsIURI targetURI, nsIURI sourceURI,
                     uint32_t reason, OriginAttributes originAttributes,
                     bool hasVerifier);
-  async PredLearn(URIParams targetURI, URIParams? sourceURI,
+  async PredLearn(nsIURI targetURI, nsIURI sourceURI,
                   uint32_t reason, OriginAttributes originAttributes);
   async PredReset();
 
@@ -166,9 +166,9 @@ child:
                                       nsString realm, uint64_t callbackId);
 
   /* Predictor Methods */
-  async PredOnPredictPrefetch(URIParams uri, uint32_t httpStatus);
-  async PredOnPredictPreconnect(URIParams uri);
-  async PredOnPredictDNS(URIParams uri);
+  async PredOnPredictPrefetch(nsIURI uri, uint32_t httpStatus);
+  async PredOnPredictPreconnect(nsIURI uri);
+  async PredOnPredictDNS(nsIURI uri);
 
   async SpeculativeConnectRequest();
 
