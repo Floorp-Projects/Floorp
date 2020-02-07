@@ -4,11 +4,17 @@ const URL =
   HOST + "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 const TIMEOUT_PREF = "signon.masterPasswordReprompt.timeout_ms";
 
+const BRAND_BUNDLE = Services.strings.createBundle(
+  "chrome://branding/locale/brand.properties"
+);
+const BRAND_FULL_NAME = BRAND_BUNDLE.GetStringFromName("brandFullName");
+
 // Waits for the master password prompt and cancels it when close() is called on the return value.
 async function waitForDialog() {
   let [subject] = await TestUtils.topicObserved("common-dialog-loaded");
   let dialog = subject.Dialog;
-  is(dialog.args.title, "Password Required", "Check common dialog title");
+  let expected = "Password Required - " + BRAND_FULL_NAME;
+  is(dialog.args.title, expected, "Check common dialog title");
   return {
     async close(win = window) {
       dialog.ui.button1.click();
