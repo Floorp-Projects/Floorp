@@ -42,11 +42,6 @@ function* testSteps() {
 
   ok(usage == 0, "Usage is zero");
 
-  info("Clearing");
-
-  clear(continueToNextStepSync);
-  yield undefined;
-
   info("Installing package");
 
   // The profile contains just one empty IndexedDB database. The file

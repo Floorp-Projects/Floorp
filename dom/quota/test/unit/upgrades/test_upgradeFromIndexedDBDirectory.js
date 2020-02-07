@@ -28,12 +28,6 @@ function* testSteps() {
     },
   ];
 
-  const packages = [
-    // Storage used prior FF 26 (indexedDB/ directory).
-    "indexedDBDirectory_profile",
-    "../indexedDBDirectory_shared",
-  ];
-
   info("Clearing");
 
   clear(continueToNextStepSync);
@@ -41,11 +35,8 @@ function* testSteps() {
 
   info("Installing package");
 
-  installPackages(packages);
-
-  info("Verifying storage");
-
-  verifyStorage(packages, "afterInstall");
+  // Storage used prior FF 26 (indexedDB/ directory).
+  installPackage("indexedDBDirectory_profile");
 
   for (let origin of origins) {
     let originDir = getRelativeFile(origin.oldPath);
@@ -65,14 +56,6 @@ function* testSteps() {
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
-
-  info("Verifying storage");
-
-  verifyStorage(packages, "afterInit");
-
-  // TODO: Remove this block once temporary storage initialization is able to
-  //       ignore unknown directories.
-  getRelativeFile("storage/default/invalid+++example.com").remove(false);
 
   info("Checking origin directories");
 
