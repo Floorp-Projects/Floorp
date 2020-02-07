@@ -319,5 +319,5 @@ object WebExtensionSupport {
         onCloseTabOverride?.invoke(webExtension, id) ?: store.dispatch(TabListAction.RemoveTabAction(id))
     }
 
-    private fun WebExtension.toState() = WebExtensionState(id, url, getMetadata()?.name)
+    private fun WebExtension.toState() = WebExtensionState(id, url, getMetadata()?.name, isEnabled())
 }

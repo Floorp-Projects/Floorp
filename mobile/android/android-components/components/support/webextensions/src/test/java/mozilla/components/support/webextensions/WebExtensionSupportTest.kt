@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.Action
+import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
@@ -72,9 +73,17 @@ class WebExtensionSupportTest {
         val store = spy(BrowserStore())
 
         val ext1: WebExtension = mock()
+        val ext1Meta: Metadata = mock()
+        whenever(ext1Meta.name).thenReturn("ext1")
         val ext2: WebExtension = mock()
         whenever(ext1.id).thenReturn("1")
+        whenever(ext1.url).thenReturn("url1")
+        whenever(ext1.getMetadata()).thenReturn(ext1Meta)
+        whenever(ext1.isEnabled()).thenReturn(true)
+
         whenever(ext2.id).thenReturn("2")
+        whenever(ext2.url).thenReturn("url2")
+        whenever(ext2.isEnabled()).thenReturn(false)
 
         val engine: Engine = mock()
         val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
@@ -88,8 +97,8 @@ class WebExtensionSupportTest {
 
         val actionCaptor = argumentCaptor<WebExtensionAction.InstallWebExtensionAction>()
         verify(store, times(2)).dispatch(actionCaptor.capture())
-        assertEquals(WebExtensionState(ext1.id, ext1.url), actionCaptor.allValues[0].extension)
-        assertEquals(WebExtensionState(ext2.id, ext2.url), actionCaptor.allValues[1].extension)
+        assertEquals(WebExtensionState(ext1.id, ext1.url, "ext1", true), actionCaptor.allValues[0].extension)
+        assertEquals(WebExtensionState(ext2.id, ext2.url, null, false), actionCaptor.allValues[1].extension)
     }
 
     @Test
@@ -198,7 +207,9 @@ class WebExtensionSupportTest {
 
         // Verify that we dispatch to the store and mark the extension as installed
         delegateCaptor.value.onInstalled(ext)
-        verify(store).dispatch(WebExtensionAction.InstallWebExtensionAction(WebExtensionState(ext.id, ext.url)))
+        verify(store).dispatch(WebExtensionAction.InstallWebExtensionAction(
+            WebExtensionState(ext.id, ext.url, ext.getMetadata()?.name, ext.isEnabled()))
+        )
         assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
 
         // Verify that we register an action handler for all existing sessions on the extension
@@ -240,7 +251,9 @@ class WebExtensionSupportTest {
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
 
         delegateCaptor.value.onInstalled(ext)
-        verify(store).dispatch(WebExtensionAction.InstallWebExtensionAction(WebExtensionState(ext.id, ext.url)))
+        verify(store).dispatch(WebExtensionAction.InstallWebExtensionAction(
+            WebExtensionState(ext.id, ext.url, ext.getMetadata()?.name, ext.isEnabled()))
+        )
         assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
 
         // Verify that we dispatch to the store and mark the extension as uninstalled
