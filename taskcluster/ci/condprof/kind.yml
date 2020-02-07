@@ -89,7 +89,7 @@ jobs:
         description: Creates or updates conditioned profiles on macOS
         treeherder:
             symbol: condprof(firefox)
-            platform: macosx64/opt
+            platform: macosx1014-64/opt
         dependencies:
             build-macosx64/opt: build-macosx64/opt
         fetches:
