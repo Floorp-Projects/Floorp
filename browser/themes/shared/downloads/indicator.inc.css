@@ -171,6 +171,10 @@
 #downloads-notification-anchor {
   width: 42px; /* Width of each frame within the SVG sprite */
   height: 98px; /* Height of each frame within the SVG sprite */
+  /* We need a min-height as well, to avoid being compressed away by our
+     container (#downloads-animation-container), which is 1px tall as defined
+     in a CSS rule above this one. */
+  min-height: 98px;
   overflow: hidden;
   /* animation is not directional and shouldn't be reversed in RTL */
   direction: ltr;
