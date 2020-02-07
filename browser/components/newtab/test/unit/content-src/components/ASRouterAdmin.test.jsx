@@ -107,18 +107,6 @@ describe("ASRouterAdmin", () => {
         "Targeting Utilities"
       );
     });
-    it("should render a pocket section for pocket route", () => {
-      wrapper = shallow(
-        <ASRouterAdminInner location={{ routes: ["pocket"] }} Sections={[]} />
-      );
-      assert.equal(
-        wrapper
-          .find("h2")
-          .at(0)
-          .text(),
-        "Pocket"
-      );
-    });
     it("should render a DS section for DS route", () => {
       wrapper = shallow(
         <ASRouterAdminInner
