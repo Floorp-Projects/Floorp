@@ -337,7 +337,7 @@ class App extends Component {
   }
 
   renderEagerEvaluation() {
-    if (!this.props.eagerEvaluationEnabled || this.props.editorMode) {
+    if (!this.props.eagerEvaluationEnabled) {
       return null;
     }
 
