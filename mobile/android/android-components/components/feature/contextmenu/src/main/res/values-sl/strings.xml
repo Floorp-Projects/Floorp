@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to open the link in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Odpri povezavo v novem zavihku</string>
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Odpri povezavo v novem zasebnem zavihku</string>
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Odpri sliko v novem zavihku</string>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">Deli povezavo</string>
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">Kopiraj povezavo</string>
+    <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image_location">Kopiraj mesto slike</string>
+    <!-- Text for context menu item to save / download the image. -->
+    <string name="mozac_feature_contextmenu_save_image">Shrani sliko</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Odprt nov zavihek</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Odprt nov zaseben zavihek</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Odpri povezavo v zunanji aplikaciji</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Прыпыніць</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">Адкрыць</string>
+
+    </resources>
