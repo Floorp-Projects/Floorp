@@ -96,6 +96,11 @@ function* testSteps() {
 
   verifyResult(result, []);
 
+  info("Clearing");
+
+  clear(continueToNextStepSync);
+  yield undefined;
+
   info("Installing package");
 
   // The profile contains IndexedDB databases placed across the repositories.
