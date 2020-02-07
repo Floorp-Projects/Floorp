@@ -484,6 +484,9 @@ const SNAPSHOT_SCHEMA = {
         windowProtocol: {
           type: "string",
         },
+        desktopEnvironment: {
+          type: "string",
+        },
       },
     },
     media: {
