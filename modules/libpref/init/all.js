@@ -2458,7 +2458,7 @@ pref("mousewheel.with_win.delta_multiplier_z", 100);
 
 // If line-height is lower than this value (in device pixels), 1 line scroll
 // scrolls this height.
-pref("mousewheel.min_line_scroll_amount", 5);
+pref("mousewheel.min_line_scroll_amount", 35);
 
 // Auto-dir is a feature which treats any single-wheel scroll as a scroll in the
 // only one scrollable direction if the target has only one scrollable
@@ -2492,8 +2492,8 @@ pref("mousewheel.autodir.honourroot", false);
 // Scrollbars: Clicking scrollbars arrows, clicking scrollbars tracks
 // Note: Currently OS X trackpad and magic mouse don't use our smooth scrolling
 // Note: These are relevant only when "general.smoothScroll" is enabled
-pref("general.smoothScroll.scrollbars.durationMinMS", 150);
-pref("general.smoothScroll.scrollbars.durationMaxMS", 150);
+pref("general.smoothScroll.scrollbars.durationMinMS", 100);
+pref("general.smoothScroll.scrollbars.durationMaxMS", 100);
 // Enable disable smooth scrolling for different triggers (when "general.smoothScroll" is enabled)
 pref("general.smoothScroll.pixels", true);
 pref("general.smoothScroll.lines", true);
