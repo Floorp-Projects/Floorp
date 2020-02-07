@@ -48,13 +48,6 @@ class ReftestRunner(MozbuildObject):
         # reftest imports will happen from the objdir
         sys.path.insert(0, self.reftest_dir)
 
-        if args.suite != 'jstestbrowser' and not args.tests:
-            test_subdir = {
-                "reftest": os.path.join('layout', 'reftests'),
-                "crashtest": os.path.join('layout', 'crashtest'),
-            }[args.suite]
-            args.tests = [test_subdir]
-
         tests = os.path.join(self.reftest_dir, 'tests')
         if not os.path.isdir(tests):
             os.symlink(self.topsrcdir, tests)
