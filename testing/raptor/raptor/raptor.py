@@ -10,6 +10,7 @@ import os
 import shutil
 import sys
 import tarfile
+import traceback
 
 import mozinfo
 
@@ -105,32 +106,39 @@ def main(args=sys.argv[1:]):
 
             return klass(*inner_args, **inner_kwargs)
 
-    raptor = raptor_class(
-        args.app,
-        args.binary,
-        run_local=args.run_local,
-        noinstall=args.noinstall,
-        installerpath=args.installerpath,
-        obj_path=args.obj_path,
-        gecko_profile=args.gecko_profile,
-        gecko_profile_interval=args.gecko_profile_interval,
-        gecko_profile_entries=args.gecko_profile_entries,
-        symbols_path=args.symbols_path,
-        host=args.host,
-        power_test=args.power_test,
-        cpu_test=args.cpu_test,
-        memory_test=args.memory_test,
-        is_release_build=args.is_release_build,
-        debug_mode=args.debug_mode,
-        post_startup_delay=args.post_startup_delay,
-        activity=args.activity,
-        intent=args.intent,
-        interrupt_handler=SignalHandler(),
-        enable_webrender=args.enable_webrender,
-        extra_prefs=args.extra_prefs or {},
-        device_name=args.device_name,
-        no_conditioned_profile=args.no_conditioned_profile,
-    )
+    try:
+        raptor = raptor_class(
+            args.app,
+            args.binary,
+            run_local=args.run_local,
+            noinstall=args.noinstall,
+            installerpath=args.installerpath,
+            obj_path=args.obj_path,
+            gecko_profile=args.gecko_profile,
+            gecko_profile_interval=args.gecko_profile_interval,
+            gecko_profile_entries=args.gecko_profile_entries,
+            symbols_path=args.symbols_path,
+            host=args.host,
+            power_test=args.power_test,
+            cpu_test=args.cpu_test,
+            memory_test=args.memory_test,
+            is_release_build=args.is_release_build,
+            debug_mode=args.debug_mode,
+            post_startup_delay=args.post_startup_delay,
+            activity=args.activity,
+            intent=args.intent,
+            interrupt_handler=SignalHandler(),
+            enable_webrender=args.enable_webrender,
+            extra_prefs=args.extra_prefs or {},
+            device_name=args.device_name,
+            no_conditioned_profile=args.no_conditioned_profile,
+        )
+    except Exception:
+        traceback.print_exc()
+        LOG.critical(
+            "TEST-UNEXPECTED-FAIL: could not initialize the raptor test runner"
+        )
+        os.sys.exit(1)
 
     success = raptor.run_tests(raptor_test_list, raptor_test_names)
 
