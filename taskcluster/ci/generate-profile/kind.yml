@@ -183,7 +183,7 @@ jobs:
             product: firefox
             job-name: macosx64-profile
         treeherder:
-            platform: macosx64-shippable/opt
+            platform: macosx1014-64-shippable/opt
         worker-type: t-osx-1014-pgo
         worker:
             max-run-time: 7200
