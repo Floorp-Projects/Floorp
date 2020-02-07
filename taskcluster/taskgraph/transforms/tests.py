@@ -296,7 +296,7 @@ test_description_schema = Schema({
     # in the TEST_VARIANTS object.
     Optional('variants'): optionally_keyed_by(
         'test-platform', 'project',
-        Any(TEST_VARIANTS.keys())),
+        Any(list(TEST_VARIANTS))),
 
     # Whether to run this task with e10s.  If false, run
     # without e10s; if true, run with e10s; if 'both', run one task with and

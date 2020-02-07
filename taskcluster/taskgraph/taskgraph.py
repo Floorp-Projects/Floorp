@@ -8,6 +8,7 @@ from .graph import Graph
 from .task import Task
 
 import attr
+import six
 
 
 @attr.s(frozen=True)
@@ -39,7 +40,7 @@ class TaskGraph(object):
 
     def __iter__(self):
         "Iterate over tasks in undefined order"
-        return self.tasks.itervalues()
+        return six.itervalues(self.tasks)
 
     def to_json(self):
         "Return a JSON-able object representing the task graph, as documented"
