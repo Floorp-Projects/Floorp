@@ -994,24 +994,6 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
 }
 
 /**
- * The second half of frame reflow. Does the following:
- * - sets the frame's bounds
- * - sizes and positions (if requested) the frame's view. If the frame's final
- *   position differs from the current position and the frame itself does not
- *   have a view, then any child frames with views are positioned so they stay
- *   in sync
- * - sets the view's visibility, opacity, content transparency, and clip
- * - invoked the DidReflow() function
- *
- * Flags:
- * ReflowChildFlags::NoMoveFrame - don't move the frame. aX and aY are ignored
- *    in this case. Also implies ReflowChildFlags::NoMoveView
- * ReflowChildFlags::NoMoveView - don't position the frame's view. Set this if
- *    you don't want to automatically sync the frame and view
- * ReflowChildFlags::NoSizeView - don't size the frame's view
- */
-
-/**
  * De-optimize function to work around a VC2017 15.5+ compiler bug:
  * https://bugzil.la/1424281#c12
  */
