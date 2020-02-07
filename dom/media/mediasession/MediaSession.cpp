@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/MediaSession.h"
 
+#include "MediaSessionUtils.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -20,6 +22,7 @@ NS_INTERFACE_MAP_END
 
 MediaSession::MediaSession(nsPIDOMWindowInner* aParent) : mParent(aParent) {
   MOZ_ASSERT(mParent);
+  NotifyMediaSessionStatus(SessionStatus::eCreated);
 }
 
 nsPIDOMWindowInner* MediaSession::GetParentObject() const { return mParent; }
@@ -48,6 +51,17 @@ void MediaSession::NotifyHandler(const MediaSessionActionDetails& aDetails) {
   if (handler) {
     handler->Call(aDetails);
   }
+}
+
+void MediaSession::Shutdown() {
+  NotifyMediaSessionStatus(SessionStatus::eDestroyed);
+}
+
+void MediaSession::NotifyMediaSessionStatus(SessionStatus aState) {
+  RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
+  MOZ_ASSERT(currentBC, "Update session status after context destroyed!");
+  NotfiyMediaSessionCreationOrDeconstruction(currentBC,
+                                             aState == SessionStatus::eCreated);
 }
 
 }  // namespace dom
