@@ -230,8 +230,8 @@ async function doUpdateTest({
 } = {}) {
   // Do a search that triggers the tip.
   let [result, element] = await awaitTip(searchString);
-
   Assert.strictEqual(result.payload.type, tip, "Tip type");
+  await element.ownerDocument.l10n.translateFragment(element);
 
   let actualTitle = element._elements.get("title").textContent;
   if (typeof title == "string") {
