@@ -228,7 +228,11 @@ void Navigator::Invalidate() {
   }
 
   mMediaCapabilities = nullptr;
-  mMediaSession = nullptr;
+
+  if (mMediaSession) {
+    mMediaSession->Shutdown();
+    mMediaSession = nullptr;
+  }
 
   mAddonManager = nullptr;
 

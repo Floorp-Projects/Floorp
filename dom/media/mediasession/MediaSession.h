@@ -45,7 +45,17 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT
   void NotifyHandler(const MediaSessionActionDetails& aDetails);
 
+  void Shutdown();
+
  private:
+  // Propagate media context status to the media session controller in the
+  // chrome process when we create or destroy the media session.
+  enum class SessionStatus : bool {
+    eDestroyed = false,
+    eCreated = true,
+  };
+  void NotifyMediaSessionStatus(SessionStatus aState);
+
   ~MediaSession() = default;
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
