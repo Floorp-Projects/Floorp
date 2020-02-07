@@ -467,6 +467,7 @@ static nsresult GetTableSelectionType(nsRange* aRange,
   return NS_OK;
 }
 
+// static
 nsresult Selection::GetTableCellLocationFromRange(
     nsRange* aRange, TableSelection* aSelectionType, int32_t* aRow,
     int32_t* aCol) {
@@ -476,9 +477,6 @@ nsresult Selection::GetTableCellLocationFromRange(
   *aSelectionType = TableSelection::None;
   *aRow = 0;
   *aCol = 0;
-
-  // Must have access to frame selection to get cell info
-  if (!mFrameSelection) return NS_OK;
 
   nsresult result = GetTableSelectionType(aRange, aSelectionType);
   if (NS_FAILED(result)) return result;
@@ -497,17 +495,12 @@ nsresult Selection::GetTableCellLocationFromRange(
 
   // GetCellLayout depends on current frame, we need flush frame to get
   // nsITableCellLayout
-  if (RefPtr<PresShell> presShell = mFrameSelection->GetPresShell()) {
+  if (RefPtr<PresShell> presShell = child->OwnerDoc()->GetPresShell()) {
     presShell->FlushPendingNotifications(FlushType::Frames);
-
-    // Since calling FlushPendingNotifications, so check whether disconnected.
-    if (!mFrameSelection || !mFrameSelection->GetPresShell()) {
-      return NS_ERROR_FAILURE;
-    }
   }
 
   // Note: This is a non-ref-counted pointer to the frame
-  nsITableCellLayout* cellLayout = mFrameSelection->GetCellLayout(child);
+  nsITableCellLayout* cellLayout = nsFrameSelection::GetCellLayout(child);
   if (!cellLayout) return NS_ERROR_FAILURE;
 
   return cellLayout->GetCellIndexes(*aRow, *aCol);
