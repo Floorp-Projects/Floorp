@@ -96,6 +96,7 @@
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/dom/MediaSessionUtils.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
@@ -6047,6 +6048,12 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
           aContext->Canonical()->GetMediaController()) {
     controller->NotifyMediaAudibleChanged(aAudible);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaSessionUpdated(
+    BrowsingContext* aContext, bool aIsCreated) {
+  NotfiyMediaSessionCreationOrDeconstruction(aContext, aIsCreated);
   return IPC_OK();
 }
 
