@@ -375,14 +375,6 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
             return
         self.app_launched = False
 
-        # Turn off verbose to prevent logcat from being inserted into the main log.
-        verbose = self.device._verbose
-        self.device._verbose = False
-        logcat = self.device.get_logcat()
-        self.device._verbose = verbose
-        if logcat:
-            if mozcrash.check_for_java_exception(logcat, "raptor"):
-                return
         try:
             dump_dir = tempfile.mkdtemp()
             remote_dir = posixpath.join(self.remote_profile, "minidumps")

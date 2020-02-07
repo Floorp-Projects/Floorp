@@ -39,7 +39,8 @@ StackInfo = namedtuple("StackInfo",
                         "stackwalk_retcode",
                         "stackwalk_errors",
                         "extra",
-                        "reason"])
+                        "reason",
+                        "java_stack"])
 
 
 def get_logger():
@@ -96,7 +97,11 @@ def check_for_crashes(dump_directory,
     crash_count = 0
     for info in crash_info:
         crash_count += 1
-        if not quiet:
+        output = None
+        if info.java_stack:
+            output = u"PROCESS-CRASH | {name} | {stack}".format(
+                name=test_name, stack=info.java_stack)
+        elif not quiet:
             stackwalk_output = [u"Crash dump filename: {}".format(info.minidump_path)]
             if info.reason:
                 stackwalk_output.append("Mozilla crash reason: %s" % info.reason)
@@ -115,6 +120,7 @@ def check_for_crashes(dump_directory,
                 sig=signature,
                 out="\n".join(stackwalk_output),
                 err="\n".join(info.stackwalk_errors))
+        if output is not None:
             if sys.stdout.encoding != 'UTF-8':
                 output = output.encode('utf-8')
             print(output)
@@ -278,6 +284,7 @@ class CrashInfo(object):
         err = None
         retcode = None
         reason = None
+        java_stack = None
         if (self.symbols_path and self.stackwalk_binary and
             os.path.exists(self.stackwalk_binary) and
                 os.access(self.stackwalk_binary, os.X_OK)):
@@ -341,8 +348,8 @@ class CrashInfo(object):
 
         if os.path.exists(extra):
             crash_dict = self._parse_extra_file(extra)
-            if crash_dict.get("MozCrashReason"):
-                reason = crash_dict["MozCrashReason"]
+            reason = crash_dict.get("MozCrashReason")
+            java_stack = crash_dict.get("JavaStackTrace")
 
         if self.dump_save_path:
             self._save_dump_file(path, extra)
@@ -359,7 +366,8 @@ class CrashInfo(object):
                          retcode,
                          errors,
                          extra,
-                         reason)
+                         reason,
+                         java_stack)
 
     def _parse_extra_file(self, path):
         with open(path) as file:
@@ -394,6 +402,11 @@ def check_for_java_exception(logcat, test_name=None, quiet=False):
     """
     Print a summary of a fatal Java exception, if present in the provided
     logcat output.
+
+    Today, exceptions in geckoview are usually noted in the minidump .extra file, allowing
+    java exceptions to be reported by the "normal" minidump processing, like log_crashes();
+    therefore, this function may be extraneous (but maintained for now, while exception
+    handling is evolving).
 
     Example:
     PROCESS-CRASH | <test-name> | java-exception java.lang.NullPointerException at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833) # noqa
