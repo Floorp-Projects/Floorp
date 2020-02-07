@@ -94,7 +94,8 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
             "klar_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.KLAR.productName),
             "fxa_signed_in" to application.settings().fxaSignedIn,
             "fxa_has_synced_items" to application.settings().fxaHasSyncedItems,
-            "search_widget_installed" to application.settings().searchWidgetInstalled
+            "search_widget_installed" to application.settings().searchWidgetInstalled,
+            "fenix" to true
         ))
     }
 
