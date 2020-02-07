@@ -1146,6 +1146,8 @@ class IonBuilder : public MIRGenerator,
   MRootList* rootList_;
 
  public:
+  using ObjectGroupVector = Vector<ObjectGroup*, 0, JitAllocPolicy>;
+
   void setRootList(MRootList& rootList) {
     MOZ_ASSERT(!rootList_);
     rootList_ = &rootList;
@@ -1217,6 +1219,8 @@ class IonBuilder : public MIRGenerator,
   LoopStateStack loopStack_;
 
   Vector<BytecodeSite*, 0, JitAllocPolicy> trackedOptimizationSites_;
+
+  ObjectGroupVector abortedPreliminaryGroups_;
 
   BytecodeSite* bytecodeSite(jsbytecode* pc) {
     MOZ_ASSERT(info().inlineScriptTree()->script()->containsPC(pc));
@@ -1334,6 +1338,8 @@ class IonBuilder : public MIRGenerator,
   // Used in tracking outcomes of optimization strategies for devtools.
   void startTrackingOptimizations();
 
+  void addAbortedPreliminaryGroup(ObjectGroup* group);
+
   // The track* methods below are called often. Do not combine them with the
   // unchecked variants, despite the unchecked variants having no other
   // callers.
@@ -1396,6 +1402,12 @@ class IonBuilder : public MIRGenerator,
   void trackInlineSuccessUnchecked(InliningStatus status);
 
  public:
+  // When aborting with AbortReason::PreliminaryObjects, all groups with
+  // preliminary objects which haven't been analyzed yet.
+  const ObjectGroupVector& abortedPreliminaryGroups() const {
+    return abortedPreliminaryGroups_;
+  }
+
   bool hasPendingEdgesMap() const { return pendingEdges_.isSome(); }
 
   // This is only valid for IonBuilders that have moved to background
