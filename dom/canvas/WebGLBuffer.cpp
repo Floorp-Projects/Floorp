@@ -183,6 +183,8 @@ void WebGLBuffer::BufferSubData(GLenum target, uint64_t dstByteOffset,
 
   ////
 
+  if (!dataLen) return;  // With validation successful, nothing else to do.
+
   const void* uploadData = data;
   if (mIndexCache) {
     const auto cachedDataBegin = (uint8_t*)mIndexCache.get() + dstByteOffset;
