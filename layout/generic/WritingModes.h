@@ -447,9 +447,9 @@ class WritingMode {
       MOZ_ASSERT(StyleWritingMode::VERTICAL.bits == 0x01 &&
                      StyleWritingMode::VERTICAL_LR.bits == 0x04,
                  "unexpected mask values");
-      const auto wm = static_cast<uint8_t>(
+      const uint8_t wm =
           ((mWritingMode & StyleWritingMode::VERTICAL_LR).bits >> 1) |
-          (mWritingMode & StyleWritingMode::VERTICAL).bits);
+          (mWritingMode & StyleWritingMode::VERTICAL).bits;
       return PhysicalSideForBlockAxis(wm, GetEdge(aSide));
     }
 
