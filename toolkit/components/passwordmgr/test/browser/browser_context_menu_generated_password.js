@@ -52,17 +52,20 @@ add_task(async function test_hidden_by_prefs() {
       let generatedPasswordItem = document.getElementById(
         "fill-login-generated-password"
       );
+      let fillLoginItem = document.getElementById("fill-login");
       let generatedPasswordSeparator = document.getElementById(
-        "generated-password-separator"
+        "fill-login-and-generated-password-separator"
       );
 
       ok(
         !BrowserTestUtils.is_visible(generatedPasswordItem),
         "generated password item is hidden"
       );
-      ok(
-        !BrowserTestUtils.is_visible(generatedPasswordSeparator),
-        "separator is hidden"
+      is(
+        BrowserTestUtils.is_visible(fillLoginItem) ||
+          BrowserTestUtils.is_visible(generatedPasswordItem),
+        BrowserTestUtils.is_visible(generatedPasswordSeparator),
+        "separator should only be visible if one of the login items is visible"
       );
 
       CONTEXT_MENU.hidePopup();
@@ -89,17 +92,20 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
       let generatedPasswordItem = document.getElementById(
         "fill-login-generated-password"
       );
+      let fillLoginItem = document.getElementById("fill-login");
       let generatedPasswordSeparator = document.getElementById(
-        "generated-password-separator"
+        "fill-login-and-generated-password-separator"
       );
 
       ok(
         !BrowserTestUtils.is_visible(generatedPasswordItem),
         "generated password item is hidden"
       );
-      ok(
-        !BrowserTestUtils.is_visible(generatedPasswordSeparator),
-        "separator is hidden"
+      is(
+        BrowserTestUtils.is_visible(fillLoginItem) ||
+          BrowserTestUtils.is_visible(generatedPasswordItem),
+        BrowserTestUtils.is_visible(generatedPasswordSeparator),
+        "separator should only be visible if one of the login items is visible"
       );
 
       CONTEXT_MENU.hidePopup();
