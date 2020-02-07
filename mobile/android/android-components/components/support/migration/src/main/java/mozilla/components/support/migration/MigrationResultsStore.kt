@@ -64,6 +64,7 @@ internal class MigrationResultsStore(context: Context) : SharedPreferencesCache<
                 Migration.Addons.javaClass.simpleName -> Migration.Addons
                 Migration.TelemetryIdentifiers.javaClass.simpleName -> Migration.TelemetryIdentifiers
                 Migration.SearchEngine.javaClass.simpleName -> Migration.SearchEngine
+                Migration.PinnedSites.javaClass.simpleName -> Migration.PinnedSites
                 else -> throw IllegalStateException("Unrecognized migration type: $migrationName")
             }
             result[migration] = MigrationRun(version = migrationVersion, success = migrationSuccess)

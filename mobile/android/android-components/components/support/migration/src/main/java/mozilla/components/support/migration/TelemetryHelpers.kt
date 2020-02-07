@@ -17,6 +17,7 @@ internal fun Migration.telemetryIdentifier(): String {
         Migration.Addons -> "addons"
         Migration.TelemetryIdentifiers -> "telemetry_identifiers"
         Migration.SearchEngine -> "search"
+        Migration.PinnedSites -> "pinned_sites"
     }
 }
 
@@ -68,7 +69,10 @@ internal enum class FailureReasonTelemetryCodes(val code: Int) {
 
     SEARCH_NO_DEFAULT(31),
     SEARCH_NO_MATCH(32),
-    SEARCH_EXCEPTION(33)
+    SEARCH_EXCEPTION(33),
+
+    PINNED_SITES_MISSING_DB_PATH(34),
+    PINNED_SITES_READ_FAILURE(35),
 }
 
 @SuppressWarnings("MagicNumber")
@@ -99,5 +103,8 @@ internal enum class SuccessReasonTelemetryCodes(val code: Int) {
     TELEMETRY_IDENTIFIERS_MIGRATED(16),
 
     FXA_WILL_RETRY(17),
-    SEARCH_MIGRATED(18)
+    SEARCH_MIGRATED(18),
+
+    PINNED_SITES_NONE(19),
+    PINNED_SITES_MIGRATED(20),
 }

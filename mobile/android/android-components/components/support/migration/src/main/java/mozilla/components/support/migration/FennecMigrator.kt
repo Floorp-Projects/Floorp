@@ -23,6 +23,7 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
+import mozilla.components.feature.top.sites.TopSiteStorage
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.Glean
@@ -41,6 +42,7 @@ import mozilla.components.support.migration.GleanMetrics.MigrationHistory
 import mozilla.components.support.migration.GleanMetrics.MigrationLogins
 import mozilla.components.support.migration.GleanMetrics.MigrationTelemetryIdentifiers
 import mozilla.components.support.migration.GleanMetrics.MigrationOpenTabs
+import mozilla.components.support.migration.GleanMetrics.MigrationPinnedSites
 import mozilla.components.support.migration.GleanMetrics.MigrationSearch
 import mozilla.components.support.migration.GleanMetrics.MigrationSettings
 import java.io.File
@@ -105,6 +107,11 @@ sealed class Migration(val currentVersion: Int) {
      * Migrates Fennec's default search engine.
      */
     object SearchEngine : Migration(currentVersion = 1)
+
+    /**
+     * Migrates Fennec's pinned sites.
+     */
+    object PinnedSites : Migration(currentVersion = 1)
 }
 
 /**
@@ -181,6 +188,12 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
      * @param cause Original exception which caused the problem.
      */
     class MigrateSearchEngineException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating pinned sites.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigratePinnedSitesException(cause: Exception) : FennecMigratorException(cause)
 }
 
 /**
@@ -212,7 +225,8 @@ class FennecMigrator private constructor(
     private val browserDbPath: String?,
     private val signonsDbName: String,
     private val key4DbName: String,
-    private val coroutineContext: CoroutineContext
+    private val coroutineContext: CoroutineContext,
+    private val topSiteStorage: TopSiteStorage?
 ) {
     /**
      * Data migration builder. Allows configuring which migrations to run, their versions and relative order.
@@ -241,6 +255,7 @@ class FennecMigrator private constructor(
         private var signonsDbName = "signons.sqlite"
         private var key4DbName = "key4.db"
         private var masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD
+        private var topSiteStorage: TopSiteStorage? = null
 
         /**
          * Enable history migration.
@@ -259,12 +274,16 @@ class FennecMigrator private constructor(
 
         /**
          * Enable bookmarks migration. Must be called after [migrateHistory].
+         * Optionally, enable top sites migration, if [topSiteStorage] is specified.
+         * In Fennec, pinned sites are stored as special type of a bookmark, hence this coupling.
          *
          * @param storage An instance of [PlacesBookmarksStorage], used for storing data.
+         * @param topSiteStorage An instance of [TopSiteStorage], used for storing pinned sites.
          * @param version Version of the migration; defaults to the current version.
          */
         fun migrateBookmarks(
             storage: PlacesBookmarksStorage,
+            topSiteStorage: TopSiteStorage? = null,
             version: Int = Migration.Bookmarks.currentVersion
         ): Builder {
             check(migrations.find { it.migration is Migration.FxA } == null) {
@@ -275,6 +294,15 @@ class FennecMigrator private constructor(
             }
             bookmarksStorage = storage
             migrations.add(VersionedMigration(Migration.Bookmarks, version))
+
+            // Allowing enabling pinned sites migration only when bookmarks migration is enabled is a conscious
+            // choice. We currently don't have a requirement to only migrate pinned sites, and not bookmarks,
+            // and so this is done to keep things a bit simpler.
+            topSiteStorage?.let {
+                this.topSiteStorage = it
+                migrations.add(VersionedMigration(Migration.PinnedSites, version))
+            }
+
             return this
         }
 
@@ -408,7 +436,8 @@ class FennecMigrator private constructor(
                 browserDbPath ?: fennecProfile?.let { "${it.path}/browser.db" },
                 signonsDbName,
                 key4DbName,
-                coroutineContext
+                coroutineContext,
+                topSiteStorage
             )
         }
 
@@ -570,6 +599,7 @@ class FennecMigrator private constructor(
                 Migration.Addons -> migrateAddons()
                 Migration.TelemetryIdentifiers -> migrateTelemetryIdentifiers()
                 Migration.SearchEngine -> migrateSearchEngine()
+                Migration.PinnedSites -> migratePinnedSites()
             }
 
             val migrationRun = when (migrationResult) {
@@ -590,6 +620,7 @@ class FennecMigrator private constructor(
                         Migration.Addons -> MigrationAddons.anyFailures.set(true)
                         Migration.TelemetryIdentifiers -> MigrationTelemetryIdentifiers.anyFailures.set(true)
                         Migration.SearchEngine -> MigrationSearch.anyFailures.set(true)
+                        Migration.PinnedSites -> MigrationPinnedSites.anyFailures.set(true)
                     }
                     setFailure(versionedMigration.migration)
 
@@ -1134,5 +1165,67 @@ class FennecMigrator private constructor(
         }
 
         return result
+    }
+
+    @Suppress("ComplexMethod", "TooGenericExceptionCaught", "ReturnCount")
+    private fun migratePinnedSites(): Result<Unit> {
+        checkNotNull(bookmarksStorage) { "Bookmarks storage must be configured to migrate pinned sites" }
+        checkNotNull(topSiteStorage) { "TopSiteStorage must be configured to migrate pinned sites" }
+
+        // There's no dbPath without a profile, but if a profile is present we expect dbPath to be also present.
+        if (profile != null && browserDbPath == null) {
+            crashReporter.submitCaughtException(IllegalStateException("Missing DB path during bookmark migration"))
+        }
+
+        if (browserDbPath == null) {
+            MigrationBookmarks.failureReason.add(FailureReasonTelemetryCodes.PINNED_SITES_MISSING_DB_PATH.code)
+            return Result.Failure(IllegalStateException("Missing DB path during bookmark migration"))
+        }
+
+        val importedPinnedSites = try {
+            bookmarksStorage.readPinnedSitesFromFennec(browserDbPath)
+        } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigratePinnedSitesException(e)
+            )
+            MigrationPinnedSites.failureReason.add(
+                FailureReasonTelemetryCodes.PINNED_SITES_READ_FAILURE.code
+            )
+            return Result.Failure(e)
+        }
+
+        if (importedPinnedSites.isEmpty()) {
+            MigrationPinnedSites.successReason.add(SuccessReasonTelemetryCodes.PINNED_SITES_NONE.code)
+            return Result.Success(Unit)
+        } else {
+            // Adding '0' to a glean counter is not supported, so instead we have an explicit success
+            // code for when there are no pinned sites.
+            MigrationPinnedSites.detectedPinnedSites.add(importedPinnedSites.size)
+        }
+
+        // We can't import pinned sites that do not have a url.
+        val pinnedSitesWithUrl = importedPinnedSites.filter { it.url != null }
+        var failedToImport = importedPinnedSites.size - pinnedSitesWithUrl.size
+
+        val recordedFailures = mutableSetOf<String>()
+        // Reversed, so that first pinned site in Fennec ends up as the first one in Fenix, as well.
+        pinnedSitesWithUrl.reversed().forEach { pinnedSite ->
+            try {
+                topSiteStorage.addTopSite(pinnedSite.title ?: "", pinnedSite.url!!)
+            } catch (e: Exception) {
+                failedToImport++
+                // Let's not spam Sentry and submit the same exception multiple times
+                if (recordedFailures.add(e.uniqueId())) {
+                    crashReporter.submitCaughtException(
+                        FennecMigratorException.MigratePinnedSitesException(e)
+                    )
+                }
+            }
+        }
+
+        MigrationPinnedSites.migratedPinnedSites.add(importedPinnedSites.size - failedToImport)
+        MigrationPinnedSites.successReason.add(SuccessReasonTelemetryCodes.PINNED_SITES_MIGRATED.code)
+
+        return Result.Success(Unit)
     }
 }

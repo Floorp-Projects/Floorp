@@ -81,6 +81,7 @@ dependencies {
 
     implementation project(':feature-addons')
     implementation project(':feature-intent')
+    implementation project(':feature-top-sites')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
