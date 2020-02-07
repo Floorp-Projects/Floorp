@@ -57,15 +57,6 @@ add_task(async function setup() {
   );
   await AddonTestUtils.promiseStartupManager();
 
-  let extensionPath = Services.dirsvc.get("GreD", Ci.nsIFile);
-  extensionPath.append("browser");
-  extensionPath.append("features");
-  extensionPath.append(ADDON_ID);
-
-  if (!extensionPath.exists()) {
-    extensionPath.leafName = `${ADDON_ID}.xpi`;
-  }
-
   let startupPromise = new Promise(resolve => {
     const { apiManager } = ExtensionParent;
     function onReady(event, extension) {
@@ -78,7 +69,9 @@ add_task(async function setup() {
     apiManager.on("ready", onReady);
   });
 
-  await AddonManager.installTemporaryAddon(extensionPath);
+  await AddonManager.installBuiltinAddon(
+    "resource:///features/doh-rollout@mozilla.org/"
+  );
   await startupPromise;
 });
 
