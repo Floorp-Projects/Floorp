@@ -4,66 +4,56 @@
 
 "use strict";
 
-var gDebuggee;
-var gThreadFront;
-
 // This test ensures that we can create SourceActors and SourceFronts properly,
 // and that they can communicate over the protocol to fetch the source text for
 // a given script.
 
-add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_source();
-    },
-    { waitForFinish: true }
-  )
-);
-
 const SOURCE_URL = "http://example.com/foobar.js";
 const SOURCE_CONTENT = "stopMe()";
 
-function test_source() {
-  DebuggerServer.LONG_STRING_LENGTH = 200;
+add_task(
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    DebuggerServer.LONG_STRING_LENGTH = 200;
 
-  gThreadFront.once("paused", function(packet) {
-    gThreadFront.getSources().then(function(response) {
-      Assert.ok(!!response);
-      Assert.ok(!!response.sources);
+    await executeOnNextTickAndWaitForPause(
+      () => evaluateTestCode(debuggee),
+      threadFront
+    );
+    const response = await threadFront.getSources();
 
-      const source = response.sources.filter(function(s) {
-        return s.url === SOURCE_URL;
-      })[0];
+    Assert.ok(!!response);
+    Assert.ok(!!response.sources);
 
-      Assert.ok(!!source);
+    const source = response.sources.filter(function(s) {
+      return s.url === SOURCE_URL;
+    })[0];
 
-      const sourceFront = gThreadFront.source(source);
-      sourceFront.source().then(function(response) {
-        Assert.ok(!!response);
-        Assert.ok(!!response.contentType);
-        Assert.ok(response.contentType.includes("javascript"));
+    Assert.ok(!!source);
 
-        Assert.ok(!!response.source);
-        Assert.equal(SOURCE_CONTENT, response.source);
+    const sourceFront = threadFront.source(source);
+    const response2 = await sourceFront.source();
 
-        gThreadFront.resume().then(function() {
-          threadFrontTestFinished();
-        });
-      });
-    });
-  });
+    Assert.ok(!!response2);
+    Assert.ok(!!response2.contentType);
+    Assert.ok(response2.contentType.includes("javascript"));
 
+    Assert.ok(!!response2.source);
+    Assert.equal(SOURCE_CONTENT, response2.source);
+
+    threadFront.resume();
+  })
+);
+
+function evaluateTestCode(debuggee) {
   Cu.evalInSandbox(
     "" +
       function stopMe(arg1) {
         debugger;
       },
-    gDebuggee,
+    debuggee,
     "1.8",
     getFileUrl("test_source-01.js")
   );
 
-  Cu.evalInSandbox(SOURCE_CONTENT, gDebuggee, "1.8", SOURCE_URL);
+  Cu.evalInSandbox(SOURCE_CONTENT, debuggee, "1.8", SOURCE_URL);
 }
