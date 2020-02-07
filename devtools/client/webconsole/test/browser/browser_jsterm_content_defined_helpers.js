@@ -20,7 +20,6 @@ const HELPERS = [
   "help",
   "inspect",
   "keys",
-  "pprint",
   "screenshot",
   "values",
 ];
