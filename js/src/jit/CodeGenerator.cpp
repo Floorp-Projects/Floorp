@@ -603,7 +603,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(getPropIC->id());
       pushArg(getPropIC->value());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext*, HandleScript, IonGetPropertyIC*,
                           HandleValue, HandleValue, MutableHandleValue);
@@ -625,7 +625,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(getPropSuperIC->receiver());
       pushArg(getPropSuperIC->object());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn =
           bool (*)(JSContext*, HandleScript, IonGetPropSuperIC*, HandleObject,
@@ -649,7 +649,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(setPropIC->id());
       pushArg(setPropIC->object());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext*, HandleScript, IonSetPropertyIC*,
                           HandleObject, HandleValue, HandleValue);
@@ -667,7 +667,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
 
       pushArg(getNameIC->environment());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext*, HandleScript, IonGetNameIC*, HandleObject,
                           MutableHandleValue);
@@ -686,7 +686,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
 
       pushArg(bindNameIC->environment());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn =
           JSObject* (*)(JSContext*, HandleScript, IonBindNameIC*, HandleObject);
@@ -705,7 +705,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
 
       pushArg(getIteratorIC->value());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = JSObject* (*)(JSContext*, HandleScript, IonGetIteratorIC*,
                                HandleValue);
@@ -726,7 +726,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(inIC->object());
       pushArg(inIC->key());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext*, HandleScript, IonInIC*, HandleValue,
                           HandleObject, bool*);
@@ -746,7 +746,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(hasOwnIC->id());
       pushArg(hasOwnIC->value());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext*, HandleScript, IonHasOwnIC*, HandleValue,
                           HandleValue, int32_t*);
@@ -766,7 +766,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(hasInstanceOfIC->rhs());
       pushArg(hasInstanceOfIC->lhs());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext*, HandleScript, IonInstanceOfIC*,
                           HandleValue lhs, HandleObject rhs, bool* res);
@@ -786,7 +786,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
 
       pushArg(unaryArithIC->input());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext * cx, HandleScript outerScript,
                           IonUnaryArithIC * stub, HandleValue val,
@@ -807,7 +807,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(binaryArithIC->rhs());
       pushArg(binaryArithIC->lhs());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext * cx, HandleScript outerScript,
                           IonBinaryArithIC * stub, HandleValue lhs,
@@ -828,7 +828,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(compareIC->rhs());
       pushArg(compareIC->lhs());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->info().script()));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext * cx, HandleScript outerScript,
                           IonCompareIC * stub, HandleValue lhs, HandleValue rhs,
@@ -5667,7 +5667,7 @@ void CodeGenerator::generateArgumentsChecks(bool assert) {
 
   masm.debugAssertContextRealm(gen->realm->realmPtr(), temp1);
 
-  const CompileInfo& info = gen->info();
+  const CompileInfo& info = gen->outerInfo();
 
   Label miss;
   for (uint32_t i = info.startArgSlot(); i < info.endArgSlot(); i++) {
@@ -5842,7 +5842,7 @@ IonScriptCounts* CodeGenerator::maybeCreateScriptCounts() {
   // must be serializable and script count codegen bakes in absolute
   // addresses, (2) wasm code does not have a JSScript with which to associate
   // code coverage data.
-  JSScript* script = gen->info().script();
+  JSScript* script = gen->outerInfo().script();
   if (!script) {
     return nullptr;
   }
@@ -10518,12 +10518,13 @@ bool CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId,
 
 bool CodeGenerator::generate() {
   JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%u:%u",
-          gen->info().script()->filename(), gen->info().script()->lineno(),
-          gen->info().script()->column());
+          gen->outerInfo().script()->filename(),
+          gen->outerInfo().script()->lineno(),
+          gen->outerInfo().script()->column());
 
   // Initialize native code table with an entry to the start of
   // top-level script.
-  InlineScriptTree* tree = gen->info().inlineScriptTree();
+  InlineScriptTree* tree = gen->outerInfo().inlineScriptTree();
   jsbytecode* startPC = tree->script()->code();
   BytecodeSite* startSite = new (gen->alloc()) BytecodeSite(tree, startPC);
   if (!addNativeToBytecodeEntry(startSite)) {
@@ -10619,7 +10620,7 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
   // removed from the relevant lists by this point. Don't allow GC here.
   JS::AutoAssertNoGC nogc(cx);
 
-  RootedScript script(cx, gen->info().script());
+  RootedScript script(cx, gen->outerInfo().script());
   OptimizationLevel optimizationLevel = gen->optimizationInfo().level();
 
   // Perform any read barriers which were skipped while compiling the
@@ -10670,7 +10671,7 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
     script->incWarmUpCounter(warmUpCount - script->getWarmUpCount());
   }
 
-  uint32_t argumentSlots = (gen->info().nargs() + 1) * sizeof(Value);
+  uint32_t argumentSlots = (gen->outerInfo().nargs() + 1) * sizeof(Value);
   uint32_t scriptFrameSize =
       frameClass_ == FrameSizeClass::None()
           ? frameDepth_
@@ -10856,7 +10857,7 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
 
   ionScript->setInvalidationEpilogueDataOffset(
       invalidateEpilogueData_.offset());
-  ionScript->setOsrPc(gen->info().osrPc());
+  ionScript->setOsrPc(gen->outerInfo().osrPc());
   ionScript->setOsrEntryOffset(getOsrEntryOffset());
   ionScript->setInvalidationEpilogueOffset(invalidate_.offset());
 

@@ -23,7 +23,7 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
                            const OptimizationInfo* optimizationInfo)
     : realm(realm),
       runtime(realm ? realm->runtime() : nullptr),
-      info_(info),
+      outerInfo_(info),
       optimizationInfo_(optimizationInfo),
       alloc_(alloc),
       graph_(graph),

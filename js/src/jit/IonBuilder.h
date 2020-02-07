@@ -173,7 +173,8 @@ class IonBuilder : public mozilla::LinkedListElement<IonBuilder>,
                    public RunnableTask {
  public:
   IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
-             CompilerConstraintList* constraints, BaselineInspector* inspector,
+             CompileInfo* info, CompilerConstraintList* constraints,
+             BaselineInspector* inspector,
              BaselineFrameInspector* baselineFrame, size_t inliningDepth = 0,
              uint32_t loopDepth = 0);
 
