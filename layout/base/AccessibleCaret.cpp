@@ -57,7 +57,8 @@ std::ostream& operator<<(
   using PositionChangedResult = AccessibleCaret::PositionChangedResult;
   switch (aResult) {
     AC_PROCESS_ENUM_TO_STREAM(PositionChangedResult::NotChanged);
-    AC_PROCESS_ENUM_TO_STREAM(PositionChangedResult::Changed);
+    AC_PROCESS_ENUM_TO_STREAM(PositionChangedResult::Position);
+    AC_PROCESS_ENUM_TO_STREAM(PositionChangedResult::Zoom);
     AC_PROCESS_ENUM_TO_STREAM(PositionChangedResult::Invisible);
   }
   return aStream;
@@ -259,10 +260,11 @@ AccessibleCaret::PositionChangedResult AccessibleCaret::SetPosition(
   nsLayoutUtils::TransformRect(aFrame, CustomContentContainerFrame(),
                                imaginaryCaretRectInContainerFrame);
   const float zoomLevel = GetZoomLevel();
+  const bool isSamePosition = imaginaryCaretRectInContainerFrame.IsEqualEdges(
+      mImaginaryCaretRectInContainerFrame);
+  const bool isSameZoomLevel = FuzzyEqualsMultiplicative(zoomLevel, mZoomLevel);
 
-  if (imaginaryCaretRectInContainerFrame.IsEqualEdges(
-          mImaginaryCaretRectInContainerFrame) &&
-      FuzzyEqualsMultiplicative(zoomLevel, mZoomLevel)) {
+  if (isSamePosition && isSameZoomLevel) {
     return PositionChangedResult::NotChanged;
   }
 
@@ -277,7 +279,8 @@ AccessibleCaret::PositionChangedResult AccessibleCaret::SetPosition(
 
   SetCaretElementStyle(imaginaryCaretRectInContainerFrame, mZoomLevel);
 
-  return PositionChangedResult::Changed;
+  return isSamePosition ? PositionChangedResult::Zoom
+                        : PositionChangedResult::Position;
 }
 
 nsIFrame* AccessibleCaret::CustomContentContainerFrame() const {
