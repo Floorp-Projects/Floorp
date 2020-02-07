@@ -557,7 +557,9 @@ bool ClientWebGLContext::InitializeCanvasRenderer(
   MOZ_ASSERT(mCanvasElement);  // TODO: What to do here?  Is this about
                                // OffscreenCanvas?
 
-  if (IsHostOOP()) {
+  if (!mNotLost) return false;
+
+  if (mNotLost->outOfProcess) {
     data.mOOPRenderer = mCanvasElement->GetOOPCanvasRenderer();
     MOZ_ASSERT(data.mOOPRenderer);
     MOZ_ASSERT((!data.mOOPRenderer->mContext) ||
