@@ -92,15 +92,18 @@ class AccessibleCaret {
            (mAppearance != Appearance::NormalNotShown);
   }
 
-  // This enumeration representing the result returned by SetPosition().
+  // This enum represents the result returned by SetPosition().
   enum class PositionChangedResult : uint8_t {
-    // Position is not changed.
+    // Both position and the zoom level are not changed.
     NotChanged,
 
-    // Position or zoom level is changed.
-    Changed,
+    // The position is changed. (The zoom level may or may not be changed.)
+    Position,
 
-    // Position is out of scroll port.
+    // Only the zoom level is changed. The position is *not* changed.
+    Zoom,
+
+    // The position is out of scroll port.
     Invisible
   };
 
