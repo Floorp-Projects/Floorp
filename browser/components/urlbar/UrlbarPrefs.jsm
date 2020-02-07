@@ -118,8 +118,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // results.
   ["restyleSearches", false],
 
-  // The number of times the user has been shown a search tip.
-  ["searchTips.shownCount", 0],
+  // The number of times the user has been shown the onboarding search tip.
+  ["searchTips.onboard.shownCount", 0],
+
+  // The number of times the user has been shown the redirect search tip.
+  ["searchTips.redirect.shownCount", 0],
 
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],

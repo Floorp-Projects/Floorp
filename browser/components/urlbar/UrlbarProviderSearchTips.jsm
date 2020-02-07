@@ -90,10 +90,18 @@ class ProviderSearchTips extends UrlbarProvider {
     // Maps the running queries by queryContext.
     this.queries = new Map();
 
-    // Whether we've shown a tip in the current browser session.
-    this.showedTipInCurrentSession = false;
-    // Whether we've shown a tip in the current engagement.
-    this.showedTipInCurrentEngagement = false;
+    // Whether we should disable tips for the current browser session, for
+    // example because a tip was already shown.
+    this.disableTipsForCurrentSession = false;
+
+    if (
+      UrlbarPrefs.get("searchTips.onboard.shownCount") >= MAX_SHOWN_COUNT &&
+      UrlbarPrefs.get("searchTips.redirect.shownCount") >= MAX_SHOWN_COUNT
+    ) {
+      this.disableTipsForCurrentSession = true;
+    }
+    // Whether and what kind of tip we've shown in the current engagement.
+    this.showedTipTypeInCurrentEngagement = TIPS.NONE;
   }
 
   get PRIORITY() {
@@ -154,9 +162,8 @@ class ProviderSearchTips extends UrlbarProvider {
     this.queries.set(queryContext, instance);
 
     let tip = this.currentTip;
+    this.showedTipTypeInCurrentEngagement = this.currentTip;
     this.currentTip = TIPS.NONE;
-
-    this.showedTipInCurrentEngagement = true;
 
     let defaultEngine = await Services.search.getDefault();
 
@@ -228,17 +235,30 @@ class ProviderSearchTips extends UrlbarProvider {
    *        engagement, abandonment, discard.
    */
   onEngagement(isPrivate, state) {
-    if (this.showedTipInCurrentEngagement && state == "engagement") {
+    if (
+      this.showedTipTypeInCurrentEngagement != TIPS.NONE &&
+      state == "engagement"
+    ) {
       // The user either clicked the tip's "Okay, Got It" button, or they
       // engaged with the urlbar while the tip was showing. We treat both as
       // the user's acknowledgment of the tip, and we don't show tips again in any
       // session. Set the shown count to the max.
-      Services.prefs.setIntPref(
-        "browser.urlbar.searchTips.shownCount",
-        MAX_SHOWN_COUNT
-      );
+      switch (this.showedTipTypeInCurrentEngagement) {
+        case TIPS.ONBOARD:
+          Services.prefs.setIntPref(
+            "browser.urlbar.searchTips.onboard.shownCount",
+            MAX_SHOWN_COUNT
+          );
+          break;
+        case TIPS.REDIRECT:
+          Services.prefs.setIntPref(
+            "browser.urlbar.searchTips.redirect.shownCount",
+            MAX_SHOWN_COUNT
+          );
+          break;
+      }
     }
-    this.showedTipInCurrentEngagement = false;
+    this.showedTipTypeInCurrentEngagement = TIPS.NONE;
   }
 
   /**
@@ -250,11 +270,22 @@ class ProviderSearchTips extends UrlbarProvider {
     let window = BrowserWindowTracker.getTopWindow();
     // The UrlbarView is usually closed on location change when the input is
     // blurred. Since we open the view to show the redirect tip without focusing
-    // the input, the view won't close in that case. We need to close it manually.
-    if (this.showedTipInCurrentEngagement) {
+    // the input, the view won't close in that case. We need to close it
+    // manually.
+    if (this.showedTipTypeInCurrentEngagement != TIPS.NONE) {
       window.gURLBar.view.close();
     }
-    this._maybeShowTipForUrl(uri.spec);
+
+    // Check if we are supposed to show a tip for the current session.
+    if (
+      !UrlbarPrefs.get("update1.searchTips") ||
+      !cfrFeaturesUserPref ||
+      this.disableTipsForCurrentSession
+    ) {
+      return;
+    }
+
+    this._maybeShowTipForUrl(uri.spec).catch(Cu.reportError);
   }
 
   /**
@@ -266,18 +297,6 @@ class ProviderSearchTips extends UrlbarProvider {
   async _maybeShowTipForUrl(urlStr) {
     let instance = {};
     this._maybeShowTipForUrlInstance = instance;
-    // We show only one tip per session, so if we've shown one already, stop.
-    if (this.showedTipInCurrentSession) {
-      return;
-    }
-
-    // Get the number of times we've shown a tip over all sessions. If it's the
-    // max, don't show it again.
-    let shownCount = UrlbarPrefs.get("searchTips.shownCount");
-
-    if (shownCount >= MAX_SHOWN_COUNT) {
-      return;
-    }
 
     // Don't show a tip if the browser is already showing some other notification.
     if (isBrowserShowingNotification()) {
@@ -292,12 +311,15 @@ class ProviderSearchTips extends UrlbarProvider {
 
     // Determine which tip we should show for the tab.
     let tip;
+    let shownCountPrefName;
     let isNewtab = ["about:newtab", "about:home"].includes(urlStr);
     let isSearchHomepage = !isNewtab && (await isDefaultEngineHomepage(urlStr));
     if (isNewtab) {
       tip = TIPS.ONBOARD;
+      shownCountPrefName = "searchTips.onboard.shownCount";
     } else if (isSearchHomepage) {
       tip = TIPS.REDIRECT;
+      shownCountPrefName = "searchTips.redirect.shownCount";
     } else {
       // No tip.
       return;
@@ -307,19 +329,20 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    this.currentTip = tip;
-    if (!this.isActive()) {
+    // If we've shown this type of tip the maximum number of times over all
+    // sessions, don't show it again.
+    let shownCount = UrlbarPrefs.get(shownCountPrefName);
+    if (shownCount >= MAX_SHOWN_COUNT) {
       return;
     }
 
+    this.currentTip = tip;
+
     // At this point, we're showing a tip.
-    this.showedTipInCurrentSession = true;
+    this.disableTipsForCurrentSession = true;
 
     // Store the new shown count.
-    Services.prefs.setIntPref(
-      "browser.urlbar.searchTips.shownCount",
-      shownCount + 1
-    );
+    Services.prefs.setIntPref(shownCountPrefName, shownCount + 1);
 
     // Start a search.
     let window = BrowserWindowTracker.getTopWindow();
