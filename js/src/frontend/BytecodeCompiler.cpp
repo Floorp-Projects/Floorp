@@ -936,14 +936,10 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
   // These flags are computed for lazy scripts and may have a different
   // definition for non-lazy scripts.
   //
-  //  HasInnerFunctions:  The full parse performs basic analysis for dead code
-  //                      and may remove inner functions that existed after lazy
-  //                      parse.
   //  TreatAsRunOnce:     Some conditions depend on parent context and are
   //                      computed during lazy parsing, while other conditions
   //                      need to full parse.
   constexpr uint32_t CustomFlagsMask =
-      uint32_t(BaseScript::ImmutableFlags::HasInnerFunctions) |
       uint32_t(BaseScript::ImmutableFlags::TreatAsRunOnce);
 
   // These flags are expected to match between lazy and full parsing.

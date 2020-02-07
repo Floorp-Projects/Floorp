@@ -2760,6 +2760,14 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
     bool tryAnnexB /* = false */) {
   MOZ_ASSERT_IF(kind == FunctionSyntaxKind::Statement, funName);
 
+  // If we see any inner function, note it on our current context. The bytecode
+  // emitter may eliminate the function later, but we use a conservative
+  // definition for consistency between lazy and full parsing. The flag is only
+  // defined on function scripts right now.
+  if (pc_->isFunctionBox()) {
+    pc_->functionBox()->setHasInnerFunctions();
+  }
+
   // When fully parsing a LazyScript, we do not fully reparse its inner
   // functions, which are also lazy. Instead, their free variables and
   // source extents are recorded and may be skipped.
