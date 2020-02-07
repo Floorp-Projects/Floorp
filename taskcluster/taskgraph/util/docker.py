@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
+import io
 import json
 import os
 import re
@@ -233,14 +234,13 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
             archive_files[archive_path] = source_path
 
     # Parse Dockerfile for special syntax of extra files to include.
-    with open(os.path.join(context_dir, 'Dockerfile'), 'rb') as fh:
+    with io.open(os.path.join(context_dir, 'Dockerfile'), 'r') as fh:
         for line in fh:
             if line.startswith('# %ARG'):
                 p = line[len('# %ARG '):].strip()
                 if not args or p not in args:
                     raise Exception('missing argument: {}'.format(p))
-                replace.append((re.compile(r'\${}\b'.format(p)),
-                                args[p].encode('ascii')))
+                replace.append((re.compile(r'\${}\b'.format(p)), args[p]))
                 continue
 
             for regexp, s in replace:
@@ -275,7 +275,7 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
                 archive_files[archive_path] = fs_path
 
     archive_files[os.path.join(prefix, 'Dockerfile')] = \
-        GeneratedFile(b''.join(content))
+        GeneratedFile(b''.join(six.ensure_binary(s) for s in content))
 
     writer = HashingWriter(out_file)
     create_tar_gz_from_files(writer, archive_files, '%s.tar.gz' % prefix)

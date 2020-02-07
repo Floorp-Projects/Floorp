@@ -34,12 +34,15 @@ def evaluate_keyed_by(value, item_name, attributes):
             default: 12
     """
     while True:
-        if not isinstance(value, dict) or len(value) != 1 or not value.keys()[0].startswith('by-'):
+        if not isinstance(value, dict) or len(value) != 1:
+            return value
+        value_key = next(iter(value))
+        if not value_key.startswith('by-'):
             return value
 
-        keyed_by = value.keys()[0][3:]  # strip off 'by-' prefix
+        keyed_by = value_key[3:]  # strip off 'by-' prefix
         key = attributes.get(keyed_by)
-        alternatives = value.values()[0]
+        alternatives = next(iter(value.values()))
 
         if len(alternatives) == 1 and 'default' in alternatives:
             # Error out when only 'default' is specified as only alternatives,
