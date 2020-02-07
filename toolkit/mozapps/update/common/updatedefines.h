@@ -85,10 +85,10 @@ static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt,
 #  include <sys/wait.h>
 #  include <unistd.h>
 
-#  ifdef SOLARIS
-#    include <sys/stat.h>
-#  else
+#  ifdef HAVE_FTS_H
 #    include <fts.h>
+#  else
+#    include <sys/stat.h>
 #  endif
 #  include <dirent.h>
 
