@@ -213,8 +213,7 @@ nsDeckFrame::DoXULLayout(nsBoxLayoutState& aState) {
   // Make sure we tweak the state so it does not resize our children.
   // We will do that.
   ReflowChildFlags oldFlags = aState.LayoutFlags();
-  aState.SetLayoutFlags(ReflowChildFlags::NoSizeView |
-                        ReflowChildFlags::NoVisibility);
+  aState.SetLayoutFlags(ReflowChildFlags::NoSizeView);
 
   // do a normal layout
   nsresult rv = nsBoxFrame::DoXULLayout(aState);
