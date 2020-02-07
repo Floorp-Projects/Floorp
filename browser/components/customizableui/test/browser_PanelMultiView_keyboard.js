@@ -20,6 +20,7 @@ let gMainView;
 let gMainContext;
 let gMainButton1;
 let gMainMenulist;
+let gMainRadiogroup;
 let gMainTextbox;
 let gMainButton2;
 let gMainButton3;
@@ -108,6 +109,16 @@ add_task(async function setup() {
   item = document.createXULElement("menuitem");
   item.setAttribute("value", "2");
   menuPopup.appendChild(item);
+  gMainRadiogroup = document.createXULElement("radiogroup");
+  gMainRadiogroup.id = "gMainRadiogroup";
+  gMainView.appendChild(gMainRadiogroup);
+  let radio = document.createXULElement("radio");
+  radio.setAttribute("value", "1");
+  radio.setAttribute("selected", "true");
+  gMainRadiogroup.appendChild(radio);
+  radio = document.createXULElement("radio");
+  radio.setAttribute("value", "2");
+  gMainRadiogroup.appendChild(radio);
   gMainTextbox = document.createElement("input");
   gMainTextbox.id = "gMainTextbox";
   gMainView.appendChild(gMainTextbox);
@@ -121,6 +132,7 @@ add_task(async function setup() {
   gMainTabOrder = [
     gMainButton1,
     gMainMenulist,
+    gMainRadiogroup,
     gMainTextbox,
     gMainButton2,
     gMainButton3,
@@ -321,6 +333,29 @@ if (AppConstants.platform == "macosx") {
     await panelHidden;
   });
 }
+
+// Test that the up/down arrow keys work as expected in radiogroups.
+add_task(async function testArrowsRadiogroup() {
+  await openPopup();
+  gMainRadiogroup.focus();
+  is(document.activeElement, gMainRadiogroup, "radiogroup focused");
+  is(gMainRadiogroup.value, "1", "radiogroup initial value 1");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  is(
+    document.activeElement,
+    gMainRadiogroup,
+    "radiogroup still focused after ArrowDown"
+  );
+  is(gMainRadiogroup.value, "2", "radiogroup value 2 after ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  is(
+    document.activeElement,
+    gMainRadiogroup,
+    "radiogroup still focused after ArrowUp"
+  );
+  is(gMainRadiogroup.value, "1", "radiogroup value 1 after ArrowUp");
+  await hidePopup();
+});
 
 // Test that pressing space in a textbox inserts a space (instead of trying to
 // activate the control).
