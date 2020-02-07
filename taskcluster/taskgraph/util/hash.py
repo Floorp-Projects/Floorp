@@ -7,6 +7,8 @@ from mozbuild.util import memoize
 from mozpack.files import FileFinder
 import mozpack.path as mozpath
 import hashlib
+import io
+import six
 
 
 @memoize
@@ -15,7 +17,7 @@ def hash_path(path):
 
     Returns the SHA-256 hash in hex form.
     """
-    with open(path) as fh:
+    with io.open(path, mode='rb') as fh:
         return hashlib.sha256(fh.read()).hexdigest()
 
 
@@ -38,8 +40,8 @@ def hash_paths(base_path, patterns):
         else:
             raise Exception('%s did not match anything' % pattern)
     for path in sorted(files.keys()):
-        h.update('{} {}\n'.format(
+        h.update(six.ensure_binary('{} {}\n'.format(
             hash_path(mozpath.abspath(mozpath.join(base_path, path))),
             mozpath.normsep(path)
-        ))
+        )))
     return h.hexdigest()

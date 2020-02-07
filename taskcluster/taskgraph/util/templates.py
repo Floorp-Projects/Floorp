@@ -20,7 +20,7 @@ def merge_to(source, dest):
 
     for key, value in source.items():
         if isinstance(value, dict) and len(value) == 1 and \
-                value.keys()[0].startswith('by-'):
+                list(value)[0].startswith('by-'):
             # Do not merge by-* values as this is likely to confuse someone
             dest[key] = value
             continue

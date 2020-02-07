@@ -17,7 +17,6 @@ py2commands="
     android-emulator
     artifact
     awsy-test
-    bootstrap
     browsertime
     build
     build-backend
