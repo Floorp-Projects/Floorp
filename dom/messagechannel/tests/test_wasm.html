@@ -48,6 +48,10 @@ function enable_sab() {
   SpecialPowers.pushPrefEnv(
     {"set": [
       ["dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled", true],
+      ["browser.tabs.remote.useCrossOriginOpenerPolicy", true],
+      ["browser.tabs.remote.useCrossOriginEmbedderPolicy", true],
+      ["dom.postMessage.sharedArrayBuffer.withCOOP_COEP", true],
+      ["javascript.options.shared_memory", true],
     ]}, next);
 }
 
