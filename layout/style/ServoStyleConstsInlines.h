@@ -390,12 +390,14 @@ inline StyleLoadData& StyleCssUrl::LoadData() const {
 inline nsIURI* StyleCssUrl::GetURI() const {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   auto& loadData = LoadData();
-  if (!loadData.tried_to_resolve) {
-    loadData.tried_to_resolve = true;
-    NS_NewURI(getter_AddRefs(loadData.resolved), SpecifiedSerialization(),
-              nullptr, ExtraData().BaseURI());
+  if (!(loadData.flags & StyleLoadDataFlags::TRIED_TO_RESOLVE_URI)) {
+    loadData.flags |= StyleLoadDataFlags::TRIED_TO_RESOLVE_URI;
+    RefPtr<nsIURI> resolved;
+    NS_NewURI(getter_AddRefs(resolved), SpecifiedSerialization(), nullptr,
+              ExtraData().BaseURI());
+    loadData.resolved_uri = resolved.forget().take();
   }
-  return loadData.resolved.get();
+  return loadData.resolved_uri;
 }
 
 inline nsDependentCSubstring StyleComputedUrl::SpecifiedSerialization() const {
@@ -425,6 +427,15 @@ inline bool StyleComputedUrl::HasRef() const {
     return NS_SUCCEEDED(uri->GetHasRef(&hasRef)) && hasRef;
   }
   return false;
+}
+
+inline bool StyleComputedImageUrl::IsImageResolved() const {
+  return bool(LoadData().flags & StyleLoadDataFlags::TRIED_TO_RESOLVE_IMAGE);
+}
+
+inline imgRequestProxy* StyleComputedImageUrl::GetImage() const {
+  MOZ_ASSERT(IsImageResolved());
+  return LoadData().resolved_image;
 }
 
 template <>

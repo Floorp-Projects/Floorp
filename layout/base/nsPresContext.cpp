@@ -1525,7 +1525,6 @@ void nsPresContext::MediaFeatureValuesChangedAllDocuments(
 
   // Propagate the media feature value change down to any SVG images the
   // document is using.
-  mDocument->StyleImageLoader()->MediaFeatureValuesChangedAllDocuments(aChange);
   mDocument->ImageTracker()->MediaFeatureValuesChangedAllDocuments(aChange);
 
   // And then into any subdocuments.
