@@ -467,7 +467,6 @@ void InspectorUtils::GetCSSValuesForProperty(GlobalObject& aGlobalObject,
   if (!found) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
-  return;
 }
 
 /* static */
