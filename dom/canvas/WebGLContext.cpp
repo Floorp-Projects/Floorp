@@ -1758,7 +1758,13 @@ void WebGLContext::EnsureVRReady() {
   if (!IsPremultAlpha() && mOptions.alpha) {
     flags |= layers::TextureFlags::NON_PREMULTIPLIED;
   }
-  auto factory = gl::GLScreenBuffer::CreateFactory(gl, caps, nullptr, flags);
+  RefPtr<layers::ImageBridgeChild> imageBridge =
+      layers::ImageBridgeChild::GetSingleton();
+  if (!imageBridge) {
+    return;
+  }
+  auto factory =
+      gl::GLScreenBuffer::CreateFactory(gl, caps, imageBridge.get(), flags);
   gl->Screen()->Morph(std::move(factory));
 
   bool needsResize = false;
