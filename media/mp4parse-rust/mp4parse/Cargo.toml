@@ -30,6 +30,7 @@ bitreader = { version = "0.3.0" }
 num-traits = "0.2.0"
 mp4parse_fallible = { version = "0.0.1", optional = true }
 log = "0.4"
+static_assertions = "1.1.0"
 
 [dev-dependencies]
 test-assembler = "0.1.2"

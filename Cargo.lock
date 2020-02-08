@@ -2528,6 +2528,7 @@ dependencies = [
  "log",
  "mp4parse_fallible",
  "num-traits",
+ "static_assertions",
 ]
 
 [[package]]
@@ -3854,6 +3855,12 @@ name = "stable_deref_trait"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15132e0e364248108c5e2c02e3ab539be8d6f5d52a01ca9bbf27ed657316f02b"
+
+[[package]]
+name = "static_assertions"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "static_prefs"
