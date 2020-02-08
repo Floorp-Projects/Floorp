@@ -14,9 +14,9 @@ extern crate bitreader;
 extern crate num_traits;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use bitreader::{BitReader, ReadInto};
+use std::convert::TryInto as _;
 use std::io::{Read, Take};
 use std::io::Cursor;
-use std::cmp;
 use num_traits::Num;
 
 #[cfg(feature = "mp4parse_fallible")]
@@ -41,6 +41,46 @@ const BUF_SIZE_LIMIT: usize = 10 * 1024 * 1024;
 // Max table length. Calculating in worth case for one week long video, one
 // frame per table entry in 30 fps.
 const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24 * 7;
+
+/// A trait to indicate a type can be infallibly converted to `u64`.
+/// This should only be implemented for infallible conversions, so only unsigned types are valid.
+trait ToU64 {
+    fn to_u64(self) -> u64;
+}
+
+/// Statically verify that the platform `usize` can fit within a `u64`.
+/// If the size won't fit on the given platform, this will fail at compile time, but if a type
+/// which can fail TryInto<usize> is used, it may panic.
+impl ToU64 for usize {
+    fn to_u64(self) -> u64 {
+        static_assertions::const_assert!(std::mem::size_of::<usize>() <= std::mem::size_of::<u64>());
+        self.try_into().expect("usize -> u64 conversion failed")
+    }
+}
+
+/// A trait to indicate a type can be infallibly converted to `usize`.
+/// This should only be implemented for infallible conversions, so only unsigned types are valid.
+trait ToUsize {
+    fn to_usize(self) -> usize;
+}
+
+/// Statically verify that the given type can fit within a `usize`.
+/// If the size won't fit on the given platform, this will fail at compile time, but if a type
+/// which can fail TryInto<usize> is used, it may panic.
+macro_rules! impl_to_usize_from {
+    ( $from_type:ty ) => {
+        impl ToUsize for $from_type {
+            fn to_usize(self) -> usize {
+                static_assertions::const_assert!(std::mem::size_of::<$from_type>() <= std::mem::size_of::<usize>());
+                self.try_into().expect(concat!(stringify!($from_type), " -> usize conversion failed"))
+            }
+        }
+    }
+}
+
+impl_to_usize_from!(u8);
+impl_to_usize_from!(u16);
+impl_to_usize_from!(u32);
 
 // TODO: vec_push() needs to be replaced when Rust supports fallible memory
 // allocation in raw_vec.
@@ -106,6 +146,12 @@ impl From<std::io::Error> for Error {
 impl From<std::string::FromUtf8Error> for Error {
     fn from(_: std::string::FromUtf8Error) -> Error {
         Error::InvalidData("invalid utf8")
+    }
+}
+
+impl From<std::num::TryFromIntError> for Error {
+    fn from(_: std::num::TryFromIntError) -> Error {
+        Error::Unsupported("integer conversion failed")
     }
 }
 
@@ -728,12 +774,12 @@ impl Track {
     }
 }
 
-struct BMFFBox<'a, T: 'a + Read> {
+struct BMFFBox<'a, T: 'a> {
     head: BoxHeader,
     content: Take<&'a mut T>,
 }
 
-struct BoxIter<'a, T: 'a + Read> {
+struct BoxIter<'a, T: 'a> {
     src: &'a mut T,
 }
 
@@ -762,8 +808,8 @@ impl<'a, T: Read> Read for BMFFBox<'a, T> {
 }
 
 impl<'a, T: Read> BMFFBox<'a, T> {
-    fn bytes_left(&self) -> usize {
-        self.content.limit() as usize
+    fn bytes_left(&self) -> u64 {
+        self.content.limit()
     }
 
     fn get_header(&self) -> &BoxHeader {
@@ -775,7 +821,7 @@ impl<'a, T: Read> BMFFBox<'a, T> {
     }
 }
 
-impl<'a, T: Read> Drop for BMFFBox<'a, T> {
+impl<'a, T> Drop for BMFFBox<'a, T> {
     fn drop(&mut self) {
         if self.content.limit() > 0 {
             let name: FourCC = From::from(self.head.name);
@@ -814,7 +860,7 @@ fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
         if size >= offset + 16 {
             let mut buffer = [0u8; 16];
             let count = src.read(&mut buffer)?;
-            offset += count as u64;
+            offset += count.to_u64();
             if count == 16 {
                 Some(buffer)
             } else {
@@ -853,7 +899,7 @@ fn skip_box_content<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
     let to_skip = {
         let header = src.get_header();
         debug!("{:?} (skipped)", header);
-        (header.size - header.offset) as usize
+        header.size.checked_sub(header.offset).expect("header offset > size")
     };
     assert_eq!(to_skip, src.bytes_left());
     skip(src, to_skip)
@@ -974,7 +1020,7 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: &mut MediaContext) -> Result<
 }
 
 fn read_pssh<T: Read>(src: &mut BMFFBox<T>) -> Result<ProtectionSystemSpecificHeaderBox> {
-    let len = src.bytes_left();
+    let len = src.bytes_left().try_into()?;
     let mut box_content = read_buf(src, len)?;
     let (system_id, kid, data) = {
         let pssh = &mut Cursor::new(box_content.as_slice());
@@ -992,14 +1038,14 @@ fn read_pssh<T: Read>(src: &mut BMFFBox<T>) -> Result<ProtectionSystemSpecificHe
             }
         }
 
-        let data_size = be_u32_with_limit(pssh)? as usize;
+        let data_size = be_u32_with_limit(pssh)?.to_usize();
         let data = read_buf(pssh, data_size)?;
 
         (system_id, kid, data)
     };
 
     let mut pssh_box = Vec::new();
-    write_be_u32(&mut pssh_box, src.head.size as u32)?;
+    write_be_u32(&mut pssh_box, src.head.size.try_into()?)?;
     pssh_box.extend_from_slice(b"pssh");
     pssh_box.append(&mut box_content);
 
@@ -1456,9 +1502,9 @@ fn read_stsc<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleToChunkBox> {
 fn read_ctts<T: Read>(src: &mut BMFFBox<T>) -> Result<CompositionOffsetBox> {
     let (version, _) = read_fullbox_extra(src)?;
 
-    let counts = be_u32_with_limit(src)?;
+    let counts = u64::from(be_u32_with_limit(src)?);
 
-    if src.bytes_left() < (counts as usize * 8) {
+    if src.bytes_left() < counts.checked_mul(8).expect("counts -> bytes overflow") {
         return Err(Error::InvalidData("insufficient data in 'ctts' box"));
     }
 
@@ -1588,7 +1634,7 @@ fn read_vpcc<T: Read>(src: &mut BMFFBox<T>) -> Result<VPxConfigBox> {
     };
 
     let codec_init_size = be_u16(src)?;
-    let codec_init = read_buf(src, codec_init_size as usize)?;
+    let codec_init = read_buf(src, codec_init_size.to_usize())?;
 
     // TODO(rillian): validate field value ranges.
     Ok(VPxConfigBox {
@@ -1636,7 +1682,7 @@ fn read_av1c<T: Read>(src: &mut BMFFBox<T>) -> Result<AV1ConfigBox> {
         };
 
     let config_obus_size = src.bytes_left();
-    let config_obus = read_buf(src, config_obus_size as usize)?;
+    let config_obus = read_buf(src, config_obus_size.try_into()?)?;
 
     Ok(AV1ConfigBox {
         profile,
@@ -1657,11 +1703,11 @@ fn read_flac_metadata<T: Read>(src: &mut BMFFBox<T>) -> Result<FLACMetadataBlock
     let temp = src.read_u8()?;
     let block_type = temp & 0x7f;
     let length = be_u24(src)?;
-    if length as usize > src.bytes_left() {
+    if u64::from(length) > src.bytes_left() {
         return Err(Error::InvalidData(
                 "FLACMetadataBlock larger than parent box"));
     }
-    let data = read_buf(src, length as usize)?;
+    let data = read_buf(src, length.to_usize())?;
     Ok(FLACMetadataBlock {
         block_type,
         data,
@@ -1684,7 +1730,7 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
         let mut end: u32 = 0;   // It's u8 without declaration type that is incorrect.
         // MSB of extend_or_len indicates more bytes, up to 4 bytes.
         for _ in 0..4 {
-            if (des.position() as usize) == remains.len() {
+            if des.position() == remains.len().to_u64() {
                 // There's nothing more to read, the 0x80 was actually part of
                 // the content, and not an extension size.
                 end = des.position() as u32;
@@ -1698,11 +1744,11 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
             }
         };
 
-        if (end as usize) > remains.len() || u64::from(end) < des.position() {
+        if end.to_usize() > remains.len() || u64::from(end) < des.position() {
             return Err(Error::InvalidData("Invalid descriptor."));
         }
 
-        let descriptor = &remains[des.position() as usize .. end as usize];
+        let descriptor = &remains[des.position().try_into()? .. end.to_usize()];
 
         match tag {
             ESDESCR_TAG => {
@@ -1719,7 +1765,7 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
             },
         }
 
-        remains = &remains[end as usize .. remains.len()];
+        remains = &remains[end.to_usize() .. remains.len()];
     }
 
     Ok(())
@@ -1897,8 +1943,8 @@ fn read_dc_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
     // Skip uninteresting fields.
     skip(des, 12)?;
 
-    if data.len() > des.position() as usize {
-        find_descriptor(&data[des.position() as usize .. data.len()], esds)?;
+    if data.len().to_u64() > des.position() {
+        find_descriptor(&data[des.position().try_into()? .. data.len()], esds)?;
     }
 
     esds.audio_codec = match object_profile {
@@ -1926,12 +1972,12 @@ fn read_es_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
     // Url flag, second bit from left most.
     if esds_flags & 0x40 > 0 {
         // Skip uninteresting fields.
-        let skip_es_len: usize = des.read_u8()? as usize + 2;
+        let skip_es_len = u64::from(des.read_u8()?) + 2;
         skip(des, skip_es_len)?;
     }
 
-    if data.len() > des.position() as usize {
-        find_descriptor(&data[des.position() as usize .. data.len()], esds)?;
+    if data.len().to_u64() > des.position() {
+        find_descriptor(&data[des.position().try_into()? .. data.len()], esds)?;
     }
 
     Ok(())
@@ -1942,8 +1988,8 @@ fn read_esds<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
 
     // Subtract 4 extra to offset the members of fullbox not accounted for in
     // head.offset
-    let esds_size = src.head.size - src.head.offset - 4;
-    let esds_array = read_buf(src, esds_size as usize)?;
+    let esds_size = src.head.size.checked_sub(src.head.offset + 4).expect("offset invalid");
+    let esds_array = read_buf(src, esds_size.try_into()?)?;
 
     let mut es_data = ES_Descriptor::default();
     find_descriptor(&esds_array, &mut es_data)?;
@@ -2002,7 +2048,7 @@ fn read_dops<T: Read>(src: &mut BMFFBox<T>) -> Result<OpusSpecificBox> {
     } else {
         let stream_count = src.read_u8()?;
         let coupled_count = src.read_u8()?;
-        let channel_mapping = read_buf(src, output_channel_count as usize)?;
+        let channel_mapping = read_buf(src, output_channel_count.to_usize())?;
 
         Some(ChannelMappingTable {
             stream_count,
@@ -2076,10 +2122,10 @@ fn read_alac<T: Read>(src: &mut BMFFBox<T>) -> Result<ALACSpecificBox> {
         return Err(Error::InvalidData("no-zero alac (ALAC) flags"));
     }
 
-    let length = src.bytes_left();
-    if length != 24 && length != 48 {
-        return Err(Error::InvalidData("ALACSpecificBox magic cookie is the wrong size"));
-    }
+    let length = match src.bytes_left() {
+        x @ 24 | x @ 48 => x.try_into().expect("infallible conversion to usize"),
+        _ => return Err(Error::InvalidData("ALACSpecificBox magic cookie is the wrong size")),
+    };
     let data = read_buf(src, length)?;
 
     Ok(ALACSpecificBox {
@@ -2151,8 +2197,8 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry>
                     codec_specific.is_some() {
                         return Err(Error::InvalidData("malformed video sample entry"));
                     }
-                let avcc_size = b.head.size - b.head.offset;
-                let avcc = read_buf(&mut b.content, avcc_size as usize)?;
+                let avcc_size = b.head.size.checked_sub(b.head.offset).expect("offset invalid");
+                let avcc = read_buf(&mut b.content, avcc_size.try_into()?)?;
                 debug!("{:?} (avcc)", avcc);
                 // TODO(kinetik): Parse avcC box?  For now we just stash the data.
                 codec_specific = Some(VideoCodecSpecific::AVCConfig(avcc));
@@ -2181,8 +2227,8 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry>
                 let (_, _) = read_fullbox_extra(&mut b.content)?;
                 // Subtract 4 extra to offset the members of fullbox not
                 // accounted for in head.offset
-                let esds_size = b.head.size - b.head.offset - 4;
-                let esds = read_buf(&mut b.content, esds_size as usize)?;
+                let esds_size = b.head.size.checked_sub(b.head.offset + 4).expect("offset invalid");
+                let esds = read_buf(&mut b.content, esds_size.try_into()?)?;
                 codec_specific = Some(VideoCodecSpecific::ESDSConfig(esds));
             }
             BoxType::ProtectionSchemeInformationBox => {
@@ -2385,7 +2431,7 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
             };
             vec_push(&mut descriptions, description)?;
             check_parser_state!(b.content);
-            if descriptions.len() == description_count as usize {
+            if descriptions.len() == description_count.to_usize() {
                 break;
             }
         }
@@ -2467,7 +2513,7 @@ fn read_tenc<T: Read>(src: &mut BMFFBox<T>) -> Result<TrackEncryptionBox> {
     let default_constant_iv = match (default_is_encrypted, default_iv_size) {
         (1, 0) => {
             let default_constant_iv_size = src.read_u8()?;
-            Some(read_buf(src, default_constant_iv_size as usize)?)
+            Some(read_buf(src, default_constant_iv_size.to_usize())?)
         },
         _ => None,
     };
@@ -2661,23 +2707,14 @@ fn read_ilst_multiple_u8_data<T: Read>(src: &mut BMFFBox<T>) -> Result<Vec<Vec<u
 
 fn read_ilst_data<T: Read>(src: &mut BMFFBox<T>) -> Result<Vec<u8>> {
     // Skip past the padding bytes
-    skip(&mut src.content, src.head.offset as usize)?;
-    let size = src.content.limit() as usize;
+    skip(&mut src.content, src.head.offset)?;
+    let size = src.content.limit().try_into()?;
     read_buf(&mut src.content, size)
 }
 
 /// Skip a number of bytes that we don't care to parse.
-fn skip<T: Read>(src: &mut T, mut bytes: usize) -> Result<()> {
-    const BUF_SIZE: usize = 64 * 1024;
-    let mut buf = vec![0; BUF_SIZE];
-    while bytes > 0 {
-        let buf_size = cmp::min(bytes, BUF_SIZE);
-        let len = src.take(buf_size as u64).read(&mut buf)?;
-        if len == 0 {
-            return Err(Error::UnexpectedEOF);
-        }
-        bytes -= len;
-    }
+fn skip<T: Read>(src: &mut T, bytes: u64) -> Result<()> {
+    std::io::copy(&mut src.take(bytes), &mut std::io::sink())?;
     Ok(())
 }
 
@@ -2714,9 +2751,7 @@ fn be_u16<T: ReadBytesExt>(src: &mut T) -> Result<u16> {
 }
 
 fn be_u24<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
-    src.read_uint::<byteorder::BigEndian>(3)
-        .map(|v| v as u32)
-        .map_err(From::from)
+    src.read_u24::<byteorder::BigEndian>().map_err(From::from)
 }
 
 fn be_u32<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
