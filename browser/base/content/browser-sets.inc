@@ -225,10 +225,10 @@
     <key id="key_toggleReaderMode"
          command="View:ReaderView"
 #ifdef XP_WIN
-         modifiers="accel,alt"
          data-l10n-id="reader-mode-toggle-shortcut-windows"
 #else
          data-l10n-id="reader-mode-toggle-shortcut-other"
+         modifiers="accel,alt"
 #endif
          disabled="true"/>
 
