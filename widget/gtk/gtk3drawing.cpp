@@ -148,6 +148,19 @@ static void moz_gtk_add_border_padding(GtkStyleContext* style, gint* left,
   moz_gtk_add_style_padding(style, left, top, right, bottom);
 }
 
+// In case there's an error in Gtk theme and preferred size is zero,
+// return some sane values to pass mozilla automation tests.
+// It should not happen in real-life.
+#define MIN_WIDGET_SIZE 10
+static void moz_gtk_sanity_preferred_size(GtkRequisition* requisition) {
+  if (requisition->width <= 0) {
+    requisition->width = MIN_WIDGET_SIZE;
+  }
+  if (requisition->height <= 0) {
+    requisition->height = MIN_WIDGET_SIZE;
+  }
+}
+
 // GetStateFlagsFromGtkWidgetState() can be safely used for the specific
 // GtkWidgets that set both prelight and active flags.  For other widgets,
 // either the GtkStateFlags or Gecko's GtkWidgetState need to be carefully
@@ -1358,6 +1371,7 @@ static gint moz_gtk_combo_box_paint(cairo_t* cr, const GdkRectangle* aRect,
   /* Now arrow_rect contains the inner rect ; we want to correct the width
    * to what the arrow needs (see gtk_combo_box_size_allocate) */
   gtk_widget_get_preferred_size(comboBoxArrow, NULL, &arrow_req);
+  moz_gtk_sanity_preferred_size(&arrow_req);
 
   if (direction == GTK_TEXT_DIR_LTR)
     arrow_rect.x += arrow_rect.width - arrow_req.width;
@@ -2335,6 +2349,7 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
 
       gtk_widget_get_preferred_size(GetWidget(MOZ_GTK_COMBOBOX_ARROW), NULL,
                                     &arrow_req);
+      moz_gtk_sanity_preferred_size(&arrow_req);
 
       if (direction == GTK_TEXT_DIR_RTL)
         *left += separator_width + arrow_req.width;
@@ -2529,6 +2544,8 @@ gint moz_gtk_get_combo_box_entry_button_size(gint* width, gint* height) {
 
   gtk_widget_get_preferred_size(GetWidget(MOZ_GTK_COMBOBOX_ENTRY_BUTTON), NULL,
                                 &requisition);
+  moz_gtk_sanity_preferred_size(&requisition);
+
   *width = requisition.width;
   *height = requisition.height;
 
@@ -2560,6 +2577,8 @@ void moz_gtk_get_arrow_size(WidgetNodeType widgetType, gint* width,
 
   GtkRequisition requisition;
   gtk_widget_get_preferred_size(widget, NULL, &requisition);
+  moz_gtk_sanity_preferred_size(&requisition);
+
   *width = requisition.width;
   *height = requisition.height;
 }
