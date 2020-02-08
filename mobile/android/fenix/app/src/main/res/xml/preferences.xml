@@ -69,7 +69,7 @@
 
         <androidx.preference.Preference
             android:icon="@drawable/ic_private_browsing"
-            android:key="@string/pref_key_add_private_browsing_shortcut"
+            android:key="@string/pref_key_private_browsing"
             android:title="@string/preferences_private_browsing_options"/>
 
         <androidx.preference.Preference

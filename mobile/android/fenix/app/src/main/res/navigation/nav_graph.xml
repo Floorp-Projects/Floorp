@@ -396,6 +396,9 @@
             android:id="@+id/action_settingsFragment_to_customizationFragment"
             app:destination="@id/customizationFragment" />
         <action
+            android:id="@+id/action_settingsFragment_to_privateBrowsingFragment"
+            app:destination="@id/privateBrowsingFragment" />
+        <action
             android:id="@+id/action_settingsFragment_to_trackingProtectionFragment"
             app:destination="@id/trackingProtectionFragment" />
         <action
@@ -499,6 +502,10 @@
         android:id="@+id/customizationFragment"
         android:name="org.mozilla.fenix.settings.CustomizationFragment"
         android:label="@string/preferences_customize" />
+    <fragment
+        android:id="@+id/privateBrowsingFragment"
+        android:name="org.mozilla.fenix.settings.PrivateBrowsingFragment"
+        android:label="@string/preferences_private_browsing_options" />
     <fragment
         android:id="@+id/trackingProtectionFragment"
         android:name="org.mozilla.fenix.settings.TrackingProtectionFragment">
