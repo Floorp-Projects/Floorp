@@ -389,6 +389,18 @@ add_task(async function test_login_removed() {
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, "", "time-used should be blank when undefined");
 });
 
+add_task(async function test_login_long_username_scrollLeft_reset() {
+  let loginLongUsername = Object.assign({}, TEST_LOGIN_1, {username: "user2longnamelongnamelongnamelongnamelongname"});
+  gLoginItem.setLogin(loginLongUsername);
+  gLoginItem.shadowRoot.querySelector(".edit-button").click();
+  await asyncElementRendered();
+  await asyncElementRendered();
+  let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
+  usernameInput.scrollLeft = usernameInput.scrollLeftMax;
+  gLoginItem.shadowRoot.querySelector(".cancel-button").click();
+  is(usernameInput.scrollLeft, 0, "username input should be scrolled horizontally to the beginning");
+});
+
 </script>
 
 </body>
