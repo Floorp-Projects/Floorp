@@ -34,6 +34,7 @@ import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
@@ -132,7 +133,11 @@ open class FenixApplication : LocaleAwareApplication() {
 
         setupLeakCanary()
         if (settings().isTelemetryEnabled) {
-            components.analytics.metrics.start()
+            components.analytics.metrics.start(MetricServiceType.Data)
+        }
+
+        if (settings().isMarketingTelemetryEnabled) {
+            components.analytics.metrics.start(MetricServiceType.Marketing)
         }
 
         setupPush()

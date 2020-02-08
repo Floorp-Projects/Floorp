@@ -408,7 +408,13 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     else -> null
 }
 
+enum class MetricServiceType {
+    Data, Marketing;
+}
+
 interface MetricsService {
+    val type: MetricServiceType
+
     fun start()
     fun stop()
     fun track(event: Event)
@@ -416,24 +422,32 @@ interface MetricsService {
 }
 
 interface MetricController {
-    fun start()
-    fun stop()
+    fun start(type: MetricServiceType)
+    fun stop(type: MetricServiceType)
     fun track(event: Event)
 
     companion object {
-        fun create(services: List<MetricsService>, isTelemetryEnabled: () -> Boolean): MetricController {
-            return if (BuildConfig.TELEMETRY) return ReleaseMetricController(services, isTelemetryEnabled)
-            else DebugMetricController()
+        fun create(
+            services: List<MetricsService>,
+            isDataTelemetryEnabled: () -> Boolean,
+            isMarketingDataTelemetryEnabled: () -> Boolean
+        ): MetricController {
+            return if (BuildConfig.TELEMETRY) {
+                ReleaseMetricController(
+                    services,
+                    isDataTelemetryEnabled,
+                    isMarketingDataTelemetryEnabled)
+            } else DebugMetricController()
         }
     }
 }
 
 private class DebugMetricController : MetricController {
-    override fun start() {
+    override fun start(type: MetricServiceType) {
         Logger.debug("DebugMetricController: start")
     }
 
-    override fun stop() {
+    override fun stop(type: MetricServiceType) {
         Logger.debug("DebugMetricController: stop")
     }
 
@@ -444,9 +458,10 @@ private class DebugMetricController : MetricController {
 
 private class ReleaseMetricController(
     private val services: List<MetricsService>,
-    private val isTelemetryEnabled: () -> Boolean
+    private val isDataTelemetryEnabled: () -> Boolean,
+    private val isMarketingDataTelemetryEnabled: () -> Boolean
 ) : MetricController {
-    private var initialized = false
+    private var initialized = mutableSetOf<MetricServiceType>()
 
     init {
         Facts.registerProcessor(object : FactProcessor {
@@ -458,25 +473,46 @@ private class ReleaseMetricController(
         })
     }
 
-    override fun start() {
-        if (!isTelemetryEnabled.invoke() || initialized) { return }
+    override fun start(type: MetricServiceType) {
+        val isEnabled = isTelemetryEnabled(type)
+        val isInitialized = isInitialized(type)
+        if (!isEnabled || isInitialized) { return }
 
-        services.forEach { it.start() }
-        initialized = true
+        services
+            .filter { it.type == type }
+            .forEach { it.start() }
+
+        initialized.add(type)
     }
 
-    override fun stop() {
-        if (!initialized) { return }
+    override fun stop(type: MetricServiceType) {
+        val isEnabled = isTelemetryEnabled(type)
+        val isInitialized = isInitialized(type)
+        if (isEnabled || !isInitialized) { return }
 
-        services.forEach { it.stop() }
-        initialized = false
+        services
+            .filter { it.type == type }
+            .forEach { it.stop() }
+
+        initialized.remove(type)
     }
 
     override fun track(event: Event) {
-        if (!isTelemetryEnabled.invoke() && !initialized) { return }
-
         services
             .filter { it.shouldTrack(event) }
-            .forEach { it.track(event) }
+            .forEach {
+                val isEnabled = isTelemetryEnabled(it.type)
+                val isInitialized = isInitialized(it.type)
+                if (!isEnabled || !isInitialized) { return }
+
+                it.track(event)
+            }
+    }
+
+    private fun isInitialized(type: MetricServiceType): Boolean = initialized.contains(type)
+
+    private fun isTelemetryEnabled(type: MetricServiceType): Boolean = when (type) {
+        MetricServiceType.Data -> isDataTelemetryEnabled()
+        MetricServiceType.Marketing -> isMarketingDataTelemetryEnabled()
     }
 }

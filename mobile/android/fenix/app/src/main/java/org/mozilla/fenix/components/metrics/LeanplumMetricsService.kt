@@ -53,6 +53,7 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
         }
     }
 
+    override val type = MetricServiceType.Marketing
     private val token = Token(LeanplumId, LeanplumToken)
 
     override fun start() {

@@ -497,6 +497,8 @@ private val Event.wrapper: EventWrapper<*>?
     }
 
 class GleanMetricsService(private val context: Context) : MetricsService {
+    override val type = MetricServiceType.Data
+
     private val logger = Logger("GleanMetricsService")
     private var initialized = false
     /*
