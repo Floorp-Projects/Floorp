@@ -28,6 +28,7 @@ import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.SCOPE_SESSION
 import mozilla.components.service.fxa.manager.SCOPE_SYNC
+import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.logger.Logger
@@ -156,7 +157,9 @@ class BackgroundServices(
         )
     ).also { accountManager ->
         // TODO this needs to change once we have a SyncManager
-        context.settings().fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
+        context.settings().fxaHasSyncedItems = accountManager.authenticatedAccount()?.let {
+            SyncEnginesStorage(context).getStatus().any { it.value }
+        } ?: false
 
         // Register a telemetry account observer to keep track of FxA auth metrics.
         accountManager.register(telemetryAccountObserver)
