@@ -318,6 +318,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * "min-height:auto", via ResolveAutoFlexBasisAndMinSize(). (Basically, the
    * returned FlexItem will be ready to participate in the "Resolve the
    * Flexible Lengths" step of the Flex Layout Algorithm.)
+   * https://drafts.csswg.org/css-flexbox-1/#algo-flex
    */
   mozilla::UniquePtr<FlexItem> GenerateFlexItemForChild(
       nsPresContext* aPresContext, nsIFrame* aChildFrame,
@@ -374,6 +375,9 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *  - Creates FlexItems for all of our child frames (except placeholders).
    *  - Groups those FlexItems into FlexLines.
    *  - Returns those FlexLines in the outparam |aLines|.
+   *
+   * This corresponds to "Collect flex items into flex lines" step in the spec.
+   * https://drafts.csswg.org/css-flexbox-1/#algo-line-break
    *
    * For any child frames which are placeholders, this method will instead just
    * append that child to the outparam |aPlaceholders| for separate handling.
