@@ -479,9 +479,8 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   // (This function needs to be told which physical start side we're measuring
   // the baseline from, so that it can look up the appropriate components from
   // margin.)
-  nscoord BaselineOffsetFromOuterCrossEdge(
-      mozilla::Side aStartSide, const FlexboxAxisTracker& aAxisTracker,
-      bool aUseFirstLineBaseline) const;
+  nscoord BaselineOffsetFromOuterCrossEdge(mozilla::Side aStartSide,
+                                           bool aUseFirstLineBaseline) const;
 
   float ShareOfWeightSoFar() const { return mShareOfWeightSoFar; }
 
@@ -800,8 +799,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
 
   // Once the main size has been resolved, should we bother doing layout to
   // establish the cross size?
-  bool CanMainSizeInfluenceCrossSize(
-      const FlexboxAxisTracker& aAxisTracker) const;
+  bool CanMainSizeInfluenceCrossSize() const;
 
   // Gets the block frame that contains the flex item's content.  This is
   // Frame() itself or one of its descendants.
@@ -2060,8 +2058,7 @@ void FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
 }
 
 nscoord FlexItem::BaselineOffsetFromOuterCrossEdge(
-    mozilla::Side aStartSide, const FlexboxAxisTracker& aAxisTracker,
-    bool aUseFirstLineBaseline) const {
+    mozilla::Side aStartSide, bool aUseFirstLineBaseline) const {
   // NOTE:
   //  * We only use baselines for aligning in the flex container's cross axis.
   //  * Baselines are a measurement in the item's block axis.
@@ -2110,8 +2107,7 @@ uint32_t FlexItem::NumAutoMarginsInAxis(LogicalAxis aAxis) const {
   return numAutoMargins;
 }
 
-bool FlexItem::CanMainSizeInfluenceCrossSize(
-    const FlexboxAxisTracker& aAxisTracker) const {
+bool FlexItem::CanMainSizeInfluenceCrossSize() const {
   if (mIsStretched) {
     // We've already had our cross-size stretched for "align-self:stretch").
     // The container is imposing its cross size on us.
@@ -3319,7 +3315,7 @@ void FlexLine::ComputeCrossSizeAndBaseline(
       //   crossEndToBaseline.
 
       nscoord crossStartToBaseline = item->BaselineOffsetFromOuterCrossEdge(
-          aAxisTracker.CrossAxisPhysicalStartSide(), aAxisTracker, useFirst);
+          aAxisTracker.CrossAxisPhysicalStartSide(), useFirst);
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
@@ -3525,7 +3521,7 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
             : aAxisTracker.CrossAxisPhysicalStartSide();
 
     nscoord itemBaselineOffset = aItem.BaselineOffsetFromOuterCrossEdge(
-        baselineAlignStartSide, aAxisTracker, useFirst);
+        baselineAlignStartSide, useFirst);
 
     nscoord lineBaselineOffset =
         useFirst ? aLine.FirstBaselineOffset() : aLine.LastBaselineOffset();
@@ -4630,7 +4626,7 @@ void nsFlexContainerFrame::DoFlexLayout(
     for (FlexItem* item = line->GetFirstItem(); item; item = item->getNext()) {
       // The item may already have the correct cross-size; only recalculate
       // if the item's main size resolution (flexing) could have influenced it:
-      if (item->CanMainSizeInfluenceCrossSize(aAxisTracker)) {
+      if (item->CanMainSizeInfluenceCrossSize()) {
         Maybe<AutoFlexItemMainSizeOverride> sizeOverride;
         if (item->HasIntrinsicRatio()) {
           // For flex items with an aspect ratio, we have to impose an override
