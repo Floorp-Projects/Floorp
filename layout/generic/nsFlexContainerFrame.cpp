@@ -210,13 +210,13 @@ static inline bool IsAutoOrEnumOnBSize(const StyleSize& aSize, bool aIsInline) {
 // these macros can be used to ensure that only the needed expression is
 // evaluated.
 #define GET_MAIN_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_) \
-  wm_.IsOrthogonalTo(axisTracker_.GetWritingMode()) !=                \
+  wm_.IsOrthogonalTo((axisTracker_).GetWritingMode()) !=              \
           (axisTracker_).IsRowOriented()                              \
       ? (isize_)                                                      \
       : (bsize_)
 
 #define GET_CROSS_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_) \
-  wm_.IsOrthogonalTo(axisTracker_.GetWritingMode()) !=                 \
+  wm_.IsOrthogonalTo((axisTracker_).GetWritingMode()) !=               \
           (axisTracker_).IsRowOriented()                               \
       ? (bsize_)                                                       \
       : (isize_)
@@ -405,7 +405,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
  public:
   // Normal constructor:
   FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
-           float aFlexShrink, nscoord aMainBaseSize, nscoord aMainMinSize,
+           float aFlexShrink, nscoord aFlexBaseSize, nscoord aMainMinSize,
            nscoord aMainMaxSize, nscoord aTentativeCrossSize,
            nscoord aCrossMinSize, nscoord aCrossMaxSize,
            const FlexboxAxisTracker& aAxisTracker);
@@ -2347,7 +2347,7 @@ nsContainerFrame* NS_NewFlexContainerFrame(PresShell* aPresShell,
 // ===========================================
 
 /* virtual */
-nsFlexContainerFrame::~nsFlexContainerFrame() {}
+nsFlexContainerFrame::~nsFlexContainerFrame() = default;
 
 /* virtual */
 void nsFlexContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -3596,11 +3596,7 @@ void FlexboxAxisTracker::InitAxesFromLegacyProps(
 
   // Legacy flexbox can use "-webkit-box-direction: reverse" to reverse the
   // main axis (so it runs in the reverse direction of the inline axis):
-  if (styleXUL->mBoxDirection == StyleBoxDirection::Reverse) {
-    mIsMainAxisReversed = true;
-  } else {
-    mIsMainAxisReversed = false;
-  }
+  mIsMainAxisReversed = styleXUL->mBoxDirection == StyleBoxDirection::Reverse;
 
   // Legacy flexbox does not support reversing the cross axis -- it has no
   // equivalent of modern flexbox's "flex-wrap: wrap-reverse".
@@ -3639,11 +3635,7 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
   }
 
   // "flex-wrap: wrap-reverse" reverses our cross axis.
-  if (stylePos->mFlexWrap == StyleFlexWrap::WrapReverse) {
-    mIsCrossAxisReversed = true;
-  } else {
-    mIsCrossAxisReversed = false;
-  }
+  mIsCrossAxisReversed = stylePos->mFlexWrap == StyleFlexWrap::WrapReverse;
 }
 
 LogicalSide FlexboxAxisTracker::MainAxisStartSide() const {
