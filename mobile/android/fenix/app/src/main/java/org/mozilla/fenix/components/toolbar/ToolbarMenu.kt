@@ -24,7 +24,7 @@ interface ToolbarMenu {
         object ReportIssue : Item()
         object OpenInFenix : Item()
         object SaveToCollection : Item()
-        object AddToFirefoxHome : Item()
+        object AddToTopSites : Item()
         object AddToHomeScreen : Item()
         object AddonsManager : Item()
         object Quit : Item()

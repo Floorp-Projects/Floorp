@@ -141,7 +141,7 @@ class DefaultBrowserToolbarController(
                 item.isChecked,
                 currentSession
             )
-            ToolbarMenu.Item.AddToFirefoxHome -> {
+            ToolbarMenu.Item.AddToTopSites -> {
                 ioScope.launch {
                     currentSession?.let {
                         topSiteStorage.addTopSite(it.title, it.url)
@@ -340,7 +340,7 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.OpenInFenix -> Event.BrowserMenuItemTapped.Item.OPEN_IN_FENIX
             ToolbarMenu.Item.Share -> Event.BrowserMenuItemTapped.Item.SHARE
             ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION
-            ToolbarMenu.Item.AddToFirefoxHome -> Event.BrowserMenuItemTapped.Item.ADD_TO_FIREFOX_HOME
+            ToolbarMenu.Item.AddToTopSites -> Event.BrowserMenuItemTapped.Item.ADD_TO_TOP_SITES
             ToolbarMenu.Item.AddToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
             ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
             is ToolbarMenu.Item.ReaderMode ->

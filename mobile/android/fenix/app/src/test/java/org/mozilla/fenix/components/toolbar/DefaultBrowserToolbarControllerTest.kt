@@ -295,8 +295,8 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleToolbarAddToFirefoxHomePress() = runBlockingTest {
-        val item = ToolbarMenu.Item.AddToFirefoxHome
+    fun handleToolbarAddToTopSitesPressed() = runBlockingTest {
+        val item = ToolbarMenu.Item.AddToTopSites
 
         controller = DefaultBrowserToolbarController(
             activity = activity,
@@ -322,7 +322,7 @@ class DefaultBrowserToolbarControllerTest {
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.ADD_TO_FIREFOX_HOME)) }
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.ADD_TO_TOP_SITES)) }
     }
 
     @Test
