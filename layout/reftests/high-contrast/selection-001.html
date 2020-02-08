@@ -1,4 +1,5 @@
 <!doctype html>
+<html class="reftest-wait">
 <title>::selection should use native colors in high contrast mode</title>
 <style>
 ::selection {
@@ -10,10 +11,11 @@
   Some selected text
 </p>
 <script>
-onload = function() {
+window.addEventListener("MozReftestInvalidate", function() {
   getSelection().removeAllRanges();
   let r = document.createRange();
   r.selectNode(document.documentElement);
   getSelection().addRange(r);
-}
+  document.documentElement.className = "";
+});
 </script>
