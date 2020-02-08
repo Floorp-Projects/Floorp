@@ -749,6 +749,9 @@ export default class LoginItem extends HTMLElement {
       delete this.dataset.isNewLogin;
     }
 
+    // Reset cursor to the start of the input for long text names.
+    this._usernameInput.scrollLeft = 0;
+
     if (shouldEdit) {
       this._passwordInput.style.removeProperty("width");
       this._passwordDisplayInput.style.removeProperty("width");
