@@ -3904,6 +3904,9 @@ static bool FrameHasRelativeBSizeDependency(nsIFrame* aFrame) {
  * Guaranteed to return a definite length, i.e. not NS_UNCONSTRAINEDSIZE,
  * aside from cases with huge lengths which happen to compute to that value.
  *
+ * This corresponds to "Determine the main size of the flex container" step in
+ * the spec. https://drafts.csswg.org/css-flexbox-1/#algo-main-container
+ *
  * (Note: This function should be structurally similar to 'ComputeCrossSize()',
  * except that here, the caller has already grabbed the tentative size from the
  * reflow input.)
@@ -4609,6 +4612,7 @@ void nsFlexContainerFrame::DoFlexLayout(
   }
 
   // Cross Size Determination - Flexbox spec section 9.4
+  // https://drafts.csswg.org/css-flexbox-1/#cross-sizing
   // ===================================================
   // Calculate the hypothetical cross size of each item:
 
@@ -4732,6 +4736,7 @@ void nsFlexContainerFrame::DoFlexLayout(
   for (FlexLine* line = lines.getFirst(); line;
        line = line->getNext(), ++lineIndex) {
     // Main-Axis Alignment - Flexbox spec section 9.5
+    // https://drafts.csswg.org/css-flexbox-1/#main-alignment
     // ==============================================
     line->PositionItemsInMainAxis(justifyContent, aContentBoxMainSize,
                                   aAxisTracker);
@@ -4743,6 +4748,7 @@ void nsFlexContainerFrame::DoFlexLayout(
     }
 
     // Cross-Axis Alignment - Flexbox spec section 9.6
+    // https://drafts.csswg.org/css-flexbox-1/#cross-alignment
     // ===============================================
     line->PositionItemsInCrossAxis(crossAxisPosnTracker.Position(),
                                    aAxisTracker);
