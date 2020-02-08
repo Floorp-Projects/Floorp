@@ -393,8 +393,8 @@
             android:id="@+id/action_settingsFragment_to_aboutFragment"
             app:destination="@id/aboutFragment" />
         <action
-            android:id="@+id/action_settingsFragment_to_themeFragment"
-            app:destination="@id/themeFragment" />
+            android:id="@+id/action_settingsFragment_to_customizationFragment"
+            app:destination="@id/customizationFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_trackingProtectionFragment"
             app:destination="@id/trackingProtectionFragment" />
@@ -410,9 +410,6 @@
         <action
             android:id="@+id/action_settingsFragment_to_defaultBrowserSettingsFragment"
             app:destination="@id/defaultBrowserSettingsFragment" />
-        <action
-            android:id="@+id/action_settingsFragment_to_toolbarSettingsFragment"
-            app:destination="@id/toolbarSettingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_localeSettingsFragment"
             app:destination="@id/localeSettingsFragment" />
@@ -499,9 +496,9 @@
             app:argType="android.content.Intent" />
     </fragment>
     <fragment
-        android:id="@+id/themeFragment"
-        android:name="org.mozilla.fenix.settings.ThemeFragment"
-        android:label="@string/preferences_theme" />
+        android:id="@+id/customizationFragment"
+        android:name="org.mozilla.fenix.settings.CustomizationFragment"
+        android:label="@string/preferences_customize" />
     <fragment
         android:id="@+id/trackingProtectionFragment"
         android:name="org.mozilla.fenix.settings.TrackingProtectionFragment">
@@ -706,9 +703,6 @@
             android:name="searchEngineIdentifier"
             app:argType="string" />
     </fragment>
-    <fragment
-        android:id="@+id/toolbarSettingsFragment"
-        android:name="org.mozilla.fenix.settings.ToolbarSettingsFragment" />
     <fragment
         android:id="@+id/localeSettingsFragment"
         android:name="org.mozilla.fenix.settings.advanced.LocaleSettingsFragment" />

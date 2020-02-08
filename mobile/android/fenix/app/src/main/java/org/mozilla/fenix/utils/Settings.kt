@@ -107,10 +107,10 @@ class Settings private constructor(
 
     val isCrashReportingEnabled: Boolean
         get() = isCrashReportEnabledInBuild &&
-                preferences.getBoolean(
-                    appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
-                    true
-                )
+            preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
+                true
+            )
 
     val isRemoteDebuggingEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_remote_debugging),
@@ -307,15 +307,6 @@ class Settings private constructor(
         appContext.getPreferenceKey(R.string.pref_key_encryption_key_generated),
         true
     ).apply()
-
-    val themeSettingString: String
-        get() = when {
-            shouldFollowDeviceTheme -> appContext.getString(R.string.preference_follow_device_theme)
-            shouldUseAutoBatteryTheme -> appContext.getString(R.string.preference_auto_battery_theme)
-            shouldUseDarkTheme -> appContext.getString(R.string.preference_dark_theme)
-            shouldUseLightTheme -> appContext.getString(R.string.preference_light_theme)
-            else -> appContext.getString(R.string.preference_light_theme)
-        }
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal val loginsSecureWarningSyncCount by intPreference(

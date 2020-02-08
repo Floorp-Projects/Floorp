@@ -47,7 +47,7 @@ import org.mozilla.fenix.R.string.pref_key_remote_debugging
 import org.mozilla.fenix.R.string.pref_key_search_settings
 import org.mozilla.fenix.R.string.pref_key_sign_in
 import org.mozilla.fenix.R.string.pref_key_site_permissions
-import org.mozilla.fenix.R.string.pref_key_theme
+import org.mozilla.fenix.R.string.pref_key_customize
 import org.mozilla.fenix.R.string.pref_key_toolbar
 import org.mozilla.fenix.R.string.pref_key_tracking_protection_settings
 import org.mozilla.fenix.R.string.pref_key_your_rights
@@ -151,10 +151,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val toolbarPreference =
             findPreference<Preference>(getPreferenceKey(pref_key_toolbar))
         toolbarPreference?.summary = context?.settings()?.toolbarSettingString
-
-        val themesPreference =
-            findPreference<Preference>(getPreferenceKey(pref_key_theme))
-        themesPreference?.summary = context?.settings()?.themeSettingString
 
         val aboutPreference = findPreference<Preference>(getPreferenceKey(pref_key_about))
         val appName = getString(R.string.app_name)
@@ -268,11 +264,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(pref_key_delete_browsing_data_on_quit_preference) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataOnQuitFragment()
             }
-            resources.getString(pref_key_theme) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToThemeFragment()
-            }
-            resources.getString(pref_key_toolbar) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToToolbarSettingsFragment()
+            resources.getString(pref_key_customize) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToCustomizationFragment()
             }
             resources.getString(pref_key_privacy_link) -> {
                 val intent = SupportUtils.createCustomTabIntent(
