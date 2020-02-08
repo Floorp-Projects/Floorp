@@ -397,8 +397,8 @@ void nsTableCellMap::RemoveColsAtEnd() {
   // eColAnonymousCell
   int32_t numCols = GetColCount();
   int32_t lastGoodColIndex = mTableFrame.GetIndexOfLastRealCol();
-  for (int32_t colX = numCols - 1; (colX >= 0) && (colX > lastGoodColIndex);
-       colX--) {
+  MOZ_ASSERT(lastGoodColIndex >= -1);
+  for (int32_t colX = numCols - 1; colX > lastGoodColIndex; colX--) {
     nsColInfo& colInfo = mCols.ElementAt(colX);
     if ((colInfo.mNumCellsOrig <= 0) && (colInfo.mNumCellsSpan <= 0)) {
       mCols.RemoveElementAt(colX);
