@@ -3671,8 +3671,8 @@ static FlexLine* AddNewFlexLineToList(LinkedList<FlexLine>& aLines,
 }
 
 bool nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
-    const nsStyleDisplay* aThisStyleDisp) {
-  MOZ_ASSERT(StyleDisplay() == aThisStyleDisp, "wrong StyleDisplay passed in");
+    const nsStyleDisplay* aFlexStyleDisp) {
+  MOZ_ASSERT(StyleDisplay() == aFlexStyleDisp, "wrong StyleDisplay passed in");
 
   // Quick filter to screen out *actual* (not-coopted-for-emulation)
   // flex containers, using state bit:
@@ -3681,8 +3681,8 @@ bool nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
   }
 
   // Check our own display value:
-  if (aThisStyleDisp->mDisplay == mozilla::StyleDisplay::MozBox ||
-      aThisStyleDisp->mDisplay == mozilla::StyleDisplay::MozInlineBox) {
+  if (aFlexStyleDisp->mDisplay == mozilla::StyleDisplay::MozBox ||
+      aFlexStyleDisp->mDisplay == mozilla::StyleDisplay::MozInlineBox) {
     return true;
   }
 
