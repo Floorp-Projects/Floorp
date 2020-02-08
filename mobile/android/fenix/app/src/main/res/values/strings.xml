@@ -1178,8 +1178,8 @@
     <string name="migration_updating_app_button_text">Updating %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">Start %s</string>
-    <!-- Accessibility description text for completed migration item (e.g. Bookmarks, History). Placeholder example: complete -->
-    <string name="migration_icon_description">Migration status: %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migration completed</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Passwords</string>
 

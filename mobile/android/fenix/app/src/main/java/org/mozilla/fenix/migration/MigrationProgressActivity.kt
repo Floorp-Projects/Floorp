@@ -133,8 +133,7 @@ internal class MigrationStatusAdapter :
             } ?: ""
             title.text = migrationText
             status.visibility = if (item.status) View.VISIBLE else View.INVISIBLE
-            status.contentDescription =
-                context.getString(R.string.migration_icon_description, migrationText)
+            status.contentDescription = context.getString(R.string.migration_icon_description)
         }
     }
 
