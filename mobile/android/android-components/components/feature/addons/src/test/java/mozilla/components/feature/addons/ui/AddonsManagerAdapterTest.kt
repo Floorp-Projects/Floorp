@@ -47,32 +47,42 @@ class AddonsManagerAdapterTest {
         val installedAddon: Addon = mock()
         val recommendedAddon: Addon = mock()
         val unsupportedAddon: Addon = mock()
+        val disabledAddon: Addon = mock()
 
         `when`(installedAddon.isInstalled()).thenReturn(true)
+        `when`(installedAddon.isEnabled()).thenReturn(true)
         `when`(installedAddon.isSupported()).thenReturn(true)
         `when`(unsupportedAddon.isInstalled()).thenReturn(true)
         `when`(unsupportedAddon.isSupported()).thenReturn(false)
+        `when`(disabledAddon.isEnabled()).thenReturn(false)
+        `when`(disabledAddon.isInstalled()).thenReturn(true)
+        `when`(disabledAddon.isSupported()).thenReturn(true)
 
-        val addons = listOf(installedAddon, recommendedAddon, unsupportedAddon)
+        val addons = listOf(installedAddon, recommendedAddon, unsupportedAddon, disabledAddon)
 
         assertEquals(0, adapter.itemCount)
 
         val itemsWithSections = adapter.createListWithSections(addons)
 
-        assertEquals(5, itemsWithSections.size)
+        assertEquals(7, itemsWithSections.size)
         assertEquals(
             R.string.mozac_feature_addons_installed_section,
             (itemsWithSections[0] as Section).title
         )
         assertEquals(installedAddon, itemsWithSections[1])
         assertEquals(
-            R.string.mozac_feature_addons_recommended_section,
+            R.string.mozac_feature_addons_disabled_section,
             (itemsWithSections[2] as Section).title
         )
-        assertEquals(recommendedAddon, itemsWithSections[3])
+        assertEquals(disabledAddon, itemsWithSections[3])
+        assertEquals(
+            R.string.mozac_feature_addons_recommended_section,
+            (itemsWithSections[4] as Section).title
+        )
+        assertEquals(recommendedAddon, itemsWithSections[5])
         assertEquals(
             R.string.mozac_feature_addons_unsupported_section,
-            (itemsWithSections[4] as NotYetSupportedSection).title
+            (itemsWithSections[6] as NotYetSupportedSection).title
         )
     }
 
