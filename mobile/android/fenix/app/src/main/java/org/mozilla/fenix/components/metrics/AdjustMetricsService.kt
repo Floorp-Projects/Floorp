@@ -18,6 +18,8 @@ import org.mozilla.fenix.ext.settings
 
 class AdjustMetricsService(private val application: Application) : MetricsService {
     override fun start() {
+        if (!application.settings().isMarketingTelemetryEnabled) return
+
         if ((BuildConfig.ADJUST_TOKEN.isNullOrBlank())) {
             Log.i(LOGTAG, "No adjust token defined")
 

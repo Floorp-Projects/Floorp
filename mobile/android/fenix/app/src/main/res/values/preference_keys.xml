@@ -49,6 +49,7 @@
 
     <!-- Data Choices -->
     <string name="pref_key_telemetry" translatable="false">pref_key_telemetry</string>
+    <string name="pref_key_marketing_telemetry" translatable="false">pref_key_marketing_telemetry</string>
     <string name="pref_key_crash_reporter" translatable="false">pref_key_crash_reporter</string>
     <string name="pref_key_mozilla_location_service" translatable="false">pref_key_mozilla_location_service</string>
     <string name="pref_key_fenix_health_report" translatable="false">pref_key_fenix_health_report</string>

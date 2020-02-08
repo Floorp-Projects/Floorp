@@ -56,6 +56,8 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
     private val token = Token(LeanplumId, LeanplumToken)
 
     override fun start() {
+        if (!application.settings().isMarketingTelemetryEnabled) return
+
         val applicationSetLocale = LocaleManager.getCurrentLocale(application)
         val currentLocale = when (applicationSetLocale != null) {
             true -> applicationSetLocale.isO3Language
@@ -96,6 +98,7 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
     }
 
     override fun stop() {
+        if (application.settings().isMarketingTelemetryEnabled) return
         // As written in LeanPlum SDK documentation, "This prevents Leanplum from communicating with the server."
         // as this "isTestMode" flag is checked before LeanPlum SDK does anything.
         // Also has the benefit effect of blocking the display of already downloaded messages.

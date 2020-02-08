@@ -51,6 +51,15 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_telemetry))?.apply {
+            isChecked = context.settings().isMarketingTelemetryEnabled
+
+            val appName = context.getString(R.string.app_name)
+            summary = context.getString(R.string.preferences_marketing_data_description, appName)
+
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
         findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_experimentation))?.apply {
             isChecked = context.settings().isExperimentationEnabled
             isVisible = Config.channel.isReleaseOrBeta
