@@ -1505,7 +1505,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
                "unexpected unit for fit-content() argument value");
     SetValueToLengthPercentage(val, aTrackSize.AsFitContent().AsBreadth(),
                                true);
-    val->GetCssText(argumentStr);
+    val->GetCssText(argumentStr, IgnoreErrors());
     fitContentStr.Append(argumentStr);
     fitContentStr.Append(char16_t(')'));
     val->SetString(fitContentStr);
@@ -1534,7 +1534,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
 
   {
     RefPtr<nsROCSSPrimitiveValue> argValue = GetGridTrackBreadth(min);
-    argValue->GetCssText(argumentStr);
+    argValue->GetCssText(argumentStr, IgnoreErrors());
     minmaxStr.Append(argumentStr);
     argumentStr.Truncate();
   }
@@ -1543,7 +1543,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
 
   {
     RefPtr<nsROCSSPrimitiveValue> argValue = GetGridTrackBreadth(max);
-    argValue->GetCssText(argumentStr);
+    argValue->GetCssText(argumentStr, IgnoreErrors());
     minmaxStr.Append(argumentStr);
   }
 
