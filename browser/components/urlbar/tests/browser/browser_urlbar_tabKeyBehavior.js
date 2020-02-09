@@ -17,17 +17,12 @@ add_task(async function init() {
     ],
   });
 
-  // We need to open a new window to make sure update1 is enabled on release
-  // channels where it is not yet enabled.
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-
   for (let i = 0; i < MAX_RESULTS; i++) {
     await PlacesTestUtils.addVisits("http://example.com/" + i);
   }
 
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
-    await BrowserTestUtils.closeWindow(win);
     await SpecialPowers.popPrefEnv();
   });
 });
@@ -49,28 +44,29 @@ add_task(async function tabKeyReverse() {
 
   await promiseAutocompleteResultPopup("exam", window, true);
   await tabThroughResults(/* reverse */ true);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function tabKeyBlur() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update1.restrictTabAfterKeyboardFocus", false]],
+  });
+
   await promiseAutocompleteResultPopup("exam", window, true);
   await UrlbarTestUtils.promisePopupClose(window);
   Assert.equal(document.activeElement, gURLBar.inputField);
   EventUtils.synthesizeKey("KEY_Tab");
   Assert.notEqual(document.activeElement, gURLBar.inputField);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function tabKeyRestrictedMouse() {
   await populateAndReopenUrlbarView(/* useKeyboardShortcut */ false);
   await tabThroughResults();
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function tabKeyRestrictedKeyboard() {
-  await UrlbarTestUtils.promisePopupOpen(window, () => {
-    EventUtils.synthesizeKey("l", { accelKey: true });
-  });
-  await UrlbarTestUtils.promiseSearchComplete(window);
-
+  await populateAndReopenUrlbarView(/* useKeyboardShortcut */ true);
   let focusPromise = waitForFocusOnNextFocusableElement();
   EventUtils.synthesizeKey("KEY_Tab");
   await focusPromise;
@@ -192,8 +188,6 @@ async function populateAndReopenUrlbarView(useKeyboardShortcut) {
   });
   await UrlbarTestUtils.promiseSearchComplete(window);
   Assert.equal(UrlbarTestUtils.getResultCount(window), MAX_RESULTS);
-
-  await SpecialPowers.popPrefEnv();
 }
 
 async function waitForFocusOnNextFocusableElement() {
