@@ -41,6 +41,9 @@ function getTabBrowser(browser) {
   while (browser.ownerGlobal.docShell.itemType !== Ci.nsIDocShell.typeChrome) {
     browser = browser.ownerGlobal.docShell.chromeEventHandler;
   }
+  if (browser.getAttribute("webextension-view-type") == "popup") {
+    browser = browser.ownerGlobal.gBrowser.selectedBrowser;
+  }
   return { browser, window: browser.ownerGlobal };
 }
 
