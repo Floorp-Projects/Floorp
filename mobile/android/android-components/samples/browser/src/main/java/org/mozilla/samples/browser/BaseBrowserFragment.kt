@@ -115,6 +115,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                     requireContext().applicationContext,
                     DownloadService::class
                 ),
+                tabId = sessionId,
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                 }),
