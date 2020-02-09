@@ -342,12 +342,14 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
 
   RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
 
-  AutoTArray<uint8_t, 16384> buffer;
-  nsresult rv = CopyFontTable(TTAG_cmap, buffer);
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = gfxFontUtils::ReadCMAP(buffer.Elements(), buffer.Length(), *charmap,
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  hb_blob_t* cmapBlob = GetFontTable(TTAG_cmap);
+  if (cmapBlob) {
+    unsigned int length;
+    const char* data = hb_blob_get_data(cmapBlob, &length);
+    rv = gfxFontUtils::ReadCMAP((const uint8_t*)data, length, *charmap,
                                 mUVSOffset);
+    hb_blob_destroy(cmapBlob);
   }
 
   if (NS_SUCCEEDED(rv) && !mIsDataUserFont && !HasGraphiteTables()) {
@@ -421,7 +423,7 @@ nsresult FT2FontEntry::CopyFontTable(uint32_t aTableTag,
 
 hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
   if (FTUserFontData* userFontData = GetUserFontData()) {
-    // if there's a cairo font face, we may be able to return a blob
+    // If there's a cairo font face, we may be able to return a blob
     // that just wraps a range of the attached user font data
     if (userFontData->FontData()) {
       return gfxFontUtils::GetTableFromFontData(userFontData->FontData(),
@@ -429,8 +431,56 @@ hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
     }
   }
 
-  // otherwise, use the default method (which in turn will call our
-  // implementation of CopyFontTable)
+  // If the FT_Face hasn't been instantiated, try to read table directly
+  // via harfbuzz API to avoid expensive FT_Face creation.
+  if (!mFTFace && !mFilename.IsEmpty()) {
+    hb_blob_t* result = nullptr;
+    if (mFilename[0] == '/') {
+      // An absolute path means a normal file in the filesystem, so we can use
+      // hb_blob_create_from_file to read it.
+      hb_blob_t* fileBlob = hb_blob_create_from_file(mFilename.get());
+      if (hb_blob_get_length(fileBlob) > 0) {
+        hb_face_t* face = hb_face_create(fileBlob, mFTFontIndex);
+        result = hb_face_reference_table(face, aTableTag);
+        hb_face_destroy(face);
+      }
+      hb_blob_destroy(fileBlob);
+    } else {
+      // A relative path means an omnijar resource, which we may need to
+      // decompress to a temporary buffer.
+      RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
+      nsZipItem* item = reader->GetItem(mFilename.get());
+      MOZ_ASSERT(item, "failed to find zip entry");
+      if (item) {
+        // TODO(jfkthame):
+        // Check whether the item is compressed; if not, we could just get a
+        // pointer without needing to allocate a buffer and copy the data.
+        // (Currently this configuration isn't used for Gecko on Android.)
+        uint32_t length = item->RealSize();
+        uint8_t* buffer = static_cast<uint8_t*>(malloc(length));
+        if (buffer) {
+          nsZipCursor cursor(item, reader, buffer, length);
+          cursor.Copy(&length);
+          MOZ_ASSERT(length == item->RealSize(), "error reading font");
+          if (length == item->RealSize()) {
+            hb_blob_t* blob =
+                hb_blob_create((const char*)buffer, length,
+                               HB_MEMORY_MODE_READONLY, buffer, free);
+            hb_face_t* face = hb_face_create(blob, mFTFontIndex);
+            result = hb_face_reference_table(face, aTableTag);
+            hb_face_destroy(face);
+            hb_blob_destroy(blob);
+          }
+        }
+      }
+    }
+    if (result) {
+      return result;
+    }
+  }
+
+  // Otherwise, use the default method (which in turn will call our
+  // implementation of CopyFontTable).
   return gfxFontEntry::GetFontTable(aTableTag);
 }
 
