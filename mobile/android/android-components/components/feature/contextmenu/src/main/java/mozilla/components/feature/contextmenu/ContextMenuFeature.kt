@@ -13,8 +13,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
@@ -41,8 +41,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
  * menu. If a context menu item was selected by the user the feature will invoke the [ContextMenuCandidate.action]
  * method of the related candidate.
  * @property engineView The [EngineView]] this feature component should show context menus for.
- * @param customTabId Optional id of a custom tab. Instead of showing context menus for the currently
- * selected tab this feature will show only context menus for this custom tab if an id is provided.
+ * @param tabId Optional id of a tab. Instead of showing context menus for the currently selected tab this feature will
+ * show only context menus for this tab if an id is provided.
  */
 class ContextMenuFeature(
     private val fragmentManager: FragmentManager,
@@ -50,7 +50,7 @@ class ContextMenuFeature(
     private val candidates: List<ContextMenuCandidate>,
     private val engineView: EngineView,
     private val useCases: ContextMenuUseCases,
-    private val customTabId: String? = null
+    private val tabId: String? = null
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 
@@ -59,7 +59,7 @@ class ContextMenuFeature(
      */
     override fun start() {
         scope = store.flowScoped { flow ->
-            flow.map { state -> state.findCustomTabOrSelectedTab(customTabId) }
+            flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .ifChanged { it?.content?.hitResult }
                 .collect { state ->
                     val hitResult = state?.content?.hitResult
