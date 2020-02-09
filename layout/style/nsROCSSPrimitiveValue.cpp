@@ -22,10 +22,9 @@ nsROCSSPrimitiveValue::nsROCSSPrimitiveValue() : CSSValue(), mType(CSS_PX) {
 
 nsROCSSPrimitiveValue::~nsROCSSPrimitiveValue() { Reset(); }
 
-nsresult nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText) {
+void nsROCSSPrimitiveValue::GetCssText(nsString& aCssText, ErrorResult& aRv) {
   nsAutoString tmpStr;
   aCssText.Truncate();
-  nsresult result = NS_OK;
 
   switch (mType) {
     case CSS_PX: {
@@ -48,7 +47,10 @@ nsresult nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText) {
       if (mValue.mURI) {
         nsAutoCString specUTF8;
         nsresult rv = mValue.mURI->GetSpec(specUTF8);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_FAILED(rv)) {
+          aRv.ThrowInvalidStateError("Can't get URL string for url()");
+          return;
+        }
 
         tmpStr.AssignLiteral("url(");
         nsStyleUtil::AppendEscapedCSSString(NS_ConvertUTF8toUTF16(specUTF8),
@@ -109,18 +111,11 @@ nsresult nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText) {
     case CSS_KHZ:
     case CSS_DIMENSION:
       NS_ERROR("We have a bogus value set.  This should not happen");
-      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      aRv.ThrowInvalidAccessError("Unexpected value in computed style");
+      return;
   }
 
-  if (NS_SUCCEEDED(result)) {
-    aCssText.Assign(tmpStr);
-  }
-
-  return NS_OK;
-}
-
-void nsROCSSPrimitiveValue::GetCssText(nsString& aText, ErrorResult& aRv) {
-  aRv = GetCssText(aText);
+  aCssText.Assign(tmpStr);
 }
 
 uint16_t nsROCSSPrimitiveValue::CssValueType() const {

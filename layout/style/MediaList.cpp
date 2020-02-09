@@ -40,18 +40,18 @@ void MediaList::SetStyleSheet(StyleSheet* aSheet) {
 }
 
 template <typename Func>
-nsresult MediaList::DoMediaChange(Func aCallback) {
+void MediaList::DoMediaChange(Func aCallback, ErrorResult& aRv) {
   if (IsReadOnly()) {
-    return NS_OK;
+    return;
   }
 
   if (mStyleSheet) {
     mStyleSheet->WillDirty();
   }
 
-  nsresult rv = aCallback();
-  if (NS_FAILED(rv)) {
-    return rv;
+  aCallback(aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   if (mStyleSheet) {
@@ -60,8 +60,6 @@ nsresult MediaList::DoMediaChange(Func aCallback) {
     // meaningful here.
     mStyleSheet->RuleChanged(nullptr);
   }
-
-  return rv;
 }
 
 already_AddRefed<MediaList> MediaList::Clone() {
@@ -114,13 +112,13 @@ void MediaList::IndexedGetter(uint32_t aIndex, bool& aFound,
   }
 }
 
-nsresult MediaList::Delete(const nsAString& aOldMedium) {
+void MediaList::Delete(const nsAString& aOldMedium, ErrorResult& aRv) {
   MOZ_ASSERT(!IsReadOnly());
   NS_ConvertUTF16toUTF8 oldMedium(aOldMedium);
   if (Servo_MediaList_DeleteMedium(mRawList, &oldMedium)) {
-    return NS_OK;
+    return;
   }
-  return NS_ERROR_DOM_NOT_FOUND_ERR;
+  aRv.ThrowNotFoundError("Medium not in list");
 }
 
 bool MediaList::Matches(const Document& aDocument) const {
@@ -130,21 +128,20 @@ bool MediaList::Matches(const Document& aDocument) const {
   return Servo_MediaList_Matches(mRawList, rawSet);
 }
 
-nsresult MediaList::Append(const nsAString& aNewMedium) {
+void MediaList::Append(const nsAString& aNewMedium, ErrorResult& aRv) {
   MOZ_ASSERT(!IsReadOnly());
   if (aNewMedium.IsEmpty()) {
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
+    // XXXbz per spec there should not be an exception here, as far as
+    // I can tell...
+    aRv.ThrowNotFoundError("Empty medium");
+    return;
   }
   NS_ConvertUTF16toUTF8 newMedium(aNewMedium);
   Servo_MediaList_AppendMedium(mRawList, &newMedium);
-  return NS_OK;
 }
 
 void MediaList::SetMediaText(const nsAString& aMediaText) {
-  DoMediaChange([&]() {
-    SetText(aMediaText);
-    return NS_OK;
-  });
+  DoMediaChange([&](ErrorResult& aRv) { SetText(aMediaText); }, IgnoreErrors());
 }
 
 void MediaList::Item(uint32_t aIndex, nsAString& aReturn) {
@@ -153,11 +150,11 @@ void MediaList::Item(uint32_t aIndex, nsAString& aReturn) {
 }
 
 void MediaList::DeleteMedium(const nsAString& aOldMedium, ErrorResult& aRv) {
-  aRv = DoMediaChange([&]() { return Delete(aOldMedium); });
+  DoMediaChange([&](ErrorResult& aRv) { Delete(aOldMedium, aRv); }, aRv);
 }
 
 void MediaList::AppendMedium(const nsAString& aNewMedium, ErrorResult& aRv) {
-  aRv = DoMediaChange([&]() { return Append(aNewMedium); });
+  DoMediaChange([&](ErrorResult& aRv) { Append(aNewMedium, aRv); }, aRv);
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoMediaListMallocSizeOf)
