@@ -27,7 +27,7 @@ void ChromeNodeList::Append(nsINode& aNode, ErrorResult& aError) {
   if (!aNode.IsContent()) {
     // nsINodeList deals with nsIContent objects only, so need to
     // filter out other nodes for now.
-    aError.Throw(NS_ERROR_DOM_TYPE_ERR);
+    aError.ThrowTypeError(u"The node passed in is not a ChildNode");
     return;
   }
 
@@ -36,7 +36,7 @@ void ChromeNodeList::Append(nsINode& aNode, ErrorResult& aError) {
 
 void ChromeNodeList::Remove(nsINode& aNode, ErrorResult& aError) {
   if (!aNode.IsContent()) {
-    aError.Throw(NS_ERROR_DOM_TYPE_ERR);
+    aError.ThrowTypeError(u"The node passed in is not a ChildNode");
     return;
   }
 
