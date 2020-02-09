@@ -60,7 +60,6 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue();
 
-  nsresult GetCssText(nsAString& aText);
   void SetNumber(float aValue);
   void SetNumber(int32_t aValue);
   void SetNumber(uint32_t aValue);

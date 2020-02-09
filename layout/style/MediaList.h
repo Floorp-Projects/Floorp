@@ -69,8 +69,8 @@ class MediaList final : public nsISupports, public nsWrapperCache {
 
   void SetTextInternal(const nsAString& aMediaText, CallerType);
 
-  nsresult Delete(const nsAString& aOldMedium);
-  nsresult Append(const nsAString& aNewMedium);
+  void Delete(const nsAString& aOldMedium, ErrorResult& aRv);
+  void Append(const nsAString& aNewMedium, ErrorResult& aRv);
 
   ~MediaList() {
     MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");
@@ -85,7 +85,7 @@ class MediaList final : public nsISupports, public nsWrapperCache {
 
  private:
   template <typename Func>
-  inline nsresult DoMediaChange(Func aCallback);
+  inline void DoMediaChange(Func aCallback, ErrorResult& aRv);
   RefPtr<RawServoMediaList> mRawList;
 };
 
