@@ -111,3 +111,10 @@ DEFINES['HB_NO_UNICODE_FUNCS'] = True
 # Cancel the effect of the -DDEBUG macro if present,
 # because harfbuzz uses that name for its own purposes
 DEFINES['DEBUG'] = False
+
+# On Android, we want to use harfbuzz's mmap support for file access,
+# so we need to set the appropriate configuration flags as we're not
+# running harfbuzz's own configure script.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    DEFINES['HAVE_MMAP'] = 1
+    DEFINES['HAVE_SYS_MMAN_H'] = 1
