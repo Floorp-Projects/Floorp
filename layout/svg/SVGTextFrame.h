@@ -232,21 +232,22 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
   // SVG DOM text methods:
   uint32_t GetNumberOfChars(nsIContent* aContent);
   float GetComputedTextLength(nsIContent* aContent);
-  nsresult SelectSubString(nsIContent* aContent, uint32_t charnum,
-                           uint32_t nchars);
-  nsresult GetSubStringLength(nsIContent* aContent, uint32_t charnum,
-                              uint32_t nchars, float* aResult);
+  void SelectSubString(nsIContent* aContent, uint32_t charnum, uint32_t nchars,
+                       mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
+  float GetSubStringLength(nsIContent* aContent, uint32_t charnum,
+                           uint32_t nchars, mozilla::ErrorResult& aRv);
   int32_t GetCharNumAtPosition(nsIContent* aContent,
                                const mozilla::dom::DOMPointInit& aPoint);
 
-  nsresult GetStartPositionOfChar(nsIContent* aContent, uint32_t aCharNum,
-                                  mozilla::dom::nsISVGPoint** aResult);
-  nsresult GetEndPositionOfChar(nsIContent* aContent, uint32_t aCharNum,
-                                mozilla::dom::nsISVGPoint** aResult);
-  nsresult GetExtentOfChar(nsIContent* aContent, uint32_t aCharNum,
-                           mozilla::dom::SVGRect** aResult);
-  nsresult GetRotationOfChar(nsIContent* aContent, uint32_t aCharNum,
-                             float* aResult);
+  already_AddRefed<mozilla::dom::nsISVGPoint> GetStartPositionOfChar(
+      nsIContent* aContent, uint32_t aCharNum, mozilla::ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::nsISVGPoint> GetEndPositionOfChar(
+      nsIContent* aContent, uint32_t aCharNum, mozilla::ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::SVGRect> GetExtentOfChar(
+      nsIContent* aContent, uint32_t aCharNum, mozilla::ErrorResult& aRv);
+  float GetRotationOfChar(nsIContent* aContent, uint32_t aCharNum,
+                          mozilla::ErrorResult& aRv);
 
   // SVGTextFrame methods:
 
@@ -393,10 +394,10 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
    * exception is text in a textPath where we need to ignore characters that
    * fall off the end of the textPath path.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult GetSubStringLengthSlowFallback(nsIContent* aContent,
-                                          uint32_t charnum, uint32_t nchars,
-                                          float* aResult);
+  MOZ_CAN_RUN_SCRIPT
+  float GetSubStringLengthSlowFallback(nsIContent* aContent, uint32_t charnum,
+                                       uint32_t nchars,
+                                       mozilla::ErrorResult& aRv);
 
   /**
    * Converts the specified index into mPositions to an addressable
