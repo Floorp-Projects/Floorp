@@ -16,7 +16,10 @@ class MigratingFenixApplication : FenixApplication() {
         FennecMigrator.Builder(this, this.components.analytics.crashReporter)
             .migrateOpenTabs(this.components.core.sessionManager)
             .migrateHistory(this.components.core.historyStorage)
-            .migrateBookmarks(this.components.core.bookmarksStorage)
+            .migrateBookmarks(
+                this.components.core.bookmarksStorage,
+                this.components.core.topSiteStorage.storage
+            )
             .migrateLogins(
                 this.components.core.asyncPasswordsStorage,
                 this.components.core.passwordsEncryptionKey

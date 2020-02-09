@@ -14,7 +14,7 @@ import org.mozilla.fenix.test.Mockable
 class TopSiteStorage(private val context: Context) {
     var cachedTopSites = listOf<TopSite>()
 
-    private val topSiteStorage by lazy {
+    val storage by lazy {
         TopSiteStorage(context)
     }
 
@@ -22,20 +22,20 @@ class TopSiteStorage(private val context: Context) {
      * Adds a new [TopSite].
      */
     fun addTopSite(title: String, url: String) {
-        topSiteStorage.addTopSite(title, url)
+        storage.addTopSite(title, url)
     }
 
     /**
      * Returns a [LiveData] list of all the [TopSite] instances.
      */
     fun getTopSites(): LiveData<List<TopSite>> {
-        return topSiteStorage.getTopSites()
+        return storage.getTopSites()
     }
 
     /**
      * Removes the given [TopSite].
      */
     fun removeTopSite(topSite: TopSite) {
-        topSiteStorage.removeTopSite(topSite)
+        storage.removeTopSite(topSite)
     }
 }
