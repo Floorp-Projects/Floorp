@@ -8,6 +8,7 @@ import androidx.annotation.GuardedBy
 import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
+import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.support.sync.telemetry.SyncTelemetry
 import org.json.JSONObject
@@ -50,6 +51,11 @@ internal interface Connection : Closeable {
      * @return Migration metrics wrapped in a JSON object. See libplaces for schema details.
      */
     fun importBookmarksFromFennec(dbPath: String): JSONObject
+
+    /**
+     * @return A list of [BookmarkNode] which represent pinned sites.
+     */
+    fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode>
 }
 
 /**
@@ -110,6 +116,11 @@ internal object RustPlacesConnection : Connection {
     override fun importBookmarksFromFennec(dbPath: String): JSONObject {
         check(api != null) { "must call init first" }
         return api!!.importBookmarksFromFennec(dbPath)
+    }
+
+    override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
+        check(api != null) { "must call init first" }
+        return api!!.importPinnedSitesFromFennec(dbPath).map { it.asBookmarkNode() }
     }
 
     override fun close() = synchronized(this) {

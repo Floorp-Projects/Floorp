@@ -241,4 +241,34 @@ class PlacesBookmarksStorageTest {
             }
         }
     }
+
+    @Test
+    fun `bookmarks pinned sites read v39`() = runBlocking {
+        val path = getTestPath("databases/pinnedSites-v39.db").absolutePath
+
+        with(bookmarks.readPinnedSitesFromFennec(path)) {
+            assertEquals(2, this.size)
+
+            with(this[0]) {
+                assertEquals("Featured extensions for Android – Add-ons for Firefox Android (en-US)", this.title)
+                assertEquals("https://addons.mozilla.org/en-US/android/collections/4757633/mob/?page=1&collection_sort=-popularity", this.url)
+                assertEquals("6l1ow_W7naMw", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+
+            with(this[1]) {
+                assertEquals("Internet for people, not profit — Mozilla", this.title)
+                assertEquals("https://www.mozilla.org/en-US/", this.url)
+                assertEquals("dgC3t6q9HIuR", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+        }
+    }
+
+    @Test
+    fun `bookmarks pinned sites read empty v39`() = runBlocking {
+        val path = getTestPath("databases/populated-v39.db").absolutePath
+
+        assertEquals(0, bookmarks.readPinnedSitesFromFennec(path).size)
+    }
 }

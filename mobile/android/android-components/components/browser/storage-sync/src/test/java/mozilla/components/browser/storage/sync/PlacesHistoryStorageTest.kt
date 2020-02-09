@@ -10,6 +10,7 @@ import mozilla.appservices.places.InternalPanic
 import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
+import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
@@ -520,6 +521,11 @@ class PlacesHistoryStorageTest {
                 return JSONObject()
             }
 
+            override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
+                fail()
+                return emptyList()
+            }
+
             override fun close() {
                 fail()
             }
@@ -567,6 +573,11 @@ class PlacesHistoryStorageTest {
                 return JSONObject()
             }
 
+            override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
+                fail()
+                return emptyList()
+            }
+
             override fun close() {
                 fail()
             }
@@ -612,6 +623,11 @@ class PlacesHistoryStorageTest {
             override fun importBookmarksFromFennec(dbPath: String): JSONObject {
                 fail()
                 return JSONObject()
+            }
+
+            override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
+                fail()
+                return emptyList()
             }
 
             override fun close() {
@@ -663,6 +679,11 @@ class PlacesHistoryStorageTest {
             override fun importBookmarksFromFennec(dbPath: String): JSONObject {
                 fail()
                 return JSONObject()
+            }
+
+            override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
+                fail()
+                return emptyList()
             }
 
             override fun close() {

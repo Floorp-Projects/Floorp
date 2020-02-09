@@ -30,10 +30,12 @@ import java.io.File
 import java.lang.IllegalStateException
 import kotlinx.coroutines.CompletableDeferred
 import mozilla.appservices.logins.MismatchedLockException
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
+import mozilla.components.feature.top.sites.TopSiteStorage
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
@@ -42,6 +44,7 @@ import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.eq
+import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import java.lang.IllegalArgumentException
 
@@ -158,6 +161,13 @@ class FennecMigratorTest {
     fun `migrations versioning basics`() = runBlocking {
         val historyStore = PlacesHistoryStorage(testContext)
         val bookmarksStore = PlacesBookmarksStorage(testContext)
+        val topSiteStorage = mock<TopSiteStorage>()
+
+        // Clear-up storage layers between test runs.
+        historyStore.deleteEverything()
+        bookmarksStore.getTree(BookmarkRoot.Mobile.id)?.children?.forEach {
+            bookmarksStore.deleteNode(it.guid)
+        }
 
         val migrator = FennecMigrator.Builder(testContext, mock())
             .setCoroutineContext(this.coroutineContext)
@@ -165,18 +175,22 @@ class FennecMigratorTest {
                 "test", File(getTestPath("combined"), "basic").absolutePath, true)
             )
             .migrateHistory(historyStore)
-            .migrateBookmarks(bookmarksStore)
+            .migrateBookmarks(bookmarksStore, topSiteStorage)
             .build()
 
+        assertEquals(listOf<String>(), historyStore.getVisited())
         assertTrue(historyStore.getVisited().isEmpty())
         assertTrue(bookmarksStore.searchBookmarks("mozilla").isEmpty())
 
+        verifyZeroInteractions(topSiteStorage)
+
         // Can run once.
         with(migrator.migrateAsync(mock()).await()) {
-            assertEquals(2, this.size)
+            assertEquals(3, this.size)
 
             assertTrue(this.containsKey(Migration.History))
             assertTrue(this.containsKey(Migration.Bookmarks))
+            assertTrue(this.containsKey(Migration.PinnedSites))
 
             with(this.getValue(Migration.History)) {
                 assertTrue(this.success)
@@ -187,10 +201,16 @@ class FennecMigratorTest {
                 assertTrue(this.success)
                 assertEquals(1, this.version)
             }
+
+            with(this.getValue(Migration.PinnedSites)) {
+                assertTrue(this.success)
+                assertEquals(1, this.version)
+            }
         }
 
         assertEquals(6, historyStore.getVisited().size)
         assertEquals(4, bookmarksStore.searchBookmarks("mozilla").size)
+        verifyZeroInteractions(topSiteStorage)
 
         // Do not run again for the same version.
         with(migrator.migrateAsync(mock()).await()) {
@@ -212,7 +232,7 @@ class FennecMigratorTest {
                 true
             ))
             .migrateHistory(historyStore)
-            .migrateBookmarks(bookmarksStore)
+            .migrateBookmarks(bookmarksStore, topSiteStorage)
             .migrateOpenTabs(sessionManager)
             .build()
 
@@ -232,6 +252,64 @@ class FennecMigratorTest {
         with(expandedMigrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
+    }
+
+    @Test
+    fun `pinned sites migration`() = runBlocking {
+        val historyStore = PlacesHistoryStorage(testContext)
+        val bookmarksStore = PlacesBookmarksStorage(testContext)
+        val topSiteStorage = mock<TopSiteStorage>()
+
+        val migrator = FennecMigrator.Builder(testContext, mock())
+            .setCoroutineContext(this.coroutineContext)
+            .setProfile(FennecProfile(
+                "test", File(getTestPath("combined"), "basic").absolutePath, true)
+            )
+            .migrateHistory(historyStore)
+            .migrateBookmarks(bookmarksStore, topSiteStorage)
+            .setBrowserDbPath(File(getTestPath("databases/v39-basic"), "pinnedSites-v39.db").absolutePath)
+            .build()
+
+        assertTrue(historyStore.getVisited().isEmpty())
+        assertTrue(bookmarksStore.searchBookmarks("mozilla").isEmpty())
+
+        verify(topSiteStorage, never()).addTopSite(any(), any())
+
+        // Can run once.
+        with(migrator.migrateAsync(mock()).await()) {
+            assertEquals(3, this.size)
+
+            assertTrue(this.containsKey(Migration.History))
+            assertTrue(this.containsKey(Migration.Bookmarks))
+            assertTrue(this.containsKey(Migration.PinnedSites))
+
+            with(this.getValue(Migration.History)) {
+                assertTrue(this.success)
+                assertEquals(1, this.version)
+            }
+
+            with(this.getValue(Migration.Bookmarks)) {
+                assertTrue(this.success)
+                assertEquals(1, this.version)
+            }
+
+            with(this.getValue(Migration.PinnedSites)) {
+                assertTrue(this.success)
+                assertEquals(1, this.version)
+            }
+        }
+
+        assertEquals(5, historyStore.getVisited().size)
+        assertEquals(2, bookmarksStore.searchBookmarks("mozilla").size)
+        verify(topSiteStorage, times(2)).addTopSite(any(), any())
+        verify(topSiteStorage).addTopSite(
+            "Featured extensions for Android – Add-ons for Firefox Android (en-US)",
+            "https://addons.mozilla.org/en-US/android/collections/4757633/mob/?page=1&collection_sort=-popularity"
+        )
+        verify(topSiteStorage).addTopSite(
+            "Internet for people, not profit — Mozilla",
+            "https://www.mozilla.org/en-US/"
+        )
     }
 
     @Test
