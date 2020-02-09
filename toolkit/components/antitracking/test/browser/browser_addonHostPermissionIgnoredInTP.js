@@ -14,7 +14,9 @@ add_task(async function() {
     manifest: { permissions: ["https://tracking.example.com/"] },
     files: {
       "page.html":
-        '<html><head></head><body><iframe src="https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/container.html"></iframe></body></html>',
+        '<html><head></head><body><script src="script.js"></script><iframe src="https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/container2.html"></iframe></body></html>',
+      "script.js":
+        'window.count=0;window.p=new Promise(resolve=>{onmessage=e=>{count=e.data.data;resolve();};});p.then(()=>{document.documentElement.setAttribute("count",count);});',
     },
     async background() {
       browser.test.sendMessage("ready", browser.runtime.getURL("page.html"));
@@ -28,11 +30,15 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
 
   info("Verify the number of script nodes found");
-  await SpecialPowers.spawn(browser, [], async function(obj) {
-    let doc = content.document.querySelector("iframe").contentDocument;
-    doc = doc.querySelector("iframe").contentDocument;
-    let scripts = doc.querySelectorAll("script");
-    is(scripts.length, 3, "Expected script nodes found");
+  await ContentTask.spawn(browser, [], async function(obj) {
+    await new Promise(resolve => {
+      // Need to wait a bit for cross-process postMessage...
+      content.setTimeout(() => {
+        let count = content.document.documentElement.getAttribute("count");
+        is(count, 3, "Expected script nodes found");
+        resolve();
+      }, 10);
+    });
   });
 
   info("Removing the tab");
