@@ -6419,7 +6419,10 @@ var TabContextMenu = {
     });
   },
   updateContextMenu(aPopupMenu) {
-    let tab = aPopupMenu.triggerNode && aPopupMenu.triggerNode.closest("tab");
+    let tab =
+      aPopupMenu.triggerNode &&
+      (aPopupMenu.triggerNode.tab || aPopupMenu.triggerNode.closest("tab"));
+
     this.contextTab = tab || gBrowser.selectedTab;
 
     let disabled = gBrowser.tabs.length == 1;
