@@ -1,16 +1,9 @@
-[![Build Status](https://travis-ci.com/PLSysSec/rlbox_lucet_sandbox.svg?branch=master)](https://travis-ci.com/PLSysSec/rlbox_lucet_sandbox)
-
 # RLBOX Lucet Sandbox Integration
 Integration with RLBox sandboxing API to leverage the sandboxing in WASM modules compiled with lucet compiler.
 
 For details about the RLBox sandboxing APIs, see [here](https://github.com/PLSysSec/rlbox_api_cpp17).
 
-This code has been tested on 64-bit versions of Ubuntu and Mac OSX.
-The lucet compiler does not currently support Windows.
-
-## Reporting security bugs
-
-If you find a security bug, please do not create a public issue. Instead, file a security bug on bugzilla using the [following template link](https://bugzilla.mozilla.org/enter_bug.cgi?cc=tom%40mozilla.com&cc=nfroyd%40mozilla.com&cc=deian%40cs.ucsd.edu&cc=shravanrn%40gmail.com&component=Security%3A%20Process%20Sandboxing&defined_groups=1&groups=core-security&product=Core&bug_type=defect).
+Currently lucet supports only Linux x64, therefore this repo will only work in this environment.
 
 ## Building/Running the tests
 
@@ -21,8 +14,6 @@ cmake -S . -B ./build
 cmake --build ./build --target all
 cmake --build ./build --target test
 ```
-
-On Arch Linux you'll need to install [ncurses5-compat-libs](https://aur.archlinux.org/packages/ncurses5-compat-libs/).
 
 ## Using this library
 

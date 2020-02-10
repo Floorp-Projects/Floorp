@@ -737,7 +737,7 @@ source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20a
 [[package]]
 name = "cranelift-entity"
 version = "0.41.0"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=a3fd180d53a6f929a7ef47466ffc2e53338ad4f1#a3fd180d53a6f929a7ef47466ffc2e53338ad4f1"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=58498599272e23ef797bb4304d0f181d7455ca57#58498599272e23ef797bb4304d0f181d7455ca57"
 
 [[package]]
 name = "cranelift-entity"
@@ -2123,7 +2123,7 @@ dependencies = [
 [[package]]
 name = "lucet-module"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=a3fd180d53a6f929a7ef47466ffc2e53338ad4f1#a3fd180d53a6f929a7ef47466ffc2e53338ad4f1"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=58498599272e23ef797bb4304d0f181d7455ca57#58498599272e23ef797bb4304d0f181d7455ca57"
 dependencies = [
  "bincode",
  "byteorder",
@@ -2139,7 +2139,7 @@ dependencies = [
 [[package]]
 name = "lucet-runtime"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=a3fd180d53a6f929a7ef47466ffc2e53338ad4f1#a3fd180d53a6f929a7ef47466ffc2e53338ad4f1"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=58498599272e23ef797bb4304d0f181d7455ca57#58498599272e23ef797bb4304d0f181d7455ca57"
 dependencies = [
  "cc",
  "libc",
@@ -2152,7 +2152,7 @@ dependencies = [
 [[package]]
 name = "lucet-runtime-internals"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=a3fd180d53a6f929a7ef47466ffc2e53338ad4f1#a3fd180d53a6f929a7ef47466ffc2e53338ad4f1"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=58498599272e23ef797bb4304d0f181d7455ca57#58498599272e23ef797bb4304d0f181d7455ca57"
 dependencies = [
  "bincode",
  "bitflags",
@@ -2168,14 +2168,13 @@ dependencies = [
  "nix",
  "num-derive",
  "num-traits",
- "raw-cpuid",
  "xfailure",
 ]
 
 [[package]]
 name = "lucet-wasi"
 version = "0.1.1"
-source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=a3fd180d53a6f929a7ef47466ffc2e53338ad4f1#a3fd180d53a6f929a7ef47466ffc2e53338ad4f1"
+source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=58498599272e23ef797bb4304d0f181d7455ca57#58498599272e23ef797bb4304d0f181d7455ca57"
 dependencies = [
  "cast",
  "failure",
@@ -2183,7 +2182,6 @@ dependencies = [
  "lucet-module",
  "lucet-runtime",
  "lucet-runtime-internals",
- "mach",
  "nix",
  "rand",
 ]
@@ -3250,17 +3248,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd5927936723a9e8b715d37d7e4b390455087c4bdf25b9f702309460577b14f9"
 
 [[package]]
-name = "raw-cpuid"
-version = "7.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4a349ca83373cfa5d6dbb66fd76e58b2cca08da71a5f6400de0a0a6a9bceeaf"
-dependencies = [
- "bitflags",
- "cc",
- "rustc_version",
-]
-
-[[package]]
 name = "raw-window-handle"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3480,7 +3467,7 @@ dependencies = [
 [[package]]
 name = "rlbox_lucet_sandbox"
 version = "0.1.0"
-source = "git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=6ddc15b70f0d902241742fd55c689649cad100f8#6ddc15b70f0d902241742fd55c689649cad100f8"
+source = "git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=5f8bca975d8206e4837786d6bdb57a5c2fbd4016#5f8bca975d8206e4837786d6bdb57a5c2fbd4016"
 dependencies = [
  "failure",
  "goblin",

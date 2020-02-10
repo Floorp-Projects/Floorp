@@ -3,8 +3,8 @@ use crate::module::{AddrDetails, GlobalSpec, HeapSpec, Module, ModuleInternal, T
 use libc::c_void;
 use libloading::Library;
 use lucet_module::{
-    FunctionHandle, FunctionIndex, FunctionPointer, FunctionSpec, ModuleData, ModuleFeatures,
-    ModuleSignature, SerializedModule, Signature, LUCET_MODULE_SYM,
+    FunctionHandle, FunctionIndex, FunctionPointer, FunctionSpec, ModuleData, SerializedModule,
+    Signature, LUCET_MODULE_SYM,
 };
 #[cfg(feature = "signature_checking")]
 use lucet_module::{ModuleSignature, PublicKey};
@@ -14,65 +14,6 @@ use std::path::Path;
 use std::slice;
 use std::slice::from_raw_parts;
 use std::sync::Arc;
-
-use raw_cpuid::CpuId;
-
-fn check_feature_support(module_features: &ModuleFeatures) -> Result<(), Error> {
-    let cpuid = CpuId::new();
-
-    fn missing_feature(feature: &str) -> Error {
-        Error::Unsupported(format!(
-            "Module requires feature host does not support: {}",
-            feature
-        ))
-    }
-
-    let info = cpuid
-        .get_feature_info()
-        .ok_or_else(|| Error::Unsupported("Unable to obtain host CPU feature info!".to_string()))?;
-
-    if module_features.sse3 && !info.has_sse3() {
-        return Err(missing_feature("SSE3"));
-    }
-    if module_features.ssse3 && !info.has_ssse3() {
-        return Err(missing_feature("SSS3"));
-    }
-    if module_features.sse41 && !info.has_sse41() {
-        return Err(missing_feature("SSE4.1"));
-    }
-    if module_features.sse42 && !info.has_sse42() {
-        return Err(missing_feature("SSE4.2"));
-    }
-    if module_features.avx && !info.has_avx() {
-        return Err(missing_feature("AVX"));
-    }
-    if module_features.popcnt && !info.has_popcnt() {
-        return Err(missing_feature("POPCNT"));
-    }
-
-    let info = cpuid.get_extended_feature_info().ok_or_else(|| {
-        Error::Unsupported("Unable to obtain host CPU extended feature info!".to_string())
-    })?;
-
-    if module_features.bmi1 && !info.has_bmi1() {
-        return Err(missing_feature("BMI1"));
-    }
-
-    if module_features.bmi2 && !info.has_bmi2() {
-        return Err(missing_feature("BMI2"));
-    }
-
-    let info = cpuid.get_extended_function_info().ok_or_else(|| {
-        Error::Unsupported("Unable to obtain host CPU extended function info!".to_string())
-    })?;
-
-    if module_features.lzcnt && !info.has_lzcnt() {
-        return Err(missing_feature("LZCNT"));
-    }
-
-    // Features are fine, we're compatible!
-    Ok(())
-}
 
 /// A Lucet module backed by a dynamically-loaded shared object.
 pub struct DlModule {
@@ -142,9 +83,6 @@ impl DlModule {
             )
         };
         let module_data = ModuleData::deserialize(module_data_slice)?;
-
-        check_feature_support(module_data.features())?;
-
         verifier(&module_data)?;
 
         let fbase = if let Some(dli) =
