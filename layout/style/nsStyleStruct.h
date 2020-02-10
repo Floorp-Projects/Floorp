@@ -297,6 +297,9 @@ struct nsStyleImage {
 
   // This variable keeps some cache data for border image and is lazily
   // allocated since it is only used in border image case.
+  //
+  // TODO(emilio, bug 1564526): Kill this, or make it a frame property or
+  // something.
   mozilla::UniquePtr<CachedBorderImageData> mCachedBIData;
 
   // This is _currently_ used only in conjunction with eStyleImageType_Image.
