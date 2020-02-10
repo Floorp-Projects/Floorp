@@ -4,9 +4,14 @@
 
 package mozilla.components.feature.pwa
 
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_MAIN
+import android.content.Intent.CATEGORY_HOME
 import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.ShortcutManager
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
@@ -81,7 +86,14 @@ class WebAppShortcutManager(
             }
 
             if (shortcut != null) {
-                ShortcutManagerCompat.requestPinShortcut(context, shortcut, null)
+                val intent = Intent(ACTION_MAIN).apply {
+                    addCategory(CATEGORY_HOME)
+                    flags = FLAG_ACTIVITY_NEW_TASK
+                }
+                val pendingIntent = PendingIntent.getActivity(context, 0, intent, FLAG_UPDATE_CURRENT)
+                val intentSender = pendingIntent.intentSender
+
+                ShortcutManagerCompat.requestPinShortcut(context, shortcut, intentSender)
             }
         }
     }
