@@ -4596,8 +4596,9 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
   BaselineInspector inspector(script);
   const JitCompileOptions options(cx);
 
-  IonBuilder builder(cx, CompileRealm::get(cx->realm()), options, &temp, &graph,
-                     constraints, &inspector, &info, optimizationInfo,
+  MIRGenerator mirGen(CompileRealm::get(cx->realm()), options, &temp, &graph,
+                      &info, optimizationInfo);
+  IonBuilder builder(cx, mirGen, constraints, &inspector,
                      /* baselineFrame = */ nullptr);
 
   AbortReasonOr<Ok> buildResult = builder.build();
@@ -4628,7 +4629,7 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
     return false;
   }
 
-  if (!EliminatePhis(&builder, graph, AggressiveObservability)) {
+  if (!EliminatePhis(&mirGen, graph, AggressiveObservability)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -4855,8 +4856,9 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
   BaselineInspector inspector(script);
   const JitCompileOptions options(cx);
 
-  IonBuilder builder(nullptr, CompileRealm::get(cx->realm()), options, &temp,
-                     &graph, constraints, &inspector, &info, optimizationInfo,
+  MIRGenerator mirGen(CompileRealm::get(cx->realm()), options, &temp, &graph,
+                      &info, optimizationInfo);
+  IonBuilder builder(nullptr, mirGen, constraints, &inspector,
                      /* baselineFrame = */ nullptr);
 
   AbortReasonOr<Ok> buildResult = builder.build();
@@ -4885,7 +4887,7 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
     return false;
   }
 
-  if (!EliminatePhis(&builder, graph, AggressiveObservability)) {
+  if (!EliminatePhis(&mirGen, graph, AggressiveObservability)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -5147,10 +5149,10 @@ void MRootList::trace(JSTracer* trc) {
 }
 
 MOZ_MUST_USE bool jit::CreateMIRRootList(IonBuilder& builder) {
-  MOZ_ASSERT(!builder.info().isAnalysis());
+  MOZ_ASSERT(!builder.mirGen().info().isAnalysis());
 
   TempAllocator& alloc = builder.alloc();
-  MIRGraph& graph = builder.graph();
+  MIRGraph& graph = builder.mirGen().graph();
 
   MRootList* roots = new (alloc.fallible()) MRootList(alloc);
   if (!roots) {

@@ -132,15 +132,12 @@ BaselineFrameInspector* jit::NewBaselineFrameInspector(TempAllocator* temp,
   return inspector;
 }
 
-IonBuilder::IonBuilder(JSContext* analysisContext, CompileRealm* realm,
-                       const JitCompileOptions& options, TempAllocator* temp,
-                       MIRGraph* graph, CompilerConstraintList* constraints,
-                       BaselineInspector* inspector, CompileInfo* info,
-                       const OptimizationInfo* optimizationInfo,
+IonBuilder::IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
+                       CompilerConstraintList* constraints,
+                       BaselineInspector* inspector,
                        BaselineFrameInspector* baselineFrame,
                        size_t inliningDepth, uint32_t loopDepth)
-    : MIRGenerator(realm, options, temp, graph, info, optimizationInfo),
-      backgroundCodegen_(nullptr),
+    : backgroundCodegen_(nullptr),
       actionableAbortScript_(nullptr),
       actionableAbortPc_(nullptr),
       actionableAbortMessage_(nullptr),
@@ -148,47 +145,53 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileRealm* realm,
       analysisContext(analysisContext),
       baselineFrame_(baselineFrame),
       constraints_(constraints),
+      mirGen_(mirGen),
       tiOracle_(this, constraints),
+      realm(mirGen.realm),
+      info_(&mirGen.info()),
+      optimizationInfo_(&mirGen.optimizationInfo()),
+      alloc_(&mirGen.alloc()),
+      graph_(&mirGen.graph()),
       thisTypes(nullptr),
       argTypes(nullptr),
       typeArray(nullptr),
       typeArrayHint(0),
       bytecodeTypeMap(nullptr),
       loopDepth_(loopDepth),
-      loopStack_(*temp),
-      trackedOptimizationSites_(*temp),
-      abortedPreliminaryGroups_(*temp),
+      loopStack_(*alloc_),
+      trackedOptimizationSites_(*alloc_),
+      abortedPreliminaryGroups_(*alloc_),
       lexicalCheck_(nullptr),
       callerResumePoint_(nullptr),
       callerBuilder_(nullptr),
-      iterators_(*temp),
-      loopHeaders_(*temp),
+      iterators_(*alloc_),
+      loopHeaders_(*alloc_),
       inspector(inspector),
       inliningDepth_(inliningDepth),
       inlinedBytecodeLength_(0),
       numLoopRestarts_(0),
-      failedBoundsCheck_(info->script()->failedBoundsCheck()),
-      failedShapeGuard_(info->script()->failedShapeGuard()),
-      failedLexicalCheck_(info->script()->failedLexicalCheck()),
+      failedBoundsCheck_(info_->script()->failedBoundsCheck()),
+      failedShapeGuard_(info_->script()->failedShapeGuard()),
+      failedLexicalCheck_(info_->script()->failedLexicalCheck()),
 #ifdef DEBUG
       hasLazyArguments_(false),
 #endif
       inlineCallInfo_(nullptr),
       maybeFallbackFunctionGetter_(nullptr) {
-  script_ = info->script();
+  script_ = info_->script();
   scriptHasIonScript_ = script_->hasIonScript();
-  pc = info->startPC();
+  pc = info_->startPC();
 
   // The script must have a JitScript. Compilation requires a BaselineScript
   // too.
   MOZ_ASSERT(script_->hasJitScript());
-  MOZ_ASSERT_IF(!info->isAnalysis(), script_->hasBaselineScript());
+  MOZ_ASSERT_IF(!info_->isAnalysis(), script_->hasBaselineScript());
 
   MOZ_ASSERT(!!analysisContext ==
-             (info->analysisMode() == Analysis_DefiniteProperties));
+             (info_->analysisMode() == Analysis_DefiniteProperties));
   MOZ_ASSERT(script_->numBytecodeTypeSets() < JSScript::MaxBytecodeTypeSets);
 
-  if (!info->isAnalysis()) {
+  if (!info_->isAnalysis()) {
     script()->jitScript()->setIonCompiledOrInlined();
   }
 }
@@ -199,7 +202,7 @@ void IonBuilder::clearForBackEnd() {
 }
 
 mozilla::GenericErrorResult<AbortReason> IonBuilder::abort(AbortReason r) {
-  auto res = this->MIRGenerator::abort(r);
+  auto res = mirGen_.abort(r);
 #ifdef DEBUG
   JitSpew(JitSpew_IonAbort, "aborted @ %s:%d", script()->filename(),
           PCToLineNumber(script(), pc));
@@ -215,7 +218,7 @@ mozilla::GenericErrorResult<AbortReason> IonBuilder::abort(AbortReason r,
   // Don't call PCToLineNumber in release builds.
   va_list ap;
   va_start(ap, message);
-  auto res = this->MIRGenerator::abortFmt(r, message, ap);
+  auto res = mirGen_.abortFmt(r, message, ap);
   va_end(ap);
 #ifdef DEBUG
   JitSpew(JitSpew_IonAbort, "aborted @ %s:%d", script()->filename(),
@@ -236,7 +239,7 @@ IonBuilder* IonBuilder::outermostBuilder() {
 }
 
 void IonBuilder::trackActionableAbort(const char* message) {
-  if (!isOptimizationTrackingEnabled()) {
+  if (!mirGen_.isOptimizationTrackingEnabled()) {
     return;
   }
 
@@ -1194,7 +1197,7 @@ void IonBuilder::runTask() {
   AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
   jit::JitContext jctx(realm->runtime(), realm, &alloc());
-  setBackgroundCodegen(jit::CompileBackEnd(this));
+  setBackgroundCodegen(jit::CompileBackEnd(&mirGen_));
 }
 
 void IonBuilder::rewriteParameter(uint32_t slotIdx, MDefinition* param) {
@@ -2811,7 +2814,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTypeOfCompare(MCompare* ins,
   // since there are multiple ways to get an object. That is the reason
   // for the 'trueBranch' test.
   TemporaryTypeSet filter;
-  const JSAtomState& names = runtime->names();
+  const JSAtomState& names = mirGen_.runtime->names();
   if (constant->toString() == TypeName(JSTYPE_UNDEFINED, names)) {
     filter.addType(TypeSet::UndefinedType(), alloc_->lifoAlloc());
     if (typeOf->inputMaybeCallableOrEmulatesUndefined() && trueBranch) {
@@ -4281,7 +4284,7 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   }
 
   // Capture formals in the outer resume point.
-  MOZ_TRY(callInfo.pushCallStack(this, current));
+  MOZ_TRY(callInfo.pushCallStack(&mirGen_, current));
 
   MResumePoint* outerResumePoint =
       MResumePoint::New(alloc(), current, pc, MResumePoint::Outer);
@@ -4328,7 +4331,7 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
     return abort(AbortReason::Alloc);
   }
   CompileInfo* info = lifoAlloc->new_<CompileInfo>(
-      runtime, calleeScript, target, (jsbytecode*)nullptr,
+      mirGen_.runtime, calleeScript, target, (jsbytecode*)nullptr,
       this->info().analysisMode(),
       /* needsArgsObj = */ false, inlineScriptTree);
   if (!info) {
@@ -4339,8 +4342,9 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
   AutoAccumulateReturns aar(graph(), returns);
 
   // Build the graph.
-  IonBuilder inlineBuilder(analysisContext, realm, options, &alloc(), &graph(),
-                           constraints(), &inspector, info, &optimizationInfo(),
+  MIRGenerator mirGen(realm, mirGen_.options, &alloc(), &graph(), info,
+                      &optimizationInfo());
+  IonBuilder inlineBuilder(analysisContext, mirGen, constraints(), &inspector,
                            nullptr, inliningDepth_ + 1, loopDepth_);
   AbortReasonOr<Ok> result =
       inlineBuilder.buildInline(this, outerResumePoint, callInfo);
@@ -4579,7 +4583,7 @@ IonBuilder::InliningDecision IonBuilder::makeInliningDecision(
 
   // Callee must not be excessively large.
   // This heuristic also applies to the callsite as a whole.
-  bool offThread = options.offThreadCompilationAvailable();
+  bool offThread = mirGen_.options.offThreadCompilationAvailable();
   if (targetScript->length() >
       optimizationInfo().inlineMaxBytecodePerCallSite(offThread)) {
     trackOptimizationOutcome(TrackedOutcome::CantInlineBigCallee);
@@ -4743,7 +4747,7 @@ AbortReasonOr<Ok> IonBuilder::selectInliningTargets(
       // Enforce a maximum inlined bytecode limit at the callsite.
       if (inlineable && target->as<JSFunction>().isInterpreted()) {
         totalSize += target->as<JSFunction>().nonLazyScript()->length();
-        bool offThread = options.offThreadCompilationAvailable();
+        bool offThread = mirGen_.options.offThreadCompilationAvailable();
         if (totalSize >
             optimizationInfo().inlineMaxBytecodePerCallSite(offThread)) {
           inlineable = false;
@@ -4773,7 +4777,7 @@ AbortReasonOr<Ok> IonBuilder::selectInliningTargets(
   // If optimization tracking is turned on and one of the inlineable targets
   // is a native, track the type info of the call. Most native inlinings
   // depend on the types of the arguments and the return value.
-  if (isOptimizationTrackingEnabled()) {
+  if (mirGen_.isOptimizationTrackingEnabled()) {
     for (size_t i = 0; i < targets.length(); i++) {
       if (choiceSet[i] && targets[i].target->as<JSFunction>().isNative()) {
         trackTypeInfo(callInfo);
@@ -5142,7 +5146,7 @@ AbortReasonOr<Ok> IonBuilder::inlineCalls(CallInfo& callInfo,
 
   MBasicBlock* dispatchBlock = current;
   callInfo.setImplicitlyUsedUnchecked();
-  MOZ_TRY(callInfo.pushCallStack(this, dispatchBlock));
+  MOZ_TRY(callInfo.pushCallStack(&mirGen_, dispatchBlock));
 
   // Patch any InlinePropertyTable to only contain functions that are
   // inlineable. The InlinePropertyTable will also be patched at the end to
@@ -5796,7 +5800,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_funcall(uint32_t argc) {
   // Save prior call stack in case we need to resolve during bailout
   // recovery of inner inlined function. This includes the JSFunction and the
   // 'call' native function.
-  MOZ_TRY(callInfo.savePriorCallStack(this, current, argc + 2));
+  MOZ_TRY(callInfo.savePriorCallStack(&mirGen_, current, argc + 2));
 
   // Shimmy the slots down to remove the native 'call' function.
   current->shimmySlots(funcDepth - 1);
@@ -5974,8 +5978,8 @@ bool IonBuilder::ensureArrayPrototypeIteratorNotModified() {
 
   jsid id = SYMBOL_TO_JSID(realm->runtime()->wellKnownSymbols().iterator);
   return propertyIsConstantFunction(obj, id, [](auto* builder, auto* fun) {
-    return IsSelfHostedFunctionWithName(fun,
-                                        builder->runtime->names().ArrayValues);
+    CompileRuntime* runtime = builder->mirGen().runtime;
+    return IsSelfHostedFunctionWithName(fun, runtime->names().ArrayValues);
   });
 }
 
@@ -5985,10 +5989,10 @@ bool IonBuilder::ensureArrayIteratorPrototypeNextNotModified() {
     return false;
   }
 
-  jsid id = NameToId(runtime->names().next);
+  jsid id = NameToId(mirGen_.runtime->names().next);
   return propertyIsConstantFunction(obj, id, [](auto* builder, auto* fun) {
     return IsSelfHostedFunctionWithName(
-        fun, builder->runtime->names().ArrayIteratorNext);
+        fun, builder->mirGen().runtime->names().ArrayIteratorNext);
   });
 }
 
@@ -6177,7 +6181,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_funapplyarguments(uint32_t argc) {
 
   CallInfo callInfo(alloc(), pc, /* constructing = */ false,
                     /* ignoresReturnValue = */ BytecodeIsPopped(pc));
-  MOZ_TRY(callInfo.savePriorCallStack(this, current, 4));
+  MOZ_TRY(callInfo.savePriorCallStack(&mirGen_, current, 4));
 
   // Vp
   MDefinition* vp = current->pop();
@@ -12887,7 +12891,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_regexp(RegExpObject* reobj) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_object(JSObject* obj) {
-  if (options.cloneSingletons()) {
+  if (mirGen_.options.cloneSingletons()) {
     MCloneLiteral* clone =
         MCloneLiteral::New(alloc(), constant(ObjectValue(*obj)));
     current->add(clone);
@@ -14251,7 +14255,7 @@ void IonBuilder::checkNurseryCell(gc::Cell* cell) {
   // function or should come from a type set (which has a similar barrier).
   if (cell && IsInsideNursery(cell)) {
     realm->zone()->setMinorGCShouldCancelIonCompilations();
-    outermostBuilder()->setNotSafeForMinorGC();
+    outermostBuilder()->mirGen().setNotSafeForMinorGC();
   }
 }
 
