@@ -549,6 +549,16 @@ public class GeckoViewActivity
         mPopupView.setLayoutParams(params);
     }
 
+    private class PopupSessionContentDelegate implements GeckoSession.ContentDelegate {
+        @Override
+        public void onCloseRequest(final GeckoSession session) {
+          setPopupVisibility(false);
+          mPopupSession.close();
+          mPopupSession = null;
+          mPopupView = null;
+        }
+    }
+
     private void openPopupSession() {
         LayoutInflater inflater = (LayoutInflater)
                 getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -556,6 +566,7 @@ public class GeckoViewActivity
         GeckoView geckoView = mPopupView.findViewById(R.id.gecko_view_popup);
         geckoView.setViewBackend(GeckoView.BACKEND_TEXTURE_VIEW);
         mPopupSession = new TabSession();
+        mPopupSession.setContentDelegate(new PopupSessionContentDelegate());
         mPopupSession.open(sGeckoRuntime);
         geckoView.setSession(mPopupSession);
 

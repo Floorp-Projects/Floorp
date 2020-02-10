@@ -60,6 +60,10 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     this.userAgentOverride = this.settings.userAgentOverride;
     this.viewportMode = this.settings.viewportMode;
     this.allowJavascript = this.settings.allowJavascript;
+    if (this.settings.isPopup) {
+      // Allow web extensions to close their own action popups (bz1612363)
+      content.windowUtils.allowScriptsToClose();
+    }
   }
 
   get useTrackingProtection() {
