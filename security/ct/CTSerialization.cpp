@@ -38,9 +38,6 @@ static const size_t kTbsCertificateLengthBytes = 3;
 static const size_t kSCTListLengthBytes = 2;
 static const size_t kSerializedSCTLengthBytes = 2;
 
-// Members of digitally-signed struct of a STH
-static const size_t kTreeSizeLength = 8;
-
 // Length of sha256RootHash buffer of SignedTreeHead
 static const size_t kSthRootHashLength = 32;
 
