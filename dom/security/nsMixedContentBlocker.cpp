@@ -791,18 +791,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocShell> docShell =
-      NS_CP_GetDocShellFromContext(aRequestingContext);
-  // Carve-out: if we're in the parent and we're loading media, e.g. through
-  // webbrowserpersist, don't reject it if we can't find a docshell.
-  if (XRE_IsParentProcess() && !docShell &&
-      (aContentType == TYPE_IMAGE || aContentType == TYPE_MEDIA)) {
-    *aDecision = ACCEPT;
-    return NS_OK;
-  }
-  // Otherwise, we must have a docshell
-  NS_ENSURE_TRUE(docShell, NS_OK);
-
   // Disallow mixed content loads for workers, shared workers and service
   // workers.
   if (isWorkerType) {
@@ -835,6 +823,19 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   // pages. Hence, we only have to check against http: here. Skip mixed content
   // blocking if the subresource load uses http: and the CSP directive
   // 'upgrade-insecure-requests' is present on the page.
+
+  nsCOMPtr<nsIDocShell> docShell =
+      NS_CP_GetDocShellFromContext(aRequestingContext);
+  // Carve-out: if we're in the parent and we're loading media, e.g. through
+  // webbrowserpersist, don't reject it if we can't find a docshell.
+  if (XRE_IsParentProcess() && !docShell &&
+      (aContentType == TYPE_IMAGE || aContentType == TYPE_MEDIA)) {
+    *aDecision = ACCEPT;
+    return NS_OK;
+  }
+  // Otherwise, we must have a docshell
+  NS_ENSURE_TRUE(docShell, NS_OK);
+
   Document* document = docShell->GetDocument();
   MOZ_ASSERT(document, "Expected a document");
   if (isHttpScheme && document->GetUpgradeInsecureRequests(isPreload)) {
