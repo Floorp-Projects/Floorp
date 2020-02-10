@@ -952,14 +952,11 @@ class WorkerPermissionChallenge final : public Runnable {
     BrowserChild* browserChild = BrowserChild::GetFrom(window);
     MOZ_ASSERT(browserChild);
 
-    IPC::Principal ipcPrincipal(principal);
-
     RefPtr<WorkerPermissionChallenge> self(this);
-    browserChild->SendIndexedDBPermissionRequest(ipcPrincipal)
-        ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
-            [self](const uint32_t& aPermission) { self->OperationCompleted(); },
-            [](const mozilla::ipc::ResponseRejectReason) {});
+    browserChild->SendIndexedDBPermissionRequest(principal)->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [self](const uint32_t& aPermission) { self->OperationCompleted(); },
+        [](const mozilla::ipc::ResponseRejectReason) {});
     return false;
   }
 
@@ -1744,17 +1741,14 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
   RefPtr<BrowserChild> browserChild = mFactory->GetBrowserChild();
   MOZ_ASSERT(browserChild);
 
-  IPC::Principal ipcPrincipal(principal);
-
-  browserChild->SendIndexedDBPermissionRequest(ipcPrincipal)
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [this](const uint32_t& aPermission) {
-            this->AssertIsOnOwningThread();
-            MaybeCollectGarbageOnIPCMessage();
-            this->SendPermissionRetry();
-          },
-          [](const mozilla::ipc::ResponseRejectReason) {});
+  browserChild->SendIndexedDBPermissionRequest(principal)->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [this](const uint32_t& aPermission) {
+        this->AssertIsOnOwningThread();
+        MaybeCollectGarbageOnIPCMessage();
+        this->SendPermissionRetry();
+      },
+      [](const mozilla::ipc::ResponseRejectReason) {});
 
   return IPC_OK();
 }
