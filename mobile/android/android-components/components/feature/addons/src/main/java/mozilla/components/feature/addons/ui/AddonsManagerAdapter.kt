@@ -222,20 +222,19 @@ class AddonsManagerAdapter(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Suppress("ComplexMethod")
     internal fun createListWithSections(addons: List<Addon>): List<Any> {
         val itemsWithSections = ArrayList<Any>()
         val installedAddons = ArrayList<Addon>()
         val recommendedAddons = ArrayList<Addon>()
+        val disabledAddons = ArrayList<Addon>()
 
         addons.forEach { addon ->
-            if (addon.isInstalled()) {
-                if (!addon.isSupported()) {
-                    unsupportedAddons.add(addon)
-                } else {
-                    installedAddons.add(addon)
-                }
-            } else {
-                recommendedAddons.add(addon)
+            when {
+                addon.inUnsupportedSection() -> unsupportedAddons.add(addon)
+                addon.inRecommendedSection() -> recommendedAddons.add(addon)
+                addon.inInstalledSection() -> installedAddons.add(addon)
+                addon.inDisabledSection() -> disabledAddons.add(addon)
             }
         }
 
@@ -243,6 +242,12 @@ class AddonsManagerAdapter(
         if (installedAddons.isNotEmpty()) {
             itemsWithSections.add(Section(R.string.mozac_feature_addons_installed_section))
             itemsWithSections.addAll(installedAddons)
+        }
+
+        // Add disabled section and addons if available
+        if (disabledAddons.isNotEmpty()) {
+            itemsWithSections.add(Section(R.string.mozac_feature_addons_disabled_section))
+            itemsWithSections.addAll(disabledAddons)
         }
 
         // Add recommended section and addons if available
@@ -265,3 +270,8 @@ class AddonsManagerAdapter(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal inner class NotYetSupportedSection(@StringRes val title: Int)
 }
+
+private fun Addon.inUnsupportedSection() = isInstalled() && !isSupported()
+private fun Addon.inRecommendedSection() = !isInstalled()
+private fun Addon.inInstalledSection() = isInstalled() && isSupported() && isEnabled()
+private fun Addon.inDisabledSection() = isInstalled() && isSupported() && !isEnabled()
