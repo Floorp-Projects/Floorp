@@ -3572,7 +3572,7 @@ void ContentParent::GeneratePairedMinidump(const char* aReason) {
   // already shutting down.
   nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
   if (mCrashReporter && !appStartup->GetShuttingDown() &&
-      Preferences::GetBool("dom.ipc.tabs.createKillHardCrashReports", false)) {
+      StaticPrefs::dom_ipc_tabs_createKillHardCrashReports_AtStartup()) {
     // GeneratePairedMinidump creates two minidumps for us - the main
     // one is for the content process we're about to kill, and the other
     // one is for the main browser process. That second one is the extra
