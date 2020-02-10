@@ -26,6 +26,8 @@ const { AppConstants } = ChromeUtils.import(
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").PerformancePref} PerformancePref
  * @typedef {import("../@types/perf").PresetDefinitions} PresetDefinitions
+ * @typedef {import("../@types/perf").ProfilerWebChannel} ProfilerWebChannel
+ * @typedef {import("../@types/perf").MessageFromFrontend} MessageFromFrontend
  */
 
 /** @type {PerformancePref["Entries"]} */
@@ -105,6 +107,13 @@ const lazyRecordingUtils = requireLazy(() => {
   const recordingUtils = require("devtools/shared/performance-new/recording-utils");
   return recordingUtils;
 });
+
+const lazyProfilerMenuButton = requireLazy(() =>
+  /** @type {import("devtools/client/performance-new/popup/menu-button.jsm.js")} */
+  (ChromeUtils.import(
+    "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
+  ))
+);
 
 /**
  * This Map caches the symbols from the shared libraries.
@@ -414,6 +423,68 @@ function getDefaultRecordingPreferencesForOlderFirefox() {
   return _defaultPrefsForOlderFirefox;
 }
 
+/**
+ * This handler handles any messages coming from the WebChannel from profiler.firefox.com.
+ *
+ * @param {ProfilerWebChannel} channel
+ * @param {string} id
+ * @param {any} message
+ * @param {MockedExports.WebChannelTarget} target
+ */
+function handleWebChannelMessage(channel, id, message, target) {
+  if (typeof message !== "object" || typeof message.type !== "string") {
+    console.error(
+      "An malformed message was received by the profiler's WebChannel handler.",
+      message
+    );
+    return;
+  }
+  const messageFromFrontend = /** @type {MessageFromFrontend} */ (message);
+  switch (messageFromFrontend.type) {
+    case "STATUS_QUERY": {
+      // The content page wants to know if this channel exists. It does, so respond
+      // back to the ping.
+      const { ProfilerMenuButton } = lazyProfilerMenuButton();
+      channel.send(
+        {
+          type: "STATUS_RESPONSE",
+          menuButtonIsEnabled: ProfilerMenuButton.isEnabled(),
+        },
+        target
+      );
+      break;
+    }
+    case "ENABLE_MENU_BUTTON": {
+      // Enable the profiler menu button.
+      const { ProfilerMenuButton } = lazyProfilerMenuButton();
+      if (!ProfilerMenuButton.isEnabled()) {
+        const { ownerDocument } = target.browser;
+        if (!ownerDocument) {
+          throw new Error(
+            "Could not find the owner document for the current browser while enabling " +
+              "the profiler menu button"
+          );
+        }
+        ProfilerMenuButton.toggle(ownerDocument);
+      }
+
+      // Respond back that we've done it.
+      channel.send(
+        {
+          type: "ENABLE_MENU_BUTTON_DONE",
+        },
+        target
+      );
+      break;
+    }
+    default:
+      console.error(
+        "An unknown message type was received by the profiler's WebChannel handler.",
+        message
+      );
+  }
+}
+
 // Provide a fake module.exports for the JSM to be properly read by TypeScript.
 /** @type {any} */ (this).module = { exports: {} };
 
@@ -430,6 +501,7 @@ module.exports = {
   revertRecordingPreferences,
   changePreset,
   getDefaultRecordingPreferencesForOlderFirefox,
+  handleWebChannelMessage,
 };
 
 // Object.keys() confuses the linting which expects a static array expression.
