@@ -14,7 +14,7 @@ add_task(async function() {
   ok(isInputFocused(hud), "input node is focused after console is opened");
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-    this.onFocus = new Promise(resolve => {
+    content.onFocus = new Promise(resolve => {
       content.addEventListener("focus", resolve, { once: true });
     });
   });
@@ -26,9 +26,74 @@ add_task(async function() {
     gBrowser.selectedBrowser,
     [],
     async function() {
-      await this.onFocus;
+      await content.onFocus;
       return Services.focus.focusedWindow == content;
     }
   );
   ok(isFocused, "content document has focus after closing the console");
+});
+
+add_task(async function testSeparateWindowToolbox() {
+  const hud = await openNewTabAndConsole(TEST_URI, true, "window");
+
+  info("Focus after console is opened");
+  ok(isInputFocused(hud), "input node is focused after console is opened");
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    content.onFocus = new Promise(resolve => {
+      content.addEventListener("focus", resolve, { once: true });
+    });
+  });
+
+  info("Closing console");
+  await closeConsole();
+
+  const isFocused = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    async function() {
+      await content.onFocus;
+      return Services.focus.focusedWindow == content;
+    }
+  );
+  ok(isFocused, "content document has focus after closing the console");
+});
+
+add_task(async function testSeparateWindowToolboxInactiveTab() {
+  await openNewTabAndConsole(TEST_URI, true, "window");
+
+  info("Focus after console is opened");
+  const firstTab = gBrowser.selectedTab;
+  await addTab(`data:text/html,<meta charset=utf8>New tab XXX`);
+
+  await SpecialPowers.spawn(firstTab.linkedBrowser, [], async () => {
+    // For some reason, there is no blur event fired on the document
+    await ContentTaskUtils.waitForCondition(
+      () => !docShell.isActive && !content.document.hasFocus(),
+      "Waiting for first tab to become inactive"
+    );
+    content.onFocus = new Promise(resolve => {
+      content.addEventListener("focus", resolve, { once: true });
+    });
+  });
+
+  info("Closing console");
+  await closeConsole(firstTab);
+
+  const onFirstTabFocus = SpecialPowers.spawn(
+    firstTab.linkedBrowser,
+    [],
+    async function() {
+      await content.onFocus;
+      return "focused";
+    }
+  );
+  const timeoutRes = "time's out";
+  const onTimeout = wait(2000).then(() => timeoutRes);
+  const res = await Promise.race([onFirstTabFocus, onTimeout]);
+  is(
+    res,
+    timeoutRes,
+    "original tab wasn't focused when closing the toolbox window"
+  );
 });
