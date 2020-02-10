@@ -161,6 +161,99 @@ add_task(async function test_dragging_e10s_windows() {
 });
 
 /**
+ * Tests that tabs from fission windows cannot be dragged into non-fission
+ * windows, and vice-versa.
+ */
+add_task(async function test_dragging_fission_windows() {
+  let fissionWin = await BrowserTestUtils.openNewBrowserWindow({
+    remote: true,
+    fission: true,
+  });
+  let nonFissionWin = await BrowserTestUtils.openNewBrowserWindow({
+    remote: true,
+    fission: false,
+  });
+
+  let fissionTab = await BrowserTestUtils.openNewForegroundTab(
+    fissionWin.gBrowser
+  );
+  let nonFissionTab = await BrowserTestUtils.openNewForegroundTab(
+    nonFissionWin.gBrowser
+  );
+
+  let effect = EventUtils.synthesizeDrop(
+    fissionTab,
+    nonFissionTab,
+    [[{ type: TAB_DROP_TYPE, data: fissionTab }]],
+    null,
+    fissionWin,
+    nonFissionWin
+  );
+  is(
+    effect,
+    "none",
+    "Should not be able to drag a fission tab to a non-fission window"
+  );
+
+  effect = EventUtils.synthesizeDrop(
+    nonFissionTab,
+    fissionTab,
+    [[{ type: TAB_DROP_TYPE, data: nonFissionTab }]],
+    null,
+    nonFissionWin,
+    fissionWin
+  );
+  is(
+    effect,
+    "none",
+    "Should not be able to drag a non-fission tab to an fission window"
+  );
+
+  let swapOk = fissionWin.gBrowser.swapBrowsersAndCloseOther(
+    fissionTab,
+    nonFissionTab
+  );
+  is(
+    swapOk,
+    false,
+    "Returns false swapping fission tab to a non-fission tabbrowser"
+  );
+  is(
+    fissionWin.gBrowser.tabs.length,
+    2,
+    "Prevent moving a fission tab to a non-fission tabbrowser"
+  );
+  is(
+    nonFissionWin.gBrowser.tabs.length,
+    2,
+    "Prevent accepting a fission tab in a non-fission tabbrowser"
+  );
+
+  swapOk = nonFissionWin.gBrowser.swapBrowsersAndCloseOther(
+    nonFissionTab,
+    fissionTab
+  );
+  is(
+    swapOk,
+    false,
+    "Returns false swapping non-fission tab to a fission tabbrowser"
+  );
+  is(
+    nonFissionWin.gBrowser.tabs.length,
+    2,
+    "Prevent moving a non-fission tab to a fission tabbrowser"
+  );
+  is(
+    fissionWin.gBrowser.tabs.length,
+    2,
+    "Prevent accepting a non-fission tab in a fission tabbrowser"
+  );
+
+  await BrowserTestUtils.closeWindow(fissionWin);
+  await BrowserTestUtils.closeWindow(nonFissionWin);
+});
+
+/**
  * Tests that remoteness-blacklisted tabs from e10s windows can
  * be dragged between e10s windows.
  */
