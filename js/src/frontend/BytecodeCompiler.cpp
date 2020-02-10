@@ -557,7 +557,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  module->init(compilationInfo.script);
+  module->initScriptSlots(compilationInfo.script);
 
   ModuleBuilder builder(cx, parser.ptr());
 
