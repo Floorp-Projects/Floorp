@@ -53,7 +53,7 @@ static inline AllocKind GetGCArrayKind(size_t numElements) {
    * maximum number of fixed slots is needed then the fixed slots will be
    * unused.
    */
-  JS_STATIC_ASSERT(ObjectElements::VALUES_PER_HEADER == 2);
+  static_assert(ObjectElements::VALUES_PER_HEADER == 2);
   if (numElements > NativeObject::MAX_DENSE_ELEMENTS_COUNT ||
       numElements + ObjectElements::VALUES_PER_HEADER >=
           SLOTS_TO_THING_KIND_LIMIT) {

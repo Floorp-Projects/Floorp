@@ -24,8 +24,8 @@ GCTrace gcTracer;
 
 #ifdef JS_GC_TRACE
 
-JS_STATIC_ASSERT(NumAllocKinds == unsigned(AllocKind::LIMIT));
-JS_STATIC_ASSERT(LastObjectAllocKind == unsigned(AllocKind::OBJECT_LAST));
+static_assert(NumAllocKinds == unsigned(AllocKind::LIMIT));
+static_assert(LastObjectAllocKind == unsigned(AllocKind::OBJECT_LAST));
 
 static inline void WriteWord(FILE* file, uint64_t data) {
   if (file) {
@@ -50,7 +50,7 @@ static inline void TraceInt(FILE* file, uint32_t data) {
 }
 
 static void TraceString(FILE* file, const char* string) {
-  JS_STATIC_ASSERT(sizeof(char) == 1);
+  static_assert(sizeof(char) == 1);
 
   size_t length = strlen(string);
   const unsigned charsPerWord = sizeof(uint64_t);
