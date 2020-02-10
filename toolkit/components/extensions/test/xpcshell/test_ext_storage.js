@@ -292,6 +292,58 @@ async function test_background_page_storage(testAreaName) {
       clearGlobalChanges();
     }
 
+    async function testFalseyValues(areaName) {
+      let storage = browser.storage[areaName];
+      const dataInitial = {
+        "test-falsey-value-bool": false,
+        "test-falsey-value-string": "",
+        "test-falsey-value-number": 0,
+      };
+      const dataUpdate = {
+        "test-falsey-value-bool": true,
+        "test-falsey-value-string": "non-empty-string",
+        "test-falsey-value-number": 10,
+      };
+
+      // Compute the expected changes.
+      const onSetInitial = {
+        "test-falsey-value-bool": { newValue: false },
+        "test-falsey-value-string": { newValue: "" },
+        "test-falsey-value-number": { newValue: 0 },
+      };
+      const onRemovedFalsey = {
+        "test-falsey-value-bool": { oldValue: false },
+        "test-falsey-value-string": { oldValue: "" },
+        "test-falsey-value-number": { oldValue: 0 },
+      };
+      const onUpdatedFalsey = {
+        "test-falsey-value-bool": { newValue: true, oldValue: false },
+        "test-falsey-value-string": {
+          newValue: "non-empty-string",
+          oldValue: "",
+        },
+        "test-falsey-value-number": { newValue: 10, oldValue: 0 },
+      };
+      const keys = Object.keys(dataInitial);
+
+      // Test on removing falsey values.
+      await storage.set(dataInitial);
+      await checkChanges(areaName, onSetInitial, "set falsey values");
+      await storage.remove(keys);
+      await checkChanges(areaName, onRemovedFalsey, "remove falsey value");
+
+      // Test on updating falsey values.
+      await storage.set(dataInitial);
+      await checkChanges(areaName, onSetInitial, "set falsey values");
+      await storage.set(dataUpdate);
+      await checkChanges(areaName, onUpdatedFalsey, "set non-falsey values");
+
+      // Clear the storage state.
+      await storage.clear();
+      await globalChanges;
+      clearGlobalChanges();
+    }
+
     /* eslint-disable dot-notation */
     async function runTests(areaName) {
       expectedAreaName = areaName;
@@ -398,36 +450,7 @@ async function test_background_page_storage(testAreaName) {
           "prop2 absent (remove array)"
         );
 
-        // Test that removing a falsey value fires the onChanged event.
-        await storage.set({
-          "test-falsey-value-bool": false,
-          "test-falsey-value-string": "",
-          "test-falsey-value-number": 0,
-        });
-        await checkChanges(
-          areaName,
-          {
-            "test-falsey-value-bool": { newValue: false },
-            "test-falsey-value-string": { newValue: "" },
-            "test-falsey-value-number": { newValue: 0 },
-          },
-          "set falsey values"
-        );
-
-        await storage.remove([
-          "test-falsey-value-bool",
-          "test-falsey-value-string",
-          "test-falsey-value-number",
-        ]);
-        await checkChanges(
-          areaName,
-          {
-            "test-falsey-value-bool": { oldValue: false },
-            "test-falsey-value-string": { oldValue: "" },
-            "test-falsey-value-number": { oldValue: 0 },
-          },
-          "remove falsey value"
-        );
+        await testFalseyValues(areaName);
 
         // test storage.clear
         await storage.set({ "test-prop1": "value1", "test-prop2": "value2" });

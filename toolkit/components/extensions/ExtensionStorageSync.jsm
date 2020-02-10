@@ -1271,7 +1271,7 @@ class ExtensionStorageSync {
           changes[key] = {
             newValue: item,
           };
-          if (oldRecord && oldRecord.data) {
+          if (oldRecord) {
             // Extract the "data" field from the old record, which
             // represents the value part of the key-value store
             changes[key].oldValue = oldRecord.data;
