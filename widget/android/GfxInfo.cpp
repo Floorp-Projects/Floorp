@@ -139,12 +139,7 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
 
 NS_IMETHODIMP
 GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetDesktopEnvironment(nsAString& aDesktopEnvironment) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_FAILURE;
 }
 
 void GfxInfo::EnsureInitialized() {
@@ -374,6 +369,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Android,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAll),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_OPENGL_LAYERS,
         nsIGfxInfo::FEATURE_STATUS_OK, DRIVER_COMPARISON_IGNORED,
         GfxDriverInfo::allDriverVersions, "FEATURE_OK_FORCE_OPENGL");

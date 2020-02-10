@@ -123,11 +123,7 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) { return NS_ERROR_F
 
 /* readonly attribute DOMString windowProtocol; */
 NS_IMETHODIMP
-GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-/* readonly attribute DOMString desktopEnvironment; */
-NS_IMETHODIMP
-GfxInfo::GetDesktopEnvironment(nsAString& aDesktopEnvironment) { return NS_ERROR_NOT_IMPLEMENTED; }
+GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) { return NS_ERROR_FAILURE; }
 
 /* readonly attribute DOMString adapterDescription; */
 NS_IMETHODIMP
@@ -279,24 +275,28 @@ void GfxInfo::AddCrashReportAnnotations() {
 }
 
 // We don't support checking driver versions on Mac.
-#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn, ruleId)          \
-  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn, DRIVER_COMPARISON_IGNORED, \
-                             V(0, 0, 0, 0), ruleId, "")
+#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, driverVendor, device, features, blockOn, \
+                                       ruleId)                                              \
+  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, driverVendor, device, features, blockOn,           \
+                             DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0), ruleId, "")
 
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(RadeonX1000),
         nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_MAC_RADEONX1000_NO_TEXTURE2D");
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(Geforce7300GT),
         nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_MAC_7300_NO_WEBGL");
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelHDGraphicsToIvyBridge),
         nsIGfxInfo::FEATURE_GL_SWIZZLE, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_MAC_INTELHD4000_NO_SWIZZLE");
