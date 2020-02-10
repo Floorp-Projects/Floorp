@@ -66,6 +66,8 @@ function update(
 
     case "MOVE_TAB":
       return moveTabInList(state, action);
+    case "MOVE_TAB_BY_SOURCE_ID":
+      return moveTabInListBySourceId(state, action);
 
     case "CLOSE_TAB":
       return removeSourceFromTabList(state, action);
@@ -254,6 +256,16 @@ function updateTabList(
 function moveTabInList(state: TabsState, { url, tabIndex: newIndex }) {
   let { tabs } = state;
   const currentIndex = tabs.findIndex(tab => tab.url == url);
+  tabs = move(tabs, currentIndex, newIndex);
+  return { tabs };
+}
+
+function moveTabInListBySourceId(
+  state: TabsState,
+  { sourceId, tabIndex: newIndex }
+) {
+  let { tabs } = state;
+  const currentIndex = tabs.findIndex(tab => tab.sourceId == sourceId);
   tabs = move(tabs, currentIndex, newIndex);
   return { tabs };
 }

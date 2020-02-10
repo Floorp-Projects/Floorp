@@ -54,6 +54,14 @@ export function moveTab(url: string, tabIndex: number): Action {
   };
 }
 
+export function moveTabBySourceId(sourceId: string, tabIndex: number): Action {
+  return {
+    type: "MOVE_TAB_BY_SOURCE_ID",
+    sourceId,
+    tabIndex,
+  };
+}
+
 /**
  * @memberof actions/tabs
  * @static
