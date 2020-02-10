@@ -10,6 +10,8 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <sys/utsname.h>
+#include <string>
+#include <cctype>
 #include "nsCRTGlue.h"
 #include "nsExceptionHandler.h"
 #include "prenv.h"
@@ -61,6 +63,8 @@ void GfxInfo::AddCrashReportAnnotations() {
                                      mIsWayland);
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IsWaylandDRM,
                                      mIsWaylandDRM);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::DesktopEnvironment, mDesktopEnvironment);
 }
 
 void GfxInfo::GetData() {
@@ -330,6 +334,84 @@ void GfxInfo::GetData() {
     mIsWaylandDRM = nsWaylandDisplay::IsDMABufEnabled();
   }
 #endif
+
+  // Make a best effort guess at the desktop environment in use. Sadly there
+  // does not appear to be a standard way to do this, so we check a few
+  // different environment variables and search for relevant keywords.
+  const char* desktopEnv = getenv("XDG_CURRENT_DESKTOP");
+  if (!desktopEnv) {
+    desktopEnv = getenv("DESKTOP_SESSION");
+  }
+
+  if (desktopEnv) {
+    std::string currentDesktop(desktopEnv);
+    for (auto& c : currentDesktop) {
+      c = std::tolower(c);
+    }
+
+    if (currentDesktop.find("gnome") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopGNOME),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("kde") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopKDE),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("xfce") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopXFCE),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("cinnamon") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopCinnamon),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("enlightenment") != std::string::npos) {
+      CopyUTF16toUTF8(
+          GfxDriverInfo::GetDesktopEnvironment(DesktopEnlightenment),
+          mDesktopEnvironment);
+    } else if (currentDesktop.find("lxde") != std::string::npos ||
+               currentDesktop.find("lubuntu") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopLXDE),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("openbox") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopOpenbox),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("i3") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopI3),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("mate") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopMate),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("unity") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopUnity),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("pantheon") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopPantheon),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("lxqt") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopLXQT),
+                      mDesktopEnvironment);
+    } else if (currentDesktop.find("deepin") != std::string::npos) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopDeepin),
+                      mDesktopEnvironment);
+    }
+  }
+
+  if (mDesktopEnvironment.IsEmpty()) {
+    if (getenv("GNOME_DESKTOP_SESSION_ID")) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopGNOME),
+                      mDesktopEnvironment);
+    } else if (getenv("KDE_FULL_SESSION")) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopKDE),
+                      mDesktopEnvironment);
+    } else if (getenv("MATE_DESKTOP_SESSION_ID")) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopMate),
+                      mDesktopEnvironment);
+    } else if (getenv("LXQT_SESSION_CONFIG")) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopLXQT),
+                      mDesktopEnvironment);
+    } else {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDesktopEnvironment(DesktopUnknown),
+                      mDesktopEnvironment);
+    }
+  }
+
   AddCrashReportAnnotations();
 }
 
@@ -337,8 +419,10 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
     // Mesa 10.0 provides the GLX_MESA_query_renderer extension, which allows us
     // to query device IDs backing a GL context for blacklisting.
-    APPEND_TO_DRIVER_BLOCKLIST(
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux,
+        (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
+        (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAll),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverMesaAll),
         GfxDriverInfo::allDevices, GfxDriverInfo::allFeatures,
@@ -346,8 +430,10 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(10, 0, 0, 0), "FEATURE_FAILURE_OLD_MESA", "Mesa 10.0");
 
     // NVIDIA baseline (ported from old blocklist)
-    APPEND_TO_DRIVER_BLOCKLIST(
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux,
+        (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
+        (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverNonMesaAll),
         GfxDriverInfo::allDevices, GfxDriverInfo::allFeatures,
@@ -358,7 +444,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, GfxDriverInfo::allFeatures,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(13, 15, 100, 1), "FEATURE_FAILURE_OLD_FGLRX", "fglrx 13.15.100.1");
@@ -370,14 +455,15 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(18, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_OLD_MESA", "Mesa 18.0.0.0");
 
     // Nvidia Mesa baseline, see bug 1563859.
-    APPEND_TO_DRIVER_BLOCKLIST(
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux,
+        (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
+        (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverMesaAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
@@ -385,8 +471,10 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(18, 2, 0, 0), "FEATURE_FAILURE_WEBRENDER_OLD_MESA", "Mesa 18.2.0.0");
 
     // Disable on all Nvidia devices not using Mesa for now.
-    APPEND_TO_DRIVER_BLOCKLIST(
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux,
+        (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
+        (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverNonMesaAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
@@ -394,8 +482,10 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_NO_LINUX_NVIDIA", "");
 
     // ATI Mesa baseline, chosen arbitrarily.
-    APPEND_TO_DRIVER_BLOCKLIST(
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux,
+        (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
+        (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverMesaAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
@@ -403,8 +493,10 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(18, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_OLD_MESA", "Mesa 18.0.0.0");
 
     // Disable on all ATI devices not using Mesa for now.
-    APPEND_TO_DRIVER_BLOCKLIST(
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux,
+        (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
+        (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverNonMesaAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
@@ -412,6 +504,17 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_NO_LINUX_ATI", "");
   }
   return *sDriverInfo;
+}
+
+bool GfxInfo::DoesWindowProtocolMatch(const nsAString& aBlocklistWindowProtocol,
+                                      const nsAString& aWindowProtocol) {
+  if (mIsWayland && aBlocklistWindowProtocol.Equals(
+                        GfxDriverInfo::GetWindowProtocol(WindowingWaylandAll),
+                        nsCaseInsensitiveStringComparator())) {
+    return true;
+  }
+  return GfxInfoBase::DoesWindowProtocolMatch(aBlocklistWindowProtocol,
+                                              aWindowProtocol);
 }
 
 bool GfxInfo::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
@@ -494,16 +597,24 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
 
 NS_IMETHODIMP
 GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
+  GetData();
   if (mIsWayland) {
     if (mIsWaylandDRM) {
-      aWindowProtocol.AssignLiteral("wayland (drm)");
+      aWindowProtocol = GfxDriverInfo::GetWindowProtocol(WindowingWaylandDRM);
     } else {
-      aWindowProtocol.AssignLiteral("wayland");
+      aWindowProtocol = GfxDriverInfo::GetWindowProtocol(WindowingWayland);
     }
     return NS_OK;
   }
 
-  aWindowProtocol.AssignLiteral("x11");
+  aWindowProtocol = GfxDriverInfo::GetWindowProtocol(WindowingX11);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDesktopEnvironment(nsAString& aDesktopEnvironment) {
+  GetData();
+  AppendASCIItoUTF16(mDesktopEnvironment, aDesktopEnvironment);
   return NS_OK;
 }
 
