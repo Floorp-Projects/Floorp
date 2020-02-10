@@ -15,6 +15,8 @@ export {
   stepOver,
   stepOut,
   resume,
+  rewind,
+  reverseStepOver,
   seekToPosition,
 } from "./commands";
 export { fetchFrames } from "./fetchFrames";

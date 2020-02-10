@@ -1,0 +1,17 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+// This interface defines the methods used for calling into replay.js in a
+// recording/replaying process. See JSControl.h for the documentation of these
+// methods.
+[scriptable, uuid(8b86b71f-8471-472e-9997-c5f21f9d0598)]
+interface rrIReplay : nsISupports {
+  void ManifestStart(in jsval manifest);
+  void HitCheckpoint(in long checkpoint);
+  long NewTimeWarpTarget();
+  void ScriptResumeFrame(in long script);
+};
