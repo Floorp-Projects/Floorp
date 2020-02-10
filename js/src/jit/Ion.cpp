@@ -1822,9 +1822,6 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
 
   const bool scriptHasIonScript = script->hasIonScript();
 
-  IonBuilder builder((JSContext*)nullptr, *mirGen, info, constraints, inspector,
-                     baselineFrameInspector);
-
   if (cx->runtime()->gc.storeBuffer().cancelIonCompilations()) {
     mirGen->setNotSafeForMinorGC();
   }
@@ -1837,6 +1834,9 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   }
 
   SpewBeginFunction(mirGen, script);
+
+  IonBuilder builder((JSContext*)nullptr, *mirGen, info, constraints, inspector,
+                     baselineFrameInspector);
 
   AbortReasonOr<Ok> buildResult = Ok();
   {
