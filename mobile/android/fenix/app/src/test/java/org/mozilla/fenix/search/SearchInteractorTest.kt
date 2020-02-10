@@ -24,8 +24,10 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore.PREF_FILE_SEARCH_ENGINES
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
@@ -107,6 +109,9 @@ class SearchInteractorTest {
         val store: SearchFragmentStore = mockk(relaxed = true)
         val context: HomeActivity = mockk(relaxed = true)
         val settings = testContext.settings().apply { testContext.settings().clear() }
+
+        val browsingModeManager: DefaultBrowsingModeManager = mockk(relaxed = true)
+        every { context.components.browsingModeManager } returns browsingModeManager
 
         mockkObject(Settings)
         every { Settings.getInstance(context = context) } returns settings

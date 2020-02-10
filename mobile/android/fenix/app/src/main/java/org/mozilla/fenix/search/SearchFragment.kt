@@ -87,7 +87,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         )
 
         val showSearchSuggestions =
-            if ((activity as HomeActivity).browsingModeManager.mode.isPrivate) {
+            if (requireComponents.browsingModeManager.mode.isPrivate) {
                 requireContext().settings().shouldShowSearchSuggestions &&
                         requireContext().settings().shouldShowSearchSuggestionsInPrivate
             } else {
@@ -130,7 +130,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             view.toolbar_component_wrapper,
             searchInteractor,
             historyStorageProvider(),
-            (activity as HomeActivity).browsingModeManager.mode.isPrivate
+            requireComponents.browsingModeManager.mode.isPrivate
         )
 
         val urlView = toolbarView.view

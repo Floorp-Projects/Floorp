@@ -88,7 +88,7 @@ class DefaultSearchController(
         store.dispatch(
             SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
                 text.isNotEmpty() &&
-                        (context as HomeActivity).browsingModeManager.mode.isPrivate &&
+                        context.components.browsingModeManager.mode.isPrivate &&
                         !context.settings().shouldShowSearchSuggestionsInPrivate &&
                         !context.settings().showSearchSuggestionsInPrivateOnboardingFinished
             )

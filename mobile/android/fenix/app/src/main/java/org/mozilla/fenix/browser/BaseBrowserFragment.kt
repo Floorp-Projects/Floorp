@@ -160,10 +160,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 navController = findNavController(),
                 readerModeController = DefaultReaderModeController(
                     readerViewFeature,
-                    (activity as HomeActivity).browsingModeManager.mode.isPrivate,
+                    requireComponents.browsingModeManager.mode.isPrivate,
                     view.readerViewControlsBar
                 ),
-                browsingModeManager = (activity as HomeActivity).browsingModeManager,
+                browsingModeManager = requireComponents.browsingModeManager,
                 sessionManager = requireComponents.core.sessionManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
                 browserLayout = view.browserLayout,

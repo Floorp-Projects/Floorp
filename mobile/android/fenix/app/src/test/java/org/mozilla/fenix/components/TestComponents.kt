@@ -8,6 +8,7 @@ import android.content.Context
 import io.mockk.mockk
 import mozilla.components.support.test.mock
 import org.mockito.Mockito.`when`
+import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.utils.ClipboardHandler
 
 class TestComponents(private val context: Context) : Components(context) {
@@ -37,6 +38,8 @@ class TestComponents(private val context: Context) : Components(context) {
         processors
     }
     override val analytics by lazy { Analytics(context) }
+
+    override val browsingModeManager by lazy { DefaultBrowsingModeManager() }
 
     override val clipboardHandler by lazy { ClipboardHandler(context) }
 }

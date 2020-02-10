@@ -12,6 +12,7 @@ import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
+import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.utils.ClipboardHandler
 import java.util.concurrent.TimeUnit
@@ -70,6 +71,8 @@ class Components(private val context: Context) {
     val addonManager by lazy {
         AddonManager(core.store, core.engine, addonCollectionProvider, addonUpdater)
     }
+
+    val browsingModeManager by lazy { DefaultBrowsingModeManager() }
 
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(core.sessionManager) }
 

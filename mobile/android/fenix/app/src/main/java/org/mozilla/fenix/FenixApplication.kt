@@ -304,7 +304,7 @@ open class FenixApplication : LocaleAwareApplication() {
                 components.core.store,
                 onNewTabOverride = {
                     _, engineSession, url ->
-                        val session = Session(url)
+                        val session = Session(url, components.browsingModeManager.mode.isPrivate)
                         components.core.sessionManager.add(session, true, engineSession)
                         session.id
                 },

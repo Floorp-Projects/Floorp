@@ -40,8 +40,7 @@ import mozilla.components.support.utils.toSafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import org.mozilla.fenix.browser.UriOpenedObserver
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeListener
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
@@ -74,7 +73,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     private var webExtScope: CoroutineScope? = null
     lateinit var themeManager: ThemeManager
-    lateinit var browsingModeManager: BrowsingModeManager
+    private val browsingModeManager get() = components.browsingModeManager
 
     private var sessionObserver: SessionManager.Observer? = null
 
@@ -97,6 +96,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             DeepLinkIntentProcessor(this),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId)
         )
+    }
+
+    private val browsingModeListener = object : BrowsingModeListener {
+        override fun onBrowsingModeChange(newMode: BrowsingMode) {
+            themeManager.currentTheme = newMode
+        }
     }
 
     override fun applyOverrideConfiguration(overrideConfiguration: Configuration?) {
@@ -159,6 +164,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     final override fun onPostResume() {
         super.onPostResume()
         hotStartMonitor.onPostResumeFinalMethodCall()
+    }
+
+    final override fun onStart() {
+        super.onStart()
+        browsingModeManager.registerBrowsingModeListener(browsingModeListener)
+    }
+
+    final override fun onStop() {
+        super.onStop()
+        browsingModeManager.unregisterBrowsingModeListener()
     }
 
     final override fun onPause() {
@@ -237,7 +252,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     private fun setupThemeAndBrowsingMode(mode: BrowsingMode) {
         settings().lastKnownMode = mode
-        browsingModeManager = createBrowsingModeManager(mode)
+        browsingModeManager.mode = mode
         themeManager = createThemeManager()
         themeManager.setActivityTheme(this)
         themeManager.applyStatusBarTheme(this)
@@ -371,12 +386,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         val sessionMode = BrowsingMode.fromBoolean(session.private)
         if (sessionMode != browsingModeManager.mode) {
             browsingModeManager.mode = sessionMode
-        }
-    }
-
-    protected open fun createBrowsingModeManager(initialMode: BrowsingMode): BrowsingModeManager {
-        return DefaultBrowsingModeManager(initialMode) { newMode ->
-            themeManager.currentTheme = newMode
         }
     }
 

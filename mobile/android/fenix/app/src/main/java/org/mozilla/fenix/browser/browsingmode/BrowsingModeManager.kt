@@ -31,19 +31,32 @@ interface BrowsingModeManager {
     var mode: BrowsingMode
 }
 
+interface BrowsingModeListener {
+    fun onBrowsingModeChange(newMode: BrowsingMode)
+}
+
 /**
  * Wraps a [BrowsingMode] and executes a callback whenever [mode] is updated.
  */
 class DefaultBrowsingModeManager(
-    private var _mode: BrowsingMode,
-    private val modeDidChange: (BrowsingMode) -> Unit
+    private var _mode: BrowsingMode = BrowsingMode.Normal
 ) : BrowsingModeManager {
+
+    private var _browsingModeListener: BrowsingModeListener? = null
+
+    fun registerBrowsingModeListener(browsingModeListener: BrowsingModeListener) {
+        _browsingModeListener = browsingModeListener
+    }
+
+    fun unregisterBrowsingModeListener() {
+        _browsingModeListener = null
+    }
 
     override var mode: BrowsingMode
         get() = _mode
         set(value) {
             _mode = value
-            modeDidChange(value)
+            _browsingModeListener?.onBrowsingModeChange(value)
             Settings.instance?.lastKnownMode = value
         }
 }
