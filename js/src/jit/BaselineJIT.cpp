@@ -198,7 +198,7 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
   cx->check(script);
   MOZ_ASSERT(!script->hasBaselineScript());
   MOZ_ASSERT(script->canBaselineCompile());
-  MOZ_ASSERT(IsBaselineJitEnabled(cx));
+  MOZ_ASSERT(IsBaselineJitEnabled());
   AutoGeckoProfilerEntry pseudoFrame(
       cx, "Baseline script compilation",
       JS::ProfilingCategoryPair::JS_BaselineCompilation);
@@ -235,7 +235,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
     return Method_Skipped;
   }
 
-  if (!IsBaselineJitEnabled(cx)) {
+  if (!IsBaselineJitEnabled()) {
     script->disableBaselineCompile();
     return Method_CantCompile;
   }

@@ -62,7 +62,6 @@ struct DefaultJitOptions {
   bool baselineInterpreter;
   bool baselineJit;
   bool ion;
-  bool jitForTrustedPrincipals;
   bool nativeRegExp;
   bool forceInlineCaches;
   bool fullDebugChecks;
@@ -138,6 +137,10 @@ inline bool IsBaselineInterpreterEnabled() {
 #else
   return JitOptions.baselineInterpreter && JitOptions.supportsFloatingPoint;
 #endif
+}
+
+inline bool IsBaselineJitEnabled() {
+  return IsBaselineInterpreterEnabled() && JitOptions.baselineJit;
 }
 
 }  // namespace jit
