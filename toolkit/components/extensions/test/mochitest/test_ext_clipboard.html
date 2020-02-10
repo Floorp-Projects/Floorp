@@ -49,8 +49,7 @@ add_task(async function test_background_clipboard_permissions() {
   await extension.unload();
 });
 
-/** TODO Bug 1272869 Selecting text in a bg page is not possible.
-add_task(function* test_background_clipboard_copy() {
+add_task(async function test_background_clipboard_copy() {
   function backgroundScript() {
     browser.test.onMessage.addListener(txt => {
       browser.test.assertEq(true, doCopy(txt),
@@ -67,19 +66,18 @@ add_task(function* test_background_clipboard_copy() {
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  await extension.startup();
+  await extension.awaitMessage("ready");
 
   const DUMMY_STR = "dummy string to copy";
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SimpleTest.waitForClipboard(DUMMY_STR, () => {
       extension.sendMessage(DUMMY_STR);
     }, resolve, resolve);
   });
 
-  yield extension.unload();
+  await extension.unload();
 });
-*/
 
 add_task(async function test_contentscript_clipboard_permissions() {
   function contentScript() {
