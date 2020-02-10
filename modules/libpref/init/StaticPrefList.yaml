@@ -1676,6 +1676,13 @@
   value: 500
   mirror: always
 
+# Whether or not to collect a paired minidump when force-killing a
+# content process.
+- name: dom.ipc.tabs.createKillHardCrashReports
+  type: bool
+  value: @IS_NOT_RELEASE_OR_BETA@
+  mirror: once
+
 # Allow Flash async drawing mode in 64-bit release builds.
 - name: dom.ipc.plugins.asyncdrawing.enabled
   type: RelaxedAtomicBool
