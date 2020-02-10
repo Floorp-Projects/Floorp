@@ -179,15 +179,15 @@ struct Register64 {
 
 #ifdef JS_PUNBOX64
   explicit constexpr Register64(Register r) : reg(r) {}
-  bool operator==(Register64 other) const { return reg == other.reg; }
-  bool operator!=(Register64 other) const { return reg != other.reg; }
+  constexpr bool operator==(Register64 other) const { return reg == other.reg; }
+  constexpr bool operator!=(Register64 other) const { return reg != other.reg; }
   static Register64 Invalid() { return Register64(Register::Invalid()); }
 #else
   constexpr Register64(Register h, Register l) : high(h), low(l) {}
-  bool operator==(Register64 other) const {
+  constexpr bool operator==(Register64 other) const {
     return high == other.high && low == other.low;
   }
-  bool operator!=(Register64 other) const {
+  constexpr bool operator!=(Register64 other) const {
     return high != other.high || low != other.low;
   }
   static Register64 Invalid() {
