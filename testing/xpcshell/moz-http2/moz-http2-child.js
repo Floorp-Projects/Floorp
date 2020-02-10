@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 function sendBackResponse(evalResult, e) {
   const output = { result: evalResult, error: "", errorStack: "" };
   if (e) {
@@ -11,6 +13,7 @@ process.on("message", msg => {
   const code = msg.code;
   let evalResult = null;
   try {
+    // eslint-disable-next-line no-eval
     evalResult = eval(code);
     if (evalResult instanceof Promise) {
       evalResult
