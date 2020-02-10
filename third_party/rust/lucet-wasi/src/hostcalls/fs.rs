@@ -7,6 +7,7 @@ use crate::memory::*;
 use crate::{host, wasm32};
 
 use super::fs_helpers::*;
+use super::timers;
 use lucet_runtime::vmctx::Vmctx;
 
 use nix::libc::{self, c_long, c_void, off_t};
@@ -821,7 +822,7 @@ pub fn wasi_fd_filestat_set_times(
     if fst_flags & (host::__WASI_FILESTAT_SET_MTIM_NOW as host::__wasi_fstflags_t) != 0 {
         let clock_id = libc::CLOCK_REALTIME;
         let mut timespec = MaybeUninit::<libc::timespec>::uninit();
-        let res = unsafe { libc::clock_gettime(clock_id, timespec.as_mut_ptr()) };
+        let res = unsafe { timers::clock_gettime_helper(clock_id, timespec.as_mut_ptr()) };
         if res != 0 {
             return wasm32::errno_from_nix(nix::errno::Errno::last());
         }
@@ -850,7 +851,7 @@ pub fn wasi_fd_filestat_set_times(
     };
     let ts_mtime = *TimeSpec::nanoseconds(st_mtim as i64).as_ref();
     let times = [ts_atime, ts_mtime];
-    let res = unsafe { libc::futimens(fe.fd_object.rawfd, times.as_ptr()) };
+    let res = unsafe { timers::futimens_helper(fe.fd_object.rawfd, times.as_ptr()) };
     if res != 0 {
         return wasm32::errno_from_nix(nix::errno::Errno::last());
     }
@@ -890,7 +891,7 @@ pub fn wasi_path_filestat_set_times(
     if fst_flags & (host::__WASI_FILESTAT_SET_MTIM_NOW as host::__wasi_fstflags_t) != 0 {
         let clock_id = libc::CLOCK_REALTIME;
         let mut timespec = MaybeUninit::<libc::timespec>::uninit();
-        let res = unsafe { libc::clock_gettime(clock_id, timespec.as_mut_ptr()) };
+        let res = unsafe { timers::clock_gettime_helper(clock_id, timespec.as_mut_ptr()) };
         if res != 0 {
             return wasm32::errno_from_nix(nix::errno::Errno::last());
         }
@@ -923,7 +924,7 @@ pub fn wasi_path_filestat_set_times(
         Ok(path_cstr) => path_cstr,
         Err(_) => return wasm32::__WASI_EINVAL,
     };
-    let res = unsafe { libc::utimensat(dir, path_cstr.as_ptr(), times.as_ptr(), atflags) };
+    let res = unsafe { timers::utimensat_helper(dir, path_cstr.as_ptr(), times.as_ptr(), atflags) };
     if res != 0 {
         return wasm32::errno_from_nix(nix::errno::Errno::last());
     }
