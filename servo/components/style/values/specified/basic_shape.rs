@@ -71,8 +71,6 @@ impl Parse for ClippingShape {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        // Need to parse this here so that `Image::parse_with_cors_anonymous`
-        // doesn't parse it.
         if input.try(|i| i.expect_ident_matching("none")).is_ok() {
             return Ok(ShapeSource::None);
         }
@@ -114,7 +112,7 @@ impl Parse for FloatAreaShape {
 
 impl<ReferenceBox, ImageOrUrl> ShapeSource<BasicShape, ReferenceBox, ImageOrUrl>
 where
-    ReferenceBox: Parse + Default,
+    ReferenceBox: Parse,
 {
     /// The internal parser for ShapeSource.
     fn parse_common<'i, 't>(
