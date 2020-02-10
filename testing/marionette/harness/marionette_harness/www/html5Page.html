@@ -29,9 +29,10 @@ limitations under the License.
 <div id="images">
   <p>Current network status: <span id="state"></span></p>
   <script>
-    var state = document.getElementById('state')
+    const state = document.getElementById('state')
     setInterval(function () {
       state.className = navigator.onLine ? 'online' : 'offline';
+      // eslint-disable-next-line no-unsanitized/property
       state.innerHTML = navigator.onLine ? 'online' : 'offline';
     }, 250);
   </script>
