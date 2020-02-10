@@ -29,8 +29,7 @@ function assertCookie(cookie, expected = {}) {
     value,
     domain,
     path,
-    // If expires is set, convert from milliseconds to seconds
-    expires: expires > 0 ? Math.floor(expires.getTime() / 1000) : -1,
+    expires,
     size,
     httpOnly,
     secure,
@@ -42,4 +41,32 @@ function assertCookie(cookie, expected = {}) {
   }
 
   Assert.deepEqual(cookie, expectedCookie);
+}
+
+function getCookies() {
+  return Services.cookies.cookies.map(cookie => {
+    const data = {
+      name: cookie.name,
+      value: cookie.value,
+      domain: cookie.host,
+      path: cookie.path,
+      expires: cookie.isSession ? -1 : cookie.expiry,
+      // The size is the combined length of both the cookie name and value
+      size: cookie.name.length + cookie.value.length,
+      httpOnly: cookie.isHttpOnly,
+      secure: cookie.isSecure,
+      session: cookie.isSession,
+    };
+
+    if (cookie.sameSite) {
+      const sameSiteMap = new Map([
+        [Ci.nsICookie.SAMESITE_LAX, "Lax"],
+        [Ci.nsICookie.SAMESITE_STRICT, "Strict"],
+      ]);
+
+      data.sameSite = sameSiteMap.get(cookie.sameSite);
+    }
+
+    return data;
+  });
 }
