@@ -199,9 +199,9 @@ enum class InterModule { False = false, True = true };
 #  define RABALDR_SCRATCH_F32
 #  define RABALDR_SCRATCH_F64
 
-static const Register RabaldrScratchI32 = Register::Invalid();
-static const FloatRegister RabaldrScratchF32 = InvalidFloatReg;
-static const FloatRegister RabaldrScratchF64 = InvalidFloatReg;
+static constexpr Register RabaldrScratchI32 = Register::Invalid();
+static constexpr FloatRegister RabaldrScratchF32 = InvalidFloatReg;
+static constexpr FloatRegister RabaldrScratchF64 = InvalidFloatReg;
 #endif
 
 #ifdef JS_CODEGEN_ARM64
@@ -211,7 +211,7 @@ static const FloatRegister RabaldrScratchF64 = InvalidFloatReg;
 #  define RABALDR_SCRATCH_F64
 #  define RABALDR_SCRATCH_F32_ALIASES_F64
 
-static const Register RabaldrScratchI32 = Register::FromCode(15);
+static constexpr Register RabaldrScratchI32{Registers::x15};
 
 // Note, the float scratch regs cannot be registers that are used for parameter
 // passing in any ABI we use.  Argregs tend to be low-numbered; register 30
@@ -239,7 +239,7 @@ static_assert(RabaldrScratchF64 != ScratchDoubleReg, "Too busy");
 // RabaldrScratchI32 is in fact ebx.
 
 #  define RABALDR_SCRATCH_I32
-static const Register RabaldrScratchI32 = ebx;
+static constexpr Register RabaldrScratchI32 = ebx;
 
 #  define RABALDR_INT_DIV_I64_CALLOUT
 #endif
@@ -251,7 +251,7 @@ static const Register RabaldrScratchI32 = ebx;
 // worth it yet.  CallTempReg2 seems safe.
 
 #  define RABALDR_SCRATCH_I32
-static const Register RabaldrScratchI32 = CallTempReg2;
+static constexpr Register RabaldrScratchI32 = CallTempReg2;
 
 #  define RABALDR_INT_DIV_I64_CALLOUT
 #  define RABALDR_I64_TO_FLOAT_CALLOUT
@@ -260,7 +260,7 @@ static const Register RabaldrScratchI32 = CallTempReg2;
 
 #ifdef JS_CODEGEN_MIPS32
 #  define RABALDR_SCRATCH_I32
-static const Register RabaldrScratchI32 = CallTempReg2;
+static constexpr Register RabaldrScratchI32 = CallTempReg2;
 
 #  define RABALDR_INT_DIV_I64_CALLOUT
 #  define RABALDR_I64_TO_FLOAT_CALLOUT
@@ -269,7 +269,7 @@ static const Register RabaldrScratchI32 = CallTempReg2;
 
 #ifdef JS_CODEGEN_MIPS64
 #  define RABALDR_SCRATCH_I32
-static const Register RabaldrScratchI32 = CallTempReg2;
+static constexpr Register RabaldrScratchI32 = CallTempReg2;
 #endif
 
 #ifdef RABALDR_SCRATCH_F32_ALIASES_F64
@@ -670,8 +670,8 @@ class BaseRegAlloc {
 #endif
 
 #ifdef RABALDR_SCRATCH_F32_ALIASES_F64
-    MOZ_ASSERT(RabaldrScratchF32 != InvalidFloatReg, "Float reg definition");
-    MOZ_ASSERT(RabaldrScratchF64 != InvalidFloatReg, "Float reg definition");
+    static_assert(RabaldrScratchF32 != InvalidFloatReg, "Float reg definition");
+    static_assert(RabaldrScratchF64 != InvalidFloatReg, "Float reg definition");
 #endif
 
 #if defined(RABALDR_SCRATCH_F32) && !defined(RABALDR_SCRATCH_F32_ALIASES_F64)
