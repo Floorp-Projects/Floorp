@@ -108,10 +108,6 @@ export const getAllThreads: Selector<Thread[]> = createSelector(
   ]
 );
 
-export function getCanRewind(state: State) {
-  return state.threads.traits.canRewind;
-}
-
 export function supportsWasm(state: State) {
   return features.wasm && state.threads.traits.wasmBinarySource;
 }

@@ -153,15 +153,6 @@ html[dir="rtl"] .img.more-tabs {
   mask-image: url(resource://devtools/client/debugger/images/resume.svg);
 }
 
-.img.reverseStepOver {
-  mask-image: url(resource://devtools/client/debugger/images/stepOver.svg);
-  transform: scaleX(-1);
-}
-
-.img.rewind {
-  mask-image: url(resource://devtools/client/debugger/images/rewind.svg);
-}
-
 .img.search {
   mask-image: url(resource://devtools/client/debugger/images/search.svg);
 }
