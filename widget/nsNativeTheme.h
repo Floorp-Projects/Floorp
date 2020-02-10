@@ -69,7 +69,7 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   // RTL chrome direction
   static bool IsFrameRTL(nsIFrame* aFrame);
 
-  bool IsHTMLContent(nsIFrame* aFrame);
+  static bool IsHTMLContent(nsIFrame* aFrame);
 
   // button:
   bool IsDefaultButton(nsIFrame* aFrame) {

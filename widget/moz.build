@@ -203,6 +203,7 @@ UNIFIED_SOURCES += [
     'nsHTMLFormatConverter.cpp',
     'nsIdleService.cpp',
     'nsIWidgetListener.cpp',
+    'nsNativeBasicTheme.cpp',
     'nsPrimitiveHelpers.cpp',
     'nsPrintSettingsImpl.cpp',
     'nsSoundProxy.cpp',
@@ -295,6 +296,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/ipc',
+    '/gfx/2d',
     '/layout/base',
     '/layout/forms',
     '/layout/generic',

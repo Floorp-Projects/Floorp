@@ -43,6 +43,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsWindow.h"
+#include "nsNativeBasicTheme.h"
 
 #ifdef MOZ_X11
 #  ifdef CAIRO_HAS_XLIB_SURFACE
@@ -2039,15 +2040,14 @@ bool nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(
 }
 
 already_AddRefed<nsITheme> do_GetNativeTheme() {
-  if (StaticPrefs::widget_disable_native_theme()) {
-    return nullptr;
-  }
-
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
     if (gfxPlatform::IsHeadless()) {
       inst = new HeadlessThemeGTK();
+    } else if (XRE_IsContentProcess() &&
+               StaticPrefs::widget_disable_native_theme_for_content()) {
+      inst = new nsNativeBasicTheme();
     } else {
       inst = new nsNativeThemeGTK();
     }
