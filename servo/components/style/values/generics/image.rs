@@ -13,22 +13,51 @@ use servo_arc::Arc;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
-/// An `<image> | none` value.
+/// An <image> | <none> (for background-image, for example).
+#[derive(
+    Clone,
+    Debug,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+pub enum GenericImageLayer<Image> {
+    /// The `none` value.
+    None,
+    /// The `<image>` value.
+    Image(Image),
+}
+
+pub use self::GenericImageLayer as ImageLayer;
+
+impl<I> ImageLayer<I> {
+    /// Returns `none`.
+    #[inline]
+    pub fn none() -> Self {
+        ImageLayer::None
+    }
+}
+
+/// An [image].
 ///
-/// https://drafts.csswg.org/css-images/#image-values
+/// [image]: https://drafts.csswg.org/css-images/#image-values
 #[derive(
     Clone, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem,
 )]
 #[repr(C, u8)]
-pub enum GenericImage<G, MozImageRect, ImageUrl> {
-    /// `none` variant.
-    None,
+pub enum GenericImage<Gradient, MozImageRect, ImageUrl> {
     /// A `<url()>` image.
     Url(ImageUrl),
 
     /// A `<gradient>` image.  Gradients are rather large, and not nearly as
     /// common as urls, so we box them here to keep the size of this enum sane.
-    Gradient(Box<G>),
+    Gradient(Box<Gradient>),
+
     /// A `-moz-image-rect` image.  Also fairly large and rare.
     // not cfg’ed out on non-Gecko to avoid `error[E0392]: parameter `MozImageRect` is never used`
     // Instead we make MozImageRect an empty enum
@@ -256,7 +285,7 @@ impl ToCss for PaintWorklet {
 ///
 /// `-moz-image-rect(<uri>, top, right, bottom, left);`
 #[allow(missing_docs)]
-#[css(comma, function = "-moz-image-rect")]
+#[css(comma, function)]
 #[derive(
     Clone,
     Debug,
@@ -268,16 +297,13 @@ impl ToCss for PaintWorklet {
     ToResolvedValue,
     ToShmem,
 )]
-#[repr(C)]
-pub struct GenericMozImageRect<NumberOrPercentage, MozImageRectUrl> {
+pub struct MozImageRect<NumberOrPercentage, MozImageRectUrl> {
     pub url: MozImageRectUrl,
     pub top: NumberOrPercentage,
     pub right: NumberOrPercentage,
     pub bottom: NumberOrPercentage,
     pub left: NumberOrPercentage,
 }
-
-pub use self::GenericMozImageRect as MozImageRect;
 
 impl<G, R, U> fmt::Debug for Image<G, R, U>
 where
@@ -301,7 +327,6 @@ where
         W: Write,
     {
         match *self {
-            Image::None => dest.write_str("none"),
             Image::Url(ref url) => url.to_css(dest),
             Image::Gradient(ref gradient) => gradient.to_css(dest),
             Image::Rect(ref rect) => rect.to_css(dest),
