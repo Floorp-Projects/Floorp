@@ -33,13 +33,6 @@ add_task(async () => {
           await BrowserTestUtils.closeWindow(pipWin);
           await uaWidgetUpdate;
         }
-
-        // no-controls case is disabled until we ensure that there's a UAWidget for
-        // the no-controls case on Desktop (which should be fixed as part of
-        // bug 1535354).
-        if (videoID !== "no-controls") {
-          await assertShowingMessage(browser, videoID, false);
-        }
       }
     );
   }
