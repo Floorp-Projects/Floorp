@@ -953,7 +953,7 @@ class RefTest(object):
         ids_by_manifest = defaultdict(list)
         for t in tests:
             tests_by_manifest[t['manifest']].append(t)
-            ids_by_manifest[t['manifest']].append(t['identifier'])
+            ids_by_manifest[t['manifestID']].append(t['identifier'])
 
         self.log.suite_start(ids_by_manifest, name=options.suite)
 
