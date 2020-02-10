@@ -6186,7 +6186,8 @@ pub trait AsyncPropertySampler {
     /// This is called for each transaction with the generate_frame flag set
     /// (i.e. that will trigger a render). The list of frame messages returned
     /// are processed as though they were part of the original transaction.
-    fn sample(&self, document_id: DocumentId) -> Vec<FrameMsg>;
+    fn sample(&self, document_id: DocumentId,
+              doc: &FastHashMap<PipelineId, Epoch>) -> Vec<FrameMsg>;
     /// This is called exactly once, when the render backend thread is about to
     /// terminate.
     fn deregister(&self);
