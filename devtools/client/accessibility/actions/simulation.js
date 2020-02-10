@@ -6,8 +6,7 @@
 
 const { SIMULATE } = require("devtools/client/accessibility/constants");
 
-exports.simulate = (simulator, simTypes = []) => dispatch =>
-  simulator
-    .simulate({ types: simTypes })
+exports.simulate = (simulateFunc, simTypes = []) => dispatch =>
+  simulateFunc(simTypes)
     .then(success => dispatch({ error: !success, simTypes, type: SIMULATE }))
     .catch(error => dispatch({ error, type: SIMULATE }));
