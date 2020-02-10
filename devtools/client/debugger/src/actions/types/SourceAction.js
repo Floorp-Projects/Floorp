@@ -62,6 +62,11 @@ export type SourceAction =
       +tabIndex: number,
     |}
   | {|
+      +type: "MOVE_TAB_BY_SOURCE_ID",
+      +sourceId: string,
+      +tabIndex: number,
+    |}
+  | {|
       +type: "CLOSE_TAB",
       +source: Source,
     |}
