@@ -1725,7 +1725,7 @@ getHardcodedLayout = basic => {
                 },
                 subtitle: "",
                 link_text: {
-                  id: "newtab-pocket-whats-pocket",
+                  id: "newtab-pocket-learn-more",
                 },
                 link_url: "https://getpocket.com/firefox/new_tab_learn_more",
                 icon:
@@ -1832,7 +1832,7 @@ getHardcodedLayout = basic => {
               },
               subtitle: "",
               link_text: {
-                id: "newtab-pocket-whats-pocket",
+                id: "newtab-pocket-learn-more",
               },
               link_url: "https://getpocket.com/firefox/new_tab_learn_more",
               icon:
