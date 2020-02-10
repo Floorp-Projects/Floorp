@@ -10,12 +10,6 @@
 #include "mozilla/gfx/Types.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace wr {
-template<typename T>
-struct FfiVec;
-}
-}
 extern "C" {
 
 // ----
@@ -78,9 +72,6 @@ struct WrWindowId;
 struct DocumentId;
 struct WrPipelineInfo;
 
-struct WrPipelineIdAndEpoch;
-using WrPipelineIdEpochs = FfiVec<WrPipelineIdAndEpoch>;
-
 const uint64_t ROOT_CLIP_CHAIN = ~0;
 
 }  // namespace wr
@@ -96,8 +87,7 @@ void apz_deregister_updater(mozilla::wr::WrWindowId aWindowId);
 void apz_register_sampler(mozilla::wr::WrWindowId aWindowId);
 void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
                            mozilla::wr::Transaction* aTransaction,
-                           mozilla::wr::DocumentId aRenderRootId,
-                           mozilla::wr::WrPipelineIdEpochs aPipelineEpochs);
+                           mozilla::wr::DocumentId aRenderRootId);
 void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 }  // extern "C"
 
