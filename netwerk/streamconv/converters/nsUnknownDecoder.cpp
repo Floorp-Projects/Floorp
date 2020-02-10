@@ -636,7 +636,9 @@ bool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest) {
   uint32_t testDataLen;
   if (mDecodedData.IsEmpty()) {
     testData = mBuffer;
-    testDataLen = mBufferLen;
+    // Since some legacy text files end with 0x1A, reading the entire buffer
+    // will lead misdetection.
+    testDataLen = std::min<uint32_t>(mBufferLen, MAX_BUFFER_SIZE);
   } else {
     testData = mDecodedData.get();
     testDataLen = std::min(mDecodedData.Length(), MAX_BUFFER_SIZE);
