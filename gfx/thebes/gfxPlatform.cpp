@@ -2918,7 +2918,7 @@ static void UpdateWRQualificationForAMD(FeatureState& aFeature,
           FeatureStatus::BlockedScreenUnknown, "Screen size unknown",
           NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
     } else if (aScreenPixels <= kMaxPixelsBattery) {
-#    ifdef NIGHTLY_BUILD
+#    ifdef EARLY_BETA_OR_EARLIER
       // Battery and small screen, it should be on by default in nightly.
       *aOutGuardedByQualifiedPref = false;
 #    else
@@ -3110,8 +3110,9 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
     MOZ_ASSERT(false);
 #    endif
     if (aScreenPixels <= kMaxPixelsBattery) {
-#    ifdef NIGHTLY_BUILD
-      // Battery and small screen, it should be on by default in nightly.
+#    ifdef EARLY_BETA_OR_EARLIER
+      // Battery and small screen, it should be on by default in nightly and
+      // beta.
       *aOutGuardedByQualifiedPref = false;
 #    else
       aFeature.Disable(
