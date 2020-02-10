@@ -5942,7 +5942,7 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
   BufferOffset load;
   if (out64 != Register64::Invalid()) {
     if (type == Scalar::Int64) {
-      MOZ_ASSERT(INT64LOW_OFFSET == 0);
+      static_assert(INT64LOW_OFFSET == 0);
 
       load = ma_dataTransferN(IsLoad, 32, /* signed = */ false, memoryBase, ptr,
                               out64.low);
@@ -6009,7 +6009,7 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
 
   BufferOffset store;
   if (type == Scalar::Int64) {
-    MOZ_ASSERT(INT64LOW_OFFSET == 0);
+    static_assert(INT64LOW_OFFSET == 0);
 
     store = ma_dataTransferN(IsStore, 32 /* bits */, /* signed */ false,
                              memoryBase, ptr, val64.low);
