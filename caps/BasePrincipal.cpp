@@ -61,6 +61,17 @@ BasePrincipal::GetAsciiOrigin(nsACString& aOrigin) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetHostPort(nsACString& aRes) {
+  aRes.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->GetHostPort(aRes);
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin) {
   MOZ_ASSERT(mInitialized);
   mOriginNoSuffix->ToUTF8String(aOrigin);
