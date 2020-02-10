@@ -83,8 +83,6 @@ using namespace mozilla::dom;
 
 //#define DEBUG_TABLE 1
 
-static bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode);
-
 static nsAtom* GetTag(nsINode* aNode);
 // returns the parent
 static nsINode* ParentOffset(nsINode* aNode, int32_t* aChildOffset);
@@ -167,17 +165,19 @@ If its parent it the limiter then the point is also valid.  In the case of
 NO limiter all points are valid since you are in a topmost iframe. (browser
 or composer)
 */
-bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode) {
-  if (!aFrameSel || !aNode) return false;
+bool nsFrameSelection::IsValidSelectionPoint(nsINode* aNode) const {
+  if (!aNode) {
+    return false;
+  }
 
-  nsIContent* limiter = aFrameSel->GetLimiter();
+  nsIContent* limiter = GetLimiter();
   if (limiter && limiter != aNode && limiter != aNode->GetParent()) {
     // if newfocus == the limiter. that's ok. but if not there and not parent
     // bad
     return false;  // not in the right content. tLimiter said so
   }
 
-  limiter = aFrameSel->GetAncestorLimiter();
+  limiter = GetAncestorLimiter();
   return !limiter || aNode->IsInclusiveDescendantOf(limiter);
 }
 
@@ -1105,7 +1105,7 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
 
   if (!aContinueSelection) {
     mMaintainRange = nullptr;
-    if (!IsValidSelectionPoint(this, aNewFocus)) {
+    if (!IsValidSelectionPoint(aNewFocus)) {
       mAncestorLimiter = nullptr;
     }
   }
@@ -1232,7 +1232,9 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
 
   NS_ENSURE_STATE(mPresShell);
 
-  if (!IsValidSelectionPoint(this, aNewFocus)) return NS_ERROR_FAILURE;
+  if (!IsValidSelectionPoint(aNewFocus)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Clear all table selection data
   mSelectingTableCellMode = TableSelection::None;
@@ -1696,7 +1698,7 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
   // If the scrolled frame is outside of current selection limiter,
   // we need to scroll the frame but keep moving selection in the limiter.
   nsIFrame* frameToClick = scrolledFrame;
-  if (!IsValidSelectionPoint(this, scrolledFrame->GetContent())) {
+  if (!IsValidSelectionPoint(scrolledFrame->GetContent())) {
     frameToClick = GetFrameToPageSelect();
     if (NS_WARN_IF(!frameToClick)) {
       return NS_OK;
@@ -2724,7 +2726,7 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
     int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     if (!mDomSelections[index]) return;
 
-    if (!IsValidSelectionPoint(this, mDomSelections[index]->GetFocusNode())) {
+    if (!IsValidSelectionPoint(mDomSelections[index]->GetFocusNode())) {
       ClearNormalSelection();
       if (mAncestorLimiter) {
         PostReason(nsISelectionListener::NO_REASON);
