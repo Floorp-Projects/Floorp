@@ -2413,8 +2413,13 @@ var LateWritesSingleton = {
   },
 
   renderLateWrites: function LateWritesSingleton_renderLateWrites(lateWrites) {
-    setHasData("late-writes-section", !!lateWrites);
-    if (!lateWrites) {
+    let hasData = !!(
+      lateWrites &&
+      lateWrites.stacks &&
+      lateWrites.stacks.length
+    );
+    setHasData("late-writes-section", hasData);
+    if (!hasData) {
       return;
     }
 
