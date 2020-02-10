@@ -3729,7 +3729,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
       return false;
     }
 
-    ModuleBuilder builder(cx, module, &parser);
+    ModuleBuilder builder(cx, &parser);
 
     ModuleSharedContext modulesc(cx, module, compilationInfo,
                                  &cx->global()->emptyGlobalScope(), builder);

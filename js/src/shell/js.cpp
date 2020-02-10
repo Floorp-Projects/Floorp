@@ -5350,7 +5350,7 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    ModuleBuilder builder(cx, module, &parser);
+    ModuleBuilder builder(cx, &parser);
 
     ModuleSharedContext modulesc(cx, module, compilationInfo, nullptr, builder);
     pn = parser.moduleBody(&modulesc);
