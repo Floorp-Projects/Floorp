@@ -2416,17 +2416,17 @@ namespace ctypes {
 // autoconverts to a primitive JS number; to support ILP64 architectures, it
 // would need to autoconvert to an Int64 object instead. Therefore we enforce
 // this invariant here.)
-JS_STATIC_ASSERT(sizeof(bool) == 1 || sizeof(bool) == 4);
-JS_STATIC_ASSERT(sizeof(char) == 1);
-JS_STATIC_ASSERT(sizeof(short) == 2);
-JS_STATIC_ASSERT(sizeof(int) == 4);
-JS_STATIC_ASSERT(sizeof(unsigned) == 4);
-JS_STATIC_ASSERT(sizeof(long) == 4 || sizeof(long) == 8);
-JS_STATIC_ASSERT(sizeof(long long) == 8);
-JS_STATIC_ASSERT(sizeof(size_t) == sizeof(uintptr_t));
-JS_STATIC_ASSERT(sizeof(float) == 4);
-JS_STATIC_ASSERT(sizeof(PRFuncPtr) == sizeof(void*));
-JS_STATIC_ASSERT(numeric_limits<double>::is_signed);
+static_assert(sizeof(bool) == 1 || sizeof(bool) == 4);
+static_assert(sizeof(char) == 1);
+static_assert(sizeof(short) == 2);
+static_assert(sizeof(int) == 4);
+static_assert(sizeof(unsigned) == 4);
+static_assert(sizeof(long) == 4 || sizeof(long) == 8);
+static_assert(sizeof(long long) == 8);
+static_assert(sizeof(size_t) == sizeof(uintptr_t));
+static_assert(sizeof(float) == 4);
+static_assert(sizeof(PRFuncPtr) == sizeof(void*));
+static_assert(numeric_limits<double>::is_signed);
 
 template <typename TargetType, typename FromType,
           bool FromIsIntegral = std::is_integral<FromType>::value>
@@ -2506,7 +2506,7 @@ static MOZ_ALWAYS_INLINE bool IsAlwaysExact() {
 template <class TargetType, class FromType, bool TargetSigned, bool FromSigned>
 struct IsExactImpl {
   static MOZ_ALWAYS_INLINE bool Test(FromType i, TargetType j) {
-    JS_STATIC_ASSERT(numeric_limits<TargetType>::is_exact);
+    static_assert(numeric_limits<TargetType>::is_exact);
     return FromType(j) == i;
   }
 };
@@ -2515,7 +2515,7 @@ struct IsExactImpl {
 template <class TargetType, class FromType>
 struct IsExactImpl<TargetType, FromType, false, true> {
   static MOZ_ALWAYS_INLINE bool Test(FromType i, TargetType j) {
-    JS_STATIC_ASSERT(numeric_limits<TargetType>::is_exact);
+    static_assert(numeric_limits<TargetType>::is_exact);
     return i >= 0 && FromType(j) == i;
   }
 };
@@ -2524,7 +2524,7 @@ struct IsExactImpl<TargetType, FromType, false, true> {
 template <class TargetType, class FromType>
 struct IsExactImpl<TargetType, FromType, true, false> {
   static MOZ_ALWAYS_INLINE bool Test(FromType i, TargetType j) {
-    JS_STATIC_ASSERT(numeric_limits<TargetType>::is_exact);
+    static_assert(numeric_limits<TargetType>::is_exact);
     return TargetType(i) >= 0 && FromType(j) == i;
   }
 };
@@ -2596,7 +2596,7 @@ static bool jsvalToBool(JSContext* cx, HandleValue val, bool* result) {
 template <class IntegerType>
 static bool jsvalToInteger(JSContext* cx, HandleValue val,
                            IntegerType* result) {
-  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+  static_assert(numeric_limits<IntegerType>::is_exact);
 
   if (val.isInt32()) {
     // Make sure the integer fits in the alotted precision, and has the right
@@ -2683,7 +2683,7 @@ static bool jsvalToInteger(JSContext* cx, HandleValue val,
 // representable by FloatType.
 template <class FloatType>
 static bool jsvalToFloat(JSContext* cx, HandleValue val, FloatType* result) {
-  JS_STATIC_ASSERT(!numeric_limits<FloatType>::is_exact);
+  static_assert(!numeric_limits<FloatType>::is_exact);
 
   // The following casts may silently throw away some bits, but there's
   // no good way around it. Sternly requiring that the 64-bit double
@@ -2738,7 +2738,7 @@ static bool jsvalToFloat(JSContext* cx, HandleValue val, FloatType* result) {
 template <class IntegerType, class CharT>
 static bool StringToInteger(JSContext* cx, CharT* cp, size_t length,
                             IntegerType* result, bool* overflow) {
-  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+  static_assert(numeric_limits<IntegerType>::is_exact);
 
   const CharT* end = cp + length;
   if (cp == end) {
@@ -2814,7 +2814,7 @@ static bool StringToInteger(JSContext* cx, JSString* string,
 template <class IntegerType>
 static bool jsvalToBigInteger(JSContext* cx, HandleValue val, bool allowString,
                               IntegerType* result, bool* overflow) {
-  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+  static_assert(numeric_limits<IntegerType>::is_exact);
 
   if (val.isInt32()) {
     // Make sure the integer fits in the alotted precision, and has the right
@@ -2882,7 +2882,7 @@ static bool jsvalToSize(JSContext* cx, HandleValue val, bool allowString,
 template <class IntegerType>
 static bool jsidToBigInteger(JSContext* cx, jsid val, bool allowString,
                              IntegerType* result) {
-  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+  static_assert(numeric_limits<IntegerType>::is_exact);
 
   if (JSID_IS_INT(val)) {
     // Make sure the integer fits in the alotted precision, and has the right
@@ -2927,7 +2927,7 @@ static bool SizeTojsval(JSContext* cx, size_t size, MutableHandleValue result) {
 // Forcefully convert val to IntegerType when explicitly requested.
 template <class IntegerType>
 static bool jsvalToIntegerExplicit(HandleValue val, IntegerType* result) {
-  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+  static_assert(numeric_limits<IntegerType>::is_exact);
 
   if (val.isDouble()) {
     // Convert using ToInt32-style semantics: non-finite numbers become 0, and
@@ -3010,7 +3010,7 @@ static bool jsvalToPtrExplicit(JSContext* cx, HandleValue val,
 template <class IntegerType, class CharType, size_t N>
 void IntegerToString(IntegerType i, int radix,
                      StringBuilder<CharType, N>& result) {
-  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+  static_assert(numeric_limits<IntegerType>::is_exact);
 
   // The buffer must be big enough for all the bits of IntegerType to fit,
   // in base-2, including '-'.
