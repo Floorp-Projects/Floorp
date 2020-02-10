@@ -2825,7 +2825,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
       }
 
       registrations.AppendElement(BlobURLRegistrationData(
-          nsCString(aURI), ipcBlob, IPC::Principal(aPrincipal), aRevoked));
+          nsCString(aURI), ipcBlob, aPrincipal, aRevoked));
 
       rv = TransmitPermissionsForPrincipal(aPrincipal);
       Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -5683,7 +5683,7 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
           }
 
           registrations.AppendElement(BlobURLRegistrationData(
-              nsCString(aURI), ipcBlob, IPC::Principal(aPrincipal), aRevoked));
+              nsCString(aURI), ipcBlob, aPrincipal, aRevoked));
 
           rv = TransmitPermissionsForPrincipal(aPrincipal);
           Unused << NS_WARN_IF(NS_FAILED(rv));
