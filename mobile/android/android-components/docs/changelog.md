@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 31.0.0-SNAPSHOT (In Development)
+# 32.0.0-SNAPSHOT (In Development)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v30.0.0...master)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/91?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 31.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v30.0.0...v31.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/91?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v31.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v31.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v31.0.0/buildSrc/src/main/java/Config.kt)
 
 * **feature-awesomebar**
   * Added resources parameter to `addSessionProvider` method from `AwesomeBarFeature` and to `SessionSuggestionProvider` constructor for accessing strings.
