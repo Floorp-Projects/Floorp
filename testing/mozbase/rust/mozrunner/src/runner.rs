@@ -299,7 +299,7 @@ impl Runner for FirefoxRunner {
 
 #[cfg(all(not(target_os = "macos"), unix))]
 pub mod platform {
-    use path::find_binary;
+    use crate::path::find_binary;
     use std::path::PathBuf;
 
     pub fn resolve_binary_path(path: &mut PathBuf) -> &PathBuf {
@@ -393,7 +393,7 @@ pub mod platform {
 
 #[cfg(target_os = "windows")]
 pub mod platform {
-    use path::{find_binary, is_binary};
+    use crate::path::{find_binary, is_binary};
     use std::io::Error;
     use std::path::PathBuf;
     use winreg::enums::*;
