@@ -227,8 +227,8 @@ class AccessibilityRow extends Component {
       return;
     }
 
-    const accessibilityWalkerFront = accessibleFront.parent();
-    if (!accessibilityWalkerFront) {
+    const accessibleWalkerFront = accessibleFront.parent();
+    if (!accessibleWalkerFront) {
       return;
     }
 
@@ -238,7 +238,7 @@ class AccessibilityRow extends Component {
       await this.scrollNodeIntoViewIfNeeded(accessibleFront);
     }
 
-    accessibilityWalkerFront
+    accessibleWalkerFront
       .highlightAccessible(accessibleFront, options)
       .catch(error => console.warn(error));
   }
@@ -249,12 +249,12 @@ class AccessibilityRow extends Component {
       return;
     }
 
-    const accessibilityWalkerFront = accessibleFront.parent();
-    if (!accessibilityWalkerFront) {
+    const accessibleWalkerFront = accessibleFront.parent();
+    if (!accessibleWalkerFront) {
       return;
     }
 
-    accessibilityWalkerFront.unhighlight().catch(error => console.warn(error));
+    accessibleWalkerFront.unhighlight().catch(error => console.warn(error));
   }
 
   async printToJSON() {
