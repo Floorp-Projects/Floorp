@@ -4128,9 +4128,6 @@ CSSRect AsyncPanZoomController::GetCurrentAsyncLayoutViewport(
   AutoApplyAsyncTestAttributes testAttributeApplier(this);
   MOZ_ASSERT(Metrics().IsRootContent(),
              "Only the root content APZC has a layout viewport");
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
-    return mLastContentPaintMetrics.GetLayoutViewport();
-  }
   return GetEffectiveLayoutViewport(aMode);
 }
 
@@ -4138,11 +4135,6 @@ ParentLayerPoint AsyncPanZoomController::GetCurrentAsyncScrollOffset(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this);
-
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
-    return mLastContentPaintMetrics.GetScrollOffset() *
-           mLastContentPaintMetrics.GetZoom();
-  }
 
   return GetEffectiveScrollOffset(aMode) * GetEffectiveZoom(aMode);
 }
@@ -4152,10 +4144,6 @@ CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this);
 
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
-    return mLastContentPaintMetrics.GetScrollOffset();
-  }
-
   return GetEffectiveScrollOffset(aMode);
 }
 
@@ -4163,10 +4151,6 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
     AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this);
-
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
-    return AsyncTransform();
-  }
 
   CSSToParentLayerScale2D effectiveZoom;
   if (aComponents.contains(AsyncTransformComponent::eVisual)) {
@@ -4230,7 +4214,10 @@ LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
 
 CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
     AsyncTransformConsumer aMode) const {
-  if (StaticPrefs::apz_frame_delay_enabled() && aMode == eForCompositing) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
+    return mLastContentPaintMetrics.GetLayoutViewport();
+  }
+  if (aMode == eForCompositing && StaticPrefs::apz_frame_delay_enabled()) {
     return mCompositedLayoutViewport;
   }
   return Metrics().GetLayoutViewport();
@@ -4238,7 +4225,10 @@ CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
 
 CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
     AsyncTransformConsumer aMode) const {
-  if (StaticPrefs::apz_frame_delay_enabled() && aMode == eForCompositing) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
+    return mLastContentPaintMetrics.GetScrollOffset();
+  }
+  if (aMode == eForCompositing && StaticPrefs::apz_frame_delay_enabled()) {
     return mCompositedScrollOffset;
   }
   return Metrics().GetScrollOffset();
@@ -4246,7 +4236,10 @@ CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
 
 CSSToParentLayerScale2D AsyncPanZoomController::GetEffectiveZoom(
     AsyncTransformConsumer aMode) const {
-  if (StaticPrefs::apz_frame_delay_enabled() && aMode == eForCompositing) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
+    return mLastContentPaintMetrics.GetZoom();
+  }
+  if (aMode == eForCompositing && StaticPrefs::apz_frame_delay_enabled()) {
     return mCompositedZoom;
   }
   return Metrics().GetZoom();
