@@ -835,7 +835,7 @@ FunctionDeclarationVector* ModuleObject::functionDeclarations() {
   return static_cast<FunctionDeclarationVector*>(value.toPrivate());
 }
 
-void ModuleObject::init(HandleScript script) {
+void ModuleObject::initScriptSlots(HandleScript script) {
   MOZ_ASSERT(script);
   initReservedSlot(ScriptSlot, PrivateGCThingValue(script));
   initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNINSTANTIATED));
@@ -1996,7 +1996,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
   MOZ_TRY(XDRScript(xdr, enclosingScope, nullptr, module, &script));
 
   if (mode == XDR_DECODE) {
-    module->init(script);
+    module->initScriptSlots(script);
   }
 
   /* Environment Slot */
