@@ -122,7 +122,10 @@ nsApplicationCacheService::ChooseApplicationCache(
 
   RefPtr<nsOfflineCacheDevice> device;
   nsresult rv = mCacheService->GetOfflineDevice(getter_AddRefs(device));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    // Silently fail and provide no appcache to the caller.
+    return NS_OK;
+  }
 
   return device->ChooseApplicationCache(key, aLoadContextInfo, out);
 }
