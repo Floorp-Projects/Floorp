@@ -13,6 +13,7 @@
 #include "ExplicitOperatorBoolChecker.h"
 #ifdef _WIN32
 #include "LoadLibraryUsageChecker.h"
+#include "FopenUsageChecker.h"
 #endif
 #include "KungFuDeathGripChecker.h"
 #include "MustOverrideChecker.h"
