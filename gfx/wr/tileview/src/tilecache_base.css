@@ -13,7 +13,19 @@
 	background: white;
 }
 
-.intern_header {
+.datasheet .header {
+	color: white;
+	font-family: Arial;
+	font-weight: bold;
+	font-size: 150%;
+	line-height: 200%;
+	background-color: grey;
+	margin-top: 15px;
+	margin-bottom: 5px;
+	padding-left: 10px;
+}
+
+.datasheet .subheader {
 	color: blue;
 	font-family: Arial;
 	font-weight: bold;
@@ -23,26 +35,29 @@
 	margin-bottom: 5px;
 }
 
-.intern_data {
+.datasheet .data {
 	font-family: monospace;
-	font-size: small;
+	margin-bottom: 5px;
 }
 
-.intern_data .insert:nth-child(even) {
+.datasheet .data *:nth-child(even) {
 	background: #FFFFFF;
 }
-.intern_data .insert:nth-child(odd) {
+.datasheet .data *:nth-child(odd) {
 	background: #EFEFEF;
 }
 
-.intern_data .insert {
-	color: #008000;
+.datasheet .data .insert {
+	color: #006000;
 }
 
-.intern_data .remove {
-	color: #800000;
+.datasheet .data .remove {
+	color: #600000;
 }
 
+.datasheet .data .change {
+	color: #000060;
+}
 
 
 .split {
@@ -58,7 +73,7 @@
 
 .right {
 	right: 0;
-	width: 25%;
+	width: 30%;
 	height: 90%;
 }
 

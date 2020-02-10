@@ -125,6 +125,7 @@ pub enum UpdateKind {
 #[derive(MallocSizeOf)]
 pub struct Update {
     pub index: usize,
+    pub uid: ItemUid,
     pub kind: UpdateKind,
 }
 
@@ -261,9 +262,12 @@ impl<I: Internable> Interner<I> {
             None => self.local_data.len(),
         };
 
+        let uid = ItemUid::next_uid();
+
         // Add a pending update to insert the new data.
         self.updates.push(Update {
             index,
+            uid,
             kind: UpdateKind::Insert,
         });
         self.update_data.alloc().init(data.clone());
@@ -272,7 +276,7 @@ impl<I: Internable> Interner<I> {
         let handle = Handle {
             index: index as u32,
             epoch: self.current_epoch,
-            uid: ItemUid::next_uid(),
+            uid,
             _marker: PhantomData,
         };
 
@@ -316,6 +320,7 @@ impl<I: Internable> Interner<I> {
                 free_list.push(handle.index as usize);
                 updates.push(Update {
                     index: handle.index as usize,
+                    uid: handle.uid,
                     kind: UpdateKind::Remove,
                 });
                 return false;
