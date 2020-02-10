@@ -29,6 +29,8 @@ loader.lazyRequireGetter(
 exports.setIgnoreLayoutChanges = (...args) =>
   this.setIgnoreLayoutChanges(...args);
 
+const ReplayInspector = require("devtools/server/actors/replay/inspector");
+
 /**
  * Returns the `DOMWindowUtils` for the window given.
  *
@@ -643,6 +645,13 @@ exports.getViewportDimensions = getViewportDimensions;
  * @return {DOMWindow}
  */
 function getWindowFor(node) {
+  // Check if we are replaying, as the tests below don't work when inspecting
+  // nodes in another process.
+  if (isReplaying) {
+    // Multiple windows are not supported yet when replaying, so return the
+    // global window.
+    return ReplayInspector.window;
+  }
   if (Node.isInstance(node)) {
     if (node.nodeType === node.DOCUMENT_NODE) {
       return node.defaultView;

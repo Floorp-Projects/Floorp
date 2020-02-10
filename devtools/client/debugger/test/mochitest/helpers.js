@@ -569,6 +569,7 @@ function isSelectedFrameSelected(dbg, state) {
 async function clearDebuggerPreferences(prefs = []) {
   resetSchemaVersion();
   asyncStorage.clear();
+  Services.prefs.clearUserPref("devtools.recordreplay.enabled");
   Services.prefs.clearUserPref("devtools.debugger.alphabetize-outline");
   Services.prefs.clearUserPref("devtools.debugger.pause-on-exceptions");
   Services.prefs.clearUserPref("devtools.debugger.pause-on-caught-exceptions");
