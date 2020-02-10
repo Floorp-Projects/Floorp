@@ -25,10 +25,11 @@ sync_javaparser:: \
 
 sync_htmlparser:: \
 ; if [ -d htmlparser/.hg ] ; \
-  then cd htmlparser ; hg pull --rebase ; cd .. ; \
-  else \
-    rm -rf htmlparser ; \
-    hg clone https://hg.mozilla.org/projects/htmlparser ; \
+  then echo "The htmlparser repo has move to GitHub. Please remove the htmlparser directory and resync." ; exit ; \
+  elif [ ! -d htmlparser/.git ] ; \
+    then rm -rf htmlparser ; \
+    git clone https://github.com/validator/htmlparser.git ; \
+    cd htmlparser ; git checkout master ; cd .. ; \
   fi
 
 sync:: sync_javaparser sync_htmlparser
