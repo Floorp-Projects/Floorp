@@ -1900,6 +1900,12 @@
             return "none";
           }
 
+          if (
+            window.gFissionBrowser != sourceNode.ownerGlobal.gFissionBrowser
+          ) {
+            return "none";
+          }
+
           return dt.dropEffect == "copy" ? "copy" : "move";
         }
       }
