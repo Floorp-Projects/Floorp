@@ -634,8 +634,8 @@ void TypeSet::addType(Type type, LifoAlloc* alloc) {
     // have many different classes and prototypes but are still optimizable
     // by IonMonkey.
     if (objectCount >= TYPE_FLAG_OBJECT_COUNT_LIMIT) {
-      JS_STATIC_ASSERT(TYPE_FLAG_DOMOBJECT_COUNT_LIMIT >=
-                       TYPE_FLAG_OBJECT_COUNT_LIMIT);
+      static_assert(TYPE_FLAG_DOMOBJECT_COUNT_LIMIT >=
+                    TYPE_FLAG_OBJECT_COUNT_LIMIT);
       // Examining the entire type set is only required when we first hit
       // the normal object limit.
       if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT) {
