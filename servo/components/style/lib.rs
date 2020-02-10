@@ -120,7 +120,7 @@ pub mod attr;
 pub mod author_styles;
 pub mod bezier;
 pub mod bloom;
-#[path="properties/computed_value_flags.rs"]
+#[path = "properties/computed_value_flags.rs"]
 pub mod computed_value_flags;
 pub mod context;
 pub mod counter_style;
