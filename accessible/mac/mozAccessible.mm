@@ -443,7 +443,15 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   if (accWrap) {
     Accessible* child =
         accWrap->ChildAtPoint(geckoPoint.x, geckoPoint.y, Accessible::eDeepestChild);
-    if (child) nativeChild = GetNativeFromGeckoAccessible(child);
+    // If this is an outer doc, drill down further into proxies to find deepest remote child.
+    if (OuterDocAccessible* docOwner = child->AsOuterDoc()) {
+      if (ProxyAccessible* proxyDoc = docOwner->RemoteChildDoc()) {
+        mozAccessible* nativeRemoteChild = GetNativeFromProxy(proxyDoc);
+        return [nativeRemoteChild accessibilityHitTest:point];
+      }
+    } else if (child) {
+      nativeChild = GetNativeFromGeckoAccessible(child);
+    }
   } else if (proxy) {
     ProxyAccessible* child =
         proxy->ChildAtPoint(geckoPoint.x, geckoPoint.y, Accessible::eDeepestChild);
