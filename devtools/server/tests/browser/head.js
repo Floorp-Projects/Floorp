@@ -86,8 +86,6 @@ async function initAccessibilityFrontForUrl(url) {
   const walker = inspector.walker;
   const accessibility = await target.getFront("accessibility");
 
-  await accessibility.bootstrap();
-
   return { inspector, walker, accessibility, target };
 }
 
