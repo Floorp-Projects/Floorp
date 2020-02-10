@@ -259,9 +259,9 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         let encinfo = self.isa.encoding_info();
         let func = &self.context.func;
         let stack_slots = &func.stack_slots;
-        for ebb in func.layout.ebbs() {
+        for block in func.layout.blocks() {
             let mut pending_safepoint = None;
-            for (offset, inst, inst_size) in func.inst_offsets(ebb, &encinfo) {
+            for (offset, inst, inst_size) in func.inst_offsets(block, &encinfo) {
                 if let Some(stackmap) = pending_safepoint.take() {
                     stackmaps.add_stackmap(stack_slots, offset + inst_size, stackmap);
                 }
@@ -513,7 +513,7 @@ impl<'a> EmitEnv<'a> {
 }
 
 impl<'a> RelocSink for EmitEnv<'a> {
-    fn reloc_ebb(&mut self, _offset: CodeOffset, _reloc: Reloc, _ebb_offset: CodeOffset) {
+    fn reloc_block(&mut self, _offset: CodeOffset, _reloc: Reloc, _block_offset: CodeOffset) {
         unimplemented!();
     }
 
