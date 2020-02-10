@@ -32,7 +32,7 @@ const size_t TestSize = 10000;
 const size_t TestIterations = 10;
 #endif
 
-JS_STATIC_ASSERT(TestSize <= 0x0000FFFF / 2);
+static_assert(TestSize <= 0x0000FFFF / 2);
 
 struct LowToHigh {
   static uint32_t rekey(uint32_t initial) {
