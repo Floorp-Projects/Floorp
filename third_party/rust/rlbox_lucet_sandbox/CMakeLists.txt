@@ -45,8 +45,8 @@ if(DEV)
     add_compile_options(-Werror) # warnings as errors
     add_compile_options(-fsanitize=address)
     add_link_options(-fsanitize=address)
-    add_compile_options(-fsanitize=undefined)
-    add_link_options(-fsanitize=undefined)
+    # add_compile_options(-fsanitize=undefined)
+    # add_link_options(-fsanitize=undefined)
   endif()
 
   find_program(CLANG_TIDY "clang-tidy")
@@ -83,7 +83,7 @@ FetchContent_Declare(
   rlbox
   GIT_REPOSITORY https://github.com/PLSysSec/rlbox_api_cpp17.git)
 FetchContent_GetProperties(rlbox)
-if(NOT rlbox_POPULATED)
+if(NOT catch2_POPULATED)
   FetchContent_Populate(rlbox)
 endif()
 
@@ -98,19 +98,11 @@ endif()
 add_subdirectory("${catch2_SOURCE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/contrib")
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  FetchContent_Declare(
-    wasiclang
-    URL
-      https://github.com/CraneStation/wasi-sdk/releases/download/wasi-sdk-6/wasi-sdk-6.0-macos.tar.gz
-    )
-else()
-  FetchContent_Declare(
-    wasiclang
-    URL
-      https://github.com/CraneStation/wasi-sdk/releases/download/wasi-sdk-6/wasi-sdk-6.0-linux.tar.gz
-    )
-endif()
+FetchContent_Declare(
+  wasiclang
+  URL
+    https://github.com/CraneStation/wasi-sdk/releases/download/wasi-sdk-6/wasi-sdk-6.0-linux.tar.gz
+  )
 FetchContent_GetProperties(wasiclang)
 if(NOT wasiclang_POPULATED)
   FetchContent_Populate(wasiclang)
@@ -126,11 +118,6 @@ endif()
 
 # Rust Lib ###################
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  set(DYLIB_EXT "dylib")
-else()
-  set(DYLIB_EXT "so")
-endif()
 set(LUCET_DIR "${CMAKE_BINARY_DIR}/cargo/release/")
 set(LUCET_PATH "${LUCET_DIR}/lucetc")
 file(GLOB_RECURSE LUCET_SOURCE_FILES ${mod_lucet_SOURCE_DIR}/*.rs ${mod_lucet_SOURCE_DIR}/*.S)
@@ -152,8 +139,11 @@ add_custom_target(lucet_release ALL DEPENDS ${LUCET_PATH})
 
 file(GLOB_RECURSE RUST_SOURCE_FILES src/*.rs)
 
+# Use the dynamic library as wasi symbols needed by the wasm module are hosted
+# in it. If we include the static version, we need to make the main executable
+# expose symbols through rdynamic
 set(RUST_LIB_DEBUG_PATH
-    "${CMAKE_BINARY_DIR}/cargo/debug/librlbox_lucet_sandbox.a")
+    "${CMAKE_BINARY_DIR}/cargo/debug/librlbox_lucet_sandbox.so")
 add_custom_command(OUTPUT ${RUST_LIB_DEBUG_PATH}
                    DEPENDS ${RUST_SOURCE_FILES} ${LUCET_SOURCE_FILES} Cargo.toml
                    COMMAND CARGO_TARGET_DIR=${CMAKE_BINARY_DIR}/cargo ${CARGO}
@@ -163,7 +153,7 @@ add_custom_target(lucet_sandbox_rustlib_debug ALL
                   DEPENDS ${RUST_LIB_DEBUG_PATH})
 
 set(RUST_LIB_RELEASE_PATH
-    "${CMAKE_BINARY_DIR}/cargo/release/librlbox_lucet_sandbox.a")
+    "${CMAKE_BINARY_DIR}/cargo/release/librlbox_lucet_sandbox.so")
 add_custom_command(OUTPUT ${RUST_LIB_RELEASE_PATH}
                    DEPENDS ${RUST_SOURCE_FILES} ${LUCET_SOURCE_FILES} Cargo.toml
                    COMMAND CARGO_TARGET_DIR=${CMAKE_BINARY_DIR}/cargo
@@ -182,14 +172,7 @@ set_target_properties(lucet_sandbox_rustlib
 set_target_properties(lucet_sandbox_rustlib
                       PROPERTIES IMPORTED_LOCATION_RELEASE
                                  ${RUST_LIB_RELEASE_PATH})
-# The wasi symbols needed by the wasm module are in this static lib, but must
-# be part of the symbol table (locatable through dlsym). We need the following
-# flag for this.
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-target_link_options(lucet_sandbox_rustlib INTERFACE "-framework" "Security" "-rdynamic")
-else()
-target_link_options(lucet_sandbox_rustlib INTERFACE "-rdynamic")
-endif()
+
 # Tests ###################
 
 include(CTest)
@@ -206,7 +189,7 @@ endif()
 
 file(GLOB_RECURSE C_SOURCE_FILES c_src/*)
 set(GLUE_LIB_WASM "${CMAKE_BINARY_DIR}/wasm/glue_lib_lucet.wasm")
-set(GLUE_LIB_SO "${CMAKE_BINARY_DIR}/wasm/glue_lib_lucet.${DYLIB_EXT}")
+set(GLUE_LIB_SO "${CMAKE_BINARY_DIR}/wasm/glue_lib_lucet.so")
 
 add_custom_command(OUTPUT ${GLUE_LIB_WASM} ${GLUE_LIB_SO}
                    DEPENDS ${C_SOURCE_FILES}
@@ -215,20 +198,20 @@ add_custom_command(OUTPUT ${GLUE_LIB_WASM} ${GLUE_LIB_SO}
                            wasiclang_SOURCE_DIR=${wasiclang_SOURCE_DIR}
                            LUCET_DIR=${LUCET_DIR}
                            LUCET_WASI_DIR=${mod_lucet_SOURCE_DIR}/lucet-wasi
-                           ${CMAKE_COMMAND}
+                           cmake
                            -S
                            .
                            -B
                            ${CMAKE_BINARY_DIR}/wasm
                    COMMAND VERBOSE=1
-                           ${CMAKE_COMMAND}
+                           cmake
                            --build
                            ${CMAKE_BINARY_DIR}/wasm
                            --target
                            all
                    COMMENT "Building wasm library")
 
-add_custom_target(glue_lib_wasm ALL DEPENDS lucet_release ${GLUE_LIB_WASM} ${GLUE_LIB_SO})
+add_custom_target(glue_lib_wasm ALL DEPENDS ${GLUE_LIB_WASM} ${GLUE_LIB_SO})
 
 add_executable(test_rlbox_glue test/test_lucet_sandbox_glue_main.cpp
                                test/test_lucet_sandbox_glue.cpp
@@ -247,8 +230,6 @@ find_package(Threads REQUIRED)
 target_compile_definitions(test_rlbox_glue PUBLIC
                            GLUE_LIB_LUCET_PATH="${GLUE_LIB_SO}")
 
-add_dependencies(test_rlbox_glue lucet_sandbox_rustlib_debug lucet_sandbox_rustlib_release)
-
 target_link_libraries(test_rlbox_glue
                       Catch2::Catch2
                       lucet_sandbox_rustlib
@@ -257,7 +238,7 @@ target_link_libraries(test_rlbox_glue
                       # glue_lib_lucet
                       )
 
-if(UNIX AND NOT (${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
+if(UNIX)
   target_link_libraries(test_rlbox_glue rt)
 endif()
 catch_discover_tests(test_rlbox_glue)

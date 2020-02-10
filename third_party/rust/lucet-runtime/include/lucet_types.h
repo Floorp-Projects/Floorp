@@ -122,13 +122,6 @@ struct lucet_alloc_limits {
      * Size of the globals region in bytes; each global uses 8 bytes. (default 4K)
      */
     uint64_t globals_size;
-    /**
-     * Size of the signal stack region in bytes.
-     *
-     * SIGSTKSZ from <signals.h> is a good default when linking against a Rust release build of
-     * lucet-runtime, but 12K or more is recommended when using a Rust debug build.
-     */
-    uint64_t signal_stack_size;
 };
 
 typedef enum lucet_signal_behavior (*lucet_signal_handler)(struct lucet_instance *   inst,
