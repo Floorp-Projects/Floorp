@@ -32,12 +32,18 @@
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
 #include "nsCycleCollector.h"
+#include "nsIOService.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsScriptError.h"
 #include "nsJSUtils.h"
+#include "prsystem.h"
+
+#ifndef XP_WIN
+#  include <sys/mman.h>
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -134,6 +140,7 @@ void nsXPConnect::InitStatics() {
   // as possible to avoid missing any classes' creations.
   js::SetLogCtorDtorFunctions(NS_LogCtor, NS_LogDtor);
 #endif
+  ReadOnlyPage::Init();
 
   gSelf = new nsXPConnect();
   gOnceAliveNowDead = false;
@@ -1123,20 +1130,69 @@ bool ThreadSafeIsChromeOrUAWidget(JSContext* cx, JSObject* obj) {
 }  // namespace dom
 }  // namespace mozilla
 
-void xpc::CacheAutomationPref(bool* aMirror) {
+#ifdef MOZ_TSAN
+ReadOnlyPage ReadOnlyPage::sInstance;
+#else
+constexpr const volatile ReadOnlyPage ReadOnlyPage::sInstance;
+#endif
+
+void xpc::ReadOnlyPage::Write(const volatile bool* aPtr, bool aValue) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (*aPtr == aValue) return;
+  // Please modify the definition of kAutomationPageSize if a new platform
+  // is running in automation and hits this assertion.
+  MOZ_RELEASE_ASSERT(PR_GetPageSize() == alignof(ReadOnlyPage));
+  MOZ_RELEASE_ASSERT(
+      reinterpret_cast<uintptr_t>(&sInstance) % alignof(ReadOnlyPage) == 0);
+#ifdef XP_WIN
+  AutoVirtualProtect prot(const_cast<ReadOnlyPage*>(&sInstance),
+                          alignof(ReadOnlyPage), PAGE_READWRITE);
+  MOZ_RELEASE_ASSERT(prot && (prot.PrevProt() & 0xFF) == PAGE_READONLY);
+#else
+  int ret = mprotect(const_cast<ReadOnlyPage*>(&sInstance),
+                     alignof(ReadOnlyPage), PROT_READ | PROT_WRITE);
+  MOZ_RELEASE_ASSERT(ret == 0);
+#endif
+  MOZ_RELEASE_ASSERT(aPtr == &sInstance.mNonLocalConnectionsDisabled ||
+                     aPtr == &sInstance.mTurnOffAllSecurityPref);
+#ifdef XP_WIN
+  BOOL ret = WriteProcessMemory(GetCurrentProcess(), const_cast<bool*>(aPtr),
+                                &aValue, sizeof(bool), nullptr);
+  MOZ_RELEASE_ASSERT(ret);
+#else
+  *const_cast<volatile bool*>(aPtr) = aValue;
+  ret = mprotect(const_cast<ReadOnlyPage*>(&sInstance), alignof(ReadOnlyPage),
+                 PROT_READ);
+  MOZ_RELEASE_ASSERT(ret == 0);
+#endif
+}
+
+void xpc::ReadOnlyPage::Init() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  static_assert(alignof(ReadOnlyPage) == kAutomationPageSize);
+  static_assert(sizeof(sInstance) == alignof(ReadOnlyPage));
+
+  // Make sure that initialization is not too late.
+  MOZ_DIAGNOSTIC_ASSERT(!net::gIOService);
+  char* s = getenv("MOZ_DISABLE_NONLOCAL_CONNECTIONS");
+  const bool disabled = s && *s != '0';
+  Write(&sInstance.mNonLocalConnectionsDisabled, disabled);
+  if (!disabled) {
+    // not bothered to check automation prefs.
+    return;
+  }
+
   // The obvious thing is to make this pref a static pref. But then it would
   // always be defined and always show up in about:config, and users could flip
   // it, which we don't want. Instead we roll our own callback so that if the
   // pref is undefined (the normal case) then sAutomationPrefIsSet is false and
   // nothing shows up in about:config.
-  nsresult rv = mozilla::Preferences::RegisterCallbackAndCall(
-      [](const char* aPrefName, void* aData) {
-        auto aMirror = static_cast<bool*>(aData);
-        *aMirror =
-            mozilla::Preferences::GetBool(aPrefName, /* aFallback */ false);
+  nsresult rv = Preferences::RegisterCallbackAndCall(
+      [](const char* aPrefName, void* /* aClosure */) {
+        Write(&sInstance.mTurnOffAllSecurityPref,
+              Preferences::GetBool(aPrefName, /* aFallback */ false));
       },
       "security."
-      "turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-      static_cast<void*>(aMirror));
+      "turn_off_all_security_so_that_viruses_can_take_over_this_computer");
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 }

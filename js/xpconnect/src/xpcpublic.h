@@ -658,29 +658,40 @@ extern void GetCurrentRealmName(JSContext*, nsCString& name);
 void AddGCCallback(xpcGCCallback cb);
 void RemoveGCCallback(xpcGCCallback cb);
 
+// We need an exact page size only if we run the binary in automation.
+const size_t kAutomationPageSize = 4096;
+
+struct alignas(kAutomationPageSize) ReadOnlyPage final {
+  bool mNonLocalConnectionsDisabled = false;
+  bool mTurnOffAllSecurityPref = false;
+
+  static void Init();
+
+#ifdef MOZ_TSAN
+  // TSan is confused by write access to read-only section.
+  static ReadOnlyPage sInstance;
+#else
+  static const volatile ReadOnlyPage sInstance;
+#endif
+
+ private:
+  constexpr ReadOnlyPage() = default;
+  ReadOnlyPage(const ReadOnlyPage&) = delete;
+  void operator=(const ReadOnlyPage&) = delete;
+
+  static void Write(const volatile bool* aPtr, bool aValue);
+};
+
 inline bool AreNonLocalConnectionsDisabled() {
-  static int disabledForTest = -1;
-  if (disabledForTest == -1) {
-    char* s = getenv("MOZ_DISABLE_NONLOCAL_CONNECTIONS");
-    if (s) {
-      disabledForTest = *s != '0';
-    } else {
-      disabledForTest = 0;
-    }
-  }
-  return disabledForTest;
+  return ReadOnlyPage::sInstance.mNonLocalConnectionsDisabled;
 }
 
-void CacheAutomationPref(bool* aPref);
-
 inline bool IsInAutomation() {
-  static bool sAutomationPrefIsSet = false;
-  static bool sPrefCacheAdded = false;
-  if (!sPrefCacheAdded) {
-    CacheAutomationPref(&sAutomationPrefIsSet);
-    sPrefCacheAdded = true;
+  if (!ReadOnlyPage::sInstance.mTurnOffAllSecurityPref) {
+    return false;
   }
-  return sAutomationPrefIsSet && AreNonLocalConnectionsDisabled();
+  MOZ_RELEASE_ASSERT(AreNonLocalConnectionsDisabled());
+  return true;
 }
 
 void InitializeJSContext();
