@@ -134,6 +134,8 @@ class nsIOService final : public nsIIOService,
   friend SocketProcessMemoryReporter;
   RefPtr<MemoryReportingProcess> GetSocketProcessMemoryReporter();
 
+  static void OnTLSPrefChange(const char* aPref, void* aSelf);
+
  private:
   // These shouldn't be called directly:
   // - construct using GetInstance

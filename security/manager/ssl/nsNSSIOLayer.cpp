@@ -1464,7 +1464,7 @@ nsresult nsSSLIOLayerHelpers::Init() {
 }
 
 void nsSSLIOLayerHelpers::loadVersionFallbackLimit() {
-  // see nsNSSComponent::setEnabledTLSVersions for pref handling rules
+  // see nsNSSComponent::SetEnabledTLSVersions for pref handling rules
   uint32_t limit = 3;  // TLS 1.2
 
   if (NS_IsMainThread()) {
