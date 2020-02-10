@@ -2,16 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/// Command line tool to convert logged tile cache files into a visualization.
+///
+/// Steps to use this:
+/// 1. enable webrender; enable gfx.webrender.debug.tile-cache-logging
+/// 2. take a capture using ctrl-shift-3
+///    if all is well, there will be a .../wr-capture/tilecache folder with *.ron files
+/// 3. run tileview with that folder as the first parameter and some empty output folder as the
+///    2nd:
+///    cargo run --release -- /foo/bar/wr-capture/tilecache /tmp/tilecache
+/// 4. open /tmp/tilecache/index.html
+
 use webrender::{TileNode, TileNodeKind, InvalidationReason, TileOffset};
 use webrender::{TileSerializer, TileCacheInstanceSerializer, TileCacheLoggerUpdateLists};
+use webrender::{PrimitiveCompareResultDetail, CompareHelperResult, UpdateKind, ItemUid};
 use serde::Deserialize;
-//use ron::de::from_reader;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::ffi::OsString;
-use webrender::api::enumerate_interners;
-use webrender::UpdateKind;
+use std::collections::HashMap;
+use webrender::api::{enumerate_interners, ColorF};
 use euclid::{Rect, Transform3D};
 use webrender_api::units::{PicturePoint, PictureSize, PicturePixel, WorldPixel};
 
@@ -34,19 +45,28 @@ static CSS_PRIM_COUNT: &str              = "fill:#40f0f0;fill-opacity:0.1;";
 static CSS_CONTENT: &str                 = "fill:#f04040;fill-opacity:0.1;";
 static CSS_COMPOSITOR_KIND_CHANGED: &str = "fill:#f0c070;fill-opacity:0.1;";
 
-fn tile_node_to_svg(node: &TileNode, transform: &Transform3D<f32, PicturePixel, WorldPixel>) -> String
+// parameters to tweak the SVG generation
+struct SvgSettings {
+    pub scale: f32,
+    pub x: f32,
+    pub y: f32,
+}
+
+fn tile_node_to_svg(node: &TileNode,
+                    transform: &Transform3D<f32, PicturePixel, WorldPixel>,
+                    svg_settings: &SvgSettings) -> String
 {
     match &node.kind {
         TileNodeKind::Leaf { .. } => {
             let rect_world = transform.transform_rect(&node.rect).unwrap();
             format!("<rect x=\"{:.2}\" y=\"{:.2}\" width=\"{:.2}\" height=\"{:.2}\" />\n",
-                    rect_world.origin.x,
-                    rect_world.origin.y,
-                    rect_world.size.width,
-                    rect_world.size.height)
+                    rect_world.origin.x    * svg_settings.scale + svg_settings.x,
+                    rect_world.origin.y    * svg_settings.scale + svg_settings.y,
+                    rect_world.size.width  * svg_settings.scale,
+                    rect_world.size.height * svg_settings.scale)
         },
         TileNodeKind::Node { children } => {
-            children.iter().fold(String::new(), |acc, child| acc + &tile_node_to_svg(child, transform) )
+            children.iter().fold(String::new(), |acc, child| acc + &tile_node_to_svg(child, transform, svg_settings) )
         }
     }
 }
@@ -55,27 +75,26 @@ fn tile_to_svg(key: TileOffset,
                tile: &TileSerializer,
                slice: &Slice,
                prev_tile: Option<&TileSerializer>,
+               itemuid_to_string: &HashMap<ItemUid, String>,
                tile_stroke: &str,
                prim_class: &str,
                invalidation_report: &mut String,
-               svg_width: &mut i32, svg_height: &mut i32 ) -> String
+               svg_width: &mut i32, svg_height: &mut i32,
+               svg_settings: &SvgSettings) -> String
 {
     let mut svg = format!("\n<!-- tile key {},{} ; -->\n", key.x, key.y);
 
 
     let tile_fill =
         match tile.invalidation_reason {
-            Some(InvalidationReason::FractionalOffset) => CSS_FRACTIONAL_OFFSET.to_string(),
-            Some(InvalidationReason::BackgroundColor) => CSS_BACKGROUND_COLOR.to_string(),
-            Some(InvalidationReason::SurfaceOpacityChanged) => CSS_SURFACE_OPACITY_CHANNEL.to_string(),
+            Some(InvalidationReason::FractionalOffset { .. }) => CSS_FRACTIONAL_OFFSET.to_string(),
+            Some(InvalidationReason::BackgroundColor { .. }) => CSS_BACKGROUND_COLOR.to_string(),
+            Some(InvalidationReason::SurfaceOpacityChanged { .. }) => CSS_SURFACE_OPACITY_CHANNEL.to_string(),
             Some(InvalidationReason::NoTexture) => CSS_NO_TEXTURE.to_string(),
             Some(InvalidationReason::NoSurface) => CSS_NO_SURFACE.to_string(),
-            Some(InvalidationReason::PrimCount) => CSS_PRIM_COUNT.to_string(),
+            Some(InvalidationReason::PrimCount { .. }) => CSS_PRIM_COUNT.to_string(),
             Some(InvalidationReason::CompositorKindChanged) => CSS_COMPOSITOR_KIND_CHANGED.to_string(),
-            Some(InvalidationReason::Content { prim_compare_result } ) => {
-                let _foo = prim_compare_result;
-                CSS_CONTENT.to_string() //TODO do something with the compare result
-            }
+            Some(InvalidationReason::Content { .. } ) => CSS_CONTENT.to_string(),
             None => {
                 let mut background = tile.background_color;
                 if background.is_none() {
@@ -103,23 +122,155 @@ fn tile_to_svg(key: TileOffset,
         None => String::new()
     };
 
-    if let Some(reason) = tile.invalidation_reason {
+    if let Some(reason) = &tile.invalidation_reason {
         invalidation_report.push_str(
-            &format!("\n<tspan x=\"0\" dy=\"16px\">slice {} tile key ({},{}) invalidated: {:?}</tspan>\n",
-                     slice.tile_cache.slice, key.x, key.y, reason));
+            &format!("<div class=\"subheader\">slice {} key ({},{})</div><div class=\"data\">",
+                     slice.tile_cache.slice,
+                     key.x, key.y));
+
+        // go through most reasons individually so we can print something nicer than
+        // the default debug formatting of old and new:
+        match reason {
+            InvalidationReason::FractionalOffset { old, new } => {
+                invalidation_report.push_str(
+                    &format!("<b>FractionalOffset</b> changed from ({},{}) to ({},{})",
+                             old.x, old.y, new.x, new.y));
+            },
+            InvalidationReason::BackgroundColor { old, new } => {
+                fn to_str(c: &Option<ColorF>) -> String {
+                    if let Some(c) = c {
+                        format!("({},{},{},{})", c.r, c.g, c.b, c.a)
+                    } else {
+                        "none".to_string()
+                    }
+                }
+
+                invalidation_report.push_str(
+                    &format!("<b>BackGroundColor</b> changed from {} to {}",
+                             to_str(old), to_str(new)));
+            },
+            InvalidationReason::SurfaceOpacityChanged { became_opaque } => {
+                invalidation_report.push_str(
+                    &format!("<b>SurfaceOpacityChanged</b> changed from {} to {}",
+                             !became_opaque, became_opaque));
+            },
+            InvalidationReason::PrimCount { old, new } => {
+                // diff the lists to find removed and added ItemUids,
+                // and convert them to strings to pretty-print what changed:
+                let old = old.as_ref().unwrap();
+                let new = new.as_ref().unwrap();
+                let removed = old.iter()
+                                 .filter(|i| !new.contains(i))
+                                 .fold(String::new(),
+                                       |acc, i| acc + "<li>" + &(i.get_uid()).to_string() + "..."
+                                                    + &itemuid_to_string.get(i).unwrap_or(&String::new())
+                                                    + "</li>\n");
+                let added   = new.iter()
+                                 .filter(|i| !old.contains(i))
+                                 .fold(String::new(),
+                                       |acc, i| acc + "<li>" + &(i.get_uid()).to_string() + "..."
+                                                    + &itemuid_to_string.get(i).unwrap_or(&String::new())
+                                                    + "</li>\n");
+                invalidation_report.push_str(
+                    &format!("<b>PrimCount</b> changed from {} to {}:<br/>\
+                              removed:<ul>{}</ul>
+                              added:<ul>{}</ul>",
+                              old.len(), new.len(),
+                              removed, added));
+            },
+            InvalidationReason::Content { prim_compare_result, prim_compare_result_detail } => {
+                let _ = prim_compare_result;
+                match prim_compare_result_detail {
+                    Some(PrimitiveCompareResultDetail::Descriptor { old, new }) => {
+                        if old.prim_uid == new.prim_uid {
+                            // if the prim uid hasn't changed then try to print something useful
+                            invalidation_report.push_str(
+                                &format!("<b>Content: Descriptor</b> changed for uid {}<br/>",
+                                         old.prim_uid.get_uid()));
+                            let mut changes = String::new();
+                            if old.origin != new.origin {
+                                changes += &format!("<li><b>origin</b> changed from ({},{}) to ({},{})</li>",
+                                                    old.origin.x, old.origin.y,
+                                                    new.origin.x, new.origin.y);
+                            }
+                            if old.prim_clip_rect != new.prim_clip_rect {
+                                changes += &format!("<li><b>prim_clip_rect</b> changed from {}x{} at ({},{})",
+                                                    old.prim_clip_rect.w,
+                                                    old.prim_clip_rect.h,
+                                                    old.prim_clip_rect.x,
+                                                    old.prim_clip_rect.y);
+                                changes += &format!(" to {}x{} at ({},{})</li>",
+                                                    new.prim_clip_rect.w,
+                                                    new.prim_clip_rect.h,
+                                                    new.prim_clip_rect.x,
+                                                    new.prim_clip_rect.y);
+                            }
+                            invalidation_report.push_str(
+                                &format!("<ul>{}<li>Item: {}</li></ul>",
+                                             changes,
+                                             &itemuid_to_string.get(&old.prim_uid).unwrap_or(&String::new())));
+                        } else {
+                            // .. if prim UIDs have changed, just dump both items and descriptors.
+                            invalidation_report.push_str(
+                                &format!("<b>Content: Descriptor</b> changed; old uid {}, new uid {}:<br/>",
+                                             old.prim_uid.get_uid(),
+                                             new.prim_uid.get_uid()));
+                            invalidation_report.push_str(
+                                &format!("old:<ul><li>Desc: {:?}</li><li>Item: {}</li></ul>",
+                                             old,
+                                             &itemuid_to_string.get(&old.prim_uid).unwrap_or(&String::new())));
+                            invalidation_report.push_str(
+                                &format!("new:<ul><li>Desc: {:?}</li><li>Item: {}</li></ul>",
+                                             new,
+                                             &itemuid_to_string.get(&new.prim_uid).unwrap_or(&String::new())));
+                        }
+                    },
+                    Some(PrimitiveCompareResultDetail::Clip { detail }) => {
+                        match detail {
+                            CompareHelperResult::Count { prev_count, curr_count } => {
+                                invalidation_report.push_str(
+                                    &format!("<b>Content: Clip</b> count changed from {} to {}<br/>",
+                                             prev_count, curr_count ));
+                            },
+                            CompareHelperResult::NotEqual { prev, curr } => {
+                                invalidation_report.push_str(
+                                    &format!("<b>Content: Clip</b> ItemUids changed from {} to {}:<br/>",
+                                             prev.get_uid(), curr.get_uid() ));
+                                invalidation_report.push_str(
+                                    &format!("old:<ul><li>{}</li></ul>",
+                                             &itemuid_to_string.get(&prev).unwrap_or(&String::new())));
+                                invalidation_report.push_str(
+                                    &format!("new:<ul><li>{}</li></ul>",
+                                             &itemuid_to_string.get(&curr).unwrap_or(&String::new())));
+                            },
+                            reason => {
+                                invalidation_report.push_str(&format!("{:?}", reason));
+                            },
+                        }
+                    },
+                    reason => {
+                        invalidation_report.push_str(&format!("{:?}", reason));
+                    },
+                }
+            },
+            reason => {
+                invalidation_report.push_str(&format!("{:?}", reason));
+            },
+        }
+        invalidation_report.push_str("</div>\n");
     }
 
     svg = format!(r#"{}<rect x="{}" y="{}" width="{}" height="{}" style="{}" ></rect>"#,
             svg,
-            tile.rect.origin.x,
-            tile.rect.origin.y,
-            tile.rect.size.width,
-            tile.rect.size.height,
+            tile.rect.origin.x    * svg_settings.scale + svg_settings.x,
+            tile.rect.origin.y    * svg_settings.scale + svg_settings.y,
+            tile.rect.size.width  * svg_settings.scale,
+            tile.rect.size.height * svg_settings.scale,
             tile_style);
 
     svg = format!("{}\n\n<g class=\"svg_quadtree\">\n{}</g>\n",
                    svg,
-                   tile_node_to_svg(&tile.root, &slice.transform));
+                   tile_node_to_svg(&tile.root, &slice.transform, svg_settings));
 
     let right  = (tile.rect.origin.x + tile.rect.size.width) as i32;
     let bottom = (tile.rect.origin.y + tile.rect.size.height) as i32;
@@ -157,10 +308,10 @@ fn tile_to_svg(key: TileOffset,
             };
 
         svg += &format!("<rect x=\"{:.2}\" y=\"{:.2}\" width=\"{:.2}\" height=\"{:.2}\" {}/>",
-                        rect_world.origin.x,
-                        rect_world.origin.y,
-                        rect_world.size.width,
-                        rect_world.size.height,
+                        rect_world.origin.x    * svg_settings.scale + svg_settings.x,
+                        rect_world.origin.y    * svg_settings.scale + svg_settings.y,
+                        rect_world.size.width  * svg_settings.scale,
+                        rect_world.size.height * svg_settings.scale,
                         style);
 
         svg += "\n\t";
@@ -171,10 +322,10 @@ fn tile_to_svg(key: TileOffset,
     // nearly invisible, all we want is the toolip really
     let style = "style=\"fill-opacity:0.001;";
     svg += &format!("<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" {}{}\" >{}<\u{2f}rect>",
-                    tile.rect.origin.x,
-                    tile.rect.origin.y,
-                    tile.rect.size.width,
-                    tile.rect.size.height,
+                    tile.rect.origin.x    * svg_settings.scale + svg_settings.x,
+                    tile.rect.origin.y    * svg_settings.scale + svg_settings.y,
+                    tile.rect.size.width  * svg_settings.scale,
+                    tile.rect.size.height * svg_settings.scale,
                     style,
                     tile_stroke,
                     title);
@@ -183,14 +334,16 @@ fn tile_to_svg(key: TileOffset,
 }
 
 fn slices_to_svg(slices: &[Slice], prev_slices: Option<Vec<Slice>>,
+                 itemuid_to_string: &HashMap<ItemUid, String>,
                  svg_width: &mut i32, svg_height: &mut i32,
-                 max_slice_index: &mut usize) -> String
+                 max_slice_index: &mut usize,
+                 svg_settings: &SvgSettings) -> (String, String)
 {
     let svg_begin = "<?xml\u{2d}stylesheet type\u{3d}\"text/css\" href\u{3d}\"tilecache_base.css\" ?>\n\
                      <?xml\u{2d}stylesheet type\u{3d}\"text/css\" href\u{3d}\"tilecache.css\" ?>\n";
 
     let mut svg = String::new();
-    let mut invalidation_report = String::new();
+    let mut invalidation_report = "<div class=\"header\">Invalidation</div>\n".to_string();
 
     for slice in slices {
         let tile_cache = &slice.tile_cache;
@@ -221,24 +374,26 @@ fn slices_to_svg(slices: &[Slice], prev_slices: Option<Vec<Slice>>,
                 prev_tile = prev.tile_cache.tiles.get(key);
             }
 
-            //println!("fofs  {:?}", tile.fract_offset);
-            //println!("id    {:?}", tile.id);
-            //println!("invr  {:?}", tile.invalidation_reason);
-            svg.push_str(&tile_to_svg(*key, &tile, &slice, prev_tile, &tile_stroke, &prim_class,
-                                      &mut invalidation_report, svg_width, svg_height));
+            svg.push_str(&tile_to_svg(*key, &tile, &slice, prev_tile,
+                                      itemuid_to_string,
+                                      &tile_stroke, &prim_class,
+                                      &mut invalidation_report,
+                                      svg_width, svg_height, svg_settings));
         }
     }
 
-    svg.push_str(&format!("<text x=\"0\" y=\"-8px\" class=\"svg_invalidated\">{}</text>\n", invalidation_report));
-
-    format!(r#"{}<svg version="1.1" baseProfile="full" xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" >"#,
-                svg_begin,
-                svg_width,
-                svg_height)
+    (
+        format!("{}<svg version=\"1.1\" baseProfile=\"full\" xmlns=\"http://www.w3.org/2000/svg\" \
+                width=\"{}\" height=\"{}\" >",
+                    svg_begin,
+                    svg_width,
+                    svg_height)
             + "\n"
             + "<rect fill=\"black\" width=\"100%\" height=\"100%\"/>\n"
             + &svg
-            + "\n</svg>\n"
+            + "\n</svg>\n",
+        invalidation_report
+    )
 }
 
 fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) {
@@ -269,7 +424,6 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
     }
     script = format!("{}];\n</script>\n\n", script);
 
-    //TODO this requires copying the js file from somewhere?
     script = format!("{}<script src=\"tilecache.js\" type=\"text/javascript\"></script>\n\n", script);
 
 
@@ -310,7 +464,7 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
     html_output.write_all(html.as_bytes()).unwrap();
 }
 
-fn write_css(output_dir: &Path, max_slice_index: usize) {
+fn write_css(output_dir: &Path, max_slice_index: usize, svg_settings: &SvgSettings) {
     let mut css = String::new();
 
     for ix in 0..max_slice_index + 1 {
@@ -325,12 +479,13 @@ fn write_css(output_dir: &Path, max_slice_index: usize) {
         css += &format!("#{} {{\n\
                            fill: {};\n\
                            fill-opacity: 0.03;\n\
-                           stroke-width: 0.8;\n\
+                           stroke-width: {};\n\
                            stroke: {};\n\
                         }}\n\n",
                         prim_class,
                         //rgb,
                         "none",
+                        0.8 * svg_settings.scale,
                         rgb);
     }
 
@@ -341,35 +496,43 @@ fn write_css(output_dir: &Path, max_slice_index: usize) {
 
 macro_rules! updatelist_to_html_macro {
     ( $( $name:ident: $ty:ty, )+ ) => {
-        fn updatelist_to_html(update_lists: &TileCacheLoggerUpdateLists) -> String {
+        fn updatelist_to_html(update_lists: &TileCacheLoggerUpdateLists,
+                              invalidation_report: String) -> String
+        {
             let mut html = "\
                 <!DOCTYPE html>\n\
                 <html> <head> <meta charset=\"UTF-8\">\n\
                 <link rel=\"stylesheet\" type=\"text/css\" href=\"tilecache_base.css\"></link>\n\
                 <link rel=\"stylesheet\" type=\"text/css\" href=\"tilecache.css\"></link>\n\
-                </head> <body>\n".to_string();
+                </head> <body>\n\
+                <div class=\"datasheet\">\n".to_string();
 
+            html += &invalidation_report;
+
+            html += "<div class=\"header\">Interning</div>\n";
             $(
-                html += &format!("<div class=\"intern_header\">{}</div>\n<div class=\"intern_data\">\n",
+                html += &format!("<div class=\"subheader\">{}</div>\n<div class=\"intern data\">\n",
                                  stringify!($name));
-                let mut insert_count = 0;
-                for update in &update_lists.$name.1.updates {
-                    match update.kind {
-                        UpdateKind::Insert => {
-                            html += &format!("<div class=\"insert\">{} {}</div>\n",
-                                             update.index,
-                                             format!("({:?})", update_lists.$name.1.data[insert_count]));
-                            insert_count = insert_count + 1;
-                        }
-                        _ => {
-                            html += &format!("<div class=\"remove\">{}</div>\n",
-                                             update.index);
-                        }
-                    };
+                for list in &update_lists.$name.1 {
+                    let mut insert_count = 0;
+                    for update in &list.updates {
+                        match update.kind {
+                            UpdateKind::Insert => {
+                                html += &format!("<div class=\"insert\"><b>{}</b> {}</div>\n",
+                                                 update.uid.get_uid(),
+                                                 format!("({:?})", list.data[insert_count]));
+                                insert_count = insert_count + 1;
+                            }
+                            _ => {
+                                html += &format!("<div class=\"remove\"><b>{}</b></div>\n",
+                                                 update.uid.get_uid());
+                            }
+                        };
+                    }
                 }
                 html += "</div><br/>\n";
             )+
-            html += "</body> </html>\n";
+            html += "</div> </body> </html>\n";
             html
         }
     }
@@ -378,11 +541,17 @@ enumerate_interners!(updatelist_to_html_macro);
 
 fn write_tile_cache_visualizer_svg(entry: &std::fs::DirEntry, output_dir: &Path,
                                    slices: &[Slice], prev_slices: Option<Vec<Slice>>,
+                                   itemuid_to_string: &HashMap<ItemUid, String>,
                                    svg_width: &mut i32, svg_height: &mut i32,
                                    max_slice_index: &mut usize,
-                                   svg_files: &mut Vec::<String>)
+                                   svg_files: &mut Vec::<String>,
+                                   svg_settings: &SvgSettings) -> String
 {
-    let svg = slices_to_svg(&slices, prev_slices, svg_width, svg_height, max_slice_index);
+    let (svg, invalidation_report) = slices_to_svg(&slices, prev_slices,
+                                                   itemuid_to_string,
+                                                   svg_width, svg_height,
+                                                   max_slice_index,
+                                                   svg_settings);
 
     let mut output_filename = OsString::from(entry.path().file_name().unwrap());
     output_filename.push(".svg");
@@ -391,13 +560,16 @@ fn write_tile_cache_visualizer_svg(entry: &std::fs::DirEntry, output_dir: &Path,
     output_filename = output_dir.join(output_filename).into_os_string();
     let mut svg_output = File::create(output_filename).unwrap();
     svg_output.write_all(svg.as_bytes()).unwrap();
+
+    invalidation_report
 }
 
 fn write_update_list_html(entry: &std::fs::DirEntry, output_dir: &Path,
                           update_lists: &TileCacheLoggerUpdateLists,
-                          html_files: &mut Vec::<String>)
+                          html_files: &mut Vec::<String>,
+                          invalidation_report: String)
 {
-    let html = updatelist_to_html(update_lists);
+    let html = updatelist_to_html(update_lists, invalidation_report);
 
     let mut output_filename = OsString::from(entry.path().file_name().unwrap());
     output_filename.push(".html");
@@ -411,9 +583,11 @@ fn write_update_list_html(entry: &std::fs::DirEntry, output_dir: &Path,
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    if args.len() != 3 {
-        println!("Usage: tileview input_dir output_dir");
+    if args.len() < 3 {
+        println!("Usage: tileview input_dir output_dir [scale [x y]]");
         println!("    where input_dir is a tile_cache folder inside a wr-capture.");
+        println!("    Scale is an optional scaling factor to compensate for high-DPI.");
+        println!("    X, Y is an optional offset to shift the entire SVG by.");
         println!("\nexample: cargo run c:/Users/me/AppData/Local/wr-capture.6/tile_cache/ c:/temp/tilecache/");
         std::process::exit(1);
     }
@@ -421,6 +595,11 @@ fn main() {
     let input_dir = Path::new(&args[1]);
     let output_dir = Path::new(&args[2]);
     std::fs::create_dir_all(output_dir).unwrap();
+
+    let scale = if args.len() >= 4 { args[3].parse::<f32>().unwrap() } else { 1.0 };
+    let x     = if args.len() >= 6 { args[4].parse::<f32>().unwrap() } else { 0.0 }; // >= 6, requires X and Y
+    let y     = if args.len() >= 6 { args[5].parse::<f32>().unwrap() } else { 0.0 };
+    let svg_settings = SvgSettings { scale, x, y };
 
     let mut svg_width = 100i32;
     let mut svg_height = 100i32;
@@ -435,6 +614,8 @@ fn main() {
     let mut svg_files: Vec::<String> = Vec::new();
     let mut intern_files: Vec::<String> = Vec::new();
     let mut prev_slices = None;
+
+    let mut itemuid_to_string = HashMap::default();
 
     for entry in &entries {
         if entry.path().is_dir() {
@@ -453,22 +634,26 @@ fn main() {
         };
         let mut update_lists = TileCacheLoggerUpdateLists::new();
         update_lists.from_ron(&chunks[1]);
+        update_lists.insert_in_lookup(&mut itemuid_to_string);
 
-        write_tile_cache_visualizer_svg(&entry, &output_dir,
-                                        &slices, prev_slices,
-                                        &mut svg_width, &mut svg_height,
-                                        &mut max_slice_index,
-                                        &mut svg_files);
+        let invalidation_report = write_tile_cache_visualizer_svg(
+                                    &entry, &output_dir,
+                                    &slices, prev_slices,
+                                    &itemuid_to_string,
+                                    &mut svg_width, &mut svg_height,
+                                    &mut max_slice_index,
+                                    &mut svg_files,
+                                    &svg_settings);
 
         write_update_list_html(&entry, &output_dir, &update_lists,
-                               &mut intern_files);
+                               &mut intern_files, invalidation_report);
 
         print!("\r");
         prev_slices = Some(slices);
     }
 
     write_html(output_dir, &svg_files, &intern_files);
-    write_css(output_dir, max_slice_index);
+    write_css(output_dir, max_slice_index, &svg_settings);
 
     std::fs::write(output_dir.join("tilecache.js"), RES_JAVASCRIPT).unwrap();
     std::fs::write(output_dir.join("tilecache_base.css"), RES_BASE_CSS).unwrap();
