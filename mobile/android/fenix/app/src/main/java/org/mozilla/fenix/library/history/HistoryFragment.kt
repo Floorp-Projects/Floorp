@@ -114,7 +114,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             historyView.update(it)
         }
 
-        viewModel.history.observe(this, Observer {
+        viewModel.history.observe(viewLifecycleOwner, Observer {
             historyView.historyAdapter.submitList(it)
         })
     }
