@@ -757,9 +757,6 @@ class Selection final : public nsSupportsWeakReference,
                                  int32_t& aEndIndex) const;
   StyledRange* FindRangeData(nsRange* aRange);
 
-  static void UserSelectRangesToAdd(nsRange* aItem,
-                                    nsTArray<RefPtr<nsRange>>& rangesToAdd);
-
   /**
    * Preserves the sorting and disjunctiveness of mRanges.
    *

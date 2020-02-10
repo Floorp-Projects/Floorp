@@ -914,7 +914,22 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
       nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
           do_QueryInterface(newHttpChannel);
       if (appCacheChannel) {
-        appCacheChannel->SetChooseApplicationCache(aChooseAppcache);
+        bool setChooseAppCache = false;
+        if (aChooseAppcache) {
+          nsCOMPtr<nsIURI> uri;
+          // Using GetURI because this is what DoAsyncOpen uses.
+          newHttpChannel->GetURI(getter_AddRefs(uri));
+
+          OriginAttributes attrs;
+          NS_GetOriginAttributes(newHttpChannel, attrs);
+
+          nsCOMPtr<nsIPrincipal> principal =
+              BasePrincipal::CreateContentPrincipal(uri, attrs);
+
+          setChooseAppCache = NS_ShouldCheckAppCache(principal);
+        }
+
+        appCacheChannel->SetChooseApplicationCache(setChooseAppCache);
       }
 
       nsCOMPtr<nsILoadInfo> newLoadInfo = newHttpChannel->LoadInfo();

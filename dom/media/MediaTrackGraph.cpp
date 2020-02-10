@@ -34,6 +34,7 @@
 #include "GraphRunner.h"
 #include "Tracing.h"
 #include "UnderrunHandler.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 
 #include "webaudio/blink/DenormalDisabler.h"
 #include "webaudio/blink/HRTFDatabaseLoader.h"
@@ -1101,7 +1102,11 @@ void MediaTrackGraphImpl::ProduceDataForTracksBlockByBlock(
   MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(aTrackIndex <= mFirstCycleBreaker,
              "Cycle breaker is not AudioNodeTrack?");
+
   while (mProcessedTime < mStateComputedTime) {
+    // Microtask checkpoints are in between render quanta.
+    nsAutoMicroTask mt;
+
     GraphTime next = RoundUpToNextAudioBlock(mProcessedTime);
     for (uint32_t i = mFirstCycleBreaker; i < mTracks.Length(); ++i) {
       auto nt = static_cast<AudioNodeTrack*>(mTracks[i]);
