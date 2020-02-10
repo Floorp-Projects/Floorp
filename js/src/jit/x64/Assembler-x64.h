@@ -125,12 +125,10 @@ static constexpr Register IntArgReg1 = rdx;
 static constexpr Register IntArgReg2 = r8;
 static constexpr Register IntArgReg3 = r9;
 static constexpr uint32_t NumIntArgRegs = 4;
-// Use "const" instead of constexpr here to work around a bug
-// of VS2015 Update 1. See bug 1229604.
-static const Register IntArgRegs[NumIntArgRegs] = {rcx, rdx, r8, r9};
+static constexpr Register IntArgRegs[NumIntArgRegs] = {rcx, rdx, r8, r9};
 
-static const Register CallTempNonArgRegs[] = {rax, rdi, rbx, rsi};
-static const uint32_t NumCallTempNonArgRegs =
+static constexpr Register CallTempNonArgRegs[] = {rax, rdi, rbx, rsi};
+static constexpr uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
 static constexpr FloatRegister FloatArgReg0 = xmm0;
@@ -148,12 +146,11 @@ static constexpr Register IntArgReg3 = rcx;
 static constexpr Register IntArgReg4 = r8;
 static constexpr Register IntArgReg5 = r9;
 static constexpr uint32_t NumIntArgRegs = 6;
-static const Register IntArgRegs[NumIntArgRegs] = {rdi, rsi, rdx, rcx, r8, r9};
+static constexpr Register IntArgRegs[NumIntArgRegs] = {rdi, rsi, rdx,
+                                                       rcx, r8,  r9};
 
-// Use "const" instead of constexpr here to work around a bug
-// of VS2015 Update 1. See bug 1229604.
-static const Register CallTempNonArgRegs[] = {rax, rbx};
-static const uint32_t NumCallTempNonArgRegs =
+static constexpr Register CallTempNonArgRegs[] = {rax, rbx};
+static constexpr uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
 static constexpr FloatRegister FloatArgReg0 = xmm0;

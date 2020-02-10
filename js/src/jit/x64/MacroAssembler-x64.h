@@ -119,17 +119,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
                    address.offset + 4);
   }
 
-  uint32_t Upper32Of(JSValueShiftedTag tag) {
-    union {  // Implemented in this way to appease MSVC++.
-      uint64_t tag;
-      struct {
-        uint32_t lo32;
-        uint32_t hi32;
-      } s;
-    } e;
-    e.tag = tag;
-    return e.s.hi32;
-  }
+  uint32_t Upper32Of(JSValueShiftedTag tag) { return uint32_t(tag >> 32); }
 
   JSValueShiftedTag GetShiftedTag(JSValueType type) {
     return (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
