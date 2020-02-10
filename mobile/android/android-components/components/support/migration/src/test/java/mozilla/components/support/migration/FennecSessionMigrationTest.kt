@@ -208,4 +208,24 @@ class FennecSessionMigrationTest {
         assertEquals(0, snapshot.sessions.size)
         assertEquals(-1, snapshot.selectedSessionIndex)
     }
+
+    @Test
+    fun `Tab with null title`() {
+        val profilePath = File(getTestPath("sessions"), "null-title")
+
+        val result = FennecSessionMigration.migrate(profilePath, mock())
+
+        assertTrue(result is Result.Success)
+        val snapshot = (result as Result.Success).value
+        assertEquals(1, snapshot.sessions.size)
+        assertEquals(0, snapshot.selectedSessionIndex)
+
+        snapshot.sessions[0].also {
+            assertEquals("https://www.mozilla.org/",
+                it.session.url)
+
+            assertEquals("https://www.mozilla.org/",
+                it.session.title)
+        }
+    }
 }

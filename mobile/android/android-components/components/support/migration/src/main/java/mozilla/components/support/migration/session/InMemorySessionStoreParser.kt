@@ -44,7 +44,12 @@ internal object InMemorySessionStoreParser {
 
             val entry = entries.getJSONObject(index - 1)
             val url = entry.getString("url")
-            val title = entry.optString("title").ifEmpty { url }
+            val title = if (entry.isNull("title")) {
+                url
+            } else {
+                entry.optString("title").ifEmpty { url }
+            }
+
             val selected = selectedTab == i + 1
 
             sessions.add(
