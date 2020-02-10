@@ -90,6 +90,19 @@ static const uint32_t kMaxConsoleOutputDelayMs = 100;
   }                                                                   \
   PR_END_MACRO
 
+#define LOG_PRIN(format, principal)                                 \
+  PR_BEGIN_MACRO                                                    \
+  if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {   \
+    nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));           \
+    _specStr.Truncate(std::min(_specStr.Length(), sMaxSpecLength)); \
+    if (principal) {                                                \
+      (principal)->GetAsciiSpec(_specStr);                          \
+    }                                                               \
+    const char* _spec = _specStr.get();                             \
+    LOG(format);                                                    \
+  }                                                                 \
+  PR_END_MACRO
+
 namespace {
 
 UniquePtr<nsTArray<AntiTrackingCommon::AntiTrackingSettingsChangedCallback>>
@@ -98,7 +111,7 @@ UniquePtr<nsTArray<AntiTrackingCommon::AntiTrackingSettingsChangedCallback>>
 bool GetParentPrincipalAndTrackingOrigin(
     nsGlobalWindowInner* a3rdPartyTrackingWindow, uint32_t aBehavior,
     nsIPrincipal** aTopLevelStoragePrincipal, nsACString& aTrackingOrigin,
-    nsIURI** aTrackingURI, nsIPrincipal** aTrackingPrincipal) {
+    nsIPrincipal** aTrackingPrincipal) {
   // Now we need the principal and the origin of the parent window.
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal =
       // Use the "top-level storage area principal" behaviour in reject tracker
@@ -118,21 +131,12 @@ bool GetParentPrincipalAndTrackingOrigin(
     return false;
   }
 
-  nsCOMPtr<nsIURI> trackingURI;
-  nsresult rv = trackingPrincipal->GetURI(getter_AddRefs(trackingURI));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  rv = trackingPrincipal->GetOriginNoSuffix(aTrackingOrigin);
+  nsresult rv = trackingPrincipal->GetOriginNoSuffix(aTrackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
   topLevelStoragePrincipal.forget(aTopLevelStoragePrincipal);
-  if (aTrackingURI) {
-    trackingURI.forget(aTrackingURI);
-  }
   if (aTrackingPrincipal) {
     trackingPrincipal.forget(aTrackingPrincipal);
   }
@@ -789,8 +793,7 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
                                  const nsAutoCString& aType,
                                  bool aIsInPrivateBrowsing,
                                  uint32_t* aRejectedReason,
-                                 uint32_t aBlockedReason,
-                                 nsIURI* aPrincipalURI) {
+                                 uint32_t aBlockedReason) {
   nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     LOG(("Failed to obtain the permission manager"));
@@ -799,10 +802,10 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
 
   uint32_t result = 0;
   if (aIsInPrivateBrowsing) {
-    LOG_SPEC(("Querying the permissions for private modei looking for a "
+    LOG_PRIN(("Querying the permissions for private modei looking for a "
               "permission of type %s for %s",
               aType.get(), _spec),
-             aPrincipalURI);
+             aPrincipal);
     if (!permManager->PermissionAvailable(aPrincipal, aType)) {
       LOG(
           ("Permission isn't available for this principal in the current "
@@ -871,11 +874,11 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
       return false;
     }
 
-    LOG_SPEC(
+    LOG_PRIN(
         ("Testing permission type %s for %s resulted in %d (%s)", aType.get(),
          _spec, int(result),
          result == nsIPermissionManager::ALLOW_ACTION ? "success" : "failure"),
-        aPrincipalURI);
+        aPrincipal);
 
     if (result != nsIPermissionManager::ALLOW_ACTION) {
       if (aRejectedReason) {
@@ -1064,16 +1067,9 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
       break;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(!uri)) {
-    LOG(("Can't get the URI from the principal"));
-    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {
     nsAutoCString origin;
-    Unused << nsContentUtils::GetASCIIOrigin(uri, origin);
+    aPrincipal->GetAsciiOrigin(origin);
     LOG(("Adding a first-party storage exception for %s...",
          PromiseFlatCString(origin).get()));
   }
@@ -1103,7 +1099,6 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   }
 
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
-  nsCOMPtr<nsIURI> trackingURI;
   nsAutoCString trackingOrigin;
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
 
@@ -1119,10 +1114,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   LOG(("The current resource is %s-party",
        outerParentWindow->IsTopLevelWindow() ? "first" : "third"));
 
+  nsresult rv;
   // We are a first party resource.
   if (outerParentWindow->IsTopLevelWindow()) {
     nsAutoCString origin;
-    nsresult rv = nsContentUtils::GetASCIIOrigin(uri, origin);
+    rv = aPrincipal->GetAsciiOrigin(origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       LOG(("Can't get the origin from the URI"));
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
@@ -1130,11 +1126,6 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
 
     trackingOrigin = origin;
     trackingPrincipal = aPrincipal;
-    rv = trackingPrincipal->GetURI(getter_AddRefs(trackingURI));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(("Couldn't get the tracking principal URI"));
-      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-    }
     topLevelStoragePrincipal = parentWindow->GetPrincipal();
     if (NS_WARN_IF(!topLevelStoragePrincipal)) {
       LOG(("Top-level storage area principal not found, bailing out early"));
@@ -1178,7 +1169,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
             // permission.
             nsICookieService::BEHAVIOR_ACCEPT,
             getter_AddRefs(topLevelStoragePrincipal), trackingOrigin,
-            getter_AddRefs(trackingURI), getter_AddRefs(trackingPrincipal))) {
+            getter_AddRefs(trackingPrincipal))) {
       LOG(
           ("Error while computing the parent principal and tracking origin, "
            "bailing out early"));
@@ -1214,14 +1205,16 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   enum : uint32_t {
     blockReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
   };
-  if (nsContentUtils::IsURIInPrefList(trackingURI,
-                                      "privacy.restrict3rdpartystorage."
-                                      "userInteractionRequiredForHosts") &&
-      !HasUserInteraction(trackingPrincipal)) {
-    LOG_SPEC(("Tracking principal (%s) hasn't been interacted with before, "
+  bool isInPrefList = false;
+  trackingPrincipal->IsURIInPrefList(
+      "privacy.restrict3rdpartystorage."
+      "userInteractionRequiredForHosts",
+      &isInPrefList);
+  if (isInPrefList && !HasUserInteraction(trackingPrincipal)) {
+    LOG_PRIN(("Tracking principal (%s) hasn't been interacted with before, "
               "refusing to add a first-party storage permission to access it",
               _spec),
-             trackingURI);
+             trackingPrincipal);
     NotifyBlockingDecision(aParentWindow, BlockingDecision::eBlock,
                            blockReason);
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
@@ -1234,8 +1227,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   }
 
   auto storePermission =
-      [pwin, parentWindow, trackingOrigin, trackingPrincipal, trackingURI,
-       topInnerWindow, topLevelStoragePrincipal,
+      [pwin, parentWindow, trackingOrigin, trackingPrincipal, topInnerWindow,
+       topLevelStoragePrincipal,
        aReason](int aAllowMode) -> RefPtr<StorageAccessGrantPromise> {
     nsAutoCString permissionKey;
     CreatePermissionKey(trackingOrigin, permissionKey);
@@ -1245,6 +1238,10 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
 
     // Let's inform the parent window.
     parentWindow->StorageAccessGranted();
+
+    auto* basePrin = BasePrincipal::Cast(trackingPrincipal);
+    nsCOMPtr<nsIURI> trackingURI;
+    basePrin->GetURI(getter_AddRefs(trackingURI));
 
     nsIChannel* channel =
         pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
@@ -1329,12 +1326,10 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
                                                                 __func__);
   };
 
-  nsCOMPtr<nsIURI> parentPrincipalURI;
-  Unused << aParentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
-  LOG_SPEC(("Saving a first-party storage permission on %s for "
+  LOG_PRIN(("Saving a first-party storage permission on %s for "
             "trackingOrigin=%s",
             _spec, aTrackingOrigin.get()),
-           parentPrincipalURI);
+           aParentPrincipal);
 
   if (NS_WARN_IF(!aParentPrincipal)) {
     // The child process is sending something wrong. Let's ignore it.
@@ -1617,18 +1612,14 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   nsCOMPtr<nsIPrincipal> parentPrincipal;
-  nsCOMPtr<nsIURI> parentPrincipalURI;
-  nsCOMPtr<nsIURI> trackingURI;
   nsAutoCString trackingOrigin;
   if (!GetParentPrincipalAndTrackingOrigin(
           nsGlobalWindowInner::Cast(aWindow), behavior,
-          getter_AddRefs(parentPrincipal), trackingOrigin,
-          getter_AddRefs(trackingURI), nullptr)) {
+          getter_AddRefs(parentPrincipal), trackingOrigin, nullptr)) {
     LOG(("Failed to obtain the parent principal and the tracking origin"));
     *aRejectedReason = blockedReason;
     return false;
   }
-  Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
 
   nsAutoCString type;
   CreatePermissionKey(trackingOrigin, type);
@@ -1640,7 +1631,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 
   return CheckAntiTrackingPermission(
       parentPrincipal, type, nsContentUtils::IsInPrivateBrowsing(document),
-      aRejectedReason, blockedReason, parentPrincipalURI);
+      aRejectedReason, blockedReason);
 }
 
 bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
@@ -1878,9 +1869,6 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     }
   }
 
-  nsCOMPtr<nsIURI> parentPrincipalURI;
-  Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
-
   // Let's see if we have to grant the access for this particular channel.
 
   nsCOMPtr<nsIURI> trackingURI;
@@ -1908,8 +1896,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   return CheckAntiTrackingPermission(parentPrincipal, type, !!privateBrowsingId,
-                                     aRejectedReason, blockedReason,
-                                     parentPrincipalURI);
+                                     aRejectedReason, blockedReason);
 }
 
 bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
@@ -1988,16 +1975,13 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
   }
 
   nsIPrincipal* parentPrincipal = parentDocument->NodePrincipal();
-  nsCOMPtr<nsIURI> parentPrincipalURI;
-  Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
 
   nsAutoCString type;
   CreatePermissionKey(origin, type);
 
   return CheckAntiTrackingPermission(
       parentPrincipal, type,
-      nsContentUtils::IsInPrivateBrowsing(parentDocument), nullptr, 0,
-      parentPrincipalURI);
+      nsContentUtils::IsInPrivateBrowsing(parentDocument), nullptr, 0);
 }
 
 nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
@@ -2010,12 +1994,9 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  Unused << aTopWinPrincipal->GetURI(getter_AddRefs(uri));
-
-  LOG_SPEC(("Deciding whether the user has overridden content blocking for %s",
+  LOG_PRIN(("Deciding whether the user has overridden content blocking for %s",
             _spec),
-           uri);
+           aTopWinPrincipal);
 
   nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   NS_ENSURE_TRUE(permManager, NS_ERROR_FAILURE);
@@ -2065,20 +2046,14 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
     return;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aDocumentPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
   // Take the host/port portion so we can allowlist by site. Also ignore the
   // scheme, since users who put sites on the allowlist probably don't expect
   // allowlisting to depend on scheme.
   nsAutoCString escaped(NS_LITERAL_CSTRING("https://"));
   nsAutoCString temp;
-  rv = uri->GetHostPort(temp);
+  nsresult rv = aDocumentPrincipal->GetHostPort(temp);
   // view-source URIs will be handled by the next block.
-  if (NS_FAILED(rv) && !uri->SchemeIs("view-source")) {
+  if (NS_FAILED(rv) && !aDocumentPrincipal->SchemeIs("view-source")) {
     // Normal for some loads, no need to print a warning
     return;
   }
@@ -2093,7 +2068,7 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
     return;
   }
   escaped.Append(temp);
-
+  nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), escaped);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -2265,9 +2240,7 @@ void AntiTrackingCommon::StoreUserInteractionFor(nsIPrincipal* aPrincipal) {
   }
 
   if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsIURI> uri;
-    Unused << aPrincipal->GetURI(getter_AddRefs(uri));
-    LOG_SPEC(("Saving the userInteraction for %s", _spec), uri);
+    LOG_PRIN(("Saving the userInteraction for %s", _spec), aPrincipal);
 
     nsPermissionManager* permManager = nsPermissionManager::GetInstance();
     if (NS_WARN_IF(!permManager)) {
@@ -2300,11 +2273,9 @@ void AntiTrackingCommon::StoreUserInteractionFor(nsIPrincipal* aPrincipal) {
   ContentChild* cc = ContentChild::GetSingleton();
   MOZ_ASSERT(cc);
 
-  nsCOMPtr<nsIURI> uri;
-  Unused << aPrincipal->GetURI(getter_AddRefs(uri));
-  LOG_SPEC(("Asking the parent process to save the user-interaction for us: %s",
+  LOG_PRIN(("Asking the parent process to save the user-interaction for us: %s",
             _spec),
-           uri);
+           aPrincipal);
   cc->SendStoreUserInteractionAsPermission(IPC::Principal(aPrincipal));
 }
 
