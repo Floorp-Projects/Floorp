@@ -139,7 +139,7 @@ class RetAddrEntry {
     // The pc offset must fit in at least 28 bits, since we shave off 4 for
     // the Kind enum.
     MOZ_ASSERT(pcOffset_ == pcOffset);
-    JS_STATIC_ASSERT(BaselineMaxScriptLength <= (1u << 28) - 1);
+    static_assert(BaselineMaxScriptLength <= (1u << 28) - 1);
     MOZ_ASSERT(pcOffset <= BaselineMaxScriptLength);
 
     MOZ_ASSERT(kind < Kind::Invalid);

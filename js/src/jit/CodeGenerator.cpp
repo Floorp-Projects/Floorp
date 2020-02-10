@@ -4893,9 +4893,9 @@ void CodeGenerator::visitCallDOMNative(LCallDOMNative* call) {
   // Now compute the argv value.  Since StackPointer is pointing to &vp[0] and
   // argv is &vp[2] we just need to add 2*sizeof(Value) to the current
   // StackPointer.
-  JS_STATIC_ASSERT(JSJitMethodCallArgsTraits::offsetOfArgv == 0);
-  JS_STATIC_ASSERT(JSJitMethodCallArgsTraits::offsetOfArgc ==
-                   IonDOMMethodExitFrameLayoutTraits::offsetOfArgcFromArgv);
+  static_assert(JSJitMethodCallArgsTraits::offsetOfArgv == 0);
+  static_assert(JSJitMethodCallArgsTraits::offsetOfArgc ==
+                IonDOMMethodExitFrameLayoutTraits::offsetOfArgcFromArgv);
   masm.computeEffectiveAddress(
       Address(masm.getStackPointer(), 2 * sizeof(Value)), argArgs);
 
@@ -12428,7 +12428,7 @@ void CodeGenerator::visitGetDOMProperty(LGetDOMProperty* ins) {
   masm.Push(UndefinedValue());
   // We pass the pointer to our out param as an instance of
   // JSJitGetterCallArgs, since on the binary level it's the same thing.
-  JS_STATIC_ASSERT(sizeof(JSJitGetterCallArgs) == sizeof(Value*));
+  static_assert(sizeof(JSJitGetterCallArgs) == sizeof(Value*));
   masm.moveStackPtrTo(ValueReg);
 
   masm.Push(ObjectReg);
@@ -12548,7 +12548,7 @@ void CodeGenerator::visitSetDOMProperty(LSetDOMProperty* ins) {
   masm.Push(argVal);
   // We pass the pointer to our out param as an instance of
   // JSJitGetterCallArgs, since on the binary level it's the same thing.
-  JS_STATIC_ASSERT(sizeof(JSJitSetterCallArgs) == sizeof(Value*));
+  static_assert(sizeof(JSJitSetterCallArgs) == sizeof(Value*));
   masm.moveStackPtrTo(ValueReg);
 
   masm.Push(ObjectReg);
