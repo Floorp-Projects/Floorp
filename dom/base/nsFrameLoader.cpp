@@ -1442,6 +1442,20 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  nsILoadContext* ourLoadContext = ourContent->OwnerDoc()->GetLoadContext();
+  nsILoadContext* otherLoadContext = otherContent->OwnerDoc()->GetLoadContext();
+  MOZ_ASSERT(ourLoadContext && otherLoadContext,
+             "Swapping frames within dead documents?");
+  if (ourLoadContext->UseRemoteTabs() != otherLoadContext->UseRemoteTabs()) {
+    NS_WARNING("Can't swap between e10s and non-e10s windows");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  if (ourLoadContext->UseRemoteSubframes() !=
+      otherLoadContext->UseRemoteSubframes()) {
+    NS_WARNING("Can't swap between fission and non-fission windows");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // Divert to a separate path for the remaining steps in the remote case
   if (IsRemoteFrame()) {
     MOZ_ASSERT(aOther->IsRemoteFrame());
