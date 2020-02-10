@@ -223,23 +223,6 @@ mochitest-devtools-chrome:
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false
 
-mochitest-devtools-webreplay:
-    description: "Mochitest devtools-webreplay run"
-    treeherder-symbol: M(dt-wr)
-    loopback-video: true
-    tier: 2
-    max-run-time: 1800
-    mozharness:
-        mochitest-flavor: chrome
-        extra-options:
-            - --mochitest-suite=mochitest-devtools-chrome-webreplay
-    allow-software-gl-layers: false
-    run-on-projects:
-        by-test-platform:
-            macosx.*64/opt: ['mozilla-central', 'try']
-            macosx.*64.*/opt: ['trunk', 'try']
-            default: []
-
 mochitest-gpu:
     description: "Mochitest GPU run"
     suite:

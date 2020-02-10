@@ -45,7 +45,6 @@ import XHRBreakpoints from "./XHRBreakpoints";
 import EventListeners from "./EventListeners";
 import DOMMutationBreakpoints from "./DOMMutationBreakpoints";
 import WhyPaused from "./WhyPaused";
-import FrameTimeline from "./FrameTimeline";
 
 import Scopes from "./Scopes";
 
@@ -523,7 +522,6 @@ class SecondaryPanes extends Component<Props, State> {
     return (
       <div className="secondary-panes-wrapper">
         <CommandBar horizontal={this.props.horizontal} />
-        <FrameTimeline />
         <div
           className={classnames(
             "secondary-panes",
