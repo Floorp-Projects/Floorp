@@ -206,31 +206,18 @@ struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSObject*> {};
 // and pass it to the functor |f| along with |... args|, forwarded. Pass the
 // type designated by |traceKind| as the functor's template argument. The
 // |thing| parameter is optional; without it, we simply pass through |... args|.
-
-// VS2017+, GCC and Clang require an explicit template declaration in front of
-// the specialization of operator() because it is a dependent template. VS2015,
-// on the other hand, gets very confused if we have a |template| token there.
-// The clang-cl front end defines _MSC_VER, but still requires the explicit
-// template declaration, so we must test for __clang__ here as well.
-#if (defined(_MSC_VER) && _MSC_VER < 1910) && !defined(__clang__)
-#  define JS_DEPENDENT_TEMPLATE_HINT
-#else
-#  define JS_DEPENDENT_TEMPLATE_HINT template
-#endif
 template <typename F, typename... Args>
 auto DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args) {
   switch (traceKind) {
 #define JS_EXPAND_DEF(name, type, _, _1)                  \
   case JS::TraceKind::name:                               \
-    return f.JS_DEPENDENT_TEMPLATE_HINT operator()<type>( \
-        std::forward<Args>(args)...);
+    return f.template operator()<type>(std::forward<Args>(args)...);
     JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
     default:
       MOZ_CRASH("Invalid trace kind in DispatchTraceKindTyped.");
   }
 }
-#undef JS_DEPENDENT_TEMPLATE_HINT
 
 // Given a GC thing specified by pointer and trace kind, calls the functor |f|
 // with a template argument of the actual type of the pointer and returns the
