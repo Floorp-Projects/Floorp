@@ -2,7 +2,7 @@
 
 # Settings
 
-`object Settings : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L92)
+`object Settings : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L94)
 
 Migrates all Fennec settings backed by SharedPreferences.
 

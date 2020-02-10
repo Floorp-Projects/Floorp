@@ -2,7 +2,7 @@
 
 # MigrateLoginsException
 
-`class MigrateLoginsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L147)
+`class MigrateLoginsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L154)
 
 Unexpected exception while migrating logins.
 

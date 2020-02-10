@@ -2,7 +2,7 @@
 
 # MigrateOpenTabsException
 
-`class MigrateOpenTabsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L153)
+`class MigrateOpenTabsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L160)
 
 Unexpected exception while migrating open tabs.
 
