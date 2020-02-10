@@ -176,12 +176,12 @@ JitRuntime::JitRuntime()
 #ifdef DEBUG
       ionBailAfter_(0),
 #endif
-      numFinishedBuilders_(0),
+      numFinishedOffThreadTasks_(0),
       ionLazyLinkListSize_(0) {
 }
 
 JitRuntime::~JitRuntime() {
-  MOZ_ASSERT(numFinishedBuilders_ == 0);
+  MOZ_ASSERT(numFinishedOffThreadTasks_ == 0);
   MOZ_ASSERT(ionLazyLinkListSize_ == 0);
   MOZ_ASSERT(ionLazyLinkList_.ref().isEmpty());
 
@@ -349,30 +349,30 @@ JitCode* JitRuntime::debugTrapHandler(JSContext* cx,
   return debugTrapHandlers_[kind];
 }
 
-JitRuntime::IonBuilderList& JitRuntime::ionLazyLinkList(JSRuntime* rt) {
+JitRuntime::IonCompileTaskList& JitRuntime::ionLazyLinkList(JSRuntime* rt) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt),
              "Should only be mutated by the main thread.");
   return ionLazyLinkList_.ref();
 }
 
 void JitRuntime::ionLazyLinkListRemove(JSRuntime* rt,
-                                       jit::IonBuilder* builder) {
+                                       jit::IonCompileTask* task) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt),
              "Should only be mutated by the main thread.");
-  MOZ_ASSERT(rt == builder->script()->runtimeFromMainThread());
+  MOZ_ASSERT(rt == task->script()->runtimeFromMainThread());
   MOZ_ASSERT(ionLazyLinkListSize_ > 0);
 
-  builder->removeFrom(ionLazyLinkList(rt));
+  task->removeFrom(ionLazyLinkList(rt));
   ionLazyLinkListSize_--;
 
   MOZ_ASSERT(ionLazyLinkList(rt).isEmpty() == (ionLazyLinkListSize_ == 0));
 }
 
-void JitRuntime::ionLazyLinkListAdd(JSRuntime* rt, jit::IonBuilder* builder) {
+void JitRuntime::ionLazyLinkListAdd(JSRuntime* rt, jit::IonCompileTask* task) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt),
              "Should only be mutated by the main thread.");
-  MOZ_ASSERT(rt == builder->script()->runtimeFromMainThread());
-  ionLazyLinkList(rt).insertFront(builder);
+  MOZ_ASSERT(rt == task->script()->runtimeFromMainThread());
+  ionLazyLinkList(rt).insertFront(task);
   ionLazyLinkListSize_++;
 }
 
@@ -419,31 +419,31 @@ void JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const {
   }
 }
 
-void jit::FreeIonBuilder(IonBuilder* builder) {
-  // The builder is allocated into its LifoAlloc, so destroying that will
-  // destroy the builder and all other data accumulated during compilation,
+void jit::FreeIonCompileTask(IonCompileTask* task) {
+  // The task is allocated into its LifoAlloc, so destroying that will
+  // destroy the task and all other data accumulated during compilation,
   // except any final codegen (which includes an assembler and needs to be
   // explicitly destroyed).
-  MOZ_ASSERT(!builder->hasPendingEdgesMap(), "Should not leak malloc memory");
-  js_delete(builder->backgroundCodegen());
-  js_delete(builder->alloc().lifoAlloc());
+  MOZ_ASSERT(!task->hasPendingEdgesMap(), "Should not leak malloc memory");
+  js_delete(task->backgroundCodegen());
+  js_delete(task->alloc().lifoAlloc());
 }
 
-void jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
-                                 const AutoLockHelperThreadState& locked) {
+void jit::FinishOffThreadTask(JSRuntime* runtime, IonCompileTask* task,
+                              const AutoLockHelperThreadState& locked) {
   MOZ_ASSERT(runtime);
 
-  JSScript* script = builder->script();
+  JSScript* script = task->script();
 
-  // Clean the references to the pending IonBuilder, if we just finished it.
-  if (script->baselineScript()->hasPendingIonBuilder() &&
-      script->baselineScript()->pendingIonBuilder() == builder) {
-    script->baselineScript()->removePendingIonBuilder(runtime, script);
+  // Clean the references to the pending IonCompileTask, if we just finished it.
+  if (script->baselineScript()->hasPendingIonCompileTask() &&
+      script->baselineScript()->pendingIonCompileTask() == task) {
+    script->baselineScript()->removePendingIonCompileTask(runtime, script);
   }
 
-  // If the builder is still in one of the helper thread list, then remove it.
-  if (builder->isInList()) {
-    runtime->jitRuntime()->ionLazyLinkListRemove(runtime, builder);
+  // If the task is still in one of the helper thread lists, then remove it.
+  if (task->isInList()) {
+    runtime->jitRuntime()->ionLazyLinkListRemove(runtime, task);
   }
 
   // Clear the recompiling flag of the old ionScript, since we continue to
@@ -456,62 +456,63 @@ void jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
   if (script->isIonCompilingOffThread()) {
     script->jitScript()->clearIsIonCompilingOffThread(script);
 
-    AbortReasonOr<Ok> status = builder->mirGen().getOffThreadStatus();
+    AbortReasonOr<Ok> status = task->mirGen().getOffThreadStatus();
     if (status.isErr() && status.unwrapErr() == AbortReason::Disable) {
       script->disableIon();
     }
   }
 
   // Free Ion LifoAlloc off-thread. Free on the main thread if this OOMs.
-  if (!StartOffThreadIonFree(builder, locked)) {
-    FreeIonBuilder(builder);
+  if (!StartOffThreadIonFree(task, locked)) {
+    FreeIonCompileTask(task);
   }
 }
 
-static bool LinkCodeGen(JSContext* cx, IonBuilder* builder,
-                        CodeGenerator* codegen) {
-  RootedScript script(cx, builder->script());
+static bool LinkCodeGen(JSContext* cx, CodeGenerator* codegen,
+                        HandleScript script,
+                        CompilerConstraintList* constraints) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
   AutoTraceLog logScript(logger, event);
   AutoTraceLog logLink(logger, TraceLogger_IonLinking);
 
-  if (!codegen->link(cx, builder->constraints())) {
+  if (!codegen->link(cx, constraints)) {
     return false;
   }
 
   return true;
 }
 
-static bool LinkBackgroundCodeGen(JSContext* cx, IonBuilder* builder) {
-  CodeGenerator* codegen = builder->backgroundCodegen();
+static bool LinkBackgroundCodeGen(JSContext* cx, IonCompileTask* task) {
+  CodeGenerator* codegen = task->backgroundCodegen();
   if (!codegen) {
     return false;
   }
 
-  JitContext jctx(cx, &builder->alloc());
-  return LinkCodeGen(cx, builder, codegen);
+  JitContext jctx(cx, &task->alloc());
+  RootedScript script(cx, task->script());
+  return LinkCodeGen(cx, codegen, script, task->constraints());
 }
 
 void jit::LinkIonScript(JSContext* cx, HandleScript calleeScript) {
-  IonBuilder* builder;
+  IonCompileTask* task;
 
   {
     AutoLockHelperThreadState lock;
 
-    // Get the pending builder from the Ion frame.
+    // Get the pending IonCompileTask from the Ion frame.
     MOZ_ASSERT(calleeScript->hasBaselineScript());
-    builder = calleeScript->baselineScript()->pendingIonBuilder();
-    calleeScript->baselineScript()->removePendingIonBuilder(cx->runtime(),
-                                                            calleeScript);
+    task = calleeScript->baselineScript()->pendingIonCompileTask();
+    calleeScript->baselineScript()->removePendingIonCompileTask(cx->runtime(),
+                                                                calleeScript);
 
     // Remove from pending.
-    cx->runtime()->jitRuntime()->ionLazyLinkListRemove(cx->runtime(), builder);
+    cx->runtime()->jitRuntime()->ionLazyLinkListRemove(cx->runtime(), task);
   }
 
   {
     AutoEnterAnalysis enterTypes(cx);
-    if (!LinkBackgroundCodeGen(cx, builder)) {
+    if (!LinkBackgroundCodeGen(cx, task)) {
       // Silently ignore OOM during code generation. The assembly code
       // doesn't has code to handle it after linking happened. So it's
       // not OK to throw a catchable exception from there.
@@ -521,7 +522,7 @@ void jit::LinkIonScript(JSContext* cx, HandleScript calleeScript) {
 
   {
     AutoLockHelperThreadState lock;
-    FinishOffThreadBuilder(cx->runtime(), builder, lock);
+    FinishOffThreadTask(cx->runtime(), task, lock);
   }
 }
 
@@ -1638,75 +1639,75 @@ CodeGenerator* CompileBackEnd(MIRGenerator* mir) {
   return GenerateCode(mir, lir);
 }
 
-static inline bool TooManyUnlinkedBuilders(JSRuntime* rt) {
-  static const size_t MaxUnlinkedBuilders = 100;
-  return rt->jitRuntime()->ionLazyLinkListSize() > MaxUnlinkedBuilders;
+static inline bool TooManyUnlinkedTasks(JSRuntime* rt) {
+  static const size_t MaxUnlinkedTasks = 100;
+  return rt->jitRuntime()->ionLazyLinkListSize() > MaxUnlinkedTasks;
 }
 
-static void MoveFinshedBuildersToLazyLinkList(
+static void MoveFinishedTasksToLazyLinkList(
     JSRuntime* rt, const AutoLockHelperThreadState& lock) {
   // Incorporate any off thread compilations for the runtime which have
   // finished, failed or have been cancelled.
 
-  GlobalHelperThreadState::IonBuilderVector& finished =
+  GlobalHelperThreadState::IonCompileTaskVector& finished =
       HelperThreadState().ionFinishedList(lock);
 
   for (size_t i = 0; i < finished.length(); i++) {
-    // Find a finished builder for the runtime.
-    IonBuilder* builder = finished[i];
-    if (builder->script()->runtimeFromAnyThread() != rt) {
+    // Find a finished task for the runtime.
+    IonCompileTask* task = finished[i];
+    if (task->script()->runtimeFromAnyThread() != rt) {
       continue;
     }
 
     HelperThreadState().remove(finished, &i);
-    rt->jitRuntime()->numFinishedBuildersRef(lock)--;
+    rt->jitRuntime()->numFinishedOffThreadTasksRef(lock)--;
 
-    JSScript* script = builder->script();
+    JSScript* script = task->script();
     MOZ_ASSERT(script->hasBaselineScript());
-    script->baselineScript()->setPendingIonBuilder(rt, script, builder);
-    rt->jitRuntime()->ionLazyLinkListAdd(rt, builder);
+    script->baselineScript()->setPendingIonCompileTask(rt, script, task);
+    rt->jitRuntime()->ionLazyLinkListAdd(rt, task);
   }
 }
 
-static void EagerlyLinkExcessBuilders(JSContext* cx,
-                                      AutoLockHelperThreadState& lock) {
+static void EagerlyLinkExcessTasks(JSContext* cx,
+                                   AutoLockHelperThreadState& lock) {
   JSRuntime* rt = cx->runtime();
-  MOZ_ASSERT(TooManyUnlinkedBuilders(rt));
+  MOZ_ASSERT(TooManyUnlinkedTasks(rt));
 
   do {
-    jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getLast();
-    RootedScript script(cx, builder->script());
+    jit::IonCompileTask* task = rt->jitRuntime()->ionLazyLinkList(rt).getLast();
+    RootedScript script(cx, task->script());
 
     AutoUnlockHelperThreadState unlock(lock);
     AutoRealm ar(cx, script);
     jit::LinkIonScript(cx, script);
-  } while (TooManyUnlinkedBuilders(rt));
+  } while (TooManyUnlinkedTasks(rt));
 }
 
 void AttachFinishedCompilations(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
-  if (!rt->jitRuntime() || !rt->jitRuntime()->numFinishedBuilders()) {
+  if (!rt->jitRuntime() || !rt->jitRuntime()->numFinishedOffThreadTasks()) {
     return;
   }
 
   AutoLockHelperThreadState lock;
 
   while (true) {
-    MoveFinshedBuildersToLazyLinkList(rt, lock);
+    MoveFinishedTasksToLazyLinkList(rt, lock);
 
-    if (!TooManyUnlinkedBuilders(rt)) {
+    if (!TooManyUnlinkedTasks(rt)) {
       break;
     }
 
-    EagerlyLinkExcessBuilders(cx, lock);
+    EagerlyLinkExcessTasks(cx, lock);
 
     // Linking releases the lock so we must now check the finished list
     // again.
   }
 
-  MOZ_ASSERT(!rt->jitRuntime()->numFinishedBuilders());
+  MOZ_ASSERT(!rt->jitRuntime()->numFinishedOffThreadTasks());
 }
 
 static void TrackIonAbort(JSContext* cx, JSScript* script, jsbytecode* pc,
@@ -1898,12 +1899,17 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
             builderScript->filename(), builderScript->lineno(),
             builderScript->column());
 
+    IonCompileTask* task = alloc->new_<IonCompileTask>(builder);
+    if (!task) {
+      return AbortReason::Alloc;
+    }
+
     if (!CreateMIRRootList(*builder)) {
       return AbortReason::Alloc;
     }
 
     AutoLockHelperThreadState lock;
-    if (!StartOffThreadIonCompile(builder, lock)) {
+    if (!StartOffThreadIonCompile(task, lock)) {
       JitSpew(JitSpew_IonAbort, "Unable to start off-thread ion compilation.");
       mirGen->graphSpewer().endFunction();
       return AbortReason::Alloc;
@@ -1932,7 +1938,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
       return AbortReason::Disable;
     }
 
-    succeeded = LinkCodeGen(cx, builder, codegen.get());
+    succeeded = LinkCodeGen(cx, codegen.get(), builderScript, constraints);
   }
 
   if (succeeded) {
@@ -2109,7 +2115,7 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
     return Method_Skipped;
   }
 
-  if (script->baselineScript()->hasPendingIonBuilder()) {
+  if (script->baselineScript()->hasPendingIonCompileTask()) {
     LinkIonScript(cx, script);
   }
 
@@ -2239,7 +2245,7 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
     return status;
   }
 
-  if (state.script()->baselineScript()->hasPendingIonBuilder()) {
+  if (state.script()->baselineScript()->hasPendingIonCompileTask()) {
     LinkIonScript(cx, state.script());
     if (!state.script()->hasIonScript()) {
       return jit::Method_Skipped;
@@ -2313,7 +2319,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
 
   // Check if the jitcode still needs to get linked and do this
   // to have a valid IonScript.
-  if (script->baselineScript()->hasPendingIonBuilder()) {
+  if (script->baselineScript()->hasPendingIonCompileTask()) {
     LinkIonScript(cx, script);
   }
 
@@ -2551,7 +2557,7 @@ MethodStatus jit::Recompile(JSContext* cx, HandleScript script, bool force) {
     return Method_Compiled;
   }
 
-  MOZ_ASSERT(!script->baselineScript()->hasPendingIonBuilder());
+  MOZ_ASSERT(!script->baselineScript()->hasPendingIonCompileTask());
 
   MethodStatus status = Compile(cx, script, /* osrFrame = */ nullptr,
                                 /* osrFrameSize = */ 0,

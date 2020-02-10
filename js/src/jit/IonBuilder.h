@@ -169,8 +169,7 @@ class LoopState {
 };
 using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
-class IonBuilder : public mozilla::LinkedListElement<IonBuilder>,
-                   public RunnableTask {
+class IonBuilder {
  public:
   IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
              CompileInfo* info, CompilerConstraintList* constraints,
@@ -190,11 +189,6 @@ class IonBuilder : public mozilla::LinkedListElement<IonBuilder>,
   mozilla::GenericErrorResult<AbortReason> abort(AbortReason r,
                                                  const char* message, ...)
       MOZ_FORMAT_PRINTF(3, 4);
-
-  void runTask() override;
-
-  // for use when ion compiles are being run offthread.
-  ThreadType threadType() override { return THREAD_TYPE_ION; }
 
  private:
   AbortReasonOr<Ok> traverseBytecode();
@@ -1621,6 +1615,32 @@ class CallInfo {
       getArg(i)->setImplicitlyUsedUnchecked();
     }
   }
+};
+
+// IonCompileTask represents a single off-thread Ion compilation task.
+class IonCompileTask final : public RunnableTask,
+                             public mozilla::LinkedListElement<IonCompileTask> {
+  jit::IonBuilder* builder_;
+
+ public:
+  explicit IonCompileTask(jit::IonBuilder* builder) : builder_(builder) {}
+
+  JSScript* script() { return builder_->script(); }
+  MIRGenerator& mirGen() { return builder_->mirGen(); }
+  TempAllocator& alloc() { return builder_->alloc(); }
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return builder_->sizeOfExcludingThis(mallocSizeOf);
+  }
+  bool scriptHasIonScript() const { return builder_->scriptHasIonScript(); }
+  void trace(JSTracer* trc) { builder_->trace(trc); }
+  bool hasPendingEdgesMap() const { return builder_->hasPendingEdgesMap(); }
+  CodeGenerator* backgroundCodegen() const {
+    return builder_->backgroundCodegen();
+  }
+  CompilerConstraintList* constraints() { return builder_->constraints(); }
+
+  ThreadType threadType() override { return THREAD_TYPE_ION; }
+  void runTask() override;
 };
 
 }  // namespace jit

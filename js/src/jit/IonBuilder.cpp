@@ -1189,15 +1189,16 @@ AbortReasonOr<Ok> IonBuilder::buildInline(IonBuilder* callerBuilder,
   return Ok();
 }
 
-void IonBuilder::runTask() {
+void IonCompileTask::runTask() {
   // This is the entry point when ion compiles are run offthread.
   TraceLoggerThread* logger = TraceLoggerForCurrentThread();
   TraceLoggerEvent event(TraceLogger_AnnotateScripts, script());
   AutoTraceLog logScript(logger, event);
   AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
-  jit::JitContext jctx(realm->runtime(), realm, &alloc());
-  setBackgroundCodegen(jit::CompileBackEnd(&mirGen_));
+  MIRGenerator& mirGen = builder_->mirGen();
+  jit::JitContext jctx(mirGen.realm->runtime(), mirGen.realm, &alloc());
+  builder_->setBackgroundCodegen(jit::CompileBackEnd(&mirGen));
 }
 
 void IonBuilder::rewriteParameter(uint32_t slotIdx, MDefinition* param) {

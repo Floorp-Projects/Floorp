@@ -209,25 +209,25 @@ void js::CancelOffThreadWasmTier2Generator() {
   CancelOffThreadWasmTier2GeneratorLocked(lock);
 }
 
-bool js::StartOffThreadIonCompile(jit::IonBuilder* builder,
+bool js::StartOffThreadIonCompile(jit::IonCompileTask* task,
                                   const AutoLockHelperThreadState& lock) {
-  if (!HelperThreadState().ionWorklist(lock).append(builder)) {
+  if (!HelperThreadState().ionWorklist(lock).append(task)) {
     return false;
   }
 
   // The build is moving off-thread. Freeze the LifoAlloc to prevent any
   // unwanted mutations.
-  builder->alloc().lifoAlloc()->setReadOnly();
+  task->alloc().lifoAlloc()->setReadOnly();
 
   HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
   return true;
 }
 
-bool js::StartOffThreadIonFree(jit::IonBuilder* builder,
+bool js::StartOffThreadIonFree(jit::IonCompileTask* task,
                                const AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(CanUseExtraThreads());
 
-  if (!HelperThreadState().ionFreeList(lock).append(builder)) {
+  if (!HelperThreadState().ionFreeList(lock).append(task)) {
     return false;
   }
 
@@ -236,20 +236,20 @@ bool js::StartOffThreadIonFree(jit::IonBuilder* builder,
 }
 
 /*
- * Move an IonBuilder for which compilation has either finished, failed, or
- * been cancelled into the global finished compilation list. All off thread
+ * Move an IonCompilationTask for which compilation has either finished, failed,
+ * or been cancelled into the global finished compilation list. All off thread
  * compilations which are started must eventually be finished.
  */
-static void FinishOffThreadIonCompile(jit::IonBuilder* builder,
+static void FinishOffThreadIonCompile(jit::IonCompileTask* task,
                                       const AutoLockHelperThreadState& lock) {
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!HelperThreadState().ionFinishedList(lock).append(builder)) {
+  if (!HelperThreadState().ionFinishedList(lock).append(task)) {
     oomUnsafe.crash("FinishOffThreadIonCompile");
   }
-  builder->script()
+  task->script()
       ->runtimeFromAnyThread()
       ->jitRuntime()
-      ->numFinishedBuildersRef(lock)++;
+      ->numFinishedOffThreadTasksRef(lock)++;
 }
 
 static JSRuntime* GetSelectorRuntime(const CompilationSelector& selector) {
@@ -284,32 +284,30 @@ static bool JitDataStructuresExist(const CompilationSelector& selector) {
   return selector.match(Matcher());
 }
 
-static bool IonBuilderMatches(const CompilationSelector& selector,
-                              jit::IonBuilder* builder) {
-  struct BuilderMatches {
-    jit::IonBuilder* builder_;
+static bool IonCompileTaskMatches(const CompilationSelector& selector,
+                                  jit::IonCompileTask* task) {
+  struct TaskMatches {
+    jit::IonCompileTask* task_;
 
-    bool operator()(JSScript* script) { return script == builder_->script(); }
-    bool operator()(Realm* realm) {
-      return realm == builder_->script()->realm();
-    }
+    bool operator()(JSScript* script) { return script == task_->script(); }
+    bool operator()(Realm* realm) { return realm == task_->script()->realm(); }
     bool operator()(Zone* zone) {
-      return zone == builder_->script()->zoneFromAnyThread();
+      return zone == task_->script()->zoneFromAnyThread();
     }
     bool operator()(JSRuntime* runtime) {
-      return runtime == builder_->script()->runtimeFromAnyThread();
+      return runtime == task_->script()->runtimeFromAnyThread();
     }
     bool operator()(ZonesInState zbs) {
-      return zbs.runtime == builder_->script()->runtimeFromAnyThread() &&
-             zbs.state == builder_->script()->zoneFromAnyThread()->gcState();
+      return zbs.runtime == task_->script()->runtimeFromAnyThread() &&
+             zbs.state == task_->script()->zoneFromAnyThread()->gcState();
     }
     bool operator()(CompilationsUsingNursery cun) {
-      return cun.runtime == builder_->script()->runtimeFromAnyThread() &&
-             !builder_->mirGen().safeForMinorGC();
+      return cun.runtime == task_->script()->runtimeFromAnyThread() &&
+             !task_->mirGen().safeForMinorGC();
     }
   };
 
-  return selector.match(BuilderMatches{builder});
+  return selector.match(TaskMatches{task});
 }
 
 static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
@@ -319,17 +317,17 @@ static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
   }
 
   /* Cancel any pending entries for which processing hasn't started. */
-  GlobalHelperThreadState::IonBuilderVector& worklist =
+  GlobalHelperThreadState::IonCompileTaskVector& worklist =
       HelperThreadState().ionWorklist(lock);
   for (size_t i = 0; i < worklist.length(); i++) {
-    jit::IonBuilder* builder = worklist[i];
-    if (IonBuilderMatches(selector, builder)) {
-      // Once finished, builders are handled by a Linked list which is
-      // allocated with the IonBuilder class which is contained in the
-      // LifoAlloc-ated structure. Thus we need it to be mutable.
+    jit::IonCompileTask* task = worklist[i];
+    if (IonCompileTaskMatches(selector, task)) {
+      // Once finished, tasks are added to a Linked list which is
+      // allocated with the IonCompileTask class. The IonCompileTask is
+      // allocated in the LifoAlloc so we need the LifoAlloc to be mutable.
       worklist[i]->alloc().lifoAlloc()->setReadWrite();
 
-      FinishOffThreadIonCompile(builder, lock);
+      FinishOffThreadIonCompile(task, lock);
       HelperThreadState().remove(worklist, &i);
     }
   }
@@ -339,9 +337,9 @@ static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
   do {
     cancelled = false;
     for (auto& helper : *HelperThreadState().threads) {
-      if (helper.ionBuilder() &&
-          IonBuilderMatches(selector, helper.ionBuilder())) {
-        helper.ionBuilder()->mirGen().cancel();
+      if (helper.ionCompileTask() &&
+          IonCompileTaskMatches(selector, helper.ionCompileTask())) {
+        helper.ionCompileTask()->mirGen().cancel();
         cancelled = true;
       }
     }
@@ -351,28 +349,28 @@ static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
   } while (cancelled);
 
   /* Cancel code generation for any completed entries. */
-  GlobalHelperThreadState::IonBuilderVector& finished =
+  GlobalHelperThreadState::IonCompileTaskVector& finished =
       HelperThreadState().ionFinishedList(lock);
   for (size_t i = 0; i < finished.length(); i++) {
-    jit::IonBuilder* builder = finished[i];
-    if (IonBuilderMatches(selector, builder)) {
-      JSRuntime* rt = builder->script()->runtimeFromAnyThread();
-      rt->jitRuntime()->numFinishedBuildersRef(lock)--;
-      jit::FinishOffThreadBuilder(rt, builder, lock);
+    jit::IonCompileTask* task = finished[i];
+    if (IonCompileTaskMatches(selector, task)) {
+      JSRuntime* rt = task->script()->runtimeFromAnyThread();
+      rt->jitRuntime()->numFinishedOffThreadTasksRef(lock)--;
+      jit::FinishOffThreadTask(rt, task, lock);
       HelperThreadState().remove(finished, &i);
     }
   }
 
-  /* Cancel lazy linking for pending builders (attached to the ionScript). */
+  /* Cancel lazy linking for pending tasks (attached to the ionScript). */
   JSRuntime* runtime = GetSelectorRuntime(selector);
-  jit::IonBuilder* builder =
+  jit::IonCompileTask* task =
       runtime->jitRuntime()->ionLazyLinkList(runtime).getFirst();
-  while (builder) {
-    jit::IonBuilder* next = builder->getNext();
-    if (IonBuilderMatches(selector, builder)) {
-      jit::FinishOffThreadBuilder(runtime, builder, lock);
+  while (task) {
+    jit::IonCompileTask* next = task->getNext();
+    if (IonCompileTaskMatches(selector, task)) {
+      jit::FinishOffThreadTask(runtime, task, lock);
     }
-    builder = next;
+    task = next;
   }
 }
 
@@ -393,38 +391,38 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
     return false;
   }
 
-  GlobalHelperThreadState::IonBuilderVector& worklist =
+  GlobalHelperThreadState::IonCompileTaskVector& worklist =
       HelperThreadState().ionWorklist(lock);
   for (size_t i = 0; i < worklist.length(); i++) {
-    jit::IonBuilder* builder = worklist[i];
-    if (builder->script()->realm() == realm) {
+    jit::IonCompileTask* task = worklist[i];
+    if (task->script()->realm() == realm) {
       return true;
     }
   }
 
   for (auto& helper : *HelperThreadState().threads) {
-    if (helper.ionBuilder() &&
-        helper.ionBuilder()->script()->realm() == realm) {
+    if (helper.ionCompileTask() &&
+        helper.ionCompileTask()->script()->realm() == realm) {
       return true;
     }
   }
 
-  GlobalHelperThreadState::IonBuilderVector& finished =
+  GlobalHelperThreadState::IonCompileTaskVector& finished =
       HelperThreadState().ionFinishedList(lock);
   for (size_t i = 0; i < finished.length(); i++) {
-    jit::IonBuilder* builder = finished[i];
-    if (builder->script()->realm() == realm) {
+    jit::IonCompileTask* task = finished[i];
+    if (task->script()->realm() == realm) {
       return true;
     }
   }
 
   JSRuntime* rt = realm->runtimeFromMainThread();
-  jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getFirst();
-  while (builder) {
-    if (builder->script()->realm() == realm) {
+  jit::IonCompileTask* task = rt->jitRuntime()->ionLazyLinkList(rt).getFirst();
+  while (task) {
+    if (task->script()->realm() == realm) {
       return true;
     }
-    builder = builder->getNext();
+    task = task->getNext();
   }
 
   return false;
@@ -1205,7 +1203,7 @@ void GlobalHelperThreadState::finish() {
   AutoLockHelperThreadState lock;
   auto& freeList = ionFreeList(lock);
   while (!freeList.empty()) {
-    jit::FreeIonBuilder(freeList.popCopy());
+    jit::FreeIonCompileTask(freeList.popCopy());
   }
   destroyHelperContexts(lock);
 }
@@ -1449,15 +1447,15 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
     htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
   }
 
-  // Report IonBuilders on wait lists
-  for (auto builder : ionWorklist_) {
-    htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
+  // Report IonCompileTasks on wait lists
+  for (auto task : ionWorklist_) {
+    htStats.ionBuilder += task->sizeOfExcludingThis(mallocSizeOf);
   }
-  for (auto builder : ionFinishedList_) {
-    htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
+  for (auto task : ionFinishedList_) {
+    htStats.ionBuilder += task->sizeOfExcludingThis(mallocSizeOf);
   }
-  for (auto builder : ionFreeList_) {
-    htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
+  for (auto task : ionFreeList_) {
+    htStats.ionBuilder += task->sizeOfExcludingThis(mallocSizeOf);
   }
 
   // Report wasm::CompileTasks on wait lists
@@ -1608,8 +1606,8 @@ bool GlobalHelperThreadState::canStartPromiseHelperTask(
                                                   /*isMaster=*/true);
 }
 
-static bool IonBuilderHasHigherPriority(jit::IonBuilder* first,
-                                        jit::IonBuilder* second) {
+static bool IonCompileTaskHasHigherPriority(jit::IonCompileTask* first,
+                                            jit::IonCompileTask* second) {
   // Return true if priority(first) > priority(second).
   //
   // This method can return whatever it wants, though it really ought to be a
@@ -1639,7 +1637,7 @@ static bool IonBuilderHasHigherPriority(jit::IonBuilder* first,
 bool GlobalHelperThreadState::canStartIonCompile(
     const AutoLockHelperThreadState& lock) {
   return !ionWorklist(lock).empty() &&
-         checkTaskThreadLimit<jit::IonBuilder*>(maxIonCompilationThreads());
+         checkTaskThreadLimit<jit::IonCompileTask*>(maxIonCompilationThreads());
 }
 
 bool GlobalHelperThreadState::canStartIonFreeTask(
@@ -1647,22 +1645,23 @@ bool GlobalHelperThreadState::canStartIonFreeTask(
   return !ionFreeList(lock).empty();
 }
 
-jit::IonBuilder* GlobalHelperThreadState::highestPriorityPendingIonCompile(
+jit::IonCompileTask* GlobalHelperThreadState::highestPriorityPendingIonCompile(
     const AutoLockHelperThreadState& lock) {
   auto& worklist = ionWorklist(lock);
   MOZ_ASSERT(!worklist.empty());
 
-  // Get the highest priority IonBuilder which has not started compilation yet.
+  // Get the highest priority IonCompileTask which has not started compilation
+  // yet.
   size_t index = 0;
   for (size_t i = 1; i < worklist.length(); i++) {
-    if (IonBuilderHasHigherPriority(worklist[i], worklist[index])) {
+    if (IonCompileTaskHasHigherPriority(worklist[i], worklist[index])) {
       index = i;
     }
   }
 
-  jit::IonBuilder* builder = worklist[index];
+  jit::IonCompileTask* task = worklist[index];
   worklist.erase(&worklist[index]);
-  return builder;
+  return task;
 }
 
 bool GlobalHelperThreadState::canStartParseTask(
@@ -2268,26 +2267,26 @@ void HelperThread::handlePromiseHelperTaskWorkload(
 void HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked) {
   MOZ_ASSERT(HelperThreadState().canStartIonCompile(locked));
   MOZ_ASSERT(idle());
-  // Find the IonBuilder in the worklist with the highest priority, and
+  // Find the IonCompileTask in the worklist with the highest priority, and
   // remove it from the worklist.
-  jit::IonBuilder* builder =
+  jit::IonCompileTask* task =
       HelperThreadState().highestPriorityPendingIonCompile(locked);
 
   // The build is taken by this thread. Unfreeze the LifoAlloc to allow
   // mutations.
-  builder->alloc().lifoAlloc()->setReadWrite();
+  task->alloc().lifoAlloc()->setReadWrite();
 
-  currentTask.emplace(builder);
+  currentTask.emplace(task);
 
-  JSRuntime* rt = builder->script()->runtimeFromAnyThread();
+  JSRuntime* rt = task->script()->runtimeFromAnyThread();
 
   {
     AutoUnlockHelperThreadState unlock(locked);
 
-    builder->runTask();
+    task->runTask();
   }
 
-  FinishOffThreadIonCompile(builder, locked);
+  FinishOffThreadIonCompile(task, locked);
 
   // Ping the main thread so that the compiled code can be incorporated at the
   // next interrupt callback.
@@ -2311,10 +2310,10 @@ void HelperThread::handleIonFreeWorkload(AutoLockHelperThreadState& locked) {
 
   auto& freeList = HelperThreadState().ionFreeList(locked);
 
-  jit::IonBuilder* builder = freeList.popCopy();
+  jit::IonCompileTask* task = freeList.popCopy();
   {
     AutoUnlockHelperThreadState unlock(locked);
-    FreeIonBuilder(builder);
+    FreeIonCompileTask(task);
   }
 }
 
@@ -2565,29 +2564,29 @@ bool js::StartOffThreadPromiseHelperTask(PromiseHelperTask* task) {
 
 void GlobalHelperThreadState::trace(JSTracer* trc) {
   AutoLockHelperThreadState lock;
-  for (auto builder : ionWorklist(lock)) {
-    builder->alloc().lifoAlloc()->setReadWrite();
-    builder->trace(trc);
-    builder->alloc().lifoAlloc()->setReadOnly();
+  for (auto task : ionWorklist(lock)) {
+    task->alloc().lifoAlloc()->setReadWrite();
+    task->trace(trc);
+    task->alloc().lifoAlloc()->setReadOnly();
   }
-  for (auto builder : ionFinishedList(lock)) {
-    builder->trace(trc);
+  for (auto task : ionFinishedList(lock)) {
+    task->trace(trc);
   }
 
   if (HelperThreadState().threads) {
     for (auto& helper : *HelperThreadState().threads) {
-      if (auto builder = helper.ionBuilder()) {
-        builder->trace(trc);
+      if (auto task = helper.ionCompileTask()) {
+        task->trace(trc);
       }
     }
   }
 
   JSRuntime* rt = trc->runtime();
   if (auto* jitRuntime = rt->jitRuntime()) {
-    jit::IonBuilder* builder = jitRuntime->ionLazyLinkList(rt).getFirst();
-    while (builder) {
-      builder->trace(trc);
-      builder = builder->getNext();
+    jit::IonCompileTask* task = jitRuntime->ionLazyLinkList(rt).getFirst();
+    while (task) {
+      task->trace(trc);
+      task = task->getNext();
     }
   }
 

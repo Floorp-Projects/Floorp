@@ -232,7 +232,7 @@ struct BaselineScript final {
   uint8_t flags_ = 0;
 
   // An ion compilation that is ready, but isn't linked yet.
-  IonBuilder* pendingBuilder_ = nullptr;
+  IonCompileTask* pendingIonCompileTask_ = nullptr;
 
   // Use BaselineScript::New to create new instances. It will properly
   // allocate trailing objects.
@@ -373,15 +373,15 @@ struct BaselineScript final {
 
   static void writeBarrierPre(Zone* zone, BaselineScript* script);
 
-  bool hasPendingIonBuilder() const { return !!pendingBuilder_; }
+  bool hasPendingIonCompileTask() const { return !!pendingIonCompileTask_; }
 
-  js::jit::IonBuilder* pendingIonBuilder() {
-    MOZ_ASSERT(hasPendingIonBuilder());
-    return pendingBuilder_;
+  js::jit::IonCompileTask* pendingIonCompileTask() {
+    MOZ_ASSERT(hasPendingIonCompileTask());
+    return pendingIonCompileTask_;
   }
-  void setPendingIonBuilder(JSRuntime* rt, JSScript* script,
-                            js::jit::IonBuilder* builder);
-  void removePendingIonBuilder(JSRuntime* rt, JSScript* script);
+  void setPendingIonCompileTask(JSRuntime* rt, JSScript* script,
+                                js::jit::IonCompileTask* task);
+  void removePendingIonCompileTask(JSRuntime* rt, JSScript* script);
 
   size_t allocBytes() const { return allocBytes_; }
 };
