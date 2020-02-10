@@ -1576,7 +1576,7 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
   }
 }
 
-void JS::BigInt::traceChildren(JSTracer* trc) { return; }
+void JS::BigInt::traceChildren(JSTracer* trc) {}
 
 template <typename Functor>
 static void VisitTraceList(const Functor& f, const uint32_t* traceList,
