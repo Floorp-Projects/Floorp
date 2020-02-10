@@ -3891,6 +3891,12 @@
         return false;
       }
 
+      // Do not allow transfering a useRemoteSubframes tab to a
+      // non-useRemoteSubframes window and vice versa.
+      if (gFissionBrowser != aOtherTab.ownerGlobal.gFissionBrowser) {
+        return false;
+      }
+
       let ourBrowser = this.getBrowserForTab(aOurTab);
       let otherBrowser = aOtherTab.linkedBrowser;
 
