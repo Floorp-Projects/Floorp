@@ -266,13 +266,13 @@ renaming_overrides_prefixing = true
 
   // TODO(emilio): cbindgen should be able to generate these in the body of the
   // union, but it seems it's only implemented for structs, not unions.
-  static const uint32_t TAG_CALC = StyleLengthPercentageUnion_TAG_CALC;
-  static const uint32_t TAG_LENGTH = StyleLengthPercentageUnion_TAG_LENGTH;
-  static const uint32_t TAG_PERCENTAGE = StyleLengthPercentageUnion_TAG_PERCENTAGE;
-  static const uint32_t TAG_MASK = StyleLengthPercentageUnion_TAG_MASK;
+  static const uint8_t TAG_CALC = StyleLengthPercentageUnion_TAG_CALC;
+  static const uint8_t TAG_LENGTH = StyleLengthPercentageUnion_TAG_LENGTH;
+  static const uint8_t TAG_PERCENTAGE = StyleLengthPercentageUnion_TAG_PERCENTAGE;
+  static const uint8_t TAG_MASK = StyleLengthPercentageUnion_TAG_MASK;
 
  private:
-  uint32_t Tag() const {
+  uint8_t Tag() const {
     return tag.tag & TAG_MASK;
   }
 
