@@ -11,6 +11,7 @@ bool lucet_runtime_test_expand_heap(struct lucet_dl_module *mod)
         .heap_address_space_size = 8 * 1024 * 1024,
         .stack_size              = 64 * 1024,
         .globals_size            = 4096,
+        .signal_stack_size       = 12 * 1024,
     };
 
     enum lucet_error err;
@@ -97,6 +98,7 @@ bool lucet_runtime_test_yield_resume(struct lucet_dl_module *mod)
         .heap_address_space_size = 8 * 1024 * 1024,
         .stack_size              = 64 * 1024,
         .globals_size            = 4096,
+        .signal_stack_size       = 12 * 1024,
     };
 
     enum lucet_error err;
