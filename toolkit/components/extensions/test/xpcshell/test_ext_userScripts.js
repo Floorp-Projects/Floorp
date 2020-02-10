@@ -640,3 +640,32 @@ add_task(async function test_scriptMetaData() {
 
   await extension.unload();
 });
+
+add_task(async function test_userScriptOptions_js_property_required() {
+  function background() {
+    const userScriptOptions = {
+      runAt: "document_start",
+      matches: ["http://*/*/file_sample.html"],
+    };
+
+    browser.test.assertThrows(
+      () => browser.userScripts.register(userScriptOptions),
+      /Type error for parameter userScriptOptions \(Property \"js\" is required\)/,
+      "Got the expected error from userScripts.register when js property is missing"
+    );
+
+    browser.test.sendMessage("done");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["http://*/*/file_sample.html"],
+      user_scripts: {},
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});

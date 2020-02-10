@@ -35,7 +35,7 @@
         "properties": {
           "js": {
             "type": "array",
-            "optional": true,
+            "optional": false,
             "description": "The list of JS files to inject",
             "minItems": 1,
             "items": { "$ref": "extensionTypes.ExtensionFileOrCode" }
