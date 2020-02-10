@@ -1140,8 +1140,7 @@ class MozPromiseHolder {
   MozPromiseHolder& operator=(MozPromiseHolder&& aOther) {
     MOZ_ASSERT(!mMonitor && !aOther.mMonitor);
     MOZ_DIAGNOSTIC_ASSERT(!mPromise);
-    mPromise = aOther.mPromise;
-    aOther.mPromise = nullptr;
+    mPromise = std::move(aOther.mPromise);
     return *this;
   }
 
