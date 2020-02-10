@@ -45,6 +45,7 @@ https://addons.mozilla.org/en-US/firefox/
 
 | Name | Summary |
 |---|---|
+| [filterTranslations](filter-translations.md) | `fun filterTranslations(locales: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Addon`](./index.md)<br>Returns a copy of this [Addon](./index.md) containing only translations (description, name, summary) of the provided locales. All other translations will be removed. |
 | [isDisabledAsUnsupported](is-disabled-as-unsupported.md) | `fun isDisabledAsUnsupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently disabled because it is not supported. This is based on the installed extension state in the engine. An addon can be disabled as unsupported and later become supported, so both [isSupported](is-supported.md) and [isDisabledAsUnsupported](is-disabled-as-unsupported.md) can be true. |
 | [isEnabled](is-enabled.md) | `fun isEnabled(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently enabled. |
 | [isInstalled](is-installed.md) | `fun isInstalled(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently installed. |

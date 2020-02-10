@@ -2,7 +2,7 @@
 
 # ERROR_SECURITY_SSL
 
-`ERROR_SECURITY_SSL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L125)
+`ERROR_SECURITY_SSL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L122)
 
 ### Inherited Properties
 
