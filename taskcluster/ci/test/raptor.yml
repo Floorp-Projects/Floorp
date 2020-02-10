@@ -1062,6 +1062,22 @@ browsertime-speedometer:
         extra-options:
             - --browsertime
 
+browsertime-ares6:
+    description: "Raptor (browsertime) ares6 on Firefox"
+    raptor-test: raptor-ares6
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try']
+            default: ['integration', 'try']
+    variants: ["fission"]
+    apps: ["firefox"]
+    treeherder-symbol: Btime(ares6)
+    tier: 3
+    mozharness:
+        extra-options:
+            - --browsertime
+
+
 browsertime-tp6-profiling:
     description: "Raptor (browsertime) tp6 page-load tests with Gecko Profiling"
     raptor-test: tp6
