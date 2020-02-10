@@ -26,10 +26,6 @@ class Picker {
     return this._panel._toolbox;
   }
 
-  get walker() {
-    return this._panel.walker;
-  }
-
   get pickerButton() {
     return this.toolbox.pickerButton;
   }
@@ -132,7 +128,7 @@ class Picker {
   }
 
   /**
-   * Stop picking and remove all walker listeners.
+   * Stop picking.
    */
   async stop() {
     if (!this.isPicking) {
@@ -140,36 +136,25 @@ class Picker {
     }
 
     this.isPicking = false;
-
     this.pickerButton.isChecked = false;
 
-    await this.walker.cancelPick();
+    await this._panel.cancelPick(
+      this.onPickerAccessibleHovered,
+      this.onPickerAccessiblePicked,
+      this.onPickerAccessiblePreviewed,
+      this.onPickerAccessibleCanceled
+    );
 
     this._telemetry.toolClosed(
       "accessibility_picker",
       this.toolbox.sessionId,
       this
     );
-
-    this.walker.off(
-      "picker-accessible-hovered",
-      this.onPickerAccessibleHovered
-    );
-    this.walker.off("picker-accessible-picked", this.onPickerAccessiblePicked);
-    this.walker.off(
-      "picker-accessible-previewed",
-      this.onPickerAccessiblePreviewed
-    );
-    this.walker.off(
-      "picker-accessible-canceled",
-      this.onPickerAccessibleCanceled
-    );
-
     this.emit("picker-stopped");
   }
 
   /**
-   * Start picking and add walker listeners.
+   * Start picking.
    * @param  {Boolean} doFocus
    *         If true, move keyboard focus into content.
    */
@@ -179,28 +164,21 @@ class Picker {
     }
 
     this.isPicking = true;
-
     this.pickerButton.isChecked = true;
 
-    this.walker.on("picker-accessible-hovered", this.onPickerAccessibleHovered);
-    this.walker.on("picker-accessible-picked", this.onPickerAccessiblePicked);
-    this.walker.on(
-      "picker-accessible-previewed",
-      this.onPickerAccessiblePreviewed
-    );
-    this.walker.on(
-      "picker-accessible-canceled",
+    await this._panel.pick(
+      doFocus,
+      this.onPickerAccessibleHovered,
+      this.onPickerAccessiblePicked,
+      this.onPickerAccessiblePreviewed,
       this.onPickerAccessibleCanceled
     );
-
-    await this.walker.pick(doFocus);
 
     this._telemetry.toolOpened(
       "accessibility_picker",
       this.toolbox.sessionId,
       this
     );
-
     this.emit("picker-started");
   }
 
