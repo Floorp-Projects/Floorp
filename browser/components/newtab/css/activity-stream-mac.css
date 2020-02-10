@@ -3148,7 +3148,8 @@ main {
   margin: 0 0 8px;
   border: 0;
   padding: 0;
-  color: #0060DF; }
+  color: #0060DF;
+  width: max-content; }
   .ds-privacy-modal .modal-link:hover {
     text-decoration: underline;
     cursor: pointer; }
