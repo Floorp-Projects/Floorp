@@ -582,8 +582,21 @@ bool permitsPort(const nsAString& aEnforcementScheme,
 
   int32_t resourcePort;
   nsresult rv = aResourceURI->GetPort(&resourcePort);
-  NS_ENSURE_SUCCESS(rv, false);
+  if (NS_FAILED(rv) && aEnforcementPort.IsEmpty()) {
+    // If we cannot get a Port (e.g. because of an Custom Protocol handler)
+    // We need to check if a default port is associated with the Scheme
+    if (aEnforcementScheme.IsEmpty()) {
+      return false;
+    }
+    int defaultPortforScheme =
+        NS_GetDefaultPort(NS_ConvertUTF16toUTF8(aEnforcementScheme).get());
 
+    // If there is no default port associated with the Scheme (
+    // defaultPortforScheme == -1) or it is an externally handled protocol (
+    // defaultPortforScheme == 0 ) and the csp does not enforce a port - we can
+    // allow not having a port
+    return (defaultPortforScheme == -1 || defaultPortforScheme == -0);
+  }
   // Avoid unnecessary string creation/manipulation and don't block the
   // load if the resource to be loaded uses the default port for that
   // scheme and there is no port to be enforced.
