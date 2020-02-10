@@ -15,6 +15,19 @@ requestLongerTimeout(4);
 // - computed view is correct when selecting an element in a remote frame
 
 add_task(async function() {
+  // Forces the Browser Toolbox to open on the inspector by default
+  await pushPref("devtools.browsertoolbox.panel", "inspector");
+
+  // Open the tab *before* opening the Browser Toolbox in order to already have the document
+  // loaded before it starts iterating over additional frame targets.
+  // Bug 1593937 should make it optional and be able to care about dynamically added targets.
+  const tab = await addTab(
+    `data:text/html,<div id="my-div" style="color: red">Foo</div><div id="second-div" style="color: blue">Foo</div>`
+  );
+
+  // Set a custom attribute on the tab's browser, in order to easily select it in the markup view
+  tab.linkedBrowser.setAttribute("test-tab", "true");
+
   const ToolboxTask = await initBrowserToolboxTask({
     enableBrowserToolboxFission: true,
   });
@@ -22,16 +35,9 @@ add_task(async function() {
     selectNodeFront,
   });
 
-  const tab = await addTab(
-    `data:text/html,<div id="my-div" style="color: red">Foo</div>`
-  );
-
-  // Set a custom attribute on the tab's browser, in order to easily select it in the markup view
-  tab.linkedBrowser.setAttribute("test-tab", "true");
-
   const color = await ToolboxTask.spawn(null, async () => {
     /* global gToolbox */
-    const inspector = await gToolbox.selectTool("inspector");
+    const inspector = gToolbox.getPanel("inspector");
     const onSidebarSelect = inspector.sidebar.once("select");
     inspector.sidebar.select("computedview");
     await onSidebarSelect;
@@ -63,6 +69,52 @@ add_task(async function() {
     color,
     "rgb(255, 0, 0)",
     "The color property of the <div> within a tab isn't red"
+  );
+
+  await ToolboxTask.spawn(null, async () => {
+    const onPickerStarted = gToolbox.nodePicker.once("picker-started");
+    gToolbox.nodePicker.start();
+    await onPickerStarted;
+
+    const inspector = gToolbox.getPanel("inspector");
+
+    // Save the promises for later tasks, in order to start listening
+    // *before* hovering the element and wait for resolution *after* hovering.
+    this.onPickerStopped = gToolbox.nodePicker.once("picker-stopped");
+    this.onInspectorUpdated = inspector.once("inspector-updated");
+  });
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#second-div",
+    {},
+    tab.linkedBrowser
+  );
+
+  const secondColor = await ToolboxTask.spawn(null, async () => {
+    dump(" # Waiting for picker stop\n");
+    await this.onPickerStopped;
+    dump(" # Waiting for inspector-updated\n");
+    await this.onInspectorUpdated;
+
+    const inspector = gToolbox.getPanel("inspector");
+    const view = inspector.getPanel("computedview").computedView;
+    function getProperty(name) {
+      const propertyViews = view.propertyViews;
+      for (const propView of propertyViews) {
+        if (propView.name == name) {
+          return propView;
+        }
+      }
+      return null;
+    }
+    const prop = getProperty("color");
+    return prop.valueNode.textContent;
+  });
+
+  is(
+    secondColor,
+    "rgb(0, 0, 255)",
+    "The color property of the <div> within a tab isn't blue"
   );
 
   await ToolboxTask.destroy();
