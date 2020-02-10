@@ -49,7 +49,7 @@ struct Register {
     Register r{Encoding(code)};
     return r;
   }
-  static Register Invalid() {
+  constexpr static Register Invalid() {
     Register r{Encoding(Codes::Invalid)};
     return r;
   }
