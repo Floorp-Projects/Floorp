@@ -263,6 +263,26 @@ async function checkTabLoadedProfile({
 }
 
 /**
+ * This function checks the document title of a tab as an easy way to pass
+ * messages from a content page to the mochitest.
+ * @param {string} title
+ */
+async function waitForTabTitle(title) {
+  const logPeriodically = createPeriodicLogger();
+
+  info(`Waiting for the selected tab to have the title "${title}".`);
+
+  return waitUntil(() => {
+    if (gBrowser.selectedTab.textContent === title) {
+      ok(true, `The selected tab has the title ${title}`);
+      return true;
+    }
+    logPeriodically(`> Waiting for the tab title to change.`);
+    return false;
+  });
+}
+
+/**
  * Close the popup, and wait for it to be destroyed.
  */
 async function closePopup() {
@@ -393,4 +413,61 @@ async function getNearestInputFromText(document, text) {
     }
   }
   throw new Error("Could not find an input near text element.");
+}
+
+/**
+ * Wait until the profiler menu button is added.
+ *
+ * @returns Promise<void>
+ */
+async function waitForProfilerMenuButton() {
+  info("Checking if the profiler menu button is enabled.");
+  await waitUntil(
+    () => gBrowser.ownerDocument.getElementById("profiler-button"),
+    "> Waiting until the profiler button is added to the browser."
+  );
+}
+
+/**
+ * Make sure the profiler popup is disabled for the test.
+ */
+async function makeSureProfilerPopupIsDisabled() {
+  info("Make sure the profiler popup is dsiabled.");
+
+  info("> Load the profiler menu button module.");
+  const { ProfilerMenuButton } = ChromeUtils.import(
+    "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
+  );
+
+  const originallyIsEnabled = ProfilerMenuButton.isEnabled();
+
+  if (originallyIsEnabled) {
+    info("> The menu button is enabled, turn it off for this test.");
+    ProfilerMenuButton.toggle(document);
+  } else {
+    info("> The menu button was already disabled.");
+  }
+
+  registerCleanupFunction(() => {
+    info("Revert the profiler menu button to its original enabled state.");
+    if (originallyIsEnabled !== ProfilerMenuButton.isEnabled()) {
+      ProfilerMenuButton.toggle(document);
+    }
+  });
+}
+
+/**
+ * Open the WebChannel test document, that will enable the profiler popup via
+ * WebChannel.
+ * @param {Function} callback
+ */
+function withWebChannelTestDocument(callback) {
+  return BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url:
+        "http://example.com/browser/devtools/client/performance-new/test/browser/webchannel.html",
+    },
+    callback
+  );
 }
