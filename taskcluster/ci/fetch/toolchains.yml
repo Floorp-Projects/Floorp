@@ -276,7 +276,7 @@ cctools-port:
     fetch:
         type: git
         repo: https://github.com/tpoechtrager/cctools-port
-        revision: 3f979bbcd7ee29d79fb93f829edf3d1d16441147
+        revision: f2890afb8a52944dd8265e489a0691c7b0afdd54
 
 libtapi:
     description: libtapi source code
