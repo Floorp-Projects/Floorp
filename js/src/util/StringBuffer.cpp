@@ -112,10 +112,10 @@ JSLinearString* JSStringBuilder::finishString() {
     return nullptr;
   }
 
-  JS_STATIC_ASSERT(JSFatInlineString::MAX_LENGTH_TWO_BYTE <
-                   TwoByteCharBuffer::InlineLength);
-  JS_STATIC_ASSERT(JSFatInlineString::MAX_LENGTH_LATIN1 <
-                   Latin1CharBuffer::InlineLength);
+  static_assert(JSFatInlineString::MAX_LENGTH_TWO_BYTE <
+                TwoByteCharBuffer::InlineLength);
+  static_assert(JSFatInlineString::MAX_LENGTH_LATIN1 <
+                Latin1CharBuffer::InlineLength);
 
   return isLatin1() ? finishStringInternal<Latin1Char>(cx_)
                     : finishStringInternal<char16_t>(cx_);

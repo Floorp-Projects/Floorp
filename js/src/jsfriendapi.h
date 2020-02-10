@@ -2262,7 +2262,7 @@ static MOZ_ALWAYS_INLINE JSAtom* JSID_TO_ATOM(jsid id) {
   return (JSAtom*)JSID_TO_STRING(id);
 }
 
-JS_STATIC_ASSERT(sizeof(jsid) == sizeof(void*));
+static_assert(sizeof(jsid) == sizeof(void*));
 
 namespace js {
 
