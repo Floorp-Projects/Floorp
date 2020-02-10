@@ -58,7 +58,6 @@ void ToFoldedCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
 
 uint32_t ToNaked(uint32_t aChar);
 void ToNaked(nsAString& aString);
-void ToNaked(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
 
 class nsCaseInsensitiveStringComparator : public nsStringComparator {
  public:
