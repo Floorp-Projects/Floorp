@@ -305,7 +305,7 @@ static bool IonBuilderMatches(const CompilationSelector& selector,
     }
     bool operator()(CompilationsUsingNursery cun) {
       return cun.runtime == builder_->script()->runtimeFromAnyThread() &&
-             !builder_->safeForMinorGC();
+             !builder_->mirGen().safeForMinorGC();
     }
   };
 
@@ -341,7 +341,7 @@ static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
     for (auto& helper : *HelperThreadState().threads) {
       if (helper.ionBuilder() &&
           IonBuilderMatches(selector, helper.ionBuilder())) {
-        helper.ionBuilder()->cancel();
+        helper.ionBuilder()->mirGen().cancel();
         cancelled = true;
       }
     }
@@ -1616,9 +1616,12 @@ static bool IonBuilderHasHigherPriority(jit::IonBuilder* first,
   // total order. The ordering is allowed to race (change on the fly), however.
 
   // A lower optimization level indicates a higher priority.
-  if (first->optimizationInfo().level() != second->optimizationInfo().level()) {
-    return first->optimizationInfo().level() <
-           second->optimizationInfo().level();
+  jit::OptimizationLevel firstLevel =
+      first->mirGen().optimizationInfo().level();
+  jit::OptimizationLevel secondLevel =
+      second->mirGen().optimizationInfo().level();
+  if (firstLevel != secondLevel) {
+    return firstLevel < secondLevel;
   }
 
   // A script without an IonScript has precedence on one with.

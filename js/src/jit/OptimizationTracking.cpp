@@ -1004,7 +1004,7 @@ BytecodeSite* IonBuilder::maybeTrackedOptimizationSite(jsbytecode* pc) {
   //
   // Since sites that track optimizations should be sparse, just do a
   // reverse linear search, as we're most likely advancing in pc.
-  MOZ_ASSERT(isOptimizationTrackingEnabled());
+  MOZ_ASSERT(mirGen_.isOptimizationTrackingEnabled());
   for (size_t i = trackedOptimizationSites_.length(); i != 0; i--) {
     BytecodeSite* site = trackedOptimizationSites_[i - 1];
     if (site->pc() == pc) {
@@ -1016,7 +1016,7 @@ BytecodeSite* IonBuilder::maybeTrackedOptimizationSite(jsbytecode* pc) {
 }
 
 void IonBuilder::startTrackingOptimizations() {
-  if (isOptimizationTrackingEnabled()) {
+  if (mirGen_.isOptimizationTrackingEnabled()) {
     BytecodeSite* site =
         maybeTrackedOptimizationSite(current->trackedSite()->pc());
 

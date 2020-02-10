@@ -169,15 +169,11 @@ class LoopState {
 };
 using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
-class IonBuilder : public MIRGenerator,
-                   public mozilla::LinkedListElement<IonBuilder>,
+class IonBuilder : public mozilla::LinkedListElement<IonBuilder>,
                    public RunnableTask {
  public:
-  IonBuilder(JSContext* analysisContext, CompileRealm* realm,
-             const JitCompileOptions& options, TempAllocator* temp,
-             MIRGraph* graph, CompilerConstraintList* constraints,
-             BaselineInspector* inspector, CompileInfo* info,
-             const OptimizationInfo* optimizationInfo,
+  IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
+             CompilerConstraintList* constraints, BaselineInspector* inspector,
              BaselineFrameInspector* baselineFrame, size_t inliningDepth = 0,
              uint32_t loopDepth = 0);
 
@@ -1198,7 +1194,14 @@ class IonBuilder : public MIRGenerator,
   // Constraints for recording dependencies on type information.
   CompilerConstraintList* constraints_;
 
+  MIRGenerator& mirGen_;
   TIOracle tiOracle_;
+
+  CompileRealm* realm;
+  const CompileInfo* info_;
+  const OptimizationInfo* optimizationInfo_;
+  TempAllocator* alloc_;
+  MIRGraph* graph_;
 
   TemporaryTypeSet* thisTypes;
   TemporaryTypeSet* argTypes;
@@ -1225,7 +1228,7 @@ class IonBuilder : public MIRGenerator,
   BytecodeSite* bytecodeSite(jsbytecode* pc) {
     MOZ_ASSERT(info().inlineScriptTree()->script()->containsPC(pc));
     // See comment in maybeTrackedOptimizationSite.
-    if (isOptimizationTrackingEnabled()) {
+    if (mirGen_.isOptimizationTrackingEnabled()) {
       if (BytecodeSite* site = maybeTrackedOptimizationSite(pc)) {
         return site;
       }
@@ -1340,6 +1343,13 @@ class IonBuilder : public MIRGenerator,
 
   void addAbortedPreliminaryGroup(ObjectGroup* group);
 
+  MIRGraph& graph() { return *graph_; }
+  const CompileInfo& info() const { return *info_; }
+
+  const OptimizationInfo& optimizationInfo() const {
+    return *optimizationInfo_;
+  }
+
   // The track* methods below are called often. Do not combine them with the
   // unchecked variants, despite the unchecked variants having no other
   // callers.
@@ -1402,6 +1412,9 @@ class IonBuilder : public MIRGenerator,
   void trackInlineSuccessUnchecked(InliningStatus status);
 
  public:
+  MIRGenerator& mirGen() { return mirGen_; }
+  TempAllocator& alloc() { return *alloc_; }
+
   // When aborting with AbortReason::PreliminaryObjects, all groups with
   // preliminary objects which haven't been analyzed yet.
   const ObjectGroupVector& abortedPreliminaryGroups() const {

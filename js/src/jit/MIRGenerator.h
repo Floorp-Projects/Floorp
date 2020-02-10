@@ -31,7 +31,7 @@ namespace jit {
 class MIRGraph;
 class OptimizationInfo;
 
-class MIRGenerator {
+class MIRGenerator final {
  public:
   MIRGenerator(CompileRealm* realm, const JitCompileOptions& options,
                TempAllocator* alloc, MIRGraph* graph, const CompileInfo* info,
@@ -129,7 +129,7 @@ class MIRGenerator {
   CompileRealm* realm;
   CompileRuntime* runtime;
 
- protected:
+ private:
   const CompileInfo* info_;
   const OptimizationInfo* optimizationInfo_;
   TempAllocator* alloc_;
