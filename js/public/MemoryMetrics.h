@@ -448,10 +448,10 @@ struct NotableScriptSourceInfo : public ScriptSourceInfo {
 };
 
 struct HelperThreadStats {
-#define FOR_EACH_SIZE(MACRO)       \
-  MACRO(_, MallocHeap, stateData)  \
-  MACRO(_, MallocHeap, parseTask)  \
-  MACRO(_, MallocHeap, ionBuilder) \
+#define FOR_EACH_SIZE(MACRO)           \
+  MACRO(_, MallocHeap, stateData)      \
+  MACRO(_, MallocHeap, parseTask)      \
+  MACRO(_, MallocHeap, ionCompileTask) \
   MACRO(_, MallocHeap, wasmCompile)
 
   HelperThreadStats() = default;

@@ -2567,9 +2567,10 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
       "The memory used by ParseTasks waiting in HelperThreadState.");
 
   REPORT_BYTES(
-      NS_LITERAL_CSTRING("explicit/js-non-window/helper-thread/ion-builder"),
-      KIND_HEAP, gStats.helperThread.ionBuilder,
-      "The memory used by IonBuilders waiting in HelperThreadState.");
+      NS_LITERAL_CSTRING(
+          "explicit/js-non-window/helper-thread/ion-compile-task"),
+      KIND_HEAP, gStats.helperThread.ionCompileTask,
+      "The memory used by IonCompileTasks waiting in HelperThreadState.");
 
   REPORT_BYTES(
       NS_LITERAL_CSTRING("explicit/js-non-window/helper-thread/wasm-compile"),
