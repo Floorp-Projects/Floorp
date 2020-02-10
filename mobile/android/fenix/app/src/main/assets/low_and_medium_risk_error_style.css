@@ -70,7 +70,12 @@ button {
 }
 
 hr {
-  color: #EDEDF0;
+  height: 0;
+  border: 0;
+  border-top: 1px solid #D7D7DB;
+}
+
+.horizontalLine {
   margin-left: -40px;
   margin-right: -40px;
 }
