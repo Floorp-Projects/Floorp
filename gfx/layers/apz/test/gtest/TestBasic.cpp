@@ -88,6 +88,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   metrics.SetCompositionBounds(ParentLayerRect(0, 0, 24, 24));
   metrics.SetDisplayPort(CSSRect(-1, -1, 6, 6));
   metrics.SetScrollOffset(CSSPoint(10, 10));
+  metrics.SetLayoutViewport(CSSRect(10, 10, 8, 8));
   metrics.SetScrollableRect(CSSRect(0, 0, 50, 50));
   metrics.SetCumulativeResolution(LayoutDeviceToLayerScale2D(2, 2));
   metrics.SetPresShellResolution(2.0f);
