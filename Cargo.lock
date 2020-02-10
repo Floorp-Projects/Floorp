@@ -698,22 +698,22 @@ dependencies = [
 
 [[package]]
 name = "cranelift-bforest"
-version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+version = "0.58.0"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
 dependencies = [
- "cranelift-entity 0.56.0",
+ "cranelift-entity 0.58.0",
 ]
 
 [[package]]
 name = "cranelift-codegen"
-version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+version = "0.58.0"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
 dependencies = [
  "byteorder",
  "cranelift-bforest",
  "cranelift-codegen-meta",
  "cranelift-codegen-shared",
- "cranelift-entity 0.56.0",
+ "cranelift-entity 0.58.0",
  "log",
  "smallvec 1.2.0",
  "target-lexicon 0.10.0",
@@ -722,17 +722,17 @@ dependencies = [
 
 [[package]]
 name = "cranelift-codegen-meta"
-version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+version = "0.58.0"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
 dependencies = [
  "cranelift-codegen-shared",
- "cranelift-entity 0.56.0",
+ "cranelift-entity 0.58.0",
 ]
 
 [[package]]
 name = "cranelift-codegen-shared"
-version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+version = "0.58.0"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
 
 [[package]]
 name = "cranelift-entity"
@@ -741,13 +741,13 @@ source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=a3fd180d53a
 
 [[package]]
 name = "cranelift-entity"
-version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+version = "0.58.0"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
 
 [[package]]
 name = "cranelift-frontend"
-version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+version = "0.58.0"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
 dependencies = [
  "cranelift-codegen",
  "log",
@@ -757,11 +757,11 @@ dependencies = [
 
 [[package]]
 name = "cranelift-wasm"
-version = "0.56.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=eb20fcab349ce20ac6f8659d1c4b058108d5e627#eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+version = "0.58.0"
+source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
 dependencies = [
  "cranelift-codegen",
- "cranelift-entity 0.56.0",
+ "cranelift-entity 0.58.0",
  "cranelift-frontend",
  "log",
  "thiserror",
@@ -4600,9 +4600,9 @@ dependencies = [
 
 [[package]]
 name = "wasmparser"
-version = "0.47.0"
+version = "0.48.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1add8db5a53a2f64f13418b241982c4ab533d7a9e1e8a5dcadccce633d8d393b"
+checksum = "073da89bf1c84db000dd68ce660c1b4a08e3a2d28fd1e3394ab9e7abdde4a0f8"
 
 [[package]]
 name = "webdriver"

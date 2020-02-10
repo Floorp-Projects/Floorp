@@ -45,7 +45,7 @@ rev = "8069f8f4189982e0b38fa6dc8993dd4fab41f728"
 [source."https://github.com/bytecodealliance/cranelift"]
 git = "https://github.com/bytecodealliance/cranelift"
 replace-with = "vendored-sources"
-rev = "eb20fcab349ce20ac6f8659d1c4b058108d5e627"
+rev = "98c818c129979e98a3db150f8f9698f6451b7ef7"
 
 [source."https://github.com/badboy/failure"]
 git = "https://github.com/badboy/failure"
