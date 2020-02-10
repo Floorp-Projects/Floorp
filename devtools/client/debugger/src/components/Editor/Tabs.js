@@ -5,6 +5,7 @@
 // @flow
 
 import React, { PureComponent } from "react";
+import ReactDOM from "react-dom";
 import { connect } from "../../utils/connect";
 
 import {
@@ -45,6 +46,7 @@ type Props = {
   startPanelCollapsed: boolean,
   endPanelCollapsed: boolean,
   moveTab: typeof actions.moveTab,
+  moveTabBySourceId: typeof actions.moveTabBySourceId,
   closeTab: typeof actions.closeTab,
   togglePaneCollapse: typeof actions.togglePaneCollapse,
   showSource: typeof actions.showSource,
@@ -85,6 +87,8 @@ class Tabs extends PureComponent<Props, State> {
   renderStartPanelToggleButton: Function;
   renderEndPanelToggleButton: Function;
   onResize: Function;
+  _draggedSource: ?Source;
+  _draggedSourceIndex: ?number;
 
   constructor(props: Props) {
     super(props);
@@ -96,6 +100,24 @@ class Tabs extends PureComponent<Props, State> {
     this.onResize = debounce(() => {
       this.updateHiddenTabs();
     });
+  }
+
+  get draggedSource() {
+    return this._draggedSource == null
+      ? { url: null, id: null }
+      : this._draggedSource;
+  }
+
+  set draggedSource(source: ?Source) {
+    this._draggedSource = source;
+  }
+
+  get draggedSourceIndex() {
+    return this._draggedSourceIndex == null ? -1 : this._draggedSourceIndex;
+  }
+
+  set draggedSourceIndex(index: ?number) {
+    this._draggedSourceIndex = index;
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -176,6 +198,57 @@ class Tabs extends PureComponent<Props, State> {
     );
   };
 
+  onTabDragStart = (source: Source, index: number) => {
+    this.draggedSource = source;
+    this.draggedSourceIndex = index;
+  };
+
+  onTabDragEnd = () => {
+    this.draggedSource = null;
+    this.draggedSourceIndex = null;
+  };
+
+  onTabDragOver = (e: any, source: Source, hoveredTabIndex: number) => {
+    const { moveTabBySourceId } = this.props;
+    if (hoveredTabIndex === this.draggedSourceIndex) {
+      return;
+    }
+
+    const tabDOM = ReactDOM.findDOMNode(
+      this.refs[`tab_${source.id}`].getWrappedInstance()
+    );
+
+    /* $FlowIgnore: tabDOM.nodeType will always be of Node.ELEMENT_NODE since it comes from a ref;
+      however; the return type of findDOMNode is null | Element | Text */
+    const tabDOMRect = tabDOM.getBoundingClientRect();
+    const { pageX: mouseCursorX } = e;
+    if (
+      /* Case: the mouse cursor moves into the left half of any target tab */
+      mouseCursorX - tabDOMRect.left <
+      tabDOMRect.width / 2
+    ) {
+      // The current tab goes to the left of the target tab
+      const targetTab =
+        hoveredTabIndex > this.draggedSourceIndex
+          ? hoveredTabIndex - 1
+          : hoveredTabIndex;
+      moveTabBySourceId(this.draggedSource.id, targetTab);
+      this.draggedSourceIndex = targetTab;
+    } else if (
+      /* Case: the mouse cursor moves into the right half of any target tab */
+      mouseCursorX - tabDOMRect.left >=
+      tabDOMRect.width / 2
+    ) {
+      // The current tab goes to the right of the target tab
+      const targetTab =
+        hoveredTabIndex < this.draggedSourceIndex
+          ? hoveredTabIndex + 1
+          : hoveredTabIndex;
+      moveTabBySourceId(this.draggedSource.id, targetTab);
+      this.draggedSourceIndex = targetTab;
+    }
+  };
+
   renderTabs() {
     const { tabSources } = this.props;
     if (!tabSources) {
@@ -184,9 +257,21 @@ class Tabs extends PureComponent<Props, State> {
 
     return (
       <div className="source-tabs" ref="sourceTabs">
-        {tabSources.map((source, index) => (
-          <Tab key={index} source={source} />
-        ))}
+        {tabSources.map((source, index) => {
+          return (
+            <Tab
+              onDragStart={_ => this.onTabDragStart(source, index)}
+              onDragOver={e => {
+                this.onTabDragOver(e, source, index);
+                e.preventDefault();
+              }}
+              onDragEnd={this.onTabDragEnd}
+              key={index}
+              source={source}
+              ref={`tab_${source.id}`}
+            />
+          );
+        })}
       </div>
     );
   }
@@ -263,6 +348,7 @@ export default connect<Props, OwnProps, _, _, _, _>(
   {
     selectSource: actions.selectSource,
     moveTab: actions.moveTab,
+    moveTabBySourceId: actions.moveTabBySourceId,
     closeTab: actions.closeTab,
     togglePaneCollapse: actions.togglePaneCollapse,
     showSource: actions.showSource,
