@@ -4226,7 +4226,7 @@ CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
 CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
     AsyncTransformConsumer aMode) const {
   if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
-    return mLastContentPaintMetrics.GetScrollOffset();
+    return mLastContentPaintMetrics.GetVisualViewportOffset();
   }
   if (aMode == eForCompositing && StaticPrefs::apz_frame_delay_enabled()) {
     return mCompositedScrollOffset;
