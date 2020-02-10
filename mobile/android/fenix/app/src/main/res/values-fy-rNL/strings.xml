@@ -24,8 +24,8 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description">
-         %1$s wist jo syk- en browserskiednis sa gau as jo de tapassing ôfslute of alle priveenavigaasjeljepblêden en -finsters slute. Hoewol priveenavigaasje jo net anonym makket foar websites of jo ynternetprovider, makket dit it
-        makliker om wat jo online dogge privee te hâlden tsjinoer oaren dy\'t dizze kompjûter brûke.
+         %1$s wisket jo syk- en browserskiednis sa gau as jo de tapassing ôfslute of alle priveenavigaasjeljepblêden en -finsters slute. Hoewol priveenavigaasje jo net anonym makket foar websites of jo ynternetprovider, makket dit it
+        makliker om wat jo online dogge privee te hâlden tsjinoer oaren dy\'t dit apparaat brûke.
     
     </string>
     <string name="private_browsing_common_myths">

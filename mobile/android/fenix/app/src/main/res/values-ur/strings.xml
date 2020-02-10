@@ -99,6 +99,9 @@
     <string name="preferences_help">مدد</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Google Play پر شرح کاری کریں</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">%1$s کے بارے میں</string>
     <!-- Preference linking to the your rights SUMO page -->
     <string name="preferences_your_rights">آپ کے حقوق</string>
     <!-- Preference for settings related to saved passwords -->
@@ -211,4 +214,14 @@
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">تلاش انجن کا نام داخل کریں</string>
-    </resources>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">ایک تلاشی سٹرنگ داخل کریں</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">”%s“ سے رابطہ کرنے میں خرابی</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s بنایا گیا</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">محفوظ %s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">حذف شدہ %s</string>
+</resources>

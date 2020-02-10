@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Ligar Sync</string>
+
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Digitalizar código de emparelhamento no Firefox do computador</string>
+
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Digitalize o código</string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Pronto para digitalizar</string>
+
+    </resources>

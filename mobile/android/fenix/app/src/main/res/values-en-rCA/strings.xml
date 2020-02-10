@@ -1,1166 +1,1119 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Firefox Preview 隐私模式</string>
-
+    <string name="app_name_private_2">Private Firefox Preview</string>
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview（隐私模式）</string>
+    <string name="app_name_private_3">Firefox Preview (Private)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
-    <string name="content_description_menu">更多选项</string>
+    <string name="content_description_menu">More options</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Enable private browsing</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">启用隐私浏览模式</string>
-    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">禁用隐私浏览模式</string>
+    <string name="content_description_disable_private_browsing_button">Disable private browsing</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="search_hint">搜索或输入网址</string>
-
+    <string name="search_hint">Search or enter address</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">没有打开的标签页</string>
+    <string name="no_open_tabs_header_2">No open tabs</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">您打开的标签页将显示于此。</string>
+    <string name="no_open_tabs_description">Your open tabs will be shown here.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">您已进入隐私浏览模式</string>
+    <string name="private_browsing_title">You’re in a private session</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">在您退出本应用或关闭所有隐私标签页后，%1$s 将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站和网络提供方匿名，但还是可以帮助您避免使用此设备的其他人获知您在网上的活动。</string>
-    <string name="private_browsing_common_myths">隐私浏览功能的常见误解</string>
+    <string name="private_browsing_placeholder_description">
+         %1$s clears your search and browsing history when you quit the app or close all private tabs. While this doesn’t make you anonymous to websites or your internet service provider, it makes it
+        easier to keep what you do online private from anyone else who uses this device.
+    </string>
+    <string name="private_browsing_common_myths">
+       Common myths about private browsing
+    </string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">删除浏览会话</string>
+    <string name="private_browsing_delete_session">Delete session</string>
 
     <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">添加快捷方式，即可由主屏幕直接打开隐私标签页。</string>
+    <string name="cfr_message">Add a shortcut to open private tabs from your Home screen.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">添加快捷方式</string>
-
+    <string name="cfr_pos_button_text">Add shortcut</string>
     <!-- Text for the negative button -->
-    <string name="cfr_neg_button_text">不了，谢谢</string>
+    <string name="cfr_neg_button_text">No thanks</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab_2">新建标签页</string>
+    <string name="home_screen_shortcut_open_new_tab_2">New tab</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab_2">新建隐私标签页</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">New private tab</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">打开的标签页</string>
+    <string name="browser_tabs_button">Open Tabs</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
-    <string name="browser_menu_back">后退</string>
+    <string name="browser_menu_back">Back</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
-    <string name="browser_menu_forward">前进</string>
+    <string name="browser_menu_forward">Forward</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
-    <string name="browser_menu_refresh">刷新</string>
+    <string name="browser_menu_refresh">Refresh</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
-    <string name="browser_menu_stop">停止</string>
+    <string name="browser_menu_stop">Stop</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">书签</string>
+    <string name="browser_menu_bookmark">Bookmark</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">编辑书签</string>
+    <string name="browser_menu_edit_bookmark">Edit bookmark</string>
     <!-- Browser menu button that sends a user to help articles -->
-    <string name="browser_menu_help">帮助</string>
+    <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that sends a to a the what's new article -->
-    <string name="browser_menu_whats_new">新版变化</string>
+    <string name="browser_menu_whats_new">What’s New</string>
     <!-- Browser menu button that opens the settings menu -->
-    <string name="browser_menu_settings">设置</string>
+    <string name="browser_menu_settings">Settings</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">我的足迹</string>
+    <string name="browser_menu_your_library">Your Library</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">桌面版网站</string>
+    <string name="browser_menu_desktop_site">Desktop site</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">添加到主屏幕</string>
+    <string name="browser_menu_add_to_homescreen">Add to Home screen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">安装</string>
+    <string name="browser_menu_install_on_homescreen">Install</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page">在页面中查找</string>
+    <string name="browser_menu_find_in_page">Find in page</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">隐私标签页</string>
+    <string name="browser_menu_private_tab">Private tab</string>
     <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">新建标签页</string>
+    <string name="browser_menu_new_tab">New tab</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">保存到收藏集</string>
+    <string name="browser_menu_save_to_collection">Save to Collection</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">反馈网站问题</string>
+    <string name="browser_menu_report_issue">Report site issue</string>
     <!-- Browser menu button that open a share menu to share the current site -->
-    <string name="browser_menu_share">分享</string>
-
+    <string name="browser_menu_share">Share</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">分享方式：</string>
-
+    <string name="menu_share_with">Share with…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_open_in_fenix">用 %1$s 打开</string>
+    <string name="browser_menu_open_in_fenix">Open in %1$s</string>
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_powered_by">由 %1$s 驱动</string>
-
+    <string name="browser_menu_powered_by">POWERED BY %1$s</string>
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_powered_by2">由 %1$s 提供</string>
-
+    <string name="browser_menu_powered_by2">Powered by %1$s</string>
     <!-- Browser menu button to put the the current page in reader mode -->
-    <string name="browser_menu_read">阅读模式</string>
+    <string name="browser_menu_read">Reader view</string>
     <!-- Browser menu button to open the current page in an external app -->
-    <string name="browser_menu_open_app_link">在应用中打开</string>
+    <string name="browser_menu_open_app_link">Open in App</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">字型调控</string>
+    <string name="browser_menu_read_appearance">Appearance</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
-    <string name="a11y_selected_locale_content_description">选择的语言</string>
+    <string name="a11y_selected_locale_content_description">Selected language</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">搜索</string>
+    <string name="a11y_search_icon_content_description">Search</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">跟随设备语言</string>
+    <string name="default_locale_text">Follow device language</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="locale_search_hint">搜索语言</string>
+    <string name="locale_search_hint">Search language</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
-    <string name="search_scan_button">扫码</string>
+    <string name="search_scan_button">Scan</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">快捷操作</string>
+    <string name="search_shortcuts_button">Shortcuts</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">搜索引擎设置</string>
-
+    <string name="search_shortcuts_engine_settings">Search engine settings</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">可选用下列引擎搜索</string>
-
+    <string name="search_shortcuts_search_with">Search with</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">更多搜索引擎：</string>
+    <string name="search_shortcuts_search_with_2">This time, search with:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
-    <string name="awesomebar_clipboard_title">打开剪贴板中的链接</string>
-
+    <string name="awesomebar_clipboard_title">Fill link from clipboard</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_allow_button">允许</string>
+    <string name="search_suggestions_onboarding_allow_button">Allow</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_do_not_allow_button">不允许</string>
+    <string name="search_suggestions_onboarding_do_not_allow_button">Don’t allow</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">要允许在隐私窗口中显示搜索建议吗？</string>
+    <string name="search_suggestions_onboarding_title">Allow search suggestions in private sessions?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s 会将您在地址栏中输入的所有内容共享至默认搜索引擎。</string>
+    <string name="search_suggestions_onboarding_text">%s will share everything you type in the address bar with your default search engine.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">详细了解</string>
+    <string name="search_suggestions_onboarding_learn_more_link">Learn more</string>
 
     <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
-    <string name="search_widget_text_short">搜索</string>
+    <string name="search_widget_text_short">Search</string>
     <!-- Text preview for larger sized widgets -->
-    <string name="search_widget_text_long">在网络上搜索</string>
+    <string name="search_widget_text_long">Search the web</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
-    <string name="settings">设置</string>
-
+    <string name="settings">Settings</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">基础</string>
+    <string name="preferences_category_basics">Basics</string>
     <!-- Preference category for all links about Fenix -->
-    <string name="preferences_category_about">关于</string>
+    <string name="preferences_category_about">About</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_default_search_engine">默认搜索引擎</string>
+    <string name="preferences_default_search_engine">Default search engine</string>
     <!-- Preference for settings related to Search -->
-    <string name="preferences_search">搜索</string>
+    <string name="preferences_search">Search</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">地址栏</string>
+    <string name="preferences_search_address_bar">Address bar</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">帮助</string>
+    <string name="preferences_help">Help</string>
     <!-- Preference link to rating Fenix on the Play Store -->
-    <string name="preferences_rate">在 Google Play 上评分</string>
+    <string name="preferences_rate">Rate on Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">提供反馈</string>
+    <string name="preferences_feedback">Give feedback</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="preferences_about">关于 %1$s</string>
+    <string name="preferences_about">About %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">您的权利</string>
+    <string name="preferences_your_rights">Your Rights</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">密码</string>
+    <string name="preferences_passwords">Passwords</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">信用卡和邮政地址</string>
+    <string name="preferences_credit_cards_addresses">Credit cards and addresses</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">设为默认浏览器</string>
+    <string name="preferences_set_as_default_browser">Set as default browser</string>
     <!-- Preference category for advanced settings -->
-    <string name="preferences_category_advanced">高级</string>
+    <string name="preferences_category_advanced">Advanced</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">隐私</string>
+    <string name="preferences_category_privacy">Privacy</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">站点权限</string>
+    <string name="preferences_site_permissions">Site permissions</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">新建隐私标签页来打开链接</string>
+    <string name="preferences_open_links_in_a_private_tab">Open links in a private tab</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">添加隐私浏览快捷方式</string>
+    <string name="preferences_add_private_browsing_shortcut">Add private browsing shortcut</string>
     <!-- Preference for accessibility -->
-    <string name="preferences_accessibility">无障碍环境</string>
+    <string name="preferences_accessibility">Accessibility</string>
     <!-- Preference category for account information -->
-    <string name="preferences_category_account">账户</string>
+    <string name="preferences_category_account">Account</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">登录</string>
+    <string name="preferences_sign_in">Sign in</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">工具栏</string>
+    <string name="preferences_toolbar">Toolbar</string>
     <!-- Preference for changing default theme to dark or light mode -->
-    <string name="preferences_theme">主题</string>
+    <string name="preferences_theme">Theme</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">使用您的 Firefox 账户同步书签、历史记录等数据</string>
+    <string name="preferences_sign_in_description">Sync bookmarks, history, and more with your Firefox Account</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox 账户</string>
+    <string name="preferences_account_default_name">Firefox Account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
-    <string name="preferences_account_sync_error">重新连接以恢复同步</string>
+    <string name="preferences_account_sync_error">Reconnect to resume syncing</string>
     <!-- Preference for language -->
-    <string name="preferences_language">语言(地区)</string>
+    <string name="preferences_language">Language</string>
     <!-- Preference for data choices -->
-    <string name="preferences_data_choices">数据反馈</string>
+    <string name="preferences_data_choices">Data choices</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">数据收集</string>
+    <string name="preferences_data_collection">Data collection</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">隐私声明</string>
+    <string name="preferences_privacy_link">Privacy notice</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">开发者工具</string>
+    <string name="developer_tools_category">Developer tools</string>
     <!-- Preference for developers -->
-    <string name="preferences_remote_debugging">通过 USB 远程调试</string>
+    <string name="preferences_remote_debugging">Remote debugging via USB</string>
     <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">显示搜索快捷操作</string>
+    <string name="preferences_show_search_shortcuts">Show search shortcuts</string>
     <!-- Preference title for switch preference to show search suggestions -->
-    <string name="preferences_show_search_suggestions">显示搜索建议</string>
+    <string name="preferences_show_search_suggestions">Show search suggestions</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
-    <string name="preferences_show_search_suggestions_in_private">在隐私浏览中显示</string>
+    <string name="preferences_show_search_suggestions_in_private">Show in private sessions</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">显示剪贴板建议</string>
+    <string name="preferences_show_clipboard_suggestions">Show clipboard suggestions</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">搜索浏览历史</string>
+    <string name="preferences_search_browsing_history">Search browsing history</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
-    <string name="preferences_search_bookmarks">搜索书签</string>
+    <string name="preferences_search_bookmarks">Search bookmarks</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">账户设置</string>
-
+    <string name="preferences_account_settings">Account settings</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">在应用程序中打开链接</string>
+    <string name="preferences_open_links_in_apps">Open links in apps</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
-    <string name="preferences_sync_now">立即同步</string>
+    <string name="preferences_sync_now">Sync now</string>
     <!-- Preference category for sync -->
-    <string name="preferences_sync_category">选择要同步的信息</string>
+    <string name="preferences_sync_category">Choose what to sync</string>
     <!-- Preference for syncing history -->
-    <string name="preferences_sync_history">历史记录</string>
+    <string name="preferences_sync_history">History</string>
     <!-- Preference for syncing bookmarks -->
-    <string name="preferences_sync_bookmarks">书签</string>
+    <string name="preferences_sync_bookmarks">Bookmarks</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">登录信息</string>
+    <string name="preferences_sync_logins">Logins</string>
     <!-- Preference for signing out -->
-    <string name="preferences_sign_out">退出登录</string>
+    <string name="preferences_sign_out">Sign out</string>
     <!-- Preference displays and allows changing current FxA device name -->
-    <string name="preferences_sync_device_name">设备名称</string>
+    <string name="preferences_sync_device_name">Device name</string>
     <!-- Text shown when user enters empty device name -->
-    <string name="empty_device_name_error">设备名不能为空。</string>
+    <string name="empty_device_name_error">Device name cannot be empty.</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">正在同步…</string>
+    <string name="sync_syncing_in_progress">Syncing…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">同步失败。上次成功：%s</string>
+    <string name="sync_failed_summary">Sync failed. Last success: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_failed_never_synced_summary">同步失败。上次同步：从未</string>
+    <string name="sync_failed_never_synced_summary">Sync failed. Last synced: never</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">上次同步: %s</string>
+    <string name="sync_last_synced_summary">Last synced: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_never_synced_summary">上次同步: 从未</string>
-
+    <string name="sync_never_synced_summary">Last synced: never</string>
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%2$s %3$s 上的 %1$s</string>
+    <string name="default_device_name">%s on %s %s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_name">收到标签页</string>
+    <string name="fxa_received_tab_channel_name">Received tabs</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_description">收到来自其他 Firefox 设备的标签页通知。</string>
-
+    <string name="fxa_received_tab_channel_description">Notifications for tabs received from other Firefox devices.</string>
     <!--  The body for these is the URL of the tab received  -->
-    <string name="fxa_tab_received_notification_name">收到标签页</string>
+    <string name="fxa_tab_received_notification_name">Tab Received</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">收到标签页</string>
+    <string name="fxa_tabs_received_notification_name">Tabs Received</string>
     <!-- %s is the device name -->
-    <string name="fxa_tab_received_from_notification_name">来自 %s 的标签页</string>
+    <string name="fxa_tab_received_from_notification_name">Tab from %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">跟踪保护</string>
+    <string name="preferences_tracking_protection_settings">Tracking Protection</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">跟踪保护</string>
-
+    <string name="preferences_tracking_protection">Tracking Protection</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">拦截网上跟踪您的内容和脚本</string>
+    <string name="preferences_tracking_protection_description">Block content and scripts that track you online</string>
     <!-- Preference for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions">例外</string>
-
+    <string name="preferences_tracking_protection_exceptions">Exceptions</string>
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">已关闭对这些网站的跟踪保护</string>
+    <string name="preferences_tracking_protection_exceptions_description">Tracking Protection is off for these websites</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
-    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">为所有网站启用</string>
-
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Turn on for all sites</string>
     <!-- Text displayed when there are no exceptions -->
-    <string name="exceptions_empty_message_description">您可以为特定网站设置例外，对其禁用跟踪保护。</string>
+    <string name="exceptions_empty_message_description">Exceptions let you disable tracking protection for selected sites.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message_learn_more_link">详细了解</string>
+    <string name="exceptions_empty_message_learn_more_link">Learn more</string>
 
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">已全局关闭，请前往“设置”开启。</string>
+    <string name="preferences_tracking_protection_turned_off_globally">Turned off globally, go to Settings to turn it on.</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">遥测技术</string>
+    <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
-    <string name="preference_usage_data">使用率和技术数据</string>
+    <string name="preference_usage_data">Usage and technical data</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">与 Mozilla 分享使用浏览器时的工作性能、使用方式、硬件设备以及有关自定义的数据，帮助我们改进 %1$s，让它变得更好</string>
+    <string name="preferences_usage_data_description">Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make %1$s better</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">实验</string>
+    <string name="preference_experiments">Experiments</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">允许 Mozilla 安装和收集实验性功能的数据</string>
+    <string name="preference_experiments_summary">Allows Mozilla to install and collect data for experimental features</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">崩溃报告器</string>
+    <string name="preferences_crash_reporter">Crash reporter</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Mozilla 位置服务</string>
+    <string name="preferences_mozilla_location_service">Mozilla location service</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">%s 健康报告</string>
+    <string name="preferences_fenix_health_report">%s health report</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">开启同步</string>
+    <string name="preferences_sync">Turn on Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">扫描桌面 Firefox 中的配对二维码</string>
+    <string name="preferences_sync_pair">Scan pairing code in desktop Firefox</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">登录</string>
-
+    <string name="preferences_sync_sign_in">Sign in</string>
     <!-- Preference for reconnecting to FxA sync -->
-    <string name="preferences_sync_sign_in_to_reconnect">登录以重新连接</string>
+    <string name="preferences_sync_sign_in_to_reconnect">Sign in to reconnect</string>
     <!-- Preference for removing FxA account -->
-    <string name="preferences_sync_remove_account">移除账户</string>
+    <string name="preferences_sync_remove_account">Remove account</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[在电脑上用 Firefox 访问 <b>firefox.com/pair</b>，获取二维码。]]></string>
+    <string name="pair_instructions"><![CDATA[Visit <b>firefox.com/pair</b> in Firefox on your computer to get your QR code.]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">打开相机</string>
+    <string name="pair_open_camera">Open Camera</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">取消</string>
+    <string name="pair_cancel">Cancel</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
-    <string name="preference_top_toolbar">顶部</string>
+    <string name="preference_top_toolbar">Top</string>
     <!-- Preference for using bottom toolbar -->
-    <string name="preference_bottom_toolbar">底部</string>
+    <string name="preference_bottom_toolbar">Bottom</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
-    <string name="preference_light_theme">明亮</string>
+    <string name="preference_light_theme">Light</string>
     <!-- Preference for using dark theme -->
-    <string name="preference_dark_theme">深邃</string>
-
+    <string name="preference_dark_theme">Dark</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
-    <string name="preference_auto_battery_theme">依系统省电模式设置</string>
+    <string name="preference_auto_battery_theme">Set by Battery Saver</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">跟随设备主题</string>
+    <string name="preference_follow_device_theme">Follow device theme</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">浏览阶段</string>
+    <string name="library_sessions">Sessions</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">屏幕截图</string>
+    <string name="library_screenshots">Screenshots</string>
     <!-- Option in Library to open Downloads page -->
-    <string name="library_downloads">下载项</string>
+    <string name="library_downloads">Downloads</string>
     <!-- Option in library to open Bookmarks page -->
-    <string name="library_bookmarks">书签</string>
+    <string name="library_bookmarks">Bookmarks</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
-    <string name="library_desktop_bookmarks_root">桌面设备上的书签</string>
+    <string name="library_desktop_bookmarks_root">Desktop Bookmarks</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
-    <string name="library_desktop_bookmarks_menu">书签菜单</string>
+    <string name="library_desktop_bookmarks_menu">Bookmarks Menu</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
-    <string name="library_desktop_bookmarks_toolbar">书签工具栏</string>
+    <string name="library_desktop_bookmarks_toolbar">Bookmarks Toolbar</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
-    <string name="library_desktop_bookmarks_unfiled">其他书签</string>
+    <string name="library_desktop_bookmarks_unfiled">Other Bookmarks</string>
     <!-- Option in Library to open History page -->
-    <string name="library_history">历史</string>
+    <string name="library_history">History</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">阅读列表</string>
+    <string name="library_reading_list">Reading List</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">搜索</string>
+    <string name="library_search">Search</string>
     <!-- Library Page Title -->
-    <string name="library_title">我的足迹</string>
+    <string name="library_title">Library</string>
     <!-- Settings Page Title -->
-    <string name="settings_title">设置</string>
+    <string name="settings_title">Settings</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">历史项目菜单</string>
+    <string name="content_description_history_menu">History item menu</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
-    <string name="content_description_close_button">关闭</string>
+    <string name="content_description_close_button">Close</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">标签页</string>
+    <string name="tab_header_label">Open tabs</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">隐私浏览阶段</string>
+    <string name="tabs_header_private_title">Private session</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_tabs_title">隐私标签页</string>
+    <string name="tabs_header_private_tabs_title">Private tabs</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_tab">添加标签页</string>
+    <string name="add_tab">Add tab</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
-    <string name="close_tab">关闭标签页</string>
+    <string name="close_tab">Close tab</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
-    <string name="close_tab_title">关闭标签页 %s</string>
+    <string name="close_tab_title">Close tab %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
-    <string name="open_tabs_menu">打开标签页菜单</string>
+    <string name="open_tabs_menu">Open tabs menu</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">关闭所有标签页</string>
+    <string name="tabs_menu_close_all_tabs">Close all tabs</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">分享标签页</string>
+    <string name="tabs_menu_share_tabs">Share tabs</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">保存到收藏集</string>
+    <string name="tabs_menu_save_to_collection">Save to collection</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">标签页菜单</string>
+    <string name="tab_menu">Tab menu</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">分享标签页</string>
+    <string name="tab_share">Share tab</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">删除</string>
+    <string name="current_session_delete">Delete</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">保存</string>
+    <string name="current_session_save">Save</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">分享</string>
+    <string name="current_session_share">Share</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">当前浏览阶段图标</string>
+    <string name="current_session_image">Current session image</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">保存到收藏集</string>
+    <string name="save_to_collection">Save to collection</string>
     <!-- Text for the menu button to delete a collection -->
-    <string name="collection_delete">删除收藏集</string>
+    <string name="collection_delete">Delete collection</string>
     <!-- Text for the menu button to rename a collection -->
-    <string name="collection_rename">更名收藏集</string>
+    <string name="collection_rename">Rename collection</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">打开标签页</string>
-
+    <string name="collection_open_tabs">Open tabs</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
-    <string name="history_delete_all">删除历史记录</string>
+    <string name="history_delete_all">Delete history</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">您确定要清除历史记录吗？</string>
+    <string name="history_delete_all_dialog">Are you sure you want to clear your history?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">清除</string>
+    <string name="history_clear_dialog">Clear</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">删除</string>
+    <string name="history_delete_item">Delete</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
-    <string name="history_multi_select_title">已选择 %1$d 条书签</string>
+    <string name="history_multi_select_title">%1$d selected</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">删除 %1$d 个项目</string>
+    <string name="history_delete_some">Delete %1$d items</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">过去 24 小时</string>
+    <string name="history_24_hours">Last 24 hours</string>
     <!-- Text for the header that groups the history the past 7 days -->
-    <string name="history_7_days">最近 7 天</string>
+    <string name="history_7_days">Last 7 days</string>
     <!-- Text for the header that groups the history the past 30 days -->
-    <string name="history_30_days">最近 30 天</string>
+    <string name="history_30_days">Last 30 days</string>
     <!-- Text for the header that groups the history older than the last month -->
-    <string name="history_older">更早</string>
-
+    <string name="history_older">Older</string>
     <!-- Text shown when no history exists -->
-    <string name="history_empty_message">无历史记录</string>
+    <string name="history_empty_message">No history here</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title_2">抱歉，%1$s 无法加载该页面。</string>
-
+    <string name="tab_crash_title_2">Sorry. %1$s can’t load that page.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">您可以尝试在下方恢复或关闭此标签页。</string>
+    <string name="tab_crash_description">You can attempt to restore or close this tab below.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
-    <string name="tab_crash_send_report">向 Mozilla 发送崩溃报告</string>
+    <string name="tab_crash_send_report">Send crash report to Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
-    <string name="tab_crash_close">关闭标签页</string>
+    <string name="tab_crash_close">Close tab</string>
     <!-- Restore tab button text on the tab crash page -->
-    <string name="tab_crash_restore">恢复标签页</string>
+    <string name="tab_crash_restore">Restore tab</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">浏览阶段选项</string>
+    <string name="content_description_session_menu">Session options</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">分享浏览阶段</string>
+    <string name="content_description_session_share">Share session</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">书签菜单</string>
+    <string name="bookmark_menu_content_description">Bookmark menu</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">编辑书签</string>
+    <string name="bookmark_edit">Edit bookmark</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">选择文件夹</string>
+    <string name="bookmark_select_folder">Select folder</string>
     <!-- Screen title for adding a bookmarks folder -->
-    <string name="bookmark_add_folder">新建文件夹</string>
+    <string name="bookmark_add_folder">Add folder</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">书签已创建。</string>
+    <string name="bookmark_created_snackbar">Bookmark created.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_saved_snackbar">书签已保存！</string>
+    <string name="bookmark_saved_snackbar">Bookmark saved!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
-    <string name="edit_bookmark_snackbar_action">编辑</string>
-
+    <string name="edit_bookmark_snackbar_action">EDIT</string>
     <!-- Bookmark overflow menu edit button -->
-    <string name="bookmark_menu_edit_button">编辑</string>
+    <string name="bookmark_menu_edit_button">Edit</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">选择</string>
+    <string name="bookmark_menu_select_button">Select</string>
     <!-- Bookmark overflow menu copy button -->
-    <string name="bookmark_menu_copy_button">复制</string>
+    <string name="bookmark_menu_copy_button">Copy</string>
     <!-- Bookmark overflow menu share button -->
-    <string name="bookmark_menu_share_button">分享</string>
+    <string name="bookmark_menu_share_button">Share</string>
     <!-- Bookmark overflow menu open in new tab button -->
-    <string name="bookmark_menu_open_in_new_tab_button">新建标签页打开</string>
+    <string name="bookmark_menu_open_in_new_tab_button">Open in new tab</string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">新建隐私标签页打开</string>
+    <string name="bookmark_menu_open_in_private_tab_button">Open in private tab</string>
     <!-- Bookmark overflow menu delete button -->
-    <string name="bookmark_menu_delete_button">删除</string>
+    <string name="bookmark_menu_delete_button">Delete</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
-    <string name="bookmarks_multi_select_title">已选择 %1$d 条书签</string>
+    <string name="bookmarks_multi_select_title">%1$d selected</string>
     <!-- Bookmark editing screen title -->
-    <string name="edit_bookmark_fragment_title">编辑书签</string>
+    <string name="edit_bookmark_fragment_title">Edit bookmark</string>
     <!-- Bookmark folder editing screen title -->
-    <string name="edit_bookmark_folder_fragment_title">编辑文件夹</string>
+    <string name="edit_bookmark_folder_fragment_title">Edit folder</string>
     <!-- Bookmark sign in button message -->
-    <string name="bookmark_sign_in_button">登录后即可查看同步的书签</string>
-
-
+    <string name="bookmark_sign_in_button">Sign in to see synced bookmarks</string>
     <!-- Bookmark URL editing field label -->
-    <string name="bookmark_url_label">网址</string>
+    <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
-    <string name="bookmark_folder_label">文件夹</string>
+    <string name="bookmark_folder_label">FOLDER</string>
     <!-- Bookmark NAME editing field label -->
-    <string name="bookmark_name_label">名称</string>
+    <string name="bookmark_name_label">NAME</string>
     <!-- Bookmark add folder screen title -->
-    <string name="bookmark_add_folder_fragment_label">新建文件夹</string>
+    <string name="bookmark_add_folder_fragment_label">Add folder</string>
     <!-- Bookmark select folder screen title -->
-    <string name="bookmark_select_folder_fragment_label">选择文件夹</string>
+    <string name="bookmark_select_folder_fragment_label">Select folder</string>
     <!-- Bookmark editing error missing title -->
-    <string name="bookmark_empty_title_error">须要有标题</string>
+    <string name="bookmark_empty_title_error">Must have a title</string>
     <!-- Bookmark editing error missing or improper URL -->
-    <string name="bookmark_invalid_url_error">无效网址</string>
+    <string name="bookmark_invalid_url_error">Invalid URL</string>
     <!-- Bookmark screen message for empty bookmarks folder -->
-    <string name="bookmarks_empty_message">此处无书签</string>
+    <string name="bookmarks_empty_message">No bookmarks here</string>
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
-    <string name="bookmark_deletion_snackbar_message">已删除 %1$s 条书签</string>
+    <string name="bookmark_deletion_snackbar_message">Deleted %1$s</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">正在删除所选的书签</string>
+    <string name="bookmark_deletion_multiple_snackbar_message">Deleting selected bookmarks</string>
     <!-- Bookmark undo button for deletion snackbar action -->
-    <string name="bookmark_undo_deletion">撤销</string>
+    <string name="bookmark_undo_deletion">UNDO</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">权限</string>
+    <string name="permissions_header">Permissions</string>
     <!-- Button label that take the user to the Android App setting -->
-    <string name="phone_feature_go_to_settings">转至设置</string>
-
+    <string name="phone_feature_go_to_settings">Go to Settings</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
         to give users access to site specific information / settings. For example:
         Secure settings status and a button to modify site permissions -->
-    <string name="quick_settings_sheet">快速设置表</string>
+    <string name="quick_settings_sheet">Quick settings sheet</string>
     <!-- Label that indicates that this option it the recommended one -->
-    <string name="phone_feature_recommended">推荐</string>
+    <string name="phone_feature_recommended">Recommended</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">管理网站权限</string>
+    <string name="quick_settings_sheet_manage_site_permissions">Manage site permissions</string>
     <!-- Button label for clearing all the information of site permissions-->
-    <string name="clear_permissions">清除权限</string>
+    <string name="clear_permissions">Clear permissions</string>
     <!-- Button label for clearing a site permission-->
-    <string name="clear_permission">清除权限</string>
+    <string name="clear_permission">Clear permission</string>
     <!-- Button label for clearing all the information on all sites-->
-    <string name="clear_permissions_on_all_sites">清除所有网站的权限</string>
+    <string name="clear_permissions_on_all_sites">Clear permissions on all sites</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
-    <string name="preference_browser_feature_autoplay">自动播放</string>
+    <string name="preference_browser_feature_autoplay">Autoplay</string>
     <!-- Preference for altering the camera access for all websites -->
-    <string name="preference_phone_feature_camera">相机</string>
+    <string name="preference_phone_feature_camera">Camera</string>
     <!-- Preference for altering the microphone access for all websites -->
-    <string name="preference_phone_feature_microphone">麦克风</string>
+    <string name="preference_phone_feature_microphone">Microphone</string>
     <!-- Preference for altering the location access for all websites -->
-    <string name="preference_phone_feature_location">位置</string>
+    <string name="preference_phone_feature_location">Location</string>
     <!-- Preference for altering the notification access for all websites -->
-    <string name="preference_phone_feature_notification">通知</string>
+    <string name="preference_phone_feature_notification">Notification</string>
     <!-- Label that indicates that a permission must be asked always -->
-    <string name="preference_option_phone_feature_ask_to_allow">始终询问</string>
+    <string name="preference_option_phone_feature_ask_to_allow">Ask to allow</string>
     <!-- Label that indicates that a permission must be blocked -->
-    <string name="preference_option_phone_feature_blocked">阻止</string>
+    <string name="preference_option_phone_feature_blocked">Blocked</string>
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">已允许</string>
+    <string name="preference_option_phone_feature_allowed">Allowed</string>
     <!--Label that indicates a permission is by the Android OS-->
-    <string name="phone_feature_blocked_by_android">被 Android 阻止</string>
+    <string name="phone_feature_blocked_by_android">Blocked by Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
-    <string name="preference_exceptions">例外</string>
+    <string name="preference_exceptions">Exceptions</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">开</string>
+    <string name="tracking_protection_on">On</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
-    <string name="tracking_protection_off">关</string>
-
+    <string name="tracking_protection_off">Off</string>
     <!-- Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">已阻止视频和音频</string>
+    <string name="preference_option_autoplay_blocked">Video and audio blocked</string>
     <!-- Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">已允许视频和音频</string>
-
+    <string name="preference_option_autoplay_allowed">Video and audio allowed</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
-    <string name="delete_browsing_data_quit_on">开</string>
+    <string name="delete_browsing_data_quit_on">On</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
-    <string name="delete_browsing_data_quit_off">关</string>
+    <string name="delete_browsing_data_quit_off">Off</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">收集你想留下的东西。作为上手第一步，将打开的标签页保存到新收藏集。</string>
+    <string name="collections_description">Collect the things that matter to you. To start, save open tabs to a new collection.</string>
     <!-- Collections header on home fragment -->
-    <string name="collections_header">收藏集</string>
+    <string name="collections_header">Collections</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
-    <string name="collection_menu_button_content_description">收藏集菜单</string>
+    <string name="collection_menu_button_content_description">Collection menu</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">尚无收藏集</string>
+    <string name="no_collections_header">No collections</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">您的收藏集将显示于此。</string>
-
+    <string name="no_collections_description">Your collections will be shown here.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_tabs">选取标签页</string>
-
+    <string name="create_collection_select_tabs">Select Tabs</string>
     <!-- Title for the "select collection" step of the collection creator -->
-    <string name="create_collection_select_collection">选择收藏集</string>
-
+    <string name="create_collection_select_collection">Select collection</string>
     <!-- Title for the "name collection" step of the collection creator -->
-    <string name="create_collection_name_collection">给收藏集起名</string>
-
+    <string name="create_collection_name_collection">Name collection</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
-    <string name="create_collection_add_new_collection">新建收藏集</string>
-
+    <string name="create_collection_add_new_collection">Add new collection</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_all">全选</string>
-
+    <string name="create_collection_select_all">Select All</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_deselect_all">全不选</string>
+    <string name="create_collection_deselect_all">Deselect All</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
-    <string name="create_collection_save_to_collection_empty">选取要保存的标签页</string>
-
+    <string name="create_collection_save_to_collection_empty">Select tabs to save</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
      %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tabs_selected">已选取 %d 个标签页</string>
-
+    <string name="create_collection_save_to_collection_tabs_selected">%d tabs selected</string>
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tab_selected">已选取 %d 个标签页</string>
-
+    <string name="create_collection_save_to_collection_tab_selected">%d tab selected</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-    <string name="create_collection_tabs_saved">标签页已保存！</string>
-
+    <string name="create_collection_tabs_saved">Tabs saved!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
-    <string name="create_collection_tab_saved">标签页已保存！</string>
-
+    <string name="create_collection_tab_saved">Tab saved!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
-    <string name="create_collection_close">关闭</string>
-
+    <string name="create_collection_close">Close</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
-    <string name="create_collection_save">保存</string>
+    <string name="create_collection_save">Save</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
-    <string name="create_collection_default_name">收藏集 %d</string>
+    <string name="create_collection_default_name">Collection %d</string>
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">发送及分享</string>
+    <string name="share_header">Send and Share</string>
     <!-- Share screen header -->
-    <string name="share_header_2">分享</string>
+    <string name="share_header_2">Share</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
-    <string name="share_button_content_description">分享</string>
+    <string name="share_button_content_description">Share</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">分享链接</string>
+    <string name="share_link_subheader">Share a link</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
-    <string name="share_device_subheader">发送到设备</string>
+    <string name="share_device_subheader">Send to device</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">登录同步服务</string>
+    <string name="sync_sign_in">Sign in to Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
-    <string name="sync_send_to_all">发送到所有设备</string>
+    <string name="sync_send_to_all">Send to all devices</string>
     <!-- An option from the share dialog to reconnect to sync -->
-    <string name="sync_reconnect">重新连接同步</string>
+    <string name="sync_reconnect">Reconnect to Sync</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
-    <string name="sync_offline">离线</string>
+    <string name="sync_offline">Offline</string>
     <!-- An option to connect additional devices -->
-    <string name="sync_connect_device">连接其他设备</string>
+    <string name="sync_connect_device">Connect another device</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">请在至少另一台设备上的 Firefox 登录才能发送标签页。</string>
+    <string name="sync_connect_device_dialog">To send a tab, sign in to Firefox on at least one other device.</string>
     <!-- Confirmation dialog button -->
-    <string name="sync_confirmation_button">明白了</string>
-
+    <string name="sync_confirmation_button">Got it</string>
     <!-- Share error message -->
-    <string name="share_error_snackbar">无法分享至该应用</string>
-
+    <string name="share_error_snackbar">Cannot share to this app</string>
     <!-- Add new device screen title -->
-    <string name="sync_add_new_device_title">发送到设备</string>
+    <string name="sync_add_new_device_title">Send to device</string>
     <!-- Text for the warning message on the Add new device screen -->
-    <string name="sync_add_new_device_message">尚未连上其他设备</string>
+    <string name="sync_add_new_device_message">No Devices Connected</string>
     <!-- Text for the button to learn about sending tabs -->
-    <string name="sync_add_new_device_learn_button">了解发送标签页…</string>
+    <string name="sync_add_new_device_learn_button">Learn About Sending Tabs…</string>
     <!-- Text for the button to connect another device -->
-    <string name="sync_add_new_device_connect_button">连接其他设备…</string>
+    <string name="sync_add_new_device_connect_button">Connect Another Device…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">隐私浏览会话</string>
+    <string name="notification_pbm_channel_name">Private browsing session</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">删除隐私标签页</string>
+    <string name="notification_pbm_delete_text">Delete private tabs</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text_2">关闭隐私标签页</string>
+    <string name="notification_pbm_delete_text_2">Close private tabs</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">打开</string>
+    <string name="notification_pbm_action_open">Open</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">删除并打开</string>
+    <string name="notification_pbm_action_delete_and_open">Delete and Open</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">源自</string>
+    <string name="notification_powered_by_channel_name">Powered By</string>
     <!-- Text shown in snackbar when user deletes a collection -->
-    <string name="snackbar_collection_deleted">收藏集已删除</string>
-
+    <string name="snackbar_collection_deleted">Collection deleted</string>
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">收藏集已更名</string>
+    <string name="snackbar_collection_renamed">Collection renamed</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">标签页已删除</string>
-
+    <string name="snackbar_tab_deleted">Tab deleted</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">已删除标签页</string>
+    <string name="snackbar_tabs_deleted">Tabs deleted</string>
     <!-- Text shown in snackbar when user closes a tab -->
-    <string name="snackbar_tab_closed">标签页已关闭</string>
+    <string name="snackbar_tab_closed">Tab closed</string>
     <!-- Text shown in snackbar when user closes all tabs -->
-    <string name="snackbar_tabs_closed">标签页已关闭</string>
+    <string name="snackbar_tabs_closed">Tabs closed</string>
     <!-- Text shown in snackbar when user closes a private tab -->
-    <string name="snackbar_private_tab_closed">隐私标签页已关闭</string>
+    <string name="snackbar_private_tab_closed">Private tab closed</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
-    <string name="snackbar_private_tabs_closed">隐私标签页已关闭</string>
+    <string name="snackbar_private_tabs_closed">Private tabs closed</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">隐私标签页已删除</string>
+    <string name="snackbar_private_tabs_deleted">Private tabs deleted</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
-    <string name="snackbar_deleted_undo">撤销</string>
-
+    <string name="snackbar_deleted_undo">UNDO</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">撤销</string>
+    <string name="a11y_dialog_deleted_undo">Undo</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">确认</string>
+    <string name="a11y_dialog_deleted_confirm">Confirm</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
-    <string name="qr_scanner_confirmation_dialog_message">允许 %1$s 打开 %2$s</string>
+    <string name="qr_scanner_confirmation_dialog_message">Allow %1$s to open %2$s</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
-    <string name="qr_scanner_dialog_positive">允许</string>
+    <string name="qr_scanner_dialog_positive">ALLOW</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
-    <string name="qr_scanner_dialog_negative">拒绝</string>
+    <string name="qr_scanner_dialog_negative">DENY</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
-    <string name="tab_collection_dialog_message">您确定要删除“%1$s”吗？</string>
+    <string name="tab_collection_dialog_message">Are you sure you want to delete %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
-    <string name="tab_collection_dialog_positive">删除</string>
+    <string name="tab_collection_dialog_positive">Delete</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">取消</string>
+    <string name="tab_collection_dialog_negative">Cancel</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
-    <string name="full_screen_notification">进入全屏模式</string>
-
+    <string name="full_screen_notification">Entering full screen mode</string>
     <!-- Message for copying the URL via long press on the toolbar -->
-    <string name="url_copied">网址已复制</string>
-
-
+    <string name="url_copied">URL copied</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. 
-中文字体测试：天地玄黄，宇宙洪荒。日月盈昃，辰宿列张。</string>
+    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_text_size_summary">使网站上的文字更大或更小</string>
+    <string name="preference_accessibility_text_size_summary">Make text on websites larger or smaller</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_font_size_title">字体大小</string>
+    <string name="preference_accessibility_font_size_title">Font Size</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">自动调整字体大小</string>
+    <string name="preference_accessibility_auto_size">Automatic Font Sizing</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">字体大小将跟随您的 Android 设置。禁用此项后则可以手动调整。</string>
+    <string name="preference_accessibility_auto_size_summary">Font size will match your Android settings. Disable to manage font size here.</string>
 
     <!-- Title for the Delete browsing data preference -->
-    <string name="preferences_delete_browsing_data">删除浏览数据</string>
+    <string name="preferences_delete_browsing_data">Delete browsing data</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">打开的标签页</string>
+    <string name="preferences_delete_browsing_data_tabs_title">Open Tabs</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
-    <string name="preferences_delete_browsing_data_tabs_subtitle">%d 个标签页</string>
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d tabs</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">浏览历史和网站数据</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title">Browsing history and site data</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
-    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 条地址</string>
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d addresses</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">历史记录</string>
+    <string name="preferences_delete_browsing_data_browsing_history_title">History</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d 页</string>
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d pages</string>
     <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">收藏集</string>
+    <string name="preferences_delete_browsing_data_collections_title">Collections</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d 个收藏集</string>
+    <string name="preferences_delete_browsing_data_collections_subtitle">%d collections</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cookie</string>
+    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">您在绝大多数网站的登录状态将被清除</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">You’ll be logged out of most sites</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cached_files">缓存的图像和文件</string>
+    <string name="preferences_delete_browsing_data_cached_files">Cached images and files</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cached_files_subtitle">释放存储空间</string>
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Frees up storage space</string>
     <!-- Title for the site permissions item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_site_permissions">站点权限</string>
+    <string name="preferences_delete_browsing_data_site_permissions">Site permissions</string>
     <!-- Text for the button to delete browsing data -->
-    <string name="preferences_delete_browsing_data_button">删除浏览数据</string>
-
+    <string name="preferences_delete_browsing_data_button">Delete browsing data</string>
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">退出时删除浏览数据</string>
-
+    <string name="preferences_delete_browsing_data_on_quit">Delete browsing data on quit</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">从主菜单中选择“退出”时，自动删除浏览数据</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">Automatically deletes browsing data when you select &quot;Quit&quot; from the main menu</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">从主菜单中选择“退出”时，自动删除浏览数据</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Automatically deletes browsing data when you select \&quot;Quit\&quot; from the main menu</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">浏览历史</string>
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Browsing history</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
-    <string name="delete_browsing_data_on_quit_action">退出</string>
+    <string name="delete_browsing_data_on_quit_action">Quit</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">这将删除所有浏览数据。</string>
+    <string name="delete_browsing_data_prompt_message">This will delete all of your browsing data.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
-    <string name="delete_browsing_data_prompt_message_3">%s 将删除选定的浏览数据。</string>
+    <string name="delete_browsing_data_prompt_message_3">%s will delete the selected browsing data.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="delete_browsing_data_prompt_cancel">取消</string>
+    <string name="delete_browsing_data_prompt_cancel">Cancel</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="delete_browsing_data_prompt_allow">删除</string>
+    <string name="delete_browsing_data_prompt_allow">Delete</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
-    <string name="preferences_delete_browsing_data_snackbar">浏览数据已删除</string>
-
+    <string name="preferences_delete_browsing_data_snackbar">Browsing data deleted</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
-    <string name="deleting_browsing_data_in_progress">正在删除浏览数据…</string>
+    <string name="deleting_browsing_data_in_progress">Deleting browsing data…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">欢迎使用 %s！</string>
+    <string name="onboarding_header">Welcome to %s!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">已有账户？</string>
+    <string name="onboarding_fxa_section_header">Already have an account?</string>
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">认识 %s</string>
+    <string name="onboarding_feature_section_header">Get to know %s</string>
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">选择您的主题</string>
+    <string name="onboarding_theme_picker_header">Choose your theme</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">试试深邃主题：更省电，更呵护眼睛。</string>
+    <string name="onboarding_theme_picker_description">Try dark theme: easier on your battery and your eyes.</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">畅享 %s。</string>
+    <string name="onboarding_firefox_account_header">Get the most out of %s.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">您已在此手机上的其他 Firefox 浏览器上以 %s 身份登录。也要使用此账号登录吗？</string>
+    <string name="onboarding_firefox_account_auto_signin_header_2">You are signed in as %s on another Firefox browser on this phone. Would you like to sign in with this account?</string>
     <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">是的，我要登录</string>
+    <string name="onboarding_firefox_account_auto_signin_confirm">Yes, sign me in</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">正在登录…</string>
+    <string name="onboarding_firefox_account_signing_in">Signing in…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">登录 Firefox</string>
+    <string name="onboarding_firefox_account_sign_in">Sign in to Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">不要登录</string>
+    <string name="onboarding_firefox_account_stay_signed_out">Stay signed out</string>
     <!-- text to display in the snackbar once account is signed-in -->
-    <string name="onboarding_firefox_account_sync_is_on">同步已开启</string>
+    <string name="onboarding_firefox_account_sync_is_on">Sync is on</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">登录失败</string>
+    <string name="onboarding_firefox_account_automatic_signin_failed">Failed to sign-in</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">自己权利自己护</string>
+    <string name="onboarding_tracking_protection_header">Protect yourself</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s 会拦截在网络上跟踪您的广告追踪器。</string>
+    <string name="onboarding_tracking_protection_description">%s blocks ad trackers that follow you around the web.
+    </string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">上网冲浪也私密</string>
+    <string name="onboarding_private_browsing_header">Browse privately</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">轻点 %s 图标，即可开启隐私浏览。</string>
+    <string name="onboarding_private_browsing_description">When you see the %s icon, private browsing is just a tap away.
+   </string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">您的隐私权</string>
+    <string name="onboarding_privacy_notice_header">Your privacy</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">%s 的设计目标是让您可以控制要在网上披露哪些内容，以及告诉我们哪些信息。</string>
+    <string name="onboarding_privacy_notice_description">We’ve designed %s to give you control over what you share
+        online and what you share with us.
+    </string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">阅读我们的隐私声明</string>
+    <string name="onboarding_privacy_notice_read_button">Read our privacy notice</string>
 
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">开始上网</string>
+    <string name="onboarding_finish">Start browsing</string>
 
     <!-- Onboarding theme -->
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">自动</string>
+    <string name="onboarding_theme_automatic_title">Automatic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">跟随您的设备设置</string>
+    <string name="onboarding_theme_automatic_summary">Adapts to your device settings</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">深邃主题</string>
+    <string name="onboarding_theme_dark_title">Dark theme</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">明亮主题</string>
+    <string name="onboarding_theme_light_title">Light theme</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
-    <string name="sync_sent_tabs_snackbar">标签页发送成功！</string>
+    <string name="sync_sent_tabs_snackbar">Tabs sent!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
-    <string name="sync_sent_tab_snackbar">标签页发送成功！</string>
+    <string name="sync_sent_tab_snackbar">Tab sent!</string>
     <!-- Text shown in snackbar when sharing tabs failed  -->
-    <string name="sync_sent_tab_error_snackbar">无法发送</string>
+    <string name="sync_sent_tab_error_snackbar">Unable to send</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
-    <string name="sync_sent_tab_error_snackbar_action">重试</string>
+    <string name="sync_sent_tab_error_snackbar_action">RETRY</string>
     <!-- Title of QR Pairing Fragment -->
-    <string name="sync_scan_code">扫码</string>
+    <string name="sync_scan_code">Scan the code</string>
     <!-- Instructions on how to access pairing -->
-    <string name="sign_in_instructions"><![CDATA[在计算机上使用 Firefox 打开 <b>https://firefox.com/pair</b>]]></string>
+    <string name="sign_in_instructions"><![CDATA[On your computer open Firefox and go to <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">扫描就绪</string>
+    <string name="sign_in_ready_for_scan">Ready to scan</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">使用相机登录</string>
+    <string name="sign_in_with_camera">Sign in with your camera</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">改用电子邮件</string>
+    <string name="sign_in_with_email">Use email instead</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox 将停止与您的账号的同步，但不会删除此设备上的任何浏览数据。</string>
+    <string name="sign_out_confirmation_message">Firefox will stop syncing with your account, but won’t delete any of your browsing data on this device.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_disconnect">断开连接</string>
+    <string name="sign_out_disconnect">Disconnect</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_cancel">取消</string>
-
+    <string name="sign_out_cancel">Cancel</string>
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
-    <string name="bookmark_cannot_edit_root">无法编辑默认文件夹</string>
+    <string name="bookmark_cannot_edit_root">Can’t edit default folders</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
-    <string name="etp_settings">保护设置</string>
+    <string name="etp_settings">Protection Settings</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">增强型跟踪保护</string>
+    <string name="preference_enhanced_tracking_protection">Enhanced Tracking Protection</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">浏览，免受跟踪</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">Browse without being followed</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">保护好你的数据。%s 可保护您免受大多数常见的跟踪器对您在线活动的窥视。</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Keep your data to yourself. %s protects you from many of the most common trackers that follow what you do online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_learn_more">详细了解</string>
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Learn more</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">标准</string>
+    <string name="preference_enhanced_tracking_protection_standard_option">Standard</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">标准（推荐）</string>
+    <string name="preference_enhanced_tracking_protection_standard">Standard (recommended)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">平衡保护和性能。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description">Balanced for protection and performance.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">页面将正常加载，但拦截的跟踪器少一些。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Pages will load normally, but block fewer trackers.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_standard_info_button">标准跟踪保护会拦截的内容</string>
+    <string name="preference_enhanced_tracking_protection_standard_info_button">What’s blocked by standard tracking protection</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict">严格</string>
+    <string name="preference_enhanced_tracking_protection_strict">Strict</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">严格（默认）</string>
+    <string name="preference_enhanced_tracking_protection_strict_default">Strict (Default)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">更强的跟踪保护与更快的性能，但可导致某些网站的运作不正常。</string>
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Stronger tracking protection and faster performance, but some sites may not work properly.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">严格（推荐）</string>
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Strict (recommended)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">更强的保护，但可能导致某些网站或内容异常。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description">Stronger protection, but may cause some sites or content to break.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_strict_info_button">严格跟踪保护会拦截的内容</string>
+    <string name="preference_enhanced_tracking_protection_strict_info_button">What’s blocked by strict tracking protection</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocked">已拦截</string>
+    <string name="enhanced_tracking_protection_blocked">Blocked</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_allowed">已允许</string>
+    <string name="enhanced_tracking_protection_allowed">Allowed</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_title">社交媒体跟踪器</string>
+    <string name="etp_social_media_trackers_title">Social Media Trackers</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_description">限制社交网络在网上跟踪您浏览活动的能力。</string>
+    <string name="etp_social_media_trackers_description">Limits the ability of social networks to track your browsing activity around the web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">跨网站跟踪型 Cookie</string>
+    <string name="etp_cookies_title">Cross-Site Tracking Cookies</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">拦截广告网络和分析公司用于跨网站收集浏览数据的 Cookie。</string>
+    <string name="etp_cookies_description">Blocks cookies that ad networks and analytics companies use to compile your browsing data across many sites.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_title">加密货币挖矿程序</string>
+    <string name="etp_cryptominers_title">Cryptominers</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_description">防止恶意脚本利用您的设备来挖取数字货币。</string>
+    <string name="etp_cryptominers_description">Prevents malicious scripts gaining access to your device to mine digital currency.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_title">数字指纹跟踪程序</string>
+    <string name="etp_fingerprinters_title">Fingerprinters</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">阻止收集可用于跟踪目的的设备唯一标识数据。</string>
+    <string name="etp_fingerprinters_description">Stops uniquely identifiable data from being collected about your device that can be used for tracking purposes.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_title">跟踪性内容</string>
+    <string name="etp_tracking_content_title">Tracking Content</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">停止加载包含跟踪代码的广告、视频和其他内容。可能会影响某些网站功能。</string>
+    <string name="etp_tracking_content_description">Stops outside ads, videos, and other content from loading that contains tracking code. May affect some website functionality.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">盾牌变成紫色时，即代表 %s 正在拦截此网站上的跟踪器。点按即可查看已拦截内容。</string>
+    <string name="etp_onboarding_message_2">%s is blocking trackers on this site when the shield is purple. Tap it to see what’s blocked.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">对此网站已开启保护</string>
+    <string name="etp_panel_on">Protections are ON for this site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">对此网站已关闭保护</string>
+    <string name="etp_panel_off">Protections are OFF for this site</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">对下列网站已关闭增强型跟踪保护</string>
+    <string name="enhanced_tracking_protection_exceptions">Enhanced Tracking Protection is off for these websites</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">您的权利</string>
+    <string name="about_your_rights">Your rights</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">我们使用的开源库</string>
+    <string name="about_open_source_licenses">Open source libraries we use</string>
     <!-- About page link text to open what's new link -->
-    <string name="about_whats_new">%s 新版变化</string>
+    <string name="about_whats_new">What’s new in %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
-    <string name="open_source_licenses_title">%s | 开源软件库</string>
+    <string name="open_source_licenses_title">%s | OSS Libraries</string>
 
     <!-- About page link text to open support link -->
-    <string name="about_support">用户支持</string>
+    <string name="about_support">Support</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">隐私声明</string>
+    <string name="about_privacy_notice">Privacy notice</string>
     <!-- About page link text to open know your rights link -->
-    <string name="about_know_your_rights">了解您的权利</string>
+    <string name="about_know_your_rights">Know your rights</string>
     <!-- About page link text to open licensing information link -->
-    <string name="about_licensing_information">授权信息</string>
+    <string name="about_licensing_information">Licensing information</string>
     <!-- About page link text to open a screen with libraries that are used -->
-    <string name="about_other_open_source_libraries">我们使用的库</string>
+    <string name="about_other_open_source_libraries">Libraries that we use</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 个标签页</string>
+    <string name="tab_counter_content_description_one_tab">1 tab</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d 个标签页</string>
+    <string name="tab_counter_content_description_multi_tab">%d tabs</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
-    <string name="browser_toolbar_long_press_popup_copy">复制</string>
+    <string name="browser_toolbar_long_press_popup_copy">Copy</string>
     <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
-    <string name="browser_toolbar_long_press_popup_paste_and_go">粘贴并前往</string>
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Paste &amp; Go</string>
     <!-- Paste the text in the clipboard -->
-    <string name="browser_toolbar_long_press_popup_paste">粘贴</string>
-  
+    <string name="browser_toolbar_long_press_popup_paste">Paste</string>
     <!-- Snackbar message shown after an URL has been copied to clipboard. -->
-    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">网址已复制到剪贴板</string>
-  
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL copied to clipboard</string>
+
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">添加到主屏幕</string>
+    <string name="add_to_homescreen_title">Add to Home screen</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_cancel">取消</string>
+    <string name="add_to_homescreen_cancel">Cancel</string>
     <!-- Add button text for the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_add">添加</string>
+    <string name="add_to_homescreen_add">Add</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_text_placeholder">快捷方式名称</string>
+    <string name="add_to_homescreen_text_placeholder">Shortcut name</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">我的密码</string>
+    <string name="preferences_passwords_logins_and_passwords">Logins and passwords</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">保存登录名和密码</string>
+    <string name="preferences_passwords_save_logins">Save logins and passwords</string>
     <!-- Preference option for asking to save passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_ask_to_save">询问是否保存</string>
+    <string name="preferences_passwords_save_logins_ask_to_save">Ask to save</string>
     <!-- Preference option for never saving passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_never_save">总不保存</string>
+    <string name="preferences_passwords_save_logins_never_save">Never save</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">自动填写</string>
+    <string name="preferences_passwords_autofill">Autofill</string>
     <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">同步登录信息</string>
+    <string name="preferences_passwords_sync_logins">Sync logins</string>
     <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">开</string>
+    <string name="preferences_passwords_sync_logins_on">On</string>
     <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">关</string>
+    <string name="preferences_passwords_sync_logins_off">Off</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">重新连接</string>
+    <string name="preferences_passwords_sync_logins_reconnect">Reconnect</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">登录同步服务</string>
+    <string name="preferences_passwords_sync_logins_sign_in">Sign in to Sync</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">存放的登录信息</string>
+    <string name="preferences_passwords_saved_logins">Saved logins</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions">例外</string>
+    <string name="preferences_passwords_exceptions">Exceptions</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">不保存登录名和密码的网站将显示于此处。</string>
+    <string name="preferences_passwords_exceptions_description_empty">Logins and passwords that are not saved will be shown here.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">将不保存这些网站的登录名和密码。</string>
+    <string name="preferences_passwords_exceptions_description">Logins and passwords will not be saved for these sites.</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">搜索登录信息</string>
+    <string name="preferences_passwords_saved_logins_search">Search logins</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">字母顺序</string>
+    <string name="preferences_passwords_saved_logins_alphabetically">Alphabetically</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">最近使用</string>
+    <string name="preferences_passwords_saved_logins_recently_used">Recently used</string>
     <!-- The header for the site that a login is for -->
-    <string name="preferences_passwords_saved_logins_site">网站</string>
+    <string name="preferences_passwords_saved_logins_site">Site</string>
     <!-- The header for the username for a login -->
-    <string name="preferences_passwords_saved_logins_username">用户名</string>
+    <string name="preferences_passwords_saved_logins_username">Username</string>
     <!-- The header for the password for a login -->
-    <string name="preferences_passwords_saved_logins_password">密码</string>
+    <string name="preferences_passwords_saved_logins_password">Password</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">重新输入您的 PIN 码</string>
+    <string name="preferences_passwords_saved_logins_enter_pin">Re-enter your PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">解锁以查看您存放的登录信息</string>
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Unlock to view your saved logins</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">此连接不安全。输入的登录信息可能被窃取。</string>
+    <string name="logins_insecure_connection_warning">This connection is not secure. Logins entered here could be compromised.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">详细了解</string>
+    <string name="logins_insecure_connection_warning_learn_more">Learn more</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">要将这条登录信息存入 %s 吗？</string>
+    <string name="logins_doorhanger_save">Do you want %s to save this login?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">保存</string>
+    <string name="logins_doorhanger_save_confirmation">Save</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">不保存</string>
+    <string name="logins_doorhanger_save_dont_save">Don’t save</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
-    <string name="logins_password_copied">密码已复制到剪贴板</string>
+    <string name="logins_password_copied">Password copied to clipboard</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
-    <string name="logins_username_copied">用户名已复制到剪贴板</string>
+    <string name="logins_username_copied">Username copied to clipboard</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">网站已复制到剪贴板</string>
+    <string name="logins_site_copied">Site copied to clipboard</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
-    <string name="saved_logins_copy_password">复制密码</string>
+    <string name="saved_logins_copy_password">Copy password</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
-    <string name="saved_login_copy_username">复制用户名</string>
+    <string name="saved_login_copy_username">Copy username</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">复制网站</string>
+    <string name="saved_login_copy_site">Copy site</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
-    <string name="saved_login_reveal_password">显示密码</string>
+    <string name="saved_login_reveal_password">Show password</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
-    <string name="saved_login_hide_password">隐藏密码</string>
+    <string name="saved_login_hide_password">Hide password</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">解锁以查看您存放的登录信息</string>
+    <string name="logins_biometric_prompt_message">Unlock to view your saved logins</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">保护您的登录名和密码</string>
+    <string name="logins_warning_dialog_title">Secure your logins and passwords</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">设置锁定方式、PIN 码或密码以保护您存放的登录名与密码，避免他人盗用。</string>
+    <string name="logins_warning_dialog_message">Set up a device lock pattern, PIN, or password to protect your saved logins and passwords from being accessed if someone else has your device.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_later">稍后</string>
+    <string name="logins_warning_dialog_later">Later</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_set_up_now">立即设置</string>
+    <string name="logins_warning_dialog_set_up_now">Set up now</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
-    <string name="logins_biometric_prompt_message_pin">解锁您的设备</string>
+    <string name="logins_biometric_prompt_message_pin">Unlock your device</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">在所有网站上缩放</string>
+    <string name="preference_accessibility_force_enable_zoom">Zoom on all websites</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">启用则允许在所有网站上进行捏合缩放，即使网站禁止该手势。</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Enable to allow pinch and zoom, even on websites that prevent this gesture.</string>
 
     <!-- Title of the Add search engine screen -->
-    <string name="search_engine_add_custom_search_engine_title">添加搜索引擎</string>
+    <string name="search_engine_add_custom_search_engine_title">Add search engine</string>
     <!-- Title of the Edit search engine screen -->
-    <string name="search_engine_edit_custom_search_engine_title">编辑搜索引擎</string>
+    <string name="search_engine_edit_custom_search_engine_title">Edit search engine</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">添加</string>
+    <string name="search_engine_add_button_content_description">Add</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">保存</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Save</string>
     <!-- Text for the menu button to edit a search engine -->
-    <string name="search_engine_edit">编辑</string>
+    <string name="search_engine_edit">Edit</string>
     <!-- Text for the menu button to delete a search engine -->
-    <string name="search_engine_delete">删除</string>
+    <string name="search_engine_delete">Delete</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">其他</string>
+    <string name="search_add_custom_engine_label_other">Other</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">名称</string>
+    <string name="search_add_custom_engine_name_hint">Name</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">搜索字符串</string>
+    <string name="search_add_custom_engine_search_string_hint">Search string to use</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">用“%s”替换查询关键字。示例：\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example">Replace query with “%s”. Example:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">详细了解</string>
+    <string name="search_add_custom_engine_learn_more_label">Learn More</string>
 
     <!-- Text shown when a user leaves the name field empty -->
-    <string name="search_add_custom_engine_error_empty_name">输入搜索引擎名称</string>
+    <string name="search_add_custom_engine_error_empty_name">Enter search engine name</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">已存在名称为“%s”的搜索引擎。</string>
+    <string name="search_add_custom_engine_error_existing_name">Search engine with name “%s” already exists.</string>
     <!-- Text shown when a user leaves the search string field empty -->
-    <string name="search_add_custom_engine_error_empty_search_string">输入搜索字符串</string>
+    <string name="search_add_custom_engine_error_empty_search_string">Enter a search string</string>
     <!-- Text shown when a user leaves out the required template string -->
-    <string name="search_add_custom_engine_error_missing_template">请检查搜索字符串与示例格式是否匹配</string>
+    <string name="search_add_custom_engine_error_missing_template">Check that search string matches Example format</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
-    <string name="search_add_custom_engine_error_cannot_reach">连接到“%s”时出错</string>
+    <string name="search_add_custom_engine_error_cannot_reach">Error connecting to “%s”</string>
     <!-- Text shown when a user creates a new search engine -->
-    <string name="search_add_custom_engine_success_message">已创建 %s</string>
+    <string name="search_add_custom_engine_success_message">Created %s</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
-    <string name="search_edit_custom_engine_success_message">已保存 %s</string>
+    <string name="search_edit_custom_engine_success_message">Saved %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
-    <string name="search_delete_search_engine_success_message">已删除 %s</string>
+    <string name="search_delete_search_engine_success_message">Deleted %s</string>
 </resources>
