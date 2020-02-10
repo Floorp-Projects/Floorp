@@ -2066,13 +2066,8 @@ StorageActors.createActor(
   },
   {
     async getCachesForHost(host) {
-      const uri = Services.io.newURI(host);
-      const attrs = this.storageActor.document.effectiveStoragePrincipal
-        .originAttributes;
-      const principal = Services.scriptSecurityManager.createContentPrincipal(
-        uri,
-        attrs
-      );
+      const win = this.storageActor.getWindowFromHost(host);
+      const principal = win.document.effectiveStoragePrincipal;
 
       // The first argument tells if you want to get |content| cache or |chrome|
       // cache.
@@ -2080,10 +2075,10 @@ StorageActors.createActor(
       // (service worker or web page).
       // The |chrome| cache is the cache implicitely cached by the platform,
       // hosting the source file of the service worker.
-      const { CacheStorage } = this.storageActor.window;
+      const { CacheStorage } = win;
 
       if (!CacheStorage) {
-        return [];
+        return null;
       }
 
       const cache = new CacheStorage("content", principal);
