@@ -71,6 +71,11 @@ ChromeUtils.defineModuleGetter(
   "ProfilerMenuButton",
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebChannel",
+  "resource://gre/modules/WebChannel.jsm"
+);
 
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
@@ -259,6 +264,51 @@ function getProfilerKeyShortcuts() {
  */
 function isProfilerButtonEnabled() {
   return Services.prefs.getBoolPref(PROFILER_POPUP_ENABLED_PREF, false);
+}
+
+/**
+ * Validate the URL that will be used for the WebChannel for the profiler.
+ *
+ * @param {string} targetUrl
+ * @returns {string}
+ */
+function validateProfilerWebChannelUrl(targetUrl) {
+  const frontEndUrl = "https://profiler.firefox.com";
+
+  if (targetUrl !== frontEndUrl) {
+    // The user can specify either localhost or deploy previews as well as
+    // the official frontend URL for testing.
+    if (
+      // Allow a test URL.
+      targetUrl === "http://example.com" ||
+      // Allows the following:
+      //   "http://localhost:4242"
+      //   "http://localhost:4242/"
+      //   "http://localhost:3"
+      //   "http://localhost:334798455"
+      /^http:\/\/localhost:\d+\/?$/.test(targetUrl) ||
+      // Allows the following:
+      //   "https://deploy-preview-1234--perf-html.netlify.com"
+      //   "https://deploy-preview-1234--perf-html.netlify.com/"
+      //   "https://deploy-preview-1234567--perf-html.netlify.com"
+      /^https:\/\/deploy-preview-\d+--perf-html\.netlify\.com\/?$/.test(
+        targetUrl
+      )
+    ) {
+      // This URL is one of the allowed ones to be used for configuration.
+      return targetUrl;
+    }
+
+    console.error(
+      `The preference "devtools.performance.recording.ui-base-url" was set to a ` +
+        "URL that is not allowed. No WebChannel messages will be sent between the " +
+        `browser and that URL. Falling back to ${frontEndUrl}. Only localhost ` +
+        "and deploy previews URLs are allowed.",
+      targetUrl
+    );
+  }
+
+  return frontEndUrl;
 }
 
 XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {
@@ -572,8 +622,65 @@ DevToolsStartup.prototype = {
       return;
     }
     this.profilerRecordingButtonCreated = true;
+
+    const isPopupFeatureFlagEnabled = Services.prefs.getBoolPref(
+      "devtools.performance.popup.feature-flag",
+      AppConstants.NIGHTLY_BUILD
+    );
+
+    if (!isPopupFeatureFlagEnabled) {
+      // The profiler's popup is experimental. The plan is to eventually turn it on
+      // everywhere, but while it's under active development we don't want everyone
+      // having it enabled. For now the default pref is to turn it on with Nightly,
+      // with the option to flip the pref in other releases. This feature flag will
+      // go away once it is fully shipped.
+      return;
+    }
+
+    // Listen for messages from the front-end. This needs to happen even if the
+    // button isn't enabled yet.
+    this.initializeProfilerWebChannel();
+
     if (isProfilerButtonEnabled()) {
       ProfilerMenuButton.initialize();
+    }
+  },
+
+  /**
+   * Initialize the WebChannel for profiler.firefox.com. This function happens at
+   * startup, so care should be taken to minimize its performance impact. The WebChannel
+   * is a mechanism that is used to communicate between the browser, and front-end code.
+   */
+  initializeProfilerWebChannel() {
+    let channel;
+
+    // Register a channel for the URL in preferences. Also update the WebChannel if
+    // the URL changes.
+    const urlPref = "devtools.performance.recording.ui-base-url";
+    Services.prefs.addObserver(urlPref, registerWebChannel);
+    registerWebChannel();
+
+    function registerWebChannel() {
+      if (channel) {
+        channel.stopListening();
+      }
+
+      const urlForWebChannel = Services.io.newURI(
+        validateProfilerWebChannelUrl(Services.prefs.getStringPref(urlPref))
+      );
+
+      channel = new WebChannel("profiler.firefox.com", urlForWebChannel);
+
+      channel.listen((id, message, target) => {
+        // Defer loading the ProfilerPopupBackground script until it's absolutely needed,
+        // as this code path gets loaded at startup.
+        ProfilerPopupBackground.handleWebChannelMessage(
+          channel,
+          id,
+          message,
+          target
+        );
+      });
     }
   },
 
@@ -1249,4 +1356,4 @@ const JsonView = {
   },
 };
 
-var EXPORTED_SYMBOLS = ["DevToolsStartup"];
+var EXPORTED_SYMBOLS = ["DevToolsStartup", "validateProfilerWebChannelUrl"];

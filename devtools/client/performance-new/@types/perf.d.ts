@@ -404,3 +404,36 @@ export interface PresetDefinition {
 export interface PresetDefinitions {
   [presetName: string]: PresetDefinition;
 }
+
+export type MessageFromFrontend =
+  | {
+      type: "STATUS_QUERY";
+    }
+  | {
+      type: "ENABLE_MENU_BUTTON";
+    };
+
+export type MessageToFrontend =
+  | {
+      type: "STATUS_RESPONSE";
+      menuButtonIsEnabled: boolean;
+    }
+  | {
+      type: "ENABLE_MENU_BUTTON_DONE";
+    }
+
+/**
+ * This represents an event channel that can talk to a content page on the web.
+ * This interface is a manually typed version of toolkit/modules/WebChannel.jsm
+ * and is opinionated about the types of messages we can send with it.
+ *
+ * The definition is here rather than gecko.d.ts because it was simpler than getting
+ * generics working with the ChromeUtils.import machinery.
+ */
+export class ProfilerWebChannel {
+  constructor(id: string, url: MockedExports.nsIURI);
+  send: (message: MessageToFrontend, target: MockedExports.WebChannelTarget) => void;
+  listen: (
+    handler: (idle: string, message: MessageFromFrontend, target: MockedExports.WebChannelTarget) => void
+  ) => void;
+}
