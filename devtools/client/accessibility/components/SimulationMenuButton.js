@@ -58,7 +58,7 @@ const SIMULATION_MENU_LABELS = {
 class SimulationMenuButton extends Component {
   static get propTypes() {
     return {
-      simulate: PropTypes.func,
+      simulator: PropTypes.object.isRequired,
       simulation: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
       toolboxDoc: PropTypes.object.isRequired,
@@ -72,20 +72,20 @@ class SimulationMenuButton extends Component {
   }
 
   disableSimulation() {
-    const { dispatch, simulate: simulateFunc } = this.props;
+    const { dispatch, simulator } = this.props;
 
-    dispatch(actions.simulate(simulateFunc));
+    dispatch(actions.simulate(simulator));
   }
 
   toggleSimulation(simKey) {
-    const { dispatch, simulation, simulate: simulateFunc } = this.props;
+    const { dispatch, simulation, simulator } = this.props;
 
     if (!simulation[simKey]) {
       if (gTelemetry) {
         gTelemetry.keyedScalarAdd(TELEMETRY_SIMULATION_ACTIVATED, simKey, 1);
       }
 
-      dispatch(actions.simulate(simulateFunc, [simKey]));
+      dispatch(actions.simulate(simulator, [simKey]));
       return;
     }
 

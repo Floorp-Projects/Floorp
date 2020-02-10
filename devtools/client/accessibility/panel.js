@@ -29,11 +29,6 @@ const EVENTS = {
     "Accessibility:AccessibilityInspectorUpdated",
 };
 
-const {
-  accessibility: { AUDIT_TYPE },
-} = require("devtools/shared/constants");
-const { FILTERS } = require("devtools/client/accessibility/constants");
-
 /**
  * This object represents Accessibility panel. It's responsibility is to
  * render Accessibility Tree of the current debugger target and the sidebar that
@@ -56,15 +51,6 @@ function AccessibilityPanel(iframeWindow, toolbox, startup) {
     this
   );
   this.forceUpdatePickerButton = this.forceUpdatePickerButton.bind(this);
-  this.getAccessibilityTreeRoot = this.getAccessibilityTreeRoot.bind(this);
-  this.startListeningForAccessibilityEvents = this.startListeningForAccessibilityEvents.bind(
-    this
-  );
-  this.stopListeningForAccessibilityEvents = this.stopListeningForAccessibilityEvents.bind(
-    this
-  );
-  this.audit = this.audit.bind(this);
-  this.simulate = this.simulate.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -105,6 +91,7 @@ AccessibilityPanel.prototype = {
 
     await this.startup.initAccessibility();
     this.picker = new Picker(this);
+    this.simulator = await this.front.getSimulator();
     this.fluentBundles = await this.createFluentBundles();
 
     this.updateA11YServiceDurationTimer();
@@ -181,16 +168,11 @@ AccessibilityPanel.prototype = {
     this.shouldRefresh = false;
     this.postContentMessage("initialize", {
       front: this.front,
+      walker: this.walker,
       supports: this.supports,
       fluentBundles: this.fluentBundles,
+      simulator: this.simulator,
       toolbox: this._toolbox,
-      getAccessibilityTreeRoot: this.getAccessibilityTreeRoot,
-      startListeningForAccessibilityEvents: this
-        .startListeningForAccessibilityEvents,
-      stopListeningForAccessibilityEvents: this
-        .stopListeningForAccessibilityEvents,
-      audit: this.audit,
-      simulate: this.startup.simulator && this.simulate,
     });
   },
 
@@ -203,7 +185,7 @@ AccessibilityPanel.prototype = {
   },
 
   selectAccessible(accessibleFront) {
-    this.postContentMessage("selectAccessible", accessibleFront);
+    this.postContentMessage("selectAccessible", this.walker, accessibleFront);
   },
 
   selectAccessibleForNode(nodeFront, reason) {
@@ -215,11 +197,15 @@ AccessibilityPanel.prototype = {
       );
     }
 
-    this.postContentMessage("selectNodeAccessible", nodeFront);
+    this.postContentMessage("selectNodeAccessible", this.walker, nodeFront);
   },
 
   highlightAccessible(accessibleFront) {
-    this.postContentMessage("highlightAccessible", accessibleFront);
+    this.postContentMessage(
+      "highlightAccessible",
+      this.walker,
+      accessibleFront
+    );
   },
 
   postContentMessage(type, ...args) {
@@ -257,104 +243,6 @@ AccessibilityPanel.prototype = {
 
   stopPicker() {
     this.picker && this.picker.stop();
-  },
-
-  /**
-   * Stop picking and remove all walker listeners.
-   */
-  async cancelPick(onHovered, onPicked, onPreviewed, onCanceled) {
-    await this.walker.cancelPick();
-    this.walker.off("picker-accessible-hovered", onHovered);
-    this.walker.off("picker-accessible-picked", onPicked);
-    this.walker.off("picker-accessible-previewed", onPreviewed);
-    this.walker.off("picker-accessible-canceled", onCanceled);
-  },
-
-  /**
-   * Start picking and add walker listeners.
-   * @param  {Boolean} doFocus
-   *         If true, move keyboard focus into content.
-   */
-  async pick(doFocus, onHovered, onPicked, onPreviewed, onCanceled) {
-    this.walker.on("picker-accessible-hovered", onHovered);
-    this.walker.on("picker-accessible-picked", onPicked);
-    this.walker.on("picker-accessible-previewed", onPreviewed);
-    this.walker.on("picker-accessible-canceled", onCanceled);
-    await this.walker.pick(doFocus);
-  },
-
-  /**
-   * Return the topmost level accessibility walker to be used as the root of
-   * the accessibility tree view.
-   *
-   * @return {Object}
-   *         Topmost accessibility walker.
-   */
-  getAccessibilityTreeRoot() {
-    return this.walker;
-  },
-
-  startListeningForAccessibilityEvents(eventMap) {
-    for (const [type, listener] of Object.entries(eventMap)) {
-      this.walker.on(type, listener);
-    }
-  },
-
-  stopListeningForAccessibilityEvents(eventMap) {
-    for (const [type, listener] of Object.entries(eventMap)) {
-      this.walker.off(type, listener);
-    }
-  },
-
-  /**
-   * Perform an audit for a given filter.
-   *
-   * @param  {Object} this.walker
-   *         Accessibility walker to be used for accessibility audit.
-   * @param  {String} filter
-   *         Type of an audit to perform.
-   * @param  {Function} onError
-   *         Audit error callback.
-   * @param  {Function} onProgress
-   *         Audit progress callback.
-   * @param  {Function} onCompleted
-   *         Audit completion callback.
-   *
-   * @return {Promise}
-   *         Resolves when the audit for a top document, that the walker
-   *         traverses, completes.
-   */
-  audit(filter, onError, onProgress, onCompleted) {
-    return new Promise(resolve => {
-      const types =
-        filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
-      const auditEventHandler = ({ type, ancestries, progress }) => {
-        switch (type) {
-          case "error":
-            this.walker.off("audit-event", auditEventHandler);
-            onError();
-            resolve();
-            break;
-          case "completed":
-            this.walker.off("audit-event", auditEventHandler);
-            onCompleted(ancestries);
-            resolve();
-            break;
-          case "progress":
-            onProgress(progress);
-            break;
-          default:
-            break;
-        }
-      };
-
-      this.walker.on("audit-event", auditEventHandler);
-      this.walker.startAudit({ types });
-    });
-  },
-
-  simulate(types) {
-    return this.startup.simulator.simulate({ types });
   },
 
   get front() {

@@ -38,12 +38,12 @@ const {
 class Toolbar extends Component {
   static get propTypes() {
     return {
+      accessibilityWalker: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
       accessibility: PropTypes.object.isRequired,
       canBeDisabled: PropTypes.bool.isRequired,
+      simulator: PropTypes.object,
       toolboxDoc: PropTypes.object.isRequired,
-      audit: PropTypes.func.isRequired,
-      simulate: PropTypes.func,
     };
   }
 
@@ -86,7 +86,12 @@ class Toolbar extends Component {
   }
 
   render() {
-    const { canBeDisabled, simulate, toolboxDoc, audit } = this.props;
+    const {
+      canBeDisabled,
+      accessibilityWalker,
+      simulator,
+      toolboxDoc,
+    } = this.props;
     const { disabling } = this.state;
     const disableButtonStr = disabling
       ? "accessibility.disabling"
@@ -102,13 +107,13 @@ class Toolbar extends Component {
       title = L10N.getStr("accessibility.disable.disabledTitle");
     }
 
-    const optionalSimulationSection = simulate
+    const optionalSimulationSection = simulator
       ? [
           div({
             role: "separator",
             className: "devtools-separator",
           }),
-          SimulationMenuButton({ simulate, toolboxDoc }),
+          SimulationMenuButton({ simulator, toolboxDoc }),
         ]
       : [];
 
@@ -142,7 +147,7 @@ class Toolbar extends Component {
         L10N.getStr("accessibility.beta")
       ),
       AccessibilityTreeFilter({
-        audit,
+        accessibilityWalker,
         describedby: betaID,
         toolboxDoc,
       }),
