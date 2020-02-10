@@ -20,16 +20,40 @@ exports.fetchChildren = accessible => dispatch =>
     .then(response => dispatch({ accessible, type: FETCH_CHILDREN, response }))
     .catch(error => dispatch({ accessible, type: FETCH_CHILDREN, error }));
 
-exports.select = (accessibilityWalker, accessible) => dispatch =>
-  accessibilityWalker
+exports.select = accessible => dispatch => {
+  const accessibleWalkerFront = accessible.parent();
+  if (!accessibleWalkerFront) {
+    dispatch({
+      accessible,
+      type: SELECT,
+      error: new Error("AccessibleWalker front is not available."),
+    });
+
+    return Promise.reject();
+  }
+
+  return accessibleWalkerFront
     .getAncestry(accessible)
     .then(response => dispatch({ accessible, type: SELECT, response }))
     .catch(error => dispatch({ accessible, type: SELECT, error }));
+};
 
-exports.highlight = (accessibilityWalker, accessible) => dispatch =>
-  accessibilityWalker
+exports.highlight = accessible => dispatch => {
+  const accessibleWalkerFront = accessible.parent();
+  if (!accessibleWalkerFront) {
+    dispatch({
+      accessible,
+      type: SELECT,
+      error: new Error("AccessibleWalker front is not available."),
+    });
+
+    return Promise.reject();
+  }
+
+  return accessibleWalkerFront
     .getAncestry(accessible)
     .then(response => dispatch({ accessible, type: HIGHLIGHT, response }))
     .catch(error => dispatch({ accessible, type: HIGHLIGHT, error }));
+};
 
 exports.unhighlight = () => dispatch => dispatch({ type: UNHIGHLIGHT });
