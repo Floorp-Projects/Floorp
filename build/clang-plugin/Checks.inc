@@ -13,6 +13,7 @@ CHECK(ExplicitOperatorBoolChecker, "explicit-operator-bool")
 CHECK(KungFuDeathGripChecker, "kungfu-death-grip")
 #ifdef _WIN32
 CHECK(LoadLibraryUsageChecker, "load-library-usage")
+CHECK(FopenUsageChecker, "fopen-usage")
 #endif
 CHECK(MustOverrideChecker, "must-override")
 CHECK(MustReturnFromCallerChecker, "must-return-from-caller")

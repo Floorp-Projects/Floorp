@@ -48,6 +48,7 @@ HOST_SOURCES += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     HOST_SOURCES += [
+        'FopenUsageChecker.cpp',
         'LoadLibraryUsageChecker.cpp',
     ]
 
