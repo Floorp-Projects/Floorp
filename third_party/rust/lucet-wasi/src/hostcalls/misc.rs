@@ -5,6 +5,8 @@ use crate::ctx::WasiCtx;
 use crate::memory::*;
 use crate::{host, wasm32};
 
+use super::timers;
+
 use cast::From as _0;
 use lucet_runtime::lucet_hostcall_terminate;
 use lucet_runtime::vmctx::Vmctx;
@@ -125,7 +127,7 @@ pub fn wasi_clock_res_get(
 
     // no `nix` wrapper for clock_getres, so we do it ourselves
     let mut timespec = MaybeUninit::<libc::timespec>::uninit();
-    let res = unsafe { libc::clock_getres(clock_id, timespec.as_mut_ptr()) };
+    let res = unsafe { timers::clock_getres_helper(clock_id, timespec.as_mut_ptr()) };
     if res != 0 {
         return wasm32::errno_from_nix(nix::errno::Errno::last());
     }
@@ -169,7 +171,7 @@ pub fn wasi_clock_time_get(
 
     // no `nix` wrapper for clock_getres, so we do it ourselves
     let mut timespec = MaybeUninit::<libc::timespec>::uninit();
-    let res = unsafe { libc::clock_gettime(clock_id, timespec.as_mut_ptr()) };
+    let res = unsafe { timers::clock_gettime_helper(clock_id, timespec.as_mut_ptr()) };
     if res != 0 {
         return wasm32::errno_from_nix(nix::errno::Errno::last());
     }
