@@ -16,6 +16,12 @@ import kotlinx.android.synthetic.main.fragment_add_ons_management.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.CoroutineScope
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
@@ -36,6 +42,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
      * Whether or not an add-on installation is in progress.
      */
     private var isInstallationInProgress = false
+    private var scope: CoroutineScope? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,11 +54,26 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
         showToolbar(getString(R.string.preferences_addons))
     }
 
+    @UseExperimental(ExperimentalCoroutinesApi::class)
     override fun onStart() {
         super.onStart()
         findPreviousDialogFragment()?.let { dialog ->
             dialog.onPositiveButtonClicked = onPositiveButtonClicked
         }
+
+        scope = requireContext().components.core.store.flowScoped { flow ->
+            flow.ifChanged { it.extensions }
+                .collect { _ ->
+                    view?.let {
+                        bindRecyclerView(it)
+                    }
+                }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        scope?.cancel()
     }
 
     override fun onAddonItemClicked(addon: Addon) {
