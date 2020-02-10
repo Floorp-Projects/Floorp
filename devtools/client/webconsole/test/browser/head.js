@@ -74,12 +74,14 @@ registerCleanupFunction(async function() {
  *        The URL for the tab to be opened.
  * @param Boolean clearJstermHistory
  *        true (default) if the jsterm history should be cleared.
+ * @param String hostId (optional)
+ *        The type of toolbox host to be used.
  * @return Promise
  *         Resolves when the tab has been added, loaded and the toolbox has been opened.
  *         Resolves to the toolbox.
  */
-async function openNewTabAndConsole(url, clearJstermHistory = true) {
-  const toolbox = await openNewTabAndToolbox(url, "webconsole");
+async function openNewTabAndConsole(url, clearJstermHistory = true, hostId) {
+  const toolbox = await openNewTabAndToolbox(url, "webconsole", hostId);
   const hud = toolbox.getCurrentPanel().hud;
 
   if (clearJstermHistory) {

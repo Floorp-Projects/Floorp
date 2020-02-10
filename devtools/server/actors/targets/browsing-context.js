@@ -1168,7 +1168,8 @@ const browsingContextTargetPrototype = {
     this._setCacheDisabled(false);
     this._setServiceWorkersTestingEnabled(false);
     this._setPaintFlashingEnabled(false);
-    if (this._restoreFocus) {
+
+    if (this._restoreFocus && this.window.docShell.isActive) {
       this.window.focus();
     }
   },
