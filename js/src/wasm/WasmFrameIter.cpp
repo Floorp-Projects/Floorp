@@ -465,7 +465,7 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
 
     *entry = masm.currentOffset();
 
-    MOZ_ASSERT(BeforePushRetAddr == 0);
+    static_assert(BeforePushRetAddr == 0);
     masm.push(lr);
 #  else
     *entry = masm.currentOffset();
@@ -703,7 +703,7 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm, Offsets* offsets) {
     AutoForbidPoolsAndNops afp(&masm,
                                /* number of instructions in scope = */ 2);
     offsets->begin = masm.currentOffset();
-    MOZ_ASSERT(BeforePushRetAddr == 0);
+    static_assert(BeforePushRetAddr == 0);
     masm.push(lr);
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     offsets->begin = masm.currentOffset();
@@ -712,7 +712,7 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm, Offsets* offsets) {
     AutoForbidPoolsAndNops afp(&masm,
                                /* number of instructions in scope = */ 3);
     offsets->begin = masm.currentOffset();
-    MOZ_ASSERT(BeforePushRetAddr == 0);
+    static_assert(BeforePushRetAddr == 0);
     // Subtract from SP first as SP must be aligned before offsetting.
     masm.Sub(sp, sp, 8);
     masm.storePtr(lr, Address(masm.getStackPointer(), 0));
