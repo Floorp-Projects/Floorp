@@ -85,9 +85,9 @@ class NewObjectCache {
   static const unsigned MAX_OBJ_SIZE = 4 * sizeof(void*) + 16 * sizeof(Value);
 
   static void staticAsserts() {
-    JS_STATIC_ASSERT(NewObjectCache::MAX_OBJ_SIZE == sizeof(JSObject_Slots16));
-    JS_STATIC_ASSERT(gc::AllocKind::OBJECT_LAST ==
-                     gc::AllocKind::OBJECT16_BACKGROUND);
+    static_assert(NewObjectCache::MAX_OBJ_SIZE == sizeof(JSObject_Slots16));
+    static_assert(gc::AllocKind::OBJECT_LAST ==
+                  gc::AllocKind::OBJECT16_BACKGROUND);
   }
 
   struct Entry {

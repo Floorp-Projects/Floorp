@@ -446,8 +446,8 @@ class ObjectGroup : public gc::TenuredCell {
                                    uint32_t count);
 
   static void staticAsserts() {
-    JS_STATIC_ASSERT(offsetof(ObjectGroup, proto_) ==
-                     offsetof(js::shadow::ObjectGroup, proto));
+    static_assert(offsetof(ObjectGroup, proto_) ==
+                  offsetof(js::shadow::ObjectGroup, proto));
   }
 
  public:

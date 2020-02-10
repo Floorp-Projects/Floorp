@@ -333,8 +333,8 @@ class InterpreterFrame {
   LifoAlloc::Mark mark_; /* Used to release memory for this frame. */
 
   static void staticAsserts() {
-    JS_STATIC_ASSERT(offsetof(InterpreterFrame, rval_) % sizeof(Value) == 0);
-    JS_STATIC_ASSERT(sizeof(InterpreterFrame) % sizeof(Value) == 0);
+    static_assert(offsetof(InterpreterFrame, rval_) % sizeof(Value) == 0);
+    static_assert(sizeof(InterpreterFrame) % sizeof(Value) == 0);
   }
 
   /*
