@@ -181,8 +181,8 @@ static_assert(JitStackAlignment % SimdMemoryAlignment == 0,
               "spilled values.  Thus it should be larger than the alignment "
               "for SIMD accesses.");
 
-static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
-static const uint32_t WasmTrapInstructionLength = 2;
+static constexpr uint32_t WasmStackAlignment = SimdMemoryAlignment;
+static constexpr uint32_t WasmTrapInstructionLength = 2;
 
 struct ImmTag : public Imm32 {
   explicit ImmTag(JSValueTag mask) : Imm32(int32_t(mask)) {}
@@ -192,7 +192,7 @@ struct ImmType : public ImmTag {
   explicit ImmType(JSValueType type) : ImmTag(JSVAL_TYPE_TO_TAG(type)) {}
 };
 
-static const Scale ScalePointer = TimesFour;
+static constexpr Scale ScalePointer = TimesFour;
 
 }  // namespace jit
 }  // namespace js
