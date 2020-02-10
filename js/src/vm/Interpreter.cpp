@@ -302,6 +302,10 @@ JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
   ctor->setIsConstructor();
   ctor->setIsClassConstructor();
 
+  if (!JSFunction::setTypeForScriptedFunction(cx, ctor)) {
+    return nullptr;
+  }
+
   // Create the script now, so we can fix up its source span below.
   RootedScript ctorScript(cx, JSFunction::getOrCreateScript(cx, ctor));
   if (!ctorScript) {
