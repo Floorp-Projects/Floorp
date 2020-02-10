@@ -539,14 +539,14 @@ Debugger::~Debugger() {
   }
 }
 
-JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
-                 unsigned(DebuggerScript::OWNER_SLOT));
-JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
-                 unsigned(DebuggerSource::OWNER_SLOT));
-JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
-                 unsigned(JSSLOT_DEBUGOBJECT_OWNER));
-JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
-                 unsigned(DebuggerEnvironment::OWNER_SLOT));
+static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
+              unsigned(DebuggerScript::OWNER_SLOT));
+static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
+              unsigned(DebuggerSource::OWNER_SLOT));
+static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
+              unsigned(JSSLOT_DEBUGOBJECT_OWNER));
+static_assert(unsigned(DebuggerFrame::OWNER_SLOT) ==
+              unsigned(DebuggerEnvironment::OWNER_SLOT));
 
 #ifdef DEBUG
 /* static */
