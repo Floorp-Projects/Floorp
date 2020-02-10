@@ -5,9 +5,6 @@
 "use strict";
 
 const {
-  accessibility: { AUDIT_TYPE },
-} = require("devtools/shared/constants");
-const {
   AUDIT,
   AUDIT_PROGRESS,
   AUDITING,
@@ -23,29 +20,10 @@ exports.auditing = filter => dispatch => {
   return dispatch({ auditing, type: AUDITING });
 };
 
-exports.audit = (accessibilityWalker, filter) => dispatch =>
-  new Promise(resolve => {
-    const types = filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
-    const auditEventHandler = ({ type, ancestries, progress }) => {
-      switch (type) {
-        case "error":
-          accessibilityWalker.off("audit-event", auditEventHandler);
-          dispatch({ type: AUDIT, error: true });
-          resolve();
-          break;
-        case "completed":
-          accessibilityWalker.off("audit-event", auditEventHandler);
-          dispatch({ type: AUDIT, response: ancestries });
-          resolve();
-          break;
-        case "progress":
-          dispatch({ type: AUDIT_PROGRESS, progress });
-          break;
-        default:
-          break;
-      }
-    };
-
-    accessibilityWalker.on("audit-event", auditEventHandler);
-    accessibilityWalker.startAudit({ types });
-  });
+exports.audit = (auditFunc, filter) => dispatch =>
+  auditFunc(
+    filter,
+    () => dispatch({ type: AUDIT, error: true }),
+    progress => dispatch({ type: AUDIT_PROGRESS, progress }),
+    ancestries => dispatch({ type: AUDIT, response: ancestries })
+  );
