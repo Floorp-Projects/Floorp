@@ -133,7 +133,7 @@ class JitcodeGlobalEntry {
     Query,
     LIMIT
   };
-  JS_STATIC_ASSERT(LIMIT <= 8);
+  static_assert(LIMIT <= 8);
 
   struct BytecodeLocation {
     JSScript* script;

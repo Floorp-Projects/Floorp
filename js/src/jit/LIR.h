@@ -422,7 +422,7 @@ class LDefinition {
   };
 
   void set(uint32_t index, Type type, Policy policy) {
-    JS_STATIC_ASSERT(MAX_VIRTUAL_REGISTERS <= VREG_MASK);
+    static_assert(MAX_VIRTUAL_REGISTERS <= VREG_MASK);
     bits_ =
         (index << VREG_SHIFT) | (policy << POLICY_SHIFT) | (type << TYPE_SHIFT);
     MOZ_ASSERT_IF(!SupportsSimd, !isSimdType());

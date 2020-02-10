@@ -666,7 +666,7 @@ class IonDOMMethodExitFrameLayout {
 
   inline Value* vp() {
     // The code in visitCallDOMNative depends on this static assert holding
-    JS_STATIC_ASSERT(
+    static_assert(
         offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_) ==
         (offsetof(IonDOMMethodExitFrameLayout, argc_) + sizeof(uintptr_t)));
     return reinterpret_cast<Value*>(&loCalleeResult_);

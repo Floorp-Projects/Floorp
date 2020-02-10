@@ -579,7 +579,7 @@ struct PoolHeader {
 
 
 void MozBaseAssembler::WritePoolHeader(uint8_t* start, js::jit::Pool* p, bool isNatural) {
-  JS_STATIC_ASSERT(sizeof(PoolHeader) == 4);
+  static_assert(sizeof(PoolHeader) == 4);
 
   // Get the total size of the pool.
   const uintptr_t totalPoolSize = sizeof(PoolHeader) + p->getPoolSize();
