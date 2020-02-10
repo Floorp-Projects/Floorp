@@ -531,6 +531,7 @@ bool LengthPercentage::IsCalc() const { return Tag() == TAG_CALC; }
 
 StyleCalcLengthPercentage& LengthPercentage::AsCalc() {
   MOZ_ASSERT(IsCalc());
+  // NOTE: in 32-bits, the pointer is not swapped, and goes along with the tag.
 #ifdef SERVO_32_BITS
   return *calc.ptr;
 #else
@@ -551,6 +552,8 @@ StyleLengthPercentageUnion::StyleLengthPercentageUnion(const Self& aOther) {
   } else {
     MOZ_ASSERT(aOther.IsCalc());
     auto* ptr = new StyleCalcLengthPercentage(aOther.AsCalc());
+    // NOTE: in 32-bits, the pointer is not swapped, and goes along with the
+    // tag.
     calc = {
 #ifdef SERVO_32_BITS
         TAG_CALC,
