@@ -157,17 +157,6 @@ loader.lazyGetter(this, "registerHarOverlay", () => {
   return require("devtools/client/netmonitor/src/har/toolbox-overlay").register;
 });
 
-loader.lazyGetter(
-  this,
-  "reloadAndRecordTab",
-  () => require("devtools/client/webreplay/menu.js").reloadAndRecordTab
-);
-loader.lazyGetter(
-  this,
-  "reloadAndStopRecordingTab",
-  () => require("devtools/client/webreplay/menu.js").reloadAndStopRecordingTab
-);
-
 loader.lazyRequireGetter(
   this,
   "defaultThreadOptions",
@@ -768,12 +757,6 @@ Toolbox.prototype = {
         window: this.win,
         useOnlyShared: true,
       }).require;
-
-      // The web console is immediately loaded when replaying, so that the
-      // timeline will always be populated with generated messages.
-      if (this.target.isReplayEnabled()) {
-        await this.loadTool("webconsole");
-      }
 
       this.isReady = true;
 
@@ -2143,12 +2126,7 @@ Toolbox.prototype = {
   _commandIsVisible: function(button) {
     const { isTargetSupported, isCurrentlyVisible, visibilityswitch } = button;
 
-    const defaultValue =
-      button.id !== "command-button-replay"
-        ? true
-        : Services.prefs.getBoolPref("devtools.recordreplay.mvp.enabled");
-
-    if (!Services.prefs.getBoolPref(visibilityswitch, defaultValue)) {
+    if (!Services.prefs.getBoolPref(visibilityswitch, true)) {
       return false;
     }
 
@@ -2869,12 +2847,7 @@ Toolbox.prototype = {
    * Tells the target tab to reload.
    */
   reloadTarget: function(force) {
-    if (this.target.canRewind) {
-      // Recording tabs need to be reloaded in a new content process.
-      reloadAndRecordTab();
-    } else {
-      this.target.reload({ force: force });
-    }
+    this.target.reload({ force: force });
   },
 
   /**
@@ -3540,11 +3513,7 @@ Toolbox.prototype = {
   },
 
   closeToolbox: async function() {
-    const shouldStopRecording = this.target.isReplayEnabled();
     await this.destroy();
-    if (shouldStopRecording) {
-      reloadAndStopRecordingTab();
-    }
   },
 
   /**

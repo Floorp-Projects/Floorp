@@ -19,18 +19,10 @@ html[dir="rtl"] .command-bar {
   flex-grow: 1;
 }
 
-.command-bar .replay-inactive {
-  opacity: 0.5;
-}
-
 .command-bar .step-position {
   color: var(--theme-text-color-inactive);
   padding-top: 8px;
   margin-inline-end: 4px;
-}
-
-.command-bar .replay-active {
-  color: var(--theme-highlight-blue);
 }
 
 .command-bar .active .disable-pausing {

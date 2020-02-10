@@ -21,7 +21,6 @@ const {
 } = require("devtools/shared/inspector/css-logic");
 const InspectorUtils = require("InspectorUtils");
 const Debugger = require("Debugger");
-const ReplayInspector = require("devtools/server/actors/replay/inspector");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
@@ -305,11 +304,6 @@ var TestActor = (exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   },
 
   get content() {
-    // When replaying, the content window is in the replaying process. We can't
-    // use isReplaying here because this actor is loaded into its own sandbox.
-    if (Debugger.recordReplayProcessKind() == "Middleman") {
-      return ReplayInspector.window;
-    }
     return this.targetActor.window;
   },
 
