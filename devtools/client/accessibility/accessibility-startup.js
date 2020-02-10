@@ -33,6 +33,10 @@ class AccessibilityStartup {
     return this._accessibility.accessibleWalkerFront;
   }
 
+  get simulator() {
+    return this._accessibility.simulatorFront;
+  }
+
   /**
    * Determine which features are supported based on the version of the server.
    * @return {Promise}

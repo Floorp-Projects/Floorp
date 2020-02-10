@@ -189,6 +189,7 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
 
   async initialize() {
     this.accessibleWalkerFront = await super.getWalker();
+    this.simulatorFront = await super.getSimulator();
     ({
       enabled: this.enabled,
       canBeEnabled: this.canBeEnabled,
@@ -198,6 +199,10 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
 
   async getWalker() {
     return this.accessibleWalkerFront;
+  }
+
+  async getSimulator() {
+    return this.simulatorFront;
   }
 
   init() {
