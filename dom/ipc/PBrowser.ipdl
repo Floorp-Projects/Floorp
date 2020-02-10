@@ -995,11 +995,6 @@ child:
     async AwaitLargeAlloc();
 
     /**
-     * Tell the BrowserChild to set the name of its toplevel docshell to the given name.
-     */
-    async SetWindowName(nsString aName);
-
-    /**
      * Tell the BrowserChild to allow scripts in the docshell to close the window.
      */
     async AllowScriptsToClose();

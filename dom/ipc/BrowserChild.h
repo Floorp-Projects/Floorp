@@ -719,8 +719,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvAwaitLargeAlloc();
 
-  mozilla::ipc::IPCResult RecvSetWindowName(const nsString& aName);
-
   mozilla::ipc::IPCResult RecvAllowScriptsToClose();
 
   mozilla::ipc::IPCResult RecvSetOriginAttributes(
