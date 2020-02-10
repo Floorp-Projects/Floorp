@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.webcompat
 
-import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -16,8 +16,11 @@ object WebCompatFeature {
     internal const val WEBCOMPAT_EXTENSION_ID = "webcompat@mozilla.com"
     internal const val WEBCOMPAT_EXTENSION_URL = "resource://android/assets/extensions/webcompat/"
 
-    fun install(engine: Engine) {
-        engine.installWebExtension(WEBCOMPAT_EXTENSION_ID, WEBCOMPAT_EXTENSION_URL,
+    /**
+     * Installs the web extension in the runtime through the WebExtensionRuntime install method
+     */
+    fun install(runtime: WebExtensionRuntime) {
+        runtime.installWebExtension(WEBCOMPAT_EXTENSION_ID, WEBCOMPAT_EXTENSION_URL,
             onSuccess = {
                 logger.debug("Installed WebCompat webextension: ${it.id}")
             },

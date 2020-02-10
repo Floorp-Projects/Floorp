@@ -465,7 +465,7 @@ class WebExtensionSupportTest {
 
         val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
         WebExtensionSupport.initialize(
-            engine = engine,
+            runtime = engine,
             store = store,
             onUpdatePermissionRequest = { _, _, _, _ ->
                 executed = true
