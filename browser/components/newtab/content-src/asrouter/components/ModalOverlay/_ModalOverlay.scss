@@ -63,6 +63,10 @@ $modal-scrollbar-z-index: 1100;
     fill: $white;
     position: absolute;
 
+    &:hover {
+      background-color: $trailhead-purple;
+    }
+
     &:focus {
       border: 1px dotted;
     }

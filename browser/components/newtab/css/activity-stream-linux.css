@@ -3350,6 +3350,8 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     padding: 20px;
     fill: #FFF;
     position: absolute; }
+    .modalOverlayInner .icon-dismiss:hover {
+      background-color: #2B2156; }
     .modalOverlayInner .icon-dismiss:focus {
       border: 1px dotted; }
   .modalOverlayInner h2 {
@@ -4194,6 +4196,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       width: 1042px; } }
   .trailheadCardsInner .icon-dismiss {
     border: 0;
+    border-radius: 4px;
     cursor: pointer;
     inset-inline-end: 15px;
     padding: 15px;
@@ -4201,7 +4204,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     position: absolute;
     top: 15px; }
     .trailheadCardsInner .icon-dismiss:hover, .trailheadCardsInner .icon-dismiss:focus {
-      background-color: var(--newtab-element-hover-color); }
+      background-color: var(--newtab-element-active-color); }
 
 .trailheadCardGrid {
   display: grid;
