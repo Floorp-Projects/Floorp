@@ -7,6 +7,7 @@ repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodrive
 readme = "README.md"
 license = "MPL-2.0"
 publish = false
+edition = "2018"
 
 [dependencies]
 base64 = "0.10"
