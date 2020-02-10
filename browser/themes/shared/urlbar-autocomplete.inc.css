@@ -63,7 +63,7 @@
 
 .urlbarView.megabar .urlbarView-body-inner {
   width: 100%;
-  border-top: 1px solid var(--urlbar-separator-color);
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 .urlbarView:not(.megabar) {
@@ -387,7 +387,7 @@
 
 .urlbarView-title-separator::before {
   content: "\2014";
-  color: var(--urlbar-separator-color);
+  color: var(--panel-disabled-color);
   margin: 0 .4em;
 }
 
