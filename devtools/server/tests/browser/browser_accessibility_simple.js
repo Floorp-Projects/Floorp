@@ -35,8 +35,14 @@ add_task(async function() {
   ok(accessibility.getWalker, "The getWalker method exists");
   ok(accessibility.getSimulator, "The getSimulator method exists");
 
+  ok(accessibility.accessibleWalkerFront, "Accessible walker was initialized");
+
   let a11yWalker = await accessibility.getWalker();
-  ok(a11yWalker, "The AccessibleWalkerFront was returned");
+  is(
+    a11yWalker,
+    accessibility.accessibleWalkerFront,
+    "The AccessibleWalkerFront was returned"
+  );
 
   const a11ySimulator = await accessibility.getSimulator();
   const webRenderEnabled = isWebRenderEnabled(window);
