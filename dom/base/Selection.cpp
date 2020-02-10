@@ -812,8 +812,8 @@ nsresult Selection::SubtractRange(StyledRange& aRange, nsRange& aSubtract,
   return NS_OK;
 }
 
-void Selection::UserSelectRangesToAdd(nsRange* aItem,
-                                      nsTArray<RefPtr<nsRange>>& aRangesToAdd) {
+static void UserSelectRangesToAdd(nsRange* aItem,
+                                  nsTArray<RefPtr<nsRange>>& aRangesToAdd) {
   // We cannot directly call IsEditorSelection() because we may be in an
   // inconsistent state during Collapse() (we're cleared already but we haven't
   // got a new focus node yet).
@@ -1271,7 +1271,7 @@ nsresult Selection::GetPrimaryFrameForAnchorNode(nsIFrame** aReturnFrame) {
   *aReturnFrame = 0;
   nsCOMPtr<nsIContent> content = do_QueryInterface(GetAnchorNode());
   if (content && mFrameSelection) {
-    *aReturnFrame = mFrameSelection->GetFrameForNodeOffset(
+    *aReturnFrame = nsFrameSelection::GetFrameForNodeOffset(
         content, AnchorOffset(), mFrameSelection->GetHint(), &frameOffset);
     if (*aReturnFrame) return NS_OK;
   }
@@ -1344,8 +1344,8 @@ nsresult Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
         /* aReturnUnadjustedFrame = */ nullptr, aOffsetUsed);
   }
 
-  *aReturnFrame = mFrameSelection->GetFrameForNodeOffset(aContent, aOffset,
-                                                         hint, aOffsetUsed);
+  *aReturnFrame = nsFrameSelection::GetFrameForNodeOffset(aContent, aOffset,
+                                                          hint, aOffsetUsed);
   if (!*aReturnFrame) {
     return NS_ERROR_FAILURE;
   }
@@ -2819,7 +2819,7 @@ nsIFrame* Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion,
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
   NS_ENSURE_TRUE(content.get(), nullptr);
   int32_t frameOffset = 0;
-  frame = mFrameSelection->GetFrameForNodeOffset(
+  frame = nsFrameSelection::GetFrameForNodeOffset(
       content, nodeOffset, mFrameSelection->GetHint(), &frameOffset);
   if (!frame) return nullptr;
 

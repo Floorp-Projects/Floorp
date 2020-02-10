@@ -626,7 +626,7 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
     RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
     if (frameSelection) {
       int32_t offset;
-      nsIFrame* theFrame = frameSelection->GetFrameForNodeOffset(
+      nsIFrame* theFrame = nsFrameSelection::GetFrameForNodeOffset(
           offsets.content, offsets.offset, offsets.associate, &offset);
       if (theFrame && theFrame != ptFrame) {
         SetSelectionDragState(true);
@@ -1066,9 +1066,8 @@ nsIFrame* AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
   }
 
   nsCOMPtr<nsIContent> startContent = do_QueryInterface(startNode);
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
-  nsIFrame* startFrame =
-      fs->GetFrameForNodeOffset(startContent, nodeOffset, hint, aOutOffset);
+  nsIFrame* startFrame = nsFrameSelection::GetFrameForNodeOffset(
+      startContent, nodeOffset, hint, aOutOffset);
 
   if (!startFrame) {
     ErrorResult err;

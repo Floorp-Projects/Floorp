@@ -96,6 +96,27 @@ impl FontRelativeLength {
         }
     }
 
+    fn try_sum(&self, other: &Self) -> Result<Self, ()> {
+        use self::FontRelativeLength::*;
+
+        if std::mem::discriminant(self) != std::mem::discriminant(other) {
+            return Err(());
+        }
+
+        Ok(match (self, other) {
+            (&Em(one), &Em(other)) => Em(one + other),
+            (&Ex(one), &Ex(other)) => Ex(one + other),
+            (&Ch(one), &Ch(other)) => Ch(one + other),
+            (&Rem(one), &Rem(other)) => Rem(one + other),
+            // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
+            // able to figure it own on its own so we help.
+            _ => unsafe {
+                match *self { Em(..) | Ex(..) | Ch(..) | Rem(..) => {} }
+                debug_unreachable!("Forgot to handle unit in try_sum()")
+            },
+        })
+    }
+
     /// Computes the font-relative length.
     pub fn to_computed_value(
         &self,
@@ -247,6 +268,27 @@ impl ViewportPercentageLength {
         }
     }
 
+    fn try_sum(&self, other: &Self) -> Result<Self, ()> {
+        use self::ViewportPercentageLength::*;
+
+        if std::mem::discriminant(self) != std::mem::discriminant(other) {
+            return Err(());
+        }
+
+        Ok(match (self, other) {
+            (&Vw(one), &Vw(other)) => Vw(one + other),
+            (&Vh(one), &Vh(other)) => Vh(one + other),
+            (&Vmin(one), &Vmin(other)) => Vmin(one + other),
+            (&Vmax(one), &Vmax(other)) => Vmax(one + other),
+            // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
+            // able to figure it own on its own so we help.
+            _ => unsafe {
+                match *self { Vw(..) | Vh(..) | Vmin(..) | Vmax(..) => {} }
+                debug_unreachable!("Forgot to handle unit in try_sum()")
+            },
+        })
+    }
+
     /// Computes the given viewport-relative length for the given viewport size.
     pub fn to_computed_value(&self, viewport_size: Size2D<Au>) -> CSSPixelLength {
         let (factor, length) = match *self {
@@ -351,6 +393,12 @@ impl ToComputedValue for AbsoluteLength {
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
         AbsoluteLength::Px(computed.px())
+    }
+}
+
+impl PartialOrd for AbsoluteLength {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        self.to_px().partial_cmp(&other.to_px())
     }
 }
 
@@ -468,6 +516,30 @@ impl NoCalcLength {
         })
     }
 
+    /// Try to sume two lengths if compatible into the left hand side.
+    pub(crate) fn try_sum(&self, other: &Self) -> Result<Self, ()> {
+        use self::NoCalcLength::*;
+
+        if std::mem::discriminant(self) != std::mem::discriminant(other) {
+            return Err(());
+        }
+
+        Ok(match (self, other) {
+            (&Absolute(ref one), &Absolute(ref other)) => Absolute(*one + *other),
+            (&FontRelative(ref one), &FontRelative(ref other)) => FontRelative(one.try_sum(other)?),
+            (&ViewportPercentage(ref one), &ViewportPercentage(ref other)) => ViewportPercentage(one.try_sum(other)?),
+            (&ServoCharacterWidth(ref one), &ServoCharacterWidth(ref other)) => {
+                ServoCharacterWidth(CharacterWidth(one.0 + other.0))
+            },
+            // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
+            // able to figure it own on its own so we help.
+            _ => unsafe {
+                match *self { Absolute(..) | FontRelative(..) | ViewportPercentage(..) | ServoCharacterWidth(..) => {} }
+                debug_unreachable!("Forgot to handle unit in try_sum()")
+            },
+        })
+    }
+
     /// Get a px value without context.
     #[inline]
     pub fn to_computed_pixel_length_without_context(&self) -> Result<CSSFloat, ()> {
@@ -485,6 +557,29 @@ impl NoCalcLength {
 }
 
 impl SpecifiedValueInfo for NoCalcLength {}
+
+impl PartialOrd for NoCalcLength {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        use self::NoCalcLength::*;
+
+        if std::mem::discriminant(self) != std::mem::discriminant(other) {
+            return None;
+        }
+
+        match (self, other) {
+            (&Absolute(ref one), &Absolute(ref other)) => one.to_px().partial_cmp(&other.to_px()),
+            (&FontRelative(ref one), &FontRelative(ref other)) => one.partial_cmp(other),
+            (&ViewportPercentage(ref one), &ViewportPercentage(ref other)) => one.partial_cmp(other),
+            (&ServoCharacterWidth(ref one), &ServoCharacterWidth(ref other)) => one.0.partial_cmp(&other.0),
+            // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
+            // able to figure it own on its own so we help.
+            _ => unsafe {
+                match *self { Absolute(..) | FontRelative(..) | ViewportPercentage(..) | ServoCharacterWidth(..) => {} }
+                debug_unreachable!("Forgot an arm in partial_cmp?")
+            },
+        }
+    }
+}
 
 impl Zero for NoCalcLength {
     fn zero() -> Self {
@@ -534,6 +629,29 @@ impl Mul<CSSFloat> for Length {
     }
 }
 
+impl PartialOrd for FontRelativeLength {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        use self::FontRelativeLength::*;
+
+        if std::mem::discriminant(self) != std::mem::discriminant(other) {
+            return None;
+        }
+
+        match (self, other) {
+            (&Em(ref one), &Em(ref other)) => one.partial_cmp(other),
+            (&Ex(ref one), &Ex(ref other)) => one.partial_cmp(other),
+            (&Ch(ref one), &Ch(ref other)) => one.partial_cmp(other),
+            (&Rem(ref one), &Rem(ref other)) => one.partial_cmp(other),
+            // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
+            // able to figure it own on its own so we help.
+            _ => unsafe {
+                match *self { Em(..) | Ex(..) | Ch(..) | Rem(..) => {} }
+                debug_unreachable!("Forgot an arm in partial_cmp?")
+            },
+        }
+    }
+}
+
 impl Mul<CSSFloat> for FontRelativeLength {
     type Output = FontRelativeLength;
 
@@ -558,6 +676,29 @@ impl Mul<CSSFloat> for ViewportPercentageLength {
             ViewportPercentageLength::Vh(v) => ViewportPercentageLength::Vh(v * scalar),
             ViewportPercentageLength::Vmin(v) => ViewportPercentageLength::Vmin(v * scalar),
             ViewportPercentageLength::Vmax(v) => ViewportPercentageLength::Vmax(v * scalar),
+        }
+    }
+}
+
+impl PartialOrd for ViewportPercentageLength {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        use self::ViewportPercentageLength::*;
+
+        if std::mem::discriminant(self) != std::mem::discriminant(other) {
+            return None;
+        }
+
+        match (self, other) {
+            (&Vw(ref one), &Vw(ref other)) => one.partial_cmp(other),
+            (&Vh(ref one), &Vh(ref other)) => one.partial_cmp(other),
+            (&Vmin(ref one), &Vmin(ref other)) => one.partial_cmp(other),
+            (&Vmax(ref one), &Vmax(ref other)) => one.partial_cmp(other),
+            // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
+            // able to figure it own on its own so we help.
+            _ => unsafe {
+                match *self { Vw(..) | Vh(..) | Vmin(..) | Vmax(..) => {} }
+                debug_unreachable!("Forgot an arm in partial_cmp?")
+            },
         }
     }
 }
