@@ -62,7 +62,6 @@ fn lucet_load_module_helper(module_path: &String, allow_stdio: bool) -> Result<L
             heap_address_space_size: 8 * 1024 * 1024 * 1024, // 8GB
             stack_size: 8 * 1024 * 1024,                     // 8MB - pthread default
             globals_size: globals_size,
-            ..Limits::default()
         },
         4 * 1024 * 1024 * 1024,                              // 4GB heap alignment
     )?;

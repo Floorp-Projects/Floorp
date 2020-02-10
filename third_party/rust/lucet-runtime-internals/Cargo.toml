@@ -24,7 +24,6 @@ nix = "0.13"
 num-derive = "0.3"
 num-traits = "0.2"
 xfailure = "0.1"
-raw-cpuid = "7.0.3"
 
 # This is only a dependency to ensure that other crates don't pick a newer version as a transitive
 # dependency. `0.1.3 < getrandom <= 0.1.6` cause `lazy_static` to pull in spinlock implementations

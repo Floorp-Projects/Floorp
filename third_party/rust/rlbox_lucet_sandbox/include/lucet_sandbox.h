@@ -1,12 +1,12 @@
 #ifndef LUCET_SANDBOX_H
 #define LUCET_SANDBOX_H
 
-#include <stdint.h>
-#include <stdlib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
+#include <stdlib.h>
 
 struct LucetSandboxInstance;
 typedef struct LucetSandboxInstance LucetSandboxInstance;

@@ -21,7 +21,6 @@ macro_rules! alloc_tests {
             heap_address_space_size: LIMITS_HEAP_ADDRSPACE_SIZE,
             stack_size: LIMITS_STACK_SIZE,
             globals_size: LIMITS_GLOBALS_SIZE,
-            ..Limits::default()
         };
 
         const SPEC_HEAP_RESERVED_SIZE: u64 = LIMITS_HEAP_ADDRSPACE_SIZE as u64 / 2;
@@ -265,7 +264,6 @@ macro_rules! alloc_tests {
                 heap_address_space_size: LIMITS_HEAP_ADDRSPACE_SIZE,
                 stack_size: LIMITS_STACK_SIZE,
                 globals_size: LIMITS_GLOBALS_SIZE,
-                ..Limits::default()
             };
             let res = TestRegion::create(10, &LIMITS);
             assert!(res.is_err(), "region creation fails");
@@ -368,7 +366,7 @@ macro_rules! alloc_tests {
                 }
 
                 let sigstack = unsafe { inst.alloc_mut().sigstack_mut() };
-                assert_eq!(sigstack.len(), LIMITS.signal_stack_size);
+                assert_eq!(sigstack.len(), libc::SIGSTKSZ);
 
                 assert_eq!(sigstack[0], 0);
                 sigstack[0] = 0xFF;
@@ -571,7 +569,6 @@ macro_rules! alloc_tests {
             heap_address_space_size: 2 * 4096,
             stack_size: 4096,
             globals_size: 4096,
-            ..Limits::default()
         };
         const CONTEXT_TEST_INITIAL_SIZE: u64 = 4096;
         const CONTEXT_TEST_HEAP: HeapSpec = HeapSpec {

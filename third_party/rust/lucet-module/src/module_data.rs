@@ -35,38 +35,6 @@ pub struct ModuleData<'a> {
     export_functions: Vec<ExportFunction<'a>>,
     signatures: Vec<Signature>,
     module_signature: Vec<u8>,
-    features: ModuleFeatures,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct ModuleFeatures {
-    pub sse3: bool,
-    pub ssse3: bool,
-    pub sse41: bool,
-    pub sse42: bool,
-    pub avx: bool,
-    pub bmi1: bool,
-    pub bmi2: bool,
-    pub lzcnt: bool,
-    pub popcnt: bool,
-    _hidden: (),
-}
-
-impl ModuleFeatures {
-    pub fn none() -> Self {
-        Self {
-            sse3: false,
-            ssse3: false,
-            sse41: false,
-            sse42: false,
-            avx: false,
-            bmi1: false,
-            bmi2: false,
-            lzcnt: false,
-            popcnt: false,
-            _hidden: (),
-        }
-    }
 }
 
 impl<'a> ModuleData<'a> {
@@ -78,7 +46,6 @@ impl<'a> ModuleData<'a> {
         import_functions: Vec<ImportFunction<'a>>,
         export_functions: Vec<ExportFunction<'a>>,
         signatures: Vec<Signature>,
-        features: ModuleFeatures,
     ) -> Self {
         let module_signature = vec![0u8; SignatureBones::BYTES];
         Self {
@@ -89,7 +56,6 @@ impl<'a> ModuleData<'a> {
             export_functions,
             signatures,
             module_signature,
-            features,
         }
     }
 
@@ -101,7 +67,6 @@ impl<'a> ModuleData<'a> {
         import_functions: Vec<ImportFunction<'a>>,
         export_functions: Vec<ExportFunction<'a>>,
         signatures: Vec<Signature>,
-        features: ModuleFeatures,
     ) -> Self {
         let module_signature = vec![0u8; 0];
         Self {
@@ -112,7 +77,6 @@ impl<'a> ModuleData<'a> {
             export_functions,
             signatures,
             module_signature,
-            features,
         }
     }
 
@@ -172,10 +136,6 @@ impl<'a> ModuleData<'a> {
         &self.module_signature
     }
 
-    pub fn features(&self) -> &ModuleFeatures {
-        &self.features
-    }
-
     #[cfg(feature = "signature_checking")]
     pub fn patch_module_signature(
         module_data_bin: &'a [u8],
@@ -226,7 +186,6 @@ pub struct OwnedModuleData {
     imports: Vec<OwnedImportFunction>,
     exports: Vec<OwnedExportFunction>,
     signatures: Vec<Signature>,
-    features: ModuleFeatures,
 }
 
 impl OwnedModuleData {
@@ -237,7 +196,6 @@ impl OwnedModuleData {
         imports: Vec<OwnedImportFunction>,
         exports: Vec<OwnedExportFunction>,
         signatures: Vec<Signature>,
-        features: ModuleFeatures,
     ) -> Self {
         Self {
             linear_memory,
@@ -246,7 +204,6 @@ impl OwnedModuleData {
             imports,
             exports,
             signatures,
-            features,
         }
     }
 
@@ -267,20 +224,11 @@ impl OwnedModuleData {
             self.imports.iter().map(|imp| imp.to_ref()).collect(),
             self.exports.iter().map(|exp| exp.to_ref()).collect(),
             self.signatures.clone(),
-            self.features.clone(),
         )
     }
 
     pub fn empty() -> Self {
-        Self::new(
-            None,
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            ModuleFeatures::none(),
-        )
+        Self::new(None, vec![], vec![], vec![], vec![], vec![])
     }
 
     pub fn with_heap_spec(mut self, heap_spec: HeapSpec) -> Self {
