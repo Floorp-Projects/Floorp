@@ -1281,7 +1281,7 @@ bool IonForcedInvalidation(JSContext* cx) {
   RootedScript script(cx, frame.script());
   MOZ_ASSERT(script->hasIonScript());
 
-  if (script->baselineScript()->hasPendingIonBuilder()) {
+  if (script->baselineScript()->hasPendingIonCompileTask()) {
     LinkIonScript(cx, script);
     return true;
   }
