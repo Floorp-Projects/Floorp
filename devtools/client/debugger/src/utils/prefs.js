@@ -59,6 +59,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.map-scopes", true);
   pref("devtools.debugger.features.remove-command-bar-options", true);
   pref("devtools.debugger.features.code-folding", false);
+  pref("devtools.debugger.features.command-click", false);
   pref("devtools.debugger.features.outline", true);
   pref("devtools.debugger.features.column-breakpoints", true);
   pref("devtools.debugger.features.skip-pausing", true);
@@ -140,6 +141,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   eventListenersBreakpoints: ["Bool", "event-listeners-breakpoints"],
   domMutationBreakpoints: ["Bool", "dom-mutation-breakpoints"],
   logPoints: ["Bool", "log-points"],
+  commandClick: ["Bool", "command-click"],
   showOverlay: ["Bool", "overlay"],
   inlinePreview: ["Bool", "inline-preview"],
   watchpoints: ["Bool", "watchpoints"],

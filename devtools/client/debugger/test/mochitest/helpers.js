@@ -1128,6 +1128,8 @@ const startKey = isMac
 
 const keyMappings = {
   close: { code: "w", modifiers: cmdOrCtrl },
+  commandKeyDown: {code: "VK_META", modifiers: {type: "keydown"}},
+  commandKeyUp: {code: "VK_META", modifiers: {type: "keyup"}},
   debugger: { code: "s", modifiers: shiftOrAlt },
   // test conditional panel shortcut
   toggleCondPanel: { code: "b", modifiers: cmdShift },
