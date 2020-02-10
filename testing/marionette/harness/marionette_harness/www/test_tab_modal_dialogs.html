@@ -8,6 +8,7 @@
   <title>Dialog Test</title>
   <script type="text/javascript">
     function setInnerText(id, value) {
+      // eslint-disable-next-line no-unsanitized/property
       document.getElementById(id).innerHTML = "<p>" + value + "</p>";
     }
 
