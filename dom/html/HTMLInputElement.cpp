@@ -928,7 +928,6 @@ UploadLastDir::Observe(nsISupports* aSubject, char const* aTopic,
 #ifdef ACCESSIBILITY
 // Helper method
 static nsresult FireEventForAccessibility(HTMLInputElement* aTarget,
-                                          nsPresContext* aPresContext,
                                           EventMessage aEventMessage);
 #endif
 
@@ -3706,17 +3705,14 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 #ifdef ACCESSIBILITY
       // Fire an event to notify accessibility
       if (mType == NS_FORM_INPUT_CHECKBOX) {
-        FireEventForAccessibility(this, aVisitor.mPresContext,
-                                  eFormCheckboxStateChange);
+        FireEventForAccessibility(this, eFormCheckboxStateChange);
       } else {
-        FireEventForAccessibility(this, aVisitor.mPresContext,
-                                  eFormRadioStateChange);
+        FireEventForAccessibility(this, eFormRadioStateChange);
         // Fire event for the previous selected radio.
         nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
         HTMLInputElement* previous = HTMLInputElement::FromNodeOrNull(content);
         if (previous) {
-          FireEventForAccessibility(previous, aVisitor.mPresContext,
-                                    eFormRadioStateChange);
+          FireEventForAccessibility(previous, eFormRadioStateChange);
         }
       }
 #endif
@@ -5516,7 +5512,6 @@ void HTMLInputElement::SetSelectionDirection(const nsAString& aDirection,
 
 #ifdef ACCESSIBILITY
 /*static*/ nsresult FireEventForAccessibility(HTMLInputElement* aTarget,
-                                              nsPresContext* aPresContext,
                                               EventMessage aEventMessage) {
   Element* element = static_cast<Element*>(aTarget);
   return nsContentUtils::DispatchTrustedEvent<WidgetEvent>(
