@@ -632,7 +632,7 @@ void JitScript::setIonScriptImpl(JSScript* script, IonScript* ionScript) {
 void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
                                  IonScript* ionScript) {
   MOZ_ASSERT_IF(ionScript != IonDisabledScriptPtr,
-                !baselineScript()->hasPendingIonBuilder());
+                !baselineScript()->hasPendingIonCompileTask());
 
   if (hasIonScript()) {
     IonScript::writeBarrierPre(script->zone(), ionScript_);

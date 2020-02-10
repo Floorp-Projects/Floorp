@@ -193,7 +193,7 @@ void Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
 void Invalidate(JSContext* cx, JSScript* script, bool resetUses = true,
                 bool cancelOffThread = true);
 
-class IonBuilder;
+class IonCompileTask;
 class MIRGenerator;
 class LIRGraph;
 class CodeGenerator;
@@ -205,9 +205,9 @@ CodeGenerator* GenerateCode(MIRGenerator* mir, LIRGraph* lir);
 CodeGenerator* CompileBackEnd(MIRGenerator* mir);
 
 void AttachFinishedCompilations(JSContext* cx);
-void FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
-                            const AutoLockHelperThreadState& lock);
-void FreeIonBuilder(IonBuilder* builder);
+void FinishOffThreadTask(JSRuntime* runtime, IonCompileTask* task,
+                         const AutoLockHelperThreadState& lock);
+void FreeIonCompileTask(IonCompileTask* task);
 
 void LinkIonScript(JSContext* cx, HandleScript calleescript);
 uint8_t* LazyLinkTopActivation(JSContext* cx, LazyLinkExitFrameLayout* frame);

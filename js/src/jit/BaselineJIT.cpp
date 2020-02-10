@@ -517,7 +517,7 @@ void BaselineScript::writeBarrierPre(Zone* zone, BaselineScript* script) {
 }
 
 void BaselineScript::Destroy(JSFreeOp* fop, BaselineScript* script) {
-  MOZ_ASSERT(!script->hasPendingIonBuilder());
+  MOZ_ASSERT(!script->hasPendingIonCompileTask());
 
   // This allocation is tracked by JSScript::setBaselineScriptImpl.
   fop->deleteUntracked(script);
@@ -746,25 +746,26 @@ void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
   }
 }
 
-void BaselineScript::setPendingIonBuilder(JSRuntime* rt, JSScript* script,
-                                          js::jit::IonBuilder* builder) {
+void BaselineScript::setPendingIonCompileTask(JSRuntime* rt, JSScript* script,
+                                              IonCompileTask* task) {
   MOZ_ASSERT(script->baselineScript() == this);
-  MOZ_ASSERT(builder);
-  MOZ_ASSERT(!hasPendingIonBuilder());
+  MOZ_ASSERT(task);
+  MOZ_ASSERT(!hasPendingIonCompileTask());
 
   if (script->isIonCompilingOffThread()) {
     script->jitScript()->clearIsIonCompilingOffThread(script);
   }
 
-  pendingBuilder_ = builder;
+  pendingIonCompileTask_ = task;
   script->updateJitCodeRaw(rt);
 }
 
-void BaselineScript::removePendingIonBuilder(JSRuntime* rt, JSScript* script) {
+void BaselineScript::removePendingIonCompileTask(JSRuntime* rt,
+                                                 JSScript* script) {
   MOZ_ASSERT(script->baselineScript() == this);
-  MOZ_ASSERT(hasPendingIonBuilder());
+  MOZ_ASSERT(hasPendingIonCompileTask());
 
-  pendingBuilder_ = nullptr;
+  pendingIonCompileTask_ = nullptr;
   script->updateJitCodeRaw(rt);
 }
 
