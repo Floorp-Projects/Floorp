@@ -11,6 +11,9 @@ For a linter to be integrated into the mozilla-central tree, it needs to have:
 * Running ``./mach lint`` command must pass (note, linters can be disabled for individual directories)
 * Taskcluster/Treeherder integration
 * In tree documentation (under ``tools/lint/docs``) to give a basic summary, links and any other useful information
+* Unit tests (under ``tools/lint/test``) to make sure that the linter works as expected and we don't regress.
+
+The review group in Phabricator is ``#linter-reviewers``.
 
 Linter Basics
 -------------
