@@ -162,14 +162,6 @@ function stepOut(thread: string): Promise<*> {
   return lookupThreadFront(thread).stepOut();
 }
 
-function rewind(thread: string): Promise<*> {
-  return lookupThreadFront(thread).rewind();
-}
-
-function reverseStepOver(thread: string): Promise<*> {
-  return lookupThreadFront(thread).reverseStepOver();
-}
-
 function breakOnNext(thread: string): Promise<*> {
   return lookupThreadFront(thread).breakOnNext();
 }
@@ -220,25 +212,6 @@ function locationKey(location: BreakpointLocation) {
   return `${sourceUrl}:${sourceId}:${line}:${column}`;
 }
 
-function maybeGenerateLogGroupId(options) {
-  if (
-    options.logValue &&
-    currentTarget.traits &&
-    currentTarget.traits.canRewind
-  ) {
-    return { ...options, logGroupId: `logGroup-${Math.random()}` };
-  }
-  return options;
-}
-
-async function maybeClearLogpoint(location: BreakpointLocation) {
-  const bp = breakpoints[locationKey(location)];
-  if (bp && bp.options.logGroupId && currentTarget) {
-    const consoleFront = await currentTarget.getFront("console");
-    consoleFront.emit("clearLogpointMessages", bp.options.logGroupId);
-  }
-}
-
 function hasBreakpoint(location: BreakpointLocation) {
   return !!breakpoints[locationKey(location)];
 }
@@ -247,15 +220,12 @@ function setBreakpoint(
   location: BreakpointLocation,
   options: BreakpointOptions
 ) {
-  maybeClearLogpoint(location);
-  options = maybeGenerateLogGroupId(options);
   breakpoints[locationKey(location)] = { location, options };
 
   return forEachThread(thread => thread.setBreakpoint(location, options));
 }
 
 function removeBreakpoint(location: PendingLocation) {
-  maybeClearLogpoint((location: any));
   delete breakpoints[locationKey((location: any))];
 
   return forEachThread(thread => thread.removeBreakpoint(location));
@@ -559,8 +529,6 @@ const clientCommands = {
   stepIn,
   stepOut,
   stepOver,
-  rewind,
-  reverseStepOver,
   breakOnNext,
   sourceContents,
   getSourceForActor,

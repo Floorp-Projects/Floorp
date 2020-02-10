@@ -30,18 +30,10 @@ import type {
   ThreadContext,
   Previews,
   SourceLocation,
-  ExecutionPoint,
   HighlightedCalls,
 } from "../types";
 
-export type Command =
-  | null
-  | "stepOver"
-  | "stepIn"
-  | "stepOut"
-  | "resume"
-  | "rewind"
-  | "reverseStepOver";
+export type Command = null | "stepOver" | "stepIn" | "stepOut" | "resume";
 
 // Pause state associated with an individual thread.
 type ThreadPauseState = {
@@ -49,9 +41,6 @@ type ThreadPauseState = {
   isWaitingOnBreak: boolean,
   frames: ?(any[]),
   framesLoading: boolean,
-  replayFramePositions: {
-    [FrameId]: Array<ExecutionPoint>,
-  },
   frameScopes: {
     generated: {
       [FrameId]: {
@@ -282,14 +271,6 @@ function update(
         },
       });
     }
-
-    case "SET_FRAME_POSITIONS":
-      return updateThreadState({
-        replayFramePositions: {
-          ...threadState().replayFramePositions,
-          [action.frame]: action.positions,
-        },
-      });
 
     case "BREAK_ON_NEXT":
       return updateThreadState({ isWaitingOnBreak: true });

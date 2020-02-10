@@ -6,7 +6,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const Debugger = require("Debugger");
-const ReplayDebugger = require("devtools/server/actors/replay/debugger");
 
 const { reportException } = require("devtools/shared/DevToolsUtils");
 
@@ -59,7 +58,7 @@ module.exports = function makeDebugger({
   findDebuggees,
   shouldAddNewGlobalAsDebuggee,
 } = {}) {
-  const dbg = isReplaying ? new ReplayDebugger() : new Debugger();
+  const dbg = new Debugger();
   EventEmitter.decorate(dbg);
 
   dbg.allowUnobservedAsmJS = true;

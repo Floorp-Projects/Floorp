@@ -84,12 +84,8 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
    *        An object with a type property set to the appropriate limit (next,
    *        step, or finish) per the remote debugging protocol specification.
    *        Use null to specify no limit.
-   * @param bool aRewind
-   *        Whether execution should rewind until the limit is reached, rather
-   *        than proceeding forwards. This parameter has no effect if the
-   *        server does not support rewinding.
    */
-  async _doResume(resumeLimit, rewind) {
+  async _doResume(resumeLimit) {
     this._assertPaused("resume");
 
     // Put the client in a tentative "resuming" state so we can prevent
@@ -97,7 +93,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     this._previousState = this._state;
     this._state = "resuming";
     try {
-      await super.resume(resumeLimit, rewind);
+      await super.resume(resumeLimit);
     } catch (e) {
       if (this._state == "resuming") {
         // There was an error resuming, update the state to the new one
@@ -118,7 +114,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
    * Resume a paused thread.
    */
   resume() {
-    return this._doResume(null, false);
+    return this._doResume(null);
   }
 
   /**
@@ -126,47 +122,28 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
    *
    */
   resumeThenPause() {
-    return this._doResume({ type: "break" }, false);
-  }
-
-  /**
-   * Rewind a thread until a breakpoint is hit.
-   */
-  async rewind() {
-    if (!this.paused) {
-      this.interrupt();
-      await this.once("paused");
-    }
-
-    this._doResume(null, true);
+    return this._doResume({ type: "break" });
   }
 
   /**
    * Step over a function call.
    */
   stepOver() {
-    return this._doResume({ type: "next" }, false);
+    return this._doResume({ type: "next" });
   }
 
   /**
    * Step into a function call.
    */
   stepIn() {
-    return this._doResume({ type: "step" }, false);
+    return this._doResume({ type: "step" });
   }
 
   /**
    * Step out of a function call.
    */
   stepOut() {
-    return this._doResume({ type: "finish" }, false);
-  }
-
-  /**
-   * Rewind step over a function call.
-   */
-  reverseStepOver() {
-    return this._doResume({ type: "next" }, true);
+    return this._doResume({ type: "finish" });
   }
 
   /**

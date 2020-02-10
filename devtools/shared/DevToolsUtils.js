@@ -913,12 +913,6 @@ errorOnFlag(exports, "wantVerbose");
 // where unsafeDereference will return an opaque security wrapper to the
 // referent.
 function callPropertyOnObject(object, name, ...args) {
-  // When replaying, the result of the call may already be known, which avoids
-  // having to communicate with the replaying process.
-  if (isReplaying && args.length == 0 && object.replayHasCallResult(name)) {
-    return object.replayCallResult(name);
-  }
-
   // Find the property.
   let descriptor;
   let proto = object;

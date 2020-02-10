@@ -7,7 +7,6 @@ module.exports = {
   "globals": {
     "exports": true,
     "isWorker": true,
-    "isReplaying": true,
     "loader": true,
     "module": true,
     "reportError": true,
