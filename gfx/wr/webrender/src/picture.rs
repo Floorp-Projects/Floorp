@@ -113,6 +113,8 @@ use ron;
 use crate::scene_builder_thread::InternerUpdates;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::intern::{Internable, UpdateList};
+#[cfg(any(feature = "replay"))]
+use crate::intern::{UpdateKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -137,6 +139,10 @@ use std::io::prelude::*;
 #[cfg(feature = "capture")]
 use std::path::PathBuf;
 use crate::scene_building::{SliceFlags};
+
+#[cfg(feature = "replay")]
+// used by tileview so don't use an internal_types FastHashMap
+use std::collections::HashMap;
 
 /// Specify whether a surface allows subpixel AA text rendering.
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -355,7 +361,9 @@ fn clampf(value: f32, low: f32, high: f32) -> f32 {
 
 /// An index into the prims array in a TileDescriptor.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct PrimitiveDependencyIndex(u32);
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PrimitiveDependencyIndex(pub u32);
 
 /// Information about the state of an opacity binding.
 #[derive(Debug)]
@@ -367,7 +375,7 @@ pub struct OpacityBindingInfo {
 }
 
 /// Information stored in a tile descriptor for an opacity binding.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum OpacityBinding {
@@ -585,6 +593,32 @@ impl TileSurface {
     }
 }
 
+/// Optional extra information returned by is_same when
+/// logging is enabled.
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum CompareHelperResult<T> {
+    /// Primitives match
+    Equal,
+    /// Counts differ
+    Count {
+        prev_count: u8,
+        curr_count: u8,
+    },
+    /// Sentinel
+    Sentinel,
+    /// Two items are not equal
+    NotEqual {
+        prev: T,
+        curr: T,
+    },
+    /// User callback returned true on item
+    PredicateTrue {
+        curr: T
+    },
+}
+
 /// The result of a primitive dependency comparison. Size is a u8
 /// since this is a hot path in the code, and keeping the data small
 /// is a performance win.
@@ -607,27 +641,70 @@ pub enum PrimitiveCompareResult {
     OpacityBinding,
 }
 
+/// A more detailed version of PrimitiveCompareResult used when
+/// debug logging is enabled.
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum PrimitiveCompareResultDetail {
+    /// Primitives match
+    Equal,
+    /// Something in the PrimitiveDescriptor was different
+    Descriptor {
+        old: PrimitiveDescriptor,
+        new: PrimitiveDescriptor,
+    },
+    /// The clip node content or spatial node changed
+    Clip {
+        detail: CompareHelperResult<ItemUid>,
+    },
+    /// The value of the transform changed
+    Transform {
+        detail: CompareHelperResult<SpatialNodeIndex>,
+    },
+    /// An image dependency was dirty
+    Image {
+        detail: CompareHelperResult<ImageDependency>,
+    },
+    /// The value of an opacity binding changed
+    OpacityBinding {
+        detail: CompareHelperResult<OpacityBinding>,
+    }
+}
+
 /// Debugging information about why a tile was invalidated
-#[derive(Debug,Copy,Clone)]
+#[derive(Debug,Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum InvalidationReason {
     /// The fractional offset changed
-    FractionalOffset,
+    FractionalOffset {
+        old: PictureVector2D,
+        new: PictureVector2D,
+    },
     /// The background color changed
-    BackgroundColor,
+    BackgroundColor {
+        old: Option<ColorF>,
+        new: Option<ColorF>,
+    },
     /// The opaque state of the backing native surface changed
-    SurfaceOpacityChanged,
+    SurfaceOpacityChanged{
+        became_opaque: bool
+    },
     /// There was no backing texture (evicted or never rendered)
     NoTexture,
     /// There was no backing native surface (never rendered, or recreated)
     NoSurface,
     /// The primitive count in the dependency list was different
-    PrimCount,
+    PrimCount {
+        old: Option<Vec<ItemUid>>,
+        new: Option<Vec<ItemUid>>,
+    },
     /// The content of one of the primitives was different
     Content {
         /// What changed in the primitive that was different
         prim_compare_result: PrimitiveCompareResult,
+        prim_compare_result_detail: Option<PrimitiveCompareResultDetail>,
     },
     // The compositor type changed
     CompositorKindChanged,
@@ -747,6 +824,7 @@ impl Tile {
         ctx: &TilePostUpdateContext,
         state: &mut TilePostUpdateState,
         invalidation_reason: &mut Option<InvalidationReason>,
+        frame_context: &FrameVisibilityContext,
     ) -> PictureRect {
         let mut prim_comparer = PrimitiveComparer::new(
             &self.prev_descriptor,
@@ -764,6 +842,7 @@ impl Tile {
             &mut dirty_rect,
             state.compare_cache,
             invalidation_reason,
+            frame_context,
         );
 
         dirty_rect
@@ -777,6 +856,7 @@ impl Tile {
         &mut self,
         ctx: &TilePostUpdateContext,
         state: &mut TilePostUpdateState,
+        frame_context: &FrameVisibilityContext,
     ) {
         // Check if the contents of the primitives, clips, and
         // other dependencies are the same.
@@ -786,6 +866,7 @@ impl Tile {
             ctx,
             state,
             &mut invalidation_reason,
+            frame_context,
         );
         if !dirty_rect.is_empty() {
             self.invalidate(
@@ -864,12 +945,16 @@ impl Tile {
         let fract_changed = (self.fract_offset.x - ctx.fract_offset.x).abs() > 0.01 ||
                             (self.fract_offset.y - ctx.fract_offset.y).abs() > 0.01;
         if fract_changed {
-            self.invalidate(None, InvalidationReason::FractionalOffset);
+            self.invalidate(None, InvalidationReason::FractionalOffset {
+                                    old: self.fract_offset,
+                                    new: ctx.fract_offset });
             self.fract_offset = ctx.fract_offset;
         }
 
         if ctx.background_color != self.background_color {
-            self.invalidate(None, InvalidationReason::BackgroundColor);
+            self.invalidate(None, InvalidationReason::BackgroundColor {
+                                    old: self.background_color,
+                                    new: ctx.background_color });
             self.background_color = ctx.background_color;
         }
 
@@ -970,6 +1055,7 @@ impl Tile {
         &mut self,
         ctx: &TilePostUpdateContext,
         state: &mut TilePostUpdateState,
+        frame_context: &FrameVisibilityContext,
     ) -> bool {
         // If tile is not visible, just early out from here - we don't update dependencies
         // so don't want to invalidate, merge, split etc. The tile won't need to be drawn
@@ -979,7 +1065,7 @@ impl Tile {
         }
 
         // Invalidate the tile based on the content changing.
-        self.update_content_validity(ctx, state);
+        self.update_content_validity(ctx, state, frame_context);
 
         // If there are no primitives there is no need to draw or cache it.
         if self.current_descriptor.prims.is_empty() {
@@ -1126,14 +1212,14 @@ impl Tile {
 }
 
 /// Defines a key that uniquely identifies a primitive instance.
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveDescriptor {
     /// Uniquely identifies the content of the primitive template.
-    prim_uid: ItemUid,
+    pub prim_uid: ItemUid,
     /// The origin in world space of this primitive.
-    origin: PointKey,
+    pub origin: PointKey,
     /// The clip rect for this primitive. Included here in
     /// dependencies since there is no entry in the clip chain
     /// dependencies for the local clip rect.
@@ -1178,14 +1264,14 @@ impl PartialEq for PrimitiveDescriptor {
 }
 
 /// A small helper to compare two arrays of primitive dependencies.
-struct CompareHelper<'a, T> {
+struct CompareHelper<'a, T> where T: Copy {
     offset_curr: usize,
     offset_prev: usize,
     curr_items: &'a [T],
     prev_items: &'a [T],
 }
 
-impl<'a, T> CompareHelper<'a, T> where T: PartialEq {
+impl<'a, T> CompareHelper<'a, T> where T: Copy + PartialEq {
     /// Construct a new compare helper for a current / previous set of dependency information.
     fn new(
         prev_items: &'a [T],
@@ -1212,18 +1298,22 @@ impl<'a, T> CompareHelper<'a, T> where T: PartialEq {
         prev_count: u8,
         curr_count: u8,
         f: F,
+        opt_detail: Option<&mut CompareHelperResult<T>>,
     ) -> bool where F: Fn(&T) -> bool {
         // If the number of items is different, trivial reject.
         if prev_count != curr_count {
+            if let Some(detail) = opt_detail { *detail = CompareHelperResult::Count{ prev_count, curr_count }; }
             return false;
         }
         // If both counts are 0, then no need to check these dependencies.
         if curr_count == 0 {
+            if let Some(detail) = opt_detail { *detail = CompareHelperResult::Equal; }
             return true;
         }
         // If both counts are u8::MAX, this is a sentinel that we can't compare these
         // deps, so just trivial reject.
         if curr_count as usize == MAX_PRIM_SUB_DEPS {
+            if let Some(detail) = opt_detail { *detail = CompareHelperResult::Sentinel; }
             return false;
         }
 
@@ -1235,14 +1325,19 @@ impl<'a, T> CompareHelper<'a, T> where T: PartialEq {
 
         for (curr, prev) in curr_items.iter().zip(prev_items.iter()) {
             if prev != curr {
+                if let Some(detail) = opt_detail {
+                    *detail = CompareHelperResult::NotEqual{ prev: *prev, curr: *curr };
+                }
                 return false;
             }
 
             if f(curr) {
+                if let Some(detail) = opt_detail { *detail = CompareHelperResult::PredicateTrue{ curr: *curr }; }
                 return false;
             }
         }
 
+        if let Some(detail) = opt_detail { *detail = CompareHelperResult::Equal; }
         true
     }
 
@@ -1552,7 +1647,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
                 /// the updates is the list of DataStore updates (avoid UpdateList
                 /// due to Default() requirements on the Keys) reconstructed at
                 /// load time.
-                pub $name: (String, UpdateList<<$ty as Internable>::Key>),
+                pub $name: (Vec<String>, Vec<UpdateList<<$ty as Internable>::Key>>),
             )+
         }
 
@@ -1560,7 +1655,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
             pub fn new() -> Self {
                 TileCacheLoggerUpdateLists {
                     $(
-                        $name : ( String::new(), UpdateList{ updates: Vec::new(), data: Vec::new()} ),
+                        $name : ( Vec::new(), Vec::new() ),
                     )+
                 }
             }
@@ -1572,7 +1667,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
                 updates: &InternerUpdates
             ) {
                 $(
-                    self.$name.0 = ron::ser::to_string_pretty(&updates.$name, Default::default()).unwrap();
+                    self.$name.0.push(ron::ser::to_string_pretty(&updates.$name, Default::default()).unwrap());
                 )+
             }
 
@@ -1589,11 +1684,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
                     TileCacheLoggerUpdateListsSerializer { ron_string: Vec::new() };
                 $(
                     serializer.ron_string.push(
-                        if self.$name.0.is_empty() {
-                            "( updates: [], data: [] )".to_string()
-                        } else {
-                            self.$name.0.clone()
-                        });
+                        ron::ser::to_string_pretty(&self.$name.0, Default::default()).unwrap());
                 )+
                 ron::ser::to_string_pretty(&serializer, Default::default()).unwrap()
             }
@@ -1610,11 +1701,45 @@ macro_rules! declare_tile_cache_logger_updatelists {
                     };
                 let mut index = 0;
                 $(
-                    self.$name.1 = ron::de::from_str(&serializer.ron_string[index]).unwrap();
+                    let ron_lists : Vec<String> = ron::de::from_str(&serializer.ron_string[index]).unwrap();
+                    self.$name.1 = ron_lists.iter()
+                                            .map( |list| ron::de::from_str(&list).unwrap() )
+                                            .collect();
                     index = index + 1;
                 )+
                 // error: value assigned to `index` is never read
                 let _ = index;
+            }
+
+            /// helper method to add a stringified version of all interned keys into
+            /// a lookup table based on ItemUid.  Use strings as a form of type erasure
+            /// so all UpdateLists can go into a single map.
+            /// Then during analysis, when we see an invalidation reason due to
+            /// "ItemUid such and such was added to the tile primitive list", the lookup
+            /// allows mapping that back into something readable.
+            #[cfg(feature = "replay")]
+            pub fn insert_in_lookup(
+                        &mut self,
+                        itemuid_to_string: &mut HashMap<ItemUid, String>)
+            {
+                $(
+                    {
+                        for list in &self.$name.1 {
+                            let mut insert_count = 0;
+                            for update in &list.updates {
+                                match update.kind {
+                                    UpdateKind::Insert => {
+                                        itemuid_to_string.insert(
+                                            update.uid,
+                                            format!("{:?}", list.data[insert_count]));
+                                        insert_count = insert_count + 1;
+                                    },
+                                    _ => {}
+                                }
+                            }
+                        }
+                    }
+                )+
             }
         }
     }
@@ -2762,7 +2887,7 @@ impl TileCacheInstance {
         // the current opacity setting and whether it's changed.
         let mut tile_cache_is_opaque = true;
         for (key, tile) in self.tiles.iter_mut() {
-            if tile.post_update(&ctx, &mut state) {
+            if tile.post_update(&ctx, &mut state, frame_context) {
                 self.tiles_to_draw.push(*key);
                 tile_cache_is_opaque &= tile.is_opaque;
             }
@@ -2785,7 +2910,8 @@ impl TileCacheInstance {
                         *id = None;
                     }
                     // Invalidate the entire tile to force a redraw.
-                    tile.invalidate(None, InvalidationReason::SurfaceOpacityChanged);
+                    tile.invalidate(None, InvalidationReason::SurfaceOpacityChanged {
+                                            became_opaque: tile_cache_is_opaque });
                 }
                 // Destroy the compositor surface. It will be reallocated with the correct
                 // opacity flag when render tasks are generated for tiles.
@@ -5128,7 +5254,7 @@ struct PrimitiveComparisonKey {
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-struct ImageDependency {
+pub struct ImageDependency {
     key: ImageKey,
     generation: ImageGeneration,
 }
@@ -5209,6 +5335,7 @@ impl<'a> PrimitiveComparer<'a> {
         &mut self,
         prev: &PrimitiveDescriptor,
         curr: &PrimitiveDescriptor,
+        opt_detail: Option<&mut PrimitiveCompareResultDetail>,
     ) -> PrimitiveCompareResult {
         let resource_cache = self.resource_cache;
         let spatial_nodes = self.spatial_nodes;
@@ -5216,43 +5343,60 @@ impl<'a> PrimitiveComparer<'a> {
 
         // Check equality of the PrimitiveDescriptor
         if prev != curr {
+            if let Some(detail) = opt_detail {
+                *detail = PrimitiveCompareResultDetail::Descriptor{ old: *prev, new: *curr };
+            }
             return PrimitiveCompareResult::Descriptor;
         }
 
         // Check if any of the clips  this prim has are different.
+        let mut clip_result = CompareHelperResult::Equal;
         if !self.clip_comparer.is_same(
             prev.clip_dep_count,
             curr.clip_dep_count,
             |_| {
                 false
-            }
+            },
+            if opt_detail.is_some() { Some(&mut clip_result) } else { None }
         ) {
+            if let Some(detail) = opt_detail { *detail = PrimitiveCompareResultDetail::Clip{ detail: clip_result }; }
             return PrimitiveCompareResult::Clip;
         }
 
         // Check if any of the transforms  this prim has are different.
+        let mut transform_result = CompareHelperResult::Equal;
         if !self.transform_comparer.is_same(
             prev.transform_dep_count,
             curr.transform_dep_count,
             |curr| {
                 spatial_nodes[curr].changed
-            }
+            },
+            if opt_detail.is_some() { Some(&mut transform_result) } else { None },
         ) {
+            if let Some(detail) = opt_detail {
+                *detail = PrimitiveCompareResultDetail::Transform{ detail: transform_result };
+            }
             return PrimitiveCompareResult::Transform;
         }
 
         // Check if any of the images this prim has are different.
+        let mut image_result = CompareHelperResult::Equal;
         if !self.image_comparer.is_same(
             prev.image_dep_count,
             curr.image_dep_count,
             |curr| {
                 resource_cache.get_image_generation(curr.key) != curr.generation
-            }
+            },
+            if opt_detail.is_some() { Some(&mut image_result) } else { None },
         ) {
+            if let Some(detail) = opt_detail {
+                *detail = PrimitiveCompareResultDetail::Image{ detail: image_result };
+            }
             return PrimitiveCompareResult::Image;
         }
 
         // Check if any of the opacity bindings this prim has are different.
+        let mut bind_result = CompareHelperResult::Equal;
         if !self.opacity_comparer.is_same(
             prev.opacity_binding_dep_count,
             curr.opacity_binding_dep_count,
@@ -5266,8 +5410,12 @@ impl<'a> PrimitiveComparer<'a> {
                 }
 
                 false
-            }
+            },
+            if opt_detail.is_some() { Some(&mut bind_result) } else { None },
         ) {
+            if let Some(detail) = opt_detail {
+                *detail = PrimitiveCompareResultDetail::OpacityBinding{ detail: bind_result };
+            }
             return PrimitiveCompareResult::OpacityBinding;
         }
 
@@ -5626,6 +5774,7 @@ impl TileNode {
         dirty_rect: &mut PictureRect,
         compare_cache: &mut FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
         invalidation_reason: &mut Option<InvalidationReason>,
+        frame_context: &FrameVisibilityContext,
     ) {
         match self.kind {
             TileNodeKind::Node { ref mut children, .. } => {
@@ -5637,6 +5786,7 @@ impl TileNode {
                         dirty_rect,
                         compare_cache,
                         invalidation_reason,
+                        frame_context,
                     );
                 }
             }
@@ -5668,12 +5818,27 @@ impl TileNode {
                             curr_index: *curr_index,
                         };
 
+                        #[cfg(any(feature = "capture", feature = "replay"))]
+                        let mut compare_detail = PrimitiveCompareResultDetail::Equal;
+                        #[cfg(any(feature = "capture", feature = "replay"))]
+                        let prim_compare_result_detail =
+                            if frame_context.debug_flags.contains(DebugFlags::TILE_CACHE_LOGGING_DBG) {
+                                Some(&mut compare_detail)
+                            } else {
+                                None
+                            };
+
+                        #[cfg(not(any(feature = "capture", feature = "replay")))]
+                        let compare_detail = PrimitiveCompareResultDetail::Equal;
+                        #[cfg(not(any(feature = "capture", feature = "replay")))]
+                        let prim_compare_result_detail = None;
+
                         let prim_compare_result = *compare_cache
                             .entry(key)
                             .or_insert_with(|| {
                                 let prev = &prev_prims[i0];
                                 let curr = &curr_prims[i1];
-                                prim_comparer.compare_prim(prev, curr)
+                                prim_comparer.compare_prim(prev, curr, prim_compare_result_detail)
                             });
 
                         // If not the same, mark this node as dirty and update the dirty rect
@@ -5681,6 +5846,7 @@ impl TileNode {
                             if invalidation_reason.is_none() {
                                 *invalidation_reason = Some(InvalidationReason::Content {
                                     prim_compare_result,
+                                    prim_compare_result_detail: Some(compare_detail)
                                 });
                             }
                             *dirty_rect = self.rect.union(dirty_rect);
@@ -5693,7 +5859,29 @@ impl TileNode {
                     }
                 } else {
                     if invalidation_reason.is_none() {
-                        *invalidation_reason = Some(InvalidationReason::PrimCount);
+                        // if and only if tile logging is enabled, do the expensive step of
+                        // converting indices back to ItemUids and allocating old and new vectors
+                        // to store them in.
+                        #[cfg(any(feature = "capture", feature = "replay"))]
+                        {
+                            if frame_context.debug_flags.contains(DebugFlags::TILE_CACHE_LOGGING_DBG) {
+                                let old = prev_indices.iter().map( |i| prev_prims[i.0 as usize].prim_uid ).collect();
+                                let new = curr_indices.iter().map( |i| curr_prims[i.0 as usize].prim_uid ).collect();
+                                *invalidation_reason = Some(InvalidationReason::PrimCount {
+                                                                old: Some(old),
+                                                                new: Some(new) });
+                            } else {
+                                *invalidation_reason = Some(InvalidationReason::PrimCount {
+                                                                old: None,
+                                                                new: None });
+                            }
+                        }
+                        #[cfg(not(any(feature = "capture", feature = "replay")))]
+                        {
+                            *invalidation_reason = Some(InvalidationReason::PrimCount {
+                                                                old: None,
+                                                                new: None });
+                        }
                     }
                     *dirty_rect = self.rect.union(dirty_rect);
                     *dirty_tracker = *dirty_tracker | 1;
