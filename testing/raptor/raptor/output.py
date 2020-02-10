@@ -15,7 +15,7 @@ import os
 from abc import ABCMeta, abstractmethod
 from logger.logger import RaptorLogger
 
-LOG = RaptorLogger(component='perftest-output')
+LOG = RaptorLogger(component="perftest-output")
 
 
 class PerftestOutput(object):
@@ -46,7 +46,7 @@ class PerftestOutput(object):
         self.browser_version = browser_version
 
     def summarize_supporting_data(self):
-        '''
+        """
         Supporting data was gathered outside of the main raptor test; it will be kept
         separate from the main raptor test results. Summarize it appropriately.
 
@@ -70,7 +70,7 @@ class PerftestOutput(object):
 
         We want to treat each value as a 'subtest'; and for the overall aggregated
         test result we will add all of these subtest values together.
-        '''
+        """
         if self.supporting_data is None:
             return
 
@@ -79,15 +79,13 @@ class PerftestOutput(object):
 
         for data_set in self.supporting_data:
 
-            data_type = data_set['type']
+            data_type = data_set["type"]
             LOG.info("summarizing %s data" % data_type)
 
             if data_type not in support_data_by_type:
                 support_data_by_type[data_type] = {
-                    'framework': {
-                        'name': 'raptor',
-                    },
-                    'suites': [],
+                    "framework": {"name": "raptor"},
+                    "suites": [],
                 }
 
             # suite name will be name of the actual raptor test that ran, plus the type of
@@ -95,36 +93,34 @@ class PerftestOutput(object):
             vals = []
             subtests = []
             suite = {
-                'name': data_set['test'] + "-" + data_set['type'],
-                'type': data_set['type'],
-                'subtests': subtests,
-                'lowerIsBetter': True,
-                'unit': data_set['unit'],
-                'alertThreshold': 2.0
+                "name": data_set["test"] + "-" + data_set["type"],
+                "type": data_set["type"],
+                "subtests": subtests,
+                "lowerIsBetter": True,
+                "unit": data_set["unit"],
+                "alertThreshold": 2.0,
             }
 
-            support_data_by_type[data_type]['suites'].append(suite)
+            support_data_by_type[data_type]["suites"].append(suite)
 
             # each supporting data measurement becomes a subtest, with the measurement type
             # used for the subtest name. i.e. 'power-cpu'
             # the overall 'suite' value for supporting data is dependent on
             # the unit of the values, by default the sum of all measurements
             # is taken.
-            for measurement_name, value in data_set['values'].iteritems():
+            for measurement_name, value in data_set["values"].iteritems():
                 new_subtest = {}
-                new_subtest['name'] = data_type + "-" + measurement_name
-                new_subtest['value'] = value
-                new_subtest['lowerIsBetter'] = True
-                new_subtest['alertThreshold'] = 2.0
-                new_subtest['unit'] = data_set['unit']
+                new_subtest["name"] = data_type + "-" + measurement_name
+                new_subtest["value"] = value
+                new_subtest["lowerIsBetter"] = True
+                new_subtest["alertThreshold"] = 2.0
+                new_subtest["unit"] = data_set["unit"]
                 subtests.append(new_subtest)
-                vals.append([new_subtest['value'], new_subtest['name']])
+                vals.append([new_subtest["value"], new_subtest["name"]])
 
             if len(subtests) >= 1:
-                suite['value'] = self.construct_summary(
-                    vals,
-                    testname="supporting_data",
-                    unit=data_set['unit']
+                suite["value"] = self.construct_summary(
+                    vals, testname="supporting_data", unit=data_set["unit"]
                 )
 
         # split the supporting data by type, there will be one
@@ -132,37 +128,38 @@ class PerftestOutput(object):
         for data_type in support_data_by_type:
             data = support_data_by_type[data_type]
             if self.browser_name:
-                data['application'] = {
-                    'name': self.browser_name
-                }
+                data["application"] = {"name": self.browser_name}
                 if self.browser_version:
-                    data['application']['version'] = self.browser_version
+                    data["application"]["version"] = self.browser_version
             self.summarized_supporting_data.append(data)
 
         return
 
     def output(self, test_names):
         """output to file and perfherder data json"""
-        if os.getenv('MOZ_UPLOAD_DIR'):
+        if os.getenv("MOZ_UPLOAD_DIR"):
             # i.e. testing/mozharness/build/raptor.json locally; in production it will
             # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
             # and made into a tc artifact accessible in treeherder as perfherder-data.json)
-            results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
-                                        'raptor.json')
-            screenshot_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
-                                           'screenshots.html')
+            results_path = os.path.join(
+                os.path.dirname(os.environ["MOZ_UPLOAD_DIR"]), "raptor.json"
+            )
+            screenshot_path = os.path.join(
+                os.path.dirname(os.environ["MOZ_UPLOAD_DIR"]), "screenshots.html"
+            )
         else:
-            results_path = os.path.join(os.getcwd(), 'raptor.json')
-            screenshot_path = os.path.join(os.getcwd(), 'screenshots.html')
+            results_path = os.path.join(os.getcwd(), "raptor.json")
+            screenshot_path = os.path.join(os.getcwd(), "screenshots.html")
 
         success = True
         if self.summarized_results == {}:
             success = False
-            LOG.error("no summarized raptor results found for %s" %
-                      ', '.join(test_names))
+            LOG.error(
+                "no summarized raptor results found for %s" % ", ".join(test_names)
+            )
         else:
-            for suite in self.summarized_results['suites']:
-                tname = suite['name']
+            for suite in self.summarized_results["suites"]:
+                tname = suite["name"]
                 # Since test names might have been modified, check if
                 # part of the test name exists in the test_names list entries
                 found = False
@@ -174,12 +171,12 @@ class PerftestOutput(object):
                     success = False
                     LOG.error("no summarized raptor results found for %s" % tname)
 
-            with open(results_path, 'w') as f:
+            with open(results_path, "w") as f:
                 for result in self.summarized_results:
                     f.write("%s\n" % result)
 
         if len(self.summarized_screenshots) > 0:
-            with open(screenshot_path, 'w') as f:
+            with open(screenshot_path, "w") as f:
                 for result in self.summarized_screenshots:
                     f.write("%s\n" % result)
             LOG.info("screen captures can be found locally at: %s" % screenshot_path)
@@ -190,26 +187,24 @@ class PerftestOutput(object):
             return success, 0
 
         # when gecko_profiling, we don't want results ingested by Perfherder
-        extra_opts = self.summarized_results['suites'][0].get('extraOptions', [])
-        test_type = self.summarized_results['suites'][0].get('type', '')
+        extra_opts = self.summarized_results["suites"][0].get("extraOptions", [])
+        test_type = self.summarized_results["suites"][0].get("type", "")
 
         output_perf_data = True
-        not_posting = '- not posting regular test results for perfherder'
-        if 'gecko_profile' in extra_opts:
+        not_posting = "- not posting regular test results for perfherder"
+        if "gecko_profile" in extra_opts:
             LOG.info("gecko profiling enabled %s" % not_posting)
             output_perf_data = False
-        elif test_type == 'scenario':
+        elif test_type == "scenario":
             # if a resource-usage flag was supplied the perfherder data
             # will still be output from output_supporting_data
             LOG.info("scenario test type was run %s" % not_posting)
             output_perf_data = False
 
         if self.browser_name:
-            self.summarized_results['application'] = {
-                'name': self.browser_name
-            }
+            self.summarized_results["application"] = {"name": self.browser_name}
             if self.browser_version:
-                self.summarized_results['application']['version'] = self.browser_version
+                self.summarized_results["application"]["version"] = self.browser_version
 
         total_perfdata = 0
         if output_perf_data:
@@ -221,16 +216,19 @@ class PerftestOutput(object):
                 LOG.info("PERFHERDER_DATA: %s" % json.dumps(self.summarized_results))
                 total_perfdata = 1
             else:
-                LOG.info("supporting data measurements exist - only posting those to perfherder")
+                LOG.info(
+                    "supporting data measurements exist - only posting those to perfherder"
+                )
 
-        json.dump(self.summarized_results, open(results_path, 'w'), indent=2,
-                  sort_keys=True)
+        json.dump(
+            self.summarized_results, open(results_path, "w"), indent=2, sort_keys=True
+        )
         LOG.info("results can also be found locally at: %s" % results_path)
 
         return success, total_perfdata
 
     def output_supporting_data(self, test_names):
-        '''
+        """
         Supporting data was gathered outside of the main raptor test; it has already
         been summarized, now output it appropriately.
 
@@ -238,59 +236,66 @@ class PerftestOutput(object):
         in a corresponding file artifact. This way, supporting data can be ingested as its own
         test suite in perfherder and alerted upon if desired; kept outside of the test results
         from the actual Raptor test which was run when the supporting data was gathered.
-        '''
+        """
         if len(self.summarized_supporting_data) == 0:
-            LOG.error("no summarized supporting data found for %s" %
-                      ', '.join(test_names))
+            LOG.error(
+                "no summarized supporting data found for %s" % ", ".join(test_names)
+            )
             return False, 0
 
         total_perfdata = 0
         for next_data_set in self.summarized_supporting_data:
-            data_type = next_data_set['suites'][0]['type']
+            data_type = next_data_set["suites"][0]["type"]
 
-            if os.environ['MOZ_UPLOAD_DIR']:
+            if os.environ["MOZ_UPLOAD_DIR"]:
                 # i.e. testing/mozharness/build/raptor.json locally; in production it will
                 # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
                 # and made into a tc artifact accessible in treeherder as perfherder-data.json)
-                results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
-                                            'raptor-%s.json' % data_type)
+                results_path = os.path.join(
+                    os.path.dirname(os.environ["MOZ_UPLOAD_DIR"]),
+                    "raptor-%s.json" % data_type,
+                )
             else:
-                results_path = os.path.join(os.getcwd(), 'raptor-%s.json' % data_type)
+                results_path = os.path.join(os.getcwd(), "raptor-%s.json" % data_type)
 
             # dump data to raptor-data.json artifact
-            json.dump(next_data_set, open(results_path, 'w'), indent=2, sort_keys=True)
+            json.dump(next_data_set, open(results_path, "w"), indent=2, sort_keys=True)
 
             # the output that treeherder expects to find
             LOG.info("PERFHERDER_DATA: %s" % json.dumps(next_data_set))
-            LOG.info("%s results can also be found locally at: %s" % (data_type, results_path))
+            LOG.info(
+                "%s results can also be found locally at: %s"
+                % (data_type, results_path)
+            )
             total_perfdata += 1
 
         return True, total_perfdata
 
     def construct_summary(self, vals, testname, unit=None):
-
         def _filter(vals, value=None):
             if value is None:
                 return [i for i, j in vals]
             return [i for i, j in vals if j == value]
 
-        if testname.startswith('raptor-v8_7'):
+        if testname.startswith("raptor-v8_7"):
             return 100 * filters.geometric_mean(_filter(vals))
 
-        if testname.startswith('raptor-speedometer'):
+        if testname.startswith("raptor-speedometer"):
             correctionFactor = 3
             results = _filter(vals)
             # speedometer has 16 tests, each of these are made of up 9 subtests
             # and a sum of the 9 values.  We receive 160 values, and want to use
             # the 16 test values, not the sub test values.
             if len(results) != 160:
-                raise Exception("Speedometer has 160 subtests, found: %s instead" % len(results))
+                raise Exception(
+                    "Speedometer has 160 subtests, found: %s instead" % len(results)
+                )
 
             results = results[9::10]
             score = 60 * 1000 / filters.geometric_mean(results) / correctionFactor
             return score
 
-        if testname.startswith('raptor-stylebench'):
+        if testname.startswith("raptor-stylebench"):
             # see https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
             correctionFactor = 3
             results = _filter(vals)
@@ -328,42 +333,43 @@ class PerftestOutput(object):
             # We receive 76 entries per test, which ads up to 380. We want to use
             # the 5 test entries, not the rest.
             if len(results) != 380:
-                raise Exception("StyleBench requires 380 entries, found: %s instead"
-                                % len(results))
+                raise Exception(
+                    "StyleBench requires 380 entries, found: %s instead" % len(results)
+                )
             results = results[75::76]
             return 60 * 1000 / filters.geometric_mean(results) / correctionFactor
 
-        if testname.startswith(('raptor-kraken', 'raptor-sunspider')):
+        if testname.startswith(("raptor-kraken", "raptor-sunspider")):
             return sum(_filter(vals))
 
-        if testname.startswith(('raptor-unity-webgl', 'raptor-webaudio')):
+        if testname.startswith(("raptor-unity-webgl", "raptor-webaudio")):
             # webaudio_score and unity_webgl_score: self reported as 'Geometric Mean'
-            return filters.mean(_filter(vals, 'Geometric Mean'))
+            return filters.mean(_filter(vals, "Geometric Mean"))
 
-        if testname.startswith('raptor-assorted-dom'):
+        if testname.startswith("raptor-assorted-dom"):
             return round(filters.geometric_mean(_filter(vals)), 2)
 
-        if testname.startswith('raptor-wasm-misc'):
+        if testname.startswith("raptor-wasm-misc"):
             # wasm_misc_score: self reported as '__total__'
-            return filters.mean(_filter(vals, '__total__'))
+            return filters.mean(_filter(vals, "__total__"))
 
-        if testname.startswith('raptor-wasm-godot'):
+        if testname.startswith("raptor-wasm-godot"):
             # wasm_godot_score: first-interactive mean
-            return filters.mean(_filter(vals, 'first-interactive'))
+            return filters.mean(_filter(vals, "first-interactive"))
 
-        if testname.startswith('raptor-youtube-playback'):
+        if testname.startswith("raptor-youtube-playback"):
             return round(filters.mean(_filter(vals)), 2)
 
-        if testname.startswith('supporting_data'):
+        if testname.startswith("supporting_data"):
             if unit:
-                if unit in ('%',):
+                if unit in ("%",):
                     return filters.mean(_filter(vals))
-                elif unit in ('W', 'MHz'):
+                elif unit in ("W", "MHz"):
                     # For power in Watts and clock frequencies,
                     # summarize with the sum of the averages
                     allavgs = []
                     for (val, subtest) in vals:
-                        if 'avg' in subtest:
+                        if "avg" in subtest:
                             allavgs.append(val)
                     if allavgs:
                         return sum(allavgs)
@@ -374,57 +380,199 @@ class PerftestOutput(object):
 
         return round(filters.mean(_filter(vals)), 2)
 
+    def parseSpeedometerOutput(self, test):
+        # each benchmark 'index' becomes a subtest; each pagecycle / iteration
+        # of the test has multiple values per index/subtest
+
+        # this is the format we receive the results in from the benchmark
+        # i.e. this is ONE pagecycle of speedometer:
+
+        # {u'name': u'raptor-speedometer', u'type': u'benchmark', u'measurements':
+        # {u'speedometer': [[{u'AngularJS-TodoMVC/DeletingAllItems': [147.3000000000011,
+        # 149.95999999999913, 143.29999999999927, 150.34000000000378, 257.6999999999971],
+        # u'Inferno-TodoMVC/CompletingAllItems/Sync': [88.03999999999996,#
+        # 85.60000000000036, 94.18000000000029, 95.19999999999709, 86.47999999999593],
+        # u'AngularJS-TodoMVC': [518.2400000000016, 525.8199999999997, 610.5199999999968,
+        # 532.8200000000215, 640.1800000000003], ...(repeated for each index/subtest)}]]},
+        # u'browser': u'Firefox 62.0a1 20180528123052', u'lower_is_better': False, u'page':
+        # u'http://localhost:55019/Speedometer/index.html?raptor', u'unit': u'score',
+        # u'alert_threshold': 2}
+
+        _subtests = {}
+        data = test["measurements"]["speedometer"]
+        for page_cycle in data:
+            for sub, replicates in page_cycle[0].iteritems():
+                # for each pagecycle, build a list of subtests and append all related replicates
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
+
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
+    def parseAresSixOutput(self, test):
+        """
+        https://browserbench.org/ARES-6/
+        Every pagecycle will perform the tests from the index page
+        We have 4 main tests per index page:
+        - Air, Basic, Babylon, ML
+        - and from these 4 above, ares6 generates the Overall results
+        Each test has 3 subtests (firstIteration, steadyState, averageWorstCase):
+        - _steadyState
+        - _firstIteration
+        - _averageWorstCase
+        Each index page will run 5 cycles, this is set in glue.js
+
+        {
+            'expected_browser_cycles': 1,
+            'subtest_unit': 'ms',
+            'name': 'raptor-ares6-firefox',
+            'lower_is_better': False,
+            'browser_cycle': '1',
+            'subtest_lower_is_better': True,
+            'cold': False,
+            'browser': 'Firefox 69.0a1 20190531035909',
+            'type': 'benchmark',
+            'page': 'http://127.0.0.1:35369/ARES-6/index.html?raptor',
+            'unit': 'ms',
+            'alert_threshold': 2
+            'measurements': {
+                'ares6': [[{
+                    'Babylon_firstIteration': [
+                        123.68,
+                        168.21999999999997,
+                        127.34000000000003,
+                        113.56,
+                        128.78,
+                        169.44000000000003
+                    ],
+                    'Air_steadyState': [
+                        21.184723618090434,
+                        22.906331658291457,
+                        19.939396984924624,
+                        20.572462311557775,
+                        20.790452261306534,
+                        18.378693467336696
+                    ],
+                    etc.
+                }]]
+            }
+        }
+
+        Details on how /ARES6/index.html is showing the mean on subsequent test results:
+
+        I selected just a small part from the metrics just to be easier to explain
+        what is going on.
+
+        After the raptor GeckoView test finishes, we have these results in the logs:
+
+        Extracted from "INFO - raptor-control-server Info: received webext_results:"
+        'Air_firstIteration': [660.8000000000002, 626.4599999999999, 655.6199999999999,
+        635.9000000000001, 636.4000000000001]
+
+        Extracted from "INFO - raptor-output Info: PERFHERDER_DATA:"
+        {"name": "Air_firstIteration", "lowerIsBetter": true, "alertThreshold": 2.0,
+        "replicates": [660.8, 626.46, 655.62, 635.9, 636.4], "value": 636.4, "unit": "ms"}
+
+        On GeckoView's /ARES6/index.html this is what we see for Air - First Iteration:
+
+        - on 1st test cycle : 660.80 (rounded from 660.8000000000002)
+
+        - on 2nd test cycle : 643.63 , this is coming from
+          (660.8000000000002 + 626.4599999999999) / 2 ,
+          then rounded up to a precision of 2 decimals
+
+        - on 3rd test cycle : 647.63 this is coming from
+          (660.8000000000002 + 626.4599999999999 + 655.6199999999999) / 3 ,
+          then rounded up to a precision of 2 decimals
+
+        - and so on
+        """
+
+        _subtests = {}
+        data = test["measurements"]["ares6"]
+
+        for page_cycle in data:
+            for sub, replicates in page_cycle[0].iteritems():
+                # for each pagecycle, build a list of subtests and append all related replicates
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
+
+        vals = []
+        for name, test in _subtests.items():
+            test["value"] = filters.mean(test["replicates"])
+            vals.append([test["value"], name])
+
+        return _subtests.values(), sorted(vals, reverse=True)
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
 
     def summarize(self, test_names):
         suites = []
-        test_results = {
-            'framework': {
-                'name': 'raptor',
-            },
-            'suites': suites,
-        }
+        test_results = {"framework": {"name": "raptor"}, "suites": suites}
 
         # check if we actually have any results
         if len(self.results) == 0:
-            LOG.error("no raptor test results found for %s" %
-                      ', '.join(test_names))
+            LOG.error("no raptor test results found for %s" % ", ".join(test_names))
             return
 
         for test in self.results:
             vals = []
             subtests = []
             suite = {
-                'name': test.name,
-                'type': test.type,
-                'tags': [],
-                'extraOptions': test.extra_options,
-                'subtests': subtests,
-                'lowerIsBetter': test.lower_is_better,
-                'unit': test.unit,
-                'alertThreshold': float(test.alert_threshold)
+                "name": test["name"],
+                "type": test["type"],
+                "tags": [],
+                "extraOptions": test["extra_options"],
+                "subtests": subtests,
+                "lowerIsBetter": test["lower_is_better"],
+                "unit": test["unit"],
+                "alertThreshold": float(test["alert_threshold"]),
             }
 
             # Check if optional properties have been set by the test
             if hasattr(test, "alert_change_type"):
-                suite['alertChangeType'] = test.alert_change_type
+                suite["alertChangeType"] = test["alert_change_type"]
 
             # if cold load add that info to the suite result dict; this will be used later
             # when combining the results from multiple browser cycles into one overall result
-            if test.cold is True:
-                suite['cold'] = True
-                suite['browser_cycle'] = int(test.browser_cycle)
-                suite['expected_browser_cycles'] = int(test.expected_browser_cycles)
-                suite['tags'].append('cold')
+            if test["cold"] is True:
+                suite["cold"] = True
+                suite["browser_cycle"] = int(test["browser_cycle"])
+                suite["expected_browser_cycles"] = int(test["expected_browser_cycles"])
+                suite["tags"].append("cold")
             else:
-                suite['tags'].append('warm')
+                suite["tags"].append("warm")
 
             suites.append(suite)
 
             # process results for pageloader type of tests
-            if test.type in ("pageload", "scenario"):
+            if test["type"] in ("pageload", "scenario"):
                 # each test can report multiple measurements per pageload
                 # each measurement becomes a subtest inside the 'suite'
 
@@ -438,23 +586,27 @@ class RaptorOutput(PerftestOutput):
                 # u'https://www.amazon.com/s/url=search-alias%3Daps&field-keywords=laptop',
                 # u'unit': u'ms', u'alert_threshold': 2}
 
-                for measurement_name, replicates in test.measurements.iteritems():
+                for measurement_name, replicates in test["measurements"].iteritems():
                     new_subtest = {}
-                    new_subtest['name'] = measurement_name
-                    new_subtest['replicates'] = replicates
-                    new_subtest['lowerIsBetter'] = test.subtest_lower_is_better
-                    new_subtest['alertThreshold'] = float(test.alert_threshold)
-                    new_subtest['value'] = 0
-                    new_subtest['unit'] = test.subtest_unit
+                    new_subtest["name"] = measurement_name
+                    new_subtest["replicates"] = replicates
+                    new_subtest["lowerIsBetter"] = test["subtest_lower_is_better"]
+                    new_subtest["alertThreshold"] = float(test["alert_threshold"])
+                    new_subtest["value"] = 0
+                    new_subtest["unit"] = test["subtest_unit"]
 
-                    if test.cold is False:
+                    if test["cold"] is False:
                         # for warm page-load, ignore first value due to 1st pageload noise
-                        LOG.info("ignoring the first %s value due to initial pageload noise"
-                                 % measurement_name)
-                        filtered_values = filters.ignore_first(new_subtest['replicates'], 1)
+                        LOG.info(
+                            "ignoring the first %s value due to initial pageload noise"
+                            % measurement_name
+                        )
+                        filtered_values = filters.ignore_first(
+                            new_subtest["replicates"], 1
+                        )
                     else:
                         # for cold-load we want all the values
-                        filtered_values = new_subtest['replicates']
+                        filtered_values = new_subtest["replicates"]
 
                     # for pageload tests that measure TTFI: TTFI is not guaranteed to be available
                     # everytime; the raptor measure.js webext will substitute a '-1' value in the
@@ -471,46 +623,50 @@ class RaptorOutput(PerftestOutput):
                     # flag in the perfherder output to turn on alerting for this subtest
                     if self.subtest_alert_on is not None:
                         if measurement_name in self.subtest_alert_on:
-                            LOG.info("turning on subtest alerting for measurement type: %s"
-                                     % measurement_name)
-                            new_subtest['shouldAlert'] = True
+                            LOG.info(
+                                "turning on subtest alerting for measurement type: %s"
+                                % measurement_name
+                            )
+                            new_subtest["shouldAlert"] = True
 
-                    new_subtest['value'] = filters.median(filtered_values)
+                    new_subtest["value"] = filters.median(filtered_values)
 
-                    vals.append([new_subtest['value'], new_subtest['name']])
+                    vals.append([new_subtest["value"], new_subtest["name"]])
                     subtests.append(new_subtest)
 
-            elif test.type == "benchmark":
-                if 'assorted-dom' in test.measurements:
+            elif test["type"] == "benchmark":
+                if "assorted-dom" in test["measurements"]:
                     subtests, vals = self.parseAssortedDomOutput(test)
-                elif 'ares6' in test.measurements:
+                elif "ares6" in test["measurements"]:
                     subtests, vals = self.parseAresSixOutput(test)
-                elif 'jetstream2' in test.measurements:
+                elif "jetstream2" in test["measurements"]:
                     subtests, vals = self.parseJetstreamTwoOutput(test)
-                elif 'motionmark' in test.measurements:
+                elif "motionmark" in test["measurements"]:
                     subtests, vals = self.parseMotionmarkOutput(test)
-                elif 'speedometer' in test.measurements:
+                elif "speedometer" in test["measurements"]:
                     subtests, vals = self.parseSpeedometerOutput(test)
-                elif 'sunspider' in test.measurements:
+                elif "sunspider" in test["measurements"]:
                     subtests, vals = self.parseSunspiderOutput(test)
-                elif 'unity-webgl' in test.measurements:
+                elif "unity-webgl" in test["measurements"]:
                     subtests, vals = self.parseUnityWebGLOutput(test)
-                elif 'wasm-godot' in test.measurements:
+                elif "wasm-godot" in test["measurements"]:
                     subtests, vals = self.parseWASMGodotOutput(test)
-                elif 'wasm-misc' in test.measurements:
+                elif "wasm-misc" in test["measurements"]:
                     subtests, vals = self.parseWASMMiscOutput(test)
-                elif 'webaudio' in test.measurements:
+                elif "webaudio" in test["measurements"]:
                     subtests, vals = self.parseWebaudioOutput(test)
-                elif 'youtube-playbackperf-test' in test.measurements:
+                elif "youtube-playbackperf-test" in test["measurements"]:
                     subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
-                suite['subtests'] = subtests
+                suite["subtests"] = subtests
 
             else:
-                LOG.error("output.summarize received unsupported test results type for %s" %
-                          test.name)
+                LOG.error(
+                    "output.summarize received unsupported test results type for %s"
+                    % test["name"]
+                )
                 return
 
-            suite['tags'].append(test.type)
+            suite["tags"].append(test["type"])
 
             # for benchmarks there is generally  more than one subtest in each cycle
             # and a benchmark-specific formula is needed to calculate the final score
@@ -523,17 +679,17 @@ class RaptorOutput(PerftestOutput):
 
             # summarize results for both benchmark or pageload type tests
             if len(subtests) > 1:
-                suite['value'] = self.construct_summary(vals, testname=test.name)
+                suite["value"] = self.construct_summary(vals, testname=test["name"])
 
-            subtests.sort(key=lambda subtest: subtest['name'])
-            suite['tags'].sort()
+            subtests.sort(key=lambda subtest: subtest["name"])
+            suite["tags"].sort()
 
-        suites.sort(key=lambda suite: suite['name'])
+        suites.sort(key=lambda suite: suite["name"])
 
         self.summarized_results = test_results
 
     def combine_browser_cycles(self):
-        '''
+        """
         At this point the results have been summarized; however there may have been multiple
         browser cycles (i.e. cold load). In which case the results have one entry for each
         test for each browser cycle. For each test we need to combine the results for all
@@ -570,10 +726,12 @@ class RaptorOutput(PerftestOutput):
             'cold': True, 'type': u'pageload', 'unit': u'ms'}]
 
         Need to combine those into a single entry.
-        '''
+        """
         # check if we actually have any results
         if len(self.results) == 0:
-            LOG.info("error: no raptor test results found, so no need to combine browser cycles")
+            LOG.info(
+                "error: no raptor test results found, so no need to combine browser cycles"
+            )
             return
 
         # first build a list of entries that need to be combined; and as we do that, mark the
@@ -583,250 +741,116 @@ class RaptorOutput(PerftestOutput):
         suites_to_be_combined = []
         combined_suites = []
 
-        for _index, suite in enumerate(self.summarized_results.get('suites', [])):
-            if suite.get('cold') is None:
+        for _index, suite in enumerate(self.summarized_results.get("suites", [])):
+            if suite.get("cold") is None:
                 continue
 
-            if suite['expected_browser_cycles'] > 1:
-                _name = suite['name']
+            if suite["expected_browser_cycles"] > 1:
+                _name = suite["name"]
                 _details = suite.copy()
-                suites_to_be_combined.append({'name': _name, 'details': _details})
-                suite['to_be_deleted'] = True
+                suites_to_be_combined.append({"name": _name, "details": _details})
+                suite["to_be_deleted"] = True
 
         # now create a new suite entry that will have all the results from
         # all of the browser cycles, but in one result entry for each test
         combined_suites = {}
 
         for next_suite in suites_to_be_combined:
-            suite_name = next_suite['details']['name']
-            browser_cycle = next_suite['details']['browser_cycle']
-            LOG.info("combining results from browser cycle %d for %s"
-                     % (browser_cycle, suite_name))
+            suite_name = next_suite["details"]["name"]
+            browser_cycle = next_suite["details"]["browser_cycle"]
+            LOG.info(
+                "combining results from browser cycle %d for %s"
+                % (browser_cycle, suite_name)
+            )
             if suite_name not in combined_suites:
                 # first browser cycle so just take entire entry to start with
-                combined_suites[suite_name] = next_suite['details']
+                combined_suites[suite_name] = next_suite["details"]
                 LOG.info("created new combined result with intial cycle replicates")
                 # remove the 'cold', 'browser_cycle', and 'expected_browser_cycles' info
                 # as we don't want that showing up in perfherder data output
-                del(combined_suites[suite_name]['cold'])
-                del(combined_suites[suite_name]['browser_cycle'])
-                del(combined_suites[suite_name]['expected_browser_cycles'])
+                del combined_suites[suite_name]["cold"]
+                del combined_suites[suite_name]["browser_cycle"]
+                del combined_suites[suite_name]["expected_browser_cycles"]
             else:
                 # subsequent browser cycles, already have an entry; just add subtest replicates
-                for next_subtest in next_suite['details']['subtests']:
+                for next_subtest in next_suite["details"]["subtests"]:
                     # find the existing entry for that subtest in our new combined test entry
                     found_subtest = False
-                    for combined_subtest in combined_suites[suite_name]['subtests']:
-                        if combined_subtest['name'] == next_subtest['name']:
+                    for combined_subtest in combined_suites[suite_name]["subtests"]:
+                        if combined_subtest["name"] == next_subtest["name"]:
                             # add subtest (measurement type) replicates to the combined entry
-                            LOG.info("adding replicates for %s" % next_subtest['name'])
-                            combined_subtest['replicates'].extend(next_subtest['replicates'])
+                            LOG.info("adding replicates for %s" % next_subtest["name"])
+                            combined_subtest["replicates"].extend(
+                                next_subtest["replicates"]
+                            )
                             found_subtest = True
                     # the subtest / measurement type wasn't found in our existing combined
                     # result entry; if it is for the same suite name add it - this could happen
                     # as ttfi may not be available in every browser cycle
                     if not found_subtest:
-                        LOG.info("adding replicates for %s" % next_subtest['name'])
-                        combined_suites[next_suite['details']['name']]['subtests'] \
-                            .append(next_subtest)
+                        LOG.info("adding replicates for %s" % next_subtest["name"])
+                        combined_suites[next_suite["details"]["name"]][
+                            "subtests"
+                        ].append(next_subtest)
 
         # now we have a single entry for each test; with all replicates from all browser cycles
         for i, name in enumerate(combined_suites):
             vals = []
-            for next_sub in combined_suites[name]['subtests']:
+            for next_sub in combined_suites[name]["subtests"]:
                 # calculate sub-test results (i.e. each measurement type)
-                next_sub['value'] = filters.median(next_sub['replicates'])
+                next_sub["value"] = filters.median(next_sub["replicates"])
                 # add to vals; vals is used to calculate overall suite result i.e. the
                 # geomean of all of the subtests / measurement types
-                vals.append([next_sub['value'], next_sub['name']])
+                vals.append([next_sub["value"], next_sub["name"]])
 
             # calculate overall suite result ('value') which is geomean of all measures
-            if len(combined_suites[name]['subtests']) > 1:
-                combined_suites[name]['value'] = self.construct_summary(vals, testname=name)
+            if len(combined_suites[name]["subtests"]) > 1:
+                combined_suites[name]["value"] = self.construct_summary(
+                    vals, testname=name
+                )
 
             # now add the combined suite entry to our overall summarized results!
-            self.summarized_results['suites'].append(combined_suites[name])
+            self.summarized_results["suites"].append(combined_suites[name])
 
         # now it is safe to delete the original entries that were made by each cycle
-        self.summarized_results['suites'] = [item for item in self.summarized_results['suites']
-                                             if item.get('to_be_deleted') is not True]
-
-    def parseSpeedometerOutput(self, test):
-        # each benchmark 'index' becomes a subtest; each pagecycle / iteration
-        # of the test has multiple values per index/subtest
-
-        # this is the format we receive the results in from the benchmark
-        # i.e. this is ONE pagecycle of speedometer:
-
-        # {u'name': u'raptor-speedometer', u'type': u'benchmark', u'measurements':
-        # {u'speedometer': [[{u'AngularJS-TodoMVC/DeletingAllItems': [147.3000000000011,
-        # 149.95999999999913, 143.29999999999927, 150.34000000000378, 257.6999999999971],
-        # u'Inferno-TodoMVC/CompletingAllItems/Sync': [88.03999999999996,#
-        # 85.60000000000036, 94.18000000000029, 95.19999999999709, 86.47999999999593],
-        # u'AngularJS-TodoMVC': [518.2400000000016, 525.8199999999997, 610.5199999999968,
-        # 532.8200000000215, 640.1800000000003], ...(repeated for each index/subtest)}]]},
-        # u'browser': u'Firefox 62.0a1 20180528123052', u'lower_is_better': False, u'page':
-        # u'http://localhost:55019/Speedometer/index.html?raptor', u'unit': u'score',
-        # u'alert_threshold': 2}
-
-        _subtests = {}
-        data = test.measurements['speedometer']
-        for page_cycle in data:
-            for sub, replicates in page_cycle[0].iteritems():
-                # for each pagecycle, build a list of subtests and append all related replicates
-                if sub not in _subtests.keys():
-                    # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
-
-        vals = []
-        subtests = []
-        names = _subtests.keys()
-        names.sort(reverse=True)
-        for name in names:
-            _subtests[name]['value'] = filters.median(_subtests[name]['replicates'])
-            subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
-
-        return subtests, vals
-
-    def parseAresSixOutput(self, test):
-        # https://browserbench.org/ARES-6/
-        # Every pagecycle will perform the tests from the index page
-        # We have 4 main tests per index page:
-        # - Air, Basic, Babylon, ML
-        # - and from these 4 above, ares6 generates the Overall results
-        # Each test has 3 subtests (firstIteration, steadyState, averageWorstCase):
-        # - _steadyState
-        # - _firstIteration
-        # - _averageWorstCase
-        # Each index page will run 5 cycles, this is set in glue.js
-        #
-        # {
-        #     'expected_browser_cycles': 1,
-        #     'subtest_unit': 'ms',
-        #     'name': 'raptor-ares6-firefox',
-        #     'lower_is_better': False,
-        #     'browser_cycle': '1',
-        #     'subtest_lower_is_better': True,
-        #     'cold': False,
-        #     'browser': 'Firefox 69.0a1 20190531035909',
-        #     'type': 'benchmark',
-        #     'page': 'http://127.0.0.1:35369/ARES-6/index.html?raptor',
-        #     'unit': 'ms',
-        #     'alert_threshold': 2
-        #     'measurements': {
-        #         'ares6': [[{
-        #             'Babylon_firstIteration': [
-        #                 123.68,
-        #                 168.21999999999997,
-        #                 127.34000000000003,
-        #                 113.56,
-        #                 128.78,
-        #                 169.44000000000003
-        #             ],
-        #             'Air_steadyState': [
-        #                 21.184723618090434,
-        #                 22.906331658291457,
-        #                 19.939396984924624,
-        #                 20.572462311557775,
-        #                 20.790452261306534,
-        #                 18.378693467336696
-        #             ],
-        #             etc.
-        #         }]]
-        #     }
-        # }
-        #
-        # Details on how /ARES6/index.html is showing the mean on subsequent test results:
-        #
-        # I selected just a small part from the metrics just to be easier to explain
-        # what is going on.
-        #
-        # After the raptor GeckoView test finishes, we have these results in the logs:
-        #
-        # Extracted from "INFO - raptor-control-server Info: received webext_results:"
-        # 'Air_firstIteration': [660.8000000000002, 626.4599999999999, 655.6199999999999,
-        # 635.9000000000001, 636.4000000000001]
-        #
-        # Extracted from "INFO - raptor-output Info: PERFHERDER_DATA:"
-        # {"name": "Air_firstIteration", "lowerIsBetter": true, "alertThreshold": 2.0,
-        # "replicates": [660.8, 626.46, 655.62, 635.9, 636.4], "value": 636.4, "unit": "ms"}
-        #
-        # On GeckoView's /ARES6/index.html this is what we see for Air - First Iteration:
-        #
-        # - on 1st test cycle : 660.80 (rounded from 660.8000000000002)
-        #
-        # - on 2nd test cycle : 643.63 , this is coming from
-        #   (660.8000000000002 + 626.4599999999999) / 2 ,
-        #   then rounded up to a precision of 2 decimals
-        #
-        # - on 3rd test cycle : 647.63 this is coming from
-        #   (660.8000000000002 + 626.4599999999999 + 655.6199999999999) / 3 ,
-        #   then rounded up to a precision of 2 decimals
-        #
-        # - and so on
-        #
-
-        _subtests = {}
-        data = test.measurements['ares6']
-        for page_cycle in data:
-            for sub, replicates in page_cycle[0].iteritems():
-                # for each pagecycle, build a list of subtests and append all related replicates
-                if sub not in _subtests.keys():
-                    # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
-
-        vals = []
-        subtests = []
-        names = _subtests.keys()
-        names.sort(reverse=True)
-        for name in names:
-            _subtests[name]['value'] = filters.mean(_subtests[name]['replicates'])
-            subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
-
-        return subtests, vals
+        self.summarized_results["suites"] = [
+            item
+            for item in self.summarized_results["suites"]
+            if item.get("to_be_deleted") is not True
+        ]
 
     def parseJetstreamTwoOutput(self, test):
         # https://browserbench.org/JetStream/
 
         _subtests = {}
-        data = test.measurements['jetstream2']
+        data = test["measurements"]["jetstream2"]
         for page_cycle in data:
             for sub, replicates in page_cycle[0].iteritems():
                 # for each pagecycle, build a list of subtests and append all related replicates
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
 
         vals = []
         subtests = []
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = filters.mean(_subtests[name]['replicates'])
+            _subtests[name]["value"] = filters.mean(_subtests[name]["replicates"])
             subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
+            vals.append([_subtests[name]["value"], name])
 
         return subtests, vals
 
     def parseWASMMiscOutput(self, test):
-        '''
+        """
           {u'wasm-misc': [
             [[{u'name': u'validate', u'time': 163.44000000000005},
               ...
@@ -835,35 +859,37 @@ class RaptorOutput(PerftestOutput):
             [[{u'name': u'validate', u'time': 129.42000000000002},
               {u'name': u'__total__', u'time': 63181.24089257814}]]
            ]}
-        '''
+        """
         _subtests = {}
-        data = test.measurements['wasm-misc']
+        data = test["measurements"]["wasm-misc"]
         for page_cycle in data:
             for item in page_cycle[0]:
                 # for each pagecycle, build a list of subtests and append all related replicates
-                sub = item['name']
+                sub = item["name"]
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].append(item['time'])
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].append(item["time"])
 
         vals = []
         subtests = []
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = filters.median(_subtests[name]['replicates'])
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
             subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
+            vals.append([_subtests[name]["value"], name])
 
         return subtests, vals
 
     def parseWASMGodotOutput(self, test):
-        '''
+        """
             {u'wasm-godot': [
                 {
                   "name": "wasm-instantiate",
@@ -873,31 +899,33 @@ class RaptorOutput(PerftestOutput):
                   "time": 1263
                 ...
                 }]}
-        '''
+        """
         _subtests = {}
-        data = test.measurements['wasm-godot']
+        data = test["measurements"]["wasm-godot"]
         print(data)
         for page_cycle in data:
             for item in page_cycle[0]:
                 # for each pagecycle, build a list of subtests and append all related replicates
-                sub = item['name']
+                sub = item["name"]
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].append(item['time'])
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].append(item["time"])
 
         vals = []
         subtests = []
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = filters.median(_subtests[name]['replicates'])
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
             subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
+            vals.append([_subtests[name]["value"], name])
 
         return subtests, vals
 
@@ -921,30 +949,32 @@ class RaptorOutput(PerftestOutput):
         # "duration":288,"buffer":{}}
 
         _subtests = {}
-        data = test.measurements['webaudio']
+        data = test["measurements"]["webaudio"]
         for page_cycle in data:
             data = json.loads(page_cycle[0])
             for item in data:
                 # for each pagecycle, build a list of subtests and append all related replicates
-                sub = item['name']
-                replicates = [item['duration']]
+                sub = item["name"]
+                replicates = [item["duration"]]
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
 
         vals = []
         subtests = []
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = filters.median(_subtests[name]['replicates'])
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
             subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
+            vals.append([_subtests[name]["value"], name])
 
         print(subtests)
         return subtests, vals
@@ -974,7 +1004,7 @@ class RaptorOutput(PerftestOutput):
         #  }}}]]}}
 
         _subtests = {}
-        data = test.measurements['motionmark']
+        data = test["measurements"]["motionmark"]
         for page_cycle in data:
             page_cycle_results = page_cycle[0]
 
@@ -983,45 +1013,52 @@ class RaptorOutput(PerftestOutput):
             for sub in page_cycle_results[suite].keys():
                 try:
                     replicate = round(
-                        float(page_cycle_results[suite][sub]['frameLength']['average']), 3
+                        float(page_cycle_results[suite][sub]["frameLength"]["average"]),
+                        3,
                     )
                 except TypeError as e:
-                    LOG.warning("[{}][{}] : {} - {}".format(suite, sub, e.__class__.__name__, e))
+                    LOG.warning(
+                        "[{}][{}] : {} - {}".format(suite, sub, e.__class__.__name__, e)
+                    )
 
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].extend([replicate])
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].extend([replicate])
 
         vals = []
         subtests = []
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = filters.median(_subtests[name]['replicates'])
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
             subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
+            vals.append([_subtests[name]["value"], name])
 
         return subtests, vals
 
     def parseSunspiderOutput(self, test):
         _subtests = {}
-        data = test.measurements['sunspider']
+        data = test["measurements"]["sunspider"]
         for page_cycle in data:
             for sub, replicates in page_cycle[0].iteritems():
                 # for each pagecycle, build a list of subtests and append all related replicates
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].extend([round(x, 3) for x in replicates])
 
         subtests = []
         vals = []
@@ -1029,10 +1066,10 @@ class RaptorOutput(PerftestOutput):
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = filters.mean(_subtests[name]['replicates'])
+            _subtests[name]["value"] = filters.mean(_subtests[name]["replicates"])
             subtests.append(_subtests[name])
 
-            vals.append([_subtests[name]['value'], name])
+            vals.append([_subtests[name]["value"], name])
 
         return subtests, vals
 
@@ -1054,29 +1091,31 @@ class RaptorOutput(PerftestOutput):
         }
         """
         _subtests = {}
-        data = test.measurements['unity-webgl']
+        data = test["measurements"]["unity-webgl"]
         for page_cycle in data:
             data = json.loads(page_cycle[0])
             for item in data:
                 # for each pagecycle, build a list of subtests and append all related replicates
-                sub = item['benchmark']
+                sub = item["benchmark"]
                 if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test.subtest_unit,
-                                      'alertThreshold': float(test.alert_threshold),
-                                      'lowerIsBetter': test.subtest_lower_is_better,
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].append(item['result'])
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].append(item["result"])
 
         vals = []
         subtests = []
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = filters.median(_subtests[name]['replicates'])
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
             subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
+            vals.append([_subtests[name]["value"], name])
 
         return subtests, vals
 
@@ -1095,29 +1134,33 @@ class RaptorOutput(PerftestOutput):
         # the totals from all pagecycles; but keep all the subtest values for the logs/json
 
         _subtests = {}
-        data = test.measurements['assorted-dom']
+        data = test["measurements"]["assorted-dom"]
         for pagecycle in data:
             for _sub, _value in pagecycle[0].iteritems():
                 # build a list of subtests and append all related replicates
                 if _sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    _subtests[_sub] = {'unit': test.subtest_unit,
-                                       'alertThreshold': float(test.alert_threshold),
-                                       'lowerIsBetter': test.subtest_lower_is_better,
-                                       'name': _sub,
-                                       'replicates': []}
-                _subtests[_sub]['replicates'].extend([_value])
+                    _subtests[_sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": _sub,
+                        "replicates": [],
+                    }
+                _subtests[_sub]["replicates"].extend([_value])
 
         vals = []
         subtests = []
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = round(filters.median(_subtests[name]['replicates']), 2)
+            _subtests[name]["value"] = round(
+                filters.median(_subtests[name]["replicates"]), 2
+            )
             subtests.append(_subtests[name])
             # only use the 'total's to compute the overall result
-            if name == 'total':
-                vals.append([_subtests[name]['value'], name])
+            if name == "total":
+                vals.append([_subtests[name]["value"], name])
 
         return subtests, vals
 
@@ -1135,62 +1178,70 @@ class RaptorOutput(PerftestOutput):
         All those three values will then be emitted as separate sub tests.
         """
         _subtests = {}
-        data = test.measurements['youtube-playbackperf-test']
+        data = test["measurements"]["youtube-playbackperf-test"]
 
-        def create_subtest_entry(name, value,
-                                 unit=test.subtest_unit,
-                                 lower_is_better=test.subtest_lower_is_better):
+        def create_subtest_entry(
+            name,
+            value,
+            unit=test["subtest_unit"],
+            lower_is_better=test["subtest_lower_is_better"],
+        ):
             # build a list of subtests and append all related replicates
             if name not in _subtests.keys():
                 # subtest not added yet, first pagecycle, so add new one
                 _subtests[name] = {
-                    'name': name,
-                    'unit': unit,
-                    'lowerIsBetter': lower_is_better,
-                    'replicates': [],
+                    "name": name,
+                    "unit": unit,
+                    "lowerIsBetter": lower_is_better,
+                    "replicates": [],
                 }
 
-            _subtests[name]['replicates'].append(value)
+            _subtests[name]["replicates"].append(value)
             if self.subtest_alert_on is not None:
                 if name in self.subtest_alert_on:
-                    LOG.info("turning on subtest alerting for measurement type: %s"
-                             % name)
-                    _subtests[name]['shouldAlert'] = True
+                    LOG.info(
+                        "turning on subtest alerting for measurement type: %s" % name
+                    )
+                    _subtests[name]["shouldAlert"] = True
 
         for pagecycle in data:
             for _sub, _value in pagecycle[0].iteritems():
                 try:
-                    percent_dropped = (float(_value['droppedFrames']) /
-                                       _value['decodedFrames'] * 100.0)
+                    percent_dropped = (
+                        float(_value["droppedFrames"]) / _value["decodedFrames"] * 100.0
+                    )
                 except ZeroDivisionError:
                     # if no frames have been decoded the playback failed completely
                     percent_dropped = 100.0
 
                 # Remove the not needed "PlaybackPerf." prefix from each test
-                _sub = _sub.split('PlaybackPerf.', 1)[-1]
+                _sub = _sub.split("PlaybackPerf.", 1)[-1]
 
                 # build a list of subtests and append all related replicates
-                create_subtest_entry("{}_decoded_frames".format(_sub),
-                                     _value['decodedFrames'],
-                                     lower_is_better=False,
-                                     )
-                create_subtest_entry("{}_dropped_frames".format(_sub),
-                                     _value['droppedFrames'],
-                                     )
-                create_subtest_entry("{}_%_dropped_frames".format(_sub),
-                                     percent_dropped,
-                                     )
+                create_subtest_entry(
+                    "{}_decoded_frames".format(_sub),
+                    _value["decodedFrames"],
+                    lower_is_better=False,
+                )
+                create_subtest_entry(
+                    "{}_dropped_frames".format(_sub), _value["droppedFrames"]
+                )
+                create_subtest_entry(
+                    "{}_%_dropped_frames".format(_sub), percent_dropped
+                )
 
         vals = []
         subtests = []
         names = _subtests.keys()
         names.sort(reverse=True)
         for name in names:
-            _subtests[name]['value'] = round(filters.median(_subtests[name]['replicates']), 2)
+            _subtests[name]["value"] = round(
+                filters.median(_subtests[name]["replicates"]), 2
+            )
             subtests.append(_subtests[name])
             # only include dropped_frames values, without the %_dropped_frames values
             if name.endswith("X_dropped_frames"):
-                vals.append([_subtests[name]['value'], name])
+                vals.append([_subtests[name]["value"], name])
 
         return subtests, vals
 
@@ -1198,7 +1249,8 @@ class RaptorOutput(PerftestOutput):
         if len(screenshots) == 0:
             return
 
-        self.summarized_screenshots.append("""<!DOCTYPE html>
+        self.summarized_screenshots.append(
+            """<!DOCTYPE html>
         <head>
         <style>
             table, th, td {
@@ -1214,69 +1266,32 @@ class RaptorOutput(PerftestOutput):
             <th>Test Name</th>
             <th>Pagecycle</th>
             <th>Screenshot</th>
-          </tr>""")
+          </tr>"""
+        )
 
         for screenshot in screenshots:
-            self.summarized_screenshots.append("""<tr>
+            self.summarized_screenshots.append(
+                """<tr>
             <th>%s</th>
             <th> %s</th>
             <th>
                 <img src="%s" alt="%s %s" width="320" height="240">
             </th>
-            </tr>""" % (screenshot['test_name'],
-                        screenshot['page_cycle'],
-                        screenshot['screenshot'],
-                        screenshot['test_name'],
-                        screenshot['page_cycle']))
+            </tr>"""
+                % (
+                    screenshot["test_name"],
+                    screenshot["page_cycle"],
+                    screenshot["screenshot"],
+                    screenshot["test_name"],
+                    screenshot["page_cycle"],
+                )
+            )
 
         self.summarized_screenshots.append("""</table></body> </html>""")
 
 
 class BrowsertimeOutput(PerftestOutput):
     """class for browsertime output"""
-
-    def parseSpeedometerOutput(self, test):
-        # each benchmark 'index' becomes a subtest; each pagecycle / iteration
-        # of the test has multiple values per index/subtest
-
-        # this is the format we receive the results in from the benchmark
-        # i.e. this is ONE pagecycle of speedometer:
-
-        # {u'name': u'raptor-speedometer', u'type': u'benchmark', u'measurements':
-        # {u'speedometer': [[{u'AngularJS-TodoMVC/DeletingAllItems': [147.3000000000011,
-        # 149.95999999999913, 143.29999999999927, 150.34000000000378, 257.6999999999971],
-        # u'Inferno-TodoMVC/CompletingAllItems/Sync': [88.03999999999996,#
-        # 85.60000000000036, 94.18000000000029, 95.19999999999709, 86.47999999999593],
-        # u'AngularJS-TodoMVC': [518.2400000000016, 525.8199999999997, 610.5199999999968,
-        # 532.8200000000215, 640.1800000000003], ...(repeated for each index/subtest)}]]},
-        # u'browser': u'Firefox 62.0a1 20180528123052', u'lower_is_better': False, u'page':
-        # u'http://localhost:55019/Speedometer/index.html?raptor', u'unit': u'score',
-        # u'alert_threshold': 2}
-
-        _subtests = {}
-        data = test['measurements']['speedometer']
-        for page_cycle in data:
-            for sub, replicates in page_cycle.iteritems():
-                # for each pagecycle, build a list of subtests and append all related replicates
-                if sub not in _subtests.keys():
-                    # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {'unit': test['subtest_unit'],
-                                      'alertThreshold': float(test['alert_threshold']),
-                                      'lowerIsBetter': test['subtest_lower_is_better'],
-                                      'name': sub,
-                                      'replicates': []}
-                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
-
-        vals = []
-        subtests = []
-        names = _subtests.keys()
-        names.sort(reverse=True)
-        for name in names:
-            _subtests[name]['value'] = filters.median(_subtests[name]['replicates'])
-            subtests.append(_subtests[name])
-            vals.append([_subtests[name]['value'], name])
-
-        return subtests, vals
 
     def summarize(self, test_names):
         """
@@ -1314,103 +1329,110 @@ class BrowsertimeOutput(PerftestOutput):
 
         # converting suites and subtests into lists, and sorting them
         def _process(subtest):
-            subtest['value'] = filters.median(filters.ignore_first(subtest['replicates'], 1))
+            subtest["value"] = filters.median(
+                filters.ignore_first(subtest["replicates"], 1)
+            )
             return subtest
 
         def _process_suite(suite):
-            suite['subtests'] = [
-                _process(subtest) for subtest in suite['subtests'].values()
-                if subtest['replicates']
+            suite["subtests"] = [
+                _process(subtest)
+                for subtest in suite["subtests"].values()
+                if subtest["replicates"]
             ]
-            suite['subtests'].sort(key=lambda subtest: subtest['name'])
+            suite["subtests"].sort(key=lambda subtest: subtest["name"])
 
             # for pageload tests, if there are > 1 subtests here, that means there
             # were multiple measurement types captured in each single pageload; we want
             # to get the mean of those values and report 1 overall 'suite' value
             # for the page; all replicates will still be available in the JSON artifact
             # summarize results to get top overall suite result
-            if len(suite['subtests']) > 1:
-                vals = [[subtest['value'], subtest['name']] for subtest in suite['subtests']]
-                suite['value'] = self.construct_summary(vals,
-                                                        testname=test['name'])
+            if len(suite["subtests"]) > 1:
+                vals = [
+                    [subtest["value"], subtest["name"]] for subtest in suite["subtests"]
+                ]
+                suite["value"] = self.construct_summary(vals, testname=test["name"])
             return suite
 
         LOG.info("preparing browsertime results for output")
 
         # check if we actually have any results
         if len(self.results) == 0:
-            LOG.error("no browsertime test results found for %s" %
-                      ', '.join(test_names))
+            LOG.error(
+                "no browsertime test results found for %s" % ", ".join(test_names)
+            )
             return
 
-        test_results = {
-            'framework': {
-                'name': 'browsertime',
-            }
-        }
+        test_results = {"framework": {"name": "browsertime"}}
 
         # using a mapping so we can have a unique set of results given a name
         suites = {}
 
         for test in self.results:
-            if test['name'] not in suites:
+            if test["name"] not in suites:
                 suite = {
-                    'name': test['name'],
-                    'type': test['type'],
-                    'extraOptions': test['extra_options'],
-                    'lowerIsBetter': test['lower_is_better'],
-                    'unit': test['unit'],
-                    'alertThreshold': float(test['alert_threshold']),
+                    "name": test["name"],
+                    "type": test["type"],
+                    "extraOptions": test["extra_options"],
+                    "lowerIsBetter": test["lower_is_better"],
+                    "unit": test["unit"],
+                    "alertThreshold": float(test["alert_threshold"]),
                     # like suites, subtests are identified by names
-                    'subtests': {}
+                    "subtests": {},
                 }
 
                 # Check if the test has set optional properties
-                if 'alert_change_type' in test:
-                    suite['alertChangeType'] = test['alert_change_type']
+                if "alert_change_type" in test:
+                    suite["alertChangeType"] = test["alert_change_type"]
 
-                suites[test['name']] = suite
+                suites[test["name"]] = suite
             else:
-                suite = suites[test['name']]
+                suite = suites[test["name"]]
 
-            if ("pageload" or "scenario") in test['type']:
-                for measurement_name, replicates in test['measurements'].iteritems():
-                    if measurement_name not in suite['subtests']:
+            if ("pageload" or "scenario") in test["type"]:
+                for measurement_name, replicates in test["measurements"].iteritems():
+                    if measurement_name not in suite["subtests"]:
                         subtest = {}
-                        subtest['name'] = measurement_name
-                        subtest['lowerIsBetter'] = test['subtest_lower_is_better']
-                        subtest['alertThreshold'] = float(test['alert_threshold'])
-                        subtest['unit'] = test['subtest_unit']
+                        subtest["name"] = measurement_name
+                        subtest["lowerIsBetter"] = test["subtest_lower_is_better"]
+                        subtest["alertThreshold"] = float(test["alert_threshold"])
+                        subtest["unit"] = test["subtest_unit"]
 
                         # if 'alert_on' is set for this particular measurement, then we want to set
                         # the flag in the perfherder output to turn on alerting for this subtest
                         if self.subtest_alert_on is not None:
                             if measurement_name in self.subtest_alert_on:
-                                LOG.info("turning on subtest alerting for measurement type: %s"
-                                         % measurement_name)
-                                subtest['shouldAlert'] = True
-                        subtest['replicates'] = []
-                        suite['subtests'][measurement_name] = subtest
+                                LOG.info(
+                                    "turning on subtest alerting for measurement type: %s"
+                                    % measurement_name
+                                )
+                                subtest["shouldAlert"] = True
+                        subtest["replicates"] = []
+                        suite["subtests"][measurement_name] = subtest
                     else:
-                        subtest = suite['subtests'][measurement_name]
+                        subtest = suite["subtests"][measurement_name]
 
-                    subtest['replicates'].extend(replicates)
+                    subtest["replicates"].extend(replicates)
 
-            elif "benchmark" in test['type']:
-                if 'speedometer' in test['name']:
+            elif "benchmark" in test["type"]:
+                if "speedometer" in test["name"]:
                     subtests, vals = self.parseSpeedometerOutput(test)
+                if "ares6" in test["name"]:
+                    subtests, vals = self.parseAresSixOutput(test)
 
-                suite['subtests'] = subtests
+                suite["subtests"] = subtests
                 # summarize results for both benchmark type tests
                 if len(subtests) > 1:
-                    suite['value'] = self.construct_summary(vals, testname=test['name'])
-                subtests.sort(key=lambda subtest: subtest['name'])
+                    suite["value"] = self.construct_summary(vals, testname=test["name"])
+                subtests.sort(key=lambda subtest: subtest["name"])
 
         # convert suites to list
-        suites = [s if "benchmark" in test['type'] else _process_suite(s)
-                  for s in suites.values()]
+        suites = [
+            s if "benchmark" in test["type"] else _process_suite(s)
+            for s in suites.values()
+        ]
 
-        suites.sort(key=lambda suite: suite['name'])
+        suites.sort(key=lambda suite: suite["name"])
 
-        test_results['suites'] = suites
+        test_results["suites"] = suites
         self.summarized_results = test_results
