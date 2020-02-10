@@ -1,5 +1,5 @@
 function sendBackResponse(evalResult, e) {
-  const output = { result: evalResult, error: "", errorStack: ""};
+  const output = { result: evalResult, error: "", errorStack: "" };
   if (e) {
     output.error = e.toString();
     output.errorStack = e.stack;
@@ -7,7 +7,7 @@ function sendBackResponse(evalResult, e) {
   process.send(output);
 }
 
-process.on('message', (msg) => {
+process.on("message", msg => {
   const code = msg.code;
   let evalResult = null;
   try {
@@ -22,5 +22,5 @@ process.on('message', (msg) => {
     sendBackResponse(undefined, e);
     return;
   }
-  sendBackResponse(evalResult)
+  sendBackResponse(evalResult);
 });
