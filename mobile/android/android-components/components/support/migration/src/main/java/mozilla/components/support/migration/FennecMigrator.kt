@@ -550,7 +550,6 @@ class FennecMigrator private constructor(
         runBlocking {
             store.dispatch(MigrationAction.Started).join()
         }
-
         ContextCompat.startForegroundService(context, Intent(context, service))
     }
 
