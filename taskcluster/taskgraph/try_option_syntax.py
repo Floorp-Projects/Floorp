@@ -119,29 +119,23 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
     'Ubuntu': [
         'linux32',
         'linux64',
-        'linux64-asan'
+        'linux64-asan',
+        'linux1804-64',
+        'linux1804-64-asan'
     ],
     'x64': [
         'linux64',
-        'linux64-asan'
+        'linux64-asan',
+        'linux1804-64',
+        'linux1804-64-asan'
     ],
     'Android 7.0 Moto G5 32bit': ['android-hw-g5-7.0-arm7-api-16'],
     'Android 8.0 Google Pixel 2 32bit': ['android-hw-p2-8.0-arm7-api-16'],
     'Android 8.0 Google Pixel 2 64bit': ['android-hw-p2-8.0-android-aarch64'],
     '10.14': ['macosx1014-64'],
-    # other commonly-used substrings for platforms not yet supported with
-    # in-tree taskgraphs:
-    # '10.10.5': [..TODO..],
-    # '10.6': [..TODO..],
-    # '10.8': [..TODO..],
-    # 'Android 2.3 API9': [..TODO..],
     'Windows 7':  ['windows7-32'],
     'Windows 7 VM':  ['windows7-32-vm'],
-    'Windows 8':  ['windows8-64'],
     'Windows 10':  ['windows10-64'],
-    # 'Windows XP': [..TODO..],
-    # 'win32': [..TODO..],
-    # 'win64': [..TODO..],
 }
 
 TEST_CHUNK_SUFFIX = re.compile('(.*)-([0-9]+)$')
