@@ -347,7 +347,6 @@ class OSXBootstrapper(BaseBootstrapper):
             'gnu-tar',
             'node',
             'python',
-            'python@2',
             'terminal-notifier',
             'watchman',
         ]
