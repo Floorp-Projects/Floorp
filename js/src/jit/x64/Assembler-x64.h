@@ -135,7 +135,7 @@ static constexpr FloatRegister FloatArgReg0 = xmm0;
 static constexpr FloatRegister FloatArgReg1 = xmm1;
 static constexpr FloatRegister FloatArgReg2 = xmm2;
 static constexpr FloatRegister FloatArgReg3 = xmm3;
-static const uint32_t NumFloatArgRegs = 4;
+static constexpr uint32_t NumFloatArgRegs = 4;
 static constexpr FloatRegister FloatArgRegs[NumFloatArgRegs] = {xmm0, xmm1,
                                                                 xmm2, xmm3};
 #else
@@ -269,10 +269,10 @@ static_assert(JitStackAlignment % SimdMemoryAlignment == 0,
               "spilled values.  Thus it should be larger than the alignment "
               "for SIMD accesses.");
 
-static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
-static const uint32_t WasmTrapInstructionLength = 2;
+static constexpr uint32_t WasmStackAlignment = SimdMemoryAlignment;
+static constexpr uint32_t WasmTrapInstructionLength = 2;
 
-static const Scale ScalePointer = TimesEight;
+static constexpr Scale ScalePointer = TimesEight;
 
 }  // namespace jit
 }  // namespace js
