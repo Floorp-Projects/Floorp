@@ -10,6 +10,7 @@
 #define mozilla_ServoStyleConstsInlines_h
 
 #include "mozilla/ServoStyleConsts.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/URLExtraData.h"
 #include "nsGkAtoms.h"
 #include "MainThreadUtils.h"
@@ -530,7 +531,12 @@ bool LengthPercentage::IsCalc() const { return Tag() == TAG_CALC; }
 
 StyleCalcLengthPercentage& LengthPercentage::AsCalc() {
   MOZ_ASSERT(IsCalc());
+#ifdef SERVO_32_BITS
   return *calc.ptr;
+#else
+  return *reinterpret_cast<StyleCalcLengthPercentage*>(
+      NativeEndian::swapFromLittleEndian(calc.ptr));
+#endif
 }
 
 const StyleCalcLengthPercentage& LengthPercentage::AsCalc() const {
@@ -544,11 +550,14 @@ StyleLengthPercentageUnion::StyleLengthPercentageUnion(const Self& aOther) {
     percentage = {TAG_PERCENTAGE, aOther.AsPercentage()};
   } else {
     MOZ_ASSERT(aOther.IsCalc());
+    auto* ptr = new StyleCalcLengthPercentage(aOther.AsCalc());
     calc = {
 #ifdef SERVO_32_BITS
         TAG_CALC,
+        ptr,
+#else
+        NativeEndian::swapToLittleEndian(reinterpret_cast<uintptr_t>(ptr)),
 #endif
-        new StyleCalcLengthPercentage(aOther.AsCalc()),
     };
   }
   MOZ_ASSERT(Tag() == aOther.Tag());
@@ -556,7 +565,7 @@ StyleLengthPercentageUnion::StyleLengthPercentageUnion(const Self& aOther) {
 
 StyleLengthPercentageUnion::~StyleLengthPercentageUnion() {
   if (IsCalc()) {
-    delete calc.ptr;
+    delete &AsCalc();
   }
 }
 
