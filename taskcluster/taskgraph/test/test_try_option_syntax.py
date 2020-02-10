@@ -246,7 +246,8 @@ class TestTryOptionSyntax(unittest.TestCase):
         parameters = {'try_options': parse_message('try: -u gtest[Ubuntu]')}
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
-            {'test': 'gtest', 'platforms': ['linux32', 'linux64', 'linux64-asan']},
+            {'test': 'gtest', 'platforms': ['linux32', 'linux64', 'linux64-asan',
+                                            'linux1804-64', 'linux1804-64-asan']},
         ]))
 
     def test_u_platforms_negated(self):
