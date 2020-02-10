@@ -456,7 +456,7 @@ void jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
   if (script->isIonCompilingOffThread()) {
     script->jitScript()->clearIsIonCompilingOffThread(script);
 
-    AbortReasonOr<Ok> status = builder->getOffThreadStatus();
+    AbortReasonOr<Ok> status = builder->mirGen().getOffThreadStatus();
     if (status.isErr() && status.unwrapErr() == AbortReason::Disable) {
       script->disableIon();
     }
@@ -1809,15 +1809,22 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
       IonOptimizations.get(optimizationLevel);
   const JitCompileOptions options(cx);
 
-  IonBuilder* builder = alloc->new_<IonBuilder>(
-      (JSContext*)nullptr, CompileRealm::get(cx->realm()), options, temp, graph,
-      constraints, inspector, info, optimizationInfo, baselineFrameInspector);
+  MIRGenerator* mirGen =
+      alloc->new_<MIRGenerator>(CompileRealm::get(cx->realm()), options, temp,
+                                graph, info, optimizationInfo);
+  if (!mirGen) {
+    return AbortReason::Alloc;
+  }
+
+  IonBuilder* builder =
+      alloc->new_<IonBuilder>((JSContext*)nullptr, *mirGen, constraints,
+                              inspector, baselineFrameInspector);
   if (!builder) {
     return AbortReason::Alloc;
   }
 
   if (cx->runtime()->gc.storeBuffer().cancelIonCompilations()) {
-    builder->setNotSafeForMinorGC();
+    builder->mirGen().setNotSafeForMinorGC();
   }
 
   MOZ_ASSERT(recompile == builder->script()->hasIonScript());
@@ -1829,7 +1836,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     builderScript->ionScript()->setRecompiling();
   }
 
-  SpewBeginFunction(builder, builderScript);
+  SpewBeginFunction(mirGen, builderScript);
 
   AbortReasonOr<Ok> buildResult = Ok();
   {
@@ -1840,7 +1847,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
 
   if (buildResult.isErr()) {
     AbortReason reason = buildResult.unwrapErr();
-    builder->graphSpewer().endFunction();
+    mirGen->graphSpewer().endFunction();
     if (reason == AbortReason::PreliminaryObjects) {
       // Some group was accessed which has associated preliminary objects
       // to analyze. Do this now and we will try to build again shortly.
@@ -1881,7 +1888,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     return reason;
   }
 
-  AssertBasicGraphCoherency(builder->graph());
+  AssertBasicGraphCoherency(mirGen->graph());
 
   // If possible, compile the script off thread.
   if (options.offThreadCompilationAvailable()) {
@@ -1898,7 +1905,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     AutoLockHelperThreadState lock;
     if (!StartOffThreadIonCompile(builder, lock)) {
       JitSpew(JitSpew_IonAbort, "Unable to start off-thread ion compilation.");
-      builder->graphSpewer().endFunction();
+      mirGen->graphSpewer().endFunction();
       return AbortReason::Alloc;
     }
 
@@ -1916,7 +1923,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
   bool succeeded = false;
   {
     AutoEnterAnalysis enter(cx);
-    UniquePtr<CodeGenerator> codegen(CompileBackEnd(builder));
+    UniquePtr<CodeGenerator> codegen(CompileBackEnd(mirGen));
     if (!codegen) {
       JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
       if (cx->isExceptionPending()) {
