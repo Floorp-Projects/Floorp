@@ -64,7 +64,7 @@ using js::frontend::IsIdentifier;
 /*
  * Index limit must stay within 32 bits.
  */
-JS_STATIC_ASSERT(sizeof(uint32_t) * CHAR_BIT >= INDEX_LIMIT_LOG2 + 1);
+static_assert(sizeof(uint32_t) * CHAR_BIT >= INDEX_LIMIT_LOG2 + 1);
 
 const JSCodeSpec js::CodeSpecTable[] = {
 #define MAKE_CODESPEC(op, op_snake, token, length, nuses, ndefs, format) \

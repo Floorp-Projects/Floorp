@@ -177,7 +177,7 @@ struct BufferIterator {
 
   explicit BufferIterator(const BufferList& buffer)
       : mBuffer(buffer), mIter(buffer.Iter()) {
-    JS_STATIC_ASSERT(8 % sizeof(T) == 0);
+    static_assert(8 % sizeof(T) == 0);
   }
 
   explicit BufferIterator(const JSStructuredCloneData& data)
@@ -375,8 +375,8 @@ class SCInput {
 
  private:
   void staticAssertions() {
-    JS_STATIC_ASSERT(sizeof(char16_t) == 2);
-    JS_STATIC_ASSERT(sizeof(uint32_t) == 4);
+    static_assert(sizeof(char16_t) == 2);
+    static_assert(sizeof(uint32_t) == 4);
   }
 
   JSContext* cx;
@@ -584,9 +584,9 @@ JS_FRIEND_API uint64_t js::GetSCOffset(JSStructuredCloneWriter* writer) {
   return writer->output().count() * sizeof(uint64_t);
 }
 
-JS_STATIC_ASSERT(SCTAG_END_OF_BUILTIN_TYPES <= JS_SCTAG_USER_MIN);
-JS_STATIC_ASSERT(JS_SCTAG_USER_MIN <= JS_SCTAG_USER_MAX);
-JS_STATIC_ASSERT(Scalar::Int8 == 0);
+static_assert(SCTAG_END_OF_BUILTIN_TYPES <= JS_SCTAG_USER_MIN);
+static_assert(JS_SCTAG_USER_MIN <= JS_SCTAG_USER_MAX);
+static_assert(Scalar::Int8 == 0);
 
 static void ReportDataCloneError(JSContext* cx,
                                  const JSStructuredCloneCallbacks* callbacks,
@@ -763,7 +763,7 @@ bool SCInput::readArray(T* p, size_t nelems) {
     return true;
   }
 
-  JS_STATIC_ASSERT(sizeof(uint64_t) % sizeof(T) == 0);
+  static_assert(sizeof(uint64_t) % sizeof(T) == 0);
 
   // Fail if nelems is so huge that computing the full size will overflow.
   mozilla::CheckedInt<size_t> size =
@@ -847,8 +847,8 @@ bool SCOutput::writeDouble(double d) {
 
 template <class T>
 bool SCOutput::writeArray(const T* p, size_t nelems) {
-  JS_STATIC_ASSERT(8 % sizeof(T) == 0);
-  JS_STATIC_ASSERT(sizeof(uint64_t) % sizeof(T) == 0);
+  static_assert(8 % sizeof(T) == 0);
+  static_assert(sizeof(uint64_t) % sizeof(T) == 0);
 
   if (nelems == 0) {
     return true;
@@ -1012,7 +1012,7 @@ void JSStructuredCloneData::discardTransferables() {
   }
 }
 
-JS_STATIC_ASSERT(JSString::MAX_LENGTH < UINT32_MAX);
+static_assert(JSString::MAX_LENGTH < UINT32_MAX);
 
 JSStructuredCloneWriter::~JSStructuredCloneWriter() {
   // Free any transferable data left lying around in the buffer

@@ -1519,7 +1519,7 @@ extern JSLinearString* NewStringFromLittleEndianNoGC(JSContext* cx,
                                                      LittleEndianChars chars,
                                                      size_t length);
 
-JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+static_assert(sizeof(HashNumber) == 4);
 
 template <AllowGC allowGC>
 extern JSString* ConcatStrings(

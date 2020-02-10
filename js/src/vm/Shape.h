@@ -834,8 +834,8 @@ class BaseShape : public gc::TenuredCell {
 
  private:
   static void staticAsserts() {
-    JS_STATIC_ASSERT(offsetof(BaseShape, clasp_) ==
-                     offsetof(js::shadow::BaseShape, clasp_));
+    static_assert(offsetof(BaseShape, clasp_) ==
+                  offsetof(js::shadow::BaseShape, clasp_));
     static_assert(sizeof(BaseShape) % gc::CellAlignBytes == 0,
                   "Things inheriting from gc::Cell must have a size that's "
                   "a multiple of gc::CellAlignBytes");
@@ -1148,11 +1148,11 @@ class Shape : public gc::TenuredCell {
 
    public:
     Range(JSContext* cx, Shape* shape) : cursor(cx, shape) {
-      JS_STATIC_ASSERT(allowGC == CanGC);
+      static_assert(allowGC == CanGC);
     }
 
     explicit Range(Shape* shape) : cursor((JSContext*)nullptr, shape) {
-      JS_STATIC_ASSERT(allowGC == NoGC);
+      static_assert(allowGC == NoGC);
     }
 
     bool empty() const { return !cursor || cursor->isEmptyShape(); }
@@ -1441,12 +1441,11 @@ class Shape : public gc::TenuredCell {
   void fixupShapeTreeAfterMovingGC();
 
   static void staticAsserts() {
-    JS_STATIC_ASSERT(offsetof(Shape, base_) ==
-                     offsetof(js::shadow::Shape, base));
-    JS_STATIC_ASSERT(offsetof(Shape, immutableFlags) ==
-                     offsetof(js::shadow::Shape, immutableFlags));
-    JS_STATIC_ASSERT(FIXED_SLOTS_SHIFT == js::shadow::Shape::FIXED_SLOTS_SHIFT);
-    JS_STATIC_ASSERT(FIXED_SLOTS_MASK == js::shadow::Shape::FIXED_SLOTS_MASK);
+    static_assert(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
+    static_assert(offsetof(Shape, immutableFlags) ==
+                  offsetof(js::shadow::Shape, immutableFlags));
+    static_assert(FIXED_SLOTS_SHIFT == js::shadow::Shape::FIXED_SLOTS_SHIFT);
+    static_assert(FIXED_SLOTS_MASK == js::shadow::Shape::FIXED_SLOTS_MASK);
   }
 };
 
