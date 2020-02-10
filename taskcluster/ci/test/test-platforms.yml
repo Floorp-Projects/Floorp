@@ -388,8 +388,8 @@ macosx1014-64-qr/debug:
     test-sets:
         - macosx1014-64-qr-tests
 
-macosx1014-64-ccov/debug:
-    build-platform: macosx64-ccov/debug
+macosx1014-64-ccov/opt:
+    build-platform: macosx64-ccov/opt
     test-sets:
         - macosx1014-64-tests
 
