@@ -130,8 +130,8 @@ static UniquePtr<T> CopyErrorHelper(JSContext* cx, T* report) {
    * Such layout together with the properties enforced by the following
    * asserts does not need any extra alignment padding.
    */
-  JS_STATIC_ASSERT(sizeof(T) % sizeof(const char*) == 0);
-  JS_STATIC_ASSERT(sizeof(const char*) % sizeof(char16_t) == 0);
+  static_assert(sizeof(T) % sizeof(const char*) == 0);
+  static_assert(sizeof(const char*) % sizeof(char16_t) == 0);
 
   size_t filenameSize = report->filename ? strlen(report->filename) + 1 : 0;
   size_t messageSize = 0;

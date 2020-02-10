@@ -42,7 +42,7 @@ void* js::GetNativeStackBaseImpl() {
 
 #elif defined(SOLARIS)
 
-JS_STATIC_ASSERT(JS_STACK_GROWTH_DIRECTION < 0);
+static_assert(JS_STACK_GROWTH_DIRECTION < 0);
 
 void* js::GetNativeStackBaseImpl() {
   stack_t st;
@@ -52,7 +52,7 @@ void* js::GetNativeStackBaseImpl() {
 
 #elif defined(AIX)
 
-JS_STATIC_ASSERT(JS_STACK_GROWTH_DIRECTION < 0);
+static_assert(JS_STACK_GROWTH_DIRECTION < 0);
 
 void* js::GetNativeStackBaseImpl() {
   ucontext_t context;
