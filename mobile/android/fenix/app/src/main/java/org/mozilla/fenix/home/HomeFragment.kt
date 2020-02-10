@@ -804,7 +804,7 @@ class HomeFragment : Fragment() {
                 }
                 FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
                     .setText(view.context.getString(stringRes))
-                    .setAnchorView(bottom_bar)
+                    .setAnchorView(snackbarAnchorView)
                     .show()
             }
         }
@@ -815,7 +815,7 @@ class HomeFragment : Fragment() {
             val string = view.context.getString(R.string.snackbar_collection_renamed)
             FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
                 .setText(string)
-                .setAnchorView(bottom_bar)
+                .setAnchorView(snackbarAnchorView)
                 .show()
         }
     }
