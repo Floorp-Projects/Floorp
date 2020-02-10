@@ -59,12 +59,12 @@ class MainFrame extends Component {
       dispatch: PropTypes.func.isRequired,
       auditing: PropTypes.array.isRequired,
       supports: PropTypes.object,
-      simulator: PropTypes.object,
       toolbox: PropTypes.object.isRequired,
       getAccessibilityTreeRoot: PropTypes.func.isRequired,
       startListeningForAccessibilityEvents: PropTypes.func.isRequired,
       stopListeningForAccessibilityEvents: PropTypes.func.isRequired,
       audit: PropTypes.func.isRequired,
+      simulate: PropTypes.func,
     };
   }
 
@@ -128,7 +128,7 @@ class MainFrame extends Component {
       fluentBundles,
       enabled,
       auditing,
-      simulator,
+      simulate,
       toolbox,
       getAccessibilityTreeRoot,
       startListeningForAccessibilityEvents,
@@ -150,7 +150,7 @@ class MainFrame extends Component {
         Toolbar({
           accessibility,
           audit,
-          simulator,
+          simulate,
           toolboxDoc: toolbox.doc,
         }),
         isAuditing && AuditProgressOverlay(),
