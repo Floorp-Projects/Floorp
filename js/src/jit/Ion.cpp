@@ -1742,7 +1742,17 @@ static void TrackAndSpewIonAbort(JSContext* cx, JSScript* script,
 static AbortReason BuildMIR(JSContext* cx, MIRGenerator* mirGen,
                             CompileInfo* info,
                             CompilerConstraintList* constraints,
-                            BaselineFrameInspector* baselineFrameInspector) {
+                            BaselineFrame* baselineFrame,
+                            uint32_t baselineFrameSize) {
+  BaselineFrameInspector* baselineFrameInspector = nullptr;
+  if (baselineFrame) {
+    baselineFrameInspector = NewBaselineFrameInspector(
+        &mirGen->alloc(), baselineFrame, baselineFrameSize);
+    if (!baselineFrameInspector) {
+      return AbortReason::Alloc;
+    }
+  }
+
   SpewBeginFunction(mirGen, info->script());
 
   BaselineInspector inspector(info->script());
@@ -1853,15 +1863,6 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     return AbortReason::Alloc;
   }
 
-  BaselineFrameInspector* baselineFrameInspector = nullptr;
-  if (baselineFrame) {
-    baselineFrameInspector =
-        NewBaselineFrameInspector(temp, baselineFrame, baselineFrameSize);
-    if (!baselineFrameInspector) {
-      return AbortReason::Alloc;
-    }
-  }
-
   CompilerConstraintList* constraints = NewCompilerConstraintList(*temp);
   if (!constraints) {
     return AbortReason::Alloc;
@@ -1892,7 +1893,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   }
 
   AbortReason reason =
-      BuildMIR(cx, mirGen, info, constraints, baselineFrameInspector);
+      BuildMIR(cx, mirGen, info, constraints, baselineFrame, baselineFrameSize);
   if (reason != AbortReason::NoAbort) {
     return reason;
   }
