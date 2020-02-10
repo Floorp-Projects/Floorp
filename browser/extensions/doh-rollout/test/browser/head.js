@@ -117,6 +117,19 @@ function ensureNoHeuristicsTelemetry() {
   is(events.length, 0, "Found no heuristics events.");
 }
 
+async function waitForStateTelemetry() {
+  let events;
+  await BrowserTestUtils.waitForCondition(() => {
+    events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+    ).dynamic;
+    return events;
+  });
+  events = events.filter(e => e[1] == "doh" && e[2] == "state");
+  is(events.length, 1, "Found the expected state event.");
+  Services.telemetry.clearEvents();
+}
+
 function setPassingHeuristics() {
   Preferences.set(prefs.MOCK_HEURISTICS_PREF, fakePassingHeuristics);
 }
