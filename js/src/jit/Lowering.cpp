@@ -476,8 +476,8 @@ void LIRGenerator::visitApplyArgs(MApplyArgs* apply) {
   MOZ_ASSERT(apply->getFunction()->type() == MIRType::Object);
 
   // Assert if the return value is already erased.
-  MOZ_ASSERT(CallTempReg2 != JSReturnReg_Type);
-  MOZ_ASSERT(CallTempReg2 != JSReturnReg_Data);
+  static_assert(CallTempReg2 != JSReturnReg_Type);
+  static_assert(CallTempReg2 != JSReturnReg_Data);
 
   LApplyArgsGeneric* lir = new (alloc()) LApplyArgsGeneric(
       useFixedAtStart(apply->getFunction(), CallTempReg3),
@@ -499,8 +499,8 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
   MOZ_ASSERT(apply->getFunction()->type() == MIRType::Object);
 
   // Assert if the return value is already erased.
-  MOZ_ASSERT(CallTempReg2 != JSReturnReg_Type);
-  MOZ_ASSERT(CallTempReg2 != JSReturnReg_Data);
+  static_assert(CallTempReg2 != JSReturnReg_Type);
+  static_assert(CallTempReg2 != JSReturnReg_Data);
 
   LApplyArrayGeneric* lir = new (alloc()) LApplyArrayGeneric(
       useFixedAtStart(apply->getFunction(), CallTempReg3),

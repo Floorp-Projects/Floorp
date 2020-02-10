@@ -2844,16 +2844,16 @@ void CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir) {
   MOZ_ASSERT(ToOutValue(lir) == JSReturnOperand);
 
 #if defined(JS_NUNBOX32)
-  MOZ_ASSERT(RegExpMatcherRegExpReg != JSReturnReg_Type);
-  MOZ_ASSERT(RegExpMatcherRegExpReg != JSReturnReg_Data);
-  MOZ_ASSERT(RegExpMatcherStringReg != JSReturnReg_Type);
-  MOZ_ASSERT(RegExpMatcherStringReg != JSReturnReg_Data);
-  MOZ_ASSERT(RegExpMatcherLastIndexReg != JSReturnReg_Type);
-  MOZ_ASSERT(RegExpMatcherLastIndexReg != JSReturnReg_Data);
+  static_assert(RegExpMatcherRegExpReg != JSReturnReg_Type);
+  static_assert(RegExpMatcherRegExpReg != JSReturnReg_Data);
+  static_assert(RegExpMatcherStringReg != JSReturnReg_Type);
+  static_assert(RegExpMatcherStringReg != JSReturnReg_Data);
+  static_assert(RegExpMatcherLastIndexReg != JSReturnReg_Type);
+  static_assert(RegExpMatcherLastIndexReg != JSReturnReg_Data);
 #elif defined(JS_PUNBOX64)
-  MOZ_ASSERT(RegExpMatcherRegExpReg != JSReturnReg);
-  MOZ_ASSERT(RegExpMatcherStringReg != JSReturnReg);
-  MOZ_ASSERT(RegExpMatcherLastIndexReg != JSReturnReg);
+  static_assert(RegExpMatcherRegExpReg != JSReturnReg);
+  static_assert(RegExpMatcherStringReg != JSReturnReg);
+  static_assert(RegExpMatcherLastIndexReg != JSReturnReg);
 #endif
 
   masm.reserveStack(RegExpReservedStack);
@@ -3023,9 +3023,9 @@ void CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir) {
   MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpTesterLastIndexReg);
   MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
 
-  MOZ_ASSERT(RegExpTesterRegExpReg != ReturnReg);
-  MOZ_ASSERT(RegExpTesterStringReg != ReturnReg);
-  MOZ_ASSERT(RegExpTesterLastIndexReg != ReturnReg);
+  static_assert(RegExpTesterRegExpReg != ReturnReg);
+  static_assert(RegExpTesterStringReg != ReturnReg);
+  static_assert(RegExpTesterLastIndexReg != ReturnReg);
 
   masm.reserveStack(RegExpReservedStack);
 
@@ -3151,9 +3151,9 @@ void CodeGenerator::visitRegExpTester(LRegExpTester* lir) {
   MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpTesterLastIndexReg);
   MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
 
-  MOZ_ASSERT(RegExpTesterRegExpReg != ReturnReg);
-  MOZ_ASSERT(RegExpTesterStringReg != ReturnReg);
-  MOZ_ASSERT(RegExpTesterLastIndexReg != ReturnReg);
+  static_assert(RegExpTesterRegExpReg != ReturnReg);
+  static_assert(RegExpTesterStringReg != ReturnReg);
+  static_assert(RegExpTesterLastIndexReg != ReturnReg);
 
   OutOfLineRegExpTester* ool = new (alloc()) OutOfLineRegExpTester(lir);
   addOutOfLineCode(ool, lir->mir());
