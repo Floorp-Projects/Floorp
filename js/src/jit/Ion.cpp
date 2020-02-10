@@ -79,7 +79,7 @@ using namespace js;
 using namespace js::jit;
 
 // Assert that JitCode is gc::Cell aligned.
-JS_STATIC_ASSERT(sizeof(JitCode) % gc::CellAlignBytes == 0);
+static_assert(sizeof(JitCode) % gc::CellAlignBytes == 0);
 
 static MOZ_THREAD_LOCAL(JitContext*) TlsJitContext;
 

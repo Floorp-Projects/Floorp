@@ -20,7 +20,7 @@ namespace jit {
 
 static Register CallReg = ip;
 static const int defaultShift = 3;
-JS_STATIC_ASSERT(1 << defaultShift == sizeof(JS::Value));
+static_assert(1 << defaultShift == sizeof(JS::Value));
 
 // See documentation for ScratchTagScope and ScratchTagScopeRelease in
 // MacroAssembler-x64.h.

@@ -2265,13 +2265,13 @@ struct PoolHeader : Instruction {
         : size(size_), isNatural(isNatural_), ONES(0xffff) {}
 
     explicit Header(const Instruction* i) {
-      JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32_t));
+      static_assert(sizeof(Header) == sizeof(uint32_t));
       memcpy(this, i, sizeof(Header));
       MOZ_ASSERT(ONES == 0xffff);
     }
 
     uint32_t raw() const {
-      JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32_t));
+      static_assert(sizeof(Header) == sizeof(uint32_t));
       uint32_t dest;
       memcpy(&dest, this, sizeof(Header));
       return dest;
