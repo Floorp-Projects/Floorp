@@ -2303,6 +2303,8 @@ var gBrowserInit = {
       NewTabPagePreloading.maybeCreatePreloadedBrowser(window);
     });
 
+    scheduleIdleTask(reportRemoteSubframesEnabledTelemetry);
+
     if (AppConstants.NIGHTLY_BUILD) {
       scheduleIdleTask(() => {
         FissionTestingUI.init();
@@ -9400,6 +9402,21 @@ var ConfirmationHint = {
     ));
   },
 };
+
+function reportRemoteSubframesEnabledTelemetry() {
+  let autostart = Services.prefs.getBoolPref("fission.autostart");
+
+  let categoryLabel = gFissionBrowser ? "Enabled" : "Disabled";
+  if (autostart == gFissionBrowser) {
+    categoryLabel += "ByAutostart";
+  } else {
+    categoryLabel += "ByUser";
+  }
+
+  Services.telemetry
+    .getHistogramById("WINDOW_REMOTE_SUBFRAMES_ENABLED_STATUS")
+    .add(categoryLabel);
+}
 
 if (AppConstants.NIGHTLY_BUILD) {
   var FissionTestingUI = {
