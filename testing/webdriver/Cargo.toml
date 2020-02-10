@@ -8,6 +8,7 @@ documentation = "https://docs.rs/webdriver"
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/webdriver"
 readme = "README.md"
 license = "MPL-2.0"
+edition = "2018"
 
 [dependencies]
 base64 = "0.10"
