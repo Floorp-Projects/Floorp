@@ -136,8 +136,8 @@ public class TextureBufferImpl implements VideoFrame.TextureBuffer {
     cropAndScaleMatrix.preScale(cropWidth / (float) width, cropHeight / (float) height);
 
     return applyTransformMatrix(cropAndScaleMatrix,
-        (int) Math.round(unscaledWidth * cropWidth / (float) width),
-        (int) Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
+        Math.round(unscaledWidth * cropWidth / (float) width),
+        Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
   }
 
   /**
