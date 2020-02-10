@@ -73,21 +73,25 @@ const stateManager = {
       case "uninstalled":
         break;
       case "disabled":
-        rollout.setSetting(TRR_MODE_PREF, 0);
+        await rollout.setSetting(TRR_MODE_PREF, 0);
         break;
       case "manuallyDisabled":
-        browser.experiments.preferences.clearUserPref(DOH_SELF_ENABLED_PREF);
+        await browser.experiments.preferences.clearUserPref(
+          DOH_SELF_ENABLED_PREF
+        );
         break;
       case "UIOk":
-        rollout.setSetting(DOH_SELF_ENABLED_PREF, true);
+        await rollout.setSetting(DOH_SELF_ENABLED_PREF, true);
         break;
       case "enabled":
-        rollout.setSetting(TRR_MODE_PREF, 2);
-        rollout.setSetting(DOH_SELF_ENABLED_PREF, true);
+        await rollout.setSetting(TRR_MODE_PREF, 2);
+        await rollout.setSetting(DOH_SELF_ENABLED_PREF, true);
         break;
       case "UIDisabled":
-        rollout.setSetting(TRR_MODE_PREF, 5);
-        browser.experiments.preferences.clearUserPref(DOH_SELF_ENABLED_PREF);
+        await rollout.setSetting(TRR_MODE_PREF, 5);
+        await browser.experiments.preferences.clearUserPref(
+          DOH_SELF_ENABLED_PREF
+        );
         break;
     }
 
