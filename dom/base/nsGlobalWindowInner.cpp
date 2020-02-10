@@ -5888,8 +5888,8 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
   const char* reason = GetTimeoutReasonString(timeout);
 
 #ifdef MOZ_GECKO_PROFILER
+  nsCString str;
   if (profiler_can_accept_markers()) {
-    nsCString str;
     TimeDuration originalInterval = timeout->When() - timeout->SubmitTime();
     str.Append(reason);
     str.Append(" with interval ");
@@ -5898,10 +5898,10 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
     nsCString handlerDescription;
     timeout->mScriptHandler->GetDescription(handlerDescription);
     str.Append(handlerDescription);
-    AUTO_PROFILER_TEXT_MARKER_CAUSE("setTimeout callback", str, JS,
-                                    Some(mWindowID),
-                                    timeout->TakeProfilerBacktrace());
   }
+  AUTO_PROFILER_TEXT_MARKER_CAUSE("setTimeout callback", str, JS,
+                                  Some(mWindowID),
+                                  timeout->TakeProfilerBacktrace());
 #endif
 
   bool abortIntervalHandler;
