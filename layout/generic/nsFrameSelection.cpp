@@ -839,9 +839,10 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
   return GetPrevNextBidiLevels(aNode, aContentOffset, mHint, aJumpLines);
 }
 
+// static
 nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
     nsIContent* aNode, uint32_t aContentOffset, CaretAssociateHint aHint,
-    bool aJumpLines) const {
+    bool aJumpLines) {
   // Get the level of the frames on each side
   nsIFrame* currentFrame;
   int32_t currentOffset;
@@ -1456,10 +1457,12 @@ static bool IsDisplayContents(const nsIContent* aContent) {
   return aContent->IsElement() && aContent->AsElement()->IsDisplayContents();
 }
 
-nsIFrame* nsFrameSelection::GetFrameForNodeOffset(
-    nsIContent* aNode, int32_t aOffset, CaretAssociateHint aHint,
-    int32_t* aReturnOffset) const {
-  if (!aNode || !aReturnOffset || !mPresShell) return nullptr;
+// static
+nsIFrame* nsFrameSelection::GetFrameForNodeOffset(nsIContent* aNode,
+                                                  int32_t aOffset,
+                                                  CaretAssociateHint aHint,
+                                                  int32_t* aReturnOffset) {
+  if (!aNode || !aReturnOffset) return nullptr;
 
   if (aOffset < 0) return nullptr;
 
@@ -2595,7 +2598,8 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
   return NS_OK;
 }
 
-nsIContent* nsFrameSelection::GetFirstCellNodeInRange(nsRange* aRange) const {
+// static
+nsIContent* nsFrameSelection::GetFirstCellNodeInRange(nsRange* aRange) {
   if (!aRange) return nullptr;
 
   nsIContent* childContent = aRange->GetChildAtStartOffset();
@@ -2651,8 +2655,9 @@ nsresult nsFrameSelection::GetCellIndexes(nsIContent* aCell, int32_t& aRowIndex,
   return cellLayoutObject->GetCellIndexes(aRowIndex, aColIndex);
 }
 
+// static
 nsIContent* nsFrameSelection::IsInSameTable(nsIContent* aContent1,
-                                            nsIContent* aContent2) const {
+                                            nsIContent* aContent2) {
   if (!aContent1 || !aContent2) return nullptr;
 
   nsIContent* tableNode1 = GetParentTable(aContent1);
@@ -2663,7 +2668,8 @@ nsIContent* nsFrameSelection::IsInSameTable(nsIContent* aContent1,
   return (tableNode1 == tableNode2) ? tableNode1 : nullptr;
 }
 
-nsIContent* nsFrameSelection::GetParentTable(nsIContent* aCell) const {
+// static
+nsIContent* nsFrameSelection::GetParentTable(nsIContent* aCell) {
   if (!aCell) {
     return nullptr;
   }

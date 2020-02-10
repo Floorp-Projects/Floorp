@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/empty.js"></script>
+<script src="https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/empty.js?redirect"></script>
+<script src="https://tracking.example.com/browser/toolkit/components/antitracking/test/browser/empty.js?redirect2"></script>
+</head>
+<body onload="parent.postMessage({data:document.querySelectorAll('script').length}, '*');"></body>
+</html>

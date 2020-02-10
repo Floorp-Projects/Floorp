@@ -190,6 +190,7 @@ testing/mochitest/tests/SimpleTest/
 # octothorpe used for pref file comment causes parsing error
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 
+# Test files that we don't want to lint.
 testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
@@ -199,7 +200,6 @@ testing/talos/talos/tests/tp5n/
 testing/talos/talos/fis/tp5n/
 
 testing/web-platform/
-testing/xpcshell/moz-http2/
 
 # toolkit/ exclusions
 
