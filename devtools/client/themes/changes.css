@@ -169,8 +169,7 @@
 }
 
 .changes__declaration-name {
-  /* Counteract double space used for indentation when text is copied to clipboard */
-  margin-left: -4px;
+  margin-left: 10px;
 }
 
 .diff-add,
