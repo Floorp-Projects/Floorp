@@ -1290,6 +1290,7 @@ CHUNK_SUITES_BLACKLIST = (
     'mochitest-browser-chrome',
     'mochitest-browser-chrome-screenshots',
     'mochitest-browser-chrome-thunderbird',
+    'mochitest-devtools-webreplay',
     'mochitest-valgrind-plain',
     'mochitest-webgl1-core',
     'mochitest-webgl1-ext',

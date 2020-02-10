@@ -78,6 +78,16 @@ loader.lazyGetter(
   "WhatsNewPanel",
   () => require("devtools/client/whats-new/panel").WhatsNewPanel
 );
+loader.lazyGetter(
+  this,
+  "reloadAndRecordTab",
+  () => require("devtools/client/webreplay/menu.js").reloadAndRecordTab
+);
+loader.lazyGetter(
+  this,
+  "reloadAndStopRecordingTab",
+  () => require("devtools/client/webreplay/menu.js").reloadAndStopRecordingTab
+);
 
 // Other dependencies
 loader.lazyRequireGetter(
@@ -555,6 +565,28 @@ exports.ToolboxButtons = [
     isChecked(toolbox) {
       return toolbox.isPaintFlashing;
     },
+  },
+  {
+    id: "command-button-replay",
+    description: l10n("toolbox.buttons.replay"),
+    isTargetSupported: target =>
+      Services.prefs.getBoolPref("devtools.recordreplay.enabled") &&
+      !target.canRewind &&
+      target.isLocalTab,
+    onClick: () => reloadAndRecordTab(),
+    isChecked: () => false,
+    experimentalURL:
+      "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/WebReplay",
+  },
+  {
+    id: "command-button-stop-replay",
+    description: l10n("toolbox.buttons.stopReplay"),
+    isTargetSupported: target =>
+      Services.prefs.getBoolPref("devtools.recordreplay.enabled") &&
+      target.canRewind &&
+      target.isLocalTab,
+    onClick: () => reloadAndStopRecordingTab(),
+    isChecked: () => true,
   },
   {
     id: "command-button-fission-prefs",

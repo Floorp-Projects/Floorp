@@ -140,10 +140,18 @@ function threadListChanged() {
   actions.updateThreads();
 }
 
+function replayFramePositions(
+  threadFront: ThreadFront,
+  { positions, frame, thread }: Object
+) {
+  actions.setFramePositions(positions, frame, thread);
+}
+
 const clientEvents = {
   paused,
   resumed,
   newSource,
+  replayFramePositions,
 };
 
 export {

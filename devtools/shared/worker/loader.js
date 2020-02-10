@@ -563,6 +563,7 @@ this.worker = new WorkerDebuggerLoader({
   createSandbox: createSandbox,
   globals: {
     isWorker: true,
+    isReplaying: false,
     dump: dump,
     loader: loader,
     reportError: reportError,
