@@ -8303,8 +8303,8 @@
 # Prefs starting with "widget."
 #---------------------------------------------------------------------------
 
-# Global user preference for disabling native theme. Used in NativeWindowTheme.
-- name: widget.disable-native-theme
+# Global user preference for disabling native theme in content processes.
+- name: widget.disable-native-theme-for-content
   type: bool
   value: false
   mirror: always

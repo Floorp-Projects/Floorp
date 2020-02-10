@@ -586,7 +586,7 @@ sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
     sandbox.windowsDefaultTheme = g.containingWindow.matchMedia("(-moz-windows-default-theme)").matches;
 
     try {
-        sandbox.nativeThemePref = !prefs.getBoolPref("widget.disable-native-theme");
+        sandbox.nativeThemePref = !prefs.getBoolPref("widget.disable-native-theme-for-content");
     } catch (e) {
         sandbox.nativeThemePref = true;
     }
