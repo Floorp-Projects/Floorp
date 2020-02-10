@@ -65,10 +65,6 @@ pub struct CalcVariant {
     ptr: *mut CalcLengthPercentage,
 }
 
-// `CalcLengthPercentage` is `Send + Sync` as asserted below.
-unsafe impl Send for CalcVariant {}
-unsafe impl Sync for CalcVariant {}
-
 #[doc(hidden)]
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -76,6 +72,10 @@ unsafe impl Sync for CalcVariant {}
 pub struct CalcVariant {
     ptr: usize, // In little-endian byte order
 }
+
+// `CalcLengthPercentage` is `Send + Sync` as asserted below.
+unsafe impl Send for CalcVariant {}
+unsafe impl Sync for CalcVariant {}
 
 #[doc(hidden)]
 #[derive(Clone, Copy)]
@@ -279,10 +279,12 @@ impl LengthPercentage {
 
     #[inline]
     unsafe fn calc_ptr(&self) -> *mut CalcLengthPercentage {
-        #[cfg(not(all(target_endian = "big", target_pointer_width = "64")))] {
+        #[cfg(not(all(target_endian = "big", target_pointer_width = "64")))]
+        {
             self.0.calc.ptr as *mut _
         }
-        #[cfg(all(target_endian = "big", target_pointer_width = "64"))] {
+        #[cfg(all(target_endian = "big", target_pointer_width = "64"))]
+        {
             self.0.calc.ptr.swap_bytes() as *mut _
         }
     }
