@@ -15,12 +15,16 @@ uint64_t GfxDriverInfo::allDriverVersions = ~(uint64_t(0));
 GfxDeviceFamily* const GfxDriverInfo::allDevices = nullptr;
 
 GfxDeviceFamily* GfxDriverInfo::sDeviceFamilies[DeviceFamilyMax];
+nsAString* GfxDriverInfo::sDesktopEnvironment[DesktopMax];
+nsAString* GfxDriverInfo::sWindowProtocol[WindowingMax];
 nsAString* GfxDriverInfo::sDeviceVendors[DeviceVendorMax];
 nsAString* GfxDriverInfo::sDriverVendors[DriverVendorMax];
 
 GfxDriverInfo::GfxDriverInfo()
     : mOperatingSystem(OperatingSystem::Unknown),
       mOperatingSystemVersion(0),
+      mDesktopEnvironment(GfxDriverInfo::GetDesktopEnvironment(DesktopAll)),
+      mWindowProtocol(GfxDriverInfo::GetWindowProtocol(WindowingAll)),
       mAdapterVendor(GfxDriverInfo::GetDeviceVendor(VendorAll)),
       mDriverVendor(GfxDriverInfo::GetDriverVendor(DriverVendorAll)),
       mDevices(allDevices),
@@ -34,16 +38,17 @@ GfxDriverInfo::GfxDriverInfo()
       mRuleId(nullptr),
       mGpu2(false) {}
 
-GfxDriverInfo::GfxDriverInfo(OperatingSystem os, const nsAString& vendor,
-                             const nsAString& driverVendor,
-                             GfxDeviceFamily* devices, int32_t feature,
-                             int32_t featureStatus, VersionComparisonOp op,
-                             uint64_t driverVersion, const char* ruleId,
-                             const char* suggestedVersion /* = nullptr */,
-                             bool ownDevices /* = false */,
-                             bool gpu2 /* = false */)
+GfxDriverInfo::GfxDriverInfo(
+    OperatingSystem os, const nsAString& desktopEnv,
+    const nsAString& windowProtocol, const nsAString& vendor,
+    const nsAString& driverVendor, GfxDeviceFamily* devices, int32_t feature,
+    int32_t featureStatus, VersionComparisonOp op, uint64_t driverVersion,
+    const char* ruleId, const char* suggestedVersion /* = nullptr */,
+    bool ownDevices /* = false */, bool gpu2 /* = false */)
     : mOperatingSystem(os),
       mOperatingSystemVersion(0),
+      mDesktopEnvironment(desktopEnv),
+      mWindowProtocol(windowProtocol),
       mAdapterVendor(vendor),
       mDriverVendor(driverVendor),
       mDevices(devices),
@@ -60,6 +65,8 @@ GfxDriverInfo::GfxDriverInfo(OperatingSystem os, const nsAString& vendor,
 GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
     : mOperatingSystem(aOrig.mOperatingSystem),
       mOperatingSystemVersion(aOrig.mOperatingSystemVersion),
+      mDesktopEnvironment(aOrig.mDesktopEnvironment),
+      mWindowProtocol(aOrig.mWindowProtocol),
       mAdapterVendor(aOrig.mAdapterVendor),
       mDriverVendor(aOrig.mDriverVendor),
       mFeature(aOrig.mFeature),
@@ -83,7 +90,9 @@ GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
 }
 
 GfxDriverInfo::~GfxDriverInfo() {
-  if (mDeleteDevices) delete mDevices;
+  if (mDeleteDevices) {
+    delete mDevices;
+  }
 }
 
 // Macros for appending a device to the DeviceFamily.
@@ -98,7 +107,9 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
                "DeviceFamily id is out of range");
 
   // If it already exists, we must have processed it once, so return it now.
-  if (sDeviceFamilies[id]) return sDeviceFamilies[id];
+  if (sDeviceFamilies[id]) {
+    return sDeviceFamilies[id];
+  }
 
   sDeviceFamilies[id] = new GfxDeviceFamily;
   GfxDeviceFamily* deviceFamily = sDeviceFamilies[id];
@@ -384,6 +395,76 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
   return deviceFamily;
 }
 
+// Macro for assigning a desktop environment to a string.
+#define DECLARE_DESKTOP_ENVIRONMENT_ID(name, desktopEnvId) \
+  case name:                                               \
+    sDesktopEnvironment[id]->AssignLiteral(desktopEnvId);  \
+    break;
+
+const nsAString& GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment id) {
+  if (id >= DesktopMax) {
+    MOZ_ASSERT_UNREACHABLE("DesktopEnvironment id is out of range");
+    id = DesktopAll;
+  }
+
+  if (sDesktopEnvironment[id]) {
+    return *sDesktopEnvironment[id];
+  }
+
+  sDesktopEnvironment[id] = new nsString();
+
+  switch (id) {
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopGNOME, "gnome");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopKDE, "kde");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopXFCE, "xfce");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopCinnamon, "cinnamon");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopEnlightenment, "enlightment");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopLXDE, "lxde");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopOpenbox, "openbox");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopI3, "i3");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopMate, "mate");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopUnity, "unity");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopPantheon, "pantheon");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopLXQT, "lxqt");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopDeepin, "deepin");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopUnknown, "unknown");
+    default:  // Suppress a warning.
+      DECLARE_DESKTOP_ENVIRONMENT_ID(DesktopAll, "");
+  }
+
+  return *sDesktopEnvironment[id];
+}
+
+// Macro for assigning a window protocol id to a string.
+#define DECLARE_WINDOW_PROTOCOL_ID(name, windowProtocolId) \
+  case name:                                               \
+    sWindowProtocol[id]->AssignLiteral(windowProtocolId);  \
+    break;
+
+const nsAString& GfxDriverInfo::GetWindowProtocol(WindowProtocol id) {
+  if (id >= WindowingMax) {
+    MOZ_ASSERT_UNREACHABLE("WindowProtocol id is out of range");
+    id = WindowingAll;
+  }
+
+  if (sWindowProtocol[id]) {
+    return *sWindowProtocol[id];
+  }
+
+  sWindowProtocol[id] = new nsString();
+
+  switch (id) {
+    DECLARE_WINDOW_PROTOCOL_ID(WindowingX11, "x11");
+    DECLARE_WINDOW_PROTOCOL_ID(WindowingWayland, "wayland");
+    DECLARE_WINDOW_PROTOCOL_ID(WindowingWaylandDRM, "wayland/drm");
+    DECLARE_WINDOW_PROTOCOL_ID(WindowingWaylandAll, "wayland/all");
+    default:  // Suppress a warning.
+      DECLARE_WINDOW_PROTOCOL_ID(WindowingAll, "");
+  }
+
+  return *sWindowProtocol[id];
+}
+
 // Macro for assigning a device vendor id to a string.
 #define DECLARE_VENDOR_ID(name, deviceId)        \
   case name:                                     \
@@ -391,15 +472,18 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
     break;
 
 const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id) {
-  NS_ASSERTION(id >= 0 && id < DeviceVendorMax,
-               "DeviceVendor id is out of range");
+  if (id >= DeviceVendorMax) {
+    MOZ_ASSERT_UNREACHABLE("DeviceVendor id is out of range");
+    id = VendorAll;
+  }
 
-  if (sDeviceVendors[id]) return *sDeviceVendors[id];
+  if (sDeviceVendors[id]) {
+    return *sDeviceVendors[id];
+  }
 
   sDeviceVendors[id] = new nsString();
 
   switch (id) {
-    DECLARE_VENDOR_ID(VendorAll, "");
     DECLARE_VENDOR_ID(VendorIntel, "0x8086");
     DECLARE_VENDOR_ID(VendorNVIDIA, "0x10de");
     DECLARE_VENDOR_ID(VendorAMD, "0x1022");
@@ -409,8 +493,8 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id) {
     // Choose an arbitrary Qualcomm PCI VENdor ID for now.
     // TODO: This should be "QCOM" when Windows device ID parsing is reworked.
     DECLARE_VENDOR_ID(VendorQualcomm, "0x5143");
-    // Suppress a warning.
-    DECLARE_VENDOR_ID(DeviceVendorMax, "");
+    default:  // Suppress a warning.
+      DECLARE_VENDOR_ID(VendorAll, "");
   }
 
   return *sDeviceVendors[id];
@@ -423,23 +507,26 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id) {
     break;
 
 const nsAString& GfxDriverInfo::GetDriverVendor(DriverVendor id) {
-  NS_ASSERTION(id >= 0 && id < DriverVendorMax,
-               "DriverVendor id is out of range");
+  if (id >= DriverVendorMax) {
+    MOZ_ASSERT_UNREACHABLE("DriverVendor id is out of range");
+    id = DriverVendorAll;
+  }
 
-  if (sDriverVendors[id]) return *sDriverVendors[id];
+  if (sDriverVendors[id]) {
+    return *sDriverVendors[id];
+  }
 
   sDriverVendors[id] = new nsString();
 
   switch (id) {
-    DECLARE_DRIVER_VENDOR_ID(DriverVendorAll, "");
     DECLARE_DRIVER_VENDOR_ID(DriverMesaAll, "mesa/all");
     DECLARE_DRIVER_VENDOR_ID(DriverMesaLLVMPipe, "mesa/llvmpipe");
     DECLARE_DRIVER_VENDOR_ID(DriverMesaSoftPipe, "mesa/softpipe");
     DECLARE_DRIVER_VENDOR_ID(DriverMesaSWRast, "mesa/swrast");
     DECLARE_DRIVER_VENDOR_ID(DriverMesaUnknown, "mesa/unknown");
     DECLARE_DRIVER_VENDOR_ID(DriverNonMesaAll, "non-mesa/all");
-    // Suppress a warning.
-    DECLARE_DRIVER_VENDOR_ID(DriverVendorMax, "");
+    default:  // Suppress a warning.
+      DECLARE_DRIVER_VENDOR_ID(DriverVendorAll, "");
   }
 
   return *sDriverVendors[id];
