@@ -221,6 +221,7 @@ class TabsPanel extends TabsListBase {
     let { doc } = this;
     let row = doc.createXULElement("toolbaritem");
     row.setAttribute("class", "all-tabs-item");
+    row.setAttribute("context", "tabContextMenu");
     if (this.className) {
       row.classList.add(this.className);
     }
