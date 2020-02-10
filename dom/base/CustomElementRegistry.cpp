@@ -731,7 +731,7 @@ void CustomElementRegistry::Define(
    */
   if (!JS::IsConstructor(constructorUnwrapped)) {
     aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(
-        NS_LITERAL_STRING("Argument 2 of CustomElementRegistry.define"));
+        u"Argument 2 of CustomElementRegistry.define");
     return;
   }
 
@@ -870,8 +870,8 @@ void CustomElementRegistry::Define(
      * 14.2. If Type(prototype) is not Object, then throw a TypeError exception.
      */
     if (!prototype.isObject()) {
-      aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_LITERAL_STRING(
-          "CustomElementRegistry.define: constructor.prototype"));
+      aRv.ThrowTypeError<MSG_NOT_OBJECT>(
+          u"CustomElementRegistry.define: constructor.prototype");
       return;
     }
 
