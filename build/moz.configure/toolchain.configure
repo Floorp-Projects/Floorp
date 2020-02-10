@@ -886,6 +886,10 @@ def prepare_flags(host_or_target, macos_sdk):
     return []
 
 
+def minimum_gcc_version():
+    return Version('7.1.0')
+
+
 @template
 def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
              other_c_compiler=None):
@@ -1012,10 +1016,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             if host_or_target.os == 'Android':
                 raise FatalCheckError('GCC is not supported on Android.\n'
                                       'Please use clang from the Android NDK instead.')
-            if info.version < '7.1.0':
+            gcc_version = minimum_gcc_version()
+            if info.version < gcc_version:
                 raise FatalCheckError(
-                    'Only GCC 7.1 or newer is supported (found version %s).'
-                    % info.version)
+                    'Only GCC %d.%d or newer is supported (found version %s).'
+                    % (gcc_version.major, gcc_version.minor, info.version))
 
         if info.type == 'clang-cl':
             if info.version < '8.0.0':
@@ -1211,6 +1216,45 @@ def check_have_64_bit(have_64_bit, compiler_have_64_bit):
     if have_64_bit != compiler_have_64_bit:
         configure_error('The target compiler does not agree with configure '
                         'about the target bitness.')
+
+
+@depends(cxx_compiler, target)
+def needs_libstdcxx_newness_check(cxx_compiler, target):
+    # We only have to care about this on Linux and MinGW.
+    if cxx_compiler.type == 'clang-cl':
+        return
+
+    if target.kernel not in ('Linux', 'WINNT'):
+        return
+
+    if target.os == 'Android':
+        return
+
+    return True
+
+
+def die_on_old_libstdcxx():
+    die('The libstdc++ in use is not new enough.  Please run '
+        './mach bootstrap to update your compiler, or update your system '
+        'libstdc++ installation.')
+
+try_compile(includes=['cstddef'],
+            body='\n'.join([
+                # _GLIBCXX_RELEASE showed up in libstdc++ 7.
+                '#if defined(__GLIBCXX__) && !defined(_GLIBCXX_RELEASE)',
+                '#  error libstdc++ not new enough',
+                '#endif',
+                '#if defined(_GLIBCXX_RELEASE)',
+                '#  if _GLIBCXX_RELEASE < %d' % minimum_gcc_version().major,
+                '#    error libstdc++ not new enough',
+                '#  else',
+                '     (void) 0',
+                '#  endif',
+                '#endif',
+            ]),
+            check_msg='for new enough STL headers from libstdc++',
+            when=needs_libstdcxx_newness_check,
+            onerror=die_on_old_libstdcxx)
 
 
 @depends(c_compiler, target)
