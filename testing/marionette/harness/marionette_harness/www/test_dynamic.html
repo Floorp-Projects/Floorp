@@ -7,7 +7,7 @@
       var next = 0;
 
       function addMore() {
-        var box = document.createElement('DIV');
+        let box = document.createElement('DIV');
         box.id = 'box' + next++;
         box.className = 'redbox';
         box.style.width = '150px';
@@ -21,7 +21,7 @@
         }
 
         function reveal() {
-          var elem = document.getElementById('revealed');
+          let elem = document.getElementById('revealed');
           window.setTimeout(function() {
             elem.style.display = '';
           }, 1000);

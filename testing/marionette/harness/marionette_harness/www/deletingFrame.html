@@ -4,13 +4,13 @@
 </head>
         <script type="text/javascript">
             function remove() {
-                var iframe = document.getElementById("iframe1");
-                var myDiv = document.getElementById("myDiv");
+                let iframe = document.getElementById("iframe1");
+                let myDiv = document.getElementById("myDiv");
                 myDiv.removeChild(iframe);
             }
             function addBack() {
-                var iframe = '<iframe src="formPage.html" marginheight="0" marginwidth="0" topmargin="0" leftmargin="600" allowtransparency="true" frameborder="0" height="600" scrolling="no" width="120" id="iframe1"></iframe>';
-                var myDiv2 = document.getElementById("myDiv2");
+                let iframe = '<iframe src="formPage.html" marginheight="0" marginwidth="0" topmargin="0" leftmargin="600" allowtransparency="true" frameborder="0" height="600" scrolling="no" width="120" id="iframe1"></iframe>';
+                let myDiv2 = document.getElementById("myDiv2");
                 myDiv2.innerHTML = iframe;
             }
         </script>

@@ -7,11 +7,11 @@
 
   <script>
     function addMousedownListener() {
-      var el = document.getElementById('showbutton');
+      let el = document.getElementById('showbutton');
 
       el.addEventListener('mousedown', function (evt) {
         evt.target.innerText = evt.button;
-      }, false);
+      });
     }
   </script>
 </head>
