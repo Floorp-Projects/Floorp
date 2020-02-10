@@ -166,7 +166,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
     }
 
     private val onPositiveButtonClicked: ((Addon) -> Unit) = { addon ->
-        addonProgressOverlay.visibility = View.VISIBLE
+        addonProgressOverlay?.visibility = View.VISIBLE
         isInstallationInProgress = true
 
         requireContext().components.addonManager.installAddon(
