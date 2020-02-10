@@ -6,6 +6,7 @@ description = "Utility for accessing Firefox version metadata"
 keywords = ["mozilla", "firefox"]
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozversion"
 license = "MPL-2.0"
+edition = "2018"
 
 [dependencies]
 regex = "1"
