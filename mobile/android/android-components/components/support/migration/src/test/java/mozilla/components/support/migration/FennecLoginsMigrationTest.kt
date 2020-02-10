@@ -224,32 +224,32 @@ class FennecLoginsMigrationTest {
     @Test
     fun testGetEncodingLength() {
         // Short form
-        assertEquals(0,   byteArrayOf(0, 0x00.toByte()).getEncodingLength(0))
-        assertEquals(3,   byteArrayOf(0, 0x03.toByte()).getEncodingLength(0))
+        assertEquals(0, byteArrayOf(0, 0x00.toByte()).getEncodingLength(0))
+        assertEquals(3, byteArrayOf(0, 0x03.toByte()).getEncodingLength(0))
         assertEquals(127, byteArrayOf(0, 0x7F.toByte()).getEncodingLength(0))
         // Long form 1 byte
-        assertEquals(0,   byteArrayOf(0, 0x81.toByte(), 0x00.toByte()).getEncodingLength(0))
-        assertEquals(3,   byteArrayOf(0, 0x81.toByte(), 0x03.toByte()).getEncodingLength(0))
+        assertEquals(0, byteArrayOf(0, 0x81.toByte(), 0x00.toByte()).getEncodingLength(0))
+        assertEquals(3, byteArrayOf(0, 0x81.toByte(), 0x03.toByte()).getEncodingLength(0))
         assertEquals(127, byteArrayOf(0, 0x81.toByte(), 0x7F.toByte()).getEncodingLength(0))
         assertEquals(128, byteArrayOf(0, 0x81.toByte(), 0x80.toByte()).getEncodingLength(0))
         assertEquals(255, byteArrayOf(0, 0x81.toByte(), 0xFF.toByte()).getEncodingLength(0))
         // Long form 2 bytes
-        assertEquals(0,     byteArrayOf(0, 0x82.toByte(), 0x00.toByte(), 0x00.toByte()).getEncodingLength(0))
-        assertEquals(3,     byteArrayOf(0, 0x82.toByte(), 0x00.toByte(), 0x03.toByte()).getEncodingLength(0))
-        assertEquals(4660,  byteArrayOf(0, 0x82.toByte(), 0x12.toByte(), 0x34.toByte()).getEncodingLength(0))
+        assertEquals(0, byteArrayOf(0, 0x82.toByte(), 0x00.toByte(), 0x00.toByte()).getEncodingLength(0))
+        assertEquals(3, byteArrayOf(0, 0x82.toByte(), 0x00.toByte(), 0x03.toByte()).getEncodingLength(0))
+        assertEquals(4660, byteArrayOf(0, 0x82.toByte(), 0x12.toByte(), 0x34.toByte()).getEncodingLength(0))
         assertEquals(32896, byteArrayOf(0, 0x82.toByte(), 0x80.toByte(), 0x80.toByte()).getEncodingLength(0))
-        assertEquals(255,   byteArrayOf(0, 0x82.toByte(), 0x00.toByte(), 0xFF.toByte()).getEncodingLength(0))
+        assertEquals(255, byteArrayOf(0, 0x82.toByte(), 0x00.toByte(), 0xFF.toByte()).getEncodingLength(0))
         assertEquals(65280, byteArrayOf(0, 0x82.toByte(), 0xFF.toByte(), 0x00.toByte()).getEncodingLength(0))
-        assertEquals(511,   byteArrayOf(0, 0x82.toByte(), 0x01.toByte(), 0xFF.toByte()).getEncodingLength(0))
+        assertEquals(511, byteArrayOf(0, 0x82.toByte(), 0x01.toByte(), 0xFF.toByte()).getEncodingLength(0))
         assertEquals(32639, byteArrayOf(0, 0x82.toByte(), 0x7F.toByte(), 0x7F.toByte()).getEncodingLength(0))
         // Long form 3 bytes
-        assertEquals(0,        byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte()).getEncodingLength(0))
-        assertEquals(3,        byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x00.toByte(), 0x03.toByte()).getEncodingLength(0))
-        assertEquals(8421504,  byteArrayOf(0, 0x83.toByte(), 0x80.toByte(), 0x80.toByte(), 0x80.toByte()).getEncodingLength(0))
-        assertEquals(32896,    byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x80.toByte(), 0x80.toByte()).getEncodingLength(0))
-        assertEquals(128,      byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x00.toByte(), 0x80.toByte()).getEncodingLength(0))
-        assertEquals(255,      byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x00.toByte(), 0xFF.toByte()).getEncodingLength(0))
-        assertEquals(65535,    byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0xFF.toByte(), 0xFF.toByte()).getEncodingLength(0))
+        assertEquals(0, byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte()).getEncodingLength(0))
+        assertEquals(3, byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x00.toByte(), 0x03.toByte()).getEncodingLength(0))
+        assertEquals(8421504, byteArrayOf(0, 0x83.toByte(), 0x80.toByte(), 0x80.toByte(), 0x80.toByte()).getEncodingLength(0))
+        assertEquals(32896, byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x80.toByte(), 0x80.toByte()).getEncodingLength(0))
+        assertEquals(128, byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x00.toByte(), 0x80.toByte()).getEncodingLength(0))
+        assertEquals(255, byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0x00.toByte(), 0xFF.toByte()).getEncodingLength(0))
+        assertEquals(65535, byteArrayOf(0, 0x83.toByte(), 0x00.toByte(), 0xFF.toByte(), 0xFF.toByte()).getEncodingLength(0))
         assertEquals(16777215, byteArrayOf(0, 0x83.toByte(), 0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte()).getEncodingLength(0))
     }
 }

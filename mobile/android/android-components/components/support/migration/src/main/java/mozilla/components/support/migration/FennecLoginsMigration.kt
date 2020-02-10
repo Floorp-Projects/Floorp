@@ -25,7 +25,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Suppress("MagicNumber")
-fun ByteArray.getEncodingLength(offset: Int): Int {
+internal fun ByteArray.getEncodingLength(offset: Int): Int {
     // First byte indicates type.
     // Second byte is length of the octet string.
     // There are two definite forms of specifying length: short and long.
@@ -56,7 +56,8 @@ fun ByteArray.getEncodingLength(offset: Int): Int {
     return when (numOctets) {
         1 -> this[offset + 2].toInt() and 0xFF
         2 -> (this[offset + 2].toInt() and 0xFF shl 8) or (this[offset + 3].toInt() and 0xFF)
-        3 -> (this[offset + 2].toInt() and 0xFF shl 16) or (this[offset + 3].toInt() and 0xFF shl 8) or (this[offset + 4].toInt() and 0xFF)
+        3 -> (this[offset + 2].toInt() and 0xFF shl 16) or (this[offset + 3].toInt() and 0xFF shl 8) or
+                (this[offset + 4].toInt() and 0xFF)
         else -> throw IllegalStateException("Unsupported number of octets: $numOctets")
     }
 }
