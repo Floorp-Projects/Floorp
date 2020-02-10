@@ -65,6 +65,7 @@ pub use self::name_section::NamingReader;
 
 pub use self::producers_section::ProducersField;
 pub use self::producers_section::ProducersFieldValue;
+pub use self::producers_section::ProducersFieldValuesReader;
 pub use self::producers_section::ProducersSectionReader;
 
 pub use self::linking_section::LinkingSectionReader;

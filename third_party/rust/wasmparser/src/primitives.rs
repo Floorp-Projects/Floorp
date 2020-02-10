@@ -84,7 +84,7 @@ pub enum Type {
 }
 
 impl Type {
-    pub(crate) fn is_valid_for_old_select(&self) -> bool {
+    pub(crate) fn is_valid_for_old_select(self) -> bool {
         match self {
             Type::I32 | Type::I64 | Type::F32 | Type::F64 => true,
             _ => false,

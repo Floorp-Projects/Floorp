@@ -429,12 +429,6 @@ mod wast_tests {
                 | Invoke { .. }
                 | AssertTrap { .. }
                 | AssertReturn { .. }
-                | AssertReturnCanonicalNan { .. }
-                | AssertReturnArithmeticNan { .. }
-                | AssertReturnCanonicalNanF32x4 { .. }
-                | AssertReturnCanonicalNanF64x2 { .. }
-                | AssertReturnArithmeticNanF32x4 { .. }
-                | AssertReturnArithmeticNanF64x2 { .. }
                 | AssertReturnFunc { .. }
                 | AssertExhaustion { .. } => {}
             }
@@ -507,10 +501,7 @@ mod wast_tests {
                 config
             },
             |name, line| match (name, line) {
-                ("br_table.wast", _)
-                | ("select.wast", _)
-                | ("binary.wast", _)
-                | ("linking.wast", 280) => true,
+                ("br_table.wast", _) | ("select.wast", _) => true,
                 _ => false,
             },
         );
