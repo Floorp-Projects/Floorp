@@ -178,19 +178,13 @@ services/fxaccounts/FxAccountsPairingChannel.js
 # Servo is imported.
 servo/
 
-# Remote protocol exclusions
-testing/marionette/atom.js
-testing/marionette/legacyaction.js
-testing/marionette/harness
-
-# other testing/ exclusions
 # third party modules
 testing/mochitest/tests/Harness_sanity/
 testing/mochitest/tests/SimpleTest/
-# octothorpe used for pref file comment causes parsing error
-testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 
-# Test files that we don't want to lint.
+# Test files that we don't want to lint (preprocessed, minified etc)
+testing/marionette/atom.js
+testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js

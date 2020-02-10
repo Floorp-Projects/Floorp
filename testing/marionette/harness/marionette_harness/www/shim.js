@@ -165,14 +165,16 @@
       let tracking =
         MouseEventShim.trackMouseMoves && !MouseEventShim.capturing;
 
+      let oldtarget;
+      let newtarget;
       if (tracking) {
         // If the touch point moves, then the element it is over
         // may have changed as well. Note that calling elementFromPoint()
         // forces a layout if one is needed.
         // XXX: how expensive is it to do this on each touchmove?
         // Can we listen for (non-standard) touchleave events instead?
-        var oldtarget = target;
-        var newtarget = document.elementFromPoint(touch.clientX, touch.clientY);
+        oldtarget = target;
+        newtarget = document.elementFromPoint(touch.clientX, touch.clientY);
         if (newtarget === null) {
           // this can happen as the touch is moving off of the screen, e.g.
           newtarget = oldtarget;
@@ -256,7 +258,7 @@
   }
 })();
 
-var MouseEventShim = {
+const MouseEventShim = {
   // It is a known gecko bug that synthetic events have timestamps measured
   // in microseconds while regular events have timestamps measured in
   // milliseconds. This utility function returns a the timestamp converted
