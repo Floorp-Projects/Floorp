@@ -51,24 +51,39 @@ AccessibilityView.prototype = {
    *
    * @param {Object}
    *        Object that contains the following properties:
-   *        - front                 {Object}
-   *                                front that can initialize accessibility
-   *                                walker and enable/disable accessibility
-   *                                services.
-   *        - walker                {Object}
-   *                                front for accessibility walker actor responsible for
-   *                                managing accessible objects actors/fronts.
-   *        - supports              {JSON}
-   *                                a collection of flags indicating which accessibility
-   *                                panel features are supported by the current serverside
-   *                                version.
-   *        - fluentBundles         {Array}
-   *                                array of FluentBundles elements for localization
-   *        - simulator             {Object}
-   *                                front for simulator actor responsible for setting
-   *                                color matrices in docShell
-   *        - toolbox               {Object}
-   *                                devtools toolbox.
+   * - front                                 {Object}
+   *                                         front that can initialize
+   *                                         accessibility walker and
+   *                                         enable/disable accessibility
+   *                                         services.
+   * - walker                                {Object}
+   *                                         front for accessibility walker
+   *                                         actor responsible for managing
+   *                                         accessible objects actors/fronts.
+   * - supports                              {JSON}
+   *                                         a collection of flags indicating
+   *                                         which accessibility panel features
+   *                                         are supported by the current
+   *                                         serverside version.
+   * - fluentBundles                         {Array}
+   *                                         array of FluentBundles elements for
+   *                                         localization
+   * - simulator                             {Object}
+   *                                         front for simulator actor
+   *                                         responsible for setting color
+   *                                         matrices in docShell
+   * - toolbox                               {Object}
+   *                                         devtools toolbox.
+   * - getAccessibilityTreeRoot              {Function}
+   *                                         Returns the topmost accessibiliity
+   *                                         walker that is used as the root of
+   *                                         the accessibility tree.
+   * - startListeningForAccessibilityEvents  {Function}
+   *                                         Add listeners for specific
+   *                                         accessibility events.
+   * - stopListeningForAccessibilityEvents   {Function}
+   *                                         Remove listeners for specific
+   *                                         accessibility events.
    */
   async initialize({
     front,
@@ -77,6 +92,9 @@ AccessibilityView.prototype = {
     fluentBundles,
     simulator,
     toolbox,
+    getAccessibilityTreeRoot,
+    startListeningForAccessibilityEvents,
+    stopListeningForAccessibilityEvents,
   }) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(front, supports));
@@ -87,6 +105,9 @@ AccessibilityView.prototype = {
       fluentBundles,
       simulator,
       toolbox,
+      getAccessibilityTreeRoot,
+      startListeningForAccessibilityEvents,
+      stopListeningForAccessibilityEvents,
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);

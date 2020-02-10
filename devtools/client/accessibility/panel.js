@@ -51,6 +51,13 @@ function AccessibilityPanel(iframeWindow, toolbox, startup) {
     this
   );
   this.forceUpdatePickerButton = this.forceUpdatePickerButton.bind(this);
+  this.getAccessibilityTreeRoot = this.getAccessibilityTreeRoot.bind(this);
+  this.startListeningForAccessibilityEvents = this.startListeningForAccessibilityEvents.bind(
+    this
+  );
+  this.stopListeningForAccessibilityEvents = this.stopListeningForAccessibilityEvents.bind(
+    this
+  );
 
   EventEmitter.decorate(this);
 }
@@ -173,6 +180,11 @@ AccessibilityPanel.prototype = {
       fluentBundles: this.fluentBundles,
       simulator: this.simulator,
       toolbox: this._toolbox,
+      getAccessibilityTreeRoot: this.getAccessibilityTreeRoot,
+      startListeningForAccessibilityEvents: this
+        .startListeningForAccessibilityEvents,
+      stopListeningForAccessibilityEvents: this
+        .stopListeningForAccessibilityEvents,
     });
   },
 
@@ -263,6 +275,29 @@ AccessibilityPanel.prototype = {
     this.walker.on("picker-accessible-previewed", onPreviewed);
     this.walker.on("picker-accessible-canceled", onCanceled);
     await this.walker.pick(doFocus);
+  },
+
+  /**
+   * Return the topmost level accessibility walker to be used as the root of
+   * the accessibility tree view.
+   *
+   * @return {Object}
+   *         Topmost accessibility walker.
+   */
+  getAccessibilityTreeRoot() {
+    return this.walker;
+  },
+
+  startListeningForAccessibilityEvents(eventMap) {
+    for (const [type, listener] of Object.entries(eventMap)) {
+      this.walker.on(type, listener);
+    }
+  },
+
+  stopListeningForAccessibilityEvents(eventMap) {
+    for (const [type, listener] of Object.entries(eventMap)) {
+      this.walker.off(type, listener);
+    }
   },
 
   get front() {

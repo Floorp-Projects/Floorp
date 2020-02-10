@@ -62,6 +62,9 @@ class MainFrame extends Component {
       supports: PropTypes.object,
       simulator: PropTypes.object,
       toolbox: PropTypes.object.isRequired,
+      getAccessibilityTreeRoot: PropTypes.func.isRequired,
+      startListeningForAccessibilityEvents: PropTypes.func.isRequired,
+      stopListeningForAccessibilityEvents: PropTypes.func.isRequired,
     };
   }
 
@@ -132,6 +135,9 @@ class MainFrame extends Component {
       auditing,
       simulator,
       toolbox,
+      getAccessibilityTreeRoot,
+      startListeningForAccessibilityEvents,
+      stopListeningForAccessibilityEvents,
     } = this.props;
 
     if (!enabled) {
@@ -171,8 +177,10 @@ class MainFrame extends Component {
                 role: "presentation",
               },
               AccessibilityTree({
-                accessibilityWalker,
                 toolboxDoc: toolbox.doc,
+                getAccessibilityTreeRoot,
+                startListeningForAccessibilityEvents,
+                stopListeningForAccessibilityEvents,
               })
             ),
             endPanel: RightSidebar({ toolbox }),
