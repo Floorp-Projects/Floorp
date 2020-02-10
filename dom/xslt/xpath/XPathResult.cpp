@@ -79,7 +79,7 @@ void XPathResult::RemoveObserver() {
 
 nsINode* XPathResult::IterateNext(ErrorResult& aRv) {
   if (!isIterator()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    aRv.ThrowTypeError(u"Result is not an iterator");
     return nullptr;
   }
 
@@ -88,7 +88,7 @@ nsINode* XPathResult::IterateNext(ErrorResult& aRv) {
   }
 
   if (mInvalidIteratorState) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("The document has been mutated since the result was returned");
     return nullptr;
   }
 
@@ -126,9 +126,9 @@ void XPathResult::ContentRemoved(nsIContent* aChild,
   Invalidate(aChild->GetParent());
 }
 
-nsresult XPathResult::SetExprResult(txAExprResult* aExprResult,
-                                    uint16_t aResultType,
-                                    nsINode* aContextNode) {
+void XPathResult::SetExprResult(txAExprResult* aExprResult,
+                                uint16_t aResultType, nsINode* aContextNode,
+                                ErrorResult& aRv) {
   MOZ_ASSERT(aExprResult);
 
   if ((isSnapshot(aResultType) || isIterator(aResultType) ||
@@ -137,7 +137,8 @@ nsresult XPathResult::SetExprResult(txAExprResult* aExprResult,
     // The DOM spec doesn't really say what should happen when reusing an
     // XPathResult and an error is thrown. Let's not touch the XPathResult
     // in that case.
-    return NS_ERROR_DOM_TYPE_ERR;
+    aRv.ThrowTypeError(u"Result type mismatch");
+    return;
   }
 
   mResultType = aResultType;
@@ -184,7 +185,7 @@ nsresult XPathResult::SetExprResult(txAExprResult* aExprResult,
   }
 
   if (!isIterator()) {
-    return NS_OK;
+    return;
   }
 
   mCurrentPos = 0;
@@ -199,8 +200,6 @@ nsresult XPathResult::SetExprResult(txAExprResult* aExprResult,
       mDocument->AddMutationObserver(this);
     }
   }
-
-  return NS_OK;
 }
 
 void XPathResult::Invalidate(const nsIContent* aChangeRoot) {

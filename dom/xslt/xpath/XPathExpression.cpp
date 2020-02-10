@@ -164,7 +164,10 @@ already_AddRefed<XPathResult> XPathExpression::EvaluateWithContext(
     xpathResult = new XPathResult(&aContextNode);
   }
 
-  aRv = xpathResult->SetExprResult(exprResult, resultType, &aContextNode);
+  xpathResult->SetExprResult(exprResult, resultType, &aContextNode, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   return xpathResult.forget();
 }
