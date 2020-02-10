@@ -1739,7 +1739,7 @@ static void TrackAndSpewIonAbort(JSContext* cx, JSScript* script,
   TrackIonAbort(cx, script, script->code(), message);
 }
 
-static AbortReason IonCompile(JSContext* cx, JSScript* script,
+static AbortReason IonCompile(JSContext* cx, HandleScript script,
                               BaselineFrame* baselineFrame,
                               uint32_t baselineFrameSize, jsbytecode* osrPc,
                               bool recompile,
@@ -1829,16 +1829,14 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     mirGen->setNotSafeForMinorGC();
   }
 
-  MOZ_ASSERT(recompile == builder.script()->hasIonScript());
-  MOZ_ASSERT(builder.script()->canIonCompile());
-
-  RootedScript builderScript(cx, builder.script());
+  MOZ_ASSERT(recompile == script->hasIonScript());
+  MOZ_ASSERT(script->canIonCompile());
 
   if (recompile) {
-    builderScript->ionScript()->setRecompiling();
+    script->ionScript()->setRecompiling();
   }
 
-  SpewBeginFunction(mirGen, builderScript);
+  SpewBeginFunction(mirGen, script);
 
   AbortReasonOr<Ok> buildResult = Ok();
   {
@@ -1896,8 +1894,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     JitSpew(JitSpew_IonSyncLogs,
             "Can't log script %s:%u:%u"
             ". (Compiled on background thread.)",
-            builderScript->filename(), builderScript->lineno(),
-            builderScript->column());
+            script->filename(), script->lineno(), script->column());
 
     IonCompileTask* task =
         alloc->new_<IonCompileTask>(*mirGen, scriptHasIonScript, constraints);
@@ -1917,7 +1914,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     }
 
     if (!recompile) {
-      builderScript->jitScript()->setIsIonCompilingOffThread(builderScript);
+      script->jitScript()->setIsIonCompilingOffThread(script);
     }
 
     // The allocator and associated data will be destroyed after being
@@ -1939,7 +1936,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
       return AbortReason::Disable;
     }
 
-    succeeded = LinkCodeGen(cx, codegen.get(), builderScript, constraints);
+    succeeded = LinkCodeGen(cx, codegen.get(), script, constraints);
   }
 
   if (succeeded) {
