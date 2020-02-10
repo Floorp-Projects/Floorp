@@ -507,9 +507,9 @@ nsresult PaymentRequestManager::CreatePayment(
   }
   uint64_t topOuterWindowId = outerWindow->WindowID();
 
-  IPCPaymentCreateActionRequest action(
-      topOuterWindowId, internalId, IPC::Principal(aTopLevelPrincipal),
-      methodData, details, options, shippingOption);
+  IPCPaymentCreateActionRequest action(topOuterWindowId, internalId,
+                                       aTopLevelPrincipal, methodData, details,
+                                       options, shippingOption);
 
   rv = SendRequestPayment(request, action, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
