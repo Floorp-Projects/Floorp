@@ -56,10 +56,6 @@ AccessibilityView.prototype = {
    *                                         accessibility walker and
    *                                         enable/disable accessibility
    *                                         services.
-   * - walker                                {Object}
-   *                                         front for accessibility walker
-   *                                         actor responsible for managing
-   *                                         accessible objects actors/fronts.
    * - supports                              {JSON}
    *                                         a collection of flags indicating
    *                                         which accessibility panel features
@@ -84,10 +80,13 @@ AccessibilityView.prototype = {
    * - stopListeningForAccessibilityEvents   {Function}
    *                                         Remove listeners for specific
    *                                         accessibility events.
+   * - audit                                 {Function}
+   *                                         Audit function that will start
+   *                                         accessibility audit for given types
+   *                                         of accessibility issues.
    */
   async initialize({
     front,
-    walker,
     supports,
     fluentBundles,
     simulator,
@@ -95,19 +94,20 @@ AccessibilityView.prototype = {
     getAccessibilityTreeRoot,
     startListeningForAccessibilityEvents,
     stopListeningForAccessibilityEvents,
+    audit,
   }) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(front, supports));
     const container = document.getElementById("content");
     const mainFrame = MainFrame({
       accessibility: front,
-      accessibilityWalker: walker,
       fluentBundles,
       simulator,
       toolbox,
       getAccessibilityTreeRoot,
       startListeningForAccessibilityEvents,
       stopListeningForAccessibilityEvents,
+      audit,
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
