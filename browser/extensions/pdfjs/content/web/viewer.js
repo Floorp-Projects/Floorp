@@ -3128,7 +3128,7 @@ class ProgressBar {
     const scrollbarWidth = container.offsetWidth - viewer.offsetWidth;
 
     if (scrollbarWidth > 0) {
-      this.bar.setAttribute("style", "width: calc(100% - " + scrollbarWidth + "px);");
+      this.bar.style.width = `calc(100% - ${scrollbarWidth}px)`;
     }
   }
 
@@ -6959,18 +6959,12 @@ class PDFOutlineViewer {
     bold,
     italic
   }) {
-    let styleStr = "";
-
     if (bold) {
-      styleStr += "font-weight: bold;";
+      element.style.fontWeight = "bold";
     }
 
     if (italic) {
-      styleStr += "font-style: italic;";
-    }
-
-    if (styleStr) {
-      element.setAttribute("style", styleStr);
+      element.style.fontStyle = "italic";
     }
   }
 
@@ -10809,7 +10803,7 @@ class SecondaryToolbar {
       return;
     }
 
-    this.toolbarButtonContainer.setAttribute("style", "max-height: " + (this.containerHeight - _ui_utils.SCROLLBAR_PADDING) + "px;");
+    this.toolbarButtonContainer.style.maxHeight = `${this.containerHeight - _ui_utils.SCROLLBAR_PADDING}px`;
     this.previousContainerHeight = this.containerHeight;
   }
 
@@ -10953,8 +10947,8 @@ exports.Toolbar = void 0;
 var _ui_utils = __webpack_require__(2);
 
 const PAGE_NUMBER_LOADING_INDICATOR = "visiblePageIsLoading";
-const SCALE_SELECT_CONTAINER_PADDING = 8;
-const SCALE_SELECT_PADDING = 22;
+const SCALE_SELECT_CONTAINER_WIDTH = 140;
+const SCALE_SELECT_WIDTH = 162;
 
 class Toolbar {
   constructor(options, eventBus, l10n = _ui_utils.NullL10n) {
@@ -11161,22 +11155,46 @@ class Toolbar {
     pageNumberInput.classList.toggle(PAGE_NUMBER_LOADING_INDICATOR, loading);
   }
 
-  _adjustScaleWidth() {
-    const container = this.items.scaleSelectContainer;
-    const select = this.items.scaleSelect;
-
-    _ui_utils.animationStarted.then(function () {
-      if (container.clientWidth === 0) {
-        container.setAttribute("style", "display: inherit;");
-      }
-
-      if (container.clientWidth > 0) {
-        select.setAttribute("style", "min-width: inherit;");
-        const width = select.clientWidth + SCALE_SELECT_CONTAINER_PADDING;
-        select.setAttribute("style", `min-width: ${width + SCALE_SELECT_PADDING}px;`);
-        container.setAttribute("style", `min-width: ${width}px; max-width: ${width}px;`);
-      }
+  async _adjustScaleWidth() {
+    const {
+      items,
+      l10n
+    } = this;
+    const predefinedValuesPromise = Promise.all([l10n.get("page_scale_auto", null, "Automatic Zoom"), l10n.get("page_scale_actual", null, "Actual Size"), l10n.get("page_scale_fit", null, "Page Fit"), l10n.get("page_scale_width", null, "Page Width")]);
+    let canvas = document.createElement("canvas");
+    canvas.mozOpaque = true;
+    let ctx = canvas.getContext("2d", {
+      alpha: false
     });
+    await _ui_utils.animationStarted;
+    const {
+      fontSize,
+      fontFamily
+    } = getComputedStyle(items.scaleSelect);
+    ctx.font = `${fontSize} ${fontFamily}`;
+    let maxWidth = 0;
+
+    for (const predefinedValue of await predefinedValuesPromise) {
+      const {
+        width
+      } = ctx.measureText(predefinedValue);
+
+      if (width > maxWidth) {
+        maxWidth = width;
+      }
+    }
+
+    const overflow = SCALE_SELECT_WIDTH - SCALE_SELECT_CONTAINER_WIDTH;
+    maxWidth += 1.5 * overflow;
+
+    if (maxWidth > SCALE_SELECT_CONTAINER_WIDTH) {
+      items.scaleSelect.style.width = `${maxWidth + overflow}px`;
+      items.scaleSelectContainer.style.width = `${maxWidth}px`;
+    }
+
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas = ctx = null;
   }
 
 }
