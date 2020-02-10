@@ -229,6 +229,15 @@ class ClusterIterator {
 // Count the number of grapheme clusters in the given string
 uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
 
+// Determine whether a character is a "combining diacritic" for the purpose
+// of diacritic-insensitive text search. Examples of such characters include
+// European accents and Hebrew niqqud, but not Hangul components or Thaana
+// vowels, even though Thaana vowels are combining nonspacing marks that could
+// be considered diacritics.
+inline bool IsCombiningDiacritic(uint32_t aCh) {
+  return u_getCombiningClass(aCh) != 0;
+}
+
 // Remove diacritics from a character
 uint32_t GetNaked(uint32_t aCh);
 
