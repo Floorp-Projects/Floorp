@@ -6,20 +6,23 @@
 
 var EXPORTED_SYMBOLS = ["Network"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { Domain } = ChromeUtils.import(
   "chrome://remote/content/domains/Domain.jsm"
 );
+
 const { NetworkObserver } = ChromeUtils.import(
   "chrome://remote/content/domains/parent/network/NetworkObserver.jsm"
 );
+
+const MAX_COOKIE_EXPIRY = Number.MAX_SAFE_INTEGER;
 
 const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_INVALID]: "Invalid",
@@ -201,6 +204,134 @@ class Network extends Domain {
     }
 
     return { cookies };
+  }
+
+  /**
+   * Sets a cookie with the given cookie data.
+   *
+   * Note that it may overwrite equivalent cookies if they exist.
+   *
+   * @param {Object} cookie
+   * @param {string} name
+   *     Cookie name.
+   * @param {string} value
+   *     Cookie value.
+   * @param {string=} domain
+   *     Cookie domain.
+   * @param {number=} expires
+   *     Cookie expiration date, session cookie if not set.
+   * @param {boolean=} httpOnly
+   *     True if cookie is http-only.
+   * @param {string=} path
+   *     Cookie path.
+   * @param {string=} sameSite
+   *     Cookie SameSite type.
+   * @param {boolean=} secure
+   *     True if cookie is secure.
+   * @param {string=} url
+   *     The request-URI to associate with the setting of the cookie.
+   *     This value can affect the default domain and path values of the
+   *     created cookie.
+   *
+   * @return {boolean}
+   *     True if successfully set cookie.
+   */
+  setCookie(cookie) {
+    if (typeof cookie.name != "string") {
+      throw new TypeError("name: string value expected");
+    }
+
+    if (typeof cookie.value != "string") {
+      throw new TypeError("value: string value expected");
+    }
+
+    if (
+      typeof cookie.url == "undefined" &&
+      typeof cookie.domain == "undefined"
+    ) {
+      throw new TypeError(
+        "At least one of the url and domain needs to be specified"
+      );
+    }
+
+    // Retrieve host. Check domain first because it has precedence.
+    let hostname = cookie.domain || "";
+    let cookieURL;
+    if (hostname.length == 0) {
+      try {
+        cookieURL = new URL(cookie.url);
+      } catch (e) {
+        return { success: false };
+      }
+
+      if (!["http:", "https:"].includes(cookieURL.protocol)) {
+        throw new TypeError(`Invalid protocol ${cookieURL.protocol}`);
+      }
+
+      if (cookieURL.protocol == "https:") {
+        cookie.secure = true;
+      }
+
+      hostname = cookieURL.hostname;
+    }
+
+    if (typeof cookie.path == "undefined") {
+      cookie.path = "/";
+    }
+
+    let isSession = false;
+    if (typeof cookie.expires == "undefined") {
+      isSession = true;
+      cookie.expires = MAX_COOKIE_EXPIRY;
+    }
+
+    const sameSiteMap = new Map([
+      ["None", Ci.nsICookie.SAMESITE_NONE],
+      ["Lax", Ci.nsICookie.SAMESITE_LAX],
+      ["Strict", Ci.nsICookie.SAMESITE_STRICT],
+    ]);
+
+    let success = true;
+    try {
+      Services.cookies.add(
+        hostname,
+        cookie.path,
+        cookie.name,
+        cookie.value,
+        cookie.secure,
+        cookie.httpOnly || false,
+        isSession,
+        cookie.expires,
+        {} /* originAttributes */,
+        sameSiteMap.get(cookie.sameSite)
+      );
+    } catch (e) {
+      success = false;
+    }
+
+    return { success };
+  }
+
+  /**
+   * Sets given cookies.
+   *
+   * @param {Object} options
+   * @param {Array.<Cookie>} cookies
+   *     Cookies to be set.
+   */
+  setCookies(options = {}) {
+    const { cookies } = options;
+
+    if (!Array.isArray(cookies)) {
+      throw new TypeError("Invalid parameters (cookies: array expected)");
+    }
+
+    cookies.forEach(cookie => {
+      const { success } = this.setCookie(cookie);
+      if (!success) {
+        throw new Error("Invalid cookie fields");
+      }
+    });
   }
 
   /**
