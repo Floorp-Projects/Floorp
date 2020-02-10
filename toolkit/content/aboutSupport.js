@@ -591,6 +591,7 @@ var snapshotFormatters = {
       ["supportsHardwareH264", "hardware-h264"],
       ["direct2DEnabled", "#Direct2D"],
       ["windowProtocol", "graphics-window-protocol"],
+      ["desktopEnvironment", "graphics-desktop-environment"],
       "usesTiling",
       "contentUsesTiling",
       "offMainThreadPaintEnabled",
