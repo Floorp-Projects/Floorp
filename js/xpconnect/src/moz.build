@@ -62,6 +62,7 @@ LOCAL_INCLUDES += [
     '/dom/svg',
     '/layout/base',
     '/layout/style',
+    '/netwerk/base',
 ]
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
