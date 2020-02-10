@@ -66,8 +66,16 @@ pub use crate::validator::ValidatingOperatorParser;
 pub use crate::validator::ValidatingParser;
 pub use crate::validator::ValidatingParserConfig;
 
+pub use crate::module_resources::WasmFuncType;
+pub use crate::module_resources::WasmGlobalType;
+pub use crate::module_resources::WasmMemoryType;
+pub use crate::module_resources::WasmModuleResources;
+pub use crate::module_resources::WasmTableType;
+pub use crate::module_resources::WasmType;
+
+pub(crate) use crate::module_resources::{wasm_func_type_inputs, wasm_func_type_outputs};
+
 pub use crate::operators_validator::OperatorValidatorConfig;
-pub use crate::operators_validator::WasmModuleResources;
 
 pub use crate::readers::CodeSectionReader;
 pub use crate::readers::CustomSectionContent;
@@ -99,6 +107,7 @@ pub use crate::readers::NamingReader;
 pub use crate::readers::OperatorsReader;
 pub use crate::readers::ProducersField;
 pub use crate::readers::ProducersFieldValue;
+pub use crate::readers::ProducersFieldValuesReader;
 pub use crate::readers::ProducersSectionReader;
 pub use crate::readers::Reloc;
 pub use crate::readers::RelocSectionReader;
@@ -113,6 +122,7 @@ pub use crate::readers::TypeSectionReader;
 
 mod binary_reader;
 mod limits;
+mod module_resources;
 mod operators_validator;
 mod parser;
 mod primitives;

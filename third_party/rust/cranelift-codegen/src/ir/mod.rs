@@ -14,7 +14,7 @@ pub mod immediates;
 pub mod instructions;
 pub mod jumptable;
 pub mod layout;
-mod libcall;
+pub(crate) mod libcall;
 mod memflags;
 mod progpoint;
 mod sourceloc;
@@ -33,7 +33,7 @@ pub use crate::ir::builder::{
 pub use crate::ir::constant::{ConstantData, ConstantOffset, ConstantPool};
 pub use crate::ir::dfg::{DataFlowGraph, ValueDef};
 pub use crate::ir::entities::{
-    Constant, Ebb, FuncRef, GlobalValue, Heap, Immediate, Inst, JumpTable, SigRef, StackSlot,
+    Block, Constant, FuncRef, GlobalValue, Heap, Immediate, Inst, JumpTable, SigRef, StackSlot,
     Table, Value,
 };
 pub use crate::ir::extfunc::{
@@ -49,7 +49,7 @@ pub use crate::ir::instructions::{
 };
 pub use crate::ir::jumptable::JumpTableData;
 pub use crate::ir::layout::Layout;
-pub use crate::ir::libcall::{get_libcall_funcref, get_probestack_funcref, LibCall};
+pub use crate::ir::libcall::{get_probestack_funcref, LibCall};
 pub use crate::ir::memflags::MemFlags;
 pub use crate::ir::progpoint::{ExpandedProgramPoint, ProgramOrder, ProgramPoint};
 pub use crate::ir::sourceloc::SourceLoc;
@@ -73,8 +73,8 @@ pub type JumpTables = PrimaryMap<JumpTable, JumpTableData>;
 /// Map of instruction encodings.
 pub type InstEncodings = SecondaryMap<Inst, isa::Encoding>;
 
-/// Code offsets for EBBs.
-pub type EbbOffsets = SecondaryMap<Ebb, binemit::CodeOffset>;
+/// Code offsets for blocks.
+pub type BlockOffsets = SecondaryMap<Block, binemit::CodeOffset>;
 
 /// Code offsets for Jump Tables.
 pub type JumpTableOffsets = SecondaryMap<JumpTable, binemit::CodeOffset>;
