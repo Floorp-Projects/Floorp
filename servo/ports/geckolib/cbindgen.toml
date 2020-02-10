@@ -43,9 +43,15 @@ derive_eq = true
 derive_neq = true
 
 [defines]
-# This will actually never be defined, but is handy to avoid cbindgen
+# These will actually never be defined, but is handy to avoid cbindgen
 # generating Servo-only types.
 "feature = servo" = "CBINDGEN_IS_SERVO"
+"feature = servo-layout-2013" = "CBINDGEN_IS_SERVO"
+"feature = servo-layout-2020" = "CBINDGEN_IS_SERVO"
+# These will always be defined.
+"feature = gecko" = "CBINDGEN_IS_GECKO"
+"feature = cbindgen" = "CBINDGEN_IS_GECKO"
+# These depend on the build.
 "target_pointer_width = 32" = "SERVO_32_BITS"
 "target_pointer_width = 64" = "HAVE_64BIT_BUILD"
 
@@ -198,6 +204,7 @@ include = [
   "AlignContent",
   "JustifyContent",
   "TransformStyle",
+  "Image",
 ]
 item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
