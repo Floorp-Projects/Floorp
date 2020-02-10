@@ -474,13 +474,11 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   }
   // MTG does not support more than UINT16_MAX inputs or outputs.
   if (aOptions.mNumberOfInputs > UINT16_MAX) {
-    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
-        NS_LITERAL_STRING("numberOfInputs"));
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(u"numberOfInputs");
     return nullptr;
   }
   if (aOptions.mNumberOfOutputs > UINT16_MAX) {
-    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
-        NS_LITERAL_STRING("numberOfOutputs"));
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(u"numberOfOutputs");
     return nullptr;
   }
 

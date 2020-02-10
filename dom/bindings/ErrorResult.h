@@ -100,6 +100,7 @@ struct StringArrayAppender {
                        "required by the ErrNum.");
   }
 
+  // Allow passing nsAString instances for our args.
   template <typename... Ts>
   static void Append(nsTArray<nsString>& aArgs, uint16_t aCount,
                      const nsAString& aFirst, Ts&&... aOtherArgs) {
@@ -110,6 +111,20 @@ struct StringArrayAppender {
       return;
     }
     aArgs.AppendElement(aFirst);
+    Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
+  }
+
+  // Also allow passing u"" instances for our args.
+  template <int N, typename... Ts>
+  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount,
+                     const char16_t (&aFirst)[N], Ts&&... aOtherArgs) {
+    if (aCount == 0) {
+      MOZ_ASSERT(false,
+                 "There should not be more string arguments provided than are "
+                 "required by the ErrNum.");
+      return;
+    }
+    aArgs.AppendElement(nsLiteralString(aFirst));
     Append(aArgs, aCount - 1, std::forward<Ts>(aOtherArgs)...);
   }
 };

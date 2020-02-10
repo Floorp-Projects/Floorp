@@ -651,21 +651,21 @@ void AudioBufferSourceNode::Start(double aWhen, double aOffset,
                                   const Optional<double>& aDuration,
                                   ErrorResult& aRv) {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
-        NS_LITERAL_STRING("start time"));
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(u"start time");
     return;
   }
   if (aOffset < 0) {
-    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("offset"));
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(u"offset");
     return;
   }
   if (aDuration.WasPassed() && !WebAudioUtils::IsTimeValid(aDuration.Value())) {
-    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("duration"));
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(u"duration");
     return;
   }
 
   if (mStartCalled) {
-    aRv.ThrowInvalidStateError("Start has already been called on this AudioBufferSourceNode.");
+    aRv.ThrowInvalidStateError(
+        "Start has already been called on this AudioBufferSourceNode.");
     return;
   }
   mStartCalled = true;
@@ -757,12 +757,13 @@ void AudioBufferSourceNode::SendOffsetAndDurationParametersToTrack(
 
 void AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv) {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("stop time"));
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(u"stop time");
     return;
   }
 
   if (!mStartCalled) {
-    aRv.ThrowInvalidStateError("Start has not been called on this AudioBufferSourceNode.");
+    aRv.ThrowInvalidStateError(
+        "Start has not been called on this AudioBufferSourceNode.");
     return;
   }
 

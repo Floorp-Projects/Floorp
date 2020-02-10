@@ -112,8 +112,8 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
   if (!aConfiguration.mVideo.WasPassed() &&
       !aConfiguration.mAudio.WasPassed()) {
     aRv.ThrowTypeError<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>(
-        NS_LITERAL_STRING("'audio' or 'video' member of argument of "
-                          "MediaCapabilities.decodingInfo"));
+        u"'audio' or 'video' member of argument of "
+        u"MediaCapabilities.decodingInfo");
     return nullptr;
   }
 
@@ -459,8 +459,8 @@ already_AddRefed<Promise> MediaCapabilities::EncodingInfo(
   if (!aConfiguration.mVideo.WasPassed() &&
       !aConfiguration.mAudio.WasPassed()) {
     aRv.ThrowTypeError<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>(
-        NS_LITERAL_STRING("'audio' or 'video' member of argument of "
-                          "MediaCapabilities.encodingInfo"));
+        u"'audio' or 'video' member of argument of "
+        u"MediaCapabilities.encodingInfo");
     return nullptr;
   }
 
