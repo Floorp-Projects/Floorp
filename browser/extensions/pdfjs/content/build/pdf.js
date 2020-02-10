@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.326';
-var pdfjsBuild = 'd6754d1e';
+var pdfjsVersion = '2.4.349';
+var pdfjsBuild = 'dced0a38';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1205,7 +1205,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.4.326',
+    apiVersion: '2.4.349',
     source: {
       data: source.data,
       url: source.url,
@@ -1428,7 +1428,7 @@ class PDFDocumentProxy {
   }
 
   cleanup() {
-    this._transport.startCleanup();
+    return this._transport.startCleanup();
   }
 
   destroy() {
@@ -1759,8 +1759,7 @@ class PDFPageProxy {
 
   cleanup(resetStats = false) {
     this.pendingCleanup = true;
-
-    this._tryCleanup(resetStats);
+    return this._tryCleanup(resetStats);
   }
 
   _tryCleanup(resetStats = false) {
@@ -1768,7 +1767,7 @@ class PDFPageProxy {
       const intentState = this.intentStates[intent];
       return intentState.renderTasks.length !== 0 || !intentState.operatorList.lastChunk;
     })) {
-      return;
+      return false;
     }
 
     Object.keys(this.intentStates).forEach(intent => {
@@ -1782,6 +1781,7 @@ class PDFPageProxy {
     }
 
     this.pendingCleanup = false;
+    return true;
   }
 
   _startRenderPage(transparency, intent) {
@@ -2874,12 +2874,16 @@ class WorkerTransport {
   }
 
   startCleanup() {
-    this.messageHandler.sendWithPromise("Cleanup", null).then(() => {
+    return this.messageHandler.sendWithPromise("Cleanup", null).then(() => {
       for (let i = 0, ii = this.pageCache.length; i < ii; i++) {
         const page = this.pageCache[i];
 
         if (page) {
-          page.cleanup();
+          const cleanupSuccessful = page.cleanup();
+
+          if (!cleanupSuccessful) {
+            throw new Error(`startCleanup: Page ${i + 1} is currently rendering.`);
+          }
         }
       }
 
@@ -3148,9 +3152,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.326';
+const version = '2.4.349';
 exports.version = version;
-const build = 'd6754d1e';
+const build = 'dced0a38';
 exports.build = build;
 
 /***/ }),

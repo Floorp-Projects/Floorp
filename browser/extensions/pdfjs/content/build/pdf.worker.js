@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.326';
-const pdfjsBuild = 'd6754d1e';
+const pdfjsVersion = '2.4.349';
+const pdfjsBuild = 'dced0a38';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.326';
+    const workerVersion = '2.4.349';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3097,6 +3097,7 @@ const STARTXREF_SIGNATURE = new Uint8Array([0x73, 0x74, 0x61, 0x72, 0x74, 0x78, 
 const ENDOBJ_SIGNATURE = new Uint8Array([0x65, 0x6e, 0x64, 0x6f, 0x62, 0x6a]);
 const FINGERPRINT_FIRST_BYTES = 1024;
 const EMPTY_FINGERPRINT = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+const PDF_HEADER_VERSION_REGEXP = /^[1-9]\.[0-9]$/;
 
 function find(stream, signature, limit = 1024, backwards = false) {
   const signatureLength = signature.length;
@@ -3338,8 +3339,15 @@ class PDFDocument {
       ModDate: _util.isString,
       Trapped: _primitives.isName
     };
+    let version = this.pdfFormatVersion;
+
+    if (typeof version !== "string" || !PDF_HEADER_VERSION_REGEXP.test(version)) {
+      (0, _util.warn)(`Invalid PDF header version number: ${version}`);
+      version = null;
+    }
+
     const docInfo = {
-      PDFFormatVersion: this.pdfFormatVersion,
+      PDFFormatVersion: version,
       IsLinearized: !!this.linearization,
       IsAcroFormPresent: !!this.acroForm,
       IsXFAPresent: !!this.xfa,
@@ -12903,6 +12911,7 @@ var JpegImage = function JpegImageClosure() {
       var data = new Uint8ClampedArray(dataLength);
       var xScaleBlockOffset = new Uint32Array(width);
       var mask3LSB = 0xfffffff8;
+      let lastComponentScaleX;
 
       for (i = 0; i < numComponents; i++) {
         component = this.components[i];
@@ -12912,9 +12921,13 @@ var JpegImage = function JpegImageClosure() {
         output = component.output;
         blocksPerScanline = component.blocksPerLine + 1 << 3;
 
-        for (x = 0; x < width; x++) {
-          j = 0 | x * componentScaleX;
-          xScaleBlockOffset[x] = (j & mask3LSB) << 3 | j & 7;
+        if (componentScaleX !== lastComponentScaleX) {
+          for (x = 0; x < width; x++) {
+            j = 0 | x * componentScaleX;
+            xScaleBlockOffset[x] = (j & mask3LSB) << 3 | j & 7;
+          }
+
+          lastComponentScaleX = componentScaleX;
         }
 
         for (y = 0; y < height; y++) {
@@ -13012,16 +13025,15 @@ var JpegImage = function JpegImageClosure() {
     _convertCmykToRgb: function convertCmykToRgb(data) {
       var c, m, y, k;
       var offset = 0;
-      var scale = 1 / 255;
 
       for (var i = 0, length = data.length; i < length; i += 4) {
-        c = data[i] * scale;
-        m = data[i + 1] * scale;
-        y = data[i + 2] * scale;
-        k = data[i + 3] * scale;
-        data[offset++] = 255 + c * (-4.387332384609988 * c + 54.48615194189176 * m + 18.82290502165302 * y + 212.25662451639585 * k - 285.2331026137004) + m * (1.7149763477362134 * m - 5.6096736904047315 * y - 17.873870861415444 * k - 5.497006427196366) + y * (-2.5217340131683033 * y - 21.248923337353073 * k + 17.5119270841813) - k * (21.86122147463605 * k + 189.48180835922747);
-        data[offset++] = 255 + c * (8.841041422036149 * c + 60.118027045597366 * m + 6.871425592049007 * y + 31.159100130055922 * k - 79.2970844816548) + m * (-15.310361306967817 * m + 17.575251261109482 * y + 131.35250912493976 * k - 190.9453302588951) + y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) - k * (20.737325471181034 * k + 187.80453709719578);
-        data[offset++] = 255 + c * (0.8842522430003296 * c + 8.078677503112928 * m + 30.89978309703729 * y - 0.23883238689178934 * k - 14.183576799673286) + m * (10.49593273432072 * m + 63.02378494754052 * y + 50.606957656360734 * k - 112.23884253719248) + y * (0.03296041114873217 * y + 115.60384449646641 * k - 193.58209356861505) - k * (22.33816807309886 * k + 180.12613974708367);
+        c = data[i];
+        m = data[i + 1];
+        y = data[i + 2];
+        k = data[i + 3];
+        data[offset++] = 255 + c * (-0.00006747147073602441 * c + 0.0008379262121013727 * m + 0.0002894718188643294 * y + 0.003264231057537806 * k - 1.1185611867203937) + m * (0.000026374107616089405 * m - 0.00008626949158638572 * y - 0.0002748769067499491 * k - 0.02155688794978967) + y * (-0.00003878099212869363 * y - 0.0003267808279485286 * k + 0.0686742238595345) - k * (0.0003361971776183937 * k + 0.7430659151342254);
+        data[offset++] = 255 + c * (0.00013596372813588848 * c + 0.000924537132573585 * m + 0.00010567359618683593 * y + 0.0004791864687436512 * k - 0.3109689587515875) + m * (-0.00023545346108370344 * m + 0.0002702845253534714 * y + 0.0020200308977307156 * k - 0.7488052167015494) + y * (0.00006834815998235662 * y + 0.00015168452363460973 * k - 0.09751927774728933) - k * (0.00031891311758832814 * k + 0.7364883807733168);
+        data[offset++] = 255 + c * (0.000013598650411385307 * c + 0.00012423956175490851 * m + 0.0004751985097583589 * y - 0.0000036729317476630422 * k - 0.05562186980264034) + m * (0.00016141380598724676 * m + 0.0009692239130725186 * y + 0.0007782692450036253 * k - 0.44015232367526463) + y * (5.068882914068769e-7 * y + 0.0017778369011375071 * k - 0.7591454649749609) - k * (0.0003435319965105553 * k + 0.7063770186160144);
       }
 
       return data.subarray(0, offset);
@@ -22119,6 +22131,20 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
             map[charCode] = String.fromCodePoint.apply(String, str);
           });
           return new _fonts.ToUnicodeMap(map);
+        }, reason => {
+          if (reason instanceof _util.AbortException) {
+            return null;
+          }
+
+          if (this.options.ignoreErrors) {
+            this.handler.send("UnsupportedFeature", {
+              featureId: _util.UNSUPPORTED_FEATURES.font
+            });
+            (0, _util.warn)(`readToUnicode - ignoring ToUnicode data: "${reason}".`);
+            return null;
+          }
+
+          throw reason;
         });
       }
 
@@ -22409,6 +22435,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var type = preEvaluatedFont.type;
       var maxCharIndex = composite ? 0xffff : 0xff;
       var properties;
+      const firstChar = dict.get("FirstChar") || 0;
+      const lastChar = dict.get("LastChar") || maxCharIndex;
 
       if (!descriptor) {
         if (type === "Type3") {
@@ -22432,18 +22460,29 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
             widths: metrics.widths,
             defaultWidth: metrics.defaultWidth,
             flags,
-            firstChar: 0,
-            lastChar: maxCharIndex
+            firstChar,
+            lastChar
           };
+          const widths = dict.get("Widths");
           return this.extractDataStructures(dict, dict, properties).then(properties => {
-            properties.widths = this.buildCharCodeToWidth(metrics.widths, properties);
+            if (widths) {
+              const glyphWidths = [];
+              let j = firstChar;
+
+              for (let i = 0, ii = widths.length; i < ii; i++) {
+                glyphWidths[j++] = this.xref.fetchIfRef(widths[i]);
+              }
+
+              properties.widths = glyphWidths;
+            } else {
+              properties.widths = this.buildCharCodeToWidth(metrics.widths, properties);
+            }
+
             return new _fonts.Font(baseFontName, null, properties);
           });
         }
       }
 
-      var firstChar = dict.get("FirstChar") || 0;
-      var lastChar = dict.get("LastChar") || maxCharIndex;
       var fontName = descriptor.get("FontName");
       var baseFont = dict.get("BaseFont");
 
@@ -24180,7 +24219,7 @@ var CMapFactory = function CMapFactoryClosure() {
   }
 
   return {
-    create(params) {
+    async create(params) {
       var encoding = params.encoding;
       var fetchBuiltInCMap = params.fetchBuiltInCMap;
       var useCMap = params.useCMap;
@@ -24199,7 +24238,7 @@ var CMapFactory = function CMapFactoryClosure() {
         });
       }
 
-      return Promise.reject(new Error("Encoding required."));
+      throw new Error("Encoding required.");
     }
 
   };
@@ -25223,7 +25262,7 @@ var Font = function FontClosure() {
       var name = this.name;
       var type = this.type;
       var subtype = this.subtype;
-      var fontName = name.replace(/[,_]/g, "-");
+      let fontName = name.replace(/[,_]/g, "-").replace(/\s/g, "");
       var stdFontMap = (0, _standard_fonts.getStdFontMap)(),
           nonStdFontMap = (0, _standard_fonts.getNonStdFontMap)();
       var isStandardFont = !!stdFontMap[fontName] || !!(nonStdFontMap[fontName] && stdFontMap[nonStdFontMap[fontName]]);
@@ -26861,6 +26900,12 @@ var Font = function FontClosure() {
       fontCharCode = this.toFontChar[charcode] || charcode;
 
       if (this.missingFile) {
+        const glyphName = this.differences[charcode] || this.defaultEncoding[charcode];
+
+        if ((glyphName === ".notdef" || glyphName === "") && this.type === "Type1") {
+          fontCharCode = 0x20;
+        }
+
         fontCharCode = (0, _unicode.mapSpecialUnicodeValues)(fontCharCode);
       }
 
