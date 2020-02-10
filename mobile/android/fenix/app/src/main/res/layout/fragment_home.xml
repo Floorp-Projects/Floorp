@@ -92,10 +92,20 @@
             app:layout_constraintBottom_toTopOf="@id/bottom_bar" />
 
         <View
+            android:id="@+id/bottomBarHighlight"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="@color/bottom_bar_shadow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/bottom_bar" />
+
+        <View
             android:id="@+id/bottom_bar"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:background="?bottomBarBackground"
+            android:foregroundGravity="bottom"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

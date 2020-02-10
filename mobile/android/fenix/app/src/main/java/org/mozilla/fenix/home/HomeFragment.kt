@@ -20,6 +20,9 @@ import android.widget.PopupWindow
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.constraintlayout.widget.ConstraintSet.BOTTOM
+import androidx.constraintlayout.widget.ConstraintSet.TOP
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
@@ -228,6 +231,18 @@ class HomeFragment : Fragment() {
                 .apply {
                     gravity = Gravity.TOP
                 }
+
+            ConstraintSet().apply {
+                clone(view.toolbarLayout)
+                clear(view.bottomBarShadow.id, BOTTOM)
+                connect(view.bottomBarShadow.id, TOP, view.bottom_bar.id, BOTTOM)
+                applyTo(view.toolbarLayout)
+            }
+
+            view.bottom_bar.background = resources.getDrawable(
+                ThemeManager.resolveAttribute(R.attr.bottomBarBackgroundTop, requireContext()),
+                null
+            )
 
             view.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 topMargin = HEADER_MARGIN.dpToPx(resources.displayMetrics)
