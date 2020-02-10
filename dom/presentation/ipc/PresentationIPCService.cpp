@@ -67,10 +67,10 @@ PresentationIPCService::StartSession(
       nsGlobalWindowInner::GetInnerWindowWithId(aWindowId);
   TabId tabId = BrowserParent::GetTabIdFrom(window->GetDocShell());
 
-  SendRequest(aCallback, StartSessionRequest(
-                             aUrls, nsString(aSessionId), nsString(aOrigin),
-                             nsString(aDeviceId), aWindowId, tabId,
-                             IPC::Principal(aPrincipal)));
+  SendRequest(
+      aCallback,
+      StartSessionRequest(aUrls, nsString(aSessionId), nsString(aOrigin),
+                          nsString(aDeviceId), aWindowId, tabId, aPrincipal));
   return NS_OK;
 }
 

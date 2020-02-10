@@ -1834,8 +1834,7 @@ nsresult nsIOService::SpeculativeConnectInternal(
   if (IsNeckoChild()) {
     ipc::URIParams params;
     SerializeURI(aURI, params);
-    gNeckoChild->SendSpeculativeConnect(params, IPC::Principal(aPrincipal),
-                                        aAnonymous);
+    gNeckoChild->SendSpeculativeConnect(params, aPrincipal, aAnonymous);
     return NS_OK;
   }
 
