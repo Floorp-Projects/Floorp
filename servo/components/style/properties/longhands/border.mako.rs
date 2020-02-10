@@ -106,10 +106,10 @@ ${helpers.single_keyword(
 
 ${helpers.predefined_type(
     "border-image-source",
-    "Image",
+    "ImageLayer",
     engines="gecko servo-2013 servo-2020",
-    initial_value="computed::Image::None",
-    initial_specified_value="specified::Image::None",
+    initial_value="computed::ImageLayer::none()",
+    initial_specified_value="specified::ImageLayer::none()",
     spec="https://drafts.csswg.org/css-backgrounds/#the-background-image",
     vector=False,
     animation_value_type="discrete",

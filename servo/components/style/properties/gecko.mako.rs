@@ -47,6 +47,7 @@ use crate::values::computed::url::ComputedImageUrl;
 use crate::values::computed::BorderStyle;
 use crate::values::computed::font::FontSize;
 use crate::values::generics::column::ColumnCount;
+use crate::values::generics::image::ImageLayer;
 
 
 pub mod style_structs {
@@ -848,7 +849,14 @@ fn static_assert() {
     % endfor
 
     pub fn set_border_image_source(&mut self, image: longhands::border_image_source::computed_value::T) {
-        self.gecko.mBorderImageSource.set(image);
+        unsafe {
+            // Prevent leaking of the last elements we did set
+            Gecko_SetNullImageValue(&mut self.gecko.mBorderImageSource);
+        }
+
+        if let ImageLayer::Image(image) = image {
+            self.gecko.mBorderImageSource.set(image);
+        }
     }
 
     pub fn copy_border_image_source_from(&mut self, other: &Self) {
@@ -863,7 +871,10 @@ fn static_assert() {
     }
 
     pub fn clone_border_image_source(&self) -> longhands::border_image_source::computed_value::T {
-        unsafe { self.gecko.mBorderImageSource.to_image() }
+        match unsafe { self.gecko.mBorderImageSource.into_image() } {
+            Some(image) => ImageLayer::Image(image),
+            None => ImageLayer::None,
+        }
     }
 
     <%
@@ -2031,7 +2042,9 @@ fn static_assert() {
 
         for (image, geckoimage) in images.zip(self.gecko.${image_layers_field}
                                                   .mLayers.iter_mut()) {
-            geckoimage.mImage.set(image)
+            if let ImageLayer::Image(image) = image {
+                geckoimage.mImage.set(image)
+            }
         }
     }
 
@@ -2039,8 +2052,12 @@ fn static_assert() {
         longhands::${shorthand}_image::computed_value::List(
             self.gecko.${image_layers_field}.mLayers.iter()
                 .take(self.gecko.${image_layers_field}.mImageCount as usize)
-                .map(|layer| unsafe { layer.mImage.to_image() })
-                .collect()
+                .map(|ref layer| {
+                    match unsafe { layer.mImage.into_image() } {
+                        Some(image) => ImageLayer::Image(image),
+                        None => ImageLayer::None,
+                    }
+            }).collect()
         )
     }
 

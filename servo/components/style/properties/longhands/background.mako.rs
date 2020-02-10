@@ -21,10 +21,10 @@ ${helpers.predefined_type(
 
 ${helpers.predefined_type(
     "background-image",
-    "Image",
+    "ImageLayer",
     engines="gecko servo-2013 servo-2020",
-    initial_value="computed::Image::None",
-    initial_specified_value="specified::Image::None",
+    initial_value="computed::ImageLayer::none()",
+    initial_specified_value="specified::ImageLayer::none()",
     spec="https://drafts.csswg.org/css-backgrounds/#the-background-image",
     vector="True",
     animation_value_type="discrete",

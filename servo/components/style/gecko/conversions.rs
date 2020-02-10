@@ -23,9 +23,6 @@ impl nsStyleImage {
     /// Set a given Servo `Image` value into this `nsStyleImage`.
     pub fn set(&mut self, image: Image) {
         match image {
-            GenericImage::None => unsafe {
-                bindings::Gecko_SetNullImageValue(self);
-            },
             GenericImage::Gradient(boxed_gradient) => self.set_gradient(boxed_gradient),
             GenericImage::Url(ref url) => unsafe {
                 bindings::Gecko_SetLayerImageImageValue(self, url);
@@ -58,35 +55,35 @@ impl nsStyleImage {
     }
 
     /// Converts into Image.
-    pub unsafe fn to_image(&self) -> Image {
+    pub unsafe fn into_image(self: &nsStyleImage) -> Option<Image> {
         use crate::gecko_bindings::structs::nsStyleImageType;
         use crate::values::computed::MozImageRect;
 
         match self.mType {
-            nsStyleImageType::eStyleImageType_Null => GenericImage::None,
+            nsStyleImageType::eStyleImageType_Null => None,
             nsStyleImageType::eStyleImageType_Image => {
                 let url = self.__bindgen_anon_1.mImage.as_ref().clone();
                 if self.mCropRect.mPtr.is_null() {
-                    GenericImage::Url(url)
+                    Some(GenericImage::Url(url))
                 } else {
                     let rect = &*self.mCropRect.mPtr;
-                    GenericImage::Rect(Box::new(MozImageRect {
+                    Some(GenericImage::Rect(Box::new(MozImageRect {
                         url,
                         top: rect.0,
                         right: rect.1,
                         bottom: rect.2,
                         left: rect.3,
-                    }))
+                    })))
                 }
             },
             nsStyleImageType::eStyleImageType_Gradient => {
                 let gradient: &Gradient = &**self.__bindgen_anon_1.mGradient.as_ref();
-                GenericImage::Gradient(Box::new(gradient.clone()))
+                Some(GenericImage::Gradient(Box::new(gradient.clone())))
             },
             nsStyleImageType::eStyleImageType_Element => {
                 use crate::gecko_string_cache::Atom;
                 let atom = bindings::Gecko_GetImageElement(self);
-                GenericImage::Element(Atom::from_raw(atom))
+                Some(GenericImage::Element(Atom::from_raw(atom)))
             },
         }
     }
@@ -105,7 +102,7 @@ pub mod basic_shape {
     impl StyleShapeSource {
         /// Convert StyleShapeSource to ShapeSource except URL and Image
         /// types.
-        fn to_shape_source<ReferenceBox, ImageOrUrl>(
+        fn into_shape_source<ReferenceBox, ImageOrUrl>(
             &self,
         ) -> Option<ShapeSource<BasicShape, ReferenceBox, ImageOrUrl>>
         where
@@ -152,14 +149,14 @@ pub mod basic_shape {
                     use crate::values::generics::image::Image as GenericImage;
 
                     let shape_image = &*other.__bindgen_anon_1.mShapeImage.as_ref().mPtr;
-                    let image = shape_image.to_image();
+                    let image = shape_image.into_image().expect("Cannot convert to Image");
                     match image {
                         GenericImage::Url(url) => ShapeSource::ImageOrUrl(url.0),
                         _ => panic!("ClippingShape doesn't support non-url images"),
                     }
                 },
                 _ => other
-                    .to_shape_source()
+                    .into_shape_source()
                     .expect("Couldn't convert to StyleSource!"),
             }
         }
@@ -170,11 +167,11 @@ pub mod basic_shape {
             match other.mType {
                 StyleShapeSourceType::Image => unsafe {
                     let shape_image = &*other.__bindgen_anon_1.mShapeImage.as_ref().mPtr;
-                    let image = shape_image.to_image();
+                    let image = shape_image.into_image().expect("Cannot convert to Image");
                     ShapeSource::ImageOrUrl(image)
                 },
                 _ => other
-                    .to_shape_source()
+                    .into_shape_source()
                     .expect("Couldn't convert to StyleSource!"),
             }
         }
