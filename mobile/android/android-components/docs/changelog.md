@@ -11,6 +11,10 @@ permalink: /changelog/
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+* **WebExtensions refactor**
+  * The Web Extensions related methods have been refactored from `Engine` into a new `WebExtensionRuntime` interface.
+  * The `Engine` interface now implements the `WebExtensionRuntime` interface.
+  * `WebCompatFeature` has been updated to receive a `WebExtensionRuntime` instead of a `Engine` as `install` method parameter.
 
 # 30.0.0
 

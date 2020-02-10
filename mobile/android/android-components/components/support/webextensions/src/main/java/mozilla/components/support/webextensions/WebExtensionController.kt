@@ -5,10 +5,10 @@
 package mozilla.components.support.webextensions
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
@@ -29,16 +29,16 @@ class WebExtensionController(
     private var registerBackgroundMessageHandler: (WebExtension) -> Unit? = { }
 
     /**
-     * Makes sure the web extension is installed in the provided engine. If a
+     * Makes sure the web extension is installed in the provided runtime. If a
      * content message handler was registered (see
      * [registerContentMessageHandler]) before install completed, registration
      * will happen upon successful installation.
      *
-     * @param engine the [Engine] the web extension should be installed in.
+     * @param runtime the [WebExtensionRuntime] the web extension should be installed in.
      */
-    fun install(engine: Engine) {
+    fun install(runtime: WebExtensionRuntime) {
         if (!installedExtensions.containsKey(extensionId)) {
-            engine.installWebExtension(extensionId, extensionUrl,
+            runtime.installWebExtension(extensionId, extensionUrl,
                 onSuccess = {
                     logger.debug("Installed extension: ${it.id}")
                     synchronized(this@WebExtensionController) {

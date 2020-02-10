@@ -14,12 +14,12 @@ import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
+import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
@@ -27,11 +27,11 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Provides functionality to make sure web extension related events in the
- * [Engine] are reflected in the browser state by dispatching the
+ * [WebExtensionRuntime] are reflected in the browser state by dispatching the
  * corresponding actions to the [BrowserStore].
  *
  * Note that this class can be removed once the browser-state migration
- * is completed and the [Engine] has direct access to the [BrowserStore]:
+ * is completed and the [WebExtensionRuntime] has direct access to the [BrowserStore]:
  * https://github.com/orgs/mozilla-mobile/projects/31
  */
 object WebExtensionSupport {
@@ -71,10 +71,10 @@ object WebExtensionSupport {
 
     /**
      * Registers a listener for web extension related events on the provided
-     * [Engine] and reacts by dispatching the corresponding actions to the
+     * [WebExtensionRuntime] and reacts by dispatching the corresponding actions to the
      * provided [BrowserStore].
      *
-     * @param engine the browser [Engine] to use.
+     * @param runtime the browser [WebExtensionRuntime] to use.
      * @param store the application's [BrowserStore].
      * @param openPopupInTab (optional) flag to determine whether a browser or page action would
      * display a web extension popup in a tab or not. Defaults to false.
@@ -99,7 +99,7 @@ object WebExtensionSupport {
      */
     @Suppress("MaxLineLength", "LongParameterList")
     fun initialize(
-        engine: Engine,
+        runtime: WebExtensionRuntime,
         store: BrowserStore,
         openPopupInTab: Boolean = false,
         onNewTabOverride: ((WebExtension?, EngineSession, String) -> String)? = null,
@@ -109,13 +109,13 @@ object WebExtensionSupport {
     ) {
         this.onUpdatePermissionRequest = onUpdatePermissionRequest
 
-        // Queries the engine for installed extensions and adds them to the store
-        registerInstalledExtensions(store, engine)
+        // Queries the runtime for installed extensions and adds them to the store
+        registerInstalledExtensions(store, runtime)
 
         // Observe the store and register action handlers for newly added engine sessions
         registerActionHandlersForNewSessions(store)
 
-        engine.registerWebExtensionDelegate(object : WebExtensionDelegate {
+        runtime.registerWebExtensionDelegate(object : WebExtensionDelegate {
             override fun onNewTab(webExtension: WebExtension?, url: String, engineSession: EngineSession) {
                 openTab(store, onNewTabOverride, webExtension, engineSession, url)
             }
@@ -213,10 +213,10 @@ object WebExtensionSupport {
     suspend fun awaitInitialization() = initializationResult.await()
 
     /**
-     * Queries the [engine] for installed web extensions and adds them to the [store].
+     * Queries the [WebExtensionRuntime] for installed web extensions and adds them to the [store].
      */
-    private fun registerInstalledExtensions(store: BrowserStore, engine: Engine) {
-        engine.listInstalledWebExtensions(
+    private fun registerInstalledExtensions(store: BrowserStore, runtime: WebExtensionRuntime) {
+        runtime.listInstalledWebExtensions(
             onSuccess = {
                 extensions -> extensions.forEach { registerInstalledExtension(store, it) }
                 initializationResult.complete(Unit)
