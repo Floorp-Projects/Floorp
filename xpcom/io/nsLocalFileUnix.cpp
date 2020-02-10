@@ -829,7 +829,10 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
 
     // get the old permissions
     uint32_t myPerms;
-    GetPermissions(&myPerms);
+    rv = GetPermissions(&myPerms);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     // Create the new file with the old file's permissions, even if write
     // permission is missing.  We can't create with write permission and
