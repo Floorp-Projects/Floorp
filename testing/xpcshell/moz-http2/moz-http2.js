@@ -5,26 +5,20 @@
 // This module is the stateful server side of test_http2.js and is meant
 // to have node be restarted in between each invocation
 
+/* eslint-env node */
+
 var node_http2_root = "../node-http2";
 if (process.env.NODE_HTTP2_ROOT) {
   node_http2_root = process.env.NODE_HTTP2_ROOT;
 }
 var http2 = require(node_http2_root);
 var fs = require("fs");
-var net = require("net");
 var url = require("url");
 var crypto = require("crypto");
 const dnsPacket = require(`${node_http2_root}/../dns-packet`);
 const ip = require(`${node_http2_root}/../node-ip`);
 const { fork } = require("child_process");
 const path = require("path");
-
-let http2_internal = null;
-try {
-  http2_internal = require("http2");
-} catch (_) {
-  // silently ignored
-}
 
 // Hook into the decompression code to log the decompressed name-value pairs
 var compression_module = node_http2_root + "/lib/protocol/compressor";
@@ -64,7 +58,7 @@ var originalTransform = Serializer.prototype._transform;
 var newTransform = function(frame, encoding, done) {
   if (frame.type == "DATA") {
     // Insert our empty DATA frame
-    emptyFrame = {};
+    const emptyFrame = {};
     emptyFrame.type = "DATA";
     emptyFrame.data = Buffer.alloc(0);
     emptyFrame.flags = [];
@@ -82,14 +76,14 @@ var newTransform = function(frame, encoding, done) {
   originalTransform.apply(this, arguments);
 };
 
-function getHttpContent(path) {
+function getHttpContent(pathName) {
   var content =
     "<!doctype html>" +
     "<html>" +
     "<head><title>HOORAY!</title></head>" +
     // 'You Win!' used in tests to check we reached this server
     "<body>You Win! (by requesting" +
-    path +
+    pathName +
     ")</body>" +
     "</html>";
   return content;
@@ -152,7 +146,7 @@ moreData.prototype = {
 
   onTimeout: function onTimeout() {
     // 1mb of data
-    content = generateContent(1024 * 1024);
+    const content = generateContent(1024 * 1024);
     this.resp.write(content); // 1mb chunk
     this.iter--;
     if (!this.iter) {
@@ -234,6 +228,7 @@ var illegalheader_conn = null;
 
 var cname_confirm = 0;
 
+// eslint-disable-next-line complexity
 function handleRequest(req, res) {
   // We do this first to ensure nothing goes wonky in our tests that don't want
   // the headers to have something illegal in them
@@ -262,7 +257,7 @@ function handleRequest(req, res) {
   }
 
   if (u.pathname === "/750ms") {
-    var rl = new runlater();
+    let rl = new runlater();
     rl.req = req;
     rl.resp = res;
     setTimeout(executeRunLater, 750, rl);
@@ -395,14 +390,14 @@ function handleRequest(req, res) {
     content = generateContent(128 * 1024);
     var hash = crypto.createHash("md5");
     hash.update(content);
-    var md5 = hash.digest("hex");
+    let md5 = hash.digest("hex");
     res.setHeader("X-Expected-MD5", md5);
   } else if (u.pathname === "/huge") {
     content = generateContent(1024);
     res.setHeader("Content-Type", "text/plain");
     res.writeHead(200);
     // 1mb of data
-    for (var i = 0; i < 1024 * 1; i++) {
+    for (let i = 0; i < 1024 * 1; i++) {
       res.write(content); // 1kb chunk
     }
     res.end();
@@ -419,7 +414,7 @@ function handleRequest(req, res) {
       post_hash.update(chunk.toString());
     });
     req.on("end", function finishPost() {
-      var md5 = post_hash.digest("hex");
+      let md5 = post_hash.digest("hex");
       res.setHeader("X-Calculated-MD5", md5);
       res.writeHead(200);
       res.end(content);
@@ -439,7 +434,7 @@ function handleRequest(req, res) {
     });
     req.on("end", function finishPost() {
       res.setHeader("X-Recvd", accum);
-      var rl = new runlater();
+      let rl = new runlater();
       rl.req = req;
       rl.resp = res;
       setTimeout(executeRunLater, 750, rl);
@@ -456,7 +451,7 @@ function handleRequest(req, res) {
     res.setHeader("Content-Type", "text/html");
     res.writeHead(200);
 
-    var rl = new moreData();
+    let rl = new moreData();
     rl.req = req;
     rl.resp = res;
     setTimeout(executeRunLater, 1, rl);
@@ -504,7 +499,7 @@ function handleRequest(req, res) {
       .split("")
       .reverse()
       .join("");
-    for (var i = 0; i < 265; i++) {
+    for (let i = 0; i < 265; i++) {
       pushRequestHeaders["X-Push-Test-Header-" + i] = pushHdrTxt;
       res.setHeader("X-Pull-Test-Header-" + i, pullHdrTxt);
     }
@@ -555,25 +550,25 @@ function handleRequest(req, res) {
   // for use with test_trr.js
   else if (u.pathname === "/dns-cname") {
     // asking for cname.example.com
-    var content;
+    let rContent;
     if (0 == cname_confirm) {
       // ... this sends a CNAME back to pointing-elsewhere.example.com
-      content = Buffer.from(
+      rContent = Buffer.from(
         "00000100000100010000000005636E616D65076578616D706C6503636F6D0000050001C00C0005000100000037002012706F696E74696E672D656C73657768657265076578616D706C6503636F6D00",
         "hex"
       );
       cname_confirm++;
     } else {
       // ... this sends an A 99.88.77.66 entry back for pointing-elsewhere.example.com
-      content = Buffer.from(
+      rContent = Buffer.from(
         "00000100000100010000000012706F696E74696E672D656C73657768657265076578616D706C6503636F6D0000010001C00C0001000100000037000463584D42",
         "hex"
       );
     }
     res.setHeader("Content-Type", "application/dns-message");
-    res.setHeader("Content-Length", content.length);
+    res.setHeader("Content-Length", rContent.length);
     res.writeHead(200);
-    res.write(content);
+    res.write(rContent);
     res.end("");
     return;
   } else if (u.pathname == "/doh") {
@@ -713,16 +708,13 @@ function handleRequest(req, res) {
         answers,
       });
 
-      function writeResponse(response, buf) {
-        response.setHeader("Content-Length", buf.length);
-        response.setHeader(
-          "Set-Cookie",
-          "trackyou=yes; path=/; max-age=100000;"
-        );
-        response.setHeader("Content-Type", "application/dns-message");
-        response.writeHead(200);
-        response.write(buf);
-        response.end("");
+      function writeResponse(resp, buffer) {
+        resp.setHeader("Content-Length", buffer.length);
+        resp.setHeader("Set-Cookie", "trackyou=yes; path=/; max-age=100000;");
+        resp.setHeader("Content-Type", "application/dns-message");
+        resp.writeHead(200);
+        resp.write(buffer);
+        resp.end("");
       }
 
       let delay = undefined;
@@ -763,9 +755,9 @@ function handleRequest(req, res) {
     // test23 asks for cname-a.example.com
     // this responds with a CNAME to here.example.com *and* an A record
     // for here.example.com
-    var content;
+    let rContent;
 
-    content = Buffer.from(
+    rContent = Buffer.from(
       "0000" +
       "0100" +
       "0001" + // QDCOUNT
@@ -793,9 +785,9 @@ function handleRequest(req, res) {
       "hex"
     );
     res.setHeader("Content-Type", "application/dns-message");
-    res.setHeader("Content-Length", content.length);
+    res.setHeader("Content-Length", rContent.length);
     res.writeHead(200);
-    res.write(content);
+    res.write(rContent);
     res.end("");
     return;
   } else if (u.pathname === "/dns-750ms") {
@@ -832,7 +824,7 @@ function handleRequest(req, res) {
   // for use with test_esni_dns_fetch.js
   else if (u.pathname === "/esni-dns-push") {
     // _esni_push.example.com has A entry 127.0.0.1
-    var content = Buffer.from(
+    let rContent = Buffer.from(
       "0000010000010001000000000A5F65736E695F70757368076578616D706C6503636F6D0000010001C00C000100010000003700047F000001",
       "hex"
     );
@@ -861,9 +853,9 @@ function handleRequest(req, res) {
     });
     push.end(pcontent);
     res.setHeader("Content-Type", "application/dns-message");
-    res.setHeader("Content-Length", content.length);
+    res.setHeader("Content-Length", rContent.length);
     res.writeHead(200);
-    res.write(content);
+    res.write(rContent);
     res.end("");
     return;
   } else if (u.pathname === "/.well-known/http-opportunistic") {
@@ -1099,11 +1091,11 @@ function handleRequest(req, res) {
     }
     // default response from here
   } else if (u.pathname === "/origin-4") {
-    var originList = [];
+    let originList = [];
     req.stream.connection.originFrame(originList);
     res.setHeader("x-client-port", req.remotePort);
   } else if (u.pathname === "/origin-6") {
-    var originList = [
+    let originList = [
       "https://alt1.example.com:" + serverPort,
       "https://alt2.example.com:" + serverPort,
       "https://bar.example.com:" + serverPort,
@@ -1113,7 +1105,7 @@ function handleRequest(req, res) {
   } else if (u.pathname === "/origin-11-a") {
     res.setHeader("x-client-port", req.remotePort);
 
-    pushb = res.push({
+    const pushb = res.push({
       hostname: "foo.example.com:" + serverPort,
       port: serverPort,
       path: "/origin-11-b",
@@ -1126,7 +1118,7 @@ function handleRequest(req, res) {
     });
     pushb.end("1");
 
-    pushc = res.push({
+    const pushc = res.push({
       hostname: "bar.example.com:" + serverPort,
       port: serverPort,
       path: "/origin-11-c",
@@ -1139,7 +1131,7 @@ function handleRequest(req, res) {
     });
     pushc.end("1");
 
-    pushd = res.push({
+    const pushd = res.push({
       hostname: "madeup.example.com:" + serverPort,
       port: serverPort,
       path: "/origin-11-d",
@@ -1152,7 +1144,7 @@ function handleRequest(req, res) {
     });
     pushd.end("1");
 
-    pushe = res.push({
+    const pushe = res.push({
       hostname: "alt1.example.com:" + serverPort,
       port: serverPort,
       path: "/origin-11-e",
@@ -1269,8 +1261,8 @@ function makeid(length) {
 let globalObjects = {};
 var serverPort;
 
-const listen = (server, envport) => {
-  if (!server) {
+const listen = (serv, envport) => {
+  if (!serv) {
     return Promise.resolve(0);
   }
 
@@ -1283,8 +1275,8 @@ const listen = (server, envport) => {
     }
   }
   return new Promise(resolve => {
-    server.listen(portSelection, "0.0.0.0", 2000, () => {
-      resolve(server.address().port);
+    serv.listen(portSelection, "0.0.0.0", 2000, () => {
+      resolve(serv.address().port);
     });
   });
 };
@@ -1437,6 +1429,6 @@ function forkProcess() {
 Promise.all([
   listen(server, process.env.MOZHTTP2_PORT).then(port => (serverPort = port)),
   listen(httpServer, process.env.MOZNODE_EXEC_PORT),
-]).then(([serverPort, nodeExecPort]) => {
-  console.log(`HTTP2 server listening on ports ${serverPort},${nodeExecPort}`);
+]).then(([sPort, nodeExecPort]) => {
+  console.log(`HTTP2 server listening on ports ${sPort},${nodeExecPort}`);
 });
