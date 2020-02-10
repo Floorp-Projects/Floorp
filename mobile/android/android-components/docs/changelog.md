@@ -21,7 +21,7 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v31.0.0/buildSrc/src/main/java/Config.kt)
 
 * **feature-awesomebar**
-  * Added resources parameter to `addSessionProvider` method from `AwesomeBarFeature` and to `SessionSuggestionProvider` constructor for accessing strings.
+  * ⚠️ **This is a breaking change**: Added resources parameter to `addSessionProvider` method from `AwesomeBarFeature` and to `SessionSuggestionProvider` constructor for accessing strings.
 
 
 # 30.0.0
@@ -47,13 +47,13 @@ permalink: /changelog/
     * Return the corresponding ErrorResponse (ErrorResponse.Content or ErrorResponse.Uri) as ErrorResponse can no longer be directly instantiated.
   * Added support for loading images into error pages with `createUrlEncodedErrorPage`. These error pages load dynamically with javascript by parsing params in the URL
   * ⚠️ To use custom HTML & CSS with image error pages, resources **must** be located in the assets folder
-  
+
 * **feature-prompts**
   * Save login prompts will no longer be closed on page load
 
 * **lib-crash**
   * Glean reports now distinguishes between fatal and non-fatal native code crashes.
-  
+
 * **feature-pwa**
   * Added ability to query install state of an url.
   * Added ability load all manifests that apply to a certain url.
@@ -128,7 +128,7 @@ permalink: /changelog/
   * `PromptFeature` now accepts a false by default `isSaveLoginEnabled` lambda to be invoked before showing prompts. If true, users
     will be prompted to save their information after logging in to a website.
   * Prompts will now be closed automatically when pages have mostly loaded
-  
+
 * **service-sync-logins**
   * Added `GeckoLoginStorageDelegate`. This can be attached to a GeckoEngine, where it will be used
   to save user login credentials.
