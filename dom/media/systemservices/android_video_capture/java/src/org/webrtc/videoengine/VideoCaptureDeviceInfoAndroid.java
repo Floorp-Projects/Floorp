@@ -15,59 +15,20 @@ import java.util.List;
 
 import android.Manifest;
 import android.app.Activity;
-import android.hardware.Camera.CameraInfo;
-import android.hardware.Camera.Parameters;
-import android.hardware.Camera.Size;
-import android.hardware.Camera;
+import android.content.Context;
 import android.util.Log;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.WebRTCJNITarget;
 import org.mozilla.gecko.permissions.Permissions;
 
+import org.webrtc.CameraEnumerator;
+import org.webrtc.CameraEnumerationAndroid.CaptureFormat;
+import org.webrtc.Camera1Enumerator;
+import org.webrtc.Camera2Enumerator;
+
 public class VideoCaptureDeviceInfoAndroid {
   private final static String TAG = "WEBRTC-JC";
-
-  private static boolean isFrontFacing(CameraInfo info) {
-    return info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT;
-  }
-
-  private static String deviceUniqueName(int index, CameraInfo info) {
-    return "Camera " + index +", Facing " +
-        (isFrontFacing(info) ? "front" : "back") +
-        ", Orientation "+ info.orientation;
-  }
-
-  @WebRTCJNITarget
-  public static List<int[]> getFpsRangesRobust(Camera.Parameters parameters) {
-      List<int[]> supportedFpsRanges = null;
-      if (android.os.Build.VERSION.SDK_INT >= 9) {
-          supportedFpsRanges = parameters.getSupportedPreviewFpsRange();
-      }
-      // getSupportedPreviewFpsRange doesn't actually work on a bunch
-      // of Gingerbread devices.
-      if (supportedFpsRanges == null) {
-          supportedFpsRanges = new ArrayList<int[]>();
-          List<Integer> frameRates = parameters.getSupportedPreviewFrameRates();
-          if (frameRates != null) {
-              for (Integer rate: frameRates) {
-                  int[] range = new int[2];
-                  // minFPS = maxFPS, convert to milliFPS
-                  range[0] = rate * 1000;
-                  range[1] = rate * 1000;
-                  supportedFpsRanges.add(range);
-              }
-          } else {
-              Log.e(TAG, "Camera doesn't know its own framerate, guessing 30fps.");
-              int[] range = new int[2];
-              // Your guess is as good as mine
-              range[0] = 30 * 1000;
-              range[1] = 30 * 1000;
-              supportedFpsRanges.add(range);
-          }
-      }
-      return supportedFpsRanges;
-  }
 
   // Returns information about all cameras on the device.
   // Since this reflects static information about the hardware present, there is
@@ -75,107 +36,59 @@ public class VideoCaptureDeviceInfoAndroid {
   // marked "private" as it is only called by native code.
   @WebRTCJNITarget
   private static CaptureCapabilityAndroid[] getDeviceInfo() {
+      final Context context = GeckoAppShell.getApplicationContext();
       final boolean hasPermissions = Permissions.has(
-              GeckoAppShell.getApplicationContext(), Manifest.permission.CAMERA);
+              context, Manifest.permission.CAMERA);
 
       if (hasPermissions) {
-          return createDeviceList();
+          if (Camera2Enumerator.isSupported(context)) {
+              return createDeviceList(new Camera2Enumerator(context));
+          } else {
+              return createDeviceList(new Camera1Enumerator());
+          }
       } else {
           return new CaptureCapabilityAndroid[0];
       }
   }
 
-  private static CaptureCapabilityAndroid[] createDeviceList() {
+  private static CaptureCapabilityAndroid[] createDeviceList(CameraEnumerator enumerator) {
+
       ArrayList<CaptureCapabilityAndroid> allDevices = new ArrayList<CaptureCapabilityAndroid>();
-      int numCameras = 1;
-      if (android.os.Build.VERSION.SDK_INT >= 9) {
-          numCameras = Camera.getNumberOfCameras();
-      }
-      for (int i = 0; i < numCameras; ++i) {
-          String uniqueName = null;
-          CameraInfo info = null;
-          if (android.os.Build.VERSION.SDK_INT >= 9) {
-              info = new CameraInfo();
-              Camera.getCameraInfo(i, info);
-              uniqueName = deviceUniqueName(i, info);
-          } else {
-              uniqueName = "Camera 0, Facing back, Orientation 90";
-          }
 
-          List<Size> supportedSizes = null;
-          List<int[]> supportedFpsRanges = null;
-          try {
-              Camera camera = null;
-              if (android.os.Build.VERSION.SDK_INT >= 9) {
-                  camera = Camera.open(i);
-              } else {
-                  camera = Camera.open();
-              }
-              Parameters parameters = camera.getParameters();
-              supportedSizes = parameters.getSupportedPreviewSizes();
-              supportedFpsRanges = getFpsRangesRobust(parameters);
-              camera.release();
-              Log.d(TAG, uniqueName);
-          } catch (RuntimeException e) {
-              Log.e(TAG, "Failed to open " + uniqueName + ", skipping due to: "
-                    + e.getLocalizedMessage());
-              continue;
-          }
-
-          boolean is30fpsRange = false;
-          boolean is15fpsRange = false;
-          // If there is constant 30 fps mode, but no 15 fps - add 15 fps
-          // mode to the list of supported ranges. Frame drop will be done
-          // in software.
-          for (int[] range : supportedFpsRanges) {
-              if (range[0] == 30000 &&
-                  range[1] == 30000) {
-                  is30fpsRange = true;
-              }
-              if (range[0] == 15000 &&
-                  range[1] == 15000) {
-                  is15fpsRange = true;
-              }
-          }
-          if (is30fpsRange && !is15fpsRange) {
-              Log.d(TAG, "Adding 15 fps support");
-              int[] range = new int[2];
-              range[0] = 15 * 1000;
-              range[1] = 15 * 1000;
-              supportedFpsRanges.add(range);
+      for (String camera: enumerator.getDeviceNames()) {
+          List<CaptureFormat> formats = enumerator.getSupportedFormats(camera);
+          int numFormats = formats.size();
+          if (numFormats <= 0) {
+            continue;
           }
 
           CaptureCapabilityAndroid device = new CaptureCapabilityAndroid();
+          device.name = camera;
 
-          int sizeLen = supportedSizes.size();
-          device.width  = new int[sizeLen];
-          device.height = new int[sizeLen];
+          // This isn't part of the new API, but we don't call
+          // GetDeviceOrientation() anywhere, so this value is unused.
+          device.orientation = 0;
 
-          int j = 0;
-          for (Size size : supportedSizes) {
-                device.width[j] = size.width;
-                device.height[j] = size.height;
-                j++;
+          device.width  = new int[numFormats];
+          device.height = new int[numFormats];
+          device.minMilliFPS = formats.get(0).framerate.min;
+          device.maxMilliFPS = formats.get(0).framerate.max;
+          int i = 0;
+          for (CaptureFormat format: formats) {
+              device.width[i] = format.width;
+              device.height[i] = format.height;
+              if (format.framerate.min < device.minMilliFPS) {
+                device.minMilliFPS = format.framerate.min;
+              }
+              if (format.framerate.max > device.maxMilliFPS) {
+                device.maxMilliFPS = format.framerate.max;
+              }
+              i++;
           }
-
-          // Android SDK deals in integral "milliframes per second"
-          // (i.e. fps*1000, instead of floating-point frames-per-second) so we
-          // preserve that through the Java->C++->Java round-trip.
-          int[] mfps = supportedFpsRanges.get(supportedFpsRanges.size() - 1);
-          device.name = uniqueName;
-          if (android.os.Build.VERSION.SDK_INT >= 9) {
-              device.frontFacing = isFrontFacing(info);
-              device.orientation = info.orientation;
-              device.minMilliFPS = mfps[Parameters.PREVIEW_FPS_MIN_INDEX];
-              device.maxMilliFPS = mfps[Parameters.PREVIEW_FPS_MAX_INDEX];
-          } else {
-              device.frontFacing = false;
-              device.orientation = 90;
-              device.minMilliFPS = mfps[0];
-              device.maxMilliFPS = mfps[1];
-          }
+          device.frontFacing = enumerator.isFrontFacing(camera);
           allDevices.add(device);
       }
+
       return allDevices.toArray(new CaptureCapabilityAndroid[0]);
   }
 }
