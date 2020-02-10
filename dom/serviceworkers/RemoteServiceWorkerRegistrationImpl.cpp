@@ -146,14 +146,16 @@ void RemoteServiceWorkerRegistrationImpl::RevokeActor(
   mShutdown = true;
 
   if (mOuter) {
-    mOuter->RegistrationCleared();
+    RefPtr<ServiceWorkerRegistration> outer = mOuter;
+    outer->RegistrationCleared();
   }
 }
 
 void RemoteServiceWorkerRegistrationImpl::UpdateState(
     const ServiceWorkerRegistrationDescriptor& aDescriptor) {
   if (mOuter) {
-    mOuter->UpdateState(aDescriptor);
+    RefPtr<ServiceWorkerRegistration> outer = mOuter;
+    outer->UpdateState(aDescriptor);
   }
 }
 
