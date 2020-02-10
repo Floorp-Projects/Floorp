@@ -26,6 +26,7 @@
 #include "nsGkAtoms.h"
 #include "nsCocoaFeatures.h"
 #include "nsCocoaWindow.h"
+#include "nsNativeBasicTheme.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -36,6 +37,7 @@
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "nsLookAndFeel.h"
 #include "VibrancyManager.h"
 
@@ -4345,7 +4347,11 @@ already_AddRefed<nsITheme> do_GetNativeTheme() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
-    inst = new nsNativeThemeCocoa();
+    if (XRE_IsContentProcess() && StaticPrefs::widget_disable_native_theme_for_content()) {
+      inst = new nsNativeBasicTheme();
+    } else {
+      inst = new nsNativeThemeCocoa();
+    }
     ClearOnShutdown(&inst);
   }
 
