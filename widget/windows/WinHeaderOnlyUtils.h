@@ -485,6 +485,8 @@ class MOZ_RAII AutoVirtualProtect final {
 
   WindowsError GetError() const { return mError; }
 
+  DWORD PrevProt() const { return mPrevProt; }
+
   AutoVirtualProtect(const AutoVirtualProtect&) = delete;
   AutoVirtualProtect(AutoVirtualProtect&&) = delete;
   AutoVirtualProtect& operator=(const AutoVirtualProtect&) = delete;
