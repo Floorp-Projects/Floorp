@@ -105,7 +105,7 @@ add_task(async function expiry({ client }) {
   const cookie = {
     name: "foo",
     value: "bar",
-    expires: date,
+    expires: Math.floor(date.getTime() / 1000),
     session: false,
   };
 
