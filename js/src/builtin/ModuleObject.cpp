@@ -1203,10 +1203,9 @@ bool GlobalObject::initModuleProto(JSContext* cx,
 ///////////////////////////////////////////////////////////////////////////
 // ModuleBuilder
 
-ModuleBuilder::ModuleBuilder(JSContext* cx, HandleModuleObject module,
+ModuleBuilder::ModuleBuilder(JSContext* cx,
                              const frontend::EitherParser& eitherParser)
     : cx_(cx),
-      module_(cx, module),
       eitherParser_(eitherParser),
       requestedModuleSpecifiers_(cx, AtomSet(cx)),
       requestedModules_(cx, RequestedModuleVector(cx)),
@@ -1259,7 +1258,7 @@ bool ModuleBuilder::buildTables() {
   return true;
 }
 
-bool ModuleBuilder::initModule() {
+bool ModuleBuilder::initModule(JS::Handle<ModuleObject*> module) {
   RootedArrayObject requestedModules(cx_,
                                      js::CreateArray(cx_, requestedModules_));
   if (!requestedModules) {
@@ -1289,9 +1288,9 @@ bool ModuleBuilder::initModule() {
     return false;
   }
 
-  module_->initImportExportData(requestedModules, importEntries,
-                                localExportEntries, indirectExportEntries,
-                                starExportEntries);
+  module->initImportExportData(requestedModules, importEntries,
+                               localExportEntries, indirectExportEntries,
+                               starExportEntries);
 
   return true;
 }
