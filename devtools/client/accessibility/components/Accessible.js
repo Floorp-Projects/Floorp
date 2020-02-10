@@ -284,14 +284,7 @@ class Accessible extends Component {
       return;
     }
 
-    const accessibilityWalkerFront = accessibleFront.parent();
-    if (!accessibilityWalkerFront) {
-      return;
-    }
-
-    await this.props.dispatch(
-      select(accessibilityWalkerFront, accessibleFront)
-    );
+    await this.props.dispatch(select(accessibleFront));
 
     const { props } = this.refs;
     if (props) {
