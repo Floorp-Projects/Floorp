@@ -35,14 +35,8 @@ add_task(async function() {
   ok(accessibility.getWalker, "The getWalker method exists");
   ok(accessibility.getSimulator, "The getSimulator method exists");
 
-  ok(accessibility.accessibleWalkerFront, "Accessible walker was initialized");
-
   let a11yWalker = await accessibility.getWalker();
-  is(
-    a11yWalker,
-    accessibility.accessibleWalkerFront,
-    "The AccessibleWalkerFront was returned"
-  );
+  ok(a11yWalker, "The AccessibleWalkerFront was returned");
 
   const a11ySimulator = await accessibility.getSimulator();
   const webRenderEnabled = isWebRenderEnabled(window);
@@ -51,14 +45,6 @@ add_task(async function() {
     webRenderEnabled,
     `The SimulatorFront was${webRenderEnabled ? "" : " not"} returned.`
   );
-  if (webRenderEnabled) {
-    ok(accessibility.simulatorFront, "Accessible simulator was initialized");
-    is(
-      a11ySimulator,
-      accessibility.simulatorFront,
-      "The SimulatorFront was returned"
-    );
-  }
 
   checkAccessibilityState(accessibility, {
     enabled: false,

@@ -664,12 +664,12 @@ async function toggleSimulationOption(doc, optionIndex) {
 }
 
 async function findAccessibleFor(
-  { toolbox: { target }, panel: { walker: accessibleWalkerFront } },
+  { toolbox: { target }, panel: { walker: accessibilityWalker } },
   selector
 ) {
   const domWalker = (await target.getFront("inspector")).walker;
   const node = await domWalker.querySelector(domWalker.rootNode, selector);
-  return accessibleWalkerFront.getAccessibleFor(node);
+  return accessibilityWalker.getAccessibleFor(node);
 }
 
 async function selectAccessibleForNode(env, selector) {

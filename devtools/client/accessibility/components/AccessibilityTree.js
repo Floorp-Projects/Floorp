@@ -41,6 +41,7 @@ const { scrollIntoView } = require("devtools/client/shared/scroll");
 class AccessibilityTree extends Component {
   static get propTypes() {
     return {
+      accessibilityWalker: PropTypes.object,
       toolboxDoc: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
       accessibles: PropTypes.object,
@@ -48,9 +49,6 @@ class AccessibilityTree extends Component {
       selected: PropTypes.string,
       highlighted: PropTypes.object,
       filtered: PropTypes.bool,
-      getAccessibilityTreeRoot: PropTypes.func.isRequired,
-      startListeningForAccessibilityEvents: PropTypes.func.isRequired,
-      stopListeningForAccessibilityEvents: PropTypes.func.isRequired,
     };
   }
 
@@ -65,14 +63,15 @@ class AccessibilityTree extends Component {
   }
 
   /**
-   * Add accessibility event listeners that affect tree rendering and updates.
+   * Add accessibility walker front event listeners that affect tree rendering
+   * and updates.
    */
   componentWillMount() {
-    this.props.startListeningForAccessibilityEvents({
-      reorder: this.onReorder,
-      "name-change": this.onNameChange,
-      "text-change": this.onTextChange,
-    });
+    const { accessibilityWalker } = this.props;
+    accessibilityWalker.on("reorder", this.onReorder);
+    accessibilityWalker.on("name-change", this.onNameChange);
+    accessibilityWalker.on("text-change", this.onTextChange);
+
     window.on(
       EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED,
       this.scrollSelectedRowIntoView
@@ -91,14 +90,13 @@ class AccessibilityTree extends Component {
   }
 
   /**
-   * Remove accessible event listeners.
+   * Remove accessible walker front event listeners.
    */
   componentWillUnmount() {
-    this.props.stopListeningForAccessibilityEvents({
-      reorder: this.onReorder,
-      "name-change": this.onNameChange,
-      "text-change": this.onTextChange,
-    });
+    const { accessibilityWalker } = this.props;
+    accessibilityWalker.off("reorder", this.onReorder);
+    accessibilityWalker.off("name-change", this.onNameChange);
+    accessibilityWalker.off("text-change", this.onTextChange);
 
     window.off(
       EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED,
@@ -151,8 +149,8 @@ class AccessibilityTree extends Component {
    */
   onNameChange(accessibleFront, parentFront) {
     const { accessibles, dispatch } = this.props;
-    const accessibleWalkerFront = accessibleFront.parent();
-    parentFront = parentFront || accessibleWalkerFront;
+    const accessibilityWalkerFront = accessibleFront.parent();
+    parentFront = parentFront || accessibilityWalkerFront;
 
     if (
       accessibles.has(accessibleFront.actorID) ||
@@ -202,9 +200,9 @@ class AccessibilityTree extends Component {
       expanded,
       selected,
       highlighted: highlightedItem,
+      accessibilityWalker,
       toolboxDoc,
       filtered,
-      getAccessibilityTreeRoot,
     } = this.props;
 
     const renderRow = rowProps => {
@@ -226,7 +224,7 @@ class AccessibilityTree extends Component {
 
     return TreeView({
       ref: "treeview",
-      object: getAccessibilityTreeRoot(),
+      object: accessibilityWalker,
       mode: MODE.SHORT,
       provider: new Provider(accessibles, filtered, dispatch),
       columns: columns,

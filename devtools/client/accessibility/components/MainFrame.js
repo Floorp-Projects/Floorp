@@ -55,16 +55,13 @@ class MainFrame extends Component {
     return {
       accessibility: PropTypes.object.isRequired,
       fluentBundles: PropTypes.array.isRequired,
+      accessibilityWalker: PropTypes.object.isRequired,
       enabled: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
       auditing: PropTypes.array.isRequired,
       supports: PropTypes.object,
+      simulator: PropTypes.object,
       toolbox: PropTypes.object.isRequired,
-      getAccessibilityTreeRoot: PropTypes.func.isRequired,
-      startListeningForAccessibilityEvents: PropTypes.func.isRequired,
-      stopListeningForAccessibilityEvents: PropTypes.func.isRequired,
-      audit: PropTypes.func.isRequired,
-      simulate: PropTypes.func,
     };
   }
 
@@ -78,9 +75,11 @@ class MainFrame extends Component {
   componentWillMount() {
     this.props.accessibility.on("init", this.resetAccessibility);
     this.props.accessibility.on("shutdown", this.resetAccessibility);
-    this.props.startListeningForAccessibilityEvents({
-      "document-ready": this.resetAccessibility,
-    });
+    this.props.accessibilityWalker.on(
+      "document-ready",
+      this.resetAccessibility
+    );
+
     window.addEventListener("resize", this.onPanelWindowResize, true);
   }
 
@@ -93,9 +92,11 @@ class MainFrame extends Component {
   componentWillUnmount() {
     this.props.accessibility.off("init", this.resetAccessibility);
     this.props.accessibility.off("shutdown", this.resetAccessibility);
-    this.props.stopListeningForAccessibilityEvents({
-      "document-ready": this.resetAccessibility,
-    });
+    this.props.accessibilityWalker.off(
+      "document-ready",
+      this.resetAccessibility
+    );
+
     window.removeEventListener("resize", this.onPanelWindowResize, true);
   }
 
@@ -125,15 +126,12 @@ class MainFrame extends Component {
   render() {
     const {
       accessibility,
+      accessibilityWalker,
       fluentBundles,
       enabled,
       auditing,
-      simulate,
+      simulator,
       toolbox,
-      getAccessibilityTreeRoot,
-      startListeningForAccessibilityEvents,
-      stopListeningForAccessibilityEvents,
-      audit,
     } = this.props;
 
     if (!enabled) {
@@ -149,8 +147,8 @@ class MainFrame extends Component {
         { className: "mainFrame", role: "presentation" },
         Toolbar({
           accessibility,
-          audit,
-          simulate,
+          accessibilityWalker,
+          simulator,
           toolboxDoc: toolbox.doc,
         }),
         isAuditing && AuditProgressOverlay(),
@@ -173,10 +171,8 @@ class MainFrame extends Component {
                 role: "presentation",
               },
               AccessibilityTree({
+                accessibilityWalker,
                 toolboxDoc: toolbox.doc,
-                getAccessibilityTreeRoot,
-                startListeningForAccessibilityEvents,
-                stopListeningForAccessibilityEvents,
               })
             ),
             endPanel: RightSidebar({ toolbox }),
