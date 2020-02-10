@@ -525,7 +525,9 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     }
 
     if (this._isPicking) {
-      this._highlighter.hide();
+      if (this._highlighter) {
+        this._highlighter.hide();
+      }
       this._stopPickerListeners();
       this._isPicking = false;
       this._hoveredNode = null;
