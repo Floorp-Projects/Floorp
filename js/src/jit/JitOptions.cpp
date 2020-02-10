@@ -138,10 +138,6 @@ DefaultJitOptions::DefaultJitOptions() {
   // Whether the IonMonkey JIT is enabled.
   SET_DEFAULT(ion, true);
 
-  // Whether the IonMonkey and Baseline JITs are enabled for Trusted Principals.
-  // (Ignored if ion or baselineJit is set to true.)
-  SET_DEFAULT(jitForTrustedPrincipals, false);
-
   // Whether the RegExp JIT is enabled.
   SET_DEFAULT(nativeRegExp, true);
 

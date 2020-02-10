@@ -44,7 +44,6 @@
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
-#include "jit/Ion.h"
 #include "jit/JitRealm.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{DetachArrayBuffer,GetArrayBufferLengthAndData,NewArrayBufferWithContents}
@@ -2992,7 +2991,7 @@ static_assert(JitWarmupResetLimit <=
 static bool testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!jit::IsBaselineJitEnabled(cx)) {
+  if (!jit::IsBaselineJitEnabled()) {
     return ReturnStringCopy(cx, args, "Baseline is disabled.");
   }
 
@@ -6117,7 +6116,7 @@ static bool BaselineCompile(JSContext* cx, unsigned argc, Value* vp) {
       return true;
     }
 
-    if (!jit::IsBaselineJitEnabled(cx)) {
+    if (!jit::IsBaselineJitEnabled()) {
       returnedStr = "baseline disabled";
       break;
     }

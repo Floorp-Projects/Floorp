@@ -59,7 +59,7 @@ bool jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo) {
   JitSpew(JitSpew_IonBailouts, "Took bailout! Snapshot offset: %d",
           frame.snapshotOffset());
 
-  MOZ_ASSERT(IsBaselineJitEnabled(cx));
+  MOZ_ASSERT(IsBaselineJitEnabled());
 
   *bailoutInfo = nullptr;
   bool success = BailoutIonToBaseline(cx, bailoutData.activation(), frame,
@@ -136,7 +136,7 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
   // Note: the frame size must be computed before we return from this function.
   *frameSizeOut = frame.frameSize();
 
-  MOZ_ASSERT(IsBaselineJitEnabled(cx));
+  MOZ_ASSERT(IsBaselineJitEnabled());
 
   *bailoutInfo = nullptr;
   bool success = BailoutIonToBaseline(cx, bailoutData.activation(), frame, true,

@@ -169,7 +169,7 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
     }
 
     // Try to Baseline-compile.
-    if (jit::IsBaselineJitEnabled(cx)) {
+    if (jit::IsBaselineJitEnabled()) {
       jit::MethodStatus status =
           jit::CanEnterBaselineMethod<BaselineTier::Compiler>(cx, state);
       if (status == jit::Method_Error) {
