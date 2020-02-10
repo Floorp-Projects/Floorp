@@ -315,6 +315,55 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun redirectDenyLoad() {
+        val redirectUri = if (sessionRule.env.isAutomation) {
+            "http://example.org/tests/junit/hello.html"
+        } else {
+            "http://jigsaw.w3.org/HTTP/300/Overview.html"
+        }
+        val uri = if (sessionRule.env.isAutomation) {
+            "http://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
+        } else {
+            "http://jigsaw.w3.org/HTTP/300/301.html"
+        }
+
+        sessionRule.delegateDuringNextWait(
+                object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 2, order = [1, 2])
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: LoadRequest):
+                                       GeckoResult<AllowOrDeny>? {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("URI should not be null", request.uri, notNullValue())
+                assertThat("URL should match", request.uri,
+                        equalTo(forEachCall(request.uri, redirectUri)))
+                assertThat("Trigger URL should be null", request.triggerUri,
+                           nullValue())
+                assertThat("Target should not be null", request.target, notNullValue())
+                assertThat("Target should match", request.target,
+                        equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
+                assertThat("Redirect flag is set", request.isRedirect,
+                        equalTo(forEachCall(false, true)))
+
+                return forEachCall(
+                    GeckoResult.fromValue(AllowOrDeny.ALLOW),
+                    GeckoResult.fromValue(AllowOrDeny.DENY))
+            }
+        })
+
+        sessionRule.session.loadUri(uri)
+        sessionRule.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(
+                object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onPageStart(session: GeckoSession, url: String) {
+                assertThat("URL should match", url, equalTo(uri))
+            }
+        })
+    }
+
+
     @Test fun bypassClassifier() {
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
         val category = ContentBlocking.SafeBrowsing.PHISHING
