@@ -794,7 +794,7 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
                                         MIRType type) {
   uint32_t offset = startTrampolineCode(masm);
 
-  MOZ_ASSERT(PreBarrierReg == edx);
+  static_assert(PreBarrierReg == edx);
   Register temp1 = eax;
   Register temp2 = ebx;
   Register temp3 = ecx;

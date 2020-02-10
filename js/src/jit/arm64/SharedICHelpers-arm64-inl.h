@@ -17,7 +17,7 @@ namespace jit {
 inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
                                    uint32_t argSize) {
   // We assume that R0 has been pushed, and R2 is unused.
-  MOZ_ASSERT(R2 == ValueOperand(r0));
+  static_assert(R2 == ValueOperand(r0));
 
   // Compute frame size into w0. Used below in makeFrameDescriptor().
   masm.Sub(x0, BaselineFrameReg64, masm.GetStackPointer64());
@@ -36,7 +36,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
 #endif
 
   // Push frame descriptor (minus the return address) and perform the tail call.
-  MOZ_ASSERT(ICTailCallReg == lr);
+  static_assert(ICTailCallReg == lr);
   masm.makeFrameDescriptor(r0, FrameType::BaselineJS, ExitFrameLayout::Size());
   masm.push(r0);
 

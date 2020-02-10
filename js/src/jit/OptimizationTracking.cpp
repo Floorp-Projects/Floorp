@@ -666,7 +666,7 @@ void IonTrackedOptimizationsRegion::WriteDelta(CompactBufferWriter& writer,
   if (startDelta <= ENC3_START_DELTA_MAX && length <= ENC3_LENGTH_MAX) {
     // index always fits because it's an uint8_t; change this if
     // ENC3_INDEX_MAX changes.
-    MOZ_ASSERT(ENC3_INDEX_MAX == UINT8_MAX);
+    static_assert(ENC3_INDEX_MAX == UINT8_MAX);
     uint32_t val = ENC3_MASK_VAL | (startDelta << ENC3_START_DELTA_SHIFT) |
                    (length << ENC3_LENGTH_SHIFT) | (index << ENC3_INDEX_SHIFT);
     writer.writeByte(val & 0xff);
@@ -681,7 +681,7 @@ void IonTrackedOptimizationsRegion::WriteDelta(CompactBufferWriter& writer,
   if (startDelta <= ENC4_START_DELTA_MAX && length <= ENC4_LENGTH_MAX) {
     // index always fits because it's an uint8_t; change this if
     // ENC4_INDEX_MAX changes.
-    MOZ_ASSERT(ENC4_INDEX_MAX == UINT8_MAX);
+    static_assert(ENC4_INDEX_MAX == UINT8_MAX);
     uint64_t val = ENC4_MASK_VAL |
                    (((uint64_t)startDelta) << ENC4_START_DELTA_SHIFT) |
                    (((uint64_t)length) << ENC4_LENGTH_SHIFT) |

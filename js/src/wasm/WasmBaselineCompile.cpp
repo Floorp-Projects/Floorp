@@ -6096,7 +6096,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   struct Atomic32Temps : mozilla::Array<RegI32, Count> {
     // Allocate all temp registers if 'allocate' is not specified.
     void allocate(BaseCompiler* bc, size_t allocate = Count) {
-      MOZ_ASSERT(Count != 0);
+      static_assert(Count != 0);
       for (size_t i = 0; i < allocate; ++i) {
         this->operator[](i) = bc->needI32();
       }

@@ -39,7 +39,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
       IntArgReg6;                      // EnterJitData::osrNumStackValues.
   const Register reg_vp = IntArgReg7;  // Address of EnterJitData::result.
 
-  MOZ_ASSERT(OsrFrameReg == IntArgReg3);
+  static_assert(OsrFrameReg == IntArgReg3);
 
   // During the pushes below, use the normal stack pointer.
   masm.SetStackPointer64(sp);
@@ -739,7 +739,7 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
                                         MIRType type) {
   uint32_t offset = startTrampolineCode(masm);
 
-  MOZ_ASSERT(PreBarrierReg == r1);
+  static_assert(PreBarrierReg == r1);
   Register temp1 = r2;
   Register temp2 = r3;
   Register temp3 = r4;

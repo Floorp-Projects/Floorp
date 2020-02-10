@@ -1266,7 +1266,7 @@ bool DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_TypeMonitor() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   // Restore the tail call register.
   EmitRestoreTailCallReg(masm);
@@ -1731,7 +1731,7 @@ bool DoToBoolFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_ToBool() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   // Restore the tail call register.
   EmitRestoreTailCallReg(masm);
@@ -1933,7 +1933,7 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emitGetElem(bool hasReceiver) {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   // Restore the tail call register.
   EmitRestoreTailCallReg(masm);
@@ -2182,7 +2182,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_SetElem() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
 
@@ -2346,7 +2346,7 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_GetName() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
 
@@ -2390,7 +2390,7 @@ bool DoBindNameFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_BindName() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
 
@@ -2536,7 +2536,7 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emitGetProp(bool hasReceiver) {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
 
@@ -2770,7 +2770,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_SetProp() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   EmitRestoreTailCallReg(masm);
 
@@ -3072,7 +3072,7 @@ void ICStubCompilerBase::pushCallArguments(MacroAssembler& masm,
 }
 
 bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   // Values are on the stack left-to-right. Calling convention wants them
   // right-to-left so duplicate them on the stack in reverse order.
@@ -3174,7 +3174,7 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
   // If this is a |constructing| call, if the callee returns a non-object, we
   // replace it with the |this| object passed in.
   if (isConstructing) {
-    MOZ_ASSERT(JSReturnOperand == R0);
+    static_assert(JSReturnOperand == R0);
     Label skipThisReplace;
 
     masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
@@ -3450,7 +3450,7 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_UnaryArith() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   // Restore the tail call register.
   EmitRestoreTailCallReg(masm);
@@ -3574,7 +3574,7 @@ bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_BinaryArith() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   // Restore the tail call register.
   EmitRestoreTailCallReg(masm);
@@ -3671,7 +3671,7 @@ bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_Compare() {
-  MOZ_ASSERT(R0 == JSReturnOperand);
+  static_assert(R0 == JSReturnOperand);
 
   // Restore the tail call register.
   EmitRestoreTailCallReg(masm);
