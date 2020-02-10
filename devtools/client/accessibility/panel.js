@@ -245,6 +245,30 @@ AccessibilityPanel.prototype = {
     this.picker && this.picker.stop();
   },
 
+  /**
+   * Stop picking and remove all walker listeners.
+   */
+  async cancelPick(onHovered, onPicked, onPreviewed, onCanceled) {
+    await this.walker.cancelPick();
+    this.walker.off("picker-accessible-hovered", onHovered);
+    this.walker.off("picker-accessible-picked", onPicked);
+    this.walker.off("picker-accessible-previewed", onPreviewed);
+    this.walker.off("picker-accessible-canceled", onCanceled);
+  },
+
+  /**
+   * Start picking and add walker listeners.
+   * @param  {Boolean} doFocus
+   *         If true, move keyboard focus into content.
+   */
+  async pick(doFocus, onHovered, onPicked, onPreviewed, onCanceled) {
+    this.walker.on("picker-accessible-hovered", onHovered);
+    this.walker.on("picker-accessible-picked", onPicked);
+    this.walker.on("picker-accessible-previewed", onPreviewed);
+    this.walker.on("picker-accessible-canceled", onCanceled);
+    await this.walker.pick(doFocus);
+  },
+
   get front() {
     return this.startup.accessibility;
   },
