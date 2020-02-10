@@ -54,7 +54,6 @@ UNIFIED_SOURCES += [
     'IonOptimizationLevels.cpp',
     'Jit.cpp',
     'JitcodeMap.cpp',
-    'JitContext.cpp',
     'JitFrames.cpp',
     'JitOptions.cpp',
     'JitScript.cpp',

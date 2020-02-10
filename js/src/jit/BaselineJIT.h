@@ -584,21 +584,6 @@ class BaselineInterpreter {
 MOZ_MUST_USE bool GenerateBaselineInterpreter(JSContext* cx,
                                               BaselineInterpreter& interpreter);
 
-inline bool IsBaselineJitEnabled(JSContext* cx) {
-  if (MOZ_UNLIKELY(!IsBaselineInterpreterEnabled())) {
-    return false;
-  }
-  if (MOZ_LIKELY(JitOptions.baselineJit)) {
-    return true;
-  }
-  if (JitOptions.jitForTrustedPrincipals) {
-    JS::Realm* realm = js::GetContextRealm(cx);
-    return realm && JS::GetRealmPrincipals(realm) &&
-           JS::GetRealmPrincipals(realm)->isSystemOrAddonPrincipal();
-  }
-  return false;
-}
-
 }  // namespace jit
 }  // namespace js
 

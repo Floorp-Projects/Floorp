@@ -4537,7 +4537,7 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
     return false;
   }
 
-  if (!jit::IsIonEnabled(cx) || !jit::IsBaselineJitEnabled(cx) ||
+  if (!jit::IsIonEnabled(cx) || !jit::IsBaselineJitEnabled() ||
       !CanBaselineInterpretScript(script)) {
     return true;
   }

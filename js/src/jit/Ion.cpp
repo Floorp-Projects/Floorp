@@ -78,6 +78,84 @@ using mozilla::DebugOnly;
 using namespace js;
 using namespace js::jit;
 
+// Assert that JitCode is gc::Cell aligned.
+JS_STATIC_ASSERT(sizeof(JitCode) % gc::CellAlignBytes == 0);
+
+static MOZ_THREAD_LOCAL(JitContext*) TlsJitContext;
+
+static JitContext* CurrentJitContext() {
+  if (!TlsJitContext.init()) {
+    return nullptr;
+  }
+  return TlsJitContext.get();
+}
+
+void jit::SetJitContext(JitContext* ctx) { TlsJitContext.set(ctx); }
+
+JitContext* jit::GetJitContext() {
+  MOZ_ASSERT(CurrentJitContext());
+  return CurrentJitContext();
+}
+
+JitContext* jit::MaybeGetJitContext() { return CurrentJitContext(); }
+
+JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm,
+                       TempAllocator* temp)
+    : prev_(CurrentJitContext()), realm_(realm), temp(temp), runtime(rt) {
+  MOZ_ASSERT(rt);
+  MOZ_ASSERT(realm);
+  MOZ_ASSERT(temp);
+  SetJitContext(this);
+}
+
+JitContext::JitContext(JSContext* cx, TempAllocator* temp)
+    : prev_(CurrentJitContext()),
+      realm_(CompileRealm::get(cx->realm())),
+      cx(cx),
+      temp(temp),
+      runtime(CompileRuntime::get(cx->runtime())) {
+  SetJitContext(this);
+}
+
+JitContext::JitContext(TempAllocator* temp)
+    : prev_(CurrentJitContext()), temp(temp) {
+#ifdef DEBUG
+  isCompilingWasm_ = true;
+#endif
+  SetJitContext(this);
+}
+
+JitContext::JitContext() : JitContext(nullptr) {}
+
+JitContext::~JitContext() { SetJitContext(prev_); }
+
+bool jit::InitializeJit() {
+  if (!TlsJitContext.init()) {
+    return false;
+  }
+
+  CheckLogging();
+
+#ifdef JS_CACHEIR_SPEW
+  const char* env = getenv("CACHEIR_LOGS");
+  if (env && env[0] && env[0] != '0') {
+    CacheIRSpewer::singleton().init(env);
+  }
+#endif
+
+#if defined(JS_CODEGEN_ARM)
+  InitARMFlags();
+#endif
+
+  // Note: these flags need to be initialized after the InitARMFlags call above.
+  JitOptions.supportsFloatingPoint = MacroAssembler::SupportsFloatingPoint();
+  JitOptions.supportsUnalignedAccesses =
+      MacroAssembler::SupportsUnalignedAccesses();
+
+  CheckPerf();
+  return true;
+}
+
 JitRuntime::JitRuntime()
     : nextCompilationId_(0),
       exceptionTailOffset_(0),
@@ -1992,7 +2070,7 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
                             BaselineFrame* osrFrame, uint32_t osrFrameSize,
                             jsbytecode* osrPc, bool forceRecompile = false) {
   MOZ_ASSERT(jit::IsIonEnabled(cx));
-  MOZ_ASSERT(jit::IsBaselineJitEnabled(cx));
+  MOZ_ASSERT(jit::IsBaselineJitEnabled());
 
   AutoGeckoProfilerEntry pseudoFrame(
       cx, "Ion script compilation",
@@ -2851,6 +2929,20 @@ size_t jit::SizeOfIonData(JSScript* script,
   }
 
   return result;
+}
+
+bool jit::JitSupportsSimd() { return js::jit::MacroAssembler::SupportsSimd(); }
+
+bool jit::JitSupportsAtomics() {
+#if defined(JS_CODEGEN_ARM)
+  // Bug 1146902, bug 1077318: Enable Ion inlining of Atomics
+  // operations on ARM only when the CPU has byte, halfword, and
+  // doubleword load-exclusive and store-exclusive instructions,
+  // until we can add support for systems that don't have those.
+  return js::jit::HasLDSTREXBHD();
+#else
+  return true;
+#endif
 }
 
 // If you change these, please also change the comment in TempAllocator.
