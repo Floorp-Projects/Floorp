@@ -102,7 +102,13 @@ internal fun MigrationResults.toItemList() = filterKeys {
         type,
         status.success
     )
-}
+}.toMutableList()
+    .plus(
+        whiteList
+            .filterKeys { !this.containsKey(it) }
+            .keys
+            .map { MigrationItem(it, false) }
+    ).sortedBy { it.migration.javaClass.simpleName }
 
 internal data class MigrationItem(val migration: Migration, val status: Boolean)
 
