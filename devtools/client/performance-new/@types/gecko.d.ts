@@ -61,6 +61,8 @@ declare namespace MockedExports {
   type GetPref<T> = (prefName: string, defaultValue?: T) => T;
   type SetPref<T> = (prefName: string, value?: T) => T;
 
+  interface nsIURI {}
+
   type Services = {
     prefs: {
       clearUserPref: (prefName: string) => void;
@@ -86,6 +88,9 @@ declare namespace MockedExports {
     focus: {
       activeWindow: ChromeWindow;
     };
+    io: {
+      newURI(url: string): nsIURI;
+    },
     scriptSecurityManager: any;
     startup: {
       quit: (optionsBitmask: number) => void,
@@ -136,6 +141,18 @@ declare namespace MockedExports {
       };
     };
   };
+
+  interface BrowsingContextStub {}
+  interface PrincipalStub {}
+
+  interface WebChannelTarget {
+    browsingContext: BrowsingContextStub,
+    browser: Browser,
+    eventTarget: null,
+    principal: PrincipalStub,
+  }
+
+  const WebChannelJSM: any;
 
   // TS-TODO
   const CustomizableUIJSM: any;
@@ -231,6 +248,10 @@ declare module "resource://gre/modules/AppConstants.jsm" {
 
 declare module "resource://gre/modules/ProfilerGetSymbols.jsm" {
   export = MockedExports.ProfilerGetSymbolsJSM;
+}
+
+declare module "resource://gre/modules/WebChannel.jsm" {
+  export = MockedExports.WebChannelJSM;
 }
 
 declare module "resource://devtools/client/performance-new/popup/background.jsm.js" {
