@@ -9,10 +9,15 @@ import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
-import { getPreview, getThreadContext } from "../../../selectors";
+import {
+  getPreview,
+  getThreadContext,
+  getCurrentThread,
+  getHighlightedCalls,
+} from "../../../selectors";
 import actions from "../../../actions";
 
-import type { ThreadContext } from "../../../types";
+import type { ThreadContext, HighlightedCalls } from "../../../types";
 
 import type { Preview as PreviewType } from "../../../reducers/types";
 
@@ -24,6 +29,7 @@ type Props = {
   cx: ThreadContext,
   editor: any,
   editorRef: ?HTMLDivElement,
+  highlightedCalls: ?HighlightedCalls,
   preview: ?PreviewType,
   clearPreview: typeof actions.clearPreview,
   addExpression: typeof actions.addExpression,
@@ -65,9 +71,9 @@ class Preview extends PureComponent<Props, State> {
   }
 
   onTokenEnter = ({ target, tokenPos }: any) => {
-    const { cx, editor, updatePreview } = this.props;
+    const { cx, editor, updatePreview, highlightedCalls } = this.props;
 
-    if (cx.isPaused && !this.state.selecting) {
+    if (cx.isPaused && !this.state.selecting && highlightedCalls === null) {
       updatePreview(cx, target, tokenPos, editor.codeMirror);
     }
   };
@@ -108,10 +114,14 @@ class Preview extends PureComponent<Props, State> {
   }
 }
 
-const mapStateToProps = state => ({
-  cx: getThreadContext(state),
-  preview: getPreview(state),
-});
+const mapStateToProps = state => {
+  const thread = getCurrentThread(state);
+  return {
+    highlightedCalls: getHighlightedCalls(state, thread),
+    cx: getThreadContext(state),
+    preview: getPreview(state),
+  };
+};
 
 export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,

@@ -12,6 +12,7 @@ import type {
   Why,
   ThreadContext,
   Previews,
+  HighlightedCalls,
   ExecutionPoint,
 } from "../../types";
 
@@ -165,6 +166,13 @@ export type PauseAction =
       +thread: string,
       +frame: Frame,
       +previews: Previews,
+    |}
+  | {|
+      +type: "HIGHLIGHT_CALLS",
+      +highlightedCalls: HighlightedCalls,
+    |}
+  | {|
+      +type: "UNHIGHLIGHT_CALLS",
     |}
   | {|
       +type: "SET_FRAME_POSITIONS",

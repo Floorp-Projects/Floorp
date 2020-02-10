@@ -31,6 +31,7 @@ import type {
   Previews,
   SourceLocation,
   ExecutionPoint,
+  HighlightedCalls,
 } from "../types";
 
 export type Command =
@@ -90,6 +91,7 @@ type ThreadPauseState = {
   inlinePreview: {
     [FrameId]: Object,
   },
+  highlightedCalls: ?HighlightedCalls,
 };
 
 // Pause state describing all threads.
@@ -116,6 +118,7 @@ function createPauseState(thread: ThreadId = "UnknownThread") {
       pauseCounter: 0,
     },
     previewLocation: null,
+    highlightedCalls: null,
     threads: {},
     skipPausing: prefs.skipPausing,
     mapScopes: prefs.mapScopes,
@@ -135,6 +138,7 @@ const resumedPauseState = {
   selectedFrameId: null,
   why: null,
   inlinePreview: {},
+  highlightedCalls: null,
 };
 
 const createInitialPauseState = () => ({
@@ -406,6 +410,18 @@ function update(
         },
       });
     }
+
+    case "HIGHLIGHT_CALLS": {
+      const { highlightedCalls } = action;
+      return updateThreadState({ ...threadState(), highlightedCalls });
+    }
+
+    case "UNHIGHLIGHT_CALLS": {
+      return updateThreadState({
+        ...threadState(),
+        highlightedCalls: null,
+      });
+    }
   }
 
   return state;
@@ -643,6 +659,10 @@ export function getTopFrame(state: State, thread: ThreadId) {
 
 export function getSkipPausing(state: State) {
   return state.pause.skipPausing;
+}
+
+export function getHighlightedCalls(state: State, thread: ThreadId) {
+  return getThreadPauseState(state.pause, thread).highlightedCalls;
 }
 
 export function isMapScopesEnabled(state: State) {

@@ -32,6 +32,7 @@ export { toggleSkipPausing, setSkipPausing } from "./skipPausing";
 export { toggleMapScopes } from "./mapScopes";
 export { setExpandedScope } from "./expandScopes";
 export { generateInlinePreview } from "./inlinePreview";
+export { highlightCalls, unhighlightCalls } from "./highlightCalls";
 export {
   previewPausedLocation,
   clearPreviewPausedLocation,
