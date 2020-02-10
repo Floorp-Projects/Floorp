@@ -14,6 +14,7 @@
 SimpleTest.requestFlakyTimeout("Timeouts are needed to test transient user_activation");
 
 let timeout = SpecialPowers.getIntPref("dom.user_activation.transient.timeout") + 1000;
+let [iframe0, iframe1] = document.querySelectorAll("iframe");
 
 function waitForEvent(aTarget, aEvent, aCallback) {
   return new Promise((aResolve) => {
@@ -112,6 +113,35 @@ add_task(async function triggerUserActivationOnCrossOriginFrame() {
          "check has-valid-transient-user-activation on the second iframe");
       aResolve();
     }, timeout);
+  });
+});
+
+add_task(async function propagateToSameOriginConnectedSubframe() {
+  // Reset the activation flag.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+
+  // load cross-origin test page on iframe.
+  iframe0.src = "https://example.com/tests/dom/base/test/useractivation/file_iframe_check_user_activation.html";
+  await waitForEvent(window, "message", (event) => {
+    if (event.data !== "loaded") {
+      ok(false, "receive unexpected message: " + event.data);
+    }
+  });
+
+  // Trigger user activation on top-level document.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  ok(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the top-level document");
+  ok(SpecialPowers.wrap(iframe1.contentDocument).hasValidTransientUserGestureActivation,
+     "check has-valid-transient-user-activation on the second iframe");
+
+  iframe0.contentWindow.postMessage("get", "*");
+  await waitForEvent(window, "message", (event) => {
+    if (typeof event.data === "object") {
+      ok(!event.data.isActivated, "check has-valid-transient-user-activation on the first iframe");
+    } else {
+      ok(false, "receive unexpected message: " + event.data);
+    }
   });
 });
 
