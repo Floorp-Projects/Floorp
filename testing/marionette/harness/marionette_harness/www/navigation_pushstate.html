@@ -8,7 +8,7 @@
   <title>Navigation by manipulating the browser history</title>
   <script type="text/javascript">
     function forward() {
-      var stateObj = { foo: "bar" };
+      let stateObj = { foo: "bar" };
       history.pushState(stateObj, "", "navigation_pushstate_target.html");
     }
   </script>
