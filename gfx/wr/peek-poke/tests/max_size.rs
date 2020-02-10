@@ -52,7 +52,7 @@ fn test_fixed_size_array() {
 
 #[test]
 fn test_tuple() {
-    assert_eq!(<(isize)>::max_size(), size_of::<isize>());
+    assert_eq!(<(isize, )>::max_size(), size_of::<isize>());
     assert_eq!(<(isize, isize, isize)>::max_size(), 3 * size_of::<isize>());
     assert_eq!(<(isize, ())>::max_size(), size_of::<isize>());
 }
