@@ -175,16 +175,14 @@ function run_test() {
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
   if (haveDefaultHandlersVersion) {
     Assert.equal(2, protoInfo.possibleApplicationHandlers.length);
-    // Win7+ or Linux's GIO may have no default mailto: handler. Otherwise
-    // alwaysAskBeforeHandling is expected to be false here, because although
-    // the pref is true, the value in RDF is false. The injected mailto handler
-    // carried over the default pref value, and so when we set the pref above
-    // to true it's ignored.
-    if (noMailto) {
-      Assert.ok(protoInfo.alwaysAskBeforeHandling);
-    } else {
-      Assert.ok(!protoInfo.alwaysAskBeforeHandling);
-    }
+    // Win7+ or Linux's GIO may have no default mailto: handler, so we'd ask
+    // anyway. Otherwise, the default handlers will not have stored preferred
+    // actions etc., so re-requesting them after the warning pref has changed
+    // will use the updated pref value. So both when we have and do not have
+    // a default mailto: handler, we'll ask:
+    Assert.ok(protoInfo.alwaysAskBeforeHandling);
+    // As soon as anyone actually stores updated defaults into the profile
+    // database, that default will stop tracking the warning pref.
   } else {
     Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
     Assert.ok(protoInfo.alwaysAskBeforeHandling);
