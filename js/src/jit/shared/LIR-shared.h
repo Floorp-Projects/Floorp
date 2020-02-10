@@ -7120,7 +7120,7 @@ class LCheckReturn
   static const size_t ThisValue = BOX_PIECES;
 };
 
-class LCheckIsObj : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
+class LCheckIsObj : public LInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(CheckIsObj)
 
@@ -7134,7 +7134,7 @@ class LCheckIsObj : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
   MCheckIsObj* mir() const { return mir_->toCheckIsObj(); }
 };
 
-class LCheckIsCallable : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1> {
+class LCheckIsCallable : public LInstructionHelper<0, BOX_PIECES, 1> {
  public:
   LIR_HEADER(CheckIsCallable)
 
@@ -7151,8 +7151,7 @@ class LCheckIsCallable : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1> {
   MCheckIsCallable* mir() const { return mir_->toCheckIsCallable(); }
 };
 
-class LCheckObjCoercible
-    : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
+class LCheckObjCoercible : public LCallInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(CheckObjCoercible)
 
@@ -7164,8 +7163,7 @@ class LCheckObjCoercible
   }
 };
 
-class LDebugCheckSelfHosted
-    : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
+class LDebugCheckSelfHosted : public LCallInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DebugCheckSelfHosted)
 
