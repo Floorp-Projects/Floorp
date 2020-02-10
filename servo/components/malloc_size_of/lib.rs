@@ -46,6 +46,8 @@
 //!   Note: WebRender has a reduced fork of this crate, so that we can avoid
 //!   publishing this crate on crates.io.
 
+#[cfg(feature = "servo")]
+extern crate accountable_refcell;
 extern crate app_units;
 #[cfg(feature = "servo")]
 extern crate content_security_policy;
@@ -75,6 +77,8 @@ extern crate thin_slice;
 extern crate time;
 #[cfg(feature = "url")]
 extern crate url;
+#[cfg(feature = "servo")]
+extern crate uuid;
 extern crate void;
 #[cfg(feature = "webrender_api")]
 extern crate webrender_api;
@@ -90,6 +94,8 @@ use std::mem::size_of;
 use std::ops::Range;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
+#[cfg(feature = "servo")]
+use uuid::Uuid;
 use void::Void;
 
 /// A C function that takes a pointer to a heap allocation and returns its size.
@@ -840,6 +846,9 @@ malloc_size_of_is_0!(cssparser::RGBA, cssparser::TokenSerializationType);
 #[cfg(feature = "servo")]
 malloc_size_of_is_0!(csp::Destination);
 
+#[cfg(feature = "servo")]
+malloc_size_of_is_0!(Uuid);
+
 #[cfg(feature = "url")]
 impl MallocSizeOf for url::Host {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
@@ -961,5 +970,12 @@ impl<T: MallocSizeOf> Deref for Measurable<T> {
 impl<T: MallocSizeOf> DerefMut for Measurable<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
+    }
+}
+
+#[cfg(feature = "servo")]
+impl<T: MallocSizeOf> MallocSizeOf for accountable_refcell::RefCell<T> {
+    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        self.borrow().size_of(ops)
     }
 }
