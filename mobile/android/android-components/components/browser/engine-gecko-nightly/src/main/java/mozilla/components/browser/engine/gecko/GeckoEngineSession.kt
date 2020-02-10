@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
@@ -642,7 +641,11 @@ class GeckoEngineSession(
             if (!privateMode) {
                 currentUrl?.let { url ->
                     settings.historyTrackingDelegate?.let { delegate ->
-                        runBlocking {
+                        // NB: There's no guarantee that the title change will be processed by the
+                        // delegate before the session is closed (and the corresponding coroutine
+                        // job is cancelled). Observers will always be notified of the title
+                        // change though.
+                        launch(coroutineContext) {
                             delegate.onTitleChanged(url, title ?: "")
                         }
                     }
