@@ -227,6 +227,7 @@ let Player = {
       }
 
       case "close": {
+        this.actor.sendAsyncMessage("PictureInPicture:Pause");
         PictureInPicture.closePipWindow({ reason: "close-button" });
         break;
       }
