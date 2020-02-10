@@ -5,6 +5,7 @@
 #include "SSLTokensCache.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Logging.h"
+#include "nsIOService.h"
 #include "nsNSSIOLayer.h"
 #include "TransportSecurityInfo.h"
 #include "ssl.h"
@@ -66,7 +67,11 @@ NS_IMPL_ISUPPORTS(SSLTokensCache, nsIMemoryReporter)
 nsresult SSLTokensCache::Init() {
   StaticMutexAutoLock lock(sLock);
 
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (gIOService->UseSocketProcess()) {
+    if (!XRE_IsSocketProcess()) {
+      return NS_OK;
+    }
+  } else if (!XRE_IsParentProcess()) {
     return NS_OK;
   }
 
