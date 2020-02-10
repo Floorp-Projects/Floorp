@@ -2669,14 +2669,6 @@ pref("plugins.favorfallback.rules", "");
   #endif
 #endif
 
-// Whether or not to collect a paired minidump when force-killing a
-// content process.
-#ifdef RELEASE_OR_BETA
-  pref("dom.ipc.tabs.createKillHardCrashReports", false);
-#else
-  pref("dom.ipc.tabs.createKillHardCrashReports", true);
-#endif
-
 pref("dom.ipc.plugins.flash.disable-protected-mode", false);
 
 pref("dom.ipc.plugins.flash.subprocess.crashreporter.enabled", true);
