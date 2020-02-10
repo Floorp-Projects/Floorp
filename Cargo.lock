@@ -3938,7 +3938,6 @@ dependencies = [
  "num-integer",
  "num-traits",
  "num_cpus",
- "ordered-float",
  "owning_ref",
  "parking_lot",
  "precomputed-hash",
