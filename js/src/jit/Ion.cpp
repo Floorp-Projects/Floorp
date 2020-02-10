@@ -1742,12 +1742,12 @@ static void TrackAndSpewIonAbort(JSContext* cx, JSScript* script,
 static AbortReason BuildMIR(JSContext* cx, MIRGenerator* mirGen,
                             CompileInfo* info,
                             CompilerConstraintList* constraints,
-                            BaselineInspector* inspector,
                             BaselineFrameInspector* baselineFrameInspector) {
   SpewBeginFunction(mirGen, info->script());
 
-  IonBuilder builder((JSContext*)nullptr, *mirGen, info, constraints, inspector,
-                     baselineFrameInspector);
+  BaselineInspector inspector(info->script());
+  IonBuilder builder((JSContext*)nullptr, *mirGen, info, constraints,
+                     &inspector, baselineFrameInspector);
 
   AbortReasonOr<Ok> buildResult = Ok();
   {
@@ -1853,11 +1853,6 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     return AbortReason::Alloc;
   }
 
-  BaselineInspector* inspector = alloc->new_<BaselineInspector>(script);
-  if (!inspector) {
-    return AbortReason::Alloc;
-  }
-
   BaselineFrameInspector* baselineFrameInspector = nullptr;
   if (baselineFrame) {
     baselineFrameInspector =
@@ -1896,8 +1891,8 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     script->ionScript()->setRecompiling();
   }
 
-  AbortReason reason = BuildMIR(cx, mirGen, info, constraints, inspector,
-                                baselineFrameInspector);
+  AbortReason reason =
+      BuildMIR(cx, mirGen, info, constraints, baselineFrameInspector);
   if (reason != AbortReason::NoAbort) {
     return reason;
   }
