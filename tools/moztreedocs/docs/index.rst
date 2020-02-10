@@ -13,6 +13,8 @@ This documentation is generated via the
 To build the documentation, run ``mach doc``. Run
 ``mach help doc`` to see configurable options.
 
+The review group in Phabricator is ``#firefox-source-docs-reviewers``.
+
 .. toctree::
   :caption: Documentation
   :maxdepth: 2
