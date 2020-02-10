@@ -832,8 +832,8 @@ class HeapSlotArray {
   }
 
   operator const Value*() const {
-    JS_STATIC_ASSERT(sizeof(GCPtr<Value>) == sizeof(Value));
-    JS_STATIC_ASSERT(sizeof(HeapSlot) == sizeof(Value));
+    static_assert(sizeof(GCPtr<Value>) == sizeof(Value));
+    static_assert(sizeof(HeapSlot) == sizeof(Value));
     return reinterpret_cast<const Value*>(array);
   }
   operator HeapSlot*() const {
