@@ -4463,6 +4463,9 @@ nsresult QuotaManager::LoadQuota() {
   }
 
   const auto now = TimeStamp::Now();
+  Telemetry::ScalarSetMaximum(
+      Telemetry::ScalarID::QM_REPOSITORIES_INITIALIZATION_TIME,
+      static_cast<uint32_t>((now - startTime).ToMilliseconds()));
   Telemetry::AccumulateTimeDelta(
       Telemetry::QM_REPOSITORIES_INITIALIZATION_TIME_V2, startTime, now);
 
