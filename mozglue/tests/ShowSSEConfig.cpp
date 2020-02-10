@@ -6,7 +6,7 @@
 #include "mozilla/SSE.h"
 #include <stdio.h>
 
-int main() {
+int wmain() {
   printf("CPUID detection present: %s\n",
 #ifdef MOZILLA_SSE_HAVE_CPUID_DETECTION
          "yes"

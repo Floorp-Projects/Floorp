@@ -1811,7 +1811,7 @@ void TestProfiler() {
 
 #endif  // MOZ_BASE_PROFILER else
 
-int main() {
+int wmain() {
   // Note that there are two `TestProfiler` functions above, depending on
   // whether MOZ_BASE_PROFILER is #defined.
   TestProfiler();
