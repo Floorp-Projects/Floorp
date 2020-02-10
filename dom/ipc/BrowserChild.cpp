@@ -3285,14 +3285,6 @@ bool BrowserChild::StopAwaitingLargeAlloc() {
   return awaiting;
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvSetWindowName(const nsString& aName) {
-  nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(WebNavigation());
-  if (item) {
-    item->SetName(aName);
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserChild::RecvAllowScriptsToClose() {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
   if (window) {

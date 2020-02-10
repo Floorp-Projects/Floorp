@@ -5020,7 +5020,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   // If we were passed a name for the window which would override the default,
   // we should send it down to the new tab.
   if (nsContentUtils::IsOverridingWindowName(aName)) {
-    Unused << newBrowserParent->SendSetWindowName(aName);
+    newBrowserHost->GetBrowsingContext()->SetName(aName);
   }
 
   // Don't send down the OriginAttributes if the content process is handling
