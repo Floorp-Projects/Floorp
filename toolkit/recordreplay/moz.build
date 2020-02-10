@@ -9,7 +9,7 @@ EXPORTS.mozilla.recordreplay += [
     'ipc/ParentIPC.h',
 ]
 
-if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['NIGHTLY_BUILD']:
+if False:
     UNIFIED_SOURCES += [
         'Assembler.cpp',
         'Callback.cpp',
