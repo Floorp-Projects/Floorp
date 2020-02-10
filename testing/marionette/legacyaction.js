@@ -2,21 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {
-  element,
-  WebElement,
-} = ChromeUtils.import("chrome://marionette/content/element.js");
-const {evaluate} = ChromeUtils.import("chrome://marionette/content/evaluate.js");
-const {event} = ChromeUtils.import("chrome://marionette/content/event.js");
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
+const { element, WebElement } = ChromeUtils.import(
+  "chrome://marionette/content/element.js"
+);
+const { evaluate } = ChromeUtils.import(
+  "chrome://marionette/content/evaluate.js"
+);
+const { event } = ChromeUtils.import("chrome://marionette/content/event.js");
+const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
-const DEFAULT_CONTEXT_MENU_DELAY = 750;  // ms
+const DEFAULT_CONTEXT_MENU_DELAY = 750; // ms
 
 this.EXPORTED_SYMBOLS = ["legacyaction"];
 
@@ -43,12 +48,13 @@ action.Chain = function() {
   this.inputSource = null;
 };
 
-action.Chain.prototype.dispatchActions = function (
-    args,
-    touchId,
-    container,
-    seenEls,
-    touchProvider) {
+action.Chain.prototype.dispatchActions = function(
+  args,
+  touchId,
+  container,
+  seenEls,
+  touchProvider
+) {
   // Some touch events code in the listener needs to do ipc, so we can't
   // share this code across chrome/content.
   if (touchProvider) {
@@ -58,7 +64,11 @@ action.Chain.prototype.dispatchActions = function (
   this.seenEls = seenEls;
   this.container = container;
   let commandArray = evaluate.fromJSON(
-      args, seenEls, container.frame, container.shadowRoot);
+    args,
+    seenEls,
+    container.frame,
+    container.shadowRoot
+  );
 
   if (touchId == null) {
     touchId = this.nextTouchId++;
@@ -96,19 +106,22 @@ action.Chain.prototype.dispatchActions = function (
  * @param {Object} modifiers
  *     An object of modifier keys present.
  */
-action.Chain.prototype.emitMouseEvent = function (
-    doc,
-    type,
-    elClientX,
-    elClientY,
-    button,
-    clickCount,
-    modifiers) {
-  logger.debug(`Emitting ${type} mouse event ` +
+action.Chain.prototype.emitMouseEvent = function(
+  doc,
+  type,
+  elClientX,
+  elClientY,
+  button,
+  clickCount,
+  modifiers
+) {
+  logger.debug(
+    `Emitting ${type} mouse event ` +
       `at coordinates (${elClientX}, ${elClientY}) ` +
       `relative to the viewport, ` +
       `button: ${button}, ` +
-      `clickCount: ${clickCount}`);
+      `clickCount: ${clickCount}`
+  );
 
   let win = doc.defaultView;
   let domUtils = win.windowUtils;
@@ -121,15 +134,16 @@ action.Chain.prototype.emitMouseEvent = function (
   }
 
   domUtils.sendMouseEvent(
-      type,
-      elClientX,
-      elClientY,
-      button || 0,
-      clickCount || 1,
-      mods,
-      false,
-      0,
-      this.inputSource);
+    type,
+    elClientX,
+    elClientY,
+    button || 0,
+    clickCount || 1,
+    mods,
+    false,
+    0,
+    this.inputSource
+  );
 };
 
 /**
@@ -162,7 +176,7 @@ action.Chain.prototype.resetValues = function() {
  * @return {Object.<string, number>}
  *     Last finger ID, or an empty object.
  */
-action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) {
+action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
   if (i == chain.length) {
     cb(touchId || null);
     this.resetValues();
@@ -201,10 +215,24 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
       let button = pack[2];
       let clickCount = pack[3];
       c = element.coordinates(el);
-      this.mouseTap(el.ownerDocument, c.x, c.y, button, clickCount, keyModifiers);
+      this.mouseTap(
+        el.ownerDocument,
+        c.x,
+        c.y,
+        button,
+        clickCount,
+        keyModifiers
+      );
       if (button == 2) {
-        this.emitMouseEvent(el.ownerDocument, "contextmenu", c.x, c.y,
-            button, clickCount, keyModifiers);
+        this.emitMouseEvent(
+          el.ownerDocument,
+          "contextmenu",
+          c.x,
+          c.y,
+          button,
+          clickCount,
+          keyModifiers
+        );
       }
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
@@ -212,20 +240,22 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
     case "press":
       if (this.lastCoordinates) {
         this.generateEvents(
-            "cancel",
-            this.lastCoordinates[0],
-            this.lastCoordinates[1],
-            touchId,
-            null,
-            keyModifiers);
+          "cancel",
+          this.lastCoordinates[0],
+          this.lastCoordinates[1],
+          touchId,
+          null,
+          keyModifiers
+        );
         this.resetValues();
         throw new WebDriverError(
-            "Invalid Command: press cannot follow an active touch event");
+          "Invalid Command: press cannot follow an active touch event"
+        );
       }
 
       // look ahead to check if we're scrolling,
       // needed for APZ touch dispatching
-      if ((i != chain.length) && (chain[i][0].includes('move'))) {
+      if (i != chain.length && chain[i][0].includes("move")) {
         this.scrolling = true;
       }
       webEl = WebElement.fromUUID(pack[1], "content");
@@ -237,14 +267,15 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
 
     case "release":
       this.generateEvents(
-          "release",
-          this.lastCoordinates[0],
-          this.lastCoordinates[1],
-          touchId,
-          null,
-          keyModifiers);
+        "release",
+        this.lastCoordinates[0],
+        this.lastCoordinates[1],
+        touchId,
+        null,
+        keyModifiers
+      );
       this.actions(chain, null, i, keyModifiers, cb);
-      this.scrolling =  false;
+      this.scrolling = false;
       break;
 
     case "move":
@@ -257,12 +288,13 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
 
     case "moveByOffset":
       this.generateEvents(
-          "move",
-          this.lastCoordinates[0] + pack[1],
-          this.lastCoordinates[1] + pack[2],
-          touchId,
-          null,
-          keyModifiers);
+        "move",
+        this.lastCoordinates[0] + pack[1],
+        this.lastCoordinates[1] + pack[2],
+        touchId,
+        null,
+        keyModifiers
+      );
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
 
@@ -272,16 +304,19 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
 
         // standard waiting time to fire contextmenu
         let standard = Preferences.get(
-            CONTEXT_MENU_DELAY_PREF,
-            DEFAULT_CONTEXT_MENU_DELAY);
+          CONTEXT_MENU_DELAY_PREF,
+          DEFAULT_CONTEXT_MENU_DELAY
+        );
 
         if (time >= standard && this.isTap) {
           chain.splice(i, 0, ["longPress"], ["wait", (time - standard) / 1000]);
           time = standard;
         }
         this.checkTimer.initWithCallback(
-            () => this.actions(chain, touchId, i, keyModifiers, cb),
-            time, Ci.nsITimer.TYPE_ONE_SHOT);
+          () => this.actions(chain, touchId, i, keyModifiers, cb),
+          time,
+          Ci.nsITimer.TYPE_ONE_SHOT
+        );
       } else {
         this.actions(chain, touchId, i, keyModifiers, cb);
       }
@@ -289,24 +324,26 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
 
     case "cancel":
       this.generateEvents(
-          "cancel",
-          this.lastCoordinates[0],
-          this.lastCoordinates[1],
-          touchId,
-          null,
-          keyModifiers);
+        "cancel",
+        this.lastCoordinates[0],
+        this.lastCoordinates[1],
+        touchId,
+        null,
+        keyModifiers
+      );
       this.actions(chain, touchId, i, keyModifiers, cb);
       this.scrolling = false;
       break;
 
     case "longPress":
       this.generateEvents(
-          "contextmenu",
-          this.lastCoordinates[0],
-          this.lastCoordinates[1],
-          touchId,
-          null,
-          keyModifiers);
+        "contextmenu",
+        this.lastCoordinates[0],
+        this.lastCoordinates[1],
+        touchId,
+        null,
+        keyModifiers
+      );
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
   }
@@ -316,7 +353,7 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
  * Given an element and a pair of coordinates, returns an array of the
  * form [clientX, clientY, pageX, pageY, screenX, screenY].
  */
-action.Chain.prototype.getCoordinateInfo = function (el, corx, cory) {
+action.Chain.prototype.getCoordinateInfo = function(el, corx, cory) {
   let win = el.ownerGlobal;
   return [
     corx, // clientX
@@ -324,7 +361,7 @@ action.Chain.prototype.getCoordinateInfo = function (el, corx, cory) {
     corx + win.pageXOffset, // pageX
     cory + win.pageYOffset, // pageY
     corx + win.mozInnerScreenX, // screenX
-    cory + win.mozInnerScreenY // screenY
+    cory + win.mozInnerScreenY, // screenY
   ];
 };
 
@@ -336,8 +373,14 @@ action.Chain.prototype.getCoordinateInfo = function (el, corx, cory) {
  *     Y coordinate of the location to generate the event that is relative
  *     to the viewport.
  */
-action.Chain.prototype.generateEvents = function (
-    type, x, y, touchId, target, keyModifiers) {
+action.Chain.prototype.generateEvents = function(
+  type,
+  x,
+  y,
+  touchId,
+  target,
+  keyModifiers
+) {
   this.lastCoordinates = [x, y];
   let doc = this.container.frame.document;
 
@@ -345,24 +388,26 @@ action.Chain.prototype.generateEvents = function (
     case "tap":
       if (this.mouseEventsOnly) {
         this.mouseTap(
-            touch.target.ownerDocument,
-            touch.clientX,
-            touch.clientY,
-            null,
-            null,
-            keyModifiers);
+          touch.target.ownerDocument,
+          touch.clientX,
+          touch.clientY,
+          null,
+          null,
+          keyModifiers
+        );
       } else {
         touchId = this.nextTouchId++;
         let touch = this.touchProvider.createATouch(target, x, y, touchId);
         this.touchProvider.emitTouchEvent("touchstart", touch);
         this.touchProvider.emitTouchEvent("touchend", touch);
         this.mouseTap(
-            touch.target.ownerDocument,
-            touch.clientX,
-            touch.clientY,
-            null,
-            null,
-            keyModifiers);
+          touch.target.ownerDocument,
+          touch.clientX,
+          touch.clientY,
+          null,
+          null,
+          keyModifiers
+        );
       }
       this.lastCoordinates = null;
       break;
@@ -394,12 +439,13 @@ action.Chain.prototype.generateEvents = function (
 
         if (this.isTap) {
           this.mouseTap(
-              touch.target.ownerDocument,
-              touch.clientX,
-              touch.clientY,
-              null,
-              null,
-              keyModifiers);
+            touch.target.ownerDocument,
+            touch.clientX,
+            touch.clientY,
+            null,
+            null,
+            keyModifiers
+          );
         }
         delete this.touchIds[touchId];
       }
@@ -414,7 +460,10 @@ action.Chain.prototype.generateEvents = function (
         let [x, y] = this.lastCoordinates;
         this.emitMouseEvent(doc, "mouseup", x, y, null, null, keyModifiers);
       } else {
-        this.touchProvider.emitTouchEvent("touchcancel", this.touchIds[touchId]);
+        this.touchProvider.emitTouchEvent(
+          "touchcancel",
+          this.touchIds[touchId]
+        );
         delete this.touchIds[touchId];
       }
       this.lastCoordinates = null;
@@ -426,7 +475,11 @@ action.Chain.prototype.generateEvents = function (
         this.emitMouseEvent(doc, "mousemove", x, y, null, null, keyModifiers);
       } else {
         let touch = this.touchProvider.createATouch(
-            this.touchIds[touchId].target, x, y, touchId);
+          this.touchIds[touchId].target,
+          x,
+          y,
+          touchId
+        );
         this.touchIds[touchId] = touch;
         this.touchProvider.emitTouchEvent("touchmove", touch);
       }
@@ -436,30 +489,40 @@ action.Chain.prototype.generateEvents = function (
       this.isTap = false;
       let event = this.container.frame.document.createEvent("MouseEvents");
       if (this.mouseEventsOnly) {
-        target = doc.elementFromPoint(this.lastCoordinates[0], this.lastCoordinates[1]);
+        target = doc.elementFromPoint(
+          this.lastCoordinates[0],
+          this.lastCoordinates[1]
+        );
       } else {
         target = this.touchIds[touchId].target;
       }
 
-      let [clientX, clientY, pageX, pageY, screenX, screenY] =
-          this.getCoordinateInfo(target, x, y);
+      let [
+        clientX,
+        clientY,
+        pageX,
+        pageY,
+        screenX,
+        screenY,
+      ] = this.getCoordinateInfo(target, x, y);
 
       event.initMouseEvent(
-          "contextmenu",
-          true,
-          true,
-          target.ownerGlobal,
-          1,
-          screenX,
-          screenY,
-          clientX,
-          clientY,
-          false,
-          false,
-          false,
-          false,
-          0,
-          null);
+        "contextmenu",
+        true,
+        true,
+        target.ownerGlobal,
+        1,
+        screenX,
+        screenY,
+        clientX,
+        clientY,
+        false,
+        false,
+        false,
+        false,
+        0,
+        null
+      );
       target.dispatchEvent(event);
       break;
 
@@ -468,7 +531,7 @@ action.Chain.prototype.generateEvents = function (
   }
 };
 
-action.Chain.prototype.mouseTap = function (doc, x, y, button, count, mod) {
+action.Chain.prototype.mouseTap = function(doc, x, y, button, count, mod) {
   this.emitMouseEvent(doc, "mousemove", x, y, button, count, mod);
   this.emitMouseEvent(doc, "mousedown", x, y, button, count, mod);
   this.emitMouseEvent(doc, "mouseup", x, y, button, count, mod);

@@ -14,15 +14,15 @@
     function addDelayedElement() {
       setTimeout(createDiv, 2000);
       function createDiv() {
-        var newDiv = document.createElement("div");
+        let newDiv = document.createElement("div");
         newDiv.id = "newDiv";
-        var newContent = document.createTextNode("I am a newly created div!");
+        let newContent = document.createTextNode("I am a newly created div!");
         newDiv.appendChild(newContent);
         document.body.appendChild(newDiv);
       }
     }
     function clicked() {
-      var link = document.getElementById("mozLink");
+      let link = document.getElementById("mozLink");
       link.innerHTML = "Clicked";
     }
   </script>
