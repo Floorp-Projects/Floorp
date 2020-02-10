@@ -1739,6 +1739,69 @@ static void TrackAndSpewIonAbort(JSContext* cx, JSScript* script,
   TrackIonAbort(cx, script, script->code(), message);
 }
 
+static AbortReason BuildMIR(JSContext* cx, MIRGenerator* mirGen,
+                            CompileInfo* info,
+                            CompilerConstraintList* constraints,
+                            BaselineInspector* inspector,
+                            BaselineFrameInspector* baselineFrameInspector) {
+  SpewBeginFunction(mirGen, info->script());
+
+  IonBuilder builder((JSContext*)nullptr, *mirGen, info, constraints, inspector,
+                     baselineFrameInspector);
+
+  AbortReasonOr<Ok> buildResult = Ok();
+  {
+    AutoEnterAnalysis enter(cx);
+    buildResult = builder.build();
+  }
+
+  if (buildResult.isErr()) {
+    AbortReason reason = buildResult.unwrapErr();
+    mirGen->graphSpewer().endFunction();
+    if (reason == AbortReason::PreliminaryObjects) {
+      // Some group was accessed which has associated preliminary objects
+      // to analyze. Do this now and we will try to build again shortly.
+      const IonBuilder::ObjectGroupVector& groups =
+          builder.abortedPreliminaryGroups();
+      for (size_t i = 0; i < groups.length(); i++) {
+        ObjectGroup* group = groups[i];
+        AutoRealm ar(cx, group);
+        AutoSweepObjectGroup sweep(group);
+        if (auto* newScript = group->newScript(sweep)) {
+          if (!newScript->maybeAnalyze(cx, group, nullptr,
+                                       /* force = */ true)) {
+            return AbortReason::Alloc;
+          }
+        } else if (auto* preliminaryObjects =
+                       group->maybePreliminaryObjects(sweep)) {
+          preliminaryObjects->maybeAnalyze(cx, group, /* force = */ true);
+        } else {
+          MOZ_CRASH("Unexpected aborted preliminary group");
+        }
+      }
+    }
+
+    if (builder.hadActionableAbort()) {
+      JSScript* abortScript;
+      jsbytecode* abortPc;
+      const char* abortMessage;
+      builder.actionableAbortLocationAndMessage(&abortScript, &abortPc,
+                                                &abortMessage);
+      TrackIonAbort(cx, abortScript, abortPc, abortMessage);
+    }
+
+    if (cx->isThrowingOverRecursed()) {
+      // Non-analysis compilations should never fail with stack overflow.
+      MOZ_CRASH("Stack overflow during compilation");
+    }
+
+    return reason;
+  }
+
+  AssertBasicGraphCoherency(mirGen->graph());
+  return AbortReason::NoAbort;
+}
+
 static AbortReason IonCompile(JSContext* cx, HandleScript script,
                               BaselineFrame* baselineFrame,
                               uint32_t baselineFrameSize, jsbytecode* osrPc,
@@ -1833,61 +1896,11 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     script->ionScript()->setRecompiling();
   }
 
-  SpewBeginFunction(mirGen, script);
-
-  IonBuilder builder((JSContext*)nullptr, *mirGen, info, constraints, inspector,
-                     baselineFrameInspector);
-
-  AbortReasonOr<Ok> buildResult = Ok();
-  {
-    AutoEnterAnalysis enter(cx);
-    buildResult = builder.build();
-  }
-
-  if (buildResult.isErr()) {
-    AbortReason reason = buildResult.unwrapErr();
-    mirGen->graphSpewer().endFunction();
-    if (reason == AbortReason::PreliminaryObjects) {
-      // Some group was accessed which has associated preliminary objects
-      // to analyze. Do this now and we will try to build again shortly.
-      const IonBuilder::ObjectGroupVector& groups =
-          builder.abortedPreliminaryGroups();
-      for (size_t i = 0; i < groups.length(); i++) {
-        ObjectGroup* group = groups[i];
-        AutoRealm ar(cx, group);
-        AutoSweepObjectGroup sweep(group);
-        if (auto* newScript = group->newScript(sweep)) {
-          if (!newScript->maybeAnalyze(cx, group, nullptr,
-                                       /* force = */ true)) {
-            return AbortReason::Alloc;
-          }
-        } else if (auto* preliminaryObjects =
-                       group->maybePreliminaryObjects(sweep)) {
-          preliminaryObjects->maybeAnalyze(cx, group, /* force = */ true);
-        } else {
-          MOZ_CRASH("Unexpected aborted preliminary group");
-        }
-      }
-    }
-
-    if (builder.hadActionableAbort()) {
-      JSScript* abortScript;
-      jsbytecode* abortPc;
-      const char* abortMessage;
-      builder.actionableAbortLocationAndMessage(&abortScript, &abortPc,
-                                                &abortMessage);
-      TrackIonAbort(cx, abortScript, abortPc, abortMessage);
-    }
-
-    if (cx->isThrowingOverRecursed()) {
-      // Non-analysis compilations should never fail with stack overflow.
-      MOZ_CRASH("Stack overflow during compilation");
-    }
-
+  AbortReason reason = BuildMIR(cx, mirGen, info, constraints, inspector,
+                                baselineFrameInspector);
+  if (reason != AbortReason::NoAbort) {
     return reason;
   }
-
-  AssertBasicGraphCoherency(mirGen->graph());
 
   // If possible, compile the script off thread.
   if (options.offThreadCompilationAvailable()) {
