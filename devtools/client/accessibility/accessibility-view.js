@@ -51,63 +51,42 @@ AccessibilityView.prototype = {
    *
    * @param {Object}
    *        Object that contains the following properties:
-   * - front                                 {Object}
-   *                                         front that can initialize
-   *                                         accessibility walker and
-   *                                         enable/disable accessibility
-   *                                         services.
-   * - supports                              {JSON}
-   *                                         a collection of flags indicating
-   *                                         which accessibility panel features
-   *                                         are supported by the current
-   *                                         serverside version.
-   * - fluentBundles                         {Array}
-   *                                         array of FluentBundles elements for
-   *                                         localization
-   * - toolbox                               {Object}
-   *                                         devtools toolbox.
-   * - getAccessibilityTreeRoot              {Function}
-   *                                         Returns the topmost accessibiliity
-   *                                         walker that is used as the root of
-   *                                         the accessibility tree.
-   * - startListeningForAccessibilityEvents  {Function}
-   *                                         Add listeners for specific
-   *                                         accessibility events.
-   * - stopListeningForAccessibilityEvents   {Function}
-   *                                         Remove listeners for specific
-   *                                         accessibility events.
-   * - audit                                 {Function}
-   *                                         Audit function that will start
-   *                                         accessibility audit for given types
-   *                                         of accessibility issues.
-   * - simulate                              {null|Function}
-   *                                         Apply simulation of a given type
-   *                                         (by setting color matrices in
-   *                                         docShell).
+   *        - front                 {Object}
+   *                                front that can initialize accessibility
+   *                                walker and enable/disable accessibility
+   *                                services.
+   *        - walker                {Object}
+   *                                front for accessibility walker actor responsible for
+   *                                managing accessible objects actors/fronts.
+   *        - supports              {JSON}
+   *                                a collection of flags indicating which accessibility
+   *                                panel features are supported by the current serverside
+   *                                version.
+   *        - fluentBundles         {Array}
+   *                                array of FluentBundles elements for localization
+   *        - simulator             {Object}
+   *                                front for simulator actor responsible for setting
+   *                                color matrices in docShell
+   *        - toolbox               {Object}
+   *                                devtools toolbox.
    */
   async initialize({
     front,
+    walker,
     supports,
     fluentBundles,
+    simulator,
     toolbox,
-    getAccessibilityTreeRoot,
-    startListeningForAccessibilityEvents,
-    stopListeningForAccessibilityEvents,
-    audit,
-    simulate,
   }) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(front, supports));
     const container = document.getElementById("content");
     const mainFrame = MainFrame({
       accessibility: front,
+      accessibilityWalker: walker,
       fluentBundles,
+      simulator,
       toolbox,
-      getAccessibilityTreeRoot,
-      startListeningForAccessibilityEvents,
-      stopListeningForAccessibilityEvents,
-      audit,
-      simulate,
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
@@ -119,20 +98,18 @@ AccessibilityView.prototype = {
     ReactDOM.unmountComponentAtNode(container);
   },
 
-  async selectAccessible(accessible) {
-    await this.store.dispatch(select(accessible));
+  async selectAccessible(walker, accessible) {
+    await this.store.dispatch(select(walker, accessible));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED);
   },
 
-  async highlightAccessible(accessible) {
-    await this.store.dispatch(highlight(accessible));
+  async highlightAccessible(walker, accessible) {
+    await this.store.dispatch(highlight(walker, accessible));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_HIGHLIGHTED);
   },
 
-  async selectNodeAccessible(node) {
-    const accessibilityFront = await node.targetFront.getFront("accessibility");
-    const accessibleWalkerFront = await accessibilityFront.getWalker();
-    let accessible = await accessibleWalkerFront.getAccessibleFor(node);
+  async selectNodeAccessible(walker, node) {
+    let accessible = await walker.getAccessibleFor(node);
     if (accessible) {
       await accessible.hydrate();
     }
@@ -145,7 +122,7 @@ AccessibilityView.prototype = {
       const { nodes: children } = await node.walkerFront.children(node);
       for (const child of children) {
         if (child.nodeType === nodeConstants.TEXT_NODE) {
-          accessible = await accessibleWalkerFront.getAccessibleFor(child);
+          accessible = await walker.getAccessibleFor(child);
           // indexInParent property is only available with additional request
           // for data (hydration) about the accessible object.
           if (accessible) {
@@ -159,7 +136,7 @@ AccessibilityView.prototype = {
       }
     }
 
-    await this.store.dispatch(select(accessible));
+    await this.store.dispatch(select(walker, accessible));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED);
   },
 

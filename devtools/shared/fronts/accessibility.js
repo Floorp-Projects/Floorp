@@ -187,22 +187,12 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
     this.formAttributeName = "accessibilityActor";
   }
 
-  async initialize() {
-    this.accessibleWalkerFront = await super.getWalker();
-    this.simulatorFront = await super.getSimulator();
-    ({
-      enabled: this.enabled,
-      canBeEnabled: this.canBeEnabled,
-      canBeDisabled: this.canBeDisabled,
-    } = await this.bootstrap());
-  }
-
-  async getWalker() {
-    return this.accessibleWalkerFront;
-  }
-
-  async getSimulator() {
-    return this.simulatorFront;
+  bootstrap() {
+    return super.bootstrap().then(state => {
+      this.enabled = state.enabled;
+      this.canBeEnabled = state.canBeEnabled;
+      this.canBeDisabled = state.canBeDisabled;
+    });
   }
 
   init() {

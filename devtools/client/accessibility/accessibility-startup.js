@@ -30,20 +30,22 @@ class AccessibilityStartup {
   }
 
   get walker() {
-    return this._accessibility.accessibleWalkerFront;
-  }
-
-  get simulator() {
-    return this._accessibility.simulatorFront;
+    return this._walker;
   }
 
   /**
-   * Determine which features are supported based on the version of the server.
+   * Determine which features are supported based on the version of the server. Also, sync
+   * the state of the accessibility front/actor.
    * @return {Promise}
-   *         A promise that returns true when accessibility front is ready.
+   *         A promise that returns true when accessibility front is fully in sync with
+   *         the actor.
    */
   async prepareAccessibility() {
+    // We must call a method on an accessibility front here (such as getWalker), in
+    // oreder to be able to check actor's backward compatibility via actorHasMethod.
+    // See targe.js@getActorDescription for more information.
     try {
+      this._walker = await this._accessibility.getWalker();
       this._supports = {};
       // To add a check for backward compatibility add something similar to the
       // example below:
@@ -52,6 +54,9 @@ class AccessibilityStartup {
       //   // Please specify the version of Firefox when the feature was added.
       //   this.target.actorHasMethod("accessibility", "getSimulator"),
       // ]);
+
+      await this._accessibility.bootstrap();
+
       return true;
     } catch (e) {
       // toolbox may be destroyed during this step.
@@ -119,7 +124,9 @@ class AccessibilityStartup {
       this._accessibility.off("init", this._updateToolHighlight);
       this._accessibility.off("shutdown", this._updateToolHighlight);
 
+      await this._walker.destroy();
       this._accessibility = null;
+      this._walker = null;
     }.bind(this)();
     return this._destroyingAccessibility;
   }
