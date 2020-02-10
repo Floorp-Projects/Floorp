@@ -3248,6 +3248,25 @@ screenshots:
     record_in_processes:
       - 'main'
 
+# The following section is for quotaManager.
+qm:
+  repositories_initialization_time:
+    bug_numbers:
+      - 1609625
+    description: >
+      A temporary probe to track the time for initializing the best-effort
+      repositories especially the longest the time.
+    expires: "76"
+    kind: uint
+    notification_emails:
+      - ttung@mozilla.com
+      - storage-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 # The following section is for tracking the number of failure for indexedDB.
 idb.failure:
   fileinfo_error:
