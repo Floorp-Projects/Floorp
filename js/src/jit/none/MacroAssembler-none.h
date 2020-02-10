@@ -65,9 +65,10 @@ static constexpr Register RegExpMatcherStringReg{Registers::invalid_reg};
 static constexpr Register RegExpMatcherLastIndexReg{Registers::invalid_reg};
 static constexpr Register RegExpMatcherStickyReg{Registers::invalid_reg};
 
-static constexpr Register JSReturnReg_Type{Registers::invalid_reg};
-static constexpr Register JSReturnReg_Data{Registers::invalid_reg};
-static constexpr Register JSReturnReg{Registers::invalid_reg};
+// Uses |invalid_reg2| to avoid static_assert failures.
+static constexpr Register JSReturnReg_Type{Registers::invalid_reg2};
+static constexpr Register JSReturnReg_Data{Registers::invalid_reg2};
+static constexpr Register JSReturnReg{Registers::invalid_reg2};
 
 #if defined(JS_NUNBOX32)
 static constexpr ValueOperand JSReturnOperand(InvalidReg, InvalidReg);
