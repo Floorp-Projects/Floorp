@@ -498,10 +498,6 @@ static bool BlacklistEntryToDriverInfo(nsCString& aBlacklistEntry,
       aDriverInfo.mOperatingSystem = BlacklistOSToOperatingSystem(dataValue);
     } else if (key.EqualsLiteral("osversion")) {
       aDriverInfo.mOperatingSystemVersion = strtoul(value.get(), nullptr, 10);
-    } else if (key.EqualsLiteral("desktopEnvironment")) {
-      aDriverInfo.mDesktopEnvironment = dataValue;
-    } else if (key.EqualsLiteral("windowProtocol")) {
-      aDriverInfo.mWindowProtocol = dataValue;
     } else if (key.EqualsLiteral("vendor")) {
       aDriverInfo.mAdapterVendor = dataValue;
     } else if (key.EqualsLiteral("driverVendor")) {
@@ -736,19 +732,6 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
     int32_t aFeature, nsACString& aFailureId, OperatingSystem os) {
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 
-  // Desktop environment and window protocol are not available on all platforms.
-  nsAutoString desktopEnvironment;
-  nsresult rv = GetDesktopEnvironment(desktopEnvironment);
-  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
-    return 0;
-  }
-
-  nsAutoString windowProtocol;
-  rv = GetWindowProtocol(windowProtocol);
-  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
-    return 0;
-  }
-
   // Get the adapters once then reuse below
   nsAutoString adapterVendorID[2];
   nsAutoString adapterDeviceID[2];
@@ -801,15 +784,6 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 
     if (info[i].mOperatingSystemVersion &&
         info[i].mOperatingSystemVersion != OperatingSystemVersion()) {
-      continue;
-    }
-
-    if (!DoesDesktopEnvironmentMatch(info[i].mDesktopEnvironment,
-                                     desktopEnvironment)) {
-      continue;
-    }
-
-    if (!DoesWindowProtocolMatch(info[i].mWindowProtocol, windowProtocol)) {
       continue;
     }
 
@@ -967,25 +941,6 @@ void GfxInfoBase::SetFeatureStatus(
     const nsTArray<dom::GfxInfoFeatureStatus>& aFS) {
   MOZ_ASSERT(!sFeatureStatus);
   sFeatureStatus = new nsTArray<dom::GfxInfoFeatureStatus>(aFS);
-}
-
-bool GfxInfoBase::DoesDesktopEnvironmentMatch(
-    const nsAString& aBlocklistDesktop, const nsAString& aDesktopEnv) {
-  return aBlocklistDesktop.Equals(aDesktopEnv,
-                                  nsCaseInsensitiveStringComparator()) ||
-         aBlocklistDesktop.Equals(
-             GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
-             nsCaseInsensitiveStringComparator());
-}
-
-bool GfxInfoBase::DoesWindowProtocolMatch(
-    const nsAString& aBlocklistWindowProtocol,
-    const nsAString& aWindowProtocol) {
-  return aBlocklistWindowProtocol.Equals(aWindowProtocol,
-                                         nsCaseInsensitiveStringComparator()) ||
-         aBlocklistWindowProtocol.Equals(
-             GfxDriverInfo::GetWindowProtocol(WindowingAll),
-             nsCaseInsensitiveStringComparator());
 }
 
 bool GfxInfoBase::DoesVendorMatch(const nsAString& aBlocklistVendor,
