@@ -19,6 +19,7 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.WebExtension
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 
 @MediumTest
 @RunWith(Parameterized::class)
@@ -592,6 +593,44 @@ class ExtensionActionTest : BaseSessionTest() {
         }
 
         sessionRule.waitForResult(onClicked)
+    }
+
+    @Test
+    fun testPopupsCanCloseThemselves() {
+        val onCloseRequestResult = GeckoResult<Void>()
+        val popupSession = sessionRule.createOpenSession()
+        popupSession.delegateUntilTestEnd(object : GeckoSession.ContentDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onCloseRequest(session: GeckoSession) {
+                onCloseRequestResult.complete(null)
+            }
+        })
+
+        val actionResult = GeckoResult<WebExtension.Action>()
+        testActionApi("""{
+           "action": "setPopup",
+           "popup": "test-popup.html"
+        }""") { action ->
+            assertEquals(action.title, "Test action default")
+            assertEquals(action.enabled, true)
+            actionResult.complete(action)
+        }
+
+        val togglePopup = GeckoResult<Void>()
+        val action = sessionRule.waitForResult(actionResult)
+        extension!!.setActionDelegate(object : WebExtension.ActionDelegate {
+            override fun onTogglePopup(extension: WebExtension,
+                                     popupAction: WebExtension.Action): GeckoResult<GeckoSession>? {
+                assertEquals(extension, this@ExtensionActionTest.extension)
+                assertEquals(popupAction, action)
+                togglePopup.complete(null)
+                return GeckoResult.fromValue(popupSession)
+            }
+        })
+        action.click()
+        sessionRule.waitForResult(togglePopup)
+
+        sessionRule.waitForResult(onCloseRequestResult)
     }
 }
 
