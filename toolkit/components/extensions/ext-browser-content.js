@@ -100,7 +100,6 @@ const BrowserListener = {
     addEventListener("load", this, true);
     addEventListener("DOMWindowCreated", this, true);
     addEventListener("DOMContentLoaded", this, true);
-    addEventListener("DOMWindowClose", this, true);
     addEventListener("MozScrolledAreaChanged", this, true);
   },
 
@@ -112,7 +111,6 @@ const BrowserListener = {
     removeEventListener("load", this, true);
     removeEventListener("DOMWindowCreated", this, true);
     removeEventListener("DOMContentLoaded", this, true);
-    removeEventListener("DOMWindowClose", this, true);
     removeEventListener("MozScrolledAreaChanged", this, true);
   },
 
@@ -153,14 +151,6 @@ const BrowserListener = {
       case "DOMWindowCreated":
         if (event.target === content.document) {
           this.loadStylesheets();
-        }
-        break;
-
-      case "DOMWindowClose":
-        if (event.target === content) {
-          event.preventDefault();
-
-          sendAsyncMessage("Extension:DOMWindowClose");
         }
         break;
 
