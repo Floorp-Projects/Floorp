@@ -275,11 +275,6 @@ CycleCollector:
     Reason why the cycle collector crashed.
   type: string
 
-DesktopEnvironment:
-  description: >
-    Desktop environment used on Linux, e.g. GNOME, KDE, XFCE, etc.
-  type: string
-
 DeviceResetReason:
   description: >
     Reason why a DirectX device has been reset, Windows only.
