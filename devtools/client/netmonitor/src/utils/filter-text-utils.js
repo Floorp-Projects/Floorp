@@ -180,7 +180,12 @@ function isFlagFilterMatch(item, { type, value, negative }) {
       }
       return item.transferredSize > value;
     },
-    "mime-type": () => item.mimeType.includes(value),
+    "mime-type": () => {
+      if (!item.mimeType) {
+        return false;
+      }
+      return item.mimeType.includes(value);
+    },
     is: () => {
       if (value === "from-cache" || value === "cached") {
         return item.fromCache || item.status === "304";
