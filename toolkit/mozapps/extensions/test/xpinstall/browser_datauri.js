@@ -1,3 +1,15 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+"use strict";
+
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+
+AddonTestUtils.initMochitest(this);
+
 // ----------------------------------------------------------------------------
 // Checks that a chained redirect through a data URI and javascript is blocked
 
@@ -44,11 +56,11 @@ function install_blocked(installInfo) {
     1,
     "Got one AddonInstall instance as expected"
   );
-  Assert.deepEqual(
-    installInfo.installs[0].installTelemetryInfo,
-    { source: "unknown", method: "link" },
-    "Got the expected install.installTelemetryInfo"
-  );
+  AddonTestUtils.checkInstallInfo(installInfo.installs[0], {
+    method: "link",
+    source: "unknown",
+    sourceURL: /moz-nullprincipal:\{.*\}/,
+  });
 }
 
 function finish_test(count) {

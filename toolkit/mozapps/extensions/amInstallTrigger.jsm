@@ -152,9 +152,11 @@ InstallTrigger.prototype = {
     }
 
     let sourceHost;
+    let sourceURL;
 
     try {
       sourceHost = this._principal.URI.host;
+      sourceURL = this._principal.URI.spec;
     } catch (err) {
       // Ignore errors when retrieving the host for the principal (e.g. null principals raise
       // an NS_ERROR_FAILURE when principal.URI.host is accessed).
@@ -167,6 +169,7 @@ InstallTrigger.prototype = {
       icon: iconUrl ? iconUrl.spec : null,
       method: "installTrigger",
       sourceHost,
+      sourceURL,
     };
 
     return this._mediator.install(
