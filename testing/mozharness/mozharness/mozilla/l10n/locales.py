@@ -132,7 +132,7 @@ class LocalesMixin(object):
         if 'l10n_dir' in c:
             dirs['abs_l10n_dir'] = os.path.join(dirs['abs_work_dir'],
                                                 c['l10n_dir'])
-        dirs['abs_src_dir'] = os.path.join(dirs['abs_work_dir'], 'src')
+        dirs['abs_src_dir'] = os.environ['GECKO_PATH']
         dirs['abs_locales_src_dir'] = os.path.join(
             dirs['abs_src_dir'],
             c['locales_dir'],
