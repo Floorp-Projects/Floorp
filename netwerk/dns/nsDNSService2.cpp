@@ -14,7 +14,6 @@
 #include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsError.h"
 #include "nsDNSPrefetch.h"

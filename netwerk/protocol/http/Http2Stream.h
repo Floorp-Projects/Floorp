@@ -248,7 +248,7 @@ class Http2Stream : public nsAHttpSegmentReader,
   uint64_t mTransactionTabId;
 
  private:
-  friend class nsAutoPtr<Http2Stream>;
+  friend class mozilla::DefaultDelete<Http2Stream>;
 
   MOZ_MUST_USE nsresult ParseHttpRequestHeaders(const char*, uint32_t,
                                                 uint32_t*);

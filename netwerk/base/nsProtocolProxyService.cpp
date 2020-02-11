@@ -1105,7 +1105,7 @@ bool nsProtocolProxyService::CanUseProxy(nsIURI* aURI, int32_t defaultPort) {
 
   int32_t index = -1;
   while (++index < int32_t(mHostFiltersArray.Length())) {
-    HostInfo* hinfo = mHostFiltersArray[index];
+    const auto& hinfo = mHostFiltersArray[index];
 
     if (is_ipaddr != hinfo->is_ipaddr) continue;
     if (hinfo->port && hinfo->port != port) continue;

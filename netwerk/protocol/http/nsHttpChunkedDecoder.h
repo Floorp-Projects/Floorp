@@ -6,7 +6,6 @@
 #ifndef nsHttpChunkedDecoder_h__
 #define nsHttpChunkedDecoder_h__
 
-#include "nsAutoPtr.h"
 #include "nsError.h"
 #include "nsString.h"
 #include "nsHttpHeaderArray.h"
@@ -32,7 +31,7 @@ class nsHttpChunkedDecoder {
 
   nsHttpHeaderArray* Trailers() { return mTrailers.get(); }
 
-  nsHttpHeaderArray* TakeTrailers() { return mTrailers.forget(); }
+  UniquePtr<nsHttpHeaderArray> TakeTrailers() { return std::move(mTrailers); }
 
   // How mush data is still missing(needs to arrive) from the current chunk.
   uint32_t GetChunkRemaining() { return mChunkRemaining; }
@@ -42,7 +41,7 @@ class nsHttpChunkedDecoder {
                                             uint32_t* countRead);
 
  private:
-  nsAutoPtr<nsHttpHeaderArray> mTrailers;
+  UniquePtr<nsHttpHeaderArray> mTrailers;
   uint32_t mChunkRemaining;
   nsCString mLineBuf;  // may hold a partial line
   bool mReachedEOF;

@@ -58,7 +58,7 @@ class nsHttpResponseHead {
   void Exit() { mRecursiveMutex.Unlock(); }
 
   HttpVersion Version();
-  uint16_t Status();
+  uint16_t Status() const;
   void StatusText(nsACString& aStatusText);
   int64_t ContentLength();
   void ContentType(nsACString& aContentType);
@@ -83,7 +83,7 @@ class nsHttpResponseHead {
   void ClearHeader(nsHttpAtom h);
   void ClearHeaders();
   bool HasHeaderValue(nsHttpAtom h, const char* v);
-  bool HasHeader(nsHttpAtom h);
+  bool HasHeader(nsHttpAtom h) const;
 
   void SetContentType(const nsACString& s);
   void SetContentCharset(const nsACString& s);
@@ -206,7 +206,7 @@ class nsHttpResponseHead {
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader
   // function calls nsIHttpHeaderVisitor::VisitHeader while under lock.
-  RecursiveMutex mRecursiveMutex;
+  mutable RecursiveMutex mRecursiveMutex;
   // During VisitHeader we sould not allow cal to SetHeader.
   bool mInVisitHeaders;
 

@@ -21,6 +21,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 
 class nsIFile;
 class nsIDirectoryEnumerator;
@@ -114,7 +115,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
 
   explicit CacheIndexEntry(KeyTypePointer aKey) {
     MOZ_COUNT_CTOR(CacheIndexEntry);
-    mRec = new CacheIndexRecord();
+    mRec = MakeUnique<CacheIndexRecord>();
     LOG(("CacheIndexEntry::CacheIndexEntry() - Created record [rec=%p]",
          mRec.get()));
     memcpy(&mRec->mHash, aKey, sizeof(SHA1Sum::Hash));
@@ -242,9 +243,9 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     mRec->mFlags |= aFileSize;
   }
   // Returns filesize in kilobytes.
-  uint32_t GetFileSize() const { return GetFileSize(mRec); }
-  static uint32_t GetFileSize(CacheIndexRecord* aRec) {
-    return aRec->mFlags & kFileSizeMask;
+  uint32_t GetFileSize() const { return GetFileSize(*mRec); }
+  static uint32_t GetFileSize(const CacheIndexRecord& aRec) {
+    return aRec.mFlags & kFileSizeMask;
   }
   static uint32_t IsPinned(CacheIndexRecord* aRec) {
     return aRec->mFlags & kPinnedMask;
@@ -353,7 +354,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
   // FileSize in kilobytes
   static const uint32_t kFileSizeMask = 0x00FFFFFF;
 
-  nsAutoPtr<CacheIndexRecord> mRec;
+  UniquePtr<CacheIndexRecord> mRec;
 };
 
 class CacheIndexEntryUpdate : public CacheIndexEntry {

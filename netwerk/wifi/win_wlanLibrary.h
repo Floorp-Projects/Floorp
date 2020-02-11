@@ -43,12 +43,12 @@ class WinWLANLibrary {
 
 class ScopedWLANObject {
  public:
-  ScopedWLANObject(WinWLANLibrary* library, void* object)
+  ScopedWLANObject(const WinWLANLibrary& library, void* object)
       : mLibrary(library), mObject(object) {}
 
-  ~ScopedWLANObject() { (*(mLibrary->GetWlanFreeMemoryPtr()))(mObject); }
+  ~ScopedWLANObject() { (*(mLibrary.GetWlanFreeMemoryPtr()))(mObject); }
 
  private:
-  WinWLANLibrary* mLibrary;
+  const WinWLANLibrary& mLibrary;
   void* mObject;
 };

@@ -11,7 +11,6 @@
 
 #include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 

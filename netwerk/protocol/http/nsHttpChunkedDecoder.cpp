@@ -111,7 +111,7 @@ nsresult nsHttpChunkedDecoder::ParseChunkRemaining(char* buf, uint32_t count,
         LOG(("got trailer: %s\n", buf));
         // allocate a header array for the trailers on demand
         if (!mTrailers) {
-          mTrailers = new nsHttpHeaderArray();
+          mTrailers = MakeUnique<nsHttpHeaderArray>();
         }
 
         nsHttpAtom hdr;

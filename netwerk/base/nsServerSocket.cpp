@@ -6,7 +6,6 @@
 #include "nsSocketTransport2.h"
 #include "nsServerSocket.h"
 #include "nsProxyRelease.h"
-#include "nsAutoPtr.h"
 #include "nsError.h"
 #include "nsNetCID.h"
 #include "prnetdb.h"

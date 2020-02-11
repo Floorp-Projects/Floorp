@@ -12,7 +12,6 @@
 #include "nsSocketTransport2.h"
 #include "nsUDPSocket.h"
 #include "nsProxyRelease.h"
-#include "nsAutoPtr.h"
 #include "nsError.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"

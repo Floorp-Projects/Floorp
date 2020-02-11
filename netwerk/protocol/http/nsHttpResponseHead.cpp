@@ -72,7 +72,7 @@ HttpVersion nsHttpResponseHead::Version() {
   return mVersion;
 }
 
-uint16_t nsHttpResponseHead::Status() {
+uint16_t nsHttpResponseHead::Status() const {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   return mStatus;
 }
@@ -189,7 +189,7 @@ bool nsHttpResponseHead::HasHeaderValue(nsHttpAtom h, const char* v) {
   return mHeaders.HasHeaderValue(h, v);
 }
 
-bool nsHttpResponseHead::HasHeader(nsHttpAtom h) {
+bool nsHttpResponseHead::HasHeader(nsHttpAtom h) const {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   return mHeaders.HasHeader(h);
 }

@@ -18,7 +18,6 @@
 #include "nsIFileStreams.h"
 #include "nsFileProtocolHandler.h"
 #include "nsProxyRelease.h"
-#include "nsAutoPtr.h"
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 

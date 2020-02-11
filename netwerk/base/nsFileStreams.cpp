@@ -489,7 +489,7 @@ nsFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* _retval) {
 NS_IMETHODIMP
 nsFileInputStream::ReadLine(nsACString& aLine, bool* aResult) {
   if (!mLineBuffer) {
-    mLineBuffer = new nsLineBuffer<char>;
+    mLineBuffer = MakeUnique<nsLineBuffer<char>>();
   }
   return NS_ReadLine(this, mLineBuffer.get(), aLine, aResult);
 }

@@ -9,7 +9,6 @@
 
 #include "nsIWebSocketEventService.h"
 
-#include "nsAutoPtr.h"
 #include "nsIWebSocketEventService.h"
 #include "nsString.h"
 

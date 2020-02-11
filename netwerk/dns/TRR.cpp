@@ -31,6 +31,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace net {
@@ -180,7 +181,8 @@ nsresult TRR::SendHTTPRequest() {
     // we also don't check the blacklist for TRR only requests
     MOZ_ASSERT(mRec);
 
-    if (UseDefaultServer() &&  gTRRService->IsTRRBlacklisted(mHost, mOriginSuffix, mPB, true)) {
+    if (UseDefaultServer() &&
+        gTRRService->IsTRRBlacklisted(mHost, mOriginSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
         // count only blacklist for A records to avoid double counts
         Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, true);
@@ -1137,7 +1139,7 @@ TRR::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
 
 nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, int index, uint16_t len,
                       bool aLocalAllowed) {
-  nsAutoPtr<DOHaddr> doh(new DOHaddr);
+  auto doh = MakeUnique<DOHaddr>();
   NetAddr* addr = &doh->mNet;
   if (4 == len) {
     // IPv4
@@ -1167,7 +1169,7 @@ nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, int index, uint16_t len,
     NetAddrToString(addr, buf, sizeof(buf));
     LOG(("DOHresp:Add %s\n", buf));
   }
-  mAddresses.insertBack(doh.forget());
+  mAddresses.insertBack(doh.release());
   return NS_OK;
 }
 
@@ -1200,9 +1202,7 @@ void TRR::Cancel() {
   }
 }
 
-bool TRR::UseDefaultServer() {
-  return !mRec || mRec->mTrrServer.IsEmpty();
-}
+bool TRR::UseDefaultServer() { return !mRec || mRec->mTrrServer.IsEmpty(); }
 
 #undef LOG
 

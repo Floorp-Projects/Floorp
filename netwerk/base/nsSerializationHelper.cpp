@@ -10,7 +10,6 @@
 #include "nsIObjectInputStream.h"
 #include "nsString.h"
 #include "nsBase64Encoder.h"
-#include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsStringStream.h"
 

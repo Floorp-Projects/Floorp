@@ -1437,8 +1437,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (httpChannelImpl) {
     httpChannelImpl->GetLoadedFromApplicationCache(&loadedFromApplicationCache);
     if (loadedFromApplicationCache) {
-      mOfflineForeignMarker =
-          httpChannelImpl->GetOfflineCacheEntryAsForeignMarker();
+      mOfflineForeignMarker.reset(
+          httpChannelImpl->GetOfflineCacheEntryAsForeignMarker());
       nsCOMPtr<nsIApplicationCache> appCache;
       httpChannelImpl->GetApplicationCache(getter_AddRefs(appCache));
       nsCString appCacheGroupId;

@@ -16,7 +16,6 @@
 #include "nsNetUtil.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsAutoPtr.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsIChannel.h"
 #include "nsIScriptError.h"

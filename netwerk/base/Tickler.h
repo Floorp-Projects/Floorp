@@ -38,7 +38,6 @@
 #ifdef MOZ_USE_WIFI_TICKLER
 #  include "mozilla/Mutex.h"
 #  include "mozilla/TimeStamp.h"
-#  include "nsAutoPtr.h"
 #  include "nsISupports.h"
 #  include "nsIThread.h"
 #  include "nsITimer.h"

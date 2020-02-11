@@ -311,7 +311,7 @@ InterceptedChannelContent::StartSynthesizedResponse(
   originalURI->Equals(responseURI, &equal);
   if (!equal) {
     mChannel->ForceIntercepted(aBody, aBodyCallback, aCacheInfoChannel);
-    mChannel->BeginNonIPCRedirect(responseURI, *mSynthesizedResponseHead.ptr(),
+    mChannel->BeginNonIPCRedirect(responseURI, mSynthesizedResponseHead->get(),
                                   aResponseRedirected);
   } else {
     mChannel->OverrideWithSynthesizedResponse(

@@ -9,7 +9,6 @@
 #include "nsString.h"
 #include "mozilla/Telemetry.h"
 #include "nsITimer.h"
-#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsISupportsPriority.h"
 #include "nsCacheUtils.h"
@@ -146,8 +145,8 @@ void nsDeleteDir::TimerCallback(nsITimer* aTimer, void* arg) {
     gInstance->mTimers.RemoveObjectAt(idx);
   }
 
-  nsAutoPtr<nsCOMArray<nsIFile> > dirList;
-  dirList = static_cast<nsCOMArray<nsIFile>*>(arg);
+  UniquePtr<nsCOMArray<nsIFile>> dirList;
+  dirList.reset(static_cast<nsCOMArray<nsIFile>*>(arg));
 
   bool shuttingDown = false;
 
@@ -226,13 +225,13 @@ nsresult nsDeleteDir::DeleteDir(nsIFile* dirIn, bool moveToTrash,
     trash.swap(dir);
   }
 
-  nsAutoPtr<nsCOMArray<nsIFile> > arg(new nsCOMArray<nsIFile>);
+  UniquePtr<nsCOMArray<nsIFile>> arg(new nsCOMArray<nsIFile>);
   arg->AppendObject(trash);
 
-  rv = gInstance->PostTimer(arg, delay);
+  rv = gInstance->PostTimer(arg.get(), delay);
   if (NS_FAILED(rv)) return rv;
 
-  arg.forget();
+  Unused << arg.release();
   return NS_OK;
 }
 
@@ -290,7 +289,7 @@ nsresult nsDeleteDir::RemoveOldTrashes(nsIFile* cacheDir) {
   rv = parent->GetDirectoryEntries(getter_AddRefs(iter));
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoPtr<nsCOMArray<nsIFile> > dirList;
+  UniquePtr<nsCOMArray<nsIFile>> dirList;
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED(iter->GetNextFile(getter_AddRefs(file))) && file) {
@@ -300,16 +299,16 @@ nsresult nsDeleteDir::RemoveOldTrashes(nsIFile* cacheDir) {
 
     // match all names that begin with the trash name (i.e. "Cache.Trash")
     if (Substring(leafName, 0, trashName.Length()).Equals(trashName)) {
-      if (!dirList) dirList = new nsCOMArray<nsIFile>;
+      if (!dirList) dirList = MakeUnique<nsCOMArray<nsIFile>>();
       dirList->AppendObject(file);
     }
   }
 
   if (dirList) {
-    rv = gInstance->PostTimer(dirList, 90000);
+    rv = gInstance->PostTimer(dirList.get(), 90000);
     if (NS_FAILED(rv)) return rv;
 
-    dirList.forget();
+    Unused << dirList.release();
   }
 
   return NS_OK;

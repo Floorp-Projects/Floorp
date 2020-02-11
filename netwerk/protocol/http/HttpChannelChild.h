@@ -258,7 +258,7 @@ class HttpChannelChild final : public PHttpChannelChild,
     OverrideRunnable(HttpChannelChild* aChannel, HttpChannelChild* aNewChannel,
                      InterceptStreamListener* aListener, nsIInputStream* aInput,
                      nsIInterceptedBodyCallback* aCallback,
-                     nsAutoPtr<nsHttpResponseHead>& aHead,
+                     UniquePtr<nsHttpResponseHead>&& aHead,
                      nsICacheInfoChannel* aCacheInfo);
 
     NS_IMETHOD Run() override;
@@ -270,7 +270,7 @@ class HttpChannelChild final : public PHttpChannelChild,
     RefPtr<InterceptStreamListener> mListener;
     nsCOMPtr<nsIInputStream> mInput;
     nsCOMPtr<nsIInterceptedBodyCallback> mCallback;
-    nsAutoPtr<nsHttpResponseHead> mHead;
+    UniquePtr<nsHttpResponseHead> mHead;
     nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   };
 
@@ -323,7 +323,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Override this channel's pending response with a synthesized one. The
   // content will be asynchronously read from the pump.
   void OverrideWithSynthesizedResponse(
-      nsAutoPtr<nsHttpResponseHead>& aResponseHead,
+      UniquePtr<nsHttpResponseHead>& aResponseHead,
       nsIInputStream* aSynthesizedInput,
       nsIInterceptedBodyCallback* aSynthesizedCallback,
       InterceptStreamListener* aStreamListener,
