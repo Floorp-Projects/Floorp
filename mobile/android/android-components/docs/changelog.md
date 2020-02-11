@@ -34,6 +34,24 @@ permalink: /changelog/
   )
   ```
 
+* **service-glean**
+  * Glean was updated to v24.2.0:
+    * Add `locale` to `client_info` section.
+    * **Deprecation Warning** Since `locale` is now in the `client_info` section, the one
+      in the baseline ping ([`glean.baseline.locale`](https://github.com/mozilla/glean/blob/c261205d6e84d2ab39c50003a8ffc3bd2b763768/glean-core/metrics.yaml#L28-L42))
+      is redundant and will be removed by the end of the quarter.
+    * Drop the Glean handle and move state into glean-core ([#664](https://github.com/mozilla/glean/pull/664))
+    * If an experiment includes no `extra` fields, it will no longer include `{"extra": null}` in the JSON payload.
+    * Support for ping `reason` codes was added.
+      * The metrics ping will now include `reason` codes that indicate why it was
+        submitted.
+      * The baseline ping will now include `reason` codes that indicate why it was
+        submitted. If an unclean shutdown is detected (e.g. due to force-close), this
+        ping will be sent at startup with `reason: dirty_startup`.
+    * The version of `glean_parser` has been upgraded to 1.17.3
+    * Collections performed before initialization (preinit tasks) are now dispatched off
+      the main thread during initialization.
+
 # 31.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v30.0.0...v31.0.0)
