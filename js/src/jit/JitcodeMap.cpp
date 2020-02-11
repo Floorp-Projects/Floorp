@@ -244,10 +244,15 @@ static inline JitcodeGlobalEntry& RejoinEntry(
 
   // There must exist an entry for the rejoin addr if this entry exists.
   JitRuntime* jitrt = rt->jitRuntime();
-  JitcodeGlobalEntry& entry =
-      jitrt->getJitcodeGlobalTable()->lookupInfallible(cache.rejoinAddr());
-  MOZ_ASSERT(entry.isIon());
-  return entry;
+  JitcodeGlobalEntry* entry =
+      jitrt->getJitcodeGlobalTable()->lookup(cache.rejoinAddr());
+
+  // Rejoin addrs should be tracked perfectly, since they do not involve
+  // any stack walking.
+  MOZ_ASSERT(entry);
+  MOZ_ASSERT(entry->isIon());
+
+  return *entry;
 }
 
 void* JitcodeGlobalEntry::IonCacheEntry::canonicalNativeAddrFor() const {
@@ -358,10 +363,12 @@ void JitcodeGlobalTable::Enum::removeFront() {
   table_.releaseEntry(*cur_, prevTower_, rt_);
 }
 
-const JitcodeGlobalEntry& JitcodeGlobalTable::lookupForSamplerInfallible(
+const JitcodeGlobalEntry* JitcodeGlobalTable::lookupForSampler(
     void* ptr, JSRuntime* rt, uint64_t samplePosInBuffer) {
   JitcodeGlobalEntry* entry = lookupInternal(ptr);
-  MOZ_ASSERT(entry);
+  if (!entry) {
+    return nullptr;
+  }
 
   entry->setSamplePositionInBuffer(samplePosInBuffer);
 
@@ -378,7 +385,7 @@ const JitcodeGlobalEntry& JitcodeGlobalTable::lookupForSamplerInfallible(
   // the beginning of the sweep phase. It's not possible to assert this here
   // as we may be off main thread when called from the gecko profiler.
 
-  return *entry;
+  return entry;
 }
 
 JitcodeGlobalEntry* JitcodeGlobalTable::lookupInternal(void* ptr) {
