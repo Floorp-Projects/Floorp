@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 var testcounter = 0;
 function checkFinished() {
   testcounter++;
-  if (testcounter < 2) {
+  if (testcounter < 3) {
   	return;
   }
   // remove the listener and we are done.
@@ -75,17 +75,10 @@ csp_testframe.src = "file_ignore_xfo.html";
 
 // 2) test XFO with CSP_RO
 var csp_ro_testframe = document.getElementById("csp_ro_testframe");
-// If XFO denies framing the onload event handler should fire. At the
-// moment we are displaying about:blank (in regular mode and the error page
-// if fission is enabled) in case XFO blocks a frame, but after Bug 1601887
-// we are going to display about:neterror, but the onload event should still
-// fire. Please note that for the purpose of this test, the actual error we
-// are detecting comes from the xfo-on-violation-polcy observer.
+// If XFO denies framing then the onload event should fire.
 csp_ro_testframe.onload = function() {
-  // Bug 1601887, onload event handler should fire even if frame is blocked.
-  // Please note that we can not add a todo, because the event would
-  // potentially fire after the test has already called SimpleTest.finish()
-  // and hence causes intermittent failures.
+  ok(true, "sanity: should fire onload for csp_ro_testframe");
+  checkFinished();
 }
 csp_ro_testframe.onerror = function() {
   ok(false, "sanity: should not fire onerror for csp_ro_testframe");
