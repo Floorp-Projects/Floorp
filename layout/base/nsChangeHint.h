@@ -10,9 +10,7 @@
 #define nsChangeHint_h___
 
 #include "mozilla/Types.h"
-#include "nsDebug.h"
-#include "nsTArray.h"
-#include "mozilla/ServoStyleConsts.h"
+#include "mozilla/Assertions.h"
 
 // Defines for various style related constants
 
@@ -516,20 +514,9 @@ inline nsChangeHint NS_RemoveSubsumedHints(nsChangeHint aOurChange,
 
 namespace mozilla {
 
+struct StyleRestyleHint;
+
 using RestyleHint = StyleRestyleHint;
-
-inline RestyleHint RestyleHint::RestyleSubtree() {
-  return RestyleHint::RESTYLE_SELF | RestyleHint::RESTYLE_DESCENDANTS;
-}
-
-inline RestyleHint RestyleHint::RecascadeSubtree() {
-  return RestyleHint::RECASCADE_SELF | RestyleHint::RECASCADE_DESCENDANTS;
-}
-
-inline RestyleHint RestyleHint::ForAnimations() {
-  return RestyleHint::RESTYLE_CSS_TRANSITIONS |
-         RestyleHint::RESTYLE_CSS_ANIMATIONS | RestyleHint::RESTYLE_SMIL;
-}
 
 }  // namespace mozilla
 

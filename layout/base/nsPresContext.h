@@ -11,7 +11,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
-#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/ScrollStyles.h"
 #include "mozilla/PreferenceSheet.h"
@@ -79,6 +78,7 @@ class CounterStyleManager;
 class PresShell;
 class RestyleManager;
 class StaticPresData;
+struct MediaFeatureChange;
 namespace layers {
 class ContainerLayer;
 class LayerManager;
@@ -261,18 +261,18 @@ class nsPresContext : public nsISupports,
 
   /**
    * Rebuilds all style data by throwing out the old rule tree and
-   * building a new one, and additionally applying aExtraHint (which
-   * must not contain nsChangeHint_ReconstructFrame) to the root frame.
-   * For aRestyleHint, see RestyleManager::RebuildAllStyleData.
+   * building a new one, and additionally applying a change hint (which must not
+   * contain nsChangeHint_ReconstructFrame) to the root frame.
+   *
+   * For the restyle hint argument, see RestyleManager::RebuildAllStyleData.
    * Also rebuild the user font set and counter style manager.
    */
-  void RebuildAllStyleData(nsChangeHint aExtraHint, mozilla::RestyleHint);
+  void RebuildAllStyleData(nsChangeHint, const mozilla::RestyleHint&);
   /**
    * Just like RebuildAllStyleData, except (1) asynchronous and (2) it
    * doesn't rebuild the user font set.
    */
-  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
-                                    mozilla::RestyleHint);
+  void PostRebuildAllStyleDataEvent(nsChangeHint, const mozilla::RestyleHint&);
 
   void ContentLanguageChanged();
 
@@ -1312,7 +1312,7 @@ class nsPresContext : public nsISupports,
   unsigned mInitialized : 1;
 #endif
 
-  mozilla::Maybe<mozilla::MediaFeatureChange> mPendingMediaFeatureValuesChange;
+  mozilla::UniquePtr<mozilla::MediaFeatureChange> mPendingMediaFeatureValuesChange;
 
  protected:
   virtual ~nsPresContext();

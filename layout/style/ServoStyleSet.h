@@ -11,7 +11,6 @@
 #include "mozilla/AtomArray.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/PostTraversalTask.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoUtils.h"
@@ -27,6 +26,7 @@
 #include "nsIMemoryReporter.h"
 
 namespace mozilla {
+enum class MediaFeatureChangeReason : uint8_t;
 namespace css {
 class Rule;
 }  // namespace css
@@ -46,6 +46,7 @@ class gfxFontFeatureValueSet;
 class nsIContent;
 
 class nsPresContext;
+class nsWindowSizes;
 struct nsTimingFunction;
 struct TreeMatchContext;
 
@@ -67,6 +68,8 @@ enum class StylistState : uint8_t {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StylistState)
 
+enum class StyleOrigin : uint8_t;
+
 // Bitfield type to represent Servo stylesheet origins.
 enum class OriginFlags : uint8_t {
   UserAgent = 0x01,
@@ -83,14 +86,17 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OriginFlags)
  */
 class ServoStyleSet {
   friend class RestyleManager;
-  typedef ServoElementSnapshotTable SnapshotTable;
-
+  using SnapshotTable = ServoElementSnapshotTable;
   using Origin = StyleOrigin;
 
- public:
-  static constexpr const StyleOrigin kOrigins[] = {
-      StyleOrigin::UserAgent, StyleOrigin::User, StyleOrigin::Author};
+  // We assert that these match the Servo ones in the definition of this array.
+  static constexpr Origin kOrigins[] = {
+    Origin(static_cast<uint8_t>(OriginFlags::UserAgent)),
+    Origin(static_cast<uint8_t>(OriginFlags::User)),
+    Origin(static_cast<uint8_t>(OriginFlags::Author)),
+  };
 
+ public:
   static bool IsInServoTraversal() { return mozilla::IsInServoTraversal(); }
 
 #ifdef DEBUG
@@ -235,9 +241,7 @@ class ServoStyleSet {
 
   void AppendAllNonDocumentAuthorSheets(nsTArray<StyleSheet*>& aArray) const;
 
-  void RemoveDocStyleSheet(StyleSheet* aSheet) {
-    RemoveStyleSheet(StyleOrigin::Author, aSheet);
-  }
+  void RemoveDocStyleSheet(StyleSheet* aSheet);
 
   void AddDocStyleSheet(StyleSheet* aSheet);
 
