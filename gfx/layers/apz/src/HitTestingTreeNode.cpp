@@ -239,14 +239,14 @@ LayersId HitTestingTreeNode::GetLayersId() const { return mLayersId; }
 
 void HitTestingTreeNode::SetHitTestData(
     const EventRegions& aRegions, const LayerIntRegion& aVisibleRegion,
-    const LayerIntRect& aRemoteDocumentRect,
+    const LayerIntSize& aRemoteDocumentSize,
     const CSSTransformMatrix& aTransform,
     const Maybe<ParentLayerIntRegion>& aClipRegion,
     const EventRegionsOverride& aOverride, bool aIsBackfaceHidden,
     bool aIsAsyncZoomContainer) {
   mEventRegions = aRegions;
   mVisibleRegion = aVisibleRegion;
-  mRemoteDocumentRect = aRemoteDocumentRect;
+  mRemoteDocumentSize = aRemoteDocumentSize;
   mTransform = aTransform;
   mClipRegion = aClipRegion;
   mOverride = aOverride;
@@ -376,8 +376,9 @@ const LayerIntRegion& HitTestingTreeNode::GetVisibleRegion() const {
 }
 
 ScreenRect HitTestingTreeNode::GetRemoteDocumentScreenRect() const {
-  ScreenRect result =
-      TransformBy(GetTransformToGecko(), IntRectToRect(mRemoteDocumentRect));
+  ScreenRect result = TransformBy(
+      GetTransformToGecko(),
+      IntRectToRect(LayerIntRect(LayerIntPoint(), mRemoteDocumentSize)));
 
   for (const HitTestingTreeNode* node = this; node; node = node->GetParent()) {
     if (!node->GetApzc()) {

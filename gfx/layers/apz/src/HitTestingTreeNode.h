@@ -103,7 +103,7 @@ class HitTestingTreeNode {
 
   void SetHitTestData(const EventRegions& aRegions,
                       const LayerIntRegion& aVisibleRegion,
-                      const LayerIntRect& aRemoteDocumentRect,
+                      const LayerIntSize& aRemoteDocumentSize,
                       const CSSTransformMatrix& aTransform,
                       const Maybe<ParentLayerIntRegion>& aClipRegion,
                       const EventRegionsOverride& aOverride,
@@ -216,9 +216,9 @@ class HitTestingTreeNode {
 
   LayerIntRegion mVisibleRegion;
 
-  /* The rectangle of remote iframe on the corresponding layer coordinate.
+  /* The size of remote iframe on the corresponding layer coordinate.
    * It's empty if this node is not for remote iframe. */
-  LayerIntRect mRemoteDocumentRect;
+  LayerIntSize mRemoteDocumentSize;
 
   /* This is the transform from layer L. This does NOT include any async
    * transforms. */

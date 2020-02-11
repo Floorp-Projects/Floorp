@@ -1311,12 +1311,14 @@ mozilla::LayerState nsDisplayRemote::GetLayerState(
   return mozilla::LayerState::LAYER_ACTIVE_FORCE;
 }
 
-LayerIntRect GetFrameRect(const nsIFrame* aFrame) {
-  LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(
-      aFrame->GetContentRectRelativeToSelf(),
+LayerIntSize GetFrameSize(const nsIFrame* aFrame) {
+  LayoutDeviceSize size = LayoutDeviceRect::FromAppUnits(
+      aFrame->GetContentRectRelativeToSelf().Size(),
       aFrame->PresContext()->AppUnitsPerDevPixel());
-  return RoundedOut(rect * LayoutDeviceToLayerScale(
-                               aFrame->PresShell()->GetCumulativeResolution()));
+
+  float cumulativeResolution = aFrame->PresShell()->GetCumulativeResolution();
+  return LayerIntSize::Round(size.width * cumulativeResolution,
+                             size.height * cumulativeResolution);
 }
 
 already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
@@ -1388,7 +1390,7 @@ already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
   refLayer->SetBaseTransform(m);
   refLayer->SetEventRegionsOverride(mEventRegionsOverride);
   refLayer->SetReferentId(mLayersId);
-  refLayer->SetRemoteDocumentRect(GetFrameRect(mFrame));
+  refLayer->SetRemoteDocumentSize(GetFrameSize(mFrame));
 
   return layer.forget();
 }
@@ -1466,7 +1468,7 @@ bool nsDisplayRemote::UpdateScrollData(
     aLayerData->SetTransform(
         mozilla::gfx::Matrix4x4::Translation(mOffset.x, mOffset.y, 0.0));
     aLayerData->SetEventRegionsOverride(mEventRegionsOverride);
-    aLayerData->SetRemoteDocumentRect(GetFrameRect(mFrame));
+    aLayerData->SetRemoteDocumentSize(GetFrameSize(mFrame));
   }
   return true;
 }
