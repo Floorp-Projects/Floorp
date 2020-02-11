@@ -9,7 +9,6 @@ taskcluster/ci/upload-generated-sources/kind.yml, into an actual task descriptio
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.taskcluster import get_artifact_url
 
 
 transforms = TransformSequence()
@@ -38,12 +37,6 @@ def add_task_info(config, jobs):
         job['treeherder']['tier'] = dep_th['tier']
         if dep_th['symbol'] != "N":
             job['treeherder']['symbol'] = "Ugs{}".format(dep_th['symbol'])
-        # Add an environment variable pointing at the artifact from the build.
-        artifact_url = get_artifact_url('<build>',
-                                        'public/build/target.generated-files.tar.gz')
-        job['worker'].setdefault('env', {})['ARTIFACT_URL'] = {
-            'task-reference': artifact_url
-        }
         job['run-on-projects'] = dep_task.attributes.get('run_on_projects')
 
         yield job
