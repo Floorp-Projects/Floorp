@@ -116,7 +116,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
       nsDisplayListBuilder* aDisplayListBuilder) override {
     HTMLCanvasElement* element =
         static_cast<HTMLCanvasElement*>(mFrame->GetContent());
-    element->HandlePrintCallback(mFrame->PresContext()->Type());
+    element->HandlePrintCallback(mFrame->PresContext());
 
     switch (element->GetCurrentContextType()) {
       case CanvasContextType::Canvas2D:
@@ -438,7 +438,7 @@ already_AddRefed<Layer> nsHTMLCanvasFrame::BuildLayer(
   nsIntSize canvasSizeInPx = GetCanvasSize();
 
   nsPresContext* presContext = PresContext();
-  element->HandlePrintCallback(presContext->Type());
+  element->HandlePrintCallback(presContext);
 
   if (canvasSizeInPx.width <= 0 || canvasSizeInPx.height <= 0 || area.IsEmpty())
     return nullptr;
