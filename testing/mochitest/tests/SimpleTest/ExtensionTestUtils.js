@@ -1,9 +1,11 @@
 var ExtensionTestUtils = {};
 
-const {ExtensionTestCommon} = SpecialPowers.Cu.import("resource://testing-common/ExtensionTestCommon.jsm", {});
+const { ExtensionTestCommon } = SpecialPowers.Cu.import(
+  "resource://testing-common/ExtensionTestCommon.jsm",
+  {}
+);
 
-ExtensionTestUtils.loadExtension = function(ext)
-{
+ExtensionTestUtils.loadExtension = function(ext) {
   // Cleanup functions need to be registered differently depending on
   // whether we're in browser chrome or plain mochitests.
   var registerCleanup;
@@ -14,7 +16,9 @@ ExtensionTestUtils.loadExtension = function(ext)
   }
 
   var testResolve;
-  var testDone = new Promise(resolve => { testResolve = resolve; });
+  var testDone = new Promise(resolve => {
+    testResolve = resolve;
+  });
 
   var messageHandler = new Map();
   var messageAwaiter = new Map();
@@ -28,7 +32,11 @@ ExtensionTestUtils.loadExtension = function(ext)
     }
     if (messageAwaiter.size) {
       let names = Array.from(messageAwaiter.keys());
-      SimpleTest.is(JSON.stringify(names), "[]", "no tasks awaiting on messages");
+      SimpleTest.is(
+        JSON.stringify(names),
+        "[]",
+        "no tasks awaiting on messages"
+      );
     }
   });
 
@@ -81,7 +89,6 @@ ExtensionTestUtils.loadExtension = function(ext)
         messageQueue.add([msg, ...args]);
         checkMessages();
       }
-
     },
   };
 
@@ -106,18 +113,18 @@ ExtensionTestUtils.loadExtension = function(ext)
 
   registerCleanup(() => {
     if (extension.state == "pending" || extension.state == "running") {
-      SimpleTest.ok(false, "Extension left running at test shutdown")
+      SimpleTest.ok(false, "Extension left running at test shutdown");
       return extension.unload();
     } else if (extension.state == "unloading") {
-      SimpleTest.ok(false, "Extension not fully unloaded at test shutdown")
+      SimpleTest.ok(false, "Extension not fully unloaded at test shutdown");
     }
   });
 
-  extension.awaitMessage = (msg) => {
+  extension.awaitMessage = msg => {
     return new Promise(resolve => {
       checkDuplicateListeners(msg);
 
-      messageAwaiter.set(msg, {resolve});
+      messageAwaiter.set(msg, { resolve });
       checkMessages();
     });
   };
@@ -127,7 +134,7 @@ ExtensionTestUtils.loadExtension = function(ext)
     messageHandler.set(msg, callback);
   };
 
-  extension.awaitFinish = (msg) => {
+  extension.awaitFinish = msg => {
     return testDone.then(actual => {
       if (msg) {
         SimpleTest.is(actual, msg, "test result correct");
