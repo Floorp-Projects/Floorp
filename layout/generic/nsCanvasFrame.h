@@ -180,9 +180,8 @@ class nsDisplayCanvasBackgroundColor final : public nsDisplaySolidColorBase {
   void SetExtraBackgroundColor(nscolor aColor) { mColor = aColor; }
 
   NS_DISPLAY_DECL_NAME("CanvasBackgroundColor", TYPE_CANVAS_BACKGROUND_COLOR)
-#ifdef MOZ_DUMP_PAINTING
+
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
-#endif
 };
 
 class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
