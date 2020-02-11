@@ -57,7 +57,6 @@ import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
-import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.perf.HotStartPerformanceMonitor
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.search.SearchFragmentDirections
@@ -120,9 +119,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
         externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
 
-        if (intent.getBooleanExtra(EXTRA_FINISH_ONBOARDING, false)) {
-            FenixOnboarding(this).finish()
-        }
+        Performance.processIntentIfPerformanceTest(intent, this)
 
         if (settings().isTelemetryEnabled) {
             lifecycle.addObserver(BreadcrumbsRecorder(components.analytics.crashReporter,
@@ -402,6 +399,5 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         const val PRIVATE_BROWSING_MODE = "private_browsing_mode"
         const val EXTRA_DELETE_PRIVATE_TABS = "notification_delete_and_open"
         const val EXTRA_OPENED_FROM_NOTIFICATION = "notification_open"
-        const val EXTRA_FINISH_ONBOARDING = "finishonboarding"
     }
 }

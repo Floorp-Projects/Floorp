@@ -137,10 +137,12 @@ class Settings private constructor(
     ) != Action.BLOCKED
 
     private var trackingProtectionOnboardingShownThisSession = false
+    var isOverrideTPPopupsForPerformanceTest = false
 
     val shouldShowTrackingProtectionOnboarding: Boolean
-        get() = trackingProtectionOnboardingCount < trackingProtectionOnboardingMaximumCount &&
-                !trackingProtectionOnboardingShownThisSession
+        get() = !isOverrideTPPopupsForPerformanceTest &&
+                (trackingProtectionOnboardingCount < trackingProtectionOnboardingMaximumCount &&
+                !trackingProtectionOnboardingShownThisSession)
 
     val shouldShowSecurityPinWarningSync: Boolean
         get() = loginsSecureWarningSyncCount < showLoginsSecureWarningSyncMaxCount
