@@ -24,6 +24,7 @@ with Files('TestBaseProfiler.cpp'):
 if CONFIG['OS_ARCH'] == 'WINNT':
     GeckoCppUnitTests([
         'TestNativeNt',
+        'TestPEExportSection',
     ], linkage=None)
     TEST_DIRS += [
         'interceptor',
