@@ -4,6 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::agentio::as_c_void;
 use crate::constants::*;
 use crate::err::Res;
 use crate::ssl::{
@@ -117,11 +118,14 @@ impl ExtensionTracker {
     }
 
     /// Use the provided handler to manage an extension.  This is quite unsafe.
-    /// # Safety
     ///
+    /// # Safety
     /// The holder of this `ExtensionTracker` needs to ensure that it lives at
     /// least as long as the file descriptor, as NSS provides no way to remove
     /// an extension handler once it is configured.
+    ///
+    /// # Errors
+    /// If the underlying NSS API fails to register a handler.
     pub unsafe fn new(
         fd: *mut PRFileDesc,
         extension: Extension,
@@ -140,16 +144,15 @@ impl ExtensionTracker {
         // This way, only this "outer" code deals with the reference count.
         let mut tracker = Self {
             extension,
-            handler: Pin::new(Box::new(Box::new(handler))),
+            handler: Box::pin(Box::new(handler)),
         };
-        let p = &mut *tracker.handler as *mut BoxedExtensionHandler as *mut c_void;
         SSL_InstallExtensionHooks(
             fd,
             extension,
             Some(Self::extension_writer),
-            p,
+            as_c_void(&mut tracker.handler),
             Some(Self::extension_handler),
-            p,
+            as_c_void(&mut tracker.handler),
         )?;
         Ok(tracker)
     }

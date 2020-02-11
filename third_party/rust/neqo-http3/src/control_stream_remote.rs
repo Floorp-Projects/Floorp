@@ -24,8 +24,8 @@ impl ::std::fmt::Display for ControlStreamRemote {
 }
 
 impl ControlStreamRemote {
-    pub fn new() -> ControlStreamRemote {
-        ControlStreamRemote {
+    pub fn new() -> Self {
+        Self {
             stream_id: None,
             frame_reader: HFrameReader::new(),
             fin: false,

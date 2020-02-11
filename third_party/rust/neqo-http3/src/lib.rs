@@ -5,6 +5,7 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
+#![warn(clippy::use_self)]
 
 mod client_events;
 mod connection;
@@ -22,9 +23,9 @@ mod transaction_client;
 pub mod transaction_server;
 //pub mod server;
 
-use neqo_qpack;
-use neqo_transport;
+use neqo_qpack::Error as QpackError;
 pub use neqo_transport::Output;
+use neqo_transport::{AppError, Error as TransportError};
 
 pub use client_events::Http3ClientEvent;
 pub use connection::Http3State;
@@ -63,82 +64,84 @@ pub enum Error {
     InvalidStreamId,
     NoMoreData,
     NotEnoughData,
-    TransportError(neqo_transport::Error),
+    TransportError(TransportError),
     Unavailable,
     Unexpected,
     InvalidResumptionToken,
 }
 
 impl Error {
-    pub fn code(&self) -> neqo_transport::AppError {
+    pub fn code(&self) -> AppError {
         match self {
-            Error::HttpNoError => 0x100,
-            Error::HttpGeneralProtocolError => 0x101,
-            Error::HttpInternalError => 0x102,
-            Error::HttpStreamCreationError => 0x103,
-            Error::HttpClosedCriticalStream => 0x104,
-            Error::HttpFrameUnexpected => 0x105,
-            Error::HttpFrameError => 0x106,
-            Error::HttpExcessiveLoad => 0x107,
-            Error::HttpIdError => 0x108,
-            Error::HttpSettingsError => 0x109,
-            Error::HttpMissingSettings => 0x10a,
-            Error::HttpRequestRejected => 0x10b,
-            Error::HttpRequestCancelled => 0x10c,
-            Error::HttpRequestIncomplete => 0x10d,
-            Error::HttpEarlyResponse => 0x10e,
-            Error::HttpConnectError => 0x10f,
-            Error::HttpVersionFallback => 0x110,
-            Error::QpackError(e) => e.code(),
+            Self::HttpNoError => 0x100,
+            Self::HttpGeneralProtocolError => 0x101,
+            Self::HttpInternalError => 0x102,
+            Self::HttpStreamCreationError => 0x103,
+            Self::HttpClosedCriticalStream => 0x104,
+            Self::HttpFrameUnexpected => 0x105,
+            Self::HttpFrameError => 0x106,
+            Self::HttpExcessiveLoad => 0x107,
+            Self::HttpIdError => 0x108,
+            Self::HttpSettingsError => 0x109,
+            Self::HttpMissingSettings => 0x10a,
+            Self::HttpRequestRejected => 0x10b,
+            Self::HttpRequestCancelled => 0x10c,
+            Self::HttpRequestIncomplete => 0x10d,
+            Self::HttpEarlyResponse => 0x10e,
+            Self::HttpConnectError => 0x10f,
+            Self::HttpVersionFallback => 0x110,
+            Self::QpackError(e) => e.code(),
             // These are all internal errors.
             _ => 3,
         }
     }
+}
 
-    pub fn from_code(error: neqo_transport::AppError) -> Error {
+impl From<TransportError> for Error {
+    fn from(err: TransportError) -> Self {
+        Self::TransportError(err)
+    }
+}
+
+impl From<QpackError> for Error {
+    fn from(err: QpackError) -> Self {
+        Self::QpackError(err)
+    }
+}
+
+impl From<AppError> for Error {
+    fn from(error: AppError) -> Self {
         match error {
-            0x100 => Error::HttpNoError,
-            0x101 => Error::HttpGeneralProtocolError,
-            0x102 => Error::HttpInternalError,
-            0x103 => Error::HttpStreamCreationError,
-            0x104 => Error::HttpClosedCriticalStream,
-            0x105 => Error::HttpFrameUnexpected,
-            0x106 => Error::HttpFrameError,
-            0x107 => Error::HttpExcessiveLoad,
-            0x108 => Error::HttpIdError,
-            0x109 => Error::HttpSettingsError,
-            0x10a => Error::HttpMissingSettings,
-            0x10b => Error::HttpRequestRejected,
-            0x10c => Error::HttpRequestCancelled,
-            0x10d => Error::HttpRequestIncomplete,
-            0x10e => Error::HttpEarlyResponse,
-            0x10f => Error::HttpConnectError,
-            0x110 => Error::HttpVersionFallback,
-            0x200 => Error::QpackError(neqo_qpack::Error::DecompressionFailed),
-            0x201 => Error::QpackError(neqo_qpack::Error::EncoderStreamError),
-            0x202 => Error::QpackError(neqo_qpack::Error::DecoderStreamError),
-            _ => Error::HttpInternalError,
+            0x100 => Self::HttpNoError,
+            0x101 => Self::HttpGeneralProtocolError,
+            0x102 => Self::HttpInternalError,
+            0x103 => Self::HttpStreamCreationError,
+            0x104 => Self::HttpClosedCriticalStream,
+            0x105 => Self::HttpFrameUnexpected,
+            0x106 => Self::HttpFrameError,
+            0x107 => Self::HttpExcessiveLoad,
+            0x108 => Self::HttpIdError,
+            0x109 => Self::HttpSettingsError,
+            0x10a => Self::HttpMissingSettings,
+            0x10b => Self::HttpRequestRejected,
+            0x10c => Self::HttpRequestCancelled,
+            0x10d => Self::HttpRequestIncomplete,
+            0x10e => Self::HttpEarlyResponse,
+            0x10f => Self::HttpConnectError,
+            0x110 => Self::HttpVersionFallback,
+            0x200 => Self::QpackError(QpackError::DecompressionFailed),
+            0x201 => Self::QpackError(QpackError::EncoderStreamError),
+            0x202 => Self::QpackError(QpackError::DecoderStreamError),
+            _ => Self::HttpInternalError,
         }
-    }
-}
-
-impl From<neqo_transport::Error> for Error {
-    fn from(err: neqo_transport::Error) -> Self {
-        Error::TransportError(err)
-    }
-}
-
-impl From<neqo_qpack::Error> for Error {
-    fn from(err: neqo_qpack::Error) -> Self {
-        Error::QpackError(err)
     }
 }
 
 impl ::std::error::Error for Error {
     fn source(&self) -> Option<&(dyn ::std::error::Error + 'static)> {
         match self {
-            Error::TransportError(e) => Some(e),
-            Error::QpackError(e) => Some(e),
+            Self::TransportError(e) => Some(e),
+            Self::QpackError(e) => Some(e),
             _ => None,
         }
     }
