@@ -19,9 +19,6 @@ namespace mozilla {
 using namespace layers;
 namespace gfx {
 
-// See VRManagerChild.cpp
-void ReleaseVRManagerParentSingleton();
-
 VRManagerParent::VRManagerParent(ProcessId aChildProcessId,
                                  bool aIsContentChild)
     : mHaveEventListener(false),
@@ -127,29 +124,16 @@ bool VRManagerParent::CreateForGPUProcess(
   return true;
 }
 
-/*static*/
-void VRManagerParent::Shutdown() {
-  CompositorThreadHolder::Loop()->PostTask(NS_NewRunnableFunction(
-      "VRManagerParent::Shutdown",
-      []() -> void { VRManagerParent::ShutdownInternal(); }));
-}
-
-/*static*/
-void VRManagerParent::ShutdownInternal() {
-  VRManager* vm = VRManager::Get();
-  if (!vm) {
-    return;
-  }
-  vm->ShutdownVRManagerParents();
-  ReleaseVRManagerParentSingleton();
-}
-
-void VRManagerParent::ActorDestroy(ActorDestroyReason why) {}
-
-void VRManagerParent::ActorDealloc() {
-  UnregisterFromManager();
+void VRManagerParent::DeferredDestroy() {
   mCompositorThreadHolder = nullptr;
   mSelfRef = nullptr;
+}
+
+void VRManagerParent::ActorDestroy(ActorDestroyReason why) {
+  UnregisterFromManager();
+  MessageLoop::current()->PostTask(
+      NewRunnableMethod("gfx::VRManagerParent::DeferredDestroy", this,
+                        &VRManagerParent::DeferredDestroy));
 }
 
 void VRManagerParent::OnChannelConnected(int32_t aPid) {
