@@ -424,6 +424,8 @@ enum MouseButtonsFlag {
   e5thFlag = 0x10
 };
 
+enum class TextRangeType : RawTextRangeType;
+
 }  // namespace mozilla
 
 #endif  // mozilla_EventForwards_h__

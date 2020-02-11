@@ -5690,6 +5690,24 @@ void nsTextFrame::PaintDecorationLine(
   }
 }
 
+static uint8_t ToStyleLineStyle(const TextRangeStyle& aStyle) {
+  switch (aStyle.mLineStyle) {
+    case TextRangeStyle::LINESTYLE_NONE:
+      return NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+    case TextRangeStyle::LINESTYLE_WAVY:
+      return NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
+    case TextRangeStyle::LINESTYLE_DASHED:
+      return NS_STYLE_TEXT_DECORATION_STYLE_DASHED;
+    case TextRangeStyle::LINESTYLE_DOTTED:
+      return NS_STYLE_TEXT_DECORATION_STYLE_DOTTED;
+    case TextRangeStyle::LINESTYLE_DOUBLE:
+      return NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown line style?");
+      return NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+  }
+}
+
 /**
  * This, plus kSelectionTypesWithDecorations, encapsulates all knowledge
  * about drawing text decoration for selections.
@@ -5770,7 +5788,7 @@ void nsTextFrame::DrawSelectionDecorations(
           if (aRangeStyle.mLineStyle == TextRangeStyle::LINESTYLE_NONE) {
             return;
           }
-          params.style = aRangeStyle.mLineStyle;
+          params.style = ToStyleLineStyle(aRangeStyle);
           relativeSize = aRangeStyle.mIsBoldLine ? 2.0f : 1.0f;
         } else if (!weDefineSelectionUnderline) {
           // There is no underline style definition.
@@ -7347,7 +7365,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
             rangeStyle.mLineStyle == TextRangeStyle::LINESTYLE_NONE) {
           continue;
         }
-        params.style = rangeStyle.mLineStyle;
+        params.style = ToStyleLineStyle(rangeStyle);
         relativeSize = rangeStyle.mIsBoldLine ? 2.0f : 1.0f;
       } else if (!nsTextPaintStyle::GetSelectionUnderline(
                      aPresContext, index, nullptr, &relativeSize,
