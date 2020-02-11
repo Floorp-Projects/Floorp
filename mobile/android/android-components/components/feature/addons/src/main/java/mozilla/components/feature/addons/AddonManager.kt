@@ -4,6 +4,9 @@
 
 package mozilla.components.feature.addons
 
+import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitAll
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.DisabledFlags
@@ -13,6 +16,8 @@ import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.webextensions.WebExtensionSupport
 import mozilla.components.support.webextensions.WebExtensionSupport.installedExtensions
 import java.lang.IllegalStateException
+import java.util.Collections.newSetFromMap
+import java.util.concurrent.ConcurrentHashMap
 import java.util.Locale
 
 /**
@@ -24,6 +29,7 @@ import java.util.Locale
  * @property addonUpdater The [AddonUpdater] instance to use when checking / triggering
  * updates.
  */
+@Suppress("LargeClass")
 class AddonManager(
     private val store: BrowserStore,
     private val engine: Engine,
@@ -31,19 +37,30 @@ class AddonManager(
     private val addonUpdater: AddonUpdater
 ) {
 
+    @VisibleForTesting
+    internal val pendingAddonActions = newSetFromMap(ConcurrentHashMap<CompletableDeferred<Unit>, Boolean>())
+
     /**
      * Returns the list of all installed and recommended add-ons.
      *
+     * @param waitForPendingActions whether or not to wait (suspend, but not
+     * block) until all pending add-on actions (install/uninstall/enable/disable)
+     * are completed in either success or failure.
      * @return list of all [Addon]s with up-to-date [Addon.installedState].
      * @throws AddonManagerException in case of a problem reading from
      * the [addonsProvider] or querying web extension state from the engine / store.
      */
     @Throws(AddonManagerException::class)
     @Suppress("TooGenericExceptionCaught")
-    suspend fun getAddons(): List<Addon> {
+    suspend fun getAddons(waitForPendingActions: Boolean = true): List<Addon> {
         try {
             // Make sure extension support is initialized, i.e. the state of all installed extensions is known.
             WebExtensionSupport.awaitInitialization()
+
+            // Make sure all pending actions are completed
+            if (waitForPendingActions) {
+                pendingAddonActions.awaitAll()
+            }
 
             // Get all available/supported addons from provider and add state if
             // installed. NB: We're keeping only the translations of the default
@@ -96,15 +113,20 @@ class AddonManager(
         onSuccess: ((Addon) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
     ) {
+        val pendingAction = addPendingAddonAction()
         engine.installWebExtension(
             id = addon.id,
             url = addon.downloadUrl,
             onSuccess = { ext ->
                 val installedAddon = addon.copy(installedState = ext.toInstalledState())
                 addonUpdater.registerForFutureUpdates(installedAddon.id)
+                completePendingAddonAction(pendingAction)
                 onSuccess(installedAddon)
             },
-            onError = onError
+            onError = { id, throwable ->
+                completePendingAddonAction(pendingAction)
+                onError(id, throwable)
+            }
         )
     }
 
@@ -126,13 +148,18 @@ class AddonManager(
             return
         }
 
+        val pendingAction = addPendingAddonAction()
         engine.uninstallWebExtension(
             extension,
             onSuccess = {
                 addonUpdater.unregisterForFutureUpdates(addon.id)
+                completePendingAddonAction(pendingAction)
                 onSuccess()
             },
-            onError = onError
+            onError = { id, throwable ->
+                completePendingAddonAction(pendingAction)
+                onError(id, throwable)
+            }
         )
     }
 
@@ -154,13 +181,18 @@ class AddonManager(
             return
         }
 
+        val pendingAction = addPendingAddonAction()
         engine.enableWebExtension(
             extension,
             onSuccess = { ext ->
                 val enabledAddon = addon.copy(installedState = ext.toInstalledState())
+                completePendingAddonAction(pendingAction)
                 onSuccess(enabledAddon)
             },
-            onError = onError
+            onError = {
+                completePendingAddonAction(pendingAction)
+                onError(it)
+            }
         )
     }
 
@@ -182,13 +214,18 @@ class AddonManager(
             return
         }
 
+        val pendingAction = addPendingAddonAction()
         engine.disableWebExtension(
             extension,
             onSuccess = { ext ->
                 val disabledAddon = addon.copy(installedState = ext.toInstalledState())
+                completePendingAddonAction(pendingAction)
                 onSuccess(disabledAddon)
             },
-            onError = onError
+            onError = {
+                completePendingAddonAction(pendingAction)
+                onError(it)
+            }
         )
     }
 
@@ -221,6 +258,15 @@ class AddonManager(
         }
 
         engine.updateWebExtension(extension, onSuccess, onError)
+    }
+
+    private fun addPendingAddonAction() = CompletableDeferred<Unit>().also {
+        pendingAddonActions.add(it)
+    }
+
+    private fun completePendingAddonAction(action: CompletableDeferred<Unit>) {
+        action.complete(Unit)
+        pendingAddonActions.remove(action)
     }
 }
 

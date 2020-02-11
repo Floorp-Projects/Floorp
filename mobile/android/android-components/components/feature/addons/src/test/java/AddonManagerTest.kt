@@ -5,7 +5,10 @@
 package mozilla.components.feature.addons.amo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.WebExtensionAction
@@ -195,6 +198,61 @@ class AddonManagerTest {
     }
 
     @Test
+    fun `getAddons - suspends until pending actions are completed`() {
+        val addon = Addon(
+            id = "ext1",
+            installedState = Addon.InstalledState("ext1", "1.0", "", true)
+        )
+
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+
+        val store = BrowserStore()
+
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(emptyList())
+        }
+        val addonsProvider: AddonsProvider = mock()
+
+        runBlocking {
+            whenever(addonsProvider.getAvailableAddons(anyBoolean())).thenReturn(listOf(addon))
+            WebExtensionSupport.initialize(engine, store)
+            WebExtensionSupport.installedExtensions[addon.id] = extension
+        }
+
+        val addonManager = AddonManager(store, mock(), addonsProvider, mock())
+        addonManager.installAddon(addon)
+        addonManager.enableAddon(addon)
+        addonManager.disableAddon(addon)
+        addonManager.uninstallAddon(addon)
+        assertEquals(4, addonManager.pendingAddonActions.size)
+
+        var getAddonsResult: List<Addon>? = null
+        val nonSuspendingJob = CoroutineScope(Dispatchers.IO).launch {
+            getAddonsResult = addonManager.getAddons(waitForPendingActions = false)
+        }
+
+        runBlocking {
+            nonSuspendingJob.join()
+            assertNotNull(getAddonsResult)
+        }
+
+        getAddonsResult = null
+        val suspendingJob = CoroutineScope(Dispatchers.IO).launch {
+            getAddonsResult = addonManager.getAddons(waitForPendingActions = true)
+        }
+
+        addonManager.pendingAddonActions.forEach { it.complete(Unit) }
+
+        runBlocking {
+            suspendingJob.join()
+            assertNotNull(getAddonsResult)
+        }
+    }
+
+    @Test
     fun `updateAddon - when a extension is updated successfully`() {
         val store = spy(
             BrowserStore(
@@ -329,6 +387,7 @@ class AddonManagerTest {
         onSuccessCaptor.value.invoke(extension)
         assertNotNull(installedAddon)
         assertEquals(addon.id, installedAddon!!.id)
+        assertTrue(manager.pendingAddonActions.isEmpty())
     }
 
     @Test
@@ -360,6 +419,7 @@ class AddonManagerTest {
         onErrorCaptor.value.invoke(addon.id, IllegalStateException("test"))
         assertNotNull(throwable!!)
         assertEquals(msg, addon.id)
+        assertTrue(manager.pendingAddonActions.isEmpty())
     }
 
     @Test
@@ -391,6 +451,7 @@ class AddonManagerTest {
 
         onSuccessCaptor.value.invoke()
         assertTrue(successCallbackInvoked)
+        assertTrue(manager.pendingAddonActions.isEmpty())
     }
 
     @Test
@@ -436,6 +497,7 @@ class AddonManagerTest {
         assertNotNull(throwable!!)
         assertEquals("test", throwable!!.localizedMessage)
         assertEquals(msg, addon.id)
+        assertTrue(manager.pendingAddonActions.isEmpty())
     }
 
     @Test
@@ -468,6 +530,7 @@ class AddonManagerTest {
         onSuccessCaptor.value.invoke(extension)
         assertNotNull(enabledAddon)
         assertEquals(addon.id, enabledAddon!!.id)
+        assertTrue(manager.pendingAddonActions.isEmpty())
     }
 
     @Test
@@ -509,6 +572,7 @@ class AddonManagerTest {
         onErrorCaptor.value.invoke(IllegalStateException("test"))
         assertNotNull(throwable!!)
         assertEquals("test", throwable!!.localizedMessage)
+        assertTrue(manager.pendingAddonActions.isEmpty())
     }
 
     @Test
@@ -541,6 +605,7 @@ class AddonManagerTest {
         onSuccessCaptor.value.invoke(extension)
         assertNotNull(disabledAddon)
         assertEquals(addon.id, disabledAddon!!.id)
+        assertTrue(manager.pendingAddonActions.isEmpty())
     }
 
     @Test
@@ -582,5 +647,6 @@ class AddonManagerTest {
         onErrorCaptor.value.invoke(IllegalStateException("test"))
         assertNotNull(throwable!!)
         assertEquals("test", throwable!!.localizedMessage)
+        assertTrue(manager.pendingAddonActions.isEmpty())
     }
 }
