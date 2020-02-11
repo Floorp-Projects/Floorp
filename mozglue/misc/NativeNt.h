@@ -21,6 +21,8 @@
 #include "mozilla/Move.h"
 #include "mozilla/Span.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "mozilla/interceptor/MMPolicies.h"
+#include "mozilla/interceptor/TargetFunction.h"
 
 #if defined(MOZILLA_INTERNAL_API)
 #  include "nsString.h"
@@ -411,6 +413,27 @@ inline int StricmpASCII(const char* aLeft, const char* aRight) {
   return curLeft - curRight;
 }
 
+inline int StrcmpASCII(const char* aLeft, const char* aRight) {
+  char curLeft, curRight;
+
+  do {
+    curLeft = *(aLeft++);
+    curRight = *(aRight++);
+  } while (curLeft && curLeft == curRight);
+
+  return curLeft - curRight;
+}
+
+inline size_t StrlenASCII(const char* aStr) {
+  size_t len = 0;
+
+  while (*(aStr++)) {
+    ++len;
+  }
+
+  return len;
+}
+
 class MOZ_RAII PEHeaders final {
   /**
    * This structure is documented on MSDN as VS_VERSIONINFO, but is not present
@@ -430,15 +453,17 @@ class MOZ_RAII PEHeaders final {
   // The lowest two bits of an HMODULE are used as flags. Stripping those bits
   // from the HMODULE yields the base address of the binary's memory mapping.
   // (See LoadLibraryEx docs on MSDN)
-  static PIMAGE_DOS_HEADER HModuleToBaseAddr(HMODULE aModule) {
-    return reinterpret_cast<PIMAGE_DOS_HEADER>(
-        reinterpret_cast<uintptr_t>(aModule) & ~uintptr_t(3));
+  template <typename T>
+  static T HModuleToBaseAddr(HMODULE aModule) {
+    return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(aModule) &
+                               ~uintptr_t(3));
   }
 
   explicit PEHeaders(void* aBaseAddress)
       : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(aBaseAddress)) {}
 
-  explicit PEHeaders(HMODULE aModule) : PEHeaders(HModuleToBaseAddr(aModule)) {}
+  explicit PEHeaders(HMODULE aModule)
+      : PEHeaders(HModuleToBaseAddr<PIMAGE_DOS_HEADER>(aModule)) {}
 
   explicit PEHeaders(PIMAGE_DOS_HEADER aMzHeader)
       : mMzHeader(aMzHeader),
@@ -829,6 +854,214 @@ class MOZ_RAII PEHeaders final {
   PIMAGE_NT_HEADERS mPeHeader;
   void* mImageLimit;
   bool mIsImportDirectoryTampered;
+};
+
+// This class represents an export section of a local/remote process.
+template <typename MMPolicy>
+class MOZ_RAII PEExportSection {
+  const MMPolicy& mMMPolicy;
+  uintptr_t mImageBase;
+  DWORD mOrdinalBase;
+  DWORD mRvaDirStart;
+  DWORD mRvaDirEnd;
+  mozilla::interceptor::TargetObjectArray<MMPolicy, DWORD> mExportAddressTable;
+  mozilla::interceptor::TargetObjectArray<MMPolicy, DWORD> mExportNameTable;
+  mozilla::interceptor::TargetObjectArray<MMPolicy, WORD> mExportOrdinalTable;
+
+  explicit PEExportSection(const MMPolicy& aMMPolicy)
+      : mMMPolicy(aMMPolicy),
+        mImageBase(0),
+        mOrdinalBase(0),
+        mRvaDirStart(0),
+        mRvaDirEnd(0),
+        mExportAddressTable(mMMPolicy),
+        mExportNameTable(mMMPolicy),
+        mExportOrdinalTable(mMMPolicy) {}
+
+  PEExportSection(const MMPolicy& aMMPolicy, uintptr_t aImageBase,
+                  DWORD aRvaDirStart, DWORD aRvaDirEnd,
+                  const IMAGE_EXPORT_DIRECTORY& exportDir)
+      : mMMPolicy(aMMPolicy),
+        mImageBase(aImageBase),
+        mOrdinalBase(exportDir.Base),
+        mRvaDirStart(aRvaDirStart),
+        mRvaDirEnd(aRvaDirEnd),
+        mExportAddressTable(mMMPolicy,
+                            mImageBase + exportDir.AddressOfFunctions,
+                            exportDir.NumberOfFunctions),
+        mExportNameTable(mMMPolicy, mImageBase + exportDir.AddressOfNames,
+                         exportDir.NumberOfNames),
+        mExportOrdinalTable(mMMPolicy,
+                            mImageBase + exportDir.AddressOfNameOrdinals,
+                            exportDir.NumberOfNames) {}
+
+  static const PEExportSection Get(uintptr_t aImageBase,
+                                   const MMPolicy& aMMPolicy) {
+    mozilla::interceptor::TargetObject<MMPolicy, IMAGE_DOS_HEADER> mzHeader(
+        aMMPolicy, aImageBase);
+    if (!mzHeader || mzHeader->e_magic != IMAGE_DOS_SIGNATURE) {
+      return PEExportSection(aMMPolicy);
+    }
+
+    mozilla::interceptor::TargetObject<MMPolicy, IMAGE_NT_HEADERS> peHeader(
+        aMMPolicy, aImageBase + mzHeader->e_lfanew);
+    if (!peHeader || peHeader->Signature != IMAGE_NT_SIGNATURE) {
+      return PEExportSection(aMMPolicy);
+    }
+
+    if (peHeader->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC) {
+      return PEExportSection(aMMPolicy);
+    }
+
+    const IMAGE_OPTIONAL_HEADER& optionalHeader = peHeader->OptionalHeader;
+
+    DWORD imageSize = optionalHeader.SizeOfImage;
+    // This is a coarse-grained check to ensure that the image size is
+    // reasonable. It we aren't big enough to contain headers, we have a
+    // problem!
+    if (imageSize < sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS)) {
+      return PEExportSection(aMMPolicy);
+    }
+
+    if (optionalHeader.NumberOfRvaAndSizes <= IMAGE_DIRECTORY_ENTRY_EXPORT) {
+      return PEExportSection(aMMPolicy);
+    }
+
+    const IMAGE_DATA_DIRECTORY& exportDirectoryEntry =
+        optionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+    if (!exportDirectoryEntry.VirtualAddress || !exportDirectoryEntry.Size) {
+      return PEExportSection(aMMPolicy);
+    }
+
+    mozilla::interceptor::TargetObject<MMPolicy, IMAGE_EXPORT_DIRECTORY>
+        exportDirectory(aMMPolicy,
+                        aImageBase + exportDirectoryEntry.VirtualAddress);
+    if (!exportDirectory || !exportDirectory->NumberOfFunctions) {
+      return PEExportSection(aMMPolicy);
+    }
+
+    return PEExportSection(
+        aMMPolicy, aImageBase, exportDirectoryEntry.VirtualAddress,
+        exportDirectoryEntry.VirtualAddress + exportDirectoryEntry.Size,
+        *exportDirectory.GetLocalBase());
+  }
+
+  FARPROC GetProcAddressByOrdinal(WORD aOrdinal) const {
+    if (aOrdinal < mOrdinalBase) {
+      return nullptr;
+    }
+
+    auto rvaToFunction = mExportAddressTable[aOrdinal - mOrdinalBase];
+    if (!rvaToFunction) {
+      return nullptr;
+    }
+    return reinterpret_cast<FARPROC>(mImageBase + *rvaToFunction);
+  }
+
+ public:
+  static const PEExportSection Get(HMODULE aModule, const MMPolicy& aMMPolicy) {
+    return Get(PEHeaders::HModuleToBaseAddr<uintptr_t>(aModule), aMMPolicy);
+  }
+
+  explicit operator bool() const {
+    // Because PEExportSection doesn't use MMPolicy::Reserve(), a boolified
+    // mMMPolicy is expected to be false.  We don't check mMMPolicy here.
+    return mImageBase && mRvaDirStart && mRvaDirEnd && mExportAddressTable &&
+           mExportNameTable && mExportOrdinalTable;
+  }
+
+  template <typename T>
+  T RVAToPtr(uint32_t aRva) const {
+    return reinterpret_cast<T>(mImageBase + aRva);
+  }
+
+  PIMAGE_EXPORT_DIRECTORY GetExportDirectory() const {
+    if (!*this) {
+      return nullptr;
+    }
+
+    return RVAToPtr<PIMAGE_EXPORT_DIRECTORY>(mRvaDirStart);
+  }
+
+  /**
+   * This functions searches the export table for a given string as
+   * GetProcAddress does, but this returns a matched entry of the Export
+   * Address Table i.e. a pointer to an RVA of a matched function instead
+   * of a function address.  If the entry is forwarded, this function
+   * returns nullptr.
+   */
+  const DWORD* FindExportAddressTableEntry(
+      const char* aFunctionNameASCII) const {
+    if (!*this || !aFunctionNameASCII) {
+      return nullptr;
+    }
+
+    struct NameTableComparator {
+      NameTableComparator(const PEExportSection<MMPolicy>& aExportSection,
+                          const char* aTarget)
+          : mExportSection(aExportSection),
+            mTargetName(aTarget),
+            mTargetNamelength(StrlenASCII(aTarget)) {}
+
+      int operator()(DWORD aRVAToString) const {
+        mozilla::interceptor::TargetObjectArray<MMPolicy, char> itemString(
+            mExportSection.mMMPolicy, mExportSection.mImageBase + aRVAToString,
+            mTargetNamelength + 1);
+        return StrcmpASCII(mTargetName, itemString[0]);
+      }
+
+      const PEExportSection<MMPolicy>& mExportSection;
+      const char* mTargetName;
+      size_t mTargetNamelength;
+    };
+
+    const NameTableComparator comp(*this, aFunctionNameASCII);
+
+    size_t match;
+    if (!mExportNameTable.BinarySearchIf(comp, &match)) {
+      return nullptr;
+    }
+
+    const WORD* index = mExportOrdinalTable[match];
+    if (!index) {
+      return nullptr;
+    }
+
+    const DWORD* rvaToFunction = mExportAddressTable[*index];
+    if (!rvaToFunction) {
+      return nullptr;
+    }
+
+    if (*rvaToFunction >= mRvaDirStart && *rvaToFunction < mRvaDirEnd) {
+      // If an entry points to an address within the export section, the
+      // field is a forwarder RVA.  We return nullptr because the entry is
+      // not a function address but a null-terminated string used for export
+      // forwarding.
+      return nullptr;
+    }
+
+    return rvaToFunction;
+  }
+
+  /**
+   * This functions behaves the same as the native ::GetProcAddress except
+   * the following cases:
+   * - Returns nullptr if a target entry is forwarded to another dll.
+   */
+  FARPROC GetProcAddress(const char* aFunctionNameASCII) const {
+    uintptr_t maybeOdrinal = reinterpret_cast<uintptr_t>(aFunctionNameASCII);
+    // When the high-order word of |aFunctionNameASCII| is zero, it's not
+    // a string but an ordinal value.
+    if (maybeOdrinal < 0x10000) {
+      return GetProcAddressByOrdinal(static_cast<WORD>(maybeOdrinal));
+    }
+
+    auto rvaToFunction = FindExportAddressTableEntry(aFunctionNameASCII);
+    if (!rvaToFunction) {
+      return nullptr;
+    }
+    return reinterpret_cast<FARPROC>(mImageBase + *rvaToFunction);
+  }
 };
 
 inline HANDLE RtlGetProcessHeap() {

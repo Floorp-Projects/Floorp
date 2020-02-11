@@ -86,9 +86,9 @@ inline LauncherVoidResult RestoreImportDirectory(const wchar_t* aFullImagePath,
     aLocalExeImage.SetImportDirectoryTampered();
   }
 
-  void* remoteAddress = reinterpret_cast<char*>(
-                            nt::PEHeaders::HModuleToBaseAddr(aRemoteExeImage)) +
-                        importDirEntryRva;
+  void* remoteAddress =
+      nt::PEHeaders::HModuleToBaseAddr<char*>(aRemoteExeImage) +
+      importDirEntryRva;
 
   {  // Scope for prot
     AutoVirtualProtect prot(remoteAddress, sizeof(IMAGE_DATA_DIRECTORY),
