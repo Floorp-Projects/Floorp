@@ -3573,7 +3573,8 @@ void SVGTextFrame::SelectSubString(nsIContent* aContent, uint32_t charnum,
 
   RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
 
-  frameSelection->HandleClick(content, charnum, charnum + nchars, false, false,
+  frameSelection->HandleClick(content, charnum, charnum + nchars,
+                              nsFrameSelection::FocusMode::kCollapseToNewPoint,
                               CARET_ASSOCIATE_BEFORE);
 }
 
