@@ -10,7 +10,7 @@ For linting, please see the `linting documentation </tools/lint/>`_.
 Clang-Tidy static analysis
 --------------------------
 
-Our current static-analysis infrastruture is based on
+Our current static-analysis infrastructure is based on
 `clang-tidy <http://clang.llvm.org/extra/clang-tidy/>`__. It uses
 checkers in order to assert different programming errors present in the
 code. The checkers that we use are split into 3 categories:

@@ -53,16 +53,12 @@ with Files("update-packaging/**"):
 with Files("update-verify/**"):
     BUG_COMPONENT = ("Release Engineering", "Release Automation: Updates")
 
-SPHINX_TREES['lint'] = 'lint/docs'
-
 SPHINX_TREES['moztreedocs'] = 'moztreedocs/docs'
 
 with Files('lint/docs/**'):
     SCHEDULES.exclusive = ['docs']
 
 SPHINX_TREES['try'] = 'tryselect/docs'
-
-SPHINX_TREES['static-analysis'] = 'clang-tidy/docs'
 
 SPHINX_TREES['fuzzing'] = 'fuzzing/docs'
 

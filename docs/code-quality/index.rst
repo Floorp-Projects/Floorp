@@ -1,9 +1,18 @@
-Static analyzers and linters
-============================
+Code quality
+============
 
 Because Firefox is a complex piece of software, a lot of tools are
 executed to identify issues at development phase.
 In this document, we try to list these all tools.
+
+
+.. toctree::
+  :maxdepth: 1
+  :glob:
+
+  static-analysis.rst
+  lint/index.rst
+  coding-style/index.rst
 
 .. list-table:: C/C++
    :widths: 25 25 25 20
@@ -112,4 +121,3 @@ In this document, we try to list these all tools.
      -
      -
      - https://github.com/facebook/infer
-

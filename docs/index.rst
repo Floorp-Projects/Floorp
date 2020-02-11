@@ -39,12 +39,6 @@ Mozilla Source Tree Documentation
 
    {python_doc}
 
-.. toctree::
-   :caption: Code quality
-   :maxdepth: 1
-
-   {code_quality_doc}
-
 
 Indices and tables
 ==================
