@@ -45,12 +45,54 @@ void MediaSession::SetActionHandler(MediaSessionAction aAction,
   mActionHandlers[index] = aHandler;
 }
 
+MediaSessionActionHandler* MediaSession::GetActionHandler(
+    MediaSessionAction aAction) const {
+  return mActionHandlers[static_cast<size_t>(aAction)];
+}
+
 void MediaSession::NotifyHandler(const MediaSessionActionDetails& aDetails) {
-  size_t index = static_cast<size_t>(aDetails.mAction);
-  RefPtr<MediaSessionActionHandler> handler = mActionHandlers[index];
-  if (handler) {
-    handler->Call(aDetails);
-  }
+  DispatchNotifyHandler(aDetails);
+}
+
+void MediaSession::NotifyHandler(MediaSessionAction aAction) {
+  MediaSessionActionDetails details;
+  details.mAction = aAction;
+  DispatchNotifyHandler(details);
+}
+
+void MediaSession::DispatchNotifyHandler(
+    const MediaSessionActionDetails& aDetails) {
+  class Runnable final : public mozilla::Runnable {
+   public:
+    Runnable(const MediaSession* aSession,
+             const MediaSessionActionDetails& aDetails)
+        : mozilla::Runnable("MediaSession::DispatchNotifyHandler"),
+          mSession(aSession),
+          mAction(aDetails.mAction) {}
+
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+      if (RefPtr<MediaSessionActionHandler> handler =
+              mSession->GetActionHandler(mAction)) {
+        MediaSessionActionDetails details;
+        details.mAction = mAction;
+        handler->Call(details);
+      }
+      return NS_OK;
+    }
+
+   private:
+    RefPtr<const MediaSession> mSession;
+    MediaSessionAction mAction;
+  };
+
+  RefPtr<nsIRunnable> runnable = new Runnable(this, aDetails);
+  NS_DispatchToMainThread(runnable);
+}
+
+bool MediaSession::IsSupportedAction(MediaSessionAction aAction) const {
+  size_t index = static_cast<size_t>(aAction);
+  MOZ_ASSERT(index < ACTIONS);
+  return mActionHandlers[index] != nullptr;
 }
 
 void MediaSession::Shutdown() {

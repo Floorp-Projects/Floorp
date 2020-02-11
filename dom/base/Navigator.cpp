@@ -2004,6 +2004,10 @@ dom::MediaSession* Navigator::MediaSession() {
   return mMediaSession;
 }
 
+bool Navigator::HasCreatedMediaSession() const {
+  return mMediaSession != nullptr;
+}
+
 Clipboard* Navigator::Clipboard() {
   if (!mClipboard) {
     mClipboard = new dom::Clipboard(GetWindow());
