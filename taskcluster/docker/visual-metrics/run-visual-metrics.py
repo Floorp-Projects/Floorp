@@ -7,8 +7,9 @@
 """Instrument visualmetrics.py to run in parallel."""
 
 import argparse
-import os
 import json
+import os
+import subprocess
 import sys
 import tarfile
 from concurrent.futures import ProcessPoolExecutor
@@ -18,10 +19,9 @@ from pathlib import Path
 
 import attr
 import structlog
-import subprocess
-
 from jsonschema import validate
 from voluptuous import ALLOW_EXTRA, Required, Schema
+
 
 #: The directory where artifacts from this job will be placed.
 OUTPUT_DIR = Path("/", "builds", "worker", "artifacts")
@@ -87,14 +87,13 @@ def run_command(log, cmd):
         return e.returncode, e.output
 
 
-def append_result(log, suites, test_name, app_name, name, result):
+def append_result(log, suites, test_name, name, result):
     """Appends a ``name`` metrics result in the ``test_name`` suite.
 
     Args:
         log: The structlog logger instance.
         suites: A mapping containing the suites.
         test_name: The name of the test.
-        app_name: The name of the browser application used in the test.
         name: The name of the metrics.
         result: The value to append.
     """
@@ -107,13 +106,9 @@ def append_result(log, suites, test_name, app_name, name, result):
         log.error("%s" % result)
         result = 0
     if test_name not in suites:
-        # TODO: Once Bug 1593198 lands, perfherder will recognize the 'application'; then
-        # it won't be necessary anymore to have the application name added to 'extraOptions'.
-        # So when Bug 1593198 lands, remove the 'extraOptions' key below.
         suites[test_name] = {
             "name": test_name,
             "subtests": {},
-            "extraOptions": [app_name],
         }
 
     subtests = suites[test_name]["subtests"]
@@ -277,7 +272,6 @@ def main(log, args):
                         log,
                         suites,
                         job.test_name,
-                        app_json["application"]["name"],
                         name,
                         value,
                     )
