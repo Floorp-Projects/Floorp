@@ -302,7 +302,7 @@ HTMLButtonElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
   //
   // We only submit if we were the button pressed
   //
-  if (aFormSubmission->GetOriginatingElement() != this) {
+  if (aFormSubmission->GetSubmitterElement() != this) {
     return NS_OK;
   }
 
