@@ -10,7 +10,6 @@
 #include "nsHttpResponseHead.h"
 #include "nsAHttpTransaction.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
 #include "TunnelUtils.h"

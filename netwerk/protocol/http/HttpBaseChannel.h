@@ -19,7 +19,6 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/PrivateBrowsingChannel.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsHashPropertyBag.h"
@@ -399,9 +398,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
     bool mReady;
   };
 
-  nsHttpResponseHead* GetResponseHead() const { return mResponseHead; }
+  nsHttpResponseHead* GetResponseHead() const { return mResponseHead.get(); }
   nsHttpRequestHead* GetRequestHead() { return &mRequestHead; }
-  nsHttpHeaderArray* GetResponseTrailers() const { return mResponseTrailers; }
+  nsHttpHeaderArray* GetResponseTrailers() const {
+    return mResponseTrailers.get();
+  }
 
   const NetAddr& GetSelfAddr() { return mSelfAddr; }
   const NetAddr& GetPeerAddr() { return mPeerAddr; }
@@ -663,17 +664,17 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIInputChannelThrottleQueue> mThrottleQueue;
   nsCOMPtr<nsIInputStream> mUploadStream;
   nsCOMPtr<nsIRunnable> mUploadCloneableCallback;
-  nsAutoPtr<nsHttpResponseHead> mResponseHead;
-  nsAutoPtr<nsHttpHeaderArray> mResponseTrailers;
+  UniquePtr<nsHttpResponseHead> mResponseHead;
+  UniquePtr<nsHttpHeaderArray> mResponseTrailers;
   RefPtr<nsHttpConnectionInfo> mConnectionInfo;
   nsCOMPtr<nsIProxyInfo> mProxyInfo;
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIHttpUpgradeListener> mUpgradeProtocolCallback;
-  nsAutoPtr<nsString> mContentDispositionFilename;
+  UniquePtr<nsString> mContentDispositionFilename;
   nsCOMPtr<nsIConsoleReportCollector> mReportCollector;
 
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
-  nsAutoPtr<nsTArray<nsCString>> mRedirectedCachekeys;
+  UniquePtr<nsTArray<nsCString>> mRedirectedCachekeys;
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
   NetAddr mSelfAddr;

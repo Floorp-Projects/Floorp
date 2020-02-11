@@ -10,7 +10,6 @@
 #include "nsHostResolver.h"
 #include "nsError.h"
 #include "mozilla/Mutex.h"
-#include "nsAutoPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "MainThreadUtils.h"
 #include "mozilla/DebugOnly.h"

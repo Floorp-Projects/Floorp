@@ -75,26 +75,26 @@ class NetlinkAddress {
   bool ScopeIsUniverse() const { return mIfam.ifa_scope == RT_SCOPE_UNIVERSE; }
   const in_common_addr* GetAddrPtr() const { return &mAddr; }
 
-  bool MsgEquals(const NetlinkAddress* aOther) const {
-    return !memcmp(&mIfam, &(aOther->mIfam), sizeof(mIfam));
+  bool MsgEquals(const NetlinkAddress& aOther) const {
+    return !memcmp(&mIfam, &(aOther.mIfam), sizeof(mIfam));
   }
 
-  bool Equals(const NetlinkAddress* aOther) const {
-    if (mIfam.ifa_family != aOther->mIfam.ifa_family) {
+  bool Equals(const NetlinkAddress& aOther) const {
+    if (mIfam.ifa_family != aOther.mIfam.ifa_family) {
       return false;
     }
-    if (mIfam.ifa_index != aOther->mIfam.ifa_index) {
+    if (mIfam.ifa_index != aOther.mIfam.ifa_index) {
       // addresses are different when they are on a different interface
       return false;
     }
-    if (mIfam.ifa_prefixlen != aOther->mIfam.ifa_prefixlen) {
+    if (mIfam.ifa_prefixlen != aOther.mIfam.ifa_prefixlen) {
       // It's possible to have two equal addresses with a different netmask on
       // the same interface, so we need to check prefixlen too.
       return false;
     }
     size_t addrSize = (mIfam.ifa_family == AF_INET) ? sizeof(mAddr.addr4)
                                                     : sizeof(mAddr.addr6);
-    return memcmp(&mAddr, aOther->GetAddrPtr(), addrSize) == 0;
+    return memcmp(&mAddr, aOther.GetAddrPtr(), addrSize) == 0;
   }
 
   bool ContainsAddr(const in_common_addr* aAddr) {
@@ -303,44 +303,44 @@ class NetlinkRoute {
     return mHasPrefSrcAddr ? &mPrefSrcAddr : nullptr;
   }
 
-  bool Equals(const NetlinkRoute* aOther) const {
+  bool Equals(const NetlinkRoute& aOther) const {
     size_t addrSize = (mRtm.rtm_family == AF_INET) ? sizeof(mDstAddr.addr4)
                                                    : sizeof(mDstAddr.addr6);
-    if (memcmp(&mRtm, &(aOther->mRtm), sizeof(mRtm))) {
+    if (memcmp(&mRtm, &(aOther.mRtm), sizeof(mRtm))) {
       return false;
     }
-    if (mHasOif != aOther->mHasOif || mOif != aOther->mOif) {
+    if (mHasOif != aOther.mHasOif || mOif != aOther.mOif) {
       return false;
     }
-    if (mHasPrio != aOther->mHasPrio || mPrio != aOther->mPrio) {
+    if (mHasPrio != aOther.mHasPrio || mPrio != aOther.mPrio) {
       return false;
     }
-    if ((mHasGWAddr != aOther->mHasGWAddr) ||
-        (mHasGWAddr && memcmp(&mGWAddr, &(aOther->mGWAddr), addrSize))) {
+    if ((mHasGWAddr != aOther.mHasGWAddr) ||
+        (mHasGWAddr && memcmp(&mGWAddr, &(aOther.mGWAddr), addrSize))) {
       return false;
     }
-    if ((mHasDstAddr != aOther->mHasDstAddr) ||
-        (mHasDstAddr && memcmp(&mDstAddr, &(aOther->mDstAddr), addrSize))) {
+    if ((mHasDstAddr != aOther.mHasDstAddr) ||
+        (mHasDstAddr && memcmp(&mDstAddr, &(aOther.mDstAddr), addrSize))) {
       return false;
     }
-    if ((mHasPrefSrcAddr != aOther->mHasPrefSrcAddr) ||
+    if ((mHasPrefSrcAddr != aOther.mHasPrefSrcAddr) ||
         (mHasPrefSrcAddr &&
-         memcmp(&mPrefSrcAddr, &(aOther->mPrefSrcAddr), addrSize))) {
+         memcmp(&mPrefSrcAddr, &(aOther.mPrefSrcAddr), addrSize))) {
       return false;
     }
     return true;
   }
 
-  bool GatewayEquals(const NetlinkNeighbor* aNeigh) const {
+  bool GatewayEquals(const NetlinkNeighbor& aNeigh) const {
     if (!mHasGWAddr) {
       return false;
     }
-    if (aNeigh->Family() != mRtm.rtm_family) {
+    if (aNeigh.Family() != mRtm.rtm_family) {
       return false;
     }
     size_t addrSize = (mRtm.rtm_family == AF_INET) ? sizeof(mGWAddr.addr4)
                                                    : sizeof(mGWAddr.addr6);
-    return memcmp(&mGWAddr, aNeigh->GetAddrPtr(), addrSize) == 0;
+    return memcmp(&mGWAddr, aNeigh.GetAddrPtr(), addrSize) == 0;
   }
 
   bool GatewayEquals(const NetlinkRoute* aRoute) const {
@@ -355,16 +355,16 @@ class NetlinkRoute {
     return memcmp(&mGWAddr, &(aRoute->mGWAddr), addrSize) == 0;
   }
 
-  bool PrefSrcAddrEquals(const NetlinkAddress* aAddress) const {
+  bool PrefSrcAddrEquals(const NetlinkAddress& aAddress) const {
     if (!mHasPrefSrcAddr) {
       return false;
     }
-    if (mRtm.rtm_family != aAddress->Family()) {
+    if (mRtm.rtm_family != aAddress.Family()) {
       return false;
     }
     size_t addrSize = (mRtm.rtm_family == AF_INET) ? sizeof(mPrefSrcAddr.addr4)
                                                    : sizeof(mPrefSrcAddr.addr6);
-    return memcmp(&mPrefSrcAddr, aAddress->GetAddrPtr(), addrSize) == 0;
+    return memcmp(&mPrefSrcAddr, aAddress.GetAddrPtr(), addrSize) == 0;
   }
 
   void GetAsString(nsACString& _retval) const {
@@ -583,8 +583,8 @@ class NetlinkRtMsg : public NetlinkMsg {
   } mReq;
 };
 
-NetlinkService::LinkInfo::LinkInfo(NetlinkLink* aLink)
-    : mLink(aLink), mIsUp(false) {}
+NetlinkService::LinkInfo::LinkInfo(UniquePtr<NetlinkLink>&& aLink)
+    : mLink(std::move(aLink)), mIsUp(false) {}
 
 NetlinkService::LinkInfo::~LinkInfo() {}
 
@@ -751,7 +751,7 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
   LOG(("NetlinkService::OnLinkMessage [type=%s]",
        aNlh->nlmsg_type == RTM_NEWLINK ? "new" : "del"));
 
-  nsAutoPtr<NetlinkLink> link(new NetlinkLink());
+  UniquePtr<NetlinkLink> link(new NetlinkLink());
   if (!link->Init(aNlh)) {
     return;
   }
@@ -767,7 +767,7 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
     if (!linkInfo) {
       LOG(("Creating new link [index=%u, name=%s, flags=%u, type=%u]",
            linkIndex, linkName.get(), link->GetFlags(), link->GetType()));
-      linkInfo = new LinkInfo(link.forget());
+      linkInfo = new LinkInfo(std::move(link));
       mLinks.Put(linkIndex, linkInfo);
     } else {
       LOG(("Updating link [index=%u, name=%s, flags=%u, type=%u]", linkIndex,
@@ -783,7 +783,7 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
         linkInfo->mNeighbors.Clear();
       }
 
-      linkInfo->mLink = link.forget();
+      linkInfo->mLink = std::move(link);
       linkInfo->UpdateStatus();
     }
   } else {
@@ -802,7 +802,7 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
   LOG(("NetlinkService::OnAddrMessage [type=%s]",
        aNlh->nlmsg_type == RTM_NEWADDR ? "new" : "del"));
 
-  nsAutoPtr<NetlinkAddress> address(new NetlinkAddress());
+  UniquePtr<NetlinkAddress> address(new NetlinkAddress());
   if (!address->Init(aNlh)) {
     return;
   }
@@ -828,14 +828,14 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
   // as RTM_NEWADDR message and add a new one in the latter case.
   for (uint32_t i = 0; i < linkInfo->mAddresses.Length(); ++i) {
     if (aNlh->nlmsg_type == RTM_NEWADDR &&
-        linkInfo->mAddresses[i]->MsgEquals(address)) {
+        linkInfo->mAddresses[i]->MsgEquals(*address)) {
       // If the new address is exactly the same, there is nothing to do.
       LOG(("Exactly the same address already exists [ifIdx=%u, addr=%s/%u",
            ifIdx, addrStr.get(), address->GetPrefixLen()));
       return;
     }
 
-    if (linkInfo->mAddresses[i]->Equals(address)) {
+    if (linkInfo->mAddresses[i]->Equals(*address)) {
       LOG(("Removing address [ifIdx=%u, addr=%s/%u]", ifIdx, addrStr.get(),
            address->GetPrefixLen()));
       linkInfo->mAddresses.RemoveElementAt(i);
@@ -846,7 +846,7 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
   if (aNlh->nlmsg_type == RTM_NEWADDR) {
     LOG(("Adding address [ifIdx=%u, addr=%s/%u]", ifIdx, addrStr.get(),
          address->GetPrefixLen()));
-    linkInfo->mAddresses.AppendElement(address.forget());
+    linkInfo->mAddresses.AppendElement(std::move(address));
   } else {
     // Remove all routes associated with this address
     for (uint32_t i = linkInfo->mDefaultRoutes.Length(); i-- > 0;) {
@@ -890,7 +890,7 @@ void NetlinkService::OnRouteMessage(struct nlmsghdr* aNlh) {
   LOG(("NetlinkService::OnRouteMessage [type=%s]",
        aNlh->nlmsg_type == RTM_NEWROUTE ? "new" : "del"));
 
-  nsAutoPtr<NetlinkRoute> route(new NetlinkRoute());
+  UniquePtr<NetlinkRoute> route(new NetlinkRoute());
   if (!route->Init(aNlh)) {
     return;
   }
@@ -961,7 +961,7 @@ void NetlinkService::OnRouteMessage(struct nlmsghdr* aNlh) {
   }
 
   for (uint32_t i = 0; i < linkInfo->mDefaultRoutes.Length(); ++i) {
-    if (linkInfo->mDefaultRoutes[i]->Equals(route)) {
+    if (linkInfo->mDefaultRoutes[i]->Equals(*route)) {
       // We shouldn't find equal route when adding a new one, but just in case
       // it can happen remove the old one to avoid duplicities.
       if (LOG_ENABLED()) {
@@ -980,7 +980,7 @@ void NetlinkService::OnRouteMessage(struct nlmsghdr* aNlh) {
       route->GetAsString(routeDbgStr);
       LOG(("Adding default route: %s", routeDbgStr.get()));
     }
-    linkInfo->mDefaultRoutes.AppendElement(route.forget());
+    linkInfo->mDefaultRoutes.AppendElement(std::move(route));
   }
 }
 
@@ -988,7 +988,7 @@ void NetlinkService::OnNeighborMessage(struct nlmsghdr* aNlh) {
   LOG(("NetlinkService::OnNeighborMessage [type=%s]",
        aNlh->nlmsg_type == RTM_NEWNEIGH ? "new" : "del"));
 
-  nsAutoPtr<NetlinkNeighbor> neigh(new NetlinkNeighbor());
+  UniquePtr<NetlinkNeighbor> neigh(new NetlinkNeighbor());
   if (!neigh->Init(aNlh)) {
     return;
   }
@@ -1026,15 +1026,15 @@ void NetlinkService::OnNeighborMessage(struct nlmsghdr* aNlh) {
         // The MAC address was added, if it's a host from some of the saved
         // routing tables we should recalculate network ID
         for (uint32_t i = 0; i < linkInfo->mDefaultRoutes.Length(); ++i) {
-          if (linkInfo->mDefaultRoutes[i]->GatewayEquals(neigh)) {
+          if (linkInfo->mDefaultRoutes[i]->GatewayEquals(*neigh)) {
             TriggerNetworkIDCalculation();
             break;
           }
         }
         if ((mIPv4RouteCheckResult &&
-             mIPv4RouteCheckResult->GatewayEquals(neigh)) ||
+             mIPv4RouteCheckResult->GatewayEquals(*neigh)) ||
             (mIPv6RouteCheckResult &&
-             mIPv6RouteCheckResult->GatewayEquals(neigh))) {
+             mIPv6RouteCheckResult->GatewayEquals(*neigh))) {
           TriggerNetworkIDCalculation();
         }
       }
@@ -1045,7 +1045,7 @@ void NetlinkService::OnNeighborMessage(struct nlmsghdr* aNlh) {
       neigh->GetAsString(neighDbgStr);
       LOG(("Adding neighbor: %s", neighDbgStr.get()));
     }
-    linkInfo->mNeighbors.Put(key, neigh.forget());
+    linkInfo->mNeighbors.Put(key, neigh.release());
   } else {
     if (LOG_ENABLED()) {
       nsAutoCString neighDbgStr;
@@ -1058,10 +1058,10 @@ void NetlinkService::OnNeighborMessage(struct nlmsghdr* aNlh) {
 
 void NetlinkService::OnRouteCheckResult(struct nlmsghdr* aNlh) {
   LOG(("NetlinkService::OnRouteCheckResult"));
-  nsAutoPtr<NetlinkRoute> route;
+  UniquePtr<NetlinkRoute> route;
 
   if (aNlh) {
-    route = new NetlinkRoute();
+    route = MakeUnique<NetlinkRoute>();
     if (!route->Init(aNlh)) {
       route = nullptr;
     } else {
@@ -1094,9 +1094,9 @@ void NetlinkService::OnRouteCheckResult(struct nlmsghdr* aNlh) {
   }
 
   if (mOutgoingMessages[0]->Family() == AF_INET) {
-    mIPv4RouteCheckResult = route.forget();
+    mIPv4RouteCheckResult = std::move(route);
   } else {
-    mIPv6RouteCheckResult = route.forget();
+    mIPv6RouteCheckResult = std::move(route);
   }
 }
 
@@ -1345,7 +1345,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     return retval;
   }
 
-  nsAutoPtr<NetlinkRoute>* routeCheckResultPtr;
+  UniquePtr<NetlinkRoute>* routeCheckResultPtr;
   if (aFamily == AF_INET) {
     routeCheckResultPtr = &mIPv4RouteCheckResult;
   } else {
@@ -1577,7 +1577,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
           }
         } else if (!(*routeCheckResultPtr)
                         ->PrefSrcAddrEquals(
-                            routeCheckLinkInfo->mAddresses[i])) {
+                            *routeCheckLinkInfo->mAddresses[i])) {
           continue;
         }
 
@@ -1586,7 +1586,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
                 routeCheckLinkInfo->mAddresses[i]->GetPrefixLen()) {
           // We have no address yet or this one has smaller prefix length,
           // use it.
-          linkAddress = routeCheckLinkInfo->mAddresses[i];
+          linkAddress = routeCheckLinkInfo->mAddresses[i].get();
         }
       }
 

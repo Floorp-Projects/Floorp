@@ -473,7 +473,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
 
     case HTTP_COMPRESS_BROTLI: {
       if (!mBrotli) {
-        mBrotli = new BrotliWrapper();
+        mBrotli = MakeUnique<BrotliWrapper>();
       }
 
       mBrotli->mRequest = request;

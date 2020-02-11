@@ -36,7 +36,6 @@
 #include "nsNotifyAddrListener.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Services.h"
 #include "nsCRT.h"
 #include "mozilla/StaticPrefs_network.h"

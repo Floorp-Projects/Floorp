@@ -16,7 +16,6 @@
 #include "nsProxyInfo.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "plstr.h"
 #include "prerr.h"
@@ -2852,7 +2851,7 @@ nsSocketTransport::Bind(NetAddr* aLocalAddr) {
     return NS_ERROR_FAILURE;
   }
 
-  mBindAddr = new NetAddr();
+  mBindAddr = MakeUnique<NetAddr>();
   memcpy(mBindAddr.get(), aLocalAddr, sizeof(NetAddr));
 
   return NS_OK;

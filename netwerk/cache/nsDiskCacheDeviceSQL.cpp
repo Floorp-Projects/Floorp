@@ -21,7 +21,6 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
-#include "nsAutoPtr.h"
 #include "nsEscape.h"
 #include "nsIPrefBranch.h"
 #include "nsString.h"

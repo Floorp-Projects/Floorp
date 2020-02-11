@@ -185,10 +185,10 @@ static nsPreflightCache* sPreflightCache = nullptr;
 static bool EnsurePreflightCache() {
   if (sPreflightCache) return true;
 
-  nsAutoPtr<nsPreflightCache> newCache(new nsPreflightCache());
+  UniquePtr<nsPreflightCache> newCache(new nsPreflightCache());
 
   if (newCache->Initialize()) {
-    sPreflightCache = newCache.forget();
+    sPreflightCache = newCache.release();
     return true;
   }
 

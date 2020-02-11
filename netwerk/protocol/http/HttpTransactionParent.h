@@ -106,8 +106,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   nsCOMPtr<nsIStreamListener> mChannel;
   nsCOMPtr<nsIEventTarget> mTargetThread;
   nsCOMPtr<nsISupports> mSecurityInfo;
-  nsAutoPtr<nsHttpResponseHead> mResponseHead;
-  nsAutoPtr<nsHttpHeaderArray> mResponseTrailers;
+  UniquePtr<nsHttpResponseHead> mResponseHead;
+  UniquePtr<nsHttpHeaderArray> mResponseTrailers;
   RefPtr<ChannelEventQueue> mEventQ;
 
   bool mResponseIsComplete;

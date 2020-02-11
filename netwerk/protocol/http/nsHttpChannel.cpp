@@ -296,9 +296,9 @@ bool IsInSubpathOfAppCacheManifest(nsIApplicationCache* cache,
 
 // We only treat 3xx responses as redirects if they have a Location header and
 // the status code is in a whitelist.
-bool nsHttpChannel::WillRedirect(nsHttpResponseHead* response) {
-  return IsRedirectStatus(response->Status()) &&
-         response->HasHeader(nsHttp::Location);
+bool nsHttpChannel::WillRedirect(const nsHttpResponseHead& response) {
+  return IsRedirectStatus(response.Status()) &&
+         response.HasHeader(nsHttp::Location);
 }
 
 nsresult StoreAuthorizationMetaData(nsICacheEntry* entry,
@@ -1873,13 +1873,13 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     mOnStartRequestCalled = true;
   });
 
-  nsresult rv = EnsureMIMEOfScript(this, mURI, mResponseHead, mLoadInfo);
+  nsresult rv = EnsureMIMEOfScript(this, mURI, mResponseHead.get(), mLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ProcessXCTO(this, mURI, mResponseHead, mLoadInfo);
+  rv = ProcessXCTO(this, mURI, mResponseHead.get(), mLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  WarnWrongMIMEOfScript(this, mURI, mResponseHead, mLoadInfo);
+  WarnWrongMIMEOfScript(this, mURI, mResponseHead.get(), mLoadInfo);
 
   // Allow consumers to override our content type
   if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
@@ -2527,7 +2527,7 @@ nsresult nsHttpChannel::ProcessResponse() {
   if (referrer) {
     nsCOMPtr<nsILoadContextInfo> lci = GetLoadContextInfo(this);
     mozilla::net::Predictor::UpdateCacheability(
-        referrer, mURI, httpStatus, mRequestHead, mResponseHead, lci,
+        referrer, mURI, httpStatus, mRequestHead, mResponseHead.get(), lci,
         IsThirdPartyTrackingResource());
   }
 
@@ -3673,7 +3673,7 @@ nsresult nsHttpChannel::ProcessPartialContent(
   }
 
   // merge any new headers with the cached response headers
-  mCachedResponseHead->UpdateHeaders(mResponseHead);
+  mCachedResponseHead->UpdateHeaders(mResponseHead.get());
 
   // update the cached response head
   nsAutoCString head;
@@ -3816,7 +3816,7 @@ nsresult nsHttpChannel::ProcessNotModified(
   }
 
   // merge any new headers with the cached response headers
-  mCachedResponseHead->UpdateHeaders(mResponseHead);
+  mCachedResponseHead->UpdateHeaders(mResponseHead.get());
 
   // update the cached response head
   nsAutoCString head;
@@ -4271,7 +4271,7 @@ nsresult nsHttpChannel::CheckPartial(nsICacheEntry* aEntry, int64_t* aSize,
                                      int64_t* aContentLength) {
   return nsHttp::CheckPartial(
       aEntry, aSize, aContentLength,
-      mCachedResponseHead ? mCachedResponseHead : mResponseHead);
+      mCachedResponseHead ? mCachedResponseHead.get() : mResponseHead.get());
 }
 
 void nsHttpChannel::UntieValidationRequest() {
@@ -4360,12 +4360,13 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
       (gHttpHandler->SessionStartTime() > lastModifiedTime);
 
   // Get the cached HTTP response headers
-  mCachedResponseHead = new nsHttpResponseHead();
+  mCachedResponseHead = MakeUnique<nsHttpResponseHead>();
 
-  rv = nsHttp::GetHttpResponseHeadFromCacheEntry(entry, mCachedResponseHead);
+  rv = nsHttp::GetHttpResponseHeadFromCacheEntry(entry,
+                                                 mCachedResponseHead.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool isCachedRedirect = WillRedirect(mCachedResponseHead);
+  bool isCachedRedirect = WillRedirect(*mCachedResponseHead);
 
   // Do not return 304 responses from the cache, and also do not return
   // any other non-redirect 3xx responses from the cache (see bug 759043).
@@ -4490,8 +4491,8 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
   entry->GetIsForcedValid(&isForcedValid);
 
   bool weaklyFramed, isImmutable;
-  nsHttp::DetermineFramingAndImmutability(entry, mCachedResponseHead, isHttps,
-                                          &weaklyFramed, &isImmutable);
+  nsHttp::DetermineFramingAndImmutability(entry, mCachedResponseHead.get(),
+                                          isHttps, &weaklyFramed, &isImmutable);
 
   // Cached entry is not the entity we request (see bug #633743)
   if (ResponseWouldVary(entry)) {
@@ -4500,9 +4501,10 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
     doValidation = true;
   } else {
     doValidation = nsHttp::ValidationRequired(
-        isForcedValid, mCachedResponseHead, mLoadFlags, mAllowStaleCacheContent,
-        isImmutable, mCustomConditionalRequest, mRequestHead, entry,
-        cacheControlRequest, fromPreviousSession, &doBackgroundValidation);
+        isForcedValid, mCachedResponseHead.get(), mLoadFlags,
+        mAllowStaleCacheContent, isImmutable, mCustomConditionalRequest,
+        mRequestHead, entry, cacheControlRequest, fromPreviousSession,
+        &doBackgroundValidation);
   }
 
   nsAutoCString requestedETag;
@@ -4554,7 +4556,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     if (!mRedirectedCachekeys)
-      mRedirectedCachekeys = new nsTArray<nsCString>();
+      mRedirectedCachekeys = MakeUnique<nsTArray<nsCString>>();
     else if (mRedirectedCachekeys->Contains(cacheKey))
       doValidation = true;
 
@@ -5034,8 +5036,8 @@ nsresult DoUpdateExpirationTime(nsHttpChannel* aSelf,
 //
 nsresult nsHttpChannel::UpdateExpirationTime() {
   uint32_t expirationTime = 0;
-  nsresult rv =
-      DoUpdateExpirationTime(this, mCacheEntry, mResponseHead, expirationTime);
+  nsresult rv = DoUpdateExpirationTime(this, mCacheEntry, mResponseHead.get(),
+                                       expirationTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mOfflineCacheEntry) {
@@ -5113,7 +5115,7 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
 
   rv = NS_OK;
 
-  if (WillRedirect(mCachedResponseHead)) {
+  if (WillRedirect(*mCachedResponseHead)) {
     // Do not even try to read the entity for a redirect because we do not
     // return an entity to the application when we process redirects.
     LOG(("Will skip read of cached redirect entity\n"));
@@ -5357,7 +5359,7 @@ nsresult nsHttpChannel::ReadFromCache(bool alreadyMarkedValid) {
   // Keep the conditions below in sync with the conditions in
   // StartBufferingCachedEntity.
 
-  if (WillRedirect(mResponseHead)) {
+  if (WillRedirect(*mResponseHead)) {
     // TODO: Bug 759040 - We should call HandleAsyncRedirect directly here,
     // to avoid event dispatching latency.
     MOZ_ASSERT(!mCacheInputStream);
@@ -5700,7 +5702,7 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
 }
 
 nsresult nsHttpChannel::AddCacheEntryHeaders(nsICacheEntry* entry) {
-  return DoAddCacheEntryHeaders(this, entry, &mRequestHead, mResponseHead,
+  return DoAddCacheEntryHeaders(this, entry, &mRequestHead, mResponseHead.get(),
                                 mSecurityInfo);
 }
 
@@ -7528,9 +7530,7 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   }
 
   // Maybe the channel failed and we have no response head?
-  nsHttpResponseHead* head =
-      mResponseHead ? mResponseHead : mCachedResponseHead;
-  if (!head) {
+  if (!mResponseHead && !mCachedResponseHead) {
     // Not having a response head is not a hard failure at the point where
     // this method is called.
     return NS_OK;
@@ -9245,7 +9245,7 @@ NS_IMETHODIMP
 nsHttpChannel::MarkOfflineCacheEntryAsForeign() {
   nsresult rv;
 
-  nsAutoPtr<OfflineCacheEntryAsForeignMarker> marker(
+  UniquePtr<OfflineCacheEntryAsForeignMarker> marker(
       GetOfflineCacheEntryAsForeignMarker());
 
   if (!marker) return NS_ERROR_NOT_AVAILABLE;

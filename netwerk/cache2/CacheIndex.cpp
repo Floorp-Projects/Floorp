@@ -87,7 +87,7 @@ class CacheIndexEntryAutoManage {
     const CacheIndexEntry* entry = FindEntry();
     mIndex->mIndexStats.BeforeChange(entry);
     if (entry && entry->IsInitialized() && !entry->IsRemoved()) {
-      mOldRecord = entry->mRec;
+      mOldRecord = entry->mRec.get();
       mOldFrecency = entry->mRec->mFrecency;
     }
   }
@@ -102,28 +102,29 @@ class CacheIndexEntryAutoManage {
     }
 
     if (entry && !mOldRecord) {
-      mIndex->mFrecencyArray.AppendRecord(entry->mRec);
-      mIndex->AddRecordToIterators(entry->mRec);
+      mIndex->mFrecencyArray.AppendRecord(entry->mRec.get());
+      mIndex->AddRecordToIterators(entry->mRec.get());
     } else if (!entry && mOldRecord) {
       mIndex->mFrecencyArray.RemoveRecord(mOldRecord);
       mIndex->RemoveRecordFromIterators(mOldRecord);
     } else if (entry && mOldRecord) {
-      if (entry->mRec != mOldRecord) {
+      auto rec = entry->mRec.get();
+      if (rec != mOldRecord) {
         // record has a different address, we have to replace it
-        mIndex->ReplaceRecordInIterators(mOldRecord, entry->mRec);
+        mIndex->ReplaceRecordInIterators(mOldRecord, rec);
 
         if (entry->mRec->mFrecency == mOldFrecency) {
           // If frecency hasn't changed simply replace the pointer
-          mIndex->mFrecencyArray.ReplaceRecord(mOldRecord, entry->mRec);
+          mIndex->mFrecencyArray.ReplaceRecord(mOldRecord, rec);
         } else {
           // Remove old pointer and insert the new one at the end of the array
           mIndex->mFrecencyArray.RemoveRecord(mOldRecord);
-          mIndex->mFrecencyArray.AppendRecord(entry->mRec);
+          mIndex->mFrecencyArray.AppendRecord(rec);
         }
       } else if (entry->mRec->mFrecency != mOldFrecency) {
         // Move the element at the end of the array
-        mIndex->mFrecencyArray.RemoveRecord(entry->mRec);
-        mIndex->mFrecencyArray.AppendRecord(entry->mRec);
+        mIndex->mFrecencyArray.RemoveRecord(rec);
+        mIndex->mFrecencyArray.AppendRecord(rec);
       }
     } else {
       // both entries were removed or not initialized, do nothing
@@ -1275,7 +1276,7 @@ nsresult CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries,
       continue;
     }
 
-    if (aIgnoreEmptyEntries && !CacheIndexEntry::GetFileSize(rec)) {
+    if (aIgnoreEmptyEntries && !CacheIndexEntry::GetFileSize(*rec)) {
       continue;
     }
 
@@ -1376,7 +1377,7 @@ nsresult CacheIndex::GetCacheStats(nsILoadContextInfo* aInfo, uint32_t* aSize,
     if (aInfo && !CacheIndexEntry::RecordMatchesLoadContextInfo(record, aInfo))
       continue;
 
-    *aSize += CacheIndexEntry::GetFileSize(record);
+    *aSize += CacheIndexEntry::GetFileSize(*record);
     ++*aCount;
   }
 

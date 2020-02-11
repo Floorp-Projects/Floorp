@@ -40,7 +40,6 @@
 #include "nsIObserverService.h"
 #include "nsCharSeparatedTokenizer.h"
 
-#include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCRT.h"
@@ -992,7 +991,7 @@ class OutboundMessage {
   nsresult ConvertStreamToString() {
     MOZ_ASSERT(mMsgType == kMsgTypeStream, "Not a stream!");
 
-    nsAutoPtr<nsCString> temp(new nsCString());
+    UniquePtr<nsCString> temp(new nsCString());
     nsresult rv = NS_ReadInputStreamToString(mMsg.pStream, *temp, mLength);
 
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1002,7 +1001,7 @@ class OutboundMessage {
 
     mMsg.pStream->Close();
     mMsg.pStream->Release();
-    mMsg.pString.mValue = temp.forget();
+    mMsg.pString.mValue = temp.release();
     mMsg.pString.mOrigValue = nullptr;
     mMsgType = kMsgTypeBinaryString;
 
@@ -1021,7 +1020,7 @@ class OutboundMessage {
       return false;
     }
 
-    nsAutoPtr<nsCString> temp(new nsCString());
+    UniquePtr<nsCString> temp(new nsCString());
     rv = aCompressor->Deflate(BeginReading(), mLength, *temp);
     if (NS_FAILED(rv)) {
       LOG(
@@ -1050,7 +1049,7 @@ class OutboundMessage {
     mDeflated = true;
     mLength = temp->Length();
     mMsg.pString.mOrigValue = mMsg.pString.mValue;
-    mMsg.pString.mValue = temp.forget();
+    mMsg.pString.mValue = temp.release();
     return true;
   }
 
@@ -2057,7 +2056,7 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
     // deflate the payload if PMCE is negotiated
     if (mPMCECompressor &&
         (msgType == kMsgTypeString || msgType == kMsgTypeBinaryString)) {
-      if (mCurrentOut->DeflatePayload(mPMCECompressor)) {
+      if (mCurrentOut->DeflatePayload(mPMCECompressor.get())) {
         // The payload was deflated successfully, set RSV1 bit
         mOutHeader[0] |= kRsv1Bit;
 
@@ -2605,7 +2604,7 @@ nsresult WebSocketChannel::HandleExtensions() {
     serverMaxWindowBits = 15;
   }
 
-  mPMCECompressor = new PMCECompression(
+  mPMCECompressor = MakeUnique<PMCECompression>(
       clientNoContextTakeover, clientMaxWindowBits, serverMaxWindowBits);
   if (mPMCECompressor->Active()) {
     LOG(
@@ -3619,7 +3618,7 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport* aTransport,
         serverMaxWindowBits = 15;
       }
 
-      mPMCECompressor = new PMCECompression(
+      mPMCECompressor = MakeUnique<PMCECompression>(
           serverNoContextTakeover, serverMaxWindowBits, clientMaxWindowBits);
       if (mPMCECompressor->Active()) {
         LOG(

@@ -8,7 +8,6 @@
 #include "nsIAsyncInputStream.h"
 #include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "CacheFileChunk.h"
 
 namespace mozilla {

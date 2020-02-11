@@ -41,7 +41,6 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsIMutableArray.h"
-#include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prprf.h"

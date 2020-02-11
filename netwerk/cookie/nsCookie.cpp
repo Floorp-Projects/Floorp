@@ -6,7 +6,6 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "nsAutoPtr.h"
 #include "nsCookie.h"
 #include "nsIURLParser.h"
 #include "nsURLHelper.h"

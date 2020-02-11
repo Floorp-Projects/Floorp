@@ -9,7 +9,6 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "nsHttpActivityDistributor.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIOService.h"
 #include "nsThreadUtils.h"
 #include "NullHttpChannel.h"

@@ -64,7 +64,7 @@ WinWifiScanner::WinWifiScanner() {
   // and make our assumption incorrect. We opt to avoid making a bunch of
   // spurious LoadLibrary calls in the common case rather than load the
   // WLAN API in the edge case.
-  mWlanLibrary = WinWLANLibrary::Load();
+  mWlanLibrary.reset(WinWLANLibrary::Load());
   if (!mWlanLibrary) {
     NS_WARNING("Could not initialize Windows Wi-Fi scanner");
   }
@@ -91,7 +91,7 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
   }
 
   // This ensures we call WlanFreeMemory on interface_list
-  ScopedWLANObject scopedInterfaceList(mWlanLibrary, interface_list);
+  ScopedWLANObject scopedInterfaceList(*mWlanLibrary, interface_list);
 
   if (!interface_list->dwNumberOfItems) {
     return NS_OK;
@@ -145,7 +145,7 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
     }
 
     // This ensures we call WlanFreeMemory on bss_list
-    ScopedWLANObject scopedBssList(mWlanLibrary, bss_list);
+    ScopedWLANObject scopedBssList(*mWlanLibrary, bss_list);
 
     // Store each discovered access point in our outparam
     for (int j = 0; j < static_cast<int>(bss_list->dwNumberOfItems); ++j) {

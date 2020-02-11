@@ -99,7 +99,7 @@ nsresult CacheFileContextEvictor::AddContext(
       if (mEntries[i]->mInfo && mEntries[i]->mInfo->Equals(aLoadContextInfo) &&
           mEntries[i]->mPinned == aPinned &&
           mEntries[i]->mOrigin.Equals(aOrigin)) {
-        entry = mEntries[i];
+        entry = mEntries[i].get();
         break;
       }
     }
@@ -122,7 +122,7 @@ nsresult CacheFileContextEvictor::AddContext(
     entry->mInfo = aLoadContextInfo;
     entry->mPinned = aPinned;
     entry->mOrigin = aOrigin;
-    mEntries.AppendElement(entry);
+    mEntries.AppendElement(WrapUnique(entry));
   }
 
   entry->mTimeStamp = PR_Now() / PR_USEC_PER_MSEC;
@@ -217,7 +217,7 @@ void CacheFileContextEvictor::WasEvicted(const nsACString& aKey, nsIFile* aFile,
   }
 
   for (uint32_t i = 0; i < mEntries.Length(); ++i) {
-    CacheFileContextEvictorEntry* entry = mEntries[i];
+    const auto& entry = mEntries[i];
 
     if (entry->mInfo && !info->Equals(entry->mInfo)) {
       continue;

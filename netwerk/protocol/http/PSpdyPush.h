@@ -25,7 +25,6 @@
 #ifndef mozilla_net_SpdyPush_Public_h
 #define mozilla_net_SpdyPush_Public_h
 
-#include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"

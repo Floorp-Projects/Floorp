@@ -11,7 +11,6 @@
 #include "CacheObserver.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/BasePrincipal.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 
 class nsICacheEntryMetaDataVisitor;

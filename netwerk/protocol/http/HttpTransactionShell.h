@@ -10,6 +10,8 @@
 #include "TimingStruct.h"
 #include "nsInputStreamPump.h"
 
+#include "mozilla/UniquePtr.h"
+
 class nsIEventTraget;
 class nsIInputStream;
 class nsIInterfaceRequestor;
@@ -97,11 +99,11 @@ class HttpTransactionShell : public nsISupports {
 
   // Called to take ownership of the response headers; the transaction
   // will drop any reference to the response headers after this call.
-  virtual nsHttpResponseHead* TakeResponseHead() = 0;
+  virtual UniquePtr<nsHttpResponseHead> TakeResponseHead() = 0;
 
   // Called to take ownership of the trailer headers.
   // Returning null if there is no trailer.
-  virtual nsHttpHeaderArray* TakeResponseTrailers() = 0;
+  virtual UniquePtr<nsHttpHeaderArray> TakeResponseTrailers() = 0;
 
   virtual nsISupports* SecurityInfo() = 0;
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) = 0;
@@ -170,8 +172,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual nsresult AsyncRead(nsIStreamListener* listener, nsIRequest** pump)   \
       override;                                                                \
   virtual void SetClassOfService(uint32_t classOfService) override;            \
-  virtual nsHttpResponseHead* TakeResponseHead() override;                     \
-  virtual nsHttpHeaderArray* TakeResponseTrailers() override;                  \
+  virtual UniquePtr<nsHttpResponseHead> TakeResponseHead() override;           \
+  virtual UniquePtr<nsHttpHeaderArray> TakeResponseTrailers() override;        \
   virtual nsISupports* SecurityInfo() override;                                \
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)         \
       override;                                                                \

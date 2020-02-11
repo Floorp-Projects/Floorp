@@ -5,7 +5,6 @@
 #include "nsWifiMonitor.h"
 
 // moz headers (alphabetical)
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -26,7 +25,7 @@ using namespace mozilla;
  */
 nsresult nsWifiMonitor::DoScan() {
   if (!mWinWifiScanner) {
-    mWinWifiScanner = new WinWifiScanner();
+    mWinWifiScanner = MakeUnique<WinWifiScanner>();
     if (!mWinWifiScanner) {
       // TODO: Probably return OOM error
       return NS_ERROR_FAILURE;

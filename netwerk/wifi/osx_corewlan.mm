@@ -12,7 +12,6 @@
 #include <objc/objc-runtime.h>
 
 #include "nsObjCExceptions.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsWifiMonitor.h"
 #include "nsWifiAccessPoint.h"

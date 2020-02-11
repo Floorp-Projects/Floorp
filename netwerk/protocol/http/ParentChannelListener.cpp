@@ -354,7 +354,7 @@ void ParentChannelListener::DivertTo(nsIStreamListener* aListener) {
 
 void ParentChannelListener::SetupInterception(
     const nsHttpResponseHead& aResponseHead) {
-  mSynthesizedResponseHead = new nsHttpResponseHead(aResponseHead);
+  mSynthesizedResponseHead = MakeUnique<nsHttpResponseHead>(aResponseHead);
   mShouldIntercept = true;
 }
 

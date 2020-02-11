@@ -9,8 +9,8 @@
 #include "CacheStorageService.h"
 #include "CacheHashUtils.h"
 #include "CacheFileUtils.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace net {
@@ -217,7 +217,7 @@ class CacheFileChunk final : public CacheFileIOListener,
   nsTArray<RefPtr<CacheFileChunkBuffer>> mOldBufs;
 
   // Read handle that is used during writing the chunk to the disk.
-  nsAutoPtr<CacheFileChunkReadHandle> mWritingStateHandle;
+  UniquePtr<CacheFileChunkReadHandle> mWritingStateHandle;
 
   // Buffer that is used to read the chunk from the disk. It is allowed to write
   // a new data to chunk while we wait for the data from the disk. In this case

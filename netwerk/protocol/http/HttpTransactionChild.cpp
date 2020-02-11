@@ -320,7 +320,7 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  nsAutoPtr<nsHttpResponseHead> head(mTransaction->TakeResponseHead());
+  UniquePtr<nsHttpResponseHead> head(mTransaction->TakeResponseHead());
   Maybe<nsHttpResponseHead> optionalHead;
   nsTArray<uint8_t> dataForSniffer;
   if (head) {
@@ -361,7 +361,7 @@ HttpTransactionChild::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 
   MOZ_ASSERT(mTransaction);
 
-  nsAutoPtr<nsHttpHeaderArray> headerArray(
+  UniquePtr<nsHttpHeaderArray> headerArray(
       mTransaction->TakeResponseTrailers());
   Maybe<nsHttpHeaderArray> responseTrailers;
   if (headerArray) {

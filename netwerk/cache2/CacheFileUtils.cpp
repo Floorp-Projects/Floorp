@@ -9,7 +9,6 @@
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include <algorithm>
 #include "mozilla/Unused.h"
