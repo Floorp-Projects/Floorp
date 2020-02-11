@@ -36,7 +36,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasPinnedTabs](#haspinnedtabs)
 * [hasAccessedFxAPanel](#hasaccessedfxapanel)
 * [isWhatsNewPanelEnabled](#iswhatsnewpanelenabled)
-* [isFxABadgeEnabled](#isfxabadgeenabled)
 * [totalBlockedCount](#totalblockedcount)
 * [recentBookmarks](#recentbookmarks)
 * [userPrefs](#userprefs)
@@ -505,16 +504,6 @@ Boolean pref that controls if the What's New panel feature is enabled
 
 ```ts
 declare const isWhatsNewPanelEnabled: boolean;
-```
-
-### `isFxABadgeEnabled`
-
-Boolean pref that controls if the FxA toolbar button is badged by Messaging System.
-
-#### Definition
-
-```ts
-declare const isFxABadgeEnabled: boolean;
 ```
 
 ### `totalBlockedCount`
