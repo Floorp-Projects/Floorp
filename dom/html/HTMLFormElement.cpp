@@ -688,12 +688,12 @@ nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
                                           Event* aEvent) {
   NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
 
-  // Get the originating frame
-  nsGenericHTMLElement* originatingElement = nullptr;
+  // Get the submitter element
+  nsGenericHTMLElement* submitter = nullptr;
   if (aEvent) {
     SubmitEvent* submitEvent = aEvent->AsSubmitEvent();
     if (submitEvent) {
-      originatingElement = submitEvent->GetSubmitter();
+      submitter = submitEvent->GetSubmitter();
     }
   }
 
@@ -705,7 +705,7 @@ nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
   //
   auto encoding = GetSubmitEncoding()->OutputEncoding();
   RefPtr<FormData> formData =
-      new FormData(GetOwnerGlobal(), encoding, originatingElement);
+      new FormData(GetOwnerGlobal(), encoding, submitter);
   rv = ConstructEntryList(formData);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
@@ -718,7 +718,7 @@ nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
   //
   // Get the submission object
   //
-  rv = HTMLFormSubmission::GetFromForm(this, originatingElement, encoding,
+  rv = HTMLFormSubmission::GetFromForm(this, submitter, encoding,
                                        aFormSubmission);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
