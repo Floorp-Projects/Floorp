@@ -41,7 +41,6 @@ const uint32_t kMinMaxVertexTextureImageUnits = 0;    // Page 164
 const uint32_t kMinMaxFragmentTextureImageUnits = 8;  // Page 164
 const uint32_t kMinMaxCombinedTextureImageUnits = 8;  // Page 164
 
-const uint32_t kMinMaxColorAttachments = 4;
 const uint32_t kMinMaxDrawBuffers = 4;
 
 // These few deviate from the spec: (The minimum values in the spec are
