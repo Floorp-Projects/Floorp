@@ -365,12 +365,13 @@ add_task(clear_state);
 add_task(async function test_age_of_data_is_reported_in_uptake_status() {
   await withFakeChannel("nightly", async () => {
     const serverTime = 1552323900000;
+    const recordsTimestamp = serverTime - 3600 * 1000;
     server.registerPathHandler(
       CHANGES_PATH,
       serveChangesEntries(serverTime, [
         {
           id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
-          last_modified: serverTime - 3600 * 1000,
+          last_modified: recordsTimestamp,
           host: "localhost",
           bucket: "main",
           collection: "some-entry",
@@ -401,6 +402,7 @@ add_task(async function test_age_of_data_is_reported_in_uptake_status() {
           source: TELEMETRY_HISTOGRAM_SYNC_KEY,
           duration: () => true,
           trigger: "manual",
+          timestamp: `"${recordsTimestamp}"`,
         },
       ],
     ]);
