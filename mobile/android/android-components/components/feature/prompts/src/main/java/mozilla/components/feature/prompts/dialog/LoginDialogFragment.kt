@@ -20,12 +20,18 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginValidationDelegate
+import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.view.toScope
@@ -205,35 +211,43 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         // The below code is not thread safe, so we ensure that we block here until we are sure that
         // the previous call has been canceled
         runBlocking { stateUpdate?.cancelAndJoin() }
-        stateUpdate = scope.launch {
-            val result =
-                feature?.loginValidationDelegate?.validateCanPersist(login)?.await()
+        var validateDeferred: Deferred<Result>? = null
+        stateUpdate = scope.launch(IO) {
+            validateDeferred = feature?.loginValidationDelegate?.validateCanPersist(login)
+            val result = validateDeferred?.await()
 
-            when (result) {
-                is LoginValidationDelegate.Result.CanBeCreated ->
-                    setViewState(
-                        confirmText =
-                        context?.getString(R.string.mozac_feature_prompt_save_confirmation)
-                    )
-                is LoginValidationDelegate.Result.CanBeUpdated ->
-                    setViewState(
-                        confirmText =
-                        context?.getString(R.string.mozac_feature_prompt_update_confirmation)
-                    )
-                is LoginValidationDelegate.Result.Error.EmptyPassword ->
-                    setViewState(
-                        confirmButtonEnabled = false,
-                        passwordErrorText =
-                        context?.getString(R.string.mozac_feature_prompt_error_empty_password)
-                    )
-                is LoginValidationDelegate.Result.Error.GeckoError -> {
-                    // TODO handle these errors more robustly. See:
-                    // https://github.com/mozilla-mobile/fenix/issues/7545
-                    setViewState(
-                        passwordErrorText =
-                        context?.getString(R.string.mozac_feature_prompt_error_unknown_cause)
-                    )
+            withContext(Main) {
+                when (result) {
+                    is LoginValidationDelegate.Result.CanBeCreated ->
+                        setViewState(
+                            confirmText =
+                            context?.getString(R.string.mozac_feature_prompt_save_confirmation)
+                        )
+                    is LoginValidationDelegate.Result.CanBeUpdated ->
+                        setViewState(
+                            confirmText =
+                            context?.getString(R.string.mozac_feature_prompt_update_confirmation)
+                        )
+                    is LoginValidationDelegate.Result.Error.EmptyPassword ->
+                        setViewState(
+                            confirmButtonEnabled = false,
+                            passwordErrorText =
+                            context?.getString(R.string.mozac_feature_prompt_error_empty_password)
+                        )
+                    is LoginValidationDelegate.Result.Error.GeckoError -> {
+                        // TODO handle these errors more robustly. See:
+                        // https://github.com/mozilla-mobile/fenix/issues/7545
+                        setViewState(
+                            passwordErrorText =
+                            context?.getString(R.string.mozac_feature_prompt_error_unknown_cause)
+                        )
+                    }
                 }
+            }
+        }
+        stateUpdate?.invokeOnCompletion {
+            if (it is CancellationException) {
+                validateDeferred?.cancel()
             }
         }
     }
