@@ -557,8 +557,6 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  module->initScriptSlots(compilationInfo.script);
-
   ModuleBuilder builder(cx, parser.ptr());
 
   RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
@@ -585,6 +583,9 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   if (!builder.initModule(module)) {
     return nullptr;
   }
+
+  module->initScriptSlots(compilationInfo.script);
+  module->initStatusSlot();
 
   if (!ModuleObject::createEnvironment(cx, module)) {
     return nullptr;
