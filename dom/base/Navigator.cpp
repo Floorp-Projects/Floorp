@@ -1047,8 +1047,7 @@ BeaconStreamListener::OnStartRequest(nsIRequest* aRequest) {
   // release the loadgroup first
   mLoadGroup = nullptr;
 
-  aRequest->Cancel(NS_ERROR_NET_INTERRUPT);
-  return NS_BINDING_ABORTED;
+  return NS_ERROR_ABORT;
 }
 
 NS_IMETHODIMP
