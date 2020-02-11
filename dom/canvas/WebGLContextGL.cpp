@@ -1263,17 +1263,6 @@ void WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail,
 ////////////////////////////////////////////////////////////////////////////////
 // Uniform setters.
 
-static inline void MatrixAxBToRowMajor(const uint8_t width,
-                                       const uint8_t height,
-                                       const float* __restrict srcColMajor,
-                                       float* __restrict dstRowMajor) {
-  for (uint8_t x = 0; x < width; ++x) {
-    for (uint8_t y = 0; y < height; ++y) {
-      dstRowMajor[y * width + x] = srcColMajor[x * height + y];
-    }
-  }
-}
-
 void WebGLContext::UniformData(const uint32_t loc, const bool transpose,
                                const Range<const uint8_t>& data) const {
   const FuncScope funcScope(*this, "uniform setter");
