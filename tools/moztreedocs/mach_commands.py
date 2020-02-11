@@ -8,6 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import fnmatch
 import multiprocessing
 import os
+import re
 import subprocess
 import sys
 import time
@@ -101,6 +102,9 @@ class Documentation(MachCommandBase):
         else:
             print('\nGenerated documentation:\n%s' % savedir)
 
+        print('Post processing HTML files')
+        self._post_process_html(savedir)
+
         if archive:
             archive_path = os.path.join(outdir, '%s.tar.gz' % self.project)
             create_tarball(archive_path, savedir)
@@ -126,7 +130,7 @@ class Documentation(MachCommandBase):
         server = Server()
 
         sphinx_trees = self.manager.trees or {savedir: docdir}
-        for dest, src in sphinx_trees.items():
+        for _, src in sphinx_trees.items():
             run_sphinx = partial(self._run_sphinx, src, savedir, fmt=fmt, jobs=jobs)
             server.watch(src, run_sphinx)
         server.serve(host=host, port=port, root=savedir,
@@ -168,6 +172,32 @@ class Documentation(MachCommandBase):
         if jobs:
             args.extend(['-j', jobs])
         return sphinx.cmd.build.build_main(args)
+
+    def _post_process_html(self, savedir):
+        """
+            Perform some operations on the generated html to fix some URL
+        """
+        MERMAID_VERSION = "8.4.4"
+        for root, _, files in os.walk(savedir):
+            for file in files:
+                if file.endswith(".html"):
+                    p = os.path.join(root, file)
+
+                    with open(p, 'r') as file:
+                        filedata = file.read()
+
+                    # Workaround https://bugzilla.mozilla.org/show_bug.cgi?id=1607143
+                    # to avoid a CSP error
+                    # This method should be removed once
+                    # https://github.com/mgaitan/sphinxcontrib-mermaid/pull/37 is merged
+                    # As sphinx-mermaid currently uses an old version, also force
+                    # a more recent version
+                    filedata = re.sub(r'https://unpkg.com/mermaid@.*/dist',
+                                      r'https://cdnjs.cloudflare.com/ajax/libs/mermaid/{}'
+                                      .format(MERMAID_VERSION), filedata)
+
+                    with open(p, 'w') as file:
+                        file.write(filedata)
 
     @property
     def manager(self):
