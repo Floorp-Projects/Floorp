@@ -429,6 +429,8 @@ float nsSVGUtils::ComputeOpacity(nsIFrame* aFrame, bool aHandleOpacity) {
 
 void nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
                                     MaskUsage& aUsage) {
+  using ClipPathType = StyleClippingShape::Tag;
+
   aUsage.opacity = ComputeOpacity(aFrame, aHandleOpacity);
 
   nsIFrame* firstFrame =
@@ -444,11 +446,10 @@ void nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
   nsSVGClipPathFrame* clipPathFrame;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
-  MOZ_ASSERT(!clipPathFrame ||
-             svgReset->mClipPath.GetType() == StyleShapeSourceType::Image);
+  MOZ_ASSERT(!clipPathFrame || svgReset->mClipPath.IsImageOrUrl());
 
-  switch (svgReset->mClipPath.GetType()) {
-    case StyleShapeSourceType::Image:
+  switch (svgReset->mClipPath.tag) {
+    case ClipPathType::ImageOrUrl:
       if (clipPathFrame) {
         if (clipPathFrame->IsTrivial()) {
           aUsage.shouldApplyClipPath = true;
@@ -457,12 +458,12 @@ void nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
         }
       }
       break;
-    case StyleShapeSourceType::Shape:
-    case StyleShapeSourceType::Box:
-    case StyleShapeSourceType::Path:
+    case ClipPathType::Shape:
+    case ClipPathType::Box:
+    case ClipPathType::Path:
       aUsage.shouldApplyBasicShapeOrPath = true;
       break;
-    case StyleShapeSourceType::None:
+    case ClipPathType::None:
       MOZ_ASSERT(!aUsage.shouldGenerateClipMaskLayer &&
                  !aUsage.shouldApplyClipPath &&
                  !aUsage.shouldApplyBasicShapeOrPath);

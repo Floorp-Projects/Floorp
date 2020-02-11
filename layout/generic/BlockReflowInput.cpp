@@ -654,9 +654,9 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
 // Maybe all this code could be refactored to make this cleaner, but keeping the
 // two properties separated was slightly nicer.
 struct ShapeInvalidationData {
-  StyleShapeSource mShapeOutside;
+  StyleFloatAreaShape mShapeOutside{StyleFloatAreaShape::None()};
   float mShapeImageThreshold = 0.0;
-  mozilla::LengthPercentage mShapeMargin;
+  LengthPercentage mShapeMargin;
 
   ShapeInvalidationData() = default;
 
@@ -665,7 +665,7 @@ struct ShapeInvalidationData {
   }
 
   static bool IsNeeded(const nsStyleDisplay& aDisplay) {
-    return aDisplay.mShapeOutside.GetType() != StyleShapeSourceType::None;
+    return !aDisplay.mShapeOutside.IsNone();
   }
 
   void Update(const nsStyleDisplay& aDisplay) {

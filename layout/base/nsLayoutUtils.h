@@ -2942,8 +2942,12 @@ class nsLayoutUtils {
   static bool IsInvisibleBreak(nsINode* aNode,
                                nsIFrame** aNextLineFrame = nullptr);
 
-  static nsRect ComputeGeometryBox(nsIFrame* aFrame,
-                                   StyleGeometryBox aGeometryBox);
+  static nsRect ComputeGeometryBox(nsIFrame*, StyleGeometryBox);
+
+  static nsRect ComputeGeometryBox(nsIFrame*,
+                                   const mozilla::StyleShapeGeometryBox&);
+
+  static nsRect ComputeGeometryBox(nsIFrame*, const mozilla::StyleShapeBox&);
 
   static nsPoint ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aFrame);

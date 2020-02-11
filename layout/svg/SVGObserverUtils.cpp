@@ -1261,14 +1261,12 @@ static nsSVGPaintingProperty* GetOrCreateClipPathObserver(
              "Require first continuation");
 
   const nsStyleSVGReset* svgStyleReset = aClippedFrame->StyleSVGReset();
-  if (svgStyleReset->mClipPath.GetType() != StyleShapeSourceType::Image) {
+  if (!svgStyleReset->mClipPath.IsImageOrUrl()) {
     return nullptr;
   }
-  const auto* url =
-      svgStyleReset->mClipPath.ShapeImage().GetImageRequestURLValue();
-  MOZ_ASSERT(url, "Clip-path only supports url() images");
+  const auto& url = svgStyleReset->mClipPath.AsImageOrUrl();
   RefPtr<URLAndReferrerInfo> pathURI =
-      ResolveURLUsingLocalRef(aClippedFrame, *url);
+      ResolveURLUsingLocalRef(aClippedFrame, url);
   return GetPaintingProperty(pathURI, aClippedFrame, ClipPathProperty());
 }
 

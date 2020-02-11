@@ -633,14 +633,17 @@ static void AddImageURL(const StyleImage& aImage,
   }
 }
 
-static void AddImageURL(const StyleShapeSource& aShapeSource,
+static void AddImageURL(const StyleFloatAreaShape& aShapeOutside,
                         nsTArray<nsCString>& aURLs) {
-  switch (aShapeSource.GetType()) {
-    case StyleShapeSourceType::Image:
-      AddImageURL(aShapeSource.ShapeImage(), aURLs);
-      break;
-    default:
-      break;
+  if (aShapeOutside.IsImageOrUrl()) {
+    AddImageURL(aShapeOutside.AsImageOrUrl(), aURLs);
+  }
+}
+
+static void AddImageURL(const StyleClippingShape& aClipPath,
+                        nsTArray<nsCString>& aURLs) {
+  if (aClipPath.IsImageOrUrl()) {
+    AddImageURL(aClipPath.AsImageOrUrl(), aURLs);
   }
 }
 
