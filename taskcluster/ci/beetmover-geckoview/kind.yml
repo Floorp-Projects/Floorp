@@ -50,14 +50,17 @@ job-template:
     shipping-phase:
         by-project:
             # Beetmoving geckoview makes it available to the official maven repo.
+            # As of December 2019, we have automated betas shipped without being
+            # blocked on QA, hence we can upload geckoview as part of the
+            # `push` phase of the release graphs.
             # So we want beetmover to act only when the release is greenlit. That
             # is to say:
-            # - right after nightly builds on mozilla-central
-            # - when Fennec beta was greenlit by QA on mozilla-beta (hence the ship phase)
+            # - (to be changed soon to be as part of the nightly graph) right after nightly builds on mozilla-central
+            # - as part of Firefox betas push graphs on mozilla-beta
             # - at every patch uplifted on the GECKOVIEW_XX_RELBRANC on mozilla-release
             # Reminder: There is no Android/geckoview build on ESR.
             mozilla-release: build
-            default: ship
+            default: push
     bucket-scope:
         by-release-level:
             production: 'project:releng:beetmover:bucket:maven-production'
