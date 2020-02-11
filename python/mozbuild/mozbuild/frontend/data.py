@@ -705,10 +705,12 @@ class BaseRustLibrary(object):
         'features',
         'target_dir',
         'output_category',
+        'is_gkrust',
     )
 
     def init(self, context, basename, cargo_file, crate_type, dependencies,
-             features, target_dir):
+             features, target_dir, is_gkrust):
+        self.is_gkrust = is_gkrust
         self.cargo_file = cargo_file
         self.crate_type = crate_type
         # We need to adjust our naming here because cargo replaces '-' in
@@ -745,13 +747,14 @@ class RustLibrary(StaticLibrary, BaseRustLibrary):
     __slots__ = BaseRustLibrary.slots
 
     def __init__(self, context, basename, cargo_file, crate_type, dependencies,
-                 features, target_dir, link_into=None):
+                 features, target_dir, is_gkrust=False, link_into=None):
         StaticLibrary.__init__(self, context, basename, link_into=link_into,
                                # A rust library is a real static library ; make
                                # it known to the build system.
                                no_expand_lib=True)
         BaseRustLibrary.init(self, context, basename, cargo_file,
-                             crate_type, dependencies, features, target_dir)
+                             crate_type, dependencies, features, target_dir,
+                             is_gkrust)
 
 
 class SharedLibrary(Library):
@@ -880,10 +883,11 @@ class HostRustLibrary(HostLibrary, BaseRustLibrary):
     no_expand_lib = True
 
     def __init__(self, context, basename, cargo_file, crate_type, dependencies,
-                 features, target_dir):
+                 features, target_dir, is_gkrust):
         HostLibrary.__init__(self, context, basename)
         BaseRustLibrary.init(self, context, basename, cargo_file,
-                             crate_type, dependencies, features, target_dir)
+                             crate_type, dependencies, features, target_dir,
+                             is_gkrust)
 
 
 class TestManifest(ContextDerived):
