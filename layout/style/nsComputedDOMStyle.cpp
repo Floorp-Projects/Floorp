@@ -626,9 +626,9 @@ static void AddImageURL(const StyleComputedUrl& aURL,
   }
 }
 
-static void AddImageURL(const nsStyleImage& aImage,
+static void AddImageURL(const StyleImage& aImage,
                         nsTArray<nsCString>& aURLs) {
-  if (auto* urlValue = aImage.GetURLValue()) {
+  if (auto* urlValue = aImage.GetImageRequestURLValue()) {
     AddImageURL(*urlValue, aURLs);
   }
 }
@@ -2494,14 +2494,13 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
           firstLayer.mPosition, nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mRepeat.IsInitialValue() ||
       !firstLayer.mSize.IsInitialValue() ||
-      !(firstLayer.mImage.GetType() == eStyleImageType_Null ||
-        firstLayer.mImage.GetType() == eStyleImageType_Image)) {
+      !(firstLayer.mImage.IsNone() || firstLayer.mImage.IsUrl())) {
     return nullptr;
   }
 
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  SetValueToURLValue(firstLayer.mImage.GetURLValue(), val);
+  SetValueToURLValue(firstLayer.mImage.GetImageRequestURLValue(), val);
 
   return val.forget();
 }

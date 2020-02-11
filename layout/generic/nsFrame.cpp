@@ -923,8 +923,8 @@ static void CompareLayers(
     const nsStyleImageLayers* aSecondLayers,
     const std::function<void(imgRequestProxy* aReq)>& aCallback) {
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, (*aFirstLayers)) {
-    const nsStyleImage& image = aFirstLayers->mLayers[i].mImage;
-    if (image.GetType() != eStyleImageType_Image || !image.IsResolved()) {
+    const auto& image = aFirstLayers->mLayers[i].mImage;
+    if (!image.IsImageRequestType() || !image.IsResolved()) {
       continue;
     }
 
@@ -932,8 +932,8 @@ static void CompareLayers(
     // be different with the corresponded one in aSecondLayers
     if (!aSecondLayers || i >= aSecondLayers->mImageCount ||
         (!aSecondLayers->mLayers[i].mImage.IsResolved() ||
-         !image.ImageDataEquals(aSecondLayers->mLayers[i].mImage))) {
-      if (imgRequestProxy* req = image.GetImageData()) {
+         image.GetImageRequest() != aSecondLayers->mLayers[i].mImage.GetImageRequest())) {
+      if (imgRequestProxy* req = image.GetImageRequest()) {
         aCallback(req);
       }
     }
@@ -5523,12 +5523,8 @@ nsIFrame::ContentOffsets nsFrame::CalcContentOffsetsFromFramePoint(
   return OffsetsForSingleFrame(this, aPoint);
 }
 
-bool nsIFrame::AssociateImage(const nsStyleImage& aImage) {
-  if (aImage.GetType() != eStyleImageType_Image) {
-    return false;
-  }
-
-  imgRequestProxy* req = aImage.GetImageData();
+bool nsIFrame::AssociateImage(const StyleImage& aImage) {
+  imgRequestProxy* req = aImage.GetImageRequest();
   if (!req) {
     return false;
   }
@@ -5540,12 +5536,8 @@ bool nsIFrame::AssociateImage(const nsStyleImage& aImage) {
   return true;
 }
 
-void nsIFrame::DisassociateImage(const nsStyleImage& aImage) {
-  if (aImage.GetType() != eStyleImageType_Image) {
-    return;
-  }
-
-  imgRequestProxy* req = aImage.GetImageData();
+void nsIFrame::DisassociateImage(const StyleImage& aImage) {
+  imgRequestProxy* req = aImage.GetImageRequest();
   if (!req) {
     return;
   }
