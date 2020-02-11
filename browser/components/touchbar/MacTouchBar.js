@@ -294,6 +294,16 @@ class TouchBarHelper {
       Ci.nsIMutableArray
     );
 
+    let window = TouchBarHelper.window;
+    if (
+      !window ||
+      !window.isChromeWindow ||
+      window.document.documentElement.getAttribute("windowtype") !=
+        "navigator:browser"
+    ) {
+      return layoutItems;
+    }
+
     // Every input must be updated at least once so that all assets (titles,
     // icons) are loaded. We keep track of which inputs haven't updated and
     // run an update on them ASAP.
