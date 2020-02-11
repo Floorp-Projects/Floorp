@@ -344,6 +344,10 @@ const kEventConstructors = {
                                                        },
                                                chromeOnly: true,
                                              },
+  SubmitEvent:                               { create (aName, aProps) {
+                                                         return new SubmitEvent(aName, aProps);
+                                                       },
+                                             },
   TCPSocketErrorEvent:                       { create(aName, aProps) {
                                                          return new TCPSocketErrorEvent(aName, aProps);
                                                        },
