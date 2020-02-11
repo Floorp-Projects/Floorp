@@ -21,9 +21,11 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Variant.h"
 #include "Units.h"
-#include "nsStyleConsts.h"
 
 namespace mozilla {
+
+enum class StyleBorderStyle : uint8_t;
+enum class StyleBorderImageRepeat : uint8_t;
 
 namespace ipc {
 class ByteBuf;
@@ -539,36 +541,10 @@ static inline wr::LayoutTransform ToLayoutTransform(
   return transform;
 }
 
-static inline wr::BorderStyle ToBorderStyle(const StyleBorderStyle& style) {
-  switch (style) {
-    case StyleBorderStyle::None:
-      return wr::BorderStyle::None;
-    case StyleBorderStyle::Solid:
-      return wr::BorderStyle::Solid;
-    case StyleBorderStyle::Double:
-      return wr::BorderStyle::Double;
-    case StyleBorderStyle::Dotted:
-      return wr::BorderStyle::Dotted;
-    case StyleBorderStyle::Dashed:
-      return wr::BorderStyle::Dashed;
-    case StyleBorderStyle::Hidden:
-      return wr::BorderStyle::Hidden;
-    case StyleBorderStyle::Groove:
-      return wr::BorderStyle::Groove;
-    case StyleBorderStyle::Ridge:
-      return wr::BorderStyle::Ridge;
-    case StyleBorderStyle::Inset:
-      return wr::BorderStyle::Inset;
-    case StyleBorderStyle::Outset:
-      return wr::BorderStyle::Outset;
-    default:
-      MOZ_ASSERT(false);
-  }
-  return wr::BorderStyle::None;
-}
+wr::BorderStyle ToBorderStyle(StyleBorderStyle style);
 
 static inline wr::BorderSide ToBorderSide(const gfx::Color& color,
-                                          const StyleBorderStyle& style) {
+                                          StyleBorderStyle style) {
   wr::BorderSide bs;
   bs.color = ToColorF(color);
   bs.style = ToBorderStyle(style);
@@ -649,23 +625,7 @@ static inline wr::LayoutSideOffsets ToLayoutSideOffsets(float top, float right,
   return offset;
 }
 
-static inline wr::RepeatMode ToRepeatMode(
-    mozilla::StyleBorderImageRepeat repeatMode) {
-  switch (repeatMode) {
-    case mozilla::StyleBorderImageRepeat::Stretch:
-      return wr::RepeatMode::Stretch;
-    case mozilla::StyleBorderImageRepeat::Repeat:
-      return wr::RepeatMode::Repeat;
-    case mozilla::StyleBorderImageRepeat::Round:
-      return wr::RepeatMode::Round;
-    case mozilla::StyleBorderImageRepeat::Space:
-      return wr::RepeatMode::Space;
-    default:
-      MOZ_ASSERT(false);
-  }
-
-  return wr::RepeatMode::Stretch;
-}
+wr::RepeatMode ToRepeatMode(StyleBorderImageRepeat);
 
 template <class S, class T>
 static inline wr::WrTransformProperty ToWrTransformProperty(
