@@ -912,6 +912,48 @@ inline RestyleHint RestyleHint::ForAnimations() {
          RestyleHint::RESTYLE_CSS_ANIMATIONS | RestyleHint::RESTYLE_SMIL;
 }
 
+template <>
+inline bool StyleImage::IsImageRequestType() const {
+  return IsUrl() || IsRect();
+}
+
+template <>
+inline const StyleComputedImageUrl* StyleImage::GetImageRequestURLValue()
+    const {
+  if (IsUrl()) {
+    return &AsUrl();
+  }
+  if (IsRect()) {
+    return &AsRect()->url;
+  }
+  return nullptr;
+}
+
+template <>
+inline imgRequestProxy* StyleImage::GetImageRequest() const {
+  auto* url = GetImageRequestURLValue();
+  return url ? url->GetImage() : nullptr;
+}
+
+template <>
+inline bool StyleImage::IsResolved() const {
+  auto* url = GetImageRequestURLValue();
+  return !url || url->IsImageResolved();
+}
+
+template <>
+bool StyleImage::IsOpaque() const;
+template <>
+bool StyleImage::IsSizeAvailable() const;
+template <>
+bool StyleImage::IsComplete() const;
+template <>
+bool StyleImage::StartDecoding() const;
+template <>
+Maybe<StyleImage::ActualCropRect> StyleImage::ComputeActualCropRect() const;
+template <>
+void StyleImage::ResolveImage(dom::Document&, const StyleImage*);
+
 }  // namespace mozilla
 
 #endif

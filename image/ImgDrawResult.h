@@ -26,8 +26,8 @@ namespace image {
  * SUCCESS_NOT_COMPLETE: The image was drawn successfully and completely, but
  * it hasn't notified about the sync-decode yet. This can only happen when
  * layout pokes at the internal image state beforehand via
- * nsStyleImage::StartDecoding. This should probably go away eventually,
- * somehow, see bug 1471583.
+ * StyleImage::StartDecoding. This should probably go away eventually, somehow,
+ * see bug 1471583.
  *
  * INCOMPLETE: We successfully drew a frame that was partially decoded. (Note
  * that successfully drawing a partially decoded frame may not actually draw any

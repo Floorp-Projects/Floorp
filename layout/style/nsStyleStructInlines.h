@@ -199,7 +199,7 @@ mozilla::StylePointerEvents nsStyleUI::GetEffectivePointerEvents(
 bool nsStyleBackground::HasLocalBackground() const {
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mImage) {
     const nsStyleImageLayers::Layer& layer = mImage.mLayers[i];
-    if (!layer.mImage.IsEmpty() &&
+    if (!layer.mImage.IsNone() &&
         layer.mAttachment == mozilla::StyleImageLayerAttachment::Local) {
       return true;
     }
