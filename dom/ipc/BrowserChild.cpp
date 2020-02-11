@@ -1305,6 +1305,14 @@ mozilla::ipc::IPCResult BrowserChild::RecvChildToParentMatrix(
   mChildToParentConversionMatrix =
       LayoutDeviceToLayoutDeviceMatrix4x4::FromUnknownMatrix(aMatrix);
   mRemoteDocumentRect = aRemoteDocumentRect;
+
+  // Triger an intersection observation since ancestor viewports changed.
+  if (RefPtr<Document> toplevelDoc = GetTopLevelDocument()) {
+    if (nsPresContext* presContext = toplevelDoc->GetPresContext()) {
+      presContext->RefreshDriver()->IntersectionObservationAdded();
+    }
+  }
+
   return IPC_OK();
 }
 
