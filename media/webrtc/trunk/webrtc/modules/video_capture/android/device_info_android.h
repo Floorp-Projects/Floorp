@@ -16,13 +16,13 @@
 #include "modules/video_capture/device_info_impl.h"
 #include "modules/video_capture/video_capture_impl.h"
 
-#define AndroidJavaCaptureDeviceInfoClass \
-  "org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid"
-#define AndroidJavaCaptureCapabilityClass \
-  "org/webrtc/videoengine/CaptureCapabilityAndroid"
+#define AndroidJavaCaptureDeviceInfoClass "org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid"
+#define AndroidJavaCaptureCapabilityClass "org/webrtc/videoengine/CaptureCapabilityAndroid"
 
-namespace webrtc {
-namespace videocapturemodule {
+namespace webrtc
+{
+namespace videocapturemodule
+{
 
 class DeviceInfoAndroid : public DeviceInfoImpl {
  public:
@@ -39,34 +39,39 @@ class DeviceInfoAndroid : public DeviceInfoImpl {
   virtual int32_t Init();
   virtual uint32_t NumberOfDevices();
   virtual int32_t Refresh();
-  virtual int32_t GetDeviceName(uint32_t deviceNumber, char* deviceNameUTF8,
-                                uint32_t deviceNameLength,
-                                char* deviceUniqueIdUTF8,
-                                uint32_t deviceUniqueIdUTF8Length,
-                                char* productUniqueIdUTF8 = 0,
-                                uint32_t productUniqueIdUTF8Length = 0,
-                                pid_t* pid = 0);
+  virtual int32_t GetDeviceName(
+      uint32_t deviceNumber,
+      char* deviceNameUTF8,
+      uint32_t deviceNameLength,
+      char* deviceUniqueIdUTF8,
+      uint32_t deviceUniqueIdUTF8Length,
+      char* productUniqueIdUTF8 = 0,
+      uint32_t productUniqueIdUTF8Length = 0,
+      pid_t* pid = 0);
   virtual int32_t CreateCapabilityMap(const char* deviceUniqueIdUTF8);
 
   virtual int32_t DisplayCaptureSettingsDialogBox(
-      const char* /*deviceUniqueIdUTF8*/, const char* /*dialogTitleUTF8*/,
-      void* /*parentWindow*/, uint32_t /*positionX*/, uint32_t /*positionY*/) {
-    return -1;
-  }
+      const char* /*deviceUniqueIdUTF8*/,
+      const char* /*dialogTitleUTF8*/,
+      void* /*parentWindow*/,
+      uint32_t /*positionX*/,
+      uint32_t /*positionY*/) { return -1; }
   virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
                                  VideoRotation& orientation);
 
   // Populate |min_mfps| and |max_mfps| with the closest supported range of the
   // device to |max_fps_to_match|.
-  void GetMFpsRange(const char* deviceUniqueIdUTF8, int max_fps_to_match,
-                    int* min_mfps, int* max_mfps);
+  void GetMFpsRange(const char* deviceUniqueIdUTF8,
+                    int max_fps_to_match,
+                    int* min_mfps,
+                    int* max_mfps);
 
  private:
-  enum { kExpectedCaptureDelay = 190 };
-  static void BuildDeviceList();
+  enum { kExpectedCaptureDelay = 190};
+  static void BuildDeviceList();  
 };
 
 }  // namespace videocapturemodule
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_ANDROID_DEVICE_INFO_ANDROID_H_
+#endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_ANDROID_DEVICE_INFO_ANDROID_H_

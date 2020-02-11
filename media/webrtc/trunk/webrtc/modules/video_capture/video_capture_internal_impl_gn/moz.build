@@ -37,6 +37,36 @@ if CONFIG["MOZ_DEBUG"] == "1":
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
 
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["ANDROID"] = True
+    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["USE_OPENSSL_CERTS"] = "1"
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["__GNU_SOURCE"] = "1"
+
+    LOCAL_INCLUDES += [
+        "/config/external/nspr/",
+        "/nsprpub/lib/ds/",
+        "/nsprpub/pr/include/"
+    ]
+
+    OS_LIBS += [
+        "log"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/video_capture/android/device_info_android.cc",
+        "/media/webrtc/trunk/webrtc/modules/video_capture/android/video_capture_android.cc"
+    ]
+
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["CR_XCODE_VERSION"] = "0920"
