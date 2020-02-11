@@ -4,7 +4,7 @@
   var debug = SpecialPowers.getBoolPref("testing.paint_listener.debug", false);
   const FlushModes = {
     FLUSH: 0,
-    NOFLUSH: 1
+    NOFLUSH: 1,
   };
 
   function paintListener(event) {
@@ -17,21 +17,26 @@
     var clientRect = event.boundingClientRect;
     var eventRect;
     if (clientRect) {
-      eventRect =
-        [ clientRect.left, clientRect.top,
-          clientRect.right, clientRect.bottom ];
+      eventRect = [
+        clientRect.left,
+        clientRect.top,
+        clientRect.right,
+        clientRect.bottom,
+      ];
     } else {
-      eventRect = [ 0, 0, 0, 0 ];
+      eventRect = [0, 0, 0, 0];
     }
     if (debug) {
       dump("got MozAfterPaint: " + eventRect.join(",") + "\n");
     }
     accumulatedRect = accumulatedRect
-                    ? [ Math.min(accumulatedRect[0], eventRect[0]),
-                        Math.min(accumulatedRect[1], eventRect[1]),
-                        Math.max(accumulatedRect[2], eventRect[2]),
-                        Math.max(accumulatedRect[3], eventRect[3]) ]
-                    : eventRect;
+      ? [
+          Math.min(accumulatedRect[0], eventRect[0]),
+          Math.min(accumulatedRect[1], eventRect[1]),
+          Math.max(accumulatedRect[2], eventRect[2]),
+          Math.max(accumulatedRect[3], eventRect[3]),
+        ]
+      : eventRect;
     if (debug) {
       dump("Dispatching " + onpaint.length + " onpaint listeners\n");
     }
@@ -68,8 +73,9 @@
       if (debug) {
         dump("waiting for paint...\n");
       }
-      onpaint.push(
-        function() { waitForPaints(callback, subdoc, FlushModes.NOFLUSH); });
+      onpaint.push(function() {
+        waitForPaints(callback, subdoc, FlushModes.NOFLUSH);
+      });
       if (utils.isTestControllingRefreshes) {
         utils.advanceTimeAndRefresh(0);
       }
@@ -79,7 +85,7 @@
     if (debug) {
       dump("done...\n");
     }
-    var result = accumulatedRect || [ 0, 0, 0, 0 ];
+    var result = accumulatedRect || [0, 0, 0, 0];
     accumulatedRect = null;
     callback.apply(null, result);
   }
@@ -94,10 +100,10 @@
 
   window.promiseAllPaintsDone = function(subdoc = null, flush = false) {
     var flushmode = flush ? FlushModes.FLUSH : FlushModes.NOFLUSH;
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
       // The callback is given the components of the rect, but resolve() can
       // only be given one arg, so we turn it back into an array.
       waitForPaints((l, r, t, b) => resolve([l, r, t, b]), subdoc, flushmode);
     });
-  }
+  };
 })();
