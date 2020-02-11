@@ -76,16 +76,20 @@ class Browsertime(Perftest):
 
     def remove_mozprofile_delimiters_from_profile(self):
         # Perftest.build_browser_profile uses mozprofile to create the profile and merge in prefs;
-        # while merging, mozprofile adds in special delimiters; these delimiters are not recognized
-        # by selenium-webdriver ultimately causing Firefox launch to fail. So we must remove these
-        # delimiters from the browser profile before passing into btime via firefox.profileTemplate
+        # while merging, mozprofile adds in special delimiters; these delimiters (along with blank
+        # lines) are not recognized by selenium-webdriver ultimately causing Firefox launch to
+        # fail. So we must remove these delimiters from the browser profile before passing into
+        # btime via firefox.profileTemplate.
 
         LOG.info("Removing mozprofile delimiters from browser profile")
         userjspath = os.path.join(self.profile.profile, "user.js")
         try:
             with open(userjspath) as userjsfile:
                 lines = userjsfile.readlines()
-            lines = [line for line in lines if not line.startswith("#MozRunner")]
+            lines = [
+                line for line in lines
+                if not line.startswith("#MozRunner") and line.strip()
+            ]
             with open(userjspath, "w") as userjsfile:
                 userjsfile.writelines(lines)
         except Exception as e:
