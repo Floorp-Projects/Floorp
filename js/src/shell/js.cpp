@@ -7639,10 +7639,12 @@ static bool ReflectTrackedOptimizations(JSContext* cx, unsigned argc,
 
   jit::JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
   jit::IonScript* ion = fun->nonLazyScript()->ionScript();
-  jit::JitcodeGlobalEntry& entry =
-      table->lookupInfallible(ion->method()->raw());
+  jit::JitcodeGlobalEntry* entry = table->lookup(ion->method()->raw());
+  if (!entry) {
+    return false;
+  }
 
-  if (!entry.hasTrackedOptimizations()) {
+  if (!entry->hasTrackedOptimizations()) {
     JSObject* obj = JS_NewPlainObject(cx);
     if (!obj) {
       return false;
@@ -7657,7 +7659,7 @@ static bool ReflectTrackedOptimizations(JSContext* cx, unsigned argc,
   }
 
   const jit::IonTrackedOptimizationsRegionTable* regions =
-      entry.ionEntry().trackedOptimizationsRegionTable();
+      entry->ionEntry().trackedOptimizationsRegionTable();
 
   if (!sp.put("{\"regions\": [")) {
     return false;
@@ -7679,7 +7681,7 @@ static bool ReflectTrackedOptimizations(JSContext* cx, unsigned argc,
       // endOffset]. Since we are not querying a return address, we want
       // the second region and not the first.
       uint8_t* addr = ion->method()->raw() + endOffset;
-      entry.youngestFrameLocationAtAddr(rt, addr, &script, &pc);
+      entry->youngestFrameLocationAtAddr(rt, addr, &script, &pc);
 
       if (!sp.jsprintf("{\"location\":\"%s:%u\",\"offset\":%zu,\"index\":%u}%s",
                        script->filename(), script->lineno(),
@@ -7697,15 +7699,15 @@ static bool ReflectTrackedOptimizations(JSContext* cx, unsigned argc,
     return false;
   }
 
-  for (uint8_t i = 0; i < entry.ionEntry().numOptimizationAttempts(); i++) {
+  for (uint8_t i = 0; i < entry->ionEntry().numOptimizationAttempts(); i++) {
     if (!sp.jsprintf("%s{\"typeinfo\":[", i == 0 ? "" : ",")) {
       return false;
     }
 
     SprintOptimizationTypeInfoOp top(&sp);
     jit::IonTrackedOptimizationsTypeInfo::ForEachOpAdapter adapter(top);
-    entry.trackedOptimizationTypeInfo(i).forEach(adapter,
-                                                 entry.allTrackedTypes());
+    entry->trackedOptimizationTypeInfo(i).forEach(adapter,
+                                                  entry->allTrackedTypes());
     if (top.hadError()) {
       return false;
     }
@@ -7720,7 +7722,7 @@ static bool ReflectTrackedOptimizations(JSContext* cx, unsigned argc,
     }
 
     SprintOptimizationAttemptsOp aop(&sp);
-    entry.trackedOptimizationAttempts(i).forEach(aop);
+    entry->trackedOptimizationAttempts(i).forEach(aop);
     if (aop.hadError()) {
       return false;
     }

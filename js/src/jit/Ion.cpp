@@ -1725,8 +1725,12 @@ static void TrackIonAbort(JSContext* cx, JSScript* script, jsbytecode* pc,
   JitcodeGlobalTable* table =
       cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
   void* ptr = script->baselineScript()->method()->raw();
-  JitcodeGlobalEntry& entry = table->lookupInfallible(ptr);
-  entry.baselineEntry().trackIonAbort(pc, message);
+
+  // If the frame lookup fails, don't track the abort.
+  JitcodeGlobalEntry* entry = table->lookup(ptr);
+  if (entry) {
+    entry->baselineEntry().trackIonAbort(pc, message);
+  }
 }
 
 static void TrackAndSpewIonAbort(JSContext* cx, JSScript* script,
