@@ -2849,13 +2849,10 @@ version = "0.1.4"
 dependencies = [
  "bindgen",
  "byteorder",
- "core-foundation",
  "env_logger",
  "lazy_static",
- "libloading",
  "log",
  "pkcs11",
- "rental",
  "sha2",
  "winapi 0.3.7",
 ]
