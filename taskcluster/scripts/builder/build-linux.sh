@@ -18,12 +18,13 @@ echo "running as" $(id)
 
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/builds/worker/tooltool-cache}
 
+: MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
+
 : NEED_XVFB                     ${NEED_XVFB:=false}
 
 : MH_CUSTOM_BUILD_VARIANT_CFG   ${MH_CUSTOM_BUILD_VARIANT_CFG}
 : MH_BRANCH                     ${MH_BRANCH:=mozilla-central}
 : MH_BUILD_POOL                 ${MH_BUILD_POOL:=staging}
-: MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
 
 : WORKSPACE                     ${WORKSPACE:=/builds/worker/workspace}
 
