@@ -7111,11 +7111,10 @@ void Document::EndUpdate() {
 
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this));
 
-  nsContentUtils::RemoveScriptBlocker();
-
   --mUpdateNestLevel;
 
-  MaybeInitializeFinalizeFrameLoaders();
+  nsContentUtils::RemoveScriptBlocker();
+
   if (mXULBroadcastManager) {
     mXULBroadcastManager->MaybeBroadcast();
   }
@@ -8477,9 +8476,8 @@ nsresult Document::FinalizeFrameLoader(nsFrameLoader* aLoader,
 }
 
 void Document::MaybeInitializeFinalizeFrameLoaders() {
-  if (mDelayFrameLoaderInitialization || mUpdateNestLevel != 0) {
-    // This method will be recalled when mUpdateNestLevel drops to 0,
-    // or when !mDelayFrameLoaderInitialization.
+  if (mDelayFrameLoaderInitialization) {
+    // This method will be recalled when !mDelayFrameLoaderInitialization.
     mFrameLoaderRunner = nullptr;
     return;
   }
