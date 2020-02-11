@@ -186,25 +186,28 @@ def main(log, args):
         log.error("Expected MOZ_FETCHES_DIR environment variable.")
         return 1
 
-    visualmetrics_path = Path(fetch_dir) / "visualmetrics.py"
+    fetch_dir = Path(fetch_dir)
+
+    visualmetrics_path = fetch_dir / "visualmetrics.py"
     if not visualmetrics_path.exists():
         log.error(
             "Could not locate visualmetrics.py", expected_path=str(visualmetrics_path)
         )
         return 1
 
-    results_path = Path(args.browsertime_results).parent
+    browsertime_results_path = fetch_dir / "browsertime-results.tgz"
+
     try:
-        with tarfile.open(str(args.browsertime_results)) as tar:
-            tar.extractall(path=str(results_path))
+        with tarfile.open(str(browsertime_results_path)) as tar:
+            tar.extractall(path=str(fetch_dir))
     except Exception:
         log.error(
             "Could not read extract browsertime results archive",
-            path=args.browsertime_results,
+            path=browsertime_results_path,
             exc_info=True,
         )
         return 1
-    log.info("Extracted browsertime results", path=args.browsertime_results)
+    log.info("Extracted browsertime results", path=browsertime_results_path)
 
     try:
         jobs_json_path = fetch_dir / "browsertime-results" / "jobs.json"
@@ -319,14 +322,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-
-    parser.add_argument(
-        "--browsertime-results",
-        type=Path,
-        metavar="PATH",
-        help="The path to the browsertime results tarball.",
-        required=True,
     )
 
     parser.add_argument(
