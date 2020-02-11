@@ -20,6 +20,8 @@ echo "running as" $(id)
 
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/builds/worker/tooltool-cache}
 
+: MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
+
 : WORKSPACE                     ${WORKSPACE:=/builds/worker/workspace}
 
 set -v
@@ -40,7 +42,7 @@ export MOZ_SIMPLE_PACKAGE_NAME=target
 
 # test required parameters are supplied
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
-if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
+if [[ -z "${MOZHARNESS_CONFIG}" && -z "${EXTRA_MOZHARNESS_CONFIG}" ]]; then fail "MOZHARNESS_CONFIG or EXTRA_MOZHARNESS_CONFIG is not set"; fi
 
 cleanup() {
     local rv=$?
@@ -63,7 +65,7 @@ export TOOLTOOL_CACHE
 
 config_path_cmds=""
 for path in ${MOZHARNESS_CONFIG_PATHS}; do
-    config_path_cmds="${config_path_cmds} --extra-config-path ${WORKSPACE}/build/src/${path}"
+    config_path_cmds="${config_path_cmds} --extra-config-path ${GECKO_PATH}/${path}"
 done
 
 # support multiple, space delimited, config files
