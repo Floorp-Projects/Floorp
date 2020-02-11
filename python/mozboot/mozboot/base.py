@@ -531,9 +531,9 @@ class BaseBootstrapper(object):
         string forces that no user or system hgrc file is used.
         """
         env = os.environ.copy()
-        env[b'HGPLAIN'] = b'1'
+        env['HGPLAIN'] = '1'
         if not load_hgrc:
-            env[b'HGRCPATH'] = b''
+            env['HGRCPATH'] = ''
 
         return env
 
