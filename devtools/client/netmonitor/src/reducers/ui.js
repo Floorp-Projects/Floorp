@@ -8,6 +8,7 @@ const Services = require("Services");
 const {
   CLEAR_REQUESTS,
   OPEN_NETWORK_DETAILS,
+  OPEN_ACTION_BAR,
   RESIZE_NETWORK_DETAILS,
   ENABLE_PERSISTENT_LOGS,
   DISABLE_BROWSER_CACHE,
@@ -82,6 +83,7 @@ function UI(initialState = {}) {
     browserCacheDisabled: Services.prefs.getBoolPref("devtools.cache.disabled"),
     statisticsOpen: false,
     waterfallWidth: null,
+    networkActionOpen: false,
     selectedActionBarTabId: null,
     ...initialState,
   };
@@ -106,6 +108,13 @@ function openNetworkDetails(state, action) {
   return {
     ...state,
     networkDetailsOpen: action.open,
+  };
+}
+
+function openNetworkAction(state, action) {
+  return {
+    ...state,
+    networkActionOpen: action.open,
   };
 }
 
@@ -224,6 +233,8 @@ function ui(state = UI(), action) {
       return resizeWaterfall(state, action);
     case SET_COLUMNS_WIDTH:
       return setColumnsWidth(state, action);
+    case OPEN_ACTION_BAR:
+      return openNetworkAction(state, action);
     default:
       return state;
   }

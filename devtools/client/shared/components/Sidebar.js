@@ -31,6 +31,8 @@ class Sidebar extends PureComponent {
         collapsePaneTitle: PropTypes.string.isRequired,
         expandPaneTitle: PropTypes.string.isRequired,
         onClick: PropTypes.func.isRequired,
+        alignRight: PropTypes.bool,
+        canVerticalSplit: PropTypes.bool,
       }),
       activeTab: PropTypes.number,
     };
@@ -51,6 +53,8 @@ class Sidebar extends PureComponent {
       collapsePaneTitle,
       expandPaneTitle,
       onClick,
+      alignRight,
+      canVerticalSplit,
     } = this.props.sidebarToggleButton;
 
     return SidebarToggle({
@@ -58,6 +62,8 @@ class Sidebar extends PureComponent {
       collapsePaneTitle,
       expandPaneTitle,
       onClick,
+      alignRight,
+      canVerticalSplit,
     });
   }
 
