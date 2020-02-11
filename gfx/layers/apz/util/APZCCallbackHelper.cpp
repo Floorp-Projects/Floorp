@@ -288,7 +288,7 @@ void APZCCallbackHelper::NotifyLayerTransforms(
           ViewAs<LayoutDeviceToLayoutDeviceMatrix4x4>(
               msg.GetMatrix(),
               PixelCastJustification::ContentProcessIsLayerInUiProcess),
-          msg.GetRemoteDocumentRect());
+          msg.GetTopLevelViewportVisibleRectInBrowserCoords());
     }
   }
 }

@@ -1301,10 +1301,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvSizeModeChanged(
 
 mozilla::ipc::IPCResult BrowserChild::RecvChildToParentMatrix(
     const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix,
-    const mozilla::ScreenRect& aRemoteDocumentRect) {
+    const mozilla::ScreenRect& aTopLevelViewportVisibleRectInBrowserCoords) {
   mChildToParentConversionMatrix =
       LayoutDeviceToLayoutDeviceMatrix4x4::FromUnknownMatrix(aMatrix);
-  mRemoteDocumentRect = aRemoteDocumentRect;
+  mTopLevelViewportVisibleRectInBrowserCoords =
+      aTopLevelViewportVisibleRectInBrowserCoords;
 
   // Triger an intersection observation since ancestor viewports changed.
   if (RefPtr<Document> toplevelDoc = GetTopLevelDocument()) {
@@ -1604,8 +1605,8 @@ BrowserChild::GetChildToParentConversionMatrix() const {
   return LayoutDeviceToLayoutDeviceMatrix4x4::Translation(offset);
 }
 
-ScreenRect BrowserChild::GetRemoteDocumentRect() const {
-  return mRemoteDocumentRect;
+ScreenRect BrowserChild::GetTopLevelViewportVisibleRectInBrowserCoords() const {
+  return mTopLevelViewportVisibleRectInBrowserCoords;
 }
 
 void BrowserChild::FlushAllCoalescedMouseData() {

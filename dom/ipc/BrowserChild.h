@@ -282,7 +282,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvChildToParentMatrix(
       const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix,
-      const mozilla::ScreenRect& aRemoteDocumentRect);
+      const mozilla::ScreenRect& aTopLevelViewportVisibleRectInBrowserCoords);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvDynamicToolbarMaxHeightChanged(
@@ -636,7 +636,10 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
   GetChildToParentConversionMatrix() const;
 
-  mozilla::ScreenRect GetRemoteDocumentRect() const;
+  // Returns the portion of the visible rect of this remote document in the
+  // top browser window coordinate system.  This is the result of being clipped
+  // by all ancestor viewports.
+  mozilla::ScreenRect GetTopLevelViewportVisibleRectInBrowserCoords() const;
 
   // Prepare to dispatch all coalesced mousemove events. We'll move all data
   // in mCoalescedMouseData to a nsDeque; then we start processing them. We
@@ -932,7 +935,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   WindowsHandle mWidgetNativeData;
 
   Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
-  ScreenRect mRemoteDocumentRect;
+  ScreenRect mTopLevelViewportVisibleRectInBrowserCoords;
 
 #ifdef XP_WIN
   // Should only be accessed on main thread.
