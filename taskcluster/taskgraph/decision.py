@@ -111,16 +111,6 @@ PER_PROJECT_PARAMETERS = {
     }
 }
 
-visual_metrics_jobs_schema = Schema({
-        Required('jobs'): [
-            {
-                Required('test_name'): str,
-                Required('json_location'): str,
-                Required('video_location'): str,
-            }
-        ]
-})
-
 try_task_config_schema = Schema({
     Required('tasks'): [text_type],
     Optional('browsertime'): bool,
@@ -130,8 +120,6 @@ try_task_config_schema = Schema({
     Optional('gecko-profile'): bool,
     Optional('rebuild'): int,
     Optional('use-artifact-builds'): bool,
-    # Keep in sync with JOB_SCHEMA in taskcluster/docker/visual-metrics/run-visual-metrics.py.
-    Optional('visual-metrics-jobs'): visual_metrics_jobs_schema,
     Optional(
         "ubuntu-bionic",
         description="Run linux desktop tests on Ubuntu 18.04 (bionic)."
