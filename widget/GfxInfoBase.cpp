@@ -64,29 +64,29 @@ class ShutdownObserver : public nsIObserver {
     delete GfxInfoBase::sFeatureStatus;
     GfxInfoBase::sFeatureStatus = nullptr;
 
-    for (uint32_t i = 0; i < DeviceFamilyMax; i++) {
-      delete GfxDriverInfo::sDeviceFamilies[i];
-      GfxDriverInfo::sDeviceFamilies[i] = nullptr;
+    for (auto& deviceFamily : GfxDriverInfo::sDeviceFamilies) {
+      delete deviceFamily;
+      deviceFamily = nullptr;
     }
 
-    for (uint32_t i = 0; i < DesktopMax; i++) {
-      delete GfxDriverInfo::sDesktopEnvironment[i];
-      GfxDriverInfo::sDesktopEnvironment[i] = nullptr;
+    for (auto& desktop : GfxDriverInfo::sDesktopEnvironment) {
+      delete desktop;
+      desktop = nullptr;
     }
 
-    for (uint32_t i = 0; i < WindowingMax; i++) {
-      delete GfxDriverInfo::sWindowProtocol[i];
-      GfxDriverInfo::sWindowProtocol[i] = nullptr;
+    for (auto& windowProtocol : GfxDriverInfo::sWindowProtocol) {
+      delete windowProtocol;
+      windowProtocol = nullptr;
     }
 
-    for (uint32_t i = 0; i < DeviceVendorMax; i++) {
-      delete GfxDriverInfo::sDeviceVendors[i];
-      GfxDriverInfo::sDeviceVendors[i] = nullptr;
+    for (auto& deviceVendor : GfxDriverInfo::sDeviceVendors) {
+      delete deviceVendor;
+      deviceVendor = nullptr;
     }
 
-    for (uint32_t i = 0; i < DriverVendorMax; i++) {
-      delete GfxDriverInfo::sDriverVendors[i];
-      GfxDriverInfo::sDriverVendors[i] = nullptr;
+    for (auto& driverVendor : GfxDriverInfo::sDriverVendors) {
+      delete driverVendor;
+      driverVendor = nullptr;
     }
 
     GfxInfoBase::sShutdownOccurred = true;
@@ -339,7 +339,7 @@ static GfxDeviceFamily* BlacklistDevicesToDeviceFamily(
   for (uint32_t i = 0; i < devices.Length(); ++i) {
     // We make sure we don't add any "empty" device entries to the array, so
     // we don't need to check if devices[i] is empty.
-    deviceIds->AppendElement(NS_ConvertUTF8toUTF16(devices[i]));
+    deviceIds->Append(NS_ConvertUTF8toUTF16(devices[i]));
   }
 
   return deviceIds;
@@ -930,19 +930,19 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
     }
 
     if (info[i].mDevices != GfxDriverInfo::allDevices &&
-        info[i].mDevices->Length()) {
-      bool deviceMatches = false;
-      for (uint32_t j = 0; j < info[i].mDevices->Length(); j++) {
-        if ((*info[i].mDevices)[j].Equals(
-                adapterDeviceID[infoIndex],
-                nsCaseInsensitiveStringComparator())) {
-          deviceMatches = true;
-          break;
-        }
-      }
-
-      if (!deviceMatches) {
+        !info[i].mDevices->IsEmpty()) {
+      nsresult rv = info[i].mDevices->Contains(adapterDeviceID[infoIndex]);
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        // Not found
         continue;
+      }
+      if (rv != NS_OK) {
+        // Failed to search, allowlist should not match, blocklist should match
+        // for safety reasons
+        if (aForAllowing) {
+          continue;
+        }
+        break;
       }
     }
 
