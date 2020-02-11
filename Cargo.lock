@@ -2872,7 +2872,7 @@ dependencies = [
 [[package]]
 name = "packed_simd"
 version = "0.3.3"
-source = "git+https://github.com/hsivonen/packed_simd?branch=rust_1_32#3541e3818fdc7c2a24f87e3459151a4ce955a67a"
+source = "git+https://github.com/hsivonen/packed_simd?rev=3541e3818fdc7c2a24f87e3459151a4ce955a67a#3541e3818fdc7c2a24f87e3459151a4ce955a67a"
 dependencies = [
  "cfg-if",
 ]
