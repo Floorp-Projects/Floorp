@@ -28,7 +28,6 @@ add_task(async function() {
     enableBrowserToolboxFission: true,
   });
   await ToolboxTask.importFunctions({
-    info: msg => dump(msg + "\n"),
     selectNodeFront,
   });
 

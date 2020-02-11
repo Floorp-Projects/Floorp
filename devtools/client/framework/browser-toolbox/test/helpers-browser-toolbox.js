@@ -95,6 +95,39 @@ async function initBrowserToolboxTask({
     );
   }
 
+  importFunctions({
+    info: msg => dump(msg + "\n"),
+    is: (a, b, description) => {
+      let msg =
+        "'" + JSON.stringify(a) + "' is equal to '" + JSON.stringify(b) + "'";
+      if (description) {
+        msg += " - " + description;
+      }
+      if (a !== b) {
+        msg = "FAILURE: " + msg;
+        dump(msg + "\n");
+        throw new Error(msg);
+      } else {
+        msg = "SUCCESS: " + msg;
+        dump(msg + "\n");
+      }
+    },
+    ok: (a, description) => {
+      let msg = "'" + JSON.stringify(a) + "' is true";
+      if (description) {
+        msg += " - " + description;
+      }
+      if (!a) {
+        msg = "FAILURE: " + msg;
+        dump(msg + "\n");
+        throw new Error(msg);
+      } else {
+        msg = "SUCCESS: " + msg;
+        dump(msg + "\n");
+      }
+    },
+  });
+
   async function spawn(arg, fn) {
     const rv = await consoleFront.evaluateJSAsync(`(${fn})(${arg})`, {
       mapped: { await: true },
