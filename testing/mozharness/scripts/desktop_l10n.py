@@ -198,7 +198,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         """this step creates nsinstall, needed my make_wget_en_US()
         """
         dirs = self.query_abs_dirs()
-        config_dir = os.path.join(dirs['abs_objdir'], 'config')
+        config_dir = os.path.join(dirs['abs_obj_dir'], 'config')
         env = self.query_bootstrap_env()
         return self._make(target=['export'], cwd=config_dir, env=env)
 
@@ -271,7 +271,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         config = self.config
         dirs = self.query_abs_dirs()
         env = self.query_bootstrap_env()
-        cwd = os.path.join(dirs['abs_objdir'], config['locales_dir'])
+        cwd = os.path.join(dirs['abs_obj_dir'], config['locales_dir'])
         return self._make(target=["unpack"], cwd=cwd, env=env)
 
     def make_wget_en_US(self):
