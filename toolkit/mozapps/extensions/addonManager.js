@@ -106,6 +106,7 @@ amManager.prototype = {
 
     let telemetryInfo = {
       source: AddonManager.getInstallSourceFromHost(aPayload.sourceHost),
+      sourceURL: aPayload.sourceURL,
     };
 
     if ("method" in aPayload) {

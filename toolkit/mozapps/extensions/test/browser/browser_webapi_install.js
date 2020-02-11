@@ -1,3 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+"use strict";
+
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+
 const TESTPAGE = `${SECURE_TESTROOT}webapi_checkavailable.html`;
 const XPI_URL = `${SECURE_TESTROOT}../xpinstall/amosigned.xpi`;
 const XPI_ADDON_ID = "amosigned-xpi@tests.mozilla.org";
@@ -8,6 +18,8 @@ const XPI_SHA =
 const ID = "amosigned-xpi@tests.mozilla.org";
 // eh, would be good to just stat the real file instead of this...
 const XPI_LEN = 4287;
+
+AddonTestUtils.initMochitest(this);
 
 function waitForClear() {
   const MSG = "WebAPICleanup";
@@ -245,11 +257,11 @@ function makeRegularTest(options, what) {
     isnot(addon, null, "Found the addon");
 
     // Check that the expected installTelemetryInfo has been stored in the addon details.
-    Assert.deepEqual(
-      addon.installTelemetryInfo,
-      { source: "test-host", method: "amWebAPI" },
-      "Got the expected addon.installTelemetryInfo"
-    );
+    AddonTestUtils.checkInstallInfo(addon, {
+      method: "amWebAPI",
+      source: "test-host",
+      sourceURL: /https:\/\/example.com\/.*\/webapi_checkavailable.html/,
+    });
 
     await addon.uninstall();
 
