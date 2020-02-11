@@ -27,18 +27,13 @@ class Histogram {
   }
 
   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
-    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
+    return new Histogram(0);
   }
 
   static public Histogram createEnumeration(String name, int max) {
-    return new Histogram(nativeCreateEnumeration(name, max));
+    return new Histogram(0);
   }
 
   public void addSample(int sample) {
-    nativeAddSample(handle, sample);
   }
-
-  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
-  private static native long nativeCreateEnumeration(String name, int max);
-  private static native void nativeAddSample(long handle, int sample);
 }
