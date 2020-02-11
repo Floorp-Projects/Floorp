@@ -10,6 +10,7 @@
 
 #include "mozilla/dom/Selection.h"
 
+#include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoCopyListener.h"
@@ -2717,6 +2718,16 @@ bool Selection::ContainsPoint(const nsPoint& aPoint) {
     }
   }
   return false;
+}
+
+void Selection::MaybeNotifyAccessibleCaretEventHub(PresShell* aPresShell) {
+  if (!mAccessibleCaretEventHub && aPresShell) {
+    mAccessibleCaretEventHub = aPresShell->GetAccessibleCaretEventHub();
+  }
+}
+
+void Selection::StopNotifyingAccessibleCaretEventHub() {
+  mAccessibleCaretEventHub = nullptr;
 }
 
 nsPresContext* Selection::GetPresContext() const {

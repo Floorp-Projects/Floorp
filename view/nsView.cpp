@@ -22,6 +22,7 @@
 #include "nsXULPopupManager.h"
 #include "nsIWidgetListener.h"
 #include "nsContentUtils.h"  // for nsAutoScriptBlocker
+#include "nsDocShell.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/CompositeTimelineMarker.h"
 
