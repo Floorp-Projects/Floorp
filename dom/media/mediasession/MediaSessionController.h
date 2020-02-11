@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef DOM_MEDIA_MEDIASESSION_MEDIASESSIONCONTROLLER_H_
+#define DOM_MEDIA_MEDIASESSION_MEDIASESSIONCONTROLLER_H_
+
+#include "mozilla/dom/MediaMetadata.h"
+#include "mozilla/dom/MediaSessionBinding.h"
+#include "mozilla/Maybe.h"
+#include "nsDataHashtable.h"
+#include "nsISupportsImpl.h"
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * MediaSessionController is used to track all alive media sessions within a tab
+ * and store their metadata which could be used to show on the virtual media
+ * control interface. In addition, we can use it to get the current media
+ * metadata even if there is no media session existing.
+ *
+ * When media session is created in the content process, we would notify
+ * MediaSessionController in the parent process to tell it in which browsing
+ * context media session is created. If there are multiple media sessions
+ * existing in the same tab, MediaSessionController would take a resbonsibility
+ * to decide which media session should be an active media session. However,
+ * the meaning of active media session here is not equal to the definition from
+ * the spec [1]. We just choose the session which is the active one inside the
+ * tab, the global active media session among different tabs would be selected
+ * in other place, which is related to how we select media controller.
+ *
+ * [1] https://w3c.github.io/mediasession/#active-media-session
+ */
+class MediaSessionController {
+ public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  // Use these functions to ensure that we can track all existing media session
+  // in the same tab when media session is created or destroyed in the content
+  // process.
+  void NotifySessionCreated(uint64_t aSessionContextId);
+  void NotifySessionDestroyed(uint64_t aSessionContextId);
+
+  // Use this function to store the media metadata when media session updated
+  // its metadata in the content process.
+  void UpdateMetadata(uint64_t aSessionContextId, MediaMetadataBase& aMetadata);
+
+  // Return active media session's metadata if active media session exists and
+  // it has already set its metadata. Otherwise, return default media metadata
+  // which is based on website's title and favicon.
+  MediaMetadataBase GetCurrentMediaMetadata() const;
+
+ protected:
+  ~MediaSessionController() = default;
+
+  MediaMetadataBase CreateDefaultMetadata() const;
+  void UpdateActiveMediaSessionContextId();
+
+  Maybe<uint64_t> mActiveMediaSessionContextId;
+  nsDataHashtable<nsUint64HashKey, Maybe<MediaMetadataBase>> mMetadataMap;
+};
+
+}  // namespace dom
+}  // namespace mozilla
+
+#endif  // DOM_MEDIA_MEDIASESSION_MEDIASESSIONCONTROLLER_H_
