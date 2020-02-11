@@ -34,6 +34,7 @@ class TestLocalesMixin(unittest.TestCase):
     BASE_ABS_DIRS = {
         'abs_log_dir', 'abs_work_dir', 'base_work_dir',
         'abs_src_dir', 'abs_locales_src_dir', 'abs_l10n_dir',
+        'abs_obj_dir', 'abs_locales_dir',
     }
 
     def setUp(self):
@@ -65,6 +66,7 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['work_dir'] = '.'
         l.config['l10n_dir'] = "l10n_dir"
         l.config['locales_dir'] = "locales_dir"
+        l.config['objdir'] = "objdir"
         locales = l.query_locales()
         locales.sort()
         self.assertEqual(ALL_LOCALES, locales)
@@ -93,6 +95,7 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['work_dir'] = "work_dir"
         l.config['l10n_dir'] = "l10n_dir"
         l.config['locales_dir'] = "locales_dir"
+        l.config['objdir'] = "objdir"
         return l
 
     def test_query_abs_dirs_base(self):
@@ -105,14 +108,6 @@ class TestLocalesMixin(unittest.TestCase):
         l.query_abs_dirs().keys()
         dirs = set(l.query_abs_dirs().keys())
         self.assertEqual(dirs, self.BASE_ABS_DIRS)
-
-    def test_query_abs_dirs_objdir(self):
-        l = self._get_query_abs_dirs_obj()
-        l.config['objdir'] = "objdir"
-        dirs = set(l.query_abs_dirs().keys())
-        expected_dirs = self.BASE_ABS_DIRS | {'abs_obj_dir', 'abs_locales_dir'}
-
-        self.assertEqual(dirs, expected_dirs)
 
 
 if __name__ == '__main__':
