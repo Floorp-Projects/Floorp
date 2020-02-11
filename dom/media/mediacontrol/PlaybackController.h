@@ -12,6 +12,8 @@
 namespace mozilla {
 namespace dom {
 
+class MediaSession;
+
 /**
  * This interface is used to handle different playback control actions. The
  * methods are designed based on the MediaSessionAction values, which are
@@ -47,6 +49,7 @@ class MOZ_STACK_CLASS PlaybackController {
   void SeekTo();
 
  private:
+  MediaSession* GetMediaSession();
   RefPtr<BrowsingContext> mBC;
 };
 
