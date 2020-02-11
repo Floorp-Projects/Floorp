@@ -10770,7 +10770,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_getelem_super() {
   MDefinition* receiver = current->pop();
 
 #if defined(JS_CODEGEN_X86)
-  if (instrumentedProfiling()) {
+  if (mirGen_.instrumentedProfiling()) {
     return abort(AbortReason::Disable,
                  "profiling functions with GETELEM_SUPER is disabled on x86");
   }
