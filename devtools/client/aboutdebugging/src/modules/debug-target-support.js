@@ -59,10 +59,8 @@ const ALL_DEBUG_TARGET_PANES = [
     : []),
 ];
 
-// All debug target panes except temporary extensions
-const REMOTE_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES.filter(
-  p => p !== DEBUG_TARGET_PANE.TEMPORARY_EXTENSION
-);
+// All debug target panes (to filter out if any of the panels should be excluded).
+const REMOTE_DEBUG_TARGET_PANES = [...ALL_DEBUG_TARGET_PANES];
 
 const THIS_FIREFOX_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES
   // Main process debugging is not available for This Firefox.
@@ -90,3 +88,22 @@ function isSupportedDebugTargetPane(runtimeType, debugTargetPaneKey) {
   );
 }
 exports.isSupportedDebugTargetPane = isSupportedDebugTargetPane;
+
+/**
+ * Check if the given runtimeType supports temporary extension installation
+ * from about:debugging (currently disallowed on non-local runtimes).
+ */
+function supportsTemporaryExtensionInstaller(runtimeType) {
+  return runtimeType === RUNTIMES.THIS_FIREFOX;
+}
+exports.supportsTemporaryExtensionInstaller = supportsTemporaryExtensionInstaller;
+
+/**
+ * Check if the given runtimeType supports temporary extension additional
+ * actions (e.g. reload and remove, which are currently disallowed on
+ * non-local runtimes).
+ */
+function supportsTemporaryExtensionAdditionalActions(runtimeType) {
+  return runtimeType === RUNTIMES.THIS_FIREFOX;
+}
+exports.supportsTemporaryExtensionAdditionalActions = supportsTemporaryExtensionAdditionalActions;

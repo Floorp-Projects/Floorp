@@ -41,6 +41,7 @@ async function checkTargetPanes({ enableLocalTabs }, mocks) {
   await selectRuntime(RUNTIME_DEVICE_NAME, RUNTIME_APP_NAME, document);
 
   const SUPPORTED_TARGET_PANES = [
+    "Temporary Extensions",
     "Extensions",
     "Other Workers",
     "Shared Workers",
@@ -56,6 +57,11 @@ async function checkTargetPanes({ enableLocalTabs }, mocks) {
       ok(!debugTargetPaneEl, `Unsupported target pane [${title}] is hidden`);
     }
   }
+
+  const installButton = document.querySelector(
+    ".qa-temporary-extension-install-button"
+  );
+  ok(!installButton, "Temporary Extensions install button is hidden");
 
   info("Remove USB runtime");
   mocks.removeUSBRuntime(RUNTIME_ID);

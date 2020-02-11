@@ -77,6 +77,8 @@ const {
 } = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
 const {
   isSupportedDebugTargetPane,
+  supportsTemporaryExtensionInstaller,
+  supportsTemporaryExtensionAdditionalActions,
 } = require("devtools/client/aboutdebugging/src/modules/debug-target-support");
 
 class RuntimePage extends PureComponent {
@@ -160,11 +162,13 @@ class RuntimePage extends PureComponent {
   }
 
   renderTemporaryExtensionInstallSection() {
+    const runtimeType = this.props.runtimeDetails.info.type;
     if (
       !isSupportedDebugTargetPane(
-        this.props.runtimeDetails.info.type,
+        runtimeType,
         DEBUG_TARGET_PANE.TEMPORARY_EXTENSION
-      )
+      ) ||
+      !supportsTemporaryExtensionInstaller(runtimeType)
     ) {
       return null;
     }
@@ -224,7 +228,9 @@ class RuntimePage extends PureComponent {
         temporaryExtensions,
         this.renderTemporaryExtensionInstallSection(),
         InspectAction,
-        TemporaryExtensionAdditionalActions,
+        supportsTemporaryExtensionAdditionalActions(runtimeDetails.info.type)
+          ? TemporaryExtensionAdditionalActions
+          : null,
         TemporaryExtensionDetail,
         DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
         "about-debugging-runtime-temporary-extensions"
