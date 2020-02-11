@@ -103,13 +103,6 @@ class TableCellAndListItemFunctor final : public BoolDomIterFunctor {
   }
 };
 
-class BRNodeFunctor final : public BoolDomIterFunctor {
- public:
-  virtual bool operator()(nsINode* aNode) const override {
-    return aNode->IsHTMLElement(nsGkAtoms::br);
-  }
-};
-
 class EmptyEditableFunctor final : public BoolDomIterFunctor {
  public:
   explicit EmptyEditableFunctor(HTMLEditor* aHTMLEditor)
@@ -3232,14 +3225,13 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
     AutoRangeArray arrayOfRanges(SelectionRefPtr());
     for (auto& range : arrayOfRanges.mRanges) {
       // Build a list of nodes in the range
-      nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-      TrivialFunctor functor;
+      AutoTArray<OwningNonNull<nsINode>, 10> arrayOfNodes;
       DOMSubtreeIterator iter;
       nsresult rv = iter.Init(*range);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return result.SetResult(rv);
       }
-      iter.AppendList(functor, arrayOfNodes);
+      iter.AppendAllNodesToArray(arrayOfNodes);
 
       // Now that we have the list, delete non-table elements
       int32_t listCount = arrayOfNodes.Length();
@@ -7727,7 +7719,7 @@ nsresult HTMLEditor::CollectEditTargetNodes(
       return rv;
     }
     if (aOutArrayOfNodes.IsEmpty()) {
-      iter.AppendList(TrivialFunctor(), aOutArrayOfNodes);
+      iter.AppendAllNodesToArray(aOutArrayOfNodes);
     } else {
       // We don't want duplicates in aOutArrayOfNodes, so we use an
       // iterator/functor that only return nodes that are not already in
@@ -7972,21 +7964,20 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // First build up a list of all the break nodes inside the inline container.
-  nsTArray<OwningNonNull<nsINode>> arrayOfBreaks;
-  BRNodeFunctor functor;
+  AutoTArray<OwningNonNull<HTMLBRElement>, 24> arrayOfBRElements;
   DOMIterator iter(aMostAncestorToBeSplit);
-  iter.AppendList(functor, arrayOfBreaks);
+  iter.AppendAllNodesToArray(arrayOfBRElements);
 
   // If there aren't any breaks, just put inNode itself in the array
-  if (arrayOfBreaks.IsEmpty()) {
+  if (arrayOfBRElements.IsEmpty()) {
     aOutArrayOfNodes.AppendElement(aMostAncestorToBeSplit);
     return NS_OK;
   }
 
   // Else we need to bust up aMostAncestorToBeSplit along all the breaks
   nsCOMPtr<nsIContent> nextContent = &aMostAncestorToBeSplit;
-  for (OwningNonNull<nsINode>& brNode : arrayOfBreaks) {
-    EditorDOMPoint atBrNode(brNode);
+  for (OwningNonNull<HTMLBRElement>& brElement : arrayOfBRElements) {
+    EditorDOMPoint atBrNode(brElement);
     if (NS_WARN_IF(!atBrNode.IsSet())) {
       return NS_ERROR_FAILURE;
     }
@@ -8009,15 +8000,14 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
 
     // Move break outside of container and also put in node list
     EditorDOMPoint atNextNode(splitNodeResult.GetNextNode());
-    nsresult rv = MoveNodeWithTransaction(MOZ_KnownLive(*brNode->AsContent()),
-                                          atNextNode);
+    nsresult rv = MoveNodeWithTransaction(brElement, atNextNode);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    aOutArrayOfNodes.AppendElement(*brNode);
+    aOutArrayOfNodes.AppendElement(brElement);
 
     nextContent = splitNodeResult.GetNextNode();
   }

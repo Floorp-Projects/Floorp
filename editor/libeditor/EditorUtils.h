@@ -739,13 +739,16 @@ class BoolDomIterFunctor {
 class MOZ_RAII DOMIterator {
  public:
   explicit DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-
   explicit DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   virtual ~DOMIterator() = default;
 
   nsresult Init(nsRange& aRange);
   nsresult Init(const RawRangeBoundary& aStartRef,
                 const RawRangeBoundary& aEndRef);
+
+  template <class NodeClass>
+  void AppendAllNodesToArray(
+      nsTArray<OwningNonNull<NodeClass>>& aArrayOfNodes) const;
 
   void AppendList(
       const BoolDomIterFunctor& functor,
@@ -768,12 +771,6 @@ class MOZ_RAII DOMSubtreeIterator final : public DOMIterator {
   ContentSubtreeIterator mSubtreeIter;
   explicit DOMSubtreeIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM) =
       delete;
-};
-
-class TrivialFunctor final : public BoolDomIterFunctor {
- public:
-  // Used to build list of all nodes iterator covers
-  virtual bool operator()(nsINode* aNode) const override { return true; }
 };
 
 class EditorUtils final {

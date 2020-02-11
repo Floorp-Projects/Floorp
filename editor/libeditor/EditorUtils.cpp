@@ -9,6 +9,7 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
 #include "nsContentUtils.h"
@@ -25,6 +26,9 @@ class nsRange;
 namespace mozilla {
 
 using namespace dom;
+
+template void DOMIterator::AppendAllNodesToArray(
+    nsTArray<OwningNonNull<HTMLBRElement>>& aArrayOfNodes) const;
 
 /******************************************************************************
  * mozilla::EditActionResult
@@ -79,6 +83,24 @@ nsresult DOMIterator::Init(const RawRangeBoundary& aStartRef,
 DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
     : mIter(&mPostOrderIter) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
+
+template <class NodeClass>
+void DOMIterator::AppendAllNodesToArray(
+    nsTArray<OwningNonNull<NodeClass>>& aArrayOfNodes) const {
+  for (; !mIter->IsDone(); mIter->Next()) {
+    if (NodeClass* node = NodeClass::FromNode(mIter->GetCurrentNode())) {
+      aArrayOfNodes.AppendElement(*node);
+    }
+  }
+}
+
+template <>
+void DOMIterator::AppendAllNodesToArray(
+    nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes) const {
+  for (; !mIter->IsDone(); mIter->Next()) {
+    aArrayOfNodes.AppendElement(*mIter->GetCurrentNode());
+  }
 }
 
 void DOMIterator::AppendList(
