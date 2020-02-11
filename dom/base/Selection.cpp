@@ -1878,10 +1878,10 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
     SetInterlinePosition(true, IgnoreErrors());
   }
 
+  if (!mFrameSelection) return;  // nothing to do
+
   RefPtr<nsPresContext> presContext = GetPresContext();
   SelectFrames(presContext, range, true);
-
-  if (!mFrameSelection) return;  // nothing to do
 
   // Be aware, this instance may be destroyed after this call.
   // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
@@ -1910,6 +1910,16 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
+  }
+
+  const int32_t cnt = mRanges.Length();
+  if (&aRange == mAnchorFocusRange) {
+    // Reset anchor to LAST range or clear it if there are no ranges.
+    SetAnchorFocusRange(cnt - 1);
+  }
+
+  if (!mFrameSelection) {
+    return;  // nothing to do
   }
 
   nsINode* beginNode = aRange.GetStartContainer();
@@ -1950,21 +1960,21 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     SelectFrames(presContext, affectedRanges[i], true);
   }
 
-  int32_t cnt = mRanges.Length();
   if (&aRange == mAnchorFocusRange) {
-    // Reset anchor to LAST range or clear it if there are no ranges.
-    SetAnchorFocusRange(cnt - 1);
-
     // When the selection is user-created it makes sense to scroll the range
     // into view. The spell-check selection, however, is created and destroyed
     // in the background. We don't want to scroll in this case or the view
     // might appear to be moving randomly (bug 337871).
     if (mSelectionType != SelectionType::eSpellCheck && cnt > 0) {
       ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
+
+      // `ScrollIntoView` might've ran script, that shouldn't invalidate
+      // `mFrameSelection`, but for safety, it's checked here.
+      if (NS_WARN_IF(!mFrameSelection)) {
+        return;
+      }
     }
   }
-
-  if (!mFrameSelection) return;  // nothing to do
 
   // Be aware, this instance may be destroyed after this call.
   // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
