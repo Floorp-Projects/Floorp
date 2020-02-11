@@ -968,7 +968,7 @@ nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
       mRy(NonNegativeLengthPercentageOrAuto::Auto()),
       mR(NonNegativeLengthPercentage::Zero()),
       mMask(nsStyleImageLayers::LayerType::Mask),
-      mClipPath(StyleClippingShape::None()),
+      mClipPath(StyleClipPath::None()),
       mStopColor(StyleColor::Black()),
       mFloodColor(StyleColor::Black()),
       mLightingColor(StyleColor::White()),
@@ -2276,7 +2276,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mVerticalAlign(
           StyleVerticalAlign::Keyword(StyleVerticalAlignKeyword::Baseline)),
       mShapeMargin(LengthPercentage::Zero()),
-      mShapeOutside(StyleFloatAreaShape::None()) {
+      mShapeOutside(StyleShapeOutside::None()) {
   MOZ_COUNT_CTOR(nsStyleDisplay);
 
   mTransitions[0].SetInitialValues();
@@ -2352,13 +2352,13 @@ void nsStyleDisplay::TriggerImageLoads(Document& aDocument,
                                        const nsStyleDisplay* aOldStyle) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mShapeOutside.IsImageOrUrl()) {
-    auto* old = aOldStyle && aOldStyle->mShapeOutside.IsImageOrUrl()
-                    ? &aOldStyle->mShapeOutside.AsImageOrUrl()
+  if (mShapeOutside.IsImage()) {
+    auto* old = aOldStyle && aOldStyle->mShapeOutside.IsImage()
+                    ? &aOldStyle->mShapeOutside.AsImage()
                     : nullptr;
     // Const-cast is ugly but legit, we could avoid it by generating mut-casts
     // with cbindgen.
-    const_cast<StyleImage&>(mShapeOutside.AsImageOrUrl())
+    const_cast<StyleImage&>(mShapeOutside.AsImage())
         .ResolveImage(aDocument, old);
   }
 }

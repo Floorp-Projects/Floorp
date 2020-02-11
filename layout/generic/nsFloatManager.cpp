@@ -2256,7 +2256,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame, nscoord aLineLeft,
       mRect(ShapeInfo::ConvertToFloatLogical(aMarginRect, aWM, aContainerSize) +
             nsPoint(aLineLeft, aBlockStart)) {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
-  using ShapeOutsideType = StyleFloatAreaShape::Tag;
+  using ShapeOutsideType = StyleShapeOutside::Tag;
 
   if (IsEmpty()) {
     // Per spec, a float area defined by a shape is clipped to the float’s
@@ -2282,10 +2282,10 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame, nscoord aLineLeft,
       // No need to create shape info.
       return;
 
-    case ShapeOutsideType::ImageOrUrl: {
+    case ShapeOutsideType::Image: {
       float shapeImageThreshold = styleDisplay->mShapeImageThreshold;
       mShapeInfo = ShapeInfo::CreateImageShape(
-          shapeOutside.AsImageOrUrl(), shapeImageThreshold, shapeMargin, mFrame,
+          shapeOutside.AsImage(), shapeImageThreshold, shapeMargin, mFrame,
           aMarginRect, aWM, aContainerSize);
       if (!mShapeInfo) {
         // Image is not ready, or fails to load, etc.
@@ -2294,11 +2294,6 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame, nscoord aLineLeft,
 
       break;
     }
-
-    case ShapeOutsideType::Path:
-      // FIXME(emilio): We shouldn't generate the enum then.
-      MOZ_ASSERT_UNREACHABLE("shape-outside doesn't have Path source type!");
-      return;
 
     case ShapeOutsideType::Box: {
       // Initialize <shape-box>'s reference rect.
@@ -2671,9 +2666,8 @@ nsFloatManager::ShapeInfo::CreateImageShape(const StyleImage& aShapeImage,
                                             const LogicalRect& aMarginRect,
                                             WritingMode aWM,
                                             const nsSize& aContainerSize) {
-  MOZ_ASSERT(
-      &aShapeImage == &aFrame->StyleDisplay()->mShapeOutside.AsImageOrUrl(),
-      "aFrame should be the frame that we got aShapeImage from");
+  MOZ_ASSERT(&aShapeImage == &aFrame->StyleDisplay()->mShapeOutside.AsImage(),
+             "aFrame should be the frame that we got aShapeImage from");
 
   nsImageRenderer imageRenderer(aFrame, &aShapeImage,
                                 nsImageRenderer::FLAG_SYNC_DECODE_IMAGES);

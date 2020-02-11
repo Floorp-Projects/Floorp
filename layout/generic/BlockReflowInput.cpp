@@ -654,7 +654,7 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
 // Maybe all this code could be refactored to make this cleaner, but keeping the
 // two properties separated was slightly nicer.
 struct ShapeInvalidationData {
-  StyleFloatAreaShape mShapeOutside{StyleFloatAreaShape::None()};
+  StyleShapeOutside mShapeOutside{StyleShapeOutside::None()};
   float mShapeImageThreshold = 0.0;
   LengthPercentage mShapeMargin;
 
