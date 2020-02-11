@@ -13,29 +13,6 @@
 # of this, an item could have zero <failure-type>, which indicates it
 # is expected to pass, and override failure rule above it.
 
-#### CSS Values 3 ####################################################
-
-# Fuzzy
-fuzzy-if(OSX||Android,0-78,0-197) css-values/ch-unit-001.html
-fuzzy(0-50,0-160) css-values/ch-unit-002.html
-fuzzy-if(Android,0-78,0-179) css-values/ch-unit-003.html
-fuzzy(0-78,0-197) css-values/ch-unit-004.html
-
-# Bug 435426
-fails css-values/attr-*.html
-      css-values/attr-*-invalid-fallback.html
-      css-values/attr-invalid-type-???.html
-
-# because of dynamic change
-skip css-values/vh_not_refreshing_on_chrome.html
-skip css-values/vh_not_refreshing_on_chrome_iframe.html
-
-# because of support files (in iframe subdir) not being copied (bug 1256580)
-skip css-values/vh-support-transform-origin.html
-skip css-values/vh-support-transform-translate.html
-
-css-values/calc-in-calc.html
-
 #### CSS Writing Modes 3 #############################################
 
 # New failures need to be triged later
@@ -167,17 +144,6 @@ fails css-writing-modes/normal-flow-overconstrained-vrl-004.xht
 
 fuzzy-if(OSX&&!webrender,255-255,100-150) css-writing-modes/outline-inline-vlr-006.html
 
-# skip these tests since they haven't been triaged yet.
-# These tests were added to the tree as part of an update for Bug 1430939.
-skip css-values/ex-calc-expression-001.html
-skip css-values/ic-unit-001.html
-skip css-values/ic-unit-002.html
-skip css-values/ic-unit-003.html
-skip css-values/ic-unit-004.html
-skip css-values/lh-unit-001.html
-skip css-values/lh-unit-002.html
-skip css-values/support/vh-support-transform-origin-iframe.html
-skip css-values/support/vh-support-transform-translate-iframe.html
 skip css-writing-modes/bidi-table-001.html
 skip css-writing-modes/block-plaintext-006.html
 skip css-writing-modes/table-cell-001.html
