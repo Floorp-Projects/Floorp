@@ -498,7 +498,9 @@ void AudioSourcePullListener::NotifyPull(MediaTrackGraph* aGraph,
   TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaTrack %p", mTrack.get());
   AudioSegment segment;
   TrackTicks delta = aDesiredTime - aEndOfAppendedData;
-  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(delta * sizeof(int16_t));
+  CheckedInt<size_t> bufferSize(sizeof(int16_t));
+  bufferSize *= delta;
+  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
   int16_t* dest = static_cast<int16_t*>(buffer->Data());
   mSineGenerator->generate(dest, delta);
   AutoTArray<const int16_t*, 1> channels;

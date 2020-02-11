@@ -1013,8 +1013,9 @@ uint32_t SpeechRecognition::SplitSamplesBuffer(
   uint32_t chunkStart = 0;
 
   while (chunkStart + mAudioSamplesPerChunk <= aSampleCount) {
-    RefPtr<SharedBuffer> chunk =
-        SharedBuffer::Create(mAudioSamplesPerChunk * sizeof(int16_t));
+    CheckedInt<size_t> bufferSize(sizeof(int16_t));
+    bufferSize *= mAudioSamplesPerChunk;
+    RefPtr<SharedBuffer> chunk = SharedBuffer::Create(bufferSize);
 
     PodCopy(static_cast<short*>(chunk->Data()), aSamplesBuffer + chunkStart,
             mAudioSamplesPerChunk);
@@ -1081,8 +1082,9 @@ void SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
   // buffer remaining samples
   if (samplesIndex < aDuration) {
     mBufferedSamples = 0;
-    mAudioSamplesBuffer =
-        SharedBuffer::Create(mAudioSamplesPerChunk * sizeof(int16_t));
+    CheckedInt<size_t> bufferSize(sizeof(int16_t));
+    bufferSize *= mAudioSamplesPerChunk;
+    mAudioSamplesBuffer = SharedBuffer::Create(bufferSize);
 
     FillSamplesBuffer(samples + samplesIndex, aDuration - samplesIndex);
   }

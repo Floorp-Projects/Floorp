@@ -14,8 +14,9 @@ AudioGenerator::AudioGenerator(int32_t aChannels, int32_t aSampleRate)
     : mGenerator(aSampleRate, 1000), mChannels(aChannels) {}
 
 void AudioGenerator::Generate(AudioSegment& aSegment, const int32_t& aSamples) {
-  RefPtr<SharedBuffer> buffer =
-      SharedBuffer::Create(aSamples * sizeof(int16_t));
+  CheckedInt<size_t> bufferSize(sizeof(int16_t));
+  bufferSize *= aSamples;
+  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
   int16_t* dest = static_cast<int16_t*>(buffer->Data());
   mGenerator.generate(dest, aSamples);
   AutoTArray<const int16_t*, 1> channels;

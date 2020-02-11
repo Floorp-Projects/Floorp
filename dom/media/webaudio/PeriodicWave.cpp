@@ -29,8 +29,10 @@ PeriodicWave::PeriodicWave(AudioContext* aContext, const float* aRealData,
 
   // Copy coefficient data.
   // The SharedBuffer and two arrays share a single allocation.
-  RefPtr<SharedBuffer> buffer =
-      SharedBuffer::Create(sizeof(float) * aLength * 2, fallible);
+  CheckedInt<size_t> bufferSize(sizeof(float));
+  bufferSize *= aLength;
+  bufferSize *= 2;
+  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize, fallible);
   if (!buffer) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
