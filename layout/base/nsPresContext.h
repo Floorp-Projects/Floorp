@@ -22,7 +22,6 @@
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 #include "nsStringFwd.h"
-#include "nsFont.h"
 #include "gfxFontConstants.h"
 #include "nsAtom.h"
 #include "nsCRT.h"
@@ -43,7 +42,6 @@
 #include "nsThreadUtils.h"
 #include "Units.h"
 #include "prenv.h"
-#include "mozilla/StaticPresData.h"
 
 class nsBidi;
 class nsIPrintSettings;
@@ -80,6 +78,7 @@ class EventStateManager;
 class CounterStyleManager;
 class PresShell;
 class RestyleManager;
+class StaticPresData;
 namespace layers {
 class ContainerLayer;
 class LayerManager;
@@ -137,7 +136,6 @@ class nsPresContext : public nsISupports,
   using StylePrefersColorScheme = mozilla::StylePrefersColorScheme;
 
   typedef mozilla::ScrollStyles ScrollStyles;
-  typedef mozilla::StaticPresData StaticPresData;
   using TransactionId = mozilla::layers::TransactionId;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL

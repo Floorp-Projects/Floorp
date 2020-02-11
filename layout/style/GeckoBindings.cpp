@@ -54,6 +54,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ShadowParts.h"
+#include "mozilla/StaticPresData.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SizeOfState.h"

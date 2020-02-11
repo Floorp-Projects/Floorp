@@ -37,6 +37,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/GeckoBindings.h"
 #include "mozilla/PreferenceSheet.h"
+#include "mozilla/StaticPresData.h"
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
 #include "mozilla/dom/Document.h"
