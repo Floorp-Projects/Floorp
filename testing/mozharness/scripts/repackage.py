@@ -44,7 +44,7 @@ class Repackage(BaseScript):
 
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
-        dirs['abs_mozilla_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
+        dirs['abs_src_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
         dirs['abs_input_dir'] = os.path.join(abs_dirs['base_work_dir'], 'fetches')
         output_dir_suffix = []
         if config.get('locale'):
@@ -91,7 +91,7 @@ class Repackage(BaseScript):
             ])
             self.run_command(
                 command=command,
-                cwd=dirs['abs_mozilla_dir'],
+                cwd=dirs['abs_src_dir'],
                 halt_on_failure=True,
                 env=self.query_env(),
             )
@@ -108,18 +108,18 @@ class Repackage(BaseScript):
 
         cmd = [
             sys.executable, '-u',
-            os.path.join(dirs['abs_mozilla_dir'], 'mach'),
+            os.path.join(dirs['abs_src_dir'], 'mach'),
             'artifact',
             'toolchain',
             '-v',
             '--retry', '4',
             '--artifact-manifest',
-            os.path.join(dirs['abs_mozilla_dir'], 'toolchains.json'),
+            os.path.join(dirs['abs_src_dir'], 'toolchains.json'),
         ]
         if manifest_src:
             cmd.extend([
                 '--tooltool-manifest',
-                os.path.join(dirs['abs_mozilla_dir'], manifest_src),
+                os.path.join(dirs['abs_src_dir'], manifest_src),
             ])
             auth_file = self._get_tooltool_auth_file()
             if auth_file:
@@ -130,7 +130,7 @@ class Repackage(BaseScript):
         if toolchains:
             cmd.extend(toolchains.split())
         self.info(str(cmd))
-        self.run_command(cmd, cwd=dirs['abs_mozilla_dir'], halt_on_failure=True)
+        self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True)
 
     def _get_tooltool_auth_file(self):
         # set the default authentication file based on platform; this
@@ -158,7 +158,7 @@ class Repackage(BaseScript):
         # first determine the mozconfig path
         if c.get('src_mozconfig'):
             self.info('Using in-tree mozconfig')
-            abs_mozconfig_path = os.path.join(dirs['abs_mozilla_dir'], c['src_mozconfig'])
+            abs_mozconfig_path = os.path.join(dirs['abs_src_dir'], c['src_mozconfig'])
         else:
             self.fatal("'src_mozconfig' must be in the config "
                        "in order to determine the mozconfig.")
@@ -167,14 +167,14 @@ class Repackage(BaseScript):
         self.read_from_file(abs_mozconfig_path, error_level=FATAL)
 
         # finally, copy the mozconfig to a path that 'mach build' expects it to be
-        self.copyfile(abs_mozconfig_path, os.path.join(dirs['abs_mozilla_dir'], '.mozconfig'))
+        self.copyfile(abs_mozconfig_path, os.path.join(dirs['abs_src_dir'], '.mozconfig'))
 
     def _run_configure(self):
         dirs = self.query_abs_dirs()
         command = [sys.executable, 'mach', '--log-no-times', 'configure']
         return self.run_command(
             command=command,
-            cwd=dirs['abs_mozilla_dir'],
+            cwd=dirs['abs_src_dir'],
             output_timeout=60*3,
             halt_on_failure=True,
         )
