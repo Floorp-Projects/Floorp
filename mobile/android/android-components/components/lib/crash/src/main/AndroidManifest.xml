@@ -21,6 +21,9 @@
 
         <service android:name=".service.SendCrashReportService"
             android:exported="false" />
+
+        <service android:name=".service.SendCrashTelemetryService"
+            android:exported="false" />
     </application>
 
 </manifest>

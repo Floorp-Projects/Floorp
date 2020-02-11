@@ -12,12 +12,10 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,20 +34,7 @@ class ExceptionHandlerTest {
 
     @Test
     fun `ExceptionHandler forwards crashes to CrashReporter`() {
-        var capturedCrash: Crash? = null
-        val service = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-                capturedCrash = crash
-            }
-
-            override fun report(crash: Crash.NativeCodeCrash) {
-                fail("Did not expect native crash")
-            }
-
-            override fun report(throwable: Throwable) {
-                fail("Did not expect caught exception")
-            }
-        }
+        val service: CrashReporterService = mock()
 
         val crashReporter = spy(CrashReporter(
             shouldPrompt = CrashReporter.Prompt.NEVER,
@@ -64,14 +49,8 @@ class ExceptionHandlerTest {
         val exception = RuntimeException("Hello World")
         handler.uncaughtException(Thread.currentThread(), exception)
 
-        verify(crashReporter).onCrash(any(), any())
-
-        assertNotNull(capturedCrash)
-
-        val crash = capturedCrash as? Crash.UncaughtExceptionCrash
-            ?: throw AssertionError("Expected UncaughtExceptionCrash instance")
-
-        assertEquals(exception, crash.throwable)
+        verify(crashReporter).onCrash(eq(testContext), any())
+        verify(crashReporter).sendCrashReport(eq(testContext), any())
     }
 
     @Test

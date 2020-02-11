@@ -10,25 +10,22 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
-import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
-import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class CrashHandlerServiceTest {
-
     private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
@@ -41,26 +38,12 @@ class CrashHandlerServiceTest {
 
     @Test
     fun `CrashHandlerService will forward GeckoView crash to crash reporter`() {
-        var caughtCrash: Crash.NativeCodeCrash? = null
-
         val scope = TestCoroutineScope(testDispatcher)
-        CrashReporter(
+        val reporter = spy(CrashReporter(
             shouldPrompt = CrashReporter.Prompt.NEVER,
-            services = listOf(object : CrashReporterService {
-                override fun report(crash: Crash.UncaughtExceptionCrash) {
-                    fail("Didn't expect uncaught exception crash")
-                }
-
-                override fun report(crash: Crash.NativeCodeCrash) {
-                    caughtCrash = crash
-                }
-
-                override fun report(throwable: Throwable) {
-                    fail("Didn't expect caught exception")
-                }
-            }),
+            services = listOf(mock()),
             scope = scope
-        ).install(testContext)
+        )).install(testContext)
 
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
         intent.component = ComponentName(
@@ -80,24 +63,9 @@ class CrashHandlerServiceTest {
 
         val service = spy(CrashHandlerService())
         doNothing().`when`(service).kill()
+        doNothing().`when`(reporter).sendCrashReport(any(), any())
 
         service.onHandleIntent(intent)
-        scope.advanceUntilIdle()
-
-        assertNotNull(caughtCrash)
-
-        val nativeCrash = caughtCrash
-            ?: throw AssertionError("Expected NativeCodeCrash instance")
-
-        assertEquals(true, nativeCrash.minidumpSuccess)
-        assertEquals(false, nativeCrash.isFatal)
-        assertEquals(
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
-            nativeCrash.minidumpPath
-        )
-        assertEquals(
-            "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
-            nativeCrash.extrasPath
-        )
+        verify(reporter).sendCrashReport(any(), any())
     }
 }

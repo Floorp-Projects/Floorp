@@ -9,7 +9,6 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -28,7 +27,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -73,9 +71,11 @@ class CrashReporterTest {
     @Test
     fun `CrashReporter will submit report immediately if setup with Prompt-NEVER`() {
         val service: CrashReporterService = mock()
+        val telemetryService: CrashReporterService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
+            telemetryServices = listOf(telemetryService),
             shouldPrompt = CrashReporter.Prompt.NEVER,
             scope = scope
         ).install(testContext))
@@ -84,18 +84,19 @@ class CrashReporterTest {
 
         reporter.onCrash(testContext, crash)
 
-        verify(reporter).submitReport(crash)
+        verify(reporter).sendCrashTelemetry(testContext, crash)
+        verify(reporter).sendCrashReport(testContext, crash)
         verify(reporter, never()).showPrompt(any(), eq(crash))
-
-        verify(service).report(crash)
     }
 
     @Test
     fun `CrashReporter will show prompt if setup with Prompt-ALWAYS`() {
         val service: CrashReporterService = mock()
+        val telemetryService: CrashReporterService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
+            telemetryServices = listOf(telemetryService),
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             scope = scope
         ).install(testContext))
@@ -104,18 +105,19 @@ class CrashReporterTest {
 
         reporter.onCrash(testContext, crash)
 
-        verify(reporter, never()).submitReport(crash)
+        verify(reporter).sendCrashTelemetry(testContext, crash)
+        verify(reporter, never()).sendCrashReport(testContext, crash)
         verify(reporter).showPrompt(any(), eq(crash))
-
-        verify(service, never()).report(crash)
     }
 
     @Test
     fun `CrashReporter will submit report immediately for non native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
         val service: CrashReporterService = mock()
+        val telemetryService: CrashReporterService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
+            telemetryServices = listOf(telemetryService),
             shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
             scope = scope
         ).install(testContext))
@@ -124,18 +126,19 @@ class CrashReporterTest {
 
         reporter.onCrash(testContext, crash)
 
-        verify(reporter).submitReport(crash)
+        verify(reporter).sendCrashTelemetry(testContext, crash)
+        verify(reporter).sendCrashReport(testContext, crash)
         verify(reporter, never()).showPrompt(any(), eq(crash))
-
-        verify(service).report(crash)
     }
 
     @Test
     fun `CrashReporter will show prompt for native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
         val service: CrashReporterService = mock()
+        val telemetryService: CrashReporterService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
+            telemetryServices = listOf(telemetryService),
             shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
             scope = scope
         ).install(testContext))
@@ -144,10 +147,103 @@ class CrashReporterTest {
 
         reporter.onCrash(testContext, crash)
 
-        verify(reporter, never()).submitReport(crash)
+        verify(reporter).sendCrashTelemetry(testContext, crash)
         verify(reporter).showPrompt(any(), eq(crash))
-
+        verify(reporter, never()).sendCrashReport(testContext, crash)
         verify(service, never()).report(crash)
+    }
+
+    @Test
+    fun `CrashReporter will submit crash telemetry even if crash report requires prompt`() {
+        val service: CrashReporterService = mock()
+        val telemetryService: CrashReporterService = mock()
+
+        val reporter = spy(CrashReporter(
+            services = listOf(service),
+            telemetryServices = listOf(telemetryService),
+            shouldPrompt = CrashReporter.Prompt.ALWAYS
+        ).install(testContext))
+
+        val crash: Crash.UncaughtExceptionCrash = mock()
+
+        reporter.onCrash(testContext, crash)
+
+        verify(reporter).sendCrashTelemetry(testContext, crash)
+        verify(reporter, never()).sendCrashReport(testContext, crash)
+        verify(reporter).showPrompt(any(), eq(crash))
+    }
+
+    @Test
+    fun `CrashReporter will not prompt the user if there is no crash services`() {
+        val telemetryService: CrashReporterService = mock()
+
+        val reporter = spy(CrashReporter(
+            telemetryServices = listOf(telemetryService),
+            shouldPrompt = CrashReporter.Prompt.ALWAYS
+        ).install(testContext))
+
+        val crash: Crash.UncaughtExceptionCrash = mock()
+
+        reporter.onCrash(testContext, crash)
+
+        verify(reporter).sendCrashTelemetry(testContext, crash)
+        verify(reporter, never()).sendCrashReport(testContext, crash)
+        verify(reporter, never()).showPrompt(any(), eq(crash))
+    }
+
+    @Test
+    fun `CrashReporter will not send crash telemetry if there is no telemetry service`() {
+        val service: CrashReporterService = mock()
+
+        val reporter = spy(CrashReporter(
+            services = listOf(service),
+            shouldPrompt = CrashReporter.Prompt.ALWAYS
+        ).install(testContext))
+
+        val crash: Crash.UncaughtExceptionCrash = mock()
+
+        reporter.onCrash(testContext, crash)
+
+        verify(reporter, never()).sendCrashTelemetry(testContext, crash)
+        verify(reporter).showPrompt(any(), eq(crash))
+    }
+
+    @Test
+    fun `Calling install() with no crash services or telemetry crash services will throw exception`() {
+        var exceptionThrown = false
+
+        try {
+            CrashReporter(
+                shouldPrompt = CrashReporter.Prompt.ALWAYS
+            ).install(testContext)
+        } catch (e: IllegalArgumentException) {
+            exceptionThrown = true
+        }
+
+        assert(exceptionThrown)
+    }
+
+    @Test
+    fun `Calling install() with at least one crash service or telemetry crash service will not throw exception`() {
+        var exceptionThrown = false
+
+        try {
+            CrashReporter(
+                services = listOf(mock())
+            ).install(testContext)
+        } catch (e: IllegalArgumentException) {
+            exceptionThrown = true
+        }
+        assert(!exceptionThrown)
+
+        try {
+            CrashReporter(
+                telemetryServices = listOf(mock())
+            ).install(testContext)
+        } catch (e: IllegalArgumentException) {
+            exceptionThrown = true
+        }
+        assert(!exceptionThrown)
     }
 
     @Test
@@ -175,7 +271,8 @@ class CrashReporterTest {
         val crash: Crash.UncaughtExceptionCrash = mock()
         reporter.onCrash(testContext, crash)
 
-        verify(reporter, never()).submitReport(crash)
+        verify(reporter, never()).sendCrashReport(testContext, crash)
+        verify(reporter, never()).sendCrashTelemetry(testContext, crash)
         verify(reporter, never()).showPrompt(any(), eq(crash))
 
         verify(service, never()).report(crash)
@@ -191,9 +288,8 @@ class CrashReporterTest {
             scope = scope
         ).install(testContext))
 
-        doReturn(mock<Job>()).`when`(reporter).submitReport(crash)
         reporter.onCrash(testContext, crash)
-        verify(reporter).submitReport(crash)
+        verify(reporter, never()).sendCrashTelemetry(testContext, crash)
     }
 
     @Test
@@ -276,6 +372,33 @@ class CrashReporterTest {
         ).joinBlocking()
 
         assertTrue(exceptionCrash)
+    }
+
+    @Test
+    fun `CrashReporter forwards native crashes to telemetry service`() {
+        var nativeCrash = false
+
+        val telemetryService = object : CrashReporterService {
+            override fun report(crash: Crash.UncaughtExceptionCrash) {
+            }
+
+            override fun report(crash: Crash.NativeCodeCrash) {
+                nativeCrash = true
+            }
+
+            override fun report(throwable: Throwable) {
+            }
+        }
+
+        val reporter = spy(CrashReporter(
+            telemetryServices = listOf(telemetryService),
+            shouldPrompt = CrashReporter.Prompt.NEVER
+        ).install(testContext))
+
+        reporter.submitCrashTelemetry(
+            Crash.NativeCodeCrash("", true, "", false, arrayListOf())
+        ).joinBlocking()
+        assertTrue(nativeCrash)
     }
 
     @Test

@@ -21,10 +21,10 @@ import mozilla.components.support.utils.asForegroundServicePendingIntent
 
 private const val NOTIFICATION_SDK_LEVEL = 29 // On Android Q+ we show a notification instead of a prompt
 
-internal const val NOTIFICATION_CHANNEL_ID = "mozac.lib.crash.channel"
 internal const val NOTIFICATION_TAG = "mozac.lib.crash.notification"
 internal const val NOTIFICATION_ID = 1
-internal const val PENDING_INTENT_TAG = "mozac.lib.crash.pendingintent"
+private const val NOTIFICATION_CHANNEL_ID = "mozac.lib.crash.channel"
+private const val PENDING_INTENT_TAG = "mozac.lib.crash.pendingintent"
 
 internal class CrashNotification(
     private val context: Context,
@@ -39,7 +39,9 @@ internal class CrashNotification(
 
         val reportPendingIntent = SendCrashReportService
             .createReportIntent(context, crash)
-            .asForegroundServicePendingIntent(context)
+            .asForegroundServicePendingIntent(
+                context, SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG)
+            )
 
         val channel = ensureChannelExists(context)
 

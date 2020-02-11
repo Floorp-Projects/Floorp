@@ -17,24 +17,24 @@ import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.notification.CrashNotification
 import mozilla.components.support.base.ids.SharedIdsHelper
 
-private const val NOTIFICATION_TAG = "mozac.lib.crash.sendcrash"
+private const val NOTIFICATION_TAG = "mozac.lib.crash.sendtelemetry"
 private const val NOTIFICATION_ID = 1
 
-class SendCrashReportService : Service() {
+class SendCrashTelemetryService : Service() {
     private val crashReporter: CrashReporter by lazy { CrashReporter.requireInstance }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = CrashNotification.ensureChannelExists(this)
             val notification = NotificationCompat.Builder(this, channel)
-                    .setContentTitle(getString(R.string.mozac_lib_send_crash_report_in_progress,
-                            crashReporter.promptConfiguration.organizationName))
-                    .setSmallIcon(R.drawable.mozac_lib_crash_notification)
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .setCategory(NotificationCompat.CATEGORY_ERROR)
-                    .setAutoCancel(true)
-                    .setProgress(0, 0, true)
-                    .build()
+                .setContentTitle(getString(R.string.mozac_lib_send_crash_report_in_progress,
+                    crashReporter.promptConfiguration.organizationName))
+                .setSmallIcon(R.drawable.mozac_lib_crash_notification)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setCategory(NotificationCompat.CATEGORY_ERROR)
+                .setAutoCancel(true)
+                .setProgress(0, 0, true)
+                .build()
 
             val notificationId = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
             startForeground(notificationId, notification)
@@ -42,7 +42,7 @@ class SendCrashReportService : Service() {
 
         NotificationManagerCompat.from(this).cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
         val crash = Crash.fromIntent(intent)
-        crashReporter.submitReport(crash) {
+        crashReporter.submitCrashTelemetry(crash) {
             stopSelf()
         }
 
@@ -56,7 +56,7 @@ class SendCrashReportService : Service() {
 
     companion object {
         fun createReportIntent(context: Context, crash: Crash): Intent {
-            val intent = Intent(context, SendCrashReportService::class.java)
+            val intent = Intent(context, SendCrashTelemetryService::class.java)
             crash.fillIn(intent)
 
             return intent

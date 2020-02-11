@@ -188,6 +188,7 @@
     <ID>UndocumentedPublicClass:SearchUseCases.kt$SearchUseCases$NewTabSearchUseCase : SearchUseCase</ID>
     <ID>UndocumentedPublicClass:SearchUseCases.kt$SearchUseCases$SearchUseCase</ID>
     <ID>UndocumentedPublicClass:SendCrashReportService.kt$SendCrashReportService : Service</ID>
+    <ID>UndocumentedPublicClass:SendCrashTelemetryService.kt$SendCrashTelemetryService : Service</ID>
     <ID>UndocumentedPublicClass:SendTabUseCases.kt$SendTabUseCases$SendToAllUseCase</ID>
     <ID>UndocumentedPublicClass:SendTabUseCases.kt$SendTabUseCases$SendToDeviceUseCase</ID>
     <ID>UndocumentedPublicClass:SessionManager.kt$SessionManager$Snapshot</ID>
@@ -485,6 +486,7 @@
     <ID>UndocumentedPublicFunction:SearchLocalizationProvider.kt$SearchLocalizationProvider$suspend fun determineRegion(): SearchLocalization</ID>
     <ID>UndocumentedPublicFunction:SearchUseCases.kt$SearchUseCases.SearchUseCase$fun invoke(searchTerms: String, searchEngine: SearchEngine? = null)</ID>
     <ID>UndocumentedPublicFunction:SendCrashReportService.kt$SendCrashReportService.Companion$fun createReportIntent(context: Context, crash: Crash): Intent</ID>
+    <ID>UndocumentedPublicFunction:SendCrashTelemetryService.kt$SendCrashTelemetryService.Companion$fun createReportIntent(context: Context, crash: Crash): Intent</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onCloseWindowRequested(session: Session, windowRequest: WindowRequest): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean</ID>
