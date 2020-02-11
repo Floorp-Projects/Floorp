@@ -641,6 +641,10 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // by all ancestor viewports.
   mozilla::ScreenRect GetTopLevelViewportVisibleRectInBrowserCoords() const;
 
+  // Similar to above GetTopLevelViewportVisibleRectInBrowserCoords(), but in
+  // this out-of-process document's coordinate system.
+  Maybe<LayoutDeviceRect> GetTopLevelViewportVisibleRectInSelfCoords() const;
+
   // Prepare to dispatch all coalesced mousemove events. We'll move all data
   // in mCoalescedMouseData to a nsDeque; then we start processing them. We
   // can't fetch the coalesced event one by one and dispatch it because we may

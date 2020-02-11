@@ -3394,6 +3394,41 @@ Maybe<LayoutDeviceIntRect> BrowserChild::GetVisibleRect() const {
   return Some(visibleRectLD);
 }
 
+Maybe<LayoutDeviceRect>
+BrowserChild::GetTopLevelViewportVisibleRectInSelfCoords() const {
+  if (mIsTopLevel) {
+    return Nothing();
+  }
+
+  if (!mChildToParentConversionMatrix) {
+    // There is a case that mChildToParentConversionMatrix hasn't been delivered
+    // since no APZ stuff has happened. In the case we can use mVisibleRect
+    // directly.
+    CSSRect visibleRectCSS = CSSPixel::FromAppUnits(mEffectsInfo.mVisibleRect);
+    return Some(visibleRectCSS * mPuppetWidget->GetDefaultScale());
+  }
+
+  Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> inverse =
+      mChildToParentConversionMatrix->MaybeInverse();
+  if (!inverse) {
+    return Nothing();
+  }
+
+  // Convert the remote document visible rect to the coordinate system of the
+  // iframe document.
+  Maybe<LayoutDeviceRect> rect = UntransformBy(
+      *inverse,
+      ViewAs<LayoutDevicePixel>(
+          mTopLevelViewportVisibleRectInBrowserCoords,
+          PixelCastJustification::ContentProcessIsLayerInUiProcess),
+      LayoutDeviceRect::MaxIntRect());
+  if (!rect) {
+    return Nothing();
+  }
+
+  return rect;
+}
+
 ScreenIntRect BrowserChild::GetOuterRect() {
   LayoutDeviceIntRect outerRect =
       RoundedToInt(mUnscaledOuterRect * mPuppetWidget->GetDefaultScale());
