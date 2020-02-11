@@ -31,6 +31,7 @@
 #endif
 
 #include "nsServiceManagerUtils.h"
+#include "nsIInputStream.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"

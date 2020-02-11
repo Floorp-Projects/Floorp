@@ -12,6 +12,7 @@
 #include "nsCommandManager.h"            // for nsCommandManager
 #include "nsComponentManagerUtils.h"     // for do_CreateInstance
 #include "nsDebug.h"                     // for NS_ENSURE_TRUE, etc
+#include "nsDocShell.h"                  // for nsIDocShell
 #include "nsError.h"                     // for NS_OK, NS_ERROR_FAILURE, etc
 #include "nsID.h"                        // for NS_GET_IID, etc
 #include "nsIInterfaceRequestorUtils.h"  // for do_GetInterface
