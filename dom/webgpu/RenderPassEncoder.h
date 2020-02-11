@@ -7,7 +7,6 @@
 #define GPU_RenderPassEncoder_H_
 
 #include "ObjectModel.h"
-#include "RenderEncoderBase.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,12 +23,10 @@ namespace webgpu {
 class CommandEncoder;
 class RenderBundle;
 
-class RenderPassEncoder final : public RenderEncoderBase,
+class RenderPassEncoder final : public ObjectBase,
                                 public ChildOf<CommandEncoder> {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(RenderPassEncoder,
-                                                         RenderEncoderBase)
+  GPU_DECL_CYCLE_COLLECTION(RenderPassEncoder)
   GPU_DECL_JS_WRAP(RenderPassEncoder)
 
   RenderPassEncoder() = delete;
@@ -40,7 +37,7 @@ class RenderPassEncoder final : public RenderEncoderBase,
 
  public:
   void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
-                    const dom::Sequence<uint32_t>& aDynamicOffsets) override;
+                    const dom::Sequence<uint32_t>& aDynamicOffsets);
 };
 
 }  // namespace webgpu
