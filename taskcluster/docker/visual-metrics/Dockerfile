@@ -25,5 +25,4 @@ RUN pip3 install --require-hashes -r /builds/worker/requirements.txt && \
 COPY run-visual-metrics.py /builds/worker/bin/run-visual-metrics.py
 RUN chmod +x /builds/worker/bin/run-visual-metrics.py
 
-VOLUME /builds/worker/workspace/
 VOLUME /builds/worker/artifacts/
