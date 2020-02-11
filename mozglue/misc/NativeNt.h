@@ -17,7 +17,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/BinarySearch.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
@@ -410,17 +409,6 @@ inline int StricmpASCII(const char* aLeft, const char* aRight) {
   return curLeft - curRight;
 }
 
-inline int StrcmpASCII(const char* aLeft, const char* aRight) {
-  char curLeft, curRight;
-
-  do {
-    curLeft = *(aLeft++);
-    curRight = *(aRight++);
-  } while (curLeft && curLeft == curRight);
-
-  return curLeft - curRight;
-}
-
 class MOZ_RAII PEHeaders final {
   /**
    * This structure is documented on MSDN as VS_VERSIONINFO, but is not present
@@ -518,70 +506,6 @@ class MOZ_RAII PEHeaders final {
     auto base = reinterpret_cast<const uint8_t*>(mMzHeader);
     DWORD imageSize = mPeHeader->OptionalHeader.SizeOfImage;
     return Some(MakeSpan(base, imageSize));
-  }
-
-  PIMAGE_EXPORT_DIRECTORY GetExportDirectory() {
-    return GetImageDirectoryEntry<PIMAGE_EXPORT_DIRECTORY>(
-        IMAGE_DIRECTORY_ENTRY_EXPORT);
-  }
-
-  /**
-   * This functions searches the export table for a given string as
-   * GetProcAddress does.  Instead of a function address, this returns a matched
-   * entry of the Export Address Table i.e. a pointer to an RVA of a matched
-   * function.  If the entry is forwarded, this function returns nullptr.
-   */
-  const DWORD* FindExportAddressTableEntry(const char* aFunctionNameASCII) {
-    struct NameTableComparator {
-      NameTableComparator(PEHeaders& aPEHeader, const char* aTarget)
-          : mPEHeader(aPEHeader), mTarget(aTarget) {}
-
-      int operator()(DWORD aOther) const {
-        return StrcmpASCII(mTarget, mPEHeader.RVAToPtr<const char*>(aOther));
-      }
-
-      PEHeaders& mPEHeader;
-      const char* mTarget;
-    };
-
-    DWORD rvaDirStart, rvaDirEnd;
-    const auto exportDir = GetImageDirectoryEntry<PIMAGE_EXPORT_DIRECTORY>(
-        IMAGE_DIRECTORY_ENTRY_EXPORT, &rvaDirStart, &rvaDirEnd);
-    if (!exportDir) {
-      return nullptr;
-    }
-
-    const auto exportAddressTable =
-        RVAToPtr<const DWORD*>(exportDir->AddressOfFunctions);
-    const auto exportNameTable =
-        RVAToPtr<const DWORD*>(exportDir->AddressOfNames);
-    const auto exportOrdinalTable =
-        RVAToPtr<const WORD*>(exportDir->AddressOfNameOrdinals);
-
-    const NameTableComparator comp(*this, aFunctionNameASCII);
-
-    size_t match;
-    if (!BinarySearchIf(exportNameTable, 0, exportDir->NumberOfNames, comp,
-                        &match)) {
-      return nullptr;
-    }
-
-    WORD index = exportOrdinalTable[match];
-
-    if (index >= exportDir->NumberOfFunctions) {
-      return nullptr;
-    }
-
-    DWORD rvaFunction = exportAddressTable[index];
-    if (rvaFunction >= rvaDirStart && rvaFunction < rvaDirEnd) {
-      // If an entry points to an address within the export section, the
-      // field is a forwarder RVA.  We return nullptr because the entry is
-      // not a function address but a null-terminated string used for export
-      // forwarding.
-      return nullptr;
-    }
-
-    return &exportAddressTable[index];
   }
 
   PIMAGE_IMPORT_DESCRIPTOR GetImportDirectory() {
@@ -800,26 +724,10 @@ class MOZ_RAII PEHeaders final {
   enum class BoundsCheckPolicy { Default, Skip };
 
   template <typename T, BoundsCheckPolicy Policy = BoundsCheckPolicy::Default>
-  T GetImageDirectoryEntry(const uint32_t aDirectoryIndex,
-                           DWORD* aOutRvaStart = nullptr,
-                           DWORD* aOutRvaEnd = nullptr) {
-    if (aOutRvaStart) {
-      *aOutRvaStart = 0;
-    }
-    if (aOutRvaEnd) {
-      *aOutRvaEnd = 0;
-    }
-
+  T GetImageDirectoryEntry(const uint32_t aDirectoryIndex) {
     PIMAGE_DATA_DIRECTORY dirEntry = GetImageDirectoryEntryPtr(aDirectoryIndex);
     if (!dirEntry) {
       return nullptr;
-    }
-
-    if (aOutRvaStart) {
-      *aOutRvaStart = dirEntry->VirtualAddress;
-    }
-    if (aOutRvaEnd) {
-      *aOutRvaEnd = dirEntry->VirtualAddress + dirEntry->Size;
     }
 
     return Policy == BoundsCheckPolicy::Skip
