@@ -891,6 +891,17 @@ ConnectionData.prototype = Object.freeze({
                 errors.map(e => e.message).join(", ")
             );
             error.errors = errors;
+
+            // Forward the error result in some cases, for example if there is
+            // a single error, or if there is corruption.
+            if (errors.length == 1 && errors[0].result) {
+              error.result = errors[0].result;
+            } else if (
+              errors.some(e => e.result == Cr.NS_ERROR_FILE_CORRUPTED)
+            ) {
+              error.result = Cr.NS_ERROR_FILE_CORRUPTED;
+            }
+
             deferred.reject(error);
             break;
 
