@@ -5,6 +5,7 @@
 package mozilla.components.support.migration.session
 
 import android.util.JsonReader
+import android.util.JsonToken
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.migration.Result
@@ -209,14 +210,20 @@ internal object StreamingSessionStoreParser {
         while (reader.hasNext()) {
             when (reader.nextName()) {
                 "url" -> parsedUrl = reader.nextString()
-                "title" -> parsedTitle = reader.nextString()
+
+                "title" -> if (reader.peek() == JsonToken.NULL) {
+                    reader.nextNull()
+                } else {
+                    parsedTitle = reader.nextString()
+                }
+
                 else -> reader.skipValue()
             }
         }
 
-        return parsedUrl?.let {
-            Session(it).apply {
-                title = parsedTitle ?: it
+        return parsedUrl?.let { url ->
+            Session(url).apply {
+                title = parsedTitle?.ifEmpty { url } ?: url
             }
         }
     }
