@@ -13,7 +13,6 @@
 #include "nsThreadUtils.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
-#include "nsAutoPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"

@@ -5,7 +5,7 @@
 #pragma once
 
 // Moz headers (alphabetical)
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMArray.h"
 #include "win_wlanLibrary.h"
 
@@ -28,5 +28,5 @@ class WinWifiScanner final {
   nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints);
 
  private:
-  nsAutoPtr<WinWLANLibrary> mWlanLibrary;
+  mozilla::UniquePtr<WinWLANLibrary> mWlanLibrary;
 };

@@ -714,7 +714,8 @@ HttpBaseChannel::GetContentDispositionFilename(
 NS_IMETHODIMP
 HttpBaseChannel::SetContentDispositionFilename(
     const nsAString& aContentDispositionFilename) {
-  mContentDispositionFilename = new nsString(aContentDispositionFilename);
+  mContentDispositionFilename =
+      MakeUnique<nsString>(aContentDispositionFilename);
   return NS_OK;
 }
 
@@ -2240,7 +2241,7 @@ HttpBaseChannel::SetChannelIsForDownload(bool aChannelIsForDownload) {
 
 NS_IMETHODIMP
 HttpBaseChannel::SetCacheKeysRedirectChain(nsTArray<nsCString>* cacheKeys) {
-  mRedirectedCachekeys = cacheKeys;
+  mRedirectedCachekeys = WrapUnique(cacheKeys);
   return NS_OK;
 }
 
@@ -3616,7 +3617,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
            "[this=%p] transferring chain of redirect cache-keys",
            this));
       rv = httpInternal->SetCacheKeysRedirectChain(
-          mRedirectedCachekeys.forget());
+          mRedirectedCachekeys.release());
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
@@ -4389,7 +4390,7 @@ void HttpBaseChannel::CallTypeSniffers(void* aClosure, const uint8_t* aData,
 
 template <class T>
 static void ParseServerTimingHeader(
-    const nsAutoPtr<T>& aHeader, nsTArray<nsCOMPtr<nsIServerTiming>>& aOutput) {
+    const UniquePtr<T>& aHeader, nsTArray<nsCOMPtr<nsIServerTiming>>& aOutput) {
   if (!aHeader) {
     return;
   }

@@ -286,7 +286,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
 
-  nsAutoPtr<class nsHttpChannel::OfflineCacheEntryAsForeignMarker>
+  UniquePtr<class nsHttpChannel::OfflineCacheEntryAsForeignMarker>
       mOfflineForeignMarker;
   nsCOMPtr<nsILoadContext> mLoadContext;
   RefPtr<nsHttpHandler> mHttpHandler;

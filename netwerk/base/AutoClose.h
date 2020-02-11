@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace net {
 
-// Like an nsAutoPtr for XPCOM streams (e.g. nsIAsyncInputStream) and other
+// A container for XPCOM streams (e.g. nsIAsyncInputStream) and other
 // refcounted classes that need to have the Close() method called explicitly
 // before they are destroyed.
 template <typename T>

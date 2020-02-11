@@ -111,13 +111,13 @@ class nsPassErrorToWifiListeners final : public nsIRunnable {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  nsPassErrorToWifiListeners(nsAutoPtr<WifiListenerArray> aListeners,
+  nsPassErrorToWifiListeners(UniquePtr<WifiListenerArray>&& aListeners,
                              nsresult aResult)
-      : mListeners(aListeners), mResult(aResult) {}
+      : mListeners(std::move(aListeners)), mResult(aResult) {}
 
  private:
   ~nsPassErrorToWifiListeners() = default;
-  nsAutoPtr<WifiListenerArray> mListeners;
+  UniquePtr<WifiListenerArray> mListeners;
   nsresult mResult;
 };
 
@@ -138,14 +138,14 @@ NS_IMETHODIMP nsWifiMonitor::Run() {
   LOG(("@@@@@ wifi monitor run::doscan complete %" PRIx32 "\n",
        static_cast<uint32_t>(rv)));
 
-  nsAutoPtr<WifiListenerArray> currentListeners;
+  UniquePtr<WifiListenerArray> currentListeners;
   bool doError = false;
 
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     if (mKeepGoing && NS_FAILED(rv)) {
       doError = true;
-      currentListeners = new WifiListenerArray(mListeners.Length());
+      currentListeners = MakeUnique<WifiListenerArray>(mListeners.Length());
       for (uint32_t i = 0; i < mListeners.Length(); i++)
         currentListeners->AppendElement(mListeners[i].mListener);
     }
@@ -157,7 +157,7 @@ NS_IMETHODIMP nsWifiMonitor::Run() {
     if (!target) return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIRunnable> runnable(
-        new nsPassErrorToWifiListeners(currentListeners, rv));
+        new nsPassErrorToWifiListeners(std::move(currentListeners), rv));
     if (!runnable) return NS_ERROR_OUT_OF_MEMORY;
 
     target->Dispatch(runnable, NS_DISPATCH_SYNC);

@@ -9,7 +9,6 @@
 #include <netinet/in.h>
 #include <linux/netlink.h>
 
-#include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
@@ -17,6 +16,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsClassHashtable.h"
 #include "mozilla/SHA1.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace net {
@@ -109,7 +109,7 @@ class NetlinkService : public nsIRunnable {
 
   class LinkInfo {
    public:
-    explicit LinkInfo(NetlinkLink* aLink);
+    explicit LinkInfo(UniquePtr<NetlinkLink>&& aLink);
     virtual ~LinkInfo();
 
     // Updates mIsUp according to current mLink and mAddresses. Returns true if
@@ -117,16 +117,16 @@ class NetlinkService : public nsIRunnable {
     bool UpdateStatus();
 
     // NetlinkLink structure for this link
-    nsAutoPtr<NetlinkLink> mLink;
+    UniquePtr<NetlinkLink> mLink;
 
     // All IPv4/IPv6 addresses on this link
-    nsTArray<nsAutoPtr<NetlinkAddress> > mAddresses;
+    nsTArray<UniquePtr<NetlinkAddress>> mAddresses;
 
     // All neighbors on this link, key is an address
     nsClassHashtable<nsCStringHashKey, NetlinkNeighbor> mNeighbors;
 
     // Default IPv4/IPv6 routes
-    nsTArray<nsAutoPtr<NetlinkRoute> > mDefaultRoutes;
+    nsTArray<UniquePtr<NetlinkRoute>> mDefaultRoutes;
 
     // Link is up when it's running, it's not a loopback and there is
     // a non-local address associated with it.
@@ -136,11 +136,11 @@ class NetlinkService : public nsIRunnable {
   nsClassHashtable<nsUint32HashKey, LinkInfo> mLinks;
 
   // Route for mRouteCheckIPv4 address
-  nsAutoPtr<NetlinkRoute> mIPv4RouteCheckResult;
+  UniquePtr<NetlinkRoute> mIPv4RouteCheckResult;
   // Route for mRouteCheckIPv6 address
-  nsAutoPtr<NetlinkRoute> mIPv6RouteCheckResult;
+  UniquePtr<NetlinkRoute> mIPv6RouteCheckResult;
 
-  nsTArray<nsAutoPtr<NetlinkMsg> > mOutgoingMessages;
+  nsTArray<UniquePtr<NetlinkMsg>> mOutgoingMessages;
 
   RefPtr<NetlinkServiceListener> mListener;
 };

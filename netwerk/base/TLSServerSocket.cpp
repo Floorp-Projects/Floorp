@@ -6,7 +6,6 @@
 #include "TLSServerSocket.h"
 
 #include "mozilla/net/DNS.h"
-#include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDependentSubstring.h"
 #include "nsIServerSocket.h"

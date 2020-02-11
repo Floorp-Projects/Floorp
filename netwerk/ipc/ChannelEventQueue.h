@@ -9,7 +9,6 @@
 #define mozilla_net_ChannelEventQueue_h
 
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"

@@ -7,7 +7,6 @@
 #include "nsITransport.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 
 using namespace mozilla;

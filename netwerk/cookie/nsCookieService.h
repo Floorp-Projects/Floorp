@@ -15,7 +15,6 @@
 #include "nsCookie.h"
 #include "nsCookieKey.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
 #include "nsTHashtable.h"

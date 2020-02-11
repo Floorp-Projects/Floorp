@@ -395,7 +395,7 @@ nsresult CacheFileChunk::Write(CacheFileHandle* aHandle,
   nsresult rv;
 
   mState = WRITING;
-  mWritingStateHandle = new CacheFileChunkReadHandle(mBuf);
+  mWritingStateHandle = MakeUnique<CacheFileChunkReadHandle>(mBuf);
 
   rv = CacheFileIOManager::Write(
       aHandle, mIndex * kChunkSize, mWritingStateHandle->Buf(),

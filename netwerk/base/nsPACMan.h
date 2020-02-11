@@ -13,7 +13,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/TimeStamp.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"

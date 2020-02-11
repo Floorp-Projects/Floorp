@@ -336,7 +336,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   // protected by nsHttp::GetLock()
   bool mResponseHeadTaken;
-  nsAutoPtr<nsHttpHeaderArray> mForTakeResponseTrailers;
+  UniquePtr<nsHttpHeaderArray> mForTakeResponseTrailers;
   bool mResponseTrailersTaken;
 
   // The time when the transaction was submitted to the Connection Manager

@@ -6,7 +6,7 @@
 #ifndef nsFileStreams_h__
 #define nsFileStreams_h__
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIFileStreams.h"
 #include "nsIFile.h"
 #include "nsICloneableInputStream.h"
@@ -159,7 +159,7 @@ class nsFileInputStream : public nsFileStreamBase,
   nsresult SeekInternal(int32_t aWhence, int64_t aOffset,
                         bool aClearBuf = true);
 
-  nsAutoPtr<nsLineBuffer<char> > mLineBuffer;
+  mozilla::UniquePtr<nsLineBuffer<char>> mLineBuffer;
 
   /**
    * The file being opened.

@@ -80,7 +80,7 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   // the interception takes place.
   bool mInterceptCanceled;
 
-  nsAutoPtr<nsHttpResponseHead> mSynthesizedResponseHead;
+  UniquePtr<nsHttpResponseHead> mSynthesizedResponseHead;
 
   // Handle to the channel wrapper if this channel has been intercepted.
   nsCOMPtr<nsIInterceptedChannel> mInterceptedChannel;

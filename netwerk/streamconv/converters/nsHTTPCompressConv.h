@@ -11,7 +11,6 @@
 #  include "nsICompressConvStats.h"
 #  include "nsIThreadRetargetableStreamListener.h"
 #  include "nsCOMPtr.h"
-#  include "nsAutoPtr.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Mutex.h"
 
@@ -104,7 +103,7 @@ class nsHTTPCompressConv : public nsIStreamConverter,
   uint32_t mOutBufferLen;
   uint32_t mInpBufferLen;
 
-  nsAutoPtr<BrotliWrapper> mBrotli;
+  UniquePtr<BrotliWrapper> mBrotli;
 
   nsCOMPtr<nsIStringInputStream> mStream;
 

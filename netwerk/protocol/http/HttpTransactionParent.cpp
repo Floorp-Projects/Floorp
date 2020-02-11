@@ -186,20 +186,20 @@ void HttpTransactionParent::SetClassOfService(uint32_t classOfService) {
   Unused << SendUpdateClassOfService(classOfService);
 }
 
-nsHttpResponseHead* HttpTransactionParent::TakeResponseHead() {
+UniquePtr<nsHttpResponseHead> HttpTransactionParent::TakeResponseHead() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResponseHeadTaken, "TakeResponseHead called 2x");
 
   mResponseHeadTaken = true;
-  return mResponseHead.forget();
+  return std::move(mResponseHead);
 }
 
-nsHttpHeaderArray* HttpTransactionParent::TakeResponseTrailers() {
+UniquePtr<nsHttpHeaderArray> HttpTransactionParent::TakeResponseTrailers() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResponseTrailersTaken, "TakeResponseTrailers called 2x");
 
   mResponseTrailersTaken = true;
-  return mResponseTrailers.forget();
+  return std::move(mResponseTrailers);
 }
 
 void HttpTransactionParent::SetSniffedTypeToChannel(
@@ -399,7 +399,7 @@ void HttpTransactionParent::DoOnStartRequest(
   }
 
   if (aResponseHead.isSome()) {
-    mResponseHead = new nsHttpResponseHead(aResponseHead.ref());
+    mResponseHead = MakeUnique<nsHttpResponseHead>(aResponseHead.ref());
   }
   mProxyConnectFailed = aProxyConnectFailed;
   TimingStructArgsToTimingsStruct(aTimings, mTimings);
@@ -517,7 +517,7 @@ void HttpTransactionParent::DoOnStopRequest(
   TimingStructArgsToTimingsStruct(aTimings, mTimings);
 
   if (aResponseTrailers.isSome()) {
-    mResponseTrailers = new nsHttpHeaderArray(aResponseTrailers.ref());
+    mResponseTrailers = MakeUnique<nsHttpHeaderArray>(aResponseTrailers.ref());
   }
   mHasStickyConnection = aHasStickyConn;
   if (aTransactionObserverResult.isSome()) {

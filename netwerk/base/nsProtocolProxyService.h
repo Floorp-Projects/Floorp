@@ -8,7 +8,6 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsIProtocolProxyService2.h"
 #include "nsIProtocolProxyFilter.h"
@@ -364,7 +363,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
   bool mFilterLocalHosts;
 
   // Holds an array of HostInfo objects
-  nsTArray<nsAutoPtr<HostInfo>> mHostFiltersArray;
+  nsTArray<UniquePtr<HostInfo>> mHostFiltersArray;
 
   // Filters, always sorted by the position.
   nsTArray<RefPtr<FilterLink>> mFilters;

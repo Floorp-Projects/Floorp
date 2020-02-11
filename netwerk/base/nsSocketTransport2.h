@@ -26,7 +26,6 @@
 #include "mozilla/Telemetry.h"
 
 #include "prerror.h"
-#include "nsAutoPtr.h"
 #include "ssl.h"
 
 class nsICancelable;
@@ -347,7 +346,7 @@ class nsSocketTransport final : public nsASocketHandler,
   Atomic<bool, Relaxed> mNetAddrIsSet;
   Atomic<bool, Relaxed> mSelfAddrIsSet;
 
-  nsAutoPtr<NetAddr> mBindAddr;
+  UniquePtr<NetAddr> mBindAddr;
 
   // socket methods (these can only be called on the socket thread):
 

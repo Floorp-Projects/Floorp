@@ -5,9 +5,9 @@
 #ifndef CacheFileContextEvictor__h__
 #define CacheFileContextEvictor__h__
 
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 
 class nsIFile;
 class nsILoadContextInfo;
@@ -88,7 +88,7 @@ class CacheFileContextEvictor {
   // startup.
   static bool sDiskAlreadySearched;
   // Array of contexts being evicted.
-  nsTArray<nsAutoPtr<CacheFileContextEvictorEntry> > mEntries;
+  nsTArray<UniquePtr<CacheFileContextEvictorEntry>> mEntries;
   nsCOMPtr<nsIFile> mCacheDirectory;
   nsCOMPtr<nsIFile> mEntriesDir;
 };

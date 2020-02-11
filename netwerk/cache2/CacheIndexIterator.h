@@ -7,7 +7,6 @@
 
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "mozilla/SHA1.h"
 
 namespace mozilla {
