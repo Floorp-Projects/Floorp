@@ -256,57 +256,58 @@ function isContentScheme(location, i = 0) {
   }
 }
 
-// eslint-disable-next-line complexity
-function isChromeScheme(location, i = 0) {
-  const firstChar = location.charCodeAt(i);
-
-  switch (firstChar) {
-    // "chrome://"
-    case CHAR_CODE_C:
-      if (
-        location.charCodeAt(++i) === CHAR_CODE_H &&
-        location.charCodeAt(++i) === CHAR_CODE_R &&
-        location.charCodeAt(++i) === CHAR_CODE_O &&
-        location.charCodeAt(++i) === CHAR_CODE_M &&
-        location.charCodeAt(++i) === CHAR_CODE_E
-      ) {
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    // "resource://"
-    case CHAR_CODE_R:
-      if (
-        location.charCodeAt(++i) === CHAR_CODE_E &&
-        location.charCodeAt(++i) === CHAR_CODE_S &&
-        location.charCodeAt(++i) === CHAR_CODE_O &&
-        location.charCodeAt(++i) === CHAR_CODE_U &&
-        location.charCodeAt(++i) === CHAR_CODE_R &&
-        location.charCodeAt(++i) === CHAR_CODE_C &&
-        location.charCodeAt(++i) === CHAR_CODE_E
-      ) {
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    // "jar:file://"
-    case CHAR_CODE_J:
-      if (
-        location.charCodeAt(++i) === CHAR_CODE_A &&
-        location.charCodeAt(++i) === CHAR_CODE_R &&
-        location.charCodeAt(++i) === CHAR_CODE_COLON &&
-        location.charCodeAt(++i) === CHAR_CODE_F &&
-        location.charCodeAt(++i) === CHAR_CODE_I &&
-        location.charCodeAt(++i) === CHAR_CODE_L &&
-        location.charCodeAt(++i) === CHAR_CODE_E
-      ) {
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    default:
-      return false;
+function isChromeString(location, i = 0) {
+  if (
+    location.charCodeAt(i) === CHAR_CODE_C &&
+    location.charCodeAt(++i) === CHAR_CODE_H &&
+    location.charCodeAt(++i) === CHAR_CODE_R &&
+    location.charCodeAt(++i) === CHAR_CODE_O &&
+    location.charCodeAt(++i) === CHAR_CODE_M &&
+    location.charCodeAt(++i) === CHAR_CODE_E
+  ) {
+    return isColonSlashSlash(location, i);
   }
+  return false;
+}
+
+function isResourceString(location, i = 0) {
+  if (
+    location.charCodeAt(i) === CHAR_CODE_R &&
+    location.charCodeAt(++i) === CHAR_CODE_E &&
+    location.charCodeAt(++i) === CHAR_CODE_S &&
+    location.charCodeAt(++i) === CHAR_CODE_O &&
+    location.charCodeAt(++i) === CHAR_CODE_U &&
+    location.charCodeAt(++i) === CHAR_CODE_R &&
+    location.charCodeAt(++i) === CHAR_CODE_C &&
+    location.charCodeAt(++i) === CHAR_CODE_E
+  ) {
+    return isColonSlashSlash(location, i);
+  }
+  return false;
+}
+
+function isJarFileString(location, i = 0) {
+  if (
+    location.charCodeAt(i) === CHAR_CODE_J &&
+    location.charCodeAt(++i) === CHAR_CODE_A &&
+    location.charCodeAt(++i) === CHAR_CODE_R &&
+    location.charCodeAt(++i) === CHAR_CODE_COLON &&
+    location.charCodeAt(++i) === CHAR_CODE_F &&
+    location.charCodeAt(++i) === CHAR_CODE_I &&
+    location.charCodeAt(++i) === CHAR_CODE_L &&
+    location.charCodeAt(++i) === CHAR_CODE_E
+  ) {
+    return isColonSlashSlash(location, i);
+  }
+  return false;
+}
+
+function isChromeScheme(location, i = 0) {
+  return (
+    isChromeString(location, i) ||
+    isResourceString(location, i) ||
+    isJarFileString(location, i)
+  );
 }
 
 function isWASM(location, i = 0) {
