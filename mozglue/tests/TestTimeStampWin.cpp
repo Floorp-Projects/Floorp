@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/TimeStamp.h"
 
 #include "nsWindowsHelpers.h"
@@ -12,18 +11,14 @@
 #include <stdio.h>
 #include <windows.h>
 
-static wchar_t kChildArg[] = L"--child";
+static char kChildArg[] = "--child";
 
-static nsReturnRef<HANDLE> CreateProcessWrapper(const wchar_t* aPath) {
+static nsReturnRef<HANDLE> CreateProcessWrapper(const char* aPath) {
   nsAutoHandle empty;
 
-  const wchar_t* childArgv[] = {aPath, kChildArg};
-  mozilla::UniquePtr<wchar_t[]> cmdLine(
-      mozilla::MakeCommandLine(mozilla::ArrayLength(childArgv), childArgv));
-
-  STARTUPINFOW si = {sizeof(si)};
+  STARTUPINFOA si = {sizeof(si)};
   PROCESS_INFORMATION pi;
-  BOOL ok = ::CreateProcessW(aPath, cmdLine.get(), nullptr, nullptr, FALSE, 0,
+  BOOL ok = ::CreateProcessA(aPath, kChildArg, nullptr, nullptr, FALSE, 0,
                              nullptr, nullptr, &si, &pi);
   if (!ok) {
     printf(
@@ -55,16 +50,16 @@ int ChildMain() {
   return 0;
 }
 
-int wmain(int argc, wchar_t* argv[]) {
-  if (argc == 2 && wcscmp(argv[1], kChildArg) == 0) {
-    return ChildMain();
-  }
-
+int main(int argc, char* argv[]) {
   if (argc != 1) {
     printf(
         "TEST-FAILED | TimeStampWin | "
         "Unexpected argc\n");
     return 1;
+  }
+
+  if (strcmp(argv[0], kChildArg) == 0) {
+    return ChildMain();
   }
 
   // Start a child process successively, checking any of them terminates with
