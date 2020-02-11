@@ -240,4 +240,190 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Відкривати посилання в програмах</string>
 
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Синхронізувати</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Оберіть що синхронізувати</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Історію</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Закладки</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Паролі</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Вийти</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Назва пристрою</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Назва пристрою обов’язкова.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Синхронізація…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Помилка синхронізації. Востаннє синхронізовано: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Помилка синхронізації. Востаннє синхронізовано: ніколи</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Востаннє синхронізовано: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Востаннє синхронізовано: ніколи</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s на %s %s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Отримані вкладки</string>
+
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Сповіщення для вкладок, отриманих від інших пристроїв Firefox.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Отримано вкладку</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Отримані вкладки</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Вкладка з %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Захист від стеження</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Захист від стеження</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Блокуйте вміст і скрипти, що стежать за вами в Інтернеті</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Винятки</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Захист від стеження вимкнено для цих вебсайтів</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Увімкнути для всіх сайтів</string>
+
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Винятки дозволяють вимкнути захист від стеження для окремих сайтів.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Докладніше</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Вимкнено глобально. Перейдіть у Налаштування, щоб увімкнути.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Телеметрія</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Використання й технічні дані</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Надсилає в Mozilla дані про використання, швидкодію, апаратне забезпечення та налаштування браузера, щоб допомогти вдосконалити %1$s</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Експерименти</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Дозволяє Mozilla встановлювати та збирати дані для експериментальних функцій</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Звіти про збої</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Служба розташування Mozilla</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Звіт про справність %s</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Увімкнути синхронізацію</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Скануйте код в Firefox на комп’ютері</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Увійти</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Увійдіть, щоб відновити з’єднання</string>
+
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Видалити обліковий запис</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Відвідайте <b>firefox.com/pair</b> в Firefox на своєму комп’ютері, щоб отримати QR-код.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Відкрити камеру</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Скасувати</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Вгорі</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Внизу</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Світла</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Темна</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Враховувати режим економії заряду</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Тема пристрою</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Сеанси</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Знімки екрану</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Завантаження</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Закладки</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Закладки комп’ютера</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Меню закладок</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Панель закладок</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Інші закладки</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Історія</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Список читання</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Пошук</string>
+    <!-- Library Page Title -->
+    <string name="library_title">Бібліотека</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Налаштування</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Меню елемента історії</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Закрити</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Відкриті вкладки</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Приватний сеанс</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Приватні вкладки</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Додати вкладку</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Закрити вкладку</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Закрити вкладку %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Відкрити меню вкладок</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Закрити всі вкладки</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Ділитися вкладками</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">Зберегти до збірки</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Меню вкладок</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Ділитися вкладкою</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Видалити</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Зберегти</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Поділитися</string>
+
     </resources>

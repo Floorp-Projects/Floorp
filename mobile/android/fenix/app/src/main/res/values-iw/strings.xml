@@ -17,7 +17,7 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description">
-         %1$s מנקה את היסטוריית החיפוש והגלישה שלך כשהיישומון נסגר או בעת סגירת כל הלשוניות הפרטיות. פעולה זו אמנם לא הופכת אותך לאלמוני כלפי אתרים או ספק האינטרנט שלך,
+         ‏%1$s מנקה את היסטוריית החיפוש והגלישה שלך כשהיישומון נסגר או בעת סגירת כל הלשוניות הפרטיות. פעולה זו אמנם לא הופכת אותך לאלמוני כלפי אתרים או ספק האינטרנט שלך,
         אבל כן מקלה עליך בשמירה על הפעולות המקוונות שלך מפני כל מי שמשתמש במכשיר זה.
     </string>
     <string name="private_browsing_common_myths">
@@ -51,6 +51,10 @@
     <string name="browser_menu_stop">עצירה</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">עריכת סימנייה</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">מנהל התוספות</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">אין תוספות כאן</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">עזרה</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -133,6 +137,8 @@
     <string name="settings">הגדרות</string>
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">הגדרות בסיסיות</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">כללי</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">על אודות</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -162,8 +168,12 @@
     <string name="preferences_category_advanced">מתקדם</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">פרטיות</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">פרטיות ואבטחה</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">הרשאות אתר</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">גלישה פרטית</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">פתיחת קישורים בלשונית פרטית</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -176,6 +186,8 @@
     <string name="preferences_toolbar">סרגל כלים</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ערכת נושא</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">התאמה אישית</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">סנכרון סימניות, היסטוריה ועוד עם חשבון ה־Firefox שלך</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -207,6 +219,9 @@
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">פתיחת קישורים ביישומונים</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">תוספות</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -366,6 +381,9 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">פתיחת לשוניות</string>
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">הסרה</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">מחיקת היסטוריה</string>
@@ -433,6 +451,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">פתיחה בלשונית פרטית</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">מחיקה</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">שמירה</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d נבחרו</string>
@@ -561,6 +581,10 @@
     <string name="share_link_subheader">שיתוף קישור</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">שליחה למכשיר</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">כל הפעולות</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">בשימוש לאחרונה</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">שליחה לכל המכשירים</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
@@ -604,16 +628,22 @@
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">הלשוניות נסגרו</string>
 
+    <!-- Text shown in snackbar when user adds a site to home fragment. Placeholder replaced with app name -->
+    <string name="snackbar_added_to_firefox_home">נוסף למסך הבית של %s!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">הלשונית הפרטית נסגרה</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">הלשוניות הפרטיות נסגרו</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">הלשוניות הפרטיות נמחקו</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ביטול</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">האתר הוסר</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">ביטול</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">אישור</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">האם ברצונך למחוק את %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -625,6 +655,8 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">הקישור הועתק</string>
 
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">זהו טקסט לדוגמה. זה כאן כדי להראות כיצד טקסט יופיע בעת הגדלה או הקטנת הגודל עם הגדרה זו.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">הגדלה או הקטנה של טקסט באתרים</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -652,11 +684,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d דפים</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">אוספים</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d אוספים</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">עוגיות</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -694,14 +721,23 @@
     <string name="onboarding_header">ברוכים הבאים אל %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">כבר יש לך חשבון?</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">בחירת ערכת הנושא שלך</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">היכרות עם %s</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">מה חדש</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">יש לך שאלות על העיצוב החדש של %s? רוצה לדעת מה השתנה?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">התשובות כאן</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">‏%s חוסם רכיבי מעקב של פרסומות שעוקבים אחריך ברשת.
-    </string>
+    <string name="onboarding_tracking_protection_description1">‏%s עוזר למנוע מאתרים לעקוב אחריך ברשת.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">גלישה בפרטיות</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">פתיחת הגדרות</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">הפרטיות שלך</string>
 
@@ -709,8 +745,12 @@
     <string name="onboarding_finish">התחלת גלישה</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">בחירת ערכת הנושא שלך</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">אוטומטי</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">מסתגל להגדרות המכשיר שלך</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">ערכת נושא כהה</string>
     <!-- Theme setting for light mode -->
@@ -750,12 +790,30 @@
     <string name="preference_enhanced_tracking_protection_explanation">הנתונים שלך נשארים אצלך. %s מגן עליך מפני רוב רכיבי הריגול שעוקבים אחר הפעילות המקוונת שלך.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">מידע נוסף</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">רגיל</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">רגיל (מומלץ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">מאוזן בין הגנה לביצועים.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">מה נחסם על־ידי הגנת מעקב רגילה</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">מחמיר</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">מחמיר (ברירת מחדל)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_default_description">הגנת מעקב חזקה יותר וביצועים מהירים יותר, אך מספר אתרים עשויים שלא לעבוד כראוי.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">מחמיר (מומלץ)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">הגנה חזקה יותר, אך עשויה לשבש פעילות של אתרים או תוכן.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">מה נחסם על־ידי הגנת מעקב מחמירה</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">חסומים</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">מורשים</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">רכיבי מעקב של מדיה חברתית</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
@@ -766,6 +824,8 @@
     <string name="etp_cryptominers_title">כורי מטבעות דיגיטליים</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">מונע מתסריטים זדוניים לקבל גישה למכשיר שלך כדי לכרות מטבעות דיגיטליים.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">תוכן מעקב</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message_2">‏%s חוסם רכיבי מעקב באתר זה כאשר המגן בצבע סגול. יש להקיש עליו כדי לראות מה נחסם.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
@@ -831,6 +891,10 @@
     <string name="preferences_passwords_sync_logins_off">כבוי</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">כניסות שמורות</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">הכניסות שיישמרו או יסתנכרנו אל %s יופיעו כאן.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">מידע נוסף על Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">חריגות</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -841,6 +905,8 @@
     <string name="preferences_passwords_saved_logins_search">חיפוש כניסות</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">לפי סדר אלפביתי</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">בשימוש לאחרונה</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">אתר</string>
     <!-- The header for the username for a login -->
@@ -914,4 +980,43 @@
     <string name="search_add_custom_engine_error_missing_template">יש לבדוק שמחרוזת החיפוש תואמת לתבנית שבדוגמה</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">שגיאה בהתחברות אל ״%s״</string>
-    </resources>
+
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">נוצר %s</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">נשמר %s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">נמחק %s</string>
+
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">בעדכון %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">הפעלת %s</string>
+
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">ססמאות</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">חיבור מאובטח</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">חיבור לא מאובטח</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">האם ברצונך לנקות את כל ההרשאות עבור כל האתרים?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">האם ברצונך לנקות את כל ההרשאות עבור אתר זה?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">האם ברצונך לנקות הרשאה זו עבור אתר זה?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">אין חריגות לאתרים</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">מאמרים מובילים</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">האם ברצונך למחוק סימנייה זו?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">הוספה לאתרים המובילים</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">אומת על־ידי %1$s </string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">מחיקה</string>
+</resources>

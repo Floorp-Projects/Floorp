@@ -18,6 +18,12 @@
     <!-- No Open Tabs Message Header -->
     <string name="no_open_tabs_header_2">Ingen opne faner</string>
 
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Dei opne fanene dine vert viste her.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Du er i ei privat økt</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Slett økt</string>
 

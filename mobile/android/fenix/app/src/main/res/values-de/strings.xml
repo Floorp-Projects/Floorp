@@ -64,6 +64,8 @@
     <string name="browser_menu_bookmark">Zu Lesezeichen hinzufügen</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Lesezeichen bearbeiten</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Add-ons-Verwaltung</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Hilfe</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -157,6 +159,8 @@
 
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Grundeinstellungen</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Allgemein</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Über</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -186,8 +190,12 @@
     <string name="preferences_category_advanced">Erweitert</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Datenschutz</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Datenschutz und Sicherheit</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Website-Berechtigungen</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Privater Modus</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Links in privatem Tab öffnen</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -202,6 +210,8 @@
     <string name="preferences_toolbar">Symbolleiste</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Theme</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Anpassen</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Synchronisieren Sie Lesezeichen, Chronik und mehr mit Ihrem Firefox-Konto</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -237,6 +247,9 @@
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Links in Apps öffnen</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Add-ons</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -437,6 +450,9 @@
     <string name="collection_open_tabs">Tabs öffnen</string>
 
 
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Entfernen</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Chronik löschen</string>
@@ -513,6 +529,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">In privatem Tab öffnen</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Löschen</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Speichern</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d ausgewählt</string>
@@ -669,6 +687,8 @@
     <string name="share_link_subheader">Einen Link teilen</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">An Gerät senden</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Kürzlich verwendet</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Bei Sync anmelden</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -729,7 +749,7 @@
     <string name="snackbar_private_tabs_closed">Private Tabs geschlossen</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Private Tabs gelöscht</string>
-    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">RÜCKGÄNGIG</string>
 
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
@@ -756,8 +776,6 @@
     <string name="url_copied">Adresse kopiert</string>
 
 
-    <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Text auf Websites vergrößern oder verkleinern</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -784,11 +802,6 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d Seiten</string>
-    <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">Sammlungen</string>
-    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
-        number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d Sammlungen</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookies</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -836,10 +849,6 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">%s kennenlernen</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Wählen Sie Ihr Theme</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Dunkles Theme: Schont die Batterie und Ihre Augen.</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Machen Sie das Beste aus %s.</string>
@@ -861,16 +870,10 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Anmeldung fehlgeschlagen</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Schützen Sie sich</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s blockiert Werbeskripte zur Aktivitätenverfolgung, die Sie im Internet verfolgen.
-    </string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Privat surfen</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">Wenn Sie das %s-Symbol sehen, ist das private Surfen nur einen Fingertipp entfernt.
-   </string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Einstellungen öffnen</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ihre Privatsphäre</string>
     <!-- text for the privacy notice onboarding card description
@@ -885,6 +888,8 @@
     <string name="onboarding_finish">Lossurfen</string>
 
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Wählen Sie Ihr Theme</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatisch</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1159,4 +1164,14 @@
     <string name="search_edit_custom_engine_success_message">%s gespeichert</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s gelöscht</string>
+
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s wird aktualisiert…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s starten</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Passwörter</string>
+
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Entfernen</string>
 </resources>

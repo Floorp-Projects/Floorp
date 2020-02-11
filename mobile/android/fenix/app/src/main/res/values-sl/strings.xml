@@ -50,6 +50,8 @@
     <string name="browser_menu_bookmark">Dodaj med zaznamke</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Uredi zaznamek</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_addon_manager">Upravitelj dodatkov</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomoč</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -127,6 +129,8 @@
     <string name="preferences_category_advanced">Napredno</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Zasebnost</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Zasebno brskanje</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Odpri povezave v zasebnem zavihku</string>
     <!-- Preference for accessibility -->
@@ -137,6 +141,8 @@
     <string name="preferences_toolbar">Orodna vrstica</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Prilagodi</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Sinhronizirajte zaznamke, gesla in ostalo s Firefox Računom</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -155,6 +161,9 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Nastavitve računa</string>
 
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Dodatki</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sinhroniziraj zdaj</string>
@@ -168,6 +177,8 @@
     <string name="preferences_sync_logins">Prijave</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Ime naprave</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Ime naprave ne sme ostati prazno.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sinhronizacija …</string>
 
@@ -222,6 +233,8 @@
     <string name="library_desktop_bookmarks_root">Namizni zaznamki</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Meni zaznamkov</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Vrstica zaznamkov</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">Drugi zaznamki</string>
     <!-- Option in Library to open History page -->
@@ -235,6 +248,8 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zapri</string>
 
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Zasebni zavihki</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Dodaj zavihek</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -258,6 +273,9 @@
     <string name="collection_delete">Izbriši zbirko</string>
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">Preimenuj zbirko</string>
+
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Odstrani</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -283,6 +301,14 @@
     <string name="bookmark_menu_content_description">Meni zaznamkov</string>
     <!-- Screen title for editing bookmarks -->
     <string name="bookmark_edit">Uredi zaznamek</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Izberi mapo</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Dodaj mapo</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Zaznamek ustvarjen.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Zaznamek shranjen!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">UREDI</string>
     <!-- Bookmark overflow menu edit button -->
@@ -311,6 +337,10 @@
     <string name="bookmark_name_label">IME</string>
     <!-- Bookmark add folder screen title -->
     <string name="bookmark_add_folder_fragment_label">Dodaj mapo</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Izberi mapo</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Mora imeti naslov</string>
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">Neveljaven URL</string>
 
@@ -321,6 +351,10 @@
     <string name="phone_feature_go_to_settings">Odpri nastavitve</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Priporočeno</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Počisti dovoljenja</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Počisti dovoljenje</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
     <string name="preference_browser_feature_autoplay">Samodejno predvajanje</string>
     <!-- Preference for altering the camera access for all websites -->
@@ -359,8 +393,26 @@
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Seja zasebnega brskanja</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Zapri zasebne zavihke</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Odpri</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Izbriši in odpri</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Zbirka izbrisana</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Zbirka preimenovana</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Zavihek izbrisan</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Zavihki izbrisani</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Zavihek zaprt</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Zavihki zaprti</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">RAZVELJAVI</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Razveljavi</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -370,6 +422,8 @@
     <string name="tab_collection_dialog_positive">Izbriši</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
     <string name="tab_collection_dialog_negative">Prekliči</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Spletni naslov kopiran</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Velikost pisave</string>
 
@@ -397,7 +451,12 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vaša zasebnost</string>
 
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Začnite brskati</string>
+
     <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Izberite si temo</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Samodejno</string>
     <!-- Theme setting for dark mode -->

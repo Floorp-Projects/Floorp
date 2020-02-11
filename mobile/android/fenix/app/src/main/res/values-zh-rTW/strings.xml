@@ -115,7 +115,7 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">搜尋</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">跟隨裝置語言</string>
+    <string name="default_locale_text">依照裝置語言顯示</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">搜尋語言</string>
 
@@ -225,7 +225,7 @@
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">顯示搜尋建議</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
-    <string name="preferences_show_search_suggestions_in_private">於隱私上網模式顯示</string>
+    <string name="preferences_show_search_suggestions_in_private">於隱私瀏覽模式顯示</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">顯示剪貼簿內容建議</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -359,7 +359,7 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">由系統省電模式設定</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">跟隨裝置佈景主題</string>
+    <string name="preference_follow_device_theme">依照裝置佈景主題顯示</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
