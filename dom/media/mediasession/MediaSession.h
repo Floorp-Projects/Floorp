@@ -42,8 +42,11 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   void SetActionHandler(MediaSessionAction aAction,
                         MediaSessionActionHandler* aHandler);
 
-  MOZ_CAN_RUN_SCRIPT
+  bool IsSupportedAction(MediaSessionAction aAction) const;
+
+  // Use these methods to trigger media session action handler asynchronously.
   void NotifyHandler(const MediaSessionActionDetails& aDetails);
+  void NotifyHandler(MediaSessionAction aAction);
 
   void Shutdown();
 
@@ -55,6 +58,10 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
     eCreated = true,
   };
   void NotifyMediaSessionStatus(SessionStatus aState);
+
+  void DispatchNotifyHandler(const MediaSessionActionDetails& aDetails);
+
+  MediaSessionActionHandler* GetActionHandler(MediaSessionAction aAction) const;
 
   ~MediaSession() = default;
 

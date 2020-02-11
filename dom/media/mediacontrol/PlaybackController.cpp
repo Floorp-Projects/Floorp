@@ -4,8 +4,9 @@
 
 #include "PlaybackController.h"
 
-#include "nsIAudioChannelAgent.h"
 #include "MediaControlUtils.h"
+#include "mozilla/dom/MediaSession.h"
+#include "mozilla/dom/Navigator.h"
 
 // avoid redefined macro in unified build
 #undef LOG
@@ -21,78 +22,99 @@ PlaybackController::PlaybackController(BrowsingContext* aContext) {
   mBC = aContext;
 }
 
+MediaSession* PlaybackController::GetMediaSession() {
+  RefPtr<nsPIDOMWindowOuter> window = mBC->GetDOMWindow();
+  if (!window) {
+    return nullptr;
+  }
+
+  RefPtr<Navigator> navigator = window->GetNavigator();
+  return navigator->HasCreatedMediaSession() ? navigator->MediaSession()
+                                             : nullptr;
+}
+
 void PlaybackController::Play() {
-  /**
-   * TODO : if media session has set its action handler, then we should use that
-   * instead of applying our default behavior.
-   * ex.
-   * ```
-   * MediaSession* session = MediaSessionManager::GetActiveSession();
-   * if (!session || !session->HasPlayHandler()) {
-   *    // Do default behavior
-   * }
-   * session->ExecutePlayHandler();
-   * ```
-   */
-  // Our default behavior is to play all media elements within this window and
-  // its children.
-  LOG("Handle 'play' in default behavior");
-  RefPtr<ContentControlKeyEventReceiver> receiver =
-      ContentControlKeyEventReceiver::Get(mBC);
-  if (receiver) {
-    receiver->OnKeyPressed(MediaControlKeysEvent::ePlay);
+  const MediaSessionAction action = MediaSessionAction::Play;
+  RefPtr<MediaSession> session = GetMediaSession();
+  if (!session || !session->IsSupportedAction(action)) {
+    // Our default behavior is to play all media elements within same browsing
+    // context tree.
+    LOG("Handle 'play' in default behavior");
+    if (RefPtr<ContentControlKeyEventReceiver> receiver =
+            ContentControlKeyEventReceiver::Get(mBC)) {
+      receiver->OnKeyPressed(MediaControlKeysEvent::ePlay);
+    }
+  } else {
+    session->NotifyHandler(action);
   }
 };
 
 void PlaybackController::Pause() {
-  // TODO : same as Play(), we would provide default action handling if current
-  // media session doesn't have an action handler.
-  LOG("Handle 'pause' in default behavior");
-  RefPtr<ContentControlKeyEventReceiver> receiver =
-      ContentControlKeyEventReceiver::Get(mBC);
-  if (receiver) {
-    receiver->OnKeyPressed(MediaControlKeysEvent::ePause);
+  const MediaSessionAction action = MediaSessionAction::Pause;
+  RefPtr<MediaSession> session = GetMediaSession();
+  if (!session || !session->IsSupportedAction(action)) {
+    // Our default behavior is to pause all media elements within same browsing
+    // context tree.
+    LOG("Handle 'pause' in default behavior");
+    if (RefPtr<ContentControlKeyEventReceiver> receiver =
+            ContentControlKeyEventReceiver::Get(mBC)) {
+      receiver->OnKeyPressed(MediaControlKeysEvent::ePause);
+    }
+  } else {
+    session->NotifyHandler(action);
   }
 }
 
 void PlaybackController::SeekBackward() {
-  // TODO : use media session's action handler if it exists.
+  // TODO : use media session's action handler if it exists. MediaSessionAction
+  // doesn't support `seekbackward` yet.
   return;
 }
 
 void PlaybackController::SeekForward() {
-  // TODO : use media session's action handler if it exists.
+  // TODO : use media session's action handler if it exists. MediaSessionAction
+  // doesn't support `seekforward` yet.
   return;
 }
 
 void PlaybackController::PreviousTrack() {
-  // TODO : use media session's action handler if it exists.
-  return;
+  if (RefPtr<MediaSession> session = GetMediaSession()) {
+    session->NotifyHandler(MediaSessionAction::Previoustrack);
+  }
 }
 
 void PlaybackController::NextTrack() {
-  // TODO : use media session's action handler if it exists.
-  return;
+  if (RefPtr<MediaSession> session = GetMediaSession()) {
+    session->NotifyHandler(MediaSessionAction::Nexttrack);
+  }
 }
 
 void PlaybackController::SkipAd() {
-  // TODO : use media session's action handler if it exists.
+  // TODO : use media session's action handler if it exists. MediaSessionAction
+  // doesn't support `skipad` yet.
   return;
 }
 
 void PlaybackController::Stop() {
-  // TODO : same as Play(), we would provide default action handling if current
-  // media session doesn't have an action handler.
-  LOG("Handle 'stop' in default behavior");
-  RefPtr<ContentControlKeyEventReceiver> receiver =
-      ContentControlKeyEventReceiver::Get(mBC);
-  if (receiver) {
-    receiver->OnKeyPressed(MediaControlKeysEvent::eStop);
+  const MediaSessionAction action = MediaSessionAction::Stop;
+  RefPtr<MediaSession> session = GetMediaSession();
+  if (!session || !session->IsSupportedAction(action)) {
+    // Our default behavior is to stop all media elements within same browsing
+    // context tree.
+    LOG("Handle 'stop' in default behavior");
+    RefPtr<ContentControlKeyEventReceiver> receiver =
+        ContentControlKeyEventReceiver::Get(mBC);
+    if (receiver) {
+      receiver->OnKeyPressed(MediaControlKeysEvent::eStop);
+    }
+  } else {
+    session->NotifyHandler(action);
   }
 }
 
 void PlaybackController::SeekTo() {
-  // TODO : use media session's action handler if it exists.
+  // TODO : use media session's action handler if it exists. MediaSessionAction
+  // doesn't support `seekto` yet.
   return;
 }
 
