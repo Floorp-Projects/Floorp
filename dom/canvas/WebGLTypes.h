@@ -17,6 +17,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
+#include "mozilla/gfx/Point.h"
 #include "gfxTypes.h"
 
 #include "nsTArray.h"
@@ -838,6 +839,7 @@ inline GLenum ImageToTexTarget(const GLenum imageTarget) {
 // -
 
 namespace dom {
+class Element;
 class ImageBitmap;
 class ImageData;
 }  // namespace dom

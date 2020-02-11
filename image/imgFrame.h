@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace image {
