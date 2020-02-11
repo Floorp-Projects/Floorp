@@ -1085,6 +1085,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'ScrollViewChangeEvent.webidl',
     'SecurityPolicyViolationEvent.webidl',
     'StyleSheetApplicableStateChangeEvent.webidl',
+    'SubmitEvent.webidl',
     'TCPServerSocketEvent.webidl',
     'TCPSocketErrorEvent.webidl',
     'TCPSocketEvent.webidl',

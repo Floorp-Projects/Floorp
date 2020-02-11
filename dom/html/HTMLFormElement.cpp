@@ -41,6 +41,7 @@
 #include "HTMLFormSubmissionConstants.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/FormDataEvent.h"
+#include "mozilla/dom/SubmitEvent.h"
 #include "mozilla/Telemetry.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
@@ -260,10 +261,16 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
   // dispatch the event. It makes sure that event is not handled if the window
   // is being destroyed.
   if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
-    InternalFormEvent event(true, eFormSubmit);
-    event.mOriginator = aSubmitter;
+    SubmitEventInit init;
+    init.mBubbles = true;
+    init.mCancelable = true;
+    init.mSubmitter =
+        aSubmitter ? nsGenericHTMLElement::FromNode(aSubmitter) : nullptr;
+    RefPtr<SubmitEvent> event =
+        SubmitEvent::Constructor(this, NS_LITERAL_STRING("submit"), init);
+    event->SetTrusted(true);
     nsEventStatus status = nsEventStatus_eIgnore;
-    presShell->HandleDOMEventWithTarget(this, &event, &status);
+    presShell->HandleDOMEventWithTarget(this, event, &status);
   }
 }
 
@@ -290,7 +297,7 @@ void HTMLFormElement::Submit(ErrorResult& aRv) {
     mPendingSubmission = nullptr;
   }
 
-  aRv = DoSubmitOrReset(nullptr, eFormSubmit);
+  aRv = DoSubmit();
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit
@@ -541,9 +548,12 @@ nsresult HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 
     if (aVisitor.mEventStatus == nsEventStatus_eIgnore) {
       switch (msg) {
-        case eFormReset:
+        case eFormReset: {
+          DoReset();
+          break;
+        }
         case eFormSubmit: {
-          if (mPendingSubmission && msg == eFormSubmit) {
+          if (mPendingSubmission) {
             // tell the form to forget a possible pending submission.
             // the reason is that the script returned true (the event was
             // ignored) so if there is a stored submission, it will miss
@@ -551,7 +561,7 @@ nsresult HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             // to forget it and the form element will build a new one
             mPendingSubmission = nullptr;
           }
-          DoSubmitOrReset(aVisitor.mEvent, msg);
+          DoSubmit(aVisitor.mDOMEvent);
           break;
         }
         default:
@@ -576,36 +586,13 @@ nsresult HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return NS_OK;
 }
 
-nsresult HTMLFormElement::DoSubmitOrReset(WidgetEvent* aEvent,
-                                          EventMessage aMessage) {
+nsresult HTMLFormElement::DoReset() {
   // Make sure the presentation is up-to-date
   Document* doc = GetComposedDoc();
   if (doc) {
     doc->FlushPendingNotifications(FlushType::ContentAndNotify);
   }
 
-  // JBK Don't get form frames anymore - bug 34297
-
-  // Submit or Reset the form
-  if (eFormReset == aMessage) {
-    return DoReset();
-  }
-
-  if (eFormSubmit == aMessage) {
-    // Don't submit if we're not in a document or if we're in
-    // a sandboxed frame and form submit is disabled.
-    if (mIsConstructingEntryList || !doc ||
-        (doc->GetSandboxFlags() & SANDBOXED_FORMS)) {
-      return NS_OK;
-    }
-    return DoSubmit(aEvent);
-  }
-
-  MOZ_ASSERT(false);
-  return NS_OK;
-}
-
-nsresult HTMLFormElement::DoReset() {
   mEverTriedInvalidSubmit = false;
   // JBK walk the elements[] array instead of form frame controls - bug 34297
   uint32_t numElements = GetElementCount();
@@ -626,8 +613,21 @@ nsresult HTMLFormElement::DoReset() {
     return rv;                       \
   }
 
-nsresult HTMLFormElement::DoSubmit(WidgetEvent* aEvent) {
-  NS_ASSERTION(GetComposedDoc(), "Should never get here without a current doc");
+nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
+  Document* doc = GetComposedDoc();
+  NS_ASSERTION(doc, "Should never get here without a current doc");
+
+  // Make sure the presentation is up-to-date
+  if (doc) {
+    doc->FlushPendingNotifications(FlushType::ContentAndNotify);
+  }
+
+  // Don't submit if we're not in a document or if we're in
+  // a sandboxed frame and form submit is disabled.
+  if (mIsConstructingEntryList || !doc ||
+      (doc->GetSandboxFlags() & SANDBOXED_FORMS)) {
+    return NS_OK;
+  }
 
   if (mIsSubmitting) {
     NS_WARNING("Preventing double form submission");
@@ -685,21 +685,15 @@ nsresult HTMLFormElement::DoSubmit(WidgetEvent* aEvent) {
 }
 
 nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
-                                          WidgetEvent* aEvent) {
+                                          Event* aEvent) {
   NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
 
-  // Get the originating frame (failure is non-fatal)
+  // Get the originating frame
   nsGenericHTMLElement* originatingElement = nullptr;
   if (aEvent) {
-    InternalFormEvent* formEvent = aEvent->AsFormEvent();
-    if (formEvent) {
-      nsIContent* originator = formEvent->mOriginator;
-      if (originator) {
-        if (!originator->IsHTMLElement()) {
-          return NS_ERROR_UNEXPECTED;
-        }
-        originatingElement = static_cast<nsGenericHTMLElement*>(originator);
-      }
+    SubmitEvent* submitEvent = aEvent->AsSubmitEvent();
+    if (submitEvent) {
+      originatingElement = submitEvent->GetSubmitter();
     }
   }
 
