@@ -452,16 +452,3 @@ add_task(async function testCharacterInPanelMultiView() {
   view.closest("panel").hidePopup();
   await hidden;
 });
-
-// Test tab stops after the search bar is added.
-add_task(async function testTabStopsAfterSearchBarAdded() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.widget.inNavBar", 1]],
-  });
-  await withNewBlankTab(async function() {
-    startFromUrlBar();
-    await expectFocusAfterKey("Tab", "searchbar", true);
-    await expectFocusAfterKey("Tab", "library-button");
-  });
-  await SpecialPowers.popPrefEnv();
-});
