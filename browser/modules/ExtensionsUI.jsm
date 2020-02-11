@@ -41,6 +41,9 @@ function getTabBrowser(browser) {
   while (browser.ownerGlobal.docShell.itemType !== Ci.nsIDocShell.typeChrome) {
     browser = browser.ownerGlobal.docShell.chromeEventHandler;
   }
+  if (browser.getAttribute("webextension-view-type") == "popup") {
+    browser = browser.ownerGlobal.gBrowser.selectedBrowser;
+  }
   return { browser, window: browser.ownerGlobal };
 }
 
@@ -117,8 +120,8 @@ var ExtensionsUI = {
     this.emit("change");
   },
 
-  showAddonsManager(browser, strings, icon, histkey) {
-    let global = browser.selectedBrowser.ownerGlobal;
+  showAddonsManager(tabbrowser, strings, icon, histkey) {
+    let global = tabbrowser.selectedBrowser.ownerGlobal;
     return global
       .BrowserOpenAddonsMgr("addons://list/extension")
       .then(aomWin => {
@@ -127,7 +130,7 @@ var ExtensionsUI = {
       });
   },
 
-  showSideloaded(browser, addon) {
+  showSideloaded(tabbrowser, addon) {
     addon.markAsSeen();
     this.sideloaded.delete(addon);
     this._updateNotifications();
@@ -142,7 +145,7 @@ var ExtensionsUI = {
       num_strings: strings.msgs.length,
     });
 
-    this.showAddonsManager(browser, strings, addon.iconURL, "sideload").then(
+    this.showAddonsManager(tabbrowser, strings, addon.iconURL, "sideload").then(
       async answer => {
         if (answer) {
           await addon.enable();
@@ -156,7 +159,7 @@ var ExtensionsUI = {
             addon.permissions &
             AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS
           ) {
-            this.showInstallNotification(browser, addon);
+            this.showInstallNotification(tabbrowser.selectedBrowser, addon);
           }
         }
         this.emit("sideload-response");
