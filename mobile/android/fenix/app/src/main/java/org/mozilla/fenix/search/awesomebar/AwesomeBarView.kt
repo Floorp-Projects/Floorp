@@ -164,7 +164,8 @@ class AwesomeBarView(
                 fetchClient = components.core.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                 limit = 3,
-                icon = searchDrawable.toBitmap()
+                icon = searchDrawable.toBitmap(),
+                showDescription = false
             )
 
         shortcutsEnginePickerProvider =
