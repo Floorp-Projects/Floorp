@@ -1000,20 +1000,20 @@ struct FontFamily {
 // particular case (so it can be reported to the DevTools font inspector).
 struct FamilyAndGeneric final {
   FamilyAndGeneric()
-      : mFamily(), mGeneric(mozilla::StyleGenericFontFamily::None) {}
+      : mFamily(), mGeneric(mozilla::StyleGenericFontFamily(0)) {}
   FamilyAndGeneric(const FamilyAndGeneric& aOther)
       : mFamily(aOther.mFamily), mGeneric(aOther.mGeneric) {}
   explicit FamilyAndGeneric(gfxFontFamily* aFamily,
                             mozilla::StyleGenericFontFamily aGeneric =
-                                mozilla::StyleGenericFontFamily::None)
+                                mozilla::StyleGenericFontFamily(0))
       : mFamily(aFamily), mGeneric(aGeneric) {}
   explicit FamilyAndGeneric(mozilla::fontlist::Family* aFamily,
                             mozilla::StyleGenericFontFamily aGeneric =
-                                mozilla::StyleGenericFontFamily::None)
+                                mozilla::StyleGenericFontFamily(0))
       : mFamily(aFamily), mGeneric(aGeneric) {}
   explicit FamilyAndGeneric(const FontFamily& aFamily,
                             mozilla::StyleGenericFontFamily aGeneric =
-                                mozilla::StyleGenericFontFamily::None)
+                                mozilla::StyleGenericFontFamily(0))
       : mFamily(aFamily), mGeneric(aGeneric) {}
 
   bool operator==(const FamilyAndGeneric& aOther) const {

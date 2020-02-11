@@ -13,4 +13,10 @@ namespace mozilla {
 ScrollStyles::ScrollStyles(const nsStyleDisplay& aDisplay)
     : mHorizontal(aDisplay.mOverflowX), mVertical(aDisplay.mOverflowY) {}
 
+bool ScrollStyles::IsHiddenInBothDirections() const {
+  return mHorizontal == StyleOverflow::Hidden &&
+         mVertical == StyleOverflow::Hidden;
+}
+
+
 }  // namespace mozilla

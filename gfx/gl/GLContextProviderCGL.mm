@@ -9,6 +9,7 @@
 #include "nsIWidget.h"
 #include <OpenGL/gl.h>
 #include "gfxFailure.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_gl.h"
 #include "mozilla/StaticPrefs_layout.h"

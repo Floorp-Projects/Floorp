@@ -29,10 +29,11 @@
 #  define MOZ_GL_DEBUG 1
 #endif
 
-#include "../../mfbt/RefPtr.h"
-#include "../../mfbt/UniquePtr.h"
-#include "../../mfbt/ThreadLocal.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/ThreadLocal.h"
 
+#include "nsTArray.h"
 #include "GLDefs.h"
 #include "GLLibraryLoader.h"
 #include "nsISupportsImpl.h"
