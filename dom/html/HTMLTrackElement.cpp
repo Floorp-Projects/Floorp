@@ -23,6 +23,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
+#include "nsIScriptError.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsPrimitives.h"
 #include "nsMappedAttributes.h"
@@ -158,11 +159,20 @@ TextTrack* HTMLTrackElement::GetTrack() {
   if (!mTrack) {
     CreateTextTrack();
   }
-
   return mTrack;
 }
 
 void HTMLTrackElement::CreateTextTrack() {
+  nsISupports* parentObject = OwnerDoc()->GetParentObject();
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
+  if (!parentObject) {
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Media"), OwnerDoc(),
+        nsContentUtils::eDOM_PROPERTIES,
+        "Using track element in non-window context");
+    return;
+  }
+
   nsString label, srcLang;
   GetSrclang(srcLang);
   GetLabel(label);
@@ -174,19 +184,11 @@ void HTMLTrackElement::CreateTextTrack() {
     kind = TextTrackKind::Subtitles;
   }
 
-  nsISupports* parentObject = OwnerDoc()->GetParentObject();
-
-  NS_ENSURE_TRUE_VOID(parentObject);
-
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
+  MOZ_ASSERT(!mTrack, "No need to recreate a text track!");
   mTrack =
       new TextTrack(window, kind, label, srcLang, TextTrackMode::Disabled,
                     TextTrackReadyState::NotLoaded, TextTrackSource::Track);
   mTrack->SetTrackElement(this);
-
-  if (mMediaParent) {
-    mMediaParent->AddTextTrack(mTrack);
-  }
 }
 
 bool HTMLTrackElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -391,6 +393,11 @@ nsresult HTMLTrackElement::BindToTree(BindContext& aContext, nsINode& aParent) {
     // TextTrack before its mTrackElement has been bound to the DOM tree.
     if (!mTrack) {
       CreateTextTrack();
+    }
+    // As `CreateTextTrack()` might fail, so we have to check it again.
+    if (mTrack) {
+      LOG("Add text track to media parent");
+      mMediaParent->AddTextTrack(mTrack);
     }
     MaybeDispatchLoadResource();
   }
