@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .status-code {
-  margin-inline-start: 3px;
   padding: 0 2px;
   border-radius: 3px;
   font-family: var(--monospace-font-family);
