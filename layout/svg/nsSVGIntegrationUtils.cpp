@@ -183,12 +183,11 @@ bool nsSVGIntegrationUtils::UsingSimpleClipPathForFrame(
   }
 
   const auto& clipPath = style->mClipPath;
-  if (clipPath.GetType() != StyleShapeSourceType::Shape) {
+  if (!clipPath.IsShape()) {
     return false;
   }
 
-  const auto& shape = clipPath.BasicShape();
-  return !shape.IsPolygon();
+  return !clipPath.AsShape()._0->IsPolygon();
 }
 
 nsPoint nsSVGIntegrationUtils::GetOffsetToBoundingBox(nsIFrame* aFrame) {

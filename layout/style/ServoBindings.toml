@@ -565,6 +565,8 @@ cbindgen-types = [
     { gecko = "StyleJustifyContent", servo = "values::computed::align::JustifyContent" },
     { gecko = "StyleComputedValueFlags", servo = "computed_value_flags::ComputedValueFlags" },
     { gecko = "StyleImage", servo = "values::computed::Image" },
+    { gecko = "StyleClippingShape", servo = "values::computed::basic_shape::ClippingShape" },
+    { gecko = "StyleFloatAreaShape", servo = "values::computed::basic_shape::FloatAreaShape" },
 ]
 
 mapped-generic-types = [

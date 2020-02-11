@@ -957,149 +957,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const {
 }
 
 // --------------------
-// StyleShapeSource
-StyleShapeSource::StyleShapeSource() : mBasicShape() {}
-
-StyleShapeSource::StyleShapeSource(const StyleShapeSource& aSource) {
-  DoCopy(aSource);
-}
-
-StyleShapeSource::~StyleShapeSource() { DoDestroy(); }
-
-StyleShapeSource& StyleShapeSource::operator=(const StyleShapeSource& aOther) {
-  if (this != &aOther) {
-    DoCopy(aOther);
-  }
-
-  return *this;
-}
-
-bool StyleShapeSource::operator==(const StyleShapeSource& aOther) const {
-  if (mType != aOther.mType) {
-    return false;
-  }
-
-  switch (mType) {
-    case StyleShapeSourceType::None:
-      return true;
-
-    case StyleShapeSourceType::Image:
-      return *mShapeImage == *aOther.mShapeImage;
-
-    case StyleShapeSourceType::Shape:
-      return *mBasicShape == *aOther.mBasicShape &&
-             mReferenceBox == aOther.mReferenceBox;
-
-    case StyleShapeSourceType::Box:
-      return mReferenceBox == aOther.mReferenceBox;
-
-    case StyleShapeSourceType::Path:
-      return *mSVGPath == *aOther.mSVGPath;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unexpected shape source type!");
-  return true;
-}
-
-void StyleShapeSource::SetShapeImage(UniquePtr<StyleImage> aShapeImage) {
-  MOZ_ASSERT(aShapeImage);
-  DoDestroy();
-  new (&mShapeImage) UniquePtr<StyleImage>(std::move(aShapeImage));
-  mType = StyleShapeSourceType::Image;
-}
-
-imgIRequest* StyleShapeSource::GetShapeImageData() const {
-  if (mType != StyleShapeSourceType::Image) {
-    return nullptr;
-  }
-  return mShapeImage->GetImageRequest();
-}
-
-void StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
-                                     StyleGeometryBox aReferenceBox) {
-  MOZ_ASSERT(aBasicShape);
-  DoDestroy();
-  new (&mBasicShape) UniquePtr<StyleBasicShape>(std::move(aBasicShape));
-  mReferenceBox = aReferenceBox;
-  mType = StyleShapeSourceType::Shape;
-}
-
-void StyleShapeSource::SetPath(UniquePtr<StyleSVGPath> aPath) {
-  MOZ_ASSERT(aPath);
-  DoDestroy();
-  new (&mSVGPath) UniquePtr<StyleSVGPath>(std::move(aPath));
-  mType = StyleShapeSourceType::Path;
-}
-
-void StyleShapeSource::TriggerImageLoads(
-    Document& aDocument, const StyleShapeSource* aOldShapeSource) {
-  if (GetType() != StyleShapeSourceType::Image) {
-    return;
-  }
-
-  auto* oldShapeImage = (aOldShapeSource && aOldShapeSource->GetType() ==
-                                                StyleShapeSourceType::Image)
-                            ? &aOldShapeSource->ShapeImage()
-                            : nullptr;
-  mShapeImage->ResolveImage(aDocument, oldShapeImage);
-}
-
-void StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox) {
-  DoDestroy();
-  mReferenceBox = aReferenceBox;
-  mType = StyleShapeSourceType::Box;
-}
-
-void StyleShapeSource::DoCopy(const StyleShapeSource& aOther) {
-  switch (aOther.mType) {
-    case StyleShapeSourceType::None:
-      mReferenceBox = StyleGeometryBox::NoBox;
-      mType = StyleShapeSourceType::None;
-      break;
-
-    case StyleShapeSourceType::Image:
-      SetShapeImage(MakeUnique<StyleImage>(aOther.ShapeImage()));
-      break;
-
-    case StyleShapeSourceType::Shape: {
-      UniquePtr<StyleBasicShape> shape(
-          Servo_CloneBasicShape(&aOther.BasicShape()));
-      // TODO(emilio): This could be a copy-ctor call like above if we teach
-      // cbindgen to generate copy-constructors for tagged unions.
-      SetBasicShape(std::move(shape), aOther.GetReferenceBox());
-      break;
-    }
-
-    case StyleShapeSourceType::Box:
-      SetReferenceBox(aOther.GetReferenceBox());
-      break;
-
-    case StyleShapeSourceType::Path:
-      SetPath(MakeUnique<StyleSVGPath>(aOther.Path()));
-      break;
-  }
-}
-
-void StyleShapeSource::DoDestroy() {
-  switch (mType) {
-    case StyleShapeSourceType::Shape:
-      mBasicShape.~UniquePtr<StyleBasicShape>();
-      break;
-    case StyleShapeSourceType::Image:
-      mShapeImage.~UniquePtr<StyleImage>();
-      break;
-    case StyleShapeSourceType::Path:
-      mSVGPath.~UniquePtr<StyleSVGPath>();
-      break;
-    case StyleShapeSourceType::None:
-    case StyleShapeSourceType::Box:
-      // Not a union type, so do nothing.
-      break;
-  }
-  mType = StyleShapeSourceType::None;
-}
-
-// --------------------
 // nsStyleSVGReset
 //
 nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
@@ -1111,6 +968,7 @@ nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
       mRy(NonNegativeLengthPercentageOrAuto::Auto()),
       mR(NonNegativeLengthPercentage::Zero()),
       mMask(nsStyleImageLayers::LayerType::Mask),
+      mClipPath(StyleClippingShape::None()),
       mStopColor(StyleColor::Black()),
       mFloodColor(StyleColor::Black()),
       mLightingColor(StyleColor::White()),
@@ -2417,7 +2275,8 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mPerspectiveOrigin(Position::FromPercentage(0.5f)),
       mVerticalAlign(
           StyleVerticalAlign::Keyword(StyleVerticalAlignKeyword::Baseline)),
-      mShapeMargin(LengthPercentage::Zero()) {
+      mShapeMargin(LengthPercentage::Zero()),
+      mShapeOutside(StyleFloatAreaShape::None()) {
   MOZ_COUNT_CTOR(nsStyleDisplay);
 
   mTransitions[0].SetInitialValues();
@@ -2493,8 +2352,15 @@ void nsStyleDisplay::TriggerImageLoads(Document& aDocument,
                                        const nsStyleDisplay* aOldStyle) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mShapeOutside.TriggerImageLoads(
-      aDocument, aOldStyle ? &aOldStyle->mShapeOutside : nullptr);
+  if (mShapeOutside.IsImageOrUrl()) {
+    auto* old = aOldStyle && aOldStyle->mShapeOutside.IsImageOrUrl()
+                    ? &aOldStyle->mShapeOutside.AsImageOrUrl()
+                    : nullptr;
+    // Const-cast is ugly but legit, we could avoid it by generating mut-casts
+    // with cbindgen.
+    const_cast<StyleImage&>(mShapeOutside.AsImageOrUrl())
+        .ResolveImage(aDocument, old);
+  }
 }
 
 template <typename TransformLike>

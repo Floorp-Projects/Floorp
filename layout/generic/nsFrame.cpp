@@ -1324,13 +1324,19 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
   }
 
-  imgIRequest* oldShapeImage =
-      aOldComputedStyle
-          ? aOldComputedStyle->StyleDisplay()->mShapeOutside.GetShapeImageData()
-          : nullptr;
-  imgIRequest* newShapeImage =
-      StyleDisplay()->mShapeOutside.GetShapeImageData();
+  auto GetShapeImageRequest = [](const ComputedStyle* aStyle) -> imgIRequest* {
+    if (!aStyle) {
+      return nullptr;
+    }
+    auto& shape = aStyle->StyleDisplay()->mShapeOutside;
+    if (!shape.IsImageOrUrl()) {
+      return nullptr;
+    }
+    return shape.AsImageOrUrl().GetImageRequest();
+  };
 
+  imgIRequest* oldShapeImage = GetShapeImageRequest(aOldComputedStyle);
+  imgIRequest* newShapeImage = GetShapeImageRequest(Style());
   if (oldShapeImage != newShapeImage) {
     if (oldShapeImage && HasImageRequest()) {
       loader->DisassociateRequestFromFrame(oldShapeImage, this);
@@ -2016,16 +2022,30 @@ bool nsIFrame::GetBoxBorderRadii(nscoord aRadii[8], nsMargin aOffset,
 }
 
 bool nsIFrame::GetShapeBoxBorderRadii(nscoord aRadii[8]) const {
-  switch (StyleDisplay()->mShapeOutside.GetReferenceBox()) {
-    case StyleGeometryBox::NoBox:
+  using Tag = StyleFloatAreaShape::Tag;
+  auto& shapeOutside = StyleDisplay()->mShapeOutside;
+  auto box = StyleShapeBox::MarginBox;
+  switch (shapeOutside.tag) {
+    case Tag::Path:
+    case Tag::ImageOrUrl:
+    case Tag::None:
       return false;
-    case StyleGeometryBox::ContentBox:
+    case Tag::Box:
+      box = shapeOutside.AsBox();
+      break;
+    case Tag::Shape:
+      box = shapeOutside.AsShape()._1;
+      break;
+  }
+
+  switch (box) {
+    case StyleShapeBox::ContentBox:
       return GetContentBoxBorderRadii(aRadii);
-    case StyleGeometryBox::PaddingBox:
+    case StyleShapeBox::PaddingBox:
       return GetPaddingBoxBorderRadii(aRadii);
-    case StyleGeometryBox::BorderBox:
+    case StyleShapeBox::BorderBox:
       return GetBorderRadii(aRadii);
-    case StyleGeometryBox::MarginBox:
+    case StyleShapeBox::MarginBox:
       return GetMarginBoxBorderRadii(aRadii);
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected box value");

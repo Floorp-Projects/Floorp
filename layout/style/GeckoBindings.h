@@ -441,18 +441,6 @@ mozilla::Keyframe* Gecko_GetOrCreateFinalKeyframe(
 mozilla::PropertyValuePair* Gecko_AppendPropertyValuePair(
     nsTArray<mozilla::PropertyValuePair>*, nsCSSPropertyID aProperty);
 
-void Gecko_CopyShapeSourceFrom(mozilla::StyleShapeSource* dst,
-                               const mozilla::StyleShapeSource* src);
-
-void Gecko_DestroyShapeSource(mozilla::StyleShapeSource* shape);
-
-void Gecko_NewShapeImage(mozilla::StyleShapeSource* shape);
-
-void Gecko_SetToSVGPath(
-    mozilla::StyleShapeSource* shape,
-    mozilla::StyleForgottenArcSlicePtr<mozilla::StylePathCommand>,
-    mozilla::StyleFillRule);
-
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);
