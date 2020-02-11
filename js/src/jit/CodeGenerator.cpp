@@ -290,14 +290,6 @@ void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins,
   TrampolinePtr code = gen->jitRuntime()->getVMWrapper(id);
   const VMFunctionData& fun = GetVMFunction(id);
 
-#ifdef DEBUG
-  if (ins->mirRaw()) {
-    MOZ_ASSERT(ins->mirRaw()->isInstruction());
-    MInstruction* mir = ins->mirRaw()->toInstruction();
-    MOZ_ASSERT_IF(mir->needsResumePoint(), mir->resumePoint());
-  }
-#endif
-
   // Stack is:
   //    ... frame ...
   //    [args]
@@ -309,6 +301,25 @@ void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins,
 #ifdef CHECK_OSIPOINT_REGISTERS
   if (shouldVerifyOsiPointRegs(ins->safepoint())) {
     StoreAllLiveRegs(masm, ins->safepoint()->liveRegs());
+  }
+#endif
+
+#ifdef DEBUG
+  if (ins->mirRaw()) {
+    MOZ_ASSERT(ins->mirRaw()->isInstruction());
+    MInstruction* mir = ins->mirRaw()->toInstruction();
+    MOZ_ASSERT_IF(mir->needsResumePoint(), mir->resumePoint());
+
+    // If this MIR instruction has an overridden AliasSet, set the JitRuntime's
+    // disallowArbitraryCode_ flag so we can assert this VMFunction doesn't call
+    // RunScript. Whitelist MInterruptCheck and MCheckOverRecursed because
+    // interrupt callbacks can call JS (chrome JS or shell testing functions).
+    bool isWhitelisted = mir->isInterruptCheck() || mir->isCheckOverRecursed();
+    if (!mir->hasDefaultAliasSet() && !isWhitelisted) {
+      const void* addr = gen->jitRuntime()->addressOfDisallowArbitraryCode();
+      masm.move32(Imm32(1), ReturnReg);
+      masm.store32(ReturnReg, AbsoluteAddress(addr));
+    }
   }
 #endif
 
@@ -330,6 +341,17 @@ void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins,
   // returned value, use another LIR instruction.
   uint32_t callOffset = masm.callJit(code);
   markSafepointAt(callOffset, ins);
+
+#ifdef DEBUG
+  // Reset the disallowArbitraryCode flag after the call.
+  {
+    const void* addr = gen->jitRuntime()->addressOfDisallowArbitraryCode();
+    masm.push(ReturnReg);
+    masm.move32(Imm32(0), ReturnReg);
+    masm.store32(ReturnReg, AbsoluteAddress(addr));
+    masm.pop(ReturnReg);
+  }
+#endif
 
   // Remove rest of the frame left on the stack. We remove the return address
   // which is implicitly poped when returning.
