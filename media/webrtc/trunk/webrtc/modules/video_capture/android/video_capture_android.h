@@ -13,8 +13,7 @@
 
 #include <jni.h>
 
-#include "device_info_android.h"
-#include "api/video/i420_buffer.h"
+#include "modules/video_capture/android/device_info_android.h"
 #include "modules/video_capture/video_capture_impl.h"
 
 namespace webrtc {
@@ -29,19 +28,23 @@ class VideoCaptureAndroid : public VideoCaptureImpl {
   virtual int32_t StopCapture();
   virtual bool CaptureStarted();
   virtual int32_t CaptureSettings(VideoCaptureCapability& settings);
+  virtual int32_t SetCaptureRotation(VideoRotation rotation);
 
-  void OnIncomingFrame(rtc::scoped_refptr<I420Buffer> buffer, int32_t degrees,
-                       int64_t captureTime = 0);
+  int32_t OnIncomingFrame(uint8_t* videoFrame,
+                          size_t videoFrameLength,
+                          int32_t degrees,
+                          int64_t captureTime = 0);
 
  protected:
   virtual ~VideoCaptureAndroid();
 
   DeviceInfoAndroid _deviceInfo;
-  jobject _jCapturer;  // Global ref to Java VideoCaptureAndroid object.
+  jobject _jCapturer; // Global ref to Java VideoCaptureAndroid object.
   VideoCaptureCapability _captureCapability;
+  VideoRotation _rotation;
   bool _captureStarted;
 };
 
 }  // namespace videocapturemodule
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_ANDROID_VIDEO_CAPTURE_ANDROID_H_
+#endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_ANDROID_VIDEO_CAPTURE_ANDROID_H_
