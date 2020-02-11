@@ -13,7 +13,6 @@
 #include "nsColor.h"
 #include "nsISelectionController.h"
 #include "nsITextInputProcessor.h"
-#include "nsStyleConsts.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -24,12 +23,12 @@ namespace mozilla {
 
 struct TextRangeStyle {
   enum {
-    LINESTYLE_NONE = NS_STYLE_TEXT_DECORATION_STYLE_NONE,
-    LINESTYLE_SOLID = NS_STYLE_TEXT_DECORATION_STYLE_SOLID,
-    LINESTYLE_DOTTED = NS_STYLE_TEXT_DECORATION_STYLE_DOTTED,
-    LINESTYLE_DASHED = NS_STYLE_TEXT_DECORATION_STYLE_DASHED,
-    LINESTYLE_DOUBLE = NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE,
-    LINESTYLE_WAVY = NS_STYLE_TEXT_DECORATION_STYLE_WAVY
+    LINESTYLE_NONE,
+    LINESTYLE_SOLID,
+    LINESTYLE_DOTTED,
+    LINESTYLE_DASHED,
+    LINESTYLE_DOUBLE,
+    LINESTYLE_WAVY,
   };
 
   enum {
@@ -42,6 +41,9 @@ struct TextRangeStyle {
 
   // Initialize all members, because TextRange instances may be compared by
   // memcomp.
+  //
+  // FIXME(emilio): I don't think that'd be sound, as it has padding which the
+  // compiler is not guaranteed to initialize.
   TextRangeStyle() { Clear(); }
 
   void Clear() {
