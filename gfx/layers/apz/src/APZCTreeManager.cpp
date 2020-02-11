@@ -1013,7 +1013,7 @@ void SetHitTestData(HitTestingTreeNode* aNode, HitTestingTreeNode* aParent,
                     const Maybe<ParentLayerIntRegion>& aClipRegion) {
   aNode->SetHitTestData(
       GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
-      aLayer.GetRemoteDocumentRect(), aLayer.GetTransformTyped(), aClipRegion,
+      aLayer.GetRemoteDocumentSize(), aLayer.GetTransformTyped(), aClipRegion,
       GetEventRegionsOverride(aParent, aLayer), aLayer.IsBackfaceHidden(),
       !!aLayer.IsAsyncZoomContainer());
 }

@@ -309,11 +309,11 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
         PixelCastJustification::MovingDownToChildren);
   }
 
-  LayerIntRect GetRemoteDocumentRect() const {
+  LayerIntSize GetRemoteDocumentSize() const {
     MOZ_ASSERT(IsValid());
 
-    return AsRefLayer() ? AsRefLayer()->GetRemoteDocumentRect()
-                        : LayerIntRect();
+    return AsRefLayer() ? AsRefLayer()->GetRemoteDocumentSize()
+                        : LayerIntSize();
   }
 
   bool HasTransformAnimation() const {

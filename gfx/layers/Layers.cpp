@@ -1303,7 +1303,7 @@ void ContainerLayer::DidInsertChild(Layer* aLayer) {
 
 void RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs) {
   aAttrs = RefLayerAttributes(GetReferentId(), mEventRegionsOverride,
-                              mRemoteDocumentRect);
+                              mRemoteDocumentSize);
 }
 
 /**
