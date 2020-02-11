@@ -118,8 +118,10 @@ void AudioData::EnsureAudioBuffer() {
     return;
   }
   const AudioDataValue* srcData = GetAdjustedData();
-  mAudioBuffer =
-      SharedBuffer::Create(mFrames * mChannels * sizeof(AudioDataValue));
+  CheckedInt<size_t> bufferSize(sizeof(AudioDataValue));
+  bufferSize *= mFrames;
+  bufferSize *= mChannels;
+  mAudioBuffer = SharedBuffer::Create(bufferSize);
 
   AudioDataValue* destData = static_cast<AudioDataValue*>(mAudioBuffer->Data());
   for (uint32_t i = 0; i < mFrames; ++i) {

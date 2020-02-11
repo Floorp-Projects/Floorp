@@ -1484,8 +1484,9 @@ class MediaPipelineReceiveAudio::PipelineListener
       MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
               ("Audio conduit returned buffer of length %zu", samplesLength));
 
-      RefPtr<SharedBuffer> samples =
-          SharedBuffer::Create(samplesLength * sizeof(uint16_t));
+      CheckedInt<size_t> bufferSize(sizeof(uint16_t));
+      bufferSize *= samplesLength;
+      RefPtr<SharedBuffer> samples = SharedBuffer::Create(bufferSize);
       int16_t* samplesData = static_cast<int16_t*>(samples->Data());
       AudioSegment segment;
       size_t frames = samplesLength / channelCount;
