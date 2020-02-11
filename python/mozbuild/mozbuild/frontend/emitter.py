@@ -544,7 +544,8 @@ class TreeMetadataEmitter(LoggingMixin):
                         description, dep_crate_name, crate_name),
                     context)
 
-    def _rust_library(self, context, libname, static_args, cls=RustLibrary):
+    def _rust_library(self, context, libname, static_args, is_gkrust=False,
+                      cls=RustLibrary):
         # We need to note any Rust library for linking purposes.
         config, cargo_file = self._parse_cargo_file(context)
         crate_name = config['package']['name']
@@ -585,7 +586,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 context)
 
         return cls(context, libname, cargo_file, crate_type, dependencies,
-                   features, cargo_target_dir, **static_args)
+                   features, cargo_target_dir, is_gkrust, **static_args)
 
     def _handle_gn_dirs(self, context):
         for target_dir in context.get('GN_DIRS', []):
@@ -848,7 +849,8 @@ class TreeMetadataEmitter(LoggingMixin):
             if static_lib:
                 is_rust_library = context.get('IS_RUST_LIBRARY')
                 if is_rust_library:
-                    lib = self._rust_library(context, libname, static_args)
+                    lib = self._rust_library(context, libname, static_args,
+                                             is_gkrust=bool(context.get('IS_GKRUST')))
                 else:
                     lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
