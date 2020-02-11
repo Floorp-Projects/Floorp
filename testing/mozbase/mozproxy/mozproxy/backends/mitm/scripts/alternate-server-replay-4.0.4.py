@@ -88,9 +88,11 @@ class AlternateServerPlayback:
         ctx.master.addons.remove(ctx.master.addons.get("serverplayback"))
         self.flowmap = {}
         self.configured = False
-        self.netlocs = defaultdict(int)
+        self.netlocs = defaultdict(lambda: defaultdict(int))
         self.calls = []
         self._done = False
+        self._replayed = 0
+        self._not_replayed = 0
 
     def load(self, loader):
         loader.add_option(
@@ -184,8 +186,14 @@ class AlternateServerPlayback:
     def done(self):
         if self._done or not ctx.options.upload_dir:
             return
+
+        confidence = float(self._replayed) / float(self._replayed + self._not_replayed)
         stats = {"totals": dict(self.netlocs),
-                 "calls": self.calls}
+                 "calls": self.calls,
+                 "replayed": self._replayed,
+                 "not_replayed": self._not_replayed,
+                 "confidence": int(confidence * 100)}
+
         path = os.path.normpath(os.path.join(ctx.options.upload_dir,
                                              "mitm_netlocs.json"))
         try:
@@ -205,6 +213,7 @@ class AlternateServerPlayback:
                 response.refresh()
 
                 f.response = response
+                self._replayed += 1
             else:
                 # returns 404 rather than dropping the whole HTTP/2 connection
                 ctx.log.warn(
@@ -215,11 +224,12 @@ class AlternateServerPlayback:
                 f.response = http.HTTPResponse.make(
                     404, b"", {"content-type": "text/plain"}
                 )
+                self._not_replayed += 1
 
             # collecting stats only if we can dump them (see .done())
             if ctx.options.upload_dir:
                 parsed_url = urllib.parse.urlparse(parse.unquote(f.request.url))
-                self.netlocs[parsed_url.netloc] += 1
+                self.netlocs[parsed_url.netloc][f.response.status_code] += 1
                 self.calls.append({'time': str(time.time()),
                                    'url': f.request.url,
                                    'response_status': f.response.status_code})
