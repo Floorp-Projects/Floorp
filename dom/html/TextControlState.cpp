@@ -723,7 +723,10 @@ TextInputSelectionController::CompleteMove(bool aForward, bool aExtend) {
     }
   }
 
-  frameSelection->HandleClick(parentDIV, offset, offset, aExtend, false, hint);
+  const nsFrameSelection::FocusMode focusMode =
+      aExtend ? nsFrameSelection::FocusMode::kExtendSelection
+              : nsFrameSelection::FocusMode::kCollapseToNewPoint;
+  frameSelection->HandleClick(parentDIV, offset, offset, focusMode, hint);
 
   // if we got this far, attempt to scroll no matter what the above result is
   return CompleteScroll(aForward);
