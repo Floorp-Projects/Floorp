@@ -2730,12 +2730,11 @@ void HTMLEditor::CreateListOfNodesToPaste(
   }
 
   // Now use a subtree iterator over the range to create a list of nodes
-  TrivialFunctor functor;
   DOMSubtreeIterator iter;
   if (NS_WARN_IF(NS_FAILED(iter.Init(*docFragRange)))) {
     return;
   }
-  iter.AppendList(functor, outNodeList);
+  iter.AppendAllNodesToArray(outNodeList);
 }
 
 void HTMLEditor::GetListAndTableParents(
