@@ -515,18 +515,8 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
   return AddRangesForSelectableNodes(aRange, aOutIndex);
 }
 
-Selection::Selection()
-    : mCachedOffsetForFrame(nullptr),
-      mDirection(eDirNext),
-      mSelectionType(SelectionType::eNormal),
-      mCustomColors(nullptr),
-      mSelectionChangeBlockerCount(0),
-      mUserInitiated(false),
-      mCalledByJS(false),
-      mNotifyAutoCopy(false) {}
-
-Selection::Selection(nsFrameSelection* aList)
-    : mFrameSelection(aList),
+Selection::Selection(nsFrameSelection* aFrameSelection)
+    : mFrameSelection(aFrameSelection),
       mCachedOffsetForFrame(nullptr),
       mDirection(eDirNext),
       mSelectionType(SelectionType::eNormal),

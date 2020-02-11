@@ -406,7 +406,7 @@ nsresult nsCopySupport::GetTransferableForNode(
   // Make a temporary selection with aNode in a single range.
   // XXX We should try to get rid of the Selection object here.
   // XXX bug 1245883
-  RefPtr<Selection> selection = new Selection();
+  RefPtr<Selection> selection = new Selection(nullptr);
   RefPtr<nsRange> range = nsRange::Create(aNode);
   ErrorResult result;
   range->SelectNode(*aNode, result);
