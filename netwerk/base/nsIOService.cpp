@@ -495,6 +495,7 @@ bool nsIOService::SocketProcessReady() {
 static bool sUseSocketProcess = false;
 static bool sUseSocketProcessChecked = false;
 
+// static
 bool nsIOService::UseSocketProcess() {
   if (sUseSocketProcessChecked) {
     return sUseSocketProcess;

@@ -1334,7 +1334,7 @@ nsresult nsHttpChannel::SetupTransaction() {
                                          getter_AddRefs(callbacks));
 
   // create the transaction object
-  if (gIOService->UseSocketProcess()) {
+  if (nsIOService::UseSocketProcess()) {
     MOZ_ASSERT(gIOService->SocketProcessReady(),
                "Socket process should be ready.");
 
@@ -1901,7 +1901,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
       if (pump) {
         pump->PeekStream(CallTypeSniffers, thisChannel);
       } else {
-        MOZ_ASSERT(gIOService->UseSocketProcess());
+        MOZ_ASSERT(nsIOService::UseSocketProcess());
         RefPtr<HttpTransactionParent> trans = do_QueryObject(mTransactionPump);
         MOZ_ASSERT(trans);
         trans->SetSniffedTypeToChannel(CallTypeSniffers, thisChannel);
@@ -6587,7 +6587,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   mListener = listener;
 
-  if (gIOService->UseSocketProcess() &&
+  if (nsIOService::UseSocketProcess() &&
       !gIOService->IsSocketProcessLaunchComplete()) {
     RefPtr<nsHttpChannel> self = this;
     gIOService->CallOrWaitForSocketProcess(
