@@ -34,13 +34,15 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
     private val limit: Int
     private val mode: Mode
     private val icon: Bitmap?
+    private val showDescription: Boolean
 
     private constructor(
         client: SearchSuggestionClient,
         searchUseCase: SearchUseCases.SearchUseCase,
         limit: Int = 15,
         mode: Mode = Mode.SINGLE_SUGGESTION,
-        icon: Bitmap? = null
+        icon: Bitmap? = null,
+        showDescription: Boolean = true
     ) {
         require(limit >= 1) { "limit needs to be >= 1" }
 
@@ -49,6 +51,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         this.limit = limit
         this.mode = mode
         this.icon = icon
+        this.showDescription = showDescription
     }
 
     /**
@@ -67,13 +70,15 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         fetchClient: Client,
         limit: Int = 15,
         mode: Mode = Mode.SINGLE_SUGGESTION,
-        icon: Bitmap? = null
+        icon: Bitmap? = null,
+        showDescription: Boolean = true
     ) : this (
         SearchSuggestionClient(searchEngine) { url -> fetch(fetchClient, url) },
         searchUseCase,
         limit,
         mode,
-        icon
+        icon,
+        showDescription
     )
 
     /**
@@ -95,13 +100,15 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         fetchClient: Client,
         limit: Int = 15,
         mode: Mode = Mode.SINGLE_SUGGESTION,
-        icon: Bitmap? = null
+        icon: Bitmap? = null,
+        showDescription: Boolean = true
     ) : this (
         SearchSuggestionClient(context, searchEngineManager) { url -> fetch(fetchClient, url) },
         searchUseCase,
         limit,
         mode,
-        icon
+        icon,
+        showDescription
     )
 
     @Suppress("ReturnCount")
@@ -140,13 +147,19 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
             list.add(0, text)
         }
 
+        val description = if (showDescription) {
+            client.searchEngine?.name
+        } else {
+            null
+        }
+
         list.distinct().take(limit).forEachIndexed { index, item ->
             suggestions.add(AwesomeBar.Suggestion(
                 provider = this,
                 // We always use the same ID for the entered text so that this suggestion gets replaced "in place".
                 id = if (item == text) ID_OF_ENTERED_TEXT else item,
                 title = item,
-                description = client.searchEngine?.name,
+                description = description,
                 icon = icon ?: client.searchEngine?.icon,
                 score = Int.MAX_VALUE - index,
                 onSuggestionClicked = {

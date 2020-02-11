@@ -23,6 +23,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
@@ -451,6 +452,57 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox extensions", suggestions[8].title)
                 assertEquals("firefox nightly", suggestions[9].title)
                 assertEquals("firefox clear cache", suggestions[10].title)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Provider returns multiple suggestions with limit and no description`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString())
+                    .`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+
+            val useCase = spy(SearchUseCases(
+                    testContext,
+                    searchEngineManager,
+                    SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
+            ).defaultSearch)
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+
+            val provider = SearchSuggestionProvider(
+                    searchEngine,
+                    useCase,
+                    HttpURLConnectionClient(),
+                    mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                    limit = 3,
+                    showDescription = false
+            )
+
+            try {
+                val suggestions = provider.onInputChanged("fire")
+
+                println(suggestions)
+
+                assertEquals(3, suggestions.size)
+
+                assertEquals("fire", suggestions[0].title)
+                assertEquals("firefox", suggestions[1].title)
+                assertEquals("firefox for mac", suggestions[2].title)
+                assertNull(suggestions[0].description)
+                assertNull(suggestions[1].description)
+                assertNull(suggestions[2].description)
             } finally {
                 server.shutdown()
             }
