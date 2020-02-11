@@ -139,7 +139,8 @@ class WindowGlobalParent final : public WindowContext,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   void NotifyContentBlockingEvent(
-      uint32_t aEvent, nsIRequest* aRequest, bool aBlocked, nsIURI* aURIHint,
+      uint32_t aEvent, nsIRequest* aRequest, bool aBlocked,
+      const nsACString& aTrackingOrigin,
       const nsTArray<nsCString>& aTrackingFullHashes,
       const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
           Nothing());

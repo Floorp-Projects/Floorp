@@ -603,7 +603,7 @@ parent:
                            WebProgressSecurityChangeData? aSecurityChangeData);
 
     async NotifyContentBlockingEvent(uint32_t aEvent, RequestData aRequestData,
-                                     bool aBlocked, nsIURI aHintURI,
+                                     bool aBlocked, nsCString aTrackingOrigin,
                                      nsCString[] aTrackingFullHashes,
                                      StorageAccessGrantedReason? aReason);
 
