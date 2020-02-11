@@ -19,6 +19,7 @@
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/SMILAnimationController.h"
+#include "mozilla/MediaFeatureChange.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/AnonymousContent.h"
@@ -48,6 +49,11 @@ bool ServoStyleSet::IsCurrentThreadInServoTraversal() {
   return sInServoTraversal && (NS_IsMainThread() || Servo_IsWorkerThread());
 }
 #endif
+
+// The definition of kOrigins relies on this.
+static_assert(static_cast<uint8_t>(StyleOrigin::UserAgent) == static_cast<uint8_t>(OriginFlags::UserAgent));
+static_assert(static_cast<uint8_t>(StyleOrigin::User) == static_cast<uint8_t>(OriginFlags::User));
+static_assert(static_cast<uint8_t>(StyleOrigin::Author) == static_cast<uint8_t>(OriginFlags::Author));
 
 constexpr const StyleOrigin ServoStyleSet::kOrigins[];
 
@@ -106,7 +112,7 @@ nsPresContext* ServoStyleSet::GetPresContext() {
 }
 
 template <typename Functor>
-void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
+static void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
   const Document::ShadowRootSet& shadowRoots = aDoc.ComposedShadowRoots();
   for (auto iter = shadowRoots.ConstIter(); !iter.Done(); iter.Next()) {
     ShadowRoot* root = iter.Get()->GetKey();
@@ -123,7 +129,7 @@ void ServoStyleSet::ShellDetachedFromDocument() {
   mStyleRuleMap = nullptr;
 
   // Remove all our stylesheets...
-  for (const Origin origin : kOrigins) {
+  for (auto origin : kOrigins) {
     for (size_t count = SheetCount(origin); count--;) {
       RemoveStyleSheet(origin, SheetAt(origin, count));
     }
@@ -585,6 +591,10 @@ void ServoStyleSet::RemoveStyleSheet(StyleOrigin aOrigin, StyleSheet* aSheet) {
   if (mStyleRuleMap) {
     mStyleRuleMap->SheetRemoved(*aSheet);
   }
+}
+
+void ServoStyleSet::RemoveDocStyleSheet(StyleSheet* aSheet) {
+  RemoveStyleSheet(Origin::Author, aSheet);
 }
 
 void ServoStyleSet::InsertStyleSheetBefore(Origin aOrigin,
