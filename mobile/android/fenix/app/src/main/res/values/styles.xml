@@ -318,6 +318,19 @@
         <item name="android:layout_alignParentStart">true</item>
     </style>
 
+    <style name="QuickSettingsLargeText">
+        <item name="android:textColor">@color/state_list_text_color</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:layout_alignParentStart">true</item>
+    </style>
+
+    <style name="QuickSettingsLargeText.Icon">
+        <item name="android:drawablePadding">8dp</item>
+    </style>
+
     <style name="QuickSettingsText.Icon">
         <item name="android:drawablePadding">8dp</item>
     </style>

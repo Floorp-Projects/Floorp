@@ -54,7 +54,7 @@
 
         <TextView
             android:id="@+id/cross_site_tracking"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_cookies_title"
@@ -64,7 +64,7 @@
 
         <TextView
             android:id="@+id/fingerprinters"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_fingerprinters_title"
@@ -74,7 +74,7 @@
 
         <TextView
             android:id="@+id/cryptominers"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_cryptominers_title"
@@ -84,7 +84,7 @@
 
         <TextView
             android:id="@+id/social_media_trackers"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_social_media_trackers_title"
@@ -94,7 +94,7 @@
 
         <TextView
             android:id="@+id/tracking_content"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_tracking_content_title"
@@ -115,7 +115,7 @@
 
         <TextView
             android:id="@+id/fingerprinters_loaded"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_fingerprinters_title"
@@ -125,7 +125,7 @@
 
         <TextView
             android:id="@+id/cryptominers_loaded"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_cryptominers_title"
@@ -135,7 +135,7 @@
 
         <TextView
             android:id="@+id/social_media_trackers_loaded"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_social_media_trackers_title"
@@ -145,7 +145,7 @@
 
         <TextView
             android:id="@+id/tracking_content_loaded"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_tracking_content_title"
@@ -162,7 +162,7 @@
 
         <TextView
             android:id="@+id/protection_settings"
-            style="@style/QuickSettingsText.Icon"
+            style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:paddingEnd="24dp"
@@ -188,6 +188,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/category_description"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/category_title"
+            app:layout_constraintVertical_bias="0.0"
             app:srcCompat="@drawable/mozac_ic_back" />
 
         <TextView
@@ -253,6 +254,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="52dp"
                 android:layout_marginEnd="26dp"
+                android:lineSpacingMultiplier="1.2"
                 android:layout_marginBottom="12dp"
                 tools:text="@tools:sample/lorem/random" />
         </androidx.core.widget.NestedScrollView>

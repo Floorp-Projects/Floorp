@@ -12,26 +12,34 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/title"
-        style="@style/QuickSettingsText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        android:textStyle="bold"
-        tools:text="Wikipedia" />
+        android:orientation="vertical"
+        android:minHeight="@dimen/tracking_protection_item_height">
 
-    <TextView
-        android:id="@+id/url"
-        style="@style/QuickSettingsText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        tools:text="https://wikipedia.org" />
+        <TextView
+            android:id="@+id/title"
+            style="@style/QuickSettingsText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:textStyle="bold"
+            tools:text="Wikipedia" />
+
+        <TextView
+            android:id="@+id/url"
+            style="@style/QuickSettingsText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            tools:text="https://wikipedia.org" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="@dimen/tracking_protection_item_height"
         android:orientation="horizontal"
         style="@style/QuickSettingsText"
         android:paddingTop="8dp"
@@ -49,7 +57,7 @@
             android:orientation="vertical">
             <TextView
                 android:id="@+id/securityInfo"
-                style="@style/QuickSettingsText"
+                style="@style/QuickSettingsLargeText"
                 android:layout_width="match_parent"
                 android:paddingStart="0dp"
                 android:layout_height="wrap_content"
