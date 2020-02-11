@@ -8,6 +8,7 @@
 
 #include "nsHttpAuthCache.h"
 
+#include <algorithm>
 #include <stdlib.h>
 
 #include "mozilla/Attributes.h"
@@ -376,8 +377,6 @@ nsHttpAuthNode::~nsHttpAuthNode() {
 }
 
 nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByPath(const char* path) {
-  nsHttpAuthEntry* entry;
-
   // null path matches empty path
   if (!path) path = "";
 
@@ -385,16 +384,19 @@ nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByPath(const char* path) {
   // ie. we'll give out credentials if the given directory is a sub-
   // directory of an existing entry.
   for (uint32_t i = 0; i < mList.Length(); ++i) {
-    entry = mList[i];
+    const auto& entry = mList[i];
     nsHttpAuthPath* authPath = entry->RootPath();
     while (authPath) {
       const char* entryPath = authPath->mPath;
       // proxy auth entries have no path, so require exact match on
       // empty path string.
       if (entryPath[0] == '\0') {
-        if (path[0] == '\0') return entry;
-      } else if (strncmp(path, entryPath, strlen(entryPath)) == 0)
-        return entry;
+        if (path[0] == '\0') {
+          return entry.get();
+        }
+      } else if (strncmp(path, entryPath, strlen(entryPath)) == 0) {
+        return entry.get();
+      }
 
       authPath = authPath->mNext;
     }
@@ -402,18 +404,22 @@ nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByPath(const char* path) {
   return nullptr;
 }
 
-nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByRealm(const char* realm) {
-  nsHttpAuthEntry* entry;
-
+nsHttpAuthNode::EntryList::const_iterator nsHttpAuthNode::LookupEntryItrByRealm(
+    const char* realm) const {
   // null realm matches empty realm
   if (!realm) realm = "";
 
-  // look for an entry that matches this realm
-  uint32_t i;
-  for (i = 0; i < mList.Length(); ++i) {
-    entry = mList[i];
-    if (strcmp(realm, entry->Realm()) == 0) return entry;
+  return std::find_if(mList.cbegin(), mList.cend(), [&realm](const auto& val) {
+    return strcmp(realm, val->Realm()) == 0;
+  });
+}
+
+nsHttpAuthEntry* nsHttpAuthNode::LookupEntryByRealm(const char* realm) {
+  auto itr = LookupEntryItrByRealm(realm);
+  if (itr != mList.cend()) {
+    return itr->get();
   }
+
   return nullptr;
 }
 
@@ -424,13 +430,12 @@ nsresult nsHttpAuthNode::SetAuthEntry(const char* path, const char* realm,
   // look for an entry with a matching realm
   nsHttpAuthEntry* entry = LookupEntryByRealm(realm);
   if (!entry) {
-    entry = new nsHttpAuthEntry(path, realm, creds, challenge, ident, metadata);
-    if (!entry) return NS_ERROR_OUT_OF_MEMORY;
-
     // We want the latest identity be at the begining of the list so that
     // the newest working credentials are sent first on new requests.
     // Changing a realm is sometimes used to "timeout" authrozization.
-    mList.InsertElementAt(0, entry);
+    mList.InsertElementAt(
+        0, WrapUnique(new nsHttpAuthEntry(path, realm, creds, challenge, ident,
+                                          metadata)));
   } else {
     // update the entry...
     nsresult rv = entry->Set(path, realm, creds, challenge, ident, metadata);
@@ -441,9 +446,9 @@ nsresult nsHttpAuthNode::SetAuthEntry(const char* path, const char* realm,
 }
 
 void nsHttpAuthNode::ClearAuthEntry(const char* realm) {
-  nsHttpAuthEntry* entry = LookupEntryByRealm(realm);
-  if (entry) {
-    mList.RemoveElement(entry);  // double search OK
+  auto idx = LookupEntryItrByRealm(realm);
+  if (idx != mList.cend()) {
+    mList.RemoveElementAt(idx);
   }
 }
 
