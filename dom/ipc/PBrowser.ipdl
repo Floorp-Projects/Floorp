@@ -74,7 +74,6 @@ using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/Comp
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::CSSToScreenScale from "Units.h";
 using mozilla::CommandInt from "mozilla/EventForwards.h";
-using mozilla::WritingMode from "mozilla/WritingModes.h";
 using nsIWidget::TouchPointerState from "nsIWidget.h";
 using nsCursor from "nsIWidget.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
