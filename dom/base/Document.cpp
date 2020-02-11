@@ -7989,7 +7989,7 @@ already_AddRefed<nsINode> Document::ImportNode(nsINode& aNode, bool aDeep,
     case CDATA_SECTION_NODE:
     case COMMENT_NODE:
     case DOCUMENT_TYPE_NODE: {
-      return imported->Clone(aDeep, mNodeInfoManager, nullptr, rv);
+      return imported->Clone(aDeep, mNodeInfoManager, rv);
     }
     default: {
       NS_WARNING("Don't know how to clone this nodetype for importNode.");
@@ -9366,41 +9366,16 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
     }
   }
 
-  nsCOMArray<nsINode> nodesWithProperties;
-  adoptedNode->Adopt(sameDocument ? nullptr : mNodeInfoManager, newScope,
-                     nodesWithProperties, rv);
+  adoptedNode->Adopt(sameDocument ? nullptr : mNodeInfoManager, newScope, rv);
   if (rv.Failed()) {
     // Disconnect all nodes from their parents, since some have the old document
     // as their ownerDocument and some have this as their ownerDocument.
     nsDOMAttributeMap::BlastSubtreeToPieces(adoptedNode);
-
-    if (!sameDocument && oldDocument) {
-      for (nsINode* node : nodesWithProperties) {
-        // Remove all properties.
-        oldDocument->PropertyTable().RemoveAllPropertiesFor(node);
-      }
-    }
-
     return nullptr;
   }
 
-  if (!sameDocument && oldDocument) {
-    nsPropertyTable& oldTable = oldDocument->PropertyTable();
-    nsPropertyTable& newTable = PropertyTable();
-    for (nsINode* node : nodesWithProperties) {
-      rv = oldTable.TransferOrRemoveAllPropertiesFor(node, newTable);
-    }
-
-    if (rv.Failed()) {
-      // Disconnect all nodes from their parents.
-      nsDOMAttributeMap::BlastSubtreeToPieces(adoptedNode);
-
-      return nullptr;
-    }
-  }
-
-  NS_ASSERTION(adoptedNode->OwnerDoc() == this,
-               "Should still be in the document we just got adopted into");
+  MOZ_ASSERT(adoptedNode->OwnerDoc() == this,
+             "Should still be in the document we just got adopted into");
 
   return adoptedNode;
 }
