@@ -26,9 +26,9 @@
 #include "nsChangeHint.h"
 #include "nsTimingFunction.h"
 #include "nsCOMPtr.h"
-#include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsCSSValue.h"
+#include "imgIContainer.h"
 #include "imgRequestProxy.h"
 #include "Orientation.h"
 #include "CounterStyleManager.h"
@@ -39,7 +39,6 @@
 class nsIFrame;
 class nsIURI;
 class nsTextFrame;
-class imgIContainer;
 class nsPresContext;
 struct nsStyleDisplay;
 struct nsStyleVisibility;
@@ -140,23 +139,42 @@ enum nsStyleImageType {
   eStyleImageType_Element,
 };
 
+// TODO(emilio, bug 1564526): Evaluate whether this is still needed.
 struct CachedBorderImageData {
   ~CachedBorderImageData() { PurgeCachedImages(); }
 
-  // Caller are expected to ensure that the value of aSVGViewportSize is
-  // different from the cached one since the method won't do the check.
-  void SetCachedSVGViewportSize(const mozilla::Maybe<nsSize>& aSVGViewportSize);
-  const mozilla::Maybe<nsSize>& GetCachedSVGViewportSize();
+  // Caller are expected to ensure that the value of aSize is different from the
+  // cached one since the method won't do the check.
+  void SetCachedSVGViewportSize(const mozilla::Maybe<nsSize>& aSize) {
+    mCachedSVGViewportSize = aSize;
+  }
+
+  const mozilla::Maybe<nsSize>& GetCachedSVGViewportSize() const {
+    return mCachedSVGViewportSize;
+  }
+
   void PurgeCachedImages();
-  void SetSubImage(uint8_t aIndex, imgIContainer* aSubImage);
-  imgIContainer* GetSubImage(uint8_t aIndex);
+
+  void SetSubImage(uint8_t aIndex, imgIContainer* aSubImage) {
+    mSubImages.EnsureLengthAtLeast(aIndex + 1);
+    mSubImages[aIndex] = aSubImage;
+  }
+  imgIContainer* GetSubImage(uint8_t aIndex) {
+    return mSubImages.SafeElementAt(aIndex);
+  }
+
+  // These methods are used for the caller to caches the sub images created
+  // during a border-image paint operation
+  void PurgeCacheForViewportChange(
+      const mozilla::Maybe<nsSize>& aSVGViewportSize,
+      const bool aHasIntrinsicRatio);
 
  private:
   // If this is a SVG border-image, we save the size of the SVG viewport that
   // we used when rasterizing any cached border-image subimages. (The viewport
   // size matters for percent-valued sizes & positions in inner SVG doc).
   mozilla::Maybe<nsSize> mCachedSVGViewportSize;
-  nsCOMArray<imgIContainer> mSubImages;
+  nsTArray<RefPtr<imgIContainer>> mSubImages;
 };
 
 /**
@@ -283,24 +301,8 @@ struct nsStyleImage {
            GetImageData() == aOther.GetImageData();
   }
 
-  // These methods are used for the caller to caches the sub images created
-  // during a border-image paint operation
-  inline void SetSubImage(uint8_t aIndex, imgIContainer* aSubImage) const;
-  inline imgIContainer* GetSubImage(uint8_t aIndex) const;
-  void PurgeCacheForViewportChange(
-      const mozilla::Maybe<nsSize>& aSVGViewportSize,
-      const bool aHasIntrinsicRatio) const;
-
  private:
   void DoCopy(const nsStyleImage& aOther);
-  void EnsureCachedBIData() const;
-
-  // This variable keeps some cache data for border image and is lazily
-  // allocated since it is only used in border image case.
-  //
-  // TODO(emilio, bug 1564526): Kill this, or make it a frame property or
-  // something.
-  mozilla::UniquePtr<CachedBorderImageData> mCachedBIData;
 
   // This is _currently_ used only in conjunction with eStyleImageType_Image.
   mozilla::UniquePtr<CropRect> mCropRect;
@@ -2253,22 +2255,5 @@ STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleTransition>,
                                  nsTArray_Simple<mozilla::StyleTransition>);
 STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleAnimation>,
                                  nsTArray_Simple<mozilla::StyleAnimation>);
-
-/**
- * <div rustbindgen replaces="nsCOMArray"></div>
- *
- * mozilla::ArrayIterator doesn't work well with bindgen.
- */
-template <typename T>
-class nsCOMArray_Simple {
-  nsTArray<nsISupports*> mBuffer;
-};
-
-STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsCOMArray<nsIContent>,
-                                 nsCOMArray_Simple<nsIContent>);
-STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsCOMArray<nsINode>,
-                                 nsCOMArray_Simple<nsINode>);
-STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsCOMArray<imgIContainer>,
-                                 nsCOMArray_Simple<imgIContainer>);
 
 #endif /* nsStyleStruct_h___ */

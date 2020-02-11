@@ -898,9 +898,16 @@ ImgDrawResult nsImageRenderer::DrawBorderImageComponent(
     // Retrieve or create the subimage we'll draw.
     nsIntRect srcRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height);
     if (mType == eStyleImageType_Image) {
-      if ((subImage = mImage->GetSubImage(aIndex)) == nullptr) {
+      CachedBorderImageData* cachedData =
+          mForFrame->GetProperty(nsIFrame::CachedBorderImageDataProperty());
+      if (!cachedData) {
+        cachedData = new CachedBorderImageData();
+        mForFrame->AddProperty(nsIFrame::CachedBorderImageDataProperty(),
+                               cachedData);
+      }
+      if (!(subImage = cachedData->GetSubImage(aIndex))) {
         subImage = ImageOps::Clip(mImageContainer, srcRect, aSVGViewportSize);
-        mImage->SetSubImage(aIndex, subImage);
+        cachedData->SetSubImage(aIndex, subImage);
       }
     } else {
       // This path, for eStyleImageType_Element, is currently slower than it
@@ -1065,6 +1072,10 @@ void nsImageRenderer::PurgeCacheForViewportChange(
   // the check since they might not have fixed ratio.
   if (mImageContainer &&
       mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
-    mImage->PurgeCacheForViewportChange(aSVGViewportSize, aHasIntrinsicRatio);
+    if (auto* cachedData =
+            mForFrame->GetProperty(nsIFrame::CachedBorderImageDataProperty())) {
+      cachedData->PurgeCacheForViewportChange(aSVGViewportSize,
+                                              aHasIntrinsicRatio);
+    }
   }
 }

@@ -1207,6 +1207,9 @@ class nsIFrame : public nsQueryFrame {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(PreTransformOverflowAreasProperty,
                                       nsOverflowAreas)
 
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedBorderImageDataProperty,
+                                      CachedBorderImageData)
+
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(OverflowAreasProperty, nsOverflowAreas)
 
   // The initial overflow area passed to FinishAndStoreOverflow. This is only
