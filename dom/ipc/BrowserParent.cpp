@@ -2665,7 +2665,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNavigationFinished() {
 
 mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
     const uint32_t& aEvent, const RequestData& aRequestData,
-    const bool aBlocked, nsIURI* aHintURI,
+    const bool aBlocked, const nsACString& aTrackingOrigin,
     nsTArray<nsCString>&& aTrackingFullHashes,
     const Maybe<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>&
         aReason) {
@@ -2693,7 +2693,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
       aRequestData.requestURI(), aRequestData.originalRequestURI(),
       aRequestData.matchedList(), aRequestData.elapsedLoadTimeMS());
 
-  wgp->NotifyContentBlockingEvent(aEvent, request, aBlocked, aHintURI,
+  wgp->NotifyContentBlockingEvent(aEvent, request, aBlocked, aTrackingOrigin,
                                   aTrackingFullHashes, aReason);
 
   return IPC_OK();

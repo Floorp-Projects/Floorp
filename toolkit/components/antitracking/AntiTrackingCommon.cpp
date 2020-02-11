@@ -895,13 +895,18 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
 void NotifyAllowDecisionInternal(nsIChannel* aReportingChannel,
                                  nsIChannel* aTrackingChannel, nsIURI* aURI,
                                  nsPIDOMWindowOuter* aWindow) {
+  nsAutoCString trackingOrigin;
+  if (aURI) {
+    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
+  }
+
   // This can be called in either the parent process or the child processes.
 
   // Now send the generic "cookies loaded" notifications, from the most generic
   // to the most specific.
   AntiTrackingCommon::NotifyContentBlockingEvent(
       aWindow, aReportingChannel, aTrackingChannel, false,
-      nsIWebProgressListener::STATE_COOKIES_LOADED, aURI);
+      nsIWebProgressListener::STATE_COOKIES_LOADED, trackingOrigin);
 
   nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
       do_QueryInterface(aTrackingChannel);
@@ -915,14 +920,15 @@ void NotifyAllowDecisionInternal(nsIChannel* aReportingChannel,
       nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_TRACKING) {
     AntiTrackingCommon::NotifyContentBlockingEvent(
         aWindow, aReportingChannel, aTrackingChannel, false,
-        nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER, aURI);
+        nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER, trackingOrigin);
   }
 
   if (classificationFlags &
       nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING) {
     AntiTrackingCommon::NotifyContentBlockingEvent(
         aWindow, aReportingChannel, aTrackingChannel, false,
-        nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER, aURI);
+        nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER,
+        trackingOrigin);
   }
 }
 
@@ -941,10 +947,15 @@ void NotifyBlockingDecisionInternal(
     return;
   }
 
+  nsAutoCString trackingOrigin;
+  if (aURI) {
+    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
+  }
+
   if (aDecision == AntiTrackingCommon::BlockingDecision::eBlock) {
-    AntiTrackingCommon::NotifyContentBlockingEvent(aWindow, aReportingChannel,
-                                                   aTrackingChannel, true,
-                                                   aRejectedReason, aURI);
+    AntiTrackingCommon::NotifyContentBlockingEvent(
+        aWindow, aReportingChannel, aTrackingChannel, true, aRejectedReason,
+        trackingOrigin);
 
     ReportBlockingToConsole(aReportingChannel, aURI, aRejectedReason);
   }
@@ -960,10 +971,15 @@ void NotifyBlockingDecisionInternal(
   // Can be called only in the parent process when there is no window.
   MOZ_ASSERT(XRE_IsParentProcess());
 
+  nsAutoCString trackingOrigin;
+  if (aURI) {
+    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
+  }
+
   if (aDecision == AntiTrackingCommon::BlockingDecision::eBlock) {
-    AntiTrackingCommon::NotifyContentBlockingEvent(nullptr, aReportingChannel,
-                                                   aTrackingChannel, true,
-                                                   aRejectedReason, aURI);
+    AntiTrackingCommon::NotifyContentBlockingEvent(
+        nullptr, aReportingChannel, aTrackingChannel, true, aRejectedReason,
+        trackingOrigin);
 
     ReportBlockingToConsole(aReportingChannel, aURI, aRejectedReason);
   }
@@ -977,7 +993,7 @@ void NotifyBlockingDecisionInternal(
 void NotifyContentBlockingEventInChild(
     nsPIDOMWindowOuter* aWindow, nsIChannel* aReportingChannel,
     nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
-    nsIURI* aURI,
+    const nsACString& aTrackingOrigin,
     const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
   MOZ_ASSERT(XRE_IsContentProcess());
   MOZ_ASSERT(aWindow);
@@ -995,15 +1011,15 @@ void NotifyContentBlockingEventInChild(
   }
 
   browserChild->NotifyContentBlockingEvent(aRejectedReason, aReportingChannel,
-                                           aBlocked, aURI, trackingFullHashes,
-                                           aReason);
+                                           aBlocked, aTrackingOrigin,
+                                           trackingFullHashes, aReason);
 }
 
 // Update the ContentBlockingLog of the top-level WindowGlobalParent of
 // the reporting channel.
 void NotifyContentBlockingEventInParent(
     nsIChannel* aReportingChannel, nsIChannel* aTrackingChannel, bool aBlocked,
-    uint32_t aRejectedReason, nsIURI* aURI,
+    uint32_t aRejectedReason, const nsACString& aTrackingOrigin,
     const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -1030,7 +1046,7 @@ void NotifyContentBlockingEventInParent(
   }
 
   wgp->NotifyContentBlockingEvent(aRejectedReason, aReportingChannel, aBlocked,
-                                  aURI, trackingFullHashes, aReason);
+                                  aTrackingOrigin, trackingFullHashes, aReason);
 }
 
 }  // namespace
@@ -1239,16 +1255,12 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     // Let's inform the parent window.
     parentWindow->StorageAccessGranted();
 
-    auto* basePrin = BasePrincipal::Cast(trackingPrincipal);
-    nsCOMPtr<nsIURI> trackingURI;
-    basePrin->GetURI(getter_AddRefs(trackingURI));
-
     nsIChannel* channel =
         pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
 
-    NotifyContentBlockingEvent(pwin, channel,
-                               parentWindow->GetExtantDoc()->GetChannel(),
-                               false, blockReason, trackingURI, Some(aReason));
+    NotifyContentBlockingEvent(
+        pwin, channel, parentWindow->GetExtantDoc()->GetChannel(), false,
+        blockReason, trackingOrigin, Some(aReason));
 
     ReportUnblockingToConsole(parentWindow,
                               NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
@@ -2361,23 +2373,29 @@ void AntiTrackingCommon::NotifyContentBlockingEvent(nsIChannel* aChannel,
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
 
+  nsAutoCString trackingOrigin;
+  if (uri) {
+    Unused << nsContentUtils::GetASCIIOrigin(uri, trackingOrigin);
+  }
+
   return AntiTrackingCommon::NotifyContentBlockingEvent(
-      nullptr, aChannel, aChannel, true, aRejectedReason, uri);
+      nullptr, aChannel, aChannel, true, aRejectedReason, trackingOrigin);
 }
 
 /* static */
 void AntiTrackingCommon::NotifyContentBlockingEvent(
     nsPIDOMWindowOuter* aWindow, nsIChannel* aReportingChannel,
     nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
-    nsIURI* aURI, const Maybe<StorageAccessGrantedReason>& aReason) {
+    const nsACString& aTrackingOrigin,
+    const Maybe<StorageAccessGrantedReason>& aReason) {
   if (XRE_IsParentProcess()) {
     NotifyContentBlockingEventInParent(aReportingChannel, aTrackingChannel,
-                                       aBlocked, aRejectedReason, aURI,
-                                       aReason);
+                                       aBlocked, aRejectedReason,
+                                       aTrackingOrigin, aReason);
   } else {
-    NotifyContentBlockingEventInChild(aWindow, aReportingChannel,
-                                      aTrackingChannel, aBlocked,
-                                      aRejectedReason, aURI, aReason);
+    NotifyContentBlockingEventInChild(
+        aWindow, aReportingChannel, aTrackingChannel, aBlocked, aRejectedReason,
+        aTrackingOrigin, aReason);
   }
 }
 
@@ -2459,7 +2477,6 @@ void AntiTrackingCommon::RedirectHeuristic(nsIChannel* aOldChannel,
   MOZ_ASSERT(ssm);
 
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
-  nsCOMPtr<nsIURI> trackingURI;
 
   const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>& chain =
       oldLoadInfo->RedirectChain();
@@ -2470,14 +2487,7 @@ void AntiTrackingCommon::RedirectHeuristic(nsIChannel* aOldChannel,
       LOG(("Can't obtain the principal from the redirect chain"));
       return;
     }
-
-    rv = trackingPrincipal->GetURI(getter_AddRefs(trackingURI));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(("Can't obtain the uri from the redirect chain"));
-      return;
-    }
   } else {
-    trackingURI = aOldURI;
     rv = ssm->GetChannelResultPrincipal(aOldChannel,
                                         getter_AddRefs(trackingPrincipal));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2485,8 +2495,6 @@ void AntiTrackingCommon::RedirectHeuristic(nsIChannel* aOldChannel,
       return;
     }
   }
-
-  MOZ_ASSERT(trackingURI);
 
   nsCOMPtr<nsIPrincipal> redirectedPrincipal;
   rv = ssm->GetChannelResultPrincipal(aNewChannel,
@@ -2505,9 +2513,9 @@ void AntiTrackingCommon::RedirectHeuristic(nsIChannel* aOldChannel,
   }
 
   nsAutoCString trackingOrigin;
-  rv = nsContentUtils::GetASCIIOrigin(trackingURI, trackingOrigin);
+  rv = trackingPrincipal->GetOrigin(trackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't get the origin from the URI"));
+    LOG(("Can't get the origin from the Principal"));
     return;
   }
 
