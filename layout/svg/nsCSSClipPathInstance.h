@@ -31,12 +31,12 @@ class MOZ_STACK_CLASS nsCSSClipPathInstance {
                                           const gfxPoint& aPoint);
 
   static Maybe<Rect> GetBoundingRectForBasicShapeOrPathClip(
-      nsIFrame* aFrame, const StyleClippingShape& aClipPathStyle);
+      nsIFrame* aFrame, const StyleClipPath&);
 
  private:
   explicit nsCSSClipPathInstance(nsIFrame* aFrame,
-                                 const StyleClippingShape& aClipPathStyle)
-      : mTargetFrame(aFrame), mClipPathStyle(aClipPathStyle) {}
+                                 const StyleClipPath& aClipPath)
+      : mTargetFrame(aFrame), mClipPathStyle(aClipPath) {}
 
   already_AddRefed<Path> CreateClipPath(DrawTarget* aDrawTarget,
                                         const gfxMatrix& aTransform);
@@ -59,7 +59,7 @@ class MOZ_STACK_CLASS nsCSSClipPathInstance {
    * The frame for the element that is currently being clipped.
    */
   nsIFrame* mTargetFrame;
-  const StyleClippingShape& mClipPathStyle;
+  const StyleClipPath& mClipPathStyle;
 };
 
 }  // namespace mozilla

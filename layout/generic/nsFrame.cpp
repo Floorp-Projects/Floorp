@@ -1329,10 +1329,10 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       return nullptr;
     }
     auto& shape = aStyle->StyleDisplay()->mShapeOutside;
-    if (!shape.IsImageOrUrl()) {
+    if (!shape.IsImage()) {
       return nullptr;
     }
-    return shape.AsImageOrUrl().GetImageRequest();
+    return shape.AsImage().GetImageRequest();
   };
 
   imgIRequest* oldShapeImage = GetShapeImageRequest(aOldComputedStyle);
@@ -2022,12 +2022,11 @@ bool nsIFrame::GetBoxBorderRadii(nscoord aRadii[8], nsMargin aOffset,
 }
 
 bool nsIFrame::GetShapeBoxBorderRadii(nscoord aRadii[8]) const {
-  using Tag = StyleFloatAreaShape::Tag;
+  using Tag = StyleShapeOutside::Tag;
   auto& shapeOutside = StyleDisplay()->mShapeOutside;
   auto box = StyleShapeBox::MarginBox;
   switch (shapeOutside.tag) {
-    case Tag::Path:
-    case Tag::ImageOrUrl:
+    case Tag::Image:
     case Tag::None:
       return false;
     case Tag::Box:

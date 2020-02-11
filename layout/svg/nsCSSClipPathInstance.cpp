@@ -51,7 +51,7 @@ bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
   MOZ_ASSERT(!clipPathStyle.IsNone(), "unexpected none value");
   // In the future nsCSSClipPathInstance may handle <clipPath> references as
   // well. For the time being return early.
-  if (clipPathStyle.IsImageOrUrl()) {
+  if (clipPathStyle.IsUrl()) {
     return false;
   }
 
@@ -68,7 +68,7 @@ bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
 
 /* static */
 Maybe<Rect> nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
-    nsIFrame* aFrame, const StyleClippingShape& aClipPathStyle) {
+    nsIFrame* aFrame, const StyleClipPath& aClipPathStyle) {
   MOZ_ASSERT(aClipPathStyle.IsShape() || aClipPathStyle.IsBox() ||
              aClipPathStyle.IsPath());
 
