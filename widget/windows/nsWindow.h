@@ -248,8 +248,6 @@ class nsWindow final : public nsWindowBase {
   bool DispatchPluginEvent(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
                            bool aDispatchPendingEvents);
 
-  void SuppressBlurEvents(bool aSuppress);  // Called from nsFilePicker
-  bool BlurEventsSuppressed();
 #ifdef ACCESSIBILITY
   /**
    * Return an accessible associated with the window.
@@ -568,7 +566,6 @@ class nsWindow final : public nsWindowBase {
   bool mOpeningAnimationSuppressed;
   bool mAlwaysOnTop;
   bool mIsEarlyBlankWindow;
-  uint32_t mBlurSuppressLevel;
   DWORD_PTR mOldStyle;
   DWORD_PTR mOldExStyle;
   nsNativeDragTarget* mNativeDragTarget;
