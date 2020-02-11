@@ -552,9 +552,9 @@ function blackDuringGray() {
   showmarks();
   marks = getMarks();
   assertEq(marks[0], "gray", "map is gray");
-  assertEq(marks[1], "black", "key inherits black even though in gray marking");
+  assertEq(marks[1], "gray", "delegate marks key but map is gray, so key gets gray");
   assertEq(marks[2], "black", "delegate is still black");
-  assertEq(marks[3], "gray", "gray map + black key => gray value");
+  assertEq(marks[3], "gray", "gray map + gray key => gray value");
 
   clearMarkQueue();
   clearMarkObservers();
