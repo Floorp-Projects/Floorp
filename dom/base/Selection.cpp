@@ -189,6 +189,8 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
   }
 
   nsresult Init(nsFrameSelection* aFrameSelection, Selection* aSelection) {
+    MOZ_ASSERT(aFrameSelection);
+
     mFrameSelection = aFrameSelection;
     mSelection = aSelection;
     return NS_OK;
