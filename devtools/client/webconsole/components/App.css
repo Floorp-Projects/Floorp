@@ -77,16 +77,15 @@ body {
   grid-column: filter-toolbar;
   grid-row: filter-toolbar / filter-toolbar-secondary;
   grid-template-rows: subgrid;
-  grid-template-columns: subgrid;
 }
 
 .webconsole-filterbar-primary {
-  grid-area: filter-toolbar;
+  grid-row: filter-toolbar;
 }
 
 /* Only put the filter buttons toolbar on its own row in narrow filterbar layout  */
 .narrow .devtools-toolbar.webconsole-filterbar-secondary {
-  grid-area: filter-toolbar-secondary;
+  grid-row: filter-toolbar-secondary;
 }
 
 .flexible-output-input {
