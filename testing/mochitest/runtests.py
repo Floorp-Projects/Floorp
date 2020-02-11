@@ -1506,7 +1506,7 @@ toolbar#nav-bar {
             if 'ancestor_manifest' in test and '/' in normsep(test['ancestor_manifest']):
                 manifest_key = '{}:{}'.format(test['ancestor_manifest'], manifest_key)
 
-            self.tests_by_manifest[manifest_key].append(tp)
+            self.tests_by_manifest[manifest_key.replace('\\', '/')].append(tp)
             self.prefs_by_manifest[manifest_key].add(test.get('prefs'))
             self.env_vars_by_manifest[manifest_key].add(test.get('environment'))
 
