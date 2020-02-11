@@ -20,18 +20,19 @@ class MatrixMessage {
   MatrixMessage() {}
 
   MatrixMessage(const Maybe<LayerToScreenMatrix4x4>& aMatrix,
-                const ScreenRect& aRemoteDocumentRect,
+                const ScreenRect& aTopLevelViewportVisibleRectInBrowserCoords,
                 const LayersId& aLayersId)
       : mMatrix(ToUnknownMatrix(aMatrix)),
-        mRemoteDocumentRect(aRemoteDocumentRect),
+        mTopLevelViewportVisibleRectInBrowserCoords(
+            aTopLevelViewportVisibleRectInBrowserCoords),
         mLayersId(aLayersId) {}
 
   inline Maybe<LayerToScreenMatrix4x4> GetMatrix() const {
     return LayerToScreenMatrix4x4::FromUnknownMatrix(mMatrix);
   }
 
-  inline ScreenRect GetRemoteDocumentRect() const {
-    return mRemoteDocumentRect;
+  inline ScreenRect GetTopLevelViewportVisibleRectInBrowserCoords() const {
+    return mTopLevelViewportVisibleRectInBrowserCoords;
   }
 
   inline const LayersId& GetLayersId() const { return mLayersId; }
@@ -43,7 +44,7 @@ class MatrixMessage {
   // The remote iframe document rectangle corresponding to this layer.
   // The rectangle is the result of clipped out by ancestor async scrolling so
   // that the rectangle will be empty if it's completely scrolled out of view.
-  ScreenRect mRemoteDocumentRect;
+  ScreenRect mTopLevelViewportVisibleRectInBrowserCoords;
   LayersId mLayersId;
 };
 };  // namespace layers
