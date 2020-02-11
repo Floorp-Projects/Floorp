@@ -514,7 +514,7 @@ typedef mozilla::gfx::SurfaceFormat gfxImageFormat;
 namespace mozilla {
 
 // Side constants for use in various places.
-enum Side { eSideTop, eSideRight, eSideBottom, eSideLeft };
+enum Side : uint8_t { eSideTop, eSideRight, eSideBottom, eSideLeft };
 
 constexpr auto AllPhysicalSides() {
   return mozilla::MakeInclusiveEnumeratedRange(eSideTop, eSideLeft);
@@ -533,7 +533,7 @@ enum class SideBits {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SideBits)
 
-enum Corner {
+enum Corner : uint8_t {
   // This order is important!
   eCornerTopLeft = 0,
   eCornerTopRight = 1,

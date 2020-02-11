@@ -178,6 +178,13 @@ constexpr detail::EnumeratedRange<EnumType> MakeEnumeratedRange(EnumType aEnd) {
 }
 
 // Create a range to iterate from aBegin to aEnd, inclusive.
+//
+// NOTE: This internally constructs a value that is one past `aEnd`, so the
+// enumeration needs to either have a fixed underlying type, or `aEnd + 1` must
+// be inside the range of the enumeration, in order to not be undefined
+// behavior.
+//
+// See bug 1614512.
 template <typename EnumType>
 constexpr detail::EnumeratedRange<EnumType> MakeInclusiveEnumeratedRange(
     EnumType aBegin, EnumType aEnd) {
