@@ -91,9 +91,9 @@ add_task(async function() {
   );
 
   const secondColor = await ToolboxTask.spawn(null, async () => {
-    dump(" # Waiting for picker stop\n");
+    info(" # Waiting for picker stop");
     await this.onPickerStopped;
-    dump(" # Waiting for inspector-updated\n");
+    info(" # Waiting for inspector-updated");
     await this.onInspectorUpdated;
 
     const inspector = gToolbox.getPanel("inspector");
