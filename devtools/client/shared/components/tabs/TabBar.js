@@ -48,6 +48,10 @@ class Tabbar extends Component {
         expandPaneTitle: PropTypes.string.isRequired,
         // Click callback
         onClick: PropTypes.func.isRequired,
+        // align toggle button to right
+        alignRight: PropTypes.bool,
+        // if set to true toggle-button rotate 90
+        canVerticalSplit: PropTypes.bool,
       }),
     };
   }

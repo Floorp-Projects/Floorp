@@ -44,10 +44,6 @@
   margin: 1px 3px;
 }
 
-.network-monitor .sidebar-toggle:dir(rtl) {
-  transform: scaleX(-1);
-}
-
 /* Empty notices in tab panels */
 
 .network-monitor .empty-notice {
@@ -336,7 +332,7 @@
 }
 
 .network-monitor .headers-summary .status-text {
-  width: auto!important;
+  width: auto !important;
   margin-inline-start: 4px;
 }
 
@@ -596,6 +592,6 @@
   margin-inline-start: 6px;
 }
 
-#timings-panel .learn-more-link{
+#timings-panel .learn-more-link {
   width: -moz-max-content;
 }

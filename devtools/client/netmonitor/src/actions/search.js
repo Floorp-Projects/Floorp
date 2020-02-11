@@ -9,8 +9,7 @@ const {
   ADD_SEARCH_RESULT,
   CLEAR_SEARCH_RESULTS,
   ADD_ONGOING_SEARCH,
-  OPEN_SEARCH,
-  CLOSE_SEARCH,
+  OPEN_ACTION_BAR,
   UPDATE_SEARCH_STATUS,
   SEARCH_STATUS,
   SET_TARGET_SEARCH_RESULT,
@@ -199,7 +198,7 @@ function updateSearchStatus(status) {
 function closeSearch() {
   return (dispatch, getState) => {
     dispatch(stopOngoingSearch());
-    dispatch({ type: CLOSE_SEARCH });
+    dispatch({ type: OPEN_ACTION_BAR, open: false });
   };
 }
 
@@ -209,7 +208,7 @@ function closeSearch() {
  */
 function openSearch() {
   return (dispatch, getState) => {
-    dispatch({ type: OPEN_SEARCH });
+    dispatch({ type: OPEN_ACTION_BAR, open: true });
   };
 }
 
@@ -230,9 +229,10 @@ function toggleSearchPanel() {
   return (dispatch, getState) => {
     const state = getState();
 
-    state.search.panelOpen && state.ui.selectedActionBarTabId === PANELS.SEARCH
-      ? dispatch({ type: CLOSE_SEARCH })
-      : dispatch({ type: OPEN_SEARCH });
+    state.ui.networkActionOpen &&
+    state.ui.selectedActionBarTabId === PANELS.SEARCH
+      ? dispatch({ type: OPEN_ACTION_BAR, open: false })
+      : dispatch({ type: OPEN_ACTION_BAR, open: true });
 
     dispatch({
       type: SELECT_ACTION_BAR_TAB,

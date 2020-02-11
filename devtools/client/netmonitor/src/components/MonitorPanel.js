@@ -76,7 +76,7 @@ class MonitorPanel extends Component {
       sourceMapService: PropTypes.object,
       openLink: PropTypes.func,
       updateRequest: PropTypes.func.isRequired,
-      panelOpen: PropTypes.bool.isRequired,
+      networkActionOpen: PropTypes.bool.isRequired,
     };
   }
 
@@ -169,7 +169,7 @@ class MonitorPanel extends Component {
   }
 
   renderActionBar() {
-    const { connector, isEmpty, panelOpen } = this.props;
+    const { connector, isEmpty, networkActionOpen } = this.props;
 
     const initialWidth = Services.prefs.getIntPref(
       "devtools.netmonitor.panes-search-width"
@@ -184,9 +184,9 @@ class MonitorPanel extends Component {
       initialHeight,
       minSize: "250px",
       maxSize: "80%",
-      splitterSize: panelOpen ? 1 : 0,
+      splitterSize: networkActionOpen ? 1 : 0,
       startPanel:
-        panelOpen &&
+        networkActionOpen &&
         NetworkActionBar({
           ref: "actionBar",
           connector,
@@ -252,7 +252,7 @@ module.exports = connect(
   state => ({
     isEmpty: state.requests.requests.length == 0,
     networkDetailsOpen: state.ui.networkDetailsOpen,
-    panelOpen: state.search.panelOpen,
+    networkActionOpen: state.ui.networkActionOpen,
     request: getSelectedRequest(state),
     selectedRequestVisible: isSelectedRequestVisible(state),
   }),

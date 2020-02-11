@@ -13,8 +13,7 @@ const {
   UPDATE_BLOCKED_URL,
   REMOVE_BLOCKED_URL,
   DISABLE_MATCHING_URLS,
-  OPEN_SEARCH,
-  CLOSE_SEARCH,
+  OPEN_ACTION_BAR,
   SELECT_ACTION_BAR_TAB,
   PANELS,
 } = require("devtools/client/netmonitor/src/constants");
@@ -22,10 +21,10 @@ const {
 function toggleRequestBlockingPanel() {
   return (dispatch, getState) => {
     const state = getState();
-    state.search.panelOpen &&
+    state.ui.networkActionOpen &&
     state.ui.selectedActionBarTabId === PANELS.BLOCKING
-      ? dispatch({ type: CLOSE_SEARCH })
-      : dispatch({ type: OPEN_SEARCH });
+      ? dispatch({ type: OPEN_ACTION_BAR, open: false })
+      : dispatch({ type: OPEN_ACTION_BAR, open: true });
     dispatch({
       type: SELECT_ACTION_BAR_TAB,
       id: PANELS.BLOCKING,
@@ -76,7 +75,7 @@ function openRequestBlockingAndAddUrl(url) {
     );
 
     if (showBlockingPanel) {
-      dispatch({ type: OPEN_SEARCH });
+      dispatch({ type: OPEN_ACTION_BAR, open: true });
       dispatch({
         type: SELECT_ACTION_BAR_TAB,
         id: PANELS.BLOCKING,
@@ -93,7 +92,7 @@ function openRequestBlockingAndDisableUrls(url) {
     );
 
     if (showBlockingPanel) {
-      dispatch({ type: OPEN_SEARCH });
+      dispatch({ type: OPEN_ACTION_BAR, open: true });
       dispatch({
         type: SELECT_ACTION_BAR_TAB,
         id: PANELS.BLOCKING,

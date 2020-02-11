@@ -26,6 +26,17 @@ class SidebarToggle extends Component {
       expandPaneTitle: PropTypes.string.isRequired,
       // Click callback
       onClick: PropTypes.func.isRequired,
+      // align toggle button to right
+      alignRight: PropTypes.bool,
+      // if set to true toggle-button rotate 90
+      canVerticalSplit: PropTypes.bool,
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      alignRight: false,
+      canVerticalSplit: true,
     };
   }
 
@@ -57,6 +68,12 @@ class SidebarToggle extends Component {
     const classNames = ["devtools-button", "sidebar-toggle"];
     if (this.state.collapsed) {
       classNames.push("pane-collapsed");
+    }
+    if (this.props.alignRight) {
+      classNames.push("alignRight");
+    }
+    if (!this.props.canVerticalSplit) {
+      classNames.push("disableVerticalBehaviour");
     }
 
     return button({
