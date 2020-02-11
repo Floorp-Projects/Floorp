@@ -45,6 +45,7 @@ class NotYetSupportedAddonActivity : AppCompatActivity() {
      */
     class NotYetSupportedAddonFragment : Fragment(), UnsupportedAddonsAdapterDelegate {
         private lateinit var addons: List<Addon>
+        private var adapter: UnsupportedAddonsAdapter? = null
 
         override fun onCreateView(
             inflater: LayoutInflater,
@@ -60,12 +61,14 @@ class NotYetSupportedAddonActivity : AppCompatActivity() {
 
             val context = requireContext()
             val recyclerView: RecyclerView = view.findViewById(R.id.unsupported_add_ons_list)
-            recyclerView.layoutManager = LinearLayoutManager(context)
-            recyclerView.adapter = UnsupportedAddonsAdapter(
+            adapter = UnsupportedAddonsAdapter(
                 addonManager = context.components.addonManager,
                 unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
-                unsupportedAddons = addons
+                addons = addons
             )
+
+            recyclerView.layoutManager = LinearLayoutManager(context)
+            recyclerView.adapter = adapter
 
             view.findViewById<View>(R.id.learn_more_label).setOnClickListener {
                 val intent = Intent(Intent.ACTION_VIEW).setData(Uri.parse(LEARN_MORE_URL))
@@ -80,6 +83,9 @@ class NotYetSupportedAddonActivity : AppCompatActivity() {
         override fun onUninstallSuccess() {
             Toast.makeText(context, "Successfully removed add-on", Toast.LENGTH_SHORT)
                 .show()
+            if (adapter?.itemCount == 0) {
+                activity?.onBackPressed()
+            }
         }
 
         companion object {
