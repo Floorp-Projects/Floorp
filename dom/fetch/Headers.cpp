@@ -25,8 +25,8 @@ NS_INTERFACE_MAP_END
 // static
 already_AddRefed<Headers> Headers::Constructor(
     const GlobalObject& aGlobal,
-    const Optional<
-        HeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord>& aInit,
+    const Optional<ByteStringSequenceSequenceOrByteStringByteStringRecord>&
+        aInit,
     ErrorResult& aRv) {
   RefPtr<InternalHeaders> ih = new InternalHeaders();
   RefPtr<Headers> headers = new Headers(aGlobal.GetAsSupports(), ih);
@@ -35,9 +35,7 @@ already_AddRefed<Headers> Headers::Constructor(
     return headers.forget();
   }
 
-  if (aInit.Value().IsHeaders()) {
-    ih->Fill(*aInit.Value().GetAsHeaders().mInternalHeaders, aRv);
-  } else if (aInit.Value().IsByteStringSequenceSequence()) {
+  if (aInit.Value().IsByteStringSequenceSequence()) {
     ih->Fill(aInit.Value().GetAsByteStringSequenceSequence(), aRv);
   } else if (aInit.Value().IsByteStringByteStringRecord()) {
     ih->Fill(aInit.Value().GetAsByteStringByteStringRecord(), aRv);
@@ -53,8 +51,7 @@ already_AddRefed<Headers> Headers::Constructor(
 // static
 already_AddRefed<Headers> Headers::Constructor(
     const GlobalObject& aGlobal,
-    const OwningHeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord&
-        aInit,
+    const OwningByteStringSequenceSequenceOrByteStringByteStringRecord& aInit,
     ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   return Create(global, aInit, aRv);
@@ -63,15 +60,12 @@ already_AddRefed<Headers> Headers::Constructor(
 /* static */
 already_AddRefed<Headers> Headers::Create(
     nsIGlobalObject* aGlobal,
-    const OwningHeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord&
-        aInit,
+    const OwningByteStringSequenceSequenceOrByteStringByteStringRecord& aInit,
     ErrorResult& aRv) {
   RefPtr<InternalHeaders> ih = new InternalHeaders();
   RefPtr<Headers> headers = new Headers(aGlobal, ih);
 
-  if (aInit.IsHeaders()) {
-    ih->Fill(*(aInit.GetAsHeaders().get()->mInternalHeaders), aRv);
-  } else if (aInit.IsByteStringSequenceSequence()) {
+  if (aInit.IsByteStringSequenceSequence()) {
     ih->Fill(aInit.GetAsByteStringSequenceSequence(), aRv);
   } else if (aInit.IsByteStringByteStringRecord()) {
     ih->Fill(aInit.GetAsByteStringByteStringRecord(), aRv);
