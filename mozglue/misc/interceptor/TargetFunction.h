@@ -9,6 +9,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BinarySearch.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/Types.h"
@@ -417,6 +419,11 @@ class ReadOnlyTargetBytes<MMPolicyInProcess> {
     // function's bytes.
   }
 
+  uint32_t TryEnsureLimit(uint32_t aDesiredLimit) {
+    // Same as EnsureLimit above.  We don't need to ensure for the in-process.
+    return aDesiredLimit;
+  }
+
   bool IsValidAtOffset(const int8_t aOffset) const {
     if (!aOffset) {
       return true;
@@ -517,6 +524,38 @@ class ReadOnlyTargetBytes<MMPolicyOutOfProcess> {
     ok = mMMPolicy.Read(&mLocalBytes[prevSize], mBase + prevSize,
                         newSize - prevSize);
     MOZ_RELEASE_ASSERT(ok);
+  }
+
+  // This function tries to ensure as many bytes as possible up to
+  // |aDesiredLimit| bytes, returning how many bytes were actually ensured.
+  // As EnsureLimit does, we allocate an extra byte in local to make sure
+  // mLocalBytes always has at least one byte even though the target memory
+  // was inaccessible at all.
+  uint32_t TryEnsureLimit(uint32_t aDesiredLimit) {
+    size_t prevSize = mLocalBytes.length();
+    if (aDesiredLimit < prevSize) {
+      return aDesiredLimit;
+    }
+
+    size_t newSize = aDesiredLimit;
+    if (newSize < kInlineStorage) {
+      // Always try to read as much memory as we can at once
+      newSize = kInlineStorage;
+    }
+
+    bool resizeOk = mLocalBytes.resize(newSize);
+    MOZ_RELEASE_ASSERT(resizeOk);
+
+    size_t bytesRead = mMMPolicy.TryRead(&mLocalBytes[prevSize],
+                                         mBase + prevSize, newSize - prevSize);
+
+    newSize = prevSize + bytesRead;
+
+    resizeOk = mLocalBytes.resize(newSize + 1);
+    MOZ_RELEASE_ASSERT(resizeOk);
+
+    mLocalBytes[newSize] = 0;
+    return newSize;
   }
 
   bool IsValidAtOffset(const int8_t aOffset) const {
@@ -826,6 +865,98 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
  private:
   mutable typename TargetBytesPtr<MMPolicy>::Type mTargetBytes;
   uint32_t mOffset;
+};
+
+template <typename MMPolicy, typename T>
+class MOZ_STACK_CLASS TargetObject {
+  mutable typename TargetBytesPtr<MMPolicy>::Type mTargetBytes;
+
+  TargetObject(const MMPolicy& aMMPolicy, const void* aBaseAddress)
+      : mTargetBytes(TargetBytesPtr<MMPolicy>::Make(aMMPolicy, aBaseAddress)) {
+    mTargetBytes->EnsureLimit(sizeof(T));
+  }
+
+ public:
+  explicit TargetObject(const MMPolicy& aMMPolicy)
+      : mTargetBytes(TargetBytesPtr<MMPolicy>::Make(aMMPolicy, nullptr)) {}
+
+  TargetObject(const MMPolicy& aMMPolicy, uintptr_t aBaseAddress)
+      : TargetObject(aMMPolicy, reinterpret_cast<const void*>(aBaseAddress)) {}
+
+  TargetObject(const TargetObject&) = delete;
+  TargetObject(TargetObject&&) = delete;
+  TargetObject& operator=(const TargetObject&) = delete;
+  TargetObject& operator=(TargetObject&&) = delete;
+
+  explicit operator bool() const {
+    return mTargetBytes->GetBase() && mTargetBytes->GetLocalBytes();
+  }
+
+  const T* operator->() const {
+    return reinterpret_cast<const T*>(mTargetBytes->GetLocalBytes());
+  }
+
+  const T* GetLocalBase() const {
+    return reinterpret_cast<const T*>(mTargetBytes->GetLocalBytes());
+  }
+};
+
+template <typename MMPolicy, typename T>
+class MOZ_STACK_CLASS TargetObjectArray {
+  mutable typename TargetBytesPtr<MMPolicy>::Type mTargetBytes;
+  size_t mNumOfItems;
+
+  TargetObjectArray(const MMPolicy& aMMPolicy, const void* aBaseAddress,
+                    size_t aNumOfItems)
+      : mTargetBytes(TargetBytesPtr<MMPolicy>::Make(aMMPolicy, aBaseAddress)),
+        mNumOfItems(aNumOfItems) {
+    uint32_t itemsRead =
+        mTargetBytes->TryEnsureLimit(sizeof(T) * mNumOfItems) / sizeof(T);
+    // itemsRead may be bigger than the requested amount because of buffering,
+    // but mNumOfItems should not include extra bytes of buffering.
+    if (itemsRead < mNumOfItems) {
+      mNumOfItems = itemsRead;
+    }
+  }
+
+  const T* GetLocalBase() const {
+    return reinterpret_cast<const T*>(mTargetBytes->GetLocalBytes());
+  }
+
+ public:
+  explicit TargetObjectArray(const MMPolicy& aMMPolicy)
+      : mTargetBytes(TargetBytesPtr<MMPolicy>::Make(aMMPolicy, nullptr)),
+        mNumOfItems(0) {}
+
+  TargetObjectArray(const MMPolicy& aMMPolicy, uintptr_t aBaseAddress,
+                    size_t aNumOfItems)
+      : TargetObjectArray(aMMPolicy,
+                          reinterpret_cast<const void*>(aBaseAddress),
+                          aNumOfItems) {}
+
+  TargetObjectArray(const TargetObjectArray&) = delete;
+  TargetObjectArray(TargetObjectArray&&) = delete;
+  TargetObjectArray& operator=(const TargetObjectArray&) = delete;
+  TargetObjectArray& operator=(TargetObjectArray&&) = delete;
+
+  explicit operator bool() const {
+    return mTargetBytes->GetBase() && mNumOfItems;
+  }
+
+  const T* operator[](size_t aIndex) const {
+    if (aIndex >= mNumOfItems) {
+      return nullptr;
+    }
+
+    return &GetLocalBase()[aIndex];
+  }
+
+  template <typename Comparator>
+  bool BinarySearchIf(const Comparator& aCompare,
+                      size_t* aMatchOrInsertionPoint) const {
+    return mozilla::BinarySearchIf(GetLocalBase(), 0, mNumOfItems, aCompare,
+                                   aMatchOrInsertionPoint);
+  }
 };
 
 }  // namespace interceptor
