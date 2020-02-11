@@ -119,12 +119,6 @@ class _ToolbarPanelHub {
     }
   }
 
-  // Removes the button from the Appmenu.
-  // Only used in tests.
-  disableAppmenuButton() {
-    EveryWindow.unregisterCallback(APPMENU_BUTTON_ID);
-  }
-
   // Turns on the Toolbar button for all open windows and future windows.
   async enableToolbarButton() {
     if ((await this.messages).length) {
