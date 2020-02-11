@@ -157,7 +157,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         abs_dirs = super(MobileSingleLocale, self).query_abs_dirs()
 
         dirs = {
-             'abs_tools_dir': os.path.join(abs_dirs['base_work_dir'], 'tools'),
              'build_dir': os.path.join(abs_dirs['base_work_dir'], 'build'),
         }
 

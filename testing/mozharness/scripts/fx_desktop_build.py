@@ -83,7 +83,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
             'abs_obj_dir': os.path.join(abs_dirs['abs_work_dir'],
                                         'src',
                                         self._query_objdir()),
-            'abs_tools_dir': os.path.join(abs_dirs['abs_work_dir'], 'tools'),
             'upload_path': self.config["upload_env"]["UPLOAD_PATH"],
         }
         abs_dirs.update(dirs)
