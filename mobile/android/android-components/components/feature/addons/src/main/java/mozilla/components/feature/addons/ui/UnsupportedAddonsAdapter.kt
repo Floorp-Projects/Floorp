@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
@@ -26,8 +27,10 @@ import mozilla.components.feature.addons.R
 class UnsupportedAddonsAdapter(
     private val addonManager: AddonManager,
     private val unsupportedAddonsAdapterDelegate: UnsupportedAddonsAdapterDelegate,
-    private val unsupportedAddons: List<Addon>
+    addons: List<Addon>
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private val unsupportedAddons = addons.toMutableList()
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder as UnsupportedAddonViewHolder
         val addon = unsupportedAddons[position]
@@ -40,14 +43,28 @@ class UnsupportedAddonsAdapter(
             }
 
         holder.removeButton.setOnClickListener {
+            holder.removeButton.visibility = View.GONE
             addonManager.uninstallAddon(addon,
                 onSuccess = {
-                    unsupportedAddonsAdapterDelegate.onUninstallSuccess()
+                    removeUninstalledAddonAtPosition(position)
                 },
                 onError = { addonId, throwable ->
                     unsupportedAddonsAdapterDelegate.onUninstallError(addonId, throwable)
+                    holder.removeButton.visibility = View.VISIBLE
                 })
         }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun removeUninstalledAddonAtPosition(position: Int) {
+        if (position >= unsupportedAddons.size) {
+            return
+        }
+
+        val uninstalledAddon = unsupportedAddons[position]
+        unsupportedAddons.remove(uninstalledAddon)
+        notifyItemChanged(position)
+        unsupportedAddonsAdapterDelegate.onUninstallSuccess()
     }
 
     override fun getItemCount(): Int {
