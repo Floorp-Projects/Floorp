@@ -98,10 +98,13 @@ events:
       A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.
     send_in_pings:
     - baseline
+    - metrics
     bugs:
     - https://github.com/mozilla-mobile/fenix/issues/1301
+    - https://github.com/mozilla-mobile/fenix/issues/4456
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1785
+    - https://github.com/mozilla-mobile/fenix/pull/8314
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-09-01"

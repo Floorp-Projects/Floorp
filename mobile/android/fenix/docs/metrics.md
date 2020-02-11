@@ -30,7 +30,7 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
-| events.total_uri_count |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.  |[1](https://github.com/mozilla-mobile/fenix/pull/1785)||2020-09-01 |
+| events.total_uri_count |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.  |[1](https://github.com/mozilla-mobile/fenix/pull/1785), [2](https://github.com/mozilla-mobile/fenix/pull/8314)||2020-09-01 |
 | metrics.search_count |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |The labels for this counter are `<search-engine-name>.<source>`. If the search engine is bundled with Fenix `search-engine-name` will be the name of the search engine. If it's a custom search engine (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the value will be `custom`. `source` will be: `action`, `suggestion`, `widget` or `shortcut` (depending on the source from which the search started). Also added the `other` option for the source but it should never enter on this case.  |[1](https://github.com/mozilla-mobile/fenix/pull/1677), [2](https://github.com/mozilla-mobile/fenix/pull/5216), [3](https://github.com/mozilla-mobile/fenix/pull/7310)||2020-09-01 |
 
 ## events
@@ -174,6 +174,7 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
+| events.total_uri_count |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.  |[1](https://github.com/mozilla-mobile/fenix/pull/1785), [2](https://github.com/mozilla-mobile/fenix/pull/8314)||2020-09-01 |
 | metrics.adjust_campaign |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |A string containing the Adjust campaign ID from which the user installed Fenix. This will not send on the first session the user runs. If the install is organic, this will be empty.  |[1](https://github.com/mozilla-mobile/fenix/pull/5579)||2020-09-01 |
 | metrics.default_browser |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |Is Fenix the default browser?  |[1](https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673)||2020-09-01 |
 | metrics.default_moz_browser |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the default browser on device if and only if it's a Mozilla owned product  |[1](https://github.com/mozilla-mobile/fenix/pull/1953/), [2](https://github.com/mozilla-mobile/fenix/pull/5216)||2020-09-01 |
