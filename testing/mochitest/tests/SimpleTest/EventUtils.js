@@ -26,6 +26,10 @@
  *  When adding methods to this file, please add a performance test for it.
  */
 
+// Certain functions assume this is loaded into browser window scope.
+// This is modifiable because certain chrome tests create their own gBrowser.
+/* global gBrowser:true */
+
 // This file is used both in privileged and unprivileged contexts, so we have to
 // be careful about our access to Components.interfaces. We also want to avoid
 // naming collisions with anything that might be defined in the scope that imports
@@ -35,6 +39,7 @@
 // placebo for compat. An easy way to differentiate this from the real thing
 // is whether the property is read-only or not.  The real |Components| property
 // is read-only.
+/* global _EU_Ci, _EU_Cc, _EU_Cu, _EU_OS */
 window.__defineGetter__("_EU_Ci", function() {
   var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? Ci : SpecialPowers.Ci;
@@ -189,6 +194,7 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
   var viewArg = aWindow;
   var detailArg =
     aEvent.detail ||
+    // eslint-disable-next-line no-nested-ternary
     (aEvent.type == "click" ||
     aEvent.type == "mousedown" ||
     aEvent.type == "mouseup"
@@ -394,7 +400,6 @@ function sendKey(aKey, aWindow) {
  * synthesizeMouse and synthesizeKey.
  */
 function _parseModifiers(aEvent, aWindow = window) {
-  var navigator = _getNavigator(aWindow);
   var nsIDOMWindowUtils = _EU_Ci.nsIDOMWindowUtils;
   var mval = 0;
   if (aEvent.shiftKey) {
@@ -700,7 +705,6 @@ function synthesizeWheelAtPoint(aLeft, aTop, aEvent, aWindow = window) {
       options |= utils.WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_Y_NEGATIVE;
     }
   }
-  var isNoLineOrPageDelta = aEvent.isNoLineOrPageDelta;
 
   // Avoid the JS warnings "reference to undefined property"
   if (!aEvent.deltaX) {
@@ -714,12 +718,14 @@ function synthesizeWheelAtPoint(aLeft, aTop, aEvent, aWindow = window) {
   }
 
   var lineOrPageDeltaX =
+    // eslint-disable-next-line no-nested-ternary
     aEvent.lineOrPageDeltaX != null
       ? aEvent.lineOrPageDeltaX
       : aEvent.deltaX > 0
       ? Math.floor(aEvent.deltaX)
       : Math.ceil(aEvent.deltaX);
   var lineOrPageDeltaY =
+    // eslint-disable-next-line no-nested-ternary
     aEvent.lineOrPageDeltaY != null
       ? aEvent.lineOrPageDeltaY
       : aEvent.deltaY > 0
@@ -1135,6 +1141,7 @@ function synthesizeAndWaitKey(
       resolve();
     });
   });
+  // eslint-disable-next-line no-shadow
   let keyReceivedPromise = ContentTask.spawn(browser, keyCode, keyCode => {
     return new Promise(resolve => {
       addEventListener("keyup", function onKeyEvent(e) {
@@ -1159,7 +1166,6 @@ function synthesizeAndWaitKey(
 }
 
 function _parseNativeModifiers(aModifiers, aWindow = window) {
-  var navigator = _getNavigator(aWindow);
   var modifiers;
   if (aModifiers.capsLockKey) {
     modifiers |= 0x00000001;
@@ -1361,7 +1367,6 @@ function synthesizeNativeKey(
   if (!utils) {
     return false;
   }
-  var navigator = _getNavigator(aWindow);
   var nativeKeyboardLayout = null;
   if (_EU_isMac(aWindow)) {
     nativeKeyboardLayout = aKeyboardLayout.Mac;
@@ -1604,13 +1609,7 @@ function _getKeyboardEvent(aWindow = window) {
   return aWindow.KeyboardEvent;
 }
 
-function _getNavigator(aWindow = window) {
-  if (typeof navigator != "undefined") {
-    return navigator;
-  }
-  return aWindow.navigator;
-}
-
+// eslint-disable-next-line complexity
 function _guessKeyNameFromKeyCode(aKeyCode, aWindow = window) {
   var KeyboardEvent = _getKeyboardEvent(aWindow);
   switch (aKeyCode) {
@@ -1788,7 +1787,7 @@ function _createKeyboardEventDictionary(
   } else if (aKey.indexOf("VK_") == 0) {
     keyCode = _getKeyboardEvent(aWindow)["DOM_" + aKey];
     if (!keyCode) {
-      throw "Unknown key: " + aKey;
+      throw new Error("Unknown key: " + aKey);
     }
     keyName = _guessKeyNameFromKeyCode(keyCode, aWindow);
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
@@ -1843,7 +1842,6 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window) {
     return null;
   }
   var KeyboardEvent = _getKeyboardEvent(aWindow);
-  var navigator = _getNavigator(aWindow);
 
   var modifiers = {
     normal: [
@@ -1866,28 +1864,28 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window) {
     ],
   };
 
-  for (var i = 0; i < modifiers.normal.length; i++) {
+  for (let i = 0; i < modifiers.normal.length; i++) {
     if (!aKeyEvent[modifiers.normal[i].attr]) {
       continue;
     }
     if (aTIP.getModifierState(modifiers.normal[i].key)) {
       continue; // already activated.
     }
-    var event = new KeyboardEvent("", { key: modifiers.normal[i].key });
+    let event = new KeyboardEvent("", { key: modifiers.normal[i].key });
     aTIP.keydown(
       event,
       aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
     );
     modifiers.normal[i].activated = true;
   }
-  for (var i = 0; i < modifiers.lockable.length; i++) {
+  for (let i = 0; i < modifiers.lockable.length; i++) {
     if (!aKeyEvent[modifiers.lockable[i].attr]) {
       continue;
     }
     if (aTIP.getModifierState(modifiers.lockable[i].key)) {
       continue; // already activated.
     }
-    var event = new KeyboardEvent("", { key: modifiers.lockable[i].key });
+    let event = new KeyboardEvent("", { key: modifiers.lockable[i].key });
     aTIP.keydown(
       event,
       aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
@@ -1906,24 +1904,24 @@ function _emulateToInactivateModifiers(aTIP, aModifiers, aWindow = window) {
     return;
   }
   var KeyboardEvent = _getKeyboardEvent(aWindow);
-  for (var i = 0; i < aModifiers.normal.length; i++) {
+  for (let i = 0; i < aModifiers.normal.length; i++) {
     if (!aModifiers.normal[i].activated) {
       continue;
     }
-    var event = new KeyboardEvent("", { key: aModifiers.normal[i].key });
+    let event = new KeyboardEvent("", { key: aModifiers.normal[i].key });
     aTIP.keyup(
       event,
       aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
     );
   }
-  for (var i = 0; i < aModifiers.lockable.length; i++) {
+  for (let i = 0; i < aModifiers.lockable.length; i++) {
     if (!aModifiers.lockable[i].activated) {
       continue;
     }
     if (!aTIP.getModifierState(aModifiers.lockable[i].key)) {
       continue; // who already inactivated this?
     }
-    var event = new KeyboardEvent("", { key: aModifiers.lockable[i].key });
+    let event = new KeyboardEvent("", { key: aModifiers.lockable[i].key });
     aTIP.keydown(
       event,
       aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
@@ -1984,11 +1982,10 @@ function _emulateToInactivateModifiers(aTIP, aModifiers, aWindow = window) {
 function synthesizeComposition(aEvent, aWindow = window, aCallback) {
   var TIP = _getTIP(aWindow, aCallback);
   if (!TIP) {
-    return false;
+    return;
   }
   var KeyboardEvent = _getKeyboardEvent(aWindow);
   var modifiers = _emulateToActivateModifiers(TIP, aEvent.key, aWindow);
-  var ret = false;
   var keyEventDict = { dictionary: null, flags: 0 };
   var keyEvent = null;
   if (aEvent.key && typeof aEvent.key.key === "string") {
@@ -1999,6 +1996,7 @@ function synthesizeComposition(aEvent, aWindow = window, aCallback) {
       aWindow
     );
     keyEvent = new KeyboardEvent(
+      // eslint-disable-next-line no-nested-ternary
       aEvent.key.type === "keydown"
         ? "keydown"
         : aEvent.key.type === "keyup"
@@ -2018,17 +2016,13 @@ function synthesizeComposition(aEvent, aWindow = window, aCallback) {
   try {
     switch (aEvent.type) {
       case "compositionstart":
-        ret = TIP.startComposition(keyEvent, keyEventDict.flags);
+        TIP.startComposition(keyEvent, keyEventDict.flags);
         break;
       case "compositioncommitasis":
-        ret = TIP.commitComposition(keyEvent, keyEventDict.flags);
+        TIP.commitComposition(keyEvent, keyEventDict.flags);
         break;
       case "compositioncommit":
-        ret = TIP.commitCompositionWith(
-          aEvent.data,
-          keyEvent,
-          keyEventDict.flags
-        );
+        TIP.commitCompositionWith(aEvent.data, keyEvent, keyEventDict.flags);
         break;
     }
   } finally {
@@ -2132,7 +2126,6 @@ function synthesizeCompositionChange(aEvent, aWindow = window, aCallback) {
           break;
         default:
           throw new Error("invalid clause attribute specified");
-          break;
       }
     }
   }
@@ -2153,6 +2146,7 @@ function synthesizeCompositionChange(aEvent, aWindow = window, aCallback) {
         aWindow
       );
       keyEvent = new KeyboardEvent(
+        // eslint-disable-next-line no-nested-ternary
         aEvent.key.type === "keydown"
           ? "keydown"
           : aEvent.key.type === "keyup"
@@ -2212,7 +2206,7 @@ const SELECTION_SET_FLAG_REVERSE = 0x0002;
 function synthesizeQueryTextContent(aOffset, aLength, aIsRelative, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
-    return nullptr;
+    return null;
   }
   var flags = QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK;
   if (aIsRelative === true) {
@@ -2240,10 +2234,6 @@ function synthesizeQueryTextContent(aOffset, aLength, aIsRelative, aWindow) {
  */
 function synthesizeQuerySelectedText(aSelectionType, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return null;
-  }
-
   var flags = QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK;
   if (aSelectionType) {
     flags |= aSelectionType;
@@ -2444,9 +2434,6 @@ function synthesizeNativeOSXClick(x, y) {
  */
 function synthesizeQueryTextRect(aOffset, aLength, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return nullptr;
-  }
   return utils.sendQueryContentEvent(
     utils.QUERY_TEXT_RECT,
     aOffset,
@@ -2470,9 +2457,6 @@ function synthesizeQueryTextRect(aOffset, aLength, aWindow) {
  */
 function synthesizeQueryTextRectArray(aOffset, aLength, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return nullptr;
-  }
   return utils.sendQueryContentEvent(
     utils.QUERY_TEXT_RECT_ARRAY,
     aOffset,
@@ -2492,9 +2476,6 @@ function synthesizeQueryTextRectArray(aOffset, aLength, aWindow) {
  */
 function synthesizeQueryEditorRect(aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return nullptr;
-  }
   return utils.sendQueryContentEvent(
     utils.QUERY_EDITOR_RECT,
     0,
@@ -2515,9 +2496,6 @@ function synthesizeQueryEditorRect(aWindow) {
  */
 function synthesizeCharAtPoint(aX, aY, aWindow) {
   var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return nullptr;
-  }
   return utils.sendQueryContentEvent(
     utils.QUERY_CHARACTER_AT_POINT,
     0,
@@ -2625,6 +2603,7 @@ function synthesizeDragOver(
     aDestWindow = aWindow;
   }
 
+  // eslint-disable-next-line mozilla/use-services
   const obs = _EU_Cc["@mozilla.org/observer-service;1"].getService(
     _EU_Ci.nsIObserverService
   );
@@ -2867,6 +2846,7 @@ function _computeSrcElementFromSrcSelection(aSrcSelection) {
  *                        to log rect of target.  E.g., `console.log`.
  *        }
  */
+// eslint-disable-next-line complexity
 async function synthesizePlainDragAndDrop(aParams) {
   let {
     dragEvent = {},

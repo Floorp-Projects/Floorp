@@ -6,6 +6,17 @@
 
 "use strict";
 
+// This file expects the following files to be loaded.
+/* import-globals-from TestRunner.js */
+
+// From the harness:
+/* import-globals-from ../../chrome-harness.js */
+/* import-globals-from ../../chunkifyTests.js */
+
+// It appears we expect these from one of the MochiKit scripts.
+/* global toggleElementClass, removeElementClass, addElementClass,
+          hasElementClass */
+
 TestRunner.logEnabled = true;
 TestRunner.logger = LogController;
 
@@ -210,9 +221,9 @@ RunSet.runtests = function(e) {
 RunSet.reloadAndRunAll = function(e) {
   e.preventDefault();
   //window.location.hash = "";
-  var addParam = "";
   if (params.autorun) {
     window.location.search += "";
+    // eslint-disable-next-line no-self-assign
     window.location.href = window.location.href;
   } else if (window.location.search) {
     window.location.href += "&autorun=1";
