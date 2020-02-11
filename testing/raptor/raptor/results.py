@@ -484,7 +484,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
         return results
 
-    def _extract_vmetrics(self, test_name, browsertime_json, browsertime_results):
+    def _extract_vmetrics(self, test_name, browsertime_json):
         # The visual metrics task expects posix paths.
         def _normalized_join(*args):
             path = os.path.join(*args)
@@ -493,24 +493,10 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         name = browsertime_json.split(os.path.sep)[-2]
         reldir = _normalized_join("browsertime-results", name)
 
-        def _extract_metrics(res):
-            # extracts the video files in one result and send back the
-            # mapping expected by the visual metrics task
-            vfiles = res.get("files", {}).get("video", [])
-            return [
-                {
-                    "json_location": _normalized_join(reldir, "browsertime.json"),
-                    "video_location": _normalized_join(reldir, vfile),
-                    "test_name": test_name,
-                }
-                for vfile in vfiles
-            ]
-
-        vmetrics = []
-        for res in browsertime_results:
-            vmetrics.extend(_extract_metrics(res))
-
-        return len(vmetrics) > 0 and vmetrics or None
+        return {
+            "browsertime_json_path": _normalized_join(reldir, "browsertime.json"),
+            "test_name": test_name,
+        }
 
     def summarize_and_output(self, test_config, tests, test_names):
         """
@@ -564,11 +550,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 raise
 
             if not run_local:
-                video_files = self._extract_vmetrics(
-                    test_name, bt_res_json, raw_btresults
-                )
-                if video_files:
-                    video_jobs.extend(video_files)
+                video_jobs.append(self._extract_vmetrics(test_name, bt_res_json))
 
             for new_result in self.parse_browsertime_json(
                 raw_btresults,
