@@ -86,16 +86,6 @@ ToolbarKeyboardNavigator = {
     return aRoot._toolbarKeyNavWalker;
   },
 
-  _initTabStops(aRoot) {
-    for (let stop of aRoot.getElementsByTagName("toolbartabstop")) {
-      // These are invisible, but because they need to be in the tab order,
-      // they can't get display: none or similar. They must therefore be
-      // explicitly hidden for accessibility.
-      stop.setAttribute("aria-hidden", "true");
-      stop.addEventListener("focus", this);
-    }
-  },
-
   init() {
     for (let id of this.kToolbars) {
       let toolbar = document.getElementById(id);
@@ -103,11 +93,16 @@ ToolbarKeyboardNavigator = {
       // We manage toolbar focus completely. This attribute ensures that CSS
       // doesn't set -moz-user-focus: normal.
       toolbar.setAttribute("keyNav", "true");
-      this._initTabStops(toolbar);
+      for (let stop of toolbar.getElementsByTagName("toolbartabstop")) {
+        // These are invisible, but because they need to be in the tab order,
+        // they can't get display: none or similar. They must therefore be
+        // explicitly hidden for accessibility.
+        stop.setAttribute("aria-hidden", "true");
+        stop.addEventListener("focus", this);
+      }
       toolbar.addEventListener("keydown", this);
       toolbar.addEventListener("keypress", this);
     }
-    CustomizableUI.addListener(this);
   },
 
   uninit() {
@@ -120,19 +115,6 @@ ToolbarKeyboardNavigator = {
       toolbar.removeEventListener("keypress", this);
       toolbar.removeAttribute("keyNav");
     }
-    CustomizableUI.removeListener(this);
-  },
-
-  // CustomizableUI event handler
-  onWidgetAdded(aWidgetId, aArea, aPosition) {
-    if (!this.kToolbars.includes(aArea)) {
-      return;
-    }
-    let widget = document.getElementById(aWidgetId);
-    if (!widget) {
-      return;
-    }
-    this._initTabStops(widget);
   },
 
   _focusButton(aButton) {
