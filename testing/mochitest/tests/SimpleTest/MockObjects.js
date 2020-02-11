@@ -34,7 +34,7 @@ MockObjectRegisterer.prototype = {
    */
   register: function MOR_register() {
     if (this._originalCID) {
-      throw new Exception("Invalid object state when calling register()");
+      throw new Error("Invalid object state when calling register()");
     }
 
     // Define a factory that creates a new object using the given constructor.
@@ -64,7 +64,7 @@ MockObjectRegisterer.prototype = {
       this._mockFactory
     );
     if ("error" in retVal) {
-      throw new Exception("ERROR: " + retVal.error);
+      throw new Error("ERROR: " + retVal.error);
     } else {
       this._originalCID = retVal.originalCID;
     }
@@ -75,7 +75,7 @@ MockObjectRegisterer.prototype = {
    */
   unregister: function MOR_unregister() {
     if (!this._originalCID) {
-      throw new Exception("Invalid object state when calling unregister()");
+      throw new Error("Invalid object state when calling unregister()");
     }
 
     // Free references to the mock factory.

@@ -6,6 +6,14 @@
  * data = json object {"filename":filename} <- for LoggerInit
  */
 
+// This file expects the following files to be loaded.
+/* import-globals-from ../../../modules/StructuredLog.jsm */
+/* import-globals-from LogController.js */
+/* import-globals-from MemoryStats.js */
+/* import-globals-from MozillaLogger.js */
+
+/* eslint-disable no-unsanitized/property */
+
 "use strict";
 
 function getElement(id) {
@@ -197,7 +205,7 @@ TestRunner.expectAssertions = function(min, max) {
     min < 0 ||
     max < min
   ) {
-    throw "bad parameter to expectAssertions";
+    throw new Error("bad parameter to expectAssertions");
   }
   TestRunner._expectedMinAsserts = min;
   TestRunner._expectedMaxAsserts = max;
@@ -237,11 +245,7 @@ TestRunner.generateFailureList = function() {
  **/
 
 // This delimiter is used to avoid interleaving Mochitest/Gecko logs.
-var LOG_DELIMITER =
-  String.fromCharCode(0xe175) +
-  String.fromCharCode(0xee31) +
-  String.fromCharCode(0x2c32) +
-  String.fromCharCode(0xacbf);
+var LOG_DELIMITER = "\ue175\uee31\u2c32\uacbf";
 
 // A log callback for StructuredLog.jsm
 TestRunner._dumpMessage = function(message) {
@@ -308,6 +312,7 @@ TestRunner.failureHandler = function() {
   if (TestRunner.debugOnFailure) {
     // You've hit this line because you requested to break into the
     // debugger upon a testcase failure on your test run.
+    // eslint-disable-next-line no-debugger
     debugger;
   }
 };
@@ -354,7 +359,6 @@ TestRunner._makeIframe = function(url, retry) {
   iframe.src = url;
   iframe.name = url;
   iframe.width = "500";
-  return iframe;
 };
 
 /**
@@ -608,7 +612,7 @@ TestRunner.testFinished = function(tests) {
           TestRunner._expectingProcessCrash
         ))
       ) {
-        var subtest = "expected-crash-dump-missing";
+        let subtest = "expected-crash-dump-missing";
         TestRunner.structuredLogger.testStatus(
           TestRunner.currentTestURL,
           subtest,
@@ -623,7 +627,7 @@ TestRunner.testFinished = function(tests) {
       var unexpectedCrashDumpFiles = await SpecialPowers.findUnexpectedCrashDumpFiles();
       TestRunner._expectingProcessCrash = false;
       if (unexpectedCrashDumpFiles.length) {
-        var subtest = "unexpected-crash-dump-found";
+        let subtest = "unexpected-crash-dump-found";
         TestRunner.structuredLogger.testStatus(
           TestRunner.currentTestURL,
           subtest,
