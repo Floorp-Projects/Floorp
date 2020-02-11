@@ -60,8 +60,10 @@ class Selection final : public nsSupportsWeakReference,
   virtual ~Selection();
 
  public:
-  Selection();
-  explicit Selection(nsFrameSelection* aList);
+  /**
+   * @param aFrameSelection can be nullptr.
+   */
+  explicit Selection(nsFrameSelection* aFrameSelection);
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Selection)
 
