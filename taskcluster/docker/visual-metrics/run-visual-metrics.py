@@ -4,8 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""Instrument visualmetrics.py to run in parallel.
-"""
+"""Instrument visualmetrics.py to run in parallel."""
 
 import argparse
 import os
@@ -51,12 +50,7 @@ JOB_SCHEMA = Schema(
 
 #: The schema for validating application data.
 APP_SCHEMA = Schema(
-    {
-        Required("application"): {
-            Required("name"): str,
-            Required("version"): str,
-        }
-    }
+    {Required("application"): {Required("name"): str, Required("version"): str}}
 )
 
 #: A partial schema for browsertime.json files.
@@ -64,7 +58,9 @@ BROWSERTIME_SCHEMA = Schema(
     [{Required("files"): {Required("video"): [str]}}], extra=ALLOW_EXTRA
 )
 
-PERFHERDER_SCHEMA = Path("/", "builds", "worker", "performance-artifact-schema.json")
+PERFHERDER_SCHEMA = Path(
+    "/", "builds", "worker", "performance-artifact-schema.json"
+)
 with PERFHERDER_SCHEMA.open() as f:
     PERFHERDER_SCHEMA = json.loads(f.read())
 
@@ -85,7 +81,9 @@ def run_command(log, cmd):
         log.info("Command succeeded", result=res)
         return 0, res
     except subprocess.CalledProcessError as e:
-        log.info("Command failed", cmd=cmd, status=e.returncode, output=e.output)
+        log.info(
+            "Command failed", cmd=cmd, status=e.returncode, output=e.output
+        )
         return e.returncode, e.output
 
 
@@ -112,7 +110,11 @@ def append_result(log, suites, test_name, app_name, name, result):
         # TODO: Once Bug 1593198 lands, perfherder will recognize the 'application'; then
         # it won't be necessary anymore to have the application name added to 'extraOptions'.
         # So when Bug 1593198 lands, remove the 'extraOptions' key below.
-        suites[test_name] = {"name": test_name, "subtests": {}, "extraOptions": [app_name]}
+        suites[test_name] = {
+            "name": test_name,
+            "subtests": {},
+            "extraOptions": [app_name],
+        }
 
     subtests = suites[test_name]["subtests"]
     if name not in subtests:
@@ -204,7 +206,8 @@ def main(log, args):
     visualmetrics_path = Path(fetch_dir) / "visualmetrics.py"
     if not visualmetrics_path.exists():
         log.error(
-            "Could not locate visualmetrics.py", expected_path=str(visualmetrics_path)
+            "Could not locate visualmetrics.py",
+            expected_path=str(visualmetrics_path),
         )
         return 1
 
@@ -270,8 +273,14 @@ def main(log, args):
                 # Python 3.5 requires a str object (not 3.6+)
                 res = json.loads(res.decode("utf8"))
                 for name, value in res.items():
-                    append_result(log, suites, job.test_name, app_json["application"]["name"],
-                                  name, value)
+                    append_result(
+                        log,
+                        suites,
+                        job.test_name,
+                        app_json["application"]["name"],
+                        name,
+                        value,
+                    )
 
     suites = [get_suite(suite) for suite in suites.values()]
 
@@ -314,7 +323,12 @@ def run_visual_metrics(job, visualmetrics_path, options):
     Returns:
        A returncode and a string containing the output of visualmetrics.py
     """
-    cmd = ["/usr/bin/python", str(visualmetrics_path), "--video", str(job.video_path)]
+    cmd = [
+        "/usr/bin/python",
+        str(visualmetrics_path),
+        "--video",
+        str(job.video_path),
+    ]
     cmd.extend(options)
     return run_command(log, cmd)
 
@@ -330,7 +344,8 @@ if __name__ == "__main__":
     )
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
