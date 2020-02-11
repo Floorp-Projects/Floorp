@@ -1,3 +1,15 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+"use strict";
+
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+
+AddonTestUtils.initMochitest(this);
+
 // ----------------------------------------------------------------------------
 // Tests installing an unsigned add-on by navigating directly to the url
 function test() {
@@ -18,11 +30,11 @@ function confirm_install(panel) {
 }
 
 function install_ended(install, addon) {
-  Assert.deepEqual(
-    install.installTelemetryInfo,
-    { source: "unknown", method: "link" },
-    "Got the expected install.installTelemetryInfo"
-  );
+  AddonTestUtils.checkInstallInfo(install, {
+    method: "link",
+    source: "unknown",
+    sourceURL: undefined,
+  });
   install.cancel();
 }
 
