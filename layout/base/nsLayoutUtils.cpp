@@ -10163,7 +10163,8 @@ static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
       PixelCastJustification::ContentProcessIsLayerInUiProcess);
 
   return Some(
-      browserChild->GetRemoteDocumentRect().Intersect(transformedToRoot));
+      browserChild->GetTopLevelViewportVisibleRectInBrowserCoords().Intersect(
+          transformedToRoot));
 }
 
 // static
