@@ -532,8 +532,6 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         gleanSetStartupMetrics = MainScope().launch {
             setStartupMetrics()
         }
-
-        context.settings().totalUriCount = 0
     }
 
     internal fun setStartupMetrics() {
@@ -544,7 +542,6 @@ class GleanMetricsService(private val context: Context) : MetricsService {
             }
             mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
             adjustCampaign.set(context.settings().adjustCampaignId)
-            totalUriCount.set(context.settings().totalUriCount.toString())
             toolbarPosition.set(
                 if (context.settings().shouldUseBottomToolbar) {
                     Event.ToolbarPositionChanged.Position.BOTTOM.name

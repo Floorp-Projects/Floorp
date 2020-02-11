@@ -362,20 +362,6 @@ metrics:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
-  total_uri_count:
-    type: string
-    lifetime: application
-    description: >
-      A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.
-    send_in_pings:
-      - metrics
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/4456
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/6003
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2020-09-01"
   toolbar_position:
     type: string
     lifetime: application

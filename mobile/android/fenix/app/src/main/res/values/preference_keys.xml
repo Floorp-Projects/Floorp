@@ -135,7 +135,5 @@
     <string name="pref_key_adjust_campaign" translatable="false">pref_key_adjust_campaign</string>
     <string name="pref_key_testing_stage" translatable="false">pref_key_testing_stage</string>
 
-    <string name="pref_key_total_uri" translatable="false">pref_key_total_uri</string>
-
     <string name="pref_key_encryption_key_generated" translatable="false">pref_key_encryption_key_generated</string>
 </resources>

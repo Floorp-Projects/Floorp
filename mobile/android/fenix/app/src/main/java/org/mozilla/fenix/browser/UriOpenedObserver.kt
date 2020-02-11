@@ -14,7 +14,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.ext.settings
 
 class UriOpenedObserver(
     private val context: Context,
@@ -62,7 +61,6 @@ class UriOpenedObserver(
             } else if (urlLoading != null && !session.private && temporaryFix.shouldSendEvent(session.url)) {
                 temporaryFix.eventSentFor = session.url
                 metrics.track(Event.UriOpened)
-                context.settings().totalUriCount += 1
             }
         }
     }
