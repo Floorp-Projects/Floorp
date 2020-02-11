@@ -163,6 +163,7 @@ Most GeckoView-consuming projects produced by Mozilla support dependency substit
   * [reference-browser](https://github.com/mozilla-mobile/reference-browser)
   * [android-components](https://github.com/mozilla-mobile/android-components)
   * [Firefox Reality](https://github.com/MozillaReality/FirefoxReality)
+
 Simply edit (or create) the file `local.properties` in the project root and include a line like:
 ```properties
 dependencySubstitutions.geckoviewTopsrcdir=/path/to/mozilla-central
