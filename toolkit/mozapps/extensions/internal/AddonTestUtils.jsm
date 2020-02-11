@@ -1811,6 +1811,36 @@ var AddonTestUtils = {
   },
 
   /**
+   * Asserts that the expected installTelemetryInfo properties are available
+   * on the AddonWrapper or AddonInstall objects.
+   *
+   * @param {AddonWrapper|AddonInstall} addonOrInstall
+   *        The addon or addonInstall object to check.
+   * @param {Object} expectedInstallInfo
+   *        The expected installTelemetryInfo properties
+   *        (every property can be a primitive value or a regular expression).
+   */
+  checkInstallInfo(addonOrInstall, expectedInstallInfo) {
+    const installInfo = addonOrInstall.installTelemetryInfo;
+    const { Assert } = this.testScope;
+
+    for (const key of Object.keys(expectedInstallInfo)) {
+      const actual = installInfo[key];
+      let expected = expectedInstallInfo[key];
+
+      // Assert the property value using a regular expression.
+      if (expected && typeof expected.test == "function") {
+        Assert.ok(
+          expected.test(actual),
+          `${key} value "${actual}" has the value expected: "${expected}"`
+        );
+      } else {
+        Assert.deepEqual(actual, expected, `Got the expected value for ${key}`);
+      }
+    }
+  },
+
+  /**
    * Helper to wait for a webextension to completely start
    *
    * @param {string} [id]
