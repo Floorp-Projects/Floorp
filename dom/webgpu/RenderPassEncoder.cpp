@@ -10,13 +10,7 @@
 namespace mozilla {
 namespace webgpu {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(RenderPassEncoder, RenderEncoderBase,
-                                   mParent)
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(RenderPassEncoder,
-                                               RenderEncoderBase)
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(RenderPassEncoder,
-                                               RenderEncoderBase)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+GPU_IMPL_CYCLE_COLLECTION(RenderPassEncoder, mParent)
 GPU_IMPL_JS_WRAP(RenderPassEncoder)
 
 RenderPassEncoder::~RenderPassEncoder() = default;

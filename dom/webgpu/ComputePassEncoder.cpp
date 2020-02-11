@@ -13,13 +13,7 @@
 namespace mozilla {
 namespace webgpu {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ComputePassEncoder, ProgrammablePassEncoder,
-                                   mParent)
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ComputePassEncoder,
-                                               ProgrammablePassEncoder)
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ComputePassEncoder,
-                                               ProgrammablePassEncoder)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+GPU_IMPL_CYCLE_COLLECTION(ComputePassEncoder, mParent)
 GPU_IMPL_JS_WRAP(ComputePassEncoder)
 
 ffi::WGPURawPass BeginComputePass(RawId aEncoderId,

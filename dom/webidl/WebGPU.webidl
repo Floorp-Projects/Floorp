@@ -802,9 +802,7 @@ interface GPUCommandEncoder {
 };
 GPUCommandEncoder includes GPUObjectBase;
 
-[Pref="dom.webgpu.enabled",
- Exposed=Window]
-interface GPUProgrammablePassEncoder {
+interface mixin GPUProgrammablePassEncoder {
     void setBindGroup(unsigned long index, GPUBindGroup bindGroup,
                       optional sequence<unsigned long> dynamicOffsets = []);
 
@@ -812,12 +810,9 @@ interface GPUProgrammablePassEncoder {
     //void popDebugGroup();
     //void insertDebugMarker(DOMString markerLabel);
 };
-GPUProgrammablePassEncoder includes GPUObjectBase;
 
 // Render Pass
-[Pref="dom.webgpu.enabled",
- Exposed=Window]
-interface GPURenderEncoderBase : GPUProgrammablePassEncoder {
+interface mixin GPURenderEncoderBase {
     //void setPipeline(GPURenderPipeline pipeline);
 
     //void setIndexBuffer(GPUBuffer buffer, u64 offset);
@@ -835,7 +830,7 @@ interface GPURenderEncoderBase : GPUProgrammablePassEncoder {
 
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
-interface GPURenderPassEncoder : GPURenderEncoderBase {
+interface GPURenderPassEncoder {
     //void setViewport(float x, float y,
     //                 float width, float height,
     //                 float minDepth, float maxDepth);
@@ -848,6 +843,9 @@ interface GPURenderPassEncoder : GPURenderEncoderBase {
     //void executeBundles(sequence<GPURenderBundle> bundles);
     //void endPass();
 };
+GPURenderPassEncoder includes GPUObjectBase;
+GPURenderPassEncoder includes GPUProgrammablePassEncoder;
+GPURenderPassEncoder includes GPURenderEncoderBase;
 
 // Compute Pass
 dictionary GPUComputePassDescriptor : GPUObjectDescriptorBase {
@@ -855,7 +853,7 @@ dictionary GPUComputePassDescriptor : GPUObjectDescriptorBase {
 
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
-interface GPUComputePassEncoder : GPUProgrammablePassEncoder {
+interface GPUComputePassEncoder {
     void setPipeline(GPUComputePipeline pipeline);
     void dispatch(u32 x, optional u32 y = 1, optional u32 z = 1);
     //void dispatchIndirect(GPUBuffer indirectBuffer, u64 indirectOffset);
@@ -863,6 +861,8 @@ interface GPUComputePassEncoder : GPUProgrammablePassEncoder {
     [Throws]
     void endPass();
 };
+GPUComputePassEncoder includes GPUObjectBase;
+GPUComputePassEncoder includes GPUProgrammablePassEncoder;
 
 // Command Buffer
 dictionary GPUCommandBufferDescriptor : GPUObjectDescriptorBase {
@@ -883,9 +883,11 @@ dictionary GPURenderBundleEncoderDescriptor : GPUObjectDescriptorBase {
 // Render Bundle
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
-interface GPURenderBundleEncoder : GPURenderEncoderBase {
+interface GPURenderBundleEncoder {
     //GPURenderBundle finish(optional GPURenderBundleDescriptor descriptor = {});
 };
+GPURenderBundleEncoder includes GPUObjectBase;
+GPURenderBundleEncoder includes GPURenderEncoderBase;
 
 dictionary GPURenderBundleDescriptor : GPUObjectDescriptorBase {
 };

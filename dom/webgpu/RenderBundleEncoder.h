@@ -7,7 +7,6 @@
 #define GPU_RenderBundleEncoder_H_
 
 #include "ObjectModel.h"
-#include "RenderEncoderBase.h"
 
 namespace mozilla {
 namespace webgpu {
@@ -15,22 +14,18 @@ namespace webgpu {
 class Device;
 class RenderBundle;
 
-class RenderBundleEncoder final : public RenderEncoderBase,
-                                  public ChildOf<Device> {
+class RenderBundleEncoder final : public ObjectBase, public ChildOf<Device> {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(RenderBundleEncoder,
-                                                         RenderEncoderBase)
+  GPU_DECL_CYCLE_COLLECTION(RenderBundleEncoder)
   GPU_DECL_JS_WRAP(RenderBundleEncoder)
 
   RenderBundleEncoder() = delete;
 
  private:
   ~RenderBundleEncoder() = default;
+  void Cleanup() {}
 
  public:
-  void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
-                    const dom::Sequence<uint32_t>& aDynamicOffsets) override;
 };
 
 }  // namespace webgpu
