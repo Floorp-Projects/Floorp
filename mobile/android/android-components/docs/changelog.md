@@ -15,6 +15,9 @@ permalink: /changelog/
 * **browser-icons**
   * ⚠️ **This is a breaking change**: Migrated this component to use `browser-state` instead of `browser-session`. It is now required to pass a `BrowserStore` instance (instead of `SessionManager`) to `BrowserIcons.install()`.
 
+* **support-webextensions**
+  * Emit facts on installed and enabled addon ids after web extension is initialized.
+
 # 33.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v32.0.0...v33.0.0)

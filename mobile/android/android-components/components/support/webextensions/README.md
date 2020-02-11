@@ -14,6 +14,22 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:support-webextensions:{latest-version}"
 ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action      | Item                       | Extras            | Description                     |
+|-------------|-----------------------_----|-------------------|---------------------------------|
+| Interaction | web_extensions_initialized | `extensionExtras` | Web extensions are initialized. |
+
+
+#### `extensionExtras`
+
+| Key         | Type         | Value                                 |
+|-------------|--------------|---------------------------------------|
+| "enabled"   | List<String> | List of enabled web extension ids.    |
+| "installed" | List<String> | List of installed web extensions ids. |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
