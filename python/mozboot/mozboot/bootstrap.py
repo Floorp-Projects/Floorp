@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from collections import OrderedDict
+
 import platform
 import sys
 import os
@@ -59,22 +61,12 @@ Please choose the version of Firefox you want to build:
 %s
 Your choice: '''
 
-APPLICATIONS_LIST = [
+APPLICATIONS = OrderedDict([
     ('Firefox for Desktop Artifact Mode', 'browser_artifact_mode'),
     ('Firefox for Desktop', 'browser'),
     ('GeckoView/Firefox for Android Artifact Mode', 'mobile_android_artifact_mode'),
     ('GeckoView/Firefox for Android', 'mobile_android'),
-]
-
-# TODO Legacy Python 2.6 code, can be removed.
-# This is a workaround for the fact that we must support python2.6 (which has
-# no OrderedDict)
-APPLICATIONS = dict(
-    browser_artifact_mode=APPLICATIONS_LIST[0],
-    browser=APPLICATIONS_LIST[1],
-    mobile_android_artifact_mode=APPLICATIONS_LIST[2],
-    mobile_android=APPLICATIONS_LIST[3],
-)
+])
 
 VCS_CHOICE = '''
 Firefox can be cloned using either Git or Mercurial.
@@ -412,15 +404,15 @@ class Bootstrapper(object):
     def bootstrap(self):
         if self.choice is None:
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
-            labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS_LIST)]
+            labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS)]
             prompt = APPLICATION_CHOICE % '\n'.join('  {}'.format(label) for label in labels)
             prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
-            name, application = APPLICATIONS_LIST[prompt_choice-1]
+            name, application = APPLICATIONS.items()[prompt_choice-1]
         elif self.choice not in APPLICATIONS.keys():
             raise Exception('Please pick a valid application choice: (%s)' %
                             '/'.join(APPLICATIONS.keys()))
         else:
-            name, application = APPLICATIONS[self.choice]
+            name, application = APPLICATIONS.items()[self.choice]
 
         self.instance.application = application
         self.instance.artifact_mode = 'artifact_mode' in application
