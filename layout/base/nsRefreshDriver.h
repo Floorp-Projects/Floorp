@@ -252,6 +252,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void RevokeViewManagerFlush() { mViewManagerFlushIsPending = false; }
   bool ViewManagerFlushIsPending() { return mViewManagerFlushIsPending; }
   bool HasScheduleFlush() { return mHasScheduleFlush; }
+  void ClearHasScheduleFlush() { mHasScheduleFlush = false; }
 
   /**
    * Add a document for which we have FrameRequestCallbacks
@@ -530,10 +531,14 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   bool mThrottled : 1;
   bool mNeedToRecomputeVisibility : 1;
   bool mTestControllingRefreshes : 1;
-  bool mViewManagerFlushIsPending : 1;
 
-  // True if the view manager needs a flush. Layers-free mode uses this value
-  // to know when to notify invalidation.
+  // These two fields are almost the same, the only difference is that
+  // mViewManagerFlushIsPending gets cleared right before calling
+  // ProcessPendingUpdates, and mHasScheduleFlush gets cleared right after
+  // calling ProcessPendingUpdates. It is important that mHasScheduleFlush
+  // only gets cleared after, but it's not clear if mViewManagerFlushIsPending
+  // needs to be cleared before.
+  bool mViewManagerFlushIsPending : 1;
   bool mHasScheduleFlush : 1;
 
   bool mInRefresh : 1;
