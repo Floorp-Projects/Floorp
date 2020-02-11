@@ -18,7 +18,7 @@
 
 .search-panel .treeTable {
   width: 100%;
-  color: var(--table-text-color);
+  color: var(--theme-body-color);
   outline: 0 !important;
 }
 
