@@ -451,8 +451,6 @@ class nsFrameSelection final {
    */
   nsresult RepaintSelection(mozilla::SelectionType aSelectionType);
 
-  bool IsValidSelectionPoint(nsINode* aNode) const;
-
   /**
    * Given a node and its child offset, return the nsIFrame and the offset into
    * that frame.

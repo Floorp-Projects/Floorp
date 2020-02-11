@@ -60,10 +60,8 @@ class Selection final : public nsSupportsWeakReference,
   virtual ~Selection();
 
  public:
-  /**
-   * @param aFrameSelection can be nullptr.
-   */
-  explicit Selection(nsFrameSelection* aFrameSelection);
+  Selection();
+  explicit Selection(nsFrameSelection* aList);
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Selection)
 
@@ -709,7 +707,7 @@ class Selection final : public nsSupportsWeakReference,
   void SelectFramesInAllRanges(nsPresContext* aPresContext);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  static nsresult GetTableCellLocationFromRange(const nsRange* aRange,
+  static nsresult GetTableCellLocationFromRange(nsRange* aRange,
                                                 TableSelection* aSelectionType,
                                                 int32_t* aRow, int32_t* aCol);
 
