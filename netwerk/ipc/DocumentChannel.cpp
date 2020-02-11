@@ -20,6 +20,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "nsContentSecurityManager.h"
+#include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsHttpHandler.h"
 #include "nsIInputStreamChannel.h"

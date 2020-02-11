@@ -14,6 +14,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/dom/nsCSPService.h"
 
 #include "nsHttp.h"
 #include "nsHttpChannel.h"

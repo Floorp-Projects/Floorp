@@ -10,6 +10,7 @@
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "nsGenericHTMLElement.h"
+#include "nsDocShell.h"
 #include "nsIAppWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
