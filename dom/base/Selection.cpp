@@ -80,6 +80,8 @@ using namespace mozilla::dom;
 
 //#define DEBUG_TABLE 1
 
+static bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode);
+
 #ifdef PRINT_RANGE
 static void printRange(nsRange* aDomRange);
 #  define DEBUG_OUT_RANGE(x) printRange(x)
@@ -189,8 +191,6 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
   }
 
   nsresult Init(nsFrameSelection* aFrameSelection, Selection* aSelection) {
-    MOZ_ASSERT(aFrameSelection);
-
     mFrameSelection = aFrameSelection;
     mSelection = aSelection;
     return NS_OK;
@@ -249,6 +249,33 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
 };
 
 NS_IMPL_ISUPPORTS(nsAutoScrollTimer, nsITimerCallback, nsINamed)
+
+/*
+The limiter is used specifically for the text areas and textfields
+In that case it is the DIV tag that is anonymously created for the text
+areas/fields.  Text nodes and BR nodes fall beneath it.  In the case of a
+BR node the limiter will be the parent and the offset will point before or
+after the BR node.  In the case of the text node the parent content is
+the text node itself and the offset will be the exact character position.
+The offset is not important to check for validity.  Simply look at the
+passed in content.  If it equals the limiter then the selection point is valid.
+If its parent it the limiter then the point is also valid.  In the case of
+NO limiter all points are valid since you are in a topmost iframe. (browser
+or composer)
+*/
+bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode) {
+  if (!aFrameSel || !aNode) return false;
+
+  nsIContent* limiter = aFrameSel->GetLimiter();
+  if (limiter && limiter != aNode && limiter != aNode->GetParent()) {
+    // if newfocus == the limiter. that's ok. but if not there and not parent
+    // bad
+    return false;  // not in the right content. tLimiter said so
+  }
+
+  limiter = aFrameSel->GetAncestorLimiter();
+  return !limiter || aNode->IsInclusiveDescendantOf(limiter);
+}
 
 #ifdef PRINT_RANGE
 void printRange(nsRange* aDomRange) {
@@ -390,7 +417,7 @@ void Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel,
  * a table element isn't selected.
  */
 // TODO: Figure out TableSelection::Column and TableSelection::AllCells
-static nsresult GetTableSelectionType(const nsRange* aRange,
+static nsresult GetTableSelectionType(nsRange* aRange,
                                       TableSelection* aTableSelectionType) {
   if (!aRange || !aTableSelectionType) {
     return NS_ERROR_NULL_POINTER;
@@ -443,7 +470,7 @@ static nsresult GetTableSelectionType(const nsRange* aRange,
 
 // static
 nsresult Selection::GetTableCellLocationFromRange(
-    const nsRange* aRange, TableSelection* aSelectionType, int32_t* aRow,
+    nsRange* aRange, TableSelection* aSelectionType, int32_t* aRow,
     int32_t* aCol) {
   if (!aRange || !aSelectionType || !aRow || !aCol)
     return NS_ERROR_NULL_POINTER;
@@ -517,8 +544,18 @@ nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
   return AddRangesForSelectableNodes(aRange, aOutIndex);
 }
 
-Selection::Selection(nsFrameSelection* aFrameSelection)
-    : mFrameSelection(aFrameSelection),
+Selection::Selection()
+    : mCachedOffsetForFrame(nullptr),
+      mDirection(eDirNext),
+      mSelectionType(SelectionType::eNormal),
+      mCustomColors(nullptr),
+      mSelectionChangeBlockerCount(0),
+      mUserInitiated(false),
+      mCalledByJS(false),
+      mNotifyAutoCopy(false) {}
+
+Selection::Selection(nsFrameSelection* aList)
+    : mFrameSelection(aList),
       mCachedOffsetForFrame(nullptr),
       mDirection(eDirNext),
       mSelectionType(SelectionType::eNormal),
@@ -1878,10 +1915,10 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
     SetInterlinePosition(true, IgnoreErrors());
   }
 
-  if (!mFrameSelection) return;  // nothing to do
-
   RefPtr<nsPresContext> presContext = GetPresContext();
   SelectFrames(presContext, range, true);
+
+  if (!mFrameSelection) return;  // nothing to do
 
   // Be aware, this instance may be destroyed after this call.
   // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
@@ -1910,16 +1947,6 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
-  }
-
-  const int32_t cnt = mRanges.Length();
-  if (&aRange == mAnchorFocusRange) {
-    // Reset anchor to LAST range or clear it if there are no ranges.
-    SetAnchorFocusRange(cnt - 1);
-  }
-
-  if (!mFrameSelection) {
-    return;  // nothing to do
   }
 
   nsINode* beginNode = aRange.GetStartContainer();
@@ -1960,21 +1987,21 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     SelectFrames(presContext, affectedRanges[i], true);
   }
 
+  int32_t cnt = mRanges.Length();
   if (&aRange == mAnchorFocusRange) {
+    // Reset anchor to LAST range or clear it if there are no ranges.
+    SetAnchorFocusRange(cnt - 1);
+
     // When the selection is user-created it makes sense to scroll the range
     // into view. The spell-check selection, however, is created and destroyed
     // in the background. We don't want to scroll in this case or the view
     // might appear to be moving randomly (bug 337871).
     if (mSelectionType != SelectionType::eSpellCheck && cnt > 0) {
       ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
-
-      // `ScrollIntoView` might've ran script, that shouldn't invalidate
-      // `mFrameSelection`, but for safety, it's checked here.
-      if (NS_WARN_IF(!mFrameSelection)) {
-        return;
-      }
     }
   }
+
+  if (!mFrameSelection) return;  // nothing to do
 
   // Be aware, this instance may be destroyed after this call.
   // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
@@ -2031,7 +2058,7 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   frameSelection->InvalidateDesiredPos();
-  if (!frameSelection->IsValidSelectionPoint(aPoint.Container())) {
+  if (!IsValidSelectionPoint(frameSelection, aPoint.Container())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2321,7 +2348,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
   }
 
   nsresult res;
-  if (!mFrameSelection->IsValidSelectionPoint(&aContainer)) {
+  if (!IsValidSelectionPoint(mFrameSelection, &aContainer)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -3299,13 +3326,12 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
   SelectionBatcher batch(this);
 
   if (aInLimiter == InLimiter::eYes) {
-    if (!mFrameSelection ||
-        !mFrameSelection->IsValidSelectionPoint(aStartRef.Container())) {
+    if (!IsValidSelectionPoint(mFrameSelection, aStartRef.Container())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
     if (aStartRef.Container() != aEndRef.Container() &&
-        !mFrameSelection->IsValidSelectionPoint(aEndRef.Container())) {
+        !IsValidSelectionPoint(mFrameSelection, aEndRef.Container())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
