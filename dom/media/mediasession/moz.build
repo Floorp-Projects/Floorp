@@ -9,11 +9,13 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 EXPORTS.mozilla.dom += [
     'MediaMetadata.h',
     'MediaSession.h',
+    'MediaSessionController.h',
 ]
 
 UNIFIED_SOURCES += [
     'MediaMetadata.cpp',
     'MediaSession.cpp',
+    'MediaSessionController.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
