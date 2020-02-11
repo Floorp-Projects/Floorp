@@ -60,6 +60,8 @@ class TestLocalesMixin(unittest.TestCase):
         l.config['locales_file'] = os.path.join(MH_DIR, "test/helper_files/locales.json")
         l.config['base_work_dir'] = '.'
         l.config['work_dir'] = '.'
+        l.config['l10n_dir'] = "l10n_dir"
+        l.config['locales_dir'] = "locales_dir"
         locales = l.query_locales()
         locales.sort()
         self.assertEqual(ALL_LOCALES, locales)

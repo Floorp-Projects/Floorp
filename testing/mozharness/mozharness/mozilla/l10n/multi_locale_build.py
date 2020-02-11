@@ -83,13 +83,12 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
 
     def _run_mach_command(self, args):
         dirs = self.query_abs_dirs()
-        topsrcdir = os.path.join(dirs['abs_work_dir'], 'src')
 
         mach = [sys.executable, 'mach']
 
         return_code = self.run_command(
             command=mach + ['--log-no-times'] + args,
-            cwd=topsrcdir,
+            cwd=dirs['abs_src_dir'],
         )
 
         if return_code:
