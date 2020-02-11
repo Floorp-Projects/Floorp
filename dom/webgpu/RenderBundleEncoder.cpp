@@ -11,22 +11,8 @@
 namespace mozilla {
 namespace webgpu {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(RenderBundleEncoder, RenderEncoderBase,
-                                   mParent)
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(RenderBundleEncoder,
-                                               RenderEncoderBase)
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(RenderBundleEncoder,
-                                               RenderEncoderBase)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+GPU_IMPL_CYCLE_COLLECTION(RenderBundleEncoder, mParent)
 GPU_IMPL_JS_WRAP(RenderBundleEncoder)
-
-void RenderBundleEncoder::SetBindGroup(
-    uint32_t aSlot, const BindGroup& aBindGroup,
-    const dom::Sequence<uint32_t>& aDynamicOffsets) {
-  if (mValid) {
-    MOZ_CRASH("TODO");
-  }
-}
 
 }  // namespace webgpu
 }  // namespace mozilla
