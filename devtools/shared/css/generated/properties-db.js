@@ -9529,7 +9529,6 @@ exports.CSS_PROPERTIES = {
       "margin-box",
       "none",
       "padding-box",
-      "path",
       "polygon",
       "radial-gradient",
       "repeating-linear-gradient",
