@@ -44,6 +44,7 @@ class NetworkActionBar extends Component {
       connector: PropTypes.object.isRequired,
       selectedActionBarTabId: PropTypes.string,
       selectActionBarTab: PropTypes.func.isRequired,
+      toggleNetworkActionBar: PropTypes.func.isRequired,
     };
   }
 
@@ -52,6 +53,7 @@ class NetworkActionBar extends Component {
       connector,
       selectedActionBarTabId,
       selectActionBarTab,
+      toggleNetworkActionBar,
     } = this.props;
 
     // The request blocking and search panels are available behind a pref
@@ -68,6 +70,14 @@ class NetworkActionBar extends Component {
         {
           activeTabId: selectedActionBarTabId,
           onSelect: id => selectActionBarTab(id),
+          sidebarToggleButton: {
+            collapsed: false,
+            collapsePaneTitle: L10N.getStr("collapseActionPane"),
+            expandPaneTitle: "",
+            onClick: toggleNetworkActionBar,
+            alignRight: true,
+            canVerticalSplit: false,
+          },
         },
         showSearchPanel &&
           TabPanel(
@@ -98,5 +108,6 @@ module.exports = connect(
   }),
   dispatch => ({
     selectActionBarTab: id => dispatch(Actions.selectActionBarTab(id)),
+    toggleNetworkActionBar: () => dispatch(Actions.toggleNetworkActionBar()),
   })
 )(NetworkActionBar);

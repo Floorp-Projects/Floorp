@@ -72,16 +72,6 @@ class Toolbar extends Component {
     }
   }
 
-  renderCloseButton() {
-    const { closeSearch } = this.props;
-    return button({
-      id: "devtools-network-search-close",
-      className: "devtools-button",
-      title: L10N.getStr("netmonitor.search.toolbar.close"),
-      onClick: () => closeSearch(),
-    });
-  }
-
   renderModifiers() {
     return div(
       { className: "search-modifiers" },
@@ -149,8 +139,7 @@ class Toolbar extends Component {
         className: "devtools-toolbar devtools-input-toolbar",
       },
       this.renderFilterBox(),
-      this.renderModifiers(),
-      this.renderCloseButton()
+      this.renderModifiers()
     );
   }
 }
