@@ -52,7 +52,7 @@ class FormData final : public nsISupports,
  public:
   explicit FormData(nsISupports* aOwner = nullptr,
                     NotNull<const Encoding*> aEncoding = UTF_8_ENCODING,
-                    Element* aOriginatingElement = nullptr);
+                    Element* aSubmitter = nullptr);
 
   already_AddRefed<FormData> Clone();
 

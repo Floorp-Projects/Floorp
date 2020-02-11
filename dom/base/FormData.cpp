@@ -17,14 +17,13 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 FormData::FormData(nsISupports* aOwner, NotNull<const Encoding*> aEncoding,
-                   Element* aOriginatingElement)
-    : HTMLFormSubmission(nullptr, EmptyString(), aEncoding,
-                         aOriginatingElement),
+                   Element* aSubmitter)
+    : HTMLFormSubmission(nullptr, EmptyString(), aEncoding, aSubmitter),
       mOwner(aOwner) {}
 
 FormData::FormData(const FormData& aFormData)
     : HTMLFormSubmission(aFormData.mActionURL, aFormData.mTarget,
-                         aFormData.mEncoding, aFormData.mOriginatingElement) {
+                         aFormData.mEncoding, aFormData.mSubmitter) {
   mOwner = aFormData.mOwner;
   mFormData = aFormData.mFormData;
 }
