@@ -69,8 +69,10 @@ void SpeechTrackListener::ConvertAndDispatchAudioChunk(int aDuration,
                                                        float aVolume,
                                                        SampleFormatType* aData,
                                                        TrackRate aTrackRate) {
-  RefPtr<SharedBuffer> samples(SharedBuffer::Create(aDuration * 1 *  // channel
-                                                    sizeof(int16_t)));
+  CheckedInt<size_t> bufferSize(sizeof(int16_t));
+  bufferSize *= aDuration;
+  bufferSize *= 1;  // channel
+  RefPtr<SharedBuffer> samples(SharedBuffer::Create(bufferSize));
 
   int16_t* to = static_cast<int16_t*>(samples->Data());
   ConvertAudioSamplesWithScale(aData, to, aDuration, aVolume);

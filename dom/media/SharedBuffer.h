@@ -57,9 +57,18 @@ class SharedBuffer : public ThreadSharedObject {
  public:
   void* Data() { return this + 1; }
 
-  static already_AddRefed<SharedBuffer> Create(size_t aSize,
+  // Ensure that the caller has a CheckedInt.  We have to take one by
+  // non-const reference to do that, because if we take one by const
+  // reference or value or rvalue reference the implicit constructor on
+  // CheckedInt will helpfully synthesize one for us at the callsite
+  // even if the caller passes a raw size_t.
+  static already_AddRefed<SharedBuffer> Create(CheckedInt<size_t>& aSize,
                                                const fallible_t&) {
-    void* m = operator new(AllocSize(aSize), fallible);
+    CheckedInt<size_t> allocSize = AllocSize(aSize, fallible);
+    if (!allocSize.isValid()) {
+      return nullptr;
+    }
+    void* m = operator new(allocSize.value(), fallible);
     if (!m) {
       return nullptr;
     }
@@ -67,7 +76,7 @@ class SharedBuffer : public ThreadSharedObject {
     return p.forget();
   }
 
-  static already_AddRefed<SharedBuffer> Create(size_t aSize) {
+  static already_AddRefed<SharedBuffer> Create(CheckedInt<size_t>& aSize) {
     void* m = operator new(AllocSize(aSize));
     RefPtr<SharedBuffer> p = new (m) SharedBuffer();
     return p.forget();
@@ -78,9 +87,15 @@ class SharedBuffer : public ThreadSharedObject {
   }
 
  private:
-  static size_t AllocSize(size_t aDataSize) {
+  static CheckedInt<size_t> AllocSize(CheckedInt<size_t> aDataSize,
+                                      const fallible_t&) {
     CheckedInt<size_t> size = sizeof(SharedBuffer);
     size += aDataSize;
+    return size;
+  }
+
+  static size_t AllocSize(CheckedInt<size_t> aDataSize) {
+    CheckedInt<size_t> size = AllocSize(aDataSize, fallible);
     if (!size.isValid()) {
       MOZ_CRASH();
     }

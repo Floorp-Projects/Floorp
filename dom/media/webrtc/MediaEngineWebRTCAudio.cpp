@@ -933,8 +933,10 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     mAudioProcessing->set_stream_delay_ms(0);
 
     // Bug 1414837: find a way to not allocate here.
-    RefPtr<SharedBuffer> buffer = SharedBuffer::Create(
-        mPacketizerInput->PacketSize() * aChannels * sizeof(float));
+    CheckedInt<size_t> bufferSize(sizeof(float));
+    bufferSize *= mPacketizerInput->PacketSize();
+    bufferSize *= aChannels;
+    RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
 
     // Prepare channel pointers to the SharedBuffer created above.
     AutoTArray<float*, 8> processedOutputChannelPointers;
@@ -1001,8 +1003,10 @@ void AudioInputProcessing::InsertInGraph(const T* aBuffer, size_t aFrames,
   MOZ_ASSERT(aChannels >= 1 && aChannels <= 8, "Support up to 8 channels");
 
   AudioSegment segment;
-  RefPtr<SharedBuffer> buffer =
-      SharedBuffer::Create(aFrames * aChannels * sizeof(T));
+  CheckedInt<size_t> bufferSize(sizeof(T));
+  bufferSize *= aFrames;
+  bufferSize *= aChannels;
+  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
   AutoTArray<const T*, 8> channels;
   if (aChannels == 1) {
     PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);

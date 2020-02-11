@@ -490,8 +490,10 @@ void MediaDecodeTask::FinishDecode() {
     mDecodeJob.mBuffer.mChannelData[i] = buffer->GetData(i);
   }
 #else
-  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(
-      sizeof(AudioDataValue) * resampledFrames * channelCount);
+  CheckedInt<size_t> bufferSize(sizeof(AudioDataValue));
+  bufferSize *= resampledFrames;
+  bufferSize *= channelCount;
+  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
   if (!buffer) {
     ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
     return;
