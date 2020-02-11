@@ -27,6 +27,10 @@ function ok(cond, msg) {
   Assert.ok(!!cond, msg);
 }
 
+function todo(cond, msg) {
+  todo_check_true(cond);
+}
+
 function run_test() {
   runTest();
 }
