@@ -159,28 +159,28 @@ def read_json(json_path, schema):
     """Read the given json file and verify against the provided schema.
 
     Args:
-        json_path: Filename and path of json file to parse.
-        schema: Schema to validate the json file against.
+        json_path: Path of json file to parse.
+        schema: A callable to validate the JSON's schema.
 
     Returns:
-        The read json content (dictionary).
+        The contents of the file at ``json_path`` interpreted as JSON.
     """
     try:
         with open(str(json_path), "r") as f:
-            read_json = json.load(f)
-    except Exception as e:
-        log.error(
-            "Could not read json file: %s" % e, path=json_path, exc_info=True
-        )
-        return 1
-    log.info("Loaded json from file", path=json_path, read_json=read_json)
+            data = json.load(f)
+    except Exception:
+        log.error("Could not read JSON file", path=json_path, exc_info=True)
+        raise
+
+    log.info("Loaded JSON from file", path=json_path, read_json=data)
 
     try:
-        schema(read_json)
-    except Exception as e:
-        log.error("Failed to parse json: %s" % e)
-        return 1
-    return read_json
+        schema(data)
+    except Exception:
+        log.error("JSON failed to validate", exc_info=True)
+        raise
+
+    return data
 
 
 def main(log, args):
@@ -219,17 +219,24 @@ def main(log, args):
         return 1
     log.info("Extracted browsertime results", path=args.browsertime_results)
 
-    jobs_json_path = results_path / "browsertime-results" / "jobs.json"
-    jobs_json = read_json(jobs_json_path, JOB_SCHEMA)
+    try:
+        jobs_json_path = fetch_dir / "browsertime-results" / "jobs.json"
+        jobs_json = read_json(jobs_json_path, JOB_SCHEMA)
 
-    app_json_path = results_path / "browsertime-results" / "application.json"
-    app_json = read_json(app_json_path, APP_SCHEMA)
+        app_json_path = results_path / "browsertime-results" / "application.json"
+        app_json = read_json(app_json_path, APP_SCHEMA)
+    except Exception:
+        return 1
 
     jobs = []
 
     for job in jobs_json["jobs"]:
         browsertime_json_path = fetch_dir / job["browsertime_json_path"]
-        browsertime_json = read_json(browsertime_json_path, BROWSERTIME_SCHEMA)
+
+        try:
+            browsertime_json = read_json(browsertime_json_path, BROWSERTIME_SCHEMA)
+        except Exception:
+            return 1
 
         for site in browsertime_json:
             for video in site["files"]["video"]:
