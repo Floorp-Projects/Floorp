@@ -44,13 +44,9 @@ JOB_SCHEMA = Schema(
     {
         Required("jobs"): [
             {Required("test_name"): str, Required("browsertime_json_path"): str}
-        ]
+        ],
+        Required("application"): {Required("name"): str, "version": str},
     }
-)
-
-#: The schema for validating application data.
-APP_SCHEMA = Schema(
-    {Required("application"): {Required("name"): str, Required("version"): str}}
 )
 
 #: A partial schema for browsertime.json files.
@@ -213,9 +209,6 @@ def main(log, args):
     try:
         jobs_json_path = fetch_dir / "browsertime-results" / "jobs.json"
         jobs_json = read_json(jobs_json_path, JOB_SCHEMA)
-
-        app_json_path = results_path / "browsertime-results" / "application.json"
-        app_json = read_json(app_json_path, APP_SCHEMA)
     except Exception:
         return 1
 
@@ -272,7 +265,7 @@ def main(log, args):
 
     perf_data = {
         "framework": {"name": "browsertime"},
-        "application": app_json["application"],
+        "application": jobs_json["application"],
         "type": "vismet",
         "suites": suites,
     }
