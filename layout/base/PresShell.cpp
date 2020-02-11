@@ -1351,6 +1351,7 @@ void PresShell::Destroy() {
 
   if (rd->GetPresContext() == GetPresContext()) {
     rd->RevokeViewManagerFlush();
+    rd->ClearHasScheduleFlush();
   }
 
   CancelAllPendingReflows();
