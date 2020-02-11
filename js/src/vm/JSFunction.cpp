@@ -316,10 +316,10 @@ bool CallerGetterImpl(JSContext* cx, const CallArgs& args) {
     MOZ_ASSERT(!callerFun->isBuiltin(),
                "non-builtin iterator returned a builtin?");
 
-    if (callerFun->strict()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_CALLER_IS_STRICT);
-      return false;
+    if (callerFun->strict() || callerFun->isAsync() ||
+        callerFun->isGenerator()) {
+      args.rval().setNull();
+      return true;
     }
   }
 
