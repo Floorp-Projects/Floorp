@@ -8,6 +8,7 @@
 
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/StaticPresData.h"
 
 #include "DateTimeFormat.h"
 #include "nsCOMPtr.h"
