@@ -28,7 +28,10 @@ class LocalesTest(locales.LocalesMixin, script.BaseScript):
 
 
 class TestLocalesMixin(unittest.TestCase):
-    BASE_ABS_DIRS = ['abs_log_dir', 'abs_work_dir', 'base_work_dir']
+    BASE_ABS_DIRS = {
+        'abs_log_dir', 'abs_work_dir', 'base_work_dir',
+        'abs_src_dir', 'abs_locales_src_dir', 'abs_l10n_dir',
+    }
 
     def setUp(self):
         cleanup()
@@ -83,54 +86,27 @@ class TestLocalesMixin(unittest.TestCase):
         l = LocalesTest()
         l.config['base_work_dir'] = "base_work_dir"
         l.config['work_dir'] = "work_dir"
+        l.config['l10n_dir'] = "l10n_dir"
+        l.config['locales_dir'] = "locales_dir"
         return l
 
     def test_query_abs_dirs_base(self):
         l = self._get_query_abs_dirs_obj()
-        dirs = list(l.query_abs_dirs().keys())
-        dirs.sort()
+        dirs = set(l.query_abs_dirs().keys())
         self.assertEqual(dirs, self.BASE_ABS_DIRS)
 
     def test_query_abs_dirs_base2(self):
         l = self._get_query_abs_dirs_obj()
         l.query_abs_dirs().keys()
-        dirs = list(l.query_abs_dirs().keys())
-        dirs.sort()
+        dirs = set(l.query_abs_dirs().keys())
         self.assertEqual(dirs, self.BASE_ABS_DIRS)
-
-    def test_query_abs_dirs_l10n(self):
-        l = self._get_query_abs_dirs_obj()
-        l.config['l10n_dir'] = "l10n_dir"
-        dirs = list(l.query_abs_dirs().keys())
-        dirs.sort()
-        expected_dirs = self.BASE_ABS_DIRS + ['abs_l10n_dir']
-        expected_dirs.sort()
-        self.assertEqual(dirs, expected_dirs)
-
-    def test_query_abs_dirs_mozilla(self):
-        l = self._get_query_abs_dirs_obj()
-        l.config['l10n_dir'] = "l10n_dir"
-        l.config['mozilla_dir'] = "mozilla_dir"
-        l.config['locales_dir'] = "locales_dir"
-        dirs = list(l.query_abs_dirs().keys())
-        dirs.sort()
-        expected_dirs = self.BASE_ABS_DIRS + [
-            'abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir']
-        expected_dirs.sort()
-        self.assertEqual(dirs, expected_dirs)
 
     def test_query_abs_dirs_objdir(self):
         l = self._get_query_abs_dirs_obj()
-        l.config['l10n_dir'] = "l10n_dir"
-        l.config['mozilla_dir'] = "mozilla_dir"
-        l.config['locales_dir'] = "locales_dir"
         l.config['objdir'] = "objdir"
-        dirs = list(l.query_abs_dirs().keys())
-        dirs.sort()
-        expected_dirs = self.BASE_ABS_DIRS + [
-            'abs_mozilla_dir', 'abs_locales_src_dir', 'abs_l10n_dir',
-            'abs_objdir', 'abs_locales_dir']
-        expected_dirs.sort()
+        dirs = set(l.query_abs_dirs().keys())
+        expected_dirs = self.BASE_ABS_DIRS | {'abs_objdir', 'abs_locales_dir'}
+
         self.assertEqual(dirs, expected_dirs)
 
 

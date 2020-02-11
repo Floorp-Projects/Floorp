@@ -175,10 +175,10 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         dirs = self.query_abs_dirs()
         env = self.query_repack_env()
 
-        mach = os.path.join(dirs['abs_mozilla_dir'], 'mach')
+        mach = os.path.join(dirs['abs_src_dir'], 'mach')
 
         if self.run_command([sys.executable, mach, 'configure'],
-                            cwd=dirs['abs_mozilla_dir'],
+                            cwd=dirs['abs_src_dir'],
                             env=env,
                             error_list=MakefileErrorList):
             self.fatal("Configure failed!")
@@ -190,7 +190,7 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         ]
 
         self.run_command([sys.executable, mach, 'build'] + targets,
-                         cwd=dirs['abs_mozilla_dir'],
+                         cwd=dirs['abs_src_dir'],
                          env=env,
                          error_list=MakefileErrorList,
                          halt_on_failure=True)
@@ -198,7 +198,7 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
     def setup(self):
         c = self.config
         dirs = self.query_abs_dirs()
-        mozconfig_path = os.path.join(dirs['abs_mozilla_dir'], '.mozconfig')
+        mozconfig_path = os.path.join(dirs['abs_src_dir'], '.mozconfig')
         self.copyfile(os.path.join(dirs['abs_work_dir'], c['mozconfig']),
                       mozconfig_path)
         # TODO stop using cat

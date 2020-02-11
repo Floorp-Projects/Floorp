@@ -9,6 +9,5 @@
     "l10n_dir": "l10n-central",
     "work_dir": "build",
     "locales_file": "src/mobile/locales/l10n-changesets.json",
-    "locales_platform": "android-multilocale",
-    "mozilla_dir": "src"
+    "locales_platform": "android-multilocale"
 }
