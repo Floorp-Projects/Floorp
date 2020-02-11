@@ -80,8 +80,6 @@ using namespace mozilla::dom;
 
 //#define DEBUG_TABLE 1
 
-static bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode);
-
 #ifdef PRINT_RANGE
 static void printRange(nsRange* aDomRange);
 #  define DEBUG_OUT_RANGE(x) printRange(x)
@@ -249,33 +247,6 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
 };
 
 NS_IMPL_ISUPPORTS(nsAutoScrollTimer, nsITimerCallback, nsINamed)
-
-/*
-The limiter is used specifically for the text areas and textfields
-In that case it is the DIV tag that is anonymously created for the text
-areas/fields.  Text nodes and BR nodes fall beneath it.  In the case of a
-BR node the limiter will be the parent and the offset will point before or
-after the BR node.  In the case of the text node the parent content is
-the text node itself and the offset will be the exact character position.
-The offset is not important to check for validity.  Simply look at the
-passed in content.  If it equals the limiter then the selection point is valid.
-If its parent it the limiter then the point is also valid.  In the case of
-NO limiter all points are valid since you are in a topmost iframe. (browser
-or composer)
-*/
-bool IsValidSelectionPoint(nsFrameSelection* aFrameSel, nsINode* aNode) {
-  if (!aFrameSel || !aNode) return false;
-
-  nsIContent* limiter = aFrameSel->GetLimiter();
-  if (limiter && limiter != aNode && limiter != aNode->GetParent()) {
-    // if newfocus == the limiter. that's ok. but if not there and not parent
-    // bad
-    return false;  // not in the right content. tLimiter said so
-  }
-
-  limiter = aFrameSel->GetAncestorLimiter();
-  return !limiter || aNode->IsInclusiveDescendantOf(limiter);
-}
 
 #ifdef PRINT_RANGE
 void printRange(nsRange* aDomRange) {
@@ -2058,7 +2029,7 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   frameSelection->InvalidateDesiredPos();
-  if (!IsValidSelectionPoint(frameSelection, aPoint.Container())) {
+  if (!frameSelection->IsValidSelectionPoint(aPoint.Container())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2348,7 +2319,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
   }
 
   nsresult res;
-  if (!IsValidSelectionPoint(mFrameSelection, &aContainer)) {
+  if (!mFrameSelection->IsValidSelectionPoint(&aContainer)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -3326,12 +3297,13 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
   SelectionBatcher batch(this);
 
   if (aInLimiter == InLimiter::eYes) {
-    if (!IsValidSelectionPoint(mFrameSelection, aStartRef.Container())) {
+    if (!mFrameSelection ||
+        !mFrameSelection->IsValidSelectionPoint(aStartRef.Container())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
     if (aStartRef.Container() != aEndRef.Container() &&
-        !IsValidSelectionPoint(mFrameSelection, aEndRef.Container())) {
+        !mFrameSelection->IsValidSelectionPoint(aEndRef.Container())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
