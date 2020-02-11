@@ -89,11 +89,11 @@ void MediaControlKeysManager::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
 }
 
 void MediaControlKeysManager::SetPlaybackState(PlaybackState aState) {
-  if (mEventSource) {
+  if (mEventSource && mEventSource->IsOpened()) {
     mEventSource->SetPlaybackState(aState);
   } else {
-    // If the event source haven't been created, we have to cache the state,
-    // then set the event source's state again when it's created.
+    // If the event source hasn't been created or been opened yet, we would
+    // cache the state, and set it again when creating the event source.
     mPlaybackState = aState;
   }
 }
