@@ -29,6 +29,9 @@ using namespace dom;
 
 template void DOMIterator::AppendAllNodesToArray(
     nsTArray<OwningNonNull<HTMLBRElement>>& aArrayOfNodes) const;
+template void DOMIterator::AppendNodesToArray(
+    BoolFunctor aFunctor, nsTArray<OwningNonNull<Element>>& aArrayOfNodes,
+    void* aClosure) const;
 
 /******************************************************************************
  * mozilla::EditActionResult
@@ -103,15 +106,26 @@ void DOMIterator::AppendAllNodesToArray(
   }
 }
 
-void DOMIterator::AppendList(
-    const BoolDomIterFunctor& functor,
-    nsTArray<OwningNonNull<nsINode>>& arrayOfNodes) const {
-  // Iterate through dom and build list
+template <class NodeClass>
+void DOMIterator::AppendNodesToArray(
+    BoolFunctor aFunctor, nsTArray<OwningNonNull<NodeClass>>& aArrayOfNodes,
+    void* aClosure /* = nullptr */) const {
   for (; !mIter->IsDone(); mIter->Next()) {
-    nsCOMPtr<nsINode> node = mIter->GetCurrentNode();
+    NodeClass* node = NodeClass::FromNode(mIter->GetCurrentNode());
+    if (node && aFunctor(*node, aClosure)) {
+      aArrayOfNodes.AppendElement(*node);
+    }
+  }
+}
 
-    if (functor(node)) {
-      arrayOfNodes.AppendElement(*node);
+template <>
+void DOMIterator::AppendNodesToArray(
+    BoolFunctor aFunctor, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+    void* aClosure /* = nullptr */) const {
+  for (; !mIter->IsDone(); mIter->Next()) {
+    nsINode* node = mIter->GetCurrentNode();
+    if (node && aFunctor(*node, aClosure)) {
+      aArrayOfNodes.AppendElement(*node);
     }
   }
 }

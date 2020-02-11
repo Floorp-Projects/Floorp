@@ -731,11 +731,6 @@ class MOZ_STACK_CLASS AutoRangeArray final {
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-class BoolDomIterFunctor {
- public:
-  virtual bool operator()(nsINode* aNode) const = 0;
-};
-
 class MOZ_RAII DOMIterator {
  public:
   explicit DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
@@ -750,9 +745,20 @@ class MOZ_RAII DOMIterator {
   void AppendAllNodesToArray(
       nsTArray<OwningNonNull<NodeClass>>& aArrayOfNodes) const;
 
-  void AppendList(
-      const BoolDomIterFunctor& functor,
-      nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes) const;
+  /**
+   * AppendNodesToArray() calls aFunctor before appending found node to
+   * aArrayOfNodes.  If aFunctor returns false, the node will be ignored.
+   * You can use aClosure instead of capturing something with lambda.
+   * Note that aNode is guaranteed that it's an instance of NodeClass
+   * or its sub-class.
+   * XXX If we can make type of aNode templated without std::function,
+   *     it'd be better, though.
+   */
+  typedef bool (*BoolFunctor)(nsINode& aNode, void* aClosure);
+  template <class NodeClass>
+  void AppendNodesToArray(BoolFunctor aFunctor,
+                          nsTArray<OwningNonNull<NodeClass>>& aArrayOfNodes,
+                          void* aClosure = nullptr) const;
 
  protected:
   ContentIteratorBase* mIter;
