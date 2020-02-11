@@ -7344,6 +7344,12 @@ void Document::EndLoad() {
     mParser = nullptr;
   }
 
+  // Update the attributes on the PerformanceNavigationTiming before notifying
+  // the onload observers.
+  if (nsPIDOMWindowInner* window = GetInnerWindow()) {
+    window->QueuePerformanceNavigationTiming();
+  }
+
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
   // Part 2: Code that only executes when this EndLoad matches a BeginLoad.
