@@ -7,6 +7,7 @@
 #include "WebRenderTypes.h"
 
 #include "mozilla/ipc/ByteBuf.h"
+#include "nsStyleConsts.h"
 
 namespace mozilla {
 namespace wr {
@@ -17,6 +18,51 @@ WindowId NewWindowId() {
   WindowId id;
   id.mHandle = sNextId++;
   return id;
+}
+
+BorderStyle ToBorderStyle(StyleBorderStyle aStyle) {
+  switch (aStyle) {
+    case StyleBorderStyle::None:
+      return wr::BorderStyle::None;
+    case StyleBorderStyle::Solid:
+      return wr::BorderStyle::Solid;
+    case StyleBorderStyle::Double:
+      return wr::BorderStyle::Double;
+    case StyleBorderStyle::Dotted:
+      return wr::BorderStyle::Dotted;
+    case StyleBorderStyle::Dashed:
+      return wr::BorderStyle::Dashed;
+    case StyleBorderStyle::Hidden:
+      return wr::BorderStyle::Hidden;
+    case StyleBorderStyle::Groove:
+      return wr::BorderStyle::Groove;
+    case StyleBorderStyle::Ridge:
+      return wr::BorderStyle::Ridge;
+    case StyleBorderStyle::Inset:
+      return wr::BorderStyle::Inset;
+    case StyleBorderStyle::Outset:
+      return wr::BorderStyle::Outset;
+    default:
+      MOZ_ASSERT(false);
+  }
+  return wr::BorderStyle::None;
+}
+
+wr::RepeatMode ToRepeatMode(StyleBorderImageRepeat aRepeat) {
+  switch (aRepeat) {
+    case StyleBorderImageRepeat::Stretch:
+      return wr::RepeatMode::Stretch;
+    case StyleBorderImageRepeat::Repeat:
+      return wr::RepeatMode::Repeat;
+    case StyleBorderImageRepeat::Round:
+      return wr::RepeatMode::Round;
+    case StyleBorderImageRepeat::Space:
+      return wr::RepeatMode::Space;
+    default:
+      MOZ_ASSERT(false);
+  }
+
+  return wr::RepeatMode::Stretch;
 }
 
 void Assign_WrVecU8(wr::WrVecU8& aVec, mozilla::ipc::ByteBuf&& aOther) {
