@@ -150,6 +150,7 @@ android {
     testOptions {
         execution 'ANDROIDX_TEST_ORCHESTRATOR'
         unitTests.includeAndroidResources = true
+        animationsDisabled = true
     }
 
     flavorDimensions "engine"
