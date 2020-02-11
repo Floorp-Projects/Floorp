@@ -146,6 +146,14 @@ class SettingsRobot {
             SettingsSubMenuLoginsAndPasswordRobot().interact()
             return SettingsSubMenuLoginsAndPasswordRobot.Transition()
         }
+
+        fun openTurnOnSyncMenu(interact: SettingsTurnOnSyncRobot.() -> Unit): SettingsTurnOnSyncRobot.Transition {
+            fun turnOnSyncButton() = onView(ViewMatchers.withText("Turn on Sync"))
+            turnOnSyncButton().click()
+
+            SettingsTurnOnSyncRobot().interact()
+            return SettingsTurnOnSyncRobot.Transition()
+        }
     }
 }
 

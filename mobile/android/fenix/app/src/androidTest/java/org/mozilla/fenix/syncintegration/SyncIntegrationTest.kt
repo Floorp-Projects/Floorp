@@ -9,34 +9,53 @@ import android.widget.EditText
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.replaceText
-import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.HomeActivityTestRule
-import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.accountSettings
-import org.mozilla.fenix.ui.robots.settingsSubMenuLoginsAndPassword
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
+import okhttp3.mockwebserver.MockWebServer
 import org.hamcrest.Matchers.allOf
+import org.junit.After
+import org.junit.Before
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.ext.toUri
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.accountSettings
+import org.mozilla.fenix.ui.robots.settingsSubMenuLoginsAndPassword
+import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.browserScreen
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class SyncIntegrationTest {
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+
+    @Before
+    fun setUp() {
+        mockWebServer = MockWebServer().apply {
+            setDispatcher(AndroidAssetDispatcher())
+            start()
+        }
+    }
+
+    @After
+    fun tearDown() {
+        mockWebServer.shutdown()
+    }
 
     // History item Desktop -> Fenix
     @Test
@@ -82,6 +101,7 @@ class SyncIntegrationTest {
         }
     }
 
+    // Login item Desktop -> Fenix
     @Test
     fun checkLoginsFromDesktopTest() {
         homeScreen {
@@ -113,30 +133,46 @@ class SyncIntegrationTest {
         }
     }
 
-    /* These tests will be running in the future
-    // once the test above runs successfully and
-    // the environment is stable
+    // Bookmark item Fenix -> Desktop
+    @Test
+    fun checkBookmarkFromDeviceTest() {
+        val defaultWebPage = "example.com".toUri()!!
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage) {
+        }.openThreeDotMenu {
+            verifyAddBookmarkButton()
+            clickAddBookmarkButton()
+        }
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openTurnOnSyncMenu {
+            useEmailInsteadButton()
+            typeEmail()
+            tapOnContinueButton()
+            typePassword()
+            sleep(TestAssetHelper.waitingTimeShort)
+            tapOnSignIn()
+        }
+    }
 
     // History item Fenix -> Desktop
     @Test
-    fun checkBookmarkFromDeviceTest() {
-        tapInToolBar()
-        typeInToolBar()
-        seeBookmark()
-        mDevice.pressBack()
-        signInFxSync()
-    }
-
-    // Bookmark item Fenix -> Desktop
-    @Test
     fun checkHistoryFromDeviceTest() {
-        tapInToolBar()
-        typeInToolBar()
-        sleep(TestAssetHelper.waitingTime)
-        mDevice.pressBack()
-        signInFxSync()
+        val defaultWebPage = "example.com".toUri()!!
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage) {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openTurnOnSyncMenu {
+            useEmailInsteadButton()
+            typeEmail()
+            tapOnContinueButton()
+            typePassword()
+            sleep(TestAssetHelper.waitingTimeShort)
+            tapOnSignIn()
+        }
     }
-    */
 
     // Useful functions for the tests
     fun typeEmail() {
@@ -170,11 +206,6 @@ class SyncIntegrationTest {
         mDevice.pressEnter()
     }
 
-    fun typeInToolBar() {
-        awesomeBar().perform(replaceText("example.com"),
-                pressImeActionButton())
-    }
-
     fun historyAfterSyncIsShown() {
         val historyEntry = mDevice.findObject(By.text("http://www.example.com/"))
         historyEntry.isEnabled()
@@ -183,12 +214,6 @@ class SyncIntegrationTest {
     fun bookmarkAfterSyncIsShown() {
         val bookmarkEntry = mDevice.findObject(By.text("Example Domain"))
         bookmarkEntry.isEnabled()
-    }
-
-    fun seeBookmark() {
-        mDevice.waitNotNull(Until.findObjects(By.text("Bookmark")), TestAssetHelper.waitingTime)
-        val bookmarkButton = mDevice.findObject(By.text("Bookmark"))
-        bookmarkButton.click()
     }
 
     fun tapReturnToPreviousApp() {
@@ -218,7 +243,5 @@ class SyncIntegrationTest {
 }
 
 fun settingsAccount() = onView(allOf(withText("Turn on Sync"))).perform(click())
-fun tapInToolBar() = onView(withId(R.id.toolbar_wrapper))
-fun awesomeBar() = onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
 fun useEmailInsteadButton() = onView(withId(R.id.signInEmailButton)).perform(click())
 fun enterAccountSettings() = onView(withId(R.id.email)).perform(click())
