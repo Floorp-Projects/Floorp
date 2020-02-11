@@ -2,7 +2,7 @@
 
 # ColorItem
 
-`data class ColorItem` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/prompts/src/main/java/mozilla/components/feature/prompts/dialog/BasicColorAdapter.kt#L36)
+`data class ColorItem` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/prompts/src/main/java/mozilla/components/feature/prompts/dialog/BasicColorAdapter.kt#L33)
 
 Represents an item in the [BasicColorAdapter](#) list.
 

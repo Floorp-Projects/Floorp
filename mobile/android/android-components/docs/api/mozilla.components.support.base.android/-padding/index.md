@@ -2,7 +2,7 @@
 
 # Padding
 
-`data class Padding` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/android/Padding.kt#L15)
+`data class Padding` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/android/Padding.kt#L18)
 
 A representation of an Android Padding.
 

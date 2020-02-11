@@ -2,7 +2,7 @@
 
 # SiteTrackingProtection
 
-`enum class SiteTrackingProtection` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L391)
+`enum class SiteTrackingProtection` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L393)
 
 Indicates which tracking protection status a site has.
 

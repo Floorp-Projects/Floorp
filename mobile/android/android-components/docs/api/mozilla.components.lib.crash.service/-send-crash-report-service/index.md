@@ -2,7 +2,7 @@
 
 # SendCrashReportService
 
-`class SendCrashReportService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/SendCrashReportService.kt#L22)
+`class SendCrashReportService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/SendCrashReportService.kt#L23)
 
 ### Constructors
 

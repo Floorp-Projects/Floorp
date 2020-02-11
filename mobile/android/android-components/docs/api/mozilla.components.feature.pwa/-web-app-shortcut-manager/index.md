@@ -2,7 +2,7 @@
 
 # WebAppShortcutManager
 
-`class WebAppShortcutManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L52)
+`class WebAppShortcutManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L57)
 
 Helper to manage pinned shortcuts for websites.
 

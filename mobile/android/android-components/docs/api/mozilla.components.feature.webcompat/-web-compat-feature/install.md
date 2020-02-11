@@ -2,4 +2,7 @@
 
 # install
 
-`fun install(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/webcompat/src/main/java/mozilla/components/feature/webcompat/WebCompatFeature.kt#L19)
+`fun install(runtime: `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/webcompat/src/main/java/mozilla/components/feature/webcompat/WebCompatFeature.kt#L22)
+
+Installs the web extension in the runtime through the WebExtensionRuntime install method
+

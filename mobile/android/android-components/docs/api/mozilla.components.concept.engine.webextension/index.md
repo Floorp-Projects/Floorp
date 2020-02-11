@@ -15,6 +15,7 @@
 | [Port](-port/index.md) | `abstract class Port`<br>Represents a port for exchanging messages: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/Port |
 | [WebExtension](-web-extension/index.md) | `abstract class WebExtension`<br>Represents a browser extension based on the WebExtension API: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions |
 | [WebExtensionDelegate](-web-extension-delegate/index.md) | `interface WebExtensionDelegate`<br>Notifies applications or other components of engine events related to web extensions e.g. an extension was installed, or an extension wants to open a new tab. |
+| [WebExtensionRuntime](-web-extension-runtime/index.md) | `interface WebExtensionRuntime`<br>Entry point for interacting with the web extensions. |
 
 ### Type Aliases
 
