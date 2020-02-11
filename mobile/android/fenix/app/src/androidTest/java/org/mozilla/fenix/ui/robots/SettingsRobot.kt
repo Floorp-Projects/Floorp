@@ -36,10 +36,10 @@ import org.mozilla.fenix.helpers.click
 class SettingsRobot {
 
     // BASICS SECTION
-    fun verifyBasicsHeading() = assertBasicsHeading()
+    fun verifyBasicsHeading() = assertGeneralHeading()
 
     fun verifySearchEngineButton() = assertSearchEngineButton()
-    fun verifyThemeButton() = assertThemeButton()
+    fun verifyThemeButton() = assertCustomizeButton()
     fun verifyThemeSelected() = assertThemeSelected()
     fun verifyAccessibilityButton() = assertAccessibilityButton()
     fun verifySetAsDefaultBrowserButton() = assertSetAsDefaultBrowserButton()
@@ -159,14 +159,14 @@ class SettingsRobot {
 
 private fun assertSettingsView() {
     // verify that we are in the correct library view
-    assertBasicsHeading()
+    assertGeneralHeading()
     assertPrivacyHeading()
     assertDeveloperToolsHeading()
     assertAboutHeading()
 }
 
-// BASICS SECTION
-private fun assertBasicsHeading() = onView(ViewMatchers.withText("Basics"))
+// GENERAL SECTION
+private fun assertGeneralHeading() = onView(ViewMatchers.withText("General"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertSearchEngineButton() {
@@ -175,7 +175,7 @@ private fun assertSearchEngineButton() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertThemeButton() = onView(ViewMatchers.withText("Theme"))
+private fun assertCustomizeButton() = onView(ViewMatchers.withText("Customize"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertThemeSelected() = onView(ViewMatchers.withText("Light"))
@@ -190,7 +190,7 @@ private fun assertSetAsDefaultBrowserButton() =
 
 // PRIVACY SECTION
 private fun assertPrivacyHeading() {
-    onView(ViewMatchers.withText("Privacy"))
+    onView(ViewMatchers.withText("Privacy and security"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 

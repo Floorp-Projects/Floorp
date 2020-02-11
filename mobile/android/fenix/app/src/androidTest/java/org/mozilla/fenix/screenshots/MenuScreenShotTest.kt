@@ -206,7 +206,7 @@ fun settingsAccountPreferences() = onView(withText(R.string.preferences_sync)).c
 
 fun settingsSearch() = onView(withText(R.string.preferences_search)).click()
 
-fun settingsTheme() = onView(withText(R.string.preferences_theme)).click()
+fun settingsTheme() = onView(withText(R.string.preferences_customize)).click()
 
 fun settingsAccessibility() = onView(withText(R.string.preferences_accessibility)).click()
 
