@@ -3276,9 +3276,10 @@ pdf.viewer:
     description: >
       How many times PDF Viewer was used.
     expires: never
+    kind: uint
     notification_emails:
       - bdahl@mozilla.com
-    kind: uint
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
@@ -3289,10 +3290,11 @@ pdf.viewer:
       - 1566882
     description: >
       How many times PDF Viewer fallback bar was shown.
-    expires: "75"
+    expires: "84"
+    kind: uint
     notification_emails:
       - bdahl@mozilla.com
-    kind: uint
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
@@ -3303,10 +3305,11 @@ pdf.viewer:
       - 1566882
     description: >
       How many times PDF Viewer print functionality was used.
-    expires: "75"
+    expires: "84"
+    kind: uint
     notification_emails:
       - bdahl@mozilla.com
-    kind: uint
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
