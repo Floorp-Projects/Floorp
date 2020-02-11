@@ -39,7 +39,7 @@ function* testSteps() {
     db.transaction(objectStoreName, "versionchange");
     ok(false, "TypeError shall be thrown if transaction mode is wrong.");
   } catch (e) {
-    ok(e instanceof DOMException, "got a database exception");
+    ok(e instanceof TypeError, "got a database exception");
     is(e.name, "TypeError", "correct error");
   }
 

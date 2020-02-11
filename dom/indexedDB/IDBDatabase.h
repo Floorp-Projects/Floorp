@@ -192,12 +192,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
       JSContext* aCx, const StringOrStringSequence& aStoreNames,
       IDBTransactionMode aMode, ErrorResult& aRv);
 
-  // This can be called from C++ to avoid JS exception.
-  nsresult Transaction(JSContext* aCx,
-                       const StringOrStringSequence& aStoreNames,
-                       IDBTransactionMode aMode,
-                       RefPtr<IDBTransaction>* aTransaction);
-
   StorageType Storage() const;
 
   IMPL_EVENT_HANDLER(abort)

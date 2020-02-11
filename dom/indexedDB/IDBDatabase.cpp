@@ -486,49 +486,43 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
     return nullptr;
   }
 
-  RefPtr<IDBTransaction> transaction;
-  aRv = Transaction(aCx, aStoreNames, aMode, &transaction);
-  if (NS_WARN_IF(aRv.Failed())) {
+  if (QuotaManager::IsShuttingDown()) {
+    IDB_REPORT_INTERNAL_ERR();
+    aRv.ThrowUnknownError("Can't start IndexedDB transaction during shutdown");
     return nullptr;
   }
 
-  return transaction;
-}
-
-nsresult IDBDatabase::Transaction(JSContext* aCx,
-                                  const StringOrStringSequence& aStoreNames,
-                                  IDBTransactionMode aMode,
-                                  RefPtr<IDBTransaction>* aTransaction) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aTransaction);
-
-  if (NS_WARN_IF((aMode == IDBTransactionMode::Readwriteflush ||
-                  aMode == IDBTransactionMode::Cleanup) &&
-                 !IndexedDatabaseManager::ExperimentalFeaturesEnabled())) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  // https://w3c.github.io/IndexedDB/#dom-idbdatabase-transaction
+  // Step 1.
+  if (RunningVersionChangeTransaction()) {
+    aRv.ThrowInvalidStateError(
+        "Can't start a transaction while running an upgrade transaction");
+    return nullptr;
   }
 
-  if (QuotaManager::IsShuttingDown()) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  // Step 2.
+  if (mClosed) {
+    aRv.ThrowInvalidStateError(
+        "Can't start a transaction on a closed database");
+    return nullptr;
   }
 
-  if (mClosed || RunningVersionChangeTransaction()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
-
+  // Step 3.
   AutoTArray<nsString, 1> stackSequence;
 
   if (aStoreNames.IsString()) {
     stackSequence.AppendElement(aStoreNames.GetAsString());
   } else {
     MOZ_ASSERT(aStoreNames.IsStringSequence());
+    // Step 5, but it can be done before step 4 because those steps
+    // can't both throw.
     if (aStoreNames.GetAsStringSequence().IsEmpty()) {
-      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      aRv.ThrowInvalidAccessError("Empty scope passed in");
+      return nullptr;
     }
   }
 
+  // Step 4.
   const nsTArray<nsString>& storeNames =
       aStoreNames.IsString() ? stackSequence
                              : static_cast<const nsTArray<nsString>&>(
@@ -551,7 +545,11 @@ nsresult IDBDatabase::Transaction(JSContext* aCx,
           return objectStore.metadata().name() == name;
         });
     if (foundIt == end) {
-      return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
+      // Not using nsPrintfCString in case "name" has embedded nulls.
+      aRv.ThrowNotFoundError(
+          NS_LITERAL_CSTRING("'") + NS_ConvertUTF16toUTF8(name) +
+          NS_LITERAL_CSTRING("' is not a known object store name"));
+      return nullptr;
     }
 
     sortedStoreNames.EmplaceBack(name);
@@ -583,19 +581,23 @@ nsresult IDBDatabase::Transaction(JSContext* aCx,
       mQuotaExceeded = false;
       break;
     case IDBTransactionMode::Versionchange:
-      return NS_ERROR_DOM_TYPE_ERR;
+      // Step 6.
+      aRv.ThrowTypeError(u"Invalid transaction mode");
+      return nullptr;
 
     default:
       MOZ_CRASH("Unknown mode!");
   }
 
-  *aTransaction = IDBTransaction::Create(aCx, this, sortedStoreNames, mode);
-  if (NS_WARN_IF(!*aTransaction)) {
+  RefPtr<IDBTransaction> transaction =
+      IDBTransaction::Create(aCx, this, sortedStoreNames, mode);
+  if (NS_WARN_IF(!transaction)) {
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    MOZ_ASSERT(!NS_IsMainThread(),
+               "Transaction creation can only fail on workers");
+    aRv.ThrowUnknownError("Failed to create IndexedDB transaction on worker");
+    return nullptr;
   }
-
-  const auto& transaction = *aTransaction;
 
   BackgroundTransactionChild* actor =
       new BackgroundTransactionChild(transaction);
@@ -616,7 +618,7 @@ nsresult IDBDatabase::Transaction(JSContext* aCx,
     ExpireFileActors(/* aExpireAll */ true);
   }
 
-  return NS_OK;
+  return transaction;
 }
 
 StorageType IDBDatabase::Storage() const {
