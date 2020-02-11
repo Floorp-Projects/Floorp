@@ -8,9 +8,7 @@
 #define mozilla_Selection_h__
 
 #include "mozilla/dom/StyledRange.h"
-#include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/SelectionChangeEventDispatcher.h"
 #include "mozilla/TextRange.h"
@@ -35,6 +33,7 @@ class nsCopySupport;
 class nsHTMLCopyEncoder;
 
 namespace mozilla {
+class AccessibleCaretEventHub;
 class ErrorResult;
 class HTMLEditor;
 class PostContentIterator;
@@ -84,19 +83,13 @@ class Selection final : public nsSupportsWeakReference,
    * MaybeNotifyAccessibleCaretEventHub() starts to notify
    * AccessibleCaretEventHub of selection change if aPresShell has it.
    */
-  void MaybeNotifyAccessibleCaretEventHub(PresShell* aPresShell) {
-    if (!mAccessibleCaretEventHub && aPresShell) {
-      mAccessibleCaretEventHub = aPresShell->GetAccessibleCaretEventHub();
-    }
-  }
+  void MaybeNotifyAccessibleCaretEventHub(PresShell* aPresShell);
 
   /**
    * StopNotifyingAccessibleCaretEventHub() stops notifying
    * AccessibleCaretEventHub of selection change.
    */
-  void StopNotifyingAccessibleCaretEventHub() {
-    mAccessibleCaretEventHub = nullptr;
-  }
+  void StopNotifyingAccessibleCaretEventHub();
 
   /**
    * EnableSelectionChangeEvent() starts to notify

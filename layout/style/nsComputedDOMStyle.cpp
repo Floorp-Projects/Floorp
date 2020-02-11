@@ -23,6 +23,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
 

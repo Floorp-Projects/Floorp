@@ -14,6 +14,7 @@
 #include "mozilla/PresShell.h"
 
 #include "nsDocLoader.h"
+#include "nsDocShell.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
 #include "nsIWebNavigation.h"

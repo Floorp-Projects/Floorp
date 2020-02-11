@@ -26,6 +26,7 @@
 #include "nsCOMArray.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLDocument.h"
