@@ -215,40 +215,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  // Use ntdll.dll because it does not have any forwarder RVA.
-  HMODULE ntdllImageBase = ::GetModuleHandleW(L"ntdll.dll");
-  PEHeaders ntdllHeaders(ntdllImageBase);
-
-  auto exportDir = ntdllHeaders.GetExportDirectory();
-  auto tableOfNames = ntdllHeaders.RVAToPtr<PDWORD>(exportDir->AddressOfNames);
-  for (DWORD i = 0; i < exportDir->NumberOfNames; ++i) {
-    const auto name = ntdllHeaders.RVAToPtr<const char*>(tableOfNames[i]);
-    const DWORD* funcEntry = ntdllHeaders.FindExportAddressTableEntry(name);
-    if (ntdllHeaders.RVAToPtr<const void*>(*funcEntry) !=
-        ::GetProcAddress(ntdllImageBase, name)) {
-      printf(
-          "TEST-FAILED | NativeNt | FindExportAddressTableEntry returned "
-          "a wrong value.\n");
-      return 1;
-    }
-  }
-
-  // Test a known forwarder RVA.
-  if (k32headers.FindExportAddressTableEntry("HeapAlloc")) {
-    printf(
-        "TEST-FAILED | NativeNt | kernel32!HeapAlloc should be forwarded to "
-        "ntdll!RtlAllocateHeap.\n");
-    return 1;
-  }
-
-  // Test an invalid name.
-  if (k32headers.FindExportAddressTableEntry("Invalid name")) {
-    printf(
-        "TEST-FAILED | NativeNt | FindExportAddressTableEntry should return "
-        "null for an non-existent name.\n");
-    return 1;
-  }
-
   printf("TEST-PASS | NativeNt | All tests ran successfully\n");
   return 0;
 }
