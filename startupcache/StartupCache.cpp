@@ -147,26 +147,7 @@ StartupCache::StartupCache()
       mPrefetchThread(nullptr) {}
 
 StartupCache::~StartupCache() {
-  if (mTimer) {
-    mTimer->Cancel();
-  }
-
-  // Generally, the in-memory table should be empty here,
-  // but an early shutdown means either mTimer didn't run
-  // or the write thread is still running.
   WaitOnWriteThread();
-  WaitOnPrefetchThread();
-
-  // If we shutdown quickly timer wont have fired. Instead of writing
-  // it on the main thread and block the shutdown we simply wont update
-  // the startup cache. Always do this if the file doesn't exist since
-  // we use it part of the package step.
-  if (!mCacheData.initialized() || ShouldCompactCache()) {
-    mDirty = true;
-    auto result = WriteToDisk();
-    Unused << NS_WARN_IF(result.isErr());
-  }
-
   UnregisterWeakMemoryReporter(this);
 }
 
@@ -613,6 +594,25 @@ void StartupCache::InvalidateCache(bool memoryOnly) {
   }
 }
 
+void StartupCache::MaybeInitShutdownWrite() {
+  if (mTimer) {
+    mTimer->Cancel();
+  }
+  gShutdownInitiated = true;
+
+  MaybeSpawnWriteThread();
+
+  // If we shutdown quickly timer wont have fired. Instead of writing
+  // it on the main thread and block the shutdown we simply wont update
+  // the startup cache. Always do this if the file doesn't exist since
+  // we use it part of the package step.
+  if (!mCacheData.initialized() || ShouldCompactCache()) {
+    mDirty = true;
+    auto result = WriteToDisk();
+    Unused << NS_WARN_IF(result.isErr());
+  }
+}
+
 void StartupCache::IgnoreDiskCache() {
   gIgnoreDiskCache = true;
   if (gStartupCache) gStartupCache->InvalidateCache();
@@ -690,22 +690,28 @@ void StartupCache::WriteTimeout(nsITimer* aTimer, void* aClosure) {
    * if the StartupCache object is valid.
    */
   StartupCache* startupCacheObj = static_cast<StartupCache*>(aClosure);
-  if (startupCacheObj->mWrittenOnce) {
+  startupCacheObj->MaybeSpawnWriteThread();
+}
+
+/*
+ * See StartupCache::WriteTimeout above - this is just the non-static body.
+ */
+void StartupCache::MaybeSpawnWriteThread() {
+  if (mWrittenOnce || mWriteThread) {
     return;
   }
 
-  if (startupCacheObj->mCacheData.initialized() &&
-      !startupCacheObj->ShouldCompactCache()) {
+  if (mCacheData.initialized() && !ShouldCompactCache()) {
     return;
   }
 
-  startupCacheObj->WaitOnPrefetchThread();
-  startupCacheObj->mStartupWriteInitiated = false;
-  startupCacheObj->mDirty = true;
-  startupCacheObj->mCacheData.reset();
-  startupCacheObj->mWriteThread = PR_CreateThread(
-      PR_USER_THREAD, StartupCache::ThreadedWrite, startupCacheObj,
-      PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 512 * 1024);
+  WaitOnPrefetchThread();
+  mStartupWriteInitiated = false;
+  mDirty = true;
+  mCacheData.reset();
+  mWriteThread = PR_CreateThread(PR_USER_THREAD, StartupCache::ThreadedWrite,
+                                 this, PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                                 PR_JOINABLE_THREAD, 512 * 1024);
 }
 
 // We don't want to refcount StartupCache, so we'll just
