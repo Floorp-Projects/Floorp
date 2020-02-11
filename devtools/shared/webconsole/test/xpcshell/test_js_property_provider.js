@@ -594,6 +594,70 @@ function runChecks(dbgObject, environment, sandbox) {
   });
   test_has_result(results, "'propA'");
   Assert.equal(results.matches.has("propLocal"), false);
+
+  info("Test that expression with optional chaining operator are completed");
+  results = propertyProvider("testObject?.prop");
+  test_has_result(results, "propA");
+
+  results = propertyProvider("testObject?.propA[0]?.propB?.to");
+  test_has_result(results, "toString");
+
+  results = propertyProvider("testObject?.propA?.[0]?.propB?.to");
+  test_has_result(results, "toString");
+
+  results = propertyProvider(
+    "testObject      ?.    propA[0]    ?.    propB  ?.   to"
+  );
+  test_has_result(results, "toString");
+
+  results = propertyProvider("testObject?.[prop");
+  test_has_result(results, '"propA"');
+
+  results = propertyProvider(`testObject?.["prop`);
+  test_has_result(results, '"propA"');
+
+  results = propertyProvider(`testObject?.['prop`);
+  test_has_result(results, `'propA'`);
+
+  results = propertyProvider(`testObject?.["propA"]?.[0]?.["propB"]?.["to`);
+  test_has_result(results, `"toString"`);
+
+  results = propertyProvider(
+    `testObject  ?.    ["propA"]  ?.   [0]  ?.   ["propB"]  ?.  ['to`
+  );
+  test_has_result(results, "'toString'");
+
+  results = propertyProvider("[1,2,3]?.");
+  test_has_result(results, "indexOf");
+
+  results = propertyProvider("'foo'?.");
+  test_has_result(results, "charAt");
+
+  results = propertyProvider("1?.");
+  test_has_result(results, "toFixed");
+
+  // check this doesn't throw since `propC` is not defined.
+  results = propertyProvider("testObject?.propC?.this?.does?.not?.exist?.d");
+
+  // check that ternary operator isn't mistaken for optional chaining
+  results = propertyProvider(`true?.3.to`);
+  test_has_result(results, `toExponential`);
+
+  results = propertyProvider(`true?.3?.to`);
+  test_has_result(results, `toExponential`);
+
+  // Test more ternary
+  results = propertyProvider(`true?t`);
+  test_has_result(results, `testObject`);
+
+  results = propertyProvider(`true??t`);
+  test_has_result(results, `testObject`);
+
+  results = propertyProvider(`true?/* comment */t`);
+  test_has_result(results, `testObject`);
+
+  results = propertyProvider(`true?<t`);
+  test_has_no_results(results);
 }
 
 /**
@@ -615,7 +679,12 @@ function test_has_no_results(results) {
 function test_has_result(results, requiredSuggestion) {
   Assert.notEqual(results, null);
   Assert.ok(results.matches.size > 0);
-  Assert.ok(results.matches.has(requiredSuggestion));
+  Assert.ok(
+    results.matches.has(requiredSuggestion),
+    `<${requiredSuggestion}> found in ${[...results.matches.values()].join(
+      " - "
+    )}`
+  );
 }
 
 /**
