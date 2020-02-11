@@ -94,6 +94,7 @@ class _SphinxManager(object):
 
         logger.info('Staging static documentation')
         self._synchronize_docs()
+
         logger.info('Generating Python API documentation')
         self._generate_python_api_docs()
 
@@ -155,7 +156,7 @@ class _SphinxManager(object):
 
         for dest, source in sorted(self.trees.items()):
             source_dir = os.path.join(self.topsrcdir, source)
-            for root, dirs, files in os.walk(source_dir):
+            for root, _, files in os.walk(source_dir):
                 for f in files:
                     source_path = os.path.normpath(os.path.join(root, f))
                     rel_source = source_path[len(source_dir) + 1:]
