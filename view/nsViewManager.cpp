@@ -1017,6 +1017,11 @@ void nsViewManager::ProcessPendingUpdates() {
     CallWillPaintOnObservers();
 
     ProcessPendingUpdatesForView(mRootView, true);
+    if (mPresShell) {
+      if (nsPresContext* pc = mPresShell->GetPresContext()) {
+        pc->RefreshDriver()->ClearHasScheduleFlush();
+      }
+    }
   }
 }
 
