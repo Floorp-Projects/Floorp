@@ -140,11 +140,11 @@ class LocalesMixin(object):
 
         if 'objdir' in c:
             if os.path.isabs(c['objdir']):
-                dirs['abs_objdir'] = c['objdir']
+                dirs['abs_obj_dir'] = c['objdir']
             else:
-                dirs['abs_objdir'] = os.path.join(dirs['abs_src_dir'],
-                                                  c['objdir'])
-            dirs['abs_locales_dir'] = os.path.join(dirs['abs_objdir'],
+                dirs['abs_obj_dir'] = os.path.join(dirs['abs_src_dir'],
+                                                   c['objdir'])
+            dirs['abs_locales_dir'] = os.path.join(dirs['abs_obj_dir'],
                                                    c['locales_dir'])
 
         for key in list(dirs.keys()):
