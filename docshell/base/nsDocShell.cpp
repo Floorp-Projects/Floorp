@@ -9789,8 +9789,18 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   }
 
   if (mLoadType == LOAD_ERROR_PAGE) {
-    // Error pages are LOAD_BACKGROUND
-    loadFlags |= nsIChannel::LOAD_BACKGROUND;
+    // Error pages are LOAD_BACKGROUND, unless it's an
+    // XFO error for which we want an error page to load
+    // but additionally want the onload() event to fire.
+    bool isXFOError = false;
+    if (mFailedChannel) {
+      nsresult status;
+      mFailedChannel->GetStatus(&status);
+      isXFOError = status == NS_ERROR_XFO_VIOLATION;
+    }
+    if (!isXFOError) {
+      loadFlags |= nsIChannel::LOAD_BACKGROUND;
+    }
     securityFlags |= nsILoadInfo::SEC_LOAD_ERROR_PAGE;
   }
 
