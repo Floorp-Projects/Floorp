@@ -240,7 +240,7 @@ class AddonsManagerAdapter(
 
         // Add installed section and addons if available
         if (installedAddons.isNotEmpty()) {
-            itemsWithSections.add(Section(R.string.mozac_feature_addons_installed_section))
+            itemsWithSections.add(Section(R.string.mozac_feature_addons_enabled))
             itemsWithSections.addAll(installedAddons)
         }
 

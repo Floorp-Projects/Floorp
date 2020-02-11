@@ -144,9 +144,9 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
 
     private fun Switch.setState(checked: Boolean) {
         val text = if (checked) {
-            R.string.mozac_feature_addons_settings_on
+            R.string.mozac_feature_addons_enabled
         } else {
-            R.string.mozac_feature_addons_settings_off
+            R.string.mozac_feature_addons_disabled
         }
         setText(text)
         isChecked = checked

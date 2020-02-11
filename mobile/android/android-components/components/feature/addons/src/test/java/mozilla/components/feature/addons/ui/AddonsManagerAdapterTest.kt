@@ -66,7 +66,7 @@ class AddonsManagerAdapterTest {
 
         assertEquals(7, itemsWithSections.size)
         assertEquals(
-            R.string.mozac_feature_addons_installed_section,
+            R.string.mozac_feature_addons_enabled,
             (itemsWithSections[0] as Section).title
         )
         assertEquals(installedAddon, itemsWithSections[1])
