@@ -22,6 +22,7 @@
 
 class nsICanvasRenderingContextInternal;
 class nsITimerCallback;
+enum class gfxAlphaType;
 
 namespace mozilla {
 
@@ -402,7 +403,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   bool IsPrintCallbackDone();
 
-  void HandlePrintCallback(nsPresContext::nsPresContextType aType);
+  void HandlePrintCallback(nsPresContext*);
 
   nsresult DispatchPrintCallback(nsITimerCallback* aCallback);
 

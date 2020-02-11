@@ -56,6 +56,7 @@
 #include "mozilla/AspectRatio.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SmallPointerArray.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/WritingModes.h"
 #include "nsDirection.h"
 #include "nsFrameList.h"
@@ -99,6 +100,7 @@
 class nsAtom;
 class nsPresContext;
 class nsView;
+class nsFrameSelection;
 class nsIWidget;
 class nsISelectionController;
 class nsBoxLayoutState;

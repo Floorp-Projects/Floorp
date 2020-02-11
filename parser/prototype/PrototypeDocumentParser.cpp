@@ -11,6 +11,7 @@
 #include "nsParserCIID.h"
 #include "mozilla/Encoding.h"
 #include "nsCharsetSource.h"
+#include "mozilla/dom/URL.h"
 #include "mozilla/dom/PrototypeDocumentContentSink.h"
 
 using namespace mozilla::dom;
