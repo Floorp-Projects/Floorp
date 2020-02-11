@@ -284,6 +284,8 @@ class ModuleObject : public NativeObject {
 
   void setInitialEnvironment(
       Handle<ModuleEnvironmentObject*> initialEnvironment);
+
+  void initStatusSlot();
   void initImportExportData(HandleArrayObject requestedModules,
                             HandleArrayObject importEntries,
                             HandleArrayObject localExportEntries,

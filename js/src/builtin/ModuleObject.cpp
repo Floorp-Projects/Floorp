@@ -838,7 +838,6 @@ FunctionDeclarationVector* ModuleObject::functionDeclarations() {
 void ModuleObject::initScriptSlots(HandleScript script) {
   MOZ_ASSERT(script);
   initReservedSlot(ScriptSlot, PrivateGCThingValue(script));
-  initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNINSTANTIATED));
   initReservedSlot(ScriptSourceObjectSlot,
                    ObjectValue(*script->sourceObject()));
 }
@@ -846,6 +845,10 @@ void ModuleObject::initScriptSlots(HandleScript script) {
 void ModuleObject::setInitialEnvironment(
     HandleModuleEnvironmentObject initialEnvironment) {
   initReservedSlot(EnvironmentSlot, ObjectValue(*initialEnvironment));
+}
+
+void ModuleObject::initStatusSlot() {
+  initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNINSTANTIATED));
 }
 
 void ModuleObject::initImportExportData(HandleArrayObject requestedModules,
@@ -859,7 +862,6 @@ void ModuleObject::initImportExportData(HandleArrayObject requestedModules,
   initReservedSlot(IndirectExportEntriesSlot,
                    ObjectValue(*indirectExportEntries));
   initReservedSlot(StarExportEntriesSlot, ObjectValue(*starExportEntries));
-  setReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNINSTANTIATED));
 }
 
 static bool FreezeObjectProperty(JSContext* cx, HandleNativeObject obj,
@@ -1997,6 +1999,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
 
   if (mode == XDR_DECODE) {
     module->initScriptSlots(script);
+    module->initStatusSlot();
   }
 
   /* Environment Slot */
