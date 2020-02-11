@@ -164,7 +164,7 @@ void HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
 }
 
 Maybe<nsStyleLinkElement::SheetInfo> HTMLStyleElement::GetStyleSheetInfo() {
-  if (!IsCSSMimeTypeAttribute(*this)) {
+  if (!IsCSSMimeTypeAttributeForStyleElement(*this)) {
     return Nothing();
   }
 

@@ -172,7 +172,7 @@ void SVGStyleElement::SetTitle(const nsAString& aTitle, ErrorResult& rv) {
 // nsStyleLinkElement methods
 
 Maybe<nsStyleLinkElement::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
-  if (!IsCSSMimeTypeAttribute(*this)) {
+  if (!IsCSSMimeTypeAttributeForStyleElement(*this)) {
     return Nothing();
   }
 
