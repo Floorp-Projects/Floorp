@@ -697,8 +697,6 @@ main {
   left: 0;
   margin: 0 auto;
   max-height: calc(100% - 40px);
-  overflow-y: auto;
-  overflow-x: hidden;
   position: fixed;
   right: 0;
   top: 40px;
@@ -3336,8 +3334,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   display: none;
-  z-index: 1100;
-  overflow: auto; }
+  z-index: 1100; }
   @media (max-width: 960px) {
     .modalOverlayInner {
       height: 100%;
