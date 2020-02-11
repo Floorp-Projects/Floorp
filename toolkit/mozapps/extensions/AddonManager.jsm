@@ -3307,6 +3307,7 @@ var AddonManagerInternal = {
         hash: options.hash,
         telemetryInfo: {
           source: AddonManager.getInstallSourceFromHost(options.sourceHost),
+          sourceURL: options.sourceURL,
           method: "amWebAPI",
         },
       }).then(install => {
