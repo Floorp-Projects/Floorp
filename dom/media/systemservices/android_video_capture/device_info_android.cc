@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_capture/android/device_info_android.h"
+#include "device_info_android.h"
 
 #include <algorithm>
 #include <string>
@@ -17,7 +17,6 @@
 
 #include "rtc_base/logging.h"
 #include "modules/utility/include/helpers_android.h"
-#include "modules/video_capture/android/video_capture_android.h"
 
 #include "mozilla/jni/Utils.h"
 
