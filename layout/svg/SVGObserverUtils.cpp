@@ -849,7 +849,7 @@ SVGMaskObserverList::SVGMaskObserverList(nsIFrame* aFrame) : mFrame(aFrame) {
 
   for (uint32_t i = 0; i < svgReset->mMask.mImageCount; i++) {
     const StyleComputedImageUrl* data =
-        svgReset->mMask.mLayers[i].mImage.GetURLValue();
+        svgReset->mMask.mLayers[i].mImage.GetImageRequestURLValue();
     RefPtr<URLAndReferrerInfo> maskUri;
     if (data) {
       maskUri = ResolveURLUsingLocalRef(aFrame, *data);
@@ -876,17 +876,16 @@ void SVGMaskObserverList::ResolveImage(uint32_t aIndex) {
   const nsStyleSVGReset* svgReset = mFrame->StyleSVGReset();
   MOZ_ASSERT(aIndex < svgReset->mMask.mImageCount);
 
-  auto& image =
-      const_cast<nsStyleImage&>(svgReset->mMask.mLayers[aIndex].mImage);
-
-  if (!image.IsResolved()) {
-    MOZ_ASSERT(image.GetType() == nsStyleImageType::eStyleImageType_Image);
-    image.ResolveImage(*mFrame->PresContext()->Document(), nullptr);
-
-    Document* doc = mFrame->PresContext()->Document();
-    if (imgRequestProxy* req = image.GetImageData()) {
-      doc->StyleImageLoader()->AssociateRequestToFrame(req, mFrame, 0);
-    }
+  auto& image = const_cast<StyleImage&>(svgReset->mMask.mLayers[aIndex].mImage);
+  if (image.IsResolved()) {
+    return;
+  }
+  MOZ_ASSERT(image.IsImageRequestType());
+  Document* doc = mFrame->PresContext()->Document();
+  image.ResolveImage(*doc, nullptr);
+  if (imgRequestProxy* req = image.GetImageRequest()) {
+    // FIXME(emilio): What disassociates this request?
+    doc->StyleImageLoader()->AssociateRequestToFrame(req, mFrame, 0);
   }
 }
 
@@ -1265,8 +1264,9 @@ static nsSVGPaintingProperty* GetOrCreateClipPathObserver(
   if (svgStyleReset->mClipPath.GetType() != StyleShapeSourceType::Image) {
     return nullptr;
   }
-  const auto* url = svgStyleReset->mClipPath.ShapeImage().GetURLValue();
-  MOZ_ASSERT(url);
+  const auto* url =
+      svgStyleReset->mClipPath.ShapeImage().GetImageRequestURLValue();
+  MOZ_ASSERT(url, "Clip-path only supports url() images");
   RefPtr<URLAndReferrerInfo> pathURI =
       ResolveURLUsingLocalRef(aClippedFrame, *url);
   return GetPaintingProperty(pathURI, aClippedFrame, ClipPathProperty());

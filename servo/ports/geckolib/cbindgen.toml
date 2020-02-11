@@ -703,31 +703,76 @@ renaming_overrides_prefixing = true
 """
 
 "GenericRotate" = """
-public:
+ public:
   // The implementation of IPC LayersMessages needs this to be public.
   StyleGenericRotate(): tag(Tag::None) {}
 """
 
 "GenericScale" = """
-public:
+ public:
   // The implementation of IPC LayersMessages needs this to be public.
   StyleGenericScale(): tag(Tag::None) {}
 """
 
 "GenericTranslate" = """
-public:
+ public:
   // The implementation of IPC LayersMessages needs this to be public.
   StyleGenericTranslate(): tag(Tag::None) {}
 """
 
 "GenericOffsetPath" = """
-public:
+ public:
   // The implementation of IPC LayersMessages needs this to be public.
   StyleGenericOffsetPath(): tag(Tag::None) {}
 """
 
 "GenericPositionOrAuto" = """
-public:
+ public:
   // The implementation of IPC LayersMessages needs this to be public.
   StyleGenericPositionOrAuto(): tag(Tag::Auto) {}
+"""
+
+"GenericImage" = """
+ public:
+  // Whether this image may have an image request associated with it.
+  bool IsImageRequestType() const;
+
+  // Gets the image request URL.
+  const StyleComputedImageUrl* GetImageRequestURLValue() const;
+
+  // Gets the image data of this image if it has any image request.
+  imgRequestProxy* GetImageRequest() const;
+
+  // Returns true if this image is fully loaded, and its size is calculated.
+  // Always returns true if there's no image request involved and this image
+  // is not `none`.
+  bool IsComplete() const;
+
+  // Returns true if this image has an available size and hasn't errored.
+  // Always returns true if there's no image request involved and this image
+  // is not `none`.
+  bool IsSizeAvailable() const;
+
+  // Starts the decoding of a image. Returns true if the current frame of the
+  // image is complete. The return value is intended to be used instead of
+  // IsComplete because IsComplete may not be up to date if notifications
+  // from decoding are pending because they are being sent async.
+  bool StartDecoding() const;
+
+  // Returns true if the item is definitely opaque --- i.e., paints every
+  // pixel within its bounds opaquely, and the bounds contains at least a pixel.
+  bool IsOpaque() const;
+
+  struct ActualCropRect {
+    nsIntRect mRect; // in image pixels
+    bool mIsEntireImage;
+  };
+
+  Maybe<ActualCropRect> ComputeActualCropRect() const;
+
+  // Resolves the underlying image request if any.
+  void ResolveImage(dom::Document&, const StyleGenericImage* aOld);
+
+  // Returns whether this image has been resolved.
+  bool IsResolved() const;
 """

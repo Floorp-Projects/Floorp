@@ -569,7 +569,7 @@ class nsFloatManager::ShapeInfo {
                                             WritingMode aWM,
                                             const nsSize& aContainerSize);
 
-  static UniquePtr<ShapeInfo> CreateImageShape(const nsStyleImage& aShapeImage,
+  static UniquePtr<ShapeInfo> CreateImageShape(const StyleImage& aShapeImage,
                                                float aShapeImageThreshold,
                                                nscoord aShapeMargin,
                                                nsIFrame* const aFrame,
@@ -2665,7 +2665,7 @@ nsFloatManager::ShapeInfo::CreatePolygon(const StyleBasicShape& aBasicShape,
 }
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
-nsFloatManager::ShapeInfo::CreateImageShape(const nsStyleImage& aShapeImage,
+nsFloatManager::ShapeInfo::CreateImageShape(const StyleImage& aShapeImage,
                                             float aShapeImageThreshold,
                                             nscoord aShapeMargin,
                                             nsIFrame* const aFrame,
@@ -2682,10 +2682,8 @@ nsFloatManager::ShapeInfo::CreateImageShape(const nsStyleImage& aShapeImage,
   if (!imageRenderer.PrepareImage()) {
     // The image is not ready yet.  Boost its loading priority since it will
     // affect layout.
-    if (aShapeImage.GetType() == eStyleImageType_Image) {
-      if (imgRequestProxy* req = aShapeImage.GetImageData()) {
-        req->BoostPriority(imgIRequest::CATEGORY_SIZE_QUERY);
-      }
+    if (imgRequestProxy* req = aShapeImage.GetImageRequest()) {
+      req->BoostPriority(imgIRequest::CATEGORY_SIZE_QUERY);
     }
     return nullptr;
   }
