@@ -847,7 +847,10 @@ items from that key's value."
         if branch == 'try':
             branch = 'mozilla-central'
 
-        multil10n_path = 'build/src/testing/mozharness/scripts/multil10n.py'
+        multil10n_path = os.path.join(
+            dirs['abs_src_dir'],
+            'testing/mozharness/scripts/multil10n.py',
+        )
         base_work_dir = os.path.join(base_work_dir, 'workspace')
 
         cmd = [

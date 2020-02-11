@@ -65,8 +65,8 @@ class LocalesMixin(object):
             locales = [l.split(":")[0] for l in locales]
 
         if not locales and 'locales_file' in c:
-            locales_file = os.path.join(c['base_work_dir'], c['work_dir'],
-                                        c['locales_file'])
+            abs_dirs = self.query_abs_dirs()
+            locales_file = os.path.join(abs_dirs['abs_src_dir'], c['locales_file'])
             locales = self.parse_locales_file(locales_file)
 
         if not locales:
