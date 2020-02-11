@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`ActionSpace(desiredWidth: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md)`? = null)`
+`ActionSpace(@Dimension(0) desiredWidth: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md)`? = null)`
 
 An "empty" action with a desired width to be used as "placeholder".
 

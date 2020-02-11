@@ -2,7 +2,7 @@
 
 # enabled
 
-`var enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L53)
+`var enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L58)
 
 Enable/Disable crash reporting.
 
@@ -13,6 +13,8 @@ Enable/Disable crash reporting.
 ### Parameters
 
 `services` - List of crash reporting services that should receive crash reports.
+
+`telemetryServices` - List of telemetry crash reporting services that should receive crash reports.
 
 `shouldPrompt` - Whether or not the user should be prompted to confirm sending crash reports.
 

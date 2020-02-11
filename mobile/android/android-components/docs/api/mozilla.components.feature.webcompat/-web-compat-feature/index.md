@@ -10,7 +10,7 @@ Feature to enable website-hotfixing via the Web Compatibility System-Addon.
 
 | Name | Summary |
 |---|---|
-| [install](install.md) | `fun install(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [install](install.md) | `fun install(runtime: `[`WebExtensionRuntime`](../../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Installs the web extension in the runtime through the WebExtensionRuntime install method |
 
 ### Extension Functions
 

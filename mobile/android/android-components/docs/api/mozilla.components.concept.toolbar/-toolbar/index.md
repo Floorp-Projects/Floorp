@@ -2,7 +2,7 @@
 
 # Toolbar
 
-`interface Toolbar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L24)
+`interface Toolbar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L26)
 
 Interface to be implemented by components that provide browser toolbar functionality.
 

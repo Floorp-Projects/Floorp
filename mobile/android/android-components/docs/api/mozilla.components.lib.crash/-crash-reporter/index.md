@@ -2,7 +2,7 @@
 
 # CrashReporter
 
-`class CrashReporter` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L50)
+`class CrashReporter` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L54)
 
 A generic crash reporter that can report crashes to multiple services.
 
@@ -30,7 +30,7 @@ crashes and forward them to the configured crash reporting services.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `CrashReporter(services: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashReporterService`](../../mozilla.components.lib.crash.service/-crash-reporter-service/index.md)`>, shouldPrompt: `[`Prompt`](-prompt/index.md)` = Prompt.NEVER, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, promptConfiguration: `[`PromptConfiguration`](-prompt-configuration/index.md)` = PromptConfiguration(), nonFatalCrashIntent: <ERROR CLASS>? = null, scope: CoroutineScope = CoroutineScope(Dispatchers.IO))`<br>A generic crash reporter that can report crashes to multiple services. |
+| [&lt;init&gt;](-init-.md) | `CrashReporter(services: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashReporterService`](../../mozilla.components.lib.crash.service/-crash-reporter-service/index.md)`> = emptyList(), telemetryServices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashReporterService`](../../mozilla.components.lib.crash.service/-crash-reporter-service/index.md)`> = emptyList(), shouldPrompt: `[`Prompt`](-prompt/index.md)` = Prompt.NEVER, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, promptConfiguration: `[`PromptConfiguration`](-prompt-configuration/index.md)` = PromptConfiguration(), nonFatalCrashIntent: <ERROR CLASS>? = null, scope: CoroutineScope = CoroutineScope(Dispatchers.IO))`<br>A generic crash reporter that can report crashes to multiple services. |
 
 ### Properties
 
@@ -45,6 +45,7 @@ crashes and forward them to the configured crash reporting services.
 | [install](install.md) | `fun install(applicationContext: <ERROR CLASS>): `[`CrashReporter`](./index.md)<br>Install this [CrashReporter](./index.md) instance. At this point the component will be setup to collect crash reports. |
 | [recordCrashBreadcrumb](record-crash-breadcrumb.md) | `fun recordCrashBreadcrumb(breadcrumb: `[`Breadcrumb`](../-breadcrumb/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Add a crash breadcrumb to all registered services with breadcrumb support. |
 | [submitCaughtException](submit-caught-exception.md) | `fun submitCaughtException(throwable: `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`): Job`<br>Submit a caught exception report to all registered services. |
+| [submitCrashTelemetry](submit-crash-telemetry.md) | `fun submitCrashTelemetry(crash: `[`Crash`](../-crash/index.md)`, then: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}): Job`<br>Submit a crash report to all registered telemetry services. |
 | [submitReport](submit-report.md) | `fun submitReport(crash: `[`Crash`](../-crash/index.md)`, then: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {}): Job`<br>Submit a crash report to all registered services. |
 
 ### Extension Functions

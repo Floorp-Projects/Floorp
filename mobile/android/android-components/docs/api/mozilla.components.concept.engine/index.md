@@ -7,7 +7,7 @@
 | Name | Summary |
 |---|---|
 | [DefaultSettings](-default-settings/index.md) | `data class DefaultSettings : `[`Settings`](-settings/index.md)<br>[Settings](-settings/index.md) implementation used to set defaults for [Engine](-engine/index.md) and [EngineSession](-engine-session/index.md). |
-| [Engine](-engine/index.md) | `interface Engine`<br>Entry point for interacting with the engine implementation. |
+| [Engine](-engine/index.md) | `interface Engine : `[`WebExtensionRuntime`](../mozilla.components.concept.engine.webextension/-web-extension-runtime/index.md)<br>Entry point for interacting with the engine implementation. |
 | [EngineSession](-engine-session/index.md) | `abstract class EngineSession : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-engine-session/-observer/index.md)`>`<br>Class representing a single engine session. |
 | [EngineSessionState](-engine-session-state/index.md) | `interface EngineSessionState`<br>The state of an [EngineSession](-engine-session/index.md). An instance can be obtained from [EngineSession.saveState](-engine-session/save-state.md). Creating a new [EngineSession](-engine-session/index.md) and calling [EngineSession.restoreState](-engine-session/restore-state.md) with the same state instance should restore the previous session. |
 | [EngineView](-engine-view/index.md) | `interface EngineView`<br>View component that renders web content. |
