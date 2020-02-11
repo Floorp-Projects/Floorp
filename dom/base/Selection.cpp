@@ -390,7 +390,7 @@ void Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel,
  * a table element isn't selected.
  */
 // TODO: Figure out TableSelection::Column and TableSelection::AllCells
-static nsresult GetTableSelectionType(nsRange* aRange,
+static nsresult GetTableSelectionType(const nsRange* aRange,
                                       TableSelection* aTableSelectionType) {
   if (!aRange || !aTableSelectionType) {
     return NS_ERROR_NULL_POINTER;
@@ -443,7 +443,7 @@ static nsresult GetTableSelectionType(nsRange* aRange,
 
 // static
 nsresult Selection::GetTableCellLocationFromRange(
-    nsRange* aRange, TableSelection* aSelectionType, int32_t* aRow,
+    const nsRange* aRange, TableSelection* aSelectionType, int32_t* aRow,
     int32_t* aCol) {
   if (!aRange || !aSelectionType || !aRow || !aCol)
     return NS_ERROR_NULL_POINTER;
