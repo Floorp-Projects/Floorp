@@ -4,7 +4,8 @@
 function run_test() {
   let sb = new Cu.Sandbox('https://www.example.com',
                           { wantGlobalProperties:
-                            ["crypto", "TextEncoder", "TextDecoder"]
+                            ["crypto", "TextEncoder", "TextDecoder", "isSecureContext"],
+                            forceSecureContext: true,
                           });
   sb.ok = ok;
   Cu.evalInSandbox('ok(this.crypto);', sb);

@@ -162,6 +162,7 @@ dictionary JsonWebKey {
 /***** The Main API *****/
 
 [Serializable,
+ SecureContext,
  Exposed=Window]
 interface CryptoKey {
   readonly attribute KeyType type;
@@ -179,7 +180,8 @@ dictionary CryptoKeyPair {
 typedef DOMString KeyFormat;
 typedef (object or DOMString) AlgorithmIdentifier;
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker),
+ SecureContext]
 interface SubtleCrypto {
   [Throws]
   Promise<any> encrypt(AlgorithmIdentifier algorithm,

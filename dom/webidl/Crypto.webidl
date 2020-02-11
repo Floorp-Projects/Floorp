@@ -14,6 +14,7 @@ interface mixin GlobalCrypto {
 
 [Exposed=(Window,Worker)]
 interface Crypto {
+  [SecureContext]
   readonly attribute SubtleCrypto subtle;
 
   [Throws]
