@@ -21,6 +21,16 @@
   border-inline-start: none;
 }
 
+.statistics-panel .back-button {
+  height: -moz-fit-content;
+  padding: 10px 15px;
+  margin: 15px;
+}
+
+.theme-light .statistics-panel .back-button {
+  background-color: var(--grey-20);
+}
+
 .statistics-panel .splitter {
   border-color: rgba(0,0,0,0.2);
   cursor: default;
