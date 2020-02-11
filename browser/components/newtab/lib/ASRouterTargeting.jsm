@@ -504,10 +504,6 @@ const TargetingGetters = {
   get isWhatsNewPanelEnabled() {
     return isWhatsNewPanelEnabled;
   },
-  get isFxABadgeEnabled() {
-    // Requires cleanup and update of remote messages. See Bug 1601965.
-    return true;
-  },
   get userPrefs() {
     return {
       cfrFeatures: cfrFeaturesUserPref,
