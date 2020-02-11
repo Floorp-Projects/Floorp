@@ -79,7 +79,7 @@ ModuleLoadFrame::~ModuleLoadFrame() {
 
 void ModuleLoadFrame::SetLoadStatus(NTSTATUS aNtStatus, HANDLE aHandle) {
   mDllLoadStatus = aNtStatus;
-  void* baseAddr = mozilla::nt::PEHeaders::HModuleToBaseAddr<void*>(
+  void* baseAddr = mozilla::nt::PEHeaders::HModuleToBaseAddr(
       reinterpret_cast<HMODULE>(aHandle));
   mLoadInfo.mBaseAddr = baseAddr;
   if (!mAlreadyLoaded) {

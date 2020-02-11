@@ -381,7 +381,7 @@ class WindowsDllInterceptor final
       return false;
     }
 
-    FARPROC proc = mDetourPatcher.GetProcAddress(mModule, aName);
+    FARPROC proc = ::GetProcAddress(mModule, aName);
     if (!proc) {
       return false;
     }
@@ -412,7 +412,7 @@ class WindowsDllInterceptor final
       return false;
     }
 
-    FARPROC proc = mDetourPatcher.GetProcAddress(mModule, aName);
+    FARPROC proc = ::GetProcAddress(mModule, aName);
     if (!proc) {
       return false;
     }
