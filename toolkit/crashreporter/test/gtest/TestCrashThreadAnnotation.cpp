@@ -83,7 +83,8 @@ already_AddRefed<nsIThread> CreateTestThread(const char* aName,
         aMonitor.NotifyAll();
       });
   nsCOMPtr<nsIThread> thread;
-  mozilla::Unused << NS_NewThread(getter_AddRefs(thread), setNameRunnable);
+  mozilla::Unused << NS_NewNamedThread("Test Thread", getter_AddRefs(thread),
+                                       setNameRunnable);
 
   return thread.forget();
 }
@@ -136,7 +137,8 @@ TEST(TestCrashThreadAnnotation, TestGetFlatThreadAnnotation_SetNameTwice)
         monitor.NotifyAll();
       });
   nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewThread(getter_AddRefs(thread), setNameRunnable);
+  nsresult rv =
+      NS_NewNamedThread("Test Thread", getter_AddRefs(thread), setNameRunnable);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   {
