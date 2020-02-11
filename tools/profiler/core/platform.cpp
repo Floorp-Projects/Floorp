@@ -4845,7 +4845,7 @@ bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
 void profiler_add_network_marker(
     nsIURI* aURI, int32_t aPriority, uint64_t aChannelId, NetworkLoadType aType,
     mozilla::TimeStamp aStart, mozilla::TimeStamp aEnd, int64_t aCount,
-    mozilla::net::CacheDisposition aCacheDisposition,
+    mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
     const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI,
     UniqueProfilerBacktrace aSource) {
   if (!profiler_can_accept_markers()) {
@@ -4867,10 +4867,11 @@ void profiler_add_network_marker(
   AUTO_PROFILER_STATS(add_marker_with_NetworkMarkerPayload);
   profiler_add_marker(
       name, JS::ProfilingCategoryPair::NETWORK,
-      NetworkMarkerPayload(
-          static_cast<int64_t>(aChannelId), PromiseFlatCString(spec).get(),
-          aType, aStart, aEnd, aPriority, aCount, aCacheDisposition, aTimings,
-          PromiseFlatCString(redirect_spec).get(), std::move(aSource)));
+      NetworkMarkerPayload(static_cast<int64_t>(aChannelId),
+                           PromiseFlatCString(spec).get(), aType, aStart, aEnd,
+                           aPriority, aCount, aCacheDisposition, aInnerWindowID,
+                           aTimings, PromiseFlatCString(redirect_spec).get(),
+                           std::move(aSource)));
 }
 
 void profiler_add_marker_for_thread(int aThreadId,

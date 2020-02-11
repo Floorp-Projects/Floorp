@@ -1068,7 +1068,8 @@ void HttpChannelChild::OnStopRequest(
     profiler_add_network_marker(
         mURI, priority, mChannelId, NetworkLoadType::LOAD_STOP,
         mLastStatusReported, TimeStamp::Now(), mTransferSize, kCacheUnknown,
-        &mTransactionTimings, nullptr, std::move(mSource));
+        mLoadInfo->GetInnerWindowID(), &mTransactionTimings, nullptr,
+        std::move(mSource));
   }
 #endif
 
@@ -1647,10 +1648,11 @@ void HttpChannelChild::Redirect1Begin(
   nsCOMPtr<nsIURI> uri = DeserializeURI(newOriginalURI);
 
   ResourceTimingStructArgsToTimingsStruct(timing, mTransactionTimings);
-  PROFILER_ADD_NETWORK_MARKER(
-      mURI, mPriority, mChannelId, NetworkLoadType::LOAD_REDIRECT,
-      mLastStatusReported, TimeStamp::Now(), 0, kCacheUnknown,
-      &mTransactionTimings, uri, std::move(mSource));
+  PROFILER_ADD_NETWORK_MARKER(mURI, mPriority, mChannelId,
+                              NetworkLoadType::LOAD_REDIRECT,
+                              mLastStatusReported, TimeStamp::Now(), 0,
+                              kCacheUnknown, mLoadInfo->GetInnerWindowID(),
+                              &mTransactionTimings, uri, std::move(mSource));
 
   if (!securityInfoSerialization.IsEmpty()) {
     rv = NS_DeserializeObject(securityInfoSerialization,
@@ -2096,10 +2098,10 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
    */
 
   mLastStatusReported = TimeStamp::Now();
-  PROFILER_ADD_NETWORK_MARKER(mURI, mPriority, mChannelId,
-                              NetworkLoadType::LOAD_START,
-                              mChannelCreationTimestamp, mLastStatusReported, 0,
-                              kCacheUnknown, nullptr, nullptr);
+  PROFILER_ADD_NETWORK_MARKER(
+      mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
+      mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
+      mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
   mIsPending = true;
   mWasOpened = true;
   mListener = aListener;
@@ -2474,10 +2476,10 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   gHttpHandler->OnOpeningRequest(this);
 
   mLastStatusReported = TimeStamp::Now();
-  PROFILER_ADD_NETWORK_MARKER(mURI, mPriority, mChannelId,
-                              NetworkLoadType::LOAD_START,
-                              mChannelCreationTimestamp, mLastStatusReported, 0,
-                              kCacheUnknown, nullptr, nullptr);
+  PROFILER_ADD_NETWORK_MARKER(
+      mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
+      mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
+      mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
 
   mIsPending = true;
   mWasOpened = true;
