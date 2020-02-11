@@ -187,7 +187,7 @@ class AntiTrackingCommon final {
   static void NotifyContentBlockingEvent(
       nsPIDOMWindowOuter* aWindow, nsIChannel* aReportingChannel,
       nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
-      nsIURI* aURI,
+      const nsACString& aTrackingOrigin,
       const Maybe<StorageAccessGrantedReason>& aReason = Nothing());
 
   static void RedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,

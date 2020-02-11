@@ -319,7 +319,7 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvNotifyContentBlockingEvent(
       const uint32_t& aEvent, const RequestData& aRequestData,
-      const bool aBlocked, nsIURI* aHintURI,
+      const bool aBlocked, const nsACString& aTrackingOrigin,
       nsTArray<nsCString>&& aTrackingFullHashes,
       const Maybe<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>&
           aReason);

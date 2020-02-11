@@ -4010,7 +4010,8 @@ BrowserChild::DoesWindowSupportProtectedMedia() {
 #endif
 
 void BrowserChild::NotifyContentBlockingEvent(
-    uint32_t aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aHintURI,
+    uint32_t aEvent, nsIChannel* aChannel, bool aBlocked,
+    const nsACString& aTrackingOrigin,
     const nsTArray<nsCString>& aTrackingFullHashes,
     const Maybe<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>&
         aReason) {
@@ -4024,8 +4025,9 @@ void BrowserChild::NotifyContentBlockingEvent(
                                             requestData);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  Unused << SendNotifyContentBlockingEvent(
-      aEvent, requestData, aBlocked, aHintURI, aTrackingFullHashes, aReason);
+  Unused << SendNotifyContentBlockingEvent(aEvent, requestData, aBlocked,
+                                           PromiseFlatCString(aTrackingOrigin),
+                                           aTrackingFullHashes, aReason);
 }
 
 BrowserChildMessageManager::BrowserChildMessageManager(
