@@ -37,7 +37,7 @@ pub struct HSetting {
 
 impl HSetting {
     pub fn new(setting_type: HSettingType, value: u64) -> Self {
-        HSetting {
+        Self {
             setting_type,
             value,
         }
@@ -51,7 +51,7 @@ pub struct HSettings {
 
 impl HSettings {
     pub fn new(settings: &[HSetting]) -> Self {
-        HSettings {
+        Self {
             settings: settings.to_vec(),
         }
     }

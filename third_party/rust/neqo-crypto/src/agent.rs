@@ -4,8 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+pub use crate::agentio::{as_c_void, Record, RecordList};
 use crate::agentio::{AgentIo, METHODS};
-pub use crate::agentio::{Record, RecordList};
 use crate::assert_initialized;
 use crate::auth::AuthenticationStatus;
 pub use crate::cert::CertificateInfo;
@@ -19,7 +19,7 @@ use crate::secrets::SecretHolder;
 use crate::ssl::{self, PRBool};
 use crate::time::{PRTime, Time};
 
-use neqo_common::{qdebug, qinfo, qwarn};
+use neqo_common::{matches, qdebug, qinfo, qtrace, qwarn};
 use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::CString;
@@ -43,11 +43,13 @@ pub enum HandshakeState {
 
 impl HandshakeState {
     #[must_use]
-    pub fn connected(&self) -> bool {
-        match self {
-            Self::Complete(_) => true,
-            _ => false,
-        }
+    pub fn is_connected(&self) -> bool {
+        matches!(self, Self::Complete(_))
+    }
+
+    #[must_use]
+    pub fn is_final(&self) -> bool {
+        matches!(self, Self::Complete(_) | Self::Failed(_))
     }
 }
 
@@ -77,7 +79,7 @@ fn get_alpn(fd: *mut ssl::PRFileDesc, pre: bool) -> Res<Option<String>> {
         }
         _ => None,
     };
-    qinfo!([format!("{:p}", fd)], "got ALPN {:?}", alpn);
+    qtrace!([format!("{:p}", fd)], "got ALPN {:?}", alpn);
     Ok(alpn)
 }
 
@@ -123,7 +125,7 @@ impl SecretAgentPreInfo {
     }
     #[must_use]
     pub fn max_early_data(&self) -> usize {
-        self.info.maxEarlyDataSize as usize
+        usize::try_from(self.info.maxEarlyDataSize).unwrap()
     }
     #[must_use]
     pub fn alpn(&self) -> Option<&String> {
@@ -225,24 +227,24 @@ pub struct SecretAgent {
 
 impl SecretAgent {
     fn new() -> Res<Self> {
-        let mut agent = Self {
-            fd: null_mut(),
+        let mut io = Box::pin(AgentIo::new());
+        let fd = Self::create_fd(&mut io)?;
+        Ok(Self {
+            fd,
             secrets: SecretHolder::default(),
             raw: None,
-            io: Pin::new(Box::new(AgentIo::new())),
+            io,
             state: HandshakeState::New,
 
-            auth_required: Pin::new(Box::new(false)),
-            alert: Pin::new(Box::new(None)),
-            now: Pin::new(Box::new(0)),
+            auth_required: Box::pin(false),
+            alert: Box::pin(None),
+            now: Box::pin(0),
 
             extension_handlers: Vec::new(),
             inf: None,
 
             no_eoed: false,
-        };
-        agent.create_fd()?;
-        Ok(agent)
+        })
     }
 
     // Create a new SSL file descriptor.
@@ -252,7 +254,7 @@ impl SecretAgent {
     // minimal, but it means that the two forms need casts to translate
     // between them.  ssl::PRFileDesc is left as an opaque type, as the
     // ssl::SSL_* APIs only need an opaque type.
-    fn create_fd(&mut self) -> Res<()> {
+    fn create_fd(io: &mut Pin<Box<AgentIo>>) -> Res<*mut ssl::PRFileDesc> {
         assert_initialized();
         let label = CString::new("sslwrapper")?;
         let id = unsafe { prio::PR_GetUniqueIdentity(label.as_ptr()) };
@@ -262,15 +264,14 @@ impl SecretAgent {
             return Err(Error::CreateSslSocket);
         }
         let fd = unsafe {
-            (*base_fd).secret = &mut *self.io as *mut AgentIo as *mut _;
+            (*base_fd).secret = as_c_void(io) as *mut _;
             ssl::SSL_ImportFD(null_mut(), base_fd as *mut ssl::PRFileDesc)
         };
         if fd.is_null() {
             unsafe { prio::PR_Close(base_fd) };
             return Err(Error::CreateSslSocket);
         }
-        self.fd = fd;
-        Ok(())
+        Ok(fd)
     }
 
     unsafe extern "C" fn auth_complete_hook(
@@ -320,7 +321,7 @@ impl SecretAgent {
             ssl::SSL_AuthCertificateHook(
                 self.fd,
                 Some(Self::auth_complete_hook),
-                &mut *self.auth_required as *mut bool as *mut c_void,
+                as_c_void(&mut self.auth_required),
             )
         })?;
 
@@ -328,24 +329,21 @@ impl SecretAgent {
             ssl::SSL_AlertSentCallback(
                 self.fd,
                 Some(Self::alert_sent_cb),
-                &mut *self.alert as *mut Option<Alert> as *mut c_void,
+                as_c_void(&mut self.alert),
             )
         })?;
 
         // TODO(mt) move to time.rs so we can remove PRTime definition from nss_ssl bindings.
-        unsafe {
-            ssl::SSL_SetTimeFunc(
-                self.fd,
-                Some(Self::time_func),
-                &mut *self.now as *mut PRTime as *mut c_void,
-            )
-        }?;
+        unsafe { ssl::SSL_SetTimeFunc(self.fd, Some(Self::time_func), as_c_void(&mut self.now)) }?;
 
         self.configure()?;
         secstatus_to_res(unsafe { ssl::SSL_ResetHandshake(self.fd, is_server as ssl::PRBool) })
     }
 
     /// Default configuration.
+    ///
+    /// # Errors
+    /// If `set_version_range` fails.
     fn configure(&mut self) -> Res<()> {
         self.set_version_range(TLS_VERSION_1_3, TLS_VERSION_1_3)?;
         self.set_option(ssl::Opt::Locking, false)?;
@@ -354,6 +352,10 @@ impl SecretAgent {
         Ok(())
     }
 
+    /// Set the versions that are supported.
+    ///
+    /// # Errors
+    /// If the range of versions isn't supported.
     pub fn set_version_range(&mut self, min: Version, max: Version) -> Res<()> {
         let range = ssl::SSLVersionRange {
             min: min as ssl::PRUint16,
@@ -362,6 +364,10 @@ impl SecretAgent {
         secstatus_to_res(unsafe { ssl::SSL_VersionRangeSet(self.fd, &range) })
     }
 
+    /// Enable a set of ciphers.  Note that the order of these is not respected.
+    ///
+    /// # Errors
+    /// If NSS can't enable or disable ciphers.
     pub fn enable_ciphers(&mut self, ciphers: &[Cipher]) -> Res<()> {
         let all_ciphers = unsafe { ssl::SSL_GetImplementedCiphers() };
         let cipher_count = unsafe { ssl::SSL_GetNumImplementedCiphers() } as usize;
@@ -380,6 +386,10 @@ impl SecretAgent {
         Ok(())
     }
 
+    /// Set key exchange groups.
+    ///
+    /// # Errors
+    /// If the underlying API fails (which shouldn't happen).
     pub fn set_groups(&mut self, groups: &[Group]) -> Res<()> {
         // SSLNamedGroup is a different size to Group, so copy one by one.
         let group_vec: Vec<_> = groups
@@ -394,6 +404,9 @@ impl SecretAgent {
     }
 
     /// Set TLS options.
+    ///
+    /// # Errors
+    /// Returns an error if the option or option value is invalid; i.e., never.
     pub fn set_option(&mut self, opt: ssl::Opt, value: bool) -> Res<()> {
         secstatus_to_res(unsafe {
             ssl::SSL_OptionSet(self.fd, opt.as_int(), opt.map_enabled(value))
@@ -401,6 +414,9 @@ impl SecretAgent {
     }
 
     /// Enable 0-RTT.
+    ///
+    /// # Errors
+    /// See `set_option`.
     pub fn enable_0rtt(&mut self) -> Res<()> {
         self.set_option(ssl::Opt::EarlyData, true)
     }
@@ -416,6 +432,9 @@ impl SecretAgent {
     ///
     /// This asserts if no items are provided, or if any individual item is longer than
     /// 255 octets in length.
+    ///
+    /// # Errors
+    /// This should always panic rather than return an error.
     pub fn set_alpn(&mut self, protocols: &[impl AsRef<str>]) -> Res<()> {
         // Validate and set length.
         let mut encoded_len = protocols.len();
@@ -459,6 +478,9 @@ impl SecretAgent {
     /// This can be called multiple times with different values for `ext`.  The handler is provided as
     /// Rc<RefCell<>> so that the caller is able to hold a reference to the handler and later access any
     /// state that it accumulates.
+    ///
+    /// # Errors
+    /// When the extension handler can't be successfully installed.
     pub fn extension_handler(
         &mut self,
         ext: Extension,
@@ -499,6 +521,9 @@ impl SecretAgent {
     ///
     /// This includes whether 0-RTT was accepted and any information related to that.
     /// Calling this function collects all the relevant information.
+    ///
+    /// # Errors
+    /// When the underlying socket functions fail.
     pub fn preinfo(&self) -> Res<SecretAgentPreInfo> {
         SecretAgentPreInfo::new(self.fd)
     }
@@ -548,13 +573,16 @@ impl SecretAgent {
         Ok(())
     }
 
-    // Drive the TLS handshake, taking bytes from @input and putting
-    // any bytes necessary into @output.
-    // This takes the current time as @now.
-    // On success a tuple of a HandshakeState and usize indicate whether the handshake
-    // is complete and how many bytes were written to @output, respectively.
-    // If the state is HandshakeState::AuthenticationPending, then ONLY call this
-    // function if you want to proceed, because this will mark the certificate as OK.
+    /// Drive the TLS handshake, taking bytes from `input` and putting
+    /// any bytes necessary into `output`.
+    /// This takes the current time as `now`.
+    /// On success a tuple of a `HandshakeState` and usize indicate whether the handshake
+    /// is complete and how many bytes were written to `output`, respectively.
+    /// If the state is `HandshakeState::AuthenticationPending`, then ONLY call this
+    /// function if you want to proceed, because this will mark the certificate as OK.
+    ///
+    /// # Errors
+    /// When the handshake fails this returns an error.
     pub fn handshake(&mut self, now: Instant, input: &[u8]) -> Res<Vec<u8>> {
         *self.now = Time::from(now).try_into()?;
         self.set_raw(false)?;
@@ -604,12 +632,15 @@ impl SecretAgent {
         Ok(())
     }
 
-    // Drive the TLS handshake, but get the raw content of records, not
-    // protected records as bytes. This function is incompatible with
-    // handshake(); use either this or handshake() exclusively.
-    //
-    // Ideally, this only includes records from the current epoch.
-    // If you send data from multiple epochs, you might end up being sad.
+    /// Drive the TLS handshake, but get the raw content of records, not
+    /// protected records as bytes. This function is incompatible with
+    /// `handshake()`; use either this or `handshake()` exclusively.
+    ///
+    /// Ideally, this only includes records from the current epoch.
+    /// If you send data from multiple epochs, you might end up being sad.
+    ///
+    /// # Errors
+    /// When the handshake fails this returns an error.
     pub fn handshake_raw(&mut self, now: Instant, input: Option<Record>) -> Res<RecordList> {
         *self.now = Time::from(now).try_into()?;
         let mut records = self.setup_raw()?;
@@ -642,18 +673,44 @@ impl SecretAgent {
         Ok(*Pin::into_inner(records))
     }
 
-    // State returns the status of the handshake.
+    pub fn close(&mut self) {
+        // It should be safe to close multiple times.
+        if self.fd.is_null() {
+            return;
+        }
+        if let Some(true) = self.raw {
+            // Need to hold the record list in scope until the close is done.
+            let _records = self.setup_raw().expect("Can only close");
+            unsafe { prio::PR_Close(self.fd as *mut prio::PRFileDesc) };
+        } else {
+            // Need to hold the IO wrapper in scope until the close is done.
+            let _io = self.io.wrap(&[]);
+            unsafe { prio::PR_Close(self.fd as *mut prio::PRFileDesc) };
+        };
+        let _output = self.io.take_output();
+        self.fd = null_mut();
+    }
+
+    /// State returns the status of the handshake.
     #[must_use]
     pub fn state(&self) -> &HandshakeState {
         &self.state
     }
+    /// Take a read secret.  This will only return a non-`None` value once.
     #[must_use]
-    pub fn read_secret(&self, epoch: Epoch) -> Option<&p11::SymKey> {
-        self.secrets.read().get(epoch)
+    pub fn read_secret(&mut self, epoch: Epoch) -> Option<p11::SymKey> {
+        self.secrets.take_read(epoch)
     }
+    /// Take a write secret.
     #[must_use]
-    pub fn write_secret(&self, epoch: Epoch) -> Option<&p11::SymKey> {
-        self.secrets.write().get(epoch)
+    pub fn write_secret(&mut self, epoch: Epoch) -> Option<p11::SymKey> {
+        self.secrets.take_write(epoch)
+    }
+}
+
+impl Drop for SecretAgent {
+    fn drop(&mut self) {
+        self.close();
     }
 }
 
@@ -673,6 +730,10 @@ pub struct Client {
 }
 
 impl Client {
+    /// Create a new client agent.
+    ///
+    /// # Errors
+    /// Errors returned if the socket can't be created or configured.
     pub fn new(server_name: &str) -> Res<Self> {
         let mut agent = SecretAgent::new()?;
         let url = CString::new(server_name)?;
@@ -680,7 +741,7 @@ impl Client {
         agent.ready(false)?;
         let mut client = Self {
             agent,
-            resumption: Pin::new(Box::new(None)),
+            resumption: Box::pin(None),
         };
         client.ready()?;
         Ok(client)
@@ -702,11 +763,12 @@ impl Client {
     }
 
     fn ready(&mut self) -> Res<()> {
+        let fd = self.fd;
         unsafe {
             ssl::SSL_SetResumptionTokenCallback(
-                self.fd,
+                fd,
                 Some(Self::resumption_token_cb),
-                &mut *self.resumption as *mut Option<Vec<u8>> as *mut c_void,
+                as_c_void(&mut self.resumption),
             )
         }
     }
@@ -718,6 +780,10 @@ impl Client {
     }
 
     /// Enable resumption, using a token previously provided.
+    ///
+    /// # Errors
+    /// Error returned when the resumption token is invalid or
+    /// the socket is not able to use the value.
     pub fn set_resumption_token(&mut self, token: &[u8]) -> Res<()> {
         unsafe {
             ssl::SSL_SetResumptionToken(
@@ -784,6 +850,10 @@ pub struct Server {
 }
 
 impl Server {
+    /// Create a new server agent.
+    ///
+    /// # Errors
+    /// Errors returned when NSS fails.
     pub fn new(certificates: &[impl AsRef<str>]) -> Res<Self> {
         let mut agent = SecretAgent::new()?;
 
@@ -853,16 +923,22 @@ impl Server {
 
     /// Enable 0-RTT.  This shadows the function of the same name that can be accessed
     /// via the Deref implementation on Server.
+    ///
+    /// # Errors
+    /// Returns an error if the underlying NSS functions fail.
     pub fn enable_0rtt(
         &mut self,
         anti_replay: &AntiReplay,
         max_early_data: u32,
         checker: Box<dyn ZeroRttChecker>,
     ) -> Res<()> {
-        let mut check_state = Pin::new(Box::new(ZeroRttCheckState::new(self.agent.fd, checker)));
-        let arg = &mut *check_state as *mut ZeroRttCheckState as *mut c_void;
+        let mut check_state = Box::pin(ZeroRttCheckState::new(self.agent.fd, checker));
         unsafe {
-            ssl::SSL_HelloRetryRequestCallback(self.agent.fd, Some(Self::hello_retry_cb), arg)
+            ssl::SSL_HelloRetryRequestCallback(
+                self.agent.fd,
+                Some(Self::hello_retry_cb),
+                as_c_void(&mut check_state),
+            )
         }?;
         unsafe { ssl::SSL_SetMaxEarlyDataSize(self.agent.fd, max_early_data) }?;
         self.zero_rtt_check = Some(check_state);
@@ -874,6 +950,9 @@ impl Server {
     /// Send a session ticket to the client.
     /// This adds |extra| application-specific content into that ticket.
     /// The records that are sent are captured and returned.
+    ///
+    /// # Errors
+    /// If NSS is unable to send a ticket, or if this agent is incorrectly configured.
     pub fn send_ticket(&mut self, now: Instant, extra: &[u8]) -> Res<RecordList> {
         *self.agent.now = Time::from(now).try_into()?;
         let records = self.setup_raw()?;

@@ -7,7 +7,9 @@
 use std::net::SocketAddr;
 use std::ops::Deref;
 
-#[derive(Debug, PartialEq, Clone)]
+use crate::hex;
+
+#[derive(PartialEq, Clone)]
 pub struct Datagram {
     src: SocketAddr,
     dst: SocketAddr,
@@ -39,5 +41,17 @@ impl Deref for Datagram {
     #[must_use]
     fn deref(&self) -> &Self::Target {
         &self.d
+    }
+}
+
+impl std::fmt::Debug for Datagram {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "Datagram {:?}->{:?}: {}",
+            self.src,
+            self.dst,
+            hex(&self.d)
+        )
     }
 }

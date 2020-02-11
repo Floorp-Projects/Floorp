@@ -10,9 +10,11 @@
 /// Connection statistics
 pub struct Stats {
     /// Total packets received
-    pub packets_rx: u64,
+    pub packets_rx: usize,
     /// Total packets sent
-    pub packets_tx: u64,
+    pub packets_tx: usize,
     /// Duplicate packets received
-    pub dups_rx: u64,
+    pub dups_rx: usize,
+    /// Dropped datagrams, or parts thereof
+    pub dropped_rx: usize,
 }
