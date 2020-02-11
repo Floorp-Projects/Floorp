@@ -204,6 +204,11 @@ void MediaControlService::ControllerManager::UpdateMainController(
           AbstractThread::MainThread(), this,
           &ControllerManager::ControllerPlaybackStateChanged);
   mSource->SetPlaybackState(mMainController->GetState());
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "main-media-controller-changed", nullptr);
+    }
+  }
 }
 
 MediaController* MediaControlService::ControllerManager::GetMainController()
