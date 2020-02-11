@@ -7,6 +7,7 @@ package mozilla.components.feature.app.links
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
@@ -55,9 +56,22 @@ class AppLinksInterceptor(
         hasUserGesture: Boolean,
         isSameDomain: Boolean
     ): RequestInterceptor.InterceptionResponse? {
-        // If request not from user gesture or if we're already on the site,
-        // and we're clicking around then let's not go to an external app.
-        if (!hasUserGesture || isSameDomain || !launchInApp()) {
+        val uriScheme = Uri.parse(uri).scheme
+
+        val doNotIntercept = when {
+            uriScheme == null -> true
+            // If request not from user gesture or if we're already on the site,
+            // and we're clicking around then let's not go to an external app.
+            !hasUserGesture || isSameDomain -> true
+            // If scheme not in whitelist then follow user preference
+            (!interceptLinkClicks || !launchInApp()) &&
+                (!alwaysAllowedSchemes.contains(uriScheme)) -> true
+            // Never go to an external app when scheme is in blacklist
+            alwaysDeniedSchemes.contains(uriScheme) -> true
+            else -> false
+        }
+
+        if (doNotIntercept) {
             return null
         }
 
@@ -87,13 +101,6 @@ class AppLinksInterceptor(
             }
 
             return handleFallback(redirect)
-        }
-
-        redirect.appIntent?.data?.scheme?.let { scheme ->
-            if ((!interceptLinkClicks && !alwaysAllowedSchemes.contains(scheme)) ||
-                alwaysDeniedSchemes.contains(scheme)) {
-                return null
-            }
         }
 
         redirect.appIntent?.let {

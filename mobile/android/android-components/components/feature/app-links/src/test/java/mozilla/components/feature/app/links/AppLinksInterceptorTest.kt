@@ -65,31 +65,57 @@ class AppLinksInterceptorTest {
     }
 
     @Test
-    fun `external app is opened by user clicking on a link`() {
+    fun `request is intercepted by user clicking on a link`() {
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
     @Test
-    fun `external app is not opened when not user clicking on a link`() {
+    fun `request is not intercepted when interceptLinkClicks is false`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = false,
+            launchInApp = { true },
+            useCases = mockUseCases
+        )
+
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false)
+        assertEquals(null, response)
+    }
+
+    @Test
+    fun `request is not intercepted when launchInApp preference is false`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { false },
+            useCases = mockUseCases
+        )
+
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false)
+        assertEquals(null, response)
+    }
+
+    @Test
+    fun `request is not intercepted when not user clicking on a link`() {
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, false, false)
         assertEquals(null, response)
     }
 
     @Test
-    fun `external app is not opened if the current session is already on the same host`() {
+    fun `request is not intercepted if the current session is already on the same host`() {
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, true)
         assertEquals(null, response)
     }
 
     @Test
-    fun `white and black listed schemes when triggered by user clicking on a link`() {
+    fun `black listed schemes request not intercepted when triggered by user clicking on a link`() {
         val engineSession: EngineSession = mock()
         val whitelistedScheme = "whitelisted"
         val blacklistedScheme = "blacklisted"
         val feature = AppLinksInterceptor(
             context = mockContext,
-            interceptLinkClicks = false,
+            interceptLinkClicks = true,
             alwaysAllowedSchemes = setOf(whitelistedScheme),
             alwaysDeniedSchemes = setOf(blacklistedScheme),
             launchInApp = { true },
@@ -100,17 +126,32 @@ class AppLinksInterceptorTest {
         val blacklistedRedirect = AppLinkRedirect(Intent.parseUri(blackListedUrl, 0), blackListedUrl, null)
         whenever(mockGetRedirect.invoke(blackListedUrl)).thenReturn(blacklistedRedirect)
         var response = feature.onLoadRequest(engineSession, blackListedUrl, true, false)
-        assertEquals(response, null)
+        assertEquals(null, response)
+    }
+
+    @Test
+    fun `white listed schemes request always intercepted regardless of interceptLinkClicks or launchInApp`() {
+        val engineSession: EngineSession = mock()
+        val whitelistedScheme = "whitelisted"
+        val blacklistedScheme = "blacklisted"
+        val feature = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = false,
+            alwaysAllowedSchemes = setOf(whitelistedScheme),
+            alwaysDeniedSchemes = setOf(blacklistedScheme),
+            launchInApp = { false },
+            useCases = mockUseCases
+        )
 
         val whiteListedUrl = "$whitelistedScheme://example.com"
         val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(whiteListedUrl, 0), whiteListedUrl, null)
         whenever(mockGetRedirect.invoke(whiteListedUrl)).thenReturn(whitelistedRedirect)
-        response = feature.onLoadRequest(engineSession, whiteListedUrl, true, false)
+        val response = feature.onLoadRequest(engineSession, whiteListedUrl, true, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
     }
 
     @Test
-    fun `an external app is not opened for URLs with javascript scheme`() {
+    fun `request is not intercepted for URLs with javascript scheme`() {
         val javascriptUri = "javascript:;"
 
         val appRedirect = AppLinkRedirect(Intent.parseUri(javascriptUri, 0), null, null)
