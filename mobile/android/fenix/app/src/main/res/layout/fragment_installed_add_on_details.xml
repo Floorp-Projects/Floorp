@@ -76,12 +76,12 @@
 
             <Button
                 android:id="@+id/remove_add_on"
+                style="@style/ThemeIndependentMaterialGreyButtonDestructive"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/permissions"
-                android:layout_marginTop="16dp"
-                android:text="@string/mozac_feature_addons_remove"
-                android:textColor="@color/photonRed50" />
+                android:layout_margin="12dp"
+                android:text="@string/mozac_feature_addons_remove"/>
         </RelativeLayout>
     </ScrollView>
 </FrameLayout>
