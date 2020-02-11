@@ -92,13 +92,9 @@ jobs:
           include-push-tasks: true
       run-on-projects:
           - mozilla-central
-          - mozilla-beta
       when:
           by-project:
               mozilla-central: [{hour: 10, minute: 0}]
-              mozilla-beta:
-                  - {weekday: 'Monday', hour: 10, minute: 0}
-                  - {weekday: 'Thursday', hour: 10, minute: 0}
 
     - name: tp6m-fennec-v68
       job:
