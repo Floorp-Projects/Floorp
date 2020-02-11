@@ -9598,73 +9598,27 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       return;
     }
 
-    bool hasOtherClient = false;
-
     if (!mClientType.IsNull()) {
-      // Checking whether there is any other client in the directory is needed.
-      // If there is not, removing whole directory is needed.
-      nsCOMPtr<nsIDirectoryEnumerator> originEntries;
-      if (NS_WARN_IF(NS_FAILED(
-              file->GetDirectoryEntries(getter_AddRefs(originEntries)))) ||
-          !originEntries) {
+      nsAutoString clientDirectoryName;
+      bool ok = Client::TypeToText(mClientType.Value(), clientDirectoryName,
+                                   fallible);
+      if (NS_WARN_IF(!ok)) {
         return;
       }
 
-      nsCOMPtr<nsIFile> clientFile;
-      while (NS_SUCCEEDED((rv = originEntries->GetNextFile(
-                               getter_AddRefs(clientFile)))) &&
-             clientFile) {
-        bool isDirectory;
-        rv = clientFile->IsDirectory(&isDirectory);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-
-        if (!isDirectory) {
-          continue;
-        }
-
-        nsString leafName;
-        rv = clientFile->GetLeafName(leafName);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-
-        Client::Type clientType;
-        bool ok = Client::TypeFromText(leafName, clientType, fallible);
-        if (!ok) {
-          UNKNOWN_FILE_WARNING(leafName);
-          continue;
-        }
-
-        if (clientType != mClientType.Value()) {
-          hasOtherClient = true;
-          break;
-        }
+      rv = file->Append(clientDirectoryName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
       }
 
-      if (hasOtherClient) {
-        nsAutoString clientDirectoryName;
-        bool ok = Client::TypeToText(mClientType.Value(), clientDirectoryName,
-                                     fallible);
-        if (NS_WARN_IF(!ok)) {
-          return;
-        }
+      bool exists;
+      rv = file->Exists(&exists);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
 
-        rv = file->Append(clientDirectoryName);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-
-        bool exists;
-        rv = file->Exists(&exists);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-
-        if (!exists) {
-          continue;
-        }
+      if (!exists) {
+        continue;
       }
     }
 
@@ -9697,13 +9651,11 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     }
 
     if (aPersistenceType != PERSISTENCE_TYPE_PERSISTENT) {
-      if (hasOtherClient) {
-        MOZ_ASSERT(!mClientType.IsNull());
-
+      if (mClientType.IsNull()) {
+        aQuotaManager->RemoveQuotaForOrigin(aPersistenceType, group, origin);
+      } else {
         aQuotaManager->ResetUsageForClient(aPersistenceType, group, origin,
                                            mClientType.Value());
-      } else {
-        aQuotaManager->RemoveQuotaForOrigin(aPersistenceType, group, origin);
       }
     }
 
