@@ -9,9 +9,14 @@
 function ChromeTask_ChromeScript() {
   "use strict";
 
-  const {Task} = ChromeUtils.import("resource://testing-common/Task.jsm");
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-  const AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
+  const { Task } = ChromeUtils.import("resource://testing-common/Task.jsm");
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  const AssertCls = ChromeUtils.import(
+    "resource://testing-common/Assert.jsm",
+    null
+  ).Assert;
 
   addMessageListener("chrome-task:spawn", function(aData) {
     let id = aData.id;
@@ -40,15 +45,15 @@ function ChromeTask_ChromeScript() {
     var isnot = Assert.notEqual.bind(Assert);
 
     function todo(expr, name) {
-      sendAsyncMessage("chrome-task:test-todo", {id, expr, name});
+      sendAsyncMessage("chrome-task:test-todo", { id, expr, name });
     }
 
     function todo_is(a, b, name) {
-      sendAsyncMessage("chrome-task:test-todo_is", {id, a, b, name});
+      sendAsyncMessage("chrome-task:test-todo_is", { id, a, b, name });
     }
 
     function info(name) {
-      sendAsyncMessage("chrome-task:test-info", {id, name});
+      sendAsyncMessage("chrome-task:test-info", { id, name });
     }
     /* eslint-enable no-unused-vars */
 
@@ -61,17 +66,20 @@ function ChromeTask_ChromeScript() {
       // eslint-disable-next-line no-eval
       let runnable = eval(runnablestr);
       let iterator = runnable.call(this, aData.arg);
-      Task.spawn(iterator).then((val) => {
-        sendAsyncMessage("chrome-task:complete", {
-          id,
-          result: val,
-        });
-      }, (e) => {
-        sendAsyncMessage("chrome-task:complete", {
-          id,
-          error: e.toString(),
-        });
-      });
+      Task.spawn(iterator).then(
+        val => {
+          sendAsyncMessage("chrome-task:complete", {
+            id,
+            result: val,
+          });
+        },
+        e => {
+          sendAsyncMessage("chrome-task:complete", {
+            id,
+            error: e.toString(),
+          });
+        }
+      );
     } catch (e) {
       sendAsyncMessage("chrome-task:complete", {
         id,
@@ -80,7 +88,6 @@ function ChromeTask_ChromeScript() {
     }
   });
 }
-
 
 /**
  * This object provides the public module functions.
@@ -126,7 +133,10 @@ var ChromeTask = {
       handle.addMessageListener("chrome-task:test-result", ChromeTask.onResult);
       handle.addMessageListener("chrome-task:test-info", ChromeTask.onInfo);
       handle.addMessageListener("chrome-task:test-todo", ChromeTask.onTodo);
-      handle.addMessageListener("chrome-task:test-todo_is", ChromeTask.onTodoIs);
+      handle.addMessageListener(
+        "chrome-task:test-todo_is",
+        ChromeTask.onTodoIs
+      );
       ChromeTask._chromeScript = handle;
     }
 
@@ -139,13 +149,11 @@ var ChromeTask = {
     let id = ChromeTask._messageID++;
     ChromeTask._promises.set(id, deferred);
 
-    handle.sendAsyncMessage(
-      "chrome-task:spawn",
-      {
-        id,
-        runnable: task.toString(),
-        arg,
-      });
+    handle.sendAsyncMessage("chrome-task:spawn", {
+      id,
+      runnable: task.toString(),
+      arg,
+    });
 
     return deferred.promise;
   },

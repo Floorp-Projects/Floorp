@@ -19,13 +19,14 @@ if (!("SpecialPowers" in window)) {
 /* Helper function */
 function parseQueryString(encodedString, useArrays) {
   // strip a leading '?' from the encoded string
-  var qstr = (encodedString.length > 0 && encodedString[0] == "?")
-             ? encodedString.substring(1)
-             : encodedString;
+  var qstr =
+    encodedString.length > 0 && encodedString[0] == "?"
+      ? encodedString.substring(1)
+      : encodedString;
   var pairs = qstr.replace(/\+/g, "%20").split(/(\&amp\;|\&\#38\;|\&#x26;|\&)/);
   var o = {};
   var decode;
-  if (typeof(decodeURIComponent) != "undefined") {
+  if (typeof decodeURIComponent != "undefined") {
     decode = decodeURIComponent;
   } else {
     decode = unescape;
@@ -54,7 +55,7 @@ function parseQueryString(encodedString, useArrays) {
     }
   }
   return o;
-};
+}
 
 // Check the query string for arguments
 var params = parseQueryString(location.search.substring(1), true);
@@ -98,7 +99,7 @@ if (params.timeout) {
 }
 
 // log levels for console and logfile
-var fileLevel =  params.fileLevel || null;
+var fileLevel = params.fileLevel || null;
 var consoleLevel = params.consoleLevel || null;
 
 // repeat tells us how many times to repeat the tests
@@ -165,7 +166,7 @@ if (params.cleanupCrashes) {
 
 // Log things to the console if appropriate.
 TestRunner.logger.addListener("dumpListener", consoleLevel + "", function(msg) {
-  dump(msg.info.join(' ') + "\n");
+  dump(msg.info.join(" ") + "\n");
 });
 
 var gTestList = [];
@@ -175,11 +176,16 @@ RunSet.runall = function(e) {
   // This allows for including or excluding tests from the gTestList
   // TODO Only used by ipc tests, remove once those are implemented sanely
   if (params.testManifest) {
-    getTestManifest(getTestManifestURL(params.testManifest), params, function(filter) { gTestList = filterTests(filter, gTestList, params.runOnly); RunSet.runtests(); });
+    getTestManifest(getTestManifestURL(params.testManifest), params, function(
+      filter
+    ) {
+      gTestList = filterTests(filter, gTestList, params.runOnly);
+      RunSet.runtests();
+    });
   } else {
     RunSet.runtests();
   }
-}
+};
 
 RunSet.runtests = function(e) {
   // Which tests we're going to run
@@ -190,7 +196,7 @@ RunSet.runtests = function(e) {
   }
 
   if (params.shuffle) {
-    for (var i = my_tests.length-1; i > 0; --i) {
+    for (var i = my_tests.length - 1; i > 0; --i) {
       var j = Math.floor(Math.random() * i);
       var tmp = my_tests[j];
       my_tests[j] = my_tests[i];
@@ -199,7 +205,7 @@ RunSet.runtests = function(e) {
   }
   TestRunner.setParameterInfo(params);
   TestRunner.runTests(my_tests);
-}
+};
 
 RunSet.reloadAndRunAll = function(e) {
   e.preventDefault();
@@ -217,27 +223,27 @@ RunSet.reloadAndRunAll = function(e) {
 
 // UI Stuff
 function toggleVisible(elem) {
-    toggleElementClass("invisible", elem);
+  toggleElementClass("invisible", elem);
 }
 
 function makeVisible(elem) {
-    removeElementClass(elem, "invisible");
+  removeElementClass(elem, "invisible");
 }
 
 function makeInvisible(elem) {
-    addElementClass(elem, "invisible");
+  addElementClass(elem, "invisible");
 }
 
 function isVisible(elem) {
-    // you may also want to check for
-    // getElement(elem).style.display == "none"
-    return !hasElementClass(elem, "invisible");
-};
+  // you may also want to check for
+  // getElement(elem).style.display == "none"
+  return !hasElementClass(elem, "invisible");
+}
 
-function toggleNonTests (e) {
+function toggleNonTests(e) {
   e.preventDefault();
   var elems = document.getElementsByClassName("non-test");
-  for (var i="0"; i<elems.length; i++) {
+  for (var i = "0"; i < elems.length; i++) {
     toggleVisible(elems[i]);
   }
   if (isVisible(elems[0])) {
@@ -250,7 +256,11 @@ function toggleNonTests (e) {
 // hook up our buttons
 function hookup() {
   if (params.manifestFile) {
-    getTestManifest(getTestManifestURL(params.manifestFile), params, hookupTests);
+    getTestManifest(
+      getTestManifestURL(params.manifestFile),
+      params,
+      hookupTests
+    );
   } else {
     hookupTests(gTestList);
   }
@@ -262,12 +272,12 @@ function hookupTests(testList) {
   } else {
     gTestList = [];
     for (var obj in testList) {
-        gTestList.push(testList[obj]);
+      gTestList.push(testList[obj]);
     }
   }
 
-  document.getElementById('runtests').onclick = RunSet.reloadAndRunAll;
-  document.getElementById('toggleNonTests').onclick = toggleNonTests;
+  document.getElementById("runtests").onclick = RunSet.reloadAndRunAll;
+  document.getElementById("toggleNonTests").onclick = toggleNonTests;
   // run automatically if autorun specified
   if (params.autorun) {
     RunSet.runall();
@@ -277,8 +287,10 @@ function hookupTests(testList) {
 function getTestManifestURL(path) {
   // The test manifest url scheme should be the same protocol as the containing
   // window... unless it's not http(s)
-  if (window.location.protocol == "http:" ||
-      window.location.protocol == "https:") {
+  if (
+    window.location.protocol == "http:" ||
+    window.location.protocol == "https:"
+  ) {
     return window.location.protocol + "//" + window.location.host + "/" + path;
   }
   return "http://mochi.test:8888/" + path;
