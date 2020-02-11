@@ -29,16 +29,20 @@ experimental_api!(SSL_HkdfExpandLabelWithMech(
     secret: *mut *mut PK11SymKey,
 ));
 
+#[derive(Clone)]
 pub struct HpKey(SymKey);
 
 impl Debug for HpKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("HP Key")
+        write!(f, "HP-{:?}", self.0)
     }
 }
 
 impl HpKey {
     /// QUIC-specific API for extracting a header-protection key.
+    ///
+    /// # Errors
+    /// Errors if HKDF fails or if the label is too long to fit in a `c_uint`.
     pub fn extract(version: Version, cipher: Cipher, prk: &SymKey, label: &str) -> Res<Self> {
         let l = label.as_bytes();
         let mut secret: *mut PK11SymKey = null_mut();
@@ -73,6 +77,10 @@ impl HpKey {
     }
 
     /// Generate a header protection mask for QUIC.
+    ///
+    /// # Errors
+    /// An error is returned if the NSS functions fail; a sample of the
+    /// wrong size is the obvious cause.
     #[allow(clippy::cast_sign_loss)]
     pub fn mask(&self, sample: &[u8]) -> Res<Vec<u8>> {
         let k: *mut PK11SymKey = *self.0;

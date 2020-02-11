@@ -39,6 +39,7 @@ functions = [
     "SSL_ImportFD",
     "SSL_NamedGroupConfig",
     "SSL_OptionSet",
+    "SSL_OptionGetDefault",
     "SSL_PeerCertificate",
     "SSL_PeerCertificateChain",
     "SSL_PeerSignedCertTimestamps",
