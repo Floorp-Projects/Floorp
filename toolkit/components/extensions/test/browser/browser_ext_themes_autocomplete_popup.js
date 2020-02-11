@@ -235,14 +235,6 @@ add_task(async function test_popup_url() {
     `Urlbar popup action color should be set to ${POPUP_ACTION_COLOR_BRIGHT}`
   );
 
-  // Since brighttext is enabled, the seperator color should be
-  // POPUP_TEXT_COLOR_BRIGHT with added alpha.
-  Assert.equal(
-    window.getComputedStyle(urlResult.element.separator, ":before").color,
-    `rgba(${hexToRGB(POPUP_TEXT_COLOR_BRIGHT).join(", ")}, 0.5)`,
-    `Urlbar popup separator color should be set to ${POPUP_TEXT_COLOR_BRIGHT} with alpha`
-  );
-
   Assert.equal(
     root.getAttribute("lwt-popup-brighttext"),
     "true",
@@ -268,20 +260,4 @@ add_task(async function test_popup_url() {
     false,
     "darktext should not be set!"
   );
-
-  // Calculate what GrayText should be. Differs between platforms.
-  // We don't use graytext for urlbar results on Mac as it's too faint.
-  if (AppConstants.platform != "macosx") {
-    let span = document.createXULElement("span");
-    span.style.color = "GrayText";
-    document.documentElement.appendChild(span);
-    let GRAY_TEXT = window.getComputedStyle(span).color;
-    span.remove();
-
-    Assert.equal(
-      window.getComputedStyle(urlResult.element.separator, ":before").color,
-      GRAY_TEXT,
-      `Urlbar popup separator color should be set to ${GRAY_TEXT}`
-    );
-  }
 });
