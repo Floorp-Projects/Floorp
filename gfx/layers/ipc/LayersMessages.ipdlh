@@ -37,7 +37,7 @@ using mozilla::LayerPoint from "Units.h";
 using mozilla::LayerCoord from "Units.h";
 using mozilla::LayerSize from "Units.h";
 using mozilla::LayerRect from "Units.h";
-using mozilla::LayerIntRect from "Units.h";
+using mozilla::LayerIntSize from "Units.h";
 using mozilla::LayerIntRegion from "Units.h";
 using mozilla::ParentLayerIntRect from "Units.h";
 using mozilla::LayoutDeviceIntRect from "Units.h";
@@ -277,7 +277,7 @@ struct CanvasLayerAttributes    { SamplingFilter samplingFilter; IntRect bounds;
 struct RefLayerAttributes {
   LayersId id;
   EventRegionsOverride eventRegionsOverride;
-  LayerIntRect remoteDocumentRect;
+  LayerIntSize remoteDocumentSize;
 };
 struct ImageLayerAttributes     { SamplingFilter samplingFilter; IntSize scaleToSize; ScaleMode scaleMode; };
 

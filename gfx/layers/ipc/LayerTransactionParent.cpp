@@ -628,8 +628,8 @@ bool LayerTransactionParent::SetLayerAttributes(
       refLayer->SetReferentId(specific.get_RefLayerAttributes().id());
       refLayer->SetEventRegionsOverride(
           specific.get_RefLayerAttributes().eventRegionsOverride());
-      refLayer->SetRemoteDocumentRect(
-          specific.get_RefLayerAttributes().remoteDocumentRect());
+      refLayer->SetRemoteDocumentSize(
+          specific.get_RefLayerAttributes().remoteDocumentSize());
       UpdateHitTestingTree(layer, "ref layer attributes changed");
       break;
     }

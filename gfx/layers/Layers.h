@@ -2683,16 +2683,16 @@ class RefLayer : public ContainerLayer {
    * CONSTRUCTION PHASE ONLY
    * Set remote subdocument iframe size.
    */
-  void SetRemoteDocumentRect(const LayerIntRect& aRemoteDocumentRect) {
-    if (mRemoteDocumentRect.IsEqualEdges(aRemoteDocumentRect)) {
+  void SetRemoteDocumentSize(const LayerIntSize& aRemoteDocumentSize) {
+    if (mRemoteDocumentSize == aRemoteDocumentSize) {
       return;
     }
-    mRemoteDocumentRect = aRemoteDocumentRect;
+    mRemoteDocumentSize = aRemoteDocumentSize;
     Mutated();
   }
 
-  const LayerIntRect& GetRemoteDocumentRect() const {
-    return mRemoteDocumentRect;
+  const LayerIntSize& GetRemoteDocumentSize() const {
+    return mRemoteDocumentSize;
   }
 
   /**
@@ -2730,7 +2730,9 @@ class RefLayer : public ContainerLayer {
   // 0 is a special value that means "no ID".
   LayersId mId;
   EventRegionsOverride mEventRegionsOverride;
-  LayerIntRect mRemoteDocumentRect;
+  // The remote documents only need their size because their origin is always
+  // (0, 0).
+  LayerIntSize mRemoteDocumentSize;
 };
 
 void SetAntialiasingFlags(Layer* aLayer, gfx::DrawTarget* aTarget);

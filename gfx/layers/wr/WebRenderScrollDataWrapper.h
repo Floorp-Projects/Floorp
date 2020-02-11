@@ -299,19 +299,18 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
         PixelCastJustification::MovingDownToChildren);
   }
 
-  LayerIntRect GetRemoteDocumentRect() const {
+  LayerIntSize GetRemoteDocumentSize() const {
     MOZ_ASSERT(IsValid());
 
     if (mLayer->GetReferentId().isNothing()) {
-      return LayerIntRect();
+      return LayerIntSize();
     }
 
     if (AtBottomLayer()) {
-      return mLayer->GetRemoteDocumentRect();
+      return mLayer->GetRemoteDocumentSize();
     }
 
-    return ViewAs<LayerPixel>(TransformBy(mLayer->GetTransformTyped(),
-                                          mLayer->GetRemoteDocumentRect()),
+    return ViewAs<LayerPixel>(mLayer->GetRemoteDocumentSize(),
                               PixelCastJustification::MovingDownToChildren);
   }
 
