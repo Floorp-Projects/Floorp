@@ -97,7 +97,7 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
 
     def package_multi(self):
         dirs = self.query_abs_dirs()
-        objdir = dirs['abs_objdir']
+        objdir = dirs['abs_obj_dir']
 
         # This will error on non-0 exit code.
         locales = list(sorted(self.query_locales()))

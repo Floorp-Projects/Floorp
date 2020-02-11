@@ -107,7 +107,7 @@ class TestLocalesMixin(unittest.TestCase):
         l = self._get_query_abs_dirs_obj()
         l.config['objdir'] = "objdir"
         dirs = set(l.query_abs_dirs().keys())
-        expected_dirs = self.BASE_ABS_DIRS | {'abs_objdir', 'abs_locales_dir'}
+        expected_dirs = self.BASE_ABS_DIRS | {'abs_obj_dir', 'abs_locales_dir'}
 
         self.assertEqual(dirs, expected_dirs)
 
