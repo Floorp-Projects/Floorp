@@ -113,15 +113,15 @@ void DeviceInfoAndroid::BuildDeviceList() {
 
   g_camera_info = new std::vector<AndroidCameraInfo>();
   jclass j_info_class = mozilla::jni::GetClassRef(
-    jni, "org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid");
+      jni, "org/webrtc/videoengine/VideoCaptureDeviceInfoAndroid");
   jclass j_cap_class = mozilla::jni::GetClassRef(
-    jni, "org/webrtc/videoengine/CaptureCapabilityAndroid");
+      jni, "org/webrtc/videoengine/CaptureCapabilityAndroid");
   assert(j_info_class);
   jmethodID j_initialize = jni->GetStaticMethodID(
-    j_info_class, "getDeviceInfo",
-    "()[Lorg/webrtc/videoengine/CaptureCapabilityAndroid;");
+      j_info_class, "getDeviceInfo",
+      "()[Lorg/webrtc/videoengine/CaptureCapabilityAndroid;");
   jarray j_camera_caps = static_cast<jarray>(
-    jni->CallStaticObjectMethod(j_info_class, j_initialize));
+      jni->CallStaticObjectMethod(j_info_class, j_initialize));
 
   const jsize capLength = jni->GetArrayLength(j_camera_caps);
 
@@ -133,46 +133,42 @@ void DeviceInfoAndroid::BuildDeviceList() {
   jfieldID frontFacingField = jni->GetFieldID(j_cap_class, "frontFacing", "Z");
   jfieldID nameField =
       jni->GetFieldID(j_cap_class, "name", "Ljava/lang/String;");
-  if (widthField == NULL
-      || heightField == NULL
-      || maxFpsField == NULL
-      || minFpsField == NULL
-      || orientationField == NULL
-      || frontFacingField == NULL
-      || nameField == NULL) {
+  if (widthField == NULL || heightField == NULL || maxFpsField == NULL ||
+      minFpsField == NULL || orientationField == NULL ||
+      frontFacingField == NULL || nameField == NULL) {
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": Failed to get field Id.";
     return;
   }
 
   for (jsize i = 0; i < capLength; i++) {
-    jobject capabilityElement = jni->GetObjectArrayElement(
-        (jobjectArray) j_camera_caps,
-        i);
+    jobject capabilityElement =
+        jni->GetObjectArrayElement((jobjectArray)j_camera_caps, i);
 
     AndroidCameraInfo info;
-    jstring camName = static_cast<jstring>(jni->GetObjectField(capabilityElement,
-                                                               nameField));
+    jstring camName =
+        static_cast<jstring>(jni->GetObjectField(capabilityElement, nameField));
     const char* camChars = jni->GetStringUTFChars(camName, nullptr);
     info.name = std::string(camChars);
     jni->ReleaseStringUTFChars(camName, camChars);
 
     info.orientation = jni->GetIntField(capabilityElement, orientationField);
-    info.front_facing = jni->GetBooleanField(capabilityElement, frontFacingField);
+    info.front_facing =
+        jni->GetBooleanField(capabilityElement, frontFacingField);
     jint min_mfps = jni->GetIntField(capabilityElement, minFpsField);
     jint max_mfps = jni->GetIntField(capabilityElement, maxFpsField);
 
-    jintArray widthResArray =
-        static_cast<jintArray>(jni->GetObjectField(capabilityElement, widthField));
-    jintArray heightResArray =
-        static_cast<jintArray>(jni->GetObjectField(capabilityElement, heightField));
+    jintArray widthResArray = static_cast<jintArray>(
+        jni->GetObjectField(capabilityElement, widthField));
+    jintArray heightResArray = static_cast<jintArray>(
+        jni->GetObjectField(capabilityElement, heightField));
 
     const jsize numRes = jni->GetArrayLength(widthResArray);
 
-    jint *widths = jni->GetIntArrayElements(widthResArray, nullptr);
-    jint *heights = jni->GetIntArrayElements(heightResArray, nullptr);
+    jint* widths = jni->GetIntArrayElements(widthResArray, nullptr);
+    jint* heights = jni->GetIntArrayElements(heightResArray, nullptr);
 
     for (jsize j = 0; j < numRes; ++j) {
-        info.resolutions.push_back(std::make_pair(widths[j], heights[j]));
+      info.resolutions.push_back(std::make_pair(widths[j], heights[j]));
     }
 
     info.mfpsRanges.push_back(std::make_pair(min_mfps, max_mfps));
@@ -204,21 +200,16 @@ VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
   return new videocapturemodule::DeviceInfoAndroid();
 }
 
-DeviceInfoAndroid::DeviceInfoAndroid() :
-    DeviceInfoImpl() {
-}
+DeviceInfoAndroid::DeviceInfoAndroid() : DeviceInfoImpl() {}
 
-DeviceInfoAndroid::~DeviceInfoAndroid() {
-}
+DeviceInfoAndroid::~DeviceInfoAndroid() {}
 
 bool DeviceInfoAndroid::FindCameraIndex(const char* deviceUniqueIdUTF8,
                                         size_t* index) {
   return FindCameraIndexByName(deviceUniqueIdUTF8, index);
 }
 
-int32_t DeviceInfoAndroid::Init() {
-  return 0;
-}
+int32_t DeviceInfoAndroid::Init() { return 0; }
 
 uint32_t DeviceInfoAndroid::NumberOfDevices() {
   Refresh();
@@ -226,13 +217,9 @@ uint32_t DeviceInfoAndroid::NumberOfDevices() {
 }
 
 int32_t DeviceInfoAndroid::GetDeviceName(
-    uint32_t deviceNumber,
-    char* deviceNameUTF8,
-    uint32_t deviceNameLength,
-    char* deviceUniqueIdUTF8,
-    uint32_t deviceUniqueIdUTF8Length,
-    char* /*productUniqueIdUTF8*/,
-    uint32_t /*productUniqueIdUTF8Length*/,
+    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameLength,
+    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Length,
+    char* /*productUniqueIdUTF8*/, uint32_t /*productUniqueIdUTF8Length*/,
     pid_t* /*pid*/) {
   if (deviceNumber >= g_camera_info->size()) {
     return -1;
@@ -247,8 +234,7 @@ int32_t DeviceInfoAndroid::GetDeviceName(
   return 0;
 }
 
-int32_t DeviceInfoAndroid::CreateCapabilityMap(
-    const char* deviceUniqueIdUTF8) {
+int32_t DeviceInfoAndroid::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
   _captureCapabilities.clear();
   const AndroidCameraInfo* info = FindCameraInfoByName(deviceUniqueIdUTF8);
   if (info == NULL) {
@@ -273,17 +259,16 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
 int32_t DeviceInfoAndroid::GetOrientation(const char* deviceUniqueIdUTF8,
                                           VideoRotation& orientation) {
   const AndroidCameraInfo* info = FindCameraInfoByName(deviceUniqueIdUTF8);
-  if (info == NULL ||
-      VideoCaptureImpl::RotationFromDegrees(info->orientation,
-                                            &orientation) != 0) {
+  if (info == NULL || VideoCaptureImpl::RotationFromDegrees(
+                          info->orientation, &orientation) != 0) {
     return -1;
   }
   return 0;
 }
 
 void DeviceInfoAndroid::GetMFpsRange(const char* deviceUniqueIdUTF8,
-                                     int max_fps_to_match,
-                                     int* min_mfps, int* max_mfps) {
+                                     int max_fps_to_match, int* min_mfps,
+                                     int* max_mfps) {
   const AndroidCameraInfo* info = FindCameraInfoByName(deviceUniqueIdUTF8);
   if (info == NULL) {
     return;
@@ -293,11 +278,13 @@ void DeviceInfoAndroid::GetMFpsRange(const char* deviceUniqueIdUTF8,
   RTC_LOG(LS_INFO) << "Search for best target mfps " << desired_mfps;
   // Search for best fps range with preference shifted to constant fps modes.
   for (size_t i = 0; i < info->mfpsRanges.size(); ++i) {
-    int diff_mfps = abs(info->mfpsRanges[i].first - desired_mfps) +
+    int diff_mfps =
+        abs(info->mfpsRanges[i].first - desired_mfps) +
         abs(info->mfpsRanges[i].second - desired_mfps) +
         (info->mfpsRanges[i].second - info->mfpsRanges[i].first) / 2;
-    RTC_LOG(LS_INFO) << "Fps range " << info->mfpsRanges[i].first << ":" <<
-        info->mfpsRanges[i].second << ". Distance: " << diff_mfps;
+    RTC_LOG(LS_INFO) << "Fps range " << info->mfpsRanges[i].first << ":"
+                     << info->mfpsRanges[i].second
+                     << ". Distance: " << diff_mfps;
     if (i == 0 || diff_mfps < best_diff_mfps) {
       best_diff_mfps = diff_mfps;
       *min_mfps = info->mfpsRanges[i].first;
