@@ -1052,6 +1052,8 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SubtleCrypto", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "SubmitEvent", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SVGAElement", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SVGAngle", insecureContext: true },
