@@ -8,6 +8,7 @@
 #define mozilla_interceptor_MMPolicies_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
@@ -613,6 +614,8 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
     return false;
   }
 
+  // This function reads as many bytes as |aLen| from the target process and
+  // succeeds only when the entire area to be read is accessible.
   bool Read(void* aToPtr, const void* aFromPtr, size_t aLen) const {
     MOZ_ASSERT(mProcess);
     if (!mProcess) {
@@ -622,6 +625,40 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
     SIZE_T numBytes = 0;
     BOOL ok = ::ReadProcessMemory(mProcess, aFromPtr, aToPtr, aLen, &numBytes);
     return ok && numBytes == aLen;
+  }
+
+  // This function reads as many bytes as possible from the target process up
+  // to |aLen| bytes and returns the number of bytes which was actually read.
+  size_t TryRead(void* aToPtr, const void* aFromPtr, size_t aLen) const {
+    MOZ_ASSERT(mProcess);
+    if (!mProcess) {
+      return 0;
+    }
+
+    uint32_t pageSize = GetPageSize();
+    uintptr_t pageMask = pageSize - 1;
+
+    auto rangeStart = reinterpret_cast<uintptr_t>(aFromPtr);
+    auto rangeEnd = rangeStart + aLen;
+
+    while (rangeStart < rangeEnd) {
+      SIZE_T numBytes = 0;
+      BOOL ok = ::ReadProcessMemory(mProcess, aFromPtr, aToPtr,
+                                    rangeEnd - rangeStart, &numBytes);
+      if (ok) {
+        return numBytes;
+      }
+
+      // If ReadProcessMemory fails, try to read up to each page boundary from
+      // the end of the requested area one by one.
+      if (rangeEnd & pageMask) {
+        rangeEnd &= ~pageMask;
+      } else {
+        rangeEnd -= pageSize;
+      }
+    }
+
+    return 0;
   }
 
   bool Write(void* aToPtr, const void* aFromPtr, size_t aLen) const {
