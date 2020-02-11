@@ -12,6 +12,31 @@
 namespace mozilla {
 namespace interceptor {
 
+template <typename MMPolicy>
+struct GetProcAddressSelector;
+
+template <>
+struct GetProcAddressSelector<MMPolicyOutOfProcess> {
+  FARPROC operator()(HMODULE aModule, const char* aName,
+                     const MMPolicyOutOfProcess& aMMPolicy) const {
+    auto exportSection =
+        mozilla::nt::PEExportSection<MMPolicyOutOfProcess>::Get(aModule,
+                                                                aMMPolicy);
+    return exportSection.GetProcAddress(aName);
+  }
+};
+
+template <>
+struct GetProcAddressSelector<MMPolicyInProcess> {
+  FARPROC operator()(HMODULE aModule, const char* aName,
+                     const MMPolicyInProcess&) const {
+    // PEExportSection works for MMPolicyInProcess, too, but the native
+    // GetProcAddress is still better because PEExportSection does not
+    // solve a forwarded entry.
+    return ::GetProcAddress(aModule, aName);
+  }
+};
+
 template <typename VMPolicy>
 class WindowsDllPatcherBase {
  protected:
@@ -93,6 +118,12 @@ class WindowsDllPatcherBase {
     }
 
     return ReadOnlyTargetFunction<MMPolicyT>(mVMPolicy, aRedirAddress);
+  }
+
+ public:
+  FARPROC GetProcAddress(HMODULE aModule, const char* aName) const {
+    GetProcAddressSelector<MMPolicyT> selector;
+    return selector(aModule, aName, mVMPolicy);
   }
 
  protected:
