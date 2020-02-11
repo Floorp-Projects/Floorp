@@ -12,10 +12,11 @@
 #include "nsChangeHint.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/ServoStyleConsts.h"
 
 namespace mozilla {
 
-enum class MediaFeatureChangeReason {
+enum class MediaFeatureChangeReason : uint8_t {
   // The viewport size the document has used has changed.
   //
   // This affects size media queries like min-width.

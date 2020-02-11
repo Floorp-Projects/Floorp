@@ -27,6 +27,7 @@ class nsIURI;
 class nsIPrincipal;
 
 namespace mozilla {
+struct MediaFeatureChange;
 namespace dom {
 class Document;
 }

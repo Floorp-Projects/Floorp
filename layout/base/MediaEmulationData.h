@@ -15,6 +15,8 @@
 
 namespace mozilla {
 
+enum class StylePrefersColorScheme : uint8_t;
+
 struct MediaEmulationData final {
   MediaEmulationData() = default;
 

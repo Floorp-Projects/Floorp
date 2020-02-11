@@ -897,6 +897,21 @@ inline nsRect StyleGenericClipRect<LengthOrAuto>::ToLayoutRect(
   return nsRect(x, y, width, height);
 }
 
+using RestyleHint = StyleRestyleHint;
+
+inline RestyleHint RestyleHint::RestyleSubtree() {
+  return RestyleHint::RESTYLE_SELF | RestyleHint::RESTYLE_DESCENDANTS;
+}
+
+inline RestyleHint RestyleHint::RecascadeSubtree() {
+  return RestyleHint::RECASCADE_SELF | RestyleHint::RECASCADE_DESCENDANTS;
+}
+
+inline RestyleHint RestyleHint::ForAnimations() {
+  return RestyleHint::RESTYLE_CSS_TRANSITIONS |
+         RestyleHint::RESTYLE_CSS_ANIMATIONS | RestyleHint::RESTYLE_SMIL;
+}
+
 }  // namespace mozilla
 
 #endif
