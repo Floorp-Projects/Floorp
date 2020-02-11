@@ -5,7 +5,7 @@ config = {
 
     "objdir": "obj-firefox",
     "repack_env": {
-        "MOZ_OBJDIR": "obj-firefox",
+        "MOZ_OBJDIR": "%(abs_obj_dir)s",
     },
 
     'vcs_share_base': "/builds/hg-shared",
