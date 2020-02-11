@@ -401,10 +401,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         """creates the repacks and udpates"""
         self._map(self.repack_locale, self.query_locales())
 
-    def _query_objdir(self):
-        """returns objdir name from configuration"""
-        return self.config['objdir']
-
     # TODO: replace with ToolToolMixin
     def _get_tooltool_auth_file(self):
         # set the default authentication file based on platform; this
