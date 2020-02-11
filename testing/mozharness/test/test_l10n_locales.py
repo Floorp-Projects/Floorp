@@ -2,6 +2,8 @@ import os
 import shutil
 import unittest
 
+import mock
+
 import mozharness.base.script as script
 import mozharness.mozilla.l10n.locales as locales
 
@@ -27,6 +29,7 @@ class LocalesTest(locales.LocalesMixin, script.BaseScript):
         self.log_obj = None
 
 
+@mock.patch.dict('os.environ', GECKO_PATH='gecko_src')
 class TestLocalesMixin(unittest.TestCase):
     BASE_ABS_DIRS = {
         'abs_log_dir', 'abs_work_dir', 'base_work_dir',
