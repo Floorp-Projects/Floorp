@@ -25,7 +25,7 @@ linux64-cbindgen:
         arguments: ['x86_64-unknown-linux-gnu']
     fetches:
         toolchain:
-            - linux64-rust-1.41
+            - linux64-rust-1.39
 
 macosx64-cbindgen:
     treeherder:
@@ -46,7 +46,7 @@ macosx64-cbindgen:
             - linux64-cctools-port
             - linux64-clang-9
             - linux64-llvm-dsymutil
-            - linux64-rust-macos-1.41
+            - linux64-rust-macos-1.39
 
 win64-cbindgen:
     treeherder:
@@ -63,4 +63,4 @@ win64-cbindgen:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - win64-rust-1.41
+            - win64-rust-1.39
