@@ -221,7 +221,7 @@ already_AddRefed<nsIInputChannelThrottleQueue> ThrottleQueue::Create() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsIInputChannelThrottleQueue> tq;
-  if (gIOService->UseSocketProcess()) {
+  if (nsIOService::UseSocketProcess()) {
     tq = new InputChannelThrottleQueueParent();
   } else {
     tq = new ThrottleQueue();

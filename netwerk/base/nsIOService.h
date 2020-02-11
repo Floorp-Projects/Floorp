@@ -119,7 +119,7 @@ class nsIOService final : public nsIIOService,
   bool SocketProcessReady();
   static void NotifySocketProcessPrefsChanged(const char* aName, void* aSelf);
   void NotifySocketProcessPrefsChanged(const char* aName);
-  bool UseSocketProcess();
+  static bool UseSocketProcess();
 
   bool IsSocketProcessLaunchComplete();
 
