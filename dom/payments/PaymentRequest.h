@@ -97,10 +97,11 @@ class PaymentRequest final : public DOMEventTargetHelper,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<PaymentRequest> CreatePaymentRequest(
-      nsPIDOMWindowInner* aWindow, nsresult& aRv);
+      nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
+  // Parameter validation methods
   static void IsValidStandardizedPMI(const nsAString& aIdentifier,
                                      ErrorResult& aRv);
 
@@ -113,6 +114,7 @@ class PaymentRequest final : public DOMEventTargetHelper,
 
   static void IsValidNumber(const nsAString& aItem, const nsAString& aStr,
                             ErrorResult& aRv);
+
   static void IsNonNegativeNumber(const nsAString& aItem, const nsAString& aStr,
                                   ErrorResult& aRv);
 
@@ -133,6 +135,7 @@ class PaymentRequest final : public DOMEventTargetHelper,
   static void IsValidDetailsBase(const PaymentDetailsBase& aDetails,
                                  const bool aRequestShipping, ErrorResult& aRv);
 
+  // Webidl implementation
   static already_AddRefed<PaymentRequest> Constructor(
       const GlobalObject& aGlobal,
       const Sequence<PaymentMethodData>& aMethodData,
@@ -148,14 +151,15 @@ class PaymentRequest final : public DOMEventTargetHelper,
                           const ResponseData& aData,
                           const nsAString& aPayerName,
                           const nsAString& aPayerEmail,
-                          const nsAString& aPayerPhone, ErrorResult& aRv);
+                          const nsAString& aPayerPhone, ErrorResult& aResult);
   void RejectShowPayment(ErrorResult& aRejectReason);
   void RespondComplete();
 
   already_AddRefed<Promise> Abort(ErrorResult& aRv);
   void RespondAbortPayment(bool aResult);
 
-  nsresult RetryPayment(JSContext* aCx, const PaymentValidationErrors& aErrors);
+  void RetryPayment(JSContext* aCx, const PaymentValidationErrors& aErrors,
+                    ErrorResult& aRv);
 
   void GetId(nsAString& aRetVal) const;
   void GetInternalId(nsAString& aRetVal);
@@ -185,9 +189,9 @@ class PaymentRequest final : public DOMEventTargetHelper,
   void SetOptions(const PaymentOptions& aOptions);
   nsresult UpdateShippingOption(const nsAString& aShippingOption);
 
-  nsresult UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails);
-  void AbortUpdate(nsresult aRv);
-  void AbortUpdate(ErrorResult& aRv);
+  void UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails,
+                     ErrorResult& aRv);
+  void AbortUpdate(ErrorResult& aReason);
 
   void SetShippingType(const Nullable<PaymentShippingType>& aShippingType);
   Nullable<PaymentShippingType> GetShippingType() const;

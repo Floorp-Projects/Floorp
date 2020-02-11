@@ -173,12 +173,13 @@ already_AddRefed<Promise> PaymentResponse::Complete(PaymentComplete result,
                                                     ErrorResult& aRv) {
   MOZ_ASSERT(mRequest);
   if (!mRequest->InFullyActiveDocument()) {
-    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    aRv.ThrowAbortError("The owner document is not fully active");
     return nullptr;
   }
 
   if (mCompleteCalled) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError(
+        "PaymentResponse.complete() has already been called");
     return nullptr;
   }
 
@@ -190,26 +191,20 @@ already_AddRefed<Promise> PaymentResponse::Complete(PaymentComplete result,
   }
 
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  if (NS_WARN_IF(!manager)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  nsresult rv = manager->CompletePayment(mRequest, result);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_FAILURE);
+  MOZ_ASSERT(manager);
+  manager->CompletePayment(mRequest, result, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
   if (NS_WARN_IF(!GetOwner())) {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.ThrowAbortError("Global object should exist");
     return nullptr;
   }
 
   nsIGlobalObject* global = GetOwner()->AsGlobal();
-  ErrorResult errResult;
-  RefPtr<Promise> promise = Promise::Create(global, errResult);
-  if (errResult.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
@@ -229,15 +224,13 @@ already_AddRefed<Promise> PaymentResponse::Retry(
     JSContext* aCx, const PaymentValidationErrors& aErrors, ErrorResult& aRv) {
   MOZ_ASSERT(mRequest);
   if (!mRequest->InFullyActiveDocument()) {
-    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    aRv.ThrowAbortError("The owner document is not fully active");
     return nullptr;
   }
 
   nsIGlobalObject* global = GetOwner()->AsGlobal();
-  ErrorResult errResult;
-  RefPtr<Promise> promise = Promise::Create(global, errResult);
-  if (errResult.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
@@ -247,28 +240,32 @@ already_AddRefed<Promise> PaymentResponse::Retry(
   }
 
   if (mCompleteCalled || mRetryPromise) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    aRv.ThrowInvalidStateError(
+        "PaymentResponse.complete() has already been called");
+    return nullptr;
   }
 
-  nsresult rv = ValidatePaymentValidationErrors(aErrors);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
-    return promise.forget();
+  if (mRetryPromise) {
+    aRv.ThrowInvalidStateError("Is retrying the PaymentRequest");
+    return nullptr;
+  }
+
+  ValidatePaymentValidationErrors(aErrors, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
   }
 
   // Depending on the PMI, try to do IDL type conversion
   // (e.g., basic-card expects at BasicCardErrors dictionary)
   ConvertPaymentMethodErrors(aCx, aErrors, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  if (aRv.Failed()) {
     return nullptr;
   }
 
   MOZ_ASSERT(mRequest);
-  rv = mRequest->RetryPayment(aCx, aErrors);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
-    return promise.forget();
+  mRequest->RetryPayment(aCx, aErrors, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
   }
 
   mRetryPromise = promise;
@@ -326,78 +323,78 @@ void PaymentResponse::ConvertPaymentMethodErrors(
   }
 }
 
-nsresult PaymentResponse::ValidatePaymentValidationErrors(
-    const PaymentValidationErrors& aErrors) {
+void PaymentResponse::ValidatePaymentValidationErrors(
+    const PaymentValidationErrors& aErrors, ErrorResult& aRv) {
   // Should not be empty errors
   // check PaymentValidationErrors.error
   if (aErrors.mError.WasPassed() && !aErrors.mError.Value().IsEmpty()) {
-    return NS_OK;
+    return;
   }
   // check PaymentValidationErrors.payer
   if (aErrors.mPayer.WasPassed()) {
     PayerErrors payerErrors(aErrors.mPayer.Value());
     if (payerErrors.mName.WasPassed() && !payerErrors.mName.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (payerErrors.mEmail.WasPassed() &&
         !payerErrors.mEmail.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (payerErrors.mPhone.WasPassed() &&
         !payerErrors.mPhone.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
   }
   // check PaymentValidationErrors.paymentMethod
   if (aErrors.mPaymentMethod.WasPassed()) {
-    return NS_OK;
+    return;
   }
   // check PaymentValidationErrors.shippingAddress
   if (aErrors.mShippingAddress.WasPassed()) {
     AddressErrors addErrors(aErrors.mShippingAddress.Value());
     if (addErrors.mAddressLine.WasPassed() &&
         !addErrors.mAddressLine.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mCity.WasPassed() && !addErrors.mCity.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mCountry.WasPassed() &&
         !addErrors.mCountry.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mDependentLocality.WasPassed() &&
         !addErrors.mDependentLocality.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mOrganization.WasPassed() &&
         !addErrors.mOrganization.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mPhone.WasPassed() && !addErrors.mPhone.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mPostalCode.WasPassed() &&
         !addErrors.mPostalCode.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mRecipient.WasPassed() &&
         !addErrors.mRecipient.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mRegion.WasPassed() && !addErrors.mRegion.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mRegionCode.WasPassed() &&
         !addErrors.mRegionCode.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
     if (addErrors.mSortingCode.WasPassed() &&
         !addErrors.mSortingCode.Value().IsEmpty()) {
-      return NS_OK;
+      return;
     }
   }
-  return NS_ERROR_DOM_ABORT_ERR;
+  aRv.ThrowAbortError("PaymentValidationErrors can not be an empty error");
 }
 
 NS_IMETHODIMP
@@ -418,8 +415,9 @@ PaymentResponse::Notify(nsITimer* timer) {
   if (NS_WARN_IF(!manager)) {
     return NS_ERROR_FAILURE;
   }
-
-  return manager->CompletePayment(mRequest, PaymentComplete::Unknown, true);
+  manager->CompletePayment(mRequest, PaymentComplete::Unknown, IgnoreErrors(),
+                           true);
+  return NS_OK;
 }
 
 nsresult PaymentResponse::UpdatePayerDetail(const nsAString& aPayerName,

@@ -22,21 +22,22 @@ namespace {
  *  Following Convert* functions are used for convert PaymentRequest structs
  *  to transferable structs for IPC.
  */
-nsresult ConvertMethodData(JSContext* aCx, const PaymentMethodData& aMethodData,
-                           IPCPaymentMethodData& aIPCMethodData) {
-  NS_ENSURE_ARG_POINTER(aCx);
+void ConvertMethodData(JSContext* aCx, const PaymentMethodData& aMethodData,
+                       IPCPaymentMethodData& aIPCMethodData, ErrorResult& aRv) {
+  MOZ_ASSERT(aCx);
   // Convert JSObject to a serialized string
   nsAutoString serializedData;
   if (aMethodData.mData.WasPassed()) {
     JS::RootedObject object(aCx, aMethodData.mData.Value());
-    nsresult rv = SerializeFromJSObject(aCx, object, serializedData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_WARN_IF(
+            NS_FAILED(SerializeFromJSObject(aCx, object, serializedData)))) {
+      aRv.ThrowTypeError(
+          u"The PaymentMethodData.data must be a serializable object");
+      return;
     }
   }
   aIPCMethodData =
       IPCPaymentMethodData(aMethodData.mSupportedMethods, serializedData);
-  return NS_OK;
 }
 
 void ConvertCurrencyAmount(const PaymentCurrencyAmount& aAmount,
@@ -51,17 +52,18 @@ void ConvertItem(const PaymentItem& aItem, IPCPaymentItem& aIPCItem) {
   aIPCItem = IPCPaymentItem(aItem.mLabel, amount, aItem.mPending);
 }
 
-nsresult ConvertModifier(JSContext* aCx,
-                         const PaymentDetailsModifier& aModifier,
-                         IPCPaymentDetailsModifier& aIPCModifier) {
-  NS_ENSURE_ARG_POINTER(aCx);
+void ConvertModifier(JSContext* aCx, const PaymentDetailsModifier& aModifier,
+                     IPCPaymentDetailsModifier& aIPCModifier,
+                     ErrorResult& aRv) {
+  MOZ_ASSERT(aCx);
   // Convert JSObject to a serialized string
   nsAutoString serializedData;
   if (aModifier.mData.WasPassed()) {
     JS::RootedObject object(aCx, aModifier.mData.Value());
-    nsresult rv = SerializeFromJSObject(aCx, object, serializedData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_WARN_IF(
+            NS_FAILED(SerializeFromJSObject(aCx, object, serializedData)))) {
+      aRv.ThrowTypeError(u"The Modifier.data must be a serializable object");
+      return;
     }
   }
 
@@ -81,7 +83,6 @@ nsresult ConvertModifier(JSContext* aCx,
   aIPCModifier = IPCPaymentDetailsModifier(
       aModifier.mSupportedMethods, total, additionalDisplayItems,
       serializedData, aModifier.mAdditionalDisplayItems.WasPassed());
-  return NS_OK;
 }
 
 void ConvertShippingOption(const PaymentShippingOption& aOption,
@@ -92,12 +93,12 @@ void ConvertShippingOption(const PaymentShippingOption& aOption,
                                         aOption.mSelected);
 }
 
-nsresult ConvertDetailsBase(
-    JSContext* aCx, const PaymentDetailsBase& aDetails,
-    nsTArray<IPCPaymentItem>& aDisplayItems,
-    nsTArray<IPCPaymentShippingOption>& aShippingOptions,
-    nsTArray<IPCPaymentDetailsModifier>& aModifiers, bool aRequestShipping) {
-  NS_ENSURE_ARG_POINTER(aCx);
+void ConvertDetailsBase(JSContext* aCx, const PaymentDetailsBase& aDetails,
+                        nsTArray<IPCPaymentItem>& aDisplayItems,
+                        nsTArray<IPCPaymentShippingOption>& aShippingOptions,
+                        nsTArray<IPCPaymentDetailsModifier>& aModifiers,
+                        bool aRequestShipping, ErrorResult& aRv) {
+  MOZ_ASSERT(aCx);
   if (aDetails.mDisplayItems.WasPassed()) {
     for (const PaymentItem& item : aDetails.mDisplayItems.Value()) {
       IPCPaymentItem displayItem;
@@ -116,28 +117,27 @@ nsresult ConvertDetailsBase(
   if (aDetails.mModifiers.WasPassed()) {
     for (const PaymentDetailsModifier& modifier : aDetails.mModifiers.Value()) {
       IPCPaymentDetailsModifier detailsModifier;
-      nsresult rv = ConvertModifier(aCx, modifier, detailsModifier);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      ConvertModifier(aCx, modifier, detailsModifier, aRv);
+      if (aRv.Failed()) {
+        return;
       }
       aModifiers.AppendElement(detailsModifier);
     }
   }
-  return NS_OK;
 }
 
-nsresult ConvertDetailsInit(JSContext* aCx, const PaymentDetailsInit& aDetails,
-                            IPCPaymentDetails& aIPCDetails,
-                            bool aRequestShipping) {
-  NS_ENSURE_ARG_POINTER(aCx);
+void ConvertDetailsInit(JSContext* aCx, const PaymentDetailsInit& aDetails,
+                        IPCPaymentDetails& aIPCDetails, bool aRequestShipping,
+                        ErrorResult& aRv) {
+  MOZ_ASSERT(aCx);
   // Convert PaymentDetailsBase members
   nsTArray<IPCPaymentItem> displayItems;
   nsTArray<IPCPaymentShippingOption> shippingOptions;
   nsTArray<IPCPaymentDetailsModifier> modifiers;
-  nsresult rv = ConvertDetailsBase(aCx, aDetails, displayItems, shippingOptions,
-                                   modifiers, aRequestShipping);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ConvertDetailsBase(aCx, aDetails, displayItems, shippingOptions, modifiers,
+                     aRequestShipping, aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   // Convert |id|
@@ -156,22 +156,20 @@ nsresult ConvertDetailsInit(JSContext* aCx, const PaymentDetailsInit& aDetails,
                         EmptyString(),   // shippingAddressErrors
                         EmptyString(),   // payerErrors
                         EmptyString());  // paymentMethodErrors
-  return NS_OK;
 }
 
-nsresult ConvertDetailsUpdate(JSContext* aCx,
-                              const PaymentDetailsUpdate& aDetails,
-                              IPCPaymentDetails& aIPCDetails,
-                              bool aRequestShipping) {
-  NS_ENSURE_ARG_POINTER(aCx);
+void ConvertDetailsUpdate(JSContext* aCx, const PaymentDetailsUpdate& aDetails,
+                          IPCPaymentDetails& aIPCDetails, bool aRequestShipping,
+                          ErrorResult& aRv) {
+  MOZ_ASSERT(aCx);
   // Convert PaymentDetailsBase members
   nsTArray<IPCPaymentItem> displayItems;
   nsTArray<IPCPaymentShippingOption> shippingOptions;
   nsTArray<IPCPaymentDetailsModifier> modifiers;
-  nsresult rv = ConvertDetailsBase(aCx, aDetails, displayItems, shippingOptions,
-                                   modifiers, aRequestShipping);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ConvertDetailsBase(aCx, aDetails, displayItems, shippingOptions, modifiers,
+                     aRequestShipping, aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   // Convert required |total|
@@ -190,23 +188,26 @@ nsresult ConvertDetailsUpdate(JSContext* aCx,
   if (aDetails.mShippingAddressErrors.WasPassed()) {
     if (!aDetails.mShippingAddressErrors.Value().ToJSON(
             shippingAddressErrors)) {
-      return NS_ERROR_FAILURE;
+      aRv.ThrowTypeError(u"The ShippingAddressErrors can not be serailized");
+      return;
     }
   }
 
   nsAutoString payerErrors;
   if (aDetails.mPayerErrors.WasPassed()) {
     if (!aDetails.mPayerErrors.Value().ToJSON(payerErrors)) {
-      return NS_ERROR_FAILURE;
+      aRv.ThrowTypeError(u"The PayerErrors can not be serialized");
+      return;
     }
   }
 
   nsAutoString paymentMethodErrors;
   if (aDetails.mPaymentMethodErrors.WasPassed()) {
     JS::RootedObject object(aCx, aDetails.mPaymentMethodErrors.Value());
-    nsresult rv = SerializeFromJSObject(aCx, object, paymentMethodErrors);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_WARN_IF(NS_FAILED(
+            SerializeFromJSObject(aCx, object, paymentMethodErrors)))) {
+      aRv.ThrowTypeError(u"The PaymentMethodErrors can not be serialized");
+      return;
     }
   }
 
@@ -214,7 +215,6 @@ nsresult ConvertDetailsUpdate(JSContext* aCx,
                                   total, displayItems, shippingOptions,
                                   modifiers, error, shippingAddressErrors,
                                   payerErrors, paymentMethodErrors);
-  return NS_OK;
 }
 
 void ConvertOptions(const PaymentOptions& aOptions,
@@ -431,23 +431,22 @@ void GetSelectedShippingOption(const PaymentDetailsBase& aDetails,
   }
 }
 
-nsresult PaymentRequestManager::CreatePayment(
+void PaymentRequestManager::CreatePayment(
     JSContext* aCx, nsPIDOMWindowInner* aWindow,
     nsIPrincipal* aTopLevelPrincipal,
     const Sequence<PaymentMethodData>& aMethodData,
     const PaymentDetailsInit& aDetails, const PaymentOptions& aOptions,
-    PaymentRequest** aRequest) {
+    PaymentRequest** aRequest, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG_POINTER(aCx);
-  NS_ENSURE_ARG_POINTER(aRequest);
-  NS_ENSURE_ARG_POINTER(aTopLevelPrincipal);
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aRequest);
+  MOZ_ASSERT(aTopLevelPrincipal);
   *aRequest = nullptr;
-  nsresult rv;
 
   RefPtr<PaymentRequest> request =
-      PaymentRequest::CreatePaymentRequest(aWindow, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+      PaymentRequest::CreatePaymentRequest(aWindow, aRv);
+  if (aRv.Failed()) {
+    return;
   }
   request->SetOptions(aOptions);
   /*
@@ -483,17 +482,17 @@ nsresult PaymentRequestManager::CreatePayment(
   nsTArray<IPCPaymentMethodData> methodData;
   for (const PaymentMethodData& data : aMethodData) {
     IPCPaymentMethodData ipcMethodData;
-    rv = ConvertMethodData(aCx, data, ipcMethodData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    ConvertMethodData(aCx, data, ipcMethodData, aRv);
+    if (aRv.Failed()) {
+      return;
     }
     methodData.AppendElement(ipcMethodData);
   }
 
   IPCPaymentDetails details;
-  rv = ConvertDetailsInit(aCx, aDetails, details, aOptions.mRequestShipping);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ConvertDetailsInit(aCx, aDetails, details, aOptions.mRequestShipping, aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   IPCPaymentOptions options;
@@ -511,38 +510,46 @@ nsresult PaymentRequestManager::CreatePayment(
                                        aTopLevelPrincipal, methodData, details,
                                        options, shippingOption);
 
-  rv = SendRequestPayment(request, action, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(SendRequestPayment(request, action, false)))) {
+    aRv.ThrowUnknownError("Internal error sending payment request");
+    return;
   }
   request.forget(aRequest);
-  return NS_OK;
 }
 
-nsresult PaymentRequestManager::CanMakePayment(PaymentRequest* aRequest) {
+void PaymentRequestManager::CanMakePayment(PaymentRequest* aRequest,
+                                           ErrorResult& aRv) {
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentCanMakeActionRequest action(requestId);
-  return SendRequestPayment(aRequest, action);
+  if (NS_WARN_IF(NS_FAILED(SendRequestPayment(aRequest, action)))) {
+    aRv.ThrowUnknownError("Internal error sending payment request");
+  }
 }
 
-nsresult PaymentRequestManager::ShowPayment(PaymentRequest* aRequest) {
+void PaymentRequestManager::ShowPayment(PaymentRequest* aRequest,
+                                        ErrorResult& aRv) {
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentShowActionRequest action(requestId, aRequest->IsUpdating());
-  return SendRequestPayment(aRequest, action);
+  if (NS_WARN_IF(NS_FAILED(SendRequestPayment(aRequest, action)))) {
+    aRv.ThrowUnknownError("Internal error sending payment request");
+  }
 }
 
-nsresult PaymentRequestManager::AbortPayment(PaymentRequest* aRequest) {
+void PaymentRequestManager::AbortPayment(PaymentRequest* aRequest,
+                                         ErrorResult& aRv) {
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentAbortActionRequest action(requestId);
-  return SendRequestPayment(aRequest, action);
+  if (NS_WARN_IF(NS_FAILED(SendRequestPayment(aRequest, action)))) {
+    aRv.ThrowUnknownError("Internal error sending payment request");
+  }
 }
 
-nsresult PaymentRequestManager::CompletePayment(
-    PaymentRequest* aRequest, const PaymentComplete& aComplete,
-    bool aTimedOut) {
+void PaymentRequestManager::CompletePayment(PaymentRequest* aRequest,
+                                            const PaymentComplete& aComplete,
+                                            ErrorResult& aRv, bool aTimedOut) {
   nsString completeStatusString(NS_LITERAL_STRING("unknown"));
   if (aTimedOut) {
     completeStatusString.AssignLiteral("timeout");
@@ -554,17 +561,21 @@ nsresult PaymentRequestManager::CompletePayment(
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentCompleteActionRequest action(requestId, completeStatusString);
-  return SendRequestPayment(aRequest, action, false);
+  if (NS_WARN_IF(NS_FAILED(SendRequestPayment(aRequest, action, false)))) {
+    aRv.ThrowUnknownError("Internal error sending payment request");
+  }
 }
 
-nsresult PaymentRequestManager::UpdatePayment(
-    JSContext* aCx, PaymentRequest* aRequest,
-    const PaymentDetailsUpdate& aDetails, bool aRequestShipping) {
-  NS_ENSURE_ARG_POINTER(aCx);
+void PaymentRequestManager::UpdatePayment(JSContext* aCx,
+                                          PaymentRequest* aRequest,
+                                          const PaymentDetailsUpdate& aDetails,
+                                          bool aRequestShipping,
+                                          ErrorResult& aRv) {
+  MOZ_ASSERT(aCx);
   IPCPaymentDetails details;
-  nsresult rv = ConvertDetailsUpdate(aCx, aDetails, details, aRequestShipping);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ConvertDetailsUpdate(aCx, aDetails, details, aRequestShipping, aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   nsAutoString shippingOption;
@@ -577,7 +588,9 @@ nsresult PaymentRequestManager::UpdatePayment(
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentUpdateActionRequest action(requestId, details, shippingOption);
-  return SendRequestPayment(aRequest, action, false);
+  if (NS_WARN_IF(NS_FAILED(SendRequestPayment(aRequest, action, false)))) {
+    aRv.ThrowUnknownError("Internal error sending payment request");
+  }
 }
 
 nsresult PaymentRequestManager::ClosePayment(PaymentRequest* aRequest) {
@@ -591,11 +604,12 @@ nsresult PaymentRequestManager::ClosePayment(PaymentRequest* aRequest) {
   return SendRequestPayment(aRequest, action, false);
 }
 
-nsresult PaymentRequestManager::RetryPayment(
-    JSContext* aCx, PaymentRequest* aRequest,
-    const PaymentValidationErrors& aErrors) {
-  NS_ENSURE_ARG_POINTER(aCx);
-  NS_ENSURE_ARG_POINTER(aRequest);
+void PaymentRequestManager::RetryPayment(JSContext* aCx,
+                                         PaymentRequest* aRequest,
+                                         const PaymentValidationErrors& aErrors,
+                                         ErrorResult& aRv) {
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aRequest);
 
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
@@ -608,29 +622,34 @@ nsresult PaymentRequestManager::RetryPayment(
   nsAutoString shippingAddressErrors;
   if (aErrors.mShippingAddress.WasPassed()) {
     if (!aErrors.mShippingAddress.Value().ToJSON(shippingAddressErrors)) {
-      return NS_ERROR_FAILURE;
+      aRv.ThrowTypeError(u"The ShippingAddressErrors can not be serialized");
+      return;
     }
   }
 
   nsAutoString payerErrors;
   if (aErrors.mPayer.WasPassed()) {
     if (!aErrors.mPayer.Value().ToJSON(payerErrors)) {
-      return NS_ERROR_FAILURE;
+      aRv.ThrowTypeError(u"The PayerErrors can not be serialized");
+      return;
     }
   }
 
   nsAutoString paymentMethodErrors;
   if (aErrors.mPaymentMethod.WasPassed()) {
     JS::RootedObject object(aCx, aErrors.mPaymentMethod.Value());
-    nsresult rv = SerializeFromJSObject(aCx, object, paymentMethodErrors);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_WARN_IF(NS_FAILED(
+            SerializeFromJSObject(aCx, object, paymentMethodErrors)))) {
+      aRv.ThrowTypeError(u"The PaymentMethodErrors can not be serialized");
+      return;
     }
   }
   IPCPaymentRetryActionRequest action(requestId, error, payerErrors,
                                       paymentMethodErrors,
                                       shippingAddressErrors);
-  return SendRequestPayment(aRequest, action);
+  if (NS_WARN_IF(NS_FAILED(SendRequestPayment(aRequest, action)))) {
+    aRv.ThrowUnknownError("Internal error sending payment request");
+  }
 }
 
 nsresult PaymentRequestManager::RespondPayment(
@@ -652,15 +671,15 @@ nsresult PaymentRequestManager::RespondPayment(
           break;
         }
         case nsIPaymentActionResponse::PAYMENT_REJECTED: {
-          rejectedReason.Throw(NS_ERROR_DOM_ABORT_ERR);
+          rejectedReason.ThrowAbortError("The user rejected the payment");
           break;
         }
         case nsIPaymentActionResponse::PAYMENT_NOTSUPPORTED: {
-          rejectedReason.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+          rejectedReason.ThrowNotSupportedError("No supported payment method");
           break;
         }
         default: {
-          rejectedReason.Throw(NS_ERROR_UNEXPECTED);
+          rejectedReason.ThrowUnknownError("Unknown response for the payment");
           break;
         }
       }

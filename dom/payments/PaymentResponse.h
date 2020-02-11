@@ -146,8 +146,8 @@ class PaymentResponse final : public DOMEventTargetHelper,
  protected:
   ~PaymentResponse();
 
-  nsresult ValidatePaymentValidationErrors(
-      const PaymentValidationErrors& aErrors);
+  void ValidatePaymentValidationErrors(const PaymentValidationErrors& aErrors,
+                                       ErrorResult& aRv);
 
   void ConvertPaymentMethodErrors(JSContext* aCx,
                                   const PaymentValidationErrors& aErrors,
