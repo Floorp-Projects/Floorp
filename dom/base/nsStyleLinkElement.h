@@ -100,8 +100,10 @@ class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
   static void GetTitleAndMediaForElement(const mozilla::dom::Element&,
                                          nsString& aTitle, nsString& aMedia);
 
-  // Returns whether the type attribute specifies the text/css mime type.
-  static bool IsCSSMimeTypeAttribute(const mozilla::dom::Element&);
+  // Returns whether the type attribute specifies the text/css type for style
+  // elements.
+  static bool IsCSSMimeTypeAttributeForStyleElement(
+      const mozilla::dom::Element&);
 
   virtual mozilla::Maybe<SheetInfo> GetStyleSheetInfo() = 0;
 
