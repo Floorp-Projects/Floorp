@@ -16,6 +16,12 @@
  *
  **/
 
+// Generally gTestPath should be set by the harness.
+/* global gTestPath */
+
+// This can be loaded into a child process.
+/* eslint-env mozilla/frame-script */
+
 var SimpleTest = {};
 var parentRunner = null;
 
@@ -75,7 +81,7 @@ try {
 
 /* Helper functions pulled out of various MochiKit modules */
 if (typeof repr == "undefined") {
-  this.repr = function(o) {
+  this.repr = function repr(o) {
     if (typeof o == "undefined") {
       return "undefined";
     } else if (o === null) {
@@ -84,7 +90,7 @@ if (typeof repr == "undefined") {
     try {
       if (typeof o.__repr__ == "function") {
         return o.__repr__();
-      } else if (typeof o.repr == "function" && o.repr != arguments.callee) {
+      } else if (typeof o.repr == "function" && o.repr != repr) {
         return o.repr();
       }
     } catch (e) {}
@@ -128,12 +134,12 @@ if (typeof repr == "undefined") {
 if (typeof partial == "undefined") {
   this.partial = function(func) {
     var args = [];
-    for (var i = 1; i < arguments.length; i++) {
+    for (let i = 1; i < arguments.length; i++) {
       args.push(arguments[i]);
     }
     return function() {
       if (arguments.length > 0) {
-        for (var i = 1; i < arguments.length; i++) {
+        for (let i = 1; i < arguments.length; i++) {
           args.push(arguments[i]);
         }
       }
@@ -150,8 +156,8 @@ if (typeof getElement == "undefined") {
 }
 
 SimpleTest._newCallStack = function(path) {
-  var rval = function() {
-    var callStack = arguments.callee.callStack;
+  var rval = function callStackHandler() {
+    var callStack = callStackHandler.callStack;
     for (var i = 0; i < callStack.length; i++) {
       if (callStack[i].apply(this, arguments) === false) {
         break;
@@ -296,17 +302,19 @@ SimpleTest.ok = function(condition, name) {
 
 SimpleTest.record = function(condition, name, diag, stack, expected) {
   var test = { result: !!condition, name, diag };
+  let successInfo;
+  let failureInfo;
   if (SimpleTest.expected == "fail") {
     if (!test.result) {
       SimpleTest.num_failed++;
       test.result = !test.result;
     }
-    var successInfo = {
+    successInfo = {
       status: "PASS",
       expected: "PASS",
       message: "TEST-PASS",
     };
-    var failureInfo = {
+    failureInfo = {
       status: "FAIL",
       expected: "FAIL",
       message: "TEST-KNOWN-FAIL",
@@ -317,34 +325,34 @@ SimpleTest.record = function(condition, name, diag, stack, expected) {
       // Add a mark for unexpected failures suppressed by failure pattern.
       name = "[suppressed] " + name;
     }
-    var successInfo = {
+    successInfo = {
       status: "FAIL",
       expected: "FAIL",
       message: "TEST-KNOWN-FAIL",
     };
-    var failureInfo = {
+    failureInfo = {
       status: "FAIL",
       expected: "PASS",
       message: "TEST-UNEXPECTED-FAIL",
     };
   } else if (expected == "fail") {
-    var successInfo = {
+    successInfo = {
       status: "PASS",
       expected: "FAIL",
       message: "TEST-UNEXPECTED-PASS",
     };
-    var failureInfo = {
+    failureInfo = {
       status: "FAIL",
       expected: "FAIL",
       message: "TEST-KNOWN-FAIL",
     };
   } else {
-    var successInfo = {
+    successInfo = {
       status: "PASS",
       expected: "PASS",
       message: "TEST-PASS",
     };
-    var failureInfo = {
+    failureInfo = {
       status: "FAIL",
       expected: "PASS",
       message: "TEST-UNEXPECTED-FAIL",
@@ -447,8 +455,6 @@ SimpleTest.todo = function(condition, name, diag) {
  * slave)
  */
 SimpleTest.getTestFileURL = function(path) {
-  var lastSlashIdx = path.lastIndexOf("/") + 1;
-  var filename = path.substr(lastSlashIdx);
   var location = window.location;
   // Remove mochitest html file name from the path
   var remotePath = location.pathname.replace(/\/[^\/]+?$/, "");
@@ -582,6 +588,7 @@ SimpleTest.report = function() {
   }
 
   var summary_class =
+    // eslint-disable-next-line no-nested-ternary
     failed != 0 ? "some_fail" : passed == 0 ? "todo_only" : "all_pass";
 
   var div1 = createEl("div", { class: "tests_report" });
@@ -846,7 +853,8 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
   // If a child frame in a child process must be focused, a
   // WaitForFocus:FocusChild message is then sent to the child to focus that
   // child. This message is used so that the child frame can be passed to it.
-  function waitForFocusInner(targetWindow, isChildProcess, expectBlankPage) {
+  /* eslint-disable mozilla/use-services */
+  function waitForFocusInner(targetWin, isChildProcess, expectBlank) {
     /* Indicates whether the desired targetWindow has loaded or focused. The
          finished flag is set when the callback has been called and is used to
          reject extraneous events from invoking the callback again. */
@@ -880,7 +888,7 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
       try {
         if (event) {
           if (event.type == "load") {
-            if (expectBlankPage != (event.target.location == "about:blank")) {
+            if (expectBlank != (event.target.location == "about:blank")) {
               return;
             }
 
@@ -903,7 +911,7 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
           } else {
             SimpleTest._pendingWaitForFocusCount--;
             SimpleTest.executeSoon(function() {
-              callback(targetWindow);
+              callback(targetWin);
             });
           }
         }
@@ -929,7 +937,7 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
              page to load. A common situation is to wait for a newly opened window
              to load its content, and we want to skip over any intermediate blank
              pages that load. This issue is described in bug 554873. */
-      loaded = expectBlankPage
+      loaded = expectBlank
         ? getHref(desiredWindow) == "about:blank"
         : getHref(desiredWindow) != "about:blank" &&
           desiredWindow.document.readyState == "complete";
@@ -976,7 +984,7 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
       });
     }
 
-    waitForLoadAndFocusOnWindow(targetWindow);
+    waitForLoadAndFocusOnWindow(targetWin);
   }
 
   SimpleTest._pendingWaitForFocusCount++;
@@ -996,7 +1004,9 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
   var c = Object.getOwnPropertyDescriptor(window, "Components");
   var Cu, Ci;
   if (c && c.value && !c.writable) {
+    // eslint-disable-next-line mozilla/use-cc-etc
     Cu = Components.utils;
+    // eslint-disable-next-line mozilla/use-cc-etc
     Ci = Components.interfaces;
   } else {
     Cu = SpecialPowers.Cu;
@@ -1051,6 +1061,7 @@ SimpleTest.waitForFocus = function(callback, targetWindow, expectBlankPage) {
     waitForFocusInner(targetWindow, false, expectBlankPage);
   }
 };
+/* eslint-enable mozilla/use-services */
 
 /*
  * Polls the clipboard waiting for the expected value. A known value different than
@@ -1138,32 +1149,27 @@ SimpleTest.promiseClipboardChange = async function(
     inputValidatorFn = function(aData) {
       return aData != initialVal;
     };
-  } else {
     // Build a default validator function for common string input.
-    if (typeof aExpectedStringOrValidatorFn == "string") {
-      if (aExpectedStringOrValidatorFn.includes("\r")) {
-        throw new Error(
-          "Use function instead of string to compare raw line breakers in clipboard"
-        );
-      }
-      if (
-        requestedFlavor === "text/html" &&
-        navigator.platform.includes("Win")
-      ) {
-        inputValidatorFn = function(aData) {
-          return (
-            aData.replace(/\r\n?/g, "\n") ===
-            `<html><body>\n<!--StartFragment-->${aExpectedStringOrValidatorFn}<!--EndFragment-->\n</body>\n</html>`
-          );
-        };
-      } else {
-        inputValidatorFn = function(aData) {
-          return aData.replace(/\r\n?/g, "\n") === aExpectedStringOrValidatorFn;
-        };
-      }
-    } else {
-      inputValidatorFn = aExpectedStringOrValidatorFn;
+  } else if (typeof aExpectedStringOrValidatorFn == "string") {
+    if (aExpectedStringOrValidatorFn.includes("\r")) {
+      throw new Error(
+        "Use function instead of string to compare raw line breakers in clipboard"
+      );
     }
+    if (requestedFlavor === "text/html" && navigator.platform.includes("Win")) {
+      inputValidatorFn = function(aData) {
+        return (
+          aData.replace(/\r\n?/g, "\n") ===
+          `<html><body>\n<!--StartFragment-->${aExpectedStringOrValidatorFn}<!--EndFragment-->\n</body>\n</html>`
+        );
+      };
+    } else {
+      inputValidatorFn = function(aData) {
+        return aData.replace(/\r\n?/g, "\n") === aExpectedStringOrValidatorFn;
+      };
+    }
+  } else {
+    inputValidatorFn = aExpectedStringOrValidatorFn;
   }
 
   let maxPolls = aTimeout ? aTimeout / 100 : 50;
@@ -1199,8 +1205,9 @@ SimpleTest.promiseClipboardChange = async function(
       "Timed out while polling clipboard for pasted data, got: " + data
     );
     if (!aExpectFailure) {
-      throw "failed";
+      throw new Error("failed");
     }
+    return data;
   }
 
   // First we wait for a known value different from the expected one.
@@ -1214,7 +1221,7 @@ SimpleTest.promiseClipboardChange = async function(
     "text/unicode"
   );
 
-  return await putAndVerify(aSetupFn, inputValidatorFn, requestedFlavor);
+  return putAndVerify(aSetupFn, inputValidatorFn, requestedFlavor);
 };
 
 /**
@@ -1310,18 +1317,18 @@ SimpleTest.finish = function() {
   }
 
   if (SimpleTest.expected == "fail" && SimpleTest.num_failed <= 0) {
-    msg = "We expected at least one failure";
-    var test = {
+    let msg = "We expected at least one failure";
+    let test = {
       result: false,
       name: "fail-if condition in manifest",
       diag: msg,
     };
-    var successInfo = {
+    let successInfo = {
       status: "FAIL",
       expected: "FAIL",
       message: "TEST-KNOWN-FAIL",
     };
-    var failureInfo = {
+    let failureInfo = {
       status: "PASS",
       expected: "FAIL",
       message: "TEST-UNEXPECTED-PASS",
@@ -1340,16 +1347,16 @@ SimpleTest.finish = function() {
       } else {
         return;
       }
-      var name = pat
+      let name = pat
         ? `failure pattern \`${pat}\` in this test`
         : "failures in this test";
-      var test = { result: false, name, diag };
-      var successInfo = {
+      let test = { result: false, name, diag };
+      let successInfo = {
         status: "PASS",
         expected: "PASS",
         message: "TEST-PASS",
       };
-      var failureInfo = {
+      let failureInfo = {
         status: "FAIL",
         expected: "PASS",
         message: "TEST-UNEXPECTED-FAIL",
@@ -1539,7 +1546,7 @@ SimpleTest.monitorConsole = function(continuation, msgs, forbidUnexpectedMsgs) {
   var forbiddenMsgs = [];
   var i = 0;
   while (i < msgs.length) {
-    var pat = msgs[i];
+    let pat = msgs[i];
     if ("forbid" in pat) {
       var forbid = pat.forbid;
       delete pat.forbid;
@@ -1564,7 +1571,7 @@ SimpleTest.monitorConsole = function(continuation, msgs, forbidUnexpectedMsgs) {
       SimpleTest.executeSoon(continuation);
       return;
     }
-    for (var pat of forbiddenMsgs) {
+    for (let pat of forbiddenMsgs) {
       if (msgMatches(msg, pat)) {
         ok(
           false,
@@ -1792,7 +1799,7 @@ SimpleTest._eqAssoc = function(o1, o2, stack, seen) {
   // confusing a reference seen more than once (such as [a, a]) for a
   // circular reference.
   seen = seen.slice(0);
-  for (var j = 0; j < seen.length; j++) {
+  for (let j = 0; j < seen.length; j++) {
     if (seen[j][0] == o1) {
       return seen[j][1] == o2;
     }
@@ -1807,15 +1814,17 @@ SimpleTest._eqAssoc = function(o1, o2, stack, seen) {
   var ok = true;
   // Only examines enumerable attributes.
   var o1Size = 0;
-  for (var i in o1) {
+  // eslint-disable-next-line no-unused-vars
+  for (let i in o1) {
     o1Size++;
   }
   var o2Size = 0;
-  for (var i in o2) {
+  // eslint-disable-next-line no-unused-vars
+  for (let i in o2) {
     o2Size++;
   }
   var bigger = o1Size > o2Size ? o1 : o2;
-  for (var i in bigger) {
+  for (let i in bigger) {
     var e1 = i in o1 ? o1[i] : SimpleTest.DNE;
     var e2 = i in o2 ? o2[i] : SimpleTest.DNE;
     stack.push({ type: "Object", idx: i, vals: [e1, e2] });
@@ -1831,7 +1840,7 @@ SimpleTest._eqAssoc = function(o1, o2, stack, seen) {
 
 SimpleTest._formatStack = function(stack) {
   var variable = "$Foo";
-  for (var i = 0; i < stack.length; i++) {
+  for (let i = 0; i < stack.length; i++) {
     var entry = stack[i];
     var type = entry.type;
     var idx = entry.idx;
@@ -1854,7 +1863,7 @@ SimpleTest._formatStack = function(stack) {
   ];
 
   var out = "Structures begin differing at:" + SimpleTest.LF;
-  for (var i = 0; i < vals.length; i++) {
+  for (let i = 0; i < vals.length; i++) {
     var val = vals[i];
     if (val === SimpleTest.DNE) {
       val = "Does not exist";

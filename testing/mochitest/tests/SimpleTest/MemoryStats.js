@@ -78,7 +78,7 @@ MemoryStats.dump = function(
     if (supported == MEM_STAT_UNKNOWN) {
       firstAccess = true;
       try {
-        var value = mrm[stat];
+        void mrm[stat];
         supported = MEM_STAT_SUPPORTED;
       } catch (e) {
         supported = MEM_STAT_UNSUPPORTED;
@@ -102,7 +102,7 @@ MemoryStats.dump = function(
     var basename = "about-memory-" + testNumber + ".json.gz";
     var dumpfile = MemoryStats.constructPathname(dumpOutputDirectory, basename);
     info(testURL + " | MEMDUMP-START " + dumpfile);
-    var md = MemoryStats._getService(
+    let md = MemoryStats._getService(
       "@mozilla.org/memory-info-dumper;1",
       "nsIMemoryInfoDumper"
     );
@@ -117,7 +117,7 @@ MemoryStats.dump = function(
   }
 
   if (dumpDMD) {
-    var md = MemoryStats._getService(
+    let md = MemoryStats._getService(
       "@mozilla.org/memory-info-dumper;1",
       "nsIMemoryInfoDumper"
     );

@@ -27,7 +27,11 @@ const browserTestPaths = [
 ];
 
 const mochitestTestPaths = [
-  "**/test*/mochitest/",
+  // Note: we do not want to match testing/mochitest as that would apply
+  // too many globals for that directory.
+  "**/test/mochitest/",
+  "**/tests/mochitest/",
+  "testing/mochitest/tests/SimpleTest/",
 ];
 
 const chromeTestPaths = [
@@ -108,7 +112,6 @@ module.exports = {
     "excludedFiles": [
       "devtools/**",
       "security/manager/ssl/tests/mochitest/browser/**",
-      "testing/mochitest/**",
     ],
   }, {
     ...removeOverrides(chromeTestConfig),

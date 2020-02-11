@@ -1,6 +1,6 @@
 (function() {
   var accumulatedRect = null;
-  var onpaint = new Array();
+  var onpaint = [];
   var debug = SpecialPowers.getBoolPref("testing.paint_listener.debug", false);
   const FlushModes = {
     FLUSH: 0,

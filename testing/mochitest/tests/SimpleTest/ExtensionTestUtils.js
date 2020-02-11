@@ -9,6 +9,7 @@ ExtensionTestUtils.loadExtension = function(ext) {
   // Cleanup functions need to be registered differently depending on
   // whether we're in browser chrome or plain mochitests.
   var registerCleanup;
+  /* global registerCleanupFunction */
   if (typeof registerCleanupFunction != "undefined") {
     registerCleanup = registerCleanupFunction;
   } else {
@@ -73,18 +74,18 @@ ExtensionTestUtils.loadExtension = function(ext) {
   }
 
   var handler = {
-    testResult(kind, pass, msg, ...args) {
+    async testResult(kind, pass, msg, ...args) {
       if (kind == "test-done") {
         SimpleTest.ok(pass, msg);
-        return testResolve(msg);
+        await testResolve(msg);
       }
       testHandler(kind, pass, msg, ...args);
     },
 
     testMessage(msg, ...args) {
-      var handler = messageHandler.get(msg);
-      if (handler) {
-        handler(...args);
+      var msgHandler = messageHandler.get(msg);
+      if (msgHandler) {
+        msgHandler(...args);
       } else {
         messageQueue.add([msg, ...args]);
         checkMessages();
@@ -111,10 +112,10 @@ ExtensionTestUtils.loadExtension = function(ext) {
 
   var extension = SpecialPowers.loadExtension(ext, handler);
 
-  registerCleanup(() => {
+  registerCleanup(async () => {
     if (extension.state == "pending" || extension.state == "running") {
       SimpleTest.ok(false, "Extension left running at test shutdown");
-      return extension.unload();
+      await extension.unload();
     } else if (extension.state == "unloading") {
       SimpleTest.ok(false, "Extension not fully unloaded at test shutdown");
     }
