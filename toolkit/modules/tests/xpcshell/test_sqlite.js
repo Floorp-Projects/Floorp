@@ -865,6 +865,7 @@ add_task(
       });
     } catch (ex) {
       print("Caught expected exception: " + ex);
+      Assert.ok(ex.result, "The ex.result value should be forwarded.");
     }
 
     // We did not get to the end of our in-transaction block.
@@ -894,6 +895,7 @@ add_task(async function test_programmatic_binding_implicit_transaction() {
     secondSucceeded = true;
   } catch (ex) {
     print("Caught expected exception: " + ex);
+    Assert.ok(ex.result, "The ex.result value should be forwarded.");
   }
 
   Assert.ok(!secondSucceeded);
