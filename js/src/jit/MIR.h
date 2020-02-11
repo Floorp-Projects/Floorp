@@ -859,6 +859,13 @@ class MDefinition : public MNode {
     return AliasSet::Store(AliasSet::Any);
   }
 
+#ifdef DEBUG
+  bool hasDefaultAliasSet() const {
+    AliasSet set = getAliasSet();
+    return set.isStore() && set.flags() == AliasSet::Flag::Any;
+  }
+#endif
+
   MDefinition* dependency() const {
     if (getAliasSet().isStore()) {
       return nullptr;

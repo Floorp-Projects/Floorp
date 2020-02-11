@@ -412,6 +412,9 @@ bool js::RunScript(JSContext* cx, RunState& state) {
     return false;
   }
 
+  MOZ_ASSERT_IF(cx->runtime()->hasJitRuntime(),
+                !cx->runtime()->jitRuntime()->disallowArbitraryCode());
+
   // Since any script can conceivably GC, make sure it's safe to do so.
   cx->verifyIsSafeToGC();
 

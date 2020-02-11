@@ -552,6 +552,10 @@ void HandleException(ResumeFromException* rfe) {
   JSContext* cx = TlsContext.get();
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
 
+#ifdef DEBUG
+  cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
+#endif
+
   auto resetProfilerFrame = mozilla::MakeScopeExit([=] {
     if (!cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(
             cx->runtime())) {
