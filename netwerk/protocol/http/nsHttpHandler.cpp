@@ -591,7 +591,7 @@ nsresult nsHttpHandler::InitConnectionMgr() {
     return NS_OK;
   }
 
-  if (gIOService->UseSocketProcess() && XRE_IsParentProcess()) {
+  if (nsIOService::UseSocketProcess() && XRE_IsParentProcess()) {
     if (!gIOService->SocketProcessReady()) {
       gIOService->CallOrWaitForSocketProcess(
           []() { Unused << gHttpHandler->InitConnectionMgr(); });
@@ -606,7 +606,7 @@ nsresult nsHttpHandler::InitConnectionMgr() {
 
     mConnMgr = connMgr;
   } else {
-    MOZ_ASSERT(XRE_IsSocketProcess() || !gIOService->UseSocketProcess());
+    MOZ_ASSERT(XRE_IsSocketProcess() || !nsIOService::UseSocketProcess());
     mConnMgr = new nsHttpConnectionMgr();
   }
 
