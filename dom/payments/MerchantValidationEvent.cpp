@@ -68,14 +68,14 @@ void MerchantValidationEvent::init(
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
   auto doc = window->GetExtantDoc();
   if (!doc) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.ThrowAbortError("The owner document does not exist");
     return;
   }
 
   Result<nsCOMPtr<nsIURI>, nsresult> rv =
       doc->ResolveWithBaseURI(aEventInitDict.mValidationURL);
   if (rv.isErr()) {
-    aRv.Throw(rv.unwrapErr());
+    aRv.ThrowTypeError(u"validationURL cannot be parsed");
     return;
   }
   mValidationURL = rv.unwrap();
@@ -104,7 +104,10 @@ void MerchantValidationEvent::ResolvedCallback(JSContext* aCx,
   // conformance, which is why at this point we throw a
   // NS_ERROR_DOM_NOT_SUPPORTED_ERR.
 
-  mRequest->AbortUpdate(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  ErrorResult result;
+  result.ThrowNotSupportedError(
+      "complete() is not supported by Firefox currently");
+  mRequest->AbortUpdate(result);
   mRequest->SetUpdating(false);
 }
 
@@ -115,20 +118,31 @@ void MerchantValidationEvent::RejectedCallback(JSContext* aCx,
     return;
   }
   mWaitForUpdate = false;
-  mRequest->AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
+  ErrorResult result;
+  result.ThrowAbortError(
+      "The promise for MerchantValidtaionEvent.complete() is rejected");
+  mRequest->AbortUpdate(result);
   mRequest->SetUpdating(false);
 }
 
 void MerchantValidationEvent::Complete(Promise& aPromise, ErrorResult& aRv) {
   if (!IsTrusted()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("Called on an untrusted event");
     return;
   }
 
   MOZ_ASSERT(mRequest);
 
-  if (mWaitForUpdate || !mRequest->ReadyForUpdate()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (mWaitForUpdate) {
+    aRv.ThrowInvalidStateError(
+        "The MerchantValidationEvent is waiting for update");
+    return;
+  }
+
+  if (!mRequest->ReadyForUpdate()) {
+    aRv.ThrowInvalidStateError(
+        "The PaymentRequest state is not eInteractive or the PaymentRequest is "
+        "updating");
     return;
   }
 

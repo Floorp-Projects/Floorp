@@ -36,25 +36,25 @@ class PaymentRequestManager final {
    *  data to chrome process for internal payment creation, such that content
    *  process can ask specific task by sending requestId only.
    */
-  nsresult CreatePayment(JSContext* aCx, nsPIDOMWindowInner* aWindow,
-                         nsIPrincipal* aTopLevelPrincipal,
-                         const Sequence<PaymentMethodData>& aMethodData,
-                         const PaymentDetailsInit& aDetails,
-                         const PaymentOptions& aOptions,
-                         PaymentRequest** aRequest);
+  void CreatePayment(JSContext* aCx, nsPIDOMWindowInner* aWindow,
+                     nsIPrincipal* aTopLevelPrincipal,
+                     const Sequence<PaymentMethodData>& aMethodData,
+                     const PaymentDetailsInit& aDetails,
+                     const PaymentOptions& aOptions, PaymentRequest** aRequest,
+                     ErrorResult& aRv);
 
-  nsresult CanMakePayment(PaymentRequest* aRequest);
-  nsresult ShowPayment(PaymentRequest* aRequest);
-  nsresult AbortPayment(PaymentRequest* aRequest);
-  nsresult CompletePayment(PaymentRequest* aRequest,
-                           const PaymentComplete& aComplete,
-                           bool aTimedOut = false);
-  nsresult UpdatePayment(JSContext* aCx, PaymentRequest* aRequest,
-                         const PaymentDetailsUpdate& aDetails,
-                         bool aRequestShipping);
+  void CanMakePayment(PaymentRequest* aRequest, ErrorResult& aRv);
+  void ShowPayment(PaymentRequest* aRequest, ErrorResult& aRv);
+  void AbortPayment(PaymentRequest* aRequest, ErrorResult& aRv);
+  void CompletePayment(PaymentRequest* aRequest,
+                       const PaymentComplete& aComplete, ErrorResult& aRv,
+                       bool aTimedOut = false);
+  void UpdatePayment(JSContext* aCx, PaymentRequest* aRequest,
+                     const PaymentDetailsUpdate& aDetails,
+                     bool aRequestShipping, ErrorResult& aRv);
   nsresult ClosePayment(PaymentRequest* aRequest);
-  nsresult RetryPayment(JSContext* aCx, PaymentRequest* aRequest,
-                        const PaymentValidationErrors& aErrors);
+  void RetryPayment(JSContext* aCx, PaymentRequest* aRequest,
+                    const PaymentValidationErrors& aErrors, ErrorResult& aRv);
 
   nsresult RespondPayment(PaymentRequest* aRequest,
                           const IPCPaymentActionResponse& aResponse);
