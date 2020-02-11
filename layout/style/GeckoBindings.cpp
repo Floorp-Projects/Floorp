@@ -1263,29 +1263,6 @@ PropertyValuePair* Gecko_AppendPropertyValuePair(
   return aProperties->AppendElement(PropertyValuePair{aProperty});
 }
 
-void Gecko_CopyShapeSourceFrom(StyleShapeSource* aDst,
-                               const StyleShapeSource* aSrc) {
-  MOZ_ASSERT(aDst);
-  MOZ_ASSERT(aSrc);
-
-  *aDst = *aSrc;
-}
-
-void Gecko_DestroyShapeSource(StyleShapeSource* aShape) {
-  aShape->~StyleShapeSource();
-}
-
-void Gecko_NewShapeImage(StyleShapeSource* aShape) {
-  aShape->SetShapeImage(MakeUnique<StyleImage>(StyleImage::None()));
-}
-
-void Gecko_SetToSVGPath(StyleShapeSource* aShape,
-                        StyleForgottenArcSlicePtr<StylePathCommand> aCommands,
-                        StyleFillRule aFill) {
-  MOZ_ASSERT(aShape);
-  aShape->SetPath(MakeUnique<StyleSVGPath>(aCommands, aFill));
-}
-
 void Gecko_nsStyleSVG_SetDashArrayLength(nsStyleSVG* aSvg, uint32_t aLen) {
   aSvg->mStrokeDasharray.Clear();
   aSvg->mStrokeDasharray.SetLength(aLen);

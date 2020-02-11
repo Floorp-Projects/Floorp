@@ -9956,11 +9956,11 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
   }
 
   const auto& clipPath = style->mClipPath;
-  const auto& shape = clipPath.BasicShape();
+  const auto& shape = *clipPath.AsShape()._0;
 
   auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
   const nsRect refBox =
-      nsLayoutUtils::ComputeGeometryBox(frame, clipPath.GetReferenceBox());
+      nsLayoutUtils::ComputeGeometryBox(frame, clipPath.AsShape()._1);
 
   AutoTArray<wr::ComplexClipRegion, 1> clipRegions;
 
