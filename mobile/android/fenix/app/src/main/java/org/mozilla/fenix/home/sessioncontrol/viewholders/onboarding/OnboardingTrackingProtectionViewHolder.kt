@@ -50,6 +50,11 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
         standardTrackingProtection.addToRadioGroup(strictTrackingProtection)
         strictTrackingProtection.addToRadioGroup(standardTrackingProtection)
 
+        strictTrackingProtection.isChecked =
+            itemView.context.settings().useStrictTrackingProtection
+        standardTrackingProtection.isChecked =
+            !itemView.context.settings().useStrictTrackingProtection
+
         standardTrackingProtection.onClickListener {
             updateTrackingProtectionPolicy()
         }
