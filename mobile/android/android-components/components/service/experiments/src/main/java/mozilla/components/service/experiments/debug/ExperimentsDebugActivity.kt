@@ -98,6 +98,8 @@ class ExperimentsDebugActivity : Activity() {
                 logger.info("Changing Kinto instance to ${config.kintoEndpoint}")
                 // Update the default config
                 Experiments.configuration = config
+                // Also update the updater's copy of the config
+                Experiments.updater.config = config
                 // Reset the source to use the new endpoint
                 Experiments.updater.source = Experiments.updater.getExperimentSource(config)
             }

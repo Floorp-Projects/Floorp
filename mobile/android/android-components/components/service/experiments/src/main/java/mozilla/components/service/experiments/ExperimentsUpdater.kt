@@ -42,7 +42,7 @@ internal class ExperimentsUpdater(
     private val experiments: ExperimentsInternalAPI
 ) {
     private val logger: Logger = Logger(LOG_TAG)
-    private lateinit var config: Configuration
+    internal lateinit var config: Configuration
 
     internal lateinit var source: KintoExperimentSource
 
@@ -119,7 +119,7 @@ internal class ExperimentsUpdater(
     @Synchronized
     internal fun updateExperiments(): Boolean {
         return try {
-            val serverExperiments = getExperimentSource(config).getExperiments(experiments.experimentsResult)
+            val serverExperiments = source.getExperiments(experiments.experimentsResult)
             logger.info("Experiments update from server: $serverExperiments")
             experiments.onExperimentsUpdated(serverExperiments)
             true
