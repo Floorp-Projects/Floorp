@@ -163,10 +163,6 @@ class StartupCache : public nsIMemoryReporter {
   // Removes the cache file.
   void InvalidateCache(bool memoryOnly = false);
 
-  // For use during shutdown - this will write the startupcache's data
-  // to disk if the timer hasn't already gone off.
-  void MaybeInitShutdownWrite();
-
   // Signal that data should not be loaded from the cache file
   static void IgnoreDiskCache();
 
@@ -207,7 +203,6 @@ class StartupCache : public nsIMemoryReporter {
   void WaitOnWriteThread();
   void WaitOnPrefetchThread();
   void StartPrefetchMemoryThread();
-  void MaybeSpawnWriteThread();
 
   static nsresult InitSingleton();
   static void WriteTimeout(nsITimer* aTimer, void* aClosure);

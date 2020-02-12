@@ -634,6 +634,7 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     gfxPlatform::ShutdownLayersIPC();
     mozilla::RemoteDecoderManagerChild::Shutdown();
 
+    mozilla::scache::StartupCache::DeleteSingleton();
     if (observerService) {
       mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownThreads);
       observerService->NotifyObservers(
@@ -715,8 +716,6 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownPostLastCycleCollection);
   mozilla::AppShutdown::MaybeFastShutdown(
       mozilla::ShutdownPhase::ShutdownPostLastCycleCollection);
-
-  mozilla::scache::StartupCache::DeleteSingleton();
 
   PROFILER_ADD_MARKER("Shutdown xpcom", OTHER);
 
