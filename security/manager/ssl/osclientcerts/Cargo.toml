@@ -15,6 +15,15 @@ log = "0.4"
 pkcs11 = "0.4"
 sha2 = "0.8"
 
+[target."cfg(target_os = \"macos\")".dependencies.core-foundation]
+version = "0.6"
+
+[target."cfg(target_os = \"macos\")".dependencies.libloading]
+version = "0.5"
+
+[target."cfg(target_os = \"macos\")".dependencies.rental]
+version = "0.5"
+
 [target."cfg(target_os = \"windows\")".dependencies.winapi]
 version = "0.3"
 features = ["wincrypt"]
