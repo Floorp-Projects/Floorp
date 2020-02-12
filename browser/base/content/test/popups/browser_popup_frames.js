@@ -19,7 +19,7 @@ add_task(async function test_opening_blocked_popups() {
     "data:text/html,Hello"
   );
 
-  await SpecialPowers.spawn(
+  let popupframeBC = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [baseURL + "popup_blocker.html"],
     uri => {
@@ -27,6 +27,7 @@ add_task(async function test_opening_blocked_popups() {
       iframe.id = "popupframe";
       iframe.src = uri;
       content.document.body.appendChild(iframe);
+      return iframe.browsingContext;
     }
   );
 
@@ -65,10 +66,8 @@ add_task(async function test_opening_blocked_popups() {
     true
   );
   // Now navigate the subframe.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    content.document.getElementById(
-      "popupframe"
-    ).contentDocument.location.href = "about:blank";
+  await SpecialPowers.spawn(popupframeBC, [], async function() {
+    content.document.location.href = "about:blank";
   });
   await pageHideHappened;
   await BrowserTestUtils.waitForCondition(
