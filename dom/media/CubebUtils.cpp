@@ -478,6 +478,7 @@ cubeb* GetCubebContextUnlocked() {
     initParams.mThreadCreateCallback = [](const char* aName) {
       PROFILER_REGISTER_THREAD(aName);
     };
+    initParams.mThreadDestroyCallback = []() { PROFILER_UNREGISTER_THREAD(); };
 
     MOZ_LOG(gCubebLog, LogLevel::Debug,
             ("%s: %d", PREF_AUDIOIPC_POOL_SIZE, (int)initParams.mPoolSize));
