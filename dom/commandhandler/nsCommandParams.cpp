@@ -22,7 +22,7 @@ NS_IMPL_ISUPPORTS(nsCommandParams, nsICommandParams)
 nsCommandParams::nsCommandParams()
     : mValuesHash(&sHashOps, sizeof(HashEntry), 2) {}
 
-nsCommandParams::~nsCommandParams() {}
+nsCommandParams::~nsCommandParams() = default;
 
 NS_IMETHODIMP
 nsCommandParams::GetValueType(const char* aName, int16_t* aRetVal) {

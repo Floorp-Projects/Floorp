@@ -25,7 +25,7 @@ nsCommandManager::nsCommandManager(mozIDOMWindowProxy* aWindow)
   MOZ_DIAGNOSTIC_ASSERT(mWindow);
 }
 
-nsCommandManager::~nsCommandManager() {}
+nsCommandManager::~nsCommandManager() = default;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCommandManager)
 
