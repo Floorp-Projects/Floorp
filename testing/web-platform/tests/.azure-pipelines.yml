@@ -111,8 +111,6 @@ jobs:
   condition: dependencies.decision.outputs['test_jobs.tools_unittest']
   pool:
     vmImage: 'macOS-10.14'
-  variables:
-    HYPOTHESIS_PROFILE: ci
   steps:
   - template: tools/ci/azure/checkout.yml
   - template: tools/ci/azure/tox_pytest.yml
@@ -158,8 +156,6 @@ jobs:
   condition: dependencies.decision.outputs['test_jobs.wptrunner_unittest']
   pool:
     vmImage: 'macOS-10.14'
-  variables:
-    HYPOTHESIS_PROFILE: ci
   steps:
   - template: tools/ci/azure/checkout.yml
   - template: tools/ci/azure/tox_pytest.yml
@@ -205,8 +201,6 @@ jobs:
   condition: dependencies.decision.outputs['test_jobs.wpt_integration']
   pool:
     vmImage: 'macOS-10.14'
-  variables:
-    HYPOTHESIS_PROFILE: ci
   steps:
   # full checkout required
   - template: tools/ci/azure/install_chrome.yml
@@ -270,8 +264,6 @@ jobs:
   condition: dependencies.decision.outputs['test_jobs.tools_unittest']
   pool:
     vmImage: 'windows-2019'
-  variables:
-    HYPOTHESIS_PROFILE: ci
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -288,8 +280,6 @@ jobs:
   condition: dependencies.decision.outputs['test_jobs.tools_unittest']
   pool:
     vmImage: 'windows-2019'
-  variables:
-    HYPOTHESIS_PROFILE: ci
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -324,8 +314,6 @@ jobs:
   condition: dependencies.decision.outputs['test_jobs.wptrunner_unittest']
   pool:
     vmImage: 'windows-2019'
-  variables:
-    HYPOTHESIS_PROFILE: ci
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -376,8 +364,6 @@ jobs:
   condition: dependencies.decision.outputs['test_jobs.wpt_integration']
   pool:
     vmImage: 'windows-2019'
-  variables:
-    HYPOTHESIS_PROFILE: ci
   steps:
   # full checkout required
   - task: UsePythonVersion@0

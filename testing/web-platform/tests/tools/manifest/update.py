@@ -26,8 +26,7 @@ def update(tests_root,  # type: str
            manifest_path=None,  # type: Optional[str]
            working_copy=True,  # type: bool
            cache_root=None,  # type: Optional[str]
-           rebuild=False,  # type: bool
-           parallel=True  # type: bool
+           rebuild=False  # type: bool
            ):
     # type: (...) -> bool
     logger.warning("Deprecated; use manifest.load_and_update instead")
@@ -35,7 +34,7 @@ def update(tests_root,  # type: str
 
     tree = vcs.get_tree(tests_root, manifest, manifest_path, cache_root,
                         working_copy, rebuild)
-    return manifest.update(tree, parallel)
+    return manifest.update(tree)
 
 
 def update_from_cli(**kwargs):
@@ -52,8 +51,7 @@ def update_from_cli(**kwargs):
                              kwargs["url_base"],
                              update=True,
                              rebuild=kwargs["rebuild"],
-                             cache_root=kwargs["cache_root"],
-                             parallel=kwargs["parallel"])
+                             cache_root=kwargs["cache_root"])
 
 
 def abs_path(path):
@@ -80,9 +78,6 @@ def create_parser():
     parser.add_argument(
         "--cache-root", action="store", default=os.path.join(wpt_root, ".wptcache"),
         help="Path in which to store any caches (default <tests_root>/.wptcache/)")
-    parser.add_argument(
-        "--no-parallel", dest="parallel", action="store_false", default=True,
-        help="Do not parallelize building the manifest")
     return parser
 
 
