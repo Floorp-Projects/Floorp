@@ -1,0 +1,12 @@
+{
+  "data": [
+    {
+      "webExtension": {
+        "id":"telemetrySearchIdentifier@search.mozilla.org"
+      },
+      "appliesTo": [{
+        "included": { "everywhere": true }
+      }]
+    }
+  ]
+}
