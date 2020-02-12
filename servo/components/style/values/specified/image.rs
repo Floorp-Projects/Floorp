@@ -92,6 +92,12 @@ pub enum LineDirection {
 /// A specified ending shape.
 pub type EndingShape = generic::EndingShape<NonNegativeLength, NonNegativeLengthPercentage>;
 
+/// A specified gradient item.
+pub type GradientItem = generic::GradientItem<Color, LengthPercentage>;
+
+/// A computed color stop.
+pub type ColorStop = generic::ColorStop<Color, LengthPercentage>;
+
 /// Specified values for `moz-image-rect`
 /// -moz-image-rect(<uri>, top, right, bottom, left);
 #[cfg(all(feature = "gecko", not(feature = "cbindgen")))]
@@ -250,7 +256,7 @@ impl Parse for Gradient {
                 Shape::Linear => GradientKind::parse_linear(context, i, &mut compat_mode)?,
                 Shape::Radial => GradientKind::parse_radial(context, i, &mut compat_mode)?,
             };
-            let items = generic::GradientItem::parse_comma_separated(context, i)?;
+            let items = GradientItem::parse_comma_separated(context, i)?;
             Ok((shape, items))
         })?;
 
@@ -772,10 +778,7 @@ impl ShapeExtent {
     }
 }
 
-impl<T> generic::GradientItem<Color, T>
-where
-    T: Parse,
-{
+impl GradientItem {
     fn parse_comma_separated<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
@@ -786,20 +789,20 @@ where
         loop {
             input.parse_until_before(Delimiter::Comma, |input| {
                 if seen_stop {
-                    if let Ok(hint) = input.try(|i| T::parse(context, i)) {
+                    if let Ok(hint) = input.try(|i| LengthPercentage::parse(context, i)) {
                         seen_stop = false;
                         items.push(generic::GradientItem::InterpolationHint(hint));
                         return Ok(());
                     }
                 }
 
-                let stop = generic::ColorStop::parse(context, input)?;
+                let stop = ColorStop::parse(context, input)?;
 
-                if let Ok(multi_position) = input.try(|i| T::parse(context, i)) {
+                if let Ok(multi_position) = input.try(|i| LengthPercentage::parse(context, i)) {
                     let stop_color = stop.color.clone();
                     items.push(stop.into_item());
                     items.push(
-                        generic::ColorStop {
+                        ColorStop {
                             color: stop_color,
                             position: Some(multi_position),
                         }
@@ -827,17 +830,14 @@ where
     }
 }
 
-impl<T> Parse for generic::ColorStop<Color, T>
-where
-    T: Parse,
-{
+impl Parse for ColorStop {
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        Ok(generic::ColorStop {
+        Ok(ColorStop {
             color: Color::parse(context, input)?,
-            position: input.try(|i| T::parse(context, i)).ok(),
+            position: input.try(|i| LengthPercentage::parse(context, i)).ok(),
         })
     }
 }
