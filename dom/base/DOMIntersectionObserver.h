@@ -85,6 +85,14 @@ class DOMIntersectionObserver final : public nsISupports,
 
   typedef void (*NativeIntersectionObserverCallback)(
       const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& aEntries);
+  DOMIntersectionObserver(nsPIDOMWindowInner* aOwner,
+                          NativeIntersectionObserverCallback aCb)
+      : mOwner(aOwner),
+        mDocument(mOwner->GetExtantDoc()),
+        mCallback(aCb),
+        mConnected(false) {
+    MOZ_ASSERT(mOwner);
+  }
 
  public:
   DOMIntersectionObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
@@ -130,6 +138,9 @@ class DOMIntersectionObserver final : public nsISupports,
 
   void Update(Document* aDocument, DOMHighResTimeStamp time);
   MOZ_CAN_RUN_SCRIPT void Notify();
+
+  static already_AddRefed<DOMIntersectionObserver> CreateLazyLoadObserver(
+      nsPIDOMWindowInner* aOwner);
 
  protected:
   void Connect();

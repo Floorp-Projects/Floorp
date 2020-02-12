@@ -21,6 +21,7 @@
 #include "mozilla/MouseEvents.h"
 #include "nsContentPolicyUtils.h"
 #include "nsFocusManager.h"
+#include "mozilla/dom/DOMIntersectionObserver.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/UserActivation.h"
@@ -113,6 +114,7 @@ HTMLImageElement::HTMLImageElement(
     : nsGenericHTMLElement(std::move(aNodeInfo)),
       mForm(nullptr),
       mInDocResponsiveContent(false),
+      mLazyLoading(false),
       mCurrentDensity(1.0) {
   // We start out broken
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
@@ -309,6 +311,20 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                         bool aNotify) {
   nsAttrValueOrString attrVal(aValue);
 
+  if (aName == nsGkAtoms::loading && aNameSpaceID == kNameSpaceID_None) {
+    if (aValue &&
+        static_cast<HTMLImageElement::Loading>(aValue->GetEnumValue()) ==
+            Loading::Lazy &&
+        !ImageState().HasState(NS_EVENT_STATE_LOADING)) {
+      SetLazyLoading();
+    } else if (aOldValue &&
+               static_cast<HTMLImageElement::Loading>(
+                   aOldValue->GetEnumValue()) == Loading::Lazy &&
+               !ImageState().HasState(NS_EVENT_STATE_LOADING)) {
+      StopLazyLoadingAndStartLoadIfNeeded();
+    }
+  }
+
   if (aValue) {
     AfterMaybeChangeAttr(aNameSpaceID, aName, attrVal, aOldValue,
                          aMaybeScriptedPrincipal, true, aNotify);
@@ -409,7 +425,7 @@ void HTMLImageElement::AfterMaybeChangeAttr(
                                               mSrcTriggeringPrincipal);
       }
       QueueImageLoadTask(true);
-    } else if (aNotify && OwnerDoc()->ShouldLoadImages()) {
+    } else if (aNotify && ShouldLoadImage()) {
       // If aNotify is false, we are coming from the parser or some such place;
       // we'll get bound after all the attributes have been set, so we'll do the
       // sync image load from BindToTree. Skip the LoadImage call in that case.
@@ -467,7 +483,7 @@ void HTMLImageElement::AfterMaybeChangeAttr(
       // per spec, full selection runs when this changes, even though
       // it doesn't directly affect the source selection
       QueueImageLoadTask(true);
-    } else if (OwnerDoc()->ShouldLoadImages()) {
+    } else if (ShouldLoadImage()) {
       // Bug 1076583 - We still use the older synchronous algorithm in
       // non-responsive mode. Force a new load of the image with the
       // new cross origin policy
@@ -558,7 +574,7 @@ nsresult HTMLImageElement::BindToTree(BindContext& aContext, nsINode& aParent) {
     // If loading is temporarily disabled, don't even launch MaybeLoadImage.
     // Otherwise MaybeLoadImage may run later when someone has reenabled
     // loading.
-    if (LoadingEnabled() && aContext.OwnerDoc().ShouldLoadImages()) {
+    if (LoadingEnabled() && ShouldLoadImage()) {
       nsContentUtils::AddScriptRunner(
           NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage", this,
                                   &HTMLImageElement::MaybeLoadImage, false));
@@ -632,21 +648,17 @@ EventStates HTMLImageElement::IntrinsicState() const {
 
 void HTMLImageElement::NodeInfoChanged(Document* aOldDoc) {
   nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
+
+  if (mLazyLoading) {
+    aOldDoc->GetLazyLoadImageObserver()->Unobserve(*this);
+    mLazyLoading = false;
+    SetLazyLoading();
+  }
+
   // Force reload image if adoption steps are run.
   // If loading is temporarily disabled, don't even launch script runner.
   // Otherwise script runner may run later when someone has reenabled loading.
-  if (LoadingEnabled() && OwnerDoc()->ShouldLoadImages()) {
-    // Use script runner for the case the adopt is from appendChild.
-    // Bug 1076583 - We still behave synchronously in the non-responsive case
-    nsContentUtils::AddScriptRunner(
-        (InResponsiveMode())
-            ? NewRunnableMethod<bool>(
-                  "dom::HTMLImageElement::QueueImageLoadTask", this,
-                  &HTMLImageElement::QueueImageLoadTask, true)
-            : NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage",
-                                      this, &HTMLImageElement::MaybeLoadImage,
-                                      true));
-  }
+  StartLoadingIfNeeded();
 }
 
 // static
@@ -734,7 +746,7 @@ nsresult HTMLImageElement::CopyInnerTo(HTMLImageElement* aDest) {
     // reaches a stable state.
     if (!aDest->InResponsiveMode() &&
         aDest->HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
-        aDest->OwnerDoc()->ShouldLoadImages()) {
+        aDest->ShouldLoadImage()) {
       // Mark channel as urgent-start before load image if the image load is
       // initaiated by a user interaction.
       mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
@@ -800,7 +812,7 @@ void HTMLImageElement::ClearForm(bool aRemoveFromForm) {
 void HTMLImageElement::QueueImageLoadTask(bool aAlwaysLoad) {
   // If loading is temporarily disabled, we don't want to queue tasks
   // that may then run when loading is re-enabled.
-  if (!LoadingEnabled() || !OwnerDoc()->ShouldLoadImages()) {
+  if (!LoadingEnabled() || !ShouldLoadImage()) {
     return;
   }
 
@@ -1227,6 +1239,61 @@ void HTMLImageElement::DestroyContent() {
 
 void HTMLImageElement::MediaFeatureValuesChanged() {
   QueueImageLoadTask(false);
+}
+
+bool HTMLImageElement::ShouldLoadImage() const {
+  return OwnerDoc()->ShouldLoadImages() && !mLazyLoading;
+}
+
+void HTMLImageElement::SetLazyLoading() {
+  if (mLazyLoading) {
+    return;
+  }
+
+  // If scripting is disabled don't do lazy load.
+  // https://whatpr.org/html/3752/images.html#updating-the-image-data
+  if (!OwnerDoc()->IsScriptEnabled()) {
+    return;
+  }
+
+  // There (maybe) is a race condition that we have no LazyLoadImageObserver
+  // when the root document has been removed from the docshell.
+  // In the case we don't need to worry about lazy-loading.
+  if (DOMIntersectionObserver* lazyLoadObserver =
+          OwnerDoc()->GetLazyLoadImageObserver()) {
+    lazyLoadObserver->Observe(*this);
+    mLazyLoading = true;
+  }
+}
+
+void HTMLImageElement::StartLoadingIfNeeded() {
+  if (LoadingEnabled() && ShouldLoadImage()) {
+    // Use script runner for the case the adopt is from appendChild.
+    // Bug 1076583 - We still behave synchronously in the non-responsive case
+    nsContentUtils::AddScriptRunner(
+        (InResponsiveMode())
+            ? NewRunnableMethod<bool>(
+                  "dom::HTMLImageElement::QueueImageLoadTask", this,
+                  &HTMLImageElement::QueueImageLoadTask, true)
+            : NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage",
+                                      this, &HTMLImageElement::MaybeLoadImage,
+                                      true));
+  }
+}
+
+void HTMLImageElement::StopLazyLoadingAndStartLoadIfNeeded() {
+  if (!mLazyLoading) {
+    return;
+  }
+  mLazyLoading = false;
+
+  DOMIntersectionObserver* lazyLoadObserver =
+      OwnerDoc()->GetLazyLoadImageObserver();
+  MOZ_ASSERT(lazyLoadObserver);
+
+  lazyLoadObserver->Unobserve(*this);
+
+  StartLoadingIfNeeded();
 }
 
 }  // namespace dom
