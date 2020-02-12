@@ -4,5 +4,4 @@
 // META: script=resources/messaging-helpers.js
 // META: script=resources/messaging-blob-helpers.js
 // META: script=resources/messaging-serialize-helpers.js
-// META: script=script-tests/FileSystemBaseHandle-postMessage-MessagePort.js
-// META: timeout=long
+// META: script=script-tests/FileSystemBaseHandle-postMessage-MessagePort-workers.js
