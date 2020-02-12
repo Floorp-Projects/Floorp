@@ -10,16 +10,17 @@ See the documentation for jar.mn on MDC for further details on the format.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import sys
-import os
 import errno
+import io
+import logging
+import os
 import re
 import six
-import logging
-from time import localtime
-from MozZipFile import ZipFile
 from six import BytesIO
+import sys
+from time import localtime
 
+from MozZipFile import ZipFile
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
 from mozbuild.util import ensure_bytes
@@ -467,8 +468,8 @@ class JarMaker(object):
         self._seen_output.add(out)
 
         if e.preprocess:
-            outf = outHelper.getOutput(out)
-            inf = open(realsrc)
+            outf = outHelper.getOutput(out, mode='w')
+            inf = io.open(realsrc, encoding='utf-8')
             pp = self.pp.clone()
             if src[-4:] == '.css':
                 pp.setMarker('%')
@@ -507,7 +508,7 @@ class JarMaker(object):
             except Exception:
                 return localtime(0)
 
-        def getOutput(self, name):
+        def getOutput(self, name, mode='wb'):
             return ZipEntry(name, self.jarfile)
 
     class OutputHelper_flat(object):
@@ -522,7 +523,7 @@ class JarMaker(object):
         def getDestModTime(self, aPath):
             return getModTime(os.path.join(self.basepath, aPath))
 
-        def getOutput(self, name):
+        def getOutput(self, name, mode='wb'):
             out = self.ensureDirFor(name)
 
             # remove previous link or file
@@ -531,7 +532,10 @@ class JarMaker(object):
             except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
-            return open(out, 'wb')
+            if 'b' in mode:
+                return io.open(out, mode)
+            else:
+                return io.open(out, mode, encoding='utf-8', newline='\n')
 
         def ensureDirFor(self, name):
             out = os.path.join(self.basepath, name)
