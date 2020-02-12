@@ -19,6 +19,7 @@
 #include <dlfcn.h>
 
 #include "mozilla/widget/gbm.h"
+#include "mozilla/widget/va_drmcommon.h"
 #include "GLContextTypes.h"  // for GLContext, etc
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
@@ -52,13 +53,42 @@ using namespace mozilla::layers;
 #  define GBM_BO_USE_TEXTURING (1 << 5)
 #endif
 
+#ifndef VA_FOURCC_NV12
+#  define VA_FOURCC_NV12 0x3231564E
+#endif
+
 WaylandDMABufSurface::WaylandDMABufSurface(SurfaceType aSurfaceType)
-    : mSurfaceType(aSurfaceType), mBufferModifier(0), mBufferPlaneCount(0) {
+    : mSurfaceType(aSurfaceType),
+      mBufferModifier(0),
+      mBufferPlaneCount(0),
+      mStrides(),
+      mOffsets() {
   for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
     mDmabufFds[i] = -1;
-    mStrides[i] = 0;
-    mOffsets[i] = 0;
   }
+}
+
+already_AddRefed<WaylandDMABufSurface>
+WaylandDMABufSurface::CreateDMABufSurface(
+    const mozilla::layers::SurfaceDescriptor& aDesc) {
+  const SurfaceDescriptorDMABuf& desc = aDesc.get_SurfaceDescriptorDMABuf();
+  RefPtr<WaylandDMABufSurface> surf;
+
+  switch (desc.bufferType()) {
+    case SURFACE_RGBA:
+      surf = new WaylandDMABufSurfaceRGBA();
+      break;
+    case SURFACE_NV12:
+      surf = new WaylandDMABufSurfaceNV12();
+      break;
+    default:
+      return nullptr;
+  }
+
+  if (!surf->Create(desc)) {
+    return nullptr;
+  }
+  return surf.forget();
 }
 
 void WaylandDMABufSurfaceRGBA::SetWLBuffer(struct wl_buffer* aWLBuffer) {
@@ -116,7 +146,7 @@ WaylandDMABufSurfaceRGBA::WaylandDMABufSurfaceRGBA()
       mWLBufferAttached(false),
       mFastWLBufferCreation(true) {}
 
-WaylandDMABufSurfaceRGBA::~WaylandDMABufSurfaceRGBA() { ReleaseRGBASurface(); }
+WaylandDMABufSurfaceRGBA::~WaylandDMABufSurfaceRGBA() { ReleaseSurface(); }
 
 bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
                                       int aWaylandDMABufSurfaceFlags) {
@@ -170,12 +200,18 @@ bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
 
   if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {
     mBufferPlaneCount = nsGbmLib::GetPlaneCount(mGbmBufferObject);
+    if (mBufferPlaneCount > DMABUF_BUFFER_PLANES) {
+      NS_WARNING("There's too many dmabuf planes!");
+      ReleaseSurface();
+      return false;
+    }
+
     for (int i = 0; i < mBufferPlaneCount; i++) {
       uint32_t handle = nsGbmLib::GetHandleForPlane(mGbmBufferObject, i).u32;
       int ret = nsGbmLib::DrmPrimeHandleToFD(display->GetGbmDeviceFd(), handle,
                                              0, &mDmabufFds[i]);
       if (ret < 0 || mDmabufFds[i] < 0) {
-        ReleaseRGBASurface();
+        ReleaseSurface();
         return false;
       }
       mStrides[i] = nsGbmLib::GetStrideForPlane(mGbmBufferObject, i);
@@ -186,7 +222,7 @@ bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     mStrides[0] = nsGbmLib::GetStride(mGbmBufferObject);
     mDmabufFds[0] = nsGbmLib::GetFd(mGbmBufferObject);
     if (mDmabufFds[0] < 0) {
-      ReleaseRGBASurface();
+      ReleaseSurface();
       return false;
     }
   }
@@ -231,6 +267,7 @@ void WaylandDMABufSurfaceRGBA::ImportSurfaceDescriptor(
   mBufferPlaneCount = desc.fds().Length();
   mBufferModifier = desc.modifier();
   mGbmBufferFlags = desc.flags();
+  MOZ_RELEASE_ASSERT(mBufferPlaneCount <= DMABUF_BUFFER_PLANES);
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
     mDmabufFds[i] = desc.fds()[i].ClonePlatformHandle().release();
@@ -259,7 +296,7 @@ bool WaylandDMABufSurfaceRGBA::Create(const SurfaceDescriptor& aDesc) {
   }
 
   if (!mGbmBufferObject) {
-    ReleaseRGBASurface();
+    ReleaseSurface();
     return false;
   }
 
@@ -394,7 +431,7 @@ void WaylandDMABufSurfaceRGBA::ReleaseTextures() {
   }
 }
 
-void WaylandDMABufSurfaceRGBA::ReleaseRGBASurface() {
+void WaylandDMABufSurfaceRGBA::ReleaseSurface() {
   MOZ_ASSERT(!IsMapped(), "We can't release mapped buffer!");
 
   ReleaseTextures();
@@ -474,7 +511,7 @@ bool WaylandDMABufSurfaceRGBA::Resize(int aWidth, int aHeight) {
     return false;
   }
 
-  ReleaseRGBASurface();
+  ReleaseSurface();
   if (Create(aWidth, aHeight, mSurfaceFlags)) {
     if (mSurfaceFlags & DMABUF_CREATE_WL_BUFFER) {
       return CreateWLBuffer();
@@ -523,16 +560,6 @@ gfx::SurfaceFormat WaylandDMABufSurfaceRGBA::GetFormatGL() {
                     : gfx::SurfaceFormat::R8G8B8X8;
 }
 
-already_AddRefed<WaylandDMABufSurface>
-WaylandDMABufSurface::CreateDMABufSurface(
-    const mozilla::layers::SurfaceDescriptor& aDesc) {
-  RefPtr<WaylandDMABufSurfaceRGBA> surf = new WaylandDMABufSurfaceRGBA();
-  if (!surf->Create(aDesc)) {
-    return nullptr;
-  }
-  return surf.forget();
-}
-
 already_AddRefed<WaylandDMABufSurfaceRGBA>
 WaylandDMABufSurfaceRGBA::CreateDMABufSurface(int aWidth, int aHeight,
                                               int aWaylandDMABufSurfaceFlags) {
@@ -544,20 +571,26 @@ WaylandDMABufSurfaceRGBA::CreateDMABufSurface(int aWidth, int aHeight,
 }
 
 WaylandDMABufSurfaceNV12::WaylandDMABufSurfaceNV12()
-    : WaylandDMABufSurface(SURFACE_NV12) {
+    : WaylandDMABufSurface(SURFACE_NV12),
+      mSurfaceFormat(gfx::SurfaceFormat::NV12),
+      mWidth(),
+      mHeight(),
+      mDrmFormats(),
+      mTexture() {
   for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
-    mTexture[i] = 0;
-    mWidth[i] = 0;
-    mHeight[i] = 0;
     mEGLImage[i] = LOCAL_EGL_NO_IMAGE;
   }
 }
 
-WaylandDMABufSurfaceNV12::~WaylandDMABufSurfaceNV12() { ReleaseNV12Surface(); }
+WaylandDMABufSurfaceNV12::~WaylandDMABufSurfaceNV12() { ReleaseSurface(); }
 
 bool WaylandDMABufSurfaceNV12::Create(
     const VADRMPRIMESurfaceDescriptor& aDesc) {
   if (aDesc.fourcc != VA_FOURCC_NV12) {
+    return false;
+  }
+  if (aDesc.num_layers > DMABUF_BUFFER_PLANES ||
+      aDesc.num_objects > DMABUF_BUFFER_PLANES) {
     return false;
   }
 
@@ -584,17 +617,18 @@ bool WaylandDMABufSurfaceNV12::Create(
 
 bool WaylandDMABufSurfaceNV12::Create(const SurfaceDescriptor& aDesc) {
   const SurfaceDescriptorDMABuf& dmaDesc = aDesc.get_SurfaceDescriptorDMABuf();
-  ImportSurfaceDescriptorNV12(dmaDesc);
+  ImportSurfaceDescriptor(dmaDesc);
   return true;
 }
 
-void WaylandDMABufSurfaceNV12::ImportSurfaceDescriptorNV12(
+void WaylandDMABufSurfaceNV12::ImportSurfaceDescriptor(
     const SurfaceDescriptorDMABuf& aDesc) {
   mSurfaceFormat = gfx::SurfaceFormat::NV12;
   mBufferPlaneCount = aDesc.fds().Length();
   mBufferModifier = aDesc.modifier();
   mColorSpace = aDesc.yUVColorSpace();
 
+  MOZ_RELEASE_ASSERT(mBufferPlaneCount <= DMABUF_BUFFER_PLANES);
   for (int i = 0; i < mBufferPlaneCount; i++) {
     mDmabufFds[i] = aDesc.fds()[i].ClonePlatformHandle().release();
     mWidth[i] = aDesc.width()[i];
@@ -735,7 +769,7 @@ gfx::SurfaceFormat WaylandDMABufSurfaceNV12::GetFormatGL() {
   return gfx::SurfaceFormat::NV12;
 }
 
-void WaylandDMABufSurfaceNV12::ReleaseNV12Surface() {
+void WaylandDMABufSurfaceNV12::ReleaseSurface() {
   ReleaseTextures();
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
