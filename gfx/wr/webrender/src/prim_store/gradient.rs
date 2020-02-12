@@ -562,6 +562,222 @@ impl IsVisible for RadialGradient {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Conic gradients
+
+/// Hashable conic gradient parameters, for use during prim interning.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, MallocSizeOf, PartialEq)]
+pub struct ConicGradientAngle {
+    pub angle: f32,
+}
+
+impl Eq for ConicGradientAngle {}
+
+impl hash::Hash for ConicGradientAngle {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.angle.to_bits().hash(state);
+    }
+}
+
+/// Identifying key for a line decoration.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, MallocSizeOf)]
+pub struct ConicGradientKey {
+    pub common: PrimKeyCommonData,
+    pub extend_mode: ExtendMode,
+    pub center: PointKey,
+    pub angle: ConicGradientAngle,
+    pub stretch_size: SizeKey,
+    pub stops: Vec<GradientStopKey>,
+    pub tile_spacing: SizeKey,
+    pub nine_patch: Option<Box<NinePatchDescriptor>>,
+}
+
+impl ConicGradientKey {
+    pub fn new(
+        flags: PrimitiveFlags,
+        prim_size: LayoutSize,
+        conic_grad: ConicGradient,
+    ) -> Self {
+        ConicGradientKey {
+            common: PrimKeyCommonData {
+                flags,
+                prim_size: prim_size.into(),
+            },
+            extend_mode: conic_grad.extend_mode,
+            center: conic_grad.center,
+            angle: conic_grad.angle,
+            stretch_size: conic_grad.stretch_size,
+            stops: conic_grad.stops,
+            tile_spacing: conic_grad.tile_spacing,
+            nine_patch: conic_grad.nine_patch,
+        }
+    }
+}
+
+impl InternDebug for ConicGradientKey {}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(MallocSizeOf)]
+pub struct ConicGradientTemplate {
+    pub common: PrimTemplateCommonData,
+    pub extend_mode: ExtendMode,
+    pub center: LayoutPoint,
+    pub angle: ConicGradientAngle,
+    pub stretch_size: LayoutSize,
+    pub tile_spacing: LayoutSize,
+    pub brush_segments: Vec<BrushSegment>,
+    pub stops: Vec<GradientStop>,
+    pub stops_handle: GpuCacheHandle,
+}
+
+impl Deref for ConicGradientTemplate {
+    type Target = PrimTemplateCommonData;
+    fn deref(&self) -> &Self::Target {
+        &self.common
+    }
+}
+
+impl DerefMut for ConicGradientTemplate {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.common
+    }
+}
+
+impl From<ConicGradientKey> for ConicGradientTemplate {
+    fn from(item: ConicGradientKey) -> Self {
+        let common = PrimTemplateCommonData::with_key_common(item.common);
+        let mut brush_segments = Vec::new();
+
+        if let Some(ref nine_patch) = item.nine_patch {
+            brush_segments = nine_patch.create_segments(common.prim_size);
+        }
+
+        let stops = item.stops.iter().map(|stop| {
+            GradientStop {
+                offset: stop.offset,
+                color: stop.color.into(),
+            }
+        }).collect();
+
+        ConicGradientTemplate {
+            common,
+            center: item.center.into(),
+            extend_mode: item.extend_mode,
+            angle: item.angle,
+            stretch_size: item.stretch_size.into(),
+            tile_spacing: item.tile_spacing.into(),
+            brush_segments,
+            stops,
+            stops_handle: GpuCacheHandle::new(),
+        }
+    }
+}
+
+impl ConicGradientTemplate {
+    /// Update the GPU cache for a given primitive template. This may be called multiple
+    /// times per frame, by each primitive reference that refers to this interned
+    /// template. The initial request call to the GPU cache ensures that work is only
+    /// done if the cache entry is invalid (due to first use or eviction).
+    pub fn update(
+        &mut self,
+        frame_state: &mut FrameBuildingState,
+    ) {
+        if let Some(mut request) =
+            frame_state.gpu_cache.request(&mut self.common.gpu_cache_handle) {
+            // write_prim_gpu_blocks
+            request.push([
+                self.center.x,
+                self.center.y,
+                self.angle.angle,
+                0.0,
+            ]);
+            request.push([
+                pack_as_float(self.extend_mode as u32),
+                self.stretch_size.width,
+                self.stretch_size.height,
+                0.0,
+            ]);
+
+            // write_segment_gpu_blocks
+            for segment in &self.brush_segments {
+                // has to match VECS_PER_SEGMENT
+                request.write_segment(
+                    segment.local_rect,
+                    segment.extra_data,
+                );
+            }
+        }
+
+        if let Some(mut request) = frame_state.gpu_cache.request(&mut self.stops_handle) {
+            GradientGpuBlockBuilder::build(
+                false,
+                &mut request,
+                &self.stops,
+            );
+        }
+
+        self.opacity = PrimitiveOpacity::translucent();
+    }
+}
+
+pub type ConicGradientDataHandle = InternHandle<ConicGradient>;
+
+#[derive(Debug, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ConicGradient {
+    pub extend_mode: ExtendMode,
+    pub center: PointKey,
+    pub angle: ConicGradientAngle,
+    pub stretch_size: SizeKey,
+    pub stops: Vec<GradientStopKey>,
+    pub tile_spacing: SizeKey,
+    pub nine_patch: Option<Box<NinePatchDescriptor>>,
+}
+
+impl Internable for ConicGradient {
+    type Key = ConicGradientKey;
+    type StoreData = ConicGradientTemplate;
+    type InternData = PrimitiveSceneData;
+}
+
+impl InternablePrimitive for ConicGradient {
+    fn into_key(
+        self,
+        info: &LayoutPrimitiveInfo,
+    ) -> ConicGradientKey {
+        ConicGradientKey::new(
+            info.flags,
+            info.rect.size,
+            self,
+        )
+    }
+
+    fn make_instance_kind(
+        _key: ConicGradientKey,
+        data_handle: ConicGradientDataHandle,
+        _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        PrimitiveInstanceKind::ConicGradient {
+            data_handle,
+            visible_tiles_range: GradientTileRange::empty(),
+        }
+    }
+}
+
+impl IsVisible for ConicGradient {
+    fn is_visible(&self) -> bool {
+        true
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // The gradient entry index for the first color stop
 pub const GRADIENT_DATA_FIRST_STOP: usize = 0;
 // The gradient entry index for the last color stop
@@ -783,4 +999,8 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<RadialGradient>(), 72, "RadialGradient size changed");
     assert_eq!(mem::size_of::<RadialGradientTemplate>(), 120, "RadialGradientTemplate size changed");
     assert_eq!(mem::size_of::<RadialGradientKey>(), 88, "RadialGradientKey size changed");
+
+    assert_eq!(mem::size_of::<ConicGradient>(), 72, "ConicGradient size changed");
+    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 112, "ConicGradientTemplate size changed");
+    assert_eq!(mem::size_of::<ConicGradientKey>(), 80, "ConicGradientKey size changed");
 }

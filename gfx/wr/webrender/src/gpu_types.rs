@@ -78,10 +78,11 @@ pub enum BrushShaderKind {
     Text            = 3,
     LinearGradient  = 4,
     RadialGradient  = 5,
-    Blend           = 6,
-    MixBlend        = 7,
-    Yuv             = 8,
-    Opacity         = 9,
+    ConicGradient   = 6,
+    Blend           = 7,
+    MixBlend        = 8,
+    Yuv             = 9,
+    Opacity         = 10,
 }
 
 #[derive(Debug, Copy, Clone)]
