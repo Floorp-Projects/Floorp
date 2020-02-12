@@ -3196,42 +3196,41 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
 
     AutoRangeArray arrayOfRanges(SelectionRefPtr());
     for (auto& range : arrayOfRanges.mRanges) {
-      // Build a list of nodes in the range
-      AutoTArray<OwningNonNull<nsINode>, 10> arrayOfNodes;
+      // Build a list of direct child nodes in the range
+      AutoTArray<OwningNonNull<nsIContent>, 10> arrayOfTopChildren;
       DOMSubtreeIterator iter;
       nsresult rv = iter.Init(*range);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return result.SetResult(rv);
       }
-      iter.AppendAllNodesToArray(arrayOfNodes);
+      iter.AppendAllNodesToArray(arrayOfTopChildren);
 
       // Now that we have the list, delete non-table elements
-      int32_t listCount = arrayOfNodes.Length();
-      for (int32_t j = 0; j < listCount; j++) {
-        OwningNonNull<nsINode> node = arrayOfNodes[0];
-        nsresult rv = DeleteElementsExceptTableRelatedElements(node);
+      size_t countOfTopChildren = arrayOfTopChildren.Length();
+      for (size_t i = 0; i < countOfTopChildren; i++) {
+        OwningNonNull<nsIContent>& content = arrayOfTopChildren[0];
+        // XXX After here, the child contents in the array may have been moved
+        //     to somewhere or removed.  We should handle it.
+        nsresult rv = DeleteElementsExceptTableRelatedElements(content);
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rv),
-            "Failed to elements except table related elements");
-        arrayOfNodes.RemoveElementAt(0);
+            "DeleteElementsExceptTableRelatedElements() failed, but ignored");
         // If something visible is deleted, no need to join.  Visible means
         // all nodes except non-visible textnodes and breaks.
+        // XXX Odd.  Why do we check the visibility after removing the node
+        //     from the DOM tree?
         if (join && aSelectionWasCollapsed == SelectionWasCollapsed::Yes) {
-          if (!node->IsContent()) {
-            join = false;
-            continue;
-          }
-          nsIContent* content = node->AsContent();
           if (Text* text = content->GetAsText()) {
             join = !IsInVisibleTextFrames(*text);
           } else {
             join = content->IsHTMLElement(nsGkAtoms::br) &&
-                   !IsVisibleBRElement(node);
+                   !IsVisibleBRElement(content);
           }
         }
+        arrayOfTopChildren.RemoveElementAt(0);
       }
     }
 
