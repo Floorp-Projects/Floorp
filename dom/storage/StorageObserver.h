@@ -24,7 +24,7 @@ class StorageObserver;
 // content processes.
 class StorageObserverSink {
  public:
-  virtual ~StorageObserverSink() {}
+  virtual ~StorageObserverSink() = default;
 
  private:
   friend class StorageObserver;
@@ -53,7 +53,7 @@ class StorageObserver : public nsIObserver, public nsSupportsWeakReference {
   void NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
 
  private:
-  virtual ~StorageObserver() {}
+  virtual ~StorageObserver() = default;
 
   nsresult GetOriginScope(const char16_t* aData, nsACString& aOriginScope);
 

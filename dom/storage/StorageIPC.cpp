@@ -132,7 +132,7 @@ StorageDBChild::StorageDBChild(LocalStorageManager* aManager)
   MOZ_ASSERT(!NextGenLocalStorageEnabled());
 }
 
-StorageDBChild::~StorageDBChild() {}
+StorageDBChild::~StorageDBChild() = default;
 
 // static
 StorageDBChild* StorageDBChild::Get() {
