@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_END
 
 Credential::Credential(nsPIDOMWindowInner* aParent) : mParent(aParent) {}
 
-Credential::~Credential() {}
+Credential::~Credential() = default;
 
 JSObject* Credential::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {

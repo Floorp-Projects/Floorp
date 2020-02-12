@@ -124,7 +124,7 @@ CredentialsContainer::CredentialsContainer(nsPIDOMWindowInner* aParent)
   MOZ_ASSERT(aParent);
 }
 
-CredentialsContainer::~CredentialsContainer() {}
+CredentialsContainer::~CredentialsContainer() = default;
 
 void CredentialsContainer::EnsureWebAuthnManager() {
   MOZ_ASSERT(NS_IsMainThread());
