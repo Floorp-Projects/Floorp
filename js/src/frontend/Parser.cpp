@@ -165,28 +165,7 @@ ParserSharedBase::ParserSharedBase(JSContext* cx,
   cx->frontendCollectionPool().addActiveCompilation();
 }
 
-// Ensure we don't hold onto any memory via trace list nodes
-// which may be freed when the lifo alloc dies.
-void ParserSharedBase::cleanupTraceList() {
-  TraceListNode* elem = traceListHead_;
-  while (elem) {
-    if (elem->isObjectBox()) {
-      ObjectBox* objBox = elem->asObjectBox();
-
-      // FunctionBoxes are LifoAllocated, but the LazyScriptCreationData that
-      // they hold onto have SystemAlloc memory. We need to make sure this gets
-      // cleaned up before the Lifo gets released (in CompilationInfo) to ensure
-      // that we don't leak memory.
-      if (objBox->isFunctionBox()) {
-        objBox->asFunctionBox()->cleanupMemory();
-      }
-    }
-    elem = elem->traceLink;
-  }
-}
-
 ParserSharedBase::~ParserSharedBase() {
-  cleanupTraceList();
   cx_->frontendCollectionPool().removeActiveCompilation();
 }
 
@@ -345,6 +324,11 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     FunctionNodeType funNode, Handle<FunctionCreationData> fcd,
     uint32_t toStringStart, Directives inheritedDirectives,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
+  size_t index = this->getCompilationInfo().funcData.length();
+  if (!this->getCompilationInfo().funcData.emplaceBack(fcd.get())) {
+    return nullptr;
+  }
+
   /*
    * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
    * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
@@ -352,11 +336,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * scanning, parsing and code generation for the whole script or top-level
    * function.
    */
-
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, fcd, toStringStart, this->getCompilationInfo(),
+      cx_, traceListHead_, toStringStart, this->getCompilationInfo(),
       inheritedDirectives, options().extraWarningsOption, generatorKind,
-      asyncKind);
+      asyncKind, index);
 
   if (!funbox) {
     ReportOutOfMemory(cx_);
@@ -1757,7 +1740,6 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     return false;
   }
 
-  MOZ_ASSERT(funbox->functionCreationData());
   funbox->functionCreationData()->lazyScriptData =
       mozilla::Some(std::move(data));
   return true;
@@ -1771,7 +1753,7 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      if (!funbox->functionCreationData()) {
+      if (!funbox->hasFunctionCreationIndex()) {
         return true;
       }
 

@@ -180,16 +180,16 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
 }
 
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-                         Handle<FunctionCreationData> data,
                          uint32_t toStringStart,
                          CompilationInfo& compilationInfo,
                          Directives directives, bool extraWarnings,
                          GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind)
+                         FunctionAsyncKind asyncKind, size_t index)
     : FunctionBox(cx, traceListHead, toStringStart, compilationInfo, directives,
-                  extraWarnings, generatorKind, asyncKind, data.get().atom,
-                  data.get().flags) {
-  functionCreationData_.emplace(data);
+                  extraWarnings, generatorKind, asyncKind,
+                  compilationInfo.funcData[index].atom,
+                  compilationInfo.funcData[index].flags) {
+  funcDataIndex_.emplace(index);
 }
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
@@ -344,6 +344,12 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
       builder(builder) {
   thisBinding_ = ThisBinding::Module;
   hasModuleGoal_ = true;
+}
+
+FunctionCreationData* FunctionBox::functionCreationData() const {
+  MOZ_ASSERT(hasFunctionCreationIndex());
+  FunctionCreationData* fcd = &compilationInfo_.funcData[*funcDataIndex_];
+  return fcd;
 }
 
 }  // namespace frontend

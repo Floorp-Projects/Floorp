@@ -471,9 +471,6 @@ void FunctionBox::trace(JSTracer* trc) {
   if (explicitName_) {
     TraceRoot(trc, &explicitName_, "funbox-explicitName");
   }
-  if (functionCreationData_) {
-    functionCreationData_->trace(trc);
-  }
 }
 
 bool js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn) {

@@ -326,6 +326,13 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // has expressions.
   VarScope::Data* extraVarScopeBindings_;
 
+  // Index into funcData, which lives inside of compilationInfo, for the
+  // functionCreationData associated with this functionBox. If there is not a
+  // functionCreationData associated with this functionBox, as in the case of
+  // the function box representing an already allocated function, then
+  // this index will be mozilla::Nothing.
+  mozilla::Maybe<size_t> funcDataIndex_;
+
   FunctionBox(JSContext* cx, TraceListNode* traceListHead,
               uint32_t toStringStart, CompilationInfo& compilationInfo,
               Directives directives, bool extraWarnings,
@@ -335,6 +342,11 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionSyntaxKind kind, bool isArrow,
                                      bool allowSuperProperty);
+
+  const mozilla::Maybe<size_t>& functionCreationDataIndex() const {
+    return funcDataIndex_;
+  }
+  mozilla::Maybe<size_t>& functionCreationDataIndex() { return funcDataIndex_; }
 
  public:
   // Back pointer used by asm.js for error messages.
@@ -424,22 +436,15 @@ class FunctionBox : public ObjectBox, public SharedContext {
   JSAtom* explicitName_;
   FunctionFlags flags_;
 
-  mozilla::Maybe<FunctionCreationData> functionCreationData_;
+  FunctionCreationData* functionCreationData() const;
 
-  bool hasFunctionCreationData() { return functionCreationData_.isSome(); }
-
-  const mozilla::Maybe<FunctionCreationData>& functionCreationData() const {
-    return functionCreationData_;
-  }
-  mozilla::Maybe<FunctionCreationData>& functionCreationData() {
-    return functionCreationData_;
-  }
+  bool hasFunctionCreationIndex() const { return funcDataIndex_.isSome(); }
 
   Handle<FunctionCreationData> functionCreationDataHandle() {
     // This is safe because the FunctionCreationData are marked
-    // via ParserBase -> FunctionBox -> FunctionCreationData.
-    return Handle<FunctionCreationData>::fromMarkedLocation(
-        functionCreationData_.ptr());
+    // via CompilationInfo -> funcData.
+    FunctionCreationData* fcd = functionCreationData();
+    return Handle<FunctionCreationData>::fromMarkedLocation(fcd);
   }
 
   FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
@@ -448,10 +453,10 @@ class FunctionBox : public ObjectBox, public SharedContext {
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
   FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-              Handle<FunctionCreationData> data, uint32_t toStringStart,
-              CompilationInfo& compilationInfo, Directives directives,
-              bool extraWarnings, GeneratorKind generatorKind,
-              FunctionAsyncKind asyncKind);
+              uint32_t toStringStart, CompilationInfo& compilationInfo,
+              Directives directives, bool extraWarnings,
+              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+              size_t index);
 
 #ifdef DEBUG
   bool atomsAreKept();
@@ -503,12 +508,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
       const AbstractScope& enclosingScope);
   void finish();
 
-  // Free non-LifoAlloc memory which would otherwise be leaked when
-  // the FunctionBox is LifoAlloc destroyed (without calling destructor)
-  void cleanupMemory() { clearDeferredAllocationInfo(); }
-
-  // Clear any deferred allocation info which will no longer be used.
-  void clearDeferredAllocationInfo() { functionCreationData().reset(); }
+  // Clear any function creation data which will no longer be used.
+  void clearFunctionCreationData() { functionCreationDataIndex().reset(); }
 
   JSFunction* function() const { return &object()->as<JSFunction>(); }
 
@@ -626,14 +627,14 @@ class FunctionBox : public ObjectBox, public SharedContext {
   }
   void setNeedsHomeObject() {
     MOZ_ASSERT_IF(hasObject(), function()->allowSuperProperty());
-    MOZ_ASSERT_IF(!hasObject(), functionCreationData().isSome());
+    MOZ_ASSERT_IF(!hasObject(), functionCreationDataIndex().isSome());
     MOZ_ASSERT_IF(!hasObject(),
                   functionCreationData()->flags.allowSuperProperty());
     needsHomeObject_ = true;
   }
   void setDerivedClassConstructor() {
     MOZ_ASSERT_IF(hasObject(), function()->isClassConstructor());
-    MOZ_ASSERT_IF(!hasObject(), functionCreationData().isSome());
+    MOZ_ASSERT_IF(!hasObject(), functionCreationDataIndex().isSome());
     MOZ_ASSERT_IF(!hasObject(),
                   functionCreationData()->flags.isClassConstructor());
     isDerivedClassConstructor_ = true;
