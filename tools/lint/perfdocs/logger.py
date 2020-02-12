@@ -13,6 +13,7 @@ class PerfDocLogger(object):
     '''
     PATHS = []
     LOGGER = None
+    FAILED = False
 
     def __init__(self):
         '''Initializes the PerfDocLogger.'''
@@ -30,7 +31,7 @@ class PerfDocLogger(object):
 
     def log(self, msg):
         '''
-        Log a message.
+        Log an info message.
 
         :param str msg: Message to log.
         '''
@@ -70,4 +71,13 @@ class PerfDocLogger(object):
                     rule="Flawless performance docs."
                 )
 
+                PerfDocLogger.FAILED = True
                 break
+
+    def critical(self, msg):
+        '''
+        Log a critical message.
+
+        :param str msg: Message to log.
+        '''
+        self.logger.critical(msg)

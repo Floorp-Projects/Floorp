@@ -9,7 +9,6 @@ suites:
         description: "Used for testing page-load performance."
         tests:
             raptor-tp6: "Used for testing desktop page-load performance using Raptor."
-            browsertime-tp6: "Used for testing desktop page-load performance using browsertime."
     mobile:
         description: "Used for testing page-load performance on Android."
     benchmarks:

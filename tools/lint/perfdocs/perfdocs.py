@@ -7,7 +7,7 @@ import os
 import re
 
 
-def run_perfdocs(config, logger=None, paths=None, verify=True, generate=False):
+def run_perfdocs(config, logger=None, paths=None, generate=True):
     '''
     Build up performance testing documentation dynamically by combining
     text data from YAML files that reside in `perfdoc` folders
@@ -28,9 +28,7 @@ def run_perfdocs(config, logger=None, paths=None, verify=True, generate=False):
     suite.
 
     Usage for verification: ./mach lint -l perfdocs
-    Usage for generation: Not Implemented
-
-    Currently, doc generation is not implemented - only validation.
+    Usage for generation: ./mach lint -l perfdocs --fix
 
     For validation, see the Verifier class for a description of how
     it works.
@@ -43,8 +41,7 @@ def run_perfdocs(config, logger=None, paths=None, verify=True, generate=False):
         output the linting warnings/errors.
     :param list paths: The paths that are being tested. Used to filter
         out errors from files outside of these paths.
-    :param bool verify: If true, the verification will be performed.
-    :param bool generate: If true, the docs will be generated.
+    :param bool generate: If true, the docs will be (re)generated.
     '''
     from perfdocs.logger import PerfDocLogger
 
@@ -63,11 +60,17 @@ def run_perfdocs(config, logger=None, paths=None, verify=True, generate=False):
     if not os.path.exists(testing_dir):
         raise Exception("Cannot locate testing directory at %s" % testing_dir)
 
-    # Run either the verifier or generator
-    if generate:
-        raise NotImplementedError
-    if verify:
-        from perfdocs.verifier import Verifier
+    # Late import because logger isn't defined until later
+    from perfdocs.generator import Generator
+    from perfdocs.verifier import Verifier
 
-        verifier = Verifier(testing_dir, top_dir)
-        verifier.validate_tree()
+    # Run the verifier first
+    verifier = Verifier(testing_dir, top_dir)
+    verifier.validate_tree()
+
+    if not PerfDocLogger.FAILED:
+        # Even if the tree is valid, we need to check if the documentation
+        # needs to be regenerated, and if it does, we throw a linting error.
+        # `generate` dictates whether or not the documentation is generated.
+        generator = Generator(verifier, generate=generate, workspace=top_dir)
+        generator.generate_perfdocs()

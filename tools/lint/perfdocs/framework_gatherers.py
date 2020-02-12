@@ -28,6 +28,7 @@ class FrameworkGatherer(object):
         self.workspace_dir = workspace_dir
         self._yaml_path = yaml_path
         self._suite_list = {}
+        self._test_list = {}
         self._manifest_path = ''
         self._manifest = None
 
@@ -105,3 +106,45 @@ class RaptorGatherer(FrameworkGatherer):
                 self._suite_list[s].append(fpath)
 
         return self._suite_list
+
+    def _get_subtests_from_ini(self, manifest_path):
+        '''
+        Returns a list of (sub)tests from an ini file containing the test definitions.
+
+        :param str manifest_path: path to the ini file
+        :return list: the list of the tests
+        '''
+        test_manifest = TestManifest([manifest_path], strict=False)
+        test_list = test_manifest.active_tests(exists=False, disabled=False)
+        subtest_list = [subtest["name"] for subtest in test_list]
+
+        return subtest_list
+
+    def get_test_list(self):
+        '''
+        Returns a dictionary containing the tests in every suite ini file.
+
+        :return dict: A dictionary with the following structure: {
+                "suite_name": [
+                    'raptor_test1',
+                    'raptor_test2'
+                ]
+            }
+        '''
+        if self._test_list:
+            return self._test_list
+
+        suite_list = self.get_suite_list()
+
+        # Iterate over each manifest path from suite_list[suite_name]
+        # and place the subtests into self._test_list under the same key
+        for suite_name, manifest_paths in suite_list.items():
+            if not self._test_list.get(suite_name):
+                self._test_list[suite_name] = []
+            for i, manifest_path in enumerate(manifest_paths, 1):
+                subtest_list = self._get_subtests_from_ini(manifest_path)
+                self._test_list[suite_name].extend(subtest_list)
+                if i == len(manifest_paths):
+                    self._test_list[suite_name] = sorted(self._test_list[suite_name])
+
+        return self._test_list
