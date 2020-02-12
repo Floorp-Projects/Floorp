@@ -32,7 +32,6 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     'IMContextWrapper.cpp',
     'mozcontainer.cpp',
-    'MPRISServiceHandler.cpp',
     'NativeKeyBindings.cpp',
     'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
