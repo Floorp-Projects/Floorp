@@ -397,7 +397,7 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   // in the segment.
   AudioChunk* AppendAndConsumeChunk(AudioChunk* aChunk) {
     AudioChunk* chunk = AppendChunk(aChunk->mDuration);
-    chunk->mBuffer = std::move(aChunk->mBuffer);
+    chunk->mBuffer = aChunk->mBuffer.forget();
     chunk->mChannelData.SwapElements(aChunk->mChannelData);
 
     MOZ_ASSERT(chunk->mBuffer || aChunk->mChannelData.IsEmpty(),

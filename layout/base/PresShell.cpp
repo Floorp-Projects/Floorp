@@ -3138,7 +3138,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 }
 
 nsresult PresShell::ScrollToAnchor() {
-  nsCOMPtr<nsIContent> lastAnchor = std::move(mLastAnchorScrolledTo);
+  nsCOMPtr<nsIContent> lastAnchor = mLastAnchorScrolledTo.forget();
   if (!lastAnchor) {
     return NS_OK;
   }

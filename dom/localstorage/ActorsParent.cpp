@@ -1718,9 +1718,10 @@ class Datastore final
   // Created by PrepareDatastoreOp.
   Datastore(const nsACString& aGroup, const nsACString& aOrigin,
             uint32_t aPrivateBrowsingId, int64_t aUsage, int64_t aSizeOfKeys,
-            int64_t aSizeOfItems, RefPtr<DirectoryLock>&& aDirectoryLock,
-            RefPtr<Connection>&& aConnection,
-            RefPtr<QuotaObject>&& aQuotaObject,
+            int64_t aSizeOfItems,
+            already_AddRefed<DirectoryLock>&& aDirectoryLock,
+            already_AddRefed<Connection>&& aConnection,
+            already_AddRefed<QuotaObject>&& aQuotaObject,
             nsDataHashtable<nsStringHashKey, LSValue>& aValues,
             nsTArray<LSItemInfo>& aOrderedItems);
 
@@ -4767,9 +4768,9 @@ void ConnectionThread::Shutdown() {
 Datastore::Datastore(const nsACString& aGroup, const nsACString& aOrigin,
                      uint32_t aPrivateBrowsingId, int64_t aUsage,
                      int64_t aSizeOfKeys, int64_t aSizeOfItems,
-                     RefPtr<DirectoryLock>&& aDirectoryLock,
-                     RefPtr<Connection>&& aConnection,
-                     RefPtr<QuotaObject>&& aQuotaObject,
+                     already_AddRefed<DirectoryLock>&& aDirectoryLock,
+                     already_AddRefed<Connection>&& aConnection,
+                     already_AddRefed<QuotaObject>&& aQuotaObject,
                      nsDataHashtable<nsStringHashKey, LSValue>& aValues,
                      nsTArray<LSItemInfo>& aOrderedItems)
     : mDirectoryLock(std::move(aDirectoryLock)),
@@ -7197,7 +7198,7 @@ nsresult PrepareDatastoreOp::OpenDirectory() {
   MOZ_ASSERT(pendingDirectoryLock);
 
   if (mNestedState == NestedState::DirectoryOpenPending) {
-    mPendingDirectoryLock = std::move(pendingDirectoryLock);
+    mPendingDirectoryLock = pendingDirectoryLock.forget();
   }
 
   mRequestedDirectoryLock = true;
@@ -7867,10 +7868,10 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
       }
     }
 
-    mDatastore = new Datastore(
-        mGroup, mOrigin, mPrivateBrowsingId, mUsage, mSizeOfKeys, mSizeOfItems,
-        std::move(mDirectoryLock), std::move(mConnection),
-        std::move(quotaObject), mValues, mOrderedItems);
+    mDatastore = new Datastore(mGroup, mOrigin, mPrivateBrowsingId, mUsage,
+                               mSizeOfKeys, mSizeOfItems,
+                               mDirectoryLock.forget(), mConnection.forget(),
+                               quotaObject.forget(), mValues, mOrderedItems);
 
     mDatastore->NoteLivePrepareDatastoreOp(this);
 

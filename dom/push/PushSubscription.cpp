@@ -55,7 +55,7 @@ NS_IMPL_ISUPPORTS(UnsubscribeResultCallback, nsIUnsubscribeResultCallback)
 class UnsubscribeResultRunnable final : public WorkerRunnable {
  public:
   UnsubscribeResultRunnable(WorkerPrivate* aWorkerPrivate,
-                            RefPtr<PromiseWorkerProxy>&& aProxy,
+                            already_AddRefed<PromiseWorkerProxy>&& aProxy,
                             nsresult aStatus, bool aSuccess)
       : WorkerRunnable(aWorkerPrivate),
         mProxy(std::move(aProxy)),
@@ -110,7 +110,7 @@ class WorkerUnsubscribeResultCallback final
 
     WorkerPrivate* worker = mProxy->GetWorkerPrivate();
     RefPtr<UnsubscribeResultRunnable> r = new UnsubscribeResultRunnable(
-        worker, std::move(mProxy), aStatus, aSuccess);
+        worker, mProxy.forget(), aStatus, aSuccess);
     MOZ_ALWAYS_TRUE(r->Dispatch());
 
     return NS_OK;

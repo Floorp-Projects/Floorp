@@ -68,7 +68,7 @@ class GMPServiceCreateHelper final : public mozilla::Runnable {
           SystemGroup::EventTargetFor(mozilla::TaskCategory::Other),
           createHelper, true);
 
-      service = std::move(createHelper->mService);
+      service = createHelper->mService.forget();
     }
 
     return service.forget();

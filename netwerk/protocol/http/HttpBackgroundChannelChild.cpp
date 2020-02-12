@@ -251,8 +251,7 @@ void HttpBackgroundChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
     mQueuedRunnables.AppendElement(NS_NewRunnableFunction(
         "HttpBackgroundChannelChild::ActorDestroy", [self]() {
           MOZ_ASSERT(OnSocketThread());
-          RefPtr<HttpChannelChild> channelChild =
-              std::move(self->mChannelChild);
+          RefPtr<HttpChannelChild> channelChild = self->mChannelChild.forget();
 
           if (channelChild) {
             channelChild->OnBackgroundChildDestroyed(self);
@@ -262,7 +261,7 @@ void HttpBackgroundChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
   if (mChannelChild) {
-    RefPtr<HttpChannelChild> channelChild = std::move(mChannelChild);
+    RefPtr<HttpChannelChild> channelChild = mChannelChild.forget();
 
     channelChild->OnBackgroundChildDestroyed(this);
   }

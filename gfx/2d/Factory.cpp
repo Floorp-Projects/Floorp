@@ -481,7 +481,7 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetForData(
       RefPtr<DrawTargetCairo> newTarget;
       newTarget = new DrawTargetCairo();
       if (newTarget->Init(aData, aSize, aStride, aFormat)) {
-        retVal = std::move(newTarget);
+        retVal = newTarget.forget();
       }
       break;
     }

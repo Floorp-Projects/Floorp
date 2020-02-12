@@ -108,7 +108,7 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
     if (!maskSnapshot) {
       return nullptr;
     }
-    surface = std::move(maskSnapshot);
+    surface = maskSnapshot.forget();
   } else {
     maskDT->FillRect(maskSurfaceRect,
                      ColorPattern(Color(1.0f, 1.0f, 1.0f, aParams.opacity)),
@@ -117,7 +117,7 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
     if (!maskSnapshot) {
       return nullptr;
     }
-    surface = std::move(maskSnapshot);
+    surface = maskSnapshot.forget();
   }
 
   return surface.forget();

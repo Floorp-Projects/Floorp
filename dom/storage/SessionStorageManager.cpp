@@ -31,7 +31,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(SessionStorageManager)
 
 SessionStorageManager::SessionStorageManager(
     RefPtr<BrowsingContext> aBrowsingContext)
-    : mBrowsingContext(std::move(aBrowsingContext)) {
+    : mBrowsingContext(aBrowsingContext.forget()) {
   if (const auto service = SessionStorageService::Get()) {
     service->RegisterSessionStorageManager(this);
   }

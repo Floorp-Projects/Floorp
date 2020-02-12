@@ -567,7 +567,7 @@ void InputQueue::ScheduleMainThreadTimeout(
     // the input block has at least one input event in mQueuedInputs, and
     // the event that triggered this call may not have been added to
     // mQueuedInputs yet.
-    mImmediateTimeout = std::move(timeoutTask);
+    mImmediateTimeout = timeoutTask.forget();
   } else {
     aTarget->PostDelayedTask(timeoutTask.forget(), timeout);
   }

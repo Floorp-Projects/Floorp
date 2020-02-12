@@ -158,7 +158,7 @@ void AudioBlock::AllocateChannels(uint32_t aChannelCount) {
   for (uint32_t i = 0; i < aChannelCount; ++i) {
     mChannelData[i] = buffer->ChannelData(i);
   }
-  mBuffer = std::move(buffer);
+  mBuffer = buffer.forget();
   mVolume = 1.0f;
   mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }

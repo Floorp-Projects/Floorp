@@ -106,7 +106,7 @@ ServiceWorkerPrivate::ServiceWorkerPrivate(ServiceWorkerInfo* aInfo)
     MOZ_ALWAYS_SUCCEEDS(inner->Initialize());
 #endif
 
-    mInner = std::move(inner);
+    mInner = inner.forget();
   }
 }
 
@@ -1798,8 +1798,7 @@ void ServiceWorkerPrivate::TerminateWorker() {
     }
 
     Unused << NS_WARN_IF(!mWorkerPrivate->Cancel());
-    RefPtr<WorkerPrivate> workerPrivate = std::move(mWorkerPrivate);
-    mozilla::Unused << workerPrivate;
+    RefPtr<WorkerPrivate> workerPrivate(mWorkerPrivate.forget());
     mSupportsArray.Clear();
 
     // Any pending events are never going to fire on this worker.  Cancel
@@ -1870,7 +1869,7 @@ void ServiceWorkerPrivate::UpdateState(ServiceWorkerState aState) {
   mPendingFunctionalEvents.SwapElements(pendingEvents);
 
   for (uint32_t i = 0; i < pendingEvents.Length(); ++i) {
-    RefPtr<WorkerRunnable> r = std::move(pendingEvents[i]);
+    RefPtr<WorkerRunnable> r = pendingEvents[i].forget();
     if (NS_WARN_IF(!r->Dispatch())) {
       NS_WARNING("Failed to dispatch pending functional event!");
     }

@@ -504,7 +504,7 @@ void MediaDecodeTask::FinishDecode() {
     data += resampledFrames;
   }
 #endif
-  mDecodeJob.mBuffer.mBuffer = std::move(buffer);
+  mDecodeJob.mBuffer.mBuffer = buffer.forget();
   mDecodeJob.mBuffer.mVolume = 1.0f;
   mDecodeJob.mBuffer.mBufferFormat = AUDIO_OUTPUT_FORMAT;
 

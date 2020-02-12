@@ -316,7 +316,7 @@ void GlobalStyleSheetCache::LoadSheetFromSharedMemory(
   sheet->SetReferrerInfo(referrerInfo);
   URLExtraData::sShared[i] = sheet->URLData();
 
-  *aSheet = std::move(sheet);
+  *aSheet = sheet.forget();
 }
 
 void GlobalStyleSheetCache::InitSharedSheetsInParent() {

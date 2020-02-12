@@ -525,7 +525,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     docShell->GetContentViewer(getter_AddRefs(cv));
   }
   if (!cv) {
-    cv = std::move(parentContentViewer);
+    cv = parentContentViewer.forget();
   }
 
   nsAutoCString urlSpec;

@@ -282,7 +282,7 @@ void ExtensionStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream) {
 
   // We must keep an owning reference to the listener
   // until we pass it on to AsyncRead.
-  nsCOMPtr<nsIStreamListener> listener = std::move(mListener);
+  nsCOMPtr<nsIStreamListener> listener = mListener.forget();
 
   MOZ_ASSERT(mChannel);
 
@@ -319,7 +319,7 @@ void ExtensionStreamGetter::OnFD(const FileDescriptor& aFD) {
 
   // We must keep an owning reference to the listener
   // until we pass it on to AsyncOpen.
-  nsCOMPtr<nsIStreamListener> listener = std::move(mListener);
+  nsCOMPtr<nsIStreamListener> listener = mListener.forget();
 
   RefPtr<FileDescriptorFile> fdFile = new FileDescriptorFile(aFD, mJarFile);
   mJarChannel->SetJarFile(fdFile);

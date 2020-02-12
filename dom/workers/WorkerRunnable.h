@@ -209,7 +209,7 @@ class WorkerSyncRunnable : public WorkerRunnable {
                      nsIEventTarget* aSyncLoopTarget);
 
   WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
-                     nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget);
+                     already_AddRefed<nsIEventTarget>&& aSyncLoopTarget);
 
   virtual ~WorkerSyncRunnable();
 
@@ -229,8 +229,9 @@ class MainThreadWorkerSyncRunnable : public WorkerSyncRunnable {
     AssertIsOnMainThread();
   }
 
-  MainThreadWorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
-                               nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget)
+  MainThreadWorkerSyncRunnable(
+      WorkerPrivate* aWorkerPrivate,
+      already_AddRefed<nsIEventTarget>&& aSyncLoopTarget)
       : WorkerSyncRunnable(aWorkerPrivate, std::move(aSyncLoopTarget)) {
     AssertIsOnMainThread();
   }
@@ -418,9 +419,9 @@ class MainThreadStopSyncLoopRunnable : public WorkerSyncRunnable {
 
  public:
   // Passing null for aSyncLoopTarget is not allowed.
-  MainThreadStopSyncLoopRunnable(WorkerPrivate* aWorkerPrivate,
-                                 nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget,
-                                 bool aResult);
+  MainThreadStopSyncLoopRunnable(
+      WorkerPrivate* aWorkerPrivate,
+      already_AddRefed<nsIEventTarget>&& aSyncLoopTarget, bool aResult);
 
   // By default StopSyncLoopRunnables cannot be canceled since they could leave
   // a sync loop spinning forever.

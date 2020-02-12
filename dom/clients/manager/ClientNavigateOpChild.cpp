@@ -284,7 +284,7 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
     // XXXbz Can we throw something better here?
     result.Throw(rv);
     promise->Reject(result, __func__);
-    return promise;
+    return promise.forget();
   }
 
   return promise->Then(

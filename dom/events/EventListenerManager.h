@@ -209,7 +209,7 @@ class EventListenerManager final : public EventListenerManagerBase {
 
     Listener(Listener&& aOther)
         : mListener(std::move(aOther.mListener)),
-          mTypeAtom(std::move(aOther.mTypeAtom)),
+          mTypeAtom(aOther.mTypeAtom.forget()),
           mEventMessage(aOther.mEventMessage),
           mListenerType(aOther.mListenerType),
           mListenerIsHandler(aOther.mListenerIsHandler),

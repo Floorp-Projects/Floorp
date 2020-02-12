@@ -356,11 +356,11 @@ class DrawableFrameRef final {
   }
 
   DrawableFrameRef(DrawableFrameRef&& aOther)
-      : mFrame(std::move(aOther.mFrame)), mRef(std::move(aOther.mRef)) {}
+      : mFrame(aOther.mFrame.forget()), mRef(std::move(aOther.mRef)) {}
 
   DrawableFrameRef& operator=(DrawableFrameRef&& aOther) {
     MOZ_ASSERT(this != &aOther, "Self-moves are prohibited");
-    mFrame = std::move(aOther.mFrame);
+    mFrame = aOther.mFrame.forget();
     mRef = std::move(aOther.mRef);
     return *this;
   }
@@ -423,7 +423,7 @@ class RawAccessFrameRef final {
   }
 
   RawAccessFrameRef(RawAccessFrameRef&& aOther)
-      : mFrame(std::move(aOther.mFrame)), mData(aOther.mData) {
+      : mFrame(aOther.mFrame.forget()), mData(aOther.mData) {
     aOther.mData = nullptr;
   }
 
@@ -440,7 +440,7 @@ class RawAccessFrameRef final {
       mFrame->UnlockImageData();
     }
 
-    mFrame = std::move(aOther.mFrame);
+    mFrame = aOther.mFrame.forget();
     mData = aOther.mData;
     aOther.mData = nullptr;
 

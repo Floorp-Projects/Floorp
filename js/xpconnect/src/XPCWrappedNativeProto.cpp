@@ -15,13 +15,10 @@ using namespace mozilla;
 int32_t XPCWrappedNativeProto::gDEBUG_LiveProtoCount = 0;
 #endif
 
-XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
-                                             nsIClassInfo* ClassInfo,
-                                             RefPtr<XPCNativeSet>&& Set)
-    : mScope(Scope),
-      mJSProtoObject(nullptr),
-      mClassInfo(ClassInfo),
-      mSet(std::move(Set)) {
+XPCWrappedNativeProto::XPCWrappedNativeProto(
+    XPCWrappedNativeScope* Scope, nsIClassInfo* ClassInfo,
+    already_AddRefed<XPCNativeSet>&& Set)
+    : mScope(Scope), mJSProtoObject(nullptr), mClassInfo(ClassInfo), mSet(Set) {
   // This native object lives as long as its associated JSObject - killed
   // by finalization of the JSObject (or explicitly if Init fails).
 
@@ -120,7 +117,7 @@ XPCWrappedNativeProto* XPCWrappedNativeProto::GetNewOrUsed(
     return nullptr;
   }
 
-  proto = new XPCWrappedNativeProto(scope, classInfo, std::move(set));
+  proto = new XPCWrappedNativeProto(scope, classInfo, set.forget());
 
   if (!proto->Init(cx, scriptable)) {
     delete proto.get();

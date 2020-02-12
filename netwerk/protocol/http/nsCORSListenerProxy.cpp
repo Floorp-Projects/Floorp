@@ -633,7 +633,7 @@ nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   nsCOMPtr<nsIStreamListener> listener;
   {
     MutexAutoLock lock(mMutex);
-    listener = std::move(mOuterListener);
+    listener = mOuterListener.forget();
   }
   nsresult rv = listener->OnStopRequest(aRequest, aStatusCode);
   mOuterNotificationCallbacks = nullptr;

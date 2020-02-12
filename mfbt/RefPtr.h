@@ -213,9 +213,7 @@ class MOZ_IS_REFPTR RefPtr {
   RefPtr<T>& operator=(const mozilla::mscom::AgileReference& aAgileRef);
 #endif  // defined(XP_WIN)
 
-  template <typename I,
-            typename = std::enable_if_t<std::is_convertible_v<I*, T*>>>
-  RefPtr<T>& operator=(RefPtr<I>&& aRefPtr) {
+  RefPtr<T>& operator=(RefPtr<T>&& aRefPtr) {
     assign_assuming_AddRef(aRefPtr.forget().take());
     return *this;
   }

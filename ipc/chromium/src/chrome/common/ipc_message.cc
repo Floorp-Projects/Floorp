@@ -99,7 +99,7 @@ Message::Message(const char* data, int data_len)
 Message::Message(Message&& other) : Pickle(std::move(other)) {
   MOZ_COUNT_CTOR(IPC::Message);
 #if defined(OS_POSIX)
-  file_descriptor_set_ = std::move(other.file_descriptor_set_);
+  file_descriptor_set_ = other.file_descriptor_set_.forget();
 #endif
 }
 

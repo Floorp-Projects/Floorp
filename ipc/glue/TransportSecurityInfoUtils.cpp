@@ -40,7 +40,7 @@ bool ParamTraits<nsITransportSecurityInfo*>::Read(
     return false;
   }
 
-  *aResult = std::move(info);
+  *aResult = info.forget();
   return true;
 }
 
@@ -72,7 +72,7 @@ bool ParamTraits<nsIX509Cert*>::Read(const Message* aMsg, PickleIterator* aIter,
     return false;
   }
 
-  *aResult = std::move(cert);
+  *aResult = cert.forget();
   return true;
 }
 

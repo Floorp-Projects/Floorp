@@ -47,13 +47,13 @@ class MediaRawDataQueue {
   }
 
   already_AddRefed<MediaRawData> PopFront() {
-    RefPtr<MediaRawData> result = std::move(mQueue.front());
+    RefPtr<MediaRawData> result = mQueue.front().forget();
     mQueue.pop_front();
     return result.forget();
   }
 
   already_AddRefed<MediaRawData> Pop() {
-    RefPtr<MediaRawData> result = std::move(mQueue.back());
+    RefPtr<MediaRawData> result = mQueue.back().forget();
     mQueue.pop_back();
     return result.forget();
   }

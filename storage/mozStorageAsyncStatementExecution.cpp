@@ -352,7 +352,7 @@ nsresult AsyncExecuteStatements::notifyCompleteOnCallingThread() {
   // notifyErrorOnCallingThread calls on the stack spinning the event loop have
   // guaranteed their safety by creating their own strong reference before
   // invoking the callback.
-  nsCOMPtr<mozIStorageStatementCallback> callback = std::move(mCallback);
+  nsCOMPtr<mozIStorageStatementCallback> callback = mCallback.forget();
   if (callback) {
     Unused << callback->HandleCompletion(mState);
   }

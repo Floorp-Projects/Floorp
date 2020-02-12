@@ -71,7 +71,7 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
         static_cast<uint32_t>(rv));
     return EmptyCString();
   }
-  return storageId;
+  return std::move(storageId);
 #endif
 }
 

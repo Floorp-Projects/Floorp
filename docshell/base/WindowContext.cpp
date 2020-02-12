@@ -214,7 +214,7 @@ bool IPDLParamTraits<dom::WindowContext*>::Read(
     windowContext.get()->Release();
   }
 
-  *aResult = std::move(windowContext);
+  *aResult = windowContext.forget();
   return true;
 }
 

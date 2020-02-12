@@ -5497,7 +5497,7 @@ RefPtr<ServiceWorker> nsGlobalWindowInner::GetOrCreateServiceWorker(
       return;
     }
 
-    ref = std::move(sw);
+    ref = sw.forget();
     *aDoneOut = true;
   });
 
@@ -5505,7 +5505,7 @@ RefPtr<ServiceWorker> nsGlobalWindowInner::GetOrCreateServiceWorker(
     ref = ServiceWorker::Create(this, aDescriptor);
   }
 
-  return ref;
+  return ref.forget();
 }
 
 RefPtr<mozilla::dom::ServiceWorkerRegistration>
@@ -5520,10 +5520,10 @@ nsGlobalWindowInner::GetServiceWorkerRegistration(
       return;
     }
 
-    ref = std::move(swr);
+    ref = swr.forget();
     *aDoneOut = true;
   });
-  return ref;
+  return ref.forget();
 }
 
 RefPtr<ServiceWorkerRegistration>
@@ -5535,7 +5535,7 @@ nsGlobalWindowInner::GetOrCreateServiceWorkerRegistration(
   if (!ref) {
     ref = ServiceWorkerRegistration::CreateForMainThread(this, aDescriptor);
   }
-  return ref;
+  return ref.forget();
 }
 
 nsresult nsGlobalWindowInner::FireDelayedDOMEvents() {
@@ -6876,7 +6876,7 @@ void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult,
   RefPtr<BrowsingContext> domWindow =
       GetChildWindow(NS_LITERAL_STRING("sidebar"));
   if (domWindow) {
-    aResult.SetAsWindowProxy() = std::move(domWindow);
+    aResult.SetAsWindowProxy() = domWindow.forget();
     return;
   }
 

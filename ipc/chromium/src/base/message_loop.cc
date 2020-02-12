@@ -324,7 +324,7 @@ bool MessageLoop::ProcessNextDelayedNonNestableTask() {
   if (deferred_non_nestable_work_queue_.empty()) return false;
 
   nsCOMPtr<nsIRunnable> task =
-      std::move(deferred_non_nestable_work_queue_.front().task);
+      deferred_non_nestable_work_queue_.front().task.forget();
   deferred_non_nestable_work_queue_.pop();
 
   RunTask(task.forget());

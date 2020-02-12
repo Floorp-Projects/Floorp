@@ -109,7 +109,7 @@ struct IPDLParamTraits<nsIAlertNotification*> {
       *aResult = nullptr;
       return true;
     }
-    *aResult = ToRefPtr(std::move(alert));
+    *aResult = alert.forget();
     return true;
   }
 };

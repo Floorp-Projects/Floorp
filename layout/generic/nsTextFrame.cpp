@@ -4054,7 +4054,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
         style->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
     mSelectionTextColor =
         style->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
-    mSelectionPseudoStyle = std::move(style);
+    mSelectionPseudoStyle = style.forget();
     return true;
   }
 

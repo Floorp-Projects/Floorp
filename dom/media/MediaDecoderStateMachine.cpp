@@ -1699,7 +1699,7 @@ class MediaDecoderStateMachine::VideoOnlySeekingState
     // changes.
     mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::VideoOnlySeekBegin);
 
-    return p;
+    return p.forget();
   }
 
   void Exit() override {
@@ -3767,7 +3767,7 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::RequestDebugInfo(
       AbstractThread::TailDispatch);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;
-  return p;
+  return p.forget();
 }
 
 class VideoQueueMemoryFunctor : public nsDequeFunctor {

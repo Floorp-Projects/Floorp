@@ -27,6 +27,6 @@ nsAtom* nsHtml5AtomTable::GetAtom(const nsAString& aKey) {
 
   RefPtr<nsAtom> atom = NS_Atomize(aKey);
   nsAtom* ret = atom.get();
-  mRecentlyUsedParserAtoms[index] = std::move(atom);
+  mRecentlyUsedParserAtoms[index] = atom.forget();
   return ret;
 }

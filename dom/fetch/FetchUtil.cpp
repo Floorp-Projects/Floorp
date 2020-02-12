@@ -273,7 +273,7 @@ class WorkerStreamOwner final {
   struct Destroyer final : CancelableRunnable {
     RefPtr<WorkerStreamOwner> mDoomed;
 
-    explicit Destroyer(RefPtr<WorkerStreamOwner>&& aDoomed)
+    explicit Destroyer(already_AddRefed<WorkerStreamOwner>&& aDoomed)
         : CancelableRunnable("WorkerStreamOwner::Destroyer"),
           mDoomed(std::move(aDoomed)) {}
 
@@ -332,8 +332,7 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
       destroyer = new WindowStreamOwner::Destroyer(mWindowStreamOwner.forget());
     } else {
       MOZ_DIAGNOSTIC_ASSERT(mWorkerStreamOwner);
-      destroyer =
-          new WorkerStreamOwner::Destroyer(std::move(mWorkerStreamOwner));
+      destroyer = new WorkerStreamOwner::Destroyer(mWorkerStreamOwner.forget());
     }
 
     MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(destroyer.forget()));

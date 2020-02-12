@@ -4114,7 +4114,7 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime) {
   // since the tasks are allowed to call APZCTreeManager methods which can grab
   // the tree lock.
   for (uint32_t i = 0; i < deferredTasks.Length(); ++i) {
-    APZThreadUtils::RunOnControllerThread(std::move(deferredTasks[i]));
+    APZThreadUtils::RunOnControllerThread(deferredTasks[i].forget());
   }
 
   // If any of the deferred tasks starts a new animation, it will request a

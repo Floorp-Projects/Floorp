@@ -422,9 +422,10 @@ WorkerSyncRunnable::WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
 }
 
 WorkerSyncRunnable::WorkerSyncRunnable(
-    WorkerPrivate* aWorkerPrivate, nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget)
+    WorkerPrivate* aWorkerPrivate,
+    already_AddRefed<nsIEventTarget>&& aSyncLoopTarget)
     : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-      mSyncLoopTarget(std::move(aSyncLoopTarget)) {
+      mSyncLoopTarget(aSyncLoopTarget) {
 #ifdef DEBUG
   if (mSyncLoopTarget) {
     mWorkerPrivate->AssertValidSyncLoop(mSyncLoopTarget);
@@ -448,8 +449,8 @@ void MainThreadWorkerSyncRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                                                 bool aDispatchResult) {}
 
 MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable(
-    WorkerPrivate* aWorkerPrivate, nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget,
-    bool aResult)
+    WorkerPrivate* aWorkerPrivate,
+    already_AddRefed<nsIEventTarget>&& aSyncLoopTarget, bool aResult)
     : WorkerSyncRunnable(aWorkerPrivate, std::move(aSyncLoopTarget)),
       mResult(aResult) {
   AssertIsOnMainThread();
@@ -575,7 +576,7 @@ WorkerMainThreadRunnable::Run() {
 
   RefPtr<MainThreadStopSyncLoopRunnable> response =
       new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
-                                         std::move(mSyncLoopTarget), runResult);
+                                         mSyncLoopTarget.forget(), runResult);
 
   MOZ_ALWAYS_TRUE(response->Dispatch());
 

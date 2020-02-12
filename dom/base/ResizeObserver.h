@@ -88,9 +88,9 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ResizeObserver)
 
-  ResizeObserver(nsCOMPtr<nsPIDOMWindowInner>&& aOwner, Document* aDocument,
-                 ResizeObserverCallback& aCb)
-      : mOwner(std::move(aOwner)), mDocument(aDocument), mCallback(&aCb) {
+  ResizeObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
+                 Document* aDocument, ResizeObserverCallback& aCb)
+      : mOwner(aOwner), mDocument(aDocument), mCallback(&aCb) {
     MOZ_ASSERT(mOwner, "Need a non-null owner window");
     MOZ_ASSERT(mDocument, "Need a non-null doc");
     MOZ_ASSERT(mDocument == mOwner->GetExtantDoc());

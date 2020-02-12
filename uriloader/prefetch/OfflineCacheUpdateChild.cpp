@@ -349,7 +349,7 @@ OfflineCacheUpdateChild::Schedule() {
   NS_ASSERTION(mWindow,
                "Window must be provided to the offline cache update child");
 
-  nsCOMPtr<nsPIDOMWindowInner> window = std::move(mWindow);
+  nsCOMPtr<nsPIDOMWindowInner> window = mWindow.forget();
   nsCOMPtr<nsIDocShell> docshell = window->GetDocShell();
   if (!docshell) {
     NS_WARNING("doc shell tree item is null");

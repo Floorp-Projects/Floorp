@@ -646,7 +646,7 @@ void nsWebBrowserPersist::SerializeNextFile() {
       flatMap->Add(iter.Key(), mapTo);
     }
   }
-  mFlatURIMap = std::move(flatMap);
+  mFlatURIMap = flatMap.forget();
 
   nsCOMPtr<nsIFile> localFile;
   GetLocalFileFromURI(docData->mFile, getter_AddRefs(localFile));

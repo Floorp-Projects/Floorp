@@ -179,10 +179,10 @@ nsFaviconService::ExpireAllFavicons() {
       mDB->GetAsyncStatement("DELETE FROM moz_icons_to_pages");
   NS_ENSURE_STATE(unlinkIconsStmt);
 
-  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      ToRefPtr(std::move(removePagesStmt)),
-      ToRefPtr(std::move(removeIconsStmt)),
-      ToRefPtr(std::move(unlinkIconsStmt))};
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {removePagesStmt.forget(),
+
+                                                      removeIconsStmt.forget(),
+                                                      unlinkIconsStmt.forget()};
   nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
   if (!conn) {
     return NS_ERROR_UNEXPECTED;

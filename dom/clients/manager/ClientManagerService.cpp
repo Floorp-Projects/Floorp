@@ -103,7 +103,7 @@ RefPtr<GenericPromise> OnShutdown() {
 
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
-  return ref;
+  return ref.forget();
 }
 
 }  // anonymous namespace
@@ -310,7 +310,7 @@ RefPtr<ClientOpPromise> ClientManagerService::Navigate(
     promise->Reject(rv, __func__);
   }
 
-  return promise;
+  return promise.forget();
 }
 
 namespace {
@@ -472,7 +472,7 @@ RefPtr<ClientOpPromise> ClaimOnMainThread(
 
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
-  return promise;
+  return promise.forget();
 }
 
 }  // anonymous namespace
@@ -657,7 +657,7 @@ RefPtr<ClientOpPromise> ClientManagerService::OpenWindow(
       new OpenWindowRunnable(promise, aArgs, std::move(aSourceProcess));
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
-  return promise;
+  return promise.forget();
 }
 
 bool ClientManagerService::HasWindow(

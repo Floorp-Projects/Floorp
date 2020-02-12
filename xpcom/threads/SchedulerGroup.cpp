@@ -278,7 +278,7 @@ SchedulerGroup::Runnable::Run() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   // The runnable's destructor can have side effects, so try to execute it in
   // the scope of the TabGroup.
-  nsCOMPtr<nsIRunnable> runnable(std::move(mRunnable));
+  nsCOMPtr<nsIRunnable> runnable(mRunnable.forget());
   return runnable->Run();
 }
 

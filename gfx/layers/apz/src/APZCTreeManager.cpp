@@ -705,10 +705,8 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
       continue;
     }
 
-    const AsyncTransformComponents asyncTransformComponents =
-        apzc->GetZoomAnimationId()
-            ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
-            : LayoutAndVisual;
+    const AsyncTransformComponents asyncTransformComponents = apzc->GetZoomAnimationId() ?
+        AsyncTransformComponents{AsyncTransformComponent::eLayout} : LayoutAndVisual;
     ParentLayerPoint layerTranslation =
         apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
                                        asyncTransformComponents)
@@ -721,15 +719,14 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
       LayoutDeviceToParentLayerScale zoom =
         apzc->GetCurrentPinchZoomScale(AsyncPanZoomController::eForCompositing);
 
-      AsyncTransform asyncVisualTransform = apzc->GetCurrentAsyncTransform(
-          AsyncPanZoomController::eForCompositing,
-          AsyncTransformComponents{AsyncTransformComponent::eVisual});
+      AsyncTransform asyncVisualTransform =
+          apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
+                                         AsyncTransformComponents{AsyncTransformComponent::eVisual});
 
       transforms.AppendElement(wr::ToWrTransformProperty(
-          *zoomAnimationId, LayoutDeviceToParentLayerMatrix4x4::Scaling(
-                                zoom.scale, zoom.scale, 1.0f) *
-                                AsyncTransformComponentMatrix::Translation(
-                                    asyncVisualTransform.mTranslation)));
+          *zoomAnimationId,
+          LayoutDeviceToParentLayerMatrix4x4::Scaling(zoom.scale, zoom.scale, 1.0f) *
+          AsyncTransformComponentMatrix::Translation(asyncVisualTransform.mTranslation)));
 
       aTxn.UpdateIsTransformAsyncZooming(*zoomAnimationId,
                                          apzc->IsAsyncZooming());
@@ -2958,7 +2955,7 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPoint(
             GetTargetAPZC(n->GetLayersId(), n->GetScrollTargetId());
         if (scrollTarget) {
           hit.mLayersId = n->GetLayersId();
-          hit.mTargetApzc = std::move(scrollTarget);
+          hit.mTargetApzc = scrollTarget.forget();
           RefPtr<HitTestingTreeNode> scrollbarRef = scrollbarNode;
           hit.mScrollbarNode.Initialize(aProofOfTreeLock, scrollbarRef.forget(),
                                         mTreeLock);

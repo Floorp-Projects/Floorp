@@ -702,7 +702,7 @@ void nsDOMMutationObserver::TakeRecords(
     current->mNext.swap(next);
     if (!mMergeAttributeRecords ||
         !MergeableAttributeRecord(aRetVal.SafeLastElement(nullptr), current)) {
-      *aRetVal.AppendElement() = std::move(current);
+      *aRetVal.AppendElement() = current.forget();
     }
     current.swap(next);
   }
@@ -755,7 +755,7 @@ already_AddRefed<nsDOMMutationObserver> nsDOMMutationObserver::Constructor(
   }
   bool isChrome = nsContentUtils::IsChromeDoc(window->GetExtantDoc());
   RefPtr<nsDOMMutationObserver> observer =
-      new nsDOMMutationObserver(std::move(window), aCb, isChrome);
+      new nsDOMMutationObserver(window.forget(), aCb, isChrome);
   return observer.forget();
 }
 
