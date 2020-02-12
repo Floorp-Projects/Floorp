@@ -14,6 +14,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "Units.h"
 
 namespace mozilla {
@@ -116,6 +117,25 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
     }
     observer->mThresholds.AppendElement(thresh);
   }
+
+  return observer.forget();
+}
+
+already_AddRefed<DOMIntersectionObserver>
+DOMIntersectionObserver::CreateLazyLoadObserver(nsPIDOMWindowInner* aOwner) {
+  RefPtr<DOMIntersectionObserver> observer = new DOMIntersectionObserver(
+      aOwner,
+      [](const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& entries) {
+        for (const auto& entry : entries) {
+          MOZ_ASSERT(entry->Target()->IsHTMLElement(nsGkAtoms::img));
+          if (entry->IsIntersecting()) {
+            static_cast<HTMLImageElement*>(entry->Target())
+                ->StopLazyLoadingAndStartLoadIfNeeded();
+          }
+        }
+      });
+
+  observer->mThresholds.AppendElement(std::numeric_limits<double>::min());
 
   return observer.forget();
 }
