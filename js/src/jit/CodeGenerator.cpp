@@ -32,7 +32,6 @@
 #include "irregexp/NativeRegExpMacroAssembler.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineCodeGen.h"
-#include "jit/IonBuilder.h"
 #include "jit/IonIC.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitcodeMap.h"

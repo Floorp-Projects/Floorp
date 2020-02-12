@@ -9,9 +9,9 @@
 #include <stdio.h>
 
 #include "jit/Ion.h"
-#include "jit/IonBuilder.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
+#include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 
 #include "vm/Printer.h"

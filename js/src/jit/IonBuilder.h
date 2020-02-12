@@ -10,7 +10,6 @@
 // This file declares the data structures for building a MIRGraph from a
 // JSScript.
 
-#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 
 #include "ds/InlineTable.h"
@@ -1585,50 +1584,6 @@ class CallInfo {
       getArg(i)->setImplicitlyUsedUnchecked();
     }
   }
-};
-
-// IonCompileTask represents a single off-thread Ion compilation task.
-class IonCompileTask final : public RunnableTask,
-                             public mozilla::LinkedListElement<IonCompileTask> {
-  MIRGenerator& mirGen_;
-
-  // If off thread compilation is successful, the final code generator is
-  // attached here. Code has been generated, but not linked (there is not yet
-  // an IonScript). This is heap allocated, and must be explicitly destroyed,
-  // performed by FinishOffThreadTask().
-  CodeGenerator* backgroundCodegen_ = nullptr;
-
-  CompilerConstraintList* constraints_ = nullptr;
-  MRootList* rootList_ = nullptr;
-
-  // script->hasIonScript() at the start of the compilation. Used to avoid
-  // calling hasIonScript() from background compilation threads.
-  bool scriptHasIonScript_;
-
- public:
-  explicit IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
-                          CompilerConstraintList* constraints);
-
-  JSScript* script() { return mirGen_.outerInfo().script(); }
-  MIRGenerator& mirGen() { return mirGen_; }
-  TempAllocator& alloc() { return mirGen_.alloc(); }
-  bool scriptHasIonScript() const { return scriptHasIonScript_; }
-  CompilerConstraintList* constraints() { return constraints_; }
-
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
-  void trace(JSTracer* trc);
-
-  void setRootList(MRootList& rootList) {
-    MOZ_ASSERT(!rootList_);
-    rootList_ = &rootList;
-  }
-  CodeGenerator* backgroundCodegen() const { return backgroundCodegen_; }
-  void setBackgroundCodegen(CodeGenerator* codegen) {
-    backgroundCodegen_ = codegen;
-  }
-
-  ThreadType threadType() override { return THREAD_TYPE_ION; }
-  void runTask() override;
 };
 
 }  // namespace jit

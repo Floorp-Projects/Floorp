@@ -14,7 +14,7 @@
 #include <algorithm>
 
 #include "frontend/BytecodeCompilation.h"
-#include "jit/IonBuilder.h"
+#include "jit/IonCompileTask.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/SourceText.h"
 #include "js/UniquePtr.h"
