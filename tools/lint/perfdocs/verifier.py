@@ -117,25 +117,25 @@ class Verifier(object):
                 # Suite found - now check if any tests in YAML
                 # definitions doesn't exist
                 ytests = ytests['tests']
-                for mnf_pth in ytests:
+                for suite_name in ytests:
                     foundtest = False
                     for t in framework_info["test_list"][suite]:
                         tb = os.path.basename(t)
                         tb = re.sub("\..*", "", tb)
-                        if mnf_pth == tb:
-                            # Found an exact match for the mnf_pth
+                        if suite_name == tb:
+                            # Found an exact match for the suite_name
                             foundtest = True
                             break
-                        if mnf_pth in tb:
-                            # Found a 'fuzzy' match for the mnf_pth
+                        if suite_name in tb:
+                            # Found a 'fuzzy' match for the suite_name
                             # i.e. 'wasm' could exist for all raptor wasm tests
-                            global_descriptions[suite].append(mnf_pth)
+                            global_descriptions[suite].append(suite_name)
                             foundtest = True
                             break
                     if not foundtest:
                         logger.warning(
                             "Could not find an existing test for {} - bad test name?".format(
-                                mnf_pth
+                                suite_name
                             ),
                             framework_info["yml_path"]
                         )
@@ -146,7 +146,7 @@ class Verifier(object):
                 )
 
         # Check for any missing tests/suites
-        for suite, manifest_paths in framework_info["test_list"].items():
+        for suite, test_list in framework_info["test_list"].items():
             if not yaml_content["suites"].get(suite):
                 # Description doesn't exist for the suite
                 logger.warning(
@@ -165,14 +165,14 @@ class Verifier(object):
             tests_found = 0
             missing_tests = []
             test_to_manifest = {}
-            for mnf_pth in manifest_paths:
-                tb = os.path.basename(mnf_pth)
+            for test_name in test_list:
+                tb = os.path.basename(test_name)
                 tb = re.sub("\..*", "", tb)
-                if stests.get(tb) or stests.get(mnf_pth):
+                if stests.get(tb) or stests.get(test_name):
                     # Test description exists, continue with the next test
                     tests_found += 1
                     continue
-                test_to_manifest[tb] = mnf_pth
+                test_to_manifest[tb] = test_name
                 missing_tests.append(tb)
 
             # Check if global test descriptions exist (i.e.
@@ -180,8 +180,8 @@ class Verifier(object):
             new_mtests = []
             for mt in missing_tests:
                 found = False
-                for mnf_pth in global_descriptions[suite]:
-                    if mnf_pth in mt:
+                for test_name in global_descriptions[suite]:
+                    if test_name in mt:
                         # Global test exists for this missing test
                         found = True
                         break
@@ -191,10 +191,10 @@ class Verifier(object):
             if len(new_mtests):
                 # Output an error for each manifest with a missing
                 # test description
-                for mnf_pth in new_mtests:
+                for test_name in new_mtests:
                     logger.warning(
-                        "Could not find a test description for {}".format(mnf_pth),
-                        test_to_manifest[mnf_pth]
+                        "Could not find a test description for {}".format(test_name),
+                        test_to_manifest[test_name]
                     )
                 continue
 
@@ -295,9 +295,11 @@ class Verifier(object):
                 "rst": self.validate_rst_content(matched_rst)
             }
 
+            # Log independently the errors found for the matched files
+            for file_format, valid in _valid_files.items():
+                if not valid:
+                    logger.log("File validation error: {}".format(file_format))
             if not all(_valid_files.values()):
-                # Don't check the descriptions if the YAML or RST is bad
-                logger.log("Bad perfdocs directory found in {}".format(matched['path']))
                 continue
             found_good += 1
 

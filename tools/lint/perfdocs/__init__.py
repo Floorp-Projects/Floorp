@@ -16,7 +16,7 @@ def setup(root, **lintargs):
         return 1
 
 
-def lint(paths, config, logger, fix=None, **lintargs):
+def lint(paths, config, logger, fix=False, **lintargs):
     return perfdocs.run_perfdocs(
-        config, logger=logger, paths=paths, verify=True
+        config, logger=logger, paths=paths, generate=fix
     )
