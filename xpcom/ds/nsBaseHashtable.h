@@ -69,7 +69,7 @@ class nsBaseHashtableET : public KeyClass {
 
   explicit nsBaseHashtableET(KeyTypePointer aKey);
   nsBaseHashtableET(nsBaseHashtableET<KeyClass, DataType>&& aToMove);
-  ~nsBaseHashtableET();
+  ~nsBaseHashtableET() = default;
 };
 
 /**
@@ -101,7 +101,7 @@ class nsBaseHashtable
   using nsTHashtable<EntryType>::SizeOfExcludingThis;
   using nsTHashtable<EntryType>::SizeOfIncludingThis;
 
-  nsBaseHashtable() {}
+  nsBaseHashtable() = default;
   explicit nsBaseHashtable(uint32_t aInitLength)
       : nsTHashtable<EntryType>(aInitLength) {}
 
@@ -406,7 +406,7 @@ class nsBaseHashtable
 
     explicit Iterator(nsBaseHashtable* aTable) : Base(&aTable->mTable) {}
     Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
-    ~Iterator() {}
+    ~Iterator() = default;
 
     KeyType Key() const { return static_cast<EntryType*>(Get())->GetKey(); }
     UserDataType UserData() const {
@@ -557,8 +557,5 @@ template <class KeyClass, class DataType>
 nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(
     nsBaseHashtableET<KeyClass, DataType>&& aToMove)
     : KeyClass(std::move(aToMove)), mData(std::move(aToMove.mData)) {}
-
-template <class KeyClass, class DataType>
-nsBaseHashtableET<KeyClass, DataType>::~nsBaseHashtableET() {}
 
 #endif  // nsBaseHashtable_h__

@@ -24,7 +24,7 @@ class nsIFile;
 class nsINIParser {
  public:
   nsINIParser() {}
-  ~nsINIParser() {}
+  ~nsINIParser() = default;
 
   /**
    * Initialize the INIParser with a nsIFile. If this method fails, no

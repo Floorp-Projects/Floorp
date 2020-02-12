@@ -31,12 +31,12 @@ class nsScriptableInputStream final : public nsIScriptableInputStream {
   NS_DECL_NSISCRIPTABLEINPUTSTREAM
 
   // nsScriptableInputStream methods
-  nsScriptableInputStream() {}
+  nsScriptableInputStream() = default;
 
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
  private:
-  ~nsScriptableInputStream() {}
+  ~nsScriptableInputStream() = default;
 
   nsresult ReadHelper(char* aBuffer, uint32_t aCount);
 

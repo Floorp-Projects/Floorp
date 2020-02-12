@@ -134,7 +134,7 @@ class AbstractThread : public nsISerialEventTarget {
   };
 
  protected:
-  virtual ~AbstractThread() {}
+  virtual ~AbstractThread() = default;
   static MOZ_THREAD_LOCAL(AbstractThread*) sCurrentThreadTLS;
 
   // True if we want to require that every task dispatched from tasks running in

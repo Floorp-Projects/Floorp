@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 
 class nsINIParserImpl final : public nsIINIParser, public nsIINIParserWriter {
-  ~nsINIParserImpl() {}
+  ~nsINIParserImpl() = default;
 
  public:
   NS_DECL_ISUPPORTS

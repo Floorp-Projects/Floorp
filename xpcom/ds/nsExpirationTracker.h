@@ -522,7 +522,7 @@ class nsExpirationTracker
       : ::detail::SingleThreadedExpirationTracker<T, K>(aTimerPeriod, aName,
                                                         aEventTarget) {}
 
-  virtual ~nsExpirationTracker() {}
+  virtual ~nsExpirationTracker() = default;
 
   nsresult AddObject(T* aObj) {
     return this->AddObjectLocked(aObj, FakeLock());

@@ -22,7 +22,7 @@ class MemoryReportingProcess {
   NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
 
-  virtual ~MemoryReportingProcess() {}
+  virtual ~MemoryReportingProcess() = default;
 
   // Return true if the process is still alive, false otherwise.
   virtual bool IsAlive() const = 0;

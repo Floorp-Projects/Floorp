@@ -75,7 +75,7 @@ nsProcess::nsProcess()
 }
 
 // Destructor
-nsProcess::~nsProcess() {}
+nsProcess::~nsProcess() = default;
 
 NS_IMETHODIMP
 nsProcess::Init(nsIFile* aExecutable) {

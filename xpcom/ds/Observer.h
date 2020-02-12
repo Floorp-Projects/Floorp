@@ -22,7 +22,7 @@ namespace mozilla {
 template <class T>
 class Observer {
  public:
-  virtual ~Observer() {}
+  virtual ~Observer() = default;
   virtual void Notify(const T& aParam) = 0;
 };
 

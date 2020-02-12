@@ -181,7 +181,7 @@ class nsVariantBase : public nsIWritableVariant {
   nsVariantBase();
 
  protected:
-  ~nsVariantBase(){};
+  ~nsVariantBase() = default;
 
   nsDiscriminatedUnion mData;
   bool mWritable;
@@ -191,10 +191,10 @@ class nsVariant final : public nsVariantBase {
  public:
   NS_DECL_ISUPPORTS
 
-  nsVariant(){};
+  nsVariant() = default;
 
  private:
-  ~nsVariant(){};
+  ~nsVariant() = default;
 };
 
 class nsVariantCC final : public nsVariantBase {
@@ -202,10 +202,10 @@ class nsVariantCC final : public nsVariantBase {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsVariantCC)
 
-  nsVariantCC(){};
+  nsVariantCC() = default;
 
  private:
-  ~nsVariantCC(){};
+  ~nsVariantCC() = default;
 };
 
 /**

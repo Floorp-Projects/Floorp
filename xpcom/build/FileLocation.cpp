@@ -25,9 +25,8 @@ FileLocation::FileLocation(nsZipArchive* aZip, const char* aPath) {
 }
 
 FileLocation::FileLocation(const FileLocation& aOther)
-    : mBaseFile(aOther.mBaseFile),
-      mBaseZip(aOther.mBaseZip),
-      mPath(aOther.mPath) {}
+
+    = default;
 
 FileLocation::FileLocation(FileLocation&& aOther)
     : mBaseFile(std::move(aOther.mBaseFile)),

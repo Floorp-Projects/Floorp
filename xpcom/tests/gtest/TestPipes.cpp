@@ -86,7 +86,7 @@ class nsReceiver final : public nsIRunnable {
   uint32_t GetBytesRead() { return mCount; }
 
  private:
-  ~nsReceiver() {}
+  ~nsReceiver() = default;
 
  protected:
   nsCOMPtr<nsIInputStream> mIn;
@@ -197,7 +197,7 @@ class nsShortReader final : public nsIRunnable {
   }
 
  private:
-  ~nsShortReader() {}
+  ~nsShortReader() = default;
 
  protected:
   nsCOMPtr<nsIInputStream> mIn;
@@ -280,7 +280,7 @@ class nsPump final : public nsIRunnable {
       : mIn(in), mOut(out), mCount(0) {}
 
  private:
-  ~nsPump() {}
+  ~nsPump() = default;
 
  protected:
   nsCOMPtr<nsIInputStream> mIn;

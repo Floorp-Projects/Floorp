@@ -21,7 +21,7 @@ class MainThreadIdlePeriod final : public IdlePeriod {
   static float GetLongIdlePeriod();
 
  private:
-  virtual ~MainThreadIdlePeriod() {}
+  virtual ~MainThreadIdlePeriod() = default;
 
   TimeStamp mLastIdleDeadline;
 };

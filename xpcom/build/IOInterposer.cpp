@@ -43,12 +43,12 @@ void VectorRemove(std::vector<T>& aVector, const T& aElement) {
 /** Lists of Observers */
 struct ObserverLists {
  private:
-  ~ObserverLists() {}
+  ~ObserverLists() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ObserverLists)
 
-  ObserverLists() {}
+  ObserverLists() = default;
 
   ObserverLists(ObserverLists const& aOther)
       : mCreateObservers(aOther.mCreateObservers),

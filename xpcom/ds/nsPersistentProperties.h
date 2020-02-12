@@ -39,7 +39,7 @@ class nsPersistentProperties final : public nsIPersistentProperties {
 
 class nsPropertyElement final : public nsIPropertyElement {
  public:
-  nsPropertyElement() {}
+  nsPropertyElement() = default;
 
   nsPropertyElement(const nsACString& aKey, const nsAString& aValue)
       : mKey(aKey), mValue(aValue) {}
@@ -50,7 +50,7 @@ class nsPropertyElement final : public nsIPropertyElement {
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
  private:
-  ~nsPropertyElement() {}
+  ~nsPropertyElement() = default;
 
  protected:
   nsCString mKey;

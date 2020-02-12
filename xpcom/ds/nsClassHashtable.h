@@ -48,7 +48,7 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
   using base_type::IsEmpty;
   using base_type::Remove;
 
-  nsClassHashtable() {}
+  nsClassHashtable() = default;
   explicit nsClassHashtable(uint32_t aInitLength)
       : nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>, T*,
                         nsUniquePtrConverter<T>>(aInitLength) {}

@@ -208,7 +208,7 @@ class ICUReporter final : public nsIMemoryReporter,
     return NS_OK;
   }
 
-  ~ICUReporter() {}
+  ~ICUReporter() = default;
 };
 
 NS_IMPL_ISUPPORTS(ICUReporter, nsIMemoryReporter)
@@ -234,7 +234,7 @@ class OggReporter final : public nsIMemoryReporter,
     return NS_OK;
   }
 
-  ~OggReporter() {}
+  ~OggReporter() = default;
 };
 
 NS_IMPL_ISUPPORTS(OggReporter, nsIMemoryReporter)

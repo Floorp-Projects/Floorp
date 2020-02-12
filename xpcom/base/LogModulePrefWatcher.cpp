@@ -119,7 +119,7 @@ static void LoadExistingPrefs() {
   }
 }
 
-LogModulePrefWatcher::LogModulePrefWatcher() {}
+LogModulePrefWatcher::LogModulePrefWatcher() = default;
 
 void LogModulePrefWatcher::RegisterPrefWatcher() {
   RefPtr<LogModulePrefWatcher> prefWatcher = new LogModulePrefWatcher();

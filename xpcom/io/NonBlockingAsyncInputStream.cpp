@@ -120,7 +120,7 @@ NonBlockingAsyncInputStream::NonBlockingAsyncInputStream(
   }
 }
 
-NonBlockingAsyncInputStream::~NonBlockingAsyncInputStream() {}
+NonBlockingAsyncInputStream::~NonBlockingAsyncInputStream() = default;
 
 NS_IMETHODIMP
 NonBlockingAsyncInputStream::Close() {

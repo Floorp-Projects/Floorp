@@ -306,7 +306,7 @@ NS_IMPL_ISUPPORTS(LowEventsReporter, nsIMemoryReporter)
  * purge here.
  */
 class nsJemallocFreeDirtyPagesRunnable final : public nsIRunnable {
-  ~nsJemallocFreeDirtyPagesRunnable() {}
+  ~nsJemallocFreeDirtyPagesRunnable() = default;
 
 #if defined(XP_WIN)
   void OptimizeSystemHeap();
@@ -354,7 +354,7 @@ void nsJemallocFreeDirtyPagesRunnable::OptimizeSystemHeap() {
  * cleaning up dirty unused pages held by jemalloc.
  */
 class nsMemoryPressureWatcher final : public nsIObserver {
-  ~nsMemoryPressureWatcher() {}
+  ~nsMemoryPressureWatcher() = default;
 
  public:
   NS_DECL_ISUPPORTS

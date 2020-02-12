@@ -18,7 +18,7 @@
 #include "mozilla/Attributes.h"
 
 class nsIOUtil final : public nsIIOUtil {
-  ~nsIOUtil() {}
+  ~nsIOUtil() = default;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -102,7 +102,7 @@ void nsDirectoryService::RealInit() {
   gService->mProviders.AppendElement(defaultProvider);
 }
 
-nsDirectoryService::~nsDirectoryService() {}
+nsDirectoryService::~nsDirectoryService() = default;
 
 NS_IMPL_ISUPPORTS(nsDirectoryService, nsIProperties, nsIDirectoryService,
                   nsIDirectoryServiceProvider, nsIDirectoryServiceProvider2)

@@ -30,8 +30,8 @@ class nsICancelableRunnable : public nsISupports {
   virtual nsresult Cancel() = 0;
 
  protected:
-  nsICancelableRunnable() {}
-  virtual ~nsICancelableRunnable() {}
+  nsICancelableRunnable() = default;
+  virtual ~nsICancelableRunnable() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICancelableRunnable, NS_ICANCELABLERUNNABLE_IID)

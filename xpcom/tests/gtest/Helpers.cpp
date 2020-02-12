@@ -89,7 +89,7 @@ NS_IMPL_ISUPPORTS(OutputStreamCallback, nsIOutputStreamCallback);
 
 OutputStreamCallback::OutputStreamCallback() : mCalled(false) {}
 
-OutputStreamCallback::~OutputStreamCallback() {}
+OutputStreamCallback::~OutputStreamCallback() = default;
 
 NS_IMETHODIMP
 OutputStreamCallback::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
@@ -101,7 +101,7 @@ NS_IMPL_ISUPPORTS(InputStreamCallback, nsIInputStreamCallback);
 
 InputStreamCallback::InputStreamCallback() : mCalled(false) {}
 
-InputStreamCallback::~InputStreamCallback() {}
+InputStreamCallback::~InputStreamCallback() = default;
 
 NS_IMETHODIMP
 InputStreamCallback::OnInputStreamReady(nsIAsyncInputStream* aStream) {

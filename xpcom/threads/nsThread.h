@@ -399,13 +399,13 @@ class MOZ_TEMPORARY_CLASS nsLocalExecutionRecord final {
 
 class MOZ_STACK_CLASS nsThreadEnumerator final {
  public:
-  nsThreadEnumerator() : mMal(nsThread::ThreadListMutex()) {}
+  nsThreadEnumerator() = default;
 
   auto begin() { return nsThread::ThreadList().begin(); }
   auto end() { return nsThread::ThreadList().end(); }
 
  private:
-  mozilla::OffTheBooksMutexAutoLock mMal;
+  mozilla::OffTheBooksMutexAutoLock mMal{nsThread::ThreadListMutex()};
 };
 
 #if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM && \

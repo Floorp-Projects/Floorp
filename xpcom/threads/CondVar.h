@@ -43,7 +43,7 @@ class OffTheBooksCondVar : BlockingResourceBase {
    * ~OffTheBooksCondVar
    * Clean up after this OffTheBooksCondVar, but NOT its associated Mutex.
    **/
-  ~OffTheBooksCondVar() {}
+  ~OffTheBooksCondVar() = default;
 
   /**
    * Wait
