@@ -21,11 +21,8 @@ function onLoad() {
   params = window.arguments[0].QueryInterface(Ci.nsIDialogParamBlock);
   token = params.objects.GetElementAt(0).QueryInterface(Ci.nsIPK11Token);
 
-  document.l10n.setAttributes(
-    document.getElementById("tokenName"),
-    "change-password-token",
-    { tokenName: token.tokenName }
-  );
+  document.getElementById("tokenName").setAttribute("value", token.name);
+
   process();
 }
 
