@@ -14,7 +14,7 @@ namespace {
 class WrappedControlRunnable final : public WorkerControlRunnable {
   nsCOMPtr<nsIRunnable> mInner;
 
-  ~WrappedControlRunnable() {}
+  ~WrappedControlRunnable() = default;
 
  public:
   WrappedControlRunnable(WorkerPrivate* aWorkerPrivate,

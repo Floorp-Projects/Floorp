@@ -239,7 +239,7 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope {
   const nsString mName;
 
-  ~DedicatedWorkerGlobalScope() {}
+  ~DedicatedWorkerGlobalScope() = default;
 
  public:
   DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
@@ -264,7 +264,7 @@ class DedicatedWorkerGlobalScope final : public WorkerGlobalScope {
 class SharedWorkerGlobalScope final : public WorkerGlobalScope {
   const nsString mName;
 
-  ~SharedWorkerGlobalScope() {}
+  ~SharedWorkerGlobalScope() = default;
 
  public:
   SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate, const nsString& aName);

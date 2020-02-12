@@ -75,16 +75,16 @@ class SharedMutex {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedMutex)
 
    private:
-    ~RefCountedMutex() {}
+    ~RefCountedMutex() = default;
   };
 
-  RefPtr<RefCountedMutex> mMutex;
+  const RefPtr<RefCountedMutex> mMutex;
 
  public:
   explicit SharedMutex(const char* aName)
       : mMutex(new RefCountedMutex(aName)) {}
 
-  SharedMutex(SharedMutex& aOther) : mMutex(aOther.mMutex) {}
+  SharedMutex(const SharedMutex& aOther) = default;
 
   operator Mutex&() { return *mMutex; }
 

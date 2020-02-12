@@ -161,7 +161,7 @@ class ExternalRunnableWrapper final : public WorkerRunnable {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ExternalRunnableWrapper, WorkerRunnable)
 
  private:
-  ~ExternalRunnableWrapper() {}
+  ~ExternalRunnableWrapper() = default;
 
   virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {
     // Silence bad assertions.
@@ -259,7 +259,7 @@ class TopLevelWorkerFinishedRunnable final : public Runnable {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(TopLevelWorkerFinishedRunnable, Runnable)
 
  private:
-  ~TopLevelWorkerFinishedRunnable() {}
+  ~TopLevelWorkerFinishedRunnable() = default;
 
   NS_IMETHOD
   Run() override {
@@ -537,7 +537,7 @@ class TimerRunnable final : public WorkerRunnable,
       : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {}
 
  private:
-  ~TimerRunnable() {}
+  ~TimerRunnable() = default;
 
   virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {
     // Silence bad assertions.
@@ -941,7 +941,7 @@ class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
   NS_DECL_NSIEVENTTARGET_FULL
 
  private:
-  ~EventTarget() {}
+  ~EventTarget() = default;
 };
 
 struct WorkerPrivate::TimeoutInfo {
@@ -1109,7 +1109,7 @@ class WorkerPrivate::MemoryReporter final : public nsIMemoryReporter {
     FinishCollectRunnable& operator=(const FinishCollectRunnable&&) = delete;
   };
 
-  ~MemoryReporter() {}
+  ~MemoryReporter() = default;
 
   void Disable() {
     // Called from WorkerPrivate::DisableMemoryReporter.
