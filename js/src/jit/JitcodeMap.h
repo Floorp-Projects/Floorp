@@ -322,9 +322,6 @@ class JitcodeGlobalEntry {
     uint32_t callStackAtAddr(void* ptr, const char** results,
                              uint32_t maxResults) const;
 
-    void youngestFrameLocationAtAddr(void* ptr, JSScript** script,
-                                     jsbytecode** pc) const;
-
     uint64_t lookupRealmID(void* ptr) const;
 
     bool hasTrackedOptimizations() const { return !!optsRegionTable_; }
@@ -409,9 +406,6 @@ class JitcodeGlobalEntry {
     uint32_t callStackAtAddr(void* ptr, const char** results,
                              uint32_t maxResults) const;
 
-    void youngestFrameLocationAtAddr(void* ptr, JSScript** script,
-                                     jsbytecode** pc) const;
-
     uint64_t lookupRealmID() const;
 
     template <class ShouldTraceProvider>
@@ -436,9 +430,6 @@ class JitcodeGlobalEntry {
 
     uint32_t callStackAtAddr(void* ptr, const char** results,
                              uint32_t maxResults) const;
-
-    void youngestFrameLocationAtAddr(void* ptr, JSScript** script,
-                                     jsbytecode** pc) const;
 
     uint64_t lookupRealmID() const;
   };
@@ -466,12 +457,6 @@ class JitcodeGlobalEntry {
     uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
                              uint32_t maxResults) const {
       return 0;
-    }
-
-    void youngestFrameLocationAtAddr(JSRuntime* rt, void* ptr,
-                                     JSScript** script, jsbytecode** pc) const {
-      *script = nullptr;
-      *pc = nullptr;
     }
 
     uint64_t lookupRealmID() const { return 0; }
@@ -713,20 +698,6 @@ class JitcodeGlobalEntry {
         MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
     }
     return false;
-  }
-
-  void youngestFrameLocationAtAddr(JSRuntime* rt, void* ptr, JSScript** script,
-                                   jsbytecode** pc) const {
-    switch (kind()) {
-      case Ion:
-        return ionEntry().youngestFrameLocationAtAddr(ptr, script, pc);
-      case Baseline:
-        return baselineEntry().youngestFrameLocationAtAddr(ptr, script, pc);
-      case Dummy:
-        return dummyEntry().youngestFrameLocationAtAddr(rt, ptr, script, pc);
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
   }
 
   uint64_t lookupRealmID(JSRuntime* rt, void* ptr) const {
