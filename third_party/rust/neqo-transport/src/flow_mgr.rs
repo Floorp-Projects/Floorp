@@ -11,13 +11,13 @@ use std::collections::HashMap;
 use std::mem;
 
 use neqo_common::{qinfo, qtrace, qwarn, Encoder};
+use neqo_crypto::Epoch;
 
 use crate::frame::{Frame, StreamType};
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RecvStreams;
 use crate::send_stream::SendStreams;
 use crate::stream_id::{StreamId, StreamIndex, StreamIndexes};
-use crate::tracking::PNSpace;
 use crate::AppError;
 
 pub type FlowControlRecoveryToken = Frame;
@@ -37,6 +37,8 @@ pub struct FlowMgr {
 
     used_data: u64,
     max_data: u64,
+
+    need_close_frame: bool,
 }
 
 impl FlowMgr {
@@ -122,16 +124,6 @@ impl FlowMgr {
             .insert((stream_id, mem::discriminant(&frame)), frame);
     }
 
-    /// Don't send stream data updates if no more data is coming
-    pub fn clear_max_stream_data(&mut self, stream_id: StreamId) {
-        let frame = Frame::MaxStreamData {
-            stream_id,
-            maximum_stream_data: 0,
-        };
-        self.from_streams
-            .remove(&(stream_id, mem::discriminant(&frame)));
-    }
-
     /// Indicate to receiving remote we need more credits
     pub fn stream_data_blocked(&mut self, stream_id: StreamId, stream_data_limit: u64) {
         let frame = Frame::StreamDataBlocked {
@@ -172,6 +164,14 @@ impl FlowMgr {
         } else {
             None
         }
+    }
+
+    pub fn need_close_frame(&self) -> bool {
+        self.need_close_frame
+    }
+
+    pub fn set_need_close_frame(&mut self, new: bool) {
+        self.need_close_frame = new
     }
 
     pub(crate) fn acked(
@@ -291,10 +291,10 @@ impl FlowMgr {
 
     pub(crate) fn get_frame(
         &mut self,
-        space: PNSpace,
+        epoch: Epoch,
         remaining: usize,
     ) -> Option<(Frame, Option<RecoveryToken>)> {
-        if space != PNSpace::ApplicationData {
+        if epoch != 3 {
             return None;
         }
 
