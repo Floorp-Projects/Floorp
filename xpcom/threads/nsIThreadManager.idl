@@ -42,11 +42,11 @@ interface nsIThreadManager : nsISupports
    * The default on Windows is 1MB, which is a little more reasonable. But the
    * vast majority of our threads don't need anywhere near that much space.
    *
-   * ASan and TSan builds, however, often need a bit more, so give them a the
-   * platform default.
+   * ASan, TSan and non-opt builds, however, often need a bit more, so give
+   * them the platform default.
    */
 %{C++
-#if defined(MOZ_ASAN) || defined(MOZ_TSAN)
+#if defined(MOZ_ASAN) || defined(MOZ_TSAN) || !defined(__OPTIMIZE__)
   static constexpr uint32_t DEFAULT_STACK_SIZE = 0;
 #else
   static constexpr uint32_t DEFAULT_STACK_SIZE = 256 * 1024;
