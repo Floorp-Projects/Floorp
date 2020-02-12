@@ -1259,9 +1259,7 @@ describe("TelemetryFeed", () => {
       const spy = sandbox.spy();
 
       sandbox.stub(Services.prefs, "getIntPref").returns(1);
-      globals.set("aboutNewTabService", {
-        overridden: false,
-        newTabURL: "",
+      globals.set("AboutNewTabStartupRecorder", {
         maybeRecordTopsitesPainted: spy,
       });
       instance.addSession("port123", "about:home");
