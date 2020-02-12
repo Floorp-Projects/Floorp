@@ -592,7 +592,7 @@ nsresult ScalarUnsigned::GetValue(const nsACString& aStoreName,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  aResult = std::move(outVar);
+  aResult = outVar.forget();
   if (aClearStore) {
     mStorage[storeIndex] = 0;
     ClearValueInStore(storeIndex);
@@ -712,7 +712,7 @@ nsresult ScalarString::GetValue(const nsACString& aStoreName, bool aClearStore,
   if (aClearStore) {
     ClearValueInStore(storeIndex);
   }
-  aResult = std::move(outVar);
+  aResult = outVar.forget();
   return NS_OK;
 }
 
@@ -806,7 +806,7 @@ nsresult ScalarBoolean::GetValue(const nsACString& aStoreName, bool aClearStore,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  aResult = std::move(outVar);
+  aResult = outVar.forget();
   return NS_OK;
 }
 

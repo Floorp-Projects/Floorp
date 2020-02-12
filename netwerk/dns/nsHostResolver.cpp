@@ -645,7 +645,7 @@ nsresult nsHostResolver::Init() {
   MOZ_ALWAYS_SUCCEEDS(
       threadPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize));
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetName(NS_LITERAL_CSTRING("DNS Resolver")));
-  mResolverThreads = ToRefPtr(std::move(threadPool));
+  mResolverThreads = threadPool.forget();
 
   return NS_OK;
 }
@@ -1876,7 +1876,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
     if (different_rrset(addrRec->addr_info, newRRSet)) {
       LOG(("nsHostResolver record %p new gencnt\n", addrRec.get()));
       old_addr_info = addrRec->addr_info;
-      addrRec->addr_info = std::move(newRRSet);
+      addrRec->addr_info = newRRSet.forget();
       addrRec->addr_info_gencnt++;
     } else {
       if (addrRec->addr_info && newRRSet) {
@@ -1885,7 +1885,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
         addrRec->addr_info->SetTrrFetchDuration(newRRSet->GetTrrFetchDuration());
         addrRec->addr_info->SetTrrFetchDurationNetworkOnly(newRRSet->GetTrrFetchDurationNetworkOnly());
       }
-      old_addr_info = std::move(newRRSet);
+      old_addr_info = newRRSet.forget();
     }
     addrRec->negative = !addrRec->addr_info;
     PrepareRecordExpirationAddrRecord(addrRec);

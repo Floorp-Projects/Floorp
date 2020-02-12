@@ -392,7 +392,7 @@ nsresult nsThreadManager::Init() {
   rv = target->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mBackgroundEventTarget = std::move(target);
+  mBackgroundEventTarget = target.forget();
 
   mInitialized = true;
 

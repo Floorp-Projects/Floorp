@@ -1897,7 +1897,7 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
     mResult = mLoadInfo.SetPrincipalsAndCSPFromChannel(channel);
     NS_ENSURE_SUCCESS(mResult, true);
 
-    mLoadInfo.mChannel = std::move(channel);
+    mLoadInfo.mChannel = channel.forget();
     return true;
   }
 

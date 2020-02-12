@@ -419,7 +419,7 @@ imgTools::DecodeImageAsync(nsIInputStream* aInStr, const nsACString& aMimeType,
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream), stream.forget(),
                                    1024);
     NS_ENSURE_SUCCESS(rv, rv);
-    stream = std::move(bufStream);
+    stream = bufStream.forget();
   }
 
   // Create a new image container to hold the decoded data.

@@ -55,7 +55,7 @@ struct IPDLParamTraits<nsIPrincipal*> {
     if (!Read(aMsg, aIter, aActor, &result)) {
       return false;
     }
-    *aResult = std::move(result);
+    *aResult = result.forget();
     return true;
   }
 };

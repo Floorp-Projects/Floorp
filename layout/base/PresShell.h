@@ -1990,7 +1990,7 @@ class PresShell final : public nsStubDocumentObserver,
     explicit EventHandler(PresShell& aPresShell)
         : mPresShell(aPresShell), mCurrentEventInfoSetter(nullptr) {}
     explicit EventHandler(RefPtr<PresShell>&& aPresShell)
-        : mPresShell(std::move(aPresShell)), mCurrentEventInfoSetter(nullptr) {}
+        : mPresShell(aPresShell.forget()), mCurrentEventInfoSetter(nullptr) {}
 
     /**
      * HandleEvent() may dispatch aGUIEvent.  This may redirect the event to

@@ -220,8 +220,8 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
   explicit CreateNodeResultBase(NodeType* aNode)
       : mNode(aNode), mRv(aNode ? NS_OK : NS_ERROR_FAILURE) {}
 
-  explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode)
-      : mNode(std::move(aNode)), mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
+  explicit CreateNodeResultBase(already_AddRefed<NodeType>&& aNode)
+      : mNode(aNode), mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
 
   CreateNodeResultBase(const SelfType& aOther) = delete;
   SelfType& operator=(const SelfType& aOther) = delete;

@@ -202,7 +202,7 @@ bool IPDLParamTraits<nsIVariant*>::Read(const Message* aMsg,
       MOZ_CRASH("Non handled variant type, patch welcome");
       return false;
   }
-  *aResult = std::move(variant);
+  *aResult = variant.forget();
   return true;
 }
 
@@ -237,11 +237,11 @@ bool IPDLParamTraits<nsIPropertyBag2*>::Read(const Message* aMsg,
   auto properties = MakeRefPtr<nsHashPropertyBag>();
 
   for (auto& entry : bag) {
-    nsCOMPtr<nsIVariant> variant = std::move(entry.value());
+    nsCOMPtr<nsIVariant> variant = entry.value().forget();
     MOZ_ALWAYS_SUCCEEDS(
         properties->SetProperty(std::move(entry.name()), variant));
   }
-  *aResult = std::move(properties);
+  *aResult = properties.forget();
   return true;
 }
 

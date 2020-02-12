@@ -279,7 +279,7 @@ AlternativeDataStreamListener::OnStopRequest(nsIRequest* aRequest,
 
   // Alternative data loading is going to finish, breaking the reference cycle
   // here by taking the ownership to a loacl variable.
-  RefPtr<FetchDriver> fetchDriver = std::move(mFetchDriver);
+  RefPtr<FetchDriver> fetchDriver = mFetchDriver.forget();
 
   if (mStatus == AlternativeDataStreamListener::CANCELED) {
     // do nothing
@@ -1206,7 +1206,7 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
   // main data loading is going to finish, breaking the reference cycle.
   RefPtr<AlternativeDataStreamListener> altDataListener =
-      std::move(mAltDataListener);
+      mAltDataListener.forget();
 
   // We need to check mObserver, which is nulled by FailWithNetworkError(),
   // because in the case of "error" redirect mode, aStatusCode may be NS_OK but

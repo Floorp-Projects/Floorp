@@ -490,7 +490,7 @@ CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
             change->Complete(aContentParent);
           },
           [change](nsresult aRv) { change->Cancel(aRv); });
-  return promise;
+  return promise.forget();
 }
 
 already_AddRefed<Promise> CanonicalBrowsingContext::ChangeFrameRemoteness(

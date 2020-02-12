@@ -360,7 +360,7 @@ void CacheFileOutputStream::ReleaseChunk() {
     mFile->mMetadata->RemoveHash(mChunk->Index());
   }
 
-  mFile->ReleaseOutsideLock(std::move(mChunk));
+  mFile->ReleaseOutsideLock(mChunk.forget());
 }
 
 void CacheFileOutputStream::EnsureCorrectChunk(bool aReleaseOnly) {

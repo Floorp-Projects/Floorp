@@ -3218,7 +3218,7 @@ nsPIDOMWindowOuter* nsGlobalWindowOuter::GetSameProcessOpener() {
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetOpenerWindowOuter() {
   if (RefPtr<BrowsingContext> opener = GetOpenerBrowsingContext()) {
-    return WindowProxyHolder(std::move(opener));
+    return WindowProxyHolder(opener.forget());
   }
   return nullptr;
 }
@@ -5442,7 +5442,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::OpenOuter(
   if (!bc) {
     return nullptr;
   }
-  return WindowProxyHolder(std::move(bc));
+  return WindowProxyHolder(bc.forget());
 }
 
 nsresult nsGlobalWindowOuter::Open(const nsAString& aUrl,
@@ -5540,7 +5540,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::OpenDialogOuter(
   if (!dialog) {
     return nullptr;
   }
-  return WindowProxyHolder(std::move(dialog));
+  return WindowProxyHolder(dialog.forget());
 }
 
 WindowProxyHolder nsGlobalWindowOuter::GetFramesOuter() {

@@ -974,7 +974,7 @@ nsresult nsPipe::CloneInputStream(nsPipeInputStream* aOriginal,
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   RefPtr<nsPipeInputStream> ref = new nsPipeInputStream(*aOriginal);
   mInputList.AppendElement(ref);
-  nsCOMPtr<nsIAsyncInputStream> downcast = std::move(ref);
+  nsCOMPtr<nsIAsyncInputStream> downcast = ref.forget();
   downcast.forget(aCloneOut);
   return NS_OK;
 }

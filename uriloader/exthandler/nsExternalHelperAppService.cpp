@@ -2162,7 +2162,7 @@ nsresult nsExternalAppHandler::CreateFailedTransfer(bool aIsPrivateBrowsing) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Our failed transfer is ready.
-  mTransfer = std::move(transfer);
+  mTransfer = transfer.forget();
 
   return NS_OK;
 }

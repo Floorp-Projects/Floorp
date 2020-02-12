@@ -307,12 +307,12 @@ bool IPDLParamTraits<dom::FeaturePolicy*>::Read(
 
   nsString declaredString = info.declaredString();
   if (declaredString.IsEmpty() || !info.selfOrigin()) {
-    *aResult = std::move(featurePolicy);
+    *aResult = featurePolicy.forget();
     return true;
   }
   featurePolicy->SetDeclaredPolicy(nullptr, declaredString, info.selfOrigin(),
                                    info.srcOrigin());
-  *aResult = std::move(featurePolicy);
+  *aResult = featurePolicy.forget();
   return true;
 }
 }  // namespace ipc

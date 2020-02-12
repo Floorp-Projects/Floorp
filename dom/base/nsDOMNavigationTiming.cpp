@@ -630,11 +630,11 @@ bool mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Read(
   }
   timing->mNavigationType = nsDOMNavigationTiming::Type(type);
   if (unloadedURI) {
-    timing->mUnloadedURI = std::move(*unloadedURI);
+    timing->mUnloadedURI = unloadedURI->forget();
   }
   if (loadedURI) {
-    timing->mLoadedURI = std::move(*loadedURI);
+    timing->mLoadedURI = loadedURI->forget();
   }
-  *aResult = std::move(timing);
+  *aResult = timing.forget();
   return true;
 }

@@ -266,7 +266,7 @@ void MediaFormatReader::DecoderFactory::RunStage(Data& aData) {
               mOwner->OwnerThread(), __func__,
               [this, &aData](RefPtr<Token> aToken) {
                 aData.mTokenRequest.Complete();
-                aData.mToken = std::move(aToken);
+                aData.mToken = aToken.forget();
                 aData.mStage = Stage::CreateDecoder;
                 RunStage(aData);
               },
@@ -408,7 +408,7 @@ void MediaFormatReader::DecoderFactory::DoInitDecoder(Data& aData) {
             aData.mInitRequest.Complete();
             aData.mStage = Stage::None;
             MutexAutoLock lock(ownerData.mMutex);
-            ownerData.mDecoder = std::move(aData.mDecoder);
+            ownerData.mDecoder = aData.mDecoder.forget();
             ownerData.mDescription = ownerData.mDecoder->GetDescriptionName();
             DDLOGEX2("MediaFormatReader::DecoderFactory", this,
                      DDLogCategory::Log, "decoder_initialized", DDNoValue{});
@@ -456,7 +456,7 @@ class MediaFormatReader::DemuxerProxy {
   ~DemuxerProxy() { MOZ_COUNT_DTOR(DemuxerProxy); }
 
   RefPtr<ShutdownPromise> Shutdown() {
-    RefPtr<Data> data = std::move(mData);
+    RefPtr<Data> data = mData.forget();
     return InvokeAsync(mTaskQueue, __func__, [data]() {
       // We need to clear our reference to the demuxer now. So that in the event
       // the init promise wasn't resolved, such as what can happen with the
@@ -676,7 +676,7 @@ class MediaFormatReader::DemuxerProxy::Wrapper : public MediaTrackDemuxer {
   friend class DemuxerProxy;
 
   ~Wrapper() {
-    RefPtr<MediaTrackDemuxer> trackDemuxer = std::move(mTrackDemuxer);
+    RefPtr<MediaTrackDemuxer> trackDemuxer = mTrackDemuxer.forget();
     nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
         "MediaFormatReader::DemuxerProxy::Wrapper::~Wrapper",
         [trackDemuxer]() { trackDemuxer->BreakCycles(); }));

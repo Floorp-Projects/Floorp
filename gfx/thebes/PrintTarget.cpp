@@ -134,7 +134,7 @@ already_AddRefed<DrawTarget> PrintTarget::GetReferenceDrawTarget() {
     if (!dt || !dt->IsValid()) {
       return nullptr;
     }
-    mRefDT = std::move(dt);
+    mRefDT = dt.forget();
   }
 
   return do_AddRef(mRefDT);

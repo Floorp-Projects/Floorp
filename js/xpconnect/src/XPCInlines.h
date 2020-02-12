@@ -243,7 +243,7 @@ inline bool XPCNativeSet::FindMember(JS::HandleId name,
                (!protoSet->FindMember(name, &protoMember, (uint16_t*)nullptr) ||
                 protoMember != Member));
 
-  *pInterface = std::move(Interface);
+  *pInterface = Interface.forget();
 
   return true;
 }

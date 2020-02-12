@@ -3363,8 +3363,8 @@ nsresult nsNavHistory::UpdateFrecency(int64_t aPlaceId) {
   }
 
   nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      ToRefPtr(std::move(updateFrecencyStmt)),
-      ToRefPtr(std::move(updateHiddenStmt)),
+      updateFrecencyStmt.forget(),
+      updateHiddenStmt.forget(),
   };
   nsCOMPtr<mozIStoragePendingStatement> ps;
   rv = conn->ExecuteAsync(stmts, nullptr, getter_AddRefs(ps));

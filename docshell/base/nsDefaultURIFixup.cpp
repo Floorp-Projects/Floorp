@@ -428,7 +428,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     }
 
     nsCOMPtr<nsIURI> temp = DeserializeURI(uri);
-    info->mPreferredURI = std::move(temp);
+    info->mPreferredURI = temp.forget();
     return NS_OK;
   }
 

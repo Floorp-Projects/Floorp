@@ -72,7 +72,7 @@ void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
     if (!aContext) {
       aContext.emplace();
     }
-    aContext->mContextPaint = std::move(contextPaint);
+    aContext->mContextPaint = contextPaint.forget();
   }
 }
 

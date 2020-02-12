@@ -226,7 +226,7 @@ void HttpChannelParent::CleanupBackgroundChannel() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mBgParent) {
-    RefPtr<HttpBackgroundChannelParent> bgParent = std::move(mBgParent);
+    RefPtr<HttpBackgroundChannelParent> bgParent = mBgParent.forget();
     bgParent->OnChannelClosed();
     return;
   }
@@ -647,8 +647,8 @@ bool HttpChannelParent::DoAsyncOpen(
   // Store the strong reference of channel and parent listener object until
   // all the initialization procedure is complete without failure, to remove
   // cycle reference in fail case and to avoid memory leakage.
-  mChannel = std::move(httpChannel);
-  mParentListener = std::move(parentListener);
+  mChannel = httpChannel.forget();
+  mParentListener = parentListener.forget();
   mChannel->SetNotificationCallbacks(mParentListener);
 
   mSuspendAfterSynthesizeResponse = aSuspendAfterSynthesizeResponse;
@@ -2332,7 +2332,7 @@ void HttpChannelParent::StartDiversion() {
   Unused << mChannel->DoApplyContentConversions(
       mDivertListener, getter_AddRefs(converterListener));
   if (converterListener) {
-    mDivertListener = std::move(converterListener);
+    mDivertListener = converterListener.forget();
   }
 
   // Now mParentListener can be diverted to mDivertListener.

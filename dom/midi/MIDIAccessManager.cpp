@@ -94,7 +94,7 @@ bool MIDIAccessManager::AddObserver(Observer<MIDIPortList>* aObserver) {
       return false;
     }
     MOZ_ASSERT(constructedMgr == mgr);
-    mChild = std::move(mgr);
+    mChild = mgr.forget();
     // Add a ref to mChild here, that will be deref'd by
     // BackgroundChildImpl::DeallocPMIDIManagerChild on IPC cleanup.
     mChild->SetActorAlive();

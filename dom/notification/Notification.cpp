@@ -1717,7 +1717,7 @@ class WorkerGetCallback final : public ScopeCheckingGetCallback {
     AssertIsOnMainThread();
     MOZ_ASSERT(mPromiseProxy, "Was Done() called twice?");
 
-    RefPtr<PromiseWorkerProxy> proxy = std::move(mPromiseProxy);
+    RefPtr<PromiseWorkerProxy> proxy = mPromiseProxy.forget();
     MutexAutoLock lock(proxy->Lock());
     if (proxy->CleanedUp()) {
       return NS_OK;

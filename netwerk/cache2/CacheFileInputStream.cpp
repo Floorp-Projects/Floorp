@@ -290,7 +290,7 @@ void CacheFileInputStream::CleanUp() {
 
   MaybeNotifyListener();
 
-  mFile->ReleaseOutsideLock(std::move(mCacheEntryHandle));
+  mFile->ReleaseOutsideLock(mCacheEntryHandle.forget());
 }
 
 NS_IMETHODIMP
@@ -524,7 +524,7 @@ void CacheFileInputStream::ReleaseChunk() {
     mWaitingForUpdate = false;
   }
 
-  mFile->ReleaseOutsideLock(std::move(mChunk));
+  mFile->ReleaseOutsideLock(mChunk.forget());
 }
 
 void CacheFileInputStream::EnsureCorrectChunk(bool aReleaseOnly) {

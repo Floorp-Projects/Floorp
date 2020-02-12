@@ -253,7 +253,7 @@ class EMEDecryptor : public MediaDataDecoder,
       mIsShutdown = true;
       mSamplesWaitingForKey->BreakCycles();
       mSamplesWaitingForKey = nullptr;
-      RefPtr<MediaDataDecoder> decoder = std::move(mDecoder);
+      RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
       mProxy = nullptr;
       return decoder->Shutdown();
     });

@@ -92,7 +92,7 @@ nsresult BrowserBridgeParent::InitWithProcess(
   }
 
   // Set our BrowserParent object to the newly created browser.
-  mBrowserParent = std::move(browserParent);
+  mBrowserParent = browserParent.forget();
   mBrowserParent->SetOwnerElement(Manager()->GetOwnerElement());
   mBrowserParent->InitRendering();
 

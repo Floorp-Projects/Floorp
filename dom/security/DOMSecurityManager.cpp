@@ -48,7 +48,7 @@ void DOMSecurityManager::Initialize() {
 
   obs->AddObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC, false);
   obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-  gDOMSecurityManager = std::move(service);
+  gDOMSecurityManager = service.forget();
 }
 
 /* static */

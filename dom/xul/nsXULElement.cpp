@@ -1418,7 +1418,7 @@ nsresult nsXULPrototypeElement::Deserialize(
             if (NS_WARN_IF(NS_FAILED(rv))) return rv;
           }
 
-          child = std::move(script);
+          child = script.forget();
           break;
         }
         default:
@@ -1776,8 +1776,7 @@ NotifyOffThreadScriptCompletedRunnable::Run() {
 
   auto index = sReceivers->IndexOf(mReceiver);
   MOZ_RELEASE_ASSERT(index != sReceivers->NoIndex);
-  nsCOMPtr<nsIOffThreadScriptReceiver> receiver =
-      std::move((*sReceivers)[index]);
+  nsCOMPtr<nsIOffThreadScriptReceiver> receiver = (*sReceivers)[index].forget();
   sReceivers->RemoveElementAt(index);
 
   return receiver->OnScriptCompileComplete(script,

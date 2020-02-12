@@ -198,7 +198,7 @@ void nsHttpTransaction::SetClassOfService(uint32_t cos) {
 
 class ReleaseH2WSTrans final : public Runnable {
  public:
-  explicit ReleaseH2WSTrans(RefPtr<SpdyConnectTransaction>&& trans)
+  explicit ReleaseH2WSTrans(already_AddRefed<SpdyConnectTransaction>&& trans)
       : Runnable("ReleaseH2WSTrans"), mTrans(std::move(trans)) {}
 
   NS_IMETHOD Run() override {
@@ -239,7 +239,7 @@ nsHttpTransaction::~nsHttpTransaction() {
 
   if (mH2WSTransaction) {
     RefPtr<ReleaseH2WSTrans> r =
-        new ReleaseH2WSTrans(std::move(mH2WSTransaction));
+        new ReleaseH2WSTrans(mH2WSTransaction.forget());
     r->Dispatch();
   }
 }

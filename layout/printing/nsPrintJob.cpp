@@ -2808,7 +2808,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
         NS_ASSERTION(po, "nsPrintObject can't be null!");
         nsCOMPtr<nsPIDOMWindowOuter> domWin = po->mDocShell->GetWindow();
         if (IsThereARangeSelection(domWin)) {
-          printData->mCurrentFocusWin = std::move(domWin);
+          printData->mCurrentFocusWin = domWin.forget();
           SetPrintPO(po, true);
           break;
         }

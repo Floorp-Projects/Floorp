@@ -820,7 +820,7 @@ CloseDatabaseListener::CloseDatabaseListener(nsPermissionManager* aManager,
 NS_IMETHODIMP
 CloseDatabaseListener::Complete(nsresult, nsISupports*) {
   // Help breaking cycles
-  RefPtr<nsPermissionManager> manager = std::move(mManager);
+  RefPtr<nsPermissionManager> manager = mManager.forget();
   if (mRebuildOnSuccess && !gIsShuttingDown) {
     return manager->InitDB(true);
   }
@@ -870,7 +870,7 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleError(mozIStorageError*) {
 
 NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason) {
   // Help breaking cycles
-  RefPtr<nsPermissionManager> manager = std::move(mManager);
+  RefPtr<nsPermissionManager> manager = mManager.forget();
 
   if (aReason == REASON_ERROR) {
     manager->CloseDB(true);

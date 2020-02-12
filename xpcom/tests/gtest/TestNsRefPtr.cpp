@@ -235,8 +235,7 @@ TEST(nsRefPtr, AddRefAndRelease)
     ASSERT_EQ(fooP->refcount_, 1);
 
     Foo::total_addrefs_ = 0;
-    RefPtr<Foo> fooP2 = std::move(fooP);
-    mozilla::Unused << fooP2;
+    RefPtr<Foo> fooP2(fooP.forget());
     ASSERT_EQ(Foo::total_addrefs_, 0);
   }
 }

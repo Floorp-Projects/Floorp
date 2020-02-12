@@ -275,7 +275,7 @@ nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI* aURI,
           rv = chan->AsyncOpen(listener);
           NS_ENSURE_SUCCESS(rv, Err(rv));
 
-          return RequestOrReason(std::move(chan));
+          return RequestOrReason(chan.forget());
         };
 
         // Now we go ahead and get our data asynchronously for the favicon.

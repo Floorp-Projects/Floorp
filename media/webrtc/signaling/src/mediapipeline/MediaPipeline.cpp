@@ -1674,7 +1674,7 @@ class MediaPipelineReceiveVideo::PipelineListener
         return;
       }
 
-      image = std::move(yuvImage);
+      image = yuvImage.forget();
     }
 
     VideoSegment segment;

@@ -232,7 +232,7 @@ bool SHistoryParent::RecvFindEntryForBFCache(
         *aEntry = nullptr;
         *aIndex = -1;
       } else {
-        *aEntry = std::move(shEntry);
+        *aEntry = shEntry.forget();
         *aIndex = i;
       }
 

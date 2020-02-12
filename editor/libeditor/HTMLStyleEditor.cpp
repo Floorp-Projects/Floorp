@@ -927,7 +927,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
         return rv;
       }
     }
-    child = ToRefPtr(std::move(nextSibling));
+    child = nextSibling.forget();
   }
 
   // Next, remove the element or its attribute.

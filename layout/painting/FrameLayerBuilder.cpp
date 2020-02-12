@@ -3438,8 +3438,7 @@ void ContainerState::FinishPaintedLayerData(
 
     NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, paintedLayer) < 0,
                  "Layer already in list???");
-    mNewChildLayers[data->mNewChildLayersIndex].mLayer =
-        std::move(paintedLayer);
+    mNewChildLayers[data->mNewChildLayersIndex].mLayer = paintedLayer.forget();
   }
 
   PaintedDisplayItemLayerUserData* userData =
@@ -5128,7 +5127,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
             NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
                          "Layer already in list???");
             mNewChildLayers[paintedLayerData->mNewChildLayersIndex].mLayer =
-                std::move(layer);
+                layer.forget();
           }
         }
       }

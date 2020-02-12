@@ -2539,7 +2539,7 @@ nsresult nsFrameSelection::SelectRowOrColumn(nsIContent* aCellContent,
 
     if (!firstCell) firstCell = curCellContent;
 
-    lastCell = std::move(curCellContent);
+    lastCell = curCellContent.forget();
 
     // Move to next cell in cellmap, skipping spanned locations
     if (aTarget == TableSelection::Row)

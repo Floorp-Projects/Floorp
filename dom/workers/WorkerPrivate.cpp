@@ -2419,7 +2419,7 @@ nsresult WorkerPrivate::SetIsDebuggerReady(bool aReady) {
     // order in which they were originally dispatched.
     auto pending = std::move(mDelayedDebuggeeRunnables);
     for (uint32_t i = 0; i < pending.Length(); i++) {
-      RefPtr<WorkerRunnable> runnable = std::move(pending[i]);
+      RefPtr<WorkerRunnable> runnable = pending[i].forget();
       nsresult rv = DispatchLockHeld(runnable.forget(), nullptr, lock);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2732,7 +2732,7 @@ void WorkerPrivate::OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo,
       loadGroup->SetNotificationCallbacks(aLoadInfo.mInterfaceRequestor);
   MOZ_ALWAYS_SUCCEEDS(rv);
 
-  aLoadInfo.mLoadGroup = std::move(loadGroup);
+  aLoadInfo.mLoadGroup = loadGroup.forget();
 
   MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(aLoadInfo.mLoadGroup, aPrincipal));
 }
@@ -3448,7 +3448,7 @@ void WorkerPrivate::ClearMainEventQueue(WorkerRanOrNot aRanOrNot) {
   if (WorkerNeverRan == aRanOrNot) {
     for (uint32_t count = mPreStartRunnables.Length(), index = 0; index < count;
          index++) {
-      RefPtr<WorkerRunnable> runnable = std::move(mPreStartRunnables[index]);
+      RefPtr<WorkerRunnable> runnable = mPreStartRunnables[index].forget();
       static_cast<nsIRunnable*>(runnable.get())->Run();
     }
   } else {
@@ -5193,7 +5193,7 @@ WorkerPrivate::AutoPushEventLoopGlobal::AutoPushEventLoopGlobal(
     WorkerPrivate* aWorkerPrivate, JSContext* aCx)
     : mWorkerPrivate(aWorkerPrivate) {
   MOZ_ACCESS_THREAD_BOUND(mWorkerPrivate->mWorkerThreadAccessible, data);
-  mOldEventLoopGlobal = std::move(data->mCurrentEventLoopGlobal);
+  mOldEventLoopGlobal = data->mCurrentEventLoopGlobal.forget();
   if (JSObject* global = JS::CurrentGlobalOrNull(aCx)) {
     data->mCurrentEventLoopGlobal = xpc::NativeGlobal(global);
   }
@@ -5201,7 +5201,7 @@ WorkerPrivate::AutoPushEventLoopGlobal::AutoPushEventLoopGlobal(
 
 WorkerPrivate::AutoPushEventLoopGlobal::~AutoPushEventLoopGlobal() {
   MOZ_ACCESS_THREAD_BOUND(mWorkerPrivate->mWorkerThreadAccessible, data);
-  data->mCurrentEventLoopGlobal = std::move(mOldEventLoopGlobal);
+  data->mCurrentEventLoopGlobal = mOldEventLoopGlobal.forget();
 }
 
 }  // namespace dom

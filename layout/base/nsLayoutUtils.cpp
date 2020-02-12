@@ -7643,9 +7643,9 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   bool hadCrossOriginRedirects = true;
   imgRequest->GetHadCrossOriginRedirects(&hadCrossOriginRedirects);
 
-  result.mPrincipal = std::move(principal);
+  result.mPrincipal = principal.forget();
   result.mHadCrossOriginRedirects = hadCrossOriginRedirects;
-  result.mImageRequest = std::move(imgRequest);
+  result.mImageRequest = imgRequest.forget();
   result.mIsWriteOnly = CanvasUtils::CheckWriteOnlySecurity(
       result.mCORSUsed, result.mPrincipal, result.mHadCrossOriginRedirects);
 
@@ -7746,7 +7746,7 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   result.mSize = result.mLayersImage->GetSize();
   result.mIntrinsicSize =
       gfx::IntSize(aElement->VideoWidth(), aElement->VideoHeight());
-  result.mPrincipal = std::move(principal);
+  result.mPrincipal = principal.forget();
   result.mHadCrossOriginRedirects = aElement->HadCrossOriginRedirects();
   result.mIsWriteOnly = CanvasUtils::CheckWriteOnlySecurity(
       result.mCORSUsed, result.mPrincipal, result.mHadCrossOriginRedirects);

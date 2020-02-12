@@ -94,7 +94,7 @@ nsresult GetSubscriptionParams(nsIPushSubscription* aSubscription,
 class GetSubscriptionResultRunnable final : public WorkerRunnable {
  public:
   GetSubscriptionResultRunnable(WorkerPrivate* aWorkerPrivate,
-                                RefPtr<PromiseWorkerProxy>&& aProxy,
+                                already_AddRefed<PromiseWorkerProxy>&& aProxy,
                                 nsresult aStatus, const nsAString& aEndpoint,
                                 const nsAString& aScope,
                                 nsTArray<uint8_t>&& aRawP256dhKey,
@@ -171,7 +171,7 @@ class GetSubscriptionCallback final : public nsIPushSubscriptionCallback {
 
     WorkerPrivate* worker = mProxy->GetWorkerPrivate();
     RefPtr<GetSubscriptionResultRunnable> r = new GetSubscriptionResultRunnable(
-        worker, std::move(mProxy), aStatus, endpoint, mScope,
+        worker, mProxy.forget(), aStatus, endpoint, mScope,
         std::move(rawP256dhKey), std::move(authSecret),
         std::move(appServerKey));
     MOZ_ALWAYS_TRUE(r->Dispatch());

@@ -289,7 +289,7 @@ RefPtr<ClientOpPromise> ClientSourceParent::StartOp(
       new ClientSourceOpParent(std::move(aArgs), promise);
   Unused << SendPClientSourceOpConstructor(actor, actor->Args());
 
-  return promise;
+  return promise.forget();
 }
 
 }  // namespace dom
