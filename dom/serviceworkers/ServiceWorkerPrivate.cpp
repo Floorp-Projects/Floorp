@@ -760,7 +760,7 @@ class PushErrorReporter final : public ExtendableEventCallback {
   WorkerPrivate* mWorkerPrivate;
   nsString mMessageId;
 
-  ~PushErrorReporter() {}
+  ~PushErrorReporter() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PushErrorReporter, override)
@@ -1368,7 +1368,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
   }
 
  private:
-  ~FetchEventRunnable() {}
+  ~FetchEventRunnable() = default;
 
   class ResumeRequest final : public Runnable {
     nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;

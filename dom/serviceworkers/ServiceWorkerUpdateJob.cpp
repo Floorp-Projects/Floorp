@@ -74,7 +74,7 @@ class ServiceWorkerUpdateJob::CompareCallback final
     : public serviceWorkerScriptCache::CompareCallback {
   RefPtr<ServiceWorkerUpdateJob> mJob;
 
-  ~CompareCallback() {}
+  ~CompareCallback() = default;
 
  public:
   explicit CompareCallback(ServiceWorkerUpdateJob* aJob) : mJob(aJob) {
@@ -159,7 +159,7 @@ ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(
       mUpdateViaCache(aUpdateViaCache),
       mOnFailure(serviceWorkerScriptCache::OnFailure::DoNothing) {}
 
-ServiceWorkerUpdateJob::~ServiceWorkerUpdateJob() {}
+ServiceWorkerUpdateJob::~ServiceWorkerUpdateJob() = default;
 
 void ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());

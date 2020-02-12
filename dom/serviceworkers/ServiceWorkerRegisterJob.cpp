@@ -53,7 +53,7 @@ void ServiceWorkerRegisterJob::AsyncExecute() {
   Update();
 }
 
-ServiceWorkerRegisterJob::~ServiceWorkerRegisterJob() {}
+ServiceWorkerRegisterJob::~ServiceWorkerRegisterJob() = default;
 
 }  // namespace dom
 }  // namespace mozilla

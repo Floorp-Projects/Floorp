@@ -69,7 +69,7 @@ ServiceWorkerDescriptor& ServiceWorkerDescriptor::operator=(
   return *this;
 }
 
-ServiceWorkerDescriptor::~ServiceWorkerDescriptor() {}
+ServiceWorkerDescriptor::~ServiceWorkerDescriptor() = default;
 
 bool ServiceWorkerDescriptor::operator==(
     const ServiceWorkerDescriptor& aRight) const {

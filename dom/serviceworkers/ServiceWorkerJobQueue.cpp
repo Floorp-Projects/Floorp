@@ -17,7 +17,7 @@ class ServiceWorkerJobQueue::Callback final
     : public ServiceWorkerJob::Callback {
   RefPtr<ServiceWorkerJobQueue> mQueue;
 
-  ~Callback() {}
+  ~Callback() = default;
 
  public:
   explicit Callback(ServiceWorkerJobQueue* aQueue) : mQueue(aQueue) {
