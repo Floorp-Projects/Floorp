@@ -101,18 +101,6 @@ public final class GeckoSessionSettings implements Parcelable {
         }
 
         /**
-         * Set whether multi-process support should be enabled.
-         *
-         * @param flag A flag determining whether multi-process should be enabled.
-         *             Default is false.
-         * @return This Builder instance.
-         */
-        public @NonNull Builder useMultiprocess(final boolean flag) {
-            mSettings.setUseMultiprocess(flag);
-            return this;
-        }
-
-        /**
          * Set whether tracking protection should be enabled.
          *
          * @param flag A flag determining whether tracking protection should be enabled.
@@ -284,13 +272,6 @@ public final class GeckoSessionSettings implements Parcelable {
         new Key<Boolean>("usePrivateMode", /* initOnly */ true, /* values */ null);
 
     /**
-     * Key to enable and disable multiprocess browsing (e10s).
-     * Read-only once session is open.
-     */
-    private static final Key<Boolean> USE_MULTIPROCESS =
-        new Key<Boolean>("useMultiprocess", /* initOnly */ true, /* values */ null);
-
-    /**
      * Key to specify which user agent mode we should use.
      */
     private static final Key<Integer> USER_AGENT_MODE =
@@ -381,7 +362,6 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putInt(SCREEN_ID.name, 0);
         mBundle.putBoolean(USE_TRACKING_PROTECTION.name, false);
         mBundle.putBoolean(USE_PRIVATE_MODE.name, false);
-        mBundle.putBoolean(USE_MULTIPROCESS.name, true);
         mBundle.putBoolean(SUSPEND_MEDIA_WHEN_INACTIVE.name, false);
         mBundle.putBoolean(ALLOW_JAVASCRIPT.name, true);
         mBundle.putBoolean(FULL_ACCESSIBILITY_TREE.name, false);
@@ -412,17 +392,6 @@ public final class GeckoSessionSettings implements Parcelable {
      */
     private void setUsePrivateMode(final boolean value) {
         setBoolean(USE_PRIVATE_MODE, value);
-    }
-
-
-    /**
-     * Set whether multi-process support should be enabled.
-     *
-     * @param value A flag determining whether multi-process should be enabled.
-     *             Default is false.
-     */
-    private void setUseMultiprocess(final boolean value) {
-        setBoolean(USE_MULTIPROCESS, value);
     }
 
     /**
@@ -496,15 +465,6 @@ public final class GeckoSessionSettings implements Parcelable {
     public @Nullable String getContextId() {
         // Return the user-provided unsafe string.
         return getString(UNSAFE_CONTEXT_ID);
-    }
-
-    /**
-     * Whether multiprocess is enabled.
-     *
-     * @return true if multiprocess is enabled, false if not.
-     */
-    public boolean getUseMultiprocess() {
-        return getBoolean(USE_MULTIPROCESS);
     }
 
     /**

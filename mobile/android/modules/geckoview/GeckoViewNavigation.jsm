@@ -15,6 +15,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.jsm",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
   Services: "resource://gre/modules/Services.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -135,7 +136,7 @@ class GeckoViewNavigation extends GeckoViewModule {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
         }
 
-        if (this.settings.useMultiprocess) {
+        if (GeckoViewSettings.useMultiprocess) {
           this.moduleManager.updateRemoteTypeForURI(uri);
         }
 

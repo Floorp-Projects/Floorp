@@ -521,6 +521,7 @@ package org.mozilla.geckoview {
     method @Nullable public RuntimeTelemetry.Delegate getTelemetryDelegate();
     method public boolean getUseContentProcessHint();
     method public boolean getUseMaxScreenDepth();
+    method public boolean getUseMultiprocess();
     method public boolean getWebFontsEnabled();
     method @NonNull public GeckoRuntimeSettings setAboutConfigEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean);
@@ -574,6 +575,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder telemetryDelegate(@NonNull RuntimeTelemetry.Delegate);
     method @NonNull public GeckoRuntimeSettings.Builder useContentProcessHint(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
+    method @NonNull public GeckoRuntimeSettings.Builder useMultiprocess(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
     method @NonNull protected GeckoRuntimeSettings newSettings(@Nullable GeckoRuntimeSettings);
   }
@@ -1127,7 +1129,6 @@ package org.mozilla.geckoview {
     method public boolean getFullAccessibilityTree();
     method public int getScreenId();
     method public boolean getSuspendMediaWhenInactive();
-    method public boolean getUseMultiprocess();
     method public boolean getUsePrivateMode();
     method public boolean getUseTrackingProtection();
     method public int getUserAgentMode();
@@ -1165,7 +1166,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoSessionSettings.Builder fullAccessibilityTree(boolean);
     method @NonNull public GeckoSessionSettings.Builder screenId(int);
     method @NonNull public GeckoSessionSettings.Builder suspendMediaWhenInactive(boolean);
-    method @NonNull public GeckoSessionSettings.Builder useMultiprocess(boolean);
     method @NonNull public GeckoSessionSettings.Builder usePrivateMode(boolean);
     method @NonNull public GeckoSessionSettings.Builder useTrackingProtection(boolean);
     method @NonNull public GeckoSessionSettings.Builder userAgentMode(int);
