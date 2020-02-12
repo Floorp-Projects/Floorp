@@ -170,7 +170,7 @@ class TimedRunner(object):
         elif self.result[1] is None:
             # We didn't get any data back from the test, so check if the
             # browser is still responsive
-            if self.protocol.is_alive:
+            if self.protocol.is_alive():
                 self.result = False, ("INTERNAL-ERROR", None)
             else:
                 self.logger.info("Browser not responding, setting status to CRASH")
@@ -512,7 +512,7 @@ class WdspecExecutor(TestExecutor):
         self.protocol = self.protocol_cls(self, browser)
 
     def is_alive(self):
-        return self.protocol.is_alive
+        return self.protocol.is_alive()
 
     def on_environment_change(self, new_environment):
         pass
@@ -638,10 +638,9 @@ class WebDriverProtocol(Protocol):
         pass
 
     def teardown(self):
-        if self.server is not None and self.server.is_alive:
+        if self.server is not None and self.server.is_alive():
             self.server.stop()
 
-    @property
     def is_alive(self):
         """Test that the connection is still alive.
 
