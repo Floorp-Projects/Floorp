@@ -34,7 +34,7 @@ class ServiceWorkerUnregisterJob::PushUnsubscribeCallback final
   }
 
  private:
-  ~PushUnsubscribeCallback() {}
+  ~PushUnsubscribeCallback() = default;
 
   RefPtr<ServiceWorkerUnregisterJob> mJob;
 };
@@ -54,7 +54,7 @@ bool ServiceWorkerUnregisterJob::GetResult() const {
   return mResult;
 }
 
-ServiceWorkerUnregisterJob::~ServiceWorkerUnregisterJob() {}
+ServiceWorkerUnregisterJob::~ServiceWorkerUnregisterJob() = default;
 
 void ServiceWorkerUnregisterJob::AsyncExecute() {
   MOZ_ASSERT(NS_IsMainThread());
