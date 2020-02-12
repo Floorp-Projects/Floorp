@@ -248,57 +248,83 @@ describe("ActivityStream", () => {
     });
   });
   describe("_updateDynamicPrefs topstories default value", () => {
+    let getStringPrefStub;
+    let appLocaleAsBCP47Stub;
+    let prefHasUserValueStub;
+    beforeEach(() => {
+      prefHasUserValueStub = sandbox.stub(
+        global.Services.prefs,
+        "prefHasUserValue"
+      );
+      getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
+      appLocaleAsBCP47Stub = sandbox.stub(
+        global.Services.locale,
+        "appLocaleAsBCP47"
+      );
+
+      prefHasUserValueStub.returns(true);
+      appLocaleAsBCP47Stub.get(() => "en-US");
+
+      getStringPrefStub.withArgs("browser.search.region").returns("US");
+
+      getStringPrefStub
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
+        )
+        .returns("US,CA");
+    });
     it("should be false with no geo/locale", () => {
+      prefHasUserValueStub.returns(false);
+      appLocaleAsBCP47Stub.get(() => "");
+      getStringPrefStub.withArgs("browser.search.region").returns("");
+
       as._updateDynamicPrefs();
 
       assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
     });
     it("should be false with unexpected geo", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("NOGEO");
+      getStringPrefStub.withArgs("browser.search.region").returns("NOGEO");
 
       as._updateDynamicPrefs();
 
       assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
     });
     it("should be false with expected geo and unexpected locale", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
-      sandbox
-        .stub(global.Services.locale, "appLocaleAsBCP47")
-        .get(() => "no-LOCALE");
+      appLocaleAsBCP47Stub.get(() => "no-LOCALE");
 
       as._updateDynamicPrefs();
 
       assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
     });
     it("should be true with expected geo and locale", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
-      sandbox
-        .stub(global.Services.locale, "appLocaleAsBCP47")
-        .get(() => "en-US");
-
       as._updateDynamicPrefs();
-
       assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
     });
     it("should be false after expected geo and locale then unexpected", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox
-        .stub(global.Services.prefs, "getStringPref")
+      getStringPrefStub
+        .withArgs("browser.search.region")
         .onFirstCall()
         .returns("US")
         .onSecondCall()
         .returns("NOGEO");
-      sandbox
-        .stub(global.Services.locale, "appLocaleAsBCP47")
-        .get(() => "en-US");
 
       as._updateDynamicPrefs();
       as._updateDynamicPrefs();
 
       assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+    });
+    it("should be true with updated pref change", () => {
+      appLocaleAsBCP47Stub.get(() => "en-GB");
+      getStringPrefStub.withArgs("browser.search.region").returns("GB");
+      getStringPrefStub
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
+        )
+        .returns("US,CA,GB");
+
+      as._updateDynamicPrefs();
+
+      assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
     });
   });
   describe("_updateDynamicPrefs topstories delayed default value", () => {
