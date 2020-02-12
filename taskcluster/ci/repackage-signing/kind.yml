@@ -16,13 +16,16 @@ kind-dependencies:
 only-for-build-platforms:
     - win32-nightly/opt
     - win32-devedition-nightly/opt
+    - win32-devedition/opt
     - win32-pgo/opt
     - win32-shippable/opt
     - win64-nightly/opt
     - win64-devedition-nightly/opt
+    - win64-devedition/opt
     - win64-pgo/opt
     - win64-shippable/opt
     - win64-aarch64-nightly/opt
     - win64-aarch64-shippable/opt
     - win64-aarch64-devedition-nightly/opt
+    - win64-aarch64-devedition/opt
     - win64-asan-reporter-nightly/opt
