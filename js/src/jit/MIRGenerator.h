@@ -93,10 +93,6 @@ class MIRGenerator final {
     return !compilingWasm() && instrumentedProfiling();
   }
 
-  bool isOptimizationTrackingEnabled() const {
-    return isOptimizationTrackingEnabled_;
-  }
-
   bool stringsCanBeInNursery() const { return stringsCanBeInNursery_; }
 
   bool safeForMinorGC() const { return safeForMinorGC_; }
@@ -149,7 +145,6 @@ class MIRGenerator final {
   bool instrumentedProfilingIsCached_;
   bool safeForMinorGC_;
   bool stringsCanBeInNursery_;
-  bool isOptimizationTrackingEnabled_;
 
   uint32_t minWasmHeapLength_;
 
