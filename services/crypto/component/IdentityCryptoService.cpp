@@ -130,7 +130,7 @@ class IdentityCryptoService final : public nsIIdentityCryptoService {
     rv = NS_NewNamedThread("IdentityCrypto", getter_AddRefs(thread));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mThread = std::move(thread);
+    mThread = thread.forget();
 
     return NS_OK;
   }

@@ -46,7 +46,7 @@ NS_IMPL_COMPONENT_FACTORY(nsIClipboard) {
     if (NS_FAILED(clipboard->Init())) {
       return nullptr;
     }
-    inst = std::move(clipboard);
+    inst = clipboard.forget();
   }
 
   return inst.forget().downcast<nsISupports>();

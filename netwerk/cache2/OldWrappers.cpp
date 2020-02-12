@@ -728,9 +728,9 @@ _OldCacheLoad::Run() {
     if (!(mFlags & CHECK_MULTITHREADED)) Check();
 
     // break cycles
-    nsCOMPtr<nsICacheEntryOpenCallback> cb = std::move(mCallback);
+    nsCOMPtr<nsICacheEntryOpenCallback> cb = mCallback.forget();
     mCacheThread = nullptr;
-    nsCOMPtr<nsICacheEntry> entry = std::move(mCacheEntry);
+    nsCOMPtr<nsICacheEntry> entry = mCacheEntry.forget();
 
     rv = cb->OnCacheEntryAvailable(entry, mNew, mAppCache, mStatus);
 

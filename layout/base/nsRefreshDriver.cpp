@@ -2466,7 +2466,7 @@ void nsRefreshDriver::PVsyncActorCreated(VsyncChild* aVsyncChild) {
   if (sRegularRateTimer) {
     sRegularRateTimer->SwapRefreshDrivers(vsyncRefreshDriverTimer);
   }
-  sRegularRateTimer = std::move(vsyncRefreshDriverTimer);
+  sRegularRateTimer = vsyncRefreshDriverTimer.forget();
 }
 
 void nsRefreshDriver::DoRefresh() {

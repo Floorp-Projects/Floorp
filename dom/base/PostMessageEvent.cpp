@@ -69,7 +69,7 @@ PostMessageEvent::Run() {
   // The document URI is just used for the principal mismatch error message
   // below. Use a stack variable so mCallerURI is not held onto after
   // this method finishes, regardless of the method outcome.
-  nsCOMPtr<nsIURI> callerURI = std::move(mCallerURI);
+  nsCOMPtr<nsIURI> callerURI = mCallerURI.forget();
 
   // If we bailed before this point we're going to leak mMessage, but
   // that's probably better than crashing.

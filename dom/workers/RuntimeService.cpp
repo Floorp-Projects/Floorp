@@ -997,7 +997,7 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
     }
 
     JS::JobQueueMayNotBeEmpty(cx);
-    microTaskQueue->push(std::move(runnable));
+    microTaskQueue->push(runnable.forget());
   }
 
   bool IsSystemCaller() const override {

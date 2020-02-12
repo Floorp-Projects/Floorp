@@ -3050,7 +3050,7 @@ MediaResult HTMLMediaElement::LoadResource() {
   RefPtr<ChannelLoader> loader = new ChannelLoader;
   nsresult rv = loader->Load(this);
   if (NS_SUCCEEDED(rv)) {
-    mChannelLoader = std::move(loader);
+    mChannelLoader = loader.forget();
   }
   return MediaResult(rv, "Failed to load channel");
 }

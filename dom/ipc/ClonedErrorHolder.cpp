@@ -80,7 +80,7 @@ void ClonedErrorHolder::Init(JSContext* aCx, JS::Handle<JSObject*> aError,
     if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, aError, domExn))) {
       mType = Type::DOMException;
       mCode = domExn->Code();
-      exn = std::move(domExn);
+      exn = domExn.forget();
     } else if (NS_SUCCEEDED(UNWRAP_OBJECT(Exception, aError, exn))) {
       mType = Type::Exception;
     } else {

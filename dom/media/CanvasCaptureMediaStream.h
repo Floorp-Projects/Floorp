@@ -70,7 +70,7 @@ class OutputStreamDriver : public FrameCaptureListener {
    * Sub classes can SetImage() to update the image being appended to the
    * output stream. It will be appended on the next NotifyPull from MTG.
    */
-  void SetImage(RefPtr<layers::Image>&& aImage, const TimeStamp& aTime);
+  void SetImage(const RefPtr<layers::Image>& aImage, const TimeStamp& aTime);
 
   /*
    * Ends the track in mSourceStream when we know there won't be any more images

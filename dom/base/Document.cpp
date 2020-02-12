@@ -5985,7 +5985,7 @@ Result<nsCOMPtr<nsIURI>, nsresult> Document::ResolveWithBaseURI(
   nsCOMPtr<nsIURI> resolvedURI;
   MOZ_TRY(
       NS_NewURI(getter_AddRefs(resolvedURI), aURI, nullptr, GetDocBaseURI()));
-  return resolvedURI;
+  return std::move(resolvedURI);
 }
 
 URLExtraData* Document::DefaultStyleAttrURLData() {
@@ -8706,7 +8706,7 @@ mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Document::Open(
   if (!newBC) {
     return nullptr;
   }
-  return WindowProxyHolder(std::move(newBC));
+  return WindowProxyHolder(newBC.forget());
 }
 
 Document* Document::Open(const Optional<nsAString>& /* unused */,
@@ -8866,7 +8866,7 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
         aError.Throw(rv);
         return nullptr;
       }
-      newURI = std::move(noFragmentURI);
+      newURI = noFragmentURI.forget();
     }
 
     // UpdateURLAndHistory might do various member-setting, so make sure we're
@@ -11694,7 +11694,7 @@ static already_AddRefed<nsPIDOMWindowOuter> FindTopWindowForElement(
 
   // Trying to find the top window (equivalent to window.top).
   if (nsCOMPtr<nsPIDOMWindowOuter> top = window->GetInProcessTop()) {
-    window = std::move(top);
+    window = top.forget();
   }
   return window.forget();
 }
@@ -11705,11 +11705,11 @@ static already_AddRefed<nsPIDOMWindowOuter> FindTopWindowForElement(
  */
 class nsAutoFocusEvent : public Runnable {
  public:
-  explicit nsAutoFocusEvent(nsCOMPtr<Element>&& aElement,
-                            nsCOMPtr<nsPIDOMWindowOuter>&& aTopWindow)
+  explicit nsAutoFocusEvent(already_AddRefed<Element>&& aElement,
+                            already_AddRefed<nsPIDOMWindowOuter>&& aTopWindow)
       : mozilla::Runnable("nsAutoFocusEvent"),
-        mElement(std::move(aElement)),
-        mTopWindow(std::move(aTopWindow)) {}
+        mElement(aElement),
+        mTopWindow(aTopWindow) {}
 
   NS_IMETHOD Run() override {
     nsCOMPtr<nsPIDOMWindowOuter> currentTopWindow =
@@ -11782,7 +11782,7 @@ void Document::TriggerAutoFocus() {
     }
 
     nsCOMPtr<nsIRunnable> event =
-        new nsAutoFocusEvent(std::move(autoFocusElement), topWindow.forget());
+        new nsAutoFocusEvent(autoFocusElement.forget(), topWindow.forget());
     nsresult rv = NS_DispatchToCurrentThread(event.forget());
     NS_ENSURE_SUCCESS_VOID(rv);
   }
@@ -12874,7 +12874,7 @@ class PendingFullscreenChangeList {
           nsCOMPtr<nsIDocShellTreeItem> root;
           mRootShellForIteration->GetInProcessRootTreeItem(
               getter_AddRefs(root));
-          mRootShellForIteration = std::move(root);
+          mRootShellForIteration = root.forget();
         }
         SkipToNextMatch();
       }
@@ -12909,7 +12909,7 @@ class PendingFullscreenChangeList {
           while (docShell && docShell != mRootShellForIteration) {
             nsCOMPtr<nsIDocShellTreeItem> parent;
             docShell->GetInProcessParent(getter_AddRefs(parent));
-            docShell = std::move(parent);
+            docShell = parent.forget();
           }
           if (docShell) {
             break;
@@ -15672,7 +15672,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                   ContentPermissionRequestBase::DelayedTaskType::Request);
             });
 
-        return std::move(p);
+        return p.forget();
       };
       AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
           NodePrincipal(), inner, AntiTrackingCommon::eStorageAccessAPI,
@@ -15968,7 +15968,7 @@ void Document::RecomputeLanguageFromCharset() {
   }
 
   mMayNeedFontPrefsUpdate = true;
-  mLanguageFromCharset = std::move(language);
+  mLanguageFromCharset = language.forget();
 }
 
 nsICookieSettings* Document::CookieSettings() {

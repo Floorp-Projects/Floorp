@@ -117,7 +117,7 @@ already_AddRefed<DrawTarget> PrintTargetSkPDF::GetReferenceDrawTarget() {
     if (!dt) {
       return nullptr;
     }
-    mRefDT = std::move(dt);
+    mRefDT = dt.forget();
   }
 
   return do_AddRef(mRefDT);

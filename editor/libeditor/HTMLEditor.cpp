@@ -4538,7 +4538,7 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
   if (NS_WARN_IF(!brElement)) {
     return NS_ERROR_FAILURE;
   }
-  *aNewBrElement = std::move(brElement);
+  *aNewBrElement = brElement.forget();
   return NS_OK;
 }
 

@@ -1132,7 +1132,7 @@ nsresult CacheFileIOManager::Init() {
   nsresult rv = ioMan->InitInternal();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  gInstance = std::move(ioMan);
+  gInstance = ioMan.forget();
   return NS_OK;
 }
 

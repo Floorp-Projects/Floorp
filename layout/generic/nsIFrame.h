@@ -773,7 +773,7 @@ class nsIFrame : public nsQueryFrame {
   void SetComputedStyle(ComputedStyle* aStyle) {
     if (aStyle != mComputedStyle) {
       AssertNewStyleIsSane(*aStyle);
-      RefPtr<ComputedStyle> oldComputedStyle = std::move(mComputedStyle);
+      RefPtr<ComputedStyle> oldComputedStyle = mComputedStyle.forget();
       mComputedStyle = aStyle;
       DidSetComputedStyle(oldComputedStyle);
     }

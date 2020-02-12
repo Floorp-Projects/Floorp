@@ -209,7 +209,7 @@ void AudioBuffer::SetSharedChannels(
   for (uint32_t i = 0; i < channelCount; ++i) {
     mSharedChannels.mChannelData[i] = buffer->GetData(i);
   }
-  mSharedChannels.mBuffer = std::move(buffer);
+  mSharedChannels.mBuffer = buffer.forget();
   mSharedChannels.mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
 

@@ -46,7 +46,7 @@ auto AllocPolicyImpl::Alloc() -> RefPtr<Promise> {
   RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
   mPromises.push(p);
   ResolvePromise(mon);
-  return p;
+  return p.forget();
 }
 
 void AllocPolicyImpl::Dealloc() {
@@ -60,7 +60,7 @@ void AllocPolicyImpl::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock) {
 
   if (mDecoderLimit > 0 && !mPromises.empty()) {
     --mDecoderLimit;
-    RefPtr<PromisePrivate> p = std::move(mPromises.front());
+    RefPtr<PromisePrivate> p = mPromises.front().forget();
     mPromises.pop();
     p->Resolve(new AutoDeallocToken(this), __func__);
   }
@@ -69,7 +69,7 @@ void AllocPolicyImpl::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock) {
 void AllocPolicyImpl::RejectAll() {
   ReentrantMonitorAutoEnter mon(mMonitor);
   while (!mPromises.empty()) {
-    RefPtr<PromisePrivate> p = std::move(mPromises.front());
+    RefPtr<PromisePrivate> p = mPromises.front().forget();
     mPromises.pop();
     p->Reject(true, __func__);
   }
@@ -137,7 +137,7 @@ auto SingleAllocPolicy::Alloc() -> RefPtr<Promise> {
   return AllocPolicyImpl::Alloc()->Then(
       mOwnerThread, __func__,
       [self](RefPtr<Token> aToken) {
-        RefPtr<Token> localToken = std::move(aToken);
+        RefPtr<Token> localToken = aToken.forget();
         RefPtr<Promise> p = self->mPendingPromise.Ensure(__func__);
         GlobalAllocPolicy::Instance(self->mTrack)
             ->Alloc()
@@ -186,8 +186,8 @@ AllocationWrapper::~AllocationWrapper() {
 }
 
 RefPtr<ShutdownPromise> AllocationWrapper::Shutdown() {
-  RefPtr<MediaDataDecoder> decoder = std::move(mDecoder);
-  RefPtr<Token> token = std::move(mToken);
+  RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
+  RefPtr<Token> token = mToken.forget();
   return decoder->Shutdown()->Then(
       AbstractThread::GetCurrent(), __func__,
       [token]() { return ShutdownPromise::CreateAndResolve(true, __func__); });

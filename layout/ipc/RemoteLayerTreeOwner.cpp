@@ -110,7 +110,7 @@ LayerManager* RemoteLayerTreeOwner::AttachLayerManager() {
     FrameLayerBuilder::InvalidateAllLayers(lm);
   }
 
-  mLayerManager = std::move(lm);
+  mLayerManager = lm.forget();
   return mLayerManager;
 }
 

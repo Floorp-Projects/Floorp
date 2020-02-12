@@ -26,7 +26,7 @@ nsDocShellEditorData::~nsDocShellEditorData() { TearDownEditor(); }
 
 void nsDocShellEditorData::TearDownEditor() {
   if (mHTMLEditor) {
-    RefPtr<HTMLEditor> htmlEditor = std::move(mHTMLEditor);
+    RefPtr<HTMLEditor> htmlEditor = mHTMLEditor.forget();
     htmlEditor->PreDestroy(false);
   }
   mEditingSession = nullptr;
@@ -43,7 +43,7 @@ nsresult nsDocShellEditorData::MakeEditable(bool aInWaitForUriLoad) {
   if (mHTMLEditor) {
     NS_WARNING("Destroying existing editor on frame");
 
-    RefPtr<HTMLEditor> htmlEditor = std::move(mHTMLEditor);
+    RefPtr<HTMLEditor> htmlEditor = mHTMLEditor.forget();
     htmlEditor->PreDestroy(false);
   }
 
@@ -72,7 +72,7 @@ nsresult nsDocShellEditorData::SetHTMLEditor(HTMLEditor* aHTMLEditor) {
   }
 
   if (mHTMLEditor) {
-    RefPtr<HTMLEditor> htmlEditor = std::move(mHTMLEditor);
+    RefPtr<HTMLEditor> htmlEditor = mHTMLEditor.forget();
     htmlEditor->PreDestroy(false);
     MOZ_ASSERT(!mHTMLEditor,
                "Nested call of nsDocShellEditorData::SetHTMLEditor() detected");

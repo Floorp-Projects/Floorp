@@ -626,7 +626,7 @@ already_AddRefed<nsAtom> nsAtomTable::AtomizeMainThread(
     RefPtr<nsAtom> newAtom =
         dont_AddRef(nsDynamicAtom::Create(aUTF16String, key.mHash));
     he->mAtom = newAtom;
-    retVal = std::move(newAtom);
+    retVal = newAtom.forget();
   }
 
   p.Set(retVal);

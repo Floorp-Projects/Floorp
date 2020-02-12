@@ -2598,7 +2598,7 @@ void Database::Shutdown() {
   // Break cycles with the shutdown blockers.
   mClientsShutdown = nullptr;
   nsCOMPtr<mozIStorageCompletionCallback> connectionShutdown =
-      std::move(mConnectionShutdown);
+      mConnectionShutdown.forget();
 
   if (!mMainConn) {
     // The connection has never been initialized. Just mark it as closed.

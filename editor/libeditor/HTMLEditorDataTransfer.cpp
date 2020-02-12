@@ -729,7 +729,7 @@ nsresult HTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly) {
       nsCOMPtr<nsIContent> previous = child->GetPreviousSibling();
       nsresult rv = StripFormattingNodes(*child, aListOnly);
       NS_ENSURE_SUCCESS(rv, rv);
-      child = std::move(previous);
+      child = previous.forget();
     }
   }
   return NS_OK;
@@ -2655,7 +2655,7 @@ nsresult HTMLEditor::CreateDOMFragmentFromPaste(
     *outEndNode = *outStartNode = fragment;
   }
 
-  *outFragNode = std::move(fragment);
+  *outFragNode = fragment.forget();
   *outStartOffset = 0;
 
   // get the infoString contents

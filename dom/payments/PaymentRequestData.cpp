@@ -171,7 +171,7 @@ nsresult PaymentDetailsModifier::Create(
         return rv;
       }
     }
-    displayItems = std::move(items);
+    displayItems = items.forget();
   }
   nsCOMPtr<nsIPaymentDetailsModifier> modifier =
       new PaymentDetailsModifier(aIPCModifier.supportedMethods(), total,
@@ -322,7 +322,7 @@ nsresult PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
       return rv;
     }
   }
-  displayItems = std::move(items);
+  displayItems = items.forget();
 
   nsCOMPtr<nsIArray> shippingOptions;
   nsCOMPtr<nsIMutableArray> options = do_CreateInstance(NS_ARRAY_CONTRACTID);
@@ -339,7 +339,7 @@ nsresult PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
       return rv;
     }
   }
-  shippingOptions = std::move(options);
+  shippingOptions = options.forget();
 
   nsCOMPtr<nsIArray> modifiers;
   nsCOMPtr<nsIMutableArray> detailsModifiers =
@@ -357,7 +357,7 @@ nsresult PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
       return rv;
     }
   }
-  modifiers = std::move(detailsModifiers);
+  modifiers = detailsModifiers.forget();
 
   nsCOMPtr<nsIPaymentDetails> details = new PaymentDetails(
       aIPCDetails.id(), total, displayItems, shippingOptions, modifiers,

@@ -191,7 +191,7 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
       RefPtr<Element> textParent;
       rv = createXHTMLElement(nsGkAtoms::pre, getter_AddRefs(textParent));
       NS_ENSURE_SUCCESS(rv, rv);
-      mTextParent = std::move(textParent);
+      mTextParent = textParent.forget();
     }
 
     rv = mTextParent->AsElement()->SetAttr(

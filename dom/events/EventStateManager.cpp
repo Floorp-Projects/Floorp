@@ -3996,7 +3996,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
       return;
     }
     cursor = framecursor->mCursor;
-    container = std::move(customCursor.mContainer);
+    container = customCursor.mContainer.forget();
     hotspot = Some(customCursor.mHotspot);
   }
 

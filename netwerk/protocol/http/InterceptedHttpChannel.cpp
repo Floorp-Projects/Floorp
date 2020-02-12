@@ -204,7 +204,7 @@ nsresult InterceptedHttpChannel::FollowSyntheticRedirect() {
                                redirectFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mRedirectChannel = std::move(newChannel);
+  mRedirectChannel = newChannel.forget();
 
   rv = gHttpHandler->AsyncOnChannelRedirect(this, mRedirectChannel,
                                             redirectFlags);
@@ -230,7 +230,7 @@ nsresult InterceptedHttpChannel::RedirectForResponseURL(
   // We want to pass ownership of the body callback to the new synthesized
   // channel.  We need to hold a reference to the callbacks on the stack
   // as well, though, so we can call them if a failure occurs.
-  nsCOMPtr<nsIInterceptedBodyCallback> bodyCallback = std::move(mBodyCallback);
+  nsCOMPtr<nsIInterceptedBodyCallback> bodyCallback = mBodyCallback.forget();
 
   RefPtr<InterceptedHttpChannel> newChannel = CreateForSynthesis(
       mResponseHead.get(), mBodyReader, bodyCallback, mChannelCreationTime,
@@ -418,7 +418,7 @@ void InterceptedHttpChannel::MaybeCallStatusAndProgress() {
 }
 
 void InterceptedHttpChannel::MaybeCallBodyCallback() {
-  nsCOMPtr<nsIInterceptedBodyCallback> callback = std::move(mBodyCallback);
+  nsCOMPtr<nsIInterceptedBodyCallback> callback = mBodyCallback.forget();
   if (callback) {
     callback->BodyComplete(mStatus);
   }
@@ -651,7 +651,7 @@ InterceptedHttpChannel::ResetInterception(void) {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mRedirectChannel = std::move(newChannel);
+  mRedirectChannel = newChannel.forget();
 
   rv = gHttpHandler->AsyncOnChannelRedirect(this, mRedirectChannel, flags);
 

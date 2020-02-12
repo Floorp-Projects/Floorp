@@ -567,7 +567,7 @@ nsresult mozInlineSpellChecker::Cleanup(bool aDestroyingFrames) {
   // observers.  They may receive two consecutive STARTED notifications for
   // example, which we guarantee will not happen.
 
-  RefPtr<TextEditor> textEditor = std::move(mTextEditor);
+  RefPtr<TextEditor> textEditor = mTextEditor.forget();
   if (mPendingSpellCheck) {
     // Cancel the pending editor spell checker initialization.
     mPendingSpellCheck = nullptr;

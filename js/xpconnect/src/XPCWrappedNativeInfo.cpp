@@ -469,7 +469,7 @@ already_AddRefed<XPCNativeSet> XPCNativeSet::GetNewOrUsed(JSContext* cx,
     return set.forget();
   }
 
-  set = NewInstance(cx, {std::move(iface)});
+  set = NewInstance(cx, {iface.forget()});
   if (!set) {
     return nullptr;
   }
@@ -681,7 +681,7 @@ already_AddRefed<XPCNativeSet> XPCNativeSet::NewInstance(
   NS_ADDREF(*(outp++) = isup);
 
   for (auto key = array.begin(); key != array.end(); key++) {
-    RefPtr<XPCNativeInterface> cur = std::move(*key);
+    RefPtr<XPCNativeInterface> cur = key->forget();
     if (isup == cur) {
       continue;
     }

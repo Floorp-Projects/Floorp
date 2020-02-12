@@ -31,7 +31,7 @@ NetworkConnectivityService::GetSingleton() {
   RefPtr<NetworkConnectivityService> service = new NetworkConnectivityService();
   service->Init();
 
-  gConnService = std::move(service);
+  gConnService = service.forget();
   ClearOnShutdown(&gConnService);
   return do_AddRef(gConnService);
 }

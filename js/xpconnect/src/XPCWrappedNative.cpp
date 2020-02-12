@@ -213,7 +213,7 @@ nsresult XPCWrappedNative::WrapNewGlobal(JSContext* cx,
   // Construct the wrapper, which takes over the strong reference to the
   // native object.
   RefPtr<XPCWrappedNative> wrapper =
-      new XPCWrappedNative(std::move(identity), proto);
+      new XPCWrappedNative(identity.forget(), proto);
 
   //
   // We don't call ::Init() on this wrapper, because our setup requirements
@@ -407,7 +407,7 @@ nsresult XPCWrappedNative::GetNewOrUsed(JSContext* cx, xpcObjectHelper& helper,
       return NS_ERROR_FAILURE;
     }
 
-    wrapper = new XPCWrappedNative(std::move(identity), proto);
+    wrapper = new XPCWrappedNative(identity.forget(), proto);
   } else {
     RefPtr<XPCNativeInterface> iface = Interface;
     if (!iface) {
@@ -421,7 +421,7 @@ nsresult XPCWrappedNative::GetNewOrUsed(JSContext* cx, xpcObjectHelper& helper,
       return NS_ERROR_FAILURE;
     }
 
-    wrapper = new XPCWrappedNative(std::move(identity), Scope, set.forget());
+    wrapper = new XPCWrappedNative(identity.forget(), Scope, set.forget());
   }
 
   MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(parent),
@@ -481,7 +481,7 @@ static nsresult FinishCreate(JSContext* cx, XPCWrappedNativeScope* Scope,
 }
 
 // This ctor is used if this object will have a proto.
-XPCWrappedNative::XPCWrappedNative(nsCOMPtr<nsISupports>&& aIdentity,
+XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    XPCWrappedNativeProto* aProto)
     : mMaybeProto(aProto), mSet(aProto->GetSet()) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -494,10 +494,11 @@ XPCWrappedNative::XPCWrappedNative(nsCOMPtr<nsISupports>&& aIdentity,
 }
 
 // This ctor is used if this object will NOT have a proto.
-XPCWrappedNative::XPCWrappedNative(nsCOMPtr<nsISupports>&& aIdentity,
+XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    XPCWrappedNativeScope* aScope,
-                                   RefPtr<XPCNativeSet>&& aSet)
-    : mMaybeScope(TagScope(aScope)), mSet(std::move(aSet)) {
+                                   already_AddRefed<XPCNativeSet>&& aSet)
+
+    : mMaybeScope(TagScope(aScope)), mSet(aSet) {
   MOZ_ASSERT(NS_IsMainThread());
 
   mIdentity = aIdentity;
@@ -866,7 +867,7 @@ bool XPCWrappedNative::ExtendSet(JSContext* aCx,
       return false;
     }
 
-    mSet = std::move(newSet);
+    mSet = newSet.forget();
   }
   return true;
 }

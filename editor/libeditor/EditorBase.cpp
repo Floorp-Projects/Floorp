@@ -1536,7 +1536,7 @@ EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
     return CreateElementResult(rv);
   }
 
-  return CreateElementResult(std::move(newBRElement));
+  return CreateElementResult(newBRElement.forget());
 }
 
 already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
@@ -3347,7 +3347,7 @@ nsresult EditorBase::DoJoinNodes(nsINode* aNodeToKeep, nsINode* aNodeToJoin,
         ErrorResult err;
         aNodeToKeep->InsertBefore(*childNode, firstNode, err);
         NS_ENSURE_TRUE(!err.Failed(), err.StealNSResult());
-        firstNode = std::move(childNode);
+        firstNode = childNode.forget();
       }
     }
   }

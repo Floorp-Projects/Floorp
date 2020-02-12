@@ -88,7 +88,7 @@ bool IPDLParamTraits<dom::CrossProcessSHEntry*>::Read(
             newEntry.mSharedID);
         dom::ContentChild::GetSingleton()->BindPSHEntryEndpoint(
             std::move(newEntry.mEndpoint), do_AddRef(entry).take());
-        *aEntry = std::move(entry);
+        *aEntry = entry.forget();
         return true;
       });
 }

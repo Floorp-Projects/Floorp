@@ -1970,7 +1970,7 @@ void MediaRecorder::NotifyError(nsresult aRv) {
                               "mSecurityDomException was not initialized"));
         mSecurityDomException = DOMException::Create(NS_ERROR_DOM_SECURITY_ERR);
       }
-      init.mError = std::move(mSecurityDomException);
+      init.mError = mSecurityDomException.forget();
       break;
     default:
       if (!mUnknownDomException) {
@@ -1981,7 +1981,7 @@ void MediaRecorder::NotifyError(nsresult aRv) {
       LOG(LogLevel::Debug, ("MediaRecorder.NotifyError: "
                             "mUnknownDomException being fired for aRv: %X",
                             uint32_t(aRv)));
-      init.mError = std::move(mUnknownDomException);
+      init.mError = mUnknownDomException.forget();
   }
 
   RefPtr<MediaRecorderErrorEvent> event = MediaRecorderErrorEvent::Constructor(

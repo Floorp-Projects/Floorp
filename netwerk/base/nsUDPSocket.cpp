@@ -461,7 +461,7 @@ void nsUDPSocket::OnSocketDetached(PRFileDesc* fd) {
     RefPtr<nsIUDPSocketListener> listener = nullptr;
     {
       MutexAutoLock lock(mLock);
-      listener = ToRefPtr(std::move(mListener));
+      listener = mListener.forget();
     }
 
     if (listener) {

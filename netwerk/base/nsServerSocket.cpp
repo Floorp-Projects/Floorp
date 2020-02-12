@@ -208,7 +208,7 @@ void nsServerSocket::OnSocketDetached(PRFileDesc* fd) {
     RefPtr<nsIServerSocketListener> listener = nullptr;
     {
       MutexAutoLock lock(mLock);
-      listener = ToRefPtr(std::move(mListener));
+      listener = mListener.forget();
     }
 
     // XXX we need to proxy the release to the listener's target thread to work

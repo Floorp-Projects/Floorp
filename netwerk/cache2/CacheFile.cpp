@@ -317,7 +317,7 @@ nsresult CacheFile::OnChunkRead(nsresult aResult, CacheFileChunk* aChunk) {
     MOZ_ASSERT(aChunk->mRefCnt == 2);
     aChunk->mActiveChunk = false;
     ReleaseOutsideLock(
-        RefPtr<CacheFileChunkListener>(std::move(aChunk->mFile)));
+        RefPtr<CacheFileChunkListener>(aChunk->mFile.forget()).forget());
 
     DebugOnly<bool> removed = mDiscardedChunks.RemoveElement(aChunk);
     MOZ_ASSERT(removed);
@@ -362,7 +362,7 @@ nsresult CacheFile::OnChunkWritten(nsresult aResult, CacheFileChunk* aChunk) {
     MOZ_ASSERT(aChunk->mRefCnt == 2);
     aChunk->mActiveChunk = false;
     ReleaseOutsideLock(
-        RefPtr<CacheFileChunkListener>(std::move(aChunk->mFile)));
+        RefPtr<CacheFileChunkListener>(aChunk->mFile.forget()).forget());
 
     DebugOnly<bool> removed = mDiscardedChunks.RemoveElement(aChunk);
     MOZ_ASSERT(removed);
@@ -1709,7 +1709,7 @@ nsresult CacheFile::DeactivateChunk(CacheFileChunk* aChunk) {
     if (aChunk->mDiscardedChunk) {
       aChunk->mActiveChunk = false;
       ReleaseOutsideLock(
-          RefPtr<CacheFileChunkListener>(std::move(aChunk->mFile)));
+          RefPtr<CacheFileChunkListener>(aChunk->mFile.forget()).forget());
 
       DebugOnly<bool> removed = mDiscardedChunks.RemoveElement(aChunk);
       MOZ_ASSERT(removed);
@@ -1791,7 +1791,8 @@ void CacheFile::RemoveChunkInternal(CacheFileChunk* aChunk, bool aCacheChunk) {
   AssertOwnsLock();
 
   aChunk->mActiveChunk = false;
-  ReleaseOutsideLock(RefPtr<CacheFileChunkListener>(std::move(aChunk->mFile)));
+  ReleaseOutsideLock(
+      RefPtr<CacheFileChunkListener>(aChunk->mFile.forget()).forget());
 
   if (aCacheChunk) {
     mCachedChunks.Put(aChunk->Index(), aChunk);
@@ -2466,7 +2467,7 @@ nsresult CacheFile::PadChunkWithZeroes(uint32_t aChunkIdx) {
 
   CacheFileChunkWriteHandle hnd = chunk->GetWriteHandle(kChunkSize);
   if (!hnd.Buf()) {
-    ReleaseOutsideLock(std::move(chunk));
+    ReleaseOutsideLock(chunk.forget());
     SetError(NS_ERROR_OUT_OF_MEMORY);
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2475,7 +2476,7 @@ nsresult CacheFile::PadChunkWithZeroes(uint32_t aChunkIdx) {
   memset(hnd.Buf() + offset, 0, kChunkSize - offset);
   hnd.UpdateDataSize(offset, kChunkSize - offset);
 
-  ReleaseOutsideLock(std::move(chunk));
+  ReleaseOutsideLock(chunk.forget());
 
   return NS_OK;
 }

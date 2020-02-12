@@ -249,7 +249,7 @@ nsMultiplexInputStream::AppendStream(nsIInputStream* aStream) {
     nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
                                             stream.forget(), 4096);
     NS_ENSURE_SUCCESS(rv, rv);
-    stream = std::move(bufferedStream);
+    stream = bufferedStream.forget();
     buffered = true;
   }
 

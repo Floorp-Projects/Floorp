@@ -569,7 +569,7 @@ void ServiceWorkerRegistrationInfo::ClearInstalling() {
     return;
   }
 
-  RefPtr<ServiceWorkerInfo> installing = std::move(mInstallingWorker);
+  RefPtr<ServiceWorkerInfo> installing = mInstallingWorker.forget();
   installing->UpdateState(ServiceWorkerState::Redundant);
   installing->UpdateRedundantTime();
 
@@ -582,7 +582,7 @@ void ServiceWorkerRegistrationInfo::TransitionEvaluatingToInstalling() {
   MOZ_ASSERT(mEvaluatingWorker);
   MOZ_ASSERT(!mInstallingWorker);
 
-  mInstallingWorker = std::move(mEvaluatingWorker);
+  mInstallingWorker = mEvaluatingWorker.forget();
   mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
 
   UpdateRegistrationState();
@@ -599,7 +599,7 @@ void ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting() {
     mWaitingWorker->UpdateRedundantTime();
   }
 
-  mWaitingWorker = std::move(mInstallingWorker);
+  mWaitingWorker = mInstallingWorker.forget();
   mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
   mWaitingWorker->UpdateInstalledTime();
 
@@ -654,7 +654,7 @@ void ServiceWorkerRegistrationInfo::TransitionWaitingToActive() {
 
   // We are transitioning from waiting to active normally, so go to
   // the activating state.
-  mActiveWorker = std::move(mWaitingWorker);
+  mActiveWorker = mWaitingWorker.forget();
   mActiveWorker->UpdateState(ServiceWorkerState::Activating);
 
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
