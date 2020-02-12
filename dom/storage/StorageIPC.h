@@ -276,7 +276,7 @@ class StorageDBParent final : public PBackgroundStorageParent {
           mOriginNoSuffix(aOriginNoSuffix),
           mLoaded(false),
           mLoadedCount(0) {}
-    virtual ~CacheParentBridge() {}
+    virtual ~CacheParentBridge() = default;
 
     // LocalStorageCacheBridge
     virtual const nsCString Origin() const override;
@@ -315,7 +315,7 @@ class StorageDBParent final : public PBackgroundStorageParent {
         : mOwningEventTarget(GetCurrentThreadSerialEventTarget()),
           mParent(aParentDB),
           mOriginScope(aOriginScope) {}
-    virtual ~UsageParentBridge() {}
+    virtual ~UsageParentBridge() = default;
 
     // StorageUsageBridge
     virtual const nsCString& OriginScope() override { return mOriginScope; }

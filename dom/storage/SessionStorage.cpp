@@ -42,7 +42,7 @@ SessionStorage::SessionStorage(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aCache);
 }
 
-SessionStorage::~SessionStorage() {}
+SessionStorage::~SessionStorage() = default;
 
 int64_t SessionStorage::GetOriginQuotaUsage() const {
   return mCache->GetOriginQuotaUsage(DATASET);
