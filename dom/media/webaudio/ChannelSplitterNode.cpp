@@ -71,22 +71,25 @@ already_AddRefed<ChannelSplitterNode> ChannelSplitterNode::Create(
   // Manually check that the other options are valid, this node has
   // channelCount, channelCountMode and channelInterpretation constraints: they
   // cannot be changed from the default.
-  if (aOptions.mChannelCount.WasPassed() &&
-      aOptions.mChannelCount.Value() != audioNode->ChannelCount()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
+  if (aOptions.mChannelCount.WasPassed()) {
+    audioNode->SetChannelCount(aOptions.mChannelCount.Value(), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
   }
-  if (aOptions.mChannelInterpretation.WasPassed() &&
-      aOptions.mChannelInterpretation.Value() !=
-          audioNode->ChannelInterpretationValue()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
+  if (aOptions.mChannelInterpretation.WasPassed()) {
+    audioNode->SetChannelInterpretationValue(
+        aOptions.mChannelInterpretation.Value(), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
   }
-  if (aOptions.mChannelCountMode.WasPassed() &&
-      aOptions.mChannelCountMode.Value() !=
-          audioNode->ChannelCountModeValue()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
+  if (aOptions.mChannelCountMode.WasPassed()) {
+    audioNode->SetChannelCountModeValue(aOptions.mChannelCountMode.Value(),
+                                        aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
   }
 
   return audioNode.forget();
