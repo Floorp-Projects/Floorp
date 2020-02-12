@@ -31,7 +31,7 @@ class RegisterDebuggerMainThreadRunnable final : public mozilla::Runnable {
         mNotifyListeners(aNotifyListeners) {}
 
  private:
-  ~RegisterDebuggerMainThreadRunnable() {}
+  ~RegisterDebuggerMainThreadRunnable() = default;
 
   NS_IMETHOD
   Run() override {
@@ -52,7 +52,7 @@ class UnregisterDebuggerMainThreadRunnable final : public mozilla::Runnable {
         mWorkerPrivate(aWorkerPrivate) {}
 
  private:
-  ~UnregisterDebuggerMainThreadRunnable() {}
+  ~UnregisterDebuggerMainThreadRunnable() = default;
 
   NS_IMETHOD
   Run() override {

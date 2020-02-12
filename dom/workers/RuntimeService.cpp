@@ -578,7 +578,7 @@ class LogViolationDetailsRunnable final : public WorkerMainThreadRunnable {
   virtual bool MainThreadRun() override;
 
  private:
-  ~LogViolationDetailsRunnable() {}
+  ~LogViolationDetailsRunnable() = default;
 };
 
 bool ContentSecurityPolicyAllows(JSContext* aCx, JS::HandleValue aValue) {
@@ -1037,7 +1037,7 @@ class WorkerThreadPrimaryRunnable final : public Runnable {
     NS_INLINE_DECL_REFCOUNTING_INHERITED(FinishedRunnable, Runnable)
 
    private:
-    ~FinishedRunnable() {}
+    ~FinishedRunnable() = default;
 
     NS_DECL_NSIRUNNABLE
   };
@@ -1056,7 +1056,7 @@ class WorkerThreadPrimaryRunnable final : public Runnable {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerThreadPrimaryRunnable, Runnable)
 
  private:
-  ~WorkerThreadPrimaryRunnable() {}
+  ~WorkerThreadPrimaryRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };

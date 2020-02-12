@@ -433,7 +433,7 @@ WorkerSyncRunnable::WorkerSyncRunnable(
 #endif
 }
 
-WorkerSyncRunnable::~WorkerSyncRunnable() {}
+WorkerSyncRunnable::~WorkerSyncRunnable() = default;
 
 bool WorkerSyncRunnable::DispatchInternal() {
   if (mSyncLoopTarget) {
@@ -681,7 +681,7 @@ void WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread() {
     }
 
    private:
-    ~ReleaseRunnable() {}
+    ~ReleaseRunnable() = default;
   };
 
   RefPtr<WorkerControlRunnable> runnable =
