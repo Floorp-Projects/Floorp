@@ -45,6 +45,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -1006,8 +1007,9 @@ void nsImageLoadingContent::ForceReload(bool aNotify, ErrorResult& aError) {
   ImageLoadType loadType = (mCurrentRequestFlags & REQUEST_IS_IMAGESET)
                                ? eImageLoadType_Imageset
                                : eImageLoadType_Normal;
-  nsresult rv = LoadImage(currentURI, true, aNotify, loadType, true, nullptr,
-                          nsIRequest::VALIDATE_ALWAYS);
+  nsresult rv =
+      LoadImage(currentURI, true, aNotify, loadType,
+                nsIRequest::VALIDATE_ALWAYS | LoadFlags(), true, nullptr);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
   }
@@ -1051,15 +1053,15 @@ nsresult nsImageLoadingContent::LoadImage(const nsAString& aNewURI, bool aForce,
   NS_ENSURE_SUCCESS(rv, rv);
   // XXXbiesi fire onerror if that failed?
 
-  return LoadImage(imageURI, aForce, aNotify, aImageLoadType, false, doc,
-                   nsIRequest::LOAD_NORMAL, aTriggeringPrincipal);
+  return LoadImage(imageURI, aForce, aNotify, aImageLoadType, LoadFlags(),
+                   false, doc, aTriggeringPrincipal);
 }
 
 nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
                                           bool aNotify,
                                           ImageLoadType aImageLoadType,
-                                          bool aLoadStart, Document* aDocument,
                                           nsLoadFlags aLoadFlags,
+                                          bool aLoadStart, Document* aDocument,
                                           nsIPrincipal* aTriggeringPrincipal) {
   MOZ_ASSERT(!mIsStartingImageLoad, "some evil code is reentering LoadImage.");
   if (mIsStartingImageLoad) {
@@ -1849,4 +1851,16 @@ Element* nsImageLoadingContent::FindImageMap() {
   }
 
   return nullptr;
+}
+
+nsLoadFlags nsImageLoadingContent::LoadFlags() {
+  nsIContent* thisContent = AsContent();
+  if (thisContent->IsHTMLElement(nsGkAtoms::img) &&
+      thisContent->OwnerDoc()->IsScriptEnabled() &&
+      static_cast<HTMLImageElement*>(thisContent)->LoadingState() ==
+          HTMLImageElement::Loading::Lazy) {
+    return nsIRequest::LOAD_BACKGROUND;
+  }
+
+  return nsIRequest::LOAD_NORMAL;
 }

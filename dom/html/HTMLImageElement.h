@@ -193,6 +193,8 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   }
   void GetLoading(nsAString&) const;
 
+  Loading LoadingState() const;
+
   already_AddRefed<Promise> Decode(ErrorResult& aRv);
 
   ReferrerPolicy GetImageReferrerPolicy() override {
