@@ -19,8 +19,10 @@ def test_parse_epoch():
     assert revlist.parse_epoch(b"10d") == 864000
     assert revlist.parse_epoch(b"10w") == 6048000
 
+def check_revisions(tagged_revisions, expected_revisions):
+    for tagged, expected in zip(tagged_revisions, expected_revisions):
+        assert tagged == expected
 
-@pytest.mark.xfail(sys.version_info >= (3,), reason="broken on Py3")
 @mock.patch('subprocess.check_output')
 def test_get_epoch_revisions(mocked_check_output):
     # check:
@@ -56,14 +58,7 @@ merge_pr_B B 453600 _tue_
 merge_pr_A A 388800 _mon_
 '''
     tagged_revisions = revlist.get_epoch_revisions(epoch, until, 8)
-    assert tagged_revisions.next() == 'N'
-    assert tagged_revisions.next() == 'M'
-    assert tagged_revisions.next() == 'K'
-    assert tagged_revisions.next() == 'J'
-    assert tagged_revisions.next() == 'G'
-    assert tagged_revisions.next() == 'F'
-    assert tagged_revisions.next() == 'C'
-    assert tagged_revisions.next() == 'A'
+    check_revisions(tagged_revisions, ['N', 'M', 'K', 'J', 'G', 'F', 'C', 'A'])
     assert len(list(tagged_revisions)) == 0  # generator exhausted
 
 
@@ -88,11 +83,7 @@ merge_pr_C C 561600 _wed_
 merge_pr_B B 475200 _thu_
 '''
     tagged_revisions = revlist.get_epoch_revisions(epoch, until, 5)
-    assert tagged_revisions.next() == 'G'
-    assert tagged_revisions.next() == 'F'
-    assert tagged_revisions.next() == 'E'
-    assert tagged_revisions.next() == 'D'
-    assert tagged_revisions.next() == 'C'
+    check_revisions(tagged_revisions, ['G', 'F', 'E', 'D', 'C'])
     assert len(list(tagged_revisions)) == 0  # generator exhausted
 
 
@@ -113,8 +104,7 @@ merge_pr_G G 907200 _sun_
 merge_pr_F F 820800 _sat_
 '''
     tagged_revisions = revlist.get_epoch_revisions(epoch, until, 5)
-    assert tagged_revisions.next() == 'G'
-    assert tagged_revisions.next() == 'F'
+    check_revisions(tagged_revisions, ['G', 'F'])
     assert len(list(tagged_revisions)) == 0  # generator exhausted
 
 
@@ -140,8 +130,7 @@ merge_pr_G G 950400 _mon_
 merge_pr_F F 921600 _sud_
 '''
     tagged_revisions = revlist.get_epoch_revisions(epoch, until, 3)
-    assert tagged_revisions.next() == 'G'
-    assert tagged_revisions.next() == 'F'
+    check_revisions(tagged_revisions, ['G', 'F'])
     assert len(list(tagged_revisions)) == 0  # generator exhausted
 
 
@@ -164,5 +153,5 @@ merge_pr_G G 950400 _mon_
 merge_pr_F F 921600 _sud_
 '''
     tagged_revisions = revlist.get_epoch_revisions(epoch, until, 1)
-    assert tagged_revisions.next() == 'F'
+    check_revisions(tagged_revisions, ['F'])
     assert len(list(tagged_revisions)) == 0  # generator exhausted
