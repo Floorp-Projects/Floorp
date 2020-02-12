@@ -17,28 +17,18 @@
       .then(() => {
         // Load iframe.
         var iframe = document.createElement("iframe");
-        let timer;
-        function pollForLoadCompletion() {
-          timer = t.step_timeout(() => iframeMayBeLoaded({isPoll: true}), 10);
-        }
-        function iframeMayBeLoaded({isPoll}) {
+        function iframeLoaded(ev) {
           var failed = false;
-          clearTimeout(timer);
           try {
-            let href = iframe.contentWindow.location.href;
-            if (isPoll && (href === "about:blank" || iframe.contentDocument.readyState !== "complete")) {
-              pollForLoadCompletion();
-              return;
-            }
+            ev.target.contentWindow.location.href;
             failed = true;
           } catch (ex) {}
           t.step_func_done(() => assert_false(failed, "The IFrame should have been blocked. It wasn't."))();
         };
-        iframe.addEventListener("load", () => iframeMayBeLoaded({isPoll: false}));
-        iframe.addEventListener("error", () => iframeMayBeLoaded({isPoll: false}));
+        iframe.addEventListener("load", iframeLoaded);
+        iframe.addEventListener("error", iframeLoaded);
         iframe.src = "/content-security-policy/frame-ancestors/support/service-worker/frame-ancestors-none.html";
         document.body.appendChild(iframe);
-        pollForLoadCompletion();
       });
   </script>
 </body>
