@@ -236,6 +236,7 @@ module.exports = {
       "dom/security/test/general/**",
       "dom/security/test/mixedcontentblocker/**",
       "dom/security/test/sri/**",
+      "dom/security/test/referrer-policy/**",
       "dom/serviceworkers/**",
       "dom/smil/**",
       "dom/tests/mochitest/**",

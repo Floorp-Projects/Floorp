@@ -20,6 +20,7 @@ MOCHITEST_MANIFESTS += [
     'csp/mochitest.ini',
     'general/mochitest.ini',
     'mixedcontentblocker/mochitest.ini',
+    'referrer-policy/mochitest.ini',
     'sri/mochitest.ini',
 ]
 
