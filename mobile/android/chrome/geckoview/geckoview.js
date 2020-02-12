@@ -15,6 +15,7 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
 });
@@ -128,7 +129,7 @@ var ModuleManager = {
     const currentType = this.browser.remoteType || E10SUtils.NOT_REMOTE;
     const remoteType = E10SUtils.getRemoteTypeForURI(
       aURI,
-      this.settings.useMultiprocess,
+      GeckoViewSettings.useMultiprocess,
       /* useRemoteSubframes */ false,
       currentType,
       this.browser.currentURI
@@ -142,7 +143,10 @@ var ModuleManager = {
       return false;
     }
 
-    if (remoteType !== E10SUtils.NOT_REMOTE && !this.settings.useMultiprocess) {
+    if (
+      remoteType !== E10SUtils.NOT_REMOTE &&
+      !GeckoViewSettings.useMultiprocess
+    ) {
       warn`Tried to create a remote browser in non-multiprocess mode`;
       return false;
     }
@@ -437,14 +441,12 @@ function createBrowser() {
   browser.setAttribute("primary", "true");
   browser.setAttribute("flex", "1");
 
-  const settings = window.arguments[0].QueryInterface(Ci.nsIAndroidView)
-    .initData.settings;
-  if (settings.useMultiprocess) {
-    if (
-      Services.prefs.getBoolPref(
-        "dom.w3c_pointer_events.multiprocess.android.enabled"
-      )
-    ) {
+  if (GeckoViewSettings.useMultiprocess) {
+    const pointerEventsEnabled = Services.prefs.getBoolPref(
+      "dom.w3c_pointer_events.multiprocess.android.enabled",
+      false
+    );
+    if (pointerEventsEnabled) {
       Services.prefs.setBoolPref("dom.w3c_pointer_events.enabled", true);
     }
     browser.setAttribute("remote", "true");

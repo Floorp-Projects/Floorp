@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change
 
+## v75
+- ⚠️ Move [`GeckoSessionSettings.Builder#useMultiprocess`] to
+  [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1]. Multiprocess state is
+  no longer determined per session.
+
+[75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
+
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
   enable and disable extensions.
@@ -571,4 +578,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e7913b3fec18f7edb75b81e6bebfb7860ab57c91
+[api-version]: af032cf9dfa68c15ed6321c9615dd8c5d32d215e
