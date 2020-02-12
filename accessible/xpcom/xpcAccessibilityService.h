@@ -35,7 +35,7 @@ class xpcAccessibilityService : public nsIAccessibilityService {
  private:
   // xpcAccessibilityService creation is controlled by friend
   // NS_GetAccessibilityService, keep constructor private.
-  xpcAccessibilityService(){};
+  xpcAccessibilityService() = default;
 
   nsCOMPtr<nsITimer> mShutdownTimer;
 
