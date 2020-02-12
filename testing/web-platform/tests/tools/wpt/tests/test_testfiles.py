@@ -19,16 +19,17 @@ def test_affected_testfiles():
     manifest_json = {
         "items": {
             "crashtest": {
-                "a/b/c/foo-crash.html": [
-                    ["a/b/c/foo-crash.html", {}],
-                ]
+                "a": {
+                    "b": {
+                        "c": {
+                            "foo-crash.html": [
+                                "acdefgh123456",
+                                ["null", {}],
+                            ]
+                        }
+                    }
+                }
             }
-        },
-        "paths": {
-            "a/b/c/foo-crash.html": [
-                "acdefgh123456",
-                "crashtest",
-            ]
         },
         "url_base": "/",
         "version": 8,
