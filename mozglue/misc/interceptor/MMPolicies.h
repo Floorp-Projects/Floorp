@@ -8,10 +8,10 @@
 #define mozilla_interceptor_MMPolicies_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/NativeNt.h"
 #include "mozilla/Span.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/Types.h"
@@ -430,10 +430,6 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyInProcess : public MMPolicyBase {
            mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
   }
 
-  FARPROC GetProcAddress(HMODULE aModule, const char* aName) const {
-    return ::GetProcAddress(aModule, aName);
-  }
-
   bool FlushInstructionCache() const {
     return !!::FlushInstructionCache(::GetCurrentProcess(), nullptr, 0);
   }
@@ -618,6 +614,8 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
     return false;
   }
 
+  // This function reads as many bytes as |aLen| from the target process and
+  // succeeds only when the entire area to be read is accessible.
   bool Read(void* aToPtr, const void* aFromPtr, size_t aLen) const {
     MOZ_ASSERT(mProcess);
     if (!mProcess) {
@@ -627,6 +625,40 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
     SIZE_T numBytes = 0;
     BOOL ok = ::ReadProcessMemory(mProcess, aFromPtr, aToPtr, aLen, &numBytes);
     return ok && numBytes == aLen;
+  }
+
+  // This function reads as many bytes as possible from the target process up
+  // to |aLen| bytes and returns the number of bytes which was actually read.
+  size_t TryRead(void* aToPtr, const void* aFromPtr, size_t aLen) const {
+    MOZ_ASSERT(mProcess);
+    if (!mProcess) {
+      return 0;
+    }
+
+    uint32_t pageSize = GetPageSize();
+    uintptr_t pageMask = pageSize - 1;
+
+    auto rangeStart = reinterpret_cast<uintptr_t>(aFromPtr);
+    auto rangeEnd = rangeStart + aLen;
+
+    while (rangeStart < rangeEnd) {
+      SIZE_T numBytes = 0;
+      BOOL ok = ::ReadProcessMemory(mProcess, aFromPtr, aToPtr,
+                                    rangeEnd - rangeStart, &numBytes);
+      if (ok) {
+        return numBytes;
+      }
+
+      // If ReadProcessMemory fails, try to read up to each page boundary from
+      // the end of the requested area one by one.
+      if (rangeEnd & pageMask) {
+        rangeEnd &= ~pageMask;
+      } else {
+        rangeEnd -= pageSize;
+      }
+    }
+
+    return 0;
   }
 
   bool Write(void* aToPtr, const void* aFromPtr, size_t aLen) const {
@@ -668,43 +700,6 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
 
     return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
            mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
-  }
-
-  /**
-   * This searches the current process's export address table for a given name,
-   * but retrieves an RVA from a corresponding table entry in the target process
-   * because the table entry in the current process might have been replaced.
-   */
-  FARPROC GetProcAddress(HMODULE aModule, const char* aName) const {
-    nt::PEHeaders moduleHeaders(aModule);
-    auto funcEntry = moduleHeaders.FindExportAddressTableEntry(aName);
-    if (funcEntry.isErr()) {
-      // FindExportAddressTableEntry fails if |aName| is invalid or the entire
-      // export table has been modified.  In the former case, ::GetProcAddress
-      // will return nullptr.  In the latter case, funcEntry may point to an
-      // invalid address in the target process.  We bail out in both cases.
-      return nullptr;
-    }
-    if (!funcEntry.inspect()) {
-      // FindExportAddressTableEntry returns nullptr if a matched entry is
-      // forwarded to another module.  Because a forwarder entry needs to point
-      // a null-terminated string within the export section, it's less likely to
-      // be modified by a third-party code.  We safely use the local table.
-      return ::GetProcAddress(aModule, aName);
-    }
-
-    SIZE_T numBytes = 0;
-    DWORD rvaTargetFunction = 0;
-    BOOL ok =
-        ::ReadProcessMemory(mProcess, funcEntry.inspect(), &rvaTargetFunction,
-                            sizeof(rvaTargetFunction), &numBytes);
-    if (!ok || numBytes != sizeof(rvaTargetFunction)) {
-      // If we fail to read the table entry in the target process for unexpected
-      // reason, we fall back to ::GetProcAddress.
-      return ::GetProcAddress(aModule, aName);
-    }
-
-    return moduleHeaders.RVAToPtr<FARPROC>(rvaTargetFunction);
   }
 
   bool FlushInstructionCache() const {

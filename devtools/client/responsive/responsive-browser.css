@@ -22,6 +22,7 @@
   width: 100%;
 }
 
+.browserContainer.responsive-mode .browserStack.device-selector-menu-opened > .rdm-toolbar,
 .browserContainer.responsive-mode .browserStack.device-modal-opened > .rdm-toolbar {
   z-index: 1;
   height: 100%;

@@ -13,6 +13,7 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/Types.h"  // for Color::FromABGR
+#include "nsNativeBasicTheme.h"
 #include "nsColor.h"
 #include "nsDeviceContext.h"
 #include "nsRect.h"
@@ -2558,7 +2559,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame,
   if ((aAppearance == StyleAppearance::Menulist ||
        aAppearance == StyleAppearance::MenulistButton ||
        aAppearance == StyleAppearance::MozMenulistButton) &&
-      IsHTMLContent(aFrame)) {
+      nsNativeTheme::IsHTMLContent(aFrame)) {
     *aShouldRepaint = true;
     return NS_OK;
   }
@@ -4308,12 +4309,15 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
 ///////////////////////////////////////////
 
 already_AddRefed<nsITheme> do_GetNativeTheme() {
-  if (StaticPrefs::widget_disable_native_theme()) return nullptr;
-
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
-    inst = new nsNativeThemeWin();
+    if (XRE_IsContentProcess() &&
+        StaticPrefs::widget_disable_native_theme_for_content()) {
+      inst = new nsNativeBasicTheme();
+    } else {
+      inst = new nsNativeThemeWin();
+    }
     ClearOnShutdown(&inst);
   }
 

@@ -243,6 +243,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
       const nsAString& aKeySystem,
       const Sequence<MediaKeySystemConfiguration>& aConfig, ErrorResult& aRv);
 
+  bool HasCreatedMediaSession() const;
+
  private:
   RefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;
 

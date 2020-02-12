@@ -40,7 +40,6 @@ $modal-scrollbar-z-index: 1100;
   border-radius: 4px;
   display: none;
   z-index: $modal-scrollbar-z-index;
-  overflow: auto;
 
   // modal takes over entire screen
   @media(max-width: 960px) {

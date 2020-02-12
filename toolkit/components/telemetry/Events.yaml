@@ -1685,6 +1685,8 @@ uptake.remotecontent.result:
         The age of pulled data in seconds (ie. difference between publication time and fetch time).
       duration: >
         The duration of the synchronization process in milliseconds.
+      timestamp: >
+        The current timestamp, received during synchronization.
     bug_numbers:
       - 1517469
     products:

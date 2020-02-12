@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1151186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1151186</title>
+  <link rel=stylesheet href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script>
+  /** Test for Bug 1151186 **/
+  SimpleTest.waitForExplicitFinish();
+
+  // In this test, we want to check the IME enabled state in the `contenteditable`
+  // editor which is focused by `focus` event listener of the document.
+  // However, according to the random oranges filed as bug 1176038 and bug 1611360,
+  // `focus` event are sometimes not fired on the document and the reason is,
+  // the document sometimes not focused automatically.  Therefore, this test
+  // will set focus the document when `focus` event is not fired until next
+  // macro task.
+  var focusEventFired = false;
+  function onFocus(event) {
+    is(event.target.nodeName, "#document", "focus event should be fired on the document node");
+    if (event.target != document) {
+      return;
+    }
+    focusEventFired = true;
+    document.getElementById("editor").focus();
+    SimpleTest.executeSoon(runTests);
+  }
+  document.addEventListener("focus", onFocus, {once: true});
+
+  // Register next macro task to check whether `focus` event of the document
+  // is fired as expected.  If not, let's focus our window manually.  Then,
+  // the `focus` event listener starts the test anyway.
+  setTimeout(() => {
+   if (focusEventFired) {
+     return; // We've gotten `focus` event as expected.
+   }
+   ok(!document.hasFocus(), "The document should not have focus yet");
+   info("Setting focus to the window forcibly...");
+   window.focus();
+  }, 0);
+
+  function runTests() {
+    let description = focusEventFired ?
+        "document got focused normally" :
+        "document got focused forcibly";
+    is(document.activeElement, document.getElementById("editor"),
+       `The div element should be focused (${description})`);
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    is(utils.IMEStatus, utils.IME_STATUS_ENABLED,
+       `IME should be enabled (${description})`);
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151186">Mozilla Bug 1151186</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<div id="editor" contenteditable="true"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

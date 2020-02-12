@@ -1335,6 +1335,15 @@ VARIABLES = {
         """
         ),
 
+    'IS_GKRUST': (
+        bool,
+        bool,
+        """Whether the current library defined by this moz.build is gkrust.
+
+        Indicates whether the current library contains rust for libxul.
+        """
+        ),
+
     'RUST_LIBRARY_FEATURES': (
         List,
         list,
@@ -2399,6 +2408,7 @@ TEMPLATE_VARIABLES = {
     'HOST_LIBRARY_NAME',
     'HOST_SIMPLE_PROGRAMS',
     'IS_FRAMEWORK',
+    'IS_GKRUST',
     'LIBRARY_NAME',
     'PROGRAM',
     'SIMPLE_PROGRAMS',
@@ -2829,6 +2839,18 @@ DEPRECATION_HINTS = {
 
             Library('foo') [ or LIBRARY_NAME = 'foo' ]
             IS_FRAMEWORK = True
+        ''',
+
+
+    'IS_GKRUST': '''
+        Please use
+
+            RustLibrary('gkrust', ... is_gkrust=True)
+
+        instead of
+
+            RustLibrary('gkrust') [ or LIBRARY_NAME = 'gkrust' ]
+            IS_GKRUST = True
         ''',
 
     'TOOL_DIRS': 'Please use the DIRS variable instead.',

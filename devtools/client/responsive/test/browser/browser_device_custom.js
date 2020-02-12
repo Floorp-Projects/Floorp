@@ -68,9 +68,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for custom device in device selector");
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, items => {
-    const menuItem = items.find(
-      item => item.getAttribute("label") === device.name
-    );
+    const menuItem = findMenuItem(items, device.name);
     ok(menuItem, "Custom device menu item added to device selector");
   });
 });
@@ -122,7 +120,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   info("Ensure custom device was removed from device selector");
   await waitUntilState(store, state => state.viewports[0].device == "");
-  const deviceSelectorTitle = document.querySelector("#device-selector .title");
+  const deviceSelectorTitle = document.querySelector("#device-selector");
   is(
     deviceSelectorTitle.textContent,
     "Responsive",
@@ -132,9 +130,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for custom device in device selector");
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const menuItem = menuItems.find(
-      item => item.getAttribute("label") === device.name
-    );
+    const menuItem = findMenuItem(menuItems, device.name);
     ok(!menuItem, "Custom device option removed from device selector");
   });
 
@@ -178,9 +174,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for custom unicode device in device selector");
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, items => {
-    const menuItem = items.find(
-      i => i.getAttribute("label") === unicodeDevice.name
-    );
+    const menuItem = findMenuItem(items, unicodeDevice.name);
     ok(menuItem, "Custom unicode device option added to device selector");
   });
 });
@@ -203,9 +197,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for custom unicode device in device selector");
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, items => {
-    const menuItem = items.find(
-      i => i.getAttribute("label") === unicodeDevice.name
-    );
+    const menuItem = findMenuItem(items, unicodeDevice.name);
     ok(menuItem, "Custom unicode device option present in device selector");
   });
 });

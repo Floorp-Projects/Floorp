@@ -83,13 +83,12 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
 
     def _run_mach_command(self, args):
         dirs = self.query_abs_dirs()
-        topsrcdir = os.path.join(dirs['abs_work_dir'], 'src')
 
         mach = [sys.executable, 'mach']
 
         return_code = self.run_command(
             command=mach + ['--log-no-times'] + args,
-            cwd=topsrcdir,
+            cwd=dirs['abs_src_dir'],
         )
 
         if return_code:
@@ -98,7 +97,7 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
 
     def package_multi(self):
         dirs = self.query_abs_dirs()
-        objdir = dirs['abs_objdir']
+        objdir = dirs['abs_obj_dir']
 
         # This will error on non-0 exit code.
         locales = list(sorted(self.query_locales()))

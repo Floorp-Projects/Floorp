@@ -484,7 +484,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
         return results
 
-    def _extract_vmetrics(self, test_name, browsertime_json, browsertime_results):
+    def _extract_vmetrics(self, test_name, browsertime_json):
         # The visual metrics task expects posix paths.
         def _normalized_join(*args):
             path = os.path.join(*args)
@@ -493,24 +493,10 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         name = browsertime_json.split(os.path.sep)[-2]
         reldir = _normalized_join("browsertime-results", name)
 
-        def _extract_metrics(res):
-            # extracts the video files in one result and send back the
-            # mapping expected by the visual metrics task
-            vfiles = res.get("files", {}).get("video", [])
-            return [
-                {
-                    "json_location": _normalized_join(reldir, "browsertime.json"),
-                    "video_location": _normalized_join(reldir, vfile),
-                    "test_name": test_name,
-                }
-                for vfile in vfiles
-            ]
-
-        vmetrics = []
-        for res in browsertime_results:
-            vmetrics.extend(_extract_metrics(res))
-
-        return len(vmetrics) > 0 and vmetrics or None
+        return {
+            "browsertime_json_path": _normalized_join(reldir, "browsertime.json"),
+            "test_name": test_name,
+        }
 
     def summarize_and_output(self, test_config, tests, test_names):
         """
@@ -564,11 +550,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 raise
 
             if not run_local:
-                video_files = self._extract_vmetrics(
-                    test_name, bt_res_json, raw_btresults
-                )
-                if video_files:
-                    video_jobs.extend(video_files)
+                video_jobs.append(self._extract_vmetrics(test_name, bt_res_json))
 
             for new_result in self.parse_browsertime_json(
                 raw_btresults,
@@ -671,31 +653,22 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         if not self.gecko_profile:
             validate_success = self._validate_treeherder_data(output, out_perfdata)
 
-        # Dumping the video list and application metadata for the visual metrics task at the
-        # root of the browsertime results dir.
         if len(video_jobs) > 0:
+            # The video list and application metadata (browser name and
+            # optionally version) that will be used in the visual metrics task.
+            jobs_json = {"jobs": video_jobs, "application": {"name": self.browser_name}}
+
+            if self.browser_version is not None:
+                jobs_json["application"]["version"] = self.browser_version
+
             jobs_file = os.path.join(self.result_dir(), "jobs.json")
-            LOG.info("Writing %d video jobs into %s" % (len(video_jobs), jobs_file))
+            LOG.info(
+                "Writing video jobs and application data {} into {}".format(
+                    jobs_json, jobs_file
+                )
+            )
             with open(jobs_file, "w") as f:
-                f.write(json.dumps({"jobs": video_jobs}))
-
-            # file that will contain browser application data so vismet task can grab it
-            # and use it inside its perfherder data output; at this point the version is
-            # not available for all apps/browsers so if it doesn't exist just set it to 'n/a'
-            if self.browser_version is None:
-                self.browser_version = "n/a"
-
-            app_data = {
-                "application": {
-                    "name": self.browser_name,
-                    "version": self.browser_version,
-                }
-            }
-
-            app_file = os.path.join(self.result_dir(), "application.json")
-            LOG.info("Writing application data {} into {}".format(app_data, app_file))
-            with open(app_file, "w") as f:
-                f.write(json.dumps(app_data))
+                f.write(json.dumps(jobs_json))
 
         return success and validate_success
 

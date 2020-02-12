@@ -331,6 +331,7 @@ function remoteSettingsFunction() {
     const syncTelemetryArgs = {
       source: TELEMETRY_SOURCE_SYNC,
       duration: durationMilliseconds,
+      timestamp: `${currentEtag}`,
       trigger,
     };
 

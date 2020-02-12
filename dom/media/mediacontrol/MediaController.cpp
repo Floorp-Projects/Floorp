@@ -87,8 +87,15 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
   if (!ControlledMediaNum() || mShutdown) {
     return;
   }
-  RefPtr<BrowsingContext> context = BrowsingContext::Get(mBrowsingContextId);
-  if (context) {
+  // If we have an active media session, then we should directly notify the
+  // browsing context where active media session exists in order to let the
+  // session handle media control key events. Otherwises, we would notify the
+  // top-level browsing context to let it handle events.
+  RefPtr<BrowsingContext> context =
+      mActiveMediaSessionContextId
+          ? BrowsingContext::Get(*mActiveMediaSessionContextId)
+          : BrowsingContext::Get(mBrowsingContextId);
+  if (context && !context->IsDiscarded()) {
     context->Canonical()->UpdateMediaControlKeysEvent(aEvent);
   }
 }

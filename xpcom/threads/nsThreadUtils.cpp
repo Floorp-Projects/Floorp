@@ -164,11 +164,6 @@ nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
   return NS_OK;
 }
 
-nsresult NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent,
-                      uint32_t aStackSize) {
-  return NS_NewNamedThread(NS_LITERAL_CSTRING(""), aResult, aEvent, aStackSize);
-}
-
 nsresult NS_GetCurrentThread(nsIThread** aResult) {
 #ifdef MOZILLA_INTERNAL_API
   return nsThreadManager::get().nsThreadManager::GetCurrentThread(aResult);

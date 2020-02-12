@@ -409,6 +409,7 @@ static inline BorderRadius ZeroBorderRadius() {
 
 nsStyleBorder::nsStyleBorder(const Document& aDocument)
     : mBorderRadius(ZeroBorderRadius()),
+      mBorderImageSource(StyleImage::None()),
       mBorderImageWidth(
           StyleRectWithAllSides(StyleBorderImageSideWidth::Number(1.))),
       mBorderImageOutset(
@@ -535,7 +536,7 @@ nsChangeHint nsStyleBorder::CalcDifference(
   // while CalcDifference might be executed on a background thread. As a
   // result, we have to check mBorderImage* fields even before border image was
   // actually loaded.
-  if (!mBorderImageSource.IsEmpty() || !aNewData.mBorderImageSource.IsEmpty()) {
+  if (!mBorderImageSource.IsNone() || !aNewData.mBorderImageSource.IsNone()) {
     if (mBorderImageSource != aNewData.mBorderImageSource ||
         mBorderImageRepeatH != aNewData.mBorderImageRepeatH ||
         mBorderImageRepeatV != aNewData.mBorderImageRepeatV ||
@@ -956,152 +957,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const {
 }
 
 // --------------------
-// StyleShapeSource
-StyleShapeSource::StyleShapeSource() : mBasicShape() {}
-
-StyleShapeSource::StyleShapeSource(const StyleShapeSource& aSource) {
-  DoCopy(aSource);
-}
-
-StyleShapeSource::~StyleShapeSource() { DoDestroy(); }
-
-StyleShapeSource& StyleShapeSource::operator=(const StyleShapeSource& aOther) {
-  if (this != &aOther) {
-    DoCopy(aOther);
-  }
-
-  return *this;
-}
-
-bool StyleShapeSource::operator==(const StyleShapeSource& aOther) const {
-  if (mType != aOther.mType) {
-    return false;
-  }
-
-  switch (mType) {
-    case StyleShapeSourceType::None:
-      return true;
-
-    case StyleShapeSourceType::Image:
-      return *mShapeImage == *aOther.mShapeImage;
-
-    case StyleShapeSourceType::Shape:
-      return *mBasicShape == *aOther.mBasicShape &&
-             mReferenceBox == aOther.mReferenceBox;
-
-    case StyleShapeSourceType::Box:
-      return mReferenceBox == aOther.mReferenceBox;
-
-    case StyleShapeSourceType::Path:
-      return *mSVGPath == *aOther.mSVGPath;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unexpected shape source type!");
-  return true;
-}
-
-void StyleShapeSource::SetShapeImage(UniquePtr<nsStyleImage> aShapeImage) {
-  MOZ_ASSERT(aShapeImage);
-  DoDestroy();
-  new (&mShapeImage) UniquePtr<nsStyleImage>(std::move(aShapeImage));
-  mType = StyleShapeSourceType::Image;
-}
-
-imgIRequest* StyleShapeSource::GetShapeImageData() const {
-  if (mType != StyleShapeSourceType::Image) {
-    return nullptr;
-  }
-  if (mShapeImage->GetType() != eStyleImageType_Image) {
-    return nullptr;
-  }
-  return mShapeImage->GetImageData();
-}
-
-void StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
-                                     StyleGeometryBox aReferenceBox) {
-  MOZ_ASSERT(aBasicShape);
-  DoDestroy();
-  new (&mBasicShape) UniquePtr<StyleBasicShape>(std::move(aBasicShape));
-  mReferenceBox = aReferenceBox;
-  mType = StyleShapeSourceType::Shape;
-}
-
-void StyleShapeSource::SetPath(UniquePtr<StyleSVGPath> aPath) {
-  MOZ_ASSERT(aPath);
-  DoDestroy();
-  new (&mSVGPath) UniquePtr<StyleSVGPath>(std::move(aPath));
-  mType = StyleShapeSourceType::Path;
-}
-
-void StyleShapeSource::TriggerImageLoads(
-    Document& aDocument, const StyleShapeSource* aOldShapeSource) {
-  if (GetType() != StyleShapeSourceType::Image) {
-    return;
-  }
-
-  auto* oldShapeImage = (aOldShapeSource && aOldShapeSource->GetType() ==
-                                                StyleShapeSourceType::Image)
-                            ? &aOldShapeSource->ShapeImage()
-                            : nullptr;
-  mShapeImage->ResolveImage(aDocument, oldShapeImage);
-}
-
-void StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox) {
-  DoDestroy();
-  mReferenceBox = aReferenceBox;
-  mType = StyleShapeSourceType::Box;
-}
-
-void StyleShapeSource::DoCopy(const StyleShapeSource& aOther) {
-  switch (aOther.mType) {
-    case StyleShapeSourceType::None:
-      mReferenceBox = StyleGeometryBox::NoBox;
-      mType = StyleShapeSourceType::None;
-      break;
-
-    case StyleShapeSourceType::Image:
-      SetShapeImage(MakeUnique<nsStyleImage>(aOther.ShapeImage()));
-      break;
-
-    case StyleShapeSourceType::Shape: {
-      UniquePtr<StyleBasicShape> shape(
-          Servo_CloneBasicShape(&aOther.BasicShape()));
-      // TODO(emilio): This could be a copy-ctor call like above if we teach
-      // cbindgen to generate copy-constructors for tagged unions.
-      SetBasicShape(std::move(shape), aOther.GetReferenceBox());
-      break;
-    }
-
-    case StyleShapeSourceType::Box:
-      SetReferenceBox(aOther.GetReferenceBox());
-      break;
-
-    case StyleShapeSourceType::Path:
-      SetPath(MakeUnique<StyleSVGPath>(aOther.Path()));
-      break;
-  }
-}
-
-void StyleShapeSource::DoDestroy() {
-  switch (mType) {
-    case StyleShapeSourceType::Shape:
-      mBasicShape.~UniquePtr<StyleBasicShape>();
-      break;
-    case StyleShapeSourceType::Image:
-      mShapeImage.~UniquePtr<nsStyleImage>();
-      break;
-    case StyleShapeSourceType::Path:
-      mSVGPath.~UniquePtr<StyleSVGPath>();
-      break;
-    case StyleShapeSourceType::None:
-    case StyleShapeSourceType::Box:
-      // Not a union type, so do nothing.
-      break;
-  }
-  mType = StyleShapeSourceType::None;
-}
-
-// --------------------
 // nsStyleSVGReset
 //
 nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
@@ -1113,6 +968,7 @@ nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
       mRy(NonNegativeLengthPercentageOrAuto::Auto()),
       mR(NonNegativeLengthPercentage::Zero()),
       mMask(nsStyleImageLayers::LayerType::Mask),
+      mClipPath(StyleClipPath::None()),
       mStopColor(StyleColor::Black()),
       mFloodColor(StyleColor::Black()),
       mLightingColor(StyleColor::White()),
@@ -1151,33 +1007,32 @@ void nsStyleSVGReset::TriggerImageLoads(Document& aDocument,
   // NOTE(emilio): we intentionally don't call TriggerImageLoads for clip-path.
 
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
-    nsStyleImage& image = mMask.mLayers[i].mImage;
-    if (image.GetType() == eStyleImageType_Image) {
-      const auto* url = image.GetURLValue();
-      // If the url is a local ref, it must be a <mask-resource>, so we don't
-      // need to resolve the style image.
-      if (url->IsLocalRef()) {
-        continue;
-      }
-#if 0
-      // XXX The old style system also checks whether this is a reference to
-      // the current document with reference, but it doesn't seem to be a
-      // behavior mentioned anywhere, so we comment out the code for now.
-      nsIURI* docURI = aPresContext->Document()->GetDocumentURI();
-      if (url->EqualsExceptRef(docURI)) {
-        continue;
-      }
-#endif
-
-      // Otherwise, we may need the image even if it has a reference, in case
-      // the referenced element isn't a valid SVG <mask> element.
-      const nsStyleImage* oldImage =
-          (aOldStyle && aOldStyle->mMask.mLayers.Length() > i)
-              ? &aOldStyle->mMask.mLayers[i].mImage
-              : nullptr;
-
-      image.ResolveImage(aDocument, oldImage);
+    auto& image = mMask.mLayers[i].mImage;
+    if (!image.IsImageRequestType()) {
+      continue;
     }
+    const auto* url = image.GetImageRequestURLValue();
+    // If the url is a local ref, it must be a <mask-resource>, so we don't
+    // need to resolve the style image.
+    if (url->IsLocalRef()) {
+      continue;
+    }
+#if 0
+    // XXX The old style system also checks whether this is a reference to
+    // the current document with reference, but it doesn't seem to be a
+    // behavior mentioned anywhere, so we comment out the code for now.
+    nsIURI* docURI = aPresContext->Document()->GetDocumentURI();
+    if (url->EqualsExceptRef(docURI)) {
+      continue;
+    }
+#endif
+    // Otherwise, we may need the image even if it has a reference, in case
+    // the referenced element isn't a valid SVG <mask> element.
+    const auto* oldImage = (aOldStyle && aOldStyle->mMask.mLayers.Length() > i)
+                               ? &aOldStyle->mMask.mLayers[i].mImage
+                               : nullptr;
+
+    image.ResolveImage(aDocument, oldImage);
   }
 }
 
@@ -1221,7 +1076,7 @@ nsChangeHint nsStyleSVGReset::CalcDifference(
 
 bool nsStyleSVGReset::HasMask() const {
   for (uint32_t i = 0; i < mMask.mImageCount; i++) {
-    if (!mMask.mLayers[i].mImage.IsEmpty()) {
+    if (!mMask.mLayers[i].mImage.IsNone()) {
       return true;
     }
   }
@@ -1584,150 +1439,25 @@ bool StyleGradient::IsOpaque() const {
 
 // --------------------
 // CachedBorderImageData
-//
-void CachedBorderImageData::SetCachedSVGViewportSize(
-    const mozilla::Maybe<nsSize>& aSVGViewportSize) {
-  mCachedSVGViewportSize = aSVGViewportSize;
-}
-
-const mozilla::Maybe<nsSize>&
-CachedBorderImageData::GetCachedSVGViewportSize() {
-  return mCachedSVGViewportSize;
-}
-
-struct PurgeCachedImagesTask : mozilla::Runnable {
-  PurgeCachedImagesTask() : mozilla::Runnable("PurgeCachedImagesTask") {}
-  NS_IMETHOD Run() final {
-    mSubImages.Clear();
-    return NS_OK;
-  }
-
-  nsCOMArray<imgIContainer> mSubImages;
-};
 
 void CachedBorderImageData::PurgeCachedImages() {
-  if (ServoStyleSet::IsInServoTraversal()) {
-    RefPtr<PurgeCachedImagesTask> task = new PurgeCachedImagesTask();
-    task->mSubImages.SwapElements(mSubImages);
-    // This will run the task immediately if we're already on the main thread,
-    // but that is fine.
-    NS_DispatchToMainThread(task.forget());
-  } else {
-    mSubImages.Clear();
+  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
+  MOZ_ASSERT(NS_IsMainThread());
+  mSubImages.Clear();
+}
+
+void CachedBorderImageData::PurgeCacheForViewportChange(
+    const Maybe<nsSize>& aSize, const bool aHasIntrinsicRatio) {
+  // If we're redrawing with a different viewport-size than we used for our
+  // cached subimages, then we can't trust that our subimages are valid;
+  // any percent sizes/positions in our SVG doc may be different now. Purge!
+  // (We don't have to purge if the SVG document has an intrinsic ratio,
+  // though, because the actual size of elements in SVG documant's coordinate
+  // axis are fixed in this case.)
+  if (aSize != mCachedSVGViewportSize && !aHasIntrinsicRatio) {
+    PurgeCachedImages();
+    SetCachedSVGViewportSize(aSize);
   }
-}
-
-void CachedBorderImageData::SetSubImage(uint8_t aIndex,
-                                        imgIContainer* aSubImage) {
-  mSubImages.ReplaceObjectAt(aSubImage, aIndex);
-}
-
-imgIContainer* CachedBorderImageData::GetSubImage(uint8_t aIndex) {
-  imgIContainer* subImage = nullptr;
-  if (aIndex < mSubImages.Count()) subImage = mSubImages[aIndex];
-  return subImage;
-}
-
-// --------------------
-// nsStyleImage
-//
-
-nsStyleImage::nsStyleImage() : mCropRect(nullptr), mType(eStyleImageType_Null) {
-  MOZ_COUNT_CTOR(nsStyleImage);
-}
-
-nsStyleImage::~nsStyleImage() {
-  MOZ_COUNT_DTOR(nsStyleImage);
-  if (mType != eStyleImageType_Null) {
-    SetNull();
-  }
-}
-
-nsStyleImage::nsStyleImage(const nsStyleImage& aOther)
-    : mCropRect(nullptr), mType(eStyleImageType_Null) {
-  // We need our own copy constructor because we don't want
-  // to copy the reference count
-  MOZ_COUNT_CTOR(nsStyleImage);
-  DoCopy(aOther);
-}
-
-nsStyleImage& nsStyleImage::operator=(const nsStyleImage& aOther) {
-  if (this != &aOther) {
-    DoCopy(aOther);
-  }
-
-  return *this;
-}
-
-void nsStyleImage::DoCopy(const nsStyleImage& aOther) {
-  SetNull();
-
-  if (aOther.mType == eStyleImageType_Image) {
-    SetImageUrl(aOther.mImage);
-  } else if (aOther.mType == eStyleImageType_Gradient) {
-    SetGradientData(MakeUnique<StyleGradient>(*aOther.mGradient));
-  } else if (aOther.mType == eStyleImageType_Element) {
-    SetElementId(do_AddRef(aOther.mElementId));
-  }
-
-  UniquePtr<CropRect> cropRectCopy;
-  if (aOther.mCropRect) {
-    cropRectCopy = MakeUnique<CropRect>(*aOther.mCropRect.get());
-  }
-  SetCropRect(std::move(cropRectCopy));
-}
-
-void nsStyleImage::SetNull() {
-  if (mType == eStyleImageType_Gradient) {
-    delete mGradient;
-    mGradient = nullptr;
-  } else if (mType == eStyleImageType_Image) {
-    mImage.~StyleComputedImageUrl();
-  } else if (mType == eStyleImageType_Element) {
-    NS_RELEASE(mElementId);
-  }
-
-  mType = eStyleImageType_Null;
-  mCropRect = nullptr;
-}
-
-void nsStyleImage::SetImageUrl(const StyleComputedImageUrl& aImage) {
-  if (mType != eStyleImageType_Null) {
-    SetNull();
-  }
-
-  new (&mImage) StyleComputedImageUrl(aImage);
-  mType = eStyleImageType_Image;
-
-  if (mCachedBIData) {
-    mCachedBIData->PurgeCachedImages();
-  }
-}
-
-void nsStyleImage::SetGradientData(UniquePtr<StyleGradient> aGradient) {
-  MOZ_ASSERT(aGradient);
-
-  if (mType != eStyleImageType_Null) {
-    SetNull();
-  }
-
-  mGradient = aGradient.release();
-  mType = eStyleImageType_Gradient;
-}
-
-void nsStyleImage::SetElementId(already_AddRefed<nsAtom> aElementId) {
-  if (mType != eStyleImageType_Null) {
-    SetNull();
-  }
-
-  if (RefPtr<nsAtom> atom = aElementId) {
-    mElementId = atom.forget().take();
-    mType = eStyleImageType_Element;
-  }
-}
-
-void nsStyleImage::SetCropRect(UniquePtr<CropRect> aCropRect) {
-  mCropRect = std::move(aCropRect);
 }
 
 static int32_t ConvertToPixelCoord(const StyleNumberOrPercentage& aCoord,
@@ -1744,109 +1474,105 @@ static int32_t ConvertToPixelCoord(const StyleNumberOrPercentage& aCoord,
   return NS_lround(pixelValue);
 }
 
-bool nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
-                                         bool* aIsEntireImage) const {
-  MOZ_ASSERT(mType == eStyleImageType_Image,
-             "This function is designed to be used only when mType"
-             "is eStyleImageType_Image.");
+template <>
+Maybe<StyleImage::ActualCropRect> StyleImage::ComputeActualCropRect() const {
+  MOZ_ASSERT(IsRect(),
+             "This function is designed to be used only image-rect images");
 
-  imgRequestProxy* req = GetImageData();
+  imgRequestProxy* req = GetImageRequest();
   if (!req) {
-    return false;
+    return Nothing();
   }
 
   nsCOMPtr<imgIContainer> imageContainer;
   req->GetImage(getter_AddRefs(imageContainer));
   if (!imageContainer) {
-    return false;
+    return Nothing();
   }
 
   nsIntSize imageSize;
   imageContainer->GetWidth(&imageSize.width);
   imageContainer->GetHeight(&imageSize.height);
   if (imageSize.width <= 0 || imageSize.height <= 0) {
-    return false;
+    return Nothing();
   }
 
-  int32_t left =
-      ConvertToPixelCoord(mCropRect->Get(eSideLeft), imageSize.width);
-  int32_t top = ConvertToPixelCoord(mCropRect->Get(eSideTop), imageSize.height);
-  int32_t right =
-      ConvertToPixelCoord(mCropRect->Get(eSideRight), imageSize.width);
-  int32_t bottom =
-      ConvertToPixelCoord(mCropRect->Get(eSideBottom), imageSize.height);
+  auto& rect = AsRect();
+
+  int32_t left = ConvertToPixelCoord(rect->left, imageSize.width);
+  int32_t top = ConvertToPixelCoord(rect->top, imageSize.height);
+  int32_t right = ConvertToPixelCoord(rect->right, imageSize.width);
+  int32_t bottom = ConvertToPixelCoord(rect->bottom, imageSize.height);
 
   // IntersectRect() returns an empty rect if we get negative width or height
   nsIntRect cropRect(left, top, right - left, bottom - top);
   nsIntRect imageRect(nsIntPoint(0, 0), imageSize);
-  aActualCropRect.IntersectRect(imageRect, cropRect);
-
-  if (aIsEntireImage) {
-    *aIsEntireImage = aActualCropRect.IsEqualInterior(imageRect);
-  }
-  return true;
+  auto finalRect = imageRect.Intersect(cropRect);
+  bool isEntireImage = finalRect.IsEqualInterior(imageRect);
+  return Some(ActualCropRect{finalRect, isEntireImage});
 }
 
-bool nsStyleImage::StartDecoding() const {
-  if (mType == eStyleImageType_Image) {
-    imgRequestProxy* req = GetImageData();
-    if (!req) {
-      return false;
-    }
-    return req->StartDecodingWithResult(imgIContainer::FLAG_ASYNC_NOTIFY);
+template <>
+bool StyleImage::StartDecoding() const {
+  if (IsImageRequestType()) {
+    imgRequestProxy* req = GetImageRequest();
+    return req &&
+           req->StartDecodingWithResult(imgIContainer::FLAG_ASYNC_NOTIFY);
   }
-  // null image types always return false from IsComplete, so we do the same
-  // here.
-  return mType != eStyleImageType_Null;
+  // None always returns false from IsComplete, so we do the same here.
+  return !IsNone();
 }
 
-bool nsStyleImage::IsOpaque() const {
+template <>
+bool StyleImage::IsOpaque() const {
   if (!IsComplete()) {
     return false;
   }
 
-  if (mType == eStyleImageType_Gradient) {
-    return mGradient->IsOpaque();
+  if (IsGradient()) {
+    return AsGradient()->IsOpaque();
   }
 
-  if (mType == eStyleImageType_Element) {
+  if (IsElement()) {
     return false;
   }
 
-  MOZ_ASSERT(mType == eStyleImageType_Image, "unexpected image type");
-  MOZ_ASSERT(GetImageData(), "should've returned earlier above");
+  MOZ_ASSERT(IsImageRequestType(), "unexpected image type");
+  MOZ_ASSERT(GetImageRequest(), "should've returned earlier above");
 
   nsCOMPtr<imgIContainer> imageContainer;
-  GetImageData()->GetImage(getter_AddRefs(imageContainer));
+  GetImageRequest()->GetImage(getter_AddRefs(imageContainer));
   MOZ_ASSERT(imageContainer, "IsComplete() said image container is ready");
 
   // Check if the crop region of the image is opaque.
   if (imageContainer->WillDrawOpaqueNow()) {
-    if (!mCropRect) {
+    if (!IsRect()) {
       return true;
     }
 
-    // Must make sure if mCropRect contains at least a pixel.
+    // Must make sure if the crop rect contains at least a pixel.
     // XXX Is this optimization worth it? Maybe I should just return false.
-    nsIntRect actualCropRect;
-    return ComputeActualCropRect(actualCropRect) && !actualCropRect.IsEmpty();
+    auto croprect = ComputeActualCropRect();
+    return croprect && !croprect->mRect.IsEmpty();
   }
 
   return false;
 }
 
-bool nsStyleImage::IsComplete() const {
-  switch (mType) {
-    case eStyleImageType_Null:
+template <>
+bool StyleImage::IsComplete() const {
+  switch (tag) {
+    case Tag::None:
       return false;
-    case eStyleImageType_Gradient:
-    case eStyleImageType_Element:
+    case Tag::Gradient:
+    case Tag::Element:
       return true;
-    case eStyleImageType_Image: {
+    case Tag::Url:
+    case Tag::Rect: {
       if (!IsResolved()) {
         return false;
       }
-      imgRequestProxy* req = GetImageData();
+      imgRequestProxy* req = GetImageRequest();
       if (!req) {
         return false;
       }
@@ -1861,15 +1587,17 @@ bool nsStyleImage::IsComplete() const {
   }
 }
 
-bool nsStyleImage::IsSizeAvailable() const {
-  switch (mType) {
-    case eStyleImageType_Null:
+template <>
+bool StyleImage::IsSizeAvailable() const {
+  switch (tag) {
+    case Tag::None:
       return false;
-    case eStyleImageType_Gradient:
-    case eStyleImageType_Element:
+    case Tag::Gradient:
+    case Tag::Element:
       return true;
-    case eStyleImageType_Image: {
-      imgRequestProxy* req = GetImageData();
+    case Tag::Url:
+    case Tag::Rect: {
+      imgRequestProxy* req = GetImageRequest();
       if (!req) {
         return false;
       }
@@ -1884,65 +1612,16 @@ bool nsStyleImage::IsSizeAvailable() const {
   }
 }
 
-static inline bool EqualRects(const nsStyleImage::CropRect* aRect1,
-                              const nsStyleImage::CropRect* aRect2) {
-  return aRect1 == aRect2 || /* handles null== null, and optimize */
-         (aRect1 && aRect2 && *aRect1 == *aRect2);
-}
-
-bool nsStyleImage::operator==(const nsStyleImage& aOther) const {
-  if (mType != aOther.mType) {
-    return false;
+template <>
+void StyleImage::ResolveImage(Document& aDoc, const StyleImage* aOld) {
+  if (IsResolved()) {
+    return;
   }
-
-  if (!EqualRects(mCropRect.get(), aOther.mCropRect.get())) {
-    return false;
-  }
-
-  if (mType == eStyleImageType_Image) {
-    return mImage == aOther.mImage;
-  }
-
-  if (mType == eStyleImageType_Gradient) {
-    return *mGradient == *aOther.mGradient;
-  }
-
-  if (mType == eStyleImageType_Element) {
-    return mElementId == aOther.mElementId;
-  }
-
-  return true;
-}
-
-void nsStyleImage::PurgeCacheForViewportChange(
-    const mozilla::Maybe<nsSize>& aSVGViewportSize,
-    const bool aHasIntrinsicRatio) const {
-  EnsureCachedBIData();
-
-  // If we're redrawing with a different viewport-size than we used for our
-  // cached subimages, then we can't trust that our subimages are valid;
-  // any percent sizes/positions in our SVG doc may be different now. Purge!
-  // (We don't have to purge if the SVG document has an intrinsic ratio,
-  // though, because the actual size of elements in SVG documant's coordinate
-  // axis are fixed in this case.)
-  if (aSVGViewportSize != mCachedBIData->GetCachedSVGViewportSize() &&
-      !aHasIntrinsicRatio) {
-    mCachedBIData->PurgeCachedImages();
-    mCachedBIData->SetCachedSVGViewportSize(aSVGViewportSize);
-  }
-}
-
-already_AddRefed<nsIURI> nsStyleImage::GetImageURI() const {
-  if (mType != eStyleImageType_Image) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> uri = mImage.GetURI();
-  return uri.forget();
-}
-
-const StyleComputedImageUrl* nsStyleImage::GetURLValue() const {
-  return mType == eStyleImageType_Image ? &mImage : nullptr;
+  auto* old = aOld ? aOld->GetImageRequestURLValue() : nullptr;
+  auto* url = GetImageRequestURLValue();
+  // We could avoid this const_cast generating more code but it's not really
+  // worth it.
+  const_cast<StyleComputedImageUrl*>(url)->ResolveImage(aDoc, old);
 }
 
 // --------------------
@@ -2031,13 +1710,9 @@ nsStyleImageLayers::nsStyleImageLayers(const nsStyleImageLayers& aSource)
   }
 }
 
-static bool IsElementImage(const nsStyleImageLayers::Layer& aLayer) {
-  return aLayer.mImage.GetType() == eStyleImageType_Element;
-}
-
 static bool AnyLayerIsElementImage(const nsStyleImageLayers& aLayers) {
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, aLayers) {
-    if (IsElementImage(aLayers.mLayers[i])) {
+    if (aLayers.mLayers[i].mImage.IsElement()) {
       return true;
     }
   }
@@ -2070,8 +1745,8 @@ nsChangeHint nsStyleImageLayers::CalcDifference(
       const Layer& lessLayersLayer = lessLayers.mLayers[i];
       nsChangeHint layerDifference =
           moreLayersLayer.CalcDifference(lessLayersLayer);
-      if (layerDifference && (IsElementImage(moreLayersLayer) ||
-                              IsElementImage(lessLayersLayer))) {
+      if (layerDifference && (moreLayersLayer.mImage.IsElement() ||
+                              lessLayersLayer.mImage.IsElement())) {
         layerDifference |=
             nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
       }
@@ -2089,8 +1764,8 @@ nsChangeHint nsStyleImageLayers::CalcDifference(
     }
 
     const Layer& lessLayersLayer = lessLayers.mLayers[i];
-    MOZ_ASSERT(moreLayersLayer.mImage.GetType() == eStyleImageType_Null);
-    MOZ_ASSERT(lessLayersLayer.mImage.GetType() == eStyleImageType_Null);
+    MOZ_ASSERT(moreLayersLayer.mImage.IsNone());
+    MOZ_ASSERT(lessLayersLayer.mImage.IsNone());
     if (moreLayersLayer.CalcDifference(lessLayersLayer)) {
       // We don't care about the difference returned, we know it's not visible,
       // but if something changed, then we need to return the neutral change.
@@ -2227,9 +1902,8 @@ bool nsStyleImageLayers::IsInitialPositionForLayerType(Position aPosition,
 }
 
 static bool SizeDependsOnPositioningAreaSize(const StyleBackgroundSize& aSize,
-                                             const nsStyleImage& aImage) {
-  MOZ_ASSERT(aImage.GetType() != eStyleImageType_Null,
-             "caller should have handled this");
+                                             const StyleImage& aImage) {
+  MOZ_ASSERT(!aImage.IsNone(), "caller should have handled this");
 
   // Contain and cover straightforwardly depend on frame size.
   if (aSize.IsCover() || aSize.IsContain()) {
@@ -2250,27 +1924,24 @@ static bool SizeDependsOnPositioningAreaSize(const StyleBackgroundSize& aSize,
     return false;
   }
 
-  nsStyleImageType type = aImage.GetType();
-
   // Gradient rendering depends on frame size when auto is involved because
   // gradients have no intrinsic ratio or dimensions, and therefore the relevant
   // dimension is "treat[ed] as 100%".
-  if (type == eStyleImageType_Gradient) {
+  if (aImage.IsGradient()) {
     return true;
   }
 
   // XXX Element rendering for auto or fixed length doesn't depend on frame size
   //     according to the spec.  However, we don't implement the spec yet, so
   //     for now we bail and say element() plus auto affects ultimate size.
-  if (type == eStyleImageType_Element) {
+  if (aImage.IsElement()) {
     return true;
   }
 
-  if (type == eStyleImageType_Image) {
+  MOZ_ASSERT(aImage.IsImageRequestType(), "Missed some image");
+  if (auto* request = aImage.GetImageRequest()) {
     nsCOMPtr<imgIContainer> imgContainer;
-    if (imgRequestProxy* req = aImage.GetImageData()) {
-      req->GetImage(getter_AddRefs(imgContainer));
-    }
+    request->GetImage(getter_AddRefs(imgContainer));
     if (imgContainer) {
       CSSIntSize imageSize;
       AspectRatio imageRatio;
@@ -2295,8 +1966,6 @@ static bool SizeDependsOnPositioningAreaSize(const StyleBackgroundSize& aSize,
       return !(hasWidth && size.width.IsLengthPercentage()) &&
              !(hasHeight && size.height.IsLengthPercentage());
     }
-  } else {
-    MOZ_ASSERT_UNREACHABLE("missed an enum value");
   }
 
   // Passed the gauntlet: no dependency.
@@ -2304,14 +1973,15 @@ static bool SizeDependsOnPositioningAreaSize(const StyleBackgroundSize& aSize,
 }
 
 nsStyleImageLayers::Layer::Layer()
-    : mSize(StyleBackgroundSize::ExplicitSize(LengthPercentageOrAuto::Auto(),
+    : mImage(StyleImage::None()),
+      mSize(StyleBackgroundSize::ExplicitSize(LengthPercentageOrAuto::Auto(),
                                               LengthPercentageOrAuto::Auto())),
+
       mClip(StyleGeometryBox::BorderBox),
       mAttachment(StyleImageLayerAttachment::Scroll),
       mBlendMode(NS_STYLE_BLEND_NORMAL),
       mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
       mMaskMode(StyleMaskMode::MatchSource) {
-  mImage.SetNull();
 }
 
 nsStyleImageLayers::Layer::~Layer() {}
@@ -2333,7 +2003,7 @@ void nsStyleImageLayers::Layer::Initialize(
 bool nsStyleImageLayers::Layer::
     RenderingMightDependOnPositioningAreaSizeChange() const {
   // Do we even have an image?
-  if (mImage.IsEmpty()) {
+  if (mImage.IsNone()) {
     return false;
   }
 
@@ -2397,10 +2067,10 @@ void nsStyleImageLayers::FillAllLayers(uint32_t aMaxItemCount) {
   FillImageLayerList(mLayers, &Layer::mComposite, mCompositeCount, fillCount);
 }
 
-static bool UrlValuesEqual(const nsStyleImage& aImage,
-                           const nsStyleImage& aOtherImage) {
-  auto* url = aImage.GetURLValue();
-  auto* other = aOtherImage.GetURLValue();
+static bool UrlValuesEqual(const StyleImage& aImage,
+                           const StyleImage& aOtherImage) {
+  auto* url = aImage.GetImageRequestURLValue();
+  auto* other = aOtherImage.GetImageRequestURLValue();
   return url == other || (url && other && *url == *other);
 }
 
@@ -2464,7 +2134,7 @@ bool nsStyleBackground::HasFixedBackground(nsIFrame* aFrame) const {
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mImage) {
     const nsStyleImageLayers::Layer& layer = mImage.mLayers[i];
     if (layer.mAttachment == StyleImageLayerAttachment::Fixed &&
-        !layer.mImage.IsEmpty() && !nsLayoutUtils::IsTransformed(aFrame)) {
+        !layer.mImage.IsNone() && !nsLayoutUtils::IsTransformed(aFrame)) {
       return true;
     }
   }
@@ -2484,7 +2154,7 @@ bool nsStyleBackground::IsTransparent(const nsIFrame* aFrame) const {
 }
 
 bool nsStyleBackground::IsTransparent(mozilla::ComputedStyle* aStyle) const {
-  return BottomLayer().mImage.IsEmpty() && mImage.mImageCount == 1 &&
+  return BottomLayer().mImage.IsNone() && mImage.mImageCount == 1 &&
          NS_GET_A(BackgroundColor(aStyle)) == 0;
 }
 
@@ -2605,7 +2275,8 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mPerspectiveOrigin(Position::FromPercentage(0.5f)),
       mVerticalAlign(
           StyleVerticalAlign::Keyword(StyleVerticalAlignKeyword::Baseline)),
-      mShapeMargin(LengthPercentage::Zero()) {
+      mShapeMargin(LengthPercentage::Zero()),
+      mShapeOutside(StyleShapeOutside::None()) {
   MOZ_COUNT_CTOR(nsStyleDisplay);
 
   mTransitions[0].SetInitialValues();
@@ -2681,8 +2352,15 @@ void nsStyleDisplay::TriggerImageLoads(Document& aDocument,
                                        const nsStyleDisplay* aOldStyle) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mShapeOutside.TriggerImageLoads(
-      aDocument, aOldStyle ? &aOldStyle->mShapeOutside : nullptr);
+  if (mShapeOutside.IsImage()) {
+    auto* old = aOldStyle && aOldStyle->mShapeOutside.IsImage()
+                    ? &aOldStyle->mShapeOutside.AsImage()
+                    : nullptr;
+    // Const-cast is ugly but legit, we could avoid it by generating mut-casts
+    // with cbindgen.
+    const_cast<StyleImage&>(mShapeOutside.AsImage())
+        .ResolveImage(aDocument, old);
+  }
 }
 
 template <typename TransformLike>

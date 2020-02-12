@@ -62,7 +62,7 @@ struct nsBackgroundLayerState {
   /**
    * @param aFlags some combination of nsCSSRendering::PAINTBG_* flags
    */
-  nsBackgroundLayerState(nsIFrame* aForFrame, const nsStyleImage* aImage,
+  nsBackgroundLayerState(nsIFrame* aForFrame, const mozilla::StyleImage* aImage,
                          uint32_t aFlags)
       : mImageRenderer(aForFrame, aImage, aFlags) {}
 

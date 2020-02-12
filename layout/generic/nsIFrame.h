@@ -1207,6 +1207,9 @@ class nsIFrame : public nsQueryFrame {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(PreTransformOverflowAreasProperty,
                                       nsOverflowAreas)
 
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedBorderImageDataProperty,
+                                      CachedBorderImageData)
+
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(OverflowAreasProperty, nsOverflowAreas)
 
   // The initial overflow area passed to FinishAndStoreOverflow. This is only
@@ -2022,13 +2025,13 @@ class nsIFrame : public nsQueryFrame {
    *
    * Returns whether the image was in fact associated with the frame.
    */
-  MOZ_MUST_USE bool AssociateImage(const nsStyleImage&);
+  MOZ_MUST_USE bool AssociateImage(const mozilla::StyleImage&);
 
   /**
    * This needs to be called if the above caller returned true, once the above
    * caller doesn't care about getting notified anymore.
    */
-  void DisassociateImage(const nsStyleImage&);
+  void DisassociateImage(const mozilla::StyleImage&);
 
   enum class AllowCustomCursorImage {
     No,

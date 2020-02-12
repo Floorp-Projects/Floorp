@@ -847,17 +847,15 @@ items from that key's value."
         if branch == 'try':
             branch = 'mozilla-central'
 
-        multi_config_pf = self.config.get('multi_locale_config_platform',
-                                          'android')
-
-        multil10n_path = 'build/src/testing/mozharness/scripts/multil10n.py'
+        multil10n_path = os.path.join(
+            dirs['abs_src_dir'],
+            'testing/mozharness/scripts/multil10n.py',
+        )
         base_work_dir = os.path.join(base_work_dir, 'workspace')
 
         cmd = [
             sys.executable,
             multil10n_path,
-            '--config-file',
-            'multi_locale/%s_%s.json' % (branch, multi_config_pf),
             '--config-file',
             'multi_locale/android-mozharness-build.json',
             '--pull-locale-source',

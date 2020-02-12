@@ -286,6 +286,15 @@ input:-moz-focusring {
   margin-inline-start: 6px;
 }
 
+#device-selector::before {
+  fill: var(--theme-icon-dimmed-color);
+}
+
+/* Override the style defined in tooltips.css */
+.tooltip-container[type="doorhanger"] .menuitem > .command.iconic.device-selector-item > .label::before {
+  fill: var(--theme-icon-dimmed-color);
+}
+
 #viewports-container {
   display: flex;
   overflow: auto;

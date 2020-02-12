@@ -237,7 +237,7 @@ void nsColumnSetFrame::CreateBorderRenderers(
         // Assert that we're not drawing a border-image here; if we were, we
         // couldn't ignore the ImgDrawResult that PaintBorderWithStyleBorder
         // returns.
-        MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
+        MOZ_ASSERT(border.mBorderImageSource.IsNone());
 
         gfx::DrawTarget* dt = aCtx ? aCtx->GetDrawTarget() : nullptr;
         bool borderIsEmpty = false;

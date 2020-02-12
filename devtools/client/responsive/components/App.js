@@ -106,6 +106,9 @@ class App extends PureComponent {
     this.onToggleUserAgentInput = this.onToggleUserAgentInput.bind(this);
     this.onUpdateDeviceDisplayed = this.onUpdateDeviceDisplayed.bind(this);
     this.onUpdateDeviceModal = this.onUpdateDeviceModal.bind(this);
+    this.onUpdateDeviceSelectorMenu = this.onUpdateDeviceSelectorMenu.bind(
+      this
+    );
   }
 
   componentWillUnmount() {
@@ -130,6 +133,9 @@ class App extends PureComponent {
   }
 
   onChangeDevice(id, device, deviceType) {
+    // Resize the viewport first.
+    this.doResizeViewport(id, device.width, device.height);
+
     // TODO: Bug 1332754: Move messaging and logic into the action creator so that the
     // message is sent from the action creator and device property changes are sent from
     // there instead of this function.
@@ -137,12 +143,12 @@ class App extends PureComponent {
       {
         type: "change-device",
         device,
-        viewport: this.props.viewports[id],
+        viewport: device,
       },
       "*"
     );
 
-    const orientation = getOrientation(device, this.props.viewports[0]);
+    const orientation = getOrientation(device, device);
 
     this.props.dispatch(changeViewportAngle(0, orientation.angle));
     this.props.dispatch(changeDevice(id, device.name, deviceType));
@@ -386,6 +392,12 @@ class App extends PureComponent {
     }
   }
 
+  onUpdateDeviceSelectorMenu(isOpen) {
+    if (Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
+      window.postMessage({ type: "update-device-selector-menu", isOpen }, "*");
+    }
+  }
+
   render() {
     const { devices, networkThrottling, screenshot, viewports } = this.props;
 
@@ -413,6 +425,7 @@ class App extends PureComponent {
       onToggleUserAgentInput,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModal,
+      onUpdateDeviceSelectorMenu,
     } = this;
 
     if (!viewports.length) {
@@ -451,6 +464,7 @@ class App extends PureComponent {
         onToggleReloadOnUserAgent,
         onToggleUserAgentInput,
         onUpdateDeviceModal,
+        onUpdateDeviceSelectorMenu,
       }),
       !Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")
         ? Viewports({

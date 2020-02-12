@@ -541,6 +541,9 @@ class ResponsiveUI {
         break;
       case "update-device-modal":
         this.onUpdateDeviceModal(event);
+        break;
+      case "update-device-selector-menu":
+        this.onUpdateDeviceSelectorMenu(event);
     }
   }
 
@@ -755,6 +758,13 @@ class ResponsiveUI {
   onUpdateDeviceModal(event) {
     this.browserStackEl.classList.toggle(
       "device-modal-opened",
+      event.data.isOpen
+    );
+  }
+
+  onUpdateDeviceSelectorMenu(event) {
+    this.browserStackEl.classList.toggle(
+      "device-selector-menu-opened",
       event.data.isOpen
     );
   }

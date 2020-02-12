@@ -1170,8 +1170,7 @@ const browsingContextTargetPrototype = {
    */
   _setCacheDisabled(disabled) {
     const enable = Ci.nsIRequest.LOAD_NORMAL;
-    const disable =
-      Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
+    const disable = Ci.nsIRequest.LOAD_BYPASS_CACHE;
 
     this.docShell.defaultLoadFlags = disabled ? disable : enable;
   },
@@ -1234,8 +1233,7 @@ const browsingContextTargetPrototype = {
       return null;
     }
 
-    const disable =
-      Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
+    const disable = Ci.nsIRequest.LOAD_BYPASS_CACHE;
     return this.docShell.defaultLoadFlags === disable;
   },
 

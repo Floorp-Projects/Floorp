@@ -440,7 +440,7 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
     return Nothing();
   }
 
-  if (!IsCSSMimeTypeAttribute(*this)) {
+  if (!IsCSSMimeTypeAttributeForLinkElement(*this)) {
     return Nothing();
   }
 
@@ -874,6 +874,19 @@ bool HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
     }
   }
   return false;
+}
+
+bool HTMLLinkElement::IsCSSMimeTypeAttributeForLinkElement(
+    const Element& aSelf) {
+  // Processing the type attribute per
+  // https://html.spec.whatwg.org/multipage/semantics.html#processing-the-type-attribute
+  // for HTML link elements.
+  nsAutoString type;
+  nsAutoString mimeType;
+  nsAutoString notUsed;
+  aSelf.GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+  nsContentUtils::SplitMimeType(type, mimeType, notUsed);
+  return mimeType.IsEmpty() || mimeType.LowerCaseEqualsLiteral("text/css");
 }
 
 }  // namespace dom
