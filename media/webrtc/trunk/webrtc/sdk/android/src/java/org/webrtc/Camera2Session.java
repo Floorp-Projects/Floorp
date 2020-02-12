@@ -10,6 +10,7 @@
 
 package org.webrtc;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.camera2.CameraAccessException;
@@ -341,6 +342,7 @@ class Camera2Session implements CameraSession {
     Logging.d(TAG, "Using capture format: " + captureFormat);
   }
 
+  @SuppressLint("MissingPermission")
   private void openCamera() {
     checkIsOnCameraThread();
 
