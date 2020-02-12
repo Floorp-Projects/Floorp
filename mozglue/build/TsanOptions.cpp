@@ -315,6 +315,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:CacheFileMetadata::SetHash\n"
          "race:CacheFileMetadata::OnDataWritten\n"
 
+         // Bug 1615045
+         "race:StartupCache::WriteToDisk\n"
+
          // ~GLContextGLX unlocks a libGL mutex that cannot be seen
          // by TSan because libGL is not instrumented.
          "mutex:GLContextGLX::~GLContextGLX\n"
