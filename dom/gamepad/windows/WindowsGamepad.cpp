@@ -516,13 +516,13 @@ void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
 
   // Then triggers
   if (state.Gamepad.bLeftTrigger != gamepad.state.Gamepad.bLeftTrigger) {
-    bool pressed =
+    const bool pressed =
         state.Gamepad.bLeftTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
     service->NewButtonEvent(gamepad.id, kButtonLeftTrigger, pressed,
                             state.Gamepad.bLeftTrigger / 255.0);
   }
   if (state.Gamepad.bRightTrigger != gamepad.state.Gamepad.bRightTrigger) {
-    bool pressed =
+    const bool pressed =
         state.Gamepad.bRightTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
     service->NewButtonEvent(gamepad.id, kButtonRightTrigger, pressed,
                             state.Gamepad.bRightTrigger / 255.0);
@@ -531,20 +531,24 @@ void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
   // Finally deal with analog sticks
   // TODO: bug 1001955 - Support deadzones.
   if (state.Gamepad.sThumbLX != gamepad.state.Gamepad.sThumbLX) {
+    const float div = state.Gamepad.sThumbLX > 0 ? 32767.0 : 32768.0;
     service->NewAxisMoveEvent(gamepad.id, kLeftStickXAxis,
-                              state.Gamepad.sThumbLX / 32767.0);
+                              state.Gamepad.sThumbLX / div);
   }
   if (state.Gamepad.sThumbLY != gamepad.state.Gamepad.sThumbLY) {
+    const float div = state.Gamepad.sThumbLY > 0 ? 32767.0 : 32768.0;
     service->NewAxisMoveEvent(gamepad.id, kLeftStickYAxis,
-                              -1.0 * state.Gamepad.sThumbLY / 32767.0);
+                              -1.0 * state.Gamepad.sThumbLY / div);
   }
   if (state.Gamepad.sThumbRX != gamepad.state.Gamepad.sThumbRX) {
+    const float div = state.Gamepad.sThumbRX > 0 ? 32767.0 : 32768.0;
     service->NewAxisMoveEvent(gamepad.id, kRightStickXAxis,
-                              state.Gamepad.sThumbRX / 32767.0);
+                              state.Gamepad.sThumbRX / div);
   }
   if (state.Gamepad.sThumbRY != gamepad.state.Gamepad.sThumbRY) {
+    const float div = state.Gamepad.sThumbRY > 0 ? 32767.0 : 32768.0;
     service->NewAxisMoveEvent(gamepad.id, kRightStickYAxis,
-                              -1.0 * state.Gamepad.sThumbRY / 32767.0);
+                              -1.0 * state.Gamepad.sThumbRY / div);
   }
   gamepad.state = state;
 }
