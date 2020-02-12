@@ -3780,6 +3780,8 @@ bool nsCookieService::ParseAttributes(nsCString& aCookieHeader,
     aCookieData.value() = tokenString;
   }
 
+  bool sameSiteSet = false;
+
   // extract remaining attributes
   while (cookieStart != cookieEnd && !newCookie) {
     newCookie = GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue,
@@ -3816,15 +3818,21 @@ bool nsCookieService::ParseAttributes(nsCString& aCookieHeader,
       if (tokenValue.LowerCaseEqualsLiteral(kSameSiteLax)) {
         aCookieData.sameSite() = nsICookie::SAMESITE_LAX;
         aCookieData.rawSameSite() = nsICookie::SAMESITE_LAX;
+        sameSiteSet = true;
       } else if (tokenValue.LowerCaseEqualsLiteral(kSameSiteStrict)) {
         aCookieData.sameSite() = nsICookie::SAMESITE_STRICT;
         aCookieData.rawSameSite() = nsICookie::SAMESITE_STRICT;
+        sameSiteSet = true;
       } else if (tokenValue.LowerCaseEqualsLiteral(kSameSiteNone)) {
         aCookieData.sameSite() = nsICookie::SAMESITE_NONE;
         aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
+        sameSiteSet = true;
       }
     }
   }
+
+  Telemetry::Accumulate(Telemetry::COOKIE_SAMESITE_SET_VS_UNSET,
+                        sameSiteSet ? 1 : 0);
 
   // re-assign aCookieHeader, in case we need to process another cookie
   aCookieHeader.Assign(Substring(cookieStart, cookieEnd));
