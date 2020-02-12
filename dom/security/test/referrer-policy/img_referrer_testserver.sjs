@@ -1,4 +1,4 @@
-var BASE_URL = 'example.com/tests/dom/base/test/img_referrer_testserver.sjs';
+var BASE_URL = 'example.com/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs';
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
   "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
