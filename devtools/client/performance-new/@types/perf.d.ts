@@ -408,18 +408,22 @@ export interface PresetDefinitions {
 export type MessageFromFrontend =
   | {
       type: "STATUS_QUERY";
+      requestId: number;
     }
   | {
       type: "ENABLE_MENU_BUTTON";
+      requestId: number;
     };
 
 export type MessageToFrontend =
   | {
       type: "STATUS_RESPONSE";
       menuButtonIsEnabled: boolean;
+      requestId: number;
     }
   | {
       type: "ENABLE_MENU_BUTTON_DONE";
+      requestId: number;
     }
 
 /**
