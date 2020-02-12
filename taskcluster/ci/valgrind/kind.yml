@@ -28,7 +28,7 @@ jobs:
             symbol: V
             kind: build
             tier: 1
-        worker-type: b-linux
+        worker-type: b-linux-aws
         worker:
             docker-image: {in-tree: valgrind-build}
             max-run-time: 72000
