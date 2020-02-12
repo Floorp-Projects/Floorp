@@ -299,6 +299,8 @@ bool CurrentThreadIsIonCompilingSafeForMinorGC();
 
 bool CurrentThreadIsGCSweeping();
 
+bool CurrentThreadIsGCFinalizing();
+
 bool IsMarkedBlack(JSObject* obj);
 
 bool CurrentThreadIsTouchingGrayThings();
@@ -549,8 +551,9 @@ class GCPtr : public WriteBarriered<T> {
     //
     // Note that when sweeping the wrapped pointer may already have been
     // freed by this point.
-    MOZ_ASSERT(CurrentThreadIsGCSweeping() ||
-               this->value == JS::SafelyInitialized<T>());
+    MOZ_ASSERT_IF(
+        !CurrentThreadIsGCSweeping() && !CurrentThreadIsGCFinalizing(),
+        this->value == JS::SafelyInitialized<T>());
     Poison(this, JS_FREED_HEAP_PTR_PATTERN, sizeof(*this),
            MemCheckKind::MakeNoAccess);
   }

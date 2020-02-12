@@ -34,6 +34,9 @@ extern bool RuntimeFromMainThreadIsHeapMajorCollecting(
 // Barriers can't be triggered during backend Ion compilation, which may run on
 // a helper thread.
 extern bool CurrentThreadIsIonCompiling();
+
+extern bool CurrentThreadIsGCMarking();
+
 #endif
 
 extern void TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc,
@@ -47,10 +50,6 @@ enum class AllocKind : uint8_t;
 struct Chunk;
 class StoreBuffer;
 class TenuredCell;
-
-#ifdef DEBUG
-extern bool CurrentThreadIsGCMarking();
-#endif
 
 // Like gc::MarkColor but allows the possibility of the cell being unmarked.
 //

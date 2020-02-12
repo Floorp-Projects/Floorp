@@ -750,10 +750,6 @@ void XPCWrappedNative::FlatJSObjectFinalized() {
     JSObject* jso = to->GetJSObjectPreserveColor();
     if (jso) {
       JS_SetPrivate(jso, nullptr);
-#ifdef DEBUG
-      JS_UpdateWeakPointerAfterGCUnbarriered(&jso);
-      MOZ_ASSERT(!jso);
-#endif
       to->JSObjectFinalized();
     }
 
