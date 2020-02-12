@@ -2743,7 +2743,14 @@ pref("browser.tabs.remote.dataUriInDefaultWebProcess", false);
 // This has been added in case breaking any window references between these
 // sorts of pages, which we have to do when we run them in the normal web
 // content process, causes compatibility issues.
+//
+// This is going away and for now is disabled on nightly because document
+// channel is enabled there.
+#ifdef NIGHTLY_BUILD
+pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
+#else
 pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", true);
+#endif
 
 // This pref will cause assertions when a remoteType triggers a process switch
 // to a new remoteType it should not be able to trigger.
