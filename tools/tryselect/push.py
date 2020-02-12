@@ -11,6 +11,12 @@ import sys
 from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object, MissingVCSExtension
+from .util.estimates import (
+    duration_summary,
+    download_task_history_data,
+    make_trimmed_taskgraph_cache
+)
+
 
 GIT_CINNABAR_NOT_FOUND = """
 Could not detect `git-cinnabar`.
@@ -90,9 +96,52 @@ def generate_try_task_config(method, labels, try_config=None):
     return try_task_config
 
 
+def task_labels_from_try_config(try_task_config):
+    return try_task_config.get("tasks", list())
+
+
+def display_push_estimates(try_task_config):
+    cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
+
+    graph_cache = None
+    dep_cache = None
+    target_file = None
+    for graph_cache_file in ["full_task_graph", "target_task_graph"]:
+        graph_cache = os.path.join(cache_dir, graph_cache_file)
+        if os.path.isfile(graph_cache):
+            dep_cache = graph_cache.replace("task_graph", "task_dependencies")
+            target_file = graph_cache.replace("task_graph", "task_set")
+            break
+
+    if not dep_cache:
+        return
+
+    download_task_history_data(cache_dir=cache_dir)
+    make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=target_file)
+
+    durations = duration_summary(
+        dep_cache, task_labels_from_try_config(try_task_config), cache_dir)
+
+    print("estimates: Runs {} tasks ({} selected, {} dependencies)".format(
+        durations["dependency_count"] + durations["selected_count"],
+        durations["selected_count"],
+        durations["dependency_count"])
+    )
+    print("estimates: Total task duration {}".format(
+        durations["dependency_duration"] + durations["selected_duration"]
+    ))
+    print("estimates: In the {}% percentile".format(durations["quantile"]))
+    print("estimates: Should take about {} (Finished around {})".format(
+        durations["wall_duration_seconds"],
+        durations["eta_datetime"].strftime("%Y-%m-%d %H:%M"))
+    )
+
+
 def push_to_try(method, msg, try_task_config=None,
                 push=True, closed_tree=False, files_to_change=None):
     check_working_directory(push)
+
+    display_push_estimates(try_task_config)
 
     # Format the commit message
     closed_tree_string = " ON A CLOSED TREE" if closed_tree else ""
