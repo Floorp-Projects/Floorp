@@ -13,6 +13,7 @@ function zzyzx() {
 function zzyzx2() {
   x = 10;
 }
+var obj = {propA: "A", propB: "B"};
 </script>
 `;
 
@@ -121,13 +122,34 @@ add_task(async function() {
   const { autocompletePopup: popup } = jsterm;
 
   ok(!popup.isOpen, "popup is not open");
-  const onPopupOpen = popup.once("popup-opened");
+  let onPopupOpen = popup.once("popup-opened");
   EventUtils.sendString("zzy");
   await onPopupOpen;
 
   await waitForEagerEvaluationResult(hud, "function zzyzx()");
   EventUtils.synthesizeKey("KEY_ArrowDown");
   await waitForEagerEvaluationResult(hud, "function zzyzx2()");
+
+  // works when the input isn't properly cased but matches an autocomplete item
+  setInputValue(hud, "o");
+  onPopupOpen = popup.once("popup-opened");
+  EventUtils.sendString("B");
+  await waitForEagerEvaluationResult(hud, `Object { propA: "A", propB: "B" }`);
+
+  // works when doing element access without quotes
+  setInputValue(hud, "obj[p");
+  onPopupOpen = popup.once("popup-opened");
+  EventUtils.sendString("RoP");
+  await waitForEagerEvaluationResult(hud, `"A"`);
+
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  await waitForEagerEvaluationResult(hud, `"B"`);
+
+  // closing the autocomplete popup updates the eager evaluation result
+  const onPopupClose = popup.once("popup-closed");
+  EventUtils.synthesizeKey("KEY_Escape");
+  await onPopupClose;
+  await waitForNoEagerEvaluationResult(hud);
 });
 
 // Test that the setting works as expected.
