@@ -219,6 +219,9 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
 
   nsresult CleanupRangesInSelection(mozilla::dom::Selection* aSelection);
 
+  /**
+   * @param aRange needs to be kept alive by the caller.
+   */
   nsresult RemoveRange(mozilla::dom::Selection* aSpellCheckSelection,
                        nsRange* aRange);
   nsresult AddRange(mozilla::dom::Selection* aSpellCheckSelection,
