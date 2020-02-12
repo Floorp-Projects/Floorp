@@ -100,21 +100,6 @@ uint32_t JitcodeGlobalEntry::IonEntry::callStackAtAddr(
   return count;
 }
 
-void JitcodeGlobalEntry::IonEntry::youngestFrameLocationAtAddr(
-    void* ptr, JSScript** script, jsbytecode** pc) const {
-  uint32_t ptrOffset;
-  JitcodeRegionEntry region = RegionAtAddr(*this, ptr, &ptrOffset);
-
-  JitcodeRegionEntry::ScriptPcIterator locationIter = region.scriptPcIterator();
-  MOZ_ASSERT(locationIter.hasMore());
-  uint32_t scriptIdx, pcOffset;
-  locationIter.readNext(&scriptIdx, &pcOffset);
-  pcOffset = region.findPcOffset(ptrOffset, pcOffset);
-
-  *script = getScript(scriptIdx);
-  *pc = (*script)->offsetToPC(pcOffset);
-}
-
 uint64_t JitcodeGlobalEntry::IonEntry::lookupRealmID(void* ptr) const {
   uint32_t ptrOffset;
   JitcodeRegionEntry region = RegionAtAddr(*this, ptr, &ptrOffset);
@@ -195,13 +180,6 @@ uint32_t JitcodeGlobalEntry::BaselineEntry::callStackAtAddr(
   return 1;
 }
 
-void JitcodeGlobalEntry::BaselineEntry::youngestFrameLocationAtAddr(
-    void* ptr, JSScript** script, jsbytecode** pc) const {
-  uint8_t* addr = reinterpret_cast<uint8_t*>(ptr);
-  *script = script_;
-  *pc = script_->baselineScript()->approximatePcForNativeAddress(script_, addr);
-}
-
 uint64_t JitcodeGlobalEntry::BaselineEntry::lookupRealmID() const {
   return script_->realm()->creationOptions().profilerRealmID();
 }
@@ -226,11 +204,6 @@ bool JitcodeGlobalEntry::BaselineInterpreterEntry::callStackAtAddr(
 
 uint32_t JitcodeGlobalEntry::BaselineInterpreterEntry::callStackAtAddr(
     void* ptr, const char** results, uint32_t maxResults) const {
-  MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
-}
-
-void JitcodeGlobalEntry::BaselineInterpreterEntry::youngestFrameLocationAtAddr(
-    void* ptr, JSScript** script, jsbytecode** pc) const {
   MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
 }
 
