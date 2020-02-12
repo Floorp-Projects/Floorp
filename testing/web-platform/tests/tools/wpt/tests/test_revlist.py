@@ -55,16 +55,16 @@ merge_pr_C C 475200 _tue_
 merge_pr_B B 453600 _tue_
 merge_pr_A A 388800 _mon_
 '''
-    tagged_revisons = revlist.get_epoch_revisions(epoch, until, 8)
-    assert tagged_revisons.next() == 'N'
-    assert tagged_revisons.next() == 'M'
-    assert tagged_revisons.next() == 'K'
-    assert tagged_revisons.next() == 'J'
-    assert tagged_revisons.next() == 'G'
-    assert tagged_revisons.next() == 'F'
-    assert tagged_revisons.next() == 'C'
-    assert tagged_revisons.next() == 'A'
-    assert len(list(tagged_revisons)) == 0  # generator exhausted
+    tagged_revisions = revlist.get_epoch_revisions(epoch, until, 8)
+    assert tagged_revisions.next() == 'N'
+    assert tagged_revisions.next() == 'M'
+    assert tagged_revisions.next() == 'K'
+    assert tagged_revisions.next() == 'J'
+    assert tagged_revisions.next() == 'G'
+    assert tagged_revisions.next() == 'F'
+    assert tagged_revisions.next() == 'C'
+    assert tagged_revisions.next() == 'A'
+    assert len(list(tagged_revisions)) == 0  # generator exhausted
 
 
     # check: max_count with enough candidate items in the revision list
@@ -87,13 +87,13 @@ merge_pr_D D 648000 _thu_
 merge_pr_C C 561600 _wed_
 merge_pr_B B 475200 _thu_
 '''
-    tagged_revisons = revlist.get_epoch_revisions(epoch, until, 5)
-    assert tagged_revisons.next() == 'G'
-    assert tagged_revisons.next() == 'F'
-    assert tagged_revisons.next() == 'E'
-    assert tagged_revisons.next() == 'D'
-    assert tagged_revisons.next() == 'C'
-    assert len(list(tagged_revisons)) == 0  # generator exhausted
+    tagged_revisions = revlist.get_epoch_revisions(epoch, until, 5)
+    assert tagged_revisions.next() == 'G'
+    assert tagged_revisions.next() == 'F'
+    assert tagged_revisions.next() == 'E'
+    assert tagged_revisions.next() == 'D'
+    assert tagged_revisions.next() == 'C'
+    assert len(list(tagged_revisions)) == 0  # generator exhausted
 
 
     # check: max_count with less returned candidates items than the needed
@@ -112,10 +112,10 @@ merge_pr_H H 993600 _mon_
 merge_pr_G G 907200 _sun_
 merge_pr_F F 820800 _sat_
 '''
-    tagged_revisons = revlist.get_epoch_revisions(epoch, until, 5)
-    assert tagged_revisons.next() == 'G'
-    assert tagged_revisons.next() == 'F'
-    assert len(list(tagged_revisons)) == 0  # generator exhausted
+    tagged_revisions = revlist.get_epoch_revisions(epoch, until, 5)
+    assert tagged_revisions.next() == 'G'
+    assert tagged_revisions.next() == 'F'
+    assert len(list(tagged_revisions)) == 0  # generator exhausted
 
 
     # check: initial until value is on an epoch boundary
@@ -139,10 +139,10 @@ merge_pr_H H 1296000 _wed_
 merge_pr_G G 950400 _mon_
 merge_pr_F F 921600 _sud_
 '''
-    tagged_revisons = revlist.get_epoch_revisions(epoch, until, 3)
-    assert tagged_revisons.next() == 'G'
-    assert tagged_revisons.next() == 'F'
-    assert len(list(tagged_revisons)) == 0  # generator exhausted
+    tagged_revisions = revlist.get_epoch_revisions(epoch, until, 3)
+    assert tagged_revisions.next() == 'G'
+    assert tagged_revisions.next() == 'F'
+    assert len(list(tagged_revisions)) == 0  # generator exhausted
 
 
     # check: until aligned with Monday, 5 January 1970 0:00:00 (345600)
@@ -163,6 +163,6 @@ merge_pr_H H 1180800 _wed_
 merge_pr_G G 950400 _mon_
 merge_pr_F F 921600 _sud_
 '''
-    tagged_revisons = revlist.get_epoch_revisions(epoch, until, 1)
-    assert tagged_revisons.next() == 'F'
-    assert len(list(tagged_revisons)) == 0  # generator exhausted
+    tagged_revisions = revlist.get_epoch_revisions(epoch, until, 1)
+    assert tagged_revisions.next() == 'F'
+    assert len(list(tagged_revisions)) == 0  # generator exhausted
