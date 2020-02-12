@@ -3612,6 +3612,8 @@ class Document : public nsINode,
   void ScheduleIntersectionObserverNotification();
   MOZ_CAN_RUN_SCRIPT void NotifyIntersectionObservers();
 
+  DOMIntersectionObserver* GetLazyLoadImageObserver();
+
   // Dispatch a runnable related to the document.
   nsresult Dispatch(TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable) final;
@@ -4867,6 +4869,8 @@ class Document : public nsINode,
 
   // Array of intersection observers
   nsTHashtable<nsPtrHashKey<DOMIntersectionObserver>> mIntersectionObservers;
+
+  RefPtr<DOMIntersectionObserver> mLazyLoadImageObserver;
 
   // Stack of fullscreen elements. When we request fullscreen we push the
   // fullscreen element onto this stack, and when we cancel fullscreen we

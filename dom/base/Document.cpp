@@ -2148,6 +2148,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLazyLoadImageObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOrientationPendingPromise)
@@ -2255,6 +2256,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
 
   tmp->mCachedRootElement = nullptr;  // Avoid a dangling pointer
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDisplayDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLazyLoadImageObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedEncoder)
@@ -14662,6 +14664,22 @@ void Document::NotifyIntersectionObservers() {
       observer->Notify();
     }
   }
+}
+
+DOMIntersectionObserver* Document::GetLazyLoadImageObserver() {
+  Document* rootDoc = nsContentUtils::GetRootDocument(this);
+  MOZ_ASSERT(rootDoc);
+
+  if (rootDoc->mLazyLoadImageObserver) {
+    return rootDoc->mLazyLoadImageObserver;
+  }
+
+  if (nsPIDOMWindowInner* inner = rootDoc->GetInnerWindow()) {
+    rootDoc->mLazyLoadImageObserver =
+        DOMIntersectionObserver::CreateLazyLoadObserver(inner);
+  }
+
+  return rootDoc->mLazyLoadImageObserver;
 }
 
 static CallState NotifyLayerManagerRecreatedCallback(Document& aDocument,
