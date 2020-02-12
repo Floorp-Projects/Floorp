@@ -509,15 +509,6 @@ void JitRuntime::Trace(JSTracer* trc, const AutoAccessAtomsZone& access) {
 }
 
 /* static */
-void JitRuntime::TraceJitcodeGlobalTableForMinorGC(JSTracer* trc) {
-  if (trc->runtime()->geckoProfiler().enabled() &&
-      trc->runtime()->hasJitRuntime() &&
-      trc->runtime()->jitRuntime()->hasJitcodeGlobalTable()) {
-    trc->runtime()->jitRuntime()->getJitcodeGlobalTable()->traceForMinorGC(trc);
-  }
-}
-
-/* static */
 bool JitRuntime::MarkJitcodeGlobalTableIteratively(GCMarker* marker) {
   if (marker->runtime()->hasJitRuntime() &&
       marker->runtime()->jitRuntime()->hasJitcodeGlobalTable()) {
