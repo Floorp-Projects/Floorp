@@ -4,9 +4,9 @@ use crate::error::Error;
 use crate::instance::{new_instance_handle, Instance, InstanceHandle};
 use crate::module::Module;
 use crate::region::{Region, RegionCreate, RegionInternal};
+use libc::c_void;
 #[cfg(not(target_os = "linux"))]
 use libc::memset;
-use libc::{c_void, SIGSTKSZ};
 use nix::sys::mman::{madvise, mmap, munmap, MapFlags, MmapAdvise, ProtFlags};
 use std::ptr;
 use std::sync::{Arc, Mutex, Weak};
@@ -39,17 +39,17 @@ use std::sync::{Arc, Mutex, Weak};
 /// 0xXXXX: ~  .......heap.......   ~ // heap size is governed by limits.heap_address_space_size
 /// 0xXXXX: |                       |
 /// 0xN000: +-----------------------| <-- Stack (at heap_start + limits.heap_address_space_size)
+/// 0xNXXX: --- stack guard page ----
 /// 0xNXXX: |                       |
 /// 0xXXXX: ~  .......stack......   ~ // stack size is governed by limits.stack_size
 /// 0xXXXX: |                       |
-/// 0xXXXx: --- stack guard page ----
 /// 0xM000: +-----------------------| <-- Globals (at stack_start + limits.stack_size + PAGE_SIZE)
 /// 0xMXXX: |                       |
 /// 0xXXXX: ~  ......globals.....   ~
 /// 0xXXXX: |                       |
 /// 0xXXXX  --- global guard page ---
 /// 0xS000: +-----------------------| <-- Sigstack (at globals_start + globals_size + PAGE_SIZE)
-/// 0xSXXX: |  ......sigstack....   | // sigstack is SIGSTKSZ bytes
+/// 0xSXXX: |  ......sigstack....   | // sigstack is governed by limits.signal_stack_size
 /// 0xSXXX: +-----------------------|
 /// ```
 pub struct MmapRegion {
@@ -87,7 +87,7 @@ impl RegionInternal for MmapRegion {
             // make the globals read/writable
             (slot.globals, limits.globals_size),
             // make the sigstack read/writable
-            (slot.sigstack, SIGSTKSZ),
+            (slot.sigstack, limits.signal_stack_size),
         ]
         .into_iter()
         {
@@ -136,7 +136,7 @@ impl RegionInternal for MmapRegion {
             (slot.heap, alloc.heap_accessible_size),
             (slot.stack, slot.limits.stack_size),
             (slot.globals, slot.limits.globals_size),
-            (slot.sigstack, SIGSTKSZ),
+            (slot.sigstack, slot.limits.signal_stack_size),
         ]
         .into_iter()
         {
@@ -272,10 +272,6 @@ impl MmapRegion {
     /// The region is returned in an `Arc`, because any instances created from it carry a reference
     /// back to the region.
     pub fn create(instance_capacity: usize, limits: &Limits) -> Result<Arc<Self>, Error> {
-        assert!(
-            SIGSTKSZ % host_page_size() == 0,
-            "signal stack size is a multiple of host page size"
-        );
         limits.validate()?;
 
         let region = Arc::new(MmapRegion {
@@ -305,10 +301,6 @@ impl MmapRegion {
         limits: &Limits,
         heap_alignment: usize,
     ) -> Result<Arc<Self>, Error> {
-        assert!(
-            SIGSTKSZ % host_page_size() == 0,
-            "signal stack size is a multiple of host page size"
-        );
         limits.validate()?;
 
         let is_power_of_2 = (heap_alignment & (heap_alignment - 1)) == 0;
@@ -372,9 +364,9 @@ impl MmapRegion {
 
         // lay out the other sections in memory
         let heap = mem as usize + instance_heap_offset();
-        let stack = heap + region.limits.heap_address_space_size;
-        let globals = stack + region.limits.stack_size + host_page_size();
-        let sigstack = globals + host_page_size();
+        let stack = heap + region.limits.heap_address_space_size + host_page_size();
+        let globals = stack + region.limits.stack_size;
+        let sigstack = globals + region.limits.globals_size + host_page_size();
 
         Ok(Slot {
             start: mem,
