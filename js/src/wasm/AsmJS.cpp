@@ -7107,6 +7107,7 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
   // The module function dynamically links the AsmJSModule when called and
   // generates a set of functions wrapping all the exports.
   FunctionBox* funbox = parser.pc_->functionBox();
+
   RootedFunction moduleFun(cx, NewAsmJSModuleFunction(cx, funbox, moduleObj));
   if (!moduleFun) {
     return false;
@@ -7119,10 +7120,12 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
   MOZ_ASSERT(funbox->isInterpreted());
   funbox->clobberFunction(moduleFun);
 
-  // Clear any deferred allocation data. This is important in particular
+  // Clear any function creation data. This is important in particular
   // to avoid publishing a deferred function allocation on top of the
   // module function set on the funbox above.
-  funbox->clearDeferredAllocationInfo();
+  if (funbox->hasFunctionCreationIndex()) {
+    funbox->clearFunctionCreationData();
+  }
 
   // Success! Write to the console with a "warning" message indicating
   // total compilation time.

@@ -45,7 +45,7 @@ class Shape;
 
 namespace frontend {
 
-struct ParseInfo;
+struct CompilationInfo;
 class FunctionBox;
 
 // [SMDOC] Script Stencil (Frontend Representation)
