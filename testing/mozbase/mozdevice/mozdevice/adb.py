@@ -3119,8 +3119,6 @@ class ADBDevice(ADBCommand):
                 'android.permission.CAMERA',
                 'android.permission.RECORD_AUDIO',
             ]
-            if self.version >= version_codes.P:
-                permissions.append('android.permission.FOREGROUND_SERVICE')
             self._logger.info("Granting important runtime permissions to %s" % app_name)
             for permission in permissions:
                 try:
