@@ -623,10 +623,13 @@ bool JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table,
 
   if (entry->isIonCache()) {
     void* ptr = entry->ionCacheEntry().rejoinAddr();
-    const JitcodeGlobalEntry& ionEntry = table->lookupInfallible(ptr);
-    MOZ_ASSERT(ionEntry.isIon());
+    const JitcodeGlobalEntry* ionEntry = table->lookup(ptr);
+    if (!ionEntry) {
+      return false;
+    }
+    MOZ_ASSERT(ionEntry->isIon());
 
-    if (ionEntry.ionEntry().getScript(0) != callee) {
+    if (ionEntry->ionEntry().getScript(0) != callee) {
       return false;
     }
 

@@ -1,25 +1,16 @@
-var BUGNUMBER = 1185106;
-var summary = "caller property of function inside async function should return wrapped async function";
-
-print(BUGNUMBER + ": " + summary);
+function g() {
+      return g.caller;
+}
 
 (async function f() {
-  var inner = (function g() {
-      return g.caller;
-  })();
-  assertEq(inner, f);
+  var inner = g();
+  assertEq(inner, null);
 })();
 
 (async function f() {
   "use strict";
-  try {
-    (function g() {
-        return g.caller;
-    })();
-    assertEq(true, false);
-  } catch (e) {
-    assertEq(e instanceof TypeError, true);
-  }
+  var inner = g();
+  assertEq(inner, null);
 })();
 
 if (typeof reportCompare === "function")

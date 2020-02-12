@@ -85,8 +85,8 @@ struct CSSSizeOrRatio {
 
 /**
  * This is a small wrapper class to encapsulate image drawing that can draw an
- * nsStyleImage image, which may internally be a real image, a sub image, or a
- * CSS gradient.
+ * StyleImage image, which may internally be a real image, a sub image, or a CSS
+ * gradient, etc...
  *
  * @note Always call the member functions in the order of PrepareImage(),
  * SetSize(), and Draw*().
@@ -100,7 +100,7 @@ class nsImageRenderer {
   enum { FLAG_SYNC_DECODE_IMAGES = 0x01, FLAG_PAINTING_TO_WINDOW = 0x02 };
   enum FitType { CONTAIN, COVER };
 
-  nsImageRenderer(nsIFrame* aForFrame, const nsStyleImage* aImage,
+  nsImageRenderer(nsIFrame* aForFrame, const mozilla::StyleImage* aImage,
                   uint32_t aFlags);
   ~nsImageRenderer() = default;
   /**
@@ -248,7 +248,7 @@ class nsImageRenderer {
   void PurgeCacheForViewportChange(
       const mozilla::Maybe<nsSize>& aSVGViewportSize, const bool aHasRatio);
   const nsSize& GetSize() const { return mSize; }
-  nsStyleImageType GetType() const { return mType; }
+  mozilla::StyleImage::Tag GetType() const { return mType; }
   const mozilla::StyleGradient* GetGradientData() const {
     return mGradientData;
   }
@@ -286,15 +286,15 @@ class nsImageRenderer {
   /**
    * Helper method for creating a gfxDrawable from mPaintServerFrame or
    * mImageElementSurface.
-   * Requires mType is eStyleImageType_Element.
+   * Requires mType to be Element.
    * Returns null if we cannot create the drawable.
    */
   already_AddRefed<gfxDrawable> DrawableForElement(const nsRect& aImageRect,
                                                    gfxContext& aContext);
 
   nsIFrame* mForFrame;
-  const nsStyleImage* mImage;
-  nsStyleImageType mType;
+  const mozilla::StyleImage* mImage;
+  mozilla::StyleImage::Tag mType;
   nsCOMPtr<imgIContainer> mImageContainer;
   const mozilla::StyleGradient* mGradientData;
   nsIFrame* mPaintServerFrame;

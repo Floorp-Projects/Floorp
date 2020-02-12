@@ -4,50 +4,6 @@
 # import-tests.py locally on web platform tests repository against the
 # revision listed at the beginning of received/import.log.
 
-fails == css-values/attr-color-invalid-cast.html css-values/reference/200-200-green.html
-== css-values/attr-color-invalid-fallback.html css-values/reference/200-200-green.html
-fails == css-values/attr-color-valid.html css-values/reference/200-200-green.html
-== css-values/attr-invalid-type-001.html css-values/reference/200-200-green.html
-== css-values/attr-invalid-type-002.html css-values/reference/200-200-green.html
-fails == css-values/attr-length-invalid-cast.html css-values/reference/200-200-green.html
-== css-values/attr-length-invalid-fallback.html css-values/reference/200-200-green.html
-fails == css-values/attr-length-valid-zero-nofallback.html css-values/reference/200-200-green.html
-fails == css-values/attr-length-valid-zero.html css-values/reference/200-200-green.html
-fails == css-values/attr-length-valid.html css-values/reference/200-200-green.html
-fails == css-values/attr-px-invalid-cast.html css-values/reference/200-200-green.html
-== css-values/attr-px-invalid-fallback.html css-values/reference/200-200-green.html
-fails == css-values/attr-px-valid.html css-values/reference/200-200-green.html
-== css-values/calc-in-calc.html css-values/reference/all-green.html
-== css-values/calc-in-media-queries-001.html css-values/reference/all-green.html
-== css-values/calc-in-media-queries-002.html css-values/reference/all-green.html
-== css-values/calc-invalid-range-clamping.html css-values/reference/200-200-green.html
-== css-values/calc-parenthesis-stack.html css-values/reference/all-green.html
-fuzzy-if(OSX||Android,0-78,0-197) == css-values/ch-unit-001.html css-values/reference/ch-unit-001-ref.html
-fuzzy(0-50,0-160) == css-values/ch-unit-002.html css-values/reference/ch-unit-002-ref.html
-fuzzy-if(Android,0-78,0-179) == css-values/ch-unit-003.html css-values/reference/ch-unit-001-ref.html
-fuzzy(0-78,0-197) == css-values/ch-unit-004.html css-values/reference/ch-unit-001-ref.html
-skip == css-values/ex-calc-expression-001.html css-values/ex-calc-expression-001-ref.html
-skip == css-values/ic-unit-001.html css-values/reference/ic-unit-001-ref.html
-skip == css-values/ic-unit-002.html css-values/reference/ic-unit-002-ref.html
-skip == css-values/ic-unit-003.html css-values/reference/ic-unit-002-ref.html
-skip == css-values/ic-unit-004.html css-values/reference/ic-unit-001-ref.html
-== css-values/initial-background-color.html css-values/reference/all-green.html
-skip == css-values/lh-unit-001.html reference/ref-filled-green-100px-square.xht
-skip == css-values/lh-unit-002.html reference/ref-filled-green-100px-square.xht
-== css-values/vh-calc-support-pct.html css-values/reference/all-green.html
-== css-values/vh-calc-support.html css-values/reference/all-green.html
-== css-values/vh-em-inherit.html css-values/reference/all-green.html
-== css-values/vh-inherit.html css-values/reference/all-green.html
-== css-values/vh-interpolate-pct.html css-values/reference/all-green.html
-== css-values/vh-interpolate-px.html css-values/reference/all-green.html
-== css-values/vh-interpolate-vh.html css-values/reference/all-green.html
-== css-values/vh-support-atviewport.html css-values/reference/all-green.html
-== css-values/vh-support-margin.html css-values/reference/all-green.html
-skip == css-values/vh-support-transform-origin.html css-values/reference/all-green.html
-skip == css-values/vh-support-transform-translate.html css-values/reference/all-green.html
-== css-values/vh-support.html css-values/reference/all-green.html
-== css-values/vh-zero-support.html css-values/reference/all-green.html
-skip == css-values/vh_not_refreshing_on_chrome.html css-values/reference/vh_not_refreshing_on_chrome-ref.html
 == css-writing-modes/abs-pos-non-replaced-icb-vlr-003.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/abs-pos-non-replaced-icb-vlr-005.xht css-writing-modes/abs-pos-non-replaced-icb-vrl-004-ref.xht
 == css-writing-modes/abs-pos-non-replaced-icb-vlr-007.xht reference/ref-filled-green-100px-square.xht

@@ -12,12 +12,21 @@ PromiseTestUtils.whitelistRejectionsGlobally(
   /Permission denied to access property "document" on cross-origin object/
 );
 
+const Types = require("devtools/client/responsive/types");
+
 const TEST_URL = "http://example.com/";
 
 add_task(async function() {
   const tab = await addTab(TEST_URL);
 
   const { ui } = await openRDM(tab);
+  const { store } = ui.toolWindow;
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
   const clientClosed = waitForClientClose(ui);
 
   closeRDM(tab, {
@@ -37,6 +46,13 @@ add_task(async function() {
   const tab = await addTab(TEST_URL);
 
   const { ui } = await openRDM(tab);
+  const { store } = ui.toolWindow;
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
   const clientClosed = waitForClientClose(ui);
 
   // Load URL that requires the main process, forcing a remoteness flip

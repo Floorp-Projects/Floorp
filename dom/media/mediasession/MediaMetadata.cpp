@@ -24,7 +24,7 @@ NS_INTERFACE_MAP_END
 
 MediaMetadata::MediaMetadata(nsIGlobalObject* aParent, const nsString& aTitle,
                              const nsString& aArtist, const nsString& aAlbum)
-    : mParent(aParent), mTitle(aTitle), mArtist(aArtist), mAlbum(aAlbum) {
+    : MediaMetadataBase(aTitle, aArtist, aAlbum), mParent(aParent) {
   MOZ_ASSERT(mParent);
 }
 

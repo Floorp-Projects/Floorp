@@ -42,10 +42,27 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   void SetActionHandler(MediaSessionAction aAction,
                         MediaSessionActionHandler* aHandler);
 
-  MOZ_CAN_RUN_SCRIPT
+  bool IsSupportedAction(MediaSessionAction aAction) const;
+
+  // Use these methods to trigger media session action handler asynchronously.
   void NotifyHandler(const MediaSessionActionDetails& aDetails);
+  void NotifyHandler(MediaSessionAction aAction);
+
+  void Shutdown();
 
  private:
+  // Propagate media context status to the media session controller in the
+  // chrome process when we create or destroy the media session.
+  enum class SessionStatus : bool {
+    eDestroyed = false,
+    eCreated = true,
+  };
+  void NotifyMediaSessionStatus(SessionStatus aState);
+
+  void DispatchNotifyHandler(const MediaSessionActionDetails& aDetails);
+
+  MediaSessionActionHandler* GetActionHandler(MediaSessionAction aAction) const;
+
   ~MediaSession() = default;
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;

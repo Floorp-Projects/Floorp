@@ -79,6 +79,7 @@ from ..util import (
     ensureParentDir,
     FileAvoidWrite,
     OrderedDefaultDict,
+    pairwise,
 )
 from ..makeutil import Makefile
 from mozbuild.shellutil import quote as shell_quote
@@ -406,6 +407,8 @@ class RecursiveMakeBackend(MakeBackend):
         self._traversal = RecursiveMakeTraversal()
         self._compile_graph = OrderedDefaultDict(set)
         self._rust_targets = set()
+        self._rust_lib_targets = set()
+        self._gkrust_target = None
 
         self._no_skip = {
             'export': set(),
@@ -638,6 +641,9 @@ class RecursiveMakeBackend(MakeBackend):
             build_target = self._build_target_for_obj(obj)
             self._compile_graph[build_target]
             self._rust_targets.add(build_target)
+            self._rust_lib_targets.add(build_target)
+            if obj.is_gkrust:
+                self._gkrust_target = build_target
 
         elif isinstance(obj, SharedLibrary):
             self._process_shared_library(obj, backend_file)
@@ -776,9 +782,21 @@ class RecursiveMakeBackend(MakeBackend):
             # on other directories in the tree, so putting them first here will
             # start them earlier in the build.
             rust_roots = [r for r in roots if r in self._rust_targets]
+            rust_libs = [r for r in roots if r in self._rust_lib_targets]
             if category == 'compile' and rust_roots:
                 rust_rule = root_deps_mk.create_rule(['recurse_rust'])
                 rust_rule.add_dependencies(rust_roots)
+                # Ensure our cargo invocations are serialized, and gecko comes
+                # first. Cargo will lock on the build output directory anyway,
+                # so trying to run things in parallel is not useful. Dependencies
+                # for gecko are especially expensive to build and parallelize
+                # poorly, so prioritizing these will save some idle time in full
+                # builds.
+                for prior_target, target in pairwise(
+                        sorted([t for t in rust_libs],
+                               key=lambda t: t != self._gkrust_target)):
+                    r = root_deps_mk.create_rule([target])
+                    r.add_dependencies([prior_target])
 
             rule.add_dependencies(chain(rust_roots, roots))
             for target, deps in sorted(graph.items()):

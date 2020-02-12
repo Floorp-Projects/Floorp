@@ -180,7 +180,6 @@ servo/
 
 # third party modules
 testing/mochitest/tests/Harness_sanity/
-testing/mochitest/tests/SimpleTest/
 
 # Test files that we don't want to lint (preprocessed, minified etc)
 testing/marionette/atom.js

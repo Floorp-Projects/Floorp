@@ -1229,6 +1229,9 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvNotifyMediaAudibleChanged(
       BrowsingContext* aContext, bool aAudible);
 
+  mozilla::ipc::IPCResult RecvNotifyMediaSessionUpdated(
+      BrowsingContext* aContext, bool aIsCreated);
+
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);

@@ -1105,43 +1105,6 @@ const AnonymousCounterStyle* Gecko_CounterStyle_GetAnonymous(
   return aPtr->AsAnonymous();
 }
 
-void Gecko_SetNullImageValue(nsStyleImage* aImage) {
-  MOZ_ASSERT(aImage);
-  aImage->SetNull();
-}
-
-void Gecko_SetGradientImageValue(nsStyleImage* aImage,
-                                 StyleGradient* aGradient) {
-  MOZ_ASSERT(aImage);
-  aImage->SetGradientData(UniquePtr<StyleGradient>(aGradient));
-}
-
-void Gecko_SetLayerImageImageValue(nsStyleImage* aImage,
-                                   const StyleComputedImageUrl* aUrl) {
-  MOZ_ASSERT(aImage && aUrl);
-  aImage->SetImageUrl(*aUrl);
-}
-
-void Gecko_SetImageElement(nsStyleImage* aImage, nsAtom* aAtom) {
-  MOZ_ASSERT(aImage);
-  aImage->SetElementId(do_AddRef(aAtom));
-}
-
-void Gecko_CopyImageValueFrom(nsStyleImage* aImage,
-                              const nsStyleImage* aOther) {
-  MOZ_ASSERT(aImage);
-  MOZ_ASSERT(aOther);
-
-  *aImage = *aOther;
-}
-
-void Gecko_InitializeImageCropRect(nsStyleImage* aImage) {
-  MOZ_ASSERT(aImage);
-  auto zero = StyleNumberOrPercentage::Number(0);
-  aImage->SetCropRect(MakeUnique<nsStyleImage::CropRect>(
-      nsStyleImage::CropRect{zero, zero, zero, zero}));
-}
-
 void Gecko_SetCursorArrayCapacity(nsStyleUI* aUi, size_t aCapacity) {
   aUi->mCursorImages.Clear();
   aUi->mCursorImages.SetCapacity(aCapacity);
@@ -1154,11 +1117,6 @@ void Gecko_AppendCursorImage(nsStyleUI* aUi,
 
 void Gecko_CopyCursorArrayFrom(nsStyleUI* aDest, const nsStyleUI* aSrc) {
   aDest->mCursorImages = aSrc->mCursorImages;
-}
-
-nsAtom* Gecko_GetImageElement(const nsStyleImage* aImage) {
-  MOZ_ASSERT(aImage && aImage->GetType() == eStyleImageType_Element);
-  return const_cast<nsAtom*>(aImage->GetElementId());
 }
 
 void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
@@ -1303,29 +1261,6 @@ PropertyValuePair* Gecko_AppendPropertyValuePair(
   MOZ_ASSERT(aProperty == eCSSPropertyExtra_variable ||
              !nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::IsLogical));
   return aProperties->AppendElement(PropertyValuePair{aProperty});
-}
-
-void Gecko_CopyShapeSourceFrom(StyleShapeSource* aDst,
-                               const StyleShapeSource* aSrc) {
-  MOZ_ASSERT(aDst);
-  MOZ_ASSERT(aSrc);
-
-  *aDst = *aSrc;
-}
-
-void Gecko_DestroyShapeSource(StyleShapeSource* aShape) {
-  aShape->~StyleShapeSource();
-}
-
-void Gecko_NewShapeImage(StyleShapeSource* aShape) {
-  aShape->SetShapeImage(MakeUnique<nsStyleImage>());
-}
-
-void Gecko_SetToSVGPath(StyleShapeSource* aShape,
-                        StyleForgottenArcSlicePtr<StylePathCommand> aCommands,
-                        StyleFillRule aFill) {
-  MOZ_ASSERT(aShape);
-  aShape->SetPath(MakeUnique<StyleSVGPath>(aCommands, aFill));
 }
 
 void Gecko_nsStyleSVG_SetDashArrayLength(nsStyleSVG* aSvg, uint32_t aLen) {

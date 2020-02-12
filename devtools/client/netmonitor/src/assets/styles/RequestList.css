@@ -47,7 +47,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  color: var(--table-text-color);
+  color: var(--theme-body-color);
 }
 
 .requests-list-scroll {
@@ -84,9 +84,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
-
   /* Reset default browser style of <td> */
   padding: 0;
+  /* Prevent text selection because it's often invisible (blue on blue),
+   * it conflicts easily with existing click and double-click actions,
+   * and we already have several Copy and Export options. */
+  user-select: none;
 }
 
 .requests-list-column > * {
@@ -117,22 +120,22 @@
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.requests-list-headers .requests-list-column:first-child .requests-list-header-button,
-.ws-frames-list-headers .ws-frames-list-column:first-child .ws-frames-list-header-button {
-  border-width: 0;
+.requests-list-headers th:not(:first-child),
+.ws-frames-list-headers th:not(:first-child) {
+  border-inline-start: 1px solid var(--theme-splitter-color);
 }
 
 .requests-list-header-button,
 .ws-frames-list-header-button {
-  background-color: transparent;
-  border-image: linear-gradient( transparent 15%, var(--theme-splitter-color) 15%, var(--theme-splitter-color) 85%, transparent 85%) 1 1;
-  border-width: 0;
-  border-inline-start-width: 1px;
   width: 100%;
   min-height: var(--theme-toolbar-height);
+  border-width: 0;
+  padding-block: 1px;
+  padding-inline-start: 5px;
+  padding-inline-end: 4px;
   text-align: start;
   color: inherit;
-  padding: 1px 4px;
+  background-color: transparent;
 }
 
 .requests-list-header-button::-moz-focus-inner,
@@ -222,69 +225,15 @@
   text-overflow: initial;
 }
 
-.requests-list-status-icon {
-  background: #fff;
-  height: 10px;
-  width: 10px;
-  margin-inline: 5px;
-  border-radius: 10px;
-  transition: box-shadow 0.5s ease-in-out;
-}
-
-.request-list-item.selected .requests-list-status-icon {
-  filter: brightness(1.3);
-}
-
-.requests-list-status-icon:not([data-code]) {
-  background-color: var(--theme-body-color);
-}
-
-.requests-list-status-icon[data-code="cached"] {
-  border: 2px solid var(--theme-body-color);
-  background-color: transparent;
-}
-
-.requests-list-status-icon[data-code^="1"] {
-  background-color: var(--status-code-color-1xx);
-}
-
-.requests-list-status-icon[data-code^="2"] {
-  background-color: var(--status-code-color-2xx);
-}
-
-/* 3xx are triangles */
-.requests-list-status-icon[data-code^="3"] {
-  background-color: var(--status-code-color-3xx);
-  width: 0;
-  height: 0;
-  border-inline: 5px solid transparent;
-  border-bottom: 10px solid var(--theme-highlight-lightorange);
-  border-radius: 0;
-}
-
-/* 4xx and 5xx are squares - error codes */
-.requests-list-status-icon[data-code^="4"] {
-  background-color: var(--status-code-color-4xx);
-  border-radius: 0; /* squares */
-}
-
-.requests-list-status-icon[data-code^="5"] {
-  background-color: var(--status-code-color-5xx);
-  border-radius: 0;
-  transform: rotate(45deg);
-}
-
-.requests-list-domain.requests-list-column,
-.requests-list-file.requests-list-column {
-  text-align: start;
-}
-
 .requests-security-icon-group {
   display: inline-flex;
   vertical-align: top;
   align-items: center;
   height: 24px;
-  margin-inline: -2px 3px;
+  /* Icons are drawn as backgrounds on a 16x16 element but are often smaller
+   * (e.g. 12x12). Shift them a few pixels to align with the header text. */
+  margin-inline-start: -3px;
+  margin-inline-end: 2px;
 }
 
 .requests-security-state-icon {
@@ -344,15 +293,28 @@
 
 .request-list-item .requests-list-column,
 .ws-frame-list-item .ws-frames-list-column {
-  padding-inline-start: 4px;
+  padding-inline-start: 5px;
+  /* Column text should not touch the next column's border.
+     We could use a 5px space to be symmetrical, but we're using
+     text-overflow:ellipsis which makes that padding look wider in most cases,
+     and a smaller padding saves space for content. */
+  padding-inline-end: 4px;
+}
+
+.request-list-item .requests-list-column:not(:first-child),
+.ws-frame-list-item .ws-frames-list-column:not(:first-child) {
+  border-inline-start: 1px solid var(--table-splitter-color);
+}
+
+.request-list-item:hover .requests-list-column,
+.request-list-item.selected .requests-list-column,
+.ws-frame-list-item:hover .ws-frames-list-column,
+.ws-frame-list-item.selected .ws-frames-list-column {
+  border-inline-start-color: transparent;
 }
 
 .request-list-item .requests-list-waterfall {
   padding-inline-start: 0;
-}
-
-.request-list-item .status-code {
-  margin-inline-start: 0;
 }
 
 .requests-list-cause-stack {
@@ -383,7 +345,7 @@
 }
 
 .requests-list-waterfall > .requests-list-header-button {
-  padding-inline-start: 0;
+  padding: 0;
 }
 
 .requests-list-waterfall > .requests-list-header-button > .button-text {
@@ -514,8 +476,21 @@
   background-color: var(--table-selection-background-hover);
 }
 
-.request-list-item:not(.selected).fromCache > .requests-list-column:not(.requests-list-waterfall) {
-  opacity: 0.7;
+/*
+ * Dim requests served from cache
+ */
+.request-list-item:not(.selected):not(:hover).fromCache {
+  --table-icon-opacity: 0.7;
+  color: var(--theme-text-color-alt);
+}
+
+/*
+ * Apply partial opacity to specific icons and icon-like elements
+ * (e.g. for cached requests)
+ */
+.requests-security-icon-group,
+.requests-list-status-code:not([data-code^="3"]) {
+  opacity: var(--table-icon-opacity, 1);
 }
 
 .request-list-item.blocked {
@@ -523,13 +498,16 @@
 }
 
 /*
- * Put ahead of .request-list-item.blocked to avoid specificity conflict.
+ * Put after .request-list-item.blocked to avoid specificity conflict.
  * Bug 1530914 - Highlighted Security Value is difficult to read.
  */
 .request-list-item.selected,
 .ws-frame-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
+  /* Rows have tabindex=0 and get a default outline when clicked, but we already
+   * have a visible selection style so hiding the outline should be okay. */
+  outline: none;
 }
 
 /* Responsive web design support */

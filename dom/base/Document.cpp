@@ -3210,24 +3210,20 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     // the checks for type_subdoc or type_object happen within
     // CheckFrameOptions.
     if (!FramingChecker::CheckFrameOptions(aChannel, mCSP)) {
-      // Bug 1601887: Display error page but still fire onload
-      // event in case x-frame-options blocks a load.
-      // After Bug 1601887 the about:blank load here should disappear
-      // and we should cancel the channel by using
-      // aChannel->Cancel(NS_ERROR_XFO_VIOLATION) which then displays
-      // the error page.
-      aChannel->Cancel(NS_BINDING_ABORTED);
-      if (docShell) {
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(docShell));
-        if (webNav) {
-          RefPtr<NullPrincipal> principal =
-              NullPrincipal::CreateWithInheritedAttributes(
-                  loadInfo->TriggeringPrincipal());
-          LoadURIOptions loadURIOptions;
-          loadURIOptions.mTriggeringPrincipal = principal;
-          webNav->LoadURI(NS_LITERAL_STRING("about:blank"), loadURIOptions);
-        }
-      }
+      // stop!  ERROR page!
+      // But before we have to reset the principal of the document
+      // because the onload() event fires before the error page
+      // is displayed and we do not want the enclosing document
+      // to access the contentDocument.
+      RefPtr<NullPrincipal> nullPrincipal =
+          NullPrincipal::CreateWithInheritedAttributes(NodePrincipal());
+      // Before calling SetPrincipals() we should ensure that mFontFaceSet
+      // and also GetInnerWindow() is still null at this point, before
+      // we can fix Bug 1614735: Evaluate calls to SetPrincipal
+      // within Document.cpp
+      MOZ_ASSERT(!mFontFaceSet && !GetInnerWindow());
+      SetPrincipals(nullPrincipal, nullPrincipal);
+      aChannel->Cancel(NS_ERROR_XFO_VIOLATION);
     }
   }
 

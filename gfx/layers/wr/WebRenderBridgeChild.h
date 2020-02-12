@@ -122,6 +122,7 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
    */
   void Destroy(bool aIsSync);
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
+  bool GetSentDisplayList() const { return mSentDisplayList; }
   bool IsDestroyed() const { return mDestroyed; }
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
@@ -250,6 +251,9 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   bool mIPCOpen;
   bool mDestroyed;
+  // True iff we have called SendSetDisplayList and haven't called
+  // SendClearCachedResources since that call.
+  bool mSentDisplayList;
 
   wr::RenderRootArray<uint32_t> mFontKeysDeleted;
   wr::RenderRootArray<nsDataHashtable<UnscaledFontHashKey, wr::FontKey>>

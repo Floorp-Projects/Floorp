@@ -14,26 +14,26 @@ class RaptorLogger():
     def __init__(self, component=None):
         self.logger = ProxyLogger(component)
 
-    def exception(self, message):
-        self.critical(message)
+    def exception(self, message, **kwargs):
+        self.critical(message, **kwargs)
 
-    def debug(self, message):
-        return self.logger.debug("Debug: {}".format(message))
+    def debug(self, message, **kwargs):
+        return self.logger.debug("Debug: {}".format(message), **kwargs)
 
-    def info(self, message):
-        return self.logger.info("Info: {}".format(message))
+    def info(self, message, **kwargs):
+        return self.logger.info("Info: {}".format(message), **kwargs)
 
-    def warning(self, message):
-        return self.logger.warning("Warning: {}".format(message))
+    def warning(self, message, **kwargs):
+        return self.logger.warning("Warning: {}".format(message), **kwargs)
 
-    def error(self, message):
-        return self.logger.error("Error: {}".format(message))
+    def error(self, message, **kwargs):
+        return self.logger.error("Error: {}".format(message), **kwargs)
 
-    def critical(self, message):
-        return self.logger.critical("Critical: {}".format(message))
+    def critical(self, message, **kwargs):
+        return self.logger.critical("Critical: {}".format(message), **kwargs)
 
-    def log_raw(self, message):
-        return self.logger.log_raw(message)
+    def log_raw(self, message, **kwargs):
+        return self.logger.log_raw(message, **kwargs)
 
     def process_output(self, *args, **kwargs):
         return self.logger.process_output(*args, **kwargs)
