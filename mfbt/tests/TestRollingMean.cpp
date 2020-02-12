@@ -32,7 +32,7 @@ class MyClass {
 
 class RollingMeanSuite {
  public:
-  RollingMeanSuite() = default;
+  RollingMeanSuite() {}
 
   void runTests() {
     testZero();

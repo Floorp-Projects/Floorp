@@ -168,7 +168,7 @@ struct NE1 {
 };
 struct NE2 : virtual E1 {};
 struct NE3 : E2 {
-  virtual ~NE3() = default;
+  virtual ~NE3() {}
 };
 struct NE4 {
   virtual void f() {}
@@ -258,13 +258,13 @@ struct TrivialCtor1 {
 };
 
 struct DefaultCtor0 {
-  DefaultCtor0() = default;
+  DefaultCtor0() {}
 };
 struct DefaultCtor1 {
   DefaultCtor1() = default;
 };
 struct DefaultCtor2 {
-  DefaultCtor2() = default;
+  DefaultCtor2() {}
   explicit DefaultCtor2(int) {}
 };
 
@@ -276,7 +276,7 @@ struct NoDefaultCtor1 {
 };
 
 class PrivateCtor0 {
-  PrivateCtor0() = default;
+  PrivateCtor0() {}
 };
 class PrivateCtor1 {
   PrivateCtor1() = default;
