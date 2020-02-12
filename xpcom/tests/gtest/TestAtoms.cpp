@@ -165,8 +165,7 @@ TEST(Atoms, ConcurrentAccessing)
   EXPECT_EQ(NS_GetUnusedAtomCount(), int32_t(0));
   nsCOMPtr<nsIThread> threads[kThreadCount];
   for (size_t i = 0; i < kThreadCount; i++) {
-    nsresult rv = NS_NewNamedThread("Atom Test", getter_AddRefs(threads[i]),
-                                    new nsAtomRunner);
+    nsresult rv = NS_NewThread(getter_AddRefs(threads[i]), new nsAtomRunner);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
   }
   for (size_t i = 0; i < kThreadCount; i++) {
