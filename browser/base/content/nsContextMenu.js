@@ -198,6 +198,7 @@ class nsContextMenu {
     this.hasMultipleBGImages = context.hasMultipleBGImages;
     this.isDesignMode = context.isDesignMode;
     this.inFrame = context.inFrame;
+    this.inPDFViewer = context.inPDFViewer;
     this.inSrcdocFrame = context.inSrcdocFrame;
     this.inSyntheticDoc = context.inSyntheticDoc;
     this.inTabBrowser = context.inTabBrowser;
@@ -578,11 +579,17 @@ class nsContextMenu {
     // background images of a stand-alone media document available.
     this.showItem(
       "context-viewbgimage",
-      shouldShow && !this.hasMultipleBGImages && !this.inSyntheticDoc
+      shouldShow &&
+        !this.hasMultipleBGImages &&
+        !this.inSyntheticDoc &&
+        !this.inPDFViewer
     );
     this.showItem(
       "context-sep-viewbgimage",
-      shouldShow && !this.hasMultipleBGImages && !this.inSyntheticDoc
+      shouldShow &&
+        !this.hasMultipleBGImages &&
+        !this.inSyntheticDoc &&
+        !this.inPDFViewer
     );
     document.getElementById("context-viewbgimage").disabled = !this.hasBGImage;
 
