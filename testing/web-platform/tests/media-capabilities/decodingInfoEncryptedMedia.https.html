@@ -75,7 +75,7 @@ promise_test(t => {
 }, "Test that decodingInfo() accepts a key system configuration with audio info.");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.mediaCapabilities.decodingInfo({
+  return promise_rejects_js(t, TypeError, navigator.mediaCapabilities.decodingInfo({
     type: 'file',
     audio: minimalAudioConfiguration,
     keySystemConfiguration: {
@@ -88,7 +88,7 @@ promise_test(t => {
 }, "Test that decodingInfo() rejects if robustness and configuration do not match (1).");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.mediaCapabilities.decodingInfo({
+  return promise_rejects_js(t, TypeError, navigator.mediaCapabilities.decodingInfo({
     type: 'file',
     video: minimalVideoConfiguration,
     keySystemConfiguration: {
@@ -101,7 +101,7 @@ promise_test(t => {
 }, "Test that decodingInfo() rejects if robustness and configuration do not match (2).");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.mediaCapabilities.decodingInfo({
+  return promise_rejects_js(t, TypeError, navigator.mediaCapabilities.decodingInfo({
     type: 'file',
     video: minimalVideoConfiguration,
     keySystemConfiguration: {
@@ -117,7 +117,7 @@ promise_test(t => {
 }, "Test that decodingInfo() rejects if robustness and configuration do not match (3).");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.mediaCapabilities.decodingInfo({
+  return promise_rejects_js(t, TypeError, navigator.mediaCapabilities.decodingInfo({
     type: 'file',
     audio: minimalAudioConfiguration,
     video: minimalVideoConfiguration,
@@ -135,7 +135,7 @@ promise_test(t => {
 }, "Test that decodingInfo() rejects if persistentState isn't valid.");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.mediaCapabilities.decodingInfo({
+  return promise_rejects_js(t, TypeError, navigator.mediaCapabilities.decodingInfo({
     type: 'file',
     audio: minimalAudioConfiguration,
     video: minimalVideoConfiguration,
@@ -153,7 +153,7 @@ promise_test(t => {
 }, "Test that decodingInfo() rejects if distinctiveIdentifier isn't valid.");
 
 promise_test(t => {
-  return promise_rejects(t, new TypeError(), navigator.mediaCapabilities.decodingInfo({
+  return promise_rejects_js(t, TypeError, navigator.mediaCapabilities.decodingInfo({
     type: 'file',
     audio: minimalAudioConfiguration,
     video: minimalVideoConfiguration,

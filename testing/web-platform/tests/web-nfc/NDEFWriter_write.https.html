@@ -118,7 +118,7 @@ promise_test(async t => {
   const promises = [];
   invalid_type_messages.forEach(message => {
     promises.push(
-      promise_rejects(t, new TypeError(), writer.write(message)));
+      promise_rejects_js(t, TypeError, writer.write(message)));
   });
   await Promise.all(promises);
 }, "Test that promise is rejected with TypeError if NDEFMessageSource is invalid.");
@@ -190,7 +190,7 @@ promise_test(async t => {
   const writer = new NDEFWriter();
   const promises = [];
   invalid_signals.forEach(invalid_signal => {
-    promises.push(promise_rejects(t, new TypeError(),
+    promises.push(promise_rejects_js(t, TypeError,
         writer.write(test_text_data, { signal: invalid_signal })));
   });
   await Promise.all(promises);
