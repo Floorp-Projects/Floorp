@@ -51,7 +51,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMIntersectionObserver)
   tmp->Disconnect();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
+  if (tmp->mCallback.is<RefPtr<dom::IntersectionCallback>>()) {
+    ImplCycleCollectionUnlink(
+        tmp->mCallback.as<RefPtr<dom::IntersectionCallback>>());
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mQueuedEntries)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -59,7 +62,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMIntersectionObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
+  if (tmp->mCallback.is<RefPtr<dom::IntersectionCallback>>()) {
+    ImplCycleCollectionTraverse(
+        cb, tmp->mCallback.as<RefPtr<dom::IntersectionCallback>>(), "mCallback",
+        0);
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mQueuedEntries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -605,8 +612,14 @@ void DOMIntersectionObserver::Notify() {
     }
   }
   mQueuedEntries.Clear();
-  RefPtr<dom::IntersectionCallback> callback(mCallback);
-  callback->Call(this, entries, *this);
+
+  if (mCallback.is<RefPtr<dom::IntersectionCallback>>()) {
+    RefPtr<dom::IntersectionCallback> callback(
+        mCallback.as<RefPtr<dom::IntersectionCallback>>());
+    callback->Call(this, entries, *this);
+  } else {
+    mCallback.as<NativeIntersectionObserverCallback>()(entries);
+  }
 }
 
 }  // namespace dom
