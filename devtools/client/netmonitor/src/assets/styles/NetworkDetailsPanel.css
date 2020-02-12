@@ -57,6 +57,12 @@
   font-size: 24px;
 }
 
+/* Accordions in the tab panels */
+
+.network-monitor .accordion-content .treeIcon {
+  margin-left: 16px;
+}
+
 /* Text inputs in tab panels */
 
 .network-monitor .textbox-input {

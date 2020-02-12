@@ -21,7 +21,7 @@ const TabPanel = createFactory(
   require("devtools/client/shared/components/tabs/Tabs").TabPanel
 );
 const CookiesPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/CookiesPanel")
+  require("devtools/client/netmonitor/src/components/request-details/CookiesPanel")
 );
 const HeadersPanel = createFactory(
   require("devtools/client/netmonitor/src/components/HeadersPanel")
