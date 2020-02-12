@@ -418,9 +418,7 @@ async function selectMenuItem({ toolWindow }, selector, value) {
   info(`Selecting ${value} in ${selector}.`);
 
   await testMenuItems(toolWindow, button, items => {
-    const menuItem = items.find(item =>
-      item.getAttribute("label").includes(value)
-    );
+    const menuItem = findMenuItem(items, value);
     isnot(
       menuItem,
       undefined,
@@ -441,12 +439,31 @@ async function selectMenuItem({ toolWindow }, selector, value) {
  *         A test function that will be ran with the found menu item in the context menu
  *         as an argument.
  */
-function testMenuItems(toolWindow, button, testFn) {
+async function testMenuItems(toolWindow, button, testFn) {
+  if (button.id === "device-selector") {
+    // device-selector uses a DevTools MenuButton instead of a XUL menu
+    button.click();
+    // Wait for appearance the menu items..
+    await waitUntil(() =>
+      toolWindow.document.querySelector("#device-selector-menu .menuitem")
+    );
+    const tooltip = toolWindow.document.querySelector("#device-selector-menu");
+    const items = tooltip.querySelectorAll(".menuitem > .command");
+    testFn([...items]);
+
+    if (tooltip.classList.contains("tooltip-visible")) {
+      // Close the tooltip explicitly.
+      button.click();
+      await waitUntil(() => !tooltip.classList.contains("tooltip-visible"));
+    }
+    return;
+  }
+
   // The context menu appears only in the top level window, which is different from
   // the inner toolWindow.
   const win = getTopLevelWindow(toolWindow);
 
-  return new Promise(resolve => {
+  await new Promise(resolve => {
     win.document.addEventListener(
       "popupshown",
       () => {
@@ -598,21 +615,11 @@ async function testTouchEventsOverride(ui, expected) {
 function testViewportDeviceMenuLabel(ui, expectedDeviceName) {
   info("Test viewport's device select label");
 
-  const label = ui.toolWindow.document.querySelector("#device-selector .title");
-  const deviceEl = label.querySelector(".device-name");
-  if (deviceEl) {
-    is(
-      deviceEl.textContent,
-      expectedDeviceName,
-      `Device Select value should be: ${expectedDeviceName}`
-    );
-  } else {
-    is(
-      label.textContent,
-      expectedDeviceName,
-      `Device Select value should be: ${expectedDeviceName}`
-    );
-  }
+  const button = ui.toolWindow.document.querySelector("#device-selector");
+  ok(
+    button.textContent.includes(expectedDeviceName),
+    `Device Select value ${button.textContent} should be: ${expectedDeviceName}`
+  );
 }
 
 async function toggleTouchSimulation(ui) {
@@ -779,6 +786,10 @@ async function editDeviceInModal(ui, device, newDevice) {
 
   await onDeviceChanged;
   return saved;
+}
+
+function findMenuItem(menuItems, name) {
+  return menuItems.find(menuItem => menuItem.textContent.includes(name));
 }
 
 function reloadOnUAChange(enabled) {
