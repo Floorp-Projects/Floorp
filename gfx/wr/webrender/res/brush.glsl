@@ -89,7 +89,6 @@ FWD_DECLARE_VS_FUNCTION(blend_brush_vs)
 FWD_DECLARE_VS_FUNCTION(mix_blend_brush_vs)
 FWD_DECLARE_VS_FUNCTION(linear_gradient_brush_vs)
 FWD_DECLARE_VS_FUNCTION(radial_gradient_brush_vs)
-FWD_DECLARE_VS_FUNCTION(conic_gradient_brush_vs)
 FWD_DECLARE_VS_FUNCTION(yuv_brush_vs)
 FWD_DECLARE_VS_FUNCTION(opacity_brush_vs)
 
@@ -259,7 +258,6 @@ Fragment blend_brush_fs();
 Fragment mix_blend_brush_fs();
 Fragment linear_gradient_brush_fs();
 Fragment radial_gradient_brush_fs();
-Fragment conic_gradient_brush_fs();
 Fragment yuv_brush_fs();
 Fragment opacity_brush_fs();
 Fragment multi_brush_fs(int brush_kind);
