@@ -508,10 +508,18 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     aRv.NoteJSContextException(cx);
     return nullptr;
   }
+
   /**
    * 9. Let serializedOptions be the result of
    *    StructuredSerialize(optionsObject).
    */
+
+  // This context and the worklet are part of the same agent cluster and they
+  // can share memory.
+  JS::CloneDataPolicy cloneDataPolicy;
+  cloneDataPolicy.allowIntraClusterClonableSharedObjects();
+  cloneDataPolicy.allowSharedMemoryObjects();
+
   // StructuredCloneHolder does not have a move constructor.  Instead allocate
   // memory so that the pointer can be passed to the rendering thread.
   UniquePtr<StructuredCloneHolder> serializedOptions =
@@ -519,7 +527,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
           StructuredCloneHolder::CloningSupported,
           StructuredCloneHolder::TransferringNotSupported,
           JS::StructuredCloneScope::SameProcess);
-  serializedOptions->Write(cx, optionsVal, aRv);
+  serializedOptions->Write(cx, optionsVal, JS::UndefinedHandleValue,
+                           cloneDataPolicy, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
