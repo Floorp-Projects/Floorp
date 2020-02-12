@@ -11,6 +11,7 @@ const { ActorPool } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const Debugger = require("Debugger");
 const { assert, dumpn, reportException } = DevToolsUtils;
 const { threadSpec } = require("devtools/shared/specs/thread");
 const {
@@ -51,6 +52,18 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "FrameActor",
+  "devtools/server/actors/frame",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getSavedFrameParent",
+  "devtools/server/actors/frame",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isValidSavedFrame",
   "devtools/server/actors/frame",
   true
 );
@@ -106,6 +119,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._activeEventPause = null;
     this._pauseOverlay = null;
     this._priorPause = null;
+    this._frameActorMap = new WeakMap();
 
     this._watchpointsMap = new WatchpointMap(this);
 
@@ -1218,8 +1232,18 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       const currentFrame = frame;
       frame = null;
 
-      if (currentFrame.older) {
+      if (!(currentFrame instanceof Debugger.Frame)) {
+        frame = getSavedFrameParent(this, currentFrame);
+      } else if (currentFrame.older) {
         frame = currentFrame.older;
+      } else if (
+        this._options.shouldIncludeSavedFrames &&
+        currentFrame.olderSavedFrame
+      ) {
+        frame = currentFrame.olderSavedFrame;
+        if (frame && !isValidSavedFrame(this, frame)) {
+          frame = null;
+        }
       } else if (
         this._options.shouldIncludeAsyncLiveFrames &&
         currentFrame.asyncPromise
@@ -1262,9 +1286,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // Return count frames, or all remaining frames if count is not defined.
     const frames = [];
     for (; frame && (!count || i < start + count); i++, walkToParentFrame()) {
-      const sourceActor = this.sources.createSourceActor(frame.script.source);
-      if (!sourceActor) {
-        continue;
+      // SavedFrame instances don't have direct Debugger.Source object. If
+      // there is an active Debugger.Source that represents the SaveFrame's
+      // source, it will have already been created in the server.
+      if (frame instanceof Debugger.Frame) {
+        const sourceActor = this.sources.createSourceActor(frame.script.source);
+        if (!sourceActor) {
+          continue;
+        }
       }
       const frameActor = this._createFrameActor(frame, i);
       frames.push(frameActor);
@@ -1494,15 +1523,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   _createFrameActor: function(frame, depth) {
-    if (frame.actor) {
-      return frame.actor;
+    let actor = this._frameActorMap.get(frame);
+    if (!actor) {
+      actor = new FrameActor(frame, this, depth);
+      this._frameActors.push(actor);
+      this._framesPool.addActor(actor);
+
+      this._frameActorMap.set(frame, actor);
     }
-
-    const actor = new FrameActor(frame, this, depth);
-    this._frameActors.push(actor);
-    this._framesPool.addActor(actor);
-    frame.actor = actor;
-
     return actor;
   },
 
