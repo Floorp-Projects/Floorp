@@ -49,7 +49,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsITestService2, NS_ITESTSERVICE2_IID)
 
 class nsTestService final : public nsITestService,
                             public nsSupportsWeakReference {
-  ~nsTestService() {}
+  ~nsTestService() = default;
 
  public:
   NS_DECL_ISUPPORTS

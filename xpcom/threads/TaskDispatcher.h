@@ -38,8 +38,8 @@ namespace mozilla {
  */
 class TaskDispatcher {
  public:
-  TaskDispatcher() {}
-  virtual ~TaskDispatcher() {}
+  TaskDispatcher() = default;
+  virtual ~TaskDispatcher() = default;
 
   // Direct tasks are run directly (rather than dispatched asynchronously) when
   // the tail dispatcher fires. A direct task may cause other tasks to be added
@@ -264,7 +264,7 @@ class AutoTaskDispatcher : public TaskDispatcher {
 template <typename T>
 class PassByRef {
  public:
-  PassByRef() {}
+  PassByRef() = default;
   operator T&() { return mVal; }
 
  private:

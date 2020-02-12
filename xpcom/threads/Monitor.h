@@ -27,7 +27,7 @@ class Monitor {
                                           recordreplay::Behavior::Preserve)
       : mMutex(aName, aRecorded), mCondVar(mMutex, "[Monitor.mCondVar]") {}
 
-  ~Monitor() {}
+  ~Monitor() = default;
 
   void Lock() { mMutex.Lock(); }
   bool TryLock() { return mMutex.TryLock(); }

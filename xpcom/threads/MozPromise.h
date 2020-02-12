@@ -145,7 +145,7 @@ class MozPromiseRefcountable {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MozPromiseRefcountable)
  protected:
-  virtual ~MozPromiseRefcountable() {}
+  virtual ~MozPromiseRefcountable() = default;
 };
 
 class MozPromiseBase : public MozPromiseRefcountable {
@@ -364,7 +364,7 @@ class MozPromise : public MozPromiseBase {
 
    protected:
     Request() : mComplete(false), mDisconnected(false) {}
-    virtual ~Request() {}
+    virtual ~Request() = default;
 
     bool mComplete;
     bool mDisconnected;
@@ -1254,7 +1254,7 @@ class MozPromiseHolder {
 template <typename PromiseType>
 class MozPromiseRequestHolder {
  public:
-  MozPromiseRequestHolder() {}
+  MozPromiseRequestHolder() = default;
   ~MozPromiseRequestHolder() { MOZ_ASSERT(!mRequest); }
 
   void Track(already_AddRefed<typename PromiseType::Request> aRequest) {

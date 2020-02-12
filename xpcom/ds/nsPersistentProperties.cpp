@@ -407,7 +407,7 @@ nsPersistentProperties::nsPersistentProperties()
       mTable(&property_HashTableOps, sizeof(PropertyTableEntry), 16),
       mArena() {}
 
-nsPersistentProperties::~nsPersistentProperties() {}
+nsPersistentProperties::~nsPersistentProperties() = default;
 
 size_t nsPersistentProperties::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {

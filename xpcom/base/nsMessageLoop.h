@@ -15,7 +15,7 @@ class nsMessageLoop : public nsIMessageLoop {
   NS_DECL_NSIMESSAGELOOP
 
  private:
-  virtual ~nsMessageLoop() {}
+  virtual ~nsMessageLoop() = default;
 };
 
 #define NS_MESSAGE_LOOP_CID                          \

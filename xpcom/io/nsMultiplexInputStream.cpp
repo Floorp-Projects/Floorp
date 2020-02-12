@@ -94,7 +94,7 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
   Mutex& GetLock() { return mLock; }
 
  private:
-  ~nsMultiplexInputStream() {}
+  ~nsMultiplexInputStream() = default;
 
   nsresult AsyncWaitInternal();
 

@@ -51,7 +51,7 @@ namespace mozilla {
 template <class T, size_t RequestedItemsPerPage = 256>
 class Queue {
  public:
-  Queue() {}
+  Queue() = default;
 
   ~Queue() {
     MOZ_ASSERT(IsEmpty());

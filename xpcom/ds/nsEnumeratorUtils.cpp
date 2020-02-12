@@ -18,7 +18,7 @@ class EmptyEnumeratorImpl : public nsSimpleEnumerator,
                             public nsIUTF8StringEnumerator,
                             public nsIStringEnumerator {
  public:
-  EmptyEnumeratorImpl() {}
+  EmptyEnumeratorImpl() = default;
 
   // nsISupports interface. Not really inherited, but no mRefCnt.
   NS_DECL_ISUPPORTS_INHERITED

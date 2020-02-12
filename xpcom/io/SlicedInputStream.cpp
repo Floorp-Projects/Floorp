@@ -78,7 +78,7 @@ SlicedInputStream::SlicedInputStream()
       mAsyncWaitRequestedCount(0),
       mMutex("SlicedInputStream::mMutex") {}
 
-SlicedInputStream::~SlicedInputStream() {}
+SlicedInputStream::~SlicedInputStream() = default;
 
 void SlicedInputStream::SetSourceStream(
     already_AddRefed<nsIInputStream> aInputStream) {

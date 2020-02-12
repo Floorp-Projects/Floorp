@@ -225,11 +225,7 @@ class PLDHashTable {
     Slot(const Slot&) = default;
     Slot(Slot&& aOther) = default;
 
-    Slot& operator=(Slot&& aOther) {
-      this->~Slot();
-      new (this) Slot(std::move(aOther));
-      return *this;
-    }
+    Slot& operator=(Slot&& aOther) = default;
 
     bool operator==(const Slot& aOther) { return mEntry == aOther.mEntry; }
 

@@ -30,7 +30,7 @@ class InputStreamCallback final : public nsIInputStreamCallback {
   }
 
  private:
-  ~InputStreamCallback() {}
+  ~InputStreamCallback() = default;
 };
 
 NS_IMPL_ISUPPORTS(InputStreamCallback, nsIInputStreamCallback)
@@ -102,7 +102,7 @@ class NonSeekableStringStream final : public nsIAsyncInputStream {
   }
 
  private:
-  ~NonSeekableStringStream() {}
+  ~NonSeekableStringStream() = default;
 };
 
 NS_IMPL_ISUPPORTS(NonSeekableStringStream, nsIInputStream, nsIAsyncInputStream)

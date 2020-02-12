@@ -86,7 +86,7 @@ class TimerCallback final : public nsITimerCallback {
   }
 
  private:
-  ~TimerCallback() {}
+  ~TimerCallback() = default;
 
   nsIThread** mThreadPtr;
   ReentrantMonitor* mReentrantMonitor;

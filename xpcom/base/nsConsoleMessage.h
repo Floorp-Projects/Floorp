@@ -21,7 +21,7 @@ class nsConsoleMessage final : public nsIConsoleMessage {
   NS_DECL_NSICONSOLEMESSAGE
 
  private:
-  ~nsConsoleMessage() {}
+  ~nsConsoleMessage() = default;
 
   int64_t mTimeStamp;
   nsString mMessage;

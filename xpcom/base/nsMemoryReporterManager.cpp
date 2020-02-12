@@ -964,7 +964,7 @@ NS_IMPL_ISUPPORTS(PrivateReporter, nsIMemoryReporter)
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
 class VsizeReporter final : public nsIMemoryReporter {
-  ~VsizeReporter() {}
+  ~VsizeReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -991,7 +991,7 @@ class VsizeReporter final : public nsIMemoryReporter {
 NS_IMPL_ISUPPORTS(VsizeReporter, nsIMemoryReporter)
 
 class ResidentReporter final : public nsIMemoryReporter {
-  ~ResidentReporter() {}
+  ~ResidentReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1020,7 +1020,7 @@ NS_IMPL_ISUPPORTS(ResidentReporter, nsIMemoryReporter)
 
 #ifdef HAVE_RESIDENT_UNIQUE_REPORTER
 class ResidentUniqueReporter final : public nsIMemoryReporter {
-  ~ResidentUniqueReporter() {}
+  ~ResidentUniqueReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1048,7 +1048,7 @@ NS_IMPL_ISUPPORTS(ResidentUniqueReporter, nsIMemoryReporter)
 #ifdef HAVE_SYSTEM_HEAP_REPORTER
 
 class SystemHeapReporter final : public nsIMemoryReporter {
-  ~SystemHeapReporter() {}
+  ~SystemHeapReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1102,7 +1102,7 @@ static MOZ_MUST_USE nsresult ResidentPeakDistinguishedAmount(int64_t* aN) {
 }
 
 class ResidentPeakReporter final : public nsIMemoryReporter {
-  ~ResidentPeakReporter() {}
+  ~ResidentPeakReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1123,7 +1123,7 @@ NS_IMPL_ISUPPORTS(ResidentPeakReporter, nsIMemoryReporter)
 #  define HAVE_PAGE_FAULT_REPORTERS 1
 
 class PageFaultsSoftReporter final : public nsIMemoryReporter {
-  ~PageFaultsSoftReporter() {}
+  ~PageFaultsSoftReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1165,7 +1165,7 @@ PageFaultsHardDistinguishedAmount(int64_t* aAmount) {
 }
 
 class PageFaultsHardReporter final : public nsIMemoryReporter {
-  ~PageFaultsHardReporter() {}
+  ~PageFaultsHardReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1218,7 +1218,7 @@ static int64_t HeapOverheadFraction(jemalloc_stats_t* aStats) {
 }
 
 class JemallocHeapReporter final : public nsIMemoryReporter {
-  ~JemallocHeapReporter() {}
+  ~JemallocHeapReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1302,7 +1302,7 @@ NS_IMPL_ISUPPORTS(JemallocHeapReporter, nsIMemoryReporter)
 class AtomTablesReporter final : public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-  ~AtomTablesReporter() {}
+  ~AtomTablesReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1491,7 +1491,7 @@ NS_IMPL_ISUPPORTS(ThreadsReporter, nsIMemoryReporter)
 class DeadlockDetectorReporter final : public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-  ~DeadlockDetectorReporter() {}
+  ~DeadlockDetectorReporter() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -1552,7 +1552,7 @@ class DMDReporter final : public nsIMemoryReporter {
   }
 
  private:
-  ~DMDReporter() {}
+  ~DMDReporter() = default;
 };
 NS_IMPL_ISUPPORTS(DMDReporter, nsIMemoryReporter)
 

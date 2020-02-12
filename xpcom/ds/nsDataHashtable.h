@@ -28,7 +28,7 @@ class nsDataHashtable : public nsBaseHashtable<KeyClass, DataType, DataType> {
   using typename BaseClass::EntryType;
   using typename BaseClass::KeyType;
 
-  nsDataHashtable() {}
+  nsDataHashtable() = default;
   explicit nsDataHashtable(uint32_t aInitLength) : BaseClass(aInitLength) {}
 
   /**

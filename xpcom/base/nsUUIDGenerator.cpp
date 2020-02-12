@@ -26,7 +26,7 @@ NS_IMPL_ISUPPORTS(nsUUIDGenerator, nsIUUIDGenerator)
 
 nsUUIDGenerator::nsUUIDGenerator() : mLock("nsUUIDGenerator.mLock") {}
 
-nsUUIDGenerator::~nsUUIDGenerator() {}
+nsUUIDGenerator::~nsUUIDGenerator() = default;
 
 nsresult nsUUIDGenerator::Init() {
   // We're a service, so we're guaranteed that Init() is not going

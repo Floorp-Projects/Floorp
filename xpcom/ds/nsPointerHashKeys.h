@@ -28,7 +28,7 @@ class nsPtrHashKey : public PLDHashEntryHdr {
   explicit nsPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
   nsPtrHashKey(nsPtrHashKey<T>&& aToMove)
       : PLDHashEntryHdr(std::move(aToMove)), mKey(std::move(aToMove.mKey)) {}
-  ~nsPtrHashKey() {}
+  ~nsPtrHashKey() = default;
 
   KeyType GetKey() const { return mKey; }
   bool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }

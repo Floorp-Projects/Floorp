@@ -766,7 +766,7 @@ void nsTimerImpl::GetName(nsACString& aName) {
 
 void nsTimerImpl::SetHolder(nsTimerImplHolder* aHolder) { mHolder = aHolder; }
 
-nsTimer::~nsTimer() {}
+nsTimer::~nsTimer() = default;
 
 size_t nsTimer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);

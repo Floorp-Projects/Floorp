@@ -74,7 +74,7 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
   typedef T elem_type;
   typedef nsTArray<T> array_type;
 
-  nsAutoTObserverArray() {}
+  nsAutoTObserverArray() = default;
 
   //
   // Accessor methods
@@ -404,7 +404,7 @@ class nsTObserverArray : public nsAutoTObserverArray<T, 0> {
   // Initialization methods
   //
 
-  nsTObserverArray() {}
+  nsTObserverArray() = default;
 
   // Initialize this array and pre-allocate some number of elements.
   explicit nsTObserverArray(size_type aCapacity) {

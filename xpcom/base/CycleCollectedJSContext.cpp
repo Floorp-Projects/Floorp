@@ -194,7 +194,7 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
     }
   }
 
-  virtual ~PromiseJobRunnable() {}
+  virtual ~PromiseJobRunnable() = default;
 
  protected:
   MOZ_CAN_RUN_SCRIPT

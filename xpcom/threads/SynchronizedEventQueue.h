@@ -51,7 +51,7 @@ class ThreadTargetSink {
       mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 
  protected:
-  virtual ~ThreadTargetSink() {}
+  virtual ~ThreadTargetSink() = default;
 };
 
 class SynchronizedEventQueue : public ThreadTargetSink {
@@ -115,7 +115,7 @@ class SynchronizedEventQueue : public ThreadTargetSink {
   virtual void PopEventQueue(nsIEventTarget* aTarget) = 0;
 
  protected:
-  virtual ~SynchronizedEventQueue() {}
+  virtual ~SynchronizedEventQueue() = default;
 
  private:
   nsTObserverArray<nsCOMPtr<nsIThreadObserver>> mEventObservers;

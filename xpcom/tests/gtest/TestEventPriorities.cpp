@@ -37,7 +37,7 @@ class TestEvent final : public Runnable, nsIRunnablePriority {
   }
 
  private:
-  ~TestEvent() {}
+  ~TestEvent() = default;
 
   int* mCounter;
   std::function<void()> mCheck;
