@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for AudioWorklet + Options + WASM</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true],
+             ["dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled", true],
+             ["browser.tabs.remote.useCrossOriginOpenerPolicy", true],
+             ["browser.tabs.remote.useCrossOriginEmbedderPolicy", true],
+             ["dom.postMessage.sharedArrayBuffer.withCOOP_COEP", true],
+             ["javascript.options.shared_memory", true],
+    ]});
+}
+
+function create_wasmModule() {
+  return new Promise(resolve => {
+    info("Checking if we can play with WebAssembly...");
+
+    if (!SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported()) {
+      resolve(null);
+      return;
+    }
+
+    ok(WebAssembly, "WebAssembly object should exist");
+    ok(WebAssembly.compile, "WebAssembly.compile function should exist");
+
+    const wasmTextToBinary = SpecialPowers.unwrap(SpecialPowers.Cu.getJSTestingFunctions().wasmTextToBinary);
+    const fooModuleCode = wasmTextToBinary(`(module
+      (func $foo (result i32) (i32.const 42))
+      (export "foo" $foo)
+    )`);
+
+    WebAssembly.compile(fooModuleCode).then(m => {
+      ok(m instanceof WebAssembly.Module, "The WasmModule has been compiled.");
+      resolve(m);
+    }, () => {
+      ok(false, "The compilation of the wasmModule failed.");
+      resolve(null);
+    });
+  });
+}
+
+function runTestInIframe() {
+  let audioContext = new AudioContext();
+  audioContext.audioWorklet.addModule("worklet_audioWorklet_options.js")
+  .then(() => create_wasmModule())
+  .then(wasmModule => {
+    const node = new AudioWorkletNode(audioContext, 'options', { processorOptions: {
+      wasmModule, sab: new SharedArrayBuffer(1024),
+    }});
+    node.port.onmessage = e => {
+      ok(e.data.wasmModule instanceof WebAssembly.Module, "WasmModule received");
+      ok(e.data.sab instanceof SharedArrayBuffer, "SAB received");
+      SimpleTest.finish();
+    }
+
+    node.connect(audioContext.destination);
+  });
+}
+
+</script>
+</body>
+</html>
