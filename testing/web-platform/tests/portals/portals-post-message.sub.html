@@ -157,13 +157,13 @@
 
     promise_test(async t => {
       var portal = document.createElement("portal");
-      return promise_rejects(t, "InvalidStateError",
+      return promise_rejects_dom(t, "InvalidStateError",
                              postMessage(portal, "test message"));
     }, "cannot call postMessage on portal without portal browsing context");
 
     promise_test(async t => {
       var portal = await createAndInsertPortal(sameOriginUrl);
-      return promise_rejects(t, "DataCloneError",
+      return promise_rejects_dom(t, "DataCloneError",
                              postMessage(portal, document.body));
     }, "postMessage should fail if message serialization fails");
 

@@ -1,5 +1,5 @@
 directory_test(async (t, root) => {
-  await promise_rejects(
+  await promise_rejects_dom(
       t, 'NotFoundError', root.getDirectory('non-existing-dir'));
 }, 'getDirectory(create=false) rejects for non-existing directories');
 
@@ -47,10 +47,10 @@ directory_test(async (t, root) => {
 directory_test(async (t, root) => {
   await createEmptyFile(t, 'file-name', root);
 
-  await promise_rejects(t, 'TypeMismatchError', root.getDirectory('file-name'));
-  await promise_rejects(
+  await promise_rejects_dom(t, 'TypeMismatchError', root.getDirectory('file-name'));
+  await promise_rejects_dom(
       t, 'TypeMismatchError', root.getDirectory('file-name', {create: false}));
-  await promise_rejects(
+  await promise_rejects_dom(
       t, 'TypeMismatchError', root.getDirectory('file-name', {create: true}));
 }, 'getDirectory() when a file already exists with the same name');
 

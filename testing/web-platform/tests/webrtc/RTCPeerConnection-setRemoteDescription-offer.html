@@ -274,7 +274,7 @@
     assert_equals(pc1.signalingState, 'stable');
     const p2 = pc1.addIceCandidate();
     const p3 = pc1.setRemoteDescription(offer);
-    await promise_rejects(t, 'InvalidStateError', p2);
+    await promise_rejects_dom(t, 'InvalidStateError', p2);
     await p1;
     await p3;
     assert_equals(pc1.signalingState, 'have-remote-offer');
@@ -305,6 +305,6 @@
     assert_equals(pc1.signalingState, 'stable');
     assert_equals(pc1.pendingLocalDescription, null);
     assert_equals(pc1.pendingRemoteDescription, null);
-    await promise_rejects(t, 'RTCError', p);
+    await promise_rejects_dom(t, 'RTCError', p);
   }, 'setRemoteDescription(invalidOffer) from have-local-offer does not undo rollback');
 </script>
