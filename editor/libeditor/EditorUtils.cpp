@@ -28,7 +28,12 @@ namespace mozilla {
 using namespace dom;
 
 template void DOMIterator::AppendAllNodesToArray(
+    nsTArray<OwningNonNull<nsIContent>>& aArrayOfNodes) const;
+template void DOMIterator::AppendAllNodesToArray(
     nsTArray<OwningNonNull<HTMLBRElement>>& aArrayOfNodes) const;
+template void DOMIterator::AppendNodesToArray(
+    BoolFunctor aFunctor, nsTArray<OwningNonNull<nsIContent>>& aArrayOfNodes,
+    void* aClosure) const;
 template void DOMIterator::AppendNodesToArray(
     BoolFunctor aFunctor, nsTArray<OwningNonNull<Element>>& aArrayOfNodes,
     void* aClosure) const;
@@ -112,18 +117,6 @@ void DOMIterator::AppendNodesToArray(
     void* aClosure /* = nullptr */) const {
   for (; !mIter->IsDone(); mIter->Next()) {
     NodeClass* node = NodeClass::FromNode(mIter->GetCurrentNode());
-    if (node && aFunctor(*node, aClosure)) {
-      aArrayOfNodes.AppendElement(*node);
-    }
-  }
-}
-
-template <>
-void DOMIterator::AppendNodesToArray(
-    BoolFunctor aFunctor, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-    void* aClosure /* = nullptr */) const {
-  for (; !mIter->IsDone(); mIter->Next()) {
-    nsINode* node = mIter->GetCurrentNode();
     if (node && aFunctor(*node, aClosure)) {
       aArrayOfNodes.AppendElement(*node);
     }
