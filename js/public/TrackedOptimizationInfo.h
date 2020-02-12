@@ -202,51 +202,6 @@ JS_PUBLIC_API const char* TrackedOutcomeString(TrackedOutcome outcome);
 
 JS_PUBLIC_API const char* TrackedTypeSiteString(TrackedTypeSite site);
 
-struct ForEachTrackedOptimizationAttemptOp {
-  virtual void operator()(TrackedStrategy strategy, TrackedOutcome outcome) = 0;
-};
-
-struct ForEachTrackedOptimizationTypeInfoOp {
-  // Called 0+ times per entry, once for each type in the type set that Ion
-  // saw during MIR construction. readType is always called _before_
-  // operator() on the same entry.
-  //
-  // The keyedBy parameter describes how the type is keyed:
-  //   - "primitive"   for primitive types
-  //   - "constructor" for object types tied to a scripted constructor
-  //                   function.
-  //   - "alloc site"  for object types tied to an allocation site.
-  //   - "prototype"   for object types tied neither to a constructor nor
-  //                   to an allocation site, but to a prototype.
-  //   - "singleton"   for object types which only has a single value.
-  //   - "function"    for object types referring to scripted functions.
-  //   - "native"      for object types referring to native functions.
-  //
-  // The name parameter is the string representation of the type. If the
-  // type is keyed by "constructor", or if the type itself refers to a
-  // scripted function, the name is the function's displayAtom. If the type
-  // is keyed by "native", this is nullptr.
-  //
-  // The location parameter is the filename if the type is keyed by
-  // "constructor", "alloc site", or if the type itself refers to a scripted
-  // function. If the type is keyed by "native", it is the offset of the
-  // native function, suitable for use with addr2line on Linux or atos on OS
-  // X. Otherwise it is nullptr.
-  //
-  // The lineno parameter is the line number if the type is keyed by
-  // "constructor", "alloc site", or if the type itself refers to a scripted
-  // function. Otherwise it is Nothing().
-  //
-  // The location parameter is the only one that may need escaping if being
-  // quoted.
-  virtual void readType(const char* keyedBy, const char* name,
-                        const char* location,
-                        const mozilla::Maybe<unsigned>& lineno) = 0;
-
-  // Called once per entry.
-  virtual void operator()(TrackedTypeSite site, const char* mirType) = 0;
-};
-
 }  // namespace JS
 
 #endif  // js_TrackedOptimizationInfo_h

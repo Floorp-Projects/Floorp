@@ -23,8 +23,6 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 
-using JS::ForEachTrackedOptimizationAttemptOp;
-using JS::ForEachTrackedOptimizationTypeInfoOp;
 using JS::TrackedOutcome;
 using JS::TrackedStrategy;
 using JS::TrackedTypeSite;
@@ -417,49 +415,6 @@ Maybe<uint8_t> JitcodeGlobalEntry::IonEntry::trackedOptimizationIndexAtAddr(
     return Nothing();
   }
   return region->findIndex(ptrOffset, entryOffsetOut);
-}
-
-void JitcodeGlobalEntry::IonEntry::forEachOptimizationAttempt(
-    uint8_t index, ForEachTrackedOptimizationAttemptOp& op) {
-  trackedOptimizationAttempts(index).forEach(op);
-}
-
-void JitcodeGlobalEntry::IonEntry::forEachOptimizationTypeInfo(
-    uint8_t index, IonTrackedOptimizationsTypeInfo::ForEachOpAdapter& op) {
-  trackedOptimizationTypeInfo(index).forEach(op, allTrackedTypes());
-}
-
-void IonTrackedOptimizationsAttempts::forEach(
-    ForEachTrackedOptimizationAttemptOp& op) {
-  CompactBufferReader reader(start_, end_);
-  const uint8_t* cur = start_;
-  while (cur != end_) {
-    TrackedStrategy strategy = TrackedStrategy(reader.readUnsigned());
-    TrackedOutcome outcome = TrackedOutcome(reader.readUnsigned());
-    MOZ_ASSERT(strategy < TrackedStrategy::Count);
-    MOZ_ASSERT(outcome < TrackedOutcome::Count);
-    op(strategy, outcome);
-    cur = reader.currentPosition();
-    MOZ_ASSERT(cur <= end_);
-  }
-}
-
-void IonTrackedOptimizationsTypeInfo::forEach(
-    ForEachOp& op, const IonTrackedTypeVector* allTypes) {
-  CompactBufferReader reader(start_, end_);
-  const uint8_t* cur = start_;
-  while (cur != end_) {
-    TrackedTypeSite site = JS::TrackedTypeSite(reader.readUnsigned());
-    MOZ_ASSERT(site < JS::TrackedTypeSite::Count);
-    MIRType mirType = MIRType(reader.readUnsigned());
-    uint32_t length = reader.readUnsigned();
-    for (uint32_t i = 0; i < length; i++) {
-      op.readType((*allTypes)[reader.readByte()]);
-    }
-    op(site, mirType);
-    cur = reader.currentPosition();
-    MOZ_ASSERT(cur <= end_);
-  }
 }
 
 Maybe<uint8_t> IonTrackedOptimizationsRegion::findIndex(
@@ -1131,91 +1086,6 @@ static JSFunction* FunctionFromTrackedType(
   return ty.group()->maybeInterpretedFunction();
 }
 
-void IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::readType(
-    const IonTrackedTypeWithAddendum& tracked) {
-  TypeSet::Type ty = tracked.type;
-
-  if (ty.isPrimitive() || ty.isUnknown() || ty.isAnyObject()) {
-    op_.readType("primitive", TypeSet::NonObjectTypeString(ty), nullptr,
-                 Nothing());
-    return;
-  }
-
-  char buf[512];
-  const uint32_t bufsize = mozilla::ArrayLength(buf);
-
-  if (JSFunction* fun = FunctionFromTrackedType(tracked)) {
-    // The displayAtom is useful for identifying both native and
-    // interpreted functions.
-    char* name = nullptr;
-    if (fun->displayAtom()) {
-      PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
-      name = buf;
-    }
-
-    if (fun->isNative()) {
-      //
-      // Try printing out the displayAtom of the native function and the
-      // absolute address of the native function pointer.
-      //
-      // Note that this address is not usable without knowing the
-      // starting address at which our shared library is loaded. Shared
-      // library information is exposed by the profiler. If this address
-      // needs to be symbolicated manually (e.g., when it is gotten via
-      // debug spewing of all optimization information), it needs to be
-      // converted to an offset from the beginning of the shared library
-      // for use with utilities like `addr2line` on Linux and `atos` on
-      // OS X. Converting to an offset may be done via dladdr():
-      //
-      //   void* addr = JS_FUNC_TO_DATA_PTR(void*, fun->native());
-      //   uintptr_t offset;
-      //   Dl_info info;
-      //   if (dladdr(addr, &info) != 0) {
-      //       offset = uintptr_t(addr) - uintptr_t(info.dli_fbase);
-      //   }
-      //
-      char locationBuf[20];
-      if (!name) {
-        uintptr_t addr = JS_FUNC_TO_DATA_PTR(uintptr_t, fun->native());
-        snprintf(locationBuf, mozilla::ArrayLength(locationBuf), "%" PRIxPTR,
-                 addr);
-      }
-      op_.readType("native", name, name ? nullptr : locationBuf, Nothing());
-      return;
-    }
-
-    const char* filename;
-    Maybe<unsigned> lineno;
-    InterpretedFunctionFilenameAndLineNumber(fun, &filename, &lineno);
-    op_.readType(tracked.hasConstructor() ? "constructor" : "function", name,
-                 filename, lineno);
-    return;
-  }
-
-  const char* className = ty.objectKey()->clasp()->name;
-  snprintf(buf, bufsize, "[object %s]", className);
-
-  if (tracked.hasAllocationSite()) {
-    JSScript* script = tracked.script;
-    op_.readType(
-        "alloc site", buf, script->maybeForwardedScriptSource()->filename(),
-        Some(PCToLineNumber(script, script->offsetToPC(tracked.offset))));
-    return;
-  }
-
-  if (ty.isGroup()) {
-    op_.readType("prototype", buf, nullptr, Nothing());
-    return;
-  }
-
-  op_.readType("singleton", buf, nullptr, Nothing());
-}
-
-void IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::operator()(
-    JS::TrackedTypeSite site, MIRType mirType) {
-  op_(site, StringFromMIRType(mirType));
-}
-
 typedef JS::ProfiledFrameHandle FrameHandle;
 
 void FrameHandle::updateHasTrackedOptimizations() {
@@ -1235,19 +1105,4 @@ void FrameHandle::updateHasTrackedOptimizations() {
     canonicalAddr_ =
         (void*)(((uint8_t*)entry_.nativeStartAddr()) + entryOffset);
   }
-}
-
-JS_PUBLIC_API void FrameHandle::forEachOptimizationAttempt(
-    ForEachTrackedOptimizationAttemptOp& op, JSScript** scriptOut,
-    jsbytecode** pcOut) const {
-  MOZ_ASSERT(optsIndex_.isSome());
-  entry_.forEachOptimizationAttempt(rt_, *optsIndex_, op);
-  entry_.youngestFrameLocationAtAddr(rt_, addr_, scriptOut, pcOut);
-}
-
-JS_PUBLIC_API void FrameHandle::forEachOptimizationTypeInfo(
-    ForEachTrackedOptimizationTypeInfoOp& op) const {
-  MOZ_ASSERT(optsIndex_.isSome());
-  IonTrackedOptimizationsTypeInfo::ForEachOpAdapter adapter(op);
-  entry_.forEachOptimizationTypeInfo(rt_, *optsIndex_, adapter);
 }

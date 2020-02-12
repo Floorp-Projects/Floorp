@@ -358,11 +358,6 @@ class JitcodeGlobalEntry {
     mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(
         void* ptr, uint32_t* entryOffsetOut);
 
-    void forEachOptimizationAttempt(
-        uint8_t index, JS::ForEachTrackedOptimizationAttemptOp& op);
-    void forEachOptimizationTypeInfo(
-        uint8_t index, IonTrackedOptimizationsTypeInfo::ForEachOpAdapter& op);
-
     template <class ShouldTraceProvider>
     bool trace(JSTracer* trc);
     void sweepChildren();
@@ -787,47 +782,6 @@ class JitcodeGlobalEntry {
         MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
     }
     return mozilla::Nothing();
-  }
-
-  void forEachOptimizationAttempt(JSRuntime* rt, uint8_t index,
-                                  JS::ForEachTrackedOptimizationAttemptOp& op) {
-    switch (kind()) {
-      case Ion:
-        ionEntry().forEachOptimizationAttempt(index, op);
-        return;
-      case Baseline:
-      case Dummy:
-        break;
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-  }
-
-  void forEachOptimizationTypeInfo(
-      JSRuntime* rt, uint8_t index,
-      IonTrackedOptimizationsTypeInfo::ForEachOpAdapter& op) {
-    switch (kind()) {
-      case Ion:
-        ionEntry().forEachOptimizationTypeInfo(index, op);
-        return;
-      case Baseline:
-      case Dummy:
-        break;
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-  }
-
-  IonTrackedOptimizationsAttempts trackedOptimizationAttempts(uint8_t index) {
-    return ionEntry().trackedOptimizationAttempts(index);
-  }
-
-  IonTrackedOptimizationsTypeInfo trackedOptimizationTypeInfo(uint8_t index) {
-    return ionEntry().trackedOptimizationTypeInfo(index);
-  }
-
-  const IonTrackedTypeVector* allTrackedTypes() {
-    return ionEntry().allTrackedTypes();
   }
 
   Zone* zone() { return baseEntry().jitcode()->zone(); }
