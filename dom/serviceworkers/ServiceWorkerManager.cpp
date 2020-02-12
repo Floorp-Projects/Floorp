@@ -248,7 +248,7 @@ class TeardownRunnable final : public Runnable {
   }
 
  private:
-  ~TeardownRunnable() {}
+  ~TeardownRunnable() = default;
 
   RefPtr<ServiceWorkerManagerChild> mActor;
 };
@@ -611,7 +611,7 @@ class PropagateSoftUpdateRunnable final : public Runnable {
   }
 
  private:
-  ~PropagateSoftUpdateRunnable() {}
+  ~PropagateSoftUpdateRunnable() = default;
 
   const OriginAttributes mOriginAttributes;
   const nsString mScope;
@@ -2955,7 +2955,7 @@ class UpdateTimerCallback final : public nsITimerCallback, public nsINamed {
   nsCOMPtr<nsIPrincipal> mPrincipal;
   const nsCString mScope;
 
-  ~UpdateTimerCallback() {}
+  ~UpdateTimerCallback() = default;
 
  public:
   UpdateTimerCallback(nsIPrincipal* aPrincipal, const nsACString& aScope)

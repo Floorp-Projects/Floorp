@@ -261,7 +261,7 @@ class SWRUpdateRunnable final : public Runnable {
     NS_DECL_THREADSAFE_ISUPPORTS
 
    private:
-    ~TimerCallback() {}
+    ~TimerCallback() = default;
   };
 
  public:
