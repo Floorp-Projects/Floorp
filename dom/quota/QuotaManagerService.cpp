@@ -118,7 +118,7 @@ class QuotaManagerService::PendingRequestInfo {
  public:
   explicit PendingRequestInfo(RequestBase* aRequest) : mRequest(aRequest) {}
 
-  virtual ~PendingRequestInfo() {}
+  virtual ~PendingRequestInfo() = default;
 
   RequestBase* GetRequest() const { return mRequest; }
 
