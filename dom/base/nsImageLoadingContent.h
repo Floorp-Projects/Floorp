@@ -150,16 +150,16 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    *        principal to use for the image load
    */
   nsresult LoadImage(nsIURI* aNewURI, bool aForce, bool aNotify,
-                     ImageLoadType aImageLoadType, bool aLoadStart = true,
+                     ImageLoadType aImageLoadType, nsLoadFlags aLoadFlags,
+                     bool aLoadStart = true,
                      mozilla::dom::Document* aDocument = nullptr,
-                     nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
                      nsIPrincipal* aTriggeringPrincipal = nullptr);
 
   nsresult LoadImage(nsIURI* aNewURI, bool aForce, bool aNotify,
                      ImageLoadType aImageLoadType,
                      nsIPrincipal* aTriggeringPrincipal) {
-    return LoadImage(aNewURI, aForce, aNotify, aImageLoadType, true, nullptr,
-                     nsIRequest::LOAD_NORMAL, aTriggeringPrincipal);
+    return LoadImage(aNewURI, aForce, aNotify, aImageLoadType, LoadFlags(),
+                     true, nullptr, aTriggeringPrincipal);
   }
 
   /**
@@ -461,6 +461,8 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   void TrackImage(imgIRequest* aImage, nsIFrame* aFrame = nullptr);
   void UntrackImage(imgIRequest* aImage,
                     const Maybe<OnNonvisible>& aNonvisibleAction = Nothing());
+
+  nsLoadFlags LoadFlags();
 
   /* MEMBERS */
   RefPtr<imgRequestProxy> mCurrentRequest;
