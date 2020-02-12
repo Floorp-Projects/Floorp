@@ -67,6 +67,24 @@ class RequestBlockingPanel extends Component {
     }
   }
 
+  componentWillUnmount() {
+    if (this.scrollToBottomTimeout) {
+      clearTimeout(this.scrollToBottomTimeout);
+    }
+  }
+
+  scrollToBottom() {
+    if (this.scrollToBottomTimeout) {
+      clearTimeout(this.scrollToBottomTimeout);
+    }
+    this.scrollToBottomTimeout = setTimeout(() => {
+      const { contents } = this.refs;
+      if (contents.scrollHeight > contents.offsetHeight) {
+        contents.scrollTo({ top: contents.scrollHeight });
+      }
+    }, 40);
+  }
+
   renderEnableBar() {
     return div(
       { className: "request-blocking-enable-bar" },
@@ -183,26 +201,36 @@ class RequestBlockingPanel extends Component {
         : this.renderItemContent(item)
     );
 
-    return ul(
+    return div(
       {
-        className: `request-blocking-list ${blockingEnabled ? "" : "disabled"}`,
+        className: "request-blocking-contents",
+        ref: "contents",
       },
-      ...listItems
+      ul(
+        {
+          className: `request-blocking-list ${
+            blockingEnabled ? "" : "disabled"
+          }`,
+        },
+        ...listItems
+      )
     );
   }
 
   renderAddForm() {
     const { addBlockedUrl } = this.props;
     return div(
-      { className: "request-blocking-add-form" },
+      { className: "request-blocking-footer" },
       form(
         {
+          className: "request-blocking-add-form",
           onSubmit: e => {
             const { addInput } = this.refs;
             e.preventDefault();
             addBlockedUrl(addInput.value);
             addInput.value = "";
             addInput.focus();
+            this.scrollToBottom();
           },
         },
         input({
@@ -230,11 +258,8 @@ class RequestBlockingPanel extends Component {
     return div(
       { className: "request-blocking-panel" },
       this.renderEnableBar(),
-      div(
-        { className: "request-blocking-contents" },
-        this.renderBlockedList(),
-        this.renderAddForm()
-      )
+      this.renderBlockedList(),
+      this.renderAddForm()
     );
   }
 }
