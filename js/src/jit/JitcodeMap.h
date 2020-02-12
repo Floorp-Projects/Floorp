@@ -214,29 +214,6 @@ class JitcodeGlobalEntry {
     // of the memory space.
     JitcodeIonTable* regionTable_;
 
-    // optsRegionTable_ points to the table within the compact
-    // optimizations map indexing all regions that have tracked
-    // optimization attempts. optsTypesTable_ is the tracked typed info
-    // associated with the attempts vectors; it is the same length as the
-    // attempts table. optsAttemptsTable_ is the table indexing those
-    // attempts vectors.
-    //
-    // All pointers point into the same block of memory; the beginning of
-    // the block is optRegionTable_->payloadStart().
-    const IonTrackedOptimizationsRegionTable* optsRegionTable_;
-    const IonTrackedOptimizationsTypesTable* optsTypesTable_;
-    const IonTrackedOptimizationsAttemptsTable* optsAttemptsTable_;
-
-    // The types table above records type sets, which have been gathered
-    // into one vector here.
-    IonTrackedTypeVector* optsAllTypes_;
-
-    // Linked list pointers to allow traversing through all entries that
-    // could possibly contain nursery pointers. Note that the contained
-    // pointers can be mutated into nursery pointers at any time.
-    IonEntry* prevNursery_;
-    IonEntry* nextNursery_;
-
     struct ScriptNamePair {
       JSScript* script;
       char* str;
@@ -267,22 +244,6 @@ class JitcodeGlobalEntry {
       BaseEntry::init(Ion, code, nativeStartAddr, nativeEndAddr);
       regionTable_ = regionTable;
       scriptList_ = scriptList;
-      optsRegionTable_ = nullptr;
-      optsTypesTable_ = nullptr;
-      optsAllTypes_ = nullptr;
-      optsAttemptsTable_ = nullptr;
-      prevNursery_ = nextNursery_ = nullptr;
-    }
-
-    void initTrackedOptimizations(
-        const IonTrackedOptimizationsRegionTable* regionTable,
-        const IonTrackedOptimizationsTypesTable* typesTable,
-        const IonTrackedOptimizationsAttemptsTable* attemptsTable,
-        IonTrackedTypeVector* allTypes) {
-      optsRegionTable_ = regionTable;
-      optsTypesTable_ = typesTable;
-      optsAttemptsTable_ = attemptsTable;
-      optsAllTypes_ = allTypes;
     }
 
     SizedScriptList* sizedScriptList() const { return scriptList_; }
@@ -323,37 +284,6 @@ class JitcodeGlobalEntry {
                              uint32_t maxResults) const;
 
     uint64_t lookupRealmID(void* ptr) const;
-
-    bool hasTrackedOptimizations() const { return !!optsRegionTable_; }
-
-    const IonTrackedOptimizationsRegionTable* trackedOptimizationsRegionTable()
-        const {
-      MOZ_ASSERT(hasTrackedOptimizations());
-      return optsRegionTable_;
-    }
-
-    uint8_t numOptimizationAttempts() const {
-      MOZ_ASSERT(hasTrackedOptimizations());
-      return optsAttemptsTable_->numEntries();
-    }
-
-    IonTrackedOptimizationsAttempts trackedOptimizationAttempts(uint8_t index) {
-      MOZ_ASSERT(hasTrackedOptimizations());
-      return optsAttemptsTable_->entry(index);
-    }
-
-    IonTrackedOptimizationsTypeInfo trackedOptimizationTypeInfo(uint8_t index) {
-      MOZ_ASSERT(hasTrackedOptimizations());
-      return optsTypesTable_->entry(index);
-    }
-
-    const IonTrackedTypeVector* allTrackedTypes() {
-      MOZ_ASSERT(hasTrackedOptimizations());
-      return optsAllTypes_;
-    }
-
-    mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(
-        void* ptr, uint32_t* entryOffsetOut);
 
     template <class ShouldTraceProvider>
     bool trace(JSTracer* trc);
@@ -724,37 +654,6 @@ class JitcodeGlobalEntry {
     return compare(*this, other);
   }
 
-  bool hasTrackedOptimizations() const {
-    switch (kind()) {
-      case Ion:
-        return ionEntry().hasTrackedOptimizations();
-      case Baseline:
-      case Dummy:
-        break;
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-    return false;
-  }
-
-  bool canHoldNurseryPointers() const {
-    return isIon() && ionEntry().hasTrackedOptimizations();
-  }
-
-  mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(
-      JSRuntime* rt, void* addr, uint32_t* entryOffsetOut) {
-    switch (kind()) {
-      case Ion:
-        return ionEntry().trackedOptimizationIndexAtAddr(addr, entryOffsetOut);
-      case Baseline:
-      case Dummy:
-        break;
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-    return mozilla::Nothing();
-  }
-
   Zone* zone() { return baseEntry().jitcode()->zone(); }
 
   template <class ShouldTraceProvider>
@@ -851,7 +750,6 @@ class JitcodeGlobalTable {
   JitcodeGlobalEntry* freeEntries_;
   uint32_t rand_;
   uint32_t skiplistSize_;
-  JitcodeGlobalEntry::IonEntry* nurseryEntries_;
 
   JitcodeGlobalEntry* startTower_[JitcodeSkiplistTower::MAX_HEIGHT];
   JitcodeSkiplistTower* freeTowers_[JitcodeSkiplistTower::MAX_HEIGHT];
@@ -861,8 +759,7 @@ class JitcodeGlobalTable {
       : alloc_(LIFO_CHUNK_SIZE),
         freeEntries_(nullptr),
         rand_(0),
-        skiplistSize_(0),
-        nurseryEntries_(nullptr) {
+        skiplistSize_(0) {
     for (unsigned i = 0; i < JitcodeSkiplistTower::MAX_HEIGHT; i++) {
       startTower_[i] = nullptr;
     }
@@ -898,7 +795,6 @@ class JitcodeGlobalTable {
                     JSRuntime* rt);
 
   void setAllEntriesAsExpired();
-  void traceForMinorGC(JSTracer* trc);
   MOZ_MUST_USE bool markIteratively(GCMarker* marker);
   void traceWeak(JSRuntime* rt, JSTracer* trc);
 
@@ -930,33 +826,6 @@ class JitcodeGlobalTable {
 #else
   void verifySkiplist() {}
 #endif
-
-  void addToNurseryList(JitcodeGlobalEntry::IonEntry* entry) {
-    MOZ_ASSERT(entry->prevNursery_ == nullptr);
-    MOZ_ASSERT(entry->nextNursery_ == nullptr);
-
-    entry->nextNursery_ = nurseryEntries_;
-    if (nurseryEntries_) {
-      nurseryEntries_->prevNursery_ = entry;
-    }
-    nurseryEntries_ = entry;
-  }
-
-  void removeFromNurseryList(JitcodeGlobalEntry::IonEntry* entry) {
-    // Splice out of list to be scanned on a minor GC.
-    if (entry->prevNursery_) {
-      entry->prevNursery_->nextNursery_ = entry->nextNursery_;
-    }
-    if (entry->nextNursery_) {
-      entry->nextNursery_->prevNursery_ = entry->prevNursery_;
-    }
-
-    if (nurseryEntries_ == entry) {
-      nurseryEntries_ = entry->nextNursery_;
-    }
-
-    entry->prevNursery_ = entry->nextNursery_ = nullptr;
-  }
 
  public:
   class Range {
