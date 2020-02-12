@@ -153,7 +153,7 @@ ToolSidebar.prototype = {
    * @param {String} tabPanelId Optional. If provided, this ID will be used
    * instead of the tabId to retrieve and remove the corresponding <tabpanel>
    */
-  async removeTab(tabId, tabPanelId) {
+  removeTab(tabId, tabPanelId) {
     this._tabbar.removeTab(tabId);
 
     this.emit("tab-unregistered", tabId);
