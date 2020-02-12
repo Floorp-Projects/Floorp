@@ -36,7 +36,7 @@ signature_checking = ["lucet-module/signature_checking"]
 
 [lib]
 name = "lucet_runtime"
-crate-type = ["rlib", "staticlib", "cdylib"]
+crate-type = ["rlib", "staticlib"]
 
 [package.metadata.deb]
 name = "fst-lucet-runtime"

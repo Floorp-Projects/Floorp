@@ -6,8 +6,8 @@ use lucet_module::owned::{
     OwnedLinearMemorySpec, OwnedModuleData, OwnedSparseData,
 };
 use lucet_module::{
-    FunctionHandle, FunctionIndex, FunctionPointer, FunctionSpec, ModuleData, Signature, TrapSite,
-    UniqueSignatureIndex,
+    FunctionHandle, FunctionIndex, FunctionPointer, FunctionSpec, ModuleData, ModuleFeatures,
+    Signature, TrapSite, UniqueSignatureIndex,
 };
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
@@ -221,6 +221,7 @@ impl MockModuleBuilder {
             self.imports,
             self.exports,
             self.signatures,
+            ModuleFeatures::none(),
         );
         let serialized_module_data = owned_module_data
             .to_ref()

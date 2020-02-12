@@ -33,6 +33,9 @@ lucet-module = { path = "../lucet-module", version = "0.1.1" }
 nix = "0.13"
 rand = "0.7"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+mach = "0.3.2"
+
 [dev-dependencies]
 lucet-wasi-sdk = { path = "../lucet-wasi-sdk", version = "0.1.1" }
 lucetc = { path = "../lucetc", version = "0.1.1" }
@@ -44,7 +47,7 @@ optional = true
 
 [lib]
 name = "lucet_wasi"
-crate-type = ["rlib", "staticlib", "cdylib"]
+crate-type = ["rlib", "staticlib"]
 
 [package.metadata.deb]
 name = "fst-lucet-wasi"

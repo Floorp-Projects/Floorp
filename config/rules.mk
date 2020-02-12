@@ -566,6 +566,7 @@ $(WASM_ARCHIVE): $(CWASMOBJS) $(CPPWASMOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOB
 	$(WASM_CXX) $(OUTOPTION)$@ -Wl,--export-all $(WASM_LDFLAGS) $(CWASMOBJS) $(CPPWASMOBJS)
 
 lucet_options := \
+    --target-cpu baseline \
     --bindings $(topsrcdir)/third_party/rust/lucet-wasi/bindings.json \
     --guard-size 4GiB \
     --min-reserved-size 4GiB \
