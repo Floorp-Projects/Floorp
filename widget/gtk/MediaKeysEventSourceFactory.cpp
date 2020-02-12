@@ -3,12 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaKeysEventSourceFactory.h"
-#include "MPRISServiceHandler.h"
 
 namespace mozilla::widget {
 
 mozilla::dom::MediaControlKeysEventSource* CreateMediaControlKeysEventSource() {
-  return new MPRISServiceHandler();
+  // TODO : will implement this in bug 1353652.
+  return nullptr;
 }
 
 }  // namespace mozilla::widget
