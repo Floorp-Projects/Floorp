@@ -309,7 +309,7 @@ void BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
 
   if (!(aFrequencyHz.Length() == aMagResponse.Length() &&
         aMagResponse.Length() == aPhaseResponse.Length())) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    aRv.ThrowInvalidAccessError("Parameter lengths must match");
     return;
   }
 

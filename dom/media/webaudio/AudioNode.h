@@ -15,6 +15,7 @@
 #include "MediaTrackGraph.h"
 #include "WebAudioUtils.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsPrintfCString.h"
 #include "nsWeakReference.h"
 #include "SelfRef.h"
 
@@ -117,7 +118,10 @@ class AudioNode : public DOMEventTargetHelper, public nsSupportsWeakReference {
   uint32_t ChannelCount() const { return mChannelCount; }
   virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) {
     if (aChannelCount == 0 || aChannelCount > WebAudioUtils::MaxChannelCount) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      aRv.ThrowNotSupportedError(
+          nsPrintfCString("Channel count (%u) must be in the range [1, max "
+                          "supported channel count]",
+                          aChannelCount));
       return;
     }
     mChannelCount = aChannelCount;

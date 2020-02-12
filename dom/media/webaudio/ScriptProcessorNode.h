@@ -89,13 +89,19 @@ class ScriptProcessorNode final : public AudioNode {
   }
   void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override {
     if (aChannelCount != ChannelCount()) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      // Spec says to throw InvalidStateError, but see
+      // https://github.com/WebAudio/web-audio-api/issues/2153
+      aRv.ThrowNotSupportedError(
+          "Cannot change channel count of ScriptProcessorNode");
     }
   }
   void SetChannelCountModeValue(ChannelCountMode aMode,
                                 ErrorResult& aRv) override {
     if (aMode != ChannelCountMode::Explicit) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      // Spec says to throw InvalidStateError, but see
+      // https://github.com/WebAudio/web-audio-api/issues/2154
+      aRv.ThrowNotSupportedError(
+          "Cannot change channel count mode of ScriptProcessorNode");
     }
   }
 

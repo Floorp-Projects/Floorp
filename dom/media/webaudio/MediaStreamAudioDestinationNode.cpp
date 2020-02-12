@@ -108,10 +108,9 @@ already_AddRefed<MediaStreamAudioDestinationNode>
 MediaStreamAudioDestinationNode::Create(AudioContext& aAudioContext,
                                         const AudioNodeOptions& aOptions,
                                         ErrorResult& aRv) {
-  if (aAudioContext.IsOffline()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
+  // The spec has a pointless check here.  See
+  // https://github.com/WebAudio/web-audio-api/issues/2149
+  MOZ_RELEASE_ASSERT(!aAudioContext.IsOffline(), "Bindings messed up?");
 
   RefPtr<MediaStreamAudioDestinationNode> audioNode =
       new MediaStreamAudioDestinationNode(&aAudioContext);
