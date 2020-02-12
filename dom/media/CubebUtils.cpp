@@ -35,6 +35,8 @@
 #ifdef XP_WIN
 #  include "mozilla/mscom/EnsureMTA.h"
 #endif
+#include "audioipc_server_ffi_generated.h"
+#include "audioipc_client_ffi_generated.h"
 
 #define AUDIOIPC_POOL_SIZE_DEFAULT 1
 #define AUDIOIPC_STACK_SIZE_DEFAULT (64 * 4096)
@@ -61,27 +63,6 @@
     defined(XP_MACOSX) || (defined(XP_WIN) && !defined(_ARM64_))
 #  define MOZ_CUBEB_REMOTING
 #endif
-
-extern "C" {
-
-// This must match AudioIpcInitParams in media/audioipc/client/src/lib.rs.
-// TODO: Generate this from the Rust definition rather than duplicating it.
-struct AudioIpcInitParams {
-  mozilla::ipc::FileDescriptor::PlatformHandleType mServerConnection;
-  size_t mPoolSize;
-  size_t mStackSize;
-  void (*mThreadCreateCallback)(const char*);
-};
-
-// These functions are provided by audioipc-server crate
-extern void* audioipc_server_start(const char*, const char*);
-extern mozilla::ipc::FileDescriptor::PlatformHandleType
-audioipc_server_new_client(void*);
-extern void audioipc_server_stop(void*);
-// These functions are provided by audioipc-client crate
-extern int audioipc_client_init(cubeb**, const char*,
-                                const AudioIpcInitParams*);
-}
 
 namespace mozilla {
 
@@ -170,7 +151,8 @@ void* sServerHandle = nullptr;
 StaticAutoPtr<ipc::FileDescriptor> sIPCConnection;
 
 static bool StartAudioIPCServer() {
-  sServerHandle = audioipc_server_start(sBrandName, sCubebBackendName);
+  sServerHandle =
+      audioipc::audioipc_server_start(sBrandName, sCubebBackendName);
   return sServerHandle != nullptr;
 }
 
@@ -179,7 +161,7 @@ static void ShutdownAudioIPCServer() {
     return;
   }
 
-  audioipc_server_stop(sServerHandle);
+  audioipc::audioipc_server_stop(sServerHandle);
   sServerHandle = nullptr;
 }
 #endif  // MOZ_CUBEB_REMOTING
@@ -423,7 +405,7 @@ ipc::FileDescriptor CreateAudioIPCConnection() {
   }
   MOZ_ASSERT(sServerHandle);
   ipc::FileDescriptor::PlatformHandleType rawFD =
-      audioipc_server_new_client(sServerHandle);
+      audioipc::audioipc_server_new_client(sServerHandle);
   ipc::FileDescriptor fd(rawFD);
   if (!fd.IsValid()) {
     MOZ_LOG(gCubebLog, LogLevel::Error, ("audioipc_server_new_client failed"));
@@ -488,7 +470,7 @@ cubeb* GetCubebContextUnlocked() {
       return nullptr;
     }
 
-    AudioIpcInitParams initParams;
+    audioipc::AudioIpcInitParams initParams;
     initParams.mPoolSize = sAudioIPCPoolSize;
     initParams.mStackSize = sAudioIPCStackSize;
     initParams.mServerConnection =
@@ -502,7 +484,8 @@ cubeb* GetCubebContextUnlocked() {
     MOZ_LOG(gCubebLog, LogLevel::Debug,
             ("%s: %d", PREF_AUDIOIPC_STACK_SIZE, (int)initParams.mStackSize));
 
-    rv = audioipc_client_init(&sCubebContext, sBrandName, &initParams);
+    rv =
+        audioipc::audioipc_client_init(&sCubebContext, sBrandName, &initParams);
   } else {
 #endif  // MOZ_CUBEB_REMOTING
 #ifdef XP_WIN

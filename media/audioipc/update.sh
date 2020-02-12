@@ -8,6 +8,7 @@ for crate in audioipc client server; do
     rm -fr $crate
     mkdir $crate
     cp -pr $1/$crate/Cargo.toml $crate
+    [ -e $1/$crate/cbindgen.toml ] && cp -pr $1/$crate/cbindgen.toml $crate
     cp -pr $1/$crate/src $crate
 done
 
