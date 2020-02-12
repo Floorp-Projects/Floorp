@@ -362,7 +362,8 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
   }
 #endif
 #if defined(MOZ_ENABLE_FORKSERVER)
-  if (aProcessType == GeckoProcessType_Content) {
+  if (aProcessType == GeckoProcessType_Content &&
+      ForkServiceChild::Get()) {
     mLaunchOptions->use_forkserver = true;
   }
 #endif

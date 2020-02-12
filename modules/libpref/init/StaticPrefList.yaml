@@ -1676,6 +1676,13 @@
   value: 500
   mirror: always
 
+#ifdef MOZ_ENABLE_FORKSERVER
+- name: dom.ipc.forkserver.enable
+  type: bool
+  value: false
+  mirror: once
+#endif
+
 # Whether or not to collect a paired minidump when force-killing a
 # content process.
 - name: dom.ipc.tabs.createKillHardCrashReports
