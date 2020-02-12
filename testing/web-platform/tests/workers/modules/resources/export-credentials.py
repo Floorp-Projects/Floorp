@@ -11,4 +11,5 @@ def main(request, response):
     cookie_value = '';
     if cookie:
         cookie_value = cookie.value;
-    return (200, response_headers, "postMessage('"+cookie_value+"');")
+    return (200, response_headers,
+            "export const cookie = '"+cookie_value+"';")
