@@ -331,9 +331,6 @@ def synchronize(host, github_project, window):
                 project.create_deployment(
                     pull_request, revision_latest
                 )
-                # Temporarily bail after creating one deployment, to verify the
-                # end-to-end flow without spamming many PRs.
-                logger.info('Created one deployment, returning for testing purposes')
         else:
             logger.info('Pull Request should not be mirrored')
 
