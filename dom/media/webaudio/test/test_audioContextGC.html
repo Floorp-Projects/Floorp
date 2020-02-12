@@ -87,6 +87,28 @@ let tests = [{
     ids.add(id(sourceAfterComplete));
     sourceAfterComplete.start();
   }
+}, {
+  name: "suspended AudioContext", setup: async () => {
+    const ac = new AudioContext();
+    ids.add(id(ac.destination));
+    const sourceBeforeSuspend = new ConstantSourceNode(ac);
+    ids.add(id(sourceBeforeSuspend));
+    sourceBeforeSuspend.start();
+    ac.suspend();
+    const sourceAfterSuspend = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterSuspend));
+    sourceAfterSuspend.start();
+    await new Promise((resolve) => {
+      ac.onstatechange = () => {
+        if (ac.state == "suspended") {
+          resolve();
+        }
+      };
+    });
+    const sourceAfterSuspended = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterSuspended));
+    sourceAfterSuspended.start();
+  }
 }];
 
 const start_next_test = async () => {
