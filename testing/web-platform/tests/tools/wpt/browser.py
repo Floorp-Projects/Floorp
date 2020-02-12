@@ -1087,11 +1087,11 @@ class Safari(Browser):
         except subprocess.CalledProcessError:
             self.logger.warning("Failed to call %s --version" % webdriver_binary)
             return None
-        m = re.match(br"Included with Safari (.*)", version_string)
+        m = re.match(r"Included with Safari (.*)", version_string)
         if not m:
             self.logger.warning("Failed to extract version from: %s" % version_string)
             return None
-        return m.group(1).decode()
+        return m.group(1)
 
 
 class Servo(Browser):
@@ -1234,7 +1234,7 @@ class WebKitGTKMiniBrowser(WebKit):
         gcc = find_executable("gcc")
         if gcc:
             try:
-                triplet = call(gcc, "-dumpmachine").decode().strip()
+                triplet = call(gcc, "-dumpmachine").strip()
             except subprocess.CalledProcessError:
                 pass
         # Add Debian/Ubuntu path
@@ -1253,7 +1253,7 @@ class WebKitGTKMiniBrowser(WebKit):
         if binary is None:
             return None
         try:  # WebKitGTK MiniBrowser before 2.26.0 doesn't support --version
-            output = call(binary, "--version").decode().strip()
+            output = call(binary, "--version").strip()
         except subprocess.CalledProcessError:
             return None
         # Example output: "WebKitGTK 2.26.1"
