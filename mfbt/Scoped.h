@@ -174,8 +174,10 @@ class MOZ_NON_TEMPORARY_CLASS Scoped {
       Super::operator=(aRhs);                                                 \
       return *this;                                                           \
     }                                                                         \
-    name& operator=(name&& aRhs) = default;                                   \
-                                                                              \
+    name& operator=(name&& aRhs) {                                            \
+      Super::operator=(std::move(aRhs));                                      \
+      return *this;                                                           \
+    }                                                                         \
     explicit name(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)                       \
         : Super(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {}            \
     explicit name(Resource aRhs MOZ_GUARD_OBJECT_NOTIFIER_PARAM)              \
@@ -184,8 +186,8 @@ class MOZ_NON_TEMPORARY_CLASS Scoped {
         : Super(std::move(aRhs) MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {} \
                                                                               \
    private:                                                                   \
-    explicit name(const name&) = delete;                                      \
-    name& operator=(const name&) = delete;                                    \
+    explicit name(name&) = delete;                                            \
+    name& operator=(name&) = delete;                                          \
   };
 
 /*

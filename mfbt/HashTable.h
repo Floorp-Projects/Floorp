@@ -178,8 +178,11 @@ class HashMap {
   explicit HashMap(uint32_t aLen) : mImpl(AllocPolicy(), aLen) {}
 
   // HashMap is movable.
-  HashMap(HashMap&& aRhs) = default;
-  HashMap& operator=(HashMap&& aRhs) = default;
+  HashMap(HashMap&& aRhs) : mImpl(std::move(aRhs.mImpl)) {}
+  void operator=(HashMap&& aRhs) {
+    MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
+    mImpl = std::move(aRhs.mImpl);
+  }
 
   // -- Status and sizing ----------------------------------------------------
 
@@ -460,8 +463,11 @@ class HashSet {
   explicit HashSet(uint32_t aLen) : mImpl(AllocPolicy(), aLen) {}
 
   // HashSet is movable.
-  HashSet(HashSet&& aRhs) = default;
-  HashSet& operator=(HashSet&& aRhs) = default;
+  HashSet(HashSet&& aRhs) : mImpl(std::move(aRhs.mImpl)) {}
+  void operator=(HashSet&& aRhs) {
+    MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
+    mImpl = std::move(aRhs.mImpl);
+  }
 
   // -- Status and sizing ----------------------------------------------------
 
@@ -905,8 +911,13 @@ class HashMapEntry {
       : key_(std::forward<KeyInput>(aKey)),
         value_(std::forward<ValueInput>(aValue)) {}
 
-  HashMapEntry(HashMapEntry&& aRhs) = default;
-  HashMapEntry& operator=(HashMapEntry&& aRhs) = default;
+  HashMapEntry(HashMapEntry&& aRhs)
+      : key_(std::move(aRhs.key_)), value_(std::move(aRhs.value_)) {}
+
+  void operator=(HashMapEntry&& aRhs) {
+    key_ = std::move(aRhs.key_);
+    value_ = std::move(aRhs.value_);
+  }
 
   using KeyType = Key;
   using ValueType = Value;
@@ -1503,14 +1514,13 @@ class HashTable : private AllocPolicy {
 
   // HashTable is movable
   HashTable(HashTable&& aRhs) : AllocPolicy(std::move(aRhs)) { moveFrom(aRhs); }
-  HashTable& operator=(HashTable&& aRhs) {
+  void operator=(HashTable&& aRhs) {
     MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
     if (mTable) {
       destroyTable(*this, mTable, capacity());
     }
     AllocPolicy::operator=(std::move(aRhs));
     moveFrom(aRhs);
-    return *this;
   }
 
  private:

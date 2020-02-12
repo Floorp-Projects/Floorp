@@ -24,11 +24,14 @@ using namespace mozilla;
 struct Number {
   explicit Number(int aValue) : mValue(aValue) {}
 
-  Number(const Number& aOther) = default;
+  Number(const Number& aOther) : mValue(aOther.mValue) {}
 
   Number(Number&& aOther) : mValue(aOther.mValue) { aOther.mValue = 0; }
 
-  Number& operator=(const Number& aOther) = default;
+  Number& operator=(const Number& aOther) {
+    mValue = aOther.mValue;
+    return *this;
+  }
 
   Number& operator=(Number&& aOther) {
     mValue = aOther.mValue;
@@ -50,7 +53,10 @@ struct MoveOnly {
 
   MoveOnly(MoveOnly&& aOther) : mValue(aOther.mValue) { aOther.mValue = 0; }
 
-  MoveOnly& operator=(MoveOnly& aOther) = default;
+  MoveOnly& operator=(MoveOnly& aOther) {
+    mValue = aOther.mValue;
+    return *this;
+  }
 
   MoveOnly& operator=(MoveOnly&& aOther) {
     mValue = aOther.mValue;

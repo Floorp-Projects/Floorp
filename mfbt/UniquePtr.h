@@ -474,7 +474,7 @@ class UniquePtr<T[], D> {
 template <typename T>
 class DefaultDelete {
  public:
-  constexpr DefaultDelete() = default;
+  constexpr DefaultDelete() {}
 
   template <typename U>
   MOZ_IMPLICIT DefaultDelete(
@@ -492,7 +492,7 @@ class DefaultDelete {
 template <typename T>
 class DefaultDelete<T[]> {
  public:
-  constexpr DefaultDelete() = default;
+  constexpr DefaultDelete() {}
 
   void operator()(T* aPtr) const {
     static_assert(sizeof(T) > 0, "T must be complete");
