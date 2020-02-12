@@ -125,7 +125,7 @@ class TestRunner(object):
         try:
             return self.executor.run_test(test)
         except Exception:
-            self.logger.critical(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             raise
 
     def wait(self):
