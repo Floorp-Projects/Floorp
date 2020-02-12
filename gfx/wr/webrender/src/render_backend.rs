@@ -309,6 +309,10 @@ impl DataStores {
                 let prim_data = &self.radial_grad[data_handle];
                 &prim_data.common
             }
+            PrimitiveInstanceKind::ConicGradient { data_handle, .. } => {
+                let prim_data = &self.conic_grad[data_handle];
+                &prim_data.common
+            }
             PrimitiveInstanceKind::TextRun { data_handle, .. }  => {
                 let prim_data = &self.text_run[data_handle];
                 &prim_data.common
