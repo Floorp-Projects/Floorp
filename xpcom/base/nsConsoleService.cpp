@@ -61,7 +61,7 @@ static const bool gLoggingBuffered = true;
 static bool gLoggingToDebugger = true;
 #endif  // XP_WIN
 
-nsConsoleService::MessageElement::~MessageElement() {}
+nsConsoleService::MessageElement::~MessageElement() = default;
 
 nsConsoleService::nsConsoleService()
     : mCurrentSize(0),

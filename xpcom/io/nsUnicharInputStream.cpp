@@ -34,7 +34,7 @@ class StringUnicharInputStream final : public nsIUnicharInputStream {
   uint32_t mLen;
 
  private:
-  ~StringUnicharInputStream() {}
+  ~StringUnicharInputStream() = default;
 };
 
 NS_IMETHODIMP

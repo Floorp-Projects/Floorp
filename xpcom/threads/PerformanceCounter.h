@@ -119,7 +119,7 @@ class PerformanceCounter final {
   uint64_t GetID() const;
 
  private:
-  ~PerformanceCounter() {}
+  ~PerformanceCounter() = default;
 
   Atomic<uint64_t> mExecutionDuration;
   Atomic<uint64_t> mTotalDispatchCount;

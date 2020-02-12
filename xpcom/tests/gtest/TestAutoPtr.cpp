@@ -10,7 +10,7 @@
 class TestObjectBaseA {
  public:
   // Virtual dtor for deleting through base class pointer
-  virtual ~TestObjectBaseA() {}
+  virtual ~TestObjectBaseA() = default;
   void MemberFunction(int, int*, int&) {}
   virtual void VirtualMemberFunction(int, int*, int&){};
   virtual void VirtualConstMemberFunction(int, int*, int&) const {};
@@ -20,13 +20,13 @@ class TestObjectBaseA {
 class TestObjectBaseB {
  public:
   // Virtual dtor for deleting through base class pointer
-  virtual ~TestObjectBaseB() {}
+  virtual ~TestObjectBaseB() = default;
   int fooB;
 };
 
 class TestObject : public TestObjectBaseA, public TestObjectBaseB {
  public:
-  TestObject() {}
+  TestObject() = default;
 
   // Virtual dtor for deleting through base class pointer
   virtual ~TestObject() { destructed++; }

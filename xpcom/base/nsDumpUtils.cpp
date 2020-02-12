@@ -270,7 +270,7 @@ void FifoWatcher::RegisterCallback(const nsCString& aCommand,
   mFifoInfo.AppendElement(aFifoInfo);
 }
 
-FifoWatcher::~FifoWatcher() {}
+FifoWatcher::~FifoWatcher() = default;
 
 int FifoWatcher::OpenFd() {
   // If the memory_info_dumper.directory pref is specified, put the fifo

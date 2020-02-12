@@ -27,7 +27,7 @@ class nsInterfaceHashtable
   typedef Interface* UserDataType;
   typedef nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*> base_type;
 
-  nsInterfaceHashtable() {}
+  nsInterfaceHashtable() = default;
   explicit nsInterfaceHashtable(uint32_t aInitLength)
       : nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>(
             aInitLength) {}

@@ -62,7 +62,7 @@ enum SegmentChangeResult { SegmentNotChanged, SegmentAdvanceBufferRead };
 // a critical section.
 class nsPipeEvents {
  public:
-  nsPipeEvents() {}
+  nsPipeEvents() = default;
   ~nsPipeEvents();
 
   inline void NotifyInputReady(nsIAsyncInputStream* aStream,
@@ -494,7 +494,7 @@ nsPipe::nsPipe()
   mInputList.AppendElement(mOriginalInput);
 }
 
-nsPipe::~nsPipe() {}
+nsPipe::~nsPipe() = default;
 
 NS_IMPL_ADDREF(nsPipe)
 NS_IMPL_QUERY_INTERFACE(nsPipe, nsIPipe)

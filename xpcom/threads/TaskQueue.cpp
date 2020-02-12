@@ -14,7 +14,7 @@ namespace mozilla {
 class TaskQueue::EventTargetWrapper final : public nsISerialEventTarget {
   RefPtr<TaskQueue> mTaskQueue;
 
-  ~EventTargetWrapper() {}
+  ~EventTargetWrapper() = default;
 
  public:
   explicit EventTargetWrapper(TaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue) {

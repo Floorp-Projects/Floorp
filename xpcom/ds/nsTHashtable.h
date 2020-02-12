@@ -92,7 +92,7 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   /**
    * destructor, cleans up and deallocates
    */
-  ~nsTHashtable();
+  ~nsTHashtable() = default;
 
   nsTHashtable(nsTHashtable<EntryType>&& aOther);
   nsTHashtable<EntryType>& operator=(nsTHashtable<EntryType>&& aOther);
@@ -236,7 +236,7 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
 
     explicit Iterator(nsTHashtable* aTable) : Base(&aTable->mTable) {}
     Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
-    ~Iterator() {}
+    ~Iterator() = default;
 
     EntryType* Get() const { return static_cast<EntryType*>(Base::Get()); }
 
@@ -377,9 +377,6 @@ nsTHashtable<EntryType>& nsTHashtable<EntryType>::operator=(
   mTable = std::move(aOther.mTable);
   return *this;
 }
-
-template <class EntryType>
-nsTHashtable<EntryType>::~nsTHashtable() {}
 
 template <class EntryType>
 /* static */ const PLDHashTableOps* nsTHashtable<EntryType>::Ops() {

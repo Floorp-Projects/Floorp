@@ -448,9 +448,9 @@ static nsresult GetAppleModelId(nsAutoCString& aModelId) {
 
 using namespace mozilla;
 
-nsSystemInfo::nsSystemInfo() {}
+nsSystemInfo::nsSystemInfo() = default;
 
-nsSystemInfo::~nsSystemInfo() {}
+nsSystemInfo::~nsSystemInfo() = default;
 
 // CPU-specific information.
 static const struct PropItems {
@@ -884,7 +884,7 @@ nsresult nsSystemInfo::Init() {
     secondaryLibrary.Append(nsDependentCSubstring(gtkver, gtkver_len));
   }
 
-#ifndef MOZ_TSAN
+#  ifndef MOZ_TSAN
   // With TSan, avoid loading libpulse here because we cannot unload it
   // afterwards due to restrictions from TSan about unloading libraries
   // matched by the suppression list.
@@ -904,7 +904,7 @@ nsresult nsSystemInfo::Init() {
   if (libpulse) {
     dlclose(libpulse);
   }
-#endif
+#  endif
 
   rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
                              secondaryLibrary);

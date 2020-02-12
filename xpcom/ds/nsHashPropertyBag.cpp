@@ -78,7 +78,7 @@ nsHashPropertyBagBase::DeleteProperty(const nsAString& aName) {
 //
 
 class nsSimpleProperty final : public nsIProperty {
-  ~nsSimpleProperty() {}
+  ~nsSimpleProperty() = default;
 
  public:
   nsSimpleProperty(const nsAString& aName, nsIVariant* aValue)

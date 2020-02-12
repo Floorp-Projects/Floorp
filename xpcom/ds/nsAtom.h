@@ -201,7 +201,7 @@ class nsDynamicAtom : public nsAtom {
   // Create()/Destroy() methods use them.
   nsDynamicAtom(const nsAString& aString, uint32_t aHash,
                 bool aIsAsciiLowercase);
-  ~nsDynamicAtom() {}
+  ~nsDynamicAtom() = default;
 
   static nsDynamicAtom* Create(const nsAString& aString, uint32_t aHash);
   static void Destroy(nsDynamicAtom* aAtom);

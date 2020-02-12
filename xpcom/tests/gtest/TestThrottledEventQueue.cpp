@@ -87,7 +87,7 @@ struct RunnableQueue : nsISerialEventTarget {
   NS_DECL_THREADSAFE_ISUPPORTS
 
  private:
-  virtual ~RunnableQueue() {}
+  virtual ~RunnableQueue() = default;
 };
 
 NS_IMPL_ISUPPORTS(RunnableQueue, nsIEventTarget, nsISerialEventTarget)

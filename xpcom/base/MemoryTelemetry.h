@@ -62,7 +62,7 @@ class MemoryTelemetry final : public nsIObserver,
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITIMERCALLBACK
 
-    TotalMemoryGatherer() {}
+    TotalMemoryGatherer() = default;
 
     void CollectParentSize(int64_t aResident);
     void CollectResult(int64_t aChildUSS);

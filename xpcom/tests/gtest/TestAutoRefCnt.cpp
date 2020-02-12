@@ -34,7 +34,7 @@ class nsThreadSafeAutoRefCntRunner final : public nsIRunnable {
   static Atomic<uint32_t, Relaxed> sDecToZero;
 
  private:
-  ~nsThreadSafeAutoRefCntRunner() {}
+  ~nsThreadSafeAutoRefCntRunner() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsThreadSafeAutoRefCntRunner, nsIRunnable)

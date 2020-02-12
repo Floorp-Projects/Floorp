@@ -152,7 +152,7 @@ class nsAtomRunner final : public nsIRunnable {
   }
 
  private:
-  ~nsAtomRunner() {}
+  ~nsAtomRunner() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsAtomRunner, nsIRunnable)

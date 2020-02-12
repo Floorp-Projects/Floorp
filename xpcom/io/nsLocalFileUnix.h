@@ -101,7 +101,7 @@ class nsLocalFile final
 
  private:
   nsLocalFile(const nsLocalFile& aOther);
-  ~nsLocalFile() {}
+  ~nsLocalFile() = default;
 
  protected:
   // This stat cache holds the *last stat* - it does not invalidate.

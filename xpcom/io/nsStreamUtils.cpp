@@ -475,7 +475,7 @@ class nsAStreamCopier : public nsIInputStreamCallback,
   nsresult mCancelStatus;
 
   // virtual since subclasses call superclass Release()
-  virtual ~nsAStreamCopier() {}
+  virtual ~nsAStreamCopier() = default;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAStreamCopier, CancelableRunnable,
@@ -484,7 +484,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsAStreamCopier, CancelableRunnable,
 class nsStreamCopierIB final : public nsAStreamCopier {
  public:
   nsStreamCopierIB() : nsAStreamCopier() {}
-  virtual ~nsStreamCopierIB() {}
+  virtual ~nsStreamCopierIB() = default;
 
   struct MOZ_STACK_CLASS ReadSegmentsState {
     // the nsIOutputStream will outlive the ReadSegmentsState on the stack
@@ -526,7 +526,7 @@ class nsStreamCopierIB final : public nsAStreamCopier {
 class nsStreamCopierOB final : public nsAStreamCopier {
  public:
   nsStreamCopierOB() : nsAStreamCopier() {}
-  virtual ~nsStreamCopierOB() {}
+  virtual ~nsStreamCopierOB() = default;
 
   struct MOZ_STACK_CLASS WriteSegmentsState {
     // the nsIInputStream will outlive the WriteSegmentsState on the stack

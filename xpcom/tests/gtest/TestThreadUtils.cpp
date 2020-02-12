@@ -41,7 +41,7 @@ class nsFoo : public nsISupports {
   }
 
  private:
-  virtual ~nsFoo() {}
+  virtual ~nsFoo() = default;
 };
 
 NS_IMPL_ISUPPORTS0(nsFoo)
@@ -67,7 +67,7 @@ class TestSuicide : public mozilla::Runnable {
 };
 
 class nsBar : public nsISupports {
-  virtual ~nsBar() {}
+  virtual ~nsBar() = default;
 
  public:
   NS_DECL_ISUPPORTS
@@ -593,7 +593,7 @@ class IdleObjectWithoutSetDeadline final {
   bool mRunnableExecuted;
 
  private:
-  ~IdleObjectWithoutSetDeadline() {}
+  ~IdleObjectWithoutSetDeadline() = default;
 };
 
 class IdleObjectParentWithSetDeadline {
@@ -612,7 +612,7 @@ class IdleObjectInheritedSetDeadline final
   bool mRunnableExecuted;
 
  private:
-  ~IdleObjectInheritedSetDeadline() {}
+  ~IdleObjectInheritedSetDeadline() = default;
 };
 
 class IdleObject final {
@@ -710,7 +710,7 @@ class IdleObject final {
   nsCOMPtr<nsITimer> mTimer;
   bool mRunnableExecuted[8];
   bool mSetIdleDeadlineCalled;
-  ~IdleObject() {}
+  ~IdleObject() = default;
 };
 
 TEST(ThreadUtils, IdleRunnableMethod)
@@ -1218,7 +1218,7 @@ NS_IMPL_ISUPPORTS(ThreadUtilsObject, IThreadUtilsObject)
 class ThreadUtilsRefCountedFinal final {
  public:
   ThreadUtilsRefCountedFinal() : m_refCount(0) {}
-  ~ThreadUtilsRefCountedFinal() {}
+  ~ThreadUtilsRefCountedFinal() = default;
   // 'AddRef' and 'Release' methods with different return types, to verify
   // that the return type doesn't influence storage selection.
   long AddRef(void) { return ++m_refCount; }
@@ -1231,7 +1231,7 @@ class ThreadUtilsRefCountedFinal final {
 class ThreadUtilsRefCountedBase {
  public:
   ThreadUtilsRefCountedBase() : m_refCount(0) {}
-  virtual ~ThreadUtilsRefCountedBase() {}
+  virtual ~ThreadUtilsRefCountedBase() = default;
   // 'AddRef' and 'Release' methods with different return types, to verify
   // that the return type doesn't influence storage selection.
   virtual void AddRef(void) { ++m_refCount; }

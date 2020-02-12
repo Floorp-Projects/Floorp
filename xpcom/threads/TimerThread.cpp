@@ -109,7 +109,7 @@ class TimerEventAllocator {
         // are not preserved when recording/replaying.
         mMonitor("TimerEventAllocator", recordreplay::Behavior::DontPreserve) {}
 
-  ~TimerEventAllocator() {}
+  ~TimerEventAllocator() = default;
 
   void* Alloc(size_t aSize);
   void Free(void* aPtr);

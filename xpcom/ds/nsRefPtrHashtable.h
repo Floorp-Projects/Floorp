@@ -26,7 +26,7 @@ class nsRefPtrHashtable
   typedef PtrType* UserDataType;
   typedef nsBaseHashtable<KeyClass, RefPtr<PtrType>, PtrType*> base_type;
 
-  nsRefPtrHashtable() {}
+  nsRefPtrHashtable() = default;
   explicit nsRefPtrHashtable(uint32_t aInitLength)
       : nsBaseHashtable<KeyClass, RefPtr<PtrType>, PtrType*>(aInitLength) {}
 

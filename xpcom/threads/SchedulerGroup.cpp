@@ -48,7 +48,7 @@ class SchedulerEventTarget final : public nsISerialEventTarget {
   SchedulerGroup* Dispatcher() const { return mDispatcher; }
 
  private:
-  ~SchedulerEventTarget() {}
+  ~SchedulerEventTarget() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SchedulerEventTarget,

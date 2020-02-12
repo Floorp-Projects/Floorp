@@ -21,7 +21,7 @@
 #define NS_INIPARSERFACTORY_CONTRACTID "@mozilla.org/xpcom/ini-parser-factory;1"
 
 class nsINIParserFactory final : public nsIINIParserFactory, public nsIFactory {
-  ~nsINIParserFactory() {}
+  ~nsINIParserFactory() = default;
 
  public:
   NS_DECL_ISUPPORTS

@@ -70,7 +70,7 @@ class InputEventStatistics {
 
  public:
   explicit InputEventStatistics(ConstructorCookie&&);
-  ~InputEventStatistics() {}
+  ~InputEventStatistics() = default;
 
   static InputEventStatistics& Get();
 

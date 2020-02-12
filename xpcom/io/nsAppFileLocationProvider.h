@@ -25,7 +25,7 @@ class nsAppFileLocationProvider final : public nsIDirectoryServiceProvider2 {
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
  private:
-  ~nsAppFileLocationProvider() {}
+  ~nsAppFileLocationProvider() = default;
 
  protected:
   nsresult CloneMozBinDirectory(nsIFile** aLocalFile);

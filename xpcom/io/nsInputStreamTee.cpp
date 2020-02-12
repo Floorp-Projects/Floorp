@@ -37,7 +37,7 @@ class nsInputStreamTee final : public nsIInputStreamTee {
   void InvalidateSink();
 
  private:
-  ~nsInputStreamTee() {}
+  ~nsInputStreamTee() = default;
 
   nsresult TeeSegment(const char* aBuf, uint32_t aCount);
 
