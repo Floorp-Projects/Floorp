@@ -536,6 +536,7 @@ pub struct Shaders {
     brush_blend: BrushShader,
     brush_mix_blend: BrushShader,
     brush_yuv_image: Vec<Option<BrushShader>>,
+    brush_conic_gradient: BrushShader,
     brush_radial_gradient: BrushShader,
     brush_linear_gradient: BrushShader,
     brush_opacity: BrushShader,
@@ -608,6 +609,20 @@ impl Shaders {
             "brush_mix_blend",
             device,
             &[],
+            options.precache_flags,
+            false /* advanced blend */,
+            false /* dual source */,
+            use_pixel_local_storage,
+        )?;
+
+        let brush_conic_gradient = BrushShader::new(
+            "brush_conic_gradient",
+            device,
+            if options.enable_dithering {
+               &[DITHERING_FEATURE]
+            } else {
+               &[]
+            },
             options.precache_flags,
             false /* advanced blend */,
             false /* dual source */,
@@ -904,6 +919,7 @@ impl Shaders {
             brush_blend,
             brush_mix_blend,
             brush_yuv_image,
+            brush_conic_gradient,
             brush_radial_gradient,
             brush_linear_gradient,
             brush_opacity,
@@ -953,6 +969,9 @@ impl Shaders {
                     BrushBatchKind::MixBlend { .. } => {
                         &mut self.brush_mix_blend
                     }
+                    BrushBatchKind::ConicGradient => {
+                        &mut self.brush_conic_gradient
+                    }
                     BrushBatchKind::RadialGradient => {
                         &mut self.brush_radial_gradient
                     }
@@ -990,6 +1009,7 @@ impl Shaders {
         self.brush_solid.deinit(device);
         self.brush_blend.deinit(device);
         self.brush_mix_blend.deinit(device);
+        self.brush_conic_gradient.deinit(device);
         self.brush_radial_gradient.deinit(device);
         self.brush_linear_gradient.deinit(device);
         self.brush_opacity.deinit(device);

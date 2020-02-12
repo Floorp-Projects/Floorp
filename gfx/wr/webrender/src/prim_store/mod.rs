@@ -32,7 +32,7 @@ use crate::picture::{PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedT
 use crate::prim_store::backdrop::BackdropDataHandle;
 use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
-use crate::prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle};
+use crate::prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle, ConicGradientDataHandle};
 use crate::prim_store::image::{ImageDataHandle, ImageInstance, VisibleImageTile, YuvImageDataHandle};
 use crate::prim_store::line_dec::LineDecorationDataHandle;
 use crate::prim_store::picture::PictureDataHandle;
@@ -1426,6 +1426,11 @@ pub enum PrimitiveInstanceKind {
         data_handle: RadialGradientDataHandle,
         visible_tiles_range: GradientTileRange,
     },
+    ConicGradient {
+        /// Handle to the common interned data for this primitive.
+        data_handle: ConicGradientDataHandle,
+        visible_tiles_range: GradientTileRange,
+    },
     /// Clear out a rect, used for special effects.
     Clear {
         /// Handle to the common interned data for this primitive.
@@ -1621,6 +1626,9 @@ impl PrimitiveInstance {
                 data_handle.uid()
             }
             PrimitiveInstanceKind::RadialGradient { data_handle, .. } => {
+                data_handle.uid()
+            }
+            PrimitiveInstanceKind::ConicGradient { data_handle, .. } => {
                 data_handle.uid()
             }
             PrimitiveInstanceKind::TextRun { data_handle, .. } => {
@@ -2240,6 +2248,7 @@ impl PrimitiveStore {
                             PrimitiveInstanceKind::Image { .. } => debug_colors::BLUE,
                             PrimitiveInstanceKind::LinearGradient { .. } => debug_colors::PINK,
                             PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
+                            PrimitiveInstanceKind::ConicGradient { .. } => debug_colors::PINK,
                             PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
                             PrimitiveInstanceKind::Backdrop { .. } => debug_colors::MEDIUMAQUAMARINE,
                         };
@@ -2559,6 +2568,7 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::YuvImage { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
+            PrimitiveInstanceKind::ConicGradient { .. } |
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::LineDecoration { .. } |
@@ -2702,6 +2712,7 @@ impl PrimitiveStore {
                 PrimitiveInstanceKind::Image { .. } |
                 PrimitiveInstanceKind::LinearGradient { .. } |
                 PrimitiveInstanceKind::RadialGradient { .. } |
+                PrimitiveInstanceKind::ConicGradient { .. } |
                 PrimitiveInstanceKind::PushClipChain |
                 PrimitiveInstanceKind::PopClipChain |
                 PrimitiveInstanceKind::Clear { .. } |
@@ -3327,6 +3338,70 @@ impl PrimitiveStore {
                 // TODO(gw): Consider whether it's worth doing segment building
                 //           for gradient primitives.
             }
+            PrimitiveInstanceKind::ConicGradient { data_handle, ref mut visible_tiles_range, .. } => {
+                let prim_data = &mut data_stores.conic_grad[*data_handle];
+
+                if prim_data.stretch_size.width >= prim_data.common.prim_size.width &&
+                    prim_data.stretch_size.height >= prim_data.common.prim_size.height {
+
+                    // We are performing the decomposition on the CPU here, no need to
+                    // have it in the shader.
+                    prim_data.common.may_need_repetition = false;
+                }
+
+                // Update the template this instane references, which may refresh the GPU
+                // cache with any shared template data.
+                prim_data.update(frame_state);
+
+                if prim_data.tile_spacing != LayoutSize::zero() {
+                    let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
+                    let prim_rect = LayoutRect::new(
+                        prim_instance.prim_origin,
+                        prim_data.common.prim_size,
+                    );
+
+                    let map_local_to_world = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        prim_spatial_node_index,
+                        frame_context.global_screen_world_rect,
+                        frame_context.spatial_tree,
+                    );
+
+                    prim_data.common.may_need_repetition = false;
+
+                    *visible_tiles_range = decompose_repeated_primitive(
+                        &prim_info.combined_local_clip_rect,
+                        &prim_rect,
+                        prim_info.clipped_world_rect,
+                        &prim_data.stretch_size,
+                        &prim_data.tile_spacing,
+                        frame_state,
+                        &mut scratch.gradient_tiles,
+                        &map_local_to_world,
+                        &mut |_, mut request| {
+                            request.push([
+                                prim_data.center.x,
+                                prim_data.center.y,
+                                prim_data.angle.angle,
+                                0.0,
+                            ]);
+                            request.push([
+                                pack_as_float(prim_data.extend_mode as u32),
+                                prim_data.stretch_size.width,
+                                prim_data.stretch_size.height,
+                                0.0,
+                            ]);
+                        },
+                    );
+
+                    if visible_tiles_range.is_empty() {
+                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                    }
+                }
+
+                // TODO(gw): Consider whether it's worth doing segment building
+                //           for gradient primitives.
+            }
             PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, data_handle, .. } => {
                 let pic = &mut self.pictures[pic_index.0];
                 let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
@@ -3718,6 +3793,7 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
+            PrimitiveInstanceKind::ConicGradient { .. } |
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::LineDecoration { .. } |
@@ -3856,6 +3932,17 @@ impl PrimitiveInstance {
             }
             PrimitiveInstanceKind::RadialGradient { data_handle, .. } => {
                 let prim_data = &data_stores.radial_grad[data_handle];
+
+                // TODO: This is quite messy - once we remove legacy primitives we
+                //       can change this to be a tuple match on (instance, template)
+                if prim_data.brush_segments.is_empty() {
+                    return false;
+                }
+
+                prim_data.brush_segments.as_slice()
+            }
+            PrimitiveInstanceKind::ConicGradient { data_handle, .. } => {
+                let prim_data = &data_stores.conic_grad[data_handle];
 
                 // TODO: This is quite messy - once we remove legacy primitives we
                 //       can change this to be a tuple match on (instance, template)
