@@ -64,7 +64,7 @@ class NestedEventTargetWrapper final : public nsISerialEventTarget {
       : mNestedEventTarget(aNestedEventTarget), mDisconnected(false) {}
 
  private:
-  ~NestedEventTargetWrapper() {}
+  ~NestedEventTargetWrapper() = default;
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -181,7 +181,7 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
   nsresult StartAndReturnResponse(LSRequestResponse& aResponse);
 
  private:
-  ~RequestHelper() {}
+  ~RequestHelper() = default;
 
   nsresult Start();
 

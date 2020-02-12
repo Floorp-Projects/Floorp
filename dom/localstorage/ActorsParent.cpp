@@ -1587,7 +1587,7 @@ class Connection::InitStorageAndOriginHelper final : public Runnable {
   nsresult BlockAndReturnOriginDirectoryPath(nsAString& aOriginDirectoryPath);
 
  private:
-  ~InitStorageAndOriginHelper() {}
+  ~InitStorageAndOriginHelper() = default;
 
   nsresult RunOnIOThread();
 
