@@ -283,18 +283,12 @@ void HttpBaseChannel::ReleaseMainThreadOnlyReferences() {
   }
 
   nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
-  arrayToRelease.AppendElement(mURI.forget());
-  arrayToRelease.AppendElement(mOriginalURI.forget());
-  arrayToRelease.AppendElement(mDocumentURI.forget());
   arrayToRelease.AppendElement(mLoadGroup.forget());
   arrayToRelease.AppendElement(mLoadInfo.forget());
   arrayToRelease.AppendElement(mCallbacks.forget());
   arrayToRelease.AppendElement(mProgressSink.forget());
   arrayToRelease.AppendElement(mApplicationCache.forget());
-  arrayToRelease.AppendElement(mAPIRedirectToURI.forget());
-  arrayToRelease.AppendElement(mProxyURI.forget());
   arrayToRelease.AppendElement(mPrincipal.forget());
-  arrayToRelease.AppendElement(mTopWindowURI.forget());
   arrayToRelease.AppendElement(mContentBlockingAllowListPrincipal.forget());
   arrayToRelease.AppendElement(mListener.forget());
   arrayToRelease.AppendElement(mCompressListener.forget());

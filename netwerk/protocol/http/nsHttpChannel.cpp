@@ -433,7 +433,6 @@ void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
   nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
   arrayToRelease.AppendElement(mApplicationCacheForWrite.forget());
   arrayToRelease.AppendElement(mAuthProvider.forget());
-  arrayToRelease.AppendElement(mRedirectURI.forget());
   arrayToRelease.AppendElement(mRedirectChannel.forget());
   arrayToRelease.AppendElement(mPreflightChannel.forget());
   arrayToRelease.AppendElement(mDNSPrefetch.forget());
