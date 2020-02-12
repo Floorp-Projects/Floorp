@@ -41,7 +41,7 @@ class MOZ_STACK_CLASS DebugOnly {
 #ifdef DEBUG
   T value;
 
-  DebugOnly() {}
+  DebugOnly() = default;
   MOZ_IMPLICIT DebugOnly(const T& aOther) : value(aOther) {}
   DebugOnly(const DebugOnly& aOther) : value(aOther.value) {}
   DebugOnly& operator=(const T& aRhs) {
@@ -65,7 +65,7 @@ class MOZ_STACK_CLASS DebugOnly {
   const T& operator->() const { return value; }
 
 #else
-  DebugOnly() {}
+  DebugOnly() = default;
   MOZ_IMPLICIT DebugOnly(const T&) {}
   DebugOnly(const DebugOnly&) {}
   DebugOnly& operator=(const T&) { return *this; }
@@ -79,7 +79,7 @@ class MOZ_STACK_CLASS DebugOnly {
 #endif
 
   /*
-   * DebugOnly must always have a destructor or else it will
+   * DebugOnly must always have a user-defined destructor or else it will
    * generate "unused variable" warnings, exactly what it's intended
    * to avoid!
    */

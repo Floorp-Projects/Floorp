@@ -160,7 +160,7 @@ struct AutoRecordAtomicAccess;
 template <>
 struct AutoRecordAtomicAccess<recordreplay::Behavior::DontPreserve> {
   explicit AutoRecordAtomicAccess(const void* aValue) {}
-  ~AutoRecordAtomicAccess() {}
+  ~AutoRecordAtomicAccess() = default;
 };
 
 template <>

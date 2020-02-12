@@ -138,7 +138,7 @@ void Initialize(int aArgc, char* aArgv[]) {
 // Record/replay API functions can't GC, but we can't use
 // JS::AutoSuppressGCAnalysis here due to linking issues.
 struct AutoSuppressGCAnalysis {
-  AutoSuppressGCAnalysis() {}
+  AutoSuppressGCAnalysis() = default;
   ~AutoSuppressGCAnalysis() {
 #ifdef DEBUG
     // Need nontrivial destructor.

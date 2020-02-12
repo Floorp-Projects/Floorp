@@ -23,7 +23,7 @@ using namespace mozilla;
 template <typename T>
 class SequenceGenerator {
  public:
-  SequenceGenerator() {}
+  SequenceGenerator() = default;
   void Get(T* aElements, size_t aCount) {
     for (size_t i = 0; i < aCount; i++) {
       aElements[i] = static_cast<T>(mIndex);
@@ -40,7 +40,7 @@ class SequenceGenerator {
 template <typename T>
 class SequenceVerifier {
  public:
-  SequenceVerifier() {}
+  SequenceVerifier() = default;
   void Check(T* aElements, size_t aCount) {
     for (size_t i = 0; i < aCount; i++) {
       if (aElements[i] != static_cast<T>(mIndex)) {
