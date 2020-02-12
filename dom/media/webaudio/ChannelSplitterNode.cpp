@@ -61,7 +61,8 @@ already_AddRefed<ChannelSplitterNode> ChannelSplitterNode::Create(
     ErrorResult& aRv) {
   if (aOptions.mNumberOfOutputs == 0 ||
       aOptions.mNumberOfOutputs > WebAudioUtils::MaxChannelCount) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "%u is not a valid number of outputs", aOptions.mNumberOfOutputs));
     return nullptr;
   }
 

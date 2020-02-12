@@ -95,7 +95,7 @@ addLoadEvent(function() {
   // Null number of channels
   expectException(function() {
     context.createBuffer(0, 2048, 48000);
-  }, DOMException.INDEX_SIZE_ERR);
+  }, DOMException.NOT_SUPPORTED_ERR);
   SimpleTest.finish();
 });
 

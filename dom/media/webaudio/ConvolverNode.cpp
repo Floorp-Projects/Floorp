@@ -394,13 +394,17 @@ void ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer,
         // Supported number of channels
         break;
       default:
-        aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        aRv.ThrowNotSupportedError(
+            nsPrintfCString("%u is not a supported number of channels",
+                            aBuffer->NumberOfChannels()));
         return;
     }
   }
 
   if (aBuffer && (aBuffer->SampleRate() != Context()->SampleRate())) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "Buffer sample rate (%g) does not match AudioContext sample rate (%g)",
+        aBuffer->SampleRate(), Context()->SampleRate()));
     return;
   }
 

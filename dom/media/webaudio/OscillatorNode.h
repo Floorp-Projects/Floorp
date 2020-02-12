@@ -47,7 +47,7 @@ class OscillatorNode final : public AudioScheduledSourceNode,
     if (aType == OscillatorType::Custom) {
       // ::Custom can only be set by setPeriodicWave().
       // https://github.com/WebAudio/web-audio-api/issues/105 for exception.
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      aRv.ThrowInvalidStateError("Can't set type to \"custom\"");
       return;
     }
     mType = aType;
