@@ -1000,6 +1000,15 @@ class JSTerm extends Component {
     } else if (items.length < minimumAutoCompleteLength && popup.isOpen) {
       popup.hidePopup();
     }
+
+    // Eager evaluation results incorporate the current autocomplete item. We need to
+    // trigger it here as well as in onAutocompleteSelect as we set the items with
+    // preventSelectCallback (which means we won't trigger onAutocompleteSelect when the
+    // popup is open).
+    this.terminalInputChanged(
+      this.getInputValueWithCompletionText().expression
+    );
+
     this.emit("autocomplete-updated");
   }
 
@@ -1029,6 +1038,10 @@ class JSTerm extends Component {
     } else {
       this.setAutoCompletionText("");
     }
+    // Eager evaluation results incorporate the current autocomplete item.
+    this.terminalInputChanged(
+      this.getInputValueWithCompletionText().expression
+    );
   }
 
   /**
@@ -1037,6 +1050,8 @@ class JSTerm extends Component {
    */
   clearCompletion() {
     this.autocompleteUpdate.cancel();
+    // Update Eager evaluation result as the completion text was removed.
+    this.terminalInputChanged(this._getValue());
 
     this.setAutoCompletionText("");
     if (this.autocompletePopup) {
@@ -1056,6 +1071,41 @@ class JSTerm extends Component {
    * Accept the proposed input completion.
    */
   acceptProposedCompletion() {
+    const {
+      completionText,
+      numberOfCharsToReplaceCharsBeforeCursor,
+    } = this.getInputValueWithCompletionText();
+
+    this.autocompleteUpdate.cancel();
+    this.props.autocompleteClear();
+
+    if (completionText) {
+      this.insertStringAtCursor(
+        completionText,
+        numberOfCharsToReplaceCharsBeforeCursor
+      );
+    }
+  }
+
+  /**
+   * Returns an object containing the expression we would get if the user accepted the
+   * current completion text. This is more than the current input + the completion text,
+   * as there are special cases for element access and case-insensitive matches.
+   *
+   * @return {Object}: An object of the following shape:
+   *         - {String} expression: The complete expression
+   *         - {String} completionText: the completion text only, which should be used
+   *                    with the next property
+   *         - {Integer} numberOfCharsToReplaceCharsBeforeCursor: The number of chars that
+   *                     should be removed from the current input before the cursor to
+   *                     cleanly apply the completionText. This is handy when we only want
+   *                     to insert the completionText.
+   */
+  getInputValueWithCompletionText() {
+    const inputBeforeCursor = this.getInputValueBeforeCursor();
+    const inputAfterCursor = this._getValue().substring(
+      inputBeforeCursor.length
+    );
     let completionText = this.getAutoCompletionText();
     let numberOfCharsToReplaceCharsBeforeCursor;
 
@@ -1072,7 +1122,6 @@ class JSTerm extends Component {
       // If the user is performing an element access, we need to check if we should add
       // starting and ending quotes, as well as a closing bracket.
       if (isElementAccess) {
-        const inputBeforeCursor = this.getInputValueBeforeCursor();
         const lastOpeningBracketIndex = inputBeforeCursor.lastIndexOf("[");
         if (lastOpeningBracketIndex > -1) {
           numberOfCharsToReplaceCharsBeforeCursor = inputBeforeCursor.substring(
@@ -1080,9 +1129,6 @@ class JSTerm extends Component {
           ).length;
         }
 
-        const inputAfterCursor = this._getValue().substring(
-          inputBeforeCursor.length
-        );
         // If there's not a bracket after the cursor, add it.
         if (!inputAfterCursor.trimLeft().startsWith("]")) {
           completionText = completionText + "]";
@@ -1090,15 +1136,20 @@ class JSTerm extends Component {
       }
     }
 
-    this.autocompleteUpdate.cancel();
-    this.props.autocompleteClear();
+    const expression =
+      inputBeforeCursor.substring(
+        0,
+        inputBeforeCursor.length -
+          (numberOfCharsToReplaceCharsBeforeCursor || 0)
+      ) +
+      completionText +
+      inputAfterCursor;
 
-    if (completionText) {
-      this.insertStringAtCursor(
-        completionText,
-        numberOfCharsToReplaceCharsBeforeCursor
-      );
-    }
+    return {
+      completionText,
+      numberOfCharsToReplaceCharsBeforeCursor,
+      expression,
+    };
   }
 
   getInputValueBeforeCursor() {
@@ -1150,9 +1201,6 @@ class JSTerm extends Component {
     }
 
     this.editor.setAutoCompletionText(suffix);
-
-    // Eager evaluation results incorporate the current autocomplete suffix.
-    this.terminalInputChanged(this.lastInputValue + suffix);
   }
 
   getAutoCompletionText() {
