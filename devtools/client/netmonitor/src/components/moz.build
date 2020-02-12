@@ -4,6 +4,7 @@
 
 DIRS += [
     'request-blocking',
+    'request-details',
     'request-list',
     'search',
     'websockets',
@@ -12,7 +13,6 @@ DIRS += [
 DevToolsModules(
     'App.js',
     'CachePanel.js',
-    'CookiesPanel.js',
     'CustomRequestPanel.js',
     'DropHarHandler.js',
     'HeadersPanel.js',
