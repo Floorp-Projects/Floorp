@@ -276,7 +276,7 @@ class GeckoWebExtension(
     }
 
     override fun isEnabled(): Boolean {
-        return nativeExtension.metaData?.enabled == true
+        return nativeExtension.metaData?.enabled ?: true
     }
 }
 

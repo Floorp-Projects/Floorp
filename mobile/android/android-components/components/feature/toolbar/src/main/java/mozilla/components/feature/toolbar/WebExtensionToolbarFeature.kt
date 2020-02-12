@@ -58,10 +58,10 @@ class WebExtensionToolbarFeature(
      */
     override fun start() {
         // The feature could start with an existing view and toolbar so
-        // we have to check if any stale actions (from uninstalled
-        // extensions) are being displayed and remove them.
+        // we have to check if any stale actions (from uninstalled or
+        // disabled extensions) are being displayed and remove them.
         webExtensionBrowserActions
-            .filterKeys { !store.state.extensions.containsKey(it) }
+            .filterKeys { !store.state.extensions.containsKey(it) || store.state.extensions[it]?.enabled == false }
             .forEach { (extensionId, action) ->
                 toolbar.removeBrowserAction(action)
                 toolbar.invalidateActions()
@@ -69,7 +69,7 @@ class WebExtensionToolbarFeature(
             }
 
         webExtensionPageActions
-            .filterKeys { !store.state.extensions.containsKey(it) }
+            .filterKeys { !store.state.extensions.containsKey(it) || store.state.extensions[it]?.enabled == false }
             .forEach { (extensionId, action) ->
                 toolbar.removePageAction(action)
                 toolbar.invalidateActions()
