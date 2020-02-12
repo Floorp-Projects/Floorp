@@ -66,7 +66,7 @@ class RequestResolver final : public nsIQuotaCallback {
   NS_DECL_NSIQUOTACALLBACK
 
  private:
-  ~RequestResolver() {}
+  ~RequestResolver() = default;
 
   nsresult GetStorageEstimate(nsIVariant* aResult);
 
@@ -688,7 +688,7 @@ StorageManager::StorageManager(nsIGlobalObject* aGlobal) : mOwner(aGlobal) {
   MOZ_ASSERT(aGlobal);
 }
 
-StorageManager::~StorageManager() {}
+StorageManager::~StorageManager() = default;
 
 already_AddRefed<Promise> StorageManager::Persisted(ErrorResult& aRv) {
   MOZ_ASSERT(mOwner);

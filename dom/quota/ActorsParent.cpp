@@ -1093,7 +1093,7 @@ class CollectOriginsHelper final : public Runnable {
       nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
 
  private:
-  ~CollectOriginsHelper() {}
+  ~CollectOriginsHelper() = default;
 
   NS_IMETHOD
   Run() override;
@@ -1232,7 +1232,7 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
   void RunOnIOThreadImmediately();
 
  private:
-  ~FinalizeOriginEvictionOp() {}
+  ~FinalizeOriginEvictionOp() = default;
 
   virtual void Open() override;
 
@@ -1270,7 +1270,7 @@ class NormalOriginOperationBase : public OriginOperationBase,
     AssertIsOnOwningThread();
   }
 
-  ~NormalOriginOperationBase() {}
+  ~NormalOriginOperationBase() = default;
 
  private:
   // Need to declare refcounting unconditionally, because
@@ -1304,7 +1304,7 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
   }
 
  private:
-  ~SaveOriginAccessTimeOp() {}
+  ~SaveOriginAccessTimeOp() = default;
 
   virtual nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -1428,7 +1428,7 @@ class GetUsageOp final : public QuotaUsageRequestBase,
   explicit GetUsageOp(const UsageRequestParams& aParams);
 
  private:
-  ~GetUsageOp() {}
+  ~GetUsageOp() = default;
 
   void ProcessOriginInternal(QuotaManager* aQuotaManager,
                              const PersistenceType aPersistenceType,
@@ -1494,7 +1494,7 @@ class InitOp final : public QuotaRequestBase {
   }
 
  private:
-  ~InitOp() {}
+  ~InitOp() = default;
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -1508,7 +1508,7 @@ class InitTemporaryStorageOp final : public QuotaRequestBase {
   }
 
  private:
-  ~InitTemporaryStorageOp() {}
+  ~InitTemporaryStorageOp() = default;
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -1527,7 +1527,7 @@ class InitStorageAndOriginOp final : public QuotaRequestBase {
   bool Init(Quota* aQuota) override;
 
  private:
-  ~InitStorageAndOriginOp() {}
+  ~InitStorageAndOriginOp() = default;
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -1543,7 +1543,7 @@ class ResetOrClearOp final : public QuotaRequestBase {
   bool Init(Quota* aQuota) override;
 
  private:
-  ~ResetOrClearOp() {}
+  ~ResetOrClearOp() = default;
 
   void DeleteFiles(QuotaManager* aQuotaManager);
 
@@ -1579,7 +1579,7 @@ class ClearOriginOp final : public ClearRequestBase {
   bool Init(Quota* aQuota) override;
 
  private:
-  ~ClearOriginOp() {}
+  ~ClearOriginOp() = default;
 
   void GetResponse(RequestResponse& aResponse) override;
 };
@@ -1593,7 +1593,7 @@ class ClearDataOp final : public ClearRequestBase {
   bool Init(Quota* aQuota) override;
 
  private:
-  ~ClearDataOp() {}
+  ~ClearDataOp() = default;
 
   void GetResponse(RequestResponse& aResponse) override;
 };
@@ -1619,7 +1619,7 @@ class PersistedOp final : public PersistRequestBase {
   explicit PersistedOp(const RequestParams& aParams);
 
  private:
-  ~PersistedOp() {}
+  ~PersistedOp() = default;
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -1631,7 +1631,7 @@ class PersistOp final : public PersistRequestBase {
   explicit PersistOp(const RequestParams& aParams);
 
  private:
-  ~PersistOp() {}
+  ~PersistOp() = default;
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -1940,7 +1940,7 @@ class StorageOperationBase {
   NS_INLINE_DECL_REFCOUNTING(StorageOperationBase)
 
  protected:
-  virtual ~StorageOperationBase() {}
+  virtual ~StorageOperationBase() = default;
 
   nsresult GetDirectoryMetadata(nsIFile* aDirectory, int64_t& aTimestamp,
                                 nsACString& aGroup, nsACString& aOrigin,
@@ -2086,7 +2086,7 @@ class RepositoryOperationBase : public StorageOperationBase {
   nsresult ProcessRepository();
 
  protected:
-  virtual ~RepositoryOperationBase() {}
+  virtual ~RepositoryOperationBase() = default;
 
   template <typename UpgradeMethod>
   nsresult MaybeUpgradeClients(const OriginProps& aOriginsProps,

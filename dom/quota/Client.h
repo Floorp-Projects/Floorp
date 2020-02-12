@@ -127,7 +127,7 @@ class Client {
   virtual void ShutdownWorkThreads() = 0;
 
  protected:
-  virtual ~Client() {}
+  virtual ~Client() = default;
 };
 
 END_QUOTA_NAMESPACE
