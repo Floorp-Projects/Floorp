@@ -52,7 +52,7 @@ function doXHR(aUrl, onSuccess, onFail) {
  * Grabs the results via XHR and passes to checker.
  */
 function checkIndividualResults(aTestname, aExpectedImg, aName) {
-  doXHR('/tests/dom/base/test/img_referrer_testserver.sjs?action=get-test-results',
+  doXHR('/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=get-test-results',
         function(xhr) {
           var results = xhr.response;
           info(JSON.stringify(xhr.response));
@@ -71,7 +71,7 @@ function checkIndividualResults(aTestname, aExpectedImg, aName) {
 }
 
 function resetState() {
-  doXHR('/tests/dom/base/test/img_referrer_testserver.sjs?action=resetState',
+  doXHR('/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=resetState',
     advance,
     function(xhr) {
       ok(false, "error in reset state");
@@ -85,7 +85,7 @@ function resetState() {
 var tests = (function*() {
 
   var iframe = document.getElementById("testframe");
-  var sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-img-policy-test";
+  var sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-img-policy-test";
 
   // setting img unsafe-url and meta origin - unsafe-url shall prevail (should use speculative load)
   yield resetState();
@@ -101,7 +101,7 @@ var tests = (function*() {
 
   // test referrer policy in regular load
   yield resetState();
-  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-img-policy-test2";
+  sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-img-policy-test2";
   name = 'regular-load-unsafe-url';
   yield iframe.src = sjs + "&imgPolicy=" + escape('unsafe-url') + "&name=" + name;
   yield checkIndividualResults("unsafe-url in img", ["full"], [name]);
@@ -110,7 +110,7 @@ var tests = (function*() {
   var policies = ['unsafe-url', 'origin', 'no-referrer'];
   var expected = ["full", "origin", "none"];
   yield resetState();
-  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-img-policy-test3";
+  sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-img-policy-test3";
   name = 'multiple-images-'+policies[0]+'-'+policies[1]+'-'+policies[2];
   yield iframe.src = sjs + "&imgPolicy1=" + escape(policies[0]) + "&imgPolicy2=" + escape(policies[1]) + "&imgPolicy3=" + escape(policies[2]) + "&name=" + name;
   yield checkIndividualResults(policies[0]+", "+policies[1]+" and "+policies[2]+" in img", expected, [name+policies[0], name+policies[1], name+policies[2]]);
@@ -118,7 +118,7 @@ var tests = (function*() {
   policies = ['origin', 'no-referrer', 'unsafe-url'];
   expected = ["origin", "none", "full"];
   yield resetState();
-  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-img-policy-test3";
+  sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-img-policy-test3";
   name = 'multiple-images-'+policies[0]+'-'+policies[1]+'-'+policies[2];
   yield iframe.src = sjs + "&imgPolicy1=" + escape(policies[0]) + "&imgPolicy2=" + escape(policies[1]) + "&imgPolicy3=" + escape(policies[2]) + "&name=" + name;
   yield checkIndividualResults(policies[0]+", "+policies[1]+" and "+policies[2]+" in img", expected, [name+policies[0], name+policies[1], name+policies[2]]);
@@ -126,47 +126,47 @@ var tests = (function*() {
   policies = ['no-referrer', 'origin', 'unsafe-url'];
   expected = ["none", "origin", "full"];
   yield resetState();
-  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-img-policy-test3";
+  sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-img-policy-test3";
   name = 'multiple-images-'+policies[0]+'-'+policies[1]+'-'+policies[2];
   yield iframe.src = sjs + "&imgPolicy1=" + escape(policies[0]) + "&imgPolicy2=" + escape(policies[1]) + "&imgPolicy3=" + escape(policies[2]) + "&name=" + name;
   yield checkIndividualResults(policies[0]+", "+policies[1]+" and "+policies[2]+" in img", expected, [name+policies[0], name+policies[1], name+policies[2]]);
 
   // regression tests that meta referrer is still working even if attribute referrers are enabled
   yield resetState();
-  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-img-policy-test4";
+  sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-img-policy-test4";
   name = 'regular-load-no-referrer-meta';
   yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name;
   yield checkIndividualResults("no-referrer in meta (no img referrer policy), speculative load", ["none"], [name]);
 
   yield resetState();
-  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-img-policy-test5";
+  sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-img-policy-test5";
   name = 'regular-load-no-referrer-meta';
   yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name;
   yield checkIndividualResults("no-referrer in meta (no img referrer policy), regular load", ["none"], [name]);
 
   //test setAttribute
   yield resetState();
-  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test1";
+  sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-setAttribute-test1";
   name = 'set-referrer-policy-attribute-before-src';
   yield iframe.src = sjs + "&imgPolicy=" + escape('no-referrer') + "&policy=" + escape('unsafe-url') + "&name=" + name;
   yield checkIndividualResults("no-referrer in img", ["none"], [name]);
 
   yield resetState();
-  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
+  sjs = "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
   name = 'set-referrer-policy-attribute-after-src';
   yield iframe.src = sjs + "&imgPolicy=" + escape('no-referrer') + "&policy=" + escape('unsafe-url') + "&name=" + name;
   yield checkIndividualResults("no-referrer in img", ["none"], [name]);
 
   yield resetState();
   sjs =
-    "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
+    "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
   name = 'set-invalid-referrer-policy-attribute-before-src-invalid';
   yield iframe.src = sjs + "&imgPolicy=" + escape('invalid') + "&policy=" + escape('unsafe-url') + "&name=" + name;
   yield checkIndividualResults("unsafe-url in meta, invalid in img", ["full"], [name]);
 
   yield resetState();
   sjs =
-    "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
+    "/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
   name = 'set-invalid-referrer-policy-attribute-before-src-invalid';
   yield iframe.src = sjs + "&imgPolicy=" + escape('default') + "&policy=" + escape('unsafe-url') + "&name=" + name;
   yield checkIndividualResults("unsafe-url in meta, default in img", ["full"], [name]);
