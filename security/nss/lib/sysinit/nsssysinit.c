@@ -149,6 +149,7 @@ userCanModifySystemDB()
     return (access(NSS_DEFAULT_SYSTEM, W_OK) == 0);
 }
 
+#ifndef NSS_FIPS_DISABLED
 static PRBool
 getFIPSEnv(void)
 {
@@ -164,10 +165,12 @@ getFIPSEnv(void)
     }
     return PR_FALSE;
 }
+#endif /* NSS_FIPS_DISABLED */
 
 static PRBool
 getFIPSMode(void)
 {
+#ifndef NSS_FIPS_DISABLED
     FILE *f;
     char d;
     size_t size;
@@ -186,6 +189,9 @@ getFIPSMode(void)
     if (d != '1')
         return PR_FALSE;
     return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif /* NSS_FIPS_DISABLED */
 }
 
 #define NSS_DEFAULT_FLAGS "flags=readonly"
