@@ -169,6 +169,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     env = worker.setdefault('env', {})
     env.update({
+        'WORKSPACE': '{workdir}/workspace'.format(**run),
         'GECKO_PATH': '{workdir}/workspace/build/src'.format(**run),
         'MOZHARNESS_CONFIG': ' '.join(run.pop('config')),
         'MOZHARNESS_SCRIPT': run.pop('script'),
