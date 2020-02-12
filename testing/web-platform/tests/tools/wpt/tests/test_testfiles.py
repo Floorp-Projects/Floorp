@@ -19,19 +19,20 @@ def test_affected_testfiles():
     manifest_json = {
         "items": {
             "crashtest": {
-                "a/b/c/foo-crash.html": [
-                    ["a/b/c/foo-crash.html", {}],
-                ]
+                "a": {
+                    "b": {
+                        "c": {
+                            "foo-crash.html": [
+                                "acdefgh123456",
+                                ["null", {}],
+                            ]
+                        }
+                    }
+                }
             }
         },
-        "paths": {
-            "a/b/c/foo-crash.html": [
-                "acdefgh123456",
-                "crashtest",
-            ]
-        },
         "url_base": "/",
-        "version": 7,
+        "version": 8,
     }
     manifest = Manifest.from_json("/", manifest_json)
     with patch("tools.wpt.testfiles.load_manifest", return_value=manifest):
