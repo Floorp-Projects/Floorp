@@ -195,13 +195,13 @@ promise_test(t => {
         np = registration.navigationPreload;
         add_completion_callback(() => registration.unregister());
         return Promise.all([
-            promise_rejects(
+            promise_rejects_dom(
                 t, 'InvalidStateError', np.enable(),
                 'enable should reject if there is no active worker'),
-            promise_rejects(
+            promise_rejects_dom(
                 t, 'InvalidStateError', np.disable(),
                 'disable should reject if there is no active worker'),
-            promise_rejects(
+            promise_rejects_dom(
                 t, 'InvalidStateError', np.setHeaderValue('umm'),
                 'setHeaderValue should reject if there is no active worker')]);
       })

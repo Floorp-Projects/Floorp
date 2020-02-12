@@ -68,12 +68,12 @@
    *        will not use to generate a certificate for RTCPeerConnection.
    */
   promise_test(t =>
-    promise_rejects(t, 'NotSupportedError',
+    promise_rejects_dom(t, 'NotSupportedError',
       RTCPeerConnection.generateCertificate('invalid-algo')),
     'generateCertificate() with invalid string algorithm should reject with NotSupportedError');
 
   promise_test(t =>
-    promise_rejects(t, 'NotSupportedError',
+    promise_rejects_dom(t, 'NotSupportedError',
       RTCPeerConnection.generateCertificate({
         name: 'invalid-algo'
       })),

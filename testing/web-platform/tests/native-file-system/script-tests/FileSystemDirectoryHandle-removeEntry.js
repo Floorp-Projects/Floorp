@@ -6,7 +6,7 @@ directory_test(async (t, root) => {
   await root.removeEntry('file-to-remove');
 
   assert_array_equals(await getSortedDirectoryEntries(root), ['file-to-keep']);
-  await promise_rejects(t, 'NotFoundError', getFileContents(handle));
+  await promise_rejects_dom(t, 'NotFoundError', getFileContents(handle));
 }, 'removeEntry() to remove a file');
 
 directory_test(async (t, root) => {
@@ -14,7 +14,7 @@ directory_test(async (t, root) => {
       await createFileWithContents(t, 'file-to-remove', '12345', root);
   await root.removeEntry('file-to-remove');
 
-  await promise_rejects(t, 'NotFoundError', root.removeEntry('file-to-remove'));
+  await promise_rejects_dom(t, 'NotFoundError', root.removeEntry('file-to-remove'));
 }, 'removeEntry() on an already removed file should fail');
 
 directory_test(async (t, root) => {
@@ -23,7 +23,7 @@ directory_test(async (t, root) => {
   await root.removeEntry('dir-to-remove');
 
   assert_array_equals(await getSortedDirectoryEntries(root), ['file-to-keep']);
-  await promise_rejects(t, 'NotFoundError', getSortedDirectoryEntries(dir));
+  await promise_rejects_dom(t, 'NotFoundError', getSortedDirectoryEntries(dir));
 }, 'removeEntry() to remove an empty directory');
 
 directory_test(async (t, root) => {
@@ -31,7 +31,7 @@ directory_test(async (t, root) => {
   t.add_cleanup(() => root.removeEntry('dir-to-remove', {recursive: true}));
   await createEmptyFile(t, 'file-in-dir', dir);
 
-  await promise_rejects(
+  await promise_rejects_dom(
       t, 'InvalidModificationError', root.removeEntry('dir-to-remove'));
   assert_array_equals(
       await getSortedDirectoryEntries(root), ['dir-to-remove/']);

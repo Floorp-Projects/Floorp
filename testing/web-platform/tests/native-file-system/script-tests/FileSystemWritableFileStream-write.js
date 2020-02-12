@@ -117,7 +117,7 @@ directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'bad_offset', root);
   const stream = await handle.createWritable();
 
-  await promise_rejects(
+  await promise_rejects_dom(
       t, 'InvalidStateError', stream.write({type: 'write', position: 4, data: new Blob(['abc'])}));
   await promise_rejects_js(
       t, TypeError, stream.close(), 'stream is already closed');
@@ -202,7 +202,7 @@ directory_test(async (t, root) => {
   await stream.write('foo');
 
   await root.removeEntry('parent_dir', {recursive: true});
-  await promise_rejects(t, 'NotFoundError', stream.close());
+  await promise_rejects_dom(t, 'NotFoundError', stream.close());
 }, 'atomic writes: close() fails when parent directory is removed');
 
 directory_test(async (t, root) => {
@@ -285,7 +285,7 @@ directory_test(async (t, root) => {
   await stream.write('bar');
 
   await dir.removeEntry(file_name);
-  await promise_rejects(t, 'NotFoundError', getFileContents(handle));
+  await promise_rejects_dom(t, 'NotFoundError', getFileContents(handle));
 
   await stream.close();
   assert_equals(await getFileContents(handle), 'bar');

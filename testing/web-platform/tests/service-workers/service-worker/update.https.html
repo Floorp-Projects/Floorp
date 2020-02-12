@@ -97,7 +97,7 @@ promise_test(async t => {
       await prepare_ready_registration_with_mode(t, 'bad_mime_type');
   t.add_cleanup(() => registration.unregister());
 
-  await promise_rejects(t, 'SecurityError', registration.update());
+  await promise_rejects_dom(t, 'SecurityError', registration.update());
   assert_active_only(registration, expected_url);
 }, 'update() should fail when mime type is invalid.');
 

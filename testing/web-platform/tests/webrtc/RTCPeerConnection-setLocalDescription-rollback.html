@@ -99,7 +99,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
     t.add_cleanup(() => pc.close());
-    return promise_rejects(t, 'InvalidStateError',
+    return promise_rejects_dom(t, 'InvalidStateError',
       pc.setLocalDescription({ type: 'rollback' }));
   }, `setLocalDescription(rollback) from stable state should reject with InvalidStateError`);
 
@@ -112,7 +112,7 @@
       .then(() => pc.createAnswer()))
     .then(answer => pc.setLocalDescription(answer))
     .then(() => {
-      return promise_rejects(t, 'InvalidStateError',
+      return promise_rejects_dom(t, 'InvalidStateError',
         pc.setLocalDescription({ type: 'rollback' }));
     });
   }, `setLocalDescription(rollback) after setting answer description should reject with InvalidStateError`);

@@ -259,7 +259,7 @@ cache_test(function(cache, test) {
 
 cache_test(function(cache, test) {
     var request = new Request('../resources/simple.txt');
-    return promise_rejects(
+    return promise_rejects_dom(
       test,
       'InvalidStateError',
       cache.addAll([request, request]),
@@ -283,7 +283,7 @@ cache_test(async function(cache, test) {
       new Request(url, { headers: { 'x-shape': 'circle' }}),
       new Request(url, { headers: { 'x-shape': 'circle' }}),
     ];
-    await promise_rejects(
+    await promise_rejects_dom(
       test,
       'InvalidStateError',
       cache.addAll(requests),
@@ -329,7 +329,7 @@ cache_test(async function(cache, test) {
                                     'x-size': 'big' },
                          credentials: 'omit' }),
     ];
-    await promise_rejects(
+    await promise_rejects_dom(
       test,
       'InvalidStateError',
       cache.addAll(requests),
@@ -337,7 +337,7 @@ cache_test(async function(cache, test) {
       'matching an earlier entry.');
 
     // Test the reverse order now.
-    await promise_rejects(
+    await promise_rejects_dom(
       test,
       'InvalidStateError',
       cache.addAll(requests.reverse()),
