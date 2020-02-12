@@ -142,7 +142,7 @@ skip-if(!gtkWidget) == grid-container-baselines-003.html grid-container-baseline
 == grid-container-synthesized-baseline-001.html grid-container-synthesized-baseline-001-ref.html
 == grid-column-gap-001.html grid-column-gap-001-ref.html
 == grid-column-gap-002.html grid-column-gap-002-ref.html
-== grid-column-gap-003.html grid-column-gap-003-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-column-gap-003.html grid-column-gap-003-ref.html
 == grid-column-gap-004.html grid-column-gap-004-ref.html
 == grid-row-gap-001.html grid-row-gap-001-ref.html
 == grid-percent-grid-gap-001.html grid-percent-grid-gap-001-ref.html
@@ -204,10 +204,10 @@ asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # b
 == grid-fragmentation-021.html grid-fragmentation-021-ref.html
 == grid-fragmentation-022.html grid-fragmentation-007-ref.html
 == grid-fragmentation-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-024.html grid-fragmentation-024-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-024.html grid-fragmentation-024-ref.html
 == grid-fragmentation-025.html grid-fragmentation-025-ref.html
 == grid-fragmentation-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-027.html grid-fragmentation-025-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-027.html grid-fragmentation-025-ref.html
 == grid-fragmentation-028.html grid-fragmentation-028-ref.html
 == grid-fragmentation-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-030.html grid-fragmentation-030-ref.html
@@ -228,8 +228,8 @@ asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # b
 == grid-fragmentation-dyn5-007.html grid-fragmentation-007-ref.html
 == grid-fragmentation-dyn5-008.html grid-fragmentation-008-ref.html
 == grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
-== grid-fragmentation-dyn4-015.html grid-fragmentation-015-ref.html
-== grid-fragmentation-dyn1-015.html grid-fragmentation-015-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn4-015.html grid-fragmentation-015-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn1-015.html grid-fragmentation-015-ref.html
 == grid-fragmentation-dyn1-016.html grid-fragmentation-016-ref.html
 == grid-fragmentation-dyn5-016.html grid-fragmentation-016-ref.html
 == grid-fragmentation-dyn3-017.html grid-fragmentation-017-ref.html
@@ -252,18 +252,18 @@ fuzzy-if(webrender&&gtkWidget,0-1,0-4) == grid-fragmentation-dyn5-021.html grid-
 == grid-fragmentation-dyn3-023.html grid-fragmentation-023-ref.html
 == grid-fragmentation-dyn4-023.html grid-fragmentation-023-ref.html
 == grid-fragmentation-dyn5-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn1-024.html grid-fragmentation-024-ref.html
-== grid-fragmentation-dyn2-025.html grid-fragmentation-025-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn1-024.html grid-fragmentation-024-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn2-025.html grid-fragmentation-025-ref.html
 == grid-fragmentation-dyn1-026.html grid-fragmentation-026-ref.html
 == grid-fragmentation-dyn2-026.html grid-fragmentation-026-ref.html
 == grid-fragmentation-dyn3-026.html grid-fragmentation-026-ref.html
 == grid-fragmentation-dyn4-026.html grid-fragmentation-026-ref.html
 == grid-fragmentation-dyn5-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn1-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn2-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn3-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn4-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn5-027.html grid-fragmentation-025-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn1-027.html grid-fragmentation-025-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn2-027.html grid-fragmentation-025-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn3-027.html grid-fragmentation-025-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn4-027.html grid-fragmentation-025-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn5-027.html grid-fragmentation-025-ref.html
 == grid-fragmentation-dyn1-028.html grid-fragmentation-028-ref.html
 == grid-fragmentation-dyn2-028.html grid-fragmentation-028-ref.html
 == grid-fragmentation-dyn3-028.html grid-fragmentation-028-ref.html

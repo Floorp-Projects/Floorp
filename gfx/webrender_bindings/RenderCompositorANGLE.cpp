@@ -804,8 +804,9 @@ void RenderCompositorANGLE::CompositorEndFrame() {
 
 void RenderCompositorANGLE::Bind(wr::NativeTileId aId,
                                  wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
-                                 wr::DeviceIntRect aDirtyRect) {
-  mDCLayerTree->Bind(aId, aOffset, aFboId, aDirtyRect);
+                                 wr::DeviceIntRect aDirtyRect,
+                                 wr::DeviceIntRect aValidRect) {
+  mDCLayerTree->Bind(aId, aOffset, aFboId, aDirtyRect, aValidRect);
 }
 
 void RenderCompositorANGLE::Unbind() { mDCLayerTree->Unbind(); }

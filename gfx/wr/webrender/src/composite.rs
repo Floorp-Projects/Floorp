@@ -5,7 +5,7 @@
 use api::ColorF;
 use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint, WorldRect, DevicePixelScale, DevicePoint};
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
-use crate::picture::{ResolvedSurfaceTexture, TileId, TileCacheInstance, TileSurface};
+use crate::picture::{ResolvedSurfaceTexture, TileCacheInstance, TileSurface};
 use crate::resource_cache::ResourceCache;
 use std::{ops, u64};
 
@@ -68,7 +68,7 @@ pub struct CompositeTile {
     pub dirty_rect: DeviceRect,
     pub valid_rect: DeviceRect,
     pub z_id: ZBufferId,
-    pub tile_id: TileId,
+    pub tile_id: Option<NativeTileId>,
 }
 
 /// Public interface specified in `RendererOptions` that configures
@@ -267,7 +267,7 @@ impl CompositeState {
     pub fn is_tile_occluded(
         &self,
         slice: usize,
-        rect: WorldRect,
+        device_rect: DeviceRect,
     ) -> bool {
         // It's often the case that a tile is only occluded by considering multiple
         // picture caches in front of it (for example, the background tiles are
@@ -282,7 +282,7 @@ impl CompositeState {
         //       Then the entire tile must be occluded and can be skipped during rasterization and compositing.
 
         // Get the reference area we will compare against.
-        let device_rect = (rect * self.global_device_pixel_scale).round().to_i32();
+        let device_rect = device_rect.round().to_i32();
         let ref_area = device_rect.size.width * device_rect.size.height;
 
         // Calculate the non-overlapping area of the valid occluders.
@@ -304,14 +304,6 @@ impl CompositeState {
     ) {
         let mut visible_tile_count = 0;
 
-        // TODO(gw): For now, we apply the valid rect as part of the clip rect
-        //           during native compositing. This works for the initial
-        //           implementation, since the valid rect is determined only
-        //           by the bounding rect of the picture cache slice. When
-        //           we implement proper per-tile valid rects, we will need to
-        //           supply the valid rect directly to the compositor interface.
-        let mut combined_valid_rect = DeviceRect::zero();
-
         for key in &tile_cache.tiles_to_draw {
             let tile = &tile_cache.tiles[key];
             if !tile.is_visible {
@@ -322,16 +314,6 @@ impl CompositeState {
             visible_tile_count += 1;
 
             let device_rect = (tile.world_tile_rect * global_device_pixel_scale).round();
-            let dirty_rect = (tile.world_dirty_rect * global_device_pixel_scale).round();
-            // The device rect is guaranteed to be aligned on a device pixel - the round
-            // above is just to deal with float accuracy. However, the valid rect is not
-            // always aligned to a device pixel. To handle this, round out to get all
-            // required pixels, and intersect with the tile device rect.
-            let valid_rect = (tile.world_valid_rect * global_device_pixel_scale)
-                .round_out()
-                .intersection(&device_rect)
-                .unwrap_or_else(DeviceRect::zero);
-            combined_valid_rect = combined_valid_rect.union(&valid_rect);
             let surface = tile.surface.as_ref().expect("no tile surface set!");
 
             let (surface, is_opaque) = match surface {
@@ -350,30 +332,36 @@ impl CompositeState {
                 }
             };
 
+            let tile_id = tile_cache.native_surface_id.map(|surface_id| {
+                NativeTileId {
+                    surface_id,
+                    x: key.x,
+                    y: key.y,
+                }
+            });
+
             let tile = CompositeTile {
                 surface,
                 rect: device_rect,
-                valid_rect,
-                dirty_rect,
+                valid_rect: tile.device_valid_rect.translate(-device_rect.origin.to_vector()),
+                dirty_rect: tile.device_dirty_rect.translate(-device_rect.origin.to_vector()),
                 clip_rect: device_clip_rect,
                 z_id,
-                tile_id: tile.id,
+                tile_id,
             };
 
             self.push_tile(tile, is_opaque);
         }
 
         if visible_tile_count > 0 {
-            if let Some(clip_rect) = device_clip_rect.intersection(&combined_valid_rect) {
-                self.descriptor.surfaces.push(
-                    CompositeSurfaceDescriptor {
-                        slice: tile_cache.slice,
-                        surface_id: tile_cache.native_surface_id,
-                        offset: tile_cache.device_position,
-                        clip_rect,
-                    }
-                );
-            }
+            self.descriptor.surfaces.push(
+                CompositeSurfaceDescriptor {
+                    slice: tile_cache.slice,
+                    surface_id: tile_cache.native_surface_id,
+                    offset: tile_cache.device_position,
+                    clip_rect: device_clip_rect,
+                }
+            );
         }
     }
 
@@ -508,6 +496,7 @@ pub trait Compositor {
         &mut self,
         id: NativeTileId,
         dirty_rect: DeviceIntRect,
+        valid_rect: DeviceIntRect,
     ) -> NativeSurfaceInfo;
 
     /// Unbind the surface. This is called by WR when it has

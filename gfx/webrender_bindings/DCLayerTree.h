@@ -68,7 +68,7 @@ class DCLayerTree {
   void CompositorBeginFrame();
   void CompositorEndFrame();
   void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
-            wr::DeviceIntRect aDirtyRect);
+            wr::DeviceIntRect aDirtyRect, wr::DeviceIntRect aValidRect);
   void Unbind();
   void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aTileSize,
                      bool aIsOpaque);
@@ -189,6 +189,7 @@ class DCSurface {
   }
 
   void UpdateAllocatedRect();
+  void DirtyAllocatedRect();
 #endif
 
  protected:
@@ -226,7 +227,9 @@ class DCLayer {
   ~DCLayer();
   bool Initialize(int aX, int aY, wr::DeviceIntSize aSize, bool aIsOpaque);
 
-#ifndef USE_VIRTUAL_SURFACES
+#ifdef USE_VIRTUAL_SURFACES
+  gfx::IntRect mValidRect;
+#else
   IDCompositionSurface* GetCompositionSurface() const {
     return mCompositionSurface;
   }

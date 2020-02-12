@@ -3011,6 +3011,10 @@ impl Renderer {
                         DeviceIntPoint::zero(),
                         surface_size,
                     ),
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
+                        surface_size,
+                    ),
                 );
 
                 // Bind the native surface to current FBO target
@@ -4225,8 +4229,13 @@ impl Renderer {
                 None => continue,
             };
 
+            // Simple compositor needs the valid rect in device space to match clip rect
+            let valid_device_rect = tile.valid_rect.translate(
+                tile.rect.origin.to_vector()
+            );
+
             // Only composite the part of the tile that contains valid pixels
-            let clip_rect = match clip_rect.intersection(&tile.valid_rect) {
+            let clip_rect = match clip_rect.intersection(&valid_device_rect) {
                 Some(rect) => rect,
                 None => continue,
             };
@@ -4298,7 +4307,8 @@ impl Renderer {
                 // Work out how many dirty rects WR produced, and if that's more than
                 // what the device supports.
                 for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
-                    combined_dirty_rect = combined_dirty_rect.union(&tile.dirty_rect);
+                    let dirty_rect = tile.dirty_rect.translate(tile.rect.origin.to_vector());
+                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
                 }
 
                 let combined_dirty_rect = combined_dirty_rect.round();
@@ -5352,7 +5362,11 @@ impl Renderer {
                                     let surface_info = match self.current_compositor_kind {
                                         CompositorKind::Native { .. } => {
                                             let compositor = self.compositor_config.compositor().unwrap();
-                                            compositor.bind(id, picture_target.dirty_rect)
+                                            compositor.bind(
+                                                id,
+                                                picture_target.dirty_rect,
+                                                picture_target.valid_rect,
+                                            )
                                         }
                                         CompositorKind::Draw { .. } => {
                                             unreachable!();

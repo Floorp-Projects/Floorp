@@ -37,9 +37,10 @@ void wr_compositor_begin_frame(void* aCompositor) {
 
 void wr_compositor_bind(void* aCompositor, wr::NativeTileId aId,
                         wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
-                        wr::DeviceIntRect aDirtyRect) {
+                        wr::DeviceIntRect aDirtyRect,
+                        wr::DeviceIntRect aValidRect) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
-  compositor->Bind(aId, aOffset, aFboId, aDirtyRect);
+  compositor->Bind(aId, aOffset, aFboId, aDirtyRect, aValidRect);
 }
 
 void wr_compositor_create_surface(void* aCompositor, wr::NativeSurfaceId aId,
