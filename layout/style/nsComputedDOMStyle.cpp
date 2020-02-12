@@ -626,21 +626,24 @@ static void AddImageURL(const StyleComputedUrl& aURL,
   }
 }
 
-static void AddImageURL(const nsStyleImage& aImage,
+static void AddImageURL(const StyleImage& aImage,
                         nsTArray<nsCString>& aURLs) {
-  if (auto* urlValue = aImage.GetURLValue()) {
+  if (auto* urlValue = aImage.GetImageRequestURLValue()) {
     AddImageURL(*urlValue, aURLs);
   }
 }
 
-static void AddImageURL(const StyleShapeSource& aShapeSource,
+static void AddImageURL(const StyleShapeOutside& aShapeOutside,
                         nsTArray<nsCString>& aURLs) {
-  switch (aShapeSource.GetType()) {
-    case StyleShapeSourceType::Image:
-      AddImageURL(aShapeSource.ShapeImage(), aURLs);
-      break;
-    default:
-      break;
+  if (aShapeOutside.IsImage()) {
+    AddImageURL(aShapeOutside.AsImage(), aURLs);
+  }
+}
+
+static void AddImageURL(const StyleClipPath& aClipPath,
+                        nsTArray<nsCString>& aURLs) {
+  if (aClipPath.IsUrl()) {
+    AddImageURL(aClipPath.AsUrl(), aURLs);
   }
 }
 
@@ -2494,14 +2497,13 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
           firstLayer.mPosition, nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mRepeat.IsInitialValue() ||
       !firstLayer.mSize.IsInitialValue() ||
-      !(firstLayer.mImage.GetType() == eStyleImageType_Null ||
-        firstLayer.mImage.GetType() == eStyleImageType_Image)) {
+      !(firstLayer.mImage.IsNone() || firstLayer.mImage.IsUrl())) {
     return nullptr;
   }
 
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  SetValueToURLValue(firstLayer.mImage.GetURLValue(), val);
+  SetValueToURLValue(firstLayer.mImage.GetImageRequestURLValue(), val);
 
   return val.forget();
 }

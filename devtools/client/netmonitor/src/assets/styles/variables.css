@@ -2,9 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  --primary-toolbar-height: 29px;
+  /* HTTP status codes */
+  --status-code-color-1xx: var(--theme-highlight-blue);
+  --status-code-color-2xx: var(--theme-highlight-green);
+  --status-code-color-3xx: transparent;
+  --status-code-color-4xx: var(--theme-highlight-pink);
+  --status-code-color-5xx: var(--theme-highlight-red);
+}
+
 :root.theme-dark {
-  --table-text-color: var(--grey-40);
-  --table-splitter-color: rgba(255,255,255,0.15);
+  --table-splitter-color: var(--grey-70);
   --table-zebra-background: rgba(255,255,255,0.05);
   --table-selection-background-hover: rgba(53, 59, 72, 1);
 
@@ -18,10 +27,7 @@
 }
 
 :root.theme-light {
-  --theme-body-color: var(--grey-70);
-
-  --table-text-color: var(--grey-70);
-  --table-splitter-color: rgba(0,0,0,0.15);
+  --table-splitter-color: var(--grey-20);
   --table-zebra-background: rgba(247, 247, 247, 0.8);
   --table-selection-background-hover: rgba(209, 232, 255, 0.8);
 
@@ -32,14 +38,4 @@
   --timing-send-color: rgba(0, 136, 204, 0.8); /* blue */
   --timing-wait-color: rgba(95, 136, 176, 0.8); /* blue grey */
   --timing-receive-color: rgba(44, 187, 15, 0.8); /* green */
-}
-
-:root {
-  --primary-toolbar-height: 29px;
-  /* HTTP status codes */
-  --status-code-color-1xx: var(--theme-highlight-blue);
-  --status-code-color-2xx: var(--theme-highlight-green);
-  --status-code-color-3xx: transparent;
-  --status-code-color-4xx: var(--theme-highlight-pink);
-  --status-code-color-5xx: var(--theme-highlight-red);
 }

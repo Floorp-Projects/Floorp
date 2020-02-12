@@ -2,8 +2,9 @@ var gWindowUtils;
 
 try {
   gWindowUtils = SpecialPowers.getDOMWindowUtils(window);
-  if (gWindowUtils && !gWindowUtils.compareCanvases)
+  if (gWindowUtils && !gWindowUtils.compareCanvases) {
     gWindowUtils = null;
+  }
 } catch (e) {
   gWindowUtils = null;
 }
@@ -21,7 +22,17 @@ function snapshotRect(win, rect) {
 // whether the comparison was as expected.
 function compareSnapshots(s1, s2, expectEqual, fuzz) {
   if (s1.width != s2.width || s1.height != s2.height) {
-    ok(false, "Snapshot canvases are not the same size: " + s1.width + "x" + s1.height + " vs. " + s2.width + "x" + s2.height);
+    ok(
+      false,
+      "Snapshot canvases are not the same size: " +
+        s1.width +
+        "x" +
+        s1.height +
+        " vs. " +
+        s2.width +
+        "x" +
+        s2.height
+    );
     return [false];
   }
   var passed = false;
@@ -32,12 +43,13 @@ function compareSnapshots(s1, s2, expectEqual, fuzz) {
     try {
       numDifferentPixels = gWindowUtils.compareCanvases(s1, s2, maxDifference);
       if (!fuzz) {
-        equal = (numDifferentPixels == 0);
+        equal = numDifferentPixels == 0;
       } else {
-        equal = (numDifferentPixels <= fuzz.numDifferentPixels &&
-                 maxDifference.value <= fuzz.maxDifference);
+        equal =
+          numDifferentPixels <= fuzz.numDifferentPixels &&
+          maxDifference.value <= fuzz.maxDifference;
       }
-      passed = (equal == expectEqual);
+      passed = equal == expectEqual;
     } catch (e) {
       ok(false, "Exception thrown from compareCanvases: " + e);
     }
@@ -49,16 +61,27 @@ function compareSnapshots(s1, s2, expectEqual, fuzz) {
     s2DataURI = s2.toDataURL();
 
     if (!gWindowUtils) {
-      passed = ((s1DataURI == s2DataURI) == expectEqual);
+      passed = (s1DataURI == s2DataURI) == expectEqual;
     }
   }
 
-  return [passed, s1DataURI, s2DataURI, numDifferentPixels, maxDifference.value];
+  return [
+    passed,
+    s1DataURI,
+    s2DataURI,
+    numDifferentPixels,
+    maxDifference.value,
+  ];
 }
 
 function assertSnapshots(s1, s2, expectEqual, fuzz, s1name, s2name) {
-  var [passed, s1DataURI, s2DataURI, numDifferentPixels, maxDifference] =
-    compareSnapshots(s1, s2, expectEqual, fuzz);
+  var [
+    passed,
+    s1DataURI,
+    s2DataURI,
+    numDifferentPixels,
+    maxDifference,
+  ] = compareSnapshots(s1, s2, expectEqual, fuzz);
   var sym = expectEqual ? "==" : "!=";
   ok(passed, "reftest comparison: " + sym + " " + s1name + " " + s2name);
   if (!passed) {
@@ -69,10 +92,18 @@ function assertSnapshots(s1, s2, expectEqual, fuzz, s1name, s2name) {
     // The language / format in this message should match the failure messages
     // displayed by reftest.js's "RecordResult()" method so that log output
     // can be parsed by reftest-analyzer.xhtml
-    var report = "REFTEST " + status + " | " + s1name +
-                 " | image comparison (" + sym + "), max difference: " +
-                 maxDifference + ", number of differing pixels: " +
-                 numDifferentPixels + "\n";
+    var report =
+      "REFTEST " +
+      status +
+      " | " +
+      s1name +
+      " | image comparison (" +
+      sym +
+      "), max difference: " +
+      maxDifference +
+      ", number of differing pixels: " +
+      numDifferentPixels +
+      "\n";
     if (expectEqual) {
       report += "REFTEST   IMAGE 1 (TEST): " + s1DataURI + "\n";
       report += "REFTEST   IMAGE 2 (REFERENCE): " + s2DataURI + "\n";

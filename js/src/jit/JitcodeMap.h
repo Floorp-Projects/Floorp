@@ -1048,14 +1048,8 @@ class JitcodeGlobalTable {
 
   JitcodeGlobalEntry* lookup(void* ptr) { return lookupInternal(ptr); }
 
-  JitcodeGlobalEntry& lookupInfallible(void* ptr) {
-    JitcodeGlobalEntry* entry = lookupInternal(ptr);
-    MOZ_ASSERT(entry);
-    return *entry;
-  }
-
-  const JitcodeGlobalEntry& lookupForSamplerInfallible(
-      void* ptr, JSRuntime* rt, uint64_t samplePosInBuffer);
+  const JitcodeGlobalEntry* lookupForSampler(void* ptr, JSRuntime* rt,
+                                             uint64_t samplePosInBuffer);
 
   MOZ_MUST_USE bool addEntry(const JitcodeGlobalEntry::IonEntry& entry) {
     return addEntry(JitcodeGlobalEntry(entry));

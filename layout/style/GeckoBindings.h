@@ -336,21 +336,6 @@ nsAtom* Gecko_CounterStyle_GetName(const mozilla::CounterStylePtr* ptr);
 const mozilla::AnonymousCounterStyle* Gecko_CounterStyle_GetAnonymous(
     const mozilla::CounterStylePtr* ptr);
 
-// background-image style.
-void Gecko_SetNullImageValue(nsStyleImage* image);
-
-// NOTE: Takes ownership of the gradient.
-void Gecko_SetGradientImageValue(nsStyleImage*, mozilla::StyleGradient*);
-
-void Gecko_SetLayerImageImageValue(nsStyleImage* image,
-                                   const mozilla::StyleComputedImageUrl* url);
-
-void Gecko_SetImageElement(nsStyleImage* image, nsAtom* atom);
-void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
-void Gecko_InitializeImageCropRect(nsStyleImage* image);
-
-nsAtom* Gecko_GetImageElement(const nsStyleImage* image);
-
 // list-style-image style.
 void Gecko_SetListStyleImageNone(nsStyleList* style_struct);
 
@@ -455,18 +440,6 @@ mozilla::Keyframe* Gecko_GetOrCreateFinalKeyframe(
 // their default values.
 mozilla::PropertyValuePair* Gecko_AppendPropertyValuePair(
     nsTArray<mozilla::PropertyValuePair>*, nsCSSPropertyID aProperty);
-
-void Gecko_CopyShapeSourceFrom(mozilla::StyleShapeSource* dst,
-                               const mozilla::StyleShapeSource* src);
-
-void Gecko_DestroyShapeSource(mozilla::StyleShapeSource* shape);
-
-void Gecko_NewShapeImage(mozilla::StyleShapeSource* shape);
-
-void Gecko_SetToSVGPath(
-    mozilla::StyleShapeSource* shape,
-    mozilla::StyleForgottenArcSlicePtr<mozilla::StylePathCommand>,
-    mozilla::StyleFillRule);
 
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 

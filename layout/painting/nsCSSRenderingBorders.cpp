@@ -3609,7 +3609,8 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
 
   ImgDrawResult drawResult = ImgDrawResult::SUCCESS;
   switch (mImageRenderer.GetType()) {
-    case eStyleImageType_Image: {
+    case StyleImage::Tag::Rect:
+    case StyleImage::Tag::Url: {
       RefPtr<imgIContainer> img = mImageRenderer.GetImage();
       if (!img || img->GetType() == imgIContainer::TYPE_VECTOR) {
         // Vector images will redraw each segment of the border up to 8 times.
@@ -3693,7 +3694,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
       aBuilder.PushBorderImage(dest, clip, !aItem->BackfaceIsHidden(), params);
       break;
     }
-    case eStyleImageType_Gradient: {
+    case StyleImage::Tag::Gradient: {
       const StyleGradient& gradient = *mImageRenderer.GetGradientData();
       nsCSSGradientRenderer renderer = nsCSSGradientRenderer::Create(
           aForFrame->PresContext(), aForFrame->Style(), gradient, mImageSize);

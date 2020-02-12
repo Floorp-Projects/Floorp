@@ -1516,6 +1516,12 @@ parent:
     */
     async NotifyMediaAudibleChanged(BrowsingContext aContext, bool aAudible);
 
+   /**
+    * This method is used to update media session's status when it's being
+    * created or destroyed.
+    */
+    async NotifyMediaSessionUpdated(BrowsingContext aContext, bool aIsCreated);
+
     /**
      * Due to sandboxing, a child process's UntrustedModulesProcessor cannot
      * obtain enough information about a DLL file to determine its

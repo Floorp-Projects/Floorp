@@ -662,12 +662,28 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   void* returnAddr = jsJitIter().resumePCinCurrentFrame();
   jit::JitcodeGlobalTable* table =
       cx_->runtime()->jitRuntime()->getJitcodeGlobalTable();
+
+  // NB:
+  // The following lookups should be infallible, but the ad-hoc stackwalking
+  // code rots easily and corner cases where frames can't be looked up
+  // occur too often (e.g. once every day).
+  //
+  // The calls to `lookup*` below have been changed from infallible ones to
+  // fallible ones.  The proper solution to this problem is to fix all
+  // the jitcode to use frame-pointers and reliably walk the stack with those.
+  const jit::JitcodeGlobalEntry* lookedUpEntry = nullptr;
   if (samplePositionInProfilerBuffer_) {
-    *entry = table->lookupForSamplerInfallible(
-        returnAddr, cx_->runtime(), *samplePositionInProfilerBuffer_);
+    lookedUpEntry = table->lookupForSampler(returnAddr, cx_->runtime(),
+                                            *samplePositionInProfilerBuffer_);
   } else {
-    *entry = table->lookupInfallible(returnAddr);
+    lookedUpEntry = table->lookup(returnAddr);
   }
+
+  // Failed to look up a jitcode entry for the given address, ignore.
+  if (!lookedUpEntry) {
+    return mozilla::Nothing();
+  }
+  *entry = *lookedUpEntry;
 
   MOZ_ASSERT(entry->isIon() || entry->isIonCache() || entry->isBaseline() ||
              entry->isBaselineInterpreter() || entry->isDummy());

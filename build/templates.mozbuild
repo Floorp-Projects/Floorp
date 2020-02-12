@@ -62,7 +62,7 @@ def DisableCompilerWarnings():
     COMPILE_FLAGS['WARNINGS_CFLAGS'] = []
 
 @template
-def RustLibrary(name, features=None, output_category=None):
+def RustLibrary(name, features=None, output_category=None, is_gkrust=False):
     '''Template for Rust libraries.'''
     Library(name)
 
@@ -80,6 +80,9 @@ def RustLibrary(name, features=None, output_category=None):
 
     if output_category:
         RUST_LIBRARY_OUTPUT_CATEGORY = output_category
+
+    if is_gkrust:
+        IS_GKRUST = True
 
 
 @template

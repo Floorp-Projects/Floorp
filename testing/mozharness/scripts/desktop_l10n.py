@@ -198,18 +198,18 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         """this step creates nsinstall, needed my make_wget_en_US()
         """
         dirs = self.query_abs_dirs()
-        config_dir = os.path.join(dirs['abs_objdir'], 'config')
+        config_dir = os.path.join(dirs['abs_obj_dir'], 'config')
         env = self.query_bootstrap_env()
         return self._make(target=['export'], cwd=config_dir, env=env)
 
     def _copy_mozconfig(self):
-        """copies the mozconfig file into abs_mozilla_dir/.mozconfig
+        """copies the mozconfig file into abs_src_dir/.mozconfig
            and logs the content
         """
         config = self.config
         dirs = self.query_abs_dirs()
         src = get_mozconfig_path(self, config, dirs)
-        dst = os.path.join(dirs['abs_mozilla_dir'], '.mozconfig')
+        dst = os.path.join(dirs['abs_src_dir'], '.mozconfig')
         self.copyfile(src, dst)
         self.read_from_file(dst, verbose=True)
 
@@ -219,7 +219,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         return self.run_command(mach + target,
                                 halt_on_failure=True,
                                 env=env,
-                                cwd=dirs['abs_mozilla_dir'],
+                                cwd=dirs['abs_src_dir'],
                                 output_parser=None)
 
     def _mach_configure(self):
@@ -235,7 +235,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         config = self.config
         dirs = self.query_abs_dirs()
         if config.get('enable_mozmake'):  # e.g. windows
-            make = r"/".join([dirs['abs_mozilla_dir'], 'mozmake.exe'])
+            make = r"/".join([dirs['abs_src_dir'], 'mozmake.exe'])
             # mysterious subprocess errors, let's try to fix this path...
             make = make.replace('\\', '/')
             make = [make]
@@ -271,7 +271,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         config = self.config
         dirs = self.query_abs_dirs()
         env = self.query_bootstrap_env()
-        cwd = os.path.join(dirs['abs_objdir'], config['locales_dir'])
+        cwd = os.path.join(dirs['abs_obj_dir'], config['locales_dir'])
         return self._make(target=["unpack"], cwd=cwd, env=env)
 
     def make_wget_en_US(self):
@@ -401,26 +401,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         """creates the repacks and udpates"""
         self._map(self.repack_locale, self.query_locales())
 
-    def _query_objdir(self):
-        """returns objdir name from configuration"""
-        return self.config['objdir']
-
-    def query_abs_dirs(self):
-        if self.abs_dirs:
-            return self.abs_dirs
-        abs_dirs = super(DesktopSingleLocale, self).query_abs_dirs()
-        for directory in abs_dirs:
-            value = abs_dirs[directory]
-            abs_dirs[directory] = value
-        dirs = {}
-        dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
-        dirs['abs_src_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
-        for key in dirs.keys():
-            if key not in abs_dirs:
-                abs_dirs[key] = dirs[key]
-        self.abs_dirs = abs_dirs
-        return self.abs_dirs
-
     # TODO: replace with ToolToolMixin
     def _get_tooltool_auth_file(self):
         # set the default authentication file based on platform; this
@@ -453,18 +433,18 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
 
         cmd = [
             python, '-u',
-            os.path.join(dirs['abs_mozilla_dir'], 'mach'),
+            os.path.join(dirs['abs_src_dir'], 'mach'),
             'artifact',
             'toolchain',
             '-v',
             '--retry', '4',
             '--artifact-manifest',
-            os.path.join(dirs['abs_mozilla_dir'], 'toolchains.json'),
+            os.path.join(dirs['abs_src_dir'], 'toolchains.json'),
         ]
         if manifest_src:
             cmd.extend([
                 '--tooltool-manifest',
-                os.path.join(dirs['abs_mozilla_dir'], manifest_src),
+                os.path.join(dirs['abs_src_dir'], manifest_src),
             ])
             auth_file = self._get_tooltool_auth_file()
             if auth_file and os.path.exists(auth_file):
@@ -475,7 +455,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         if toolchains:
             cmd.extend(toolchains.split())
         self.info(str(cmd))
-        self.run_command(cmd, cwd=dirs['abs_mozilla_dir'], halt_on_failure=True,
+        self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
                          env=env)
 
 

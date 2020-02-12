@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test frame for triggering media session's action handler</title>
+    <script src="MediaSessionTestUtils.js"></script>
+  </head>
+<body>
+<script>
+// Setup the action handlers which would post the result back to the main window.
+for (const action of gMediaSessionActions) {
+  navigator.mediaSession.setActionHandler(action, () => {
+  	const w = window.opener || window.parent;
+    w.postMessage(action, "*");
+  });
+}
+</script>
+</body>
+</html>

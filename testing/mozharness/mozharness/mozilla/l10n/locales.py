@@ -65,8 +65,8 @@ class LocalesMixin(object):
             locales = [l.split(":")[0] for l in locales]
 
         if not locales and 'locales_file' in c:
-            locales_file = os.path.join(c['base_work_dir'], c['work_dir'],
-                                        c['locales_file'])
+            abs_dirs = self.query_abs_dirs()
+            locales_file = os.path.join(abs_dirs['abs_src_dir'], c['locales_file'])
             locales = self.parse_locales_file(locales_file)
 
         if not locales:
@@ -132,20 +132,16 @@ class LocalesMixin(object):
         if 'l10n_dir' in c:
             dirs['abs_l10n_dir'] = os.path.join(dirs['abs_work_dir'],
                                                 c['l10n_dir'])
-        if 'mozilla_dir' in c:
-            dirs['abs_mozilla_dir'] = os.path.join(dirs['abs_work_dir'],
-                                                   c['mozilla_dir'])
-            dirs['abs_locales_src_dir'] = os.path.join(dirs['abs_mozilla_dir'],
-                                                       c['locales_dir'])
+        dirs['abs_src_dir'] = os.environ['GECKO_PATH']
+        dirs['abs_locales_src_dir'] = os.path.join(
+            dirs['abs_src_dir'],
+            c['locales_dir'],
+        )
 
-        if 'objdir' in c:
-            if os.path.isabs(c['objdir']):
-                dirs['abs_objdir'] = c['objdir']
-            else:
-                dirs['abs_objdir'] = os.path.join(dirs['abs_mozilla_dir'],
-                                                  c['objdir'])
-            dirs['abs_locales_dir'] = os.path.join(dirs['abs_objdir'],
-                                                   c['locales_dir'])
+        dirs['abs_obj_dir'] = os.path.join(dirs['abs_src_dir'],
+                                           c['objdir'])
+        dirs['abs_locales_dir'] = os.path.join(dirs['abs_obj_dir'],
+                                               c['locales_dir'])
 
         for key in list(dirs.keys()):
             if key not in abs_dirs:

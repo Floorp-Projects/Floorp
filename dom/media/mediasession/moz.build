@@ -9,11 +9,16 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 EXPORTS.mozilla.dom += [
     'MediaMetadata.h',
     'MediaSession.h',
+    'MediaSessionController.h',
+    'MediaSessionUtils.h',
 ]
 
 UNIFIED_SOURCES += [
     'MediaMetadata.cpp',
     'MediaSession.cpp',
+    'MediaSessionController.cpp',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

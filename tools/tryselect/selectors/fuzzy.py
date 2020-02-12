@@ -255,7 +255,6 @@ class FuzzyParser(BaseTryParser):
         'path',
         'pernosco',
         'rebuild',
-        'visual-metrics-jobs',
         'worker-overrides',
     ]
 

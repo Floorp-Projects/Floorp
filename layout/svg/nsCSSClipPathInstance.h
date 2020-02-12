@@ -18,7 +18,7 @@ class gfxContext;
 
 namespace mozilla {
 
-class nsCSSClipPathInstance {
+class MOZ_STACK_CLASS nsCSSClipPathInstance {
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Path Path;
   typedef mozilla::gfx::Rect Rect;
@@ -31,12 +31,12 @@ class nsCSSClipPathInstance {
                                           const gfxPoint& aPoint);
 
   static Maybe<Rect> GetBoundingRectForBasicShapeOrPathClip(
-      nsIFrame* aFrame, const StyleShapeSource& aClipPathStyle);
+      nsIFrame* aFrame, const StyleClipPath&);
 
  private:
   explicit nsCSSClipPathInstance(nsIFrame* aFrame,
-                                 const StyleShapeSource& aClipPathStyle)
-      : mTargetFrame(aFrame), mClipPathStyle(aClipPathStyle) {}
+                                 const StyleClipPath& aClipPath)
+      : mTargetFrame(aFrame), mClipPathStyle(aClipPath) {}
 
   already_AddRefed<Path> CreateClipPath(DrawTarget* aDrawTarget,
                                         const gfxMatrix& aTransform);
@@ -59,7 +59,7 @@ class nsCSSClipPathInstance {
    * The frame for the element that is currently being clipped.
    */
   nsIFrame* mTargetFrame;
-  StyleShapeSource mClipPathStyle;
+  const StyleClipPath& mClipPathStyle;
 };
 
 }  // namespace mozilla

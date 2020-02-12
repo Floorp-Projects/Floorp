@@ -1589,6 +1589,23 @@ dom.parentprocess:
     record_in_processes:
       - 'main'
 
+# The following section contains scalars related to DOM IPC messages.
+dom.ipc:
+  rejected_window_actor_message:
+    bug_numbers:
+      - 1604609
+    description: Each key is the window actor name followed by the message name, with digits removed, that was rejected for being over approximately 256MB, recorded in the sending process at the time of sending.
+    expires: "83"
+    kind: uint
+    notification_emails:
+      - amccreight@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'content'
+    keyed: true
+
 devtools.toolbar.eyedropper:
   opened:
     bug_numbers:
@@ -3295,9 +3312,10 @@ pdf.viewer:
     description: >
       How many times PDF Viewer was used.
     expires: never
+    kind: uint
     notification_emails:
       - bdahl@mozilla.com
-    kind: uint
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
@@ -3308,10 +3326,11 @@ pdf.viewer:
       - 1566882
     description: >
       How many times PDF Viewer fallback bar was shown.
-    expires: "75"
+    expires: "84"
+    kind: uint
     notification_emails:
       - bdahl@mozilla.com
-    kind: uint
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
@@ -3322,10 +3341,11 @@ pdf.viewer:
       - 1566882
     description: >
       How many times PDF Viewer print functionality was used.
-    expires: "75"
+    expires: "84"
+    kind: uint
     notification_emails:
       - bdahl@mozilla.com
-    kind: uint
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:

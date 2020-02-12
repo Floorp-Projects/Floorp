@@ -84,7 +84,10 @@ MOCHITEST_MANIFESTS += [
     'tests/mochitest/identity/mochitest.ini',
 ]
 
-BROWSER_CHROME_MANIFESTS += ['mediacontrol/tests/browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+    'mediacontrol/tests/browser.ini',
+    'mediasession/test/browser.ini',
+]
 
 if CONFIG['MOZ_WEBRTC']:
     MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']

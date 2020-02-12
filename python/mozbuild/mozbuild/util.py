@@ -14,6 +14,7 @@ import difflib
 import errno
 import functools
 import hashlib
+import itertools
 import os
 import pprint
 import re
@@ -1193,6 +1194,20 @@ def pair(iterable):
     '''
     i = iter(iterable)
     return six.moves.zip_longest(i, i)
+
+
+def pairwise(iterable):
+    '''Given an iterable, returns an iterable of overlapped pairs of
+    its items. Based on the Python itertools documentation.
+
+    For example,
+        list(pairwise([1,2,3,4,5,6]))
+    returns
+        [(1,2), (2,3), (3,4), (4,5), (5,6)]
+    '''
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
 
 
 VARIABLES_RE = re.compile('\$\((\w+)\)')
