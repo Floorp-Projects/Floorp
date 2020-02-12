@@ -2065,7 +2065,7 @@ static uint32_t StatusToTelemetryEnum(nsresult aStatus) {
 }
 
 void CacheFile::RemoveInput(CacheFileInputStream* aInput, nsresult aStatus) {
-  CacheFileAutoLock lock(this);
+  AssertOwnsLock();
 
   LOG(("CacheFile::RemoveInput() [this=%p, input=%p, status=0x%08" PRIx32 "]",
        this, aInput, static_cast<uint32_t>(aStatus)));

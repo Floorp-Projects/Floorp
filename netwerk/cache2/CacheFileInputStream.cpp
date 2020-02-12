@@ -27,6 +27,7 @@ CacheFileInputStream::Release() {
   }
 
   if (count == 1) {
+    CacheFileAutoLock lock(mFile);
     mFile->RemoveInput(this, mStatus);
   }
 
