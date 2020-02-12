@@ -6,4 +6,4 @@ def main(request, response):
                         ("Access-Control-Allow-Origin", "*")]
 
     return (200, response_headers,
-            "postMessage('"+referrer+"')")
+            "export const referrer = '"+referrer+"';")
