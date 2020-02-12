@@ -37,19 +37,24 @@
 #include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/DirectoryBinding.h"
+#include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/DOMParserBinding.h"
+#include "mozilla/dom/DOMTokenListBinding.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FileBinding.h"
+#include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NodeFilterBinding.h"
+#include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseDebuggingBinding.h"
+#include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
 #ifdef MOZ_WEBRTC
@@ -57,6 +62,7 @@
 #endif
 #include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/UnionConversions.h"
@@ -833,10 +839,14 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       CSS = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "CSSRule")) {
       CSSRule = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "Document")) {
+      Document = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Directory")) {
       Directory = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "DOMParser")) {
       DOMParser = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "DOMTokenList")) {
+      DOMTokenList = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Element")) {
       Element = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Event")) {
@@ -847,6 +857,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       FileReader = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "FormData")) {
       FormData = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "Headers")) {
+      Headers = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "InspectorUtils")) {
       InspectorUtils = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "MessageChannel")) {
@@ -855,8 +867,14 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       Node = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "NodeFilter")) {
       NodeFilter = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "Performance")) {
+      Performance = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "PromiseDebugging")) {
       PromiseDebugging = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "Range")) {
+      Range = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "Selection")) {
+      Selection = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "TextDecoder")) {
       TextDecoder = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "TextEncoder")) {
@@ -925,8 +943,16 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
   if (Directory && !dom::Directory_Binding::GetConstructorObject(cx))
     return false;
 
+  if (Document && !dom::Document_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
   if (DOMParser && !dom::DOMParser_Binding::GetConstructorObject(cx))
     return false;
+
+  if (DOMTokenList && !dom::DOMTokenList_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
 
   if (Element && !dom::Element_Binding::GetConstructorObject(cx)) return false;
 
@@ -940,6 +966,10 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
 
   if (FormData && !dom::FormData_Binding::GetConstructorObject(cx))
     return false;
+
+  if (Headers && !dom::Headers_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
 
   if (InspectorUtils && !dom::InspectorUtils_Binding::GetConstructorObject(cx))
     return false;
@@ -957,8 +987,20 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
     return false;
   }
 
+  if (Performance && !dom::Performance_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
   if (PromiseDebugging &&
       !dom::PromiseDebugging_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
+  if (Range && !dom::Range_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
+  if (Selection && !dom::Selection_Binding::GetConstructorObject(cx)) {
     return false;
   }
 
