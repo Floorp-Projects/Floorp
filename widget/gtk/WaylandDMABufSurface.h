@@ -10,16 +10,18 @@
 #include <stdint.h>
 #include "GLContextTypes.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
+#include <va/va.h>
+#include <va/va_drmcommon.h>
 
 typedef void* EGLImageKHR;
-typedef void* EGLSyncKHR;
 
 #define DMABUF_BUFFER_PLANES 4
 
 namespace mozilla {
 namespace layers {
 class SurfaceDescriptor;
-}
+class SurfaceDescriptorDMABuf;
+}  // namespace layers
 }  // namespace mozilla
 
 typedef enum {
@@ -35,28 +37,72 @@ typedef enum {
   DMABUF_USE_MODIFIERS = 1 << 3,
 } WaylandDMABufSurfaceFlags;
 
+class WaylandDMABufSurfaceRGBA;
+
 class WaylandDMABufSurface {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaylandDMABufSurface)
 
-  static already_AddRefed<WaylandDMABufSurface> CreateDMABufSurface(
-      int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
+  enum SurfaceType {
+    SURFACE_RGBA,
+    SURFACE_NV12,
+  };
+
   static already_AddRefed<WaylandDMABufSurface> CreateDMABufSurface(
       const mozilla::layers::SurfaceDescriptor& aDesc);
+
+  virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
+  virtual bool Serialize(
+      mozilla::layers::SurfaceDescriptor& aOutDescriptor) = 0;
+
+  virtual int GetWidth(int aPlane = 0) = 0;
+  virtual int GetHeight(int aPlane = 0) = 0;
+  virtual mozilla::gfx::SurfaceFormat GetFormat() = 0;
+  virtual mozilla::gfx::SurfaceFormat GetFormatGL() = 0;
+
+  virtual bool CreateTexture(mozilla::gl::GLContext* aGLContext,
+                             int aPlane = 0) = 0;
+  virtual void ReleaseTextures() = 0;
+  virtual GLuint GetTexture(int aPlane = 0) = 0;
+  virtual EGLImageKHR GetEGLImage(int aPlane = 0) = 0;
+
+  SurfaceType GetSurfaceType() { return mSurfaceType; };
+  virtual uint32_t GetPlaneCount() = 0;
+
+  virtual WaylandDMABufSurfaceRGBA* GetAsWaylandDMABufSurfaceRGBA() {
+    return nullptr;
+  }
+
+  WaylandDMABufSurface(SurfaceType aSurfaceType) : mSurfaceType(aSurfaceType){};
+
+ protected:
+  virtual ~WaylandDMABufSurface() = default;
+
+  int mSurfaceFlags;
+  SurfaceType mSurfaceType;
+};
+
+class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
+ public:
+  static already_AddRefed<WaylandDMABufSurfaceRGBA> CreateDMABufSurface(
+      int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
 
   bool Create(int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
 
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
+  WaylandDMABufSurfaceRGBA* GetAsWaylandDMABufSurfaceRGBA() { return this; }
+
   bool Resize(int aWidth, int aHeight);
   void Clear();
 
   bool CopyFrom(class WaylandDMABufSurface* aSourceSurface);
 
-  int GetWidth() { return mWidth; };
-  int GetHeight() { return mHeight; };
+  int GetWidth(int aPlane = 0) { return mWidth; };
+  int GetHeight(int aPlane = 0) { return mHeight; };
   mozilla::gfx::SurfaceFormat GetFormat();
+  mozilla::gfx::SurfaceFormat GetFormatGL();
   bool HasAlpha();
 
   void* MapReadOnly(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
@@ -70,26 +116,25 @@ class WaylandDMABufSurface {
   bool IsMapped() { return (mMappedRegion != nullptr); };
   void Unmap();
 
-  bool IsEGLSupported(mozilla::gl::GLContext* aGLContext);
-  bool CreateEGLImage(mozilla::gl::GLContext* aGLContext);
-  void ReleaseEGLImage();
-  EGLImageKHR GetEGLImage() { return mEGLImage; };
-  GLuint GetGLTexture() { return mTexture; };
+  bool CreateTexture(mozilla::gl::GLContext* aGLContext, int aPlane = 0);
+  void ReleaseTextures();
+  GLuint GetTexture(int aPlane = 0) { return mTexture; };
+  EGLImageKHR GetEGLImage(int aPlane = 0) { return mEGLImage; };
+
+  uint32_t GetPlaneCount() { return mBufferPlaneCount; };
 
   void SetWLBuffer(struct wl_buffer* aWLBuffer);
   wl_buffer* GetWLBuffer();
-
   void WLBufferDetach() { mWLBufferAttached = false; };
   bool WLBufferIsAttached() { return mWLBufferAttached; };
   void WLBufferSetAttached() { mWLBufferAttached = true; };
 
-  WaylandDMABufSurface();
+  WaylandDMABufSurfaceRGBA();
 
  private:
-  ~WaylandDMABufSurface();
+  ~WaylandDMABufSurfaceRGBA();
 
   void ReleaseDMABufSurface();
-
   bool CreateWLBuffer();
 
   void FillFdData(struct gbm_import_fd_data& aData);
@@ -100,8 +145,6 @@ class WaylandDMABufSurface {
                     uint32_t* aStride, int aGbmFlags);
 
  private:
-  int mSurfaceFlags;
-
   int mWidth;
   int mHeight;
   mozilla::widget::GbmFormat* mGmbFormat;
