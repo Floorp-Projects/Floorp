@@ -33,9 +33,9 @@ replace-with = "vendored-sources"
 tag = "v0.3.0"
 
 [source."https://github.com/hsivonen/packed_simd"]
-branch = "rust_1_32"
 git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
+rev = "3541e3818fdc7c2a24f87e3459151a4ce955a67a"
 
 [source."https://github.com/djg/cubeb-pulse-rs"]
 git = "https://github.com/djg/cubeb-pulse-rs"
