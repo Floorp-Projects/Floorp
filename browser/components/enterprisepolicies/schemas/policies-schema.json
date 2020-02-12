@@ -1054,6 +1054,24 @@
       "required": ["Title", "URL"],
     },
 
+    "UserMessaging": {
+      "type": "object",
+      "properties": {
+        "WhatsNew": {
+          "type": "boolean"
+        },
+        "ExtensionRecommendations": {
+          "type": "boolean"
+        },
+        "FeatureRecommendations": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "WebsiteFilter": {
       "type": "object",
       "properties": {
