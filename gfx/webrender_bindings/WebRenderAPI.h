@@ -493,6 +493,14 @@ class DisplayListBuilder final {
                           const wr::LayoutSize aTileSize,
                           const wr::LayoutSize aTileSpacing);
 
+  void PushConicGradient(const wr::LayoutRect& aBounds,
+                         const wr::LayoutRect& aClip, bool aIsBackfaceVisible,
+                         const wr::LayoutPoint& aCenter, const float aAngle,
+                         const nsTArray<wr::GradientStop>& aStops,
+                         wr::ExtendMode aExtendMode,
+                         const wr::LayoutSize aTileSize,
+                         const wr::LayoutSize aTileSpacing);
+
   void PushImage(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                  bool aIsBackfaceVisible, wr::ImageRendering aFilter,
                  wr::ImageKey aImage, bool aPremultipliedAlpha = true,
@@ -554,6 +562,13 @@ class DisplayListBuilder final {
       const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
       bool aIsBackfaceVisible, const wr::LayoutSideOffsets& aWidths, bool aFill,
       const wr::LayoutPoint& aCenter, const wr::LayoutSize& aRadius,
+      const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode,
+      const wr::LayoutSideOffsets& aOutset);
+
+  void PushBorderConicGradient(
+      const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
+      bool aIsBackfaceVisible, const wr::LayoutSideOffsets& aWidths, bool aFill,
+      const wr::LayoutPoint& aCenter, const float aAngle,
       const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode,
       const wr::LayoutSideOffsets& aOutset);
 

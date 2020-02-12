@@ -99,6 +99,27 @@ impl GradientBuilder {
         }
     }
 
+    /// Produce a conic gradient, normalize the stops.
+    pub fn conic_gradient(
+        &mut self,
+        center: LayoutPoint,
+        angle: f32,
+        extend_mode: di::ExtendMode,
+    ) -> di::ConicGradient {
+        // XXX(ntim): Possibly handle negative angles ?
+
+        let (start_offset, end_offset) =
+            self.normalize(extend_mode);
+
+        di::ConicGradient {
+            center,
+            angle,
+            start_offset,
+            end_offset,
+            extend_mode,
+        }
+    }
+
     /// Gradients can be defined with stops outside the range of [0, 1]
     /// when this happens the gradient needs to be normalized by adjusting
     /// the gradient stops and gradient line into an equivalent gradient
