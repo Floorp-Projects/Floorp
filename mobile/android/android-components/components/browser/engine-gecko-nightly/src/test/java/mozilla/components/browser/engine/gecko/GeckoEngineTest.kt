@@ -747,6 +747,47 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `web extension delegate handles update prompt`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val currentExtension = GeckoWebExtension("test", runtime.webExtensionController)
+        val updatedExtension = GeckoWebExtension("testUpdated", runtime.webExtensionController)
+        val updatedPermissions = arrayOf("p1", "p2")
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.PromptDelegate>()
+        verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
+
+        val result = geckoDelegateCaptor.value.onUpdatePrompt(
+            currentExtension, updatedExtension, updatedPermissions, emptyArray()
+        )
+        assertNotNull(result)
+
+        val currentExtensionCaptor = argumentCaptor<WebExtension>()
+        val updatedExtensionCaptor = argumentCaptor<WebExtension>()
+        val onPermissionsGrantedCaptor = argumentCaptor<((Boolean) -> Unit)>()
+        verify(webExtensionsDelegate).onUpdatePermissionRequest(
+            currentExtensionCaptor.capture(),
+            updatedExtensionCaptor.capture(),
+            eq(updatedPermissions.toList()),
+            onPermissionsGrantedCaptor.capture()
+        )
+        val current =
+            currentExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(currentExtension, current.nativeExtension)
+        val updated =
+            updatedExtensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(updatedExtension, updated.nativeExtension)
+
+        onPermissionsGrantedCaptor.value.invoke(true)
+        assertEquals(GeckoResult.ALLOW, result)
+    }
+
+    @Test
     fun `web extension delegate notified of browser actions from built-in extensions`() {
         val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
@@ -901,16 +942,76 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun `updating a web extension successfully`() {
+    fun `update web extension successfully`() {
         val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        val updatedExtension = MockWebExtension(bundle)
+        val updateExtensionResult = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.update(any())).thenReturn(updateExtensionResult)
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
         val engine = GeckoEngine(context, runtime = runtime)
-        var onSuccessCalled = false
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            runtime.webExtensionController,
+            true,
+            true
+        )
+        var result: WebExtension? = null
+        var onErrorCalled = false
 
         engine.updateWebExtension(
-            mock(),
-            onSuccess = { onSuccessCalled = true }
+            extension,
+            onSuccess = { result = it },
+            onError = { _, _ -> onErrorCalled = true }
         )
-        assertTrue(onSuccessCalled)
+        updateExtensionResult.complete(updatedExtension)
+
+        assertFalse(onErrorCalled)
+        assertNotNull(result)
+    }
+
+    @Test
+    fun `update web extension failure`() {
+        val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+
+        val updateExtensionResult = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.update(any())).thenReturn(updateExtensionResult)
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            runtime.webExtensionController,
+            true,
+            true
+        )
+        var result: WebExtension? = null
+        val expected = IOException()
+        var throwable: Throwable? = null
+
+        engine.updateWebExtension(
+            extension,
+            onSuccess = { result = it },
+            onError = { _, e -> throwable = e }
+        )
+        updateExtensionResult.completeExceptionally(expected)
+
+        assertSame(expected, throwable)
+        assertNull(result)
     }
 
     @Test
