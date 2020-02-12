@@ -165,7 +165,7 @@ class CryptoKey final : public nsISupports, public nsWrapperCache {
       JSStructuredCloneReader* aReader);
 
  private:
-  ~CryptoKey() {}
+  ~CryptoKey() = default;
 
   RefPtr<nsIGlobalObject> mGlobal;
   uint32_t mAttributes;  // see above
