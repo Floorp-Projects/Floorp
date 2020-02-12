@@ -32,6 +32,7 @@ WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
       mManager(nullptr),
       mIPCOpen(false),
       mDestroyed(false),
+      mSentDisplayList(false),
       mFontKeysDeleted(),
       mFontInstanceKeysDeleted() {}
 
@@ -130,6 +131,7 @@ void WebRenderBridgeChild::EndTransaction(
     mManager->TakeCompositionPayloads(payloads);
   }
 
+  mSentDisplayList = true;
   this->SendSetDisplayList(
       std::move(aRenderRoots), mDestroyedActors, GetFwdTransactionId(),
       aTransactionId, aContainsSVGGroup, aVsyncId, aVsyncStartTime,
@@ -548,6 +550,7 @@ mozilla::ipc::IPCResult WebRenderBridgeChild::RecvWrReleasedImages(
 }
 
 void WebRenderBridgeChild::BeginClearCachedResources() {
+  mSentDisplayList = false;
   mIsInClearCachedResources = true;
   // Clear display list and animtaions at parent side before clearing cached
   // resources on client side. It prevents to clear resources before clearing
