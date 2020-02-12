@@ -223,12 +223,6 @@ nfc_test(async (t, mockNFC) => {
   await promise_rejects(t, 'NotSupportedError', writer.write(test_text_data));
 }, "NDEFWriter.write should fail when NFC HW is not supported.");
 
-promise_test(async t => {
-  const writer = new NDEFWriter();
-  await promise_rejects(
-    t, 'NotSupportedError', writer.write(new ArrayBuffer(32 * 1024 + 1)));
-}, "Reject promise with NotSupportedError if NFC message size exceeds 32KB.");
-
 promise_test(async () => {
   await new Promise((resolve,reject) => {
     const iframe = document.createElement('iframe');
