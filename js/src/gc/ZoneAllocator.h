@@ -27,7 +27,7 @@ namespace js {
 class ZoneAllocator;
 
 #ifdef DEBUG
-bool CurrentThreadIsGCSweeping();
+bool CurrentThreadIsGCFinalizing();
 #endif
 
 namespace gc {
@@ -86,7 +86,7 @@ class ZoneAllocator : public JS::shadow::Zone,
                         bool wasSwept = false) {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(nbytes);
-    MOZ_ASSERT_IF(CurrentThreadIsGCSweeping(), wasSwept);
+    MOZ_ASSERT_IF(CurrentThreadIsGCFinalizing(), wasSwept);
 
     mallocHeapSize.removeBytes(nbytes, wasSwept);
 
@@ -129,7 +129,7 @@ class ZoneAllocator : public JS::shadow::Zone,
   }
   void decNonGCMemory(void* mem, size_t nbytes, MemoryUse use, bool wasSwept) {
     MOZ_ASSERT(nbytes);
-    MOZ_ASSERT_IF(CurrentThreadIsGCSweeping(), wasSwept);
+    MOZ_ASSERT_IF(CurrentThreadIsGCFinalizing(), wasSwept);
 
     mallocHeapSize.removeBytes(nbytes, wasSwept);
 

@@ -28,7 +28,7 @@ class ArenaCellIterUnderGC : public ArenaCellIter {
 class ArenaCellIterUnderFinalize : public ArenaCellIter {
  public:
   explicit ArenaCellIterUnderFinalize(Arena* arena) : ArenaCellIter(arena) {
-    MOZ_ASSERT(CurrentThreadIsGCSweeping());
+    MOZ_ASSERT(CurrentThreadIsGCFinalizing());
   }
 };
 

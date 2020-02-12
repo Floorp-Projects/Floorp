@@ -28,7 +28,8 @@ WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
 }
 
 WeakMapBase::~WeakMapBase() {
-  MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadCanAccessZone(zone_));
+  MOZ_ASSERT(CurrentThreadIsGCFinalizing() ||
+             CurrentThreadCanAccessZone(zone_));
 }
 
 void WeakMapBase::unmarkZone(JS::Zone* zone) {

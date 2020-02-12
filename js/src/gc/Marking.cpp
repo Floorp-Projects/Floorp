@@ -3580,10 +3580,11 @@ static inline void CheckIsMarkedThing(T* thingp) {
   // Allow the current thread access if it is sweeping or in sweep-marking, but
   // try to check the zone. Some threads have access to all zones when sweeping.
   JSContext* cx = TlsContext.get();
-  if (cx->gcSweeping || cx->gcMarking) {
+  MOZ_ASSERT(cx->gcUse != JSContext::GCUse::Finalizing);
+  if (cx->gcUse == JSContext::GCUse::Sweeping) {
     Zone* zone = thing->zoneFromAnyThread();
-    MOZ_ASSERT_IF(cx->gcSweepingZone,
-                  cx->gcSweepingZone == zone || zone->isAtomsZone());
+    MOZ_ASSERT_IF(cx->gcSweepZone,
+                  cx->gcSweepZone == zone || zone->isAtomsZone());
     return;
   }
 
@@ -3622,6 +3623,9 @@ struct MightBeNurseryAllocated {
 
 template <typename T>
 bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
+  // Don't depend on the mark state of other cells during finalization.
+  MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
+
   if (IsOwnedByOtherRuntime(rt, *thingp)) {
     return true;
   }
@@ -3642,11 +3646,18 @@ bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
 bool js::gc::IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured) {
   MOZ_ASSERT(!IsInsideNursery(&tenured));
   MOZ_ASSERT(tenured.zoneFromAnyThread()->isGCSweeping());
+
+  // Don't depend on the mark state of other cells during finalization.
+  MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
+
   return !tenured.isMarkedAny();
 }
 
 template <typename T>
 bool js::gc::IsAboutToBeFinalizedInternal(T** thingp) {
+  // Don't depend on the mark state of other cells during finalization.
+  MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
+
   CheckIsMarkedThing(thingp);
   T* thing = *thingp;
   JSRuntime* rt = thing->runtimeFromAnyThread();
@@ -3775,10 +3786,6 @@ JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_INTERNAL_IATBF_FUNCTION)
 #undef INSTANTIATE_INTERNAL_IS_MARKED_FUNCTION
 #undef INSTANTIATE_INTERNAL_IATBF_FUNCTION
 #undef INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND
-
-#ifdef DEBUG
-bool CurrentThreadIsGCMarking() { return TlsContext.get()->gcMarking; }
-#endif  // DEBUG
 
 } /* namespace gc */
 } /* namespace js */

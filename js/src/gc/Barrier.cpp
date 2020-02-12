@@ -70,7 +70,17 @@ bool CurrentThreadIsIonCompilingSafeForMinorGC() {
   return jcx && jcx->inIonBackendSafeForMinorGC();
 }
 
-bool CurrentThreadIsGCSweeping() { return TlsContext.get()->gcSweeping; }
+bool CurrentThreadIsGCMarking() {
+  return TlsContext.get()->gcUse == JSContext::GCUse::Marking;
+}
+
+bool CurrentThreadIsGCSweeping() {
+  return TlsContext.get()->gcUse == JSContext::GCUse::Sweeping;
+}
+
+bool CurrentThreadIsGCFinalizing() {
+  return TlsContext.get()->gcUse == JSContext::GCUse::Finalizing;
+}
 
 bool CurrentThreadIsTouchingGrayThings() {
   return TlsContext.get()->isTouchingGrayThings;

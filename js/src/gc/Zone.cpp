@@ -105,7 +105,7 @@ void ZoneAllocator::removeSharedMemory(void* mem, size_t nbytes,
   // nbytes can be zero here for SharedArrayBuffers.
 
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
-  MOZ_ASSERT(CurrentThreadIsGCSweeping());
+  MOZ_ASSERT(CurrentThreadIsGCFinalizing());
 
   auto ptr = sharedMemoryUseCounts.lookup(mem);
 
