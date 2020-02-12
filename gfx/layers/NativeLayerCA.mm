@@ -432,6 +432,16 @@ IntRect NativeLayerCA::GetRect() {
   return IntRect(mPosition, mSize);
 }
 
+void NativeLayerCA::SetValidRect(const gfx::IntRect& aValidRect) {
+  MutexAutoLock lock(mMutex);
+  mValidRect = aValidRect;
+}
+
+IntRect NativeLayerCA::GetValidRect() {
+  MutexAutoLock lock(mMutex);
+  return mValidRect;
+}
+
 void NativeLayerCA::SetBackingScale(float aBackingScale) {
   MutexAutoLock lock(mMutex);
 
@@ -518,27 +528,32 @@ void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aLock,
 
   gfx::IntRegion copyRegion;
   copyRegion.Sub(mInProgressSurface->mInvalidRegion, aUpdateRegion);
+
+  // TODO(gw): !!!!! Need to get mac code updated to handle partial valid rect updates.
+
   if (!copyRegion.IsEmpty()) {
     // There are parts in mInProgressSurface which are invalid but which are not included in
     // aUpdateRegion. We will obtain valid content for those parts by copying from a previous
     // surface.
-    MOZ_RELEASE_ASSERT(
-        mFrontSurface,
-        "The first call to NextSurface* must always update the entire layer. If this "
-        "is the second call, mFrontSurface will be Some().");
+    // MOZ_RELEASE_ASSERT(
+    //     mFrontSurface,
+    //     "The first call to NextSurface* must always update the entire layer. If this "
+    //     "is the second call, mFrontSurface will be Some().");
 
-    // NotifySurfaceReady marks the entirety of mFrontSurface as valid.
-    MOZ_RELEASE_ASSERT(mFrontSurface->mInvalidRegion.Intersect(copyRegion).IsEmpty(),
-                       "mFrontSurface should have valid content in the entire copy region, because "
-                       "the only invalidation since NotifySurfaceReady was aUpdateRegion, and "
-                       "aUpdateRegion has no overlap with copyRegion.");
+    // // NotifySurfaceReady marks the entirety of mFrontSurface as valid.
+    // MOZ_RELEASE_ASSERT(mFrontSurface->mInvalidRegion.Intersect(copyRegion).IsEmpty(),
+    //                    "mFrontSurface should have valid content in the entire copy region,
+    //                    because " "the only invalidation since NotifySurfaceReady was
+    //                    aUpdateRegion, and " "aUpdateRegion has no overlap with copyRegion.");
 
-    // Now copy the valid content, using a caller-provided copy function.
-    aCopyFn(mFrontSurface->mSurface, copyRegion);
-    mInProgressSurface->mInvalidRegion.SubOut(copyRegion);
+    if (mFrontSurface) {
+      // Now copy the valid content, using a caller-provided copy function.
+      aCopyFn(mFrontSurface->mSurface, copyRegion);
+      mInProgressSurface->mInvalidRegion.SubOut(copyRegion);
+    }
   }
 
-  MOZ_RELEASE_ASSERT(mInProgressSurface->mInvalidRegion == aUpdateRegion);
+  // MOZ_RELEASE_ASSERT(mInProgressSurface->mInvalidRegion == aUpdateRegion);
 }
 
 RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(const gfx::IntRegion& aUpdateRegion,

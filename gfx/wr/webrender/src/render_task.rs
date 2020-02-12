@@ -147,6 +147,7 @@ pub struct PictureTask {
     /// in batches built for this picture task.
     pub vis_mask: PrimitiveVisibilityMask,
     pub scissor_rect: Option<DeviceIntRect>,
+    pub valid_rect: Option<DeviceIntRect>,
 }
 
 #[derive(Debug)]
@@ -401,6 +402,7 @@ impl RenderTask {
         device_pixel_scale: DevicePixelScale,
         vis_mask: PrimitiveVisibilityMask,
         scissor_rect: Option<DeviceIntRect>,
+        valid_rect: Option<DeviceIntRect>,
     ) -> Self {
         let size = match location {
             RenderTaskLocation::Dynamic(_, size) => size,
@@ -427,6 +429,7 @@ impl RenderTask {
                 device_pixel_scale,
                 vis_mask,
                 scissor_rect,
+                valid_rect,
             }),
             clear_mode: ClearMode::Transparent,
             saved_index: None,
