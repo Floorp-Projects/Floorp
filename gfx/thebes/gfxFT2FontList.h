@@ -44,13 +44,13 @@ class FT2FontEntry : public gfxFT2FontEntryBase {
   // until actually needed
   static FT2FontEntry* CreateFontEntry(const FontListEntry& aFLE);
 
-  // Create a font entry for a given freetype face; if it is an installed font,
+  // Create a font entry with the given name; if it is an installed font,
   // also record the filename and index.
-  // aFontData (if non-nullptr) is NS_Malloc'ed data that aFace depends on,
-  // to be freed after the face is destroyed.
-  // aLength is the length of aFontData.
-  static FT2FontEntry* CreateFontEntry(FT_Face, const char* aFilename,
-                                       uint8_t aIndex, const nsACString& aName);
+  // If a non-null harfbuzz face is passed, also set style/weight/stretch
+  // properties of the entry from the values in the face.
+  static FT2FontEntry* CreateFontEntry(const nsACString& aName,
+                                       const char* aFilename, uint8_t aIndex,
+                                       const hb_face_t* aFace);
 
   gfxFont* CreateFontInstance(const gfxFontStyle* aStyle) override;
 
@@ -157,6 +157,10 @@ class gfxFT2FontList : public gfxPlatformFontList {
   void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
                                    StandardFile aStdFile);
 
+  void AppendFacesFromBlob(const nsCString& aFileName, StandardFile aStdFile,
+                           hb_blob_t* aBlob, FontNameCache* aCache,
+                           uint32_t aTimestamp, uint32_t aFilesize);
+
   void AppendFacesFromFontFile(const nsCString& aFileName,
                                FontNameCache* aCache, StandardFile aStdFile);
 
@@ -191,7 +195,7 @@ class gfxFT2FontList : public gfxPlatformFontList {
                                      StandardFile aStdFile);
 
   void AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
-                     StandardFile aStdFile, FT_Face aFace,
+                     StandardFile aStdFile, hb_face_t* aFace,
                      nsCString& aFaceList);
 
   void FindFonts();
