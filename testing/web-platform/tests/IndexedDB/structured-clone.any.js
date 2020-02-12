@@ -250,6 +250,7 @@ cloneObjectTest({foo: true, bar: false}, (orig, clone) => {
 // TODO: Test these additional interfaces:
 // * DOMQuad
 // * DOMException
+// * DetectedText, DetectedFace, DetectedBarcode
 // * RTCCertificate
 
 // Geometry types
