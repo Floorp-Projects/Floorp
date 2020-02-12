@@ -34,6 +34,8 @@ for (let user_activation of [true, false]) {
   }), `Test that a text fragment directive requires a user activation (user_activation=${user_activation}).`);
 }
 
+const crossOriginTarget = "http://{{hosts[alt][www]}}:{{ports[http][0]}}/scroll-to-text-fragment/scroll-to-text-fragment-target.html";
+
 // Test security restriction for no window opener
 for (let noopener of [true, false]) {
   promise_test(t => new Promise((resolve, reject) => {
@@ -41,9 +43,9 @@ for (let noopener of [true, false]) {
 
     test_driver.bless('Open a URL with a text fragment directive', () => {
       if (noopener) {
-        window.open(`scroll-to-text-fragment-target.html?key=${key}#:~:text=test`, '_blank', 'noopener');
+        window.open(`${crossOriginTarget}?key=${key}#:~:text=test`, '_blank', 'noopener');
       } else {
-        window.open(`scroll-to-text-fragment-target.html?key=${key}#:~:text=test`, '_blank');
+        window.open(`${crossOriginTarget}?key=${key}#:~:text=test`, '_blank');
       }
     });
 
@@ -67,7 +69,7 @@ promise_test(t => new Promise((resolve, reject) => {
   document.body.appendChild(frame);
 
   test_driver.bless('Navigate the iframe with a text fragment directive', () => {
-    frame.src = `scroll-to-text-fragment-target.html?key=${key}#:~:text=test`;
+    frame.src = `${crossOriginTarget}?key=${key}#:~:text=test`;
   });
 
   fetchResults(key, resolve, reject);
