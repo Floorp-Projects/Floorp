@@ -230,7 +230,7 @@ class CommonTestCase(unittest.TestCase):
     def test_name(self):
         rel_path = None
         if os.path.exists(self.filepath):
-            rel_path = self._fix_test_path(os.path.relpath(self.filepath))
+            rel_path = self._fix_test_path(self.filepath)
 
         return '{0} {1}.{2}'.format(rel_path,
                                     self.__class__.__name__,
@@ -276,10 +276,13 @@ class CommonTestCase(unittest.TestCase):
             "tests{}".format(os.path.sep),
         ]
 
+        path = os.path.relpath(path)
         for prefix in test_path_prefixes:
             if path.startswith(prefix):
                 path = path[len(prefix):]
                 break
+        path = path.replace('\\', '/')
+
         return path
 
 

@@ -819,17 +819,20 @@ class BaseMarionetteTestRunner(object):
             "tests{}".format(os.path.sep),
         ]
 
+        path = os.path.relpath(path)
         for prefix in test_path_prefixes:
             if path.startswith(prefix):
                 path = path[len(prefix):]
                 break
+        path = path.replace('\\', '/')
+
         return path
 
     def _log_skipped_tests(self):
         for test in self.manifest_skipped_tests:
             rel_path = None
             if os.path.exists(test['path']):
-                rel_path = self._fix_test_path(os.path.relpath(test['path']))
+                rel_path = self._fix_test_path(test['path'])
 
             self.logger.test_start(rel_path)
             self.logger.test_end(rel_path,
@@ -866,7 +869,9 @@ class BaseMarionetteTestRunner(object):
 
         tests_by_group = defaultdict(list)
         for test in self.tests:
-            tests_by_group[test['group']].append(test['filepath'])
+            group = self._fix_test_path(test['group'])
+            filepath = self._fix_test_path(test['filepath'])
+            tests_by_group[group].append(filepath)
 
         self.logger.suite_start(tests_by_group,
                                 name='marionette-test',
