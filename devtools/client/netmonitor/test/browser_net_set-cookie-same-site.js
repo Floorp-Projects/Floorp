@@ -34,28 +34,20 @@ add_task(async function() {
   info("Checking the SameSite property");
   const expectedValues = [
     {
-      key: "Response Cookies",
-      value: "",
-    },
-    {
       key: "foo",
       value: "",
     },
     {
       key: "samesite",
-      value: "Lax",
+      value: '"Lax"',
     },
     {
       key: "value",
-      value: "bar",
-    },
-    {
-      key: "Request Cookies",
-      value: "",
+      value: '"bar"',
     },
     {
       key: "foo",
-      value: "bar",
+      value: '"bar"',
     },
   ];
   const labelCells = document.querySelectorAll(".treeLabelCell");

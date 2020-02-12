@@ -9,9 +9,6 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
@@ -21,12 +18,18 @@ const {
   sortObjectKeys,
 } = require("devtools/client/netmonitor/src/utils/sort-utils");
 const {
-  setTargetSearchResult,
-} = require("devtools/client/netmonitor/src/actions/search");
+  FILTER_SEARCH_DELAY,
+} = require("devtools/client/netmonitor/src/constants");
 
 // Component
 const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/PropertiesView")
+  require("devtools/client/netmonitor/src/components/request-details/PropertiesView")
+);
+const SearchBox = createFactory(
+  require("devtools/client/shared/components/SearchBox")
+);
+const Accordion = createFactory(
+  require("devtools/client/shared/components/Accordion")
 );
 
 const { div } = dom;
@@ -35,7 +38,6 @@ const COOKIES_EMPTY_TEXT = L10N.getStr("cookiesEmptyText");
 const COOKIES_FILTER_TEXT = L10N.getStr("cookiesFilterText");
 const REQUEST_COOKIES = L10N.getStr("requestCookies");
 const RESPONSE_COOKIES = L10N.getStr("responseCookies");
-const SECTION_NAMES = [RESPONSE_COOKIES, REQUEST_COOKIES];
 
 /*
  * Cookies panel component
@@ -47,8 +49,14 @@ class CookiesPanel extends Component {
       connector: PropTypes.object.isRequired,
       openLink: PropTypes.func,
       request: PropTypes.object.isRequired,
-      resetTargetSearchResult: PropTypes.func,
       targetSearchResult: PropTypes.object,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      filterText: "",
     };
   }
 
@@ -91,65 +99,16 @@ class CookiesPanel extends Component {
     }, {});
   }
 
-  /**
-   * If target cookie (coming from the Search panel) is set, let's
-   * scroll the content so the cookie is visible. This is used for
-   * search result navigation, which happens when the user clicks
-   * on a search result coming from a cookie.
-   */
-  scrollToCookie() {
-    const { targetSearchResult, resetTargetSearchResult } = this.props;
-    if (!targetSearchResult) {
-      return;
-    }
-
-    const path = this.getTargetCookiePath(targetSearchResult);
-    const element = document.getElementById(path);
-    if (element) {
-      element.scrollIntoView({ block: "center" });
-    }
-
-    resetTargetSearchResult();
-  }
-
-  /**
-   * Returns unique cookie path that identifies cookie location
-   * within the Tree component. The path is calculated from
-   * labels used to render the tree items.
-   * This path is used to highlight the cookie and ensure
-   * that it's properly scrolled within the visible view-port.
-   */
-  getTargetCookiePath(searchResult) {
-    if (!searchResult) {
-      return null;
-    }
-
-    if (
-      searchResult.type !== "requestCookies" &&
-      searchResult.type !== "responseCookies"
-    ) {
-      return null;
-    }
-
-    return (
-      "/" +
-      (searchResult.type == "requestCookies"
-        ? REQUEST_COOKIES
-        : RESPONSE_COOKIES) +
-      "/" +
-      searchResult.label
-    );
-  }
-
   render() {
     let {
       request: {
         requestCookies = { cookies: [] },
         responseCookies = { cookies: [] },
       },
-      openLink,
       targetSearchResult,
     } = this.props;
+
+    const { filterText } = this.state;
 
     requestCookies = requestCookies.cookies || requestCookies;
     responseCookies = responseCookies.cookies || responseCookies;
@@ -158,38 +117,50 @@ class CookiesPanel extends Component {
       return div({ className: "empty-notice" }, COOKIES_EMPTY_TEXT);
     }
 
-    const object = {};
+    const items = [];
 
     if (responseCookies.length) {
-      object[RESPONSE_COOKIES] = sortObjectKeys(
-        this.getProperties(responseCookies)
-      );
+      items.push({
+        component: PropertiesView,
+        componentProps: {
+          object: sortObjectKeys(this.getProperties(responseCookies)),
+          filterText,
+          targetSearchResult,
+        },
+        header: RESPONSE_COOKIES,
+        id: "responseCookies",
+        opened: true,
+      });
     }
 
     if (requestCookies.length) {
-      object[REQUEST_COOKIES] = sortObjectKeys(
-        this.getProperties(requestCookies)
-      );
+      items.push({
+        component: PropertiesView,
+        componentProps: {
+          object: sortObjectKeys(this.getProperties(requestCookies)),
+          filterText,
+          targetSearchResult,
+        },
+        header: REQUEST_COOKIES,
+        id: "requestCookies",
+        opened: true,
+      });
     }
 
     return div(
       { className: "panel-container" },
-      PropertiesView({
-        object,
-        ref: () => this.scrollToCookie(),
-        selected: this.getTargetCookiePath(targetSearchResult),
-        filterPlaceHolder: COOKIES_FILTER_TEXT,
-        sectionNames: SECTION_NAMES,
-        openLink,
-        targetSearchResult,
-      })
+      div(
+        { className: "devtools-toolbar devtools-input-toolbar" },
+        SearchBox({
+          delay: FILTER_SEARCH_DELAY,
+          type: "filter",
+          onChange: text => this.setState({ filterText: text }),
+          placeholder: COOKIES_FILTER_TEXT,
+        })
+      ),
+      Accordion({ items })
     );
   }
 }
 
-module.exports = connect(
-  null,
-  dispatch => ({
-    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
-  })
-)(CookiesPanel);
+module.exports = CookiesPanel;
