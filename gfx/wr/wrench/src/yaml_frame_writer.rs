@@ -526,29 +526,6 @@ fn radial_gradient_to_yaml(
     bool_node(table, "repeat", gradient.extend_mode == ExtendMode::Repeat);
 }
 
-fn conic_gradient_to_yaml(
-    table: &mut Table,
-    gradient: &webrender::api::ConicGradient,
-    stops_range: ItemRange<GradientStop>,
-) {
-    point_node(table, "center", &gradient.center);
-    f32_node(table, "angle", gradient.angle);
-
-    let first_offset = gradient.start_offset;
-    let last_offset = gradient.end_offset;
-    let stops_delta = last_offset - first_offset;
-    assert!(first_offset <= last_offset);
-
-    let mut denormalized_stops = vec![];
-    for stop in stops_range {
-        let denormalized_stop = (stop.offset * stops_delta) + first_offset;
-        denormalized_stops.push(Yaml::Real(denormalized_stop.to_string()));
-        denormalized_stops.push(Yaml::String(color_to_string(stop.color)));
-    }
-    yaml_node(table, "stops", Yaml::Array(denormalized_stops));
-    bool_node(table, "repeat", gradient.extend_mode == ExtendMode::Repeat);
-}
-
 enum CachedFont {
     Native(NativeFontHandle, Option<PathBuf>),
     Raw(Option<Vec<u8>>, u32, Option<PathBuf>),
@@ -1214,14 +1191,6 @@ impl YamlFrameWriter {
                                         base.gradient_stops(),
                                     );
                                 }
-                                NinePatchBorderSource::ConicGradient(gradient) => {
-                                    str_node(&mut v, "border-type", "conic-gradient");
-                                    conic_gradient_to_yaml(
-                                        &mut v,
-                                        &gradient,
-                                        base.gradient_stops(),
-                                    );
-                                }
                             }
 
                             i32_node(&mut v, "image-width", details.width);
@@ -1299,18 +1268,6 @@ impl YamlFrameWriter {
                     size_node(&mut v, "tile-size", &item.tile_size);
                     size_node(&mut v, "tile-spacing", &item.tile_spacing);
                     radial_gradient_to_yaml(
-                        &mut v,
-                        &item.gradient,
-                        base.gradient_stops(),
-                    );
-                }
-                DisplayItem::ConicGradient(item) => {
-                    str_node(&mut v, "type", "conic-gradient");
-                    rect_node(&mut v, "bounds", &item.bounds);
-                    common_node(&mut v, clip_id_mapper, &item.common);
-                    size_node(&mut v, "tile-size", &item.tile_size);
-                    size_node(&mut v, "tile-spacing", &item.tile_spacing);
-                    conic_gradient_to_yaml(
                         &mut v,
                         &item.gradient,
                         base.gradient_stops(),
