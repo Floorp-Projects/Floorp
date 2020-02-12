@@ -42,7 +42,6 @@
             android:layout_height="wrap_content"
             android:importantForAccessibility="no"
             android:src="@drawable/mozac_ic_lock"
-            android:tint="@color/photonGreen50"
             android:paddingEnd="8dp"/>
         <LinearLayout
             android:layout_width="match_parent"
