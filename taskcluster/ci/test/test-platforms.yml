@@ -53,7 +53,7 @@ linux1804-64-shippable/opt:
         - web-platform-tests-wdspec-headless
 
 linux1804-64-devedition/opt:
-    build-platform: linux64-devedition-nightly/opt
+    build-platform: linux64-devedition/opt
     test-sets:
         - desktop-screenshot-capture
         - linux1804-tests
@@ -134,7 +134,7 @@ linux64-shippable/opt:
         - talos-profiling
 
 linux64-devedition/opt:
-    build-platform: linux64-devedition-nightly/opt
+    build-platform: linux64-devedition/opt
     test-sets:
         - linux-common-tests
         - web-platform-tests-1604
@@ -221,7 +221,7 @@ windows7-32-shippable/opt:
         - browsertime
 
 windows7-32-devedition/opt:
-    build-platform: win32-devedition-nightly/opt
+    build-platform: win32-devedition/opt
     test-sets:
         - desktop-screenshot-capture
         - windows-reftest-gpu
@@ -295,7 +295,7 @@ windows10-64-shippable/opt:
         - talos-profiling
 
 windows10-64-devedition/opt:
-    build-platform: win64-devedition-nightly/opt
+    build-platform: win64-devedition/opt
     test-sets:
         - desktop-screenshot-capture
         - marionette-gpu-tests
@@ -379,7 +379,7 @@ macosx1014-64/debug:
         - macosx1014-64-tests
 
 macosx1014-64-devedition/opt:
-    build-platform: macosx64-devedition-nightly/opt
+    build-platform: macosx64-devedition/opt
     test-sets:
         - macosx1014-64-tests
 

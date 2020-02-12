@@ -176,8 +176,8 @@ macosx64-fuzzing/debug:
             - linux64-lucetc
             - wasi-sysroot
 
-macosx64-devedition-nightly/opt:
-    description: "MacOS X Dev Edition x64 Nightly"
+macosx64-devedition/opt:
+    description: "MacOS X Dev Edition x64 (shippable)"
     use-pgo: macosx64-shippable/opt
     attributes:
         nightly: true

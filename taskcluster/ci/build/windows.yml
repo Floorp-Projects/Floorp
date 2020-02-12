@@ -853,8 +853,8 @@ win64-asan-fuzzing/opt:
             - win64-nasm
             - win64-node
 
-win32-devedition-nightly/opt:
-    description: "Win32 Dev Edition Nightly"
+win32-devedition/opt:
+    description: "Win32 Dev Edition (shippable)"
     use-pgo: win32-shippable/opt
     index:
         product: devedition
@@ -906,8 +906,8 @@ win32-devedition-nightly/opt:
             - win64-nasm
             - win64-node
 
-win64-devedition-nightly/opt:
-    description: "Win64 Dev Edition Nightly"
+win64-devedition/opt:
+    description: "Win64 Dev Edition (shippable)"
     use-pgo: win64-shippable/opt
     index:
         product: devedition
@@ -1200,8 +1200,8 @@ win64-aarch64-shippable-no-eme/opt:
             - win64-node
 
 
-win64-aarch64-devedition-nightly/opt:
-    description: "AArch64 Win64 MSVC Devedition Nightly"
+win64-aarch64-devedition/opt:
+    description: "AArch64 Win64 MSVC Devedition (shippable)"
     index:
         product: devedition
         job-name: win64-aarch64-opt
