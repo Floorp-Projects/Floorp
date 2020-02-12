@@ -16,7 +16,7 @@ namespace mozilla {
 
 class OriginAttributes : public dom::OriginAttributesDictionary {
  public:
-  OriginAttributes() {}
+  OriginAttributes() = default;
 
   explicit OriginAttributes(bool aInIsolatedMozBrowser) {
     mInIsolatedMozBrowser = aInIsolatedMozBrowser;
@@ -126,7 +126,7 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
   // if (!pattern.Init(aJSONString)) {
   //   ... // handle failure.
   // }
-  OriginAttributesPattern() {}
+  OriginAttributesPattern() = default;
 
   explicit OriginAttributesPattern(
       const OriginAttributesPatternDictionary& aOther)
