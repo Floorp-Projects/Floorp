@@ -428,6 +428,8 @@ void AudioStream::Shutdown() {
     // Must not try to shut down cubeb from within the lock!  wasapi may still
     // call our callback after Pause()/stop()!?! Bug 996162
     mCubebStream.reset();
+
+    StopAudioCallbackTracing();
   }
 
   mState = SHUTDOWN;

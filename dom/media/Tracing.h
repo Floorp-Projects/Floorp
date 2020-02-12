@@ -35,6 +35,7 @@ extern mozilla::AsyncLogger gAudioCallbackTraceLogger;
 
 // This is no-op if tracing is not enabled, and is idempotent.
 void StartAudioCallbackTracing();
+void StopAudioCallbackTracing();
 
 #ifdef TRACING
 /* TRACE is for use in the real-time audio rendering thread.
