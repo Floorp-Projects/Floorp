@@ -1737,8 +1737,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   nsCOMPtr<nsIPrincipal> channelPrincipal;
-  rv = ssm->GetChannelResultPrincipal(aChannel,
-                                      getter_AddRefs(channelPrincipal));
+  rv = ssm->GetChannelURIPrincipal(aChannel, getter_AddRefs(channelPrincipal));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("No channel principal, bail out early"));
     return false;
