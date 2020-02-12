@@ -37,7 +37,7 @@ class NotYetSupportedAddonFragment :
             adapter = UnsupportedAddonsAdapter(
                 addonManager = requireContext().components.addonManager,
                 unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
-                unsupportedAddons = args.addons.toList()
+                addons = args.addons.toList()
             )
         }
 
