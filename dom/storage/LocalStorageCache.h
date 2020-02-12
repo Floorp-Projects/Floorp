@@ -62,7 +62,7 @@ class LocalStorageCacheBridge {
   virtual void LoadWait() = 0;
 
  protected:
-  virtual ~LocalStorageCacheBridge() {}
+  virtual ~LocalStorageCacheBridge() = default;
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
@@ -282,7 +282,7 @@ class StorageUsageBridge {
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~StorageUsageBridge() {}
+  virtual ~StorageUsageBridge() = default;
 };
 
 class StorageUsage : public StorageUsageBridge {

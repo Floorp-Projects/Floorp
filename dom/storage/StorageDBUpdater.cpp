@@ -25,7 +25,7 @@ using namespace StorageUtils;
 namespace {
 
 class nsReverseStringSQLFunction final : public mozIStorageFunction {
-  ~nsReverseStringSQLFunction() {}
+  ~nsReverseStringSQLFunction() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
@@ -148,7 +148,7 @@ class GetOriginParticular final : public mozIStorageFunction {
 
  private:
   GetOriginParticular() = delete;
-  ~GetOriginParticular() {}
+  ~GetOriginParticular() = default;
 
   EParticular mParticular;
 
@@ -189,10 +189,10 @@ GetOriginParticular::OnFunctionCall(mozIStorageValueArray* aFunctionArguments,
 
 class StripOriginAddonId final : public mozIStorageFunction {
  public:
-  explicit StripOriginAddonId() {}
+  explicit StripOriginAddonId() = default;
 
  private:
-  ~StripOriginAddonId() {}
+  ~StripOriginAddonId() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION

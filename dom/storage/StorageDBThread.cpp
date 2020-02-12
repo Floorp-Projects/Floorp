@@ -796,7 +796,7 @@ class OriginAttrsPatternMatchSQLFunction final : public mozIStorageFunction {
 
  private:
   OriginAttrsPatternMatchSQLFunction() = delete;
-  ~OriginAttrsPatternMatchSQLFunction() {}
+  ~OriginAttrsPatternMatchSQLFunction() = default;
 
   OriginAttributesPattern mPattern;
 };

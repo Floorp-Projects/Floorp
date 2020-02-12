@@ -60,7 +60,7 @@ LocalStorage::LocalStorage(nsPIDOMWindowInner* aWindow,
   mCache->Preload();
 }
 
-LocalStorage::~LocalStorage() {}
+LocalStorage::~LocalStorage() = default;
 
 int64_t LocalStorage::GetOriginQuotaUsage() const {
   return mCache->GetOriginQuotaUsage(this);

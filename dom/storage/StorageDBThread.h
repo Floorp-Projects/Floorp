@@ -280,7 +280,7 @@ class StorageDBThread final {
     Monitor& GetMonitor() { return mMonitor; }
 
    private:
-    virtual ~ThreadObserver() {}
+    virtual ~ThreadObserver() = default;
     bool mHasPendingEvents;
     // The monitor we drive the thread with
     Monitor mMonitor;
@@ -301,14 +301,14 @@ class StorageDBThread final {
     }
 
    private:
-    ~ShutdownRunnable() {}
+    ~ShutdownRunnable() = default;
 
     NS_DECL_NSIRUNNABLE
   };
 
  public:
   StorageDBThread();
-  virtual ~StorageDBThread() {}
+  virtual ~StorageDBThread() = default;
 
   static StorageDBThread* Get();
 
