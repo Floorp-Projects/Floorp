@@ -3365,69 +3365,6 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_border_conic_gradient(state: &mut WrState,
-                                                   rect: LayoutRect,
-                                                   clip: LayoutRect,
-                                                   is_backface_visible: bool,
-                                                   parent: &WrSpaceAndClipChain,
-                                                   widths: LayoutSideOffsets,
-                                                   fill: bool,
-                                                   center: LayoutPoint,
-                                                   angle: f32,
-                                                   stops: *const GradientStop,
-                                                   stops_count: usize,
-                                                   extend_mode: ExtendMode,
-                                                   outset: LayoutSideOffsets) {
-    debug_assert!(unsafe { is_in_main_thread() });
-
-    let stops_slice = unsafe { make_slice(stops, stops_count) };
-    let stops_vector = stops_slice.to_owned();
-
-    let slice = SideOffsets2D::new(
-        widths.top as i32,
-        widths.right as i32,
-        widths.bottom as i32,
-        widths.left as i32,
-    );
-
-    let gradient = state.frame_builder.dl_builder.create_conic_gradient(
-        center.into(),
-        angle,
-        stops_vector,
-        extend_mode.into()
-    );
-
-    let border_details = BorderDetails::NinePatch(NinePatchBorder {
-        source: NinePatchBorderSource::ConicGradient(gradient),
-        width: rect.size.width as i32,
-        height: rect.size.height as i32,
-        slice,
-        fill,
-        outset: outset.into(),
-        repeat_horizontal: RepeatMode::Stretch,
-        repeat_vertical: RepeatMode::Stretch,
-    });
-
-    let space_and_clip = parent.to_webrender(state.pipeline_id);
-
-    let prim_info = CommonItemProperties {
-        clip_rect: clip,
-        clip_id: space_and_clip.clip_id,
-        spatial_id: space_and_clip.spatial_id,
-        flags: prim_flags(is_backface_visible),
-        hit_info: state.current_tag,
-        item_key: state.current_item_key,
-    };
-
-    state.frame_builder.dl_builder.push_border(
-        &prim_info,
-        rect,
-        widths.into(),
-        border_details,
-    );
-}
-
-#[no_mangle]
 pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              rect: LayoutRect,
                                              clip: LayoutRect,
@@ -3509,50 +3446,6 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
     };
 
     state.frame_builder.dl_builder.push_radial_gradient(
-        &prim_info,
-        rect,
-        gradient,
-        tile_size,
-        tile_spacing);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_push_conic_gradient(state: &mut WrState,
-                                            rect: LayoutRect,
-                                            clip: LayoutRect,
-                                            is_backface_visible: bool,
-                                            parent: &WrSpaceAndClipChain,
-                                            center: LayoutPoint,
-                                            angle: f32,
-                                            stops: *const GradientStop,
-                                            stops_count: usize,
-                                            extend_mode: ExtendMode,
-                                            tile_size: LayoutSize,
-                                            tile_spacing: LayoutSize) {
-    debug_assert!(unsafe { is_in_main_thread() });
-
-    let stops_slice = unsafe { make_slice(stops, stops_count) };
-    let stops_vector = stops_slice.to_owned();
-
-    let gradient = state.frame_builder
-                        .dl_builder
-                        .create_conic_gradient(center.into(),
-                                               angle,
-                                               stops_vector,
-                                               extend_mode.into());
-
-    let space_and_clip = parent.to_webrender(state.pipeline_id);
-
-    let prim_info = CommonItemProperties {
-        clip_rect: clip,
-        clip_id: space_and_clip.clip_id,
-        spatial_id: space_and_clip.spatial_id,
-        flags: prim_flags(is_backface_visible),
-        hit_info: state.current_tag,
-        item_key: state.current_item_key,
-    };
-
-    state.frame_builder.dl_builder.push_conic_gradient(
         &prim_info,
         rect,
         gradient,
