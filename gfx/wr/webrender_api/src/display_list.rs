@@ -684,7 +684,6 @@ impl Serialize for BuiltDisplayList {
                 Real::BoxShadow(v) => Debug::BoxShadow(v),
                 Real::Gradient(v) => Debug::Gradient(v),
                 Real::RadialGradient(v) => Debug::RadialGradient(v),
-                Real::ConicGradient(v) => Debug::ConicGradient(v),
                 Real::Iframe(v) => Debug::Iframe(v),
                 Real::PushReferenceFrame(v) => Debug::PushReferenceFrame(v),
                 Real::PushStackingContext(v) => Debug::PushStackingContext(v),
@@ -791,7 +790,6 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 Debug::BoxShadow(v) => Real::BoxShadow(v),
                 Debug::Gradient(v) => Real::Gradient(v),
                 Debug::RadialGradient(v) => Real::RadialGradient(v),
-                Debug::ConicGradient(v) => Real::ConicGradient(v),
                 Debug::PushStackingContext(v) => Real::PushStackingContext(v),
                 Debug::PushShadow(v) => Real::PushShadow(v),
                 Debug::BackdropFilter(v) => Real::BackdropFilter(v),
@@ -1207,21 +1205,6 @@ impl DisplayListBuilder {
         gradient
     }
 
-    /// NOTE: gradients must be pushed in the order they're created
-    /// because create_gradient stores the stops in anticipation.
-    pub fn create_conic_gradient(
-        &mut self,
-        center: LayoutPoint,
-        angle: f32,
-        stops: Vec<di::GradientStop>,
-        extend_mode: di::ExtendMode,
-    ) -> di::ConicGradient {
-        let mut builder = GradientBuilder::with_stops(stops);
-        let gradient = builder.conic_gradient(center, angle, extend_mode);
-        self.push_stops(builder.stops());
-        gradient
-    }
-
     pub fn push_border(
         &mut self,
         common: &di::CommonItemProperties,
@@ -1309,28 +1292,6 @@ impl DisplayListBuilder {
         tile_spacing: LayoutSize,
     ) {
         let item = di::DisplayItem::RadialGradient(di::RadialGradientDisplayItem {
-            common: *common,
-            bounds,
-            gradient,
-            tile_size,
-            tile_spacing,
-        });
-
-        self.push_item(&item);
-    }
-
-    /// Pushes a conic gradient to be displayed.
-    ///
-    /// See [`push_gradient`](#method.push_gradient) for explanation.
-    pub fn push_conic_gradient(
-        &mut self,
-        common: &di::CommonItemProperties,
-        bounds: LayoutRect,
-        gradient: di::ConicGradient,
-        tile_size: LayoutSize,
-        tile_spacing: LayoutSize,
-    ) {
-        let item = di::DisplayItem::ConicGradient(di::ConicGradientDisplayItem {
             common: *common,
             bounds,
             gradient,

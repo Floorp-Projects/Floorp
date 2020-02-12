@@ -1195,17 +1195,6 @@ void DisplayListBuilder::PushRadialGradient(
       aStops.Length(), aExtendMode, aTileSize, aTileSpacing);
 }
 
-void DisplayListBuilder::PushConicGradient(
-    const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
-    bool aIsBackfaceVisible, const wr::LayoutPoint& aCenter, const float aAngle,
-    const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode,
-    const wr::LayoutSize aTileSize, const wr::LayoutSize aTileSpacing) {
-  wr_dp_push_conic_gradient(mWrState, aBounds, MergeClipLeaf(aClip),
-                            aIsBackfaceVisible, &mCurrentSpaceAndClipChain,
-                            aCenter, aAngle, aStops.Elements(), aStops.Length(),
-                            aExtendMode, aTileSize, aTileSpacing);
-}
-
 void DisplayListBuilder::PushImage(
     const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
     bool aIsBackfaceVisible, wr::ImageRendering aFilter, wr::ImageKey aImage,
@@ -1325,18 +1314,6 @@ void DisplayListBuilder::PushBorderRadialGradient(
   wr_dp_push_border_radial_gradient(
       mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
       &mCurrentSpaceAndClipChain, aWidths, aFill, aCenter, aRadius,
-      aStops.Elements(), aStops.Length(), aExtendMode, aOutset);
-}
-
-void DisplayListBuilder::PushBorderConicGradient(
-    const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
-    bool aIsBackfaceVisible, const wr::LayoutSideOffsets& aWidths, bool aFill,
-    const wr::LayoutPoint& aCenter, const float aAngle,
-    const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode,
-    const wr::LayoutSideOffsets& aOutset) {
-  wr_dp_push_border_conic_gradient(
-      mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
-      &mCurrentSpaceAndClipChain, aWidths, aFill, aCenter, aAngle,
       aStops.Elements(), aStops.Length(), aExtendMode, aOutset);
 }
 
