@@ -436,7 +436,7 @@ already_AddRefed<gfx::DrawTarget> WindowBackBufferShm::Lock() {
 WindowBackBufferDMABuf::WindowBackBufferDMABuf(
     WindowSurfaceWayland* aWindowSurfaceWayland, int aWidth, int aHeight)
     : WindowBackBuffer(aWindowSurfaceWayland) {
-  mDMAbufSurface = WaylandDMABufSurface::CreateDMABufSurface(
+  mDMAbufSurface = WaylandDMABufSurfaceRGBA::CreateDMABufSurface(
       aWidth, aHeight, DMABUF_ALPHA | DMABUF_CREATE_WL_BUFFER);
   LOGWAYLAND(
       ("WindowBackBufferDMABuf::WindowBackBufferDMABuf [%p] Created DMABuf "
