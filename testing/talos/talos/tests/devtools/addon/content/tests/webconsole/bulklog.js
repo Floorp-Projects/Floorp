@@ -16,7 +16,7 @@ const {
 const { waitForConsoleOutputChildListChange } = require("./webconsole-helpers");
 
 module.exports = async function() {
-  let TOTAL_MESSAGES = 10;
+  let TOTAL_MESSAGES = 1000;
   let tab = await testSetup(SIMPLE_URL);
   let messageManager = tab.linkedBrowser.messageManager;
   let toolbox = await openToolbox("webconsole");
@@ -44,6 +44,7 @@ module.exports = async function() {
   const allMessagesreceived = waitForConsoleOutputChildListChange(
     hud,
     consoleOutput =>
+      consoleOutput.querySelectorAll(".message").length >= TOTAL_MESSAGES &&
       consoleOutput.textContent.includes("damp " + TOTAL_MESSAGES)
   );
 
