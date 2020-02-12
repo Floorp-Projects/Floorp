@@ -80,6 +80,7 @@ class ToolbarView(
         .findViewById(R.id.toolbar)
 
     private var isInitialized = false
+    private var hasBeenCanceled = false
 
     init {
         view.apply {
@@ -120,7 +121,10 @@ class ToolbarView(
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onCancelEditing(): Boolean {
-                    interactor.onEditingCanceled()
+                    // For some reason, this can be triggered twice on one back press. This only leads to
+                    // navigateUp, so let's make sure we only call it once
+                    if (!hasBeenCanceled) interactor.onEditingCanceled()
+                    hasBeenCanceled = true
                     // We need to return false to not show display mode
                     return false
                 }
