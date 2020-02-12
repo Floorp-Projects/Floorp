@@ -2571,8 +2571,8 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
 name = "neqo-common"
-version = "0.1.13"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.13#1bc70df50cb3e22ec6820e2a746a506317977604"
+version = "0.1.12"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.12#ccb7c07326230c4b1dc68d98a15ce364a4718c15"
 dependencies = [
  "env_logger",
  "lazy_static",
@@ -2582,8 +2582,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.1.13"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.13#1bc70df50cb3e22ec6820e2a746a506317977604"
+version = "0.1.12"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.12#ccb7c07326230c4b1dc68d98a15ce364a4718c15"
 dependencies = [
  "bindgen",
  "log",
@@ -2595,8 +2595,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.1.13"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.13#1bc70df50cb3e22ec6820e2a746a506317977604"
+version = "0.1.12"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.12#ccb7c07326230c4b1dc68d98a15ce364a4718c15"
 dependencies = [
  "log",
  "neqo-common",
@@ -2609,8 +2609,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.1.13"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.13#1bc70df50cb3e22ec6820e2a746a506317977604"
+version = "0.1.12"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.12#ccb7c07326230c4b1dc68d98a15ce364a4718c15"
 dependencies = [
  "log",
  "neqo-common",
@@ -2620,13 +2620,14 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.1.13"
-source = "git+https://github.com/mozilla/neqo?tag=v0.1.13#1bc70df50cb3e22ec6820e2a746a506317977604"
+version = "0.1.12"
+source = "git+https://github.com/mozilla/neqo?tag=v0.1.12#ccb7c07326230c4b1dc68d98a15ce364a4718c15"
 dependencies = [
  "lazy_static",
  "log",
  "neqo-common",
  "neqo-crypto",
+ "rand",
  "smallvec 1.2.0",
 ]
 

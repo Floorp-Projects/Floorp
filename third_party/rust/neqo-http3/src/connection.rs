@@ -85,7 +85,7 @@ impl<T: Http3Transaction> Http3Connection<T> {
         if max_table_size > (1 << 30) - 1 {
             panic!("Wrong max_table_size");
         }
-        Self {
+        Http3Connection {
             state: Http3State::Initializing,
             local_settings: LocalSettings {
                 max_table_size,
@@ -341,7 +341,6 @@ impl<T: Http3Transaction> Http3Connection<T> {
     }
 
     pub fn handle_state_change(&mut self, conn: &mut Connection, state: &State) -> Res<bool> {
-        qdebug!([self], "Handle state change {:?}", state);
         match state {
             State::Connected => {
                 debug_assert!(matches!(
@@ -364,7 +363,7 @@ impl<T: Http3Transaction> Http3Connection<T> {
             }
             State::Closed(error) => {
                 if !matches!(self.state, Http3State::Closed(_)) {
-                    self.state = Http3State::Closed(error.clone().into());
+                    self.state = Http3State::Closing(error.clone().into());
                     Ok(true)
                 } else {
                     Ok(false)
