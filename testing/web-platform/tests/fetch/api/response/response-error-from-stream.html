@@ -9,7 +9,7 @@
   <body>
     <script>
       function newStreamWithStartError() {
-        var err = new Error("Start error " + Math.random());
+        var err = new Error("Start error");
         return [new ReadableStream({
                   start(controller) {
                       controller.error(err);
@@ -19,7 +19,7 @@
       }
 
       function newStreamWithPullError() {
-        var err = new Error("Pull error " + Math.random());
+        var err = new Error("Pull error");
         return [new ReadableStream({
                   pull(controller) {
                       controller.error(err);
