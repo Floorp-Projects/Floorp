@@ -1294,9 +1294,8 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       dtoaState(this, nullptr),
       suppressGC(this, 0),
 #ifdef DEBUG
-      gcSweeping(this, false),
-      gcSweepingZone(this, nullptr),
-      gcMarking(this, false),
+      gcUse(this, GCUse::None),
+      gcSweepZone(this, nullptr),
       isTouchingGrayThings(this, false),
       noNurseryAllocationCheck(this, 0),
       disableStrictProxyCheckingCount(this, 0),
