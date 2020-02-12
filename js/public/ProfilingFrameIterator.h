@@ -28,9 +28,6 @@ class ProfilingFrameIterator;
 
 namespace JS {
 
-struct ForEachTrackedOptimizationAttemptOp;
-struct ForEachTrackedOptimizationTypeInfoOp;
-
 // This iterator can be used to walk the stack of a thread suspended at an
 // arbitrary pc. To provide accurate results, profiling must have been enabled
 // (via EnableRuntimeProfilingStack) before executing the callstack being
@@ -193,12 +190,6 @@ class MOZ_STACK_CLASS ProfiledFrameHandle {
   void* canonicalAddress() const { return canonicalAddr_; }
 
   JS_PUBLIC_API ProfilingFrameIterator::FrameKind frameKind() const;
-  JS_PUBLIC_API void forEachOptimizationAttempt(
-      ForEachTrackedOptimizationAttemptOp& op, JSScript** scriptOut,
-      jsbytecode** pcOut) const;
-
-  JS_PUBLIC_API void forEachOptimizationTypeInfo(
-      ForEachTrackedOptimizationTypeInfoOp& op) const;
 
   JS_PUBLIC_API uint64_t realmID() const;
 };

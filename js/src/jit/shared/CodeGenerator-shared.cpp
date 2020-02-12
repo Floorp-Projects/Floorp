@@ -959,61 +959,6 @@ bool CodeGeneratorShared::generateCompactTrackedOptimizationsMap(
   return true;
 }
 
-#ifdef DEBUG
-class ReadTempAttemptsVectorOp
-    : public JS::ForEachTrackedOptimizationAttemptOp {
-  TempOptimizationAttemptsVector* attempts_;
-  bool oom_;
-
- public:
-  explicit ReadTempAttemptsVectorOp(TempOptimizationAttemptsVector* attempts)
-      : attempts_(attempts), oom_(false) {}
-
-  bool oom() { return oom_; }
-
-  void operator()(JS::TrackedStrategy strategy,
-                  JS::TrackedOutcome outcome) override {
-    if (!attempts_->append(OptimizationAttempt(strategy, outcome))) {
-      oom_ = true;
-    }
-  }
-};
-
-struct ReadTempTypeInfoVectorOp
-    : public IonTrackedOptimizationsTypeInfo::ForEachOp {
-  TempAllocator& alloc_;
-  TempOptimizationTypeInfoVector* types_;
-  TempTypeList accTypes_;
-  bool oom_;
-
- public:
-  ReadTempTypeInfoVectorOp(TempAllocator& alloc,
-                           TempOptimizationTypeInfoVector* types)
-      : alloc_(alloc), types_(types), accTypes_(alloc), oom_(false) {}
-
-  bool oom() { return oom_; }
-
-  void readType(const IonTrackedTypeWithAddendum& tracked) override {
-    if (!accTypes_.append(tracked.type)) {
-      oom_ = true;
-    }
-  }
-
-  void operator()(JS::TrackedTypeSite site, MIRType mirType) override {
-    OptimizationTypeInfo ty(alloc_, site, mirType);
-    for (uint32_t i = 0; i < accTypes_.length(); i++) {
-      if (!ty.trackType(accTypes_[i])) {
-        oom_ = true;
-      }
-    }
-    if (!types_->append(std::move(ty))) {
-      oom_ = true;
-    }
-    accTypes_.clear();
-  }
-};
-#endif  // DEBUG
-
 void CodeGeneratorShared::verifyCompactTrackedOptimizationsMap(
     JitCode* code, uint32_t numRegions,
     const UniqueTrackedOptimizations& unique,
@@ -1082,16 +1027,10 @@ void CodeGeneratorShared::verifyCompactTrackedOptimizationsMap(
       if (!rt->gc.storeBuffer().cancelIonCompilations()) {
         IonTrackedOptimizationsTypeInfo typeInfo = typesTable->entry(index);
         TempOptimizationTypeInfoVector tvec(alloc());
-        ReadTempTypeInfoVectorOp top(alloc(), &tvec);
-        typeInfo.forEach(top, allTypes);
-        MOZ_ASSERT_IF(!top.oom(), entry.optimizations->matchTypes(tvec));
       }
 
       IonTrackedOptimizationsAttempts attempts = attemptsTable->entry(index);
       TempOptimizationAttemptsVector avec(alloc());
-      ReadTempAttemptsVectorOp aop(&avec);
-      attempts.forEach(aop);
-      MOZ_ASSERT_IF(!aop.oom(), entry.optimizations->matchAttempts(avec));
     }
   }
 #endif

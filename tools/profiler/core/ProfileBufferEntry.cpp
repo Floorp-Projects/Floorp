@@ -116,44 +116,6 @@ struct TypeInfo {
   Maybe<unsigned> mLineNumber;
 };
 
-template <typename LambdaT>
-class ForEachTrackedOptimizationTypeInfoLambdaOp
-    : public JS::ForEachTrackedOptimizationTypeInfoOp {
- public:
-  // aLambda needs to be a function with the following signature:
-  // void lambda(JS::TrackedTypeSite site, const char* mirType,
-  //             const nsTArray<TypeInfo>& typeset)
-  // aLambda will be called once per entry.
-  explicit ForEachTrackedOptimizationTypeInfoLambdaOp(LambdaT&& aLambda)
-      : mLambda(aLambda) {}
-
-  // This is called 0 or more times per entry, *before* operator() is called
-  // for that entry.
-  void readType(const char* keyedBy, const char* name, const char* location,
-                const Maybe<unsigned>& lineno) override {
-    TypeInfo info = {keyedBy ? Some(nsCString(keyedBy)) : Nothing(),
-                     name ? Some(nsCString(name)) : Nothing(),
-                     location ? Some(nsCString(location)) : Nothing(), lineno};
-    mTypesetForUpcomingEntry.AppendElement(std::move(info));
-  }
-
-  void operator()(JS::TrackedTypeSite site, const char* mirType) override {
-    nsTArray<TypeInfo> typeset(std::move(mTypesetForUpcomingEntry));
-    mLambda(site, mirType, typeset);
-  }
-
- private:
-  nsTArray<TypeInfo> mTypesetForUpcomingEntry;
-  LambdaT mLambda;
-};
-
-template <typename LambdaT>
-ForEachTrackedOptimizationTypeInfoLambdaOp<LambdaT>
-MakeForEachTrackedOptimizationTypeInfoLambdaOp(LambdaT&& aLambda) {
-  return ForEachTrackedOptimizationTypeInfoLambdaOp<LambdaT>(
-      std::forward<LambdaT>(aLambda));
-}
-
 // As mentioned in ProfileBufferEntry.h, the JSON format contains many
 // arrays whose elements are laid out according to various schemas to help
 // de-duplication. This RAII class helps write these arrays by keeping track of
@@ -242,28 +204,6 @@ class MOZ_RAII AutoArraySchemaWriter {
   UniqueJSONStrings* mStrings;
   uint32_t mNextFreeIndex;
 };
-
-template <typename LambdaT>
-class ForEachTrackedOptimizationAttemptsLambdaOp
-    : public JS::ForEachTrackedOptimizationAttemptOp {
- public:
-  explicit ForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda)
-      : mLambda(std::move(aLambda)) {}
-  void operator()(JS::TrackedStrategy aStrategy,
-                  JS::TrackedOutcome aOutcome) override {
-    mLambda(aStrategy, aOutcome);
-  }
-
- private:
-  LambdaT mLambda;
-};
-
-template <typename LambdaT>
-ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>
-MakeForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda) {
-  return ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>(
-      std::move(aLambda));
-}
 
 UniqueJSONStrings::UniqueJSONStrings() { mStringTableWriter.StartBareList(); }
 
@@ -496,94 +436,6 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
   }
 }
 
-static void StreamJITFrameOptimizations(
-    SpliceableJSONWriter& aWriter, UniqueJSONStrings& aUniqueStrings,
-    JSContext* aContext, const JS::ProfiledFrameHandle& aJITFrame) {
-  aWriter.StartObjectElement();
-  {
-    aWriter.StartArrayProperty("types");
-    {
-      auto op = MakeForEachTrackedOptimizationTypeInfoLambdaOp(
-          [&](JS::TrackedTypeSite site, const char* mirType,
-              const nsTArray<TypeInfo>& typeset) {
-            aWriter.StartObjectElement();
-            {
-              aUniqueStrings.WriteProperty(aWriter, "site",
-                                           JS::TrackedTypeSiteString(site));
-              aUniqueStrings.WriteProperty(aWriter, "mirType", mirType);
-
-              if (!typeset.IsEmpty()) {
-                aWriter.StartArrayProperty("typeset");
-                for (const TypeInfo& typeInfo : typeset) {
-                  aWriter.StartObjectElement();
-                  {
-                    aUniqueStrings.WriteProperty(aWriter, "keyedBy",
-                                                 typeInfo.mKeyedBy->get());
-                    if (typeInfo.mName) {
-                      aUniqueStrings.WriteProperty(aWriter, "name",
-                                                   typeInfo.mName->get());
-                    }
-                    if (typeInfo.mLocation) {
-                      aUniqueStrings.WriteProperty(aWriter, "location",
-                                                   typeInfo.mLocation->get());
-                    }
-                    if (typeInfo.mLineNumber.isSome()) {
-                      aWriter.IntProperty("line", *typeInfo.mLineNumber);
-                    }
-                  }
-                  aWriter.EndObject();
-                }
-                aWriter.EndArray();
-              }
-            }
-            aWriter.EndObject();
-          });
-      aJITFrame.forEachOptimizationTypeInfo(op);
-    }
-    aWriter.EndArray();
-
-    JS::Rooted<JSScript*> script(aContext);
-    jsbytecode* pc;
-    aWriter.StartObjectProperty("attempts");
-    {
-      {
-        JSONSchemaWriter schema(aWriter);
-        schema.WriteField("strategy");
-        schema.WriteField("outcome");
-      }
-
-      aWriter.StartArrayProperty("data");
-      {
-        auto op = MakeForEachTrackedOptimizationAttemptsLambdaOp(
-            [&](JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) {
-              enum Schema : uint32_t { STRATEGY = 0, OUTCOME = 1 };
-
-              AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
-              writer.StringElement(STRATEGY,
-                                   JS::TrackedStrategyString(strategy));
-              writer.StringElement(OUTCOME, JS::TrackedOutcomeString(outcome));
-            });
-        aJITFrame.forEachOptimizationAttempt(op, script.address(), &pc);
-      }
-      aWriter.EndArray();
-    }
-    aWriter.EndObject();
-
-    if (JSAtom* name = js::GetPropertyNameFromPC(script, pc)) {
-      char buf[512];
-      JS_PutEscapedLinearString(buf, ArrayLength(buf),
-                                js::AtomToLinearString(name), 0);
-      aUniqueStrings.WriteProperty(aWriter, "propertyName", buf);
-    }
-
-    unsigned line, column;
-    line = JS_PCToLineNumber(script, pc, &column);
-    aWriter.IntProperty("line", line);
-    aWriter.IntProperty("column", column);
-  }
-  aWriter.EndObject();
-}
-
 static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
                            UniqueJSONStrings& aUniqueStrings,
                            const JS::ProfiledFrameHandle& aJITFrame) {
@@ -615,15 +467,6 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
   writer.StringElement(
       IMPLEMENTATION,
       frameKind == JS::ProfilingFrameIterator::Frame_Ion ? "ion" : "baseline");
-
-  if (aJITFrame.hasTrackedOptimizations()) {
-    writer.FreeFormElement(
-        OPTIMIZATIONS,
-        [&](SpliceableJSONWriter& aWriter, UniqueJSONStrings& aUniqueStrings) {
-          StreamJITFrameOptimizations(aWriter, aUniqueStrings, aContext,
-                                      aJITFrame);
-        });
-  }
 
   const JS::ProfilingCategoryPairInfo& info =
       JS::GetProfilingCategoryPairInfo(JS::ProfilingCategoryPair::JS);

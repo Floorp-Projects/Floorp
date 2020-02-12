@@ -427,8 +427,6 @@ class IonTrackedOptimizationsAttempts {
     // Cannot be empty.
     MOZ_ASSERT(start < end);
   }
-
-  void forEach(JS::ForEachTrackedOptimizationAttemptOp& op);
 };
 
 struct IonTrackedTypeWithAddendum {
@@ -479,30 +477,6 @@ class IonTrackedOptimizationsTypeInfo {
   }
 
   bool empty() const { return start_ == end_; }
-
-  // Unlike IonTrackedOptimizationAttempts,
-  // JS::ForEachTrackedOptimizationTypeInfoOp cannot be used directly. The
-  // internal API needs to deal with engine-internal data structures (e.g.,
-  // TypeSet::Type) directly.
-  //
-  // An adapter is provided below.
-  struct ForEachOp {
-    virtual void readType(const IonTrackedTypeWithAddendum& tracked) = 0;
-    virtual void operator()(JS::TrackedTypeSite site, MIRType mirType) = 0;
-  };
-
-  class ForEachOpAdapter : public ForEachOp {
-    JS::ForEachTrackedOptimizationTypeInfoOp& op_;
-
-   public:
-    explicit ForEachOpAdapter(JS::ForEachTrackedOptimizationTypeInfoOp& op)
-        : op_(op) {}
-
-    void readType(const IonTrackedTypeWithAddendum& tracked) override;
-    void operator()(JS::TrackedTypeSite site, MIRType mirType) override;
-  };
-
-  void forEach(ForEachOp& op, const IonTrackedTypeVector* allTypes);
 };
 
 template <class Entry>
