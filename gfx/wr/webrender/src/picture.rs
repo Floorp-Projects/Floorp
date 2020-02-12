@@ -122,7 +122,7 @@ use crate::prim_store::backdrop::Backdrop;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 #[cfg(any(feature = "capture", feature = "replay"))]
-use crate::prim_store::gradient::{LinearGradient, RadialGradient, ConicGradient};
+use crate::prim_store::gradient::{LinearGradient, RadialGradient};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::prim_store::image::{Image, YuvImage};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -2714,7 +2714,6 @@ impl TileCacheInstance {
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
-            PrimitiveInstanceKind::ConicGradient { .. } |
             PrimitiveInstanceKind::Backdrop { .. } => {
                 // These don't contribute dependencies
             }
