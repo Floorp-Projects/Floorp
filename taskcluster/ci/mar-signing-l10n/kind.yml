@@ -21,17 +21,23 @@ only-for-build-platforms:
     - win64-aarch64-shippable/opt
     - linux-nightly/opt
     - linux-devedition-nightly/opt
+    - linux-devedition/opt
     - linux64-nightly/opt
     - linux64-devedition-nightly/opt
+    - linux64-devedition/opt
     - linux64-asan-reporter-nightly/opt
     - macosx64-nightly/opt
     - macosx64-devedition-nightly/opt
+    - macosx64-devedition/opt
     - win32-nightly/opt
     - win32-devedition-nightly/opt
+    - win32-devedition/opt
     - win64-nightly/opt
     - win64-devedition-nightly/opt
+    - win64-devedition/opt
     - win64-aarch64-nightly/opt
     - win64-aarch64-devedition-nightly/opt
+    - win64-aarch64-devedition/opt
 
 job-template:
     shipping-phase: promote

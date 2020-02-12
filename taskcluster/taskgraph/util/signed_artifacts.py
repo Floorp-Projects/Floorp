@@ -11,8 +11,9 @@ from taskgraph.util.declarative_artifacts import get_geckoview_upstream_artifact
 
 
 LANGPACK_SIGN_PLATFORMS = {  # set
-    'linux64-shippable', 'linux64-devedition-nightly',
-    'macosx64-shippable', 'macosx64-devedition-nightly',
+    'linux64-shippable', 'linux64-devedition',
+    'macosx64-shippable', 'macosx64-devedition',
+    'linux64-devedition-nightly', 'macosx64-devedition-nightly',
 }
 
 

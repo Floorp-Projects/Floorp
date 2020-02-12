@@ -20,6 +20,7 @@ only-for-attributes:
 only-for-build-platforms:
     - linux64-shippable/opt
     - linux64-devedition-nightly/opt
+    - linux64-devedition/opt
 
 job-template:
     description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
