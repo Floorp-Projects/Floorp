@@ -536,11 +536,6 @@ class MDefinition : public MNode {
   InlineScriptTree* trackedTree() const {
     return trackedSite_ ? trackedSite_->tree() : nullptr;
   }
-  TrackedOptimizations* trackedOptimizations() const {
-    return trackedSite_ && trackedSite_->hasOptimizations()
-               ? trackedSite_->optimizations()
-               : nullptr;
-  }
 
   JSScript* profilerLeaveScript() const {
     return trackedTree()->outermostCaller()->script();

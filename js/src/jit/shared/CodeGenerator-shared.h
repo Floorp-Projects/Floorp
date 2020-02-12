@@ -111,10 +111,6 @@ class CodeGeneratorShared : public LElementVisitor {
 
   bool stringsCanBeInNursery() const { return gen->stringsCanBeInNursery(); }
 
-  bool isOptimizationTrackingEnabled() {
-    return gen->isOptimizationTrackingEnabled();
-  }
-
  protected:
   // The offset of the first instruction of the OSR entry block from the
   // beginning of the code buffer.
