@@ -291,8 +291,15 @@ Finder.prototype = {
    *  linksOnly Only consider nodes that are links for the search.
    *  drawOutline Puts an outline around matched links.
    *  useSubFrames True to iterate over subframes.
+   *  caseSensitive True for case sensitive searching.
+   *  entireWord True to match entire words.
+   *  matchDiacritics True to match diacritics.
    */
   find(options) {
+    this.caseSensitive = options.caseSensitive;
+    this.entireWord = options.entireWord;
+    this.matchDiacritics = options.matchDiacritics;
+
     this._lastFindResult = this._fastFind.find(
       options.searchString,
       options.linksOnly,

@@ -349,6 +349,103 @@ add_task(async function test_hotkey_insubframe() {
   gBrowser.removeTab(tab);
 });
 
+/**
+ * Reloading a page should use the same match case / whole word
+ * state for the search.
+ */
+add_task(async function test_preservestate_on_reload() {
+  for (let stateChange of ["case-sensitive", "entire-word"]) {
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "data:text/html,<p>There is a cat named Theo in the kitchen with another cat named Catherine. The two of them are thirsty."
+    );
+
+    // Start a find and wait for the findbar to open.
+    let findBarOpenPromise = BrowserTestUtils.waitForEvent(
+      gBrowser,
+      "findbaropen"
+    );
+    EventUtils.synthesizeKey("f", { accelKey: true });
+    await findBarOpenPromise;
+
+    let isEntireWord = stateChange == "entire-word";
+
+    let findbar = await gBrowser.getFindBar();
+
+    // Find some text.
+    let promiseMatches = promiseGetMatchCount(findbar);
+    await promiseFindFinished("The", true);
+
+    let matches = await promiseMatches;
+    is(matches.current, 1, "Correct match position " + stateChange);
+    is(matches.total, 7, "Correct number of matches " + stateChange);
+
+    // Turn on the case sensitive or entire word option.
+    findbar.getElement("find-" + stateChange).click();
+
+    promiseMatches = promiseGetMatchCount(findbar);
+    gFindBar.onFindAgainCommand();
+    matches = await promiseMatches;
+    is(
+      matches.current,
+      2,
+      "Correct match position after state change matches " + stateChange
+    );
+    is(
+      matches.total,
+      isEntireWord ? 2 : 3,
+      "Correct number after state change matches " + stateChange
+    );
+
+    // Reload the page.
+    let loadedPromise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      true
+    );
+    gBrowser.reload();
+    await loadedPromise;
+
+    // Perform a find again. The state should be preserved.
+    promiseMatches = promiseGetMatchCount(findbar);
+    gFindBar.onFindAgainCommand();
+    matches = await promiseMatches;
+    is(
+      matches.current,
+      1,
+      "Correct match position after reload and find again " + stateChange
+    );
+    is(
+      matches.total,
+      isEntireWord ? 2 : 3,
+      "Correct number of matches after reload and find again " + stateChange
+    );
+
+    // Turn off the case sensitive or entire word option and find again.
+    findbar.getElement("find-" + stateChange).click();
+
+    promiseMatches = promiseGetMatchCount(findbar);
+    gFindBar.onFindAgainCommand();
+    matches = await promiseMatches;
+
+    is(
+      matches.current,
+      isEntireWord ? 4 : 2,
+      "Correct match position after reload and find again reset " + stateChange
+    );
+    is(
+      matches.total,
+      7,
+      "Correct number of matches after reload and find again reset " +
+        stateChange
+    );
+
+    findbar.clear();
+    await closeFindbarAndWait(findbar);
+
+    gBrowser.removeTab(tab);
+  }
+});
+
 async function promiseFindFinished(searchText, highlightOn) {
   let findbar = await gBrowser.getFindBar();
   findbar.startFind(findbar.FIND_NORMAL);
@@ -389,6 +486,23 @@ async function promiseFindFinished(searchText, highlightOn) {
       findbar.browser.finder.addResultListener(resultListener);
       findbar._find();
     });
+  });
+}
+
+function promiseGetMatchCount(findbar) {
+  return new Promise(resolve => {
+    let resultListener = {
+      onFindResult() {},
+      onCurrentSelection() {},
+      onHighlightFinished() {},
+      onMatchesCountResult(response) {
+        if (response.total > 0) {
+          findbar.browser.finder.removeResultListener(resultListener);
+          resolve(response);
+        }
+      },
+    };
+    findbar.browser.finder.addResultListener(resultListener);
   });
 }
 
