@@ -24,7 +24,7 @@ nsBaseCommandController::nsBaseCommandController(
     nsControllerCommandTable* aControllerCommandTable)
     : mCommandContextRawPtr(nullptr), mCommandTable(aControllerCommandTable) {}
 
-nsBaseCommandController::~nsBaseCommandController() {}
+nsBaseCommandController::~nsBaseCommandController() = default;
 
 NS_IMETHODIMP
 nsBaseCommandController::SetCommandContext(nsISupports* aCommandContext) {
