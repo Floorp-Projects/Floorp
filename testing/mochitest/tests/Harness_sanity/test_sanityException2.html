@@ -11,6 +11,7 @@ SimpleTest.waitForExplicitFinish();
 ok(true, "a call to ok");
 SimpleTest.executeSoon(function() {
   SimpleTest.expectUncaughtException();
+  // eslint-disable-next-line no-throw-literal
   throw "an uncaught exception";
 });
 SimpleTest.executeSoon(function() {

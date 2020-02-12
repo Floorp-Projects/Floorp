@@ -71,15 +71,15 @@ add_task(async function() {
     },
     "SpecialPowers.spawn-subframe": () => {
       return SpecialPowers.spawn(frame, [subframeSrc], async src => {
-        let frame = this.content.document.createElement("iframe");
-        frame.src = src;
-        this.content.document.body.appendChild(frame);
+        let subFrame = this.content.document.createElement("iframe");
+        subFrame.src = src;
+        this.content.document.body.appendChild(subFrame);
 
         await new Promise(resolve => {
-          frame.addEventListener("load", resolve, { once: true });
+          subFrame.addEventListener("load", resolve, { once: true });
         });
 
-        await SpecialPowers.spawn(frame, [], () => {
+        await SpecialPowers.spawn(subFrame, [], () => {
           Assert.equal(1, 2, "Thing");
           Assert.equal(1, 1, "Hmm");
           Assert.ok(true, "Yay.");

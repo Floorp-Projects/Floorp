@@ -30,6 +30,7 @@
 
     is(result, "Hello there.", "Got correct element text from frame");
 
+    /* eslint-disable no-shadow */
     result = await SpecialPowers.spawn(frame, ["#hello"], selector => {
       return SpecialPowers.spawn(content.parent, [selector], selector => {
         let elem = content.document.querySelector(selector);
@@ -54,7 +55,7 @@
 
     is(result, "Hello there.", "Got correct element text from browsing context");
 
-    let line = 58; // Keep this in sync with the line number where the callback function starts.
+    let line = 59; // Keep this in sync with the line number where the callback function starts.
     let callback = () => {
       let e = new Error("Hello.");
       return { filename: e.fileName, lineNumber: e.lineNumber };

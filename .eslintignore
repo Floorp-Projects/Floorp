@@ -175,9 +175,6 @@ services/fxaccounts/FxAccountsPairingChannel.js
 # Servo is imported.
 servo/
 
-# third party modules
-testing/mochitest/tests/Harness_sanity/
-
 # Test files that we don't want to lint (preprocessed, minified etc)
 testing/marionette/atom.js
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
