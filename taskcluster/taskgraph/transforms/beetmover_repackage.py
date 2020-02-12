@@ -177,8 +177,8 @@ def strip_unwanted_langpacks_from_worker(config, jobs):
     This explicitly deletes langpacks from upstream artifacts and from artifact-maps.
     Due to limitations in declarative artifacts, doing this was our easiest way right now.
     """
-    ALWAYS_OK_PLATFORMS = {'linux64-shippable', 'linux64-devedition-nightly'}
-    OSX_OK_PLATFORMS = {'macosx64-shippable', 'macosx64-devedition-nightly'}
+    ALWAYS_OK_PLATFORMS = {'linux64-shippable', 'linux64-devedition-nightly', 'linux64-devedition'}
+    OSX_OK_PLATFORMS = {'macosx64-shippable', 'macosx64-devedition-nightly', 'macosx64-devedition'}
     for job in jobs:
         platform = job['attributes'].get('build_platform')
         if platform in ALWAYS_OK_PLATFORMS:
