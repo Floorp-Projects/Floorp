@@ -6114,6 +6114,15 @@
   value: false
   mirror: always
 
+# Do we need explicit approval from the application to allow access to EME?
+# If true, Gecko will ask for permission before allowing MediaKeySystemAccess.
+# At time of writing this is aimed at GeckoView, and setting this to true
+# outside of GeckoView or test environments will likely break EME.
+- name: media.eme.require-app-approval
+  type: bool
+  value: false
+  mirror: always
+
 - name: media.eme.audio.blank
   type: RelaxedAtomicBool
   value: false
