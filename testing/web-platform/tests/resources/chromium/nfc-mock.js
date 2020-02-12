@@ -132,7 +132,7 @@ function matchesWatchOptions(message, options) {
 
 function createNDEFError(type) {
   return {
-    error: type ?
+    error: type != null ?
         new device.mojom.NDEFError({errorType: type, errorMessage: ''}) :
         null
   };
