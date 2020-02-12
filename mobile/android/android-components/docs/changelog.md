@@ -18,6 +18,9 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 74.0
     * `browser-engine-gecko-nightly`: GeckoView 75.0
 
+* **browser-engine-gecko-nightly**, **concept-engine**
+  * Updated `WebPushHandler` and `GeckoWebPushHandler` to accept push scopes for `onSubscriptionChanged` events.
+
 * **WebExtensions refactor**
   * The Web Extensions related methods have been refactored from `Engine` into a new `WebExtensionRuntime` interface.
   * The `Engine` interface now implements the `WebExtensionRuntime` interface.
@@ -60,7 +63,6 @@ permalink: /changelog/
 
 * **feature-awesomebar**
   * Added `showDescription` parameter (default to `true`) to `SearchSuggestionProvider` constructors to add the possibility of removing search suggestion description.
-
 
 # 31.0.0
 

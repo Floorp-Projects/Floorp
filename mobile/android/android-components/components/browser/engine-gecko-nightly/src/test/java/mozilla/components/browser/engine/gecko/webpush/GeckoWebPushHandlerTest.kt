@@ -46,5 +46,9 @@ class GeckoWebPushHandlerTest {
         handler.onSubscriptionChanged(subscription)
 
         verify(controller).onSubscriptionChanged(any())
+
+        handler.onSubscriptionChanged(any<String>())
+
+        verify(controller).onSubscriptionChanged(any())
     }
 }
