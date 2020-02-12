@@ -68,7 +68,7 @@ class WaylandDMABufSurface {
   virtual EGLImageKHR GetEGLImage(int aPlane = 0) = 0;
 
   SurfaceType GetSurfaceType() { return mSurfaceType; };
-  virtual uint32_t GetPlaneCount() = 0;
+  virtual uint32_t GetTextureCount() = 0;
 
   virtual WaylandDMABufSurfaceRGBA* GetAsWaylandDMABufSurfaceRGBA() {
     return nullptr;
@@ -132,7 +132,7 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   GLuint GetTexture(int aPlane = 0) { return mTexture; };
   EGLImageKHR GetEGLImage(int aPlane = 0) { return mEGLImage; };
 
-  uint32_t GetPlaneCount() { return mBufferPlaneCount; };
+  uint32_t GetTextureCount() { return 1; };
 
   void SetWLBuffer(struct wl_buffer* aWLBuffer);
   wl_buffer* GetWLBuffer();
@@ -196,7 +196,7 @@ class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
   void ReleaseTextures();
   GLuint GetTexture(int aPlane = 0) { return mTexture[aPlane]; };
 
-  uint32_t GetPlaneCount();
+  uint32_t GetTextureCount() { return 2; };
 
   void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
     mColorSpace = aColorSpace;
