@@ -685,7 +685,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   }
   *entry = *lookedUpEntry;
 
-  MOZ_ASSERT(entry->isIon() || entry->isIonCache() || entry->isBaseline() ||
+  MOZ_ASSERT(entry->isIon() || entry->isBaseline() ||
              entry->isBaselineInterpreter() || entry->isDummy());
 
   // Dummy frames produce no stack frames.
