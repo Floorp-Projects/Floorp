@@ -243,7 +243,8 @@ void RenderCompositorOGL::CompositorEndFrame() {
 
 void RenderCompositorOGL::Bind(wr::NativeTileId aId,
                                wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
-                               wr::DeviceIntRect aDirtyRect) {
+                               wr::DeviceIntRect aDirtyRect,
+                               wr::DeviceIntRect aValidRect) {
   MOZ_RELEASE_ASSERT(!mCurrentlyBoundNativeLayer);
 
   auto surfaceCursor = mSurfaces.find(aId.surface_id);
@@ -253,6 +254,10 @@ void RenderCompositorOGL::Bind(wr::NativeTileId aId,
   auto layerCursor = surface.mNativeLayers.find(TileKey(aId.x, aId.y));
   MOZ_RELEASE_ASSERT(layerCursor != surface.mNativeLayers.end());
   RefPtr<layers::NativeLayer> layer = layerCursor->second;
+
+  gfx::IntRect validRect(aValidRect.origin.x, aValidRect.origin.y,
+                         aValidRect.size.width, aValidRect.size.height);
+  layer->SetValidRect(validRect);
 
   gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
                          aDirtyRect.size.width, aDirtyRect.size.height);
@@ -344,14 +349,16 @@ void RenderCompositorOGL::AddSurface(wr::NativeSurfaceId aId,
         aPosition.x + surface.mTileSize.width * it->first.mX,
         aPosition.y + surface.mTileSize.height * it->first.mY, layerSize.width,
         layerSize.height);
+    gfx::IntRect validRect = layer->GetValidRect() + layerRect.TopLeft();
     gfx::IntRect clipRect(aClipRect.origin.x, aClipRect.origin.y,
                           aClipRect.size.width, aClipRect.size.height);
+    gfx::IntRect realClip = clipRect.Intersect(validRect);
     layer->SetPosition(layerRect.TopLeft());
-    layer->SetClipRect(Some(clipRect));
+    layer->SetClipRect(Some(realClip));
     mAddedLayers.AppendElement(layer);
 
     mAddedPixelCount += layerRect.Area();
-    mAddedClippedPixelCount += clipRect.Intersect(layerRect).Area();
+    mAddedClippedPixelCount += realClip.Intersect(layerRect).Area();
   }
 }
 

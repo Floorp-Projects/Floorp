@@ -723,6 +723,7 @@ pub struct PictureCacheTarget {
     pub alpha_batch_container: AlphaBatchContainer,
     pub clear_color: Option<ColorF>,
     pub dirty_rect: DeviceIntRect,
+    pub valid_rect: DeviceIntRect,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]

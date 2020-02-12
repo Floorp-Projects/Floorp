@@ -120,6 +120,11 @@ class NativeLayer {
 
   virtual gfx::IntRect GetRect() = 0;
 
+  // The valid rect is stored here, but applied in the compositor code
+  // by combining it with the surface clip rect.
+  virtual void SetValidRect(const gfx::IntRect& aValidRect) = 0;
+  virtual gfx::IntRect GetValidRect() = 0;
+
   // Set an optional clip rect on the layer. The clip rect is in the same
   // coordinate space as the layer rect.
   virtual void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) = 0;

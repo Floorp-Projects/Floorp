@@ -186,6 +186,8 @@ class NativeLayerCA : public NativeLayer {
   void SetPosition(const gfx::IntPoint& aPosition) override;
   gfx::IntPoint GetPosition() override;
   gfx::IntRect GetRect() override;
+  void SetValidRect(const gfx::IntRect& aValidRect) override;
+  gfx::IntRect GetValidRect() override;
   RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       const gfx::IntRegion& aUpdateRegion,
       gfx::BackendType aBackendType) override;
@@ -344,6 +346,7 @@ class NativeLayerCA : public NativeLayer {
   Representation mOffscreenRepresentation;
 
   gfx::IntPoint mPosition;
+  gfx::IntRect mValidRect;
   const gfx::IntSize mSize;
   Maybe<gfx::IntRect> mClipRect;
   float mBackingScale = 1.0f;
