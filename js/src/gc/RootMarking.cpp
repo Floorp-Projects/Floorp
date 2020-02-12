@@ -303,8 +303,6 @@ void js::gc::GCRuntime::traceRuntimeForMinorGC(JSTracer* trc,
   // the verifier for the last time.
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
 
-  jit::JitRuntime::TraceJitcodeGlobalTableForMinorGC(trc);
-
   traceRuntimeCommon(trc, TraceRuntime);
 }
 

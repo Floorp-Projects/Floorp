@@ -6222,28 +6222,6 @@ void CodeGenerator::emitDebugForceBailing(LInstruction* lir) {
 }
 #endif
 
-static void DumpTrackedSite(const BytecodeSite* site) {
-  if (!JitSpewEnabled(JitSpew_OptimizationTracking)) {
-    return;
-  }
-
-#ifdef JS_JITSPEW
-  unsigned column = 0;
-  unsigned lineNumber = PCToLineNumber(site->script(), site->pc(), &column);
-  JitSpew(JitSpew_OptimizationTracking, "Types for %s at %s:%u:%u",
-          CodeName(JSOp(*site->pc())), site->script()->filename(), lineNumber,
-          column);
-#endif
-}
-
-static void DumpTrackedOptimizations(TrackedOptimizations* optimizations) {
-  if (!JitSpewEnabled(JitSpew_OptimizationTracking)) {
-    return;
-  }
-
-  optimizations->spew(JitSpew_OptimizationTracking);
-}
-
 bool CodeGenerator::generateBody() {
   JitSpew(JitSpew_Codegen, "==== BEGIN CodeGenerator::generateBody ====\n");
   IonScriptCounts* counts = maybeCreateScriptCounts();
@@ -6295,7 +6273,6 @@ bool CodeGenerator::generateBody() {
         return false;
       }
     }
-    TrackedOptimizations* last = nullptr;
 
 #if defined(JS_ION_PERF)
     if (!perfSpewer->startBasicBlock(current->mir(), masm)) {
@@ -6334,19 +6311,6 @@ bool CodeGenerator::generateBody() {
             return false;
           }
         }
-
-        // Track the start native offset of optimizations.
-        if (iter->mirRaw()->trackedOptimizations()) {
-          if (last != iter->mirRaw()->trackedOptimizations()) {
-            DumpTrackedSite(iter->mirRaw()->trackedSite());
-            DumpTrackedOptimizations(iter->mirRaw()->trackedOptimizations());
-            last = iter->mirRaw()->trackedOptimizations();
-          }
-          if (!addTrackedOptimizationsEntry(
-                  iter->mirRaw()->trackedOptimizations())) {
-            return false;
-          }
-        }
       }
 
       setElement(*iter);  // needed to encode correct snapshot location.
@@ -6367,11 +6331,6 @@ bool CodeGenerator::generateBody() {
         case LNode::Opcode::Invalid:
         default:
           MOZ_CRASH("Invalid LIR op");
-      }
-
-      // Track the end native offset of optimizations.
-      if (iter->mirRaw() && iter->mirRaw()->trackedOptimizations()) {
-        extendTrackedOptimizationsEntry(iter->mirRaw()->trackedOptimizations());
       }
 
 #ifdef DEBUG
@@ -10746,32 +10705,6 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
 
     // nativeToBytecodeScriptList_ is no longer needed.
     js_free(nativeToBytecodeScriptList_);
-
-    // Generate the tracked optimizations map.
-    if (isOptimizationTrackingEnabled()) {
-      // Treat OOMs and failures as if optimization tracking were turned off.
-      IonTrackedTypeVector* allTypes = cx->new_<IonTrackedTypeVector>();
-      if (allTypes &&
-          generateCompactTrackedOptimizationsMap(cx, code, allTypes)) {
-        const uint8_t* optsRegionTableAddr =
-            trackedOptimizationsMap_ + trackedOptimizationsRegionTableOffset_;
-        const IonTrackedOptimizationsRegionTable* optsRegionTable =
-            (const IonTrackedOptimizationsRegionTable*)optsRegionTableAddr;
-        const uint8_t* optsTypesTableAddr =
-            trackedOptimizationsMap_ + trackedOptimizationsTypesTableOffset_;
-        const IonTrackedOptimizationsTypesTable* optsTypesTable =
-            (const IonTrackedOptimizationsTypesTable*)optsTypesTableAddr;
-        const uint8_t* optsAttemptsTableAddr =
-            trackedOptimizationsMap_ + trackedOptimizationsAttemptsTableOffset_;
-        const IonTrackedOptimizationsAttemptsTable* optsAttemptsTable =
-            (const IonTrackedOptimizationsAttemptsTable*)optsAttemptsTableAddr;
-        entry.initTrackedOptimizations(optsRegionTable, optsTypesTable,
-                                       optsAttemptsTable, allTypes);
-      } else {
-        cx->recoverFromOutOfMemory();
-        js_delete(allTypes);
-      }
-    }
 
     // Add entry to the global table.
     JitcodeGlobalTable* globalTable =

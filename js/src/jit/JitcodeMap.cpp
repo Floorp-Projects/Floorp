@@ -132,19 +132,6 @@ void JitcodeGlobalEntry::IonEntry::destroy() {
   // Free the script list
   js_free(scriptList_);
   scriptList_ = nullptr;
-
-  // The optimizations region and attempts table is in the same block of
-  // memory, the beginning of which is pointed to by
-  // optimizationsRegionTable_->payloadStart().
-  if (optsRegionTable_) {
-    MOZ_ASSERT(optsAttemptsTable_);
-    js_free((void*)optsRegionTable_->payloadStart());
-  }
-  optsRegionTable_ = nullptr;
-  optsTypesTable_ = nullptr;
-  optsAttemptsTable_ = nullptr;
-  js_delete(optsAllTypes_);
-  optsAllTypes_ = nullptr;
 }
 
 void* JitcodeGlobalEntry::BaselineEntry::canonicalNativeAddrFor(
@@ -383,22 +370,12 @@ bool JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry& entry) {
   skiplistSize_++;
   // verifySkiplist(); - disabled for release.
 
-  // Any entries that may directly contain nursery pointers must be marked
-  // during a minor GC to update those pointers.
-  if (entry.canHoldNurseryPointers()) {
-    addToNurseryList(&newEntry->ionEntry());
-  }
-
   return true;
 }
 
 void JitcodeGlobalTable::removeEntry(JitcodeGlobalEntry& entry,
                                      JitcodeGlobalEntry** prevTower) {
   MOZ_ASSERT(!TlsContext.get()->isProfilerSamplingEnabled());
-
-  if (entry.canHoldNurseryPointers()) {
-    removeFromNurseryList(&entry.ionEntry());
-  }
 
   // Unlink query entry.
   for (int level = entry.tower_->height() - 1; level >= 0; level--) {
@@ -578,9 +555,6 @@ void JitcodeGlobalTable::setAllEntriesAsExpired() {
   AutoSuppressProfilerSampling suppressSampling(TlsContext.get());
   for (Range r(*this); !r.empty(); r.popFront()) {
     auto entry = r.front();
-    if (entry->canHoldNurseryPointers()) {
-      removeFromNurseryList(&entry->ionEntry());
-    }
     entry->setAsExpired();
   }
 }
@@ -591,23 +565,6 @@ struct Unconditionally {
     return true;
   }
 };
-
-void JitcodeGlobalTable::traceForMinorGC(JSTracer* trc) {
-  // Trace only entries that can directly contain nursery pointers.
-
-  MOZ_ASSERT(trc->runtime()->geckoProfiler().enabled());
-  MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
-
-  JSContext* cx = trc->runtime()->mainContextFromOwnThread();
-  AutoSuppressProfilerSampling suppressSampling(cx);
-  JitcodeGlobalEntry::IonEntry* entry = nurseryEntries_;
-  while (entry) {
-    entry->trace<Unconditionally>(trc);
-    JitcodeGlobalEntry::IonEntry* prev = entry;
-    entry = entry->nextNursery_;
-    removeFromNurseryList(prev);
-  }
-}
 
 struct IfUnmarked {
   template <typename T>
@@ -666,9 +623,6 @@ bool JitcodeGlobalTable::markIteratively(GCMarker* marker) {
     // types used by optimizations and scripts used for pc to line number
     // mapping, alive as well.
     if (!rangeStart || !entry->isSampled(*rangeStart)) {
-      if (entry->canHoldNurseryPointers()) {
-        removeFromNurseryList(&entry->ionEntry());
-      }
       entry->setAsExpired();
       if (!entry->baseEntry().isJitcodeMarkedFromAnyThread(marker->runtime())) {
         continue;
@@ -753,31 +707,6 @@ bool JitcodeGlobalEntry::IonEntry::trace(JSTracer* trc) {
     }
   }
 
-  if (!optsAllTypes_) {
-    return tracedAny;
-  }
-
-  for (IonTrackedTypeWithAddendum* iter = optsAllTypes_->begin();
-       iter != optsAllTypes_->end(); iter++) {
-    if (ShouldTraceProvider::ShouldTrace(rt, &iter->type)) {
-      iter->type.trace(trc);
-      tracedAny = true;
-    }
-    if (iter->hasAllocationSite() &&
-        ShouldTraceProvider::ShouldTrace(rt, &iter->script)) {
-      TraceManuallyBarrieredEdge(
-          trc, &iter->script,
-          "jitcodeglobaltable-ionentry-type-addendum-script");
-      tracedAny = true;
-    } else if (iter->hasConstructor() &&
-               ShouldTraceProvider::ShouldTrace(rt, &iter->constructor)) {
-      TraceManuallyBarrieredEdge(
-          trc, &iter->constructor,
-          "jitcodeglobaltable-ionentry-type-addendum-constructor");
-      tracedAny = true;
-    }
-  }
-
   return tracedAny;
 }
 
@@ -786,38 +715,11 @@ void JitcodeGlobalEntry::IonEntry::sweepChildren() {
     MOZ_ALWAYS_FALSE(
         IsAboutToBeFinalizedUnbarriered(&sizedScriptList()->pairs[i].script));
   }
-
-  if (!optsAllTypes_) {
-    return;
-  }
-
-  for (IonTrackedTypeWithAddendum* iter = optsAllTypes_->begin();
-       iter != optsAllTypes_->end(); iter++) {
-    // Types may move under compacting GC. This method is only called on
-    // entries that are sampled, and thus are not about to be finalized.
-    MOZ_ALWAYS_FALSE(TypeSet::IsTypeAboutToBeFinalized(&iter->type));
-    if (iter->hasAllocationSite()) {
-      MOZ_ALWAYS_FALSE(IsAboutToBeFinalizedUnbarriered(&iter->script));
-    } else if (iter->hasConstructor()) {
-      MOZ_ALWAYS_FALSE(IsAboutToBeFinalizedUnbarriered(&iter->constructor));
-    }
-  }
 }
 
 bool JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread(JSRuntime* rt) {
   for (unsigned i = 0; i < numScripts(); i++) {
     if (!IsMarkedUnbarriered(rt, &sizedScriptList()->pairs[i].script)) {
-      return false;
-    }
-  }
-
-  if (!optsAllTypes_) {
-    return true;
-  }
-
-  for (IonTrackedTypeWithAddendum* iter = optsAllTypes_->begin();
-       iter != optsAllTypes_->end(); iter++) {
-    if (!TypeSet::IsTypeMarked(rt, &iter->type)) {
       return false;
     }
   }
@@ -1418,14 +1320,8 @@ JS::ProfiledFrameHandle::ProfiledFrameHandle(JSRuntime* rt,
       addr_(addr),
       canonicalAddr_(nullptr),
       label_(label),
-      depth_(depth),
-      optsIndex_() {
-  updateHasTrackedOptimizations();
-
+      depth_(depth) {
   if (!canonicalAddr_) {
-    // If the entry has tracked optimizations, updateHasTrackedOptimizations
-    // would have updated the canonical address.
-    MOZ_ASSERT_IF(entry_.isIon(), !hasTrackedOptimizations());
     canonicalAddr_ = entry_.canonicalNativeAddrFor(rt_, addr_);
   }
 }
