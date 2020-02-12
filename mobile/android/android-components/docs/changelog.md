@@ -12,6 +12,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 73.0
+    * `browser-engine-gecko-beta`: GeckoView 74.0
+    * `browser-engine-gecko-nightly`: GeckoView 75.0
+
 * **WebExtensions refactor**
   * The Web Extensions related methods have been refactored from `Engine` into a new `WebExtensionRuntime` interface.
   * The `Engine` interface now implements the `WebExtensionRuntime` interface.
