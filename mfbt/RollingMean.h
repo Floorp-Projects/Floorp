@@ -44,7 +44,15 @@ class RollingMean {
     MOZ_ASSERT(aMaxValues > 0);
   }
 
-  RollingMean& operator=(RollingMean&& aOther) = default;
+  RollingMean& operator=(RollingMean&& aOther) {
+    MOZ_ASSERT(this != &aOther, "self-assignment is forbidden");
+    this->~RollingMean();
+    new (this) RollingMean(aOther.mMaxValues);
+    mInsertIndex = aOther.mInsertIndex;
+    mTotal = aOther.mTotal;
+    mValues.swap(aOther.mValues);
+    return *this;
+  }
 
   /**
    * Insert a value into the rolling mean.
