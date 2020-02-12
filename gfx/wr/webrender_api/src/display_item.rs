@@ -136,6 +136,7 @@ pub enum DisplayItem {
     PushShadow(PushShadowDisplayItem),
     Gradient(GradientDisplayItem),
     RadialGradient(RadialGradientDisplayItem),
+    ConicGradient(ConicGradientDisplayItem),
     Image(ImageDisplayItem),
     RepeatingImage(RepeatingImageDisplayItem),
     YuvImage(YuvImageDisplayItem),
@@ -183,6 +184,7 @@ pub enum DebugDisplayItem {
     PushShadow(PushShadowDisplayItem),
     Gradient(GradientDisplayItem),
     RadialGradient(RadialGradientDisplayItem),
+    ConicGradient(ConicGradientDisplayItem),
     Image(ImageDisplayItem),
     RepeatingImage(RepeatingImageDisplayItem),
     YuvImage(YuvImageDisplayItem),
@@ -444,6 +446,7 @@ pub enum NinePatchBorderSource {
     Image(ImageKey),
     Gradient(Gradient),
     RadialGradient(RadialGradient),
+    ConicGradient(ConicGradient),
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
@@ -633,6 +636,15 @@ pub struct RadialGradient {
     pub extend_mode: ExtendMode,
 } // IMPLICIT stops: Vec<GradientStop>
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
+pub struct ConicGradient {
+    pub center: LayoutPoint,
+    pub angle: f32,
+    pub start_offset: f32,
+    pub end_offset: f32,
+    pub extend_mode: ExtendMode,
+} // IMPLICIT stops: Vec<GradientStop>
+
 /// Just an abstraction for bundling up a bunch of clips into a "super clip".
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct ClipChainItem {
@@ -648,6 +660,18 @@ pub struct RadialGradientDisplayItem {
     // defining the bounds of the item. Needs non-trivial backend changes.
     pub bounds: LayoutRect,
     pub gradient: RadialGradient,
+    pub tile_size: LayoutSize,
+    pub tile_spacing: LayoutSize,
+}
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
+pub struct ConicGradientDisplayItem {
+    pub common: CommonItemProperties,
+    /// The area to tile the gradient over (first tile starts at origin of this rect)
+    // FIXME: this should ideally just be `tile_origin` here, with the clip_rect
+    // defining the bounds of the item. Needs non-trivial backend changes.
+    pub bounds: LayoutRect,
+    pub gradient: ConicGradient,
     pub tile_size: LayoutSize,
     pub tile_spacing: LayoutSize,
 }
@@ -1462,6 +1486,7 @@ impl DisplayItem {
             DisplayItem::HitTest(..) => "hit_test",
             DisplayItem::Clip(..) => "clip",
             DisplayItem::ClipChain(..) => "clip_chain",
+            DisplayItem::ConicGradient(..) => "conic_gradient",
             DisplayItem::Gradient(..) => "gradient",
             DisplayItem::Iframe(..) => "iframe",
             DisplayItem::Image(..) => "image",
