@@ -992,6 +992,76 @@ add_task(async function test_image_in_iframe() {
   ]);
 });
 
+add_task(async function test_pdf_viewer_in_iframe() {
+  await test_contextmenu(
+    "#test-pdf-viewer-in-frame",
+    [
+      "context-navigation",
+      null,
+      [
+        "context-back",
+        false,
+        "context-forward",
+        false,
+        "context-reload",
+        true,
+        "context-bookmarkpage",
+        true,
+      ],
+      null,
+      "---",
+      null,
+      "context-savepage",
+      true,
+      ...(hasPocket ? ["context-pocket", true] : []),
+      "---",
+      null,
+      "context-sendpagetodevice",
+      true,
+      [],
+      null,
+      "context-selectall",
+      true,
+      "frame",
+      null,
+      getThisFrameSubMenu([
+        "context-showonlythisframe",
+        true,
+        "context-openframeintab",
+        true,
+        "context-openframe",
+        true,
+        "---",
+        null,
+        "context-reloadframe",
+        true,
+        "---",
+        null,
+        "context-bookmarkframe",
+        true,
+        "context-saveframe",
+        true,
+        "---",
+        null,
+        "context-printframe",
+        true,
+        "---",
+        null,
+        "context-viewframeinfo",
+        true,
+      ]),
+      null,
+      "---",
+      null,
+      "context-viewsource",
+      true,
+      "context-viewinfo",
+      true,
+    ],
+    { maybeScreenshotsPresent: true, shiftkey: true }
+  );
+});
+
 add_task(async function test_textarea() {
   // Disabled since this is seeing spell-check-enabled
   // instead of spell-add-dictionaries-main

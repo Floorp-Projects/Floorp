@@ -854,6 +854,7 @@ class ContextMenuChild extends JSWindowActorChild {
     context.hasMultipleBGImages = false;
     context.isDesignMode = false;
     context.inFrame = false;
+    context.inPDFViewer = false;
     context.inSrcdocFrame = false;
     context.inSyntheticDoc = false;
     context.inTabBrowser = true;
@@ -900,6 +901,10 @@ class ContextMenuChild extends JSWindowActorChild {
     context.frameOuterWindowID = WebNavigationFrames.getFrameId(
       context.target.ownerGlobal
     );
+
+    // Check if we are in the PDF Viewer.
+    context.inPDFViewer =
+      context.target.ownerDocument.nodePrincipal.origin == "resource://pdf.js";
 
     // Check if we are in a synthetic document (stand alone image, video, etc.).
     context.inSyntheticDoc = context.target.ownerDocument.mozSyntheticDocument;
