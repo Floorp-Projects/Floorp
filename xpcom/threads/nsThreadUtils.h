@@ -38,8 +38,6 @@
 /**
  * Create a new thread, and optionally provide an initial event for the thread.
  *
- * @param aName
- *   The name of the thread.
  * @param aResult
  *   The resulting nsIThread object.
  * @param aInitialEvent
@@ -50,7 +48,13 @@
  * @returns NS_ERROR_INVALID_ARG
  *   Indicates that the given name is not unique.
  */
+extern nsresult NS_NewThread(
+    nsIThread** aResult, nsIRunnable* aInitialEvent = nullptr,
+    uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
 
+/**
+ * Creates a named thread, otherwise the same as NS_NewThread
+ */
 extern nsresult NS_NewNamedThread(
     const nsACString& aName, nsIThread** aResult,
     nsIRunnable* aInitialEvent = nullptr,

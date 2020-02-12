@@ -52,9 +52,8 @@ TEST(AutoRefCnt, ThreadSafeAutoRefCntBalance)
   static const size_t kThreadCount = 4;
   nsCOMPtr<nsIThread> threads[kThreadCount];
   for (size_t i = 0; i < kThreadCount; i++) {
-    nsresult rv =
-        NS_NewNamedThread("AutoRefCnt Test", getter_AddRefs(threads[i]),
-                          new nsThreadSafeAutoRefCntRunner);
+    nsresult rv = NS_NewThread(getter_AddRefs(threads[i]),
+                               new nsThreadSafeAutoRefCntRunner);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
   }
   for (size_t i = 0; i < kThreadCount; i++) {
