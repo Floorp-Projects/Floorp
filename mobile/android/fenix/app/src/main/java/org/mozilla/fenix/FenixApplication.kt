@@ -20,7 +20,6 @@ import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.push.PushProcessor
-import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
@@ -107,16 +106,6 @@ open class FenixApplication : LocaleAwareApplication() {
             setDayNightTheme()
             enableStrictMode()
             warmBrowsersCache()
-
-            // Enable the service-experiments component
-            if (settings().isExperimentationEnabled && Config.channel.isReleaseOrBeta) {
-                Experiments.initialize(
-                    applicationContext,
-                    mozilla.components.service.experiments.Configuration(
-                        httpClient = lazy(LazyThreadSafetyMode.NONE) { components.core.client }
-                    )
-                )
-            }
 
             // Make sure the engine is initialized and ready to use.
             components.core.engine.warmUp()
