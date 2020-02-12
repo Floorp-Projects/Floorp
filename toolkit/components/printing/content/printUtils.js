@@ -638,15 +638,15 @@ var PrintUtils = {
       }
 
       // copy the window close handler
-      if (document.documentElement.hasAttribute("onclose")) {
-        this._closeHandlerPP = document.documentElement.getAttribute("onclose");
+      if (window.onclose) {
+        this._closeHandlerPP = window.onclose;
       } else {
         this._closeHandlerPP = null;
       }
-      document.documentElement.setAttribute(
-        "onclose",
-        "PrintUtils.exitPrintPreview(); return false;"
-      );
+      window.onclose = function() {
+        PrintUtils.exitPrintPreview();
+        return false;
+      };
 
       // disable chrome shortcuts...
       window.addEventListener("keydown", this.onKeyDownPP, true);
@@ -673,9 +673,9 @@ var PrintUtils = {
 
     // restore the old close handler
     if (this._closeHandlerPP) {
-      document.documentElement.setAttribute("onclose", this._closeHandlerPP);
+      window.onclose = this._closeHandlerPP;
     } else {
-      document.documentElement.removeAttribute("onclose");
+      window.onclose = null;
     }
     this._closeHandlerPP = null;
 
