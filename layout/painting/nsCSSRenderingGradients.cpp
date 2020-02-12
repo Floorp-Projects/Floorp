@@ -529,8 +529,10 @@ static void ClampColorStops(nsTArray<ColorStop>& aStops) {
 
 namespace mozilla {
 
-static Color GetSpecifiedColor(const StyleGradientItem& aItem,
-                               const ComputedStyle& aStyle) {
+template <typename T>
+static Color GetSpecifiedColor(
+    const StyleGenericGradientItem<StyleColor, T>& aItem,
+    const ComputedStyle& aStyle) {
   if (aItem.IsInterpolationHint()) {
     return Color();
   }
@@ -541,7 +543,8 @@ static Color GetSpecifiedColor(const StyleGradientItem& aItem,
 }
 
 static Maybe<double> GetSpecifiedGradientPosition(
-    const StyleGradientItem& aItem, CSSCoord aLineLength) {
+    const StyleGenericGradientItem<StyleColor, StyleLengthPercentage>& aItem,
+    CSSCoord aLineLength) {
   if (aItem.IsSimpleColorStop()) {
     return Nothing();
   }
@@ -573,7 +576,7 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
   Maybe<size_t> firstUnsetPosition;
   auto span = aGradient.items.AsSpan();
   for (size_t i = 0; i < aGradient.items.Length(); ++i) {
-    const StyleGradientItem& stop = span[i];
+    const auto& stop = span[i];
     double position;
 
     Maybe<double> specifiedPosition =
