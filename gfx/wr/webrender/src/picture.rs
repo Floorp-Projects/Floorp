@@ -2428,6 +2428,11 @@ impl TileCacheInstance {
             }
         }
 
+        // When old tiles that remain after the loop, dirty rects are not valid.
+        if !self.old_tiles.is_empty() {
+            frame_state.composite_state.dirty_rects_are_valid = false;
+        }
+
         // Any old tiles that remain after the loop above are going to be dropped. For
         // simple composite mode, the texture cache handle will expire and be collected
         // by the texture cache. For native compositor mode, we need to explicitly
