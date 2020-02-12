@@ -1972,24 +1972,3 @@ def dump_syms(dump_syms_override, toolchain_search_path):
     '''))
 
 set_config('DUMP_SYMS', dump_syms)
-
-# Fork server
-@depends(target, build_project)
-def forkserver_default(target, build_project):
-    return build_project == 'browser' and \
-        ((target.os == 'GNU' and target.kernel == 'Linux') or \
-         target.os == 'FreeBSD')
-
-option('--enable-forkserver', default=forkserver_default,
-       env='MOZ_ENABLE_FORKSERVER', help='Enable fork server')
-
-@depends('--enable-forkserver', target)
-def forkserver_flag(value, target):
-    if target.os == 'Android' or \
-       (target.os == 'GNU' and target.kernel == 'Linux') or \
-       target.os == 'FreeBSD':
-        return bool(value)
-    pass
-
-set_config('MOZ_ENABLE_FORKSERVER', forkserver_flag)
-set_define('MOZ_ENABLE_FORKSERVER', forkserver_flag, forkserver_flag)
