@@ -27,6 +27,11 @@ var minimalKeySystemConfiguration = {
   keySystem: 'org.w3.clearkey',
 };
 
+// Config with bogus name not provided by any UA.
+var bogusKeySystemConfiguration = {
+  keySystem: 'bogus',
+};
+
 promise_test(t => {
   return navigator.mediaCapabilities.decodingInfo({
     type: 'file',
@@ -233,4 +238,16 @@ promise_test(t => {
   });
 }, "Test that keySystemAccess is only null when not supported if keySystemConfiguration was used.");
 
+promise_test(t => {
+  return navigator.mediaCapabilities.decodingInfo({
+    type: 'file',
+    video: minimalVideoConfiguration,
+    audio: minimalAudioConfiguration,
+    // Supply bogus config to reliably result in a null keySystemAccess.
+    keySystemConfiguration: bogusKeySystemConfiguration,
+  }).then(ability => {
+    assert_equals(ability.keySystemAccess, null);
+    assert_false(ability.supported);
+  });
+}, "Test that supported=false when keySystemConfiguration is unsupported.");
 </script>
