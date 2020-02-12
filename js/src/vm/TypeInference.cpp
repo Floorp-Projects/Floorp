@@ -461,8 +461,7 @@ bool TypeSet::objectsIntersect(const TypeSet* other) const {
   return false;
 }
 
-template <class TypeListT>
-bool TypeSet::enumerateTypes(TypeListT* list) const {
+bool TypeSet::enumerateTypes(TypeList* list) const {
   /* If any type is possible, there's no need to worry about specifics. */
   if (flags & TYPE_FLAG_UNKNOWN) {
     return list->append(UnknownType());
@@ -496,10 +495,6 @@ bool TypeSet::enumerateTypes(TypeListT* list) const {
 
   return true;
 }
-
-template bool TypeSet::enumerateTypes<TypeSet::TypeList>(TypeList* list) const;
-template bool TypeSet::enumerateTypes<jit::TempTypeList>(
-    jit::TempTypeList* list) const;
 
 inline bool TypeSet::addTypesToConstraint(JSContext* cx,
                                           TypeConstraint* constraint) {
