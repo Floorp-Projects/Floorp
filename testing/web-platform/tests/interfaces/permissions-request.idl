@@ -6,4 +6,3 @@
 partial interface Permissions {
   Promise<PermissionStatus> request(object permissionDesc);
 };
-
