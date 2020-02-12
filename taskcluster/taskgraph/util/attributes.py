@@ -129,10 +129,10 @@ def match_run_on_hg_branches(hg_branch, run_on_hg_branches):
     return False
 
 
-def copy_attributes_from_dependent_job(dep_job):
+def copy_attributes_from_dependent_job(dep_job, denylist=()):
     return {
         attr: dep_job.attributes[attr]
-        for attr in _COPYABLE_ATTRIBUTES if attr in dep_job.attributes
+        for attr in _COPYABLE_ATTRIBUTES if attr in dep_job.attributes and attr not in denylist
     }
 
 
