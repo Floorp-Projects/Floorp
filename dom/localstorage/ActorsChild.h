@@ -181,7 +181,7 @@ class NS_NO_VTABLE LSRequestChildCallback {
   virtual void OnResponse(const LSRequestResponse& aResponse) = 0;
 
  protected:
-  virtual ~LSRequestChildCallback() {}
+  virtual ~LSRequestChildCallback() = default;
 };
 
 /**
@@ -228,7 +228,7 @@ class NS_NO_VTABLE LSSimpleRequestChildCallback {
   virtual void OnResponse(const LSSimpleRequestResponse& aResponse) = 0;
 
  protected:
-  virtual ~LSSimpleRequestChildCallback() {}
+  virtual ~LSSimpleRequestChildCallback() = default;
 };
 
 /**
