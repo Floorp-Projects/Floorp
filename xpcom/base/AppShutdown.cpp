@@ -16,6 +16,7 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Printf.h"
+#include "mozilla/scache/StartupCache.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/LateWriteChecks.h"
@@ -125,6 +126,8 @@ void AppShutdown::Init(AppShutdownMode aMode) {
   int32_t lateWriteChecksPref =
       StaticPrefs::toolkit_shutdown_lateWriteChecksStage();
   sLateWriteChecksPhase = GetShutdownPhaseFromPrefValue(lateWriteChecksPref);
+
+  scache::StartupCache::GetSingleton()->MaybeInitShutdownWrite();
 }
 
 void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
