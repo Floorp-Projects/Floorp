@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Focus Tests"
+  onload="setTimeout(runTest, 0);"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+<script>
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
+SimpleTest.waitForExplicitFinish();
+async function runTest() {
+  // Enable full tab focus model on mac.
+  await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
+  window.openDialog("focus_dialog.xhtml", "_blank", "chrome,modal,noopener", window);
+}
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>
