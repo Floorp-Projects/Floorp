@@ -71,14 +71,14 @@ public class WebPushController {
      * Notify that a given subscription has changed. This is normally a signal to the content
      * that it needs to re-subscribe.
      *
-     * @param subscription The subscription that changed.
+     * @param scope The Service Worker scope associated with this subscription.
      */
     @UiThread
-    public void onSubscriptionChanged(final @NonNull WebPushSubscription subscription) {
+    public void onSubscriptionChanged(final @NonNull String scope) {
         ThreadUtils.assertOnUiThread();
 
         final GeckoBundle msg = new GeckoBundle(1);
-        msg.putBundle("subscription", subscription.toBundle());
+        msg.putString("scope", scope);
         EventDispatcher.getInstance().dispatch("GeckoView:PushSubscriptionChanged", msg);
     }
 
