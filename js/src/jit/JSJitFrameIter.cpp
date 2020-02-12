@@ -580,7 +580,7 @@ bool JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table,
 
   JSScript* callee = frameScript();
 
-  MOZ_ASSERT(entry->isIon() || entry->isBaseline() || entry->isIonCache() ||
+  MOZ_ASSERT(entry->isIon() || entry->isBaseline() ||
              entry->isBaselineInterpreter() || entry->isDummy());
 
   // Treat dummy lookups as an empty frame sequence.
@@ -617,23 +617,6 @@ bool JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table,
 
   if (entry->isBaselineInterpreter()) {
     type_ = FrameType::BaselineJS;
-    resumePCinCurrentFrame_ = pc;
-    return true;
-  }
-
-  if (entry->isIonCache()) {
-    void* ptr = entry->ionCacheEntry().rejoinAddr();
-    const JitcodeGlobalEntry* ionEntry = table->lookup(ptr);
-    if (!ionEntry) {
-      return false;
-    }
-    MOZ_ASSERT(ionEntry->isIon());
-
-    if (ionEntry->ionEntry().getScript(0) != callee) {
-      return false;
-    }
-
-    type_ = FrameType::IonJS;
     resumePCinCurrentFrame_ = pc;
     return true;
   }
