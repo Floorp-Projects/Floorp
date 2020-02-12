@@ -283,7 +283,6 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.tabs.remote.separateFileUriProcess", true],
-      ["browser.tabs.documentChannel", false],
       ["dom.ipc.processCount.file", 2],
     ],
   });
@@ -294,10 +293,25 @@ add_task(async function runWebNotInFileTestFalse() {
 });
 
 if (SpecialPowers.useRemoteSubframes) {
-  // With fission this pref is ignored.
   add_task(async function runWebNotInFileTestTrue() {
     await runWebNotInFileTest(true);
   });
 } else {
-  add_task(runWebInFileTest);
+  // Without document channel this pref obeyed.
+  add_task(async function runWithDCOff() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.tabs.documentchannel", false]],
+    });
+    await runWebInFileTest();
+    await SpecialPowers.popPrefEnv();
+  });
+
+  // With document channel this pref is ignored.
+  add_task(async function runWithDCOn() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.tabs.documentchannel", true]],
+    });
+    await runWebNotInFileTest(true);
+    await SpecialPowers.popPrefEnv();
+  });
 }
