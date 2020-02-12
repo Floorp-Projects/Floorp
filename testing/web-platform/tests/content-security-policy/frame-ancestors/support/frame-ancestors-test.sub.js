@@ -47,16 +47,10 @@ function injectNestedIframe(policy, parent, child, expectation, isSandboxed) {
     document.body.appendChild(iframe);
 }
 
-let timer;
-function pollForLoadCompletion({iframe, expectBlock}) {
-    let fn = iframeLoaded({expectBlock, isPoll: true});
-    timer = test.step_timeout(() => fn({target: iframe}), 10);
-}
-
 function injectIFrame(policy, sameOrigin, expectBlock) {
     var iframe = document.createElement("iframe");
-    iframe.addEventListener("load", iframeLoaded({expectBlock, isPoll: false}));
-    iframe.addEventListener("error", iframeLoaded({expectBlock, isPoll: false}));
+    iframe.addEventListener("load", iframeLoaded(expectBlock));
+    iframe.addEventListener("error", iframeLoaded(expectBlock));
 
     var url = "/content-security-policy/frame-ancestors/support/frame-ancestors.sub.html?policy=" + policy;
     if (sameOrigin)
@@ -66,20 +60,14 @@ function injectIFrame(policy, sameOrigin, expectBlock) {
 
     iframe.src = url;
     document.body.appendChild(iframe);
-    pollForLoadCompletion({iframe, expectBlock});
 }
 
-function iframeLoaded({isPoll, expectBlock}) {
+function iframeLoaded(expectBlock) {
     return function(ev) {
-        clearTimeout(timer);
         var failed = true;
         var message = "";
         try {
-            let url = ev.target.contentWindow.location.href;
-            if (isPoll && (url === "about:blank" || ev.target.contentDocument.readyState !== "complete")) {
-                pollForLoadCompletion({iframe: ev.target, expectBlock});
-                return;
-            }
+            ev.target.contentWindow.location.href;
             if (expectBlock) {
                 message = "The IFrame should have been blocked (or cross-origin). It wasn't.";
                 failed = true;
