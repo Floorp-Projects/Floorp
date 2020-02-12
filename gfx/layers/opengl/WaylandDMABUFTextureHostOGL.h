@@ -49,6 +49,10 @@ class WaylandDMABUFTextureHostOGL : public TextureHost {
 #ifdef MOZ_LAYERS_HAVE_LOG
   const char* Name() override { return "WaylandDMABUFTextureHostOGL"; }
 #endif
+  uint32_t NumSubTextures() override;
+
+  gfx::YUVColorSpace GetYUVColorSpace() const override;
+  gfx::ColorRange GetColorRange() const override;
 
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
@@ -64,8 +68,11 @@ class WaylandDMABUFTextureHostOGL : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys) override;
 
+ private:
+  GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);
+
  protected:
-  RefPtr<EGLImageTextureSource> mTextureSource;
+  RefPtr<GLTextureSource> mTextureSource;
   RefPtr<WaylandDMABufSurface> mSurface;
 };
 
