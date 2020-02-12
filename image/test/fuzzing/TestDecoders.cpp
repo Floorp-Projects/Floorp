@@ -78,8 +78,7 @@ static int RunDecodeToSurfaceFuzzing(nsCOMPtr<nsIInputStream> inputStream,
   }
 
   nsCOMPtr<nsIThread> thread;
-  nsresult rv =
-      NS_NewNamedThread("Decoder Test", getter_AddRefs(thread), nullptr);
+  nsresult rv = NS_NewThread(getter_AddRefs(thread), nullptr);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
   // We run the DecodeToSurface tests off-main-thread to ensure that
