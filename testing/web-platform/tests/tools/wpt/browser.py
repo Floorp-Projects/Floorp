@@ -379,14 +379,14 @@ class Firefox(Browser):
         tags = call("git", "ls-remote", "--tags", "--refs",
                     "https://github.com/mozilla/geckodriver.git")
         release_re = re.compile(r".*refs/tags/v(\d+)\.(\d+)\.(\d+)")
-        latest_release = 0
+        latest_release = (0,0,0)
         for item in tags.split("\n"):
             m = release_re.match(item)
             if m:
-                version = [int(item) for item in m.groups()]
+                version = tuple(int(item) for item in m.groups())
                 if version > latest_release:
                     latest_release = version
-        assert latest_release != 0
+        assert latest_release != (0,0,0)
         return "v%s.%s.%s" % tuple(str(item) for item in latest_release)
 
     def install_webdriver(self, dest=None, channel=None, browser_binary=None):
