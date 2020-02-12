@@ -79,7 +79,7 @@ class SettingsBasicsTest {
             verifySearchBrowsingHistory()
             verifySearchBookmarks()
         }.goBack {
-        }.openThemeSubMenu {
+        }.openCustomizeSubMenu {
             verifyThemes()
         }.goBack {
         }.openAccessibilitySubMenu {
@@ -165,7 +165,7 @@ class SettingsBasicsTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-        }.openThemeSubMenu {
+        }.openCustomizeSubMenu {
             verifyThemes()
             selectDarkMode()
             verifyDarkThemeApplied(getUiTheme())

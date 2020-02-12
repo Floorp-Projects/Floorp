@@ -52,7 +52,7 @@ class SettingsRobot {
     fun verifyEnhancedTrackingProtectionValue(state: String) =
         assertEnhancedTrackingProtectionValue(state)
 
-    fun verifyAddPrivateBrowsingShortcutButton() = assertAddPrivateBrowsingShortcutButton()
+    fun verifyAddPrivateBrowsingShortcutButton() = assertPrivateBrowsingButton()
     fun verifySitePermissionsButton() = assertSitePermissionsButton()
     fun verifyDeleteBrowsingDataButton() = assertDeleteBrowsingDataButton()
     fun verifyDeleteBrowsingDataOnQuitButton() = assertDeleteBrowsingDataOnQuitButton()
@@ -102,10 +102,10 @@ class SettingsRobot {
             return SettingsSubMenuSearchRobot.Transition()
         }
 
-        fun openThemeSubMenu(interact: SettingsSubMenuThemeRobot.() -> Unit): SettingsSubMenuThemeRobot.Transition {
+        fun openCustomizeSubMenu(interact: SettingsSubMenuThemeRobot.() -> Unit): SettingsSubMenuThemeRobot.Transition {
 
-            fun themeButton() = onView(ViewMatchers.withText("Theme"))
-            themeButton().click()
+            fun customizeButton() = onView(ViewMatchers.withText("Customize"))
+            customizeButton().click()
 
             SettingsSubMenuThemeRobot().interact()
             return SettingsSubMenuThemeRobot.Transition()
@@ -211,10 +211,10 @@ private fun assertLoginsButton() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertAddPrivateBrowsingShortcutButton() {
-    TestHelper.scrollToElementByText("Add private browsing shortcut")
-    mDevice.wait(Until.findObject(By.text("Add private browsing shortcut")), waitingTime)
-    onView(ViewMatchers.withText("Add private browsing shortcut"))
+private fun assertPrivateBrowsingButton() {
+    TestHelper.scrollToElementByText("Private browsing")
+    mDevice.wait(Until.findObject(By.text("Private browsing")), waitingTime)
+    onView(ViewMatchers.withText("Private browsing"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
