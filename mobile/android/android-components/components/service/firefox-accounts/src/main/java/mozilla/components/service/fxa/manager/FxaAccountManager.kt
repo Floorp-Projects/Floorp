@@ -964,9 +964,8 @@ open class FxaAccountManager(
 
         // If device supports SEND_TAB...
         if (deviceConfig.capabilities.contains(DeviceCapability.SEND_TAB)) {
-            // ... update constellation state, and poll for any pending device events.
+            // ... update constellation state
             account.deviceConstellation().refreshDevicesAsync().await()
-            account.deviceConstellation().pollForEventsAsync().await()
         }
     }
 
