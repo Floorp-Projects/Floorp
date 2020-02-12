@@ -92,11 +92,13 @@ job-template:
         type:
             by-build-platform:
                 .*nightly.*: nightly-l10n
+                # Defer swapping index's until a later patch
+                .*devedition.*: nightly-l10n
                 default: shippable-l10n
         product:
             by-build-platform:
                 default: firefox
-                .*-devedition-.*: devedition
+                .*-devedition: devedition
                 android-api-16-nightly: mobile
         job-name:
             by-build-platform:
