@@ -1181,17 +1181,6 @@ AbortReasonOr<Ok> IonBuilder::buildInline(IonBuilder* callerBuilder,
   return Ok();
 }
 
-void IonCompileTask::runTask() {
-  // This is the entry point when ion compiles are run offthread.
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-  TraceLoggerEvent event(TraceLogger_AnnotateScripts, script());
-  AutoTraceLog logScript(logger, event);
-  AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
-
-  jit::JitContext jctx(mirGen_.realm->runtime(), mirGen_.realm, &alloc());
-  setBackgroundCodegen(jit::CompileBackEnd(&mirGen_));
-}
-
 void IonBuilder::rewriteParameter(uint32_t slotIdx, MDefinition* param) {
   MOZ_ASSERT(param->isParameter() || param->isGetArgumentsObjectArg());
 
@@ -14344,35 +14333,6 @@ MDefinition* IonBuilder::convertToBoolean(MDefinition* input) {
   current->add(resultInverted);
   MNot* result = MNot::New(alloc(), resultInverted, constraints());
   current->add(result);
-
-  return result;
-}
-
-void IonCompileTask::trace(JSTracer* trc) {
-  if (!mirGen_.runtime->runtimeMatches(trc->runtime())) {
-    return;
-  }
-
-  MOZ_ASSERT(rootList_);
-  rootList_->trace(trc);
-}
-
-IonCompileTask::IonCompileTask(MIRGenerator& mirGen, bool scriptHasIonScript,
-                               CompilerConstraintList* constraints)
-    : mirGen_(mirGen),
-      constraints_(constraints),
-      scriptHasIonScript_(scriptHasIonScript) {}
-
-size_t IonCompileTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-  // See js::jit::FreeIonCompileTask.
-  // The IonCompileTask and most of its contents live in the LifoAlloc we point
-  // to.
-
-  size_t result = alloc().lifoAlloc()->sizeOfIncludingThis(mallocSizeOf);
-
-  if (backgroundCodegen_) {
-    result += mallocSizeOf(backgroundCodegen_);
-  }
 
   return result;
 }

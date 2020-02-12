@@ -50,6 +50,7 @@ UNIFIED_SOURCES += [
     'IonAnalysis.cpp',
     'IonBuilder.cpp',
     'IonCacheIRCompiler.cpp',
+    'IonCompileTask.cpp',
     'IonIC.cpp',
     'IonOptimizationLevels.cpp',
     'Jit.cpp',
