@@ -134,6 +134,10 @@ bool IsPreloadPermission(const nsACString& aType) {
 // for user context and private browsing.
 // Keep this array in sync with 'STRIPPED_PERMS' in
 // 'test_permmanager_oa_strip.js'
+// Currently only preloaded permissions are supported.
+// This is because perms are sent to the content process in bulk by perm key.
+// Non-preloaded, but OA stripped permissions would not be accessible by sites
+// in private browsing / non-default user context.
 static constexpr std::array<nsLiteralCString, 1> kStripOAPermissions = {
     {NS_LITERAL_CSTRING("cookie")}};
 
@@ -3047,8 +3051,9 @@ bool nsPermissionManager::GetPermissionsWithKey(
     PermissionHashKey* entry = iter.Get();
 
     nsAutoCString permissionKey;
-    GetKeyForOrigin(entry->GetKey()->mOrigin,
-                    IsOAForceStripPermission(aPermissionKey), permissionKey);
+    // We can't check for individual OA strip perms here.
+    // Don't force strip origin attributes.
+    GetKeyForOrigin(entry->GetKey()->mOrigin, false, permissionKey);
 
     // If the keys don't match, and we aren't getting the default "" key, then
     // we can exit early. We have to keep looking if we're getting the default
@@ -3209,6 +3214,8 @@ nsTArray<nsCString> nsPermissionManager::GetAllKeysForPrincipal(
   while (prin) {
     // Add the key to the list
     nsCString* key = keys.AppendElement();
+    // We can't check for individual OA strip perms here.
+    // Don't force strip origin attributes.
     GetKeyForPrincipal(prin, false, *key);
 
     // Get the next subdomain principal and loop back around.
