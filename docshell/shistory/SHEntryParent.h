@@ -81,7 +81,7 @@ class LegacySHEntry final : public nsSHEntry, public CrossProcessSHEntry {
   friend class SHEntryParent;
   friend class SHistoryParent;
 
-  ~LegacySHEntry() {}
+  ~LegacySHEntry() = default;
 
   SHEntryParent* CreateActor();
 
