@@ -109,6 +109,28 @@ let tests = [{
     ids.add(id(sourceAfterSuspended));
     sourceAfterSuspended.start();
   }
+}, {
+  name: "closed AudioContext", setup: async () => {
+    const ac = new AudioContext();
+    ids.add(id(ac.destination));
+    const sourceBeforeClose = new ConstantSourceNode(ac);
+    ids.add(id(sourceBeforeClose));
+    sourceBeforeClose.start();
+    ac.close();
+    const sourceAfterClose = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterClose));
+    sourceAfterClose.start();
+    await new Promise((resolve) => {
+      ac.onstatechange = () => {
+        if (ac.state == "closed") {
+          resolve();
+        }
+      };
+    });
+    const sourceAfterClosed = new ConstantSourceNode(ac);
+    ids.add(id(sourceAfterClosed));
+    sourceAfterClosed.start();
+  }
 }];
 
 const start_next_test = async () => {
