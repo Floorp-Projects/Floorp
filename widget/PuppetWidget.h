@@ -132,9 +132,7 @@ class PuppetWidget : public nsBaseWidget,
   virtual mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
   WidgetToTopLevelWidgetTransform() override;
 
-  virtual LayoutDeviceIntPoint WidgetToScreenOffset() override {
-    return GetWindowPosition() + GetChromeOffset();
-  }
+  virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
 
   virtual LayoutDeviceIntPoint TopLevelWidgetToScreenOffset() override {
     return GetWindowPosition();
@@ -235,6 +233,10 @@ class PuppetWidget : public nsBaseWidget,
   nsIntSize GetScreenDimensions();
 
   // Get the offset to the chrome of the window that this tab belongs to.
+  //
+  // NOTE: In OOP iframes this value is zero. You should use
+  // WidgetToTopLevelWidgetTransform instead which is already including the
+  // chrome offset.
   LayoutDeviceIntPoint GetChromeOffset();
 
   // Get the screen position of the application window.
