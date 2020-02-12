@@ -684,7 +684,7 @@ void AudioContext::RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob) {
 }
 
 void AudioContext::RegisterActiveNode(AudioNode* aNode) {
-  if (!mIsShutDown) {
+  if (!mCloseCalled) {
     mActiveNodes.PutEntry(aNode);
   }
 }
@@ -777,12 +777,10 @@ void AudioContext::Shutdown() {
   }
   mIsShutDown = true;
 
+  CloseInternal(nullptr, AudioContextOperationFlags::None);
+
   // We don't want to touch promises if the global is going away soon.
   if (!mIsDisconnecting) {
-    if (!mIsOffline) {
-      CloseInternal(nullptr, AudioContextOperationFlags::None);
-    }
-
     for (auto p : mPromiseGripArray) {
       p->MaybeRejectWithInvalidStateError("Navigated away from page");
     }
@@ -794,11 +792,6 @@ void AudioContext::Shutdown() {
     }
     mPendingResumePromises.Clear();
   }
-
-  // Release references to active nodes.
-  // Active AudioNodes don't unregister in destructors, at which point the
-  // Node is already unregistered.
-  mActiveNodes.Clear();
 
   // On process shutdown, the MTG thread shuts down before the destination
   // track is destroyed, but AudioWorklet needs to release objects on the MTG
@@ -1186,7 +1179,7 @@ void AudioContext::CloseInternal(void* aPromise,
   // This can be called when freeing a document, and the tracks are dead at
   // this point, so we need extra null-checks.
   AudioNodeTrack* ds = DestinationTrack();
-  if (ds) {
+  if (ds && !mIsOffline) {
     Destination()->DestroyAudioChannelAgent();
 
     nsTArray<mozilla::MediaTrack*> tracks;
@@ -1209,6 +1202,10 @@ void AudioContext::CloseInternal(void* aPromise,
     }
   }
   mCloseCalled = true;
+  // Release references to active nodes.
+  // Active AudioNodes don't unregister in destructors, at which point the
+  // Node is already unregistered.
+  mActiveNodes.Clear();
 }
 
 void AudioContext::RegisterNode(AudioNode* aNode) {
