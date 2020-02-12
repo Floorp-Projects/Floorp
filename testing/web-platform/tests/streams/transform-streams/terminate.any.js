@@ -66,8 +66,8 @@ promise_test(t => {
   });
   return Promise.all([
     promise_rejects_js(t, TypeError, ts.writable.abort(), 'abort() should reject with a TypeError'),
-    promise_rejects(t, error1, ts.readable.cancel(), 'cancel() should reject with error1'),
-    promise_rejects(t, error1, ts.readable.getReader().closed, 'closed should reject with error1')
+    promise_rejects_exactly(t, error1, ts.readable.cancel(), 'cancel() should reject with error1'),
+    promise_rejects_exactly(t, error1, ts.readable.getReader().closed, 'closed should reject with error1')
   ]);
 }, 'controller.error() after controller.terminate() with queued chunk should error the readable');
 

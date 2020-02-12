@@ -47,7 +47,7 @@ promise_test(t => {
   writer.close();
   writer.releaseLock();
 
-  return promise_rejects(t, error1, rs.pipeTo(ws), 'pipeTo must reject with the same error').then(() => {
+  return promise_rejects_exactly(t, error1, rs.pipeTo(ws), 'pipeTo must reject with the same error').then(() => {
     assert_equals(recordedError.name, 'TypeError', 'the cancel reason must be a TypeError');
 
     assert_array_equals(rs.eventsWithoutPulls, ['cancel', recordedError]);
