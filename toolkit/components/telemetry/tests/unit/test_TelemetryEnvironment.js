@@ -19,6 +19,9 @@ const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { SearchTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm"
+);
 
 // AttributionCode is only needed for Firefox
 ChromeUtils.defineModuleGetter(
@@ -1076,6 +1079,9 @@ add_task(async function setup() {
   await AddonTestUtils.overrideBuiltIns({ system: [] });
   AddonTestUtils.addonStartup.remove(true);
   await AddonTestUtils.promiseStartupManager();
+  // Override ExtensionXPCShellUtils.jsm's overriding of the pref as the
+  // search service needs it.
+  Services.prefs.clearUserPref("services.settings.default_bucket");
 
   // Register a fake plugin host for consistent flash version data.
   registerFakePluginHost();
@@ -1098,6 +1104,7 @@ add_task(async function setup() {
 
   await spoofProfileReset();
   await TelemetryEnvironment.delayedInit();
+  await SearchTestUtils.useTestEngines("data", "search-extensions");
 });
 
 add_task(async function test_checkEnvironment() {
@@ -1896,19 +1903,6 @@ add_task(async function test_collectionWithbrokenAddonData() {
 });
 
 async function checkDefaultSearch(privateOn, reInitSearchService) {
-  // Check that no default engine is in the environment before the search service is
-  // initialized.
-  let searchExtensions = do_get_cwd();
-  searchExtensions.append("data");
-  searchExtensions.append("search-extensions");
-  let resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution(
-    "search-extensions",
-    Services.io.newURI("file://" + searchExtensions.path)
-  );
-
   // Start off with separate default engine for private browsing turned off.
   Preferences.set(
     "browser.search.separatePrivateDefault.ui.enabled",
@@ -1971,38 +1965,41 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
     );
   }
 
-  // Remove all the search engines.
-  for (let engine of await Services.search.getEngines()) {
-    await Services.search.removeEngine(engine);
-  }
-  // The search service does not notify "engine-default" when removing a default engine.
-  // Manually force the notification.
-  // TODO: remove this when bug 1165341 is resolved.
-  Services.obs.notifyObservers(
-    null,
-    "browser-search-engine-modified",
-    "engine-default"
-  );
-  if (privateOn) {
+  if (!Services.prefs.getBoolPref("browser.search.modernConfig")) {
+    // Remove all the search engines.
+    for (let engine of await Services.search.getEngines()) {
+      await Services.search.removeEngine(engine);
+    }
+    // The search service does not notify "engine-default" when removing a default engine.
+    // Manually force the notification.
+    // TODO: remove this when bug 1165341 is resolved.
     Services.obs.notifyObservers(
       null,
       "browser-search-engine-modified",
-      "engine-default-private"
+      "engine-default"
     );
-  }
-  await promiseNextTick();
+    if (privateOn) {
+      Services.obs.notifyObservers(
+        null,
+        "browser-search-engine-modified",
+        "engine-default-private"
+      );
+    }
+    await promiseNextTick();
 
-  // Then check that no default engine is reported if none is available.
-  data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
-  Assert.equal(data.settings.defaultSearchEngine, "NONE");
-  Assert.deepEqual(data.settings.defaultSearchEngineData, { name: "NONE" });
-  if (privateOn) {
-    Assert.equal(data.settings.defaultPrivateSearchEngine, "NONE");
-    Assert.deepEqual(data.settings.defaultPrivateSearchEngineData, {
-      name: "NONE",
-    });
+    // Then check that no default engine is reported if none is available.
+    data = TelemetryEnvironment.currentEnvironment;
+    checkEnvironmentData(data);
+    Assert.equal(data.settings.defaultSearchEngine, "NONE");
+    Assert.deepEqual(data.settings.defaultSearchEngineData, { name: "NONE" });
+    if (privateOn) {
+      Assert.equal(data.settings.defaultPrivateSearchEngine, "NONE");
+      Assert.deepEqual(data.settings.defaultPrivateSearchEngineData, {
+        name: "NONE",
+      });
+    }
   }
+
   // Add a new search engine (this will have no engine identifier).
   const SEARCH_ENGINE_ID = "telemetry_default";
   const SEARCH_ENGINE_URL = `http://www.example.org/${
@@ -2139,6 +2136,18 @@ add_task(async function test_defaultSearchEngine() {
   Assert.equal(data.settings.defaultSearchEngineData.origin, "invalid");
   await Services.search.removeEngine(engine);
 
+  const SEARCH_ENGINE_ID = "telemetry_default";
+  const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
+  // Work around bug 1165341: Intentionally set the default engine.
+  await Services.search.setDefault(
+    Services.search.getEngineByName(SEARCH_ENGINE_ID)
+  );
+
+  // Double-check the default for the next part of the test.
+  data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+  Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
+
   // Define and reset the test preference.
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   const PREFS_TO_WATCH = new Map([
@@ -2161,8 +2170,6 @@ add_task(async function test_defaultSearchEngine() {
   // Check that the search engine information is correctly retained when prefs change.
   data = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(data);
-  const SEARCH_ENGINE_ID = "telemetry_default";
-  const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
   Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
 
   // Check that by default we are not sending a cohort identifier...
