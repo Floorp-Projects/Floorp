@@ -89,7 +89,7 @@ def make_task_description(config, jobs):
         mar_signing_name = "mar-signing"
         if job.get('locale'):
             signing_name = "shippable-l10n-signing"
-            build_name = "nightly-l10n"
+            build_name = "shippable-l10n"
             repackage_name = "repackage-l10n"
             repackage_signing_name = "repackage-signing-l10n"
             mar_signing_name = "mar-signing-l10n"
