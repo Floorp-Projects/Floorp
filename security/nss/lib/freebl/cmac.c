@@ -22,7 +22,7 @@ struct CMACContextStr {
      * add a new Context pointer to the cipher union with the correct type. */
     CMACCipher cipherType;
     union {
-        AESContext aes;
+        AESContext *aes;
     } cipher;
     int blockSize;
 
@@ -62,7 +62,7 @@ cmac_Encrypt(CMACContext *ctx, unsigned char *output,
 {
     if (ctx->cipherType == CMAC_AES) {
         unsigned int tmpOutputLen;
-        SECStatus rv = AES_Encrypt(&ctx->cipher.aes, output, &tmpOutputLen,
+        SECStatus rv = AES_Encrypt(ctx->cipher.aes, output, &tmpOutputLen,
                                    ctx->blockSize, input, inputLen);
 
         /* Assumption: AES_Encrypt (when in ECB mode) always returns an
@@ -156,8 +156,9 @@ CMAC_Init(CMACContext *ctx, CMACCipher type,
 
     ctx->blockSize = AES_BLOCK_SIZE;
     ctx->cipherType = CMAC_AES;
-    if (AES_InitContext(&ctx->cipher.aes, key, key_len, NULL, NSS_AES, 1,
-                        ctx->blockSize) != SECSuccess) {
+    ctx->cipher.aes = AES_CreateContext(key, NULL, NSS_AES, 1, key_len,
+                                        ctx->blockSize);
+    if (ctx->cipher.aes == NULL) {
         return SECFailure;
     }
 
@@ -308,8 +309,8 @@ CMAC_Destroy(CMACContext *ctx, PRBool free_it)
         return;
     }
 
-    if (ctx->cipherType == CMAC_AES) {
-        AES_DestroyContext(&ctx->cipher.aes, PR_FALSE);
+    if (ctx->cipherType == CMAC_AES && ctx->cipher.aes != NULL) {
+        AES_DestroyContext(ctx->cipher.aes, PR_TRUE);
     }
 
     /* Destroy everything in the context. This includes sensitive data in
