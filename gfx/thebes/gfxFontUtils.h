@@ -644,6 +644,15 @@ struct SFNTHeader {
   AutoSwap_PRUint16 rangeShift;     // NumTables x 16-searchRange.
 };
 
+struct TTCHeader {
+  AutoSwap_PRUint32 ttcTag;  // 4 -byte identifier 'ttcf'.
+  AutoSwap_PRUint16 majorVersion;
+  AutoSwap_PRUint16 minorVersion;
+  AutoSwap_PRUint32 numFonts;
+  // followed by:
+  // AutoSwap_PRUint32 offsetTable[numFonts]
+};
+
 struct TableDirEntry {
   AutoSwap_PRUint32 tag;       // 4 -byte identifier.
   AutoSwap_PRUint32 checkSum;  // CheckSum for this table.
