@@ -8,8 +8,8 @@
 void FopenUsageChecker::registerMatchers(MatchFinder *AstMatcher) {
 
   auto hasConstCharPtrParam = [](const unsigned int Position) {
-    return allOf(hasParameter(Position, hasType(pointsTo(isAnyCharacter()))),
-                 hasParameter(Position, hasType(pointsTo(isConstQualified()))));
+    return hasParameter(
+        Position, hasType(hasCanonicalType(pointsTo(asString("const char")))));
   };
 
   auto hasParamOfType = [](const unsigned int Position, const char *Name) {
@@ -43,10 +43,10 @@ void FopenUsageChecker::registerMatchers(MatchFinder *AstMatcher) {
                             hasParameter(0, hasType(pointsTo(isInteger()))),
                             hasConstCharPtrParam(1), hasIntegerParam(2),
                             hasIntegerParam(3), hasIntegerParam(4)),
-                      allOf(hasName("OpenFile"), hasParamOfType(0, "LPCSTR"),
+                      allOf(hasName("OpenFile"), hasConstCharPtrParam(0),
                             hasParamOfType(1, "LPOFSTRUCT"),
                             hasIntegerParam(2)),
-                      allOf(hasName("CreateFileA"), hasParamOfType(0, "LPCSTR"),
+                      allOf(hasName("CreateFileA"), hasConstCharPtrParam(0),
                             hasIntegerParam(1), hasIntegerParam(2),
                             hasParamOfType(3, "LPSECURITY_ATTRIBUTES"),
                             hasIntegerParam(4), hasIntegerParam(5),
