@@ -44,7 +44,8 @@ class CreateShortcutFragment : DialogFragment() {
                 val text = shortcut_text.text.toString()
                 viewLifecycleOwner.lifecycleScope.launch {
                     requireComponents.useCases.webAppUseCases.addToHomescreen(text)
-                }.invokeOnCompletion { dismiss() }
+                }
+                dismiss()
             }
 
             shortcut_text.addTextChangedListener {
