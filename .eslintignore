@@ -56,9 +56,6 @@ browser/locales/
 # Generated data files
 browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 
-# Soon to be removed (bug 1609815)
-devtools/client/webreplay/
-
 # Ignore devtools debugger files which aren't intended for linting, and also
 # aren't included in any .eslintignore or .prettierignore file.
 # See https://github.com/firefox-devtools/debugger/blob/master/package.json#L24
