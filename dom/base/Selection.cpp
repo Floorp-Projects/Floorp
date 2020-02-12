@@ -1370,7 +1370,7 @@ void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
  * traversing through the frames
  */
 nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
-                                 bool aSelect) {
+                                 bool aSelect) const {
   if (!mFrameSelection || !aPresContext || !aPresContext->GetPresShell()) {
     // nothing to do
     return NS_OK;
@@ -1878,10 +1878,12 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
     SetInterlinePosition(true, IgnoreErrors());
   }
 
+  if (!mFrameSelection) {
+    return;  // nothing to do
+  }
+
   RefPtr<nsPresContext> presContext = GetPresContext();
   SelectFrames(presContext, range, true);
-
-  if (!mFrameSelection) return;  // nothing to do
 
   // Be aware, this instance may be destroyed after this call.
   // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
