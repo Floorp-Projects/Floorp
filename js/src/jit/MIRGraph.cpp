@@ -39,11 +39,7 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
                                    : false),
       minWasmHeapLength_(0),
       options(options),
-      gs_(alloc) {
-  isOptimizationTrackingEnabled_ = !JitOptions.disableOptimizationTracking &&
-                                   isProfilerInstrumentationEnabled() &&
-                                   !outerInfo().isAnalysis();
-}
+      gs_(alloc) {}
 
 mozilla::GenericErrorResult<AbortReason> MIRGenerator::abort(AbortReason r) {
   if (JitSpewEnabled(JitSpew_IonAbort)) {
