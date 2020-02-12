@@ -2,9 +2,15 @@
 
 # getAddons
 
-`suspend fun getAddons(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../-addon/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L43)
+`suspend fun getAddons(waitForPendingActions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../-addon/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L55)
 
 Returns the list of all installed and recommended add-ons.
+
+### Parameters
+
+`waitForPendingActions` - whether or not to wait (suspend, but not
+block) until all pending add-on actions (install/uninstall/enable/disable)
+are completed in either success or failure.
 
 ### Exceptions
 

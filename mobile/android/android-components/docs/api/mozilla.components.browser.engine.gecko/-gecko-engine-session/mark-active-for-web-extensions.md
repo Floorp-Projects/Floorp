@@ -2,7 +2,7 @@
 
 # markActiveForWebExtensions
 
-`fun markActiveForWebExtensions(active: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L319)
+`fun markActiveForWebExtensions(active: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L318)
 
 Overrides [EngineSession.markActiveForWebExtensions](../../mozilla.components.concept.engine/-engine-session/mark-active-for-web-extensions.md)
 

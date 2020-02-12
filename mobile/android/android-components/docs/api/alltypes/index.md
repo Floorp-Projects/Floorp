@@ -450,6 +450,7 @@
 | [mozilla.components.browser.engine.gecko.NestedGeckoView](../mozilla.components.browser.engine.gecko/-nested-gecko-view/index.md) | geckoView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.browser.engine.system.NestedWebView](../mozilla.components.browser.engine.system/-nested-web-view/index.md) | WebView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.service.glean.private.NoExtraKeys](../mozilla.components.service.glean.private/-no-extra-keys.md) |  |
+| [mozilla.components.service.glean.private.NoReasonCodes](../mozilla.components.service.glean.private/-no-reason-codes.md) |  |
 | [mozilla.components.service.sync.logins.NoSuchRecordException](../mozilla.components.service.sync.logins/-no-such-record-exception.md) | This is thrown if `update()` is performed with a record whose ID does not exist. |
 | [androidx.core.app.NotificationManagerCompat](../mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/index.md) (extensions in package mozilla.components.support.base.ids) |  |
 | [mozilla.components.concept.sync.OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md) | Facilitates testing consumers of FirefoxAccount. |

@@ -2,4 +2,4 @@
 
 # DatetimeMetricType
 
-`typealias DatetimeMetricType = DatetimeMetricType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L13)
+`typealias DatetimeMetricType = DatetimeMetricType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L14)

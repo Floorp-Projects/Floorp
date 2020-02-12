@@ -2,4 +2,4 @@
 
 # RecordedExperimentData
 
-`typealias RecordedExperimentData = RecordedExperimentData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L22)
+`typealias RecordedExperimentData = RecordedExperimentData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L23)

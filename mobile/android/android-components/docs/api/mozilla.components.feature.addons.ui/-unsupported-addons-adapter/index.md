@@ -2,7 +2,7 @@
 
 # UnsupportedAddonsAdapter
 
-`class UnsupportedAddonsAdapter : Adapter<ViewHolder>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/UnsupportedAddonsAdapter.kt#L26)
+`class UnsupportedAddonsAdapter : Adapter<ViewHolder>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/UnsupportedAddonsAdapter.kt#L27)
 
 An adapter for displaying unsupported add-on items.
 
@@ -16,7 +16,7 @@ An adapter for displaying unsupported add-on items.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `UnsupportedAddonsAdapter(addonManager: `[`AddonManager`](../../mozilla.components.feature.addons/-addon-manager/index.md)`, unsupportedAddonsAdapterDelegate: `[`UnsupportedAddonsAdapterDelegate`](../-unsupported-addons-adapter-delegate/index.md)`, unsupportedAddons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`>)`<br>An adapter for displaying unsupported add-on items. |
+| [&lt;init&gt;](-init-.md) | `UnsupportedAddonsAdapter(addonManager: `[`AddonManager`](../../mozilla.components.feature.addons/-addon-manager/index.md)`, unsupportedAddonsAdapterDelegate: `[`UnsupportedAddonsAdapterDelegate`](../-unsupported-addons-adapter-delegate/index.md)`, addons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`>)`<br>An adapter for displaying unsupported add-on items. |
 
 ### Functions
 
