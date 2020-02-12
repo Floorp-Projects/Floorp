@@ -81,7 +81,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
   if (!constructorUnwrapped) {
     // If the caller's compartment does not have permission to access the
     // unwrapped constructor then throw.
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aRv.ThrowSecurityError("Constructor cannot be called");
     return;
   }
 

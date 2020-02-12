@@ -47,15 +47,15 @@ MediaStreamAudioSourceNode::MediaStreamAudioSourceNode(
 already_AddRefed<MediaStreamAudioSourceNode> MediaStreamAudioSourceNode::Create(
     AudioContext& aAudioContext, const MediaStreamAudioSourceOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.IsOffline()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
+  // The spec has a pointless check here.  See
+  // https://github.com/WebAudio/web-audio-api/issues/2149
+  MOZ_RELEASE_ASSERT(!aAudioContext.IsOffline(), "Bindings messed up?");
 
   RefPtr<MediaStreamAudioSourceNode> node =
       new MediaStreamAudioSourceNode(&aAudioContext, LockOnTrackPicked);
 
-  node->Init(aOptions.mMediaStream, aRv);
+  // aOptions.mMediaStream is not nullable.
+  node->Init(*aOptions.mMediaStream, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -63,14 +63,9 @@ already_AddRefed<MediaStreamAudioSourceNode> MediaStreamAudioSourceNode::Create(
   return node.forget();
 }
 
-void MediaStreamAudioSourceNode::Init(DOMMediaStream* aMediaStream,
+void MediaStreamAudioSourceNode::Init(DOMMediaStream& aMediaStream,
                                       ErrorResult& aRv) {
-  if (!aMediaStream) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  mInputStream = aMediaStream;
+  mInputStream = &aMediaStream;
   AudioNodeEngine* engine = new MediaStreamAudioSourceNodeEngine(this);
   mTrack = AudioNodeExternalInputTrack::Create(Context()->Graph(), engine);
   mInputStream->AddConsumerToKeepAlive(ToSupports(this));
@@ -109,7 +104,11 @@ void MediaStreamAudioSourceNode::AttachToTrack(
                                     NS_LITERAL_CSTRING("Web Audio"), document,
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "MediaStreamAudioSourceNodeDifferentRate");
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    // This is not a spec-required exception, just a limitation of our
+    // implementation.
+    aRv.ThrowNotSupportedError(
+        "Connecting AudioNodes from AudioContexts with different sample-rate "
+        "is currently not supported.");
     return;
   }
 
@@ -149,7 +148,7 @@ void MediaStreamAudioSourceNode::AttachToRightTrack(
   aMediaStream->GetAudioTracks(tracks);
 
   if (tracks.IsEmpty() && mBehavior == LockOnTrackPicked) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("No audio tracks in MediaStream");
     return;
   }
 

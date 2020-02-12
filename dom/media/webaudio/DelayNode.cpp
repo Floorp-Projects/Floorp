@@ -186,7 +186,9 @@ already_AddRefed<DelayNode> DelayNode::Create(AudioContext& aAudioContext,
                                               const DelayOptions& aOptions,
                                               ErrorResult& aRv) {
   if (aOptions.mMaxDelayTime <= 0. || aOptions.mMaxDelayTime >= 180.) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowNotSupportedError(
+        nsPrintfCString("\"maxDelayTime\" (%g) is not in the range (0,180)",
+                        aOptions.mMaxDelayTime));
     return nullptr;
   }
 

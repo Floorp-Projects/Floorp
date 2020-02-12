@@ -155,7 +155,8 @@ JSObject* AnalyserNode::WrapObject(JSContext* aCx,
 void AnalyserNode::SetFftSize(uint32_t aValue, ErrorResult& aRv) {
   // Disallow values that are not a power of 2 and outside the [32,32768] range
   if (aValue < 32 || aValue > MAX_FFT_SIZE || (aValue & (aValue - 1)) != 0) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "FFT size %u is not a power of two in the range 32 to 32768", aValue));
     return;
   }
   if (FftSize() != aValue) {
@@ -166,7 +167,9 @@ void AnalyserNode::SetFftSize(uint32_t aValue, ErrorResult& aRv) {
 
 void AnalyserNode::SetMinDecibels(double aValue, ErrorResult& aRv) {
   if (aValue >= mMaxDecibels) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "%g is not strictly smaller than current maxDecibels (%g)", aValue,
+        mMaxDecibels));
     return;
   }
   mMinDecibels = aValue;
@@ -174,7 +177,9 @@ void AnalyserNode::SetMinDecibels(double aValue, ErrorResult& aRv) {
 
 void AnalyserNode::SetMaxDecibels(double aValue, ErrorResult& aRv) {
   if (aValue <= mMinDecibels) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "%g is not strictly larger than current minDecibels (%g)", aValue,
+        mMinDecibels));
     return;
   }
   mMaxDecibels = aValue;
@@ -183,7 +188,9 @@ void AnalyserNode::SetMaxDecibels(double aValue, ErrorResult& aRv) {
 void AnalyserNode::SetMinAndMaxDecibels(double aMinValue, double aMaxValue,
                                         ErrorResult& aRv) {
   if (aMinValue >= aMaxValue) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "minDecibels value (%g) must be smaller than maxDecibels value (%g)",
+        aMinValue, aMaxValue));
     return;
   }
   mMinDecibels = aMinValue;
@@ -192,7 +199,8 @@ void AnalyserNode::SetMinAndMaxDecibels(double aMinValue, double aMaxValue,
 
 void AnalyserNode::SetSmoothingTimeConstant(double aValue, ErrorResult& aRv) {
   if (aValue < 0 || aValue > 1) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(
+        nsPrintfCString("%g is not in the range [0, 1]", aValue));
     return;
   }
   mSmoothingTimeConstant = aValue;
