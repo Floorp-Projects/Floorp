@@ -59,9 +59,6 @@ tools/clang-tidy/test/.*
 # We are testing the incorrect formatting.
 tools/lint/test/files/file-whitespace/
 
-# Contains an XML definition and formatting would break the layout
-widget/gtk/MPRISInterfaceDescription.h
-
 # The XPTCall stubs files have some inline assembly macros
 # that get reformatted badly. See bug 1510781.
 xpcom/reflect/xptcall/md/win32/.*
