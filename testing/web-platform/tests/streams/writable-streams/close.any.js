@@ -80,8 +80,8 @@ promise_test(t => {
 
   return Promise.all([
     writer.write('y'),
-    promise_rejects(t, error1, writer.close(), 'close() must reject with the error'),
-    promise_rejects(t, error1, writer.closed, 'closed must reject with the error')
+    promise_rejects_exactly(t, error1, writer.close(), 'close() must reject with the error'),
+    promise_rejects_exactly(t, error1, writer.closed, 'closed must reject with the error')
   ]);
 }, 'when the sink throws during close, and the close is requested while a write is still in-flight, the stream should ' +
    'become errored during the close');
@@ -203,7 +203,7 @@ promise_test(t => {
       };
     }
   });
-  return promise_rejects(t, rejection, ws.getWriter().close(), 'close() should return a rejection');
+  return promise_rejects_exactly(t, rejection, ws.getWriter().close(), 'close() should return a rejection');
 }, 'returning a thenable from close() should work');
 
 promise_test(t => {
@@ -354,12 +354,12 @@ promise_test(t => {
     abortPromise.catch(() => events.push('abortPromise'));
     writer.closed.catch(() => events.push('closed'));
     return Promise.all([
-      promise_rejects(t, error1, closePromise,
-                      'closePromise must reject with the error returned from the sink\'s close method'),
-      promise_rejects(t, error1, abortPromise,
-                      'abortPromise must reject with the error returned from the sink\'s close method'),
-      promise_rejects(t, error2, writer.closed,
-                      'writer.closed must reject with error2')
+      promise_rejects_exactly(t, error1, closePromise,
+                             'closePromise must reject with the error returned from the sink\'s close method'),
+      promise_rejects_exactly(t, error1, abortPromise,
+                             'abortPromise must reject with the error returned from the sink\'s close method'),
+      promise_rejects_exactly(t, error2, writer.closed,
+                              'writer.closed must reject with error2')
     ]).then(() => {
       assert_array_equals(events, ['closePromise', 'abortPromise', 'closed'],
                           'promises must fulfill/reject in the expected order');
@@ -392,7 +392,7 @@ promise_test(t => {
       resolveWrite();
       return Promise.all([
         writePromise,
-        promise_rejects(t, error1, closePromise, 'close() should reject')
+        promise_rejects_exactly(t, error1, closePromise, 'close() should reject')
       ]).then(() => {
         assert_true(closeRejected);
       });
@@ -431,7 +431,7 @@ promise_test(t => {
       controller.error(error1);
     }
   });
-  return promise_rejects(t, error1, ws.close(), 'close should reject with error1');
+  return promise_rejects_exactly(t, error1, ws.close(), 'close should reject with error1');
 }, 'close() on an erroring stream should reject');
 
 promise_test(t => {
@@ -441,7 +441,7 @@ promise_test(t => {
     }
   });
   const writer = ws.getWriter();
-  return promise_rejects(t, error1, writer.closed, 'closed should reject with the error').then(() => {
+  return promise_rejects_exactly(t, error1, writer.closed, 'closed should reject with the error').then(() => {
     writer.releaseLock();
     return promise_rejects_js(t, TypeError, ws.close(), 'close should reject');
   });
