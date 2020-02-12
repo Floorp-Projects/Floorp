@@ -106,7 +106,7 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
       // global scope is still allowed, since |var| only looks up |own|
       // properties. But unqualified shadowing will fail, per-spec.
       JS::Rooted<JS::Value> v(aCx);
-      if (!ToJSValue(aCx, WindowProxyHolder(child.forget()), &v)) {
+      if (!ToJSValue(aCx, WindowProxyHolder(std::move(child)), &v)) {
         return false;
       }
       FillPropertyDescriptor(aDesc, aProxy, 0, v);

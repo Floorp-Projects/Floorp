@@ -3369,7 +3369,7 @@ nsresult UnwrapWindowProxyArg(JSContext* cx, JS::Handle<JSObject*> src,
 
   nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
   RefPtr<BrowsingContext> bc = outer ? outer->GetBrowsingContext() : nullptr;
-  ppArg = bc.forget();
+  ppArg = std::move(bc);
   return NS_OK;
 }
 

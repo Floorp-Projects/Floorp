@@ -22498,7 +22498,7 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     RefPtr<TransactionBase> aTransaction)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aTransaction->GetLoggingInfo()->NextRequestSN()),
-      mTransaction(aTransaction.forget()),
+      mTransaction(std::move(aTransaction)),
       mTransactionIsAborted((*mTransaction)->IsAborted()),
       mTransactionLoggingSerialNumber((*mTransaction)->LoggingSerialNumber()) {
   MOZ_ASSERT(LoggingSerialNumber());
@@ -22508,7 +22508,7 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     RefPtr<TransactionBase> aTransaction, uint64_t aLoggingSerialNumber)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aLoggingSerialNumber),
-      mTransaction(aTransaction.forget()),
+      mTransaction(std::move(aTransaction)),
       mTransactionIsAborted((*mTransaction)->IsAborted()),
       mTransactionLoggingSerialNumber((*mTransaction)->LoggingSerialNumber()) {}
 

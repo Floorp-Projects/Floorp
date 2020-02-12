@@ -378,14 +378,14 @@ class PromiseNativeHandlerShim final : public PromiseNativeHandler {
 
   MOZ_CAN_RUN_SCRIPT
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-    RefPtr<PromiseNativeHandler> inner = mInner.forget();
+    RefPtr<PromiseNativeHandler> inner = std::move(mInner);
     inner->ResolvedCallback(aCx, aValue);
     MOZ_ASSERT(!mInner);
   }
 
   MOZ_CAN_RUN_SCRIPT
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-    RefPtr<PromiseNativeHandler> inner = mInner.forget();
+    RefPtr<PromiseNativeHandler> inner = std::move(mInner);
     inner->RejectedCallback(aCx, aValue);
     MOZ_ASSERT(!mInner);
   }

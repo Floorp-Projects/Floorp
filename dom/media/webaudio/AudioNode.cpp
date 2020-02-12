@@ -168,7 +168,7 @@ void AudioNode::DisconnectFromGraph() {
 
   while (!mOutputNodes.IsEmpty()) {
     size_t i = mOutputNodes.Length() - 1;
-    RefPtr<AudioNode> output = mOutputNodes[i].forget();
+    RefPtr<AudioNode> output = std::move(mOutputNodes[i]);
     mOutputNodes.RemoveElementAt(i);
     size_t inputIndex = FindIndexOfNode(output->mInputNodes, this);
     // It doesn't matter which one we remove, since we're going to remove all
@@ -180,7 +180,7 @@ void AudioNode::DisconnectFromGraph() {
 
   while (!mOutputParams.IsEmpty()) {
     size_t i = mOutputParams.Length() - 1;
-    RefPtr<AudioParam> output = mOutputParams[i].forget();
+    RefPtr<AudioParam> output = std::move(mOutputParams[i]);
     mOutputParams.RemoveElementAt(i);
     size_t inputIndex = FindIndexOfNode(output->InputNodes(), this);
     // It doesn't matter which one we remove, since we're going to remove all
@@ -326,7 +326,7 @@ bool AudioNode::DisconnectFromOutputIfConnected<AudioNode>(
   // Remove one instance of 'dest' from mOutputNodes. There could be
   // others, and it's not correct to remove them all since some of them
   // could be for different output ports.
-  RefPtr<AudioNode> output = mOutputNodes[aOutputNodeIndex].forget();
+  RefPtr<AudioNode> output = std::move(mOutputNodes[aOutputNodeIndex]);
   mOutputNodes.RemoveElementAt(aOutputNodeIndex);
   // Destroying the InputNode here sends a message to the graph thread
   // to disconnect the tracks, which should be sent before the

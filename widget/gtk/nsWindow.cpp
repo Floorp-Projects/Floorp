@@ -3704,7 +3704,7 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
     }
   } else if (aEvent->type == GDK_TOUCH_END ||
              aEvent->type == GDK_TOUCH_CANCEL) {
-    *event.mTouches.AppendElement() = touch.forget();
+    *event.mTouches.AppendElement() = std::move(touch);
   }
 
   DispatchInputEvent(&event);

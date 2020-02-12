@@ -99,7 +99,7 @@ class EncodingCompleteEvent : public CancelableRunnable {
     nsresult rv = NS_OK;
 
     // We want to null out mEncodeCompleteCallback no matter what.
-    RefPtr<EncodeCompleteCallback> callback(mEncodeCompleteCallback.forget());
+    RefPtr<EncodeCompleteCallback> callback(std::move(mEncodeCompleteCallback));
     if (!mFailed) {
       RefPtr<BlobImpl> blobImpl = new MemoryBlobImpl(mImgData, mImgSize, mType);
       rv = callback->ReceiveBlobImpl(blobImpl.forget());
