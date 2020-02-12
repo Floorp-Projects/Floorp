@@ -1273,15 +1273,9 @@ void CacheStorageService::OnMemoryConsumptionChange(
 
   if (!overLimit) return;
 
-  {
-    mozilla::MutexAutoLock lock(mLock);
-
-    // It's likely the timer has already been set when we get here,
-    // check outside the lock to save resources.
-    if (mPurgeTimer) {
-      return;
-    }
-  }
+  // It's likely the timer has already been set when we get here,
+  // check outside the lock to save resources.
+  if (mPurgeTimer) return;
 
   // We don't know if this is called under the service lock or not,
   // hence rather dispatch.
