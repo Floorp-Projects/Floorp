@@ -79,7 +79,7 @@ class WorkerScriptTimeoutHandler final : public ScriptTimeoutHandler {
   MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* aExecutionReason) override;
 
  private:
-  virtual ~WorkerScriptTimeoutHandler() {}
+  virtual ~WorkerScriptTimeoutHandler() = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WorkerScriptTimeoutHandler,
@@ -697,7 +697,7 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(
       mRegistration(
           GetOrCreateServiceWorkerRegistration(aRegistrationDescriptor)) {}
 
-ServiceWorkerGlobalScope::~ServiceWorkerGlobalScope() {}
+ServiceWorkerGlobalScope::~ServiceWorkerGlobalScope() = default;
 
 bool ServiceWorkerGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {

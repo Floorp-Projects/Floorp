@@ -372,7 +372,7 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
                          uint32_t aFirstIndex, uint32_t aLastIndex);
 
  private:
-  ~ScriptExecutorRunnable() {}
+  ~ScriptExecutorRunnable() = default;
 
   virtual bool IsDebuggerRunnable() const override;
 
@@ -435,7 +435,7 @@ class CacheCreator final : public PromiseNativeHandler {
   void DeleteCache();
 
  private:
-  ~CacheCreator() {}
+  ~CacheCreator() = default;
 
   nsresult CreateCacheStorage(nsIPrincipal* aPrincipal);
 
@@ -558,7 +558,7 @@ class LoaderListener final : public nsIStreamLoaderObserver,
   }
 
  private:
-  ~LoaderListener() {}
+  ~LoaderListener() = default;
 
   RefPtr<ScriptLoaderRunnable> mRunnable;
   uint32_t mIndex;
@@ -617,7 +617,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   }
 
  private:
-  ~ScriptLoaderRunnable() {}
+  ~ScriptLoaderRunnable() = default;
 
   NS_IMETHOD
   Run() override {
@@ -1904,7 +1904,7 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
   nsresult GetResult() const { return mResult; }
 
  private:
-  virtual ~ChannelGetterRunnable() {}
+  virtual ~ChannelGetterRunnable() = default;
 };
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
