@@ -312,8 +312,8 @@ directory_test(async (t, root) => {
       t, 'content.txt', 'very long string', root);
   const stream = await handle.createWritable();
 
-  await promise_rejects_js(
-      t, SyntaxError, stream.write({type: 'truncate'}), 'truncate without size');
+  await promise_rejects_dom(
+      t, "SyntaxError", stream.write({type: 'truncate'}), 'truncate without size');
 
 }, 'WriteParams: truncate missing size param');
 
@@ -321,8 +321,8 @@ directory_test(async (t, root) => {
   const handle = await createEmptyFile(t, 'content.txt', root);
   const stream = await handle.createWritable();
 
-  await promise_rejects_js(
-      t, SyntaxError, stream.write({type: 'write'}), 'write without data');
+  await promise_rejects_dom(
+      t, "SyntaxError", stream.write({type: 'write'}), 'write without data');
 
 }, 'WriteParams: write missing data param');
 
@@ -331,7 +331,7 @@ directory_test(async (t, root) => {
       t, 'content.txt', 'seekable', root);
   const stream = await handle.createWritable();
 
-  await promise_rejects_js(
-      t, SyntaxError, stream.write({type: 'seek'}), 'seek without position');
+  await promise_rejects_dom(
+      t, "SyntaxError", stream.write({type: 'seek'}), 'seek without position');
 
 }, 'WriteParams: seek missing position param');
