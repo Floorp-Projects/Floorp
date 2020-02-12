@@ -12,6 +12,8 @@ jobs:
     - name: Install dependency
       run: pip install requests
     - name: Synchronize state
+      # Use a conditional step instead of a conditional job to work around #20700.
+      if: github.repository == 'web-platform-tests/wpt'
       run:
         ./tools/ci/pr_preview.py
           --host https://api.github.com
