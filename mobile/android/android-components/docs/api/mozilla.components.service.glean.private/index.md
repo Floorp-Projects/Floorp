@@ -18,7 +18,8 @@
 | [MemoryDistributionMetricType](-memory-distribution-metric-type.md) | `typealias MemoryDistributionMetricType = MemoryDistributionMetricType` |
 | [MemoryUnit](-memory-unit.md) | `typealias MemoryUnit = MemoryUnit` |
 | [NoExtraKeys](-no-extra-keys.md) | `typealias NoExtraKeys = NoExtraKeys` |
-| [PingType](-ping-type.md) | `typealias PingType = PingType` |
+| [NoReasonCodes](-no-reason-codes.md) | `typealias NoReasonCodes = NoReasonCodes` |
+| [PingType](-ping-type.md) | `typealias PingType<T> = PingType<`[`T`](-ping-type.md#T)`>` |
 | [QuantityMetricType](-quantity-metric-type.md) | `typealias QuantityMetricType = QuantityMetricType` |
 | [RecordedExperimentData](-recorded-experiment-data.md) | `typealias RecordedExperimentData = RecordedExperimentData` |
 | [StringListMetricType](-string-list-metric-type.md) | `typealias StringListMetricType = StringListMetricType` |

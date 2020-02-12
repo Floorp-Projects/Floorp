@@ -2,4 +2,4 @@
 
 # MemoryDistributionMetricType
 
-`typealias MemoryDistributionMetricType = MemoryDistributionMetricType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L18)
+`typealias MemoryDistributionMetricType = MemoryDistributionMetricType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L19)

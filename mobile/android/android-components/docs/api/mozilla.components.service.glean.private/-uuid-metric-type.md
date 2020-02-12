@@ -2,4 +2,4 @@
 
 # UuidMetricType
 
-`typealias UuidMetricType = UuidMetricType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L28)
+`typealias UuidMetricType = UuidMetricType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L29)

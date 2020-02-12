@@ -2,4 +2,4 @@
 
 # StringMetricType
 
-`typealias StringMetricType = StringMetricType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L24)
+`typealias StringMetricType = StringMetricType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/MetricAliases.kt#L25)
