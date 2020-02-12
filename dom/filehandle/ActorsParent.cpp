@@ -87,7 +87,7 @@ class FileHandleThreadPool::FileHandleQueue final : public Runnable {
   void ProcessQueue();
 
  private:
-  ~FileHandleQueue() {}
+  ~FileHandleQueue() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -347,7 +347,7 @@ class FileHandleOp {
     MOZ_ASSERT(aFileHandle);
   }
 
-  virtual ~FileHandleOp() {}
+  virtual ~FileHandleOp() = default;
 };
 
 class FileHandle::FinishOp : public FileHandleOp {
@@ -361,7 +361,7 @@ class FileHandle::FinishOp : public FileHandleOp {
     MOZ_ASSERT(aFileHandle);
   }
 
-  ~FinishOp() {}
+  ~FinishOp() = default;
 
   virtual void RunOnThreadPool() override;
 
@@ -483,7 +483,7 @@ class CopyFileHandleOp::ProgressRunnable final : public Runnable {
         mProgressMax(aProgressMax) {}
 
  private:
-  ~ProgressRunnable() {}
+  ~ProgressRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -500,7 +500,7 @@ class GetMetadataOp : public NormalFileHandleOp {
   // Only created by FileHandle.
   GetMetadataOp(FileHandle* aFileHandle, const FileRequestParams& aParams);
 
-  ~GetMetadataOp() {}
+  ~GetMetadataOp() = default;
 
   virtual nsresult DoFileWork(FileHandle* aFileHandle) override;
 
@@ -516,7 +516,7 @@ class ReadOp final : public CopyFileHandleOp {
   // Only created by FileHandle.
   ReadOp(FileHandle* aFileHandle, const FileRequestParams& aParams);
 
-  ~ReadOp() {}
+  ~ReadOp() = default;
 
   virtual bool Init(FileHandle* aFileHandle) override;
 
@@ -532,7 +532,7 @@ class WriteOp final : public CopyFileHandleOp {
   // Only created by FileHandle.
   WriteOp(FileHandle* aFileHandle, const FileRequestParams& aParams);
 
-  ~WriteOp() {}
+  ~WriteOp() = default;
 
   virtual bool Init(FileHandle* aFileHandle) override;
 
@@ -548,7 +548,7 @@ class TruncateOp final : public NormalFileHandleOp {
   // Only created by FileHandle.
   TruncateOp(FileHandle* aFileHandle, const FileRequestParams& aParams);
 
-  ~TruncateOp() {}
+  ~TruncateOp() = default;
 
   virtual nsresult DoFileWork(FileHandle* aFileHandle) override;
 
@@ -564,7 +564,7 @@ class FlushOp final : public NormalFileHandleOp {
   // Only created by FileHandle.
   FlushOp(FileHandle* aFileHandle, const FileRequestParams& aParams);
 
-  ~FlushOp() {}
+  ~FlushOp() = default;
 
   virtual nsresult DoFileWork(FileHandle* aFileHandle) override;
 
