@@ -376,9 +376,9 @@ inline wchar_t* ArgToString(wchar_t* d, const wchar_t* s) {
  * @param aArgvExtra Optional array of arguments to be appended to the resulting
  *                   command line after those provided by |argv|.
  */
-inline UniquePtr<wchar_t[]> MakeCommandLine(int argc, wchar_t** argv,
-                                            int aArgcExtra = 0,
-                                            wchar_t** aArgvExtra = nullptr) {
+inline UniquePtr<wchar_t[]> MakeCommandLine(
+    int argc, const wchar_t* const* argv, int aArgcExtra = 0,
+    const wchar_t* const* aArgvExtra = nullptr) {
   int i;
   int len = 0;
 

@@ -152,7 +152,12 @@ static void TestPrintfFormats() {
       print_one("7799 9977", "%2$zu %1$zu", (size_t)9977, (size_t)7799));
 }
 
-int main() {
+#if defined(XP_WIN)
+int wmain()
+#else
+int main()
+#endif  // defined(XP_WIN)
+{
   TestPrintfFormats();
   TestPrintfTargetPrint();
 
