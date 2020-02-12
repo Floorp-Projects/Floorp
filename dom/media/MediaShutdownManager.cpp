@@ -59,7 +59,7 @@ static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
   }
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   MOZ_RELEASE_ASSERT(barrier);
-  return barrier.forget();
+  return barrier;
 }
 
 void MediaShutdownManager::InitStatics() {

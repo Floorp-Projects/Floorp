@@ -71,7 +71,7 @@ RefPtr<TextureSource> GetMaskLayerTexture(Layer* aLayer) {
     gfxWarning() << "Mask layer does not have a TextureSource";
     return nullptr;
   }
-  return source.forget();
+  return source;
 }
 
 MaskCombineOperation::MaskCombineOperation(FrameBuilder* aBuilder)

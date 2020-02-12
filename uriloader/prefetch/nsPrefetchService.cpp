@@ -397,7 +397,7 @@ void nsPrefetchService::ProcessNextPrefetchURI() {
     if (mPrefetchQueue.empty()) {
       break;
     }
-    RefPtr<nsPrefetchNode> node = mPrefetchQueue.front().forget();
+    RefPtr<nsPrefetchNode> node = std::move(mPrefetchQueue.front());
     mPrefetchQueue.pop_front();
 
     if (LOG_ENABLED()) {

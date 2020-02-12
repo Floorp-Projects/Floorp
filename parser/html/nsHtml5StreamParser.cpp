@@ -895,7 +895,7 @@ nsresult nsHtml5StreamParser::WriteStreamBytes(
         MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mLastBuffer = (mLastBuffer->next = newBuf.forget());
+      mLastBuffer = (mLastBuffer->next = std::move(newBuf));
     } else {
       MOZ_ASSERT(totalRead == aFromSegment.Length(),
                  "The Unicode decoder consumed the wrong number of bytes.");
@@ -1279,7 +1279,7 @@ void nsHtml5StreamParser::DoStopRequest() {
         MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
         return;
       }
-      mLastBuffer = (mLastBuffer->next = newBuf.forget());
+      mLastBuffer = (mLastBuffer->next = std::move(newBuf));
     } else {
       if (mDecodingLocalFileWithoutTokenizing) {
         MOZ_ASSERT(mLocalFileBytesBuffered < LOCAL_FILE_UTF_8_BUFFER_SIZE);

@@ -903,7 +903,7 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
   // window, or an ancestor of the focused window. Either way, the focus is no
   // longer valid, so it needs to be updated.
 
-  RefPtr<Element> oldFocusedElement = mFocusedElement.forget();
+  RefPtr<Element> oldFocusedElement = std::move(mFocusedElement);
 
   nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
   RefPtr<PresShell> presShell = focusedDocShell->GetPresShell();

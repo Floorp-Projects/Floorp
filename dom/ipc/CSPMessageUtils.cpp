@@ -52,7 +52,7 @@ bool ParamTraits<nsIContentSecurityPolicy*>::Read(
   nsCOMPtr<nsIContentSecurityPolicy> csp = do_QueryInterface(iSupports);
   NS_ENSURE_TRUE(csp, false);
 
-  *aResult = csp.forget();
+  *aResult = ToRefPtr(std::move(csp));
   return true;
 }
 

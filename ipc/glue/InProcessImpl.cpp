@@ -76,8 +76,8 @@ void InProcessParent::Startup() {
   parent->SetOtherProcessId(base::GetCurrentProcId());
 
   // Stash global references to fetch the other side of the reference.
-  InProcessParent::sSingleton = parent.forget();
-  InProcessChild::sSingleton = child.forget();
+  InProcessParent::sSingleton = std::move(parent);
+  InProcessChild::sSingleton = std::move(child);
 }
 
 /* static */

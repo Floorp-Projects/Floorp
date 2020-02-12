@@ -401,7 +401,7 @@ void CycleCollectedJSContext::ProcessStableStateQueue() {
   // When run, one event can add another event to the mStableStateEvents, as
   // such you can't use iterators here.
   for (uint32_t i = 0; i < mStableStateEvents.Length(); ++i) {
-    nsCOMPtr<nsIRunnable> event = mStableStateEvents[i].forget();
+    nsCOMPtr<nsIRunnable> event = std::move(mStableStateEvents[i]);
     event->Run();
   }
 
@@ -424,7 +424,7 @@ void CycleCollectedJSContext::CleanupIDBTransactions(uint32_t aRecursionDepth) {
     }
 
     {
-      nsCOMPtr<nsIRunnable> transaction = data.mTransaction.forget();
+      nsCOMPtr<nsIRunnable> transaction = std::move(data.mTransaction);
       transaction->Run();
     }
 
@@ -561,7 +561,7 @@ void CycleCollectedJSContext::DispatchToMicroTask(
   MOZ_ASSERT(runnable);
 
   JS::JobQueueMayNotBeEmpty(Context());
-  mPendingMicroTaskRunnables.push(runnable.forget());
+  mPendingMicroTaskRunnables.push(std::move(runnable));
 }
 
 class AsyncMutationHandler final : public mozilla::Runnable {
@@ -617,10 +617,10 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
   for (;;) {
     RefPtr<MicroTaskRunnable> runnable;
     if (!mDebuggerMicroTaskQueue.empty()) {
-      runnable = mDebuggerMicroTaskQueue.front().forget();
+      runnable = std::move(mDebuggerMicroTaskQueue.front());
       mDebuggerMicroTaskQueue.pop();
     } else if (!mPendingMicroTaskRunnables.empty()) {
-      runnable = mPendingMicroTaskRunnables.front().forget();
+      runnable = std::move(mPendingMicroTaskRunnables.front());
       mPendingMicroTaskRunnables.pop();
     } else {
       break;
@@ -669,7 +669,7 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
       break;
     }
 
-    RefPtr<MicroTaskRunnable> runnable = microtaskQueue->front().forget();
+    RefPtr<MicroTaskRunnable> runnable = std::move(microtaskQueue->front());
     MOZ_ASSERT(runnable);
 
     // This function can re-enter, so we remove the element before calling.

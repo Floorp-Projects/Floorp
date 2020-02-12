@@ -477,7 +477,7 @@ struct ParamTraitsMozilla<nsCOMPtr<T>> {
     if (!ParamTraits<T*>::Read(m, iter, &refptr)) {
       return false;
     }
-    *r = refptr.forget();
+    *r = std::move(refptr);
     return true;
   }
 };

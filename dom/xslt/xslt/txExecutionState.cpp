@@ -471,7 +471,7 @@ void txExecutionState::pushParamMap(txParameterMap* aParams) {
 }
 
 already_AddRefed<txParameterMap> txExecutionState::popParamMap() {
-  RefPtr<txParameterMap> oldParams = mTemplateParams.forget();
+  RefPtr<txParameterMap> oldParams = std::move(mTemplateParams);
   mTemplateParams = mParamStack.PopLastElement();
 
   return oldParams.forget();

@@ -134,7 +134,7 @@ already_AddRefed<ResizeObserver> ResizeObserver::Constructor(
     return nullptr;
   }
 
-  return do_AddRef(new ResizeObserver(window.forget(), doc, aCb));
+  return do_AddRef(new ResizeObserver(std::move(window), doc, aCb));
 }
 
 void ResizeObserver::Observe(Element& aTarget,
@@ -306,7 +306,7 @@ void ResizeObserverEntry::SetContentRectAndSize(const nsSize& aSize) {
   nsRect rect(nsPoint(padding.left, padding.top), aSize);
   RefPtr<DOMRect> contentRect = new DOMRect(this);
   contentRect->SetLayoutRect(rect);
-  mContentRect = contentRect.forget();
+  mContentRect = std::move(contentRect);
 
   // 2. Update mContentBoxSize.
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();

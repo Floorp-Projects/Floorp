@@ -392,7 +392,7 @@ RefPtr<GenericErrorResultPromise> ServiceWorkerManager::StartControllingClient(
   auto entry = mControlledClients.LookupForAdd(aClientInfo.Id());
   if (entry) {
     RefPtr<ServiceWorkerRegistrationInfo> old =
-        entry.Data()->mRegistrationInfo.forget();
+        std::move(entry.Data()->mRegistrationInfo);
 
     if (aControlClientHandle) {
       promise = entry.Data()->mClientHandle->Control(active);
@@ -468,7 +468,7 @@ void ServiceWorkerManager::StopControllingClient(
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> reg =
-      entry.Data()->mRegistrationInfo.forget();
+      std::move(entry.Data()->mRegistrationInfo);
 
   entry.Remove();
 

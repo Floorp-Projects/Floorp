@@ -39,7 +39,7 @@ already_AddRefed<nsIAuthModule> nsIAuthModule::CreateInstance(
       return nullptr;
     }
 
-    auth = sambaAuth.forget();
+    auth = std::move(sambaAuth);
 #endif
   } else if (!nsCRT::strcmp(aType, "sasl-gssapi")) {
     auth = new nsAuthSASL();
@@ -52,7 +52,7 @@ already_AddRefed<nsIAuthModule> nsIAuthModule::CreateInstance(
       return nullptr;
     }
 
-    auth = ntlmAuth.forget();
+    auth = std::move(ntlmAuth);
   } else {
     return nullptr;
   }
