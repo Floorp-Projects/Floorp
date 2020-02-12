@@ -1002,3 +1002,7 @@ android-hw-arm7-browsertime:
     - browsertime-tp6m
     - browsertime-tp6m-profiling
     - browsertime-benchmark-speedometer
+
+linux-tsan-tests:
+    - mochitest
+    - xpcshell
