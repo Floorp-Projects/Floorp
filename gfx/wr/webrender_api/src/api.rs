@@ -1175,6 +1175,7 @@ macro_rules! enumerate_interners {
             line_decoration: LineDecoration,
             linear_grad: LinearGradient,
             radial_grad: RadialGradient,
+            conic_grad: ConicGradient,
             picture: Picture,
             text_run: TextRun,
             filter_data: FilterDataIntern,
