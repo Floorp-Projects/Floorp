@@ -99,6 +99,7 @@ int
 secmod_GetSystemFIPSEnabled(void)
 {
 #ifdef LINUX
+#ifndef NSS_FIPS_DISABLED
     FILE *f;
     char d;
     size_t size;
@@ -116,6 +117,7 @@ secmod_GetSystemFIPSEnabled(void)
     if (d == '1') {
         return 1;
     }
+#endif
 #endif
     return 0;
 }
