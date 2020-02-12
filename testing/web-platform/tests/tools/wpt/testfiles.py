@@ -396,7 +396,7 @@ def run_changed_files(**kwargs):
     separator = "\0" if kwargs["null"] else "\n"
 
     for item in sorted(changed):
-        sys.stdout.write(os.path.relpath(item.encode("utf8"), wpt_root) + separator)
+        sys.stdout.write(os.path.relpath(six.ensure_str(item), wpt_root) + separator)
 
 
 def run_tests_affected(**kwargs):
