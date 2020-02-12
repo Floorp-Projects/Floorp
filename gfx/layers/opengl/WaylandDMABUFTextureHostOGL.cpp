@@ -53,7 +53,7 @@ bool WaylandDMABUFTextureHostOGL::Lock() {
     mTextureSource = CreateTextureSourceForPlane(0);
 
     RefPtr<TextureSource> prev = mTextureSource;
-    for (size_t i = 1; i < mSurface->GetPlaneCount(); i++) {
+    for (size_t i = 1; i < mSurface->GetTextureCount(); i++) {
       RefPtr<TextureSource> next = CreateTextureSourceForPlane(i);
       prev->SetNextSibling(next);
       prev = next;
@@ -102,7 +102,7 @@ gfx::ColorRange WaylandDMABUFTextureHostOGL::GetColorRange() const {
 }
 
 uint32_t WaylandDMABUFTextureHostOGL::NumSubTextures() {
-  return mSurface->GetPlaneCount();
+  return mSurface->GetTextureCount();
 }
 
 gfx::IntSize WaylandDMABUFTextureHostOGL::GetSize() const {
@@ -151,7 +151,7 @@ void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
     }
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
-      MOZ_ASSERT(mSurface->GetPlaneCount() == 2);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 2);
       wr::ImageDescriptor descriptor0(
           gfx::IntSize(mSurface->GetWidth(0), mSurface->GetHeight(0)),
           gfx::SurfaceFormat::A8, aPreferCompositorSurface);
@@ -184,7 +184,7 @@ void WaylandDMABUFTextureHostOGL::PushDisplayItems(
     }
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
-      MOZ_ASSERT(mSurface->GetPlaneCount() == 2);
+      MOZ_ASSERT(mSurface->GetTextureCount() == 2);
       // Those images can only be generated at present by the VAAPI H264 decoder
       // which only supports 8 bits color depth.
       aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
