@@ -116,7 +116,7 @@ class DocManager : public nsIWebProgressListener,
 
  protected:
   DocManager();
-  virtual ~DocManager() {}
+  virtual ~DocManager() = default;
 
   /**
    * Initialize the manager.
