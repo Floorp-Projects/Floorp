@@ -1518,7 +1518,7 @@ nsresult mozInlineSpellChecker::ResumeCheck(
     // no active dictionary
     int32_t count = spellCheckSelection->RangeCount();
     for (int32_t index = count - 1; index >= 0; index--) {
-      nsRange* checkRange = spellCheckSelection->GetRangeAt(index);
+      RefPtr<nsRange> checkRange = spellCheckSelection->GetRangeAt(index);
       if (checkRange) {
         RemoveRange(spellCheckSelection, checkRange);
       }
