@@ -1325,9 +1325,9 @@ class GeckoEngineSessionTest {
                 ERROR_CATEGORY_UNKNOWN,
                 ERROR_UNKNOWN)
         )
-
         onLoadError!!.then { value: String? ->
-            GeckoResult.fromValue(value)
+            assertTrue(value!!.contains("data:text/html;base64,"))
+            GeckoResult.fromValue(null)
         }
     }
 

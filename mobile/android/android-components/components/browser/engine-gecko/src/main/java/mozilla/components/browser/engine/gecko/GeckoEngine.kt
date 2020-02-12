@@ -28,6 +28,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
@@ -62,7 +63,22 @@ class GeckoEngine(
 ) : Engine, WebExtensionRuntime {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
+
     private var webExtensionDelegate: WebExtensionDelegate? = null
+    private val webExtensionActionHandler = object : ActionHandler {
+        override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) {
+            webExtensionDelegate?.onBrowserActionDefined(extension, action)
+        }
+
+        override fun onPageAction(extension: WebExtension, session: EngineSession?, action: Action) {
+            webExtensionDelegate?.onPageActionDefined(extension, action)
+        }
+
+        override fun onToggleActionPopup(extension: WebExtension, action: Action): EngineSession? {
+            return webExtensionDelegate?.onToggleActionPopup(extension, GeckoEngineSession(runtime), action)
+        }
+    }
+
     private var webPushHandler: WebPushHandler? = null
 
     init {
@@ -151,7 +167,7 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit),
         onError: ((String, Throwable) -> Unit)
     ) {
-        val ext = GeckoWebExtension(id, url, allowContentMessaging, supportActions)
+        val ext = GeckoWebExtension(id, url, runtime.webExtensionController, allowContentMessaging, supportActions)
         installWebExtension(ext, onSuccess, onError)
     }
 
@@ -160,37 +176,72 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
     ) {
-        if (ext.supportActions) {
-            // We currently have to install the global action handler before we
-            // install the extension which is why this is done here directly.
-            // This code can be removed from the engine once the new GV addon
-            // management API lands. Then the global handlers will be invoked
-            // with the latest state whenever they are registered:
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1599897
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1582185
-            ext.registerActionHandler(object : ActionHandler {
-                override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) {
-                    webExtensionDelegate?.onBrowserActionDefined(extension, action)
-                }
+        if (ext.isBuiltIn()) {
+            if (ext.supportActions) {
+                // We currently have to install the global action handler before we
+                // install the extension which is why this is done here directly.
+                // This code can be removed from the engine once the new GV addon
+                // management API (specifically installBuiltIn) lands. Then the
+                // global handlers will be invoked with the latest state whenever
+                // they are registered:
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1599897
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1582185
+                ext.registerActionHandler(webExtensionActionHandler)
+            }
 
-                override fun onToggleActionPopup(
-                    extension: WebExtension,
-                    action: Action
-                ): EngineSession? {
-                    val session = GeckoEngineSession(runtime)
-                    return webExtensionDelegate?.onToggleActionPopup(extension, session, action)
-                }
+            // For now we have to use registerWebExtension for builtin extensions until we get the
+            // new installBuiltIn call on the controller: https://bugzilla.mozilla.org/show_bug.cgi?id=1601067
+            runtime.registerWebExtension(ext.nativeExtension).then({
+                webExtensionDelegate?.onInstalled(ext)
+                onSuccess(ext)
+                GeckoResult<Void>()
+            }, { throwable ->
+                onError(ext.id, throwable)
+                GeckoResult<Void>()
+            })
+        } else {
+            runtime.webExtensionController.install(ext.url).then({
+                val installedExtension = GeckoWebExtension(it!!, runtime.webExtensionController)
+                webExtensionDelegate?.onInstalled(installedExtension)
+                installedExtension.registerActionHandler(webExtensionActionHandler)
+                onSuccess(installedExtension)
+                GeckoResult<Void>()
+            }, { throwable ->
+                onError(ext.id, throwable)
+                GeckoResult<Void>()
             })
         }
+    }
 
-        runtime.registerWebExtension(ext.nativeExtension).then({
-            webExtensionDelegate?.onInstalled(ext)
-            onSuccess(ext)
+    /**
+     * See [Engine.uninstallWebExtension].
+     */
+    override fun uninstallWebExtension(
+        ext: WebExtension,
+        onSuccess: () -> Unit,
+        onError: (String, Throwable) -> Unit
+    ) {
+        runtime.webExtensionController.uninstall((ext as GeckoWebExtension).nativeExtension).then({
+            webExtensionDelegate?.onUninstalled(ext)
+            onSuccess()
             GeckoResult<Void>()
-        }, {
-            throwable -> onError(ext.id, throwable)
+        }, { throwable ->
+            onError(ext.id, throwable)
             GeckoResult<Void>()
         })
+    }
+
+    /**
+     * See [Engine.updateWebExtension].
+     */
+    override fun updateWebExtension(
+        extension: WebExtension,
+        onSuccess: (WebExtension?) -> Unit,
+        onError: (String, Throwable) -> Unit
+    ) {
+        // GeckoView support for updating extensions hasn't been implemented yet
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599581
+        onSuccess(null)
     }
 
     /**
@@ -214,7 +265,9 @@ class GeckoEngine(
                 url: String?
             ): GeckoResult<GeckoSession>? {
                 val geckoEngineSession = GeckoEngineSession(runtime, openGeckoSession = false)
-                val geckoWebExtension = webExtension?.let { GeckoWebExtension(it.id, it.location) }
+                val geckoWebExtension = webExtension?.let {
+                    GeckoWebExtension(it.id, it.location, runtime.webExtensionController)
+                }
                 webExtensionDelegate.onNewTab(geckoWebExtension, url ?: "", geckoEngineSession)
 
                 tabs[geckoEngineSession] = webExtension?.id
@@ -228,7 +281,8 @@ class GeckoEngine(
                 val geckoEngineSession = tabs.keys.find { it.geckoSession == session } ?: return GeckoResult.DENY
 
                 return if (webExtension != null && tabs[geckoEngineSession] == webExtension.id) {
-                    val geckoWebExtension = GeckoWebExtension(webExtension.id, webExtension.location)
+                    val geckoWebExtension =
+                        GeckoWebExtension(webExtension.id, webExtension.location, runtime.webExtensionController)
                     if (webExtensionDelegate.onCloseTab(geckoWebExtension, geckoEngineSession)) {
                         GeckoResult.ALLOW
                     } else {
@@ -240,6 +294,21 @@ class GeckoEngine(
             }
         }
 
+        val promptDelegate = object : WebExtensionController.PromptDelegate {
+            override fun onInstallPrompt(ext: org.mozilla.geckoview.WebExtension): GeckoResult<AllowOrDeny>? {
+                val extension = GeckoWebExtension(ext, runtime.webExtensionController)
+                return if (webExtensionDelegate.onInstallPermissionRequest(extension)) {
+                    GeckoResult.ALLOW
+                } else {
+                    GeckoResult.DENY
+                }
+            }
+            // TODO implement onUpdatePrompt:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1599581
+            // https://github.com/mozilla-mobile/android-components/issues/5143
+        }
+
+        runtime.webExtensionController.promptDelegate = promptDelegate
         runtime.webExtensionController.tabDelegate = tabsDelegate
     }
 
@@ -247,8 +316,46 @@ class GeckoEngine(
      * See [Engine.listInstalledWebExtensions].
      */
     override fun listInstalledWebExtensions(onSuccess: (List<WebExtension>) -> Unit, onError: (Throwable) -> Unit) {
-        // TODO https://github.com/mozilla-mobile/android-components/issues/4500
-        onSuccess(emptyList())
+        runtime.webExtensionController.list().then({
+            val extensions = it?.map {
+                extension -> GeckoWebExtension(extension, runtime.webExtensionController)
+            } ?: emptyList()
+
+            extensions.forEach { extension -> extension.registerActionHandler(webExtensionActionHandler) }
+            onSuccess(extensions)
+            GeckoResult<Void>()
+        }, { throwable ->
+            onError(throwable)
+            GeckoResult<Void>()
+        })
+    }
+
+    /**
+     * See [Engine.enableWebExtension].
+     */
+    override fun enableWebExtension(
+        extension: WebExtension,
+        source: EnableSource,
+        onSuccess: (WebExtension) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
+        webExtensionDelegate?.onEnabled(extension)
+        onSuccess(extension)
+    }
+
+    /**
+     * See [Engine.disableWebExtension].
+     */
+    override fun disableWebExtension(
+        extension: WebExtension,
+        source: EnableSource,
+        onSuccess: (WebExtension) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
+        webExtensionDelegate?.onDisabled(extension)
+        onSuccess(extension)
     }
 
     /**

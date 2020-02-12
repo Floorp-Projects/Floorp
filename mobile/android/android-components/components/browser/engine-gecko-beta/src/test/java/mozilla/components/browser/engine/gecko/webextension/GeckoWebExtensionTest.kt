@@ -337,8 +337,9 @@ class GeckoWebExtensionTest {
         metaDataBundle.putString("creatorURL", "https://developer1.dev")
         metaDataBundle.putString("homepageURL", "https://mozilla.org")
         metaDataBundle.putString("name", "myextension")
-        metaDataBundle.putString("optionsPageUrl", "")
+        metaDataBundle.putString("optionsPageURL", "http://options-page.moz")
         metaDataBundle.putBoolean("openOptionsPageInTab", false)
+        metaDataBundle.putStringArray("disabledFlags", arrayOf("userDisabled"))
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
@@ -356,11 +357,11 @@ class GeckoWebExtensionTest {
         assertEquals("https://developer1.dev", metadata.developerUrl)
         assertEquals("https://mozilla.org", metadata.homePageUrl)
         assertEquals("myextension", metadata.name)
+        assertEquals("http://options-page.moz", metadata.optionsPageUrl)
         assertFalse(metadata.openOptionsPageInTab)
-        assertFalse(metadata.disabledFlags.contains(DisabledFlags.USER))
+        assertTrue(metadata.disabledFlags.contains(DisabledFlags.USER))
         assertFalse(metadata.disabledFlags.contains(DisabledFlags.BLOCKLIST))
         assertFalse(metadata.disabledFlags.contains(DisabledFlags.APP_SUPPORT))
-        assertNull(metadata.optionsPageUrl)
     }
 
     @Test
@@ -379,6 +380,7 @@ class GeckoWebExtensionTest {
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
+        metaDataBundle.putStringArray("disabledFlags", emptyArray())
         bundle.putBundle("metaData", metaDataBundle)
 
         val nativeWebExtension = MockWebExtension(bundle)
@@ -415,10 +417,27 @@ class GeckoWebExtensionTest {
     @Test
     fun `isEnabled depends on native state`() {
         val webExtensionController: WebExtensionController = mock()
-        val extension = GeckoWebExtension(
-            WebExtension("resource://url", "id", WebExtension.Flags.NONE, webExtensionController),
-            webExtensionController
-        )
-        assertTrue(extension.isEnabled())
+
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        val nativeExtensionWithoutMetadata = MockWebExtension(bundle)
+        val webExtension = GeckoWebExtension(nativeExtensionWithoutMetadata, webExtensionController)
+        assertFalse(webExtension.isEnabled())
+
+        val metaDataBundle = GeckoBundle()
+        metaDataBundle.putBoolean("enabled", true)
+        metaDataBundle.putStringArray("disabledFlags", emptyArray())
+        bundle.putBundle("metaData", metaDataBundle)
+        val nativeEnabledWebExtension = MockWebExtension(bundle)
+        val enabledWebExtension = GeckoWebExtension(nativeEnabledWebExtension, webExtensionController)
+        assertTrue(enabledWebExtension.isEnabled())
+
+        metaDataBundle.putBoolean("enabled", false)
+        metaDataBundle.putStringArray("disabledFlags", arrayOf("userDisabled"))
+        bundle.putBundle("metaData", metaDataBundle)
+        val nativeDisabledWebExtnesion = MockWebExtension(bundle)
+        val disabledWebExtension = GeckoWebExtension(nativeDisabledWebExtnesion, webExtensionController)
+        assertFalse(disabledWebExtension.isEnabled())
     }
 }
