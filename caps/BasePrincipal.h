@@ -129,6 +129,7 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetAsciiSpec(nsACString& aSpec) override;
   NS_IMETHOD GetExposablePrePath(nsACString& aResult) override;
   NS_IMETHOD GetHostPort(nsACString& aRes) override;
+  NS_IMETHOD GetPrepath(nsACString& aResult) override;
   NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final;
   NS_IMETHOD GetIsOnion(bool* aIsOnion) override;
   NS_IMETHOD GetIsInIsolatedMozBrowserElement(
