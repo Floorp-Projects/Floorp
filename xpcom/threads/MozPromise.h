@@ -259,7 +259,7 @@ class MozPromise : public MozPromiseBase {
     RefPtr<typename MozPromise::Private> p =
         new MozPromise::Private(aResolveSite);
     p->Resolve(std::forward<ResolveValueType_>(aResolveValue), aResolveSite);
-    return p.forget();
+    return p;
   }
 
   template <typename RejectValueType_>
@@ -271,7 +271,7 @@ class MozPromise : public MozPromiseBase {
     RefPtr<typename MozPromise::Private> p =
         new MozPromise::Private(aRejectSite);
     p->Reject(std::forward<RejectValueType_>(aRejectValue), aRejectSite);
-    return p.forget();
+    return p;
   }
 
   template <typename ResolveOrRejectValueType_>
@@ -279,7 +279,7 @@ class MozPromise : public MozPromiseBase {
       ResolveOrRejectValueType_&& aValue, const char* aSite) {
     RefPtr<typename MozPromise::Private> p = new MozPromise::Private(aSite);
     p->ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue), aSite);
-    return p.forget();
+    return p;
   }
 
   typedef MozPromise<nsTArray<ResolveValueType>, RejectValueType, IsExclusive>
@@ -1134,7 +1134,7 @@ class MozPromiseHolder {
   MozPromiseHolder() : mMonitor(nullptr) {}
 
   MozPromiseHolder(MozPromiseHolder&& aOther)
-      : mMonitor(nullptr), mPromise(aOther.mPromise.forget()) {}
+      : mMonitor(nullptr), mPromise(std::move(aOther.mPromise)) {}
 
   // Move semantics.
   MozPromiseHolder& operator=(MozPromiseHolder&& aOther) {
@@ -1374,7 +1374,7 @@ static RefPtr<PromiseType> InvokeAsyncImpl(
       new (typename PromiseType::Private)(aCallerName);
   RefPtr<ProxyRunnableType> r = new ProxyRunnableType(p, methodCall);
   aTarget->Dispatch(r.forget());
-  return p.forget();
+  return p;
 }
 
 constexpr bool Any() { return false; }
@@ -1490,7 +1490,7 @@ static auto InvokeAsync(nsISerialEventTarget* aTarget, const char* aCallerName,
   auto p = MakeRefPtr<typename PromiseType::Private>(aCallerName);
   auto r = MakeRefPtr<ProxyRunnableType>(p, std::forward<Function>(aFunction));
   aTarget->Dispatch(r.forget());
-  return p.forget();
+  return p;
 }
 
 }  // namespace detail

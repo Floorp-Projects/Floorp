@@ -774,7 +774,7 @@ RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength) {
       NS_WARNING("Failed to create a thread for MediaCache.");
       return nullptr;
     }
-    sThread = thread.forget();
+    sThread = ToRefPtr(std::move(thread));
 
     static struct ClearThread {
       // Called during shutdown to clear sThread.

@@ -412,7 +412,7 @@ RefPtr<ShutdownPromise> MediaChangeMonitor::Shutdown() {
     if (mShutdownPromise) {
       // We have a shutdown in progress, return that promise instead as we can't
       // shutdown a decoder twice.
-      RefPtr<ShutdownPromise> p = mShutdownPromise.forget();
+      RefPtr<ShutdownPromise> p = std::move(mShutdownPromise);
       return p;
     }
     return ShutdownDecoder();
@@ -424,7 +424,7 @@ RefPtr<ShutdownPromise> MediaChangeMonitor::ShutdownDecoder() {
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
     mConversionRequired.reset();
     if (mDecoder) {
-      RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
+      RefPtr<MediaDataDecoder> decoder = std::move(mDecoder);
       return decoder->Shutdown();
     }
     return ShutdownPromise::CreateAndResolve(true, __func__);

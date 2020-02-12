@@ -293,7 +293,7 @@ nsresult CacheIndex::Init(nsIFile* aCacheDirectory) {
   nsresult rv = idx->InitInternal(aCacheDirectory);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  gInstance = idx.forget();
+  gInstance = std::move(idx);
   return NS_OK;
 }
 

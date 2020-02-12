@@ -158,7 +158,7 @@ static nsresult ProcessSerialNumberDER(
     return rv;
   }
 
-  retItem = printableItem.forget();
+  retItem = std::move(printableItem);
   return NS_OK;
 }
 

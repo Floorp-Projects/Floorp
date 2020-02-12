@@ -1628,10 +1628,10 @@ void nsINode::DisconnectChild(nsIContent* aKid) {
   aKid->mPreviousOrLastSibling = nullptr;
 
   if (previousSibling) {
-    previousSibling->mNextSibling = aKid->mNextSibling.forget();
+    previousSibling->mNextSibling = std::move(aKid->mNextSibling);
   } else {
     // aKid is the first child in the list
-    mFirstChild = aKid->mNextSibling.forget();
+    mFirstChild = std::move(aKid->mNextSibling);
   }
 
   --mChildCount;

@@ -6082,7 +6082,7 @@ CreateElementResult HTMLEditor::ChangeListElementType(Element& aListElement,
     return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(listElement != nullptr, "Failed to create list element");
-  return CreateElementResult(listElement.forget());
+  return CreateElementResult(std::move(listElement));
 }
 
 nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {

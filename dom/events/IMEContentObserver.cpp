@@ -2079,7 +2079,7 @@ void IMEContentObserver::DocumentObserver::Observe(Document* aDocument) {
 
   StopObserving();
 
-  mDocument = newDocument.forget();
+  mDocument = std::move(newDocument);
   mDocument->AddObserver(this);
 }
 
@@ -2089,10 +2089,10 @@ void IMEContentObserver::DocumentObserver::StopObserving() {
   }
 
   // Grab IMEContentObserver which could be destroyed during method calls.
-  RefPtr<IMEContentObserver> observer = mIMEContentObserver.forget();
+  RefPtr<IMEContentObserver> observer = std::move(mIMEContentObserver);
 
   // Stop observing the document first.
-  RefPtr<Document> document = mDocument.forget();
+  RefPtr<Document> document = std::move(mDocument);
   document->RemoveObserver(this);
 
   // Notify IMEContentObserver of ending of document updates if this already

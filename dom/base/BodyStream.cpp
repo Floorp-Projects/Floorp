@@ -121,7 +121,7 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
     // Note, this will create a ref-cycle between the holder and the stream.
     // The cycle is broken when the stream is closed or the worker begins
     // shutting down.
-    stream->mWorkerRef = workerRef.forget();
+    stream->mWorkerRef = std::move(workerRef);
   }
 
   aRv.MightThrowJSException();

@@ -185,7 +185,7 @@ void CompositorScreenshotGrabberImpl::GrabScreenshot(Compositor* aCompositor) {
   // ProcessQueue(). This ensures that the buffer isn't mapped into main memory
   // until the next frame. If we did it in this frame, we'd block on the GPU.
   mCurrentFrameQueueItem = Some(QueueItem{
-      TimeStamp::Now(), buffer.forget(), scaledSize, windowTarget->GetSize(),
+      TimeStamp::Now(), std::move(buffer), scaledSize, windowTarget->GetSize(),
       reinterpret_cast<uintptr_t>(static_cast<void*>(this))});
 }
 

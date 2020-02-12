@@ -268,11 +268,12 @@ class ThreadSafeWeakPtr {
   ThreadSafeWeakPtr(const ThreadSafeWeakPtr& aOther) : mRef(aOther.mRef) {}
 
   ThreadSafeWeakPtr& operator=(ThreadSafeWeakPtr&& aOther) {
-    mRef = aOther.mRef.forget();
+    mRef = std::move(aOther.mRef);
     return *this;
   }
 
-  ThreadSafeWeakPtr(ThreadSafeWeakPtr&& aOther) : mRef(aOther.mRef.forget()) {}
+  ThreadSafeWeakPtr(ThreadSafeWeakPtr&& aOther)
+      : mRef(std::move(aOther.mRef)) {}
 
   ThreadSafeWeakPtr& operator=(const RefPtr<T>& aOther) {
     if (aOther) {

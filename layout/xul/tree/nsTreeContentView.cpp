@@ -520,7 +520,7 @@ nsTreeContentView::SetTree(XULTreeElement* aTree) {
 
     RefPtr<dom::Element> bodyElement = mTree->GetTreeBody();
     if (bodyElement) {
-      mBody = bodyElement.forget();
+      mBody = std::move(bodyElement);
       int32_t index = 0;
       Serialize(mBody, -1, &index, mRows);
     }
