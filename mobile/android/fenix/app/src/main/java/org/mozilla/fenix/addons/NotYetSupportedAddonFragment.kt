@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_not_yet_supported_addons.view.*
@@ -28,17 +29,20 @@ class NotYetSupportedAddonFragment :
     Fragment(R.layout.fragment_not_yet_supported_addons), UnsupportedAddonsAdapterDelegate {
 
     private val args by navArgs<NotYetSupportedAddonFragmentArgs>()
+    private var unsupportedAddonsAdapter: UnsupportedAddonsAdapter? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        unsupportedAddonsAdapter = UnsupportedAddonsAdapter(
+            addonManager = requireContext().components.addonManager,
+            unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
+            addons = args.addons.toList()
+        )
+
         view.unsupported_add_ons_list.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = UnsupportedAddonsAdapter(
-                addonManager = requireContext().components.addonManager,
-                unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
-                addons = args.addons.toList()
-            )
+            adapter = unsupportedAddonsAdapter
         }
 
         view.learn_more_label.setOnClickListener {
@@ -55,6 +59,10 @@ class NotYetSupportedAddonFragment :
     override fun onUninstallError(addonId: String, throwable: Throwable) {
         this@NotYetSupportedAddonFragment.view?.let { view ->
             showSnackBar(view, getString(R.string.mozac_feature_addons_failed_to_remove, ""))
+        }
+
+        if (unsupportedAddonsAdapter?.itemCount == 0) {
+            findNavController().popBackStack()
         }
     }
 
