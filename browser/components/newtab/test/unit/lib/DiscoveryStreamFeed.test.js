@@ -833,20 +833,128 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
       sandbox
         .stub(feed, "fetchFromEndpoint")
-        .resolves({ spocs: [{ id: "data" }] });
+        .resolves({ spocs: { items: [{ id: "data" }] } });
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
 
       await feed.loadSpocs(feed.store.dispatch);
 
       assert.calledWith(feed.cache.set, "spocs", {
-        spocs: { spocs: [{ id: "data", min_score: 0, score: 1 }] },
+        spocs: {
+          spocs: {
+            context: "",
+            title: "",
+            items: [{ id: "data", min_score: 0, score: 1 }],
+          },
+        },
         lastUpdated: 0,
       });
 
       assert.deepEqual(
-        feed.store.getState().DiscoveryStream.spocs.data.spocs[0],
+        feed.store.getState().DiscoveryStream.spocs.data.spocs.items[0],
         { id: "data", min_score: 0, score: 1 }
       );
+    });
+    it("should normalizeSpocsItems for older spoc data", async () => {
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve());
+      sandbox
+        .stub(feed, "fetchFromEndpoint")
+        .resolves({ spocs: [{ id: "data" }] });
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+
+      await feed.loadSpocs(feed.store.dispatch);
+
+      assert.deepEqual(
+        feed.store.getState().DiscoveryStream.spocs.data.spocs.items[0],
+        { id: "data", min_score: 0, score: 1 }
+      );
+    });
+    it("should return expected data if normalizeSpocsItems returns no spoc data", async () => {
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve());
+      sandbox
+        .stub(feed, "fetchFromEndpoint")
+        .resolves({ placement1: [{ id: "data" }], placement2: [] });
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+
+      const fakeComponents = {
+        components: [
+          { placement: { name: "placement1" } },
+          { placement: { name: "placement2" } },
+        ],
+      };
+      feed.updatePlacements(feed.store.dispatch, [fakeComponents]);
+
+      await feed.loadSpocs(feed.store.dispatch);
+
+      assert.deepEqual(feed.store.getState().DiscoveryStream.spocs.data, {
+        placement1: {
+          title: "",
+          context: "",
+          items: [{ id: "data", score: 1, min_score: 0 }],
+        },
+        placement2: {
+          title: "",
+          context: "",
+          items: [],
+        },
+      });
+    });
+    it("should use title and context on spoc data", async () => {
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve());
+      sandbox.stub(feed, "fetchFromEndpoint").resolves({
+        placement1: {
+          title: "title",
+          context: "context",
+          items: [{ id: "data" }],
+        },
+      });
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+
+      const fakeComponents = {
+        components: [{ placement: { name: "placement1" } }],
+      };
+      feed.updatePlacements(feed.store.dispatch, [fakeComponents]);
+
+      await feed.loadSpocs(feed.store.dispatch);
+
+      assert.deepEqual(feed.store.getState().DiscoveryStream.spocs.data, {
+        placement1: {
+          title: "title",
+          context: "context",
+          items: [{ id: "data", score: 1, min_score: 0 }],
+        },
+      });
+    });
+  });
+
+  describe("#normalizeSpocsItems", () => {
+    it("should return correct data if new data passed in", async () => {
+      const spocs = {
+        title: "title",
+        context: "context",
+        items: [{ id: "id" }],
+      };
+      const result = feed.normalizeSpocsItems(spocs);
+      assert.deepEqual(result, spocs);
+    });
+    it("should return normalized data if new data passed in without title or context", async () => {
+      const spocs = {
+        items: [{ id: "id" }],
+      };
+      const result = feed.normalizeSpocsItems(spocs);
+      assert.deepEqual(result, {
+        title: "",
+        context: "",
+        items: [{ id: "id" }],
+      });
+    });
+    it("should return normalized data if old data passed in", async () => {
+      const spocs = [{ id: "id" }];
+      const result = feed.normalizeSpocsItems(spocs);
+      assert.deepEqual(result, {
+        title: "",
+        context: "",
+        items: [{ id: "id" }],
+      });
     });
   });
 
@@ -1377,28 +1485,30 @@ describe("DiscoveryStreamFeed", () => {
   describe("#cleanUpFlightImpressionPref", () => {
     it("should remove flight-3 because it is no longer being used", async () => {
       const fakeSpocs = {
-        spocs: [
-          {
-            flight_id: "flight-1",
-            caps: {
-              lifetime: 3,
-              flight: {
-                count: 1,
-                period: 1,
+        spocs: {
+          items: [
+            {
+              flight_id: "flight-1",
+              caps: {
+                lifetime: 3,
+                flight: {
+                  count: 1,
+                  period: 1,
+                },
               },
             },
-          },
-          {
-            flight_id: "flight-2",
-            caps: {
-              lifetime: 3,
-              flight: {
-                count: 1,
-                period: 1,
+            {
+              flight_id: "flight-2",
+              caps: {
+                lifetime: 3,
+                flight: {
+                  count: 1,
+                  period: 1,
+                },
               },
             },
-          },
-        ],
+          ],
+        },
       };
       const fakeImpressions = {
         "flight-2": [Date.now() - 1],
@@ -1412,6 +1522,20 @@ describe("DiscoveryStreamFeed", () => {
       assert.calledWith(feed.writeDataPref, SPOC_IMPRESSION_TRACKING_PREF, {
         "flight-2": [-1],
       });
+    });
+    it("should use old spocs data strucutre", async () => {
+      const fakeSpocs = {
+        spocs: [
+          {
+            flight_id: "flight-2",
+          },
+        ],
+      };
+      sandbox.stub(feed, "cleanUpImpressionPref").returns();
+
+      feed.cleanUpFlightImpressionPref(fakeSpocs);
+
+      assert.calledOnce(feed.cleanUpImpressionPref);
     });
   });
 
@@ -1530,30 +1654,32 @@ describe("DiscoveryStreamFeed", () => {
   describe("#onAction: DISCOVERY_STREAM_SPOC_IMPRESSION", () => {
     beforeEach(() => {
       const data = {
-        spocs: [
-          {
-            id: 1,
-            flight_id: "seen",
-            caps: {
-              lifetime: 3,
-              flight: {
-                count: 1,
-                period: 1,
+        spocs: {
+          items: [
+            {
+              id: 1,
+              flight_id: "seen",
+              caps: {
+                lifetime: 3,
+                flight: {
+                  count: 1,
+                  period: 1,
+                },
               },
             },
-          },
-          {
-            id: 2,
-            flight_id: "not-seen",
-            caps: {
-              lifetime: 3,
-              flight: {
-                count: 1,
-                period: 1,
+            {
+              id: 2,
+              flight_id: "not-seen",
+              caps: {
+                lifetime: 3,
+                flight: {
+                  count: 1,
+                  period: 1,
+                },
               },
             },
-          },
-        ],
+          ],
+        },
       };
       sandbox.stub(feed.store, "getState").returns({
         DiscoveryStream: {
@@ -1571,19 +1697,21 @@ describe("DiscoveryStreamFeed", () => {
         seen: [Date.now() - 1],
       };
       const result = {
-        spocs: [
-          {
-            id: 2,
-            flight_id: "not-seen",
-            caps: {
-              lifetime: 3,
-              flight: {
-                count: 1,
-                period: 1,
+        spocs: {
+          items: [
+            {
+              id: 2,
+              flight_id: "not-seen",
+              caps: {
+                lifetime: 3,
+                flight: {
+                  count: 1,
+                  period: 1,
+                },
               },
             },
-          },
-        ],
+          ],
+        },
       };
       const spocFillResult = [
         {
@@ -1600,7 +1728,7 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({
         type: at.DISCOVERY_STREAM_SPOC_IMPRESSION,
-        data: { flight_id: "seen" },
+        data: { flightId: "seen" },
       });
 
       assert.deepEqual(
@@ -1636,19 +1764,21 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.spy(feed, "frequencyCapSpocs");
 
       const data = {
-        spocs: [
-          {
-            id: 2,
-            flight_id: "seen-2",
-            caps: {
-              lifetime: 3,
-              flight: {
-                count: 1,
-                period: 1,
+        spocs: {
+          items: [
+            {
+              id: 2,
+              flight_id: "seen-2",
+              caps: {
+                lifetime: 3,
+                flight: {
+                  count: 1,
+                  period: 1,
+                },
               },
             },
-          },
-        ],
+          ],
+        },
       };
       sandbox.stub(feed.store, "getState").returns({
         DiscoveryStream: {
@@ -1666,25 +1796,27 @@ describe("DiscoveryStreamFeed", () => {
       });
 
       assert.calledOnce(feed.frequencyCapSpocs);
-      assert.calledWith(feed.frequencyCapSpocs, data.spocs);
+      assert.calledWith(feed.frequencyCapSpocs, data.spocs.items);
     });
   });
 
   describe("#onAction: PLACES_LINK_BLOCKED", () => {
     beforeEach(() => {
       const data = {
-        spocs: [
-          {
-            id: 1,
-            flight_id: "foo",
-            url: "foo.com",
-          },
-          {
-            id: 2,
-            flight_id: "bar",
-            url: "bar.com",
-          },
-        ],
+        spocs: {
+          items: [
+            {
+              id: 1,
+              flight_id: "foo",
+              url: "foo.com",
+            },
+            {
+              id: 2,
+              flight_id: "bar",
+              url: "bar.com",
+            },
+          ],
+        },
       };
       sandbox.stub(feed.store, "getState").returns({
         DiscoveryStream: {
@@ -2512,31 +2644,35 @@ describe("DiscoveryStreamFeed", () => {
       const fakeSpocs = {
         lastUpdated: 1234,
         data: {
-          placement1: [
-            {
-              min_score: 0.5,
-              item_score: 0.6,
-            },
-            {
-              min_score: 0.5,
-              item_score: 0.4,
-            },
-            {
-              min_score: 0.5,
-              item_score: 0.8,
-            },
-          ],
-          placement2: [
-            {
-              min_score: 0.5,
-              item_score: 0.6,
-            },
-            {
-              min_score: 0.5,
-              item_score: 0.8,
-            },
-          ],
-          placement3: [],
+          placement1: {
+            items: [
+              {
+                min_score: 0.5,
+                item_score: 0.6,
+              },
+              {
+                min_score: 0.5,
+                item_score: 0.4,
+              },
+              {
+                min_score: 0.5,
+                item_score: 0.8,
+              },
+            ],
+          },
+          placement2: {
+            items: [
+              {
+                min_score: 0.5,
+                item_score: 0.6,
+              },
+              {
+                min_score: 0.5,
+                item_score: 0.8,
+              },
+            ],
+          },
+          placement3: { items: [] },
         },
       };
 
@@ -2545,31 +2681,35 @@ describe("DiscoveryStreamFeed", () => {
       const spocsTestResult = {
         lastUpdated: 1234,
         spocs: {
-          placement1: [
-            {
-              min_score: 0.5,
-              score: 0.8,
-              item_score: 0.8,
-            },
-            {
-              min_score: 0.5,
-              score: 0.6,
-              item_score: 0.6,
-            },
-          ],
-          placement2: [
-            {
-              min_score: 0.5,
-              score: 0.8,
-              item_score: 0.8,
-            },
-            {
-              min_score: 0.5,
-              score: 0.6,
-              item_score: 0.6,
-            },
-          ],
-          placement3: [],
+          placement1: {
+            items: [
+              {
+                min_score: 0.5,
+                score: 0.8,
+                item_score: 0.8,
+              },
+              {
+                min_score: 0.5,
+                score: 0.6,
+                item_score: 0.6,
+              },
+            ],
+          },
+          placement2: {
+            items: [
+              {
+                min_score: 0.5,
+                score: 0.8,
+                item_score: 0.8,
+              },
+              {
+                min_score: 0.5,
+                score: 0.6,
+                item_score: 0.6,
+              },
+            ],
+          },
+          placement3: { items: [] },
         },
       };
       assert.calledWith(feed.cache.set, "spocs", spocsTestResult);
