@@ -29,7 +29,7 @@ promise_test(async t => {
   const reader = new NDEFReader();
   const promises = [];
   invalid_signals.forEach(invalid_signal => {
-    promises.push(promise_rejects(t, new TypeError(),
+    promises.push(promise_rejects_js(t, TypeError,
         reader.scan({ signal: invalid_signal })));
   });
   await Promise.all(promises);
