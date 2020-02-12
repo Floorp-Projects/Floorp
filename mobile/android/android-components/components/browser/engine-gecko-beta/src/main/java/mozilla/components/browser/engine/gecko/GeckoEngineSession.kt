@@ -313,6 +313,13 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.markActiveForWebExtensions].
+     */
+    override fun markActiveForWebExtensions(active: Boolean) {
+        runtime.webExtensionController.setTabActive(geckoSession, active)
+    }
+
+    /**
      * See [EngineSession.close].
      */
     override fun close() {
@@ -445,7 +452,8 @@ class GeckoEngineSession(
             }
 
             notifyObservers {
-                onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.issuerOrganization)
+                // TODO provide full certificate info: https://github.com/mozilla-mobile/android-components/issues/5557
+                onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.certificate?.issuerDN?.name)
             }
         }
 
