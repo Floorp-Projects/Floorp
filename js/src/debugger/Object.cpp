@@ -2563,9 +2563,13 @@ bool DebuggerObject::isSameNative(JSContext* cx, HandleDebuggerObject object,
                                   MutableHandleValue result) {
   RootedValue referentValue(cx, ObjectValue(*object->referent()));
 
-  RootedFunction fun(cx, EnsureNativeFunction(value));
+  RootedValue nonCCWValue(
+      cx, value.isObject() ? ObjectValue(*UncheckedUnwrap(&value.toObject()))
+                           : value);
+
+  RootedFunction fun(cx, EnsureNativeFunction(nonCCWValue));
   if (!fun) {
-    RootedAtom selfHostedName(cx, MaybeGetSelfHostedFunctionName(value));
+    RootedAtom selfHostedName(cx, MaybeGetSelfHostedFunctionName(nonCCWValue));
     if (!selfHostedName) {
       JS_ReportErrorASCII(cx, "Need native function");
       return false;
