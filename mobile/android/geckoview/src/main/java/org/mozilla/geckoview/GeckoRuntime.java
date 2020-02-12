@@ -48,6 +48,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 public final class GeckoRuntime implements Parcelable {
