@@ -203,6 +203,14 @@ void HTMLImageElement::GetLoading(nsAString& aValue) const {
   GetEnumAttr(nsGkAtoms::loading, kLoadingTable[0].tag, aValue);
 }
 
+HTMLImageElement::Loading HTMLImageElement::LoadingState() const {
+  const nsAttrValue* val = mAttrs.GetAttr(nsGkAtoms::loading);
+  if (!val) {
+    return HTMLImageElement::Loading::Eager;
+  }
+  return static_cast<HTMLImageElement::Loading>(val->GetEnumValue());
+}
+
 already_AddRefed<Promise> HTMLImageElement::Decode(ErrorResult& aRv) {
   return nsImageLoadingContent::QueueDecodeAsync(aRv);
 }
