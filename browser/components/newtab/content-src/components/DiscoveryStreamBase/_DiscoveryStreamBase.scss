@@ -21,11 +21,21 @@ $ds-width: 936px;
   .ds-column-grid {
     display: grid;
     grid-row-gap: var(--gridRowGap);
+
+    // We want to completely hide components with no content,
+    // otherwise, it creates grid-row-gap gaps around nothing.
+    > div:empty {
+      display: none;
+    }
   }
 }
 
 .ds-header {
   margin: 8px 0;
+
+  .ds-context {
+    font-weight: 400;
+  }
 }
 
 .ds-header,

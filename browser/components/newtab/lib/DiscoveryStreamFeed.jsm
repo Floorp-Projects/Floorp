@@ -572,6 +572,19 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
+  // Bug 1567271 introduced meta data on a list of spocs.
+  // This involved moving the spocs array into an items prop.
+  // However, old data could still be returned, and cached data might also be old.
+  // For ths reason, we want to ensure if we don't find an items array,
+  // we use the previous array placement, and then stub out title and context to empty strings.
+  // We need to do this *after* both fresh fetches and cached data to reduce repetition.
+  normalizeSpocsItems(spocs) {
+    const items = spocs.items || spocs;
+    const title = spocs.title || "";
+    const context = spocs.context || "";
+    return { items, title, context };
+  }
+
   async loadSpocs(sendUpdate, isStartup) {
     const cachedData = (await this.cache.get()) || {};
     let spocsState;
@@ -638,12 +651,39 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     this.placementsForEach(placement => {
       const freshSpocs = spocsState.spocs[placement.name];
 
-      if (!freshSpocs || !freshSpocs.length) {
+      if (!freshSpocs) {
+        return;
+      }
+
+      // spocs can be returns as an array, or an object with an items array.
+      // We want to normalize this so all our spocs have an items array.
+      // There can also be some meta data for title and context.
+      // This is mostly because of backwards compat.
+      const {
+        items: normalizedSpocsItems,
+        title,
+        context,
+      } = this.normalizeSpocsItems(freshSpocs);
+
+      if (!normalizedSpocsItems || !normalizedSpocsItems.length) {
+        // In the case of old data, we still want to ensure we normalize the data structure,
+        // even if it's empty. We expect the empty data to be an object with items array,
+        // and not just an empty array.
+        spocsState.spocs = {
+          ...spocsState.spocs,
+          [placement.name]: {
+            title,
+            context,
+            items: [],
+          },
+        };
         return;
       }
 
       // Migrate flight_id
-      const { data: migratedSpocs } = this.migrateFlightId(freshSpocs);
+      const { data: migratedSpocs } = this.migrateFlightId(
+        normalizedSpocsItems
+      );
 
       const { data: capResult, filtered: caps } = this.frequencyCapSpocs(
         migratedSpocs
@@ -667,7 +707,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
       spocsState.spocs = {
         ...spocsState.spocs,
-        [placement.name]: transformResult,
+        [placement.name]: {
+          title,
+          context,
+          items: transformResult,
+        },
       };
     });
 
@@ -1144,7 +1188,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   async scoreSpocs(spocsState) {
     let belowMinScore = [];
     this.placementsForEach(placement => {
-      const items = spocsState.data[placement.name];
+      const nextSpocs = spocsState.data[placement.name] || {};
+      const { items } = nextSpocs;
 
       if (!items || !items.length) {
         return;
@@ -1158,7 +1203,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
       spocsState.data = {
         ...spocsState.data,
-        [placement.name]: scoreResult,
+        [placement.name]: {
+          ...nextSpocs,
+          items: scoreResult,
+        },
       };
     });
 
@@ -1436,7 +1484,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       if (!newSpocs) {
         return;
       }
-      flightIds = [...flightIds, ...newSpocs.map(s => `${s.flight_id}`)];
+
+      // We need to do a small items migration here.
+      // In bug 1567271 we moved spoc data array into items,
+      // but we also need backwards comp here, because
+      // this is the only place where we use spocs before the migration.
+      // We however don't need to do a total migration, we *just* need the items.
+      // A total migration would involve setting the data with new values,
+      // and also ensuring metadata like context and title are there or empty strings.
+      // see #normalizeSpocsItems function.
+      const items = newSpocs.items || newSpocs;
+      flightIds = [...flightIds, ...items.map(s => `${s.flight_id}`)];
     });
     if (flightIds && flightIds.length) {
       this.cleanUpImpressionPref(
@@ -1599,18 +1657,21 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           let frequencyCapped = [];
           this.placementsForEach(placement => {
             const freshSpocs = spocsState.data[placement.name];
-            if (!freshSpocs) {
+            if (!freshSpocs || !freshSpocs.items) {
               return;
             }
 
             const { data: newSpocs, filtered } = this.frequencyCapSpocs(
-              freshSpocs
+              freshSpocs.items
             );
             frequencyCapped = [...frequencyCapped, ...filtered];
 
             spocsState.data = {
               ...spocsState.data,
-              [placement.name]: newSpocs,
+              [placement.name]: {
+                ...freshSpocs,
+                items: newSpocs,
+              },
             };
           });
           if (frequencyCapped.length) {
@@ -1636,8 +1697,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           let spocsList = [];
           this.placementsForEach(placement => {
             const spocs = spocsState.data[placement.name];
-            if (spocs && spocs.length) {
-              spocsList = [...spocsList, ...spocs];
+            if (spocs && spocs.items && spocs.items.length) {
+              spocsList = [...spocsList, ...spocs.items];
             }
           });
           const filtered = spocsList.filter(s => s.url === action.data.url);

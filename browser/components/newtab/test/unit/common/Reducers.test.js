@@ -1055,7 +1055,13 @@ describe("Reducers", () => {
       const oldState = {
         spocs: {
           data: {
-            spocs: [{ url: "test-spoc.com" }],
+            spocs: {
+              items: [
+                {
+                  url: "test-spoc.com",
+                },
+              ],
+            },
           },
           loaded: true,
         },
@@ -1067,7 +1073,7 @@ describe("Reducers", () => {
 
       const newState = DiscoveryStream(oldState, deleteAction);
 
-      assert.equal(newState.spocs.data.spocs.length, 1);
+      assert.equal(newState.spocs.data.spocs.items.length, 1);
     });
     it("should handle no data from DISCOVERY_STREAM_SPOCS_UPDATE", () => {
       const data = null;
@@ -1133,7 +1139,9 @@ describe("Reducers", () => {
       const oldState = {
         spocs: {
           data: {
-            spocs: [{ url: "https://foo.com" }, { url: "test-spoc.com" }],
+            spocs: {
+              items: [{ url: "https://foo.com" }, { url: "test-spoc.com" }],
+            },
           },
           loaded: true,
           placements: [{ name: "spocs" }],
@@ -1144,7 +1152,9 @@ describe("Reducers", () => {
         },
       };
       const newState = DiscoveryStream(oldState, deleteAction);
-      assert.deepEqual(newState.spocs.data.spocs, [{ url: "test-spoc.com" }]);
+      assert.deepEqual(newState.spocs.data.spocs.items, [
+        { url: "test-spoc.com" },
+      ]);
     });
     it("should remove the site on DISCOVERY_STREAM_LINK_BLOCKED from feeds if spocs data is empty", () => {
       const deleteAction = {
@@ -1194,7 +1204,9 @@ describe("Reducers", () => {
         },
         spocs: {
           data: {
-            spocs: [{ url: "https://foo.com" }, { url: "test-spoc.com" }],
+            spocs: {
+              items: [{ url: "https://foo.com" }, { url: "test-spoc.com" }],
+            },
           },
           loaded: true,
           placements: [{ name: "spocs" }],
@@ -1205,7 +1217,9 @@ describe("Reducers", () => {
         data: { url: "https://foo.com" },
       };
       const newState = DiscoveryStream(oldState, deleteAction);
-      assert.deepEqual(newState.spocs.data.spocs, [{ url: "test-spoc.com" }]);
+      assert.deepEqual(newState.spocs.data.spocs.items, [
+        { url: "test-spoc.com" },
+      ]);
       assert.deepEqual(
         newState.feeds.data["https://foo.com/feed1"].data.recommendations,
         [{ url: "test.com" }]
@@ -1234,7 +1248,9 @@ describe("Reducers", () => {
         },
         spocs: {
           data: {
-            spocs: [{ url: "https://foo.com" }, { url: "test-spoc.com" }],
+            spocs: {
+              items: [{ url: "https://foo.com" }, { url: "test-spoc.com" }],
+            },
           },
           placements: [{ name: "spocs" }],
           loaded: true,
@@ -1251,13 +1267,16 @@ describe("Reducers", () => {
 
       const newState = DiscoveryStream(oldState, action);
 
-      assert.lengthOf(newState.spocs.data.spocs, 2);
+      assert.lengthOf(newState.spocs.data.spocs.items, 2);
       assert.equal(
-        newState.spocs.data.spocs[0].pocket_id,
+        newState.spocs.data.spocs.items[0].pocket_id,
         action.data.pocket_id
       );
-      assert.equal(newState.spocs.data.spocs[0].open_url, action.data.open_url);
-      assert.isUndefined(newState.spocs.data.spocs[1].pocket_id);
+      assert.equal(
+        newState.spocs.data.spocs.items[0].open_url,
+        action.data.open_url
+      );
+      assert.isUndefined(newState.spocs.data.spocs.items[1].pocket_id);
 
       assert.lengthOf(
         newState.feeds.data["https://foo.com/feed1"].data.recommendations,
@@ -1301,10 +1320,12 @@ describe("Reducers", () => {
         },
         spocs: {
           data: {
-            spocs: [
-              { url: "https://foo.com", pocket_id: 1234 },
-              { url: "test-spoc.com" },
-            ],
+            spocs: {
+              items: [
+                { url: "https://foo.com", pocket_id: 1234 },
+                { url: "test-spoc.com" },
+              ],
+            },
           },
           loaded: true,
           placements: [{ name: "spocs" }],
@@ -1318,7 +1339,9 @@ describe("Reducers", () => {
       };
 
       const newState = DiscoveryStream(oldState, deleteAction);
-      assert.deepEqual(newState.spocs.data.spocs, [{ url: "test-spoc.com" }]);
+      assert.deepEqual(newState.spocs.data.spocs.items, [
+        { url: "test-spoc.com" },
+      ]);
       assert.deepEqual(
         newState.feeds.data["https://foo.com/feed1"].data.recommendations,
         [{ url: "test.com" }]
@@ -1341,10 +1364,12 @@ describe("Reducers", () => {
         },
         spocs: {
           data: {
-            spocs: [
-              { url: "https://foo.com", pocket_id: 1234 },
-              { url: "test-spoc.com" },
-            ],
+            spocs: {
+              items: [
+                { url: "https://foo.com", pocket_id: 1234 },
+                { url: "test-spoc.com" },
+              ],
+            },
           },
           loaded: true,
           placements: [{ name: "spocs" }],
@@ -1358,7 +1383,9 @@ describe("Reducers", () => {
       };
 
       const newState = DiscoveryStream(oldState, deleteAction);
-      assert.deepEqual(newState.spocs.data.spocs, [{ url: "test-spoc.com" }]);
+      assert.deepEqual(newState.spocs.data.spocs.items, [
+        { url: "test-spoc.com" },
+      ]);
       assert.deepEqual(
         newState.feeds.data["https://foo.com/feed1"].data.recommendations,
         [{ url: "test.com" }]
@@ -1381,7 +1408,9 @@ describe("Reducers", () => {
         },
         spocs: {
           data: {
-            spocs: [{ url: "https://foo.com" }, { url: "test-spoc.com" }],
+            spocs: {
+              items: [{ url: "https://foo.com" }, { url: "test-spoc.com" }],
+            },
           },
           loaded: true,
           placements: [{ name: "spocs" }],
@@ -1399,16 +1428,16 @@ describe("Reducers", () => {
 
       const newState = DiscoveryStream(oldState, bookmarkAction);
 
-      assert.lengthOf(newState.spocs.data.spocs, 2);
+      assert.lengthOf(newState.spocs.data.spocs.items, 2);
       assert.equal(
-        newState.spocs.data.spocs[0].bookmarkGuid,
+        newState.spocs.data.spocs.items[0].bookmarkGuid,
         bookmarkAction.data.bookmarkGuid
       );
       assert.equal(
-        newState.spocs.data.spocs[0].bookmarkTitle,
+        newState.spocs.data.spocs.items[0].bookmarkTitle,
         bookmarkAction.data.bookmarkTitle
       );
-      assert.isUndefined(newState.spocs.data.spocs[1].bookmarkGuid);
+      assert.isUndefined(newState.spocs.data.spocs.items[1].bookmarkGuid);
 
       assert.lengthOf(
         newState.feeds.data["https://foo.com/feed1"].data.recommendations,
@@ -1451,14 +1480,16 @@ describe("Reducers", () => {
         },
         spocs: {
           data: {
-            spocs: [
-              {
-                url: "https://foo.com",
-                bookmarkGuid: "bookmark123",
-                bookmarkTitle: "Title for bar.com",
-              },
-              { url: "test-spoc.com" },
-            ],
+            spocs: {
+              items: [
+                {
+                  url: "https://foo.com",
+                  bookmarkGuid: "bookmark123",
+                  bookmarkTitle: "Title for bar.com",
+                },
+                { url: "test-spoc.com" },
+              ],
+            },
           },
           loaded: true,
           placements: [{ name: "spocs" }],
@@ -1473,9 +1504,9 @@ describe("Reducers", () => {
 
       const newState = DiscoveryStream(oldState, action);
 
-      assert.lengthOf(newState.spocs.data.spocs, 2);
-      assert.isUndefined(newState.spocs.data.spocs[0].bookmarkGuid);
-      assert.isUndefined(newState.spocs.data.spocs[0].bookmarkTitle);
+      assert.lengthOf(newState.spocs.data.spocs.items, 2);
+      assert.isUndefined(newState.spocs.data.spocs.items[0].bookmarkGuid);
+      assert.isUndefined(newState.spocs.data.spocs.items[0].bookmarkTitle);
 
       assert.lengthOf(
         newState.feeds.data["https://foo.com/feed1"].data.recommendations,
