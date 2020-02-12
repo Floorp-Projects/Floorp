@@ -237,7 +237,7 @@ class WebExtensionToolbarFeatureTest {
     }
 
     @Test
-    fun `stale actions are removed when feature is restarted`() {
+    fun `stale actions (from uninstalled or disabled extensions) are removed when feature is restarted`() {
         val browserExtensions = HashMap<String, WebExtensionState>()
         val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
         val browserAction = Action(
@@ -261,16 +261,20 @@ class WebExtensionToolbarFeatureTest {
         browserExtensions["1"] =
             WebExtensionState(id = "1", browserAction = browserAction, pageAction = pageAction)
 
+        browserExtensions["2"] =
+            WebExtensionState(id = "2", browserAction = browserAction, pageAction = pageAction)
+
         val browserState = BrowserState(extensions = browserExtensions)
         val store = BrowserStore(browserState)
         val toolbar: Toolbar = mock()
         val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
 
         webExtToolbarFeature.renderWebExtensionActions(browserState, mock())
-        assertEquals(1, webExtToolbarFeature.webExtensionBrowserActions.size)
-        assertEquals(1, webExtToolbarFeature.webExtensionPageActions.size)
+        assertEquals(2, webExtToolbarFeature.webExtensionBrowserActions.size)
+        assertEquals(2, webExtToolbarFeature.webExtensionPageActions.size)
 
         store.dispatch(WebExtensionAction.UninstallWebExtensionAction("1")).joinBlocking()
+        store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction("2", false)).joinBlocking()
 
         webExtToolbarFeature.start()
         assertEquals(0, webExtToolbarFeature.webExtensionBrowserActions.size)
@@ -278,10 +282,10 @@ class WebExtensionToolbarFeatureTest {
 
         val browserActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
         val pageActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
-        verify(toolbar).removeBrowserAction(browserActionCaptor.capture())
-        verify(toolbar).removeBrowserAction(pageActionCaptor.capture())
+        verify(toolbar, times(2)).removeBrowserAction(browserActionCaptor.capture())
+        verify(toolbar, times(2)).removePageAction(pageActionCaptor.capture())
         assertEquals(browserAction, browserActionCaptor.value.action)
-        assertEquals(browserAction, pageActionCaptor.value.action)
+        assertEquals(pageAction, pageActionCaptor.value.action)
     }
 
     @Test

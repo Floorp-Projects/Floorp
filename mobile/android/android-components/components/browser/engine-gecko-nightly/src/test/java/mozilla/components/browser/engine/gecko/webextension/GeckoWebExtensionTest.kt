@@ -415,7 +415,7 @@ class GeckoWebExtensionTest {
     }
 
     @Test
-    fun `isEnabled depends on native state`() {
+    fun `isEnabled depends on native state and defaults to true if state unknown`() {
         val webExtensionController: WebExtensionController = mock()
 
         val bundle = GeckoBundle()
@@ -423,7 +423,7 @@ class GeckoWebExtensionTest {
         bundle.putString("locationURI", "uri")
         val nativeExtensionWithoutMetadata = MockWebExtension(bundle)
         val webExtension = GeckoWebExtension(nativeExtensionWithoutMetadata, webExtensionController)
-        assertFalse(webExtension.isEnabled())
+        assertTrue(webExtension.isEnabled())
 
         val metaDataBundle = GeckoBundle()
         metaDataBundle.putBoolean("enabled", true)
