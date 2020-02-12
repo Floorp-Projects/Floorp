@@ -83,9 +83,9 @@ class DirectoryLock : public RefCountedObject {
   void Log() const;
 
  private:
-  DirectoryLock() {}
+  DirectoryLock() = default;
 
-  ~DirectoryLock() {}
+  ~DirectoryLock() = default;
 };
 
 class NS_NO_VTABLE OpenDirectoryListener : public RefCountedObject {
@@ -95,7 +95,7 @@ class NS_NO_VTABLE OpenDirectoryListener : public RefCountedObject {
   virtual void DirectoryLockFailed() = 0;
 
  protected:
-  virtual ~OpenDirectoryListener() {}
+  virtual ~OpenDirectoryListener() = default;
 };
 
 struct OriginParams {

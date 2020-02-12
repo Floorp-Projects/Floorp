@@ -24,7 +24,7 @@ class UsageResult : public nsIQuotaUsageResult {
               uint64_t aLastAccessed);
 
  private:
-  virtual ~UsageResult() {}
+  virtual ~UsageResult() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUOTAUSAGERESULT
@@ -38,7 +38,7 @@ class OriginUsageResult : public nsIQuotaOriginUsageResult {
   OriginUsageResult(uint64_t aUsage, uint64_t aFileUsage);
 
  private:
-  virtual ~OriginUsageResult() {}
+  virtual ~OriginUsageResult() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUOTAORIGINUSAGERESULT
@@ -52,7 +52,7 @@ class EstimateResult : public nsIQuotaEstimateResult {
   EstimateResult(uint64_t aUsage, uint64_t aLimit);
 
  private:
-  virtual ~EstimateResult() {}
+  virtual ~EstimateResult() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUOTAESTIMATERESULT
