@@ -8,11 +8,9 @@
 #define WaylandDMABufSurface_h__
 
 #include <stdint.h>
+#include "GLContext.h"
 #include "GLContextTypes.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
-// TODO
-#include <va/va.h>
-#include <va/va_drmcommon.h>
 
 typedef void* EGLImageKHR;
 
@@ -39,6 +37,7 @@ typedef enum {
 } WaylandDMABufSurfaceFlags;
 
 class WaylandDMABufSurfaceRGBA;
+struct _VADRMPRIMESurfaceDescriptor;
 
 class WaylandDMABufSurface {
  public:
@@ -52,7 +51,6 @@ class WaylandDMABufSurface {
   static already_AddRefed<WaylandDMABufSurface> CreateDMABufSurface(
       const mozilla::layers::SurfaceDescriptor& aDesc);
 
-  virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
   virtual bool Serialize(
       mozilla::layers::SurfaceDescriptor& aOutDescriptor) = 0;
 
@@ -82,7 +80,10 @@ class WaylandDMABufSurface {
   WaylandDMABufSurface(SurfaceType aSurfaceType);
 
  protected:
-  virtual ~WaylandDMABufSurface() = default;
+  virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
+  virtual void ReleaseSurface() = 0;
+
+  virtual ~WaylandDMABufSurface(){};
 
   SurfaceType mSurfaceType;
   uint64_t mBufferModifier;
@@ -91,15 +92,14 @@ class WaylandDMABufSurface {
   int mDmabufFds[DMABUF_BUFFER_PLANES];
   uint32_t mStrides[DMABUF_BUFFER_PLANES];
   uint32_t mOffsets[DMABUF_BUFFER_PLANES];
+
+  RefPtr<mozilla::gl::GLContext> mGL;
 };
 
 class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
  public:
   static already_AddRefed<WaylandDMABufSurfaceRGBA> CreateDMABufSurface(
       int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
-
-  bool Create(int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
-  bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
 
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
@@ -145,7 +145,9 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
  private:
   ~WaylandDMABufSurfaceRGBA();
 
-  void ReleaseRGBASurface();
+  bool Create(int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
+  bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
+  void ReleaseSurface();
 
   bool CreateWLBuffer();
 
@@ -179,11 +181,11 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
 };
 
 class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
+ public:
   static already_AddRefed<WaylandDMABufSurfaceNV12> CreateYUVSurface(
-      const VADRMPRIMESurfaceDescriptor& aDesc);
+      const _VADRMPRIMESurfaceDescriptor& aDesc);
 
-  bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
-  bool Create(const VADRMPRIMESurfaceDescriptor& aDesc);
+  bool Create(const _VADRMPRIMESurfaceDescriptor& aDesc);
 
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
@@ -195,6 +197,7 @@ class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
   bool CreateTexture(mozilla::gl::GLContext* aGLContext, int aPlane = 0);
   void ReleaseTextures();
   GLuint GetTexture(int aPlane = 0) { return mTexture[aPlane]; };
+  EGLImageKHR GetEGLImage(int aPlane = 0) { return mEGLImage[aPlane]; };
 
   uint32_t GetTextureCount() { return 2; };
 
@@ -210,18 +213,16 @@ class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
  private:
   ~WaylandDMABufSurfaceNV12();
 
-  void ReleaseNV12Surface();
+  bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
+  void ReleaseSurface();
 
-  void ImportSurfaceDescriptorNV12(
+  void ImportSurfaceDescriptor(
       const mozilla::layers::SurfaceDescriptorDMABuf& aDesc);
 
   mozilla::gfx::SurfaceFormat mSurfaceFormat;
 
-  int mDmabufFds[DMABUF_BUFFER_PLANES];
   int mWidth[DMABUF_BUFFER_PLANES];
   int mHeight[DMABUF_BUFFER_PLANES];
-  uint32_t mStrides[DMABUF_BUFFER_PLANES];
-  uint32_t mOffsets[DMABUF_BUFFER_PLANES];
   uint32_t mDrmFormats[DMABUF_BUFFER_PLANES];
   EGLImageKHR mEGLImage[DMABUF_BUFFER_PLANES];
   GLuint mTexture[DMABUF_BUFFER_PLANES];
