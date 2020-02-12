@@ -27,18 +27,17 @@ RenderWaylandDMABUFTextureHostOGL::~RenderWaylandDMABUFTextureHostOGL() {
 
 GLuint RenderWaylandDMABUFTextureHostOGL::GetGLHandle(
     uint8_t aChannelIndex) const {
-  return mSurface->GetGLTexture();
+  return mSurface->GetTexture(aChannelIndex);
 }
 
 gfx::IntSize RenderWaylandDMABUFTextureHostOGL::GetSize(
     uint8_t aChannelIndex) const {
-  return gfx::IntSize(mSurface->GetWidth(), mSurface->GetHeight());
+  return gfx::IntSize(mSurface->GetWidth(aChannelIndex),
+                      mSurface->GetHeight(aChannelIndex));
 }
 
 wr::WrExternalImage RenderWaylandDMABUFTextureHostOGL::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
-  MOZ_ASSERT(aChannelIndex == 0);
-
   if (mGL.get() != aGL) {
     if (mGL) {
       // This should not happen. EGLImage is created only in
@@ -55,8 +54,8 @@ wr::WrExternalImage RenderWaylandDMABUFTextureHostOGL::Lock(
 
   bool bindTexture = IsFilterUpdateNecessary(aRendering);
 
-  if (!mSurface->GetGLTexture()) {
-    if (!mSurface->CreateEGLImage(mGL)) {
+  if (!mSurface->GetTexture(aChannelIndex)) {
+    if (!mSurface->CreateTexture(mGL, aChannelIndex)) {
       return InvalidToWrExternalImage();
     }
     bindTexture = true;
@@ -66,18 +65,19 @@ wr::WrExternalImage RenderWaylandDMABUFTextureHostOGL::Lock(
     // Cache new rendering filter.
     mCachedRendering = aRendering;
     ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0, LOCAL_GL_TEXTURE_2D,
-                                 mSurface->GetGLTexture(), aRendering);
+                                 mSurface->GetTexture(aChannelIndex),
+                                 aRendering);
   }
 
-  return NativeTextureToWrExternalImage(mSurface->GetGLTexture(), 0, 0,
-                                        mSurface->GetWidth(),
-                                        mSurface->GetHeight());
+  return NativeTextureToWrExternalImage(mSurface->GetTexture(aChannelIndex), 0,
+                                        0, mSurface->GetWidth(aChannelIndex),
+                                        mSurface->GetHeight(aChannelIndex));
 }
 
 void RenderWaylandDMABUFTextureHostOGL::Unlock() {}
 
 void RenderWaylandDMABUFTextureHostOGL::DeleteTextureHandle() {
-  mSurface->ReleaseEGLImage();
+  mSurface->ReleaseTextures();
 }
 
 }  // namespace mozilla::wr
