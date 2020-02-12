@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<title>DedicatedWorker: Referrer</title>
+<title>SharedWorker: Referrer</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script>
@@ -40,7 +40,7 @@ function generateExpectedReferrer(referrerURL, referrerPolicy, requestURL) {
 }
 
 // Runs a referrer policy test with the given settings. This opens a new window
-// that starts a dedicated worker.
+// that starts a shared worker.
 //
 // |settings| has options as follows:
 //
@@ -60,7 +60,7 @@ function generateExpectedReferrer(referrerURL, referrerPolicy, requestURL) {
 // - |fetchType| indicates a script whose referrer will be tested.
 function import_referrer_test(settings, description) {
   promise_test(async () => {
-    let windowURL = 'resources/new-worker-window.html';
+    let windowURL = 'resources/new-shared-worker-window.html';
     if (settings.windowReferrerPolicy) {
       windowURL +=
           `?pipe=header(Referrer-Policy, ${settings.windowReferrerPolicy})`;
@@ -89,7 +89,7 @@ function import_referrer_test(settings, description) {
     if (settings.fetchType === 'top-level') {
       // Top-level worker requests have their outgoing referrers set given their
       // containing window's URL and referrer policy.
-      expectedReferrer = generateExpectedReferrer('new-worker-window.html', settings.windowReferrerPolicy, settings.scriptURL);
+      expectedReferrer = generateExpectedReferrer('new-shared-worker-window.html', settings.windowReferrerPolicy, settings.scriptURL);
     } else if (settings.fetchType === 'descendant-static') {
       // Static descendant script requests from a worker have their outgoing
       // referrer set given their containing script's URL and containing
@@ -120,8 +120,8 @@ function import_referrer_test(settings, description) {
 //
 // [Current document]
 // --(open)--> [Window] whose referrer policy is |windowReferrerPolicy|.
-//   --(new Worker)--> [Worker] should respect [windowReferrerPolicy| when
-//                     using [Window]'s URL as the referrer.
+//   --(new SharedWorker)--> [SharedWorker] should respect [windowReferrerPolicy|
+//                           when using [Window]'s URL as the referrer.
 
 import_referrer_test(
     { scriptURL: 'postmessage-referrer-checker.py',
@@ -153,9 +153,9 @@ import_referrer_test(
 //
 // [Current document]
 // --(open)--> [Window] whose referrer policy is |windowReferrerPolicy|.
-//   --(new Worker)--> [Worker]
+//   --(new SharedWorker)--> [SharedWorker]
 //     --(static import)--> [Script] should respect |windowReferrerPolicy| when
-//                          using [Worker]'s URL as the referrer.
+//                          using [SharedWorker]'s URL as the referrer.
 
 import_referrer_test(
     { scriptURL: 'static-import-same-origin-referrer-checker-worker.js',
@@ -201,9 +201,10 @@ import_referrer_test(
 //
 // [Current document]
 // --(open)--> [Window]
-//   --(new Worker)--> [Worker] whose referrer policy is |workerReferrerPolicy|.
+//   --(new SharedWorker)--> [SharedWorker] whose referrer policy is
+//                           |workerReferrerPolicy|.
 //     --(dynamic import)--> [Script] should respect |workerReferrerPolicy| when
-//                           using [Worker]'s URL as the referrer.
+//                           using [SharedWorker]'s URL as the referrer.
 
 import_referrer_test(
     { scriptURL: 'dynamic-import-same-origin-referrer-checker-worker.js',
@@ -240,4 +241,5 @@ import_referrer_test(
       workerReferrerPolicy: 'same-origin',
       fetchType: 'descendant-dynamic' },
     'Cross-origin dynamic import with "same-origin" referrer policy.');
+
 </script>
