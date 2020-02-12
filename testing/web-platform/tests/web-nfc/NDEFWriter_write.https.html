@@ -128,7 +128,7 @@ promise_test(async t => {
   const promises = [];
   invalid_syntax_messages.forEach(message => {
     promises.push(
-      promise_rejects(t, 'SyntaxError', writer.write(message)));
+      promise_rejects_dom(t, 'SyntaxError', writer.write(message)));
   });
   await Promise.all(promises);
 }, "Test that promise is rejected with SyntaxError if NDEFMessageSource contains\
@@ -141,7 +141,7 @@ promise_test(async t => {
                                     location.origin, location.origin);
   }
   const writer = new NDEFWriter();
-  await promise_rejects(t, 'NotAllowedError', writer.write(test_text_data));
+  await promise_rejects_dom(t, 'NotAllowedError', writer.write(test_text_data));
 }, 'NDEFWriter.write should fail if user permission is not granted.');
 
 // We do not provide NFC mock here to simulate that there has no available
@@ -153,7 +153,7 @@ promise_test(async t => {
                                     location.origin, location.origin);
   }
   const writer = new NDEFWriter();
-  await promise_rejects(t, 'NotSupportedError', writer.write(test_text_data));
+  await promise_rejects_dom(t, 'NotSupportedError', writer.write(test_text_data));
 }, 'NDEFWriter.write should fail if no implementation for NFC Mojo interface is available.');
 
 nfc_test(async (t, mockNFC) => {
@@ -163,7 +163,7 @@ nfc_test(async (t, mockNFC) => {
   //Make sure push is pending
   mockNFC.setPendingPushCompleted(false);
   const p = writer.write(test_text_data, { signal: controller.signal });
-  const rejected = promise_rejects(t, 'AbortError', p);
+  const rejected = promise_rejects_dom(t, 'AbortError', p);
   let callback_called = false;
   await new Promise(resolve => {
     t.step_timeout(() => {
@@ -182,7 +182,7 @@ promise_test(async t => {
   assert_false(controller.signal.aborted);
   controller.abort();
   assert_true(controller.signal.aborted);
-  await promise_rejects(t, 'AbortError',
+  await promise_rejects_dom(t, 'AbortError',
       writer.write(test_text_data, { signal: controller.signal }));
 }, "NDEFWriter.write should fail if signal's aborted flag is set.");
 
@@ -205,7 +205,7 @@ nfc_test(async (t, mockNFC) => {
   // Even though write request is grantable,
   // this abort should be processed synchronously.
   controller.abort();
-  await promise_rejects(t, 'AbortError', p1);
+  await promise_rejects_dom(t, 'AbortError', p1);
 
   await writer2.write(test_text_data);
   assertNDEFMessagesEqual(test_text_data, mockNFC.pushedMessage());
@@ -214,13 +214,13 @@ nfc_test(async (t, mockNFC) => {
 nfc_test(async (t, mockNFC) => {
   const writer = new NDEFWriter();
   mockNFC.setHWStatus(NFCHWStatus.DISABLED);
-  await promise_rejects(t, 'NotReadableError', writer.write(test_text_data));
+  await promise_rejects_dom(t, 'NotReadableError', writer.write(test_text_data));
 }, "NDEFWriter.write should fail when NFC HW is disabled.");
 
 nfc_test(async (t, mockNFC) => {
   const writer = new NDEFWriter();
   mockNFC.setHWStatus(NFCHWStatus.NOT_SUPPORTED);
-  await promise_rejects(t, 'NotSupportedError', writer.write(test_text_data));
+  await promise_rejects_dom(t, 'NotSupportedError', writer.write(test_text_data));
 }, "NDEFWriter.write should fail when NFC HW is not supported.");
 
 promise_test(async () => {
@@ -436,7 +436,7 @@ nfc_test(async (t, mockNFC) => {
   await reader.scan();
 
   mockNFC.simulateNonNDEFTagDiscovered();
-  await promise_rejects(t, 'NotSupportedError', promise);
+  await promise_rejects_dom(t, 'NotSupportedError', promise);
 }, "NDEFWriter.write should fail when the NFC device coming up does not expose \
 NDEF technology.");
 
@@ -460,14 +460,14 @@ nfc_test(async (t, mockNFC) => {
   const writer = new NDEFWriter();
   const p = writer.write(test_text_data, { overwrite: false });
   mockNFC.setIsFormattedTag(true);
-  await promise_rejects(t, 'NotAllowedError', p);
+  await promise_rejects_dom(t, 'NotAllowedError', p);
 }, "NDEFWriter.write should fail when there are NDEF records on the NFC device \
 and NDEFWriteOptions.overwrite is false.");
 
 nfc_test(async (t, mockNFC) => {
   const writer = new NDEFWriter();
   mockNFC.simulateDataTransferFails();
-  await promise_rejects(t, 'NetworkError', writer.write(test_text_data));
+  await promise_rejects_dom(t, 'NetworkError', writer.write(test_text_data));
 }, "NDEFWriter.write should fail with NetworkError when NFC data transfer fails.");
 
 </script>

@@ -22,7 +22,7 @@ const invalid_signals = [
 
 function waitSyntaxErrorPromise(t, scan_options) {
   const reader = new NDEFReader();
-  return promise_rejects(t, 'SyntaxError', reader.scan(scan_options));
+  return promise_rejects_dom(t, 'SyntaxError', reader.scan(scan_options));
 }
 
 promise_test(async t => {
@@ -42,7 +42,7 @@ promise_test(async t => {
                                     location.origin, location.origin);
   }
   const reader = new NDEFReader();
-  await promise_rejects(t, 'NotAllowedError', reader.scan());
+  await promise_rejects_dom(t, 'NotAllowedError', reader.scan());
 }, "NDEFReader.scan should fail if user permission is not granted.");
 
 // We do not provide NFC mock here to simulate that there has no available
@@ -57,7 +57,7 @@ promise_test(async t => {
   const promise = readerWatcher.wait_for("error").then(event => {
     assert_true(event instanceof ErrorEvent);
   });
-  await promise_rejects(t, 'NotSupportedError', reader.scan());
+  await promise_rejects_dom(t, 'NotSupportedError', reader.scan());
   await promise;
 }, "Test that an error event happens if no implementation for NFC Mojo interface \
 is available.");
@@ -65,13 +65,13 @@ is available.");
 nfc_test(async (t, mockNFC) => {
   mockNFC.setHWStatus(NFCHWStatus.DISABLED);
   const reader = new NDEFReader();
-  await promise_rejects(t, 'NotReadableError', reader.scan());
+  await promise_rejects_dom(t, 'NotReadableError', reader.scan());
 }, "NDEFReader.scan should fail if NFC HW is disabled.");
 
 nfc_test(async (t, mockNFC) => {
   mockNFC.setHWStatus(NFCHWStatus.NOT_SUPPORTED);
   const reader = new NDEFReader();
-  await promise_rejects(t, 'NotSupportedError', reader.scan());
+  await promise_rejects_dom(t, 'NotSupportedError', reader.scan());
 }, "NDEFReader.scan should fail if NFC HW is not supported.");
 
 nfc_test(async (t, mockNFC) => {
@@ -106,7 +106,7 @@ nfc_test(async (t, mockNFC) => {
   const reader = new NDEFReader();
   const controller = new AbortController();
   controller.abort();
-  await promise_rejects(t, 'AbortError', reader.scan({signal: controller.signal}));
+  await promise_rejects_dom(t, 'AbortError', reader.scan({signal: controller.signal}));
 }, "Test that NDEFReader.scan rejects if NDEFScanOptions.signal is already aborted.");
 
 nfc_test(async (t, mockNFC) => {
@@ -114,7 +114,7 @@ nfc_test(async (t, mockNFC) => {
   const controller = new AbortController();
   const promise = reader.scan({signal: controller.signal});
   controller.abort();
-  await promise_rejects(t, 'AbortError', promise);
+  await promise_rejects_dom(t, 'AbortError', promise);
 }, "Test that NDEFReader.scan rejects if NDEFScanOptions.signal aborts right after \
 the scan invocation.");
 

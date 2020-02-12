@@ -39,7 +39,7 @@
     const { sender } = transceiver;
     pc.close();
 
-    return promise_rejects(t, 'InvalidStateError',
+    return promise_rejects_dom(t, 'InvalidStateError',
       sender.replaceTrack(track));
   }, 'Calling replaceTrack on closed connection should reject with InvalidStateError');
 
@@ -79,7 +79,7 @@
     const { sender } = transceiver;
     transceiver.stop();
 
-    return promise_rejects(t, 'InvalidStateError',
+    return promise_rejects_dom(t, 'InvalidStateError',
       sender.replaceTrack(track));
   }, 'Calling replaceTrack on stopped sender should reject with InvalidStateError');
 
