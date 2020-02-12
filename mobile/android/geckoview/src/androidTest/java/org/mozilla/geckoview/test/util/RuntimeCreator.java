@@ -24,6 +24,7 @@ public class RuntimeCreator {
     public static final int TEST_SUPPORT_ERROR = 2;
     private static final String LOGTAG = "RuntimeCreator";
 
+    private static final Environment env = new Environment();
     private static GeckoRuntime sRuntime;
     public static AtomicInteger sTestSupport = new AtomicInteger(0);
     public static WebExtension sTestSupportExtension;
@@ -147,6 +148,7 @@ public class RuntimeCreator {
         }
 
         final GeckoRuntimeSettings runtimeSettings = new GeckoRuntimeSettings.Builder()
+                .useMultiprocess(env.isMultiprocess())
                 .arguments(new String[]{"-purgecaches"})
                 .extras(InstrumentationRegistry.getArguments())
                 .remoteDebuggingEnabled(true)
@@ -209,7 +211,6 @@ public class RuntimeCreator {
      * down any extant GeckoRuntime, thus ensuring only one GeckoRuntime is active at once.
      */
     public static void shutdownRuntime() {
-        final Environment env = new Environment();
         // It takes a while to shutdown an existing runtime in debug builds, so
         // we double the timeout for this method.
         final long timeoutMillis = 2 * env.getDefaultTimeoutMillis();
