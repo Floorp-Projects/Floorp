@@ -67,9 +67,6 @@ scoped_ptr!(Slot, PK11SlotInfo, PK11_FreeSlot);
 
 impl SymKey {
     /// You really don't want to use this.
-    ///
-    /// # Errors
-    /// Internal errors in case of failures in NSS.
     pub fn as_bytes<'a>(&'a self) -> Res<&'a [u8]> {
         secstatus_to_res(unsafe { PK11_ExtractKeyValue(self.ptr) })?;
 
@@ -79,15 +76,6 @@ impl SymKey {
             None => Err(Error::InternalError),
             Some(key) => Ok(unsafe { std::slice::from_raw_parts(key.data, key.len as usize) }),
         }
-    }
-}
-
-impl Clone for SymKey {
-    #[must_use]
-    fn clone(&self) -> Self {
-        let ptr = unsafe { PK11_ReferenceSymKey(self.ptr) };
-        assert!(!ptr.is_null());
-        Self { ptr }
     }
 }
 
@@ -102,14 +90,10 @@ impl std::fmt::Debug for SymKey {
 }
 
 /// Generate a randomized buffer.
-#[must_use]
-pub fn random(size: usize) -> Vec<u8> {
+pub fn random(size: usize) -> Res<Vec<u8>> {
     let mut buf = vec![0; size];
-    secstatus_to_res(unsafe {
-        PK11_GenerateRandom(buf.as_mut_ptr(), buf.len().try_into().unwrap())
-    })
-    .unwrap();
-    buf
+    secstatus_to_res(unsafe { PK11_GenerateRandom(buf.as_mut_ptr(), buf.len().try_into()?) })?;
+    Ok(buf)
 }
 
 #[cfg(test)]
