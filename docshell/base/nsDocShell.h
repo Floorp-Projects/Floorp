@@ -174,7 +174,7 @@ class nsDocShell final : public nsDocLoader,
 
    private:
     virtual ~InterfaceRequestorProxy();
-    InterfaceRequestorProxy() {}
+    InterfaceRequestorProxy() = default;
     nsWeakPtr mWeakPtr;
   };
 
