@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "GLContextTypes.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
+// TODO
 #include <va/va.h>
 #include <va/va_drmcommon.h>
 
@@ -73,13 +74,23 @@ class WaylandDMABufSurface {
     return nullptr;
   }
 
-  WaylandDMABufSurface(SurfaceType aSurfaceType) : mSurfaceType(aSurfaceType){};
+  virtual mozilla::gfx::YUVColorSpace GetYUVColorSpace() {
+    return mozilla::gfx::YUVColorSpace::UNKNOWN;
+  };
+  virtual bool IsFullRange() { return false; };
+
+  WaylandDMABufSurface(SurfaceType aSurfaceType);
 
  protected:
   virtual ~WaylandDMABufSurface() = default;
 
-  int mSurfaceFlags;
   SurfaceType mSurfaceType;
+  uint64_t mBufferModifier;
+
+  int mBufferPlaneCount;
+  int mDmabufFds[DMABUF_BUFFER_PLANES];
+  uint32_t mStrides[DMABUF_BUFFER_PLANES];
+  uint32_t mOffsets[DMABUF_BUFFER_PLANES];
 };
 
 class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
@@ -134,7 +145,8 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
  private:
   ~WaylandDMABufSurfaceRGBA();
 
-  void ReleaseDMABufSurface();
+  void ReleaseRGBASurface();
+
   bool CreateWLBuffer();
 
   void FillFdData(struct gbm_import_fd_data& aData);
@@ -145,6 +157,8 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
                     uint32_t* aStride, int aGbmFlags);
 
  private:
+  int mSurfaceFlags;
+
   int mWidth;
   int mHeight;
   mozilla::widget::GbmFormat* mGmbFormat;
@@ -154,11 +168,6 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   uint32_t mMappedRegionStride;
 
   struct gbm_bo* mGbmBufferObject;
-  uint64_t mBufferModifier;
-  int mBufferPlaneCount;
-  int mDmabufFds[DMABUF_BUFFER_PLANES];
-  uint32_t mStrides[DMABUF_BUFFER_PLANES];
-  uint32_t mOffsets[DMABUF_BUFFER_PLANES];
   uint32_t mGbmBufferFlags;
 
   RefPtr<mozilla::gl::GLContext> mGL;
@@ -167,6 +176,57 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
 
   bool mWLBufferAttached;
   bool mFastWLBufferCreation;
+};
+
+class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
+  static already_AddRefed<WaylandDMABufSurfaceNV12> CreateYUVSurface(
+      const VADRMPRIMESurfaceDescriptor& aDesc);
+
+  bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
+  bool Create(const VADRMPRIMESurfaceDescriptor& aDesc);
+
+  bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
+
+  int GetWidth(int aPlane = 0) { return mWidth[aPlane]; }
+  int GetHeight(int aPlane = 0) { return mHeight[aPlane]; }
+  mozilla::gfx::SurfaceFormat GetFormat();
+  mozilla::gfx::SurfaceFormat GetFormatGL();
+
+  bool CreateTexture(mozilla::gl::GLContext* aGLContext, int aPlane = 0);
+  void ReleaseTextures();
+  GLuint GetTexture(int aPlane = 0) { return mTexture[aPlane]; };
+
+  uint32_t GetPlaneCount();
+
+  void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
+    mColorSpace = aColorSpace;
+  }
+  mozilla::gfx::YUVColorSpace GetYUVColorSpace() { return mColorSpace; }
+
+  bool IsFullRange() { return true; }
+
+  WaylandDMABufSurfaceNV12();
+
+ private:
+  ~WaylandDMABufSurfaceNV12();
+
+  void ReleaseNV12Surface();
+
+  void ImportSurfaceDescriptorNV12(
+      const mozilla::layers::SurfaceDescriptorDMABuf& aDesc);
+
+  mozilla::gfx::SurfaceFormat mSurfaceFormat;
+
+  int mDmabufFds[DMABUF_BUFFER_PLANES];
+  int mWidth[DMABUF_BUFFER_PLANES];
+  int mHeight[DMABUF_BUFFER_PLANES];
+  uint32_t mStrides[DMABUF_BUFFER_PLANES];
+  uint32_t mOffsets[DMABUF_BUFFER_PLANES];
+  uint32_t mDrmFormats[DMABUF_BUFFER_PLANES];
+  EGLImageKHR mEGLImage[DMABUF_BUFFER_PLANES];
+  GLuint mTexture[DMABUF_BUFFER_PLANES];
+  mozilla::gfx::YUVColorSpace mColorSpace;
+  RefPtr<mozilla::gl::GLContext> mGL;
 };
 
 #endif
