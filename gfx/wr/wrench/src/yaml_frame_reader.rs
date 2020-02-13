@@ -1732,6 +1732,13 @@ impl YamlFrameReader {
                     flags.remove(PrimitiveFlags::IS_SCROLLBAR_CONTAINER);
                 }
             }
+            if let Some(prefer_compositor_surface) = item["prefer-compositor-surface"].as_bool() {
+                if prefer_compositor_surface {
+                    flags.insert(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE);
+                } else {
+                    flags.remove(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE);
+                }
+            }
 
             let mut info = CommonItemProperties {
                 clip_rect,
