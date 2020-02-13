@@ -135,6 +135,31 @@ add_task(async function test_url_result_no_path() {
   );
 });
 
+add_task(async function test_url_result_www() {
+  await testResult(
+    {
+      query: "ample",
+      title: "The Title",
+      url: "https://www.example.com/",
+    },
+    {
+      displayedUrl:
+        (UrlbarPrefs.get("update1.view.stripHttps") ? "" : "https://www.") +
+        "example.com",
+      highlightedTitle: [["The Title", false]],
+      highlightedUrl: [
+        [
+          (UrlbarPrefs.get("update1.view.stripHttps") ? "" : "https://www.") +
+            "ex",
+          false,
+        ],
+        ["ample", true],
+        [".com", false],
+      ],
+    }
+  );
+});
+
 add_task(async function test_url_result_no_trimming() {
   Services.prefs.setBoolPref("browser.urlbar.trimURLs", false);
 
