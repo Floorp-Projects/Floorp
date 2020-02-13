@@ -9,64 +9,62 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const CONFIG = {
-  data: [
-    {
-      webExtension: {
-        id: "aol@example.com",
-      },
-      appliesTo: [
-        {
-          included: { everywhere: true },
-        },
-      ],
-      default: "yes-if-no-other",
+const CONFIG = [
+  {
+    webExtension: {
+      id: "aol@example.com",
     },
-    {
-      webExtension: {
-        id: "lycos@example.com",
+    appliesTo: [
+      {
+        included: { everywhere: true },
       },
-      appliesTo: [
-        {
-          included: { everywhere: true },
-          application: {
-            name: ["firefox"],
-          },
-        },
-      ],
-      default: "yes",
+    ],
+    default: "yes-if-no-other",
+  },
+  {
+    webExtension: {
+      id: "lycos@example.com",
     },
-    {
-      webExtension: {
-        id: "altavista@example.com",
+    appliesTo: [
+      {
+        included: { everywhere: true },
+        application: {
+          name: ["firefox"],
+        },
       },
-      appliesTo: [
-        {
-          included: { everywhere: true },
-          application: {
-            name: ["fenix"],
-          },
-        },
-      ],
+    ],
+    default: "yes",
+  },
+  {
+    webExtension: {
+      id: "altavista@example.com",
     },
-    {
-      webExtension: {
-        id: "excite@example.com",
+    appliesTo: [
+      {
+        included: { everywhere: true },
+        application: {
+          name: ["fenix"],
+        },
       },
-      appliesTo: [
-        {
-          included: { everywhere: true },
-          application: {
-            name: ["firefox"],
-            minVersion: "10",
-            maxVersion: "30",
-          },
-          default: "yes",
-        },
-      ],
+    ],
+  },
+  {
+    webExtension: {
+      id: "excite@example.com",
     },
-  ],
-};
+    appliesTo: [
+      {
+        included: { everywhere: true },
+        application: {
+          name: ["firefox"],
+          minVersion: "10",
+          maxVersion: "30",
+        },
+        default: "yes",
+      },
+    ],
+  },
+];
 
 function fetchWithConfig(name, version) {
   Services.appinfo = { name, version };
@@ -109,11 +107,8 @@ const tests = [
 ];
 
 add_task(async function setup() {
-  await useTestEngines();
+  await useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
-
-  let confUrl = `data:application/json,${JSON.stringify(CONFIG)}`;
-  Services.prefs.setStringPref("search.config.url", confUrl);
 
   await engineSelector.init();
 });
@@ -121,7 +116,7 @@ add_task(async function setup() {
 add_task(async function test_application_name() {
   for (const { name, version, expected } of tests) {
     Services.appinfo = { name, version };
-    let { engines } = engineSelector.fetchEngineConfiguration(
+    let { engines } = await engineSelector.fetchEngineConfiguration(
       "default",
       "default"
     );
