@@ -264,14 +264,14 @@ open class FxaAccountManager(
      * user input. Once sign-in completes, any registered [AccountObserver.onAuthenticated] listeners
      * will be notified and [authenticatedAccount] will refer to the new account.
      * This may fail in case of network errors, or if provided credentials are not valid.
-     * @param reuseAccount Whether or not to reuse existing session token (which is part of the [ShareableAccount].
+     * @param reuseSessionToken Whether or not to reuse existing session token (which is part of the [ShareableAccount].
      * @return A deferred boolean flag indicating success (if true) of the sign-in operation.
      */
     fun signInWithShareableAccountAsync(
         fromAccount: ShareableAccount,
-        reuseAccount: Boolean = false
+        reuseSessionToken: Boolean = false
     ): Deferred<SignInWithShareableAccountResult> {
-        val stateMachineTransition = processQueueAsync(Event.SignInShareableAccount(fromAccount, reuseAccount))
+        val stateMachineTransition = processQueueAsync(Event.SignInShareableAccount(fromAccount, reuseSessionToken))
         val result = CompletableDeferred<SignInWithShareableAccountResult>()
         CoroutineScope(coroutineContext).launch {
             stateMachineTransition.await()

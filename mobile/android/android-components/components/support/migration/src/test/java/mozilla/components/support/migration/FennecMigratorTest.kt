@@ -575,7 +575,7 @@ class FennecMigratorTest {
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(true))).thenReturn(
             CompletableDeferred(SignInWithShareableAccountResult.Success)
         )
 
@@ -586,7 +586,7 @@ class FennecMigratorTest {
         }
 
         val captor = argumentCaptor<ShareableAccount>()
-        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(false))
+        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(true))
 
         assertEquals("test@example.com", captor.value.email)
         // This is going to be package name (org.mozilla.firefox) in actual builds.
@@ -614,7 +614,7 @@ class FennecMigratorTest {
             .setBrowserDbPath(File(getTestPath("combined"), "basic/browser.db").absolutePath)
             .build()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(true))).thenReturn(
             CompletableDeferred(SignInWithShareableAccountResult.WillRetry)
         )
 
@@ -625,7 +625,7 @@ class FennecMigratorTest {
         }
 
         val captor = argumentCaptor<ShareableAccount>()
-        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(false))
+        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(true))
 
         assertEquals("test@example.com", captor.value.email)
         // This is going to be package name (org.mozilla.firefox) in actual builds.
@@ -654,7 +654,7 @@ class FennecMigratorTest {
             .build()
 
         // For now, we don't treat sign-in failure any different from success. E.g. it's a one-shot attempt.
-        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(true))).thenReturn(
             CompletableDeferred(SignInWithShareableAccountResult.Failure)
         )
 
@@ -665,7 +665,7 @@ class FennecMigratorTest {
         }
 
         val captor = argumentCaptor<ShareableAccount>()
-        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(false))
+        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(true))
 
         assertEquals("test@example.com", captor.value.email)
         // This is going to be package name (org.mozilla.firefox) in actual builds.
