@@ -7,7 +7,7 @@
 #ifndef jit_Label_h
 #define jit_Label_h
 
-#include "jit/Ion.h"
+#include "jit/JitContext.h"
 
 namespace js {
 namespace jit {

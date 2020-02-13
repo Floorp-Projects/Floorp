@@ -17,7 +17,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "jit/InlineList.h"
-#include "jit/Ion.h"
+#include "jit/JitContext.h"
 #include "vm/JSContext.h"
 
 namespace js {
