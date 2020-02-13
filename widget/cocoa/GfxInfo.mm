@@ -282,27 +282,22 @@ void GfxInfo::AddCrashReportAnnotations() {
 }
 
 // We don't support checking driver versions on Mac.
-#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn, ruleId)          \
-  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn, DRIVER_COMPARISON_IGNORED, \
+#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, device, features, blockOn, ruleId)          \
+  APPEND_TO_DRIVER_BLOCKLIST(os, device, features, blockOn, DRIVER_COMPARISON_IGNORED, \
                              V(0, 0, 0, 0), ruleId, "")
 
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
-        (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(RadeonX1000),
-        nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        "FEATURE_FAILURE_MAC_RADEONX1000_NO_TEXTURE2D");
+        OperatingSystem::OSX, DeviceFamily::RadeonX1000, nsIGfxInfo::FEATURE_OPENGL_LAYERS,
+        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_MAC_RADEONX1000_NO_TEXTURE2D");
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
-        (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(Geforce7300GT),
-        nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        "FEATURE_FAILURE_MAC_7300_NO_WEBGL");
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
-        (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelHDGraphicsToIvyBridge),
-        nsIGfxInfo::FEATURE_GL_SWIZZLE, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        "FEATURE_FAILURE_MAC_INTELHD4000_NO_SWIZZLE");
+        OperatingSystem::OSX, DeviceFamily::Geforce7300GT, nsIGfxInfo::FEATURE_WEBGL_OPENGL,
+        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_MAC_7300_NO_WEBGL");
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::IntelHDGraphicsToIvyBridge,
+                                   nsIGfxInfo::FEATURE_GL_SWIZZLE,
+                                   nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+                                   "FEATURE_FAILURE_MAC_INTELHD4000_NO_SWIZZLE");
   }
   return *sDriverInfo;
 }

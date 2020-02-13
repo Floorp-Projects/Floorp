@@ -939,8 +939,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
       continue;
     }
 
-    if (info[i].mDevices != GfxDriverInfo::allDevices &&
-        !info[i].mDevices->IsEmpty()) {
+    if (info[i].mDevices && !info[i].mDevices->IsEmpty()) {
       nsresult rv = info[i].mDevices->Contains(adapterDeviceID[infoIndex]);
       if (rv == NS_ERROR_NOT_AVAILABLE) {
         // Not found
@@ -1048,7 +1047,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
       (aFeature == nsIGfxInfo::FEATURE_DIRECT2D)) {
     if (!adapterInfoFailed[1]) {
       nsAString& nvVendorID =
-          (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA);
+          (nsAString&)GfxDriverInfo::GetDeviceVendor(DeviceVendor::NVIDIA);
       const nsString nv310mDeviceId = NS_LITERAL_STRING("0x0A70");
       if (nvVendorID.Equals(adapterVendorID[1],
                             nsCaseInsensitiveStringComparator()) &&
@@ -1091,7 +1090,7 @@ bool GfxInfoBase::DoesDesktopEnvironmentMatch(
   return aBlocklistDesktop.Equals(aDesktopEnv,
                                   nsCaseInsensitiveStringComparator()) ||
          aBlocklistDesktop.Equals(
-             GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
+             GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment::All),
              nsCaseInsensitiveStringComparator());
 }
 
@@ -1101,7 +1100,7 @@ bool GfxInfoBase::DoesWindowProtocolMatch(
   return aBlocklistWindowProtocol.Equals(aWindowProtocol,
                                          nsCaseInsensitiveStringComparator()) ||
          aBlocklistWindowProtocol.Equals(
-             GfxDriverInfo::GetWindowProtocol(WindowingAll),
+             GfxDriverInfo::GetWindowProtocol(WindowProtocol::All),
              nsCaseInsensitiveStringComparator());
 }
 
@@ -1109,8 +1108,9 @@ bool GfxInfoBase::DoesVendorMatch(const nsAString& aBlocklistVendor,
                                   const nsAString& aAdapterVendor) {
   return aBlocklistVendor.Equals(aAdapterVendor,
                                  nsCaseInsensitiveStringComparator()) ||
-         aBlocklistVendor.Equals(GfxDriverInfo::GetDeviceVendor(VendorAll),
-                                 nsCaseInsensitiveStringComparator());
+         aBlocklistVendor.Equals(
+             GfxDriverInfo::GetDeviceVendor(DeviceVendor::All),
+             nsCaseInsensitiveStringComparator());
 }
 
 bool GfxInfoBase::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
@@ -1118,7 +1118,7 @@ bool GfxInfoBase::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
   return aBlocklistVendor.Equals(aDriverVendor,
                                  nsCaseInsensitiveStringComparator()) ||
          aBlocklistVendor.Equals(
-             GfxDriverInfo::GetDriverVendor(DriverVendorAll),
+             GfxDriverInfo::GetDriverVendor(DriverVendor::All),
              nsCaseInsensitiveStringComparator());
 }
 
