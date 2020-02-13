@@ -28,7 +28,7 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
 
     private var background: View? = null
 
-    override fun onAttach(context: Context?) {
+    override fun onAttach(context: Context) {
         super.onAttach(context)
 
         val transition = TransitionInflater.from(context).inflateTransition(R.transition.firstrun_exit)

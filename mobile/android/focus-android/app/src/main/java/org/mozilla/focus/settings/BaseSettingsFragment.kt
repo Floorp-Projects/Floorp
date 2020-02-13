@@ -25,7 +25,7 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         list?.divider = null
     }
 
-    override fun onAttach(context: Context?) {
+    override fun onAttach(context: Context) {
         super.onAttach(context)
         if (activity !is ActionBarUpdater) {
             throw IllegalArgumentException("Parent activity must implement ActionBarUpdater")

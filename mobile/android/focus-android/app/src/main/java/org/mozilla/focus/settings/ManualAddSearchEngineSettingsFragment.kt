@@ -78,11 +78,11 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         menuItemForActiveAsyncTask = null
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
-        inflater?.inflate(R.menu.menu_search_engine_manual_add, menu)
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_search_engine_manual_add, menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val openLearnMore = {
             val url = SupportUtils.getSumoURLForTopic(context!!,
                     SupportUtils.SumoTopic.ADD_SEARCH_ENGINE)
@@ -111,7 +111,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             }
         }
 
-        when (item?.itemId) {
+        when (item.itemId) {
             R.id.learn_more -> openLearnMore()
             R.id.menu_save_search_engine -> saveSearchEngine()
             else -> return super.onOptionsItemSelected(item)

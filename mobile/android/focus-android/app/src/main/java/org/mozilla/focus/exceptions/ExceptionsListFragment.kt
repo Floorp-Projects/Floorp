@@ -145,12 +145,12 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
         super.onStop()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
-        inflater?.inflate(R.menu.menu_exceptions_list, menu)
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_exceptions_list, menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?) {
-        val removeItem = menu?.findItem(R.id.remove)
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        val removeItem = menu.findItem(R.id.remove)
 
         removeItem?.let {
             it.isVisible = isSelectionMode() || exceptionList.adapter!!.itemCount > 0
@@ -160,7 +160,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean = when (item?.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.remove -> {
             fragmentManager!!
                 .beginTransaction()

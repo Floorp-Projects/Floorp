@@ -30,6 +30,9 @@ public class CustomTabsService extends Service {
             }
 
             @Override
+            public boolean newSessionWithExtras(ICustomTabsCallback callback, Bundle extras) { return true; }
+
+            @Override
             public boolean mayLaunchUrl(ICustomTabsCallback callback, Uri url, Bundle extras, List<Bundle> otherLikelyBundles) {
                 return true;
             }
@@ -51,6 +54,13 @@ public class CustomTabsService extends Service {
             }
 
             @Override
+            public boolean requestPostMessageChannelWithExtras(ICustomTabsCallback callback,
+                                                               Uri uri,
+                                                               Bundle extras) {
+                return false;
+            }
+
+            @Override
             public int postMessage(ICustomTabsCallback iCustomTabsCallback, String s,
                                    Bundle bundle) {
                 return 0;
@@ -58,6 +68,11 @@ public class CustomTabsService extends Service {
 
             @Override
             public boolean validateRelationship(ICustomTabsCallback iCustomTabsCallback, int i, Uri uri, Bundle bundle) {
+                return false;
+            }
+
+            @Override
+            public boolean receiveFile(ICustomTabsCallback callback, Uri uri, int i, Bundle bundle) {
                 return false;
             }
         };

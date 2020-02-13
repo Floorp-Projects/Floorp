@@ -42,9 +42,9 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
         inflater.inflate(R.menu.menu_search_engines, menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?) {
+    override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
-        menu?.findItem(R.id.menu_restore_default_engines)?.let {
+        menu.findItem(R.id.menu_restore_default_engines)?.let {
             it.isEnabled = !CustomSearchEngineStore.hasAllDefaultSearchEngines(activity!!)
         }
     }

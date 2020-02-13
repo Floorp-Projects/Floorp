@@ -100,6 +100,7 @@ class DownloadDialogFragment : DialogFragment() {
 
             val fileName = download.fileName ?: DownloadUtils.guessFileName(
                 download.contentDisposition,
+                null,
                 download.url,
                 download.mimeType
             )

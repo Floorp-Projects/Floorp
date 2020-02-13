@@ -150,12 +150,12 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
         super.onPause()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
-        inflater?.inflate(R.menu.menu_autocomplete_list, menu)
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_autocomplete_list, menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?) {
-        val removeItem = menu?.findItem(R.id.remove)
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        val removeItem = menu.findItem(R.id.remove)
 
         removeItem?.let {
             it.isVisible = isSelectionMode() || domainList.adapter!!.itemCount > 1
@@ -164,7 +164,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean = when (item?.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.remove -> {
             fragmentManager!!
                     .beginTransaction()

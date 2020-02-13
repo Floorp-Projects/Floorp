@@ -896,6 +896,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         else
             DownloadUtils.guessFileName(
                 download.contentDisposition,
+                null,
                 download.url,
                 download.mimeType
             )

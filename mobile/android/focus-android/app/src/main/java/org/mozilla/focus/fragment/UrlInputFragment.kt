@@ -393,10 +393,10 @@ class UrlInputFragment :
         ViewUtils.showKeyboard(urlView)
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
+    override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        if (newConfig?.orientation != Configuration.ORIENTATION_UNDEFINED) {
+        if (newConfig.orientation != Configuration.ORIENTATION_UNDEFINED) {
             // This is a hack to make the HomeMenu actually stick on top of the menuView (#3287)
 
             displayedPopupMenu?.let {

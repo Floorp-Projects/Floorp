@@ -34,7 +34,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         setStyle(DialogFragment.STYLE_NORMAL, android.R.style.Theme_Material_Light_Dialog)
     }
 
-    override fun onCancel(dialog: DialogInterface?) {
+    override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         val startMain = Intent(Intent.ACTION_MAIN)
         startMain.addCategory(Intent.CATEGORY_HOME)
@@ -56,8 +56,8 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
 
         val biometricDialog = dialog
         this.isCancelable = true
-        biometricDialog.setCanceledOnTouchOutside(false)
-        biometricDialog.setTitle(
+        biometricDialog?.setCanceledOnTouchOutside(false)
+        biometricDialog?.setTitle(
             context!!.getString(
                 R.string.biometric_auth_title,
                 context!!.getString(R.string.app_name)

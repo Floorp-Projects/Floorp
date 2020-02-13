@@ -64,8 +64,8 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
                     final String decoded = Uri.decode(localUri);
                     File file = new File(decoded);
                     final String mimeType = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_MEDIA_TYPE));
-                    String fileName = DownloadUtils.guessFileName(null, decoded, null);
-                    final String fileName2 = DownloadUtils.guessFileName(null, decoded, mimeType);
+                    String fileName = DownloadUtils.guessFileName(null, null, decoded, null);
+                    final String fileName2 = DownloadUtils.guessFileName(null, null, decoded, mimeType);
                     // Rename the file extension if it lacks a known MIME type and the server provided a Content-Type header.
                     if (!fileName.equals(fileName2)) {
                         final File file2 = new File(file.getParent(), fileName2);
