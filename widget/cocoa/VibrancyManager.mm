@@ -66,6 +66,7 @@ static id AppearanceForVibrancyType(VibrancyType aType) {
     case VibrancyType::TOOLTIP:
     case VibrancyType::MENU:
     case VibrancyType::HIGHLIGHTED_MENUITEM:
+    case VibrancyType::SHEET:
     case VibrancyType::SOURCE_LIST:
     case VibrancyType::SOURCE_LIST_SELECTION:
     case VibrancyType::ACTIVE_SOURCE_LIST_SELECTION:
@@ -96,8 +97,10 @@ static NSUInteger VisualEffectStateForVibrancyType(VibrancyType aType) {
     case VibrancyType::TOOLTIP:
     case VibrancyType::MENU:
     case VibrancyType::HIGHLIGHTED_MENUITEM:
-      // Tooltip and menu windows are never "key", so we need to tell the vibrancy effect to look
-      // active regardless of window state.
+    case VibrancyType::SHEET:
+      // Tooltip and menu windows are never "key" and sheets always looks
+      // active, so we need to tell the vibrancy effect to look active
+      // regardless of window state.
       return NSVisualEffectStateActive;
     default:
       return NSVisualEffectStateFollowsWindowActiveState;
