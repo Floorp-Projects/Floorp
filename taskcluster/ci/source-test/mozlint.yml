@@ -268,24 +268,12 @@ l10n-conflicts:
 rustfmt:
     description: rustfmt on the Rust code
     treeherder:
-        symbol: rust(rustfmt)
+        symbol: misc(rustfmt)
     run:
         mach: lint -v -l rustfmt -f treeherder -f json:/builds/worker/mozlint.json *
     when:
         files-changed:
             - '**/*.rs'
-
-
-clippy:
-    description: clippy on the Rust code
-    treeherder:
-        symbol: rust(clippy)
-    run:
-        mach: lint -v -l clippy -f treeherder -f json:/builds/worker/mozlint.json
-    when:
-        files-changed:
-            - '**/*.rs'
-            - '**/Cargo.toml'
 
 
 file-whitespace:
