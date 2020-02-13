@@ -234,7 +234,7 @@ already_AddRefed<Layer> nsVideoFrame::BuildLayer(
   uint32_t flags = element->HasAlpha() ? 0 : Layer::CONTENT_OPAQUE;
   layer->SetContentFlags(flags);
 
-  RefPtr<Layer> result = layer.forget();
+  RefPtr<Layer> result = std::move(layer);
   return result.forget();
 }
 

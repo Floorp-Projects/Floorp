@@ -149,8 +149,12 @@ static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
 
   if (realm) {
     Zone* zone = realm->zone();
-    for (auto iter = zone->cellIter<T>(prep); !iter.done(); iter.next()) {
-      T* script = iter;
+    for (auto iter = zone->cellIter<BaseScript>(prep); !iter.done();
+         iter.next()) {
+      if (mozilla::IsSame<T, LazyScript>::value != iter->isLazyScript()) {
+        continue;
+      }
+      T* script = static_cast<T*>(iter.get());
       if (script->realm() != realm) {
         continue;
       }
@@ -158,8 +162,12 @@ static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
     }
   } else {
     for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-      for (auto iter = zone->cellIter<T>(prep); !iter.done(); iter.next()) {
-        T* script = iter;
+      for (auto iter = zone->cellIter<BaseScript>(prep); !iter.done();
+           iter.next()) {
+        if (mozilla::IsSame<T, LazyScript>::value != iter->isLazyScript()) {
+          continue;
+        }
+        T* script = static_cast<T*>(iter.get());
         DoScriptCallback(cx, data, script, scriptCallback, nogc);
       }
     }

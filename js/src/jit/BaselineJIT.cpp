@@ -975,8 +975,11 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
   jrt->baselineInterpreter().toggleProfilerInstrumentation(enable);
 
   for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-    for (auto script = zone->cellIter<JSScript>(); !script.done();
-         script.next()) {
+    for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
+      if (base->isLazyScript()) {
+        continue;
+      }
+      JSScript* script = static_cast<JSScript*>(base.get());
       if (enable) {
         if (JitScript* jitScript = script->maybeJitScript()) {
           jitScript->ensureProfileString(cx, script);
@@ -994,11 +997,11 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
 #ifdef JS_TRACE_LOGGING
 void jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable) {
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
-      JSScript* script = iter;
-      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+    for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
+      if (base->isLazyScript()) {
         continue;
       }
+      JSScript* script = static_cast<JSScript*>(base.get());
       if (!script->hasBaselineScript()) {
         continue;
       }
@@ -1009,11 +1012,11 @@ void jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable) {
 
 void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
-      JSScript* script = iter;
-      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+    for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
+      if (base->isLazyScript()) {
         continue;
       }
+      JSScript* script = static_cast<JSScript*>(base.get());
       if (!script->hasBaselineScript()) {
         continue;
       }

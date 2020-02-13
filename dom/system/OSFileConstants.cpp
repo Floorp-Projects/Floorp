@@ -955,7 +955,7 @@ already_AddRefed<OSFileConstantsService> OSFileConstantsService::GetOrCreate() {
       return nullptr;
     }
 
-    gInstance = service.forget();
+    gInstance = std::move(service);
     ClearOnShutdown(&gInstance);
   }
 

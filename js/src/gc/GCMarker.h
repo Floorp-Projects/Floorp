@@ -15,6 +15,8 @@
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 
+class JSRope;
+
 namespace js {
 
 class AutoAccessAtomsZone;
@@ -380,7 +382,6 @@ class GCMarker : public JSTracer {
   void eagerlyMarkChildren(JSLinearString* str);
   void eagerlyMarkChildren(JSRope* rope);
   void eagerlyMarkChildren(JSString* str);
-  void eagerlyMarkChildren(LazyScript* thing);
   void eagerlyMarkChildren(Shape* shape);
   void eagerlyMarkChildren(Scope* scope);
   void lazilyMarkChildren(ObjectGroup* group);

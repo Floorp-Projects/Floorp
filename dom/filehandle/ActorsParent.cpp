@@ -1090,7 +1090,7 @@ void BackgroundMutableFileParentBase::Invalidate() {
 
       if (count) {
         for (uint32_t index = 0; index < count; index++) {
-          RefPtr<FileHandle> fileHandle = fileHandles[index].forget();
+          RefPtr<FileHandle> fileHandle = std::move(fileHandles[index]);
           MOZ_ASSERT(fileHandle);
 
           fileHandle->Invalidate();

@@ -43,7 +43,7 @@ async function testScriptError(hud, testData) {
     expectUncaughtException();
   }
 
-  await loadDocument(makeURIData(testData.script));
+  await loadDocument(hud.toolbox, makeURIData(testData.script));
 
   const msg = "the expected error message was displayed";
   info(`waiting for ${msg} to be displayed`);

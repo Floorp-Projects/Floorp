@@ -77,7 +77,7 @@ void StreamBlobImpl::CreateInputStream(nsIInputStream** aStream,
   }
 
   if (replacementStream) {
-    mInputStream = replacementStream.forget();
+    mInputStream = std::move(replacementStream);
   }
 
   nsCOMPtr<nsIInputStream> wrappedStream =

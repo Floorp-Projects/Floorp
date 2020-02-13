@@ -32,7 +32,6 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
   std::string originSalt(aOriginSalt.BeginReading(), aOriginSalt.Length());
   std::string input =
       machineId + originSalt + CDMStorageIdProvider::kBrowserIdentifier;
-  nsAutoCString storageId;
   nsresult rv;
   nsCOMPtr<nsICryptoHash> hasher =
       do_CreateInstance("@mozilla.org/security/hash;1", &rv);
@@ -63,6 +62,7 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
     return EmptyCString();
   }
 
+  nsCString storageId;
   rv = hasher->Finish(false, storageId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     GMP_LOG_DEBUG(
@@ -71,7 +71,7 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
         static_cast<uint32_t>(rv));
     return EmptyCString();
   }
-  return std::move(storageId);
+  return storageId;
 #endif
 }
 

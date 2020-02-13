@@ -81,10 +81,12 @@ pub enum GlobalInit {
     F64Const(u64),
     /// A `vconst`.
     V128Const(V128Imm),
-    /// A `get_global` of another global.
+    /// A `global.get` of another global.
     GetGlobal(GlobalIndex),
     /// A `ref.null`.
     RefNullConst,
+    /// A `ref.func <index>`.
+    RefFunc(FuncIndex),
     ///< The global is imported from, and thus initialized by, a different module.
     Import,
 }
@@ -185,42 +187,42 @@ pub fn blocktype_params_results(
     })
 }
 
-/// Create an `Ebb` with the given Wasm parameters.
-pub fn ebb_with_params<PE: TargetEnvironment + ?Sized>(
+/// Create a `Block` with the given Wasm parameters.
+pub fn block_with_params<PE: TargetEnvironment + ?Sized>(
     builder: &mut FunctionBuilder,
     params: &[wasmparser::Type],
     environ: &PE,
-) -> WasmResult<ir::Ebb> {
-    let ebb = builder.create_ebb();
+) -> WasmResult<ir::Block> {
+    let block = builder.create_block();
     for ty in params.iter() {
         match ty {
             wasmparser::Type::I32 => {
-                builder.append_ebb_param(ebb, ir::types::I32);
+                builder.append_block_param(block, ir::types::I32);
             }
             wasmparser::Type::I64 => {
-                builder.append_ebb_param(ebb, ir::types::I64);
+                builder.append_block_param(block, ir::types::I64);
             }
             wasmparser::Type::F32 => {
-                builder.append_ebb_param(ebb, ir::types::F32);
+                builder.append_block_param(block, ir::types::F32);
             }
             wasmparser::Type::F64 => {
-                builder.append_ebb_param(ebb, ir::types::F64);
+                builder.append_block_param(block, ir::types::F64);
             }
             wasmparser::Type::AnyRef | wasmparser::Type::AnyFunc | wasmparser::Type::NullRef => {
-                builder.append_ebb_param(ebb, environ.reference_type());
+                builder.append_block_param(block, environ.reference_type());
             }
             wasmparser::Type::V128 => {
-                builder.append_ebb_param(ebb, ir::types::I8X16);
+                builder.append_block_param(block, ir::types::I8X16);
             }
             ty => {
                 return Err(wasm_unsupported!(
-                    "ebb_with_params: type {:?} in multi-value block's signature",
+                    "block_with_params: type {:?} in multi-value block's signature",
                     ty
                 ))
             }
         }
     }
-    Ok(ebb)
+    Ok(block)
 }
 
 /// Turns a `wasmparser` `f32` into a `Cranelift` one.

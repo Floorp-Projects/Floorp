@@ -130,10 +130,6 @@ class DOMIntersectionObserver final : public nsISupports,
 
   void TakeRecords(nsTArray<RefPtr<DOMIntersectionObserverEntry>>& aRetVal);
 
-  dom::IntersectionCallback* IntersectionCallback() {
-    return mCallback.as<RefPtr<dom::IntersectionCallback>>();
-  }
-
   bool SetRootMargin(const nsAString& aString);
 
   void Update(Document* aDocument, DOMHighResTimeStamp time);

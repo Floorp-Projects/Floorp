@@ -367,7 +367,6 @@ static constexpr FinalizePhase ForegroundNonObjectFinalizePhase = {
  * Finalization order for GC things swept on the background thread.
  */
 static constexpr FinalizePhase BackgroundFinalizePhases[] = {
-    {gcstats::PhaseKind::SWEEP_SCRIPT, {AllocKind::LAZY_SCRIPT}},
     {gcstats::PhaseKind::SWEEP_OBJECT,
      {AllocKind::FUNCTION, AllocKind::FUNCTION_EXTENDED,
       AllocKind::OBJECT0_BACKGROUND, AllocKind::OBJECT2_BACKGROUND,
@@ -2085,11 +2084,8 @@ bool MovingTracer::onShapeEdge(Shape** shapep) { return updateEdge(shapep); }
 bool MovingTracer::onStringEdge(JSString** stringp) {
   return updateEdge(stringp);
 }
-bool MovingTracer::onScriptEdge(JSScript** scriptp) {
+bool MovingTracer::onScriptEdge(js::BaseScript** scriptp) {
   return updateEdge(scriptp);
-}
-bool MovingTracer::onLazyScriptEdge(LazyScript** lazyp) {
-  return updateEdge(lazyp);
 }
 bool MovingTracer::onBaseShapeEdge(BaseShape** basep) {
   return updateEdge(basep);
@@ -2110,8 +2106,13 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
 
   AutoClearTypeInferenceStateOnOOM oom(zone);
 
-  for (auto script = zone->cellIterUnsafe<JSScript>(); !script.done();
-       script.next()) {
+  for (auto base = zone->cellIterUnsafe<BaseScript>(); !base.done();
+       base.next()) {
+    if (base->isLazyScript()) {
+      continue;
+    }
+    JSScript* script = static_cast<JSScript*>(base.get());
+
     AutoSweepJitScript sweep(script);
   }
   for (auto group = zone->cellIterUnsafe<ObjectGroup>(); !group.done();
@@ -2435,8 +2436,7 @@ static constexpr AllocKinds UpdatePhaseOne{
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
-static constexpr AllocKinds UpdatePhaseThree{AllocKind::LAZY_SCRIPT,
-                                             AllocKind::SCOPE,
+static constexpr AllocKinds UpdatePhaseThree{AllocKind::SCOPE,
                                              AllocKind::FUNCTION,
                                              AllocKind::FUNCTION_EXTENDED,
                                              AllocKind::OBJECT0,
@@ -3954,7 +3954,7 @@ void GCRuntime::purgeSourceURLsForShrinkingGC() {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE_SOURCE_URLS);
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     // URLs are not tracked for realms in the system zone.
-    if (!canRelocateZone(zone) || zone->isSystem) {
+    if (!canRelocateZone(zone) || zone->isSystemZone()) {
       continue;
     }
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
@@ -4917,8 +4917,12 @@ static void SweepCompressionTasks(GCParallelTask* task) {
 void js::gc::SweepLazyScripts(GCParallelTask* task) {
   for (SweepGroupZonesIter zone(task->gc); !zone.done(); zone.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
-    for (auto i = zone->cellIter<LazyScript>(); !i.done(); i.next()) {
-      WeakHeapPtrScript* edge = &i.unbarrieredGet()->script_;
+    for (auto iter = zone->cellIter<BaseScript>(); !iter.done(); iter.next()) {
+      BaseScript* base = iter.unbarrieredGet();
+      if (!base->isLazyScript()) {
+        continue;
+      }
+      WeakHeapPtrScript* edge = &base->u.script_;
       if (*edge && IsAboutToBeFinalized(edge)) {
         *edge = nullptr;
       }
@@ -5449,7 +5453,7 @@ static void SweepThing(JSFreeOp* fop, Shape* shape) {
   }
 }
 
-static void SweepThing(JSFreeOp* fop, JSScript* script) {
+static void SweepThing(JSFreeOp* fop, BaseScript* script) {
   AutoSweepJitScript sweep(script);
 }
 
@@ -5493,8 +5497,8 @@ IncrementalProgress GCRuntime::sweepTypeInformation(JSFreeOp* fop,
 
   AutoClearTypeInferenceStateOnOOM oom(sweepZone);
 
-  if (!SweepArenaList<JSScript>(fop, &al.gcScriptArenasToUpdate.ref(),
-                                budget)) {
+  if (!SweepArenaList<BaseScript>(fop, &al.gcScriptArenasToUpdate.ref(),
+                                  budget)) {
     return NotFinished;
   }
 
@@ -7527,16 +7531,15 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
 
   if (!zone) {
     zoneHolder = MakeUnique<Zone>(cx->runtime());
-    if (!zoneHolder) {
+    if (!zoneHolder || !zoneHolder->init()) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
 
     const JSPrincipals* trusted = rt->trustedPrincipals();
     bool isSystem = principals && principals == trusted;
-    if (!zoneHolder->init(isSystem)) {
-      ReportOutOfMemory(cx);
-      return nullptr;
+    if (isSystem) {
+      zoneHolder->setIsSystemZone();
     }
 
     zone = zoneHolder.get();
@@ -7589,11 +7592,11 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
   if (zoneHolder) {
     rt->gc.zones().infallibleAppend(zoneHolder.release());
 
-    // Lazily set the runtime's sytem zone.
+    // Lazily set the runtime's system zone.
     if (compSpec == JS::CompartmentSpecifier::NewCompartmentInSystemZone) {
       MOZ_RELEASE_ASSERT(!rt->gc.systemZone);
       rt->gc.systemZone = zone;
-      zone->isSystem = true;
+      zone->setIsSystemZone();
     }
   }
 
@@ -8650,7 +8653,7 @@ bool js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol** symp) {
 bool js::gc::ClearEdgesTracer::onBigIntEdge(JS::BigInt** bip) {
   return clearEdge(bip);
 }
-bool js::gc::ClearEdgesTracer::onScriptEdge(JSScript** scriptp) {
+bool js::gc::ClearEdgesTracer::onScriptEdge(js::BaseScript** scriptp) {
   return clearEdge(scriptp);
 }
 bool js::gc::ClearEdgesTracer::onShapeEdge(js::Shape** shapep) {
@@ -8664,9 +8667,6 @@ bool js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape** basep) {
 }
 bool js::gc::ClearEdgesTracer::onJitCodeEdge(js::jit::JitCode** codep) {
   return clearEdge(codep);
-}
-bool js::gc::ClearEdgesTracer::onLazyScriptEdge(js::LazyScript** lazyp) {
-  return clearEdge(lazyp);
 }
 bool js::gc::ClearEdgesTracer::onScopeEdge(js::Scope** scopep) {
   return clearEdge(scopep);

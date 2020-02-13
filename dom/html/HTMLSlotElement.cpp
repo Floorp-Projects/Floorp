@@ -15,8 +15,7 @@
 nsGenericHTMLElement* NS_NewHTMLSlotElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser) {
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo(std::move(aNodeInfo));
-  return new mozilla::dom::HTMLSlotElement(nodeInfo.forget());
+  return new mozilla::dom::HTMLSlotElement(std::move(aNodeInfo));
 }
 
 namespace mozilla {

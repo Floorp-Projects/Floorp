@@ -368,7 +368,7 @@ nsresult nsFileChannel::OpenContentStream(bool async, nsIInputStream** result,
     if (!uploadStream || !uploadStream->IsInitialized()) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    stream = uploadStream.forget();
+    stream = std::move(uploadStream);
 
     mContentLength = 0;
 

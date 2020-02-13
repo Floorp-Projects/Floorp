@@ -462,7 +462,7 @@ class StartUnregisterRunnable final : public Runnable {
     RefPtr<GenericPromise::Private> promise;
     {
       MutexAutoLock lock(mMutex);
-      promise = mPromise.forget();
+      promise = std::move(mPromise);
     }
 
     RefPtr<WorkerUnregisterCallback> cb =

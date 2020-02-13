@@ -97,6 +97,8 @@ const MessageState = overrides =>
         // Map of the form {messageId : networkInformation}
         // `networkInformation` holds request, response, totalTime, ...
         networkMessagesUpdateById: {},
+        // Id of the last messages that was added.
+        lastMessageId: null,
       },
       overrides
     )
@@ -115,6 +117,7 @@ function cloneState(state) {
     repeatById: { ...state.repeatById },
     networkMessagesUpdateById: { ...state.networkMessagesUpdateById },
     warningGroupsById: new Map(state.warningGroupsById),
+    lastMessageId: state.lastMessageId,
   };
 }
 
@@ -143,9 +146,8 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     return state;
   }
 
-  if (newMessage.allowRepeating && messagesById.size > 0) {
-    const lastMessage = messagesById.get(getLastMessageId(state));
-
+  const lastMessage = messagesById.get(state.lastMessageId);
+  if (lastMessage && newMessage.allowRepeating && messagesById.size > 0) {
     if (
       lastMessage.repeatId === newMessage.repeatId &&
       lastMessage.groupId === currentGroup
@@ -154,6 +156,9 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
       return state;
     }
   }
+
+  // Store the id of the message as being the last one being added.
+  state.lastMessageId = newMessage.id;
 
   // Add the new message with a reference to the parent group.
   const parentGroups = getParentGroups(currentGroup, groupsById);
@@ -1495,10 +1500,6 @@ function maybeSortVisibleMessages(
       return messageA.timeStamp < messageB.timeStamp ? -1 : 1;
     });
   }
-}
-
-function getLastMessageId(state) {
-  return Array.from(state.messagesById.keys())[state.messagesById.size - 1];
 }
 
 /**

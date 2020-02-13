@@ -1287,12 +1287,32 @@ SearchService.prototype = {
     SearchUtils.log("_loadEngines: done using rebuilt cache");
   },
 
+  /**
+   * Loads engines as specified by the configuration. We only expect
+   * configured engines here, user engines should not be listed.
+   *
+   * @param {array} engineConfigs
+   *   An array of engines configurations based on the schema.
+   * @param {boolean} [isReload]
+   *   Set to true to indicate a reload is happening.
+   * @returns {array.<nsISearchEngine>}
+   *   Returns an array of the loaded search engines. This may be
+   *   smaller than the original list if not all engines can be loaded.
+   */
   async _loadEnginesFromConfig(engineConfigs, isReload = false) {
     SearchUtils.log("_loadEnginesFromConfig");
     let engines = [];
     for (let config of engineConfigs) {
-      let engine = await this.makeEngineFromConfig(config, isReload);
-      engines.push(engine);
+      try {
+        let engine = await this.makeEngineFromConfig(config, isReload);
+        engines.push(engine);
+      } catch (ex) {
+        console.error(
+          `Could not load engine ${
+            "webExtension" in config ? config.webExtension.id : "unknown"
+          }: ${ex}`
+        );
+      }
     }
     return engines;
   },

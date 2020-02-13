@@ -28,12 +28,13 @@ registerCleanupFunction(function() {
 });
 
 add_task(async function() {
+  await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Test SHA1 warnings");
   let onContentLog = waitForMessage(hud, TRIGGER_MSG);
   const onSha1Warning = waitForMessage(hud, "SHA-1");
-  await loadDocument(SHA1_URL);
+  await loadDocument(hud.toolbox, SHA1_URL);
   await Promise.all([onContentLog, onSha1Warning]);
 
   let { textContent } = hud.ui.outputNode;
@@ -45,7 +46,7 @@ add_task(async function() {
 
   info("Test SSL warnings appropriately not present");
   onContentLog = waitForMessage(hud, TRIGGER_MSG);
-  await loadDocument(SHA256_URL);
+  await loadDocument(hud.toolbox, SHA256_URL);
   await onContentLog;
 
   textContent = hud.ui.outputNode.textContent;
@@ -65,7 +66,7 @@ add_task(async function() {
   Services.prefs.setIntPref("security.tls.version.min", 1);
   Services.prefs.setIntPref("security.tls.version.max", 4);
   onContentLog = waitForMessage(hud, TRIGGER_MSG);
-  await loadDocument(TLS_1_0_URL);
+  await loadDocument(hud.toolbox, TLS_1_0_URL);
   await onContentLog;
 
   textContent = hud.ui.outputNode.textContent;

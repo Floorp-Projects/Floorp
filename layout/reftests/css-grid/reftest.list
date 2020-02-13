@@ -197,7 +197,7 @@ test-pref(layout.css.serialize-grid-implicit-tracks,false) == grid-repeat-auto-f
 == grid-fragmentation-014.html grid-fragmentation-014-ref.html
 asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # bug 1144852 (due to vertical writing-mode)
 == grid-fragmentation-016.html grid-fragmentation-016-ref.html
-== grid-fragmentation-017.html grid-fragmentation-017-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-017.html grid-fragmentation-017-ref.html
 == grid-fragmentation-018.html grid-fragmentation-018-ref.html
 == grid-fragmentation-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-020.html grid-fragmentation-020-ref.html
@@ -232,7 +232,7 @@ fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn4-015.html grid-
 fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn1-015.html grid-fragmentation-015-ref.html
 == grid-fragmentation-dyn1-016.html grid-fragmentation-016-ref.html
 == grid-fragmentation-dyn5-016.html grid-fragmentation-016-ref.html
-== grid-fragmentation-dyn3-017.html grid-fragmentation-017-ref.html
+fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn3-017.html grid-fragmentation-017-ref.html
 == grid-fragmentation-dyn2-018.html grid-fragmentation-018-ref.html
 == grid-fragmentation-dyn1-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-dyn2-019.html grid-fragmentation-019-ref.html

@@ -220,8 +220,7 @@ struct MovingTracer final : public JS::CallbackTracer {
   bool onObjectEdge(JSObject** objp) override;
   bool onShapeEdge(Shape** shapep) override;
   bool onStringEdge(JSString** stringp) override;
-  bool onScriptEdge(JSScript** scriptp) override;
-  bool onLazyScriptEdge(LazyScript** lazyp) override;
+  bool onScriptEdge(js::BaseScript** scriptp) override;
   bool onBaseShapeEdge(BaseShape** basep) override;
   bool onScopeEdge(Scope** scopep) override;
   bool onRegExpSharedEdge(RegExpShared** sharedp) override;
@@ -247,8 +246,7 @@ struct SweepingTracer final : public JS::CallbackTracer {
   bool onObjectEdge(JSObject** objp) override;
   bool onShapeEdge(Shape** shapep) override;
   bool onStringEdge(JSString** stringp) override;
-  bool onScriptEdge(JSScript** scriptp) override;
-  bool onLazyScriptEdge(LazyScript** lazyp) override;
+  bool onScriptEdge(js::BaseScript** scriptp) override;
   bool onBaseShapeEdge(BaseShape** basep) override;
   bool onJitCodeEdge(jit::JitCode** jitp) override;
   bool onScopeEdge(Scope** scopep) override;

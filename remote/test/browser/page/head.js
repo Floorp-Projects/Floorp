@@ -10,6 +10,13 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+const {
+  clearInterval,
+  clearTimeout,
+  setInterval,
+  setTimeout,
+} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
 function assertHistoryEntries(history, expectedData, expectedIndex) {
   const { currentIndex, entries } = history;
 
@@ -40,6 +47,21 @@ function assertHistoryEntries(history, expectedData, expectedIndex) {
   });
 }
 
+function generateHistoryData(count) {
+  const data = [];
+
+  for (let index = 0; index < count; index++) {
+    const url = toDataURL(`<head><title>Test ${index + 1}</title></head>`);
+    data.push({
+      url,
+      userTypedURL: url,
+      title: `Test ${index + 1}`,
+    });
+  }
+
+  return data;
+}
+
 async function getContentSize() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     const docEl = content.document.documentElement;
@@ -64,17 +86,38 @@ async function getViewportSize() {
   });
 }
 
-function generateHistoryData(count) {
-  const data = [];
-
-  for (let index = 0; index < count; index++) {
-    const url = toDataURL(`<head><title>Test ${index + 1}</title></head>`);
-    data.push({
-      url,
-      userTypedURL: url,
-      title: `Test ${index + 1}`,
+function getCurrentHistoryIndex() {
+  return new Promise(resolve => {
+    SessionStore.getSessionHistory(window.gBrowser.selectedTab, history => {
+      resolve(history.index);
     });
-  }
+  });
+}
 
-  return data;
+async function gotoHistoryIndex(index) {
+  gBrowser.gotoIndex(index);
+
+  return new Promise((resolve, reject) => {
+    let intervalId, timeoutId;
+
+    const onTimer = async type => {
+      switch (type) {
+        case "check":
+          const currentIndex = await getCurrentHistoryIndex();
+          if (currentIndex == index) {
+            clearInterval(intervalId);
+            clearTimeout(timeoutId);
+            resolve();
+          }
+          break;
+        case "timeout":
+          clearInterval(intervalId);
+          reject(new Error(`History navigation to index ${index} failed`));
+          break;
+      }
+    };
+
+    timeoutId = setTimeout(onTimer, 1000, "timeout");
+    intervalId = setInterval(onTimer, 10, "check");
+  });
 }

@@ -1337,8 +1337,8 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
     newTarget->ClearRect(canvasRect);
   }
 
-  mTarget = newTarget.forget();
-  mBufferProvider = newProvider.forget();
+  mTarget = std::move(newTarget);
+  mBufferProvider = std::move(newProvider);
 
   RegisterAllocation();
 
@@ -4366,8 +4366,8 @@ CanvasRenderingContext2D::CachedSurfaceFromElement(Element* aElement) {
   }
 
   res.mSize = res.mIntrinsicSize = res.mSourceSurface->GetSize();
-  res.mPrincipal = principal.forget();
-  res.mImageRequest = imgRequest.forget();
+  res.mPrincipal = std::move(principal);
+  res.mImageRequest = std::move(imgRequest);
   res.mIsWriteOnly = CheckWriteOnlySecurity(res.mCORSUsed, res.mPrincipal,
                                             res.mHadCrossOriginRedirects);
 

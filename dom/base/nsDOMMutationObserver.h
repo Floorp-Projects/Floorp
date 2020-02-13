@@ -432,9 +432,9 @@ class nsAnimationReceiver : public nsMutationReceiver {
 
 class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
  public:
-  nsDOMMutationObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
+  nsDOMMutationObserver(nsCOMPtr<nsPIDOMWindowInner>&& aOwner,
                         mozilla::dom::MutationCallback& aCb, bool aChrome)
-      : mOwner(aOwner),
+      : mOwner(std::move(aOwner)),
         mLastPendingMutation(nullptr),
         mPendingMutationCount(0),
         mCallback(&aCb),
@@ -490,11 +490,11 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
     MOZ_ASSERT(record);
     if (!mLastPendingMutation) {
       MOZ_ASSERT(!mFirstPendingMutation);
-      mFirstPendingMutation = record.forget();
+      mFirstPendingMutation = std::move(record);
       mLastPendingMutation = mFirstPendingMutation;
     } else {
       MOZ_ASSERT(mFirstPendingMutation);
-      mLastPendingMutation->mNext = record.forget();
+      mLastPendingMutation->mNext = std::move(record);
       mLastPendingMutation = mLastPendingMutation->mNext;
     }
     ++mPendingMutationCount;
@@ -503,11 +503,11 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
   void ClearPendingRecords() {
     // Break down the pending mutation record list so that cycle collector
     // can delete the objects sooner.
-    RefPtr<nsDOMMutationRecord> current = mFirstPendingMutation.forget();
+    RefPtr<nsDOMMutationRecord> current = std::move(mFirstPendingMutation);
     mLastPendingMutation = nullptr;
     mPendingMutationCount = 0;
     while (current) {
-      current = current->mNext.forget();
+      current = std::move(current->mNext);
     }
   }
 

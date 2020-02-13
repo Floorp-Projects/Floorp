@@ -1843,7 +1843,7 @@ gboolean nsDragService::RunScheduledTask() {
                             mPendingWindowPoint != mTargetWindowPoint;
   DragTask task = mScheduledTask;
   mScheduledTask = eDragTaskNone;
-  mTargetWindow = mPendingWindow.forget();
+  mTargetWindow = std::move(mPendingWindow);
   mTargetWindowPoint = mPendingWindowPoint;
 
   if (task == eDragTaskLeave || task == eDragTaskSourceEnd) {
@@ -1868,7 +1868,7 @@ gboolean nsDragService::RunScheduledTask() {
   mTargetWidget = mTargetWindow->GetMozContainerWidget();
   mTargetDragContext.steal(mPendingDragContext);
 #ifdef MOZ_WAYLAND
-  mTargetWaylandDragContext = mPendingWaylandDragContext.forget();
+  mTargetWaylandDragContext = std::move(mPendingWaylandDragContext);
 #endif
   mTargetTime = mPendingTime;
 
