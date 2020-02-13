@@ -358,6 +358,11 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:init_simd\n"
          "race:simd_support\n"
          "race:jsimd_can_ycc_rgb\n"
+         // Likely benign race in ipc/chromium/ where we set
+         // `message_loop_` to `NULL` on two threads when stopping
+         // a thread at the same time it is already finishing.
+         // See also bug 1615228 for discussion.
+         "race:base::Thread::Stop\n"
 
          // End of suppressions.
       ;  // Please keep this semicolon.
