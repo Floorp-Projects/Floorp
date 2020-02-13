@@ -3971,10 +3971,13 @@ class HTMLEditor final : public TextEditor,
       const nsTArray<OwningNonNull<Element>>&
           aArrayOfListAndTableRelatedElements);
 
+  /**
+   * TODO: Document what this does.
+   */
   enum class StartOrEnd { start, end };
-  void ReplaceOrphanedStructure(StartOrEnd aStartOrEnd,
-                                nsTArray<OwningNonNull<nsINode>>& aNodeArray,
-                                Element& aListOrTableElement);
+  static void ReplaceOrphanedStructure(
+      StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+      Element& aListOrTableElement);
 
   /**
    * FindReplaceableTableElement() is a helper method of
