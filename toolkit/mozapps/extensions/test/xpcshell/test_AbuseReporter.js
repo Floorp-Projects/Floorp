@@ -299,16 +299,23 @@ add_task(async function test_normalized_addon_install_source_and_method() {
       amInstallTelemetryInfo,
     });
     const {
-      addon_install_source,
       addon_install_method,
+      addon_install_source,
+      addon_install_source_url,
     } = await AbuseReporter.getReportData(addon);
+
     Assert.deepEqual(
-      { addon_install_source, addon_install_method },
       {
-        addon_install_source: expected.source,
-        addon_install_method: expected.method,
+        addon_install_method,
+        addon_install_source,
+        addon_install_source_url,
       },
-      `Got the expected addon_install_method for ${JSON.stringify(
+      {
+        addon_install_method: expected.method,
+        addon_install_source: expected.source,
+        addon_install_source_url: expected.sourceURL,
+      },
+      `Got the expected report data for ${JSON.stringify(
         amInstallTelemetryInfo
       )}`
     );
@@ -342,12 +349,28 @@ add_task(async function test_normalized_addon_install_source_and_method() {
       expect: { source: "distribution", method: null },
     },
     {
-      test: { source: "test-host", method: "installTrigger" },
-      expect: { source: "test_host", method: "installtrigger" },
+      test: {
+        method: "installTrigger",
+        source: "test-host",
+        sourceURL: "http://host.triggered.install/example?test=1",
+      },
+      expect: {
+        method: "installtrigger",
+        source: "test_host",
+        sourceURL: "http://host.triggered.install/example?test=1",
+      },
     },
     {
-      test: { source: "unknown", method: "link" },
-      expect: { source: "unknown", method: "link" },
+      test: {
+        method: "link",
+        source: "unknown",
+        sourceURL: "https://another.host/installExtension?name=ext1",
+      },
+      expect: {
+        method: "link",
+        source: "unknown",
+        sourceURL: "https://another.host/installExtension?name=ext1",
+      },
     },
   ];
 
