@@ -2799,35 +2799,32 @@ int32_t HTMLEditor::DiscoverPartialListsAndTables(
   return ret;
 }
 
-nsINode* HTMLEditor::ScanForListAndTableStructure(
-    StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodes,
-    Element& aListOrTable) {
+Element* HTMLEditor::ScanForListAndTableStructure(
+    nsINode& aNodeMaybeInListOrTable, Element& aListOrTable) {
   // Look upward from first/last paste node for a piece of this list/table
-  int32_t idx = aStartOrEnd == StartOrEnd::end ? aNodes.Length() - 1 : 0;
   bool isList = HTMLEditUtils::IsList(&aListOrTable);
-
-  for (nsCOMPtr<nsINode> node = aNodes[idx]; node;
-       node = node->GetParentNode()) {
-    if ((isList && HTMLEditUtils::IsListItem(node)) ||
-        (!isList && HTMLEditUtils::IsTableElement(node) &&
-         !node->IsHTMLElement(nsGkAtoms::table))) {
-      nsCOMPtr<Element> structureNode = node->GetParentElement();
-      if (isList) {
-        while (structureNode && !HTMLEditUtils::IsList(structureNode)) {
-          structureNode = structureNode->GetParentElement();
-        }
-      } else {
-        while (structureNode &&
-               !structureNode->IsHTMLElement(nsGkAtoms::table)) {
-          structureNode = structureNode->GetParentElement();
-        }
+  for (Element* element = aNodeMaybeInListOrTable.IsElement()
+                              ? aNodeMaybeInListOrTable.AsElement()
+                              : aNodeMaybeInListOrTable.GetParentElement();
+       element; element = element->GetParentElement()) {
+    if (!(isList && HTMLEditUtils::IsListItem(element)) &&
+        !(!isList && HTMLEditUtils::IsTableElement(element) &&
+          !element->IsHTMLElement(nsGkAtoms::table))) {
+      continue;
+    }
+    Element* structureElement = element->GetParentElement();
+    if (isList) {
+      while (structureElement && !HTMLEditUtils::IsList(structureElement)) {
+        structureElement = structureElement->GetParentElement();
       }
-      if (structureNode == &aListOrTable) {
-        if (isList) {
-          return structureNode;
-        }
-        return node;
+    } else {
+      while (structureElement &&
+             !structureElement->IsHTMLElement(nsGkAtoms::table)) {
+        structureElement = structureElement->GetParentElement();
       }
+    }
+    if (structureElement == &aListOrTable) {
+      return isList ? structureElement : element;
     }
   }
   return nullptr;
@@ -2837,13 +2834,17 @@ void HTMLEditor::ReplaceOrphanedStructure(
     StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
     nsTArray<OwningNonNull<Element>>& aListAndTableArray,
     int32_t aHighWaterMark) {
+  MOZ_ASSERT(!aNodeArray.IsEmpty());
+
   OwningNonNull<Element> curNode = aListAndTableArray[aHighWaterMark];
 
   // Find substructure of list or table that must be included in paste.
-  nsCOMPtr<nsINode> replaceNode =
-      ScanForListAndTableStructure(aStartOrEnd, aNodeArray, curNode);
+  Element* replaceElment = ScanForListAndTableStructure(
+      aStartOrEnd == StartOrEnd::end ? *aNodeArray.LastElement()
+                                     : *aNodeArray[0],
+      curNode);
 
-  if (!replaceNode) {
+  if (!replaceElment) {
     return;
   }
 
@@ -2856,8 +2857,8 @@ void HTMLEditor::ReplaceOrphanedStructure(
     uint32_t idx = aStartOrEnd == StartOrEnd::start ? (i - removedCount)
                                                     : (originalLength - i - 1);
     OwningNonNull<nsINode> endpoint = aNodeArray[idx];
-    if (endpoint == replaceNode ||
-        EditorUtils::IsDescendantOf(*endpoint, *replaceNode)) {
+    if (endpoint == replaceElment ||
+        EditorUtils::IsDescendantOf(*endpoint, *replaceElment)) {
       aNodeArray.RemoveElementAt(idx);
       removedCount++;
     }
@@ -2865,9 +2866,9 @@ void HTMLEditor::ReplaceOrphanedStructure(
 
   // Now replace the removed nodes with the structural parent
   if (aStartOrEnd == StartOrEnd::end) {
-    aNodeArray.AppendElement(*replaceNode);
+    aNodeArray.AppendElement(*replaceElment);
   } else {
-    aNodeArray.InsertElementAt(0, *replaceNode);
+    aNodeArray.InsertElementAt(0, *replaceElment);
   }
 }
 

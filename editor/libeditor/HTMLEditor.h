@@ -3946,9 +3946,8 @@ class HTMLEditor final : public TextEditor,
   int32_t DiscoverPartialListsAndTables(
       nsTArray<OwningNonNull<nsINode>>& aPasteNodes,
       nsTArray<OwningNonNull<Element>>& aListsAndTables);
-  nsINode* ScanForListAndTableStructure(
-      StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodes,
-      Element& aListOrTable);
+  Element* ScanForListAndTableStructure(nsINode& aNodeMaybeInListOrTable,
+                                        Element& aListOrTable);
   void ReplaceOrphanedStructure(
       StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       nsTArray<OwningNonNull<Element>>& aListAndTableArray,
