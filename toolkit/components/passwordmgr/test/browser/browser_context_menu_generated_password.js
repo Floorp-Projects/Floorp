@@ -192,12 +192,14 @@ add_task(async function fill_generated_password_nonempty_field() {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
+      await changeContentFormValues(browser, {
+        [passwordInputSelector]: "aa",
+      });
       await SpecialPowers.spawn(
         browser,
         [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
-          input.setUserInput("aa");
           is(
             content.getComputedStyle(input).filter,
             "none",
@@ -233,6 +235,8 @@ add_task(async function fill_generated_password_nonempty_field() {
       );
     }
   );
+  LoginTestUtils.clearData();
+  LoginTestUtils.resetGeneratedPasswordsCache();
 });
 
 add_task(async function fill_generated_password_with_matching_logins() {
@@ -467,7 +471,7 @@ add_task(async function test_edited_generated_password_in_new_tab() {
     }
   );
 
-  Services.logins.removeAllLogins();
+  LoginTestUtils.clearData();
   LoginTestUtils.resetGeneratedPasswordsCache();
   await SpecialPowers.popPrefEnv();
 });
