@@ -658,6 +658,10 @@ function runChecks(dbgObject, environment, sandbox) {
 
   results = propertyProvider(`true?<t`);
   test_has_no_results(results);
+
+  // Test autocompletion on debugger statement does not throw
+  results = propertyProvider(`debugger.`);
+  Assert.ok(results === null, "Does not complete a debugger keyword");
 }
 
 /**
