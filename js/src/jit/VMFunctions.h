@@ -1021,9 +1021,6 @@ MOZ_MUST_USE bool InitBaselineFrameForOsr(BaselineFrame* frame,
                                           InterpreterFrame* interpFrame,
                                           uint32_t numStackValues);
 
-JSObject* CreateDerivedTypedObj(JSContext* cx, HandleObject descr,
-                                HandleObject owner, int32_t offset);
-
 MOZ_MUST_USE bool IonRecompile(JSContext* cx);
 MOZ_MUST_USE bool IonForcedRecompile(JSContext* cx);
 MOZ_MUST_USE bool IonForcedInvalidation(JSContext* cx);
