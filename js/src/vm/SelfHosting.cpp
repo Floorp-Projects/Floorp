@@ -2682,7 +2682,7 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
   RootedId id(cx);
   bool nameMissing = false;
 
-  for (auto base = cx->zone()->cellIter<JSScript>();
+  for (auto base = cx->zone()->cellIter<BaseScript>();
        !base.done() && !nameMissing; base.next()) {
     if (base->isLazyScript()) {
       continue;

@@ -4306,7 +4306,7 @@ JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
                         uint32_t sourceStart, uint32_t sourceEnd,
                         uint32_t toStringStart, uint32_t toStringEnd,
                         uint32_t lineno, uint32_t column) {
-  void* script = Allocate<JSScript>(cx);
+  void* script = Allocate<BaseScript>(cx);
   if (!script) {
     return nullptr;
   }
@@ -5506,7 +5506,7 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
                                   uint32_t lineno, uint32_t column) {
   cx->check(fun);
 
-  void* res = Allocate<LazyScript>(cx);
+  void* res = Allocate<BaseScript>(cx);
   if (!res) {
     return nullptr;
   }

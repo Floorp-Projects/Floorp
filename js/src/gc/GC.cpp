@@ -367,7 +367,6 @@ static constexpr FinalizePhase ForegroundNonObjectFinalizePhase = {
  * Finalization order for GC things swept on the background thread.
  */
 static constexpr FinalizePhase BackgroundFinalizePhases[] = {
-    {gcstats::PhaseKind::SWEEP_SCRIPT, {AllocKind::LAZY_SCRIPT}},
     {gcstats::PhaseKind::SWEEP_OBJECT,
      {AllocKind::FUNCTION, AllocKind::FUNCTION_EXTENDED,
       AllocKind::OBJECT0_BACKGROUND, AllocKind::OBJECT2_BACKGROUND,
@@ -2107,7 +2106,7 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
 
   AutoClearTypeInferenceStateOnOOM oom(zone);
 
-  for (auto base = zone->cellIterUnsafe<JSScript>(); !base.done();
+  for (auto base = zone->cellIterUnsafe<BaseScript>(); !base.done();
        base.next()) {
     if (base->isLazyScript()) {
       continue;
@@ -2437,8 +2436,7 @@ static constexpr AllocKinds UpdatePhaseOne{
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
-static constexpr AllocKinds UpdatePhaseThree{AllocKind::LAZY_SCRIPT,
-                                             AllocKind::SCOPE,
+static constexpr AllocKinds UpdatePhaseThree{AllocKind::SCOPE,
                                              AllocKind::FUNCTION,
                                              AllocKind::FUNCTION_EXTENDED,
                                              AllocKind::OBJECT0,
@@ -4919,7 +4917,7 @@ static void SweepCompressionTasks(GCParallelTask* task) {
 void js::gc::SweepLazyScripts(GCParallelTask* task) {
   for (SweepGroupZonesIter zone(task->gc); !zone.done(); zone.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
-    for (auto iter = zone->cellIter<LazyScript>(); !iter.done(); iter.next()) {
+    for (auto iter = zone->cellIter<BaseScript>(); !iter.done(); iter.next()) {
       BaseScript* base = iter.unbarrieredGet();
       if (!base->isLazyScript()) {
         continue;
@@ -5455,7 +5453,7 @@ static void SweepThing(JSFreeOp* fop, Shape* shape) {
   }
 }
 
-static void SweepThing(JSFreeOp* fop, JSScript* script) {
+static void SweepThing(JSFreeOp* fop, BaseScript* script) {
   AutoSweepJitScript sweep(script);
 }
 
@@ -5499,8 +5497,8 @@ IncrementalProgress GCRuntime::sweepTypeInformation(JSFreeOp* fop,
 
   AutoClearTypeInferenceStateOnOOM oom(sweepZone);
 
-  if (!SweepArenaList<JSScript>(fop, &al.gcScriptArenasToUpdate.ref(),
-                                budget)) {
+  if (!SweepArenaList<BaseScript>(fop, &al.gcScriptArenasToUpdate.ref(),
+                                  budget)) {
     return NotFinished;
   }
 
