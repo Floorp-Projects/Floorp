@@ -44,7 +44,7 @@ impl Http3Client {
         max_table_size: u32,
         max_blocked_streams: u16,
     ) -> Res<Self> {
-        Ok(Self::new_with_conn(
+        Ok(Http3Client::new_with_conn(
             Connection::new_client(server_name, protocols, cid_manager, local_addr, remote_addr)?,
             max_table_size,
             max_blocked_streams,
@@ -52,7 +52,7 @@ impl Http3Client {
     }
 
     pub fn new_with_conn(c: Connection, max_table_size: u32, max_blocked_streams: u16) -> Self {
-        Self {
+        Http3Client {
             conn: c,
             base_handler: Http3Connection::new(max_table_size, max_blocked_streams),
             events: Http3ClientEvents::default(),
@@ -184,7 +184,6 @@ impl Http3Client {
         match transaction.read_response_headers() {
             Ok((headers, fin)) => {
                 if transaction.done() {
-                    qinfo!([self], "read_response_headers transaction done");
                     self.base_handler.transactions.remove(&stream_id);
                 }
                 Ok((headers, fin))
@@ -568,7 +567,7 @@ mod tests {
 
         assert_eq!(client.state(), Http3State::Connected);
         let _ = server.conn.process(out.dgram(), now());
-        assert!(server.conn.state().connected());
+        assert_eq!(*server.conn.state(), State::Connected);
     }
 
     // Perform only Quic transport handshake.
@@ -2483,7 +2482,7 @@ mod tests {
         assert_eq!(client.state(), Http3State::Connected);
 
         let _out = server.conn.process(out.dgram(), now());
-        assert!(server.conn.state().connected());
+        assert_eq!(*server.conn.state(), State::Connected);
 
         assert!(client.tls_info().unwrap().resumed());
         assert!(server.conn.tls_info().unwrap().resumed());
@@ -2516,7 +2515,7 @@ mod tests {
         let out = client.process(out.dgram(), now());
         assert_eq!(client.state(), Http3State::Connected);
         let out = server.conn.process(out.dgram(), now());
-        assert!(server.conn.state().connected());
+        assert_eq!(*server.conn.state(), State::Connected);
         let out = client.process(out.dgram(), now());
         assert!(out.as_dgram_ref().is_none());
 
@@ -2608,6 +2607,7 @@ mod tests {
         original_settings: &[HSetting],
         resumption_settings: &[HSetting],
         expected_client_state: Http3State,
+        expected_server_state: State,
         expected_encoder_stream_data: &[u8],
     ) {
         let mut client = default_http3_client();
@@ -2643,7 +2643,7 @@ mod tests {
         assert_eq!(client.state(), Http3State::Connected);
 
         let _out = server.conn.process(out.dgram(), now());
-        assert!(server.conn.state().connected());
+        assert_eq!(*server.conn.state(), State::Connected);
 
         assert!(client.tls_info().unwrap().resumed());
         assert!(server.conn.tls_info().unwrap().resumed());
@@ -2661,7 +2661,7 @@ mod tests {
         client.process(out.dgram(), now());
 
         assert_eq!(client.state(), expected_client_state);
-        assert!(server.conn.state().connected());
+        assert_eq!(*server.conn.state(), expected_server_state);
     }
 
     #[test]
@@ -2679,6 +2679,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Connected,
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2697,6 +2698,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Closing(CloseError::Application(265)),
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2715,6 +2717,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Closing(CloseError::Application(265)),
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2733,6 +2736,7 @@ mod tests {
                 HSetting::new(HSettingType::BlockedStreams, 100),
             ],
             Http3State::Connected,
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2752,6 +2756,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Closing(CloseError::Application(265)),
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2771,6 +2776,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Closing(CloseError::Application(265)),
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2790,6 +2796,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Connected,
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2809,6 +2816,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Closing(CloseError::Application(265)),
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2828,6 +2836,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 20000),
             ],
             Http3State::Connected,
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2847,6 +2856,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 5000),
             ],
             Http3State::Closing(CloseError::Application(265)),
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2866,6 +2876,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Connected,
+            State::Connected,
             ENCODER_STREAM_DATA,
         );
     }
@@ -2885,6 +2896,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Connected,
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
@@ -2904,6 +2916,7 @@ mod tests {
                 HSetting::new(HSettingType::MaxHeaderListSize, 10000),
             ],
             Http3State::Closing(CloseError::Application(265)),
+            State::Connected,
             ENCODER_STREAM_DATA_WITH_CAP_INSTRUCTION,
         );
     }
