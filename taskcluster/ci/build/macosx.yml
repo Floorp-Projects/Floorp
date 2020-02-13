@@ -43,6 +43,8 @@ macosx64/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64/opt:
     description: "MacOS X x64 Cross-compile"
@@ -85,6 +87,8 @@ macosx64/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-asan-fuzzing/opt:
     description: "MacOS X x64 Cross-compile Fuzzing ASAN"
@@ -125,6 +129,8 @@ macosx64-asan-fuzzing/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-fuzzing/debug:
     description: "MacOS X x64 Cross-compile Fuzzing Debug"
@@ -167,6 +173,8 @@ macosx64-fuzzing/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-devedition-nightly/opt:
     description: "MacOS X Dev Edition x64 Nightly"
@@ -216,6 +224,8 @@ macosx64-devedition-nightly/opt:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-noopt/debug:
     description: "MacOS X x64 No-optimize Debug"
@@ -258,6 +268,8 @@ macosx64-noopt/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
@@ -299,6 +311,8 @@ macosx64-add-on-devel/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
@@ -344,6 +358,8 @@ macosx64-shippable/opt:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-ccov/opt:
     description: "MacOS X x64 Cross-compile Code Coverage"
@@ -386,6 +402,8 @@ macosx64-ccov/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-gcp/debug:
     description: "MacOS X x64 Cross-compile - built on GCP"
@@ -429,6 +447,8 @@ macosx64-gcp/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
 
 macosx64-gcp/opt:
     description: "MacOS X x64 Cross-compile - built on GCP"
@@ -471,3 +491,5 @@ macosx64-gcp/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+            - linux64-lucetc
+            - wasi-sysroot
