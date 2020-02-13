@@ -3939,13 +3939,20 @@ class HTMLEditor final : public TextEditor,
                                 nsTArray<OwningNonNull<nsINode>>& outNodeList,
                                 nsINode* aStartContainer, int32_t aStartOffset,
                                 nsINode* aEndContainer, int32_t aEndOffset);
-  enum class StartOrEnd { start, end };
-  void GetListAndTableParents(StartOrEnd aStartOrEnd,
-                              nsTArray<OwningNonNull<nsINode>>& aNodeList,
-                              nsTArray<OwningNonNull<Element>>& outArray);
+
+  /**
+   * CollectListAndTableRelatedElementsAt() collects list elements and
+   * table related elements from aNode (meaning aNode may be in the first of
+   * the result) to the root element.
+   */
+  static void CollectListAndTableRelatedElementsAt(
+      nsINode& aNode,
+      nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements);
+
   int32_t DiscoverPartialListsAndTables(
       nsTArray<OwningNonNull<nsINode>>& aPasteNodes,
       nsTArray<OwningNonNull<Element>>& aListsAndTables);
+  enum class StartOrEnd { start, end };
   void ReplaceOrphanedStructure(
       StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       nsTArray<OwningNonNull<Element>>& aListAndTableArray,
