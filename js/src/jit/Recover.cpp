@@ -1314,31 +1314,6 @@ bool RNewIterator::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
-bool MNewDerivedTypedObject::writeRecoverData(
-    CompactBufferWriter& writer) const {
-  MOZ_ASSERT(canRecoverOnBailout());
-  writer.writeUnsigned(uint32_t(RInstruction::Recover_NewDerivedTypedObject));
-  return true;
-}
-
-RNewDerivedTypedObject::RNewDerivedTypedObject(CompactBufferReader& reader) {}
-
-bool RNewDerivedTypedObject::recover(JSContext* cx,
-                                     SnapshotIterator& iter) const {
-  Rooted<TypeDescr*> descr(cx, &iter.read().toObject().as<TypeDescr>());
-  Rooted<TypedObject*> owner(cx, &iter.read().toObject().as<TypedObject>());
-  int32_t offset = iter.read().toInt32();
-
-  JSObject* obj = OutlineTypedObject::createDerived(cx, descr, owner, offset);
-  if (!obj) {
-    return false;
-  }
-
-  RootedValue result(cx, ObjectValue(*obj));
-  iter.storeInstructionResult(result);
-  return true;
-}
-
 bool MCreateThisWithTemplate::writeRecoverData(
     CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());

@@ -27,7 +27,6 @@
 #include "jit/MacroAssembler.h"
 #include "jit/MOpcodes.h"
 #include "jit/TIOracle.h"
-#include "jit/TypedObjectPrediction.h"
 #include "jit/TypePolicy.h"
 #include "js/HeapAPI.h"
 #include "vm/ArrayObject.h"
@@ -2369,98 +2368,6 @@ class MNewIterator : public MUnaryInstruction, public NoTypePolicy::Data {
   }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  MOZ_MUST_USE bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override { return true; }
-};
-
-class MNewTypedObject : public MNullaryInstruction {
-  CompilerGCPointer<InlineTypedObject*> templateObject_;
-  gc::InitialHeap initialHeap_;
-
-  MNewTypedObject(TempAllocator& alloc, CompilerConstraintList* constraints,
-                  InlineTypedObject* templateObject,
-                  gc::InitialHeap initialHeap)
-      : MNullaryInstruction(classOpcode),
-        templateObject_(templateObject),
-        initialHeap_(initialHeap) {
-    setResultType(MIRType::Object);
-    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
-  }
-
- public:
-  INSTRUCTION_HEADER(NewTypedObject)
-  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
-
-  InlineTypedObject* templateObject() const { return templateObject_; }
-
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
-
-  virtual AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  bool appendRoots(MRootList& roots) const override {
-    return roots.append(templateObject_);
-  }
-};
-
-class MTypedObjectDescr : public MUnaryInstruction,
-                          public SingleObjectPolicy::Data {
- private:
-  explicit MTypedObjectDescr(MDefinition* object)
-      : MUnaryInstruction(classOpcode, object) {
-    setResultType(MIRType::Object);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(TypedObjectDescr)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-};
-
-// Creates a new derived type object. At runtime, this is just a call
-// to `BinaryBlock::createDerived()`. That is, the MIR itself does not
-// compile to particularly optimized code. However, using a distinct
-// MIR for creating derived type objects allows the compiler to
-// optimize ephemeral typed objects as would be created for a
-// reference like `a.b.c` -- here, the `a.b` will create an ephemeral
-// derived type object that aliases the memory of `a` itself. The
-// specific nature of `a.b` is revealed by using
-// `MNewDerivedTypedObject` rather than `MGetProperty` or what have
-// you. Moreover, the compiler knows that there are no side-effects,
-// so `MNewDerivedTypedObject` instructions can be reordered or pruned
-// as dead code.
-class MNewDerivedTypedObject
-    : public MTernaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>,
-                       UnboxedInt32Policy<2>>::Data {
- private:
-  TypedObjectPrediction prediction_;
-
-  MNewDerivedTypedObject(TypedObjectPrediction prediction, MDefinition* type,
-                         MDefinition* owner, MDefinition* offset)
-      : MTernaryInstruction(classOpcode, type, owner, offset),
-        prediction_(prediction) {
-    setMovable();
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(NewDerivedTypedObject)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, type), (1, owner), (2, offset))
-
-  TypedObjectPrediction prediction() const { return prediction_; }
-
-  virtual AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
@@ -7346,42 +7253,6 @@ class MTypedArrayIndexToInt32 : public MUnaryInstruction,
   ALLOW_CLONE(MTypedArrayIndexToInt32)
 };
 
-// Load a binary data object's "elements", which is just its opaque
-// binary data space. Eventually this should probably be
-// unified with `MTypedArrayElements`.
-class MTypedObjectElements : public MUnaryInstruction,
-                             public SingleObjectPolicy::Data {
-  bool definitelyOutline_;
-
- private:
-  explicit MTypedObjectElements(MDefinition* object, bool definitelyOutline)
-      : MUnaryInstruction(classOpcode, object),
-        definitelyOutline_(definitelyOutline) {
-    setResultType(MIRType::Elements);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(TypedObjectElements)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object))
-
-  bool definitelyOutline() const { return definitelyOutline_; }
-  bool congruentTo(const MDefinition* ins) const override {
-    if (!ins->isTypedObjectElements()) {
-      return false;
-    }
-    const MTypedObjectElements* other = ins->toTypedObjectElements();
-    if (other->definitelyOutline() != definitelyOutline()) {
-      return false;
-    }
-    return congruentIfOperandsEqual(other);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::ObjectFields);
-  }
-};
-
 class MKeepAliveObject : public MUnaryInstruction,
                          public SingleObjectPolicy::Data {
   explicit MKeepAliveObject(MDefinition* object)
@@ -7692,99 +7563,6 @@ class MLoadElementHole : public MTernaryInstruction,
   ALLOW_CLONE(MLoadElementHole)
 };
 
-class MLoadUnboxedObjectOrNull : public MBinaryInstruction,
-                                 public SingleObjectPolicy::Data {
- public:
-  enum NullBehavior { HandleNull, BailOnNull, NullNotPossible };
-
- private:
-  NullBehavior nullBehavior_;
-  int32_t offsetAdjustment_;
-
-  MLoadUnboxedObjectOrNull(MDefinition* elements, MDefinition* index,
-                           NullBehavior nullBehavior, int32_t offsetAdjustment)
-      : MBinaryInstruction(classOpcode, elements, index),
-        nullBehavior_(nullBehavior),
-        offsetAdjustment_(offsetAdjustment) {
-    if (nullBehavior == BailOnNull) {
-      // Don't eliminate loads which bail out on a null pointer, for the
-      // same reason as MLoadElement.
-      setGuard();
-    }
-    setResultType(nullBehavior == HandleNull ? MIRType::Value
-                                             : MIRType::Object);
-    setMovable();
-    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-  }
-
- public:
-  INSTRUCTION_HEADER(LoadUnboxedObjectOrNull)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, elements), (1, index))
-
-  NullBehavior nullBehavior() const { return nullBehavior_; }
-  int32_t offsetAdjustment() const { return offsetAdjustment_; }
-  bool fallible() const { return nullBehavior() == BailOnNull; }
-  bool congruentTo(const MDefinition* ins) const override {
-    if (!ins->isLoadUnboxedObjectOrNull()) {
-      return false;
-    }
-    const MLoadUnboxedObjectOrNull* other = ins->toLoadUnboxedObjectOrNull();
-    if (nullBehavior() != other->nullBehavior()) {
-      return false;
-    }
-    if (offsetAdjustment() != other->offsetAdjustment()) {
-      return false;
-    }
-    return congruentIfOperandsEqual(other);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::UnboxedElement);
-  }
-  AliasType mightAlias(const MDefinition* store) const override;
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  ALLOW_CLONE(MLoadUnboxedObjectOrNull)
-};
-
-class MLoadUnboxedString : public MBinaryInstruction,
-                           public SingleObjectPolicy::Data {
-  int32_t offsetAdjustment_;
-
-  MLoadUnboxedString(MDefinition* elements, MDefinition* index,
-                     int32_t offsetAdjustment = 0)
-      : MBinaryInstruction(classOpcode, elements, index),
-        offsetAdjustment_(offsetAdjustment) {
-    setResultType(MIRType::String);
-    setMovable();
-    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-  }
-
- public:
-  INSTRUCTION_HEADER(LoadUnboxedString)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, elements), (1, index))
-
-  int32_t offsetAdjustment() const { return offsetAdjustment_; }
-  bool congruentTo(const MDefinition* ins) const override {
-    if (!ins->isLoadUnboxedString()) {
-      return false;
-    }
-    const MLoadUnboxedString* other = ins->toLoadUnboxedString();
-    if (offsetAdjustment() != other->offsetAdjustment()) {
-      return false;
-    }
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::UnboxedElement);
-  }
-
-  ALLOW_CLONE(MLoadUnboxedString)
-};
-
 class MStoreElementCommon {
   MIRType elementType_;
   bool needsBarrier_;
@@ -7902,76 +7680,6 @@ class MFallibleStoreElement
   bool needsHoleCheck() const { return needsHoleCheck_; }
 
   ALLOW_CLONE(MFallibleStoreElement)
-};
-
-// Store an unboxed object or null pointer to an elements vector.
-class MStoreUnboxedObjectOrNull : public MQuaternaryInstruction,
-                                  public StoreUnboxedObjectOrNullPolicy::Data {
-  int32_t offsetAdjustment_;
-  bool preBarrier_;
-
-  MStoreUnboxedObjectOrNull(MDefinition* elements, MDefinition* index,
-                            MDefinition* value, MDefinition* typedObj,
-                            int32_t offsetAdjustment = 0,
-                            bool preBarrier = true)
-      : MQuaternaryInstruction(classOpcode, elements, index, value, typedObj),
-        offsetAdjustment_(offsetAdjustment),
-        preBarrier_(preBarrier) {
-    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-    MOZ_ASSERT(typedObj->type() == MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(StoreUnboxedObjectOrNull)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, elements), (1, index), (2, value), (3, typedObj))
-
-  int32_t offsetAdjustment() const { return offsetAdjustment_; }
-  bool preBarrier() const { return preBarrier_; }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Store(AliasSet::UnboxedElement);
-  }
-
-  // For StoreUnboxedObjectOrNullPolicy.
-  void setValue(MDefinition* def) { replaceOperand(2, def); }
-
-  ALLOW_CLONE(MStoreUnboxedObjectOrNull)
-};
-
-// Store an unboxed string to an elements vector.
-class MStoreUnboxedString : public MQuaternaryInstruction,
-                            public StoreUnboxedStringPolicy::Data {
-  int32_t offsetAdjustment_;
-  bool preBarrier_;
-
-  MStoreUnboxedString(MDefinition* elements, MDefinition* index,
-                      MDefinition* value, MDefinition* typedObj,
-                      int32_t offsetAdjustment = 0, bool preBarrier = true)
-      : MQuaternaryInstruction(classOpcode, elements, index, value, typedObj),
-        offsetAdjustment_(offsetAdjustment),
-        preBarrier_(preBarrier) {
-    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
-    MOZ_ASSERT(index->type() == MIRType::Int32);
-    MOZ_ASSERT(typedObj->type() == MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(StoreUnboxedString)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, elements), (1, index), (2, value), (3, typedObj));
-
-  int32_t offsetAdjustment() const { return offsetAdjustment_; }
-  bool preBarrier() const { return preBarrier_; }
-  AliasSet getAliasSet() const override {
-    return AliasSet::Store(AliasSet::UnboxedElement);
-  }
-
-  // For StoreUnboxedStringPolicy, to replace the original output with the
-  // output of a post barrier (if one is needed.)
-  void setValue(MDefinition* def) { replaceOperand(2, def); }
-
-  ALLOW_CLONE(MStoreUnboxedString)
 };
 
 // Array.prototype.pop or Array.prototype.shift on a dense array.

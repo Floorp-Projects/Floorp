@@ -443,20 +443,6 @@ class LNewObject : public LInstructionHelper<1, 0, 1> {
   MNewObject* mir() const { return mir_->toNewObject(); }
 };
 
-class LNewTypedObject : public LInstructionHelper<1, 0, 1> {
- public:
-  LIR_HEADER(NewTypedObject)
-
-  explicit LNewTypedObject(const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setTemp(0, temp);
-  }
-
-  const LDefinition* temp() { return getTemp(0); }
-
-  MNewTypedObject* mir() const { return mir_->toNewTypedObject(); }
-};
-
 // Allocates a new NamedLambdaObject.
 //
 // This instruction generates two possible instruction sets:
@@ -496,25 +482,6 @@ class LNewCallObject : public LInstructionHelper<1, 0, 1> {
   const LDefinition* temp() { return getTemp(0); }
 
   MNewCallObject* mir() const { return mir_->toNewCallObject(); }
-};
-
-class LNewDerivedTypedObject : public LCallInstructionHelper<1, 3, 0> {
- public:
-  LIR_HEADER(NewDerivedTypedObject);
-
-  LNewDerivedTypedObject(const LAllocation& type, const LAllocation& owner,
-                         const LAllocation& offset)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, type);
-    setOperand(1, owner);
-    setOperand(2, offset);
-  }
-
-  const LAllocation* type() { return getOperand(0); }
-
-  const LAllocation* owner() { return getOperand(1); }
-
-  const LAllocation* offset() { return getOperand(2); }
 };
 
 class LNewStringObject : public LInstructionHelper<1, 1, 1> {
@@ -3866,33 +3833,6 @@ class LTypedArrayIndexToInt32 : public LInstructionHelper<1, 1, 0> {
   }
 };
 
-// Load a typed object's descriptor.
-class LTypedObjectDescr : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(TypedObjectDescr)
-
-  explicit LTypedObjectDescr(const LAllocation& object)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-  }
-  const LAllocation* object() { return getOperand(0); }
-};
-
-// Load a typed object's elements vector.
-class LTypedObjectElements : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(TypedObjectElements)
-
-  explicit LTypedObjectElements(const LAllocation& object)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-  }
-  const LAllocation* object() { return getOperand(0); }
-  const MTypedObjectElements* mir() const {
-    return mir_->toTypedObjectElements();
-  }
-};
-
 // Bailout if index >= length.
 class LBoundsCheck : public LInstructionHelper<0, 2, 0> {
  public:
@@ -4036,42 +3976,6 @@ class LLoadElementT : public LInstructionHelper<1, 2, 0> {
   }
 
   const MLoadElement* mir() const { return mir_->toLoadElement(); }
-  const LAllocation* elements() { return getOperand(0); }
-  const LAllocation* index() { return getOperand(1); }
-};
-
-class LLoadUnboxedPointerV : public LInstructionHelper<BOX_PIECES, 2, 0> {
- public:
-  LIR_HEADER(LoadUnboxedPointerV)
-
-  LLoadUnboxedPointerV(const LAllocation& elements, const LAllocation& index)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, elements);
-    setOperand(1, index);
-  }
-
-  const MLoadUnboxedObjectOrNull* mir() const {
-    return mir_->toLoadUnboxedObjectOrNull();
-  }
-  const LAllocation* elements() { return getOperand(0); }
-  const LAllocation* index() { return getOperand(1); }
-};
-
-class LLoadUnboxedPointerT : public LInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(LoadUnboxedPointerT)
-
-  LLoadUnboxedPointerT(const LAllocation& elements, const LAllocation& index)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, elements);
-    setOperand(1, index);
-  }
-
-  MDefinition* mir() {
-    MOZ_ASSERT(mir_->isLoadUnboxedObjectOrNull() ||
-               mir_->isLoadUnboxedString());
-    return mir_;
-  }
   const LAllocation* elements() { return getOperand(0); }
   const LAllocation* index() { return getOperand(1); }
 };
@@ -4269,29 +4173,6 @@ class LFallibleStoreElementT : public LInstructionHelper<0, 4, 1> {
   const LAllocation* index() { return getOperand(2); }
   const LAllocation* value() { return getOperand(3); }
   const LDefinition* spectreTemp() { return getTemp(0); }
-};
-
-class LStoreUnboxedPointer : public LInstructionHelper<0, 3, 0> {
- public:
-  LIR_HEADER(StoreUnboxedPointer)
-
-  LStoreUnboxedPointer(LAllocation elements, LAllocation index,
-                       LAllocation value)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, elements);
-    setOperand(1, index);
-    setOperand(2, value);
-  }
-
-  MDefinition* mir() {
-    MOZ_ASSERT(mir_->isStoreUnboxedObjectOrNull() ||
-               mir_->isStoreUnboxedString());
-    return mir_;
-  }
-
-  const LAllocation* elements() { return getOperand(0); }
-  const LAllocation* index() { return getOperand(1); }
-  const LAllocation* value() { return getOperand(2); }
 };
 
 class LArrayPopShiftV : public LInstructionHelper<BOX_PIECES, 1, 2> {
