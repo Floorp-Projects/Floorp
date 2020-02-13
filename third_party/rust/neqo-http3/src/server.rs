@@ -43,8 +43,8 @@ impl Http3Server {
         cid_manager: Rc<RefCell<dyn ConnectionIdManager>>,
         max_table_size: u32,
         max_blocked_streams: u16,
-    ) -> Res<Http3Server> {
-        Ok(Http3Server {
+    ) -> Res<Self> {
+        Ok(Self {
             server: Server::new(now, certs, protocols, anti_replay, cid_manager)?,
             max_table_size,
             max_blocked_streams,
