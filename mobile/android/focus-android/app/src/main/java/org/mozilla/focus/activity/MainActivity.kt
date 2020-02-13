@@ -167,6 +167,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         if (intent.dataString.equals(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL)) {
             openGeneralSettings()
+            super.onNewIntent(unsafeIntent)
             return
         }
 
@@ -187,6 +188,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         if (intent.isLauncherIntent) {
             TelemetryWrapper.resumeFromIconEvent()
         }
+
+        super.onNewIntent(unsafeIntent)
     }
 
     private fun processEraseAction(intent: SafeIntent) {
