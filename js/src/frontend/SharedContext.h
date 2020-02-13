@@ -156,6 +156,9 @@ class SharedContext {
   // Script is being parsed with a goal of Module.
   bool hasModuleGoal_ : 1;
 
+  // Whether this script has nested functions.
+  bool hasInnerFunctions_ : 1;
+
   void computeAllowSyntax(Scope* scope);
   void computeInWith(Scope* scope);
   void computeThisBinding(Scope* scope);
@@ -180,7 +183,8 @@ class SharedContext {
         bindingsAccessedDynamically_(false),
         hasDirectEval_(false),
         hasCallSiteObj_(false),
-        hasModuleGoal_(false) {}
+        hasModuleGoal_(false),
+        hasInnerFunctions_(false) {}
 
   // If this is the outermost SharedContext, the Scope that encloses
   // it. Otherwise nullptr.
@@ -213,6 +217,7 @@ class SharedContext {
   ThisBinding thisBinding() const { return thisBinding_; }
 
   bool hasModuleGoal() const { return hasModuleGoal_; }
+  bool hasInnerFunctions() const { return hasInnerFunctions_; }
   bool allowNewTarget() const { return allowNewTarget_; }
   bool allowSuperProperty() const { return allowSuperProperty_; }
   bool allowSuperCall() const { return allowSuperCall_; }
@@ -232,6 +237,7 @@ class SharedContext {
   void setHasDirectEval() { hasDirectEval_ = true; }
   void setHasCallSiteObj() { hasCallSiteObj_ = true; }
   void setHasModuleGoal() { hasModuleGoal_ = true; }
+  void setHasInnerFunctions() { hasInnerFunctions_ = true; }
 
   inline bool allBindingsClosedOver();
 
@@ -413,9 +419,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // JSOp::FunctionThis in the prologue to initialize it.
   bool hasThisBinding_ : 1;
 
-  // Whether this function has nested functions.
-  bool hasInnerFunctions_ : 1;
-
   uint16_t nargs_;
 
   JSAtom* explicitName_;
@@ -590,7 +593,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool definitelyNeedsArgsObj() const { return definitelyNeedsArgsObj_; }
   bool needsHomeObject() const { return needsHomeObject_; }
   bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
-  bool hasInnerFunctions() const { return hasInnerFunctions_; }
   bool isNamedLambda() const { return flags_.isNamedLambda(explicitName()); }
   bool isGetter() const { return flags_.isGetter(); }
   bool isSetter() const { return flags_.isSetter(); }
@@ -636,7 +638,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
                   functionCreationData()->flags.isClassConstructor());
     isDerivedClassConstructor_ = true;
   }
-  void setHasInnerFunctions() { hasInnerFunctions_ = true; }
 
   bool hasSimpleParameterList() const {
     return !hasRest() && !hasParameterExprs && !hasDestructuringArgs;

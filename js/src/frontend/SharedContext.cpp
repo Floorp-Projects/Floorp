@@ -159,7 +159,6 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       needsHomeObject_(false),
       isDerivedClassConstructor_(false),
       hasThisBinding_(false),
-      hasInnerFunctions_(false),
       nargs_(0),
       explicitName_(explicitName),
       flags_(flags) {}

@@ -2104,7 +2104,7 @@ class BaseScript : public gc::TenuredCell {
     HasMappedArgsObj = 1 << 11,
 
     // Script contains inner functions. Used to check if we can relazify the
-    // script. Note: This is only valid for function scripts.
+    // script.
     HasInnerFunctions = 1 << 12,
 
     NeedsHomeObject = 1 << 13,
