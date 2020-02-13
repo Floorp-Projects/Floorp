@@ -74,8 +74,11 @@ class BrowserConsole extends WebConsole {
       // toolbox session id.
       this._telemetry.toolOpened("browserconsole", -1, this);
 
-      await this.targetList.startListening();
+      // Bug 1605763: Call super.init before fetching targets in order to build the
+      // console UI first; have it listen for targets and be able to display first
+      // targets as soon as they get available.
       await super.init();
+      await this.targetList.startListening();
     })();
     return this._bcInitializer;
   }
