@@ -189,6 +189,9 @@ enum DeviceFamily {
   Bug1207665,
   Bug1447141,
   NvidiaBlockWebRender,
+  NvidiaRolloutWebRender,
+  IntelRolloutWebRender,
+  AtiRolloutWebRender,
   DeviceFamilyMax
 };
 
@@ -264,7 +267,26 @@ enum class ScreenSizeStatus : uint8_t {
 };
 
 /* Array of devices to match, or an empty array for all devices */
-typedef nsTArray<nsString> GfxDeviceFamily;
+class GfxDeviceFamily final {
+ public:
+  GfxDeviceFamily() = default;
+
+  void Append(const nsAString& aDeviceId);
+  void AppendRange(int32_t aBeginDeviceId, int32_t aEndDeviceId);
+
+  bool IsEmpty() const { return mIds.IsEmpty() && mRanges.IsEmpty(); }
+
+  nsresult Contains(nsAString& aDeviceId) const;
+
+ private:
+  struct DeviceRange {
+    int32_t mBegin;
+    int32_t mEnd;
+  };
+
+  nsTArray<nsString> mIds;
+  nsTArray<DeviceRange> mRanges;
+};
 
 struct GfxDriverInfo {
   // If |ownDevices| is true, you are transferring ownership of the devices
