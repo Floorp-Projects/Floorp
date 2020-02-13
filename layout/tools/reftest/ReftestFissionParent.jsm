@@ -77,6 +77,7 @@ class ReftestFissionParent extends JSWindowActorParent {
         let promise = this.tellChildrenToUpdateLayerTree(msg.data.browsingContext);
         return promise.then(function (results) {
           let errorStrings = [];
+          let infoStrings = [];
           for (let r of results) {
             if (r.status != "fulfilled") {
               if (r.status == "pending") {
@@ -93,7 +94,7 @@ class ReftestFissionParent extends JSWindowActorParent {
               errorStrings.push(r.value.errorString);
             }
           }
-          return errorStrings;
+          return {errorStrings, infoStrings};
         });
       }
     }
