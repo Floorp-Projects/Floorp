@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_migration.*
 import kotlinx.android.synthetic.main.migration_list_item.view.*
 import mozilla.components.support.migration.AbstractMigrationProgressActivity
+import mozilla.components.support.migration.AbstractMigrationService
 import mozilla.components.support.migration.Migration
 import mozilla.components.support.migration.Migration.Bookmarks
 import mozilla.components.support.migration.Migration.History
@@ -58,6 +59,8 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
 
         migration_button.apply {
             setOnClickListener {
+                AbstractMigrationService.dismissNotification(context)
+
                 finish()
                 overridePendingTransition(0, 0)
 
