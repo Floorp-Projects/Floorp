@@ -97,7 +97,6 @@ namespace jit {
   _(CopyElementsForWrite, js::NativeObject::CopyElementsForWrite)              \
   _(CopyLexicalEnvironmentObject, js::jit::CopyLexicalEnvironmentObject)       \
   _(CreateAsyncFromSyncIterator, js::CreateAsyncFromSyncIterator)              \
-  _(CreateDerivedTypedObj, js::jit::CreateDerivedTypedObj)                     \
   _(CreateGenerator, js::jit::CreateGenerator)                                 \
   _(CreateThisForFunctionWithProto, js::CreateThisForFunctionWithProto)        \
   _(CreateThisFromIC, js::jit::CreateThisFromIC)                               \
@@ -156,7 +155,6 @@ namespace jit {
   _(InitFunctionEnvironmentObjects, js::jit::InitFunctionEnvironmentObjects)   \
   _(InitPropGetterSetterOperation, js::InitPropGetterSetterOperation)          \
   _(InitRestParameter, js::jit::InitRestParameter)                             \
-  _(InlineTypedObjectCreateCopy, js::InlineTypedObject::createCopy)            \
   _(InstrumentationActiveOperation, js::InstrumentationActiveOperation)        \
   _(InstrumentationCallbackOperation, js::InstrumentationCallbackOperation)    \
   _(InstrumentationScriptIdOperation, js::InstrumentationScriptIdOperation)    \
