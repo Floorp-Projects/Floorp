@@ -283,16 +283,20 @@ static const Time kMaxTime = ~(Time(0));
 
 // The average delay before doing any page allocations at the start of a
 // process. Note that roughly 1 million allocations occur in the main process
-// while starting the browser.
+// while starting the browser. The delay range is 1..kAvgFirstAllocDelay*2.
 static const Delay kAvgFirstAllocDelay = 512 * 1024;
 
 // The average delay until the next attempted page allocation, once we get past
-// the first delay.
-static const Delay kAvgAllocDelay = 2 * 1024;
+// the first delay. The delay range is 1..kAvgAllocDelay*2.
+static const Delay kAvgAllocDelay = 16 * 1024;
 
 // The average delay before reusing a freed page. Should be significantly larger
-// than kAvgAllocDelay, otherwise there's not much point in having it.
-static const Delay kAvgPageReuseDelay = 32 * 1024;
+// than kAvgAllocDelay, otherwise there's not much point in having it. The delay
+// range is (kAvgAllocDelay / 2)..(kAvgAllocDelay / 2 * 3). This is different to
+// the other delay ranges in not having a minimum of 1, because that's such a
+// short delay that there is a high likelihood of bad stacks in any crash
+// report.
+static const Delay kAvgPageReuseDelay = 256 * 1024;
 
 // Truncate aRnd to the range (1 .. AvgDelay*2). If aRnd is random, this
 // results in an average value of aAvgDelay + 0.5, which is close enough to
@@ -986,6 +990,11 @@ static void* replace_malloc(size_t aReqSize) {
   return PageMalloc(Nothing(), aReqSize);
 }
 
+static Delay ReuseDelay(GMutLock aLock) {
+  return (kAvgPageReuseDelay / 2) +
+         Rnd64ToDelay<kAvgPageReuseDelay / 2>(gMut->Random64(aLock));
+}
+
 // This handles both calloc and moz_arena_calloc.
 MOZ_ALWAYS_INLINE static void* PageCalloc(const Maybe<arena_id_t>& aArenaId,
                                           size_t aNum, size_t aReqSize) {
@@ -1089,7 +1098,7 @@ MOZ_ALWAYS_INLINE static void* PageRealloc(const Maybe<arena_id_t>& aArenaId,
 
   MOZ_ASSERT(aNewSize > kPageSize);
 
-  Delay reuseDelay = Rnd64ToDelay<kAvgPageReuseDelay>(gMut->Random64(lock));
+  Delay reuseDelay = ReuseDelay(lock);
 
   // Copy the usable size rather than the requested size, because the user
   // might have used malloc_usable_size() and filled up the usable size. Note
@@ -1136,7 +1145,7 @@ MOZ_ALWAYS_INLINE static void PageFree(const Maybe<arena_id_t>& aArenaId,
   gMut->EnsureInUse(lock, aPtr, *i);
 
   // Note that FreePage() checks aArenaId (via SetPageFreed()).
-  Delay reuseDelay = Rnd64ToDelay<kAvgPageReuseDelay>(gMut->Random64(lock));
+  Delay reuseDelay = ReuseDelay(lock);
   FreePage(lock, *i, aArenaId, freeStack, reuseDelay);
 
   LOG("PageFree(%p[%zu]), %zu delay, reuse at ~%zu, fullness %zu/%zu\n", aPtr,
