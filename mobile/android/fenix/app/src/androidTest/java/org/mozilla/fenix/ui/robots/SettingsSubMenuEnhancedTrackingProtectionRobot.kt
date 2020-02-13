@@ -6,13 +6,18 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.view.View
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers
+import org.hamcrest.Matcher
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.isChecked
 
@@ -38,8 +43,26 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
             return SettingsRobot.Transition()
         }
 
-        fun openExceptions(interact: SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.Transition {
-            openExceptions().click()
+        fun openExceptions(
+            interact: SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.() -> Unit
+        ): SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.Transition {
+            TestHelper.scrollToElementByText("Exceptions")
+            openExceptions().perform(
+                object : ViewAction {
+                    override fun getConstraints(): Matcher<View> {
+                        // do not check constraints, check if enabled
+                        return ViewMatchers.isEnabled()
+                    }
+
+                    override fun getDescription(): String {
+                        return "Exceptions"
+                    }
+
+                    override fun perform(uiController: UiController?, view: View) {
+                        view.performClick()
+                    }
+                }
+            )
 
             SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot().interact()
             return SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.Transition()
