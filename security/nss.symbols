@@ -672,6 +672,7 @@ SSL_NamedGroupConfig
 SSL_NumImplementedCiphers @DATA@
 SSL_OptionGet
 SSL_OptionSet
+SSL_OptionGetDefault
 SSL_OptionSetDefault
 SSL_PeerCertificate
 SSL_PeerCertificateChain

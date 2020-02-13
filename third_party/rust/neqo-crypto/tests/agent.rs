@@ -1,4 +1,5 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
+#![warn(clippy::pedantic)]
 
 use neqo_crypto::*;
 
@@ -48,7 +49,7 @@ fn basic() {
     // Calling handshake() again indicates that we're happy with the cert.
     let bytes = client.handshake(now(), &[]).expect("send CF");
     assert!(!bytes.is_empty());
-    assert!(client.state().connected());
+    assert!(client.state().is_connected());
 
     let client_info = client.info().expect("got info");
     assert_eq!(TLS_VERSION_1_3, client_info.version());
@@ -56,14 +57,14 @@ fn basic() {
 
     let bytes = server.handshake(now(), &bytes[..]).expect("finish");
     assert!(bytes.is_empty());
-    assert!(server.state().connected());
+    assert!(server.state().is_connected());
 
     let server_info = server.info().expect("got info");
     assert_eq!(TLS_VERSION_1_3, server_info.version());
     assert_eq!(TLS_AES_128_GCM_SHA256, server_info.cipher_suite());
 }
 
-fn check_client_preinfo(client_preinfo: SecretAgentPreInfo) {
+fn check_client_preinfo(client_preinfo: &SecretAgentPreInfo) {
     assert_eq!(client_preinfo.version(), None);
     assert_eq!(client_preinfo.cipher_suite(), None);
     assert_eq!(client_preinfo.early_data(), false);
@@ -72,7 +73,7 @@ fn check_client_preinfo(client_preinfo: SecretAgentPreInfo) {
     assert_eq!(client_preinfo.alpn(), None);
 }
 
-fn check_server_preinfo(server_preinfo: SecretAgentPreInfo) {
+fn check_server_preinfo(server_preinfo: &SecretAgentPreInfo) {
     assert_eq!(server_preinfo.version(), Some(TLS_VERSION_1_3));
     assert_eq!(server_preinfo.cipher_suite(), Some(TLS_AES_128_GCM_SHA256));
     assert_eq!(server_preinfo.early_data(), false);
@@ -93,14 +94,14 @@ fn raw() {
     assert!(!client_records.is_empty());
     assert_eq!(*client.state(), HandshakeState::InProgress);
 
-    check_client_preinfo(client.preinfo().expect("get preinfo"));
+    check_client_preinfo(&client.preinfo().expect("get preinfo"));
 
     let server_records =
         forward_records(now(), &mut server, client_records).expect("read CH, send SH");
     assert!(!server_records.is_empty());
     assert_eq!(*server.state(), HandshakeState::InProgress);
 
-    check_server_preinfo(server.preinfo().expect("get preinfo"));
+    check_server_preinfo(&server.preinfo().expect("get preinfo"));
 
     let client_records = forward_records(now(), &mut client, server_records).expect("send CF");
     assert!(client_records.is_empty());
@@ -112,11 +113,11 @@ fn raw() {
     // Calling handshake() again indicates that we're happy with the cert.
     let client_records = client.handshake_raw(now(), None).expect("send CF");
     assert!(!client_records.is_empty());
-    assert!(client.state().connected());
+    assert!(client.state().is_connected());
 
     let server_records = forward_records(now(), &mut server, client_records).expect("finish");
     assert!(server_records.is_empty());
-    assert!(server.state().connected());
+    assert!(server.state().is_connected());
 
     // The client should have one certificate for the server.
     let mut certs = client.peer_certificate().unwrap();
@@ -352,4 +353,22 @@ fn reject_zero_rtt() {
     connect(&mut client, &mut server);
     assert!(!client.info().unwrap().early_data_accepted());
     assert!(!server.info().unwrap().early_data_accepted());
+}
+
+#[test]
+fn close() {
+    let mut client = Client::new("server.example").expect("should create client");
+    let mut server = Server::new(&["key"]).expect("should create server");
+    connect(&mut client, &mut server);
+    client.close();
+    server.close();
+}
+
+#[test]
+fn close_client_twice() {
+    let mut client = Client::new("server.example").expect("should create client");
+    let mut server = Server::new(&["key"]).expect("should create server");
+    connect(&mut client, &mut server);
+    client.close();
+    client.close(); // Should be a noop.
 }
