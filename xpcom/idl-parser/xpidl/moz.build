@@ -9,5 +9,4 @@ PYTHON_UNITTEST_MANIFESTS += [
 ]
 
 GeneratedFile('xpidl.stub', 'xpidllex.py', 'xpidlyacc.py', script='header.py',
-              py2=True,
               entry_point='main')

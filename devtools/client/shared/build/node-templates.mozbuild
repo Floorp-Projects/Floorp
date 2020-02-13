@@ -29,7 +29,6 @@ def CompiledModules(*modules):
       "node.stub", *[final + '/' + module for module in modules],
       script='/python/mozbuild/mozbuild/action/node.py',
       entry_point='generate',
-      py2=True,
       inputs=['/devtools/client/shared/build/build.js'] +
              [module for module in modules],
       flags=[final])

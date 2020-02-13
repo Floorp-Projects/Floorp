@@ -145,13 +145,11 @@ for f in bitdepth_basenames:
 
     GeneratedFile(file_bd16,
                   script='generate_source.py',
-                  py2=True,
                   entry_point='add_define',
                   inputs=[relative_path + f],
                   flags=['BITDEPTH', '16'])
     GeneratedFile(file_bd8,
                   script='generate_source.py',
-                  py2=True,
                   entry_point='add_define',
                   inputs=[relative_path + f],
                   flags=['BITDEPTH', '8'])

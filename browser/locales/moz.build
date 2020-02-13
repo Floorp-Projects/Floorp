@@ -20,7 +20,6 @@ if CONFIG['MOZ_UPDATER']:
         'en-US/updater/updater.ini',
         '../installer/windows/nsis/updater_append.ini',
     ]
-    updater.py2 = True
     # Yes, this is weird, but what can you do? This file doesn't want to be in the DIST_SUBDIR,
     # but we can't really move it to a different directory until we change how locale repacks
     # work.
@@ -35,7 +34,6 @@ bookmarks.inputs = [
     # The `locales/en-US/` will be rewritten to the locale-specific path.
     'en-US/profile/bookmarks.inc',
 ]
-bookmarks.py2 = True
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
