@@ -16,7 +16,6 @@ interface nsIGfxInfo : nsISupports
   readonly attribute boolean D2DEnabled;
   readonly attribute boolean DWriteEnabled;
   readonly attribute boolean usingGPUProcess;
-  readonly attribute boolean hasBattery;
   readonly attribute AString DWriteVersion;
   readonly attribute AString cleartypeParameters;
 
@@ -181,12 +180,6 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_BLOCKED_OS_VERSION = 6;
   /* This feature is blocked because of mismatched driver versions. */
   const long FEATURE_BLOCKED_MISMATCHED_VERSION = 7;
-  /* This feature is blocked due to not being on the allowlist. */
-  const long FEATURE_DENIED = 8;
-  /* This feature is safe to be on this device due to the allowlist. */
-  const long FEATURE_ALLOW_ALWAYS = 9;
-  /* This feature is safe to be on this device due to the allowlist, depending on qualified/experiment status. */
-  const long FEATURE_ALLOW_QUALIFIED = 10;
 
   /**
    * Ask about a feature, and return the status of that feature.
@@ -260,7 +253,6 @@ interface nsIGfxInfo : nsISupports
   //       //   "unavailable" - OS version or restriction prevents use.
   //       //   "blocked"     - An internal condition (such as safe mode) prevents use.
   //       //   "blacklisted" - Blocked due to a blacklist restriction.
-  //       //   "denied"      - Blocked due to allowlist restrictions.
   //       //   "disabled"    - User explicitly disabled this default feature.
   //       //   "failed"      - Feature failed to initialize.
   //       //   "available"   - User has this feature available by default.

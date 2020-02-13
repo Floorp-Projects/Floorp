@@ -420,7 +420,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // Mesa 10.0 provides the GLX_MESA_query_renderer extension, which allows us
     // to query device IDs backing a GL context for blacklisting.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
         (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAll),
@@ -431,7 +431,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     // NVIDIA baseline (ported from old blocklist)
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
         (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
@@ -461,7 +461,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     // Nvidia Mesa baseline, see bug 1563859.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
         (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
@@ -472,7 +472,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     // Disable on all Nvidia devices not using Mesa for now.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
         (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
@@ -483,7 +483,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     // ATI Mesa baseline, chosen arbitrarily.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
         (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
@@ -494,7 +494,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     // Disable on all ATI devices not using Mesa for now.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDesktopEnvironment(DesktopAll),
         (nsAString&)GfxDriverInfo::GetWindowProtocol(WindowingAll),
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
@@ -588,10 +588,6 @@ GfxInfo::GetDWriteEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) {
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP GfxInfo::GetHasBattery(bool* aHasBattery) {
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
