@@ -7,7 +7,6 @@ package org.mozilla.fenix.addons
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.navigation.fragment.findNavController
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
@@ -19,6 +18,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.feature.prompts.PromptFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.ext.requireComponents
 
@@ -26,11 +26,12 @@ import org.mozilla.fenix.ext.requireComponents
  * Provides shared functionality to our fragments for add-on settings and
  * browser/page action popups.
  */
-abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer {
+abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, UserInteractionHandler {
     private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
 
     protected var session: SessionState? = null
     protected var engineSession: EngineSession? = null
+    private var canGoBack: Boolean = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         session?.let {
@@ -81,6 +82,21 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer {
     override fun onWindowRequest(windowRequest: WindowRequest) {
         if (windowRequest.type == WindowRequest.Type.CLOSE) {
             findNavController().popBackStack()
+        } else {
+            engineSession?.loadUrl(windowRequest.url)
+        }
+    }
+
+    override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
+        canGoBack?.let { this.canGoBack = canGoBack }
+    }
+
+    override fun onBackPressed(): Boolean {
+        return if (this.canGoBack) {
+            engineSession?.goBack()
+            true
+        } else {
+            false
         }
     }
 
