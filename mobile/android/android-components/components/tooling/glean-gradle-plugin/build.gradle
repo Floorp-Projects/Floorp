@@ -22,14 +22,14 @@ dependencies {
 
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
 
             pom {
                 groupId = config.componentsGroupId
                 artifactId = archivesBaseName
                 description = project.ext.description
-                version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
+                version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : (project.hasProperty('local') ? '-local' + getLocalPublicationTimestamp() : ''))
 
                 licenses {
                     license {
@@ -51,6 +51,12 @@ publishing {
                     url = libUrl
                 }
             }
+        }
+    }
+
+    repositories {
+        maven {
+            url = "$buildDir/maven"
         }
     }
 }

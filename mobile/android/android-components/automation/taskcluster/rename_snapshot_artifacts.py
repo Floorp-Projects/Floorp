@@ -76,6 +76,8 @@ def does_file_name_contain_timestamp(filename):
 
     for extension, hash_extension in itertools.product(ARTIFACT_EXTENSIONS, HASH_EXTENSIONS):
         if filename.endswith(extension + hash_extension):
+            if "-unspecified" in filename:
+                return False
             return True
     return False
 
