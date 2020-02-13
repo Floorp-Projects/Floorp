@@ -3,14 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import time
 
-from firefox_puppeteer import PuppeteerMixin
 from marionette_driver import By, expected, Wait
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
-class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
+class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestSafeBrowsingNotificationBar, self).setUp()
@@ -30,6 +30,8 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
             }
         ]
 
+        self.default_homepage = self.marionette.get_pref('browser.startup.homepage')
+
         self.marionette.set_pref('browser.safebrowsing.phishing.enabled', True)
         self.marionette.set_pref('browser.safebrowsing.malware.enabled', True)
 
@@ -38,39 +40,52 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
         # hg.mozilla.org/mozilla-central/file/46aebcd9481e/browser/base/content/browser.js#l1194
         time.sleep(3)
 
-        # TODO: Bug 1139544: While we don't have a reliable way to close the safe browsing
-        # notification bar when a test fails, run this test in a new tab.
-        self.browser.tabbar.open_tab()
+        # Run this test in a new tab.
+        new_tab = self.open_tab()
+        self.marionette.switch_to_window(new_tab)
 
     def tearDown(self):
         try:
-            self.puppeteer.utils.permissions.remove('https://www.itisatrap.org', 'safe-browsing')
-            self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
             self.marionette.clear_pref('browser.safebrowsing.phishing.enabled')
             self.marionette.clear_pref('browser.safebrowsing.malware.enabled')
+
+            self.remove_permission('https://www.itisatrap.org', 'safe-browsing')
+            self.close_all_tabs()
         finally:
             super(TestSafeBrowsingNotificationBar, self).tearDown()
 
     def test_notification_bar(self):
-        with self.marionette.using_context('content'):
-            for item in self.test_data:
-                unsafe_page = item['unsafe_page']
+        for item in self.test_data:
+            unsafe_page = item['unsafe_page']
 
-                # Return to the unsafe page
-                # Check "ignore warning" link then notification bar's "get me out" button
-                self.marionette.navigate(unsafe_page)
-                # Wait for the DOM to receive events for about:blocked
-                time.sleep(1)
-                self.check_ignore_warning_link(unsafe_page)
-                self.check_get_me_out_of_here_button()
+            # Return to the unsafe page
+            # Check "ignore warning" link then notification bar's "get me out" button
+            self.marionette.navigate(unsafe_page)
+            # Wait for the DOM to receive events for about:blocked
+            time.sleep(1)
+            self.check_ignore_warning_link(unsafe_page)
+            self.check_get_me_out_of_here_button()
 
-                # Return to the unsafe page
-                # Check "ignore warning" link then notification bar's "X" button
-                self.marionette.navigate(unsafe_page)
-                # Wait for the DOM to receive events for about:blocked
-                time.sleep(1)
-                self.check_ignore_warning_link(unsafe_page)
-                self.check_x_button()
+            # Return to the unsafe page
+            # Check "ignore warning" link then notification bar's "X" button
+            self.marionette.navigate(unsafe_page)
+            # Wait for the DOM to receive events for about:blocked
+            time.sleep(1)
+            self.check_ignore_warning_link(unsafe_page)
+            self.check_x_button()
+
+    def get_final_url(self, url):
+        self.marionette.navigate(url)
+        return self.marionette.get_url()
+
+    def remove_permission(self, host, permission):
+        with self.marionette.using_context('chrome'):
+            self.marionette.execute_script("""
+              Components.utils.import("resource://gre/modules/Services.jsm");
+              let uri = Services.io.newURI(arguments[0], null, null);
+              let principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
+              Services.perms.removeFromPrincipal(principal, arguments[1]);
+            """, script_args=[host, permission])
 
     def check_ignore_warning_link(self, unsafe_page):
         button = self.marionette.find_element(By.ID, 'seeDetailsButton')
@@ -83,10 +98,10 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
             expected.element_present(By.ID, 'main-feature'),
             message='Expected target element "#main-feature" has not been found',
         )
-        self.assertEquals(self.marionette.get_url(), self.browser.get_final_url(unsafe_page))
+        self.assertEquals(self.marionette.get_url(), self.get_final_url(unsafe_page))
 
         # Clean up here since the permission gets set in this function
-        self.puppeteer.utils.permissions.remove('https://www.itisatrap.org', 'safe-browsing')
+        self.remove_permission('https://www.itisatrap.org', 'safe-browsing')
 
     def check_get_me_out_of_here_button(self):
         with self.marionette.using_context('chrome'):
@@ -95,7 +110,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
             button.click()
 
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-            lambda mn: self.browser.default_homepage in mn.get_url(),
+            lambda mn: self.default_homepage in mn.get_url(),
             message='The default home page has not been loaded',
         )
 
