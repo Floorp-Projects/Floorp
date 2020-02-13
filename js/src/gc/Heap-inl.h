@@ -12,6 +12,7 @@
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"
 #include "util/Poison.h"
+#include "vm/Runtime.h"
 
 inline void js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind,
                                 const AutoLockGC& lock) {

@@ -628,7 +628,6 @@ struct JSRuntime {
   bool isSelfHostingGlobal(JSObject* global) {
     return global == selfHostingGlobal_;
   }
-  bool isSelfHostingZone(const JS::Zone* zone) const;
   bool createLazySelfHostedFunctionClone(JSContext* cx,
                                          js::HandlePropertyName selfHostedName,
                                          js::HandleAtom name, unsigned nargs,
@@ -642,6 +641,11 @@ struct JSRuntime {
                             js::MutableHandleValue vp);
   void assertSelfHostedFunctionHasCanonicalName(JSContext* cx,
                                                 js::HandlePropertyName name);
+#if DEBUG
+  bool isSelfHostingZone(const JS::Zone* zone) const {
+    return selfHostingGlobal_ && selfHostingGlobal_->zone() == zone;
+  }
+#endif
 
   //-------------------------------------------------------------------------
   // Locale information
@@ -763,7 +767,9 @@ struct JSRuntime {
   }
   JS::Zone* unsafeAtomsZone() { return gc.atomsZone; }
 
+#ifdef DEBUG
   bool isAtomsZone(const JS::Zone* zone) const { return zone == gc.atomsZone; }
+#endif
 
   bool activeGCInAtomsZone();
 
