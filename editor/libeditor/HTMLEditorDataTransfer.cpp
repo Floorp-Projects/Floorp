@@ -2799,24 +2799,44 @@ int32_t HTMLEditor::DiscoverPartialListsAndTables(
   return ret;
 }
 
-Element* HTMLEditor::ScanForTableStructure(nsINode& aNodeMaybeInTable,
-                                           Element& aTableElement) {
-  for (Element* element = aNodeMaybeInTable.IsElement()
-                              ? aNodeMaybeInTable.AsElement()
-                              : aNodeMaybeInTable.GetParentElement();
+// static
+Element* HTMLEditor::FindReplaceableTableElement(
+    Element& aTableElement, nsINode& aNodeMaybeInTableElement) {
+  MOZ_ASSERT(aTableElement.IsHTMLElement(nsGkAtoms::table));
+  // Perhaps, this is designed for climbing up the DOM tree from
+  // aNodeMaybeInTableElement to aTableElement and making sure that
+  // aNodeMaybeInTableElement itself or its ancestor is a `<td>`, `<th>`,
+  // `<tr>`, `<thead>`, `<tbody>`, `<tfoot>` or `<caption>`.
+  // But this looks really buggy because this loop may skip aTableElement
+  // as the following NS_ASSERTION.  We should write automated tests and
+  // check right behavior.
+  for (Element* element = aNodeMaybeInTableElement.IsElement()
+                              ? aNodeMaybeInTableElement.AsElement()
+                              : aNodeMaybeInTableElement.GetParentElement();
        element; element = element->GetParentElement()) {
     if (!HTMLEditUtils::IsTableElement(element) ||
         element->IsHTMLElement(nsGkAtoms::table)) {
+      // XXX Perhaps, the original developer of this method assumed that
+      //     aTableElement won't be skipped because if it's assumed, we can
+      //     stop climbing up the tree in that case.
+      NS_ASSERTION(element != &aTableElement,
+                   "The table element which is looking for is ignored");
       continue;
     }
-    Element* structureElement = element->GetParentElement();
-    while (structureElement &&
-           !structureElement->IsHTMLElement(nsGkAtoms::table)) {
-      structureElement = structureElement->GetParentElement();
+    Element* tableElement = nullptr;
+    for (Element* maybeTableElement = element->GetParentElement();
+         maybeTableElement;
+         maybeTableElement = maybeTableElement->GetParentElement()) {
+      if (maybeTableElement->IsHTMLElement(nsGkAtoms::table)) {
+        tableElement = maybeTableElement;
+        break;
+      }
     }
-    if (structureElement == &aTableElement) {
+    if (tableElement == &aTableElement) {
       return element;
     }
+    // XXX If we find another `<table>` element, why don't we keep searching
+    //     from its parent?
   }
   return nullptr;
 }
@@ -2878,11 +2898,13 @@ void HTMLEditor::ReplaceOrphanedStructure(
       return;
     }
     replaceElement = curNode;
-  } else {
-    replaceElement = ScanForTableStructure(edgeNode, curNode);
+  } else if (curNode->IsHTMLElement(nsGkAtoms::table)) {
+    replaceElement = HTMLEditor::FindReplaceableTableElement(curNode, edgeNode);
     if (!replaceElement) {
       return;
     }
+  } else {
+    return;
   }
 
   // If we found substructure, paste it instead of its descendants.
