@@ -81,6 +81,7 @@ typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineSessionTest {
 
+    private lateinit var runtime: GeckoRuntime
     private lateinit var geckoSession: GeckoSession
     private lateinit var geckoSessionProvider: () -> GeckoSession
 
@@ -107,6 +108,8 @@ class GeckoEngineSessionTest {
             }
         })
 
+        runtime = mock()
+        whenever(runtime.settings).thenReturn(mock())
         navigationDelegate = ArgumentCaptor.forClass(GeckoSession.NavigationDelegate::class.java)
         progressDelegate = ArgumentCaptor.forClass(GeckoSession.ProgressDelegate::class.java)
         contentDelegate = ArgumentCaptor.forClass(GeckoSession.ContentDelegate::class.java)
@@ -129,7 +132,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun engineSessionInitialization() {
-        val runtime = mock<GeckoRuntime>()
         GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
 
         verify(geckoSession).open(any())
@@ -142,13 +144,12 @@ class GeckoEngineSessionTest {
 
     @Test
     fun isIgnoredForTrackingProtection() {
-        val mockedRuntime = mock<GeckoRuntime>()
         val mockedContentBlockingController = mock<ContentBlockingController>()
         var geckoResult = GeckoResult<Boolean?>()
-        val session = GeckoEngineSession(mockedRuntime, geckoSessionProvider = geckoSessionProvider)
+        val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
         var wasExecuted = false
 
-        whenever(mockedRuntime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
         session.isIgnoredForTrackingProtection {
@@ -220,10 +221,8 @@ class GeckoEngineSessionTest {
     @Test
     fun navigationDelegateNotifiesObservers() {
         val geckoResult = GeckoResult<Boolean?>()
-        val mockedRuntime = mock<GeckoRuntime>()
         val mockedContentBlockingController = mock<ContentBlockingController>()
-        val engineSession = GeckoEngineSession(mockedRuntime,
-                geckoSessionProvider = geckoSessionProvider)
+        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
 
         var observedUrl = ""
         var observedCanGoBack = false
@@ -236,7 +235,7 @@ class GeckoEngineSessionTest {
             }
         })
 
-        whenever(mockedRuntime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
         captureDelegates()
@@ -521,17 +520,15 @@ class GeckoEngineSessionTest {
     @Test
     fun navigationDelegateIgnoresInitialLoadOfAboutBlank() {
         val geckoResult = GeckoResult<Boolean?>()
-        val mockedRuntime = mock<GeckoRuntime>()
         val mockedContentBlockingController = mock<ContentBlockingController>()
-        val engineSession = GeckoEngineSession(mockedRuntime,
-                geckoSessionProvider = geckoSessionProvider)
+        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
 
         var observedUrl = ""
         engineSession.register(object : EngineSession.Observer {
             override fun onLocationChange(url: String) { observedUrl = url }
         })
 
-        whenever(mockedRuntime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
         whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
         captureDelegates()
@@ -934,7 +931,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun enableTrackingProtection() {
-        val runtime = mock<GeckoRuntime>()
         whenever(runtime.settings).thenReturn(mock())
         whenever(runtime.settings.contentBlocking).thenReturn(mock())
         val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
@@ -999,8 +995,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun disableTrackingProtection() {
-        val runtime = mock<GeckoRuntime>()
-        whenever(runtime.settings).thenReturn(mock())
         whenever(runtime.settings.contentBlocking).thenReturn(mock())
 
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
@@ -1058,9 +1052,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun settingTestingMode() {
-        val runtime = mock<GeckoRuntime>()
-        whenever(runtime.settings).thenReturn(mock())
-
         GeckoEngineSession(runtime,
                 geckoSessionProvider = geckoSessionProvider,
                 defaultSettings = DefaultSettings())
@@ -1074,9 +1065,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun settingUserAgent() {
-        val runtime = mock<GeckoRuntime>()
-        whenever(runtime.settings).thenReturn(mock())
-
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
         engineSession.settings.userAgentString
 
@@ -1089,9 +1077,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun settingUserAgentDefault() {
-        val runtime = mock<GeckoRuntime>()
-        whenever(runtime.settings).thenReturn(mock())
-
         GeckoEngineSession(runtime,
                 geckoSessionProvider = geckoSessionProvider,
                 defaultSettings = DefaultSettings(userAgentString = "test-ua"))
@@ -1101,9 +1086,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun settingSuspendMediaWhenInactive() {
-        val runtime = mock<GeckoRuntime>()
-        whenever(runtime.settings).thenReturn(mock())
-
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
         verify(geckoSession.settings, never()).suspendMediaWhenInactive = anyBoolean()
 
@@ -1116,9 +1098,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun settingSuspendMediaWhenInactiveDefault() {
-        val runtime = mock<GeckoRuntime>()
-        whenever(runtime.settings).thenReturn(mock())
-
         GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
         verify(geckoSession.settings, never()).suspendMediaWhenInactive = anyBoolean()
 
@@ -1135,7 +1114,7 @@ class GeckoEngineSessionTest {
 
     @Test
     fun unsupportedSettings() {
-        val settings = GeckoEngineSession(mock(),
+        val settings = GeckoEngineSession(runtime,
                 geckoSessionProvider = geckoSessionProvider).settings
 
         expectException(UnsupportedSettingException::class) {
@@ -1335,7 +1314,7 @@ class GeckoEngineSessionTest {
     fun onLoadErrorCallsInterceptorWithInvalidUri() {
         val requestInterceptor: RequestInterceptor = mock()
         val defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
-        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        val engineSession = GeckoEngineSession(runtime, defaultSettings = defaultSettings)
 
         engineSession.geckoSession.navigationDelegate!!.onLoadError(
             engineSession.geckoSession,
@@ -1470,9 +1449,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun `WHEN TrackingCategory do not includes content then useTrackingProtection must be set to false`() {
-        val runtime = mock<GeckoRuntime>()
-        whenever(runtime.settings).thenReturn(mock())
-
         val defaultSettings =
             DefaultSettings(trackingProtectionPolicy = TrackingProtectionPolicy.recommended())
 
@@ -1484,8 +1460,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun `WHEN disabling tracking protection THEN CookieBehavior and AntiTracking category must be set to ACCEPT_ALL and NONE`() {
-        val runtime = mock<GeckoRuntime>()
-        whenever(runtime.settings).thenReturn(mock())
         whenever(runtime.settings.contentBlocking).thenReturn(mock())
 
         val defaultSettings =
@@ -1590,7 +1564,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun setDesktopMode() {
-        val runtime = mock<GeckoRuntime>()
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
 
         var desktopModeToggled = false
@@ -1727,7 +1700,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun clearData() {
-        val runtime = mock<GeckoRuntime>()
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
         val observer: EngineSession.Observer = mock()
 
@@ -1740,7 +1712,6 @@ class GeckoEngineSessionTest {
 
     @Test
     fun `after onCrash get called geckoSession must be reset`() {
-        val runtime = mock<GeckoRuntime>()
         val engineSession = GeckoEngineSession(runtime)
         val oldGeckoSession = engineSession.geckoSession
 

@@ -36,6 +36,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
@@ -66,8 +67,15 @@ import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineTest {
 
-    private val runtime: GeckoRuntime = mock()
-    private val context: Context = mock()
+    private lateinit var runtime: GeckoRuntime
+    private lateinit var context: Context
+
+    @Before
+    fun setup() {
+        runtime = mock()
+        whenever(runtime.settings).thenReturn(mock())
+        context = mock()
+    }
 
     @Test
     fun createView() {
@@ -669,7 +677,6 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate handles closing tab`() {
-        val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
@@ -789,7 +796,6 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate notified of browser actions from built-in extensions`() {
-        val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
@@ -825,7 +831,6 @@ class GeckoEngineTest {
 
     @Test
     fun `web extension delegate notified of page actions from built-in extensions`() {
-        val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
