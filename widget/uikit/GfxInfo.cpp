@@ -114,11 +114,9 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) { return NS_ERROR_FAILURE; }
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (sDriverInfo->IsEmpty()) {
     APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Ios,
-        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAll),
-        GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_OPENGL_LAYERS,
-        nsIGfxInfo::FEATURE_STATUS_OK, DRIVER_COMPARISON_IGNORED,
-        GfxDriverInfo::allDriverVersions);
+        OperatingSystem::Ios, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_STATUS_OK,
+        DRIVER_COMPARISON_IGNORED, GfxDriverInfo::allDriverVersions);
   }
 
   return *sDriverInfo;
