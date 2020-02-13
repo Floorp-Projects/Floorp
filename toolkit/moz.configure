@@ -1925,9 +1925,9 @@ def wasm_sandboxing(libraries, target):
 
     # Wasm sandboxing is only enabled on specific targets.
     if not (target.cpu in ('x86_64',) and \
-            (target.kernel == 'Linux' and target.os != 'Android') or \
-            target.kernel == 'Darwin'):
-        die('wasm sandboxing is only enabled on x86-64 Linux and Mac')
+            target.kernel == 'Linux' and \
+            target.os != 'Android'):
+        die('wasm sandboxing is only enabled on x86-64 Linux')
 
     return namespace(**{name: True for name in libraries})
 

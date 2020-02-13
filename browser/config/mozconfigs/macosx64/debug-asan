@@ -14,5 +14,4 @@ export MOZ_PACKAGE_JSSHELL=1
 export MOZ_PKG_SPECIAL=asan
 
 . "$topsrcdir/build/macosx/mozconfig.common"
-. $topsrcdir/build/mozconfig.wasm-sandboxing
 . "$topsrcdir/build/mozconfig.common.override"
