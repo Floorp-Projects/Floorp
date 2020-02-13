@@ -393,9 +393,41 @@ function _getContextMenu(hud) {
   return doc.getElementById("webconsole-menu");
 }
 
-function loadDocument(url, browser = gBrowser.selectedBrowser) {
-  BrowserTestUtils.loadURI(browser, url);
-  return BrowserTestUtils.browserLoaded(browser);
+async function loadDocument(
+  toolbox,
+  newUrl,
+  browser = gBrowser.selectedBrowser
+) {
+  const currentToolboxTarget = toolbox.target;
+
+  // If fission and target switching are enabled, and if we're switching origin, we need
+  // to wait for the 'switched-target' event to make sure everything is ready.
+  const onTargetSwitched = isTargetSwitchingEnabled()
+    ? toolbox.once("switched-target")
+    : null;
+
+  info(`Load document "${newUrl}"`);
+  const onBrowserLoaded = BrowserTestUtils.browserLoaded(browser);
+  BrowserTestUtils.loadURI(browser, newUrl);
+  info(`Waiting for page to be loaded…`);
+  await onBrowserLoaded;
+  info(`→ page loaded`);
+  if (onTargetSwitched && toolbox.target !== currentToolboxTarget) {
+    info(`Waiting for target switch…`);
+    await onTargetSwitched;
+    info(`→ switched-target emitted`);
+  }
+}
+
+function isFissionEnabled() {
+  return SpecialPowers.useRemoteSubframes;
+}
+
+function isTargetSwitchingEnabled() {
+  return (
+    isFissionEnabled() &&
+    Services.prefs.getBoolPref("devtools.target-switching.enabled", false)
+  );
 }
 
 async function toggleConsoleSetting(hud, selector) {
@@ -964,17 +996,17 @@ async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
 
   store.dispatch(nmActions.batchEnable(false));
 
-  await waitUntil(() => {
+  await waitFor(() => {
     const selected = getSelectedRequest(store.getState());
     return selected && selected.url === url;
-  });
+  }, "network entry for the URL wasn't found");
 
   ok(true, "The attached url is correct.");
 
   info(
-    "Wait for the netmonitor headers panel to appear as it spawn RDP requests"
+    "Wait for the netmonitor headers panel to appear as it spawns RDP requests"
   );
-  await waitUntil(() =>
+  await waitFor(() =>
     panelWin.document.querySelector("#headers-panel .headers-overview")
   );
 }

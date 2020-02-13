@@ -195,7 +195,7 @@ RefPtr<ClientOpPromise> ClientManager::StartOp(
         promise->Reject(rv, __func__);
       });
 
-  return promise.forget();
+  return promise;
 }
 
 // static

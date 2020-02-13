@@ -301,7 +301,7 @@ class MessageLoop : public base::MessagePump::Delegate {
         : task(aTask), sequence_num(0), nestable(aNestable) {}
 
     PendingTask(PendingTask&& aOther)
-        : task(aOther.task.forget()),
+        : task(std::move(aOther.task)),
           delayed_run_time(aOther.delayed_run_time),
           sequence_num(aOther.sequence_num),
           nestable(aOther.nestable) {}

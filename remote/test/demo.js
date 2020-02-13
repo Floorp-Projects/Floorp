@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 "use strict";
 
 // Node.js script to test basic CDP behaviors against Firefox and Chromium.
@@ -22,7 +24,7 @@ async function demo() {
   let client;
   try {
     client = await CDP();
-    const {Log, Network, Page, Runtime} = client;
+    const { Log, Page, Runtime } = client;
 
     // Bug 1553756, Firefox requires `contextId` argument to be passed to
     // Runtime.evaluate, so fetch the current context id it first.
@@ -48,9 +50,9 @@ async function demo() {
 
     // receive console.log messages and print them
     Log.enable();
-    Log.entryAdded(({entry}) => {
-      const {timestamp, level, text, args} = entry;
-      const msg = text || args.join(" ");
+    Log.entryAdded(({ entry }) => {
+      const { timestamp, level, text, args } = entry;
+      const msg = text || args.join(" ");
       console.log(`${new Date(timestamp)}\t${level.toUpperCase()}\t${msg}`);
     });
 
@@ -58,7 +60,10 @@ async function demo() {
     await Page.enable();
 
     const onLoad = Page.loadEventFired();
-    await Page.navigate({url: "data:text/html,test-page<script>console.log('foo');</script><script>'</script>"});
+    await Page.navigate({
+      url:
+        "data:text/html,test-page<script>console.log('foo');</script><script>'</script>",
+    });
     await onLoad;
   } catch (e) {
     console.error(e);

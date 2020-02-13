@@ -650,7 +650,7 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
           })
       ->Track(*holder);
 
-  return outerPromise.forget();
+  return outerPromise;
 }
 
 RefPtr<ClientOpPromise> ClientSource::GetInfoAndState(

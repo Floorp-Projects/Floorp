@@ -3152,8 +3152,12 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
         }
       }
     } else {
-      for (auto script = zone->cellIter<JSScript>(); !script.done();
-           script.next()) {
+      for (auto base = zone->cellIter<BaseScript>(); !base.done();
+           base.next()) {
+        if (base->isLazyScript()) {
+          continue;
+        }
+        JSScript* script = static_cast<JSScript*>(base.get());
         if (obs.shouldRecompileOrInvalidate(script)) {
           if (!AppendAndInvalidateScript(cx, zone, script, scripts)) {
             return false;

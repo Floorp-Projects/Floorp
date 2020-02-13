@@ -2021,6 +2021,25 @@ class BaseScript : public gc::TenuredCell {
 
   ScriptWarmUpData warmUpData_ = {};
 
+  union TwinPointer {
+    // Information used to re-lazify a lazily-parsed interpreted function.
+    js::LazyScript* lazyScript;
+
+    // If non-nullptr, the script has been compiled and this is a forwarding
+    // pointer to the result. This is a weak pointer: after relazification, we
+    // can collect the script if there are no other pointers to it.
+    WeakHeapPtrScript script_;
+
+    // Default to the lazyScript union arm which is used by JSScripts. This
+    // corresponds to the default IsLazyScript flag being clear. Remember that a
+    // non-lazy script points *to* a LazyScript.
+    TwinPointer() : lazyScript(nullptr) {}
+
+    // The BaseScript uses a finalizer instead of a C++ destructor so this
+    // should never be run. We need to define to appease compiler though.
+    ~TwinPointer() { MOZ_CRASH(); }
+  } u;
+
   BaseScript(uint8_t* stubEntry, JSObject* functionOrGlobal,
              ScriptSourceObject* sourceObject, uint32_t sourceStart,
              uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd,
@@ -2131,6 +2150,10 @@ class BaseScript : public gc::TenuredCell {
 
     // Whether this script contains a direct eval statement.
     HasDirectEval = 1 << 27,
+
+    // Whether this BaseScript is a LazyScript. This flag will be removed after
+    // LazyScript and JSScript are merged in Bug 1529456.
+    IsLazyScript = 1 << 28,
   };
 
   // Mutable flags typically store information about runtime or deoptimization
@@ -2376,6 +2399,7 @@ setterLevel:                                                                  \
                                       ShouldDeclareArguments)
   IMMUTABLE_FLAG_GETTER(isFunction, IsFunction)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasDirectEval, HasDirectEval)
+  IMMUTABLE_FLAG_GETTER(isLazyScript, IsLazyScript)
 
   MUTABLE_FLAG_GETTER_SETTER(warnedAboutUndefinedProp, WarnedAboutUndefinedProp)
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
@@ -2498,10 +2522,13 @@ setterLevel:                                                                  \
     return false;
   }
 
- protected:
-  void traceChildren(JSTracer* trc);
-
  public:
+  friend class GCMarker;
+  friend void js::gc::SweepLazyScripts(GCParallelTask* task);
+
+  static const JS::TraceKind TraceKind = JS::TraceKind::Script;
+
+  void traceChildren(JSTracer* trc);
   void finalize(JSFreeOp* fop);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
@@ -2565,14 +2592,6 @@ struct DeletePolicy<js::PrivateScriptData>
 } /* namespace JS */
 
 class JSScript : public js::BaseScript {
- private:
-  /* Information used to re-lazify a lazily-parsed interpreted function. */
-  js::LazyScript* lazyScript = nullptr;
-
-  //
-  // End of fields.  Start methods.
-  //
-
  private:
   template <js::XDRMode mode>
   friend js::XDRResult js::XDRScript(js::XDRState<mode>* xdr,
@@ -2847,13 +2866,13 @@ class JSScript : public js::BaseScript {
     //    discard most JIT code before attempting relazification.
     //  - Specific subsystems (such as the Debugger) may disable scripts for
     //    their own reasons.
-    bool lazyAvailable = selfHosted() || lazyScript;
+    bool lazyAvailable = selfHosted() || u.lazyScript;
     return isRelazifiable() && lazyAvailable && !hasJitScript() &&
            !doNotRelazify();
   }
 
-  void setLazyScript(js::LazyScript* lazy) { lazyScript = lazy; }
-  js::LazyScript* maybeLazyScript() { return lazyScript; }
+  void setLazyScript(js::LazyScript* lazy) { u.lazyScript = lazy; }
+  js::LazyScript* maybeLazyScript() { return u.lazyScript; }
 
   bool isModule() const {
     MOZ_ASSERT(hasFlag(ImmutableFlags::IsModule) ==
@@ -3047,12 +3066,6 @@ class JSScript : public js::BaseScript {
     return js::BytecodeLocation(this, offsetToPC(offset));
   }
 
-  /*
-   * sizeOfData() is the size of the block allocated to hold all the data
-   * sections (which can be larger than the in-use size).
-   */
-  size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const;
-
   void addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                           size_t* sizeOfJitScript,
                           size_t* sizeOfBaselineFallbackStubs) const;
@@ -3191,10 +3204,6 @@ class JSScript : public js::BaseScript {
   // invariants of debuggee compartments, scripts, and frames.
   inline bool isDebuggee() const;
 
-  static const JS::TraceKind TraceKind = JS::TraceKind::Script;
-
-  void traceChildren(JSTracer* trc);
-
   // A helper class to prevent relazification of the given function's script
   // while it's holding on to it.  This class automatically roots the script.
   class AutoDelazify;
@@ -3237,12 +3246,6 @@ namespace js {
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
 class LazyScript : public BaseScript {
-  // If non-nullptr, the script has been compiled and this is a forwarding
-  // pointer to the result. This is a weak pointer: after relazification, we
-  // can collect the script if there are no other pointers to it.
-  WeakHeapPtrScript script_ = nullptr;
-  friend void js::gc::SweepLazyScripts(GCParallelTask* task);
-
   // The BaseScript::warmUpData_ field is used as follows:
   //   * LazyScript in which the script is nested.  This case happens if the
   //     enclosing script is lazily parsed and have never been compiled.
@@ -3376,11 +3379,11 @@ class LazyScript : public BaseScript {
 
   void initScript(JSScript* script);
 
-  JSScript* maybeScript() { return script_; }
+  JSScript* maybeScript() { return u.script_; }
   const JSScript* maybeScriptUnbarriered() const {
-    return script_.unbarrieredGet();
+    return u.script_.unbarrieredGet();
   }
-  bool hasScript() const { return bool(script_); }
+  bool hasScript() const { return bool(u.script_); }
 
   // Returns true if the enclosing script has ever been compiled.
   // Once the enclosing script is compiled, the scope chain is created.
@@ -3391,11 +3394,6 @@ class LazyScript : public BaseScript {
   bool enclosingScriptHasEverBeenCompiled() const {
     return warmUpData_.isEnclosingScope();
   }
-
-  friend class GCMarker;
-  void traceChildren(JSTracer* trc);
-
-  static const JS::TraceKind TraceKind = JS::TraceKind::LazyScript;
 };
 
 /* If this fails, add/remove padding within LazyScript. */
@@ -3482,24 +3480,12 @@ JSScript* CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
 // with no associated compartment.
 namespace JS {
 namespace ubi {
+
 template <>
-class Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> {
- protected:
-  explicit Concrete(js::LazyScript* ptr)
-      : TracerConcrete<js::LazyScript>(ptr) {}
+class Concrete<JSScript> : public Concrete<js::BaseScript> {};
+template <>
+class Concrete<js::LazyScript> : public Concrete<js::BaseScript> {};
 
- public:
-  static void construct(void* storage, js::LazyScript* ptr) {
-    new (storage) Concrete(ptr);
-  }
-
-  CoarseType coarseType() const final { return CoarseType::Script; }
-  Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-  const char* scriptFilename() const final;
-
-  const char16_t* typeName() const override { return concreteTypeName; }
-  static const char16_t concreteTypeName[];
-};
 }  // namespace ubi
 }  // namespace JS
 

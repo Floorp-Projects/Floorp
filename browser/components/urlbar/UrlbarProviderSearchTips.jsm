@@ -342,7 +342,10 @@ class ProviderSearchTips extends UrlbarProvider {
     this.disableTipsForCurrentSession = true;
 
     // Store the new shown count.
-    Services.prefs.setIntPref(shownCountPrefName, shownCount + 1);
+    Services.prefs.setIntPref(
+      `browser.urlbar.${shownCountPrefName}`,
+      shownCount + 1
+    );
 
     // Start a search.
     let window = BrowserWindowTracker.getTopWindow();

@@ -370,7 +370,7 @@ TEST(COMPtr, AssignmentHelpers)
     ASSERT_EQ(IFoo::total_constructions_, 5);
     ASSERT_EQ(IFoo::total_destructions_, 4);
 
-    nsCOMPtr<IFoo> fooP2(fooP.forget());
+    nsCOMPtr<IFoo> fooP2(std::move(fooP));
     ASSERT_TRUE(fooP2);
 
     ASSERT_EQ(IFoo::total_constructions_, 5);

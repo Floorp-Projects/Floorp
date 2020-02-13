@@ -820,8 +820,8 @@ void Proxy::Teardown(bool aSendUnpin) {
       if (mSyncLoopTarget) {
         // We have an unclosed sync loop.  Fix that now.
         RefPtr<MainThreadStopSyncLoopRunnable> runnable =
-            new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
-                                               mSyncLoopTarget.forget(), false);
+            new MainThreadStopSyncLoopRunnable(
+                mWorkerPrivate, std::move(mSyncLoopTarget), false);
         if (!runnable->Dispatch()) {
           MOZ_CRASH("We're going to hang at shutdown anyways.");
         }

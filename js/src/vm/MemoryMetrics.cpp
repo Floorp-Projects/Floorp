@@ -381,7 +381,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       RealmStats& realmStats = script->realm()->realmStats();
       realmStats.scriptsGCHeap += thingSize;
       realmStats.scriptsMallocHeapData +=
-          script->sizeOfData(rtStats->mallocSizeOf_);
+          script->sizeOfExcludingThis(rtStats->mallocSizeOf_);
       script->addSizeOfJitScript(rtStats->mallocSizeOf_, &realmStats.jitScripts,
                                  &realmStats.baselineStubsFallback);
       jit::AddSizeOfBaselineData(script, rtStats->mallocSizeOf_,
@@ -457,14 +457,6 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
     case JS::TraceKind::JitCode: {
       zStats->jitCodesGCHeap += thingSize;
       // The code for a script is counted in ExecutableAllocator::sizeOfCode().
-      break;
-    }
-
-    case JS::TraceKind::LazyScript: {
-      LazyScript* lazy = &cellptr.as<LazyScript>();
-      zStats->lazyScriptsGCHeap += thingSize;
-      zStats->lazyScriptsMallocHeap +=
-          lazy->sizeOfExcludingThis(rtStats->mallocSizeOf_);
       break;
     }
 

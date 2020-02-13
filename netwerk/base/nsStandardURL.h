@@ -369,7 +369,7 @@ class nsStandardURL : public nsIFileURL,
       if (NS_FAILED(rv)) {
         return rv;
       }
-      BaseURIMutator<T>::mURI = uri.forget();
+      BaseURIMutator<T>::mURI = std::move(uri);
       return NS_OK;
     }
 

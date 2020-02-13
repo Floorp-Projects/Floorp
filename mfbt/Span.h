@@ -260,7 +260,7 @@ class extent_type {
 
   static_assert(Ext >= 0, "A fixed-size Span must be >= 0 in size.");
 
-  constexpr extent_type() {}
+  constexpr extent_type() = default;
 
   template <index_type Other>
   constexpr MOZ_IMPLICIT extent_type(extent_type<Other> ext) {

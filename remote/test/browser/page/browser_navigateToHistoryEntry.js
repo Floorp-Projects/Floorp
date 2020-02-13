@@ -65,7 +65,7 @@ add_task(async function oneEntryForwardInHistory({ client }) {
     await loadURL(entry.userTypedURL);
   }
 
-  gBrowser.gotoIndex(0);
+  await gotoHistoryIndex(0);
 
   const { currentIndex, entries } = await Page.getNavigationHistory();
   await Page.navigateToHistoryEntry({ entryId: entries[currentIndex + 1].id });
@@ -109,7 +109,7 @@ add_task(async function toLastEntryInHistory({ client }) {
     await loadURL(entry.userTypedURL);
   }
 
-  gBrowser.gotoIndex(0);
+  await gotoHistoryIndex(0);
 
   const { entries } = await Page.getNavigationHistory();
   await Page.navigateToHistoryEntry({

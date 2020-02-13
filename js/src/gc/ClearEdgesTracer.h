@@ -27,12 +27,11 @@ struct ClearEdgesTracer final : public JS::CallbackTracer {
   bool onStringEdge(JSString** strp) override;
   bool onSymbolEdge(JS::Symbol** symp) override;
   bool onBigIntEdge(JS::BigInt** bip) override;
-  bool onScriptEdge(JSScript** scriptp) override;
+  bool onScriptEdge(js::BaseScript** scriptp) override;
   bool onShapeEdge(js::Shape** shapep) override;
   bool onObjectGroupEdge(js::ObjectGroup** groupp) override;
   bool onBaseShapeEdge(js::BaseShape** basep) override;
   bool onJitCodeEdge(js::jit::JitCode** codep) override;
-  bool onLazyScriptEdge(js::LazyScript** lazyp) override;
   bool onScopeEdge(js::Scope** scopep) override;
   bool onRegExpSharedEdge(js::RegExpShared** sharedp) override;
   bool onChild(const JS::GCCellPtr& thing) override;

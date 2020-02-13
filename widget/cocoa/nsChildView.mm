@@ -236,6 +236,7 @@ nsChildView::nsChildView()
       mDrawing(false),
       mIsDispatchPaint(false),
       mPluginFocused{false},
+      mOpaqueRegion("nsChildView::mOpaqueRegion"),
       mCurrentPanGestureBelongsToSwipe{false} {}
 
 nsChildView::~nsChildView() {
@@ -496,6 +497,8 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode) {
   if (windowWidget) {
     windowWidget->SetTransparencyMode(aMode);
   }
+
+  UpdateInternalOpaqueRegion();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1423,6 +1426,11 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset() {
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
 }
 
+LayoutDeviceIntRegion nsChildView::GetOpaqueWidgetRegion() {
+  auto opaqueRegion = mOpaqueRegion.Lock();
+  return *opaqueRegion;
+}
+
 nsresult nsChildView::SetTitle(const nsAString& title) {
   // child views don't have titles
   return NS_OK;
@@ -1795,6 +1803,8 @@ static Maybe<VibrancyType> ThemeGeometryTypeToVibrancyType(
     case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyDark:
     case nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarDark:
       return Some(VibrancyType::DARK);
+    case nsNativeThemeCocoa::eThemeGeometryTypeSheet:
+      return Some(VibrancyType::SHEET);
     case nsNativeThemeCocoa::eThemeGeometryTypeTooltip:
       return Some(VibrancyType::TOOLTIP);
     case nsNativeThemeCocoa::eThemeGeometryTypeMenu:
@@ -1848,6 +1858,7 @@ void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries
     return;
   }
 
+  LayoutDeviceIntRegion sheetRegion = GatherVibrantRegion(aThemeGeometries, VibrancyType::SHEET);
   LayoutDeviceIntRegion vibrantLightRegion =
       GatherVibrantRegion(aThemeGeometries, VibrancyType::LIGHT);
   LayoutDeviceIntRegion vibrantDarkRegion =
@@ -1864,9 +1875,9 @@ void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries
   LayoutDeviceIntRegion activeSourceListSelectionRegion =
       GatherVibrantRegion(aThemeGeometries, VibrancyType::ACTIVE_SOURCE_LIST_SELECTION);
 
-  MakeRegionsNonOverlapping(vibrantLightRegion, vibrantDarkRegion, menuRegion, tooltipRegion,
-                            highlightedMenuItemRegion, sourceListRegion, sourceListSelectionRegion,
-                            activeSourceListSelectionRegion);
+  MakeRegionsNonOverlapping(sheetRegion, vibrantLightRegion, vibrantDarkRegion, menuRegion,
+                            tooltipRegion, highlightedMenuItemRegion, sourceListRegion,
+                            sourceListSelectionRegion, activeSourceListSelectionRegion);
 
   auto& vm = EnsureVibrancyManager();
   bool changed = false;
@@ -1875,10 +1886,13 @@ void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries
   changed |= vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
   changed |= vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
   changed |= vm.UpdateVibrantRegion(VibrancyType::HIGHLIGHTED_MENUITEM, highlightedMenuItemRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::SHEET, sheetRegion);
   changed |= vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST, sourceListRegion);
   changed |= vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST_SELECTION, sourceListSelectionRegion);
   changed |= vm.UpdateVibrantRegion(VibrancyType::ACTIVE_SOURCE_LIST_SELECTION,
                                     activeSourceListSelectionRegion);
+
+  UpdateInternalOpaqueRegion();
 
   if (changed) {
     SuspendAsyncCATransactions();
@@ -1891,6 +1905,19 @@ mozilla::VibrancyManager& nsChildView::EnsureVibrancyManager() {
     mVibrancyManager = MakeUnique<VibrancyManager>(*this, [mView vibrancyViewsContainer]);
   }
   return *mVibrancyManager;
+}
+
+void nsChildView::UpdateInternalOpaqueRegion() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread(), "This should only be called on the main thread.");
+  auto opaqueRegion = mOpaqueRegion.Lock();
+  bool widgetIsOpaque = GetTransparencyMode() == eTransparencyOpaque;
+  if (!widgetIsOpaque) {
+    opaqueRegion->SetEmpty();
+  } else if (VibrancyManager::SystemSupportsVibrancy()) {
+    opaqueRegion->Sub(mBounds, EnsureVibrancyManager().GetUnionOfVibrantRegions());
+  } else {
+    *opaqueRegion = mBounds;
+  }
 }
 
 nsChildView::SwipeInfo nsChildView::SendMayStartSwipe(

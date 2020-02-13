@@ -256,16 +256,14 @@ function validatedWebRemoteType(
 
   if (
     allowLinkedWebInFileUriProcess &&
+    // This is not supported with documentchannel
+    !documentChannel &&
     aPreferredRemoteType == FILE_REMOTE_TYPE
   ) {
     // If aCurrentUri is passed then we should only allow FILE_REMOTE_TYPE
     // when it is same origin as target or the current URI is already a
     // file:// URI.
     if (aCurrentUri) {
-      if (documentChannel && aCurrentUri.scheme == "file") {
-        return aPreferredRemoteType;
-      }
-
       try {
         // checkSameOriginURI throws when not same origin.
         // todo: if you intend to update CheckSameOriginURI to log the error to the

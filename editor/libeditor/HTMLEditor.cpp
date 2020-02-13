@@ -3635,37 +3635,36 @@ Element* HTMLEditor::GetEnclosingTable(nsINode* aNode) {
  * Uses EditorBase::JoinNodesWithTransaction() so action is undoable.
  * Should be called within the context of a batch transaction.
  */
-nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange) {
-  NS_ENSURE_TRUE(aInRange, NS_ERROR_NULL_POINTER);
+nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange& aInRange) {
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
-  nsTArray<nsCOMPtr<nsINode>> textNodes;
-  // we can't actually do anything during iteration, so store the text nodes in
-  // an array don't bother ref counting them because we know we can hold them
-  // for the lifetime of this method
 
-  // build a list of editable text nodes
-  ContentSubtreeIterator subtreeIter;
-  subtreeIter.Init(aInRange);
-  for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-    nsINode* node = subtreeIter.GetCurrentNode();
-    if (node->NodeType() == nsINode::TEXT_NODE &&
-        IsEditable(node->AsContent())) {
-      textNodes.AppendElement(node);
-    }
+  // we can't actually do anything during iteration, so store the text nodes in
+  // an array first.
+  DOMSubtreeIterator subtreeIter;
+  if (NS_WARN_IF(NS_FAILED(subtreeIter.Init(aInRange)))) {
+    return NS_ERROR_FAILURE;
   }
+  AutoTArray<OwningNonNull<Text>, 8> textNodes;
+  subtreeIter.AppendNodesToArray(
+      +[](nsINode& aNode, void* aSelf) -> bool {
+        return static_cast<HTMLEditor*>(aSelf)->IsEditable(&aNode);
+      },
+      textNodes, this);
 
   // now that I have a list of text nodes, collapse adjacent text nodes
   // NOTE: assumption that JoinNodes keeps the righthand node
   while (textNodes.Length() > 1) {
     // we assume a textNodes entry can't be nullptr
-    nsINode* leftTextNode = textNodes[0];
-    nsINode* rightTextNode = textNodes[1];
+    Text* leftTextNode = textNodes[0];
+    Text* rightTextNode = textNodes[1];
     NS_ASSERTION(leftTextNode && rightTextNode,
                  "left or rightTextNode null in CollapseAdjacentTextNodes");
 
     // get the prev sibling of the right node, and see if its leftTextNode
-    nsCOMPtr<nsINode> prevSibOfRightNode = rightTextNode->GetPreviousSibling();
-    if (prevSibOfRightNode && prevSibOfRightNode == leftTextNode) {
+    nsIContent* previousSiblingOfRightTextNode =
+        rightTextNode->GetPreviousSibling();
+    if (previousSiblingOfRightTextNode &&
+        previousSiblingOfRightTextNode == leftTextNode) {
       nsresult rv = JoinNodesWithTransaction(MOZ_KnownLive(*leftTextNode),
                                              MOZ_KnownLive(*rightTextNode));
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -4538,7 +4537,7 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
   if (NS_WARN_IF(!brElement)) {
     return NS_ERROR_FAILURE;
   }
-  *aNewBrElement = brElement.forget();
+  *aNewBrElement = std::move(brElement);
   return NS_OK;
 }
 

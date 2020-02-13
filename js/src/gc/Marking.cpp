@@ -581,10 +581,8 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<Value>(
     JSTracer*, JSObject*, Value*, const char*);
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(
     JSTracer*, JSObject*, JSObject**, const char*);
-template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSScript*>(
-    JSTracer*, JSObject*, JSScript**, const char*);
-template void js::TraceManuallyBarrieredCrossCompartmentEdge<LazyScript*>(
-    JSTracer*, JSObject*, LazyScript**, const char*);
+template void js::TraceManuallyBarrieredCrossCompartmentEdge<BaseScript*>(
+    JSTracer*, JSObject*, BaseScript**, const char*);
 
 template <typename T>
 void js::TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone,
@@ -610,11 +608,8 @@ void js::TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone,
 template void js::TraceWeakMapKeyEdgeInternal<JSObject>(JSTracer*, Zone*,
                                                         JSObject**,
                                                         const char*);
-template void js::TraceWeakMapKeyEdgeInternal<JSScript>(JSTracer*, Zone*,
-                                                        JSScript**,
-                                                        const char*);
-template void js::TraceWeakMapKeyEdgeInternal<LazyScript>(JSTracer*, Zone*,
-                                                          LazyScript**,
+template void js::TraceWeakMapKeyEdgeInternal<BaseScript>(JSTracer*, Zone*,
+                                                          BaseScript**,
                                                           const char*);
 
 template <typename T>
@@ -748,22 +743,17 @@ struct ImplicitEdgeHolderType {
   typedef HasNoImplicitEdgesType Type;
 };
 
-// For now, we only handle JSObject* and JSScript* keys, but the linear time
+// For now, we only handle JSObject* and BaseScript* keys, but the linear time
 // algorithm can be easily extended by adding in more types here, then making
-// GCMarker::traverse<T> call markPotentialEphemeronKey.
+// GCMarker::traverse<T> call markImplicitEdges.
 template <>
 struct ImplicitEdgeHolderType<JSObject*> {
   typedef JSObject* Type;
 };
 
 template <>
-struct ImplicitEdgeHolderType<JSScript*> {
-  typedef JSScript* Type;
-};
-
-template <>
-struct ImplicitEdgeHolderType<LazyScript*> {
-  typedef LazyScript* Type;
+struct ImplicitEdgeHolderType<BaseScript*> {
+  typedef BaseScript* Type;
 };
 
 void GCMarker::markEphemeronValues(gc::Cell* markedCell,
@@ -809,8 +799,7 @@ void GCMarker::markImplicitEdges(T* thing) {
 }
 
 template void GCMarker::markImplicitEdges(JSObject*);
-template void GCMarker::markImplicitEdges(JSScript*);
-template void GCMarker::markImplicitEdges(LazyScript*);
+template void GCMarker::markImplicitEdges(BaseScript*);
 
 }  // namespace js
 
@@ -949,9 +938,9 @@ void GCMarker::traverse(RegExpShared* thing) {
 }
 }  // namespace js
 
-// Strings, LazyScripts, Shapes, and Scopes are extremely common, but have
-// simple patterns of recursion. We traverse trees of these edges immediately,
-// with aggressive, manual inlining, implemented by eagerlyTraceChildren.
+// Strings, Shapes, and Scopes are extremely common, but have simple patterns of
+// recursion. We traverse trees of these edges immediately, with aggressive,
+// manual inlining, implemented by eagerlyTraceChildren.
 template <typename T>
 void js::GCMarker::markAndScan(T* thing) {
   if (ThingIsPermanentAtomOrWellKnownSymbol(thing)) {
@@ -964,10 +953,6 @@ void js::GCMarker::markAndScan(T* thing) {
 namespace js {
 template <>
 void GCMarker::traverse(JSString* thing) {
-  markAndScan(thing);
-}
-template <>
-void GCMarker::traverse(LazyScript* thing) {
   markAndScan(thing);
 }
 template <>
@@ -1006,7 +991,7 @@ void GCMarker::traverse(jit::JitCode* thing) {
   markAndPush(thing);
 }
 template <>
-void GCMarker::traverse(JSScript* thing) {
+void GCMarker::traverse(BaseScript* thing) {
   markAndPush(thing);
 }
 }  // namespace js
@@ -1135,44 +1120,22 @@ void BaseScript::traceChildren(JSTracer* trc) {
       DebugAPI::traceDebugScript(trc, script);
     }
   }
-}
 
-void LazyScript::traceChildren(JSTracer* trc) {
-  BaseScript::traceChildren(trc);
-
-  if (trc->traceWeakEdges()) {
-    TraceNullableEdge(trc, &script_, "script");
+  // Trace the edge to our twin. Note that it will have the opposite type of
+  // current script.
+  if (isLazyScript()) {
+    if (trc->traceWeakEdges()) {
+      TraceNullableEdge(trc, &u.script_, "script");
+    }
+  } else {
+    if (u.lazyScript) {
+      TraceManuallyBarrieredEdge(trc, &u.lazyScript, "lazyScript");
+    }
   }
 
   if (trc->isMarkingTracer()) {
     GCMarker::fromTracer(trc)->markImplicitEdges(this);
   }
-}
-inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
-  traverseEdge(thing, static_cast<JSObject*>(thing->functionOrGlobal_));
-  traverseEdge(thing, static_cast<JSObject*>(thing->sourceObject_));
-
-  thing->warmUpData_.trace(this);
-
-  if (thing->data_) {
-    // Traverse the PrivateScriptData::gcthings() array.
-    for (JS::GCCellPtr& elem : thing->data_->gcthings()) {
-      if (elem.is<JSObject>()) {
-        traverseEdge(thing, &elem.as<JSObject>());
-      } else if (elem.is<JSString>()) {
-        traverseEdge(thing, &elem.as<JSString>());
-      } else {
-        MOZ_ASSERT(!elem);
-      }
-    }
-  }
-
-  MOZ_ASSERT(thing->sharedData_ == nullptr,
-             "LazyScript should not have shared data.");
-
-  // script_ is weak so is not traced here.
-
-  markImplicitEdges(thing);
 }
 
 void Shape::traceChildren(JSTracer* trc) {
@@ -1929,7 +1892,7 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
     }
 
     case MarkStack::ScriptTag: {
-      auto script = stack.popPtr().as<JSScript>();
+      auto script = stack.popPtr().as<BaseScript>();
       AutoSetTracingSource asts(this, script);
       return script->traceChildren(this);
     }
@@ -2213,7 +2176,7 @@ struct MapTypeToMarkStackTag<jit::JitCode*> {
   static const auto value = MarkStack::JitCodeTag;
 };
 template <>
-struct MapTypeToMarkStackTag<JSScript*> {
+struct MapTypeToMarkStackTag<BaseScript*> {
   static const auto value = MarkStack::ScriptTag;
 };
 
@@ -3061,7 +3024,7 @@ static inline void TraceWholeCell(TenuringTracer& mover, JS::BigInt* bi) {
   bi->traceChildren(&mover);
 }
 
-static inline void TraceWholeCell(TenuringTracer& mover, JSScript* script) {
+static inline void TraceWholeCell(TenuringTracer& mover, BaseScript* script) {
   script->traceChildren(&mover);
 }
 
@@ -3106,7 +3069,7 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover) {
         TraceBufferedCells<JS::BigInt>(mover, arena, cells);
         break;
       case JS::TraceKind::Script:
-        TraceBufferedCells<JSScript>(mover, arena, cells);
+        TraceBufferedCells<BaseScript>(mover, arena, cells);
         break;
       case JS::TraceKind::JitCode:
         TraceBufferedCells<jit::JitCode>(mover, arena, cells);
@@ -3726,11 +3689,8 @@ bool SweepingTracer::onShapeEdge(Shape** shapep) { return sweepEdge(shapep); }
 bool SweepingTracer::onStringEdge(JSString** stringp) {
   return sweepEdge(stringp);
 }
-bool SweepingTracer::onScriptEdge(JSScript** scriptp) {
+bool SweepingTracer::onScriptEdge(js::BaseScript** scriptp) {
   return sweepEdge(scriptp);
-}
-bool SweepingTracer::onLazyScriptEdge(LazyScript** lazyp) {
-  return sweepEdge(lazyp);
 }
 bool SweepingTracer::onBaseShapeEdge(BaseShape** basep) {
   return sweepEdge(basep);

@@ -267,9 +267,8 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   }
   certificate->derCert = *signedCert;
 
-  RefPtr<DtlsIdentity> identity = new DtlsIdentity(
-      std::move(private_key), std::move(certificate), ssl_kea_ecdh);
-  return identity.forget();
+  return new DtlsIdentity(std::move(private_key), std::move(certificate),
+                          ssl_kea_ecdh);
 }
 
 const std::string DtlsIdentity::DEFAULT_HASH_ALGORITHM = "sha-256";

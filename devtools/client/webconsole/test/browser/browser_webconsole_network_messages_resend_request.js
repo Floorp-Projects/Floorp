@@ -9,29 +9,19 @@ const TEST_URI =
 
 const TEST_FILE = "test-network-request.html";
 const TEST_PATH =
-  "http://example.com/browser/devtools/client/webconsole/" + "test/browser/";
+  "http://example.com/browser/devtools/client/webconsole/test/browser/";
 
 add_task(async function task() {
+  await pushPref("devtools.target-switching.enabled", true);
   await pushPref("devtools.webconsole.filter.net", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const documentUrl = TEST_PATH + TEST_FILE;
-  await loadDocument(documentUrl);
+  await loadDocument(hud.toolbox, documentUrl);
   info("Document loaded.");
 
-  await resendNetworkRequest(hud, documentUrl);
-});
-
-/**
- * Resends a network request logged in the webconsole
- *
- * @param {Object} hud
- * @param {String} url
- *        URL of the request as logged in the netmonitor.
- */
-async function resendNetworkRequest(hud, url) {
-  const message = await waitFor(() => findMessage(hud, url));
+  const message = await waitFor(() => findMessage(hud, documentUrl));
 
   const menuPopup = await openContextMenu(hud, message);
   const openResendRequestMenuItem = menuPopup.querySelector(
@@ -40,9 +30,8 @@ async function resendNetworkRequest(hud, url) {
   ok(openResendRequestMenuItem, "resend network request item is enabled");
 
   // Wait for message containing the resent request url
-  const onNewRequestMessage = waitForMessage(hud, url);
   openResendRequestMenuItem.click();
-  await onNewRequestMessage;
+  await waitFor(() => findMessages(hud, documentUrl).length === 2);
 
   ok(true, "The resent request url is correct.");
-}
+});

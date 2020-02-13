@@ -918,7 +918,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * Join together any adjacent editable text nodes in the range.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult CollapseAdjacentTextNodes(nsRange* aRange);
+  MOZ_CAN_RUN_SCRIPT nsresult CollapseAdjacentTextNodes(nsRange& aRange);
 
   /**
    * IsInVisibleTextFrames() returns true if all text in aText is in visible
@@ -1393,16 +1393,16 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SplitElementsAtEveryBRElement(
       nsIContent& aMostAncestorToBeSplit,
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents);
 
   /**
    * MaybeSplitElementsAtEveryBRElement() calls SplitElementsAtEveryBRElement()
    * for each given node when this needs to do that for aEditSubAction.
-   * If split a node, it in aArrayOfNodes is replaced with split nodes and
+   * If split a node, it in aArrayOfContents is replaced with split nodes and
    * <br> elements.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeSplitElementsAtEveryBRElement(
-      nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
       EditSubAction aEditSubAction);
 
   /**
@@ -1410,7 +1410,7 @@ class HTMLEditor final : public TextEditor,
    * first editable child, but may return non-editable children after it).
    *
    * @param aNode               Parent node of retrieving children.
-   * @param aOutArrayOfNodes    [out] This method will inserts found children
+   * @param aOutArrayOfContents [out] This method will inserts found children
    *                            into this array.
    * @param aIndexToInsertChildren      Starting from this index, found
    *                                    children will be inserted to the array.
@@ -1426,7 +1426,7 @@ class HTMLEditor final : public TextEditor,
   enum class CollectTableChildren { No, Yes };
   enum class CollectNonEditableNodes { No, Yes };
   size_t CollectChildren(
-      nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      nsINode& aNode, nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       size_t aIndexToInsertChildren, CollectListChildren aCollectListChildren,
       CollectTableChildren aCollectTableChildren,
       CollectNonEditableNodes aCollectNonEditableNodes) const;
@@ -1444,7 +1444,7 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   SplitInlinesAndCollectEditTargetNodes(
       nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes);
 
@@ -1464,7 +1464,7 @@ class HTMLEditor final : public TextEditor,
    */
   nsresult CollectEditTargetNodes(
       nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes);
 
@@ -1562,14 +1562,14 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes) {
     AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
     GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
                                                     aEditSubAction);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, aOutArrayOfNodes, aEditSubAction,
+        extendedSelectionRanges, aOutArrayOfContents, aEditSubAction,
         aCollectNonEditableNodes);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "SplitInlinesAndCollectEditTargetNodes() failed");
@@ -1587,7 +1587,7 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   SplitInlinesAndCollectEditTargetNodesInOneHardLine(
       const EditorDOMPoint& aPointInOneHardLine,
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes) {
     if (NS_WARN_IF(!aPointInOneHardLine.IsSet())) {
@@ -1609,7 +1609,7 @@ class HTMLEditor final : public TextEditor,
     AutoTArray<RefPtr<nsRange>, 1> arrayOfLineRanges;
     arrayOfLineRanges.AppendElement(oneLineRange);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        arrayOfLineRanges, aOutArrayOfNodes, aEditSubAction,
+        arrayOfLineRanges, aOutArrayOfContents, aEditSubAction,
         aCollectNonEditableNodes);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "SplitInlinesAndCollectEditTargetNodes() failed");
@@ -1623,14 +1623,14 @@ class HTMLEditor final : public TextEditor,
    * methods for the detail.
    */
   nsresult CollectEditTargetNodesInExtendedSelectionRanges(
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes) {
     AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
     GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
                                                     aEditSubAction);
     nsresult rv =
-        CollectEditTargetNodes(extendedSelectionRanges, aOutArrayOfNodes,
+        CollectEditTargetNodes(extendedSelectionRanges, aOutArrayOfContents,
                                aEditSubAction, aCollectNonEditableNodes);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "CollectEditTargetNodes() failed");
     return rv;
@@ -1651,13 +1651,14 @@ class HTMLEditor final : public TextEditor,
   /**
    * GetChildNodesOf() returns all child nodes of aParent with an array.
    */
-  static void GetChildNodesOf(nsINode& aParentNode,
-                              nsTArray<OwningNonNull<nsINode>>& aChildNodes) {
-    MOZ_ASSERT(aChildNodes.IsEmpty());
-    aChildNodes.SetCapacity(aParentNode.GetChildCount());
+  static void GetChildNodesOf(
+      nsINode& aParentNode,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) {
+    MOZ_ASSERT(aOutArrayOfContents.IsEmpty());
+    aOutArrayOfContents.SetCapacity(aParentNode.GetChildCount());
     for (nsIContent* childContent = aParentNode.GetFirstChild(); childContent;
          childContent = childContent->GetNextSibling()) {
-      aChildNodes.AppendElement(*childContent);
+      aOutArrayOfContents.AppendElement(*childContent);
     }
   }
 
@@ -1688,36 +1689,36 @@ class HTMLEditor final : public TextEditor,
   MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
 
   /**
-   * IsEmptyInline() returns true if aNode is an inline node and it does not
-   * have meaningful content.
+   * IsEmptyInlineNode() returns true if aContent is an inline node and it does
+   * not have meaningful content.
    */
-  bool IsEmptyInineNode(nsINode& aNode) const {
+  bool IsEmptyInlineNode(nsIContent& aContent) const {
     MOZ_ASSERT(IsEditActionDataAvailable());
 
-    if (!HTMLEditor::NodeIsInlineStatic(aNode) || !IsContainer(&aNode)) {
+    if (!HTMLEditor::NodeIsInlineStatic(aContent) || !IsContainer(&aContent)) {
       return false;
     }
     bool isEmpty = true;
-    IsEmptyNode(&aNode, &isEmpty);
+    IsEmptyNode(&aContent, &isEmpty);
     return isEmpty;
   }
 
   /**
-   * IsEmptyOneHardLine() returns true if aArrayOfNodes does not represent
+   * IsEmptyOneHardLine() returns true if aArrayOfContents does not represent
    * 2 or more lines and have meaningful content.
    */
   bool IsEmptyOneHardLine(
-      nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes) const {
-    if (NS_WARN_IF(!aArrayOfNodes.Length())) {
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) const {
+    if (NS_WARN_IF(aArrayOfContents.IsEmpty())) {
       return true;
     }
 
     bool brElementHasFound = false;
-    for (auto& node : aArrayOfNodes) {
-      if (!IsEditable(node)) {
+    for (auto& content : aArrayOfContents) {
+      if (!IsEditable(content)) {
         continue;
       }
-      if (node->IsHTMLElement(nsGkAtoms::br)) {
+      if (content->IsHTMLElement(nsGkAtoms::br)) {
         // If there are 2 or more `<br>` elements, it's not empty line since
         // there may be only one `<br>` element in a hard line.
         if (brElementHasFound) {
@@ -1726,7 +1727,7 @@ class HTMLEditor final : public TextEditor,
         brElementHasFound = true;
         continue;
       }
-      if (!IsEmptyInineNode(node)) {
+      if (!IsEmptyInlineNode(content)) {
         return false;
       }
     }
@@ -1792,45 +1793,46 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * MoveNodesIntoNewBlockquoteElement() inserts at least one <blockquote>
-   * element and moves nodes in aNodeArray into new <blockquote> elements.
-   * If aNodeArray includes a table related element except <table>, this
-   * calls itself recursively to insert <blockquote> into the cell.
+   * element and moves nodes in aArrayOfContents into new <blockquote>
+   * elements.
+   * If aArrayOfContents includes a table related element except <table>,
+   * this calls itself recursively to insert <blockquote> into the cell.
    *
-   * @param aNodeArray          Nodes which will be moved into created
+   * @param aArrayOfContents    Nodes which will be moved into created
    *                            <blockquote> elements.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MoveNodesIntoNewBlockquoteElement(
-      nsTArray<OwningNonNull<nsINode>>& aNodeArray);
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   /**
    * RemoveBlockContainerElements() removes all format blocks, table related
-   * element, etc in aNodeArray from the DOM tree.
-   * If aNodeArray has a format node, it will be removed and its contents
+   * element, etc in aArrayOfContents from the DOM tree.
+   * If aArrayOfContents has a format node, it will be removed and its contents
    * will be moved to where it was.
-   * If aNodeArray has a table related element, <li>, <blockquote> or <div>,
-   * it will be removed and its contents will be moved to where it was.
+   * If aArrayOfContents has a table related element, <li>, <blockquote> or
+   * <div>, it will be removed and its contents will be moved to where it was.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  RemoveBlockContainerElements(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult RemoveBlockContainerElements(
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   /**
-   * CreateOrChangeBlockContainerElement() formats all nodes in aNodeArray
+   * CreateOrChangeBlockContainerElement() formats all nodes in aArrayOfContents
    * with block elements whose name is aBlockTag.
-   * If aNodeArray has an inline element, a block element is created and the
-   * inline element and following inline elements are moved into the new block
-   * element.
-   * If aNodeArray has <br> elements, they'll be removed from the DOM tree and
-   * new block element will be created when there are some remaining inline
-   * elements.
-   * If aNodeArray has a block element, this calls itself with children of
-   * the block element.  Then, new block element will be created when there
+   * If aArrayOfContents has an inline element, a block element is created and
+   * the inline element and following inline elements are moved into the new
+   * block element.
+   * If aArrayOfContents has <br> elements, they'll be removed from the DOM
+   * tree and new block element will be created when there are some remaining
+   * inline elements.
+   * If aArrayOfContents has a block element, this calls itself with children
+   * of the block element.  Then, new block element will be created when there
    * are some remaining inline elements.
    *
-   * @param aNodeArray      Must be descendants of a node.
-   * @param aBlockTag       The element name of new block elements.
+   * @param aArrayOfContents    Must be descendants of a node.
+   * @param aBlockTag           The element name of new block elements.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateOrChangeBlockContainerElement(
-      nsTArray<OwningNonNull<nsINode>>& aNodeArray, nsAtom& aBlockTag);
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents, nsAtom& aBlockTag);
 
   /**
    * FormatBlockContainerWithTransaction() is implementation of "formatBlock"
@@ -2574,7 +2576,7 @@ class HTMLEditor final : public TextEditor,
    * parent.
    */
   static void MakeTransitionList(
-      const nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+      const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
       nsTArray<bool>& aTransitionArray);
 
   /**
@@ -2651,15 +2653,15 @@ class HTMLEditor final : public TextEditor,
   AlignContentsAtSelectionWithEmptyDivElement(const nsAString& aAlignType);
 
   /**
-   * AlignNodesAndDescendants() make contents of nodes in aArrayOfNodes and
+   * AlignNodesAndDescendants() make contents of nodes in aArrayOfContents and
    * their descendants aligned to aAlignType.
    *
    * @param aAlignType          New align attribute value where the contents
    *                            should be aligned to.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  AlignNodesAndDescendants(nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-                           const nsAString& aAlignType);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AlignNodesAndDescendants(
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+      const nsAString& aAlignType);
 
   /**
    * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
@@ -4359,7 +4361,7 @@ class HTMLEditor final : public TextEditor,
   // Helper for Handle[CSS|HTML]IndentAtSelectionInternal
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   IndentListChild(RefPtr<Element>* aCurList, const EditorDOMPoint& aCurPoint,
-                  OwningNonNull<nsINode>& aCurNode);
+                  nsIContent& aContent);
 
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
@@ -4588,14 +4590,14 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
    * the last of the array (not inserting where aNonFormatBlockElement is,
    * so that the node order becomes randomly).
    *
-   * @param aArrayOfNodes               [in/out] Found descendant format blocks
+   * @param aArrayOfContents            [in/out] Found descendant format blocks
    *                                    and first inline node in each non-format
    *                                    block will be appended to this.
    * @param aNonFormatBlockElement      Must be a non-format block element.
    */
   static void AppendDescendantFormatNodesAndFirstInlineNode(
-      nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-      mozilla::dom::Element& aNonFormatBlockElement);
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+      dom::Element& aNonFormatBlockElement);
 
   /**
    * CollectEditableFormatNodesInSelection() collects only editable nodes
@@ -4605,7 +4607,8 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
    * related elements, they will be replaced their children.
    */
   static nsresult CollectEditableFormatNodesInSelection(
-      HTMLEditor& aHTMLEditor, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes);
+      HTMLEditor& aHTMLEditor,
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   RefPtr<nsAtom> mFirstParagraphState;
   bool mIsMixed = false;

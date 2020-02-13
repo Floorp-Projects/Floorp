@@ -585,7 +585,7 @@ bool PuppetWidget::CreateRemoteLayerManager(
   // it if we successfully create its successor because a partially initialized
   // layer manager is worse than a fully initialized but shutdown layer manager.
   DestroyLayerManager();
-  mLayerManager = lm.forget();
+  mLayerManager = std::move(lm);
   return true;
 }
 

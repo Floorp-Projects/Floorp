@@ -205,6 +205,7 @@ fn common_node(v: &mut Table, clip_id_mapper: &mut ClipIdMapper, info: &CommonIt
     rect_node(v, "clip-rect", &info.clip_rect);
     bool_node(v, "backface-visible", info.flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE));
     bool_node(v, "scrollbar-container", info.flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER));
+    bool_node(v, "prefer-compositor-surface", info.flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE));
     bool_node(v, "scrollbar-thumb", info.flags.contains(PrimitiveFlags::IS_SCROLLBAR_THUMB));
 
     clip_and_scroll_node(v, clip_id_mapper, info.clip_id, info.spatial_id);

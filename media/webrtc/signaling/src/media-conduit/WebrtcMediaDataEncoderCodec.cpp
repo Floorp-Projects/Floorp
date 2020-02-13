@@ -170,7 +170,7 @@ int32_t WebrtcMediaDataEncoder::Shutdown() {
   OwnerThread()->Dispatch(NS_NewRunnableFunction(
       "WebrtcMediaDataEncoder::Shutdown",
       [self = RefPtr<WebrtcMediaDataEncoder>(this),
-       encoder = RefPtr<MediaDataEncoder>(mEncoder.forget())]() {
+       encoder = RefPtr<MediaDataEncoder>(std::move(mEncoder))]() {
         self->mCallback = nullptr;
         self->mError = NS_OK;
         encoder->Shutdown();
@@ -205,7 +205,7 @@ RefPtr<MediaData> WebrtcMediaDataEncoder::CreateVideoDataFromWebrtcVideoFrame(
       image->GetSize(), 0, TimeUnit::FromMicroseconds(aFrame.timestamp_us()),
       TimeUnit::FromSeconds(1.0 / mMaxFrameRate), image, aIsKeyFrame,
       TimeUnit::FromMicroseconds(aFrame.timestamp()));
-  return data.forget();
+  return data;
 }
 
 int32_t WebrtcMediaDataEncoder::Encode(

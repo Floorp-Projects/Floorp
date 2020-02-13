@@ -29,10 +29,10 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "PREFS",
-  "devtools/client/webconsole/constants",
-  true
+  "constants",
+  "devtools/client/webconsole/constants"
 );
+
 loader.lazyRequireGetter(
   this,
   "START_IGNORE_ACTION",
@@ -121,7 +121,9 @@ class WebConsoleUI {
     // Ignore Fronts that are already destroyed
     if (filterDisconnectedProxies) {
       proxies = proxies.filter(proxy => {
-        return proxy.webConsoleFront && !!proxy.webConsoleFront.actorID;
+        return (
+          proxy && proxy.webConsoleFront && !!proxy.webConsoleFront.actorID
+        );
       });
     }
 
@@ -347,11 +349,21 @@ class WebConsoleUI {
    *        A new top level target is created.
    */
   async _onTargetAvailable({ type, targetFront, isTopLevel }) {
+    const dispatchTargetAvailable = () => {
+      const store = this.wrapper && this.wrapper.getStore();
+      if (store) {
+        this.wrapper.getStore().dispatch({
+          type: constants.TARGET_AVAILABLE,
+          targetType: type,
+        });
+      }
+    };
+
     // This is a top level target. It may update on process switches
     // when navigating to another domain.
     if (isTopLevel) {
       const fissionSupport = Services.prefs.getBoolPref(
-        PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
+        constants.PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
       );
       const needContentProcessMessagesListener =
         targetFront.isParentProcess && !targetFront.isAddon && !fissionSupport;
@@ -361,6 +373,7 @@ class WebConsoleUI {
         needContentProcessMessagesListener
       );
       await this.proxy.connect();
+      dispatchTargetAvailable();
       return;
     }
 
@@ -381,6 +394,7 @@ class WebConsoleUI {
     const proxy = new WebConsoleConnectionProxy(this, targetFront);
     this.additionalProxies.set(targetFront, proxy);
     await proxy.connect();
+    dispatchTargetAvailable();
   }
 
   /**

@@ -337,7 +337,7 @@ class IdleDispatchRunnable final : public IdleRunnable,
       RefPtr<IdleDeadline> idleDeadline =
           new IdleDeadline(mParent, mTimedOut, deadline.ToMilliseconds());
 
-      RefPtr<IdleRequestCallback> callback(mCallback.forget());
+      RefPtr<IdleRequestCallback> callback(std::move(mCallback));
       MOZ_ASSERT(!mCallback);
       callback->Call(*idleDeadline, "ChromeUtils::IdleDispatch handler");
       mParent = nullptr;

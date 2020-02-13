@@ -266,26 +266,32 @@ impl<'a> Section<'a> {
                 SectionContent::DataCount(self.get_data_count_section_content()?)
             }
             SectionCode::Custom { kind, name } => {
+                // The invalid custom section may cause trouble during
+                // content() call. The spec recommends to ignore erroneous
+                // content in custom section.
+                // Return None in the content field if invalid.
                 let binary = self.get_binary_reader();
                 let content = match kind {
-                    CustomSectionKind::Name => {
-                        Some(CustomSectionContent::Name(self.get_name_section_reader()?))
-                    }
-                    CustomSectionKind::Producers => Some(CustomSectionContent::Producers(
-                        self.get_producers_section_reader()?,
-                    )),
-                    CustomSectionKind::Linking => Some(CustomSectionContent::Linking(
-                        self.get_linking_section_reader()?,
-                    )),
-                    CustomSectionKind::Reloc => Some(CustomSectionContent::Reloc(
-                        self.get_reloc_section_reader()?,
-                    )),
-                    CustomSectionKind::SourceMappingURL => {
-                        Some(CustomSectionContent::SourceMappingURL(
-                            self.get_sourcemappingurl_section_content()?,
-                        ))
-                    }
-
+                    CustomSectionKind::Name => self
+                        .get_name_section_reader()
+                        .ok()
+                        .map(CustomSectionContent::Name),
+                    CustomSectionKind::Producers => self
+                        .get_producers_section_reader()
+                        .ok()
+                        .map(CustomSectionContent::Producers),
+                    CustomSectionKind::Linking => self
+                        .get_linking_section_reader()
+                        .ok()
+                        .map(CustomSectionContent::Linking),
+                    CustomSectionKind::Reloc => self
+                        .get_reloc_section_reader()
+                        .ok()
+                        .map(CustomSectionContent::Reloc),
+                    CustomSectionKind::SourceMappingURL => self
+                        .get_sourcemappingurl_section_content()
+                        .ok()
+                        .map(CustomSectionContent::SourceMappingURL),
                     _ => None,
                 };
                 SectionContent::Custom {

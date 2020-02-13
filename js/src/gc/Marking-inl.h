@@ -67,8 +67,7 @@ struct MightBeForwarded {
                             std::is_base_of<BaseShape, T>::value ||
                             std::is_base_of<JSString, T>::value ||
                             std::is_base_of<JS::BigInt, T>::value ||
-                            std::is_base_of<JSScript, T>::value ||
-                            std::is_base_of<js::LazyScript, T>::value ||
+                            std::is_base_of<js::BaseScript, T>::value ||
                             std::is_base_of<js::Scope, T>::value ||
                             std::is_base_of<js::RegExpShared, T>::value;
 };

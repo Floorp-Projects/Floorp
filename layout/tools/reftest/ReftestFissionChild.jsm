@@ -5,6 +5,7 @@ class ReftestFissionChild extends JSWindowActorChild {
   receiveMessage(msg) {
     switch (msg.name) {
       case "UpdateLayerTree":
+      {
         let errorString = null;
         try {
           if (this.manager.isProcessRoot) {
@@ -14,7 +15,9 @@ class ReftestFissionChild extends JSWindowActorChild {
           errorString = "updateLayerTree failed: " + e;
         }
         return Promise.resolve({errorString});
+      }
       case "FlushRendering":
+      {
         let errorStrings = [];
         let warningStrings = [];
         let infoStrings = [];
@@ -38,12 +41,12 @@ class ReftestFissionChild extends JSWindowActorChild {
                     root.getBoundingClientRect();
                   }
                 } catch (e) {
-                  warningStrings.push("flushWindow failed: " + e + "\n")
+                  warningStrings.push("flushWindow failed: " + e + "\n");
                 }
               }
 
               if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
-                infoStrings.push("FlushRendering generated paint for window " + win.location.href)
+                infoStrings.push("FlushRendering generated paint for window " + win.location.href);
                 anyPendingPaintsGeneratedInDescendants = true;
               }
 
@@ -70,6 +73,7 @@ class ReftestFissionChild extends JSWindowActorChild {
           errorStrings.push("flushWindow failed: " + e);
         }
         return Promise.resolve({errorStrings, warningStrings, infoStrings});
+      }
     }
   }
 }

@@ -82,7 +82,7 @@ nsresult FetchStreamReader::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
 
     // These 2 objects create a ref-cycle here that is broken when the stream is
     // closed or the worker shutsdown.
-    streamReader->mWorkerRef = workerRef.forget();
+    streamReader->mWorkerRef = std::move(workerRef);
   }
 
   pipeIn.forget(aInputStream);

@@ -6,6 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Protocol"];
 
+// The `Description` below is imported from Chromium Code.
+
 // TODO(ato): We send back a description of the protocol
 // when the user makes the initial HTTP request,
 // but the following is pure fiction.

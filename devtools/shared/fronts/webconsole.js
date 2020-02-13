@@ -203,7 +203,10 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
       eager: opts.eager,
     };
 
-    const { resultID } = await super.evaluateJSAsync(options);
+    this._pendingAsyncEvaluation = super.evaluateJSAsync(options);
+    const { resultID } = await this._pendingAsyncEvaluation;
+    this._pendingAsyncEvaluation = null;
+
     return new Promise((resolve, reject) => {
       // Null check this in case the client has been detached while sending
       // the one way request
@@ -247,7 +250,12 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   /**
    * Handler for the actors's unsolicited evaluationResult packet.
    */
-  onEvaluationResult(packet) {
+  async onEvaluationResult(packet) {
+    // In some cases, the evaluationResult event can be received before the initial call
+    // to evaluationJSAsync completes. So make sure to wait for the corresponding promise
+    // before handling the event.
+    await this._pendingAsyncEvaluation;
+
     // Find the associated callback based on this ID, and fire it.
     // In a sync evaluation, this would have already been called in
     // direct response to the client.request function.
