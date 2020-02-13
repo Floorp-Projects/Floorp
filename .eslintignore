@@ -1,6 +1,5 @@
 # Please DO NOT add more third party files to this file.
 # They should be added to tools/rewriting/ThirdPartyPaths.txt instead.
-# The remaining third-party paths will be removed in bug 1608799.
 
 # This file should only be used for exclusions where we have:
 # - preprocessed files
@@ -158,10 +157,9 @@ modules/libpref/test/unit/*data/
 # Only contains non-standard test files.
 python/
 
-# Remote agent
+# These are (mainly) imported code that we don't want to lint to make imports easier.
 remote/Protocol.jsm
 remote/test/browser/chrome-remote-interface.js
-remote/test/demo.js
 
 # services/ exclusions
 
@@ -186,6 +184,7 @@ testing/talos/talos/tests/devtools/addon/content/pages/
 testing/talos/talos/tests/tp5n/
 testing/talos/talos/fis/tp5n/
 
+# Mainly third-party related code, that shouldn't be linted.
 testing/web-platform/
 
 # toolkit/ exclusions
