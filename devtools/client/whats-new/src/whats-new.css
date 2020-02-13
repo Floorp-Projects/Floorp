@@ -11,6 +11,7 @@ body {
   justify-content: center;
   margin: 0;
   color: var(--theme-text-color);
+  background: var(--theme-body-background);
 }
 
 h2 {
