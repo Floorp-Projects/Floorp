@@ -93,7 +93,7 @@ class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
 #endif
 
  public:
-  inline explicit AutoSweepJitScript(JSScript* script);
+  inline explicit AutoSweepJitScript(BaseScript* script);
 #ifdef DEBUG
   inline ~AutoSweepJitScript();
 

@@ -60,8 +60,7 @@ namespace gc {
 
 #define FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D) \
  /* AllocKind              TraceKind     TypeName           SizedType          BGFinal Nursery Compact */ \
-    D(SCRIPT,              Script,       JSScript,          JSScript,          false,  false,  true) \
-    D(LAZY_SCRIPT,         Script,       js::LazyScript,    js::LazyScript,    true,   false,  true) \
+    D(SCRIPT,              Script,       js::BaseScript,    js::BaseScript,    false,  false,  true) \
     D(SHAPE,               Shape,        js::Shape,         js::Shape,         true,   false,  true) \
     D(ACCESSOR_SHAPE,      Shape,        js::AccessorShape, js::AccessorShape, true,   false,  true) \
     D(BASE_SHAPE,          BaseShape,    js::BaseShape,     js::BaseShape,     true,   false,  true) \
