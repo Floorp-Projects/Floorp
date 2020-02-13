@@ -123,11 +123,7 @@ case "$target" in
         _WIN32_MSVC=1
 
         # Make sure compilers are valid
-        CFLAGS="$CFLAGS -nologo"
-        CXXFLAGS="$CXXFLAGS -TP -nologo"
-        if test -z "$CLANG_CL"; then
-            CPPFLAGS="$CPPFLAGS -utf-8"
-        fi
+        CXXFLAGS="$CXXFLAGS -TP"
         # _CRT_SECURE_NO_WARNINGS disables warnings about using MSVC-specific
         # secure CRT functions.
         CXXFLAGS="$CXXFLAGS -D_CRT_SECURE_NO_WARNINGS"
@@ -401,7 +397,7 @@ dnl ========================================================
 case "$host" in
 *mingw*)
     if test -n "$_WIN32_MSVC"; then
-        HOST_CFLAGS="$HOST_CFLAGS -nologo"
+        HOST_CFLAGS="$HOST_CFLAGS"
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
