@@ -34,9 +34,9 @@ class IPCStreamDestination::DelayedStartInputStream final
   NS_DECL_THREADSAFE_ISUPPORTS
 
   DelayedStartInputStream(IPCStreamDestination* aDestination,
-                          already_AddRefed<nsIAsyncInputStream>&& aStream)
+                          nsCOMPtr<nsIAsyncInputStream>&& aStream)
       : mDestination(aDestination),
-        mStream(aStream),
+        mStream(std::move(aStream)),
         mMutex("IPCStreamDestination::DelayedStartInputStream::mMutex") {
     MOZ_ASSERT(mDestination);
     MOZ_ASSERT(mStream);
@@ -302,7 +302,7 @@ already_AddRefed<nsIInputStream> IPCStreamDestination::TakeReader() {
 
   if (mDelayedStart) {
     mDelayedStartInputStream =
-        new DelayedStartInputStream(this, mReader.forget());
+        new DelayedStartInputStream(this, std::move(mReader));
     RefPtr<nsIAsyncInputStream> inputStream = mDelayedStartInputStream;
     return inputStream.forget();
   }

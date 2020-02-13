@@ -41,7 +41,7 @@ void CanvasRenderingContextHelper::ToBlob(
         blob = Blob::Create(mGlobal, blobImpl);
       }
 
-      RefPtr<BlobCallback> callback(mBlobCallback.forget());
+      RefPtr<BlobCallback> callback(std::move(mBlobCallback));
       ErrorResult rv;
 
       callback->Call(blob, rv);
@@ -173,7 +173,7 @@ already_AddRefed<nsISupports> CanvasRenderingContextHelper::GetContext(
       return nullptr;
     }
 
-    mCurrentContext = context.forget();
+    mCurrentContext = std::move(context);
     mCurrentContextType = contextType;
 
     nsresult rv = UpdateContext(aCx, aContextOptions, aRv);

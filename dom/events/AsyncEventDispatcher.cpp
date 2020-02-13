@@ -27,7 +27,7 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
   MOZ_ASSERT(mTarget);
   RefPtr<Event> event =
       EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, EmptyString());
-  mEvent = event.forget();
+  mEvent = std::move(event);
   mEventType.SetIsVoid(true);
   NS_ASSERTION(mEvent, "Should never fail to create an event");
   mEvent->DuplicatePrivateData();

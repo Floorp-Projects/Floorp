@@ -222,14 +222,14 @@ inline nsQueryInterfaceISupportsWithError do_QueryInterface(T aPtr,
 }
 #else
 template <class T>
-inline nsQueryInterface<mozilla::PointedToType<T> > do_QueryInterface(T aPtr) {
-  return nsQueryInterface<mozilla::PointedToType<T> >(aPtr);
+inline nsQueryInterface<mozilla::PointedToType<T>> do_QueryInterface(T aPtr) {
+  return nsQueryInterface<mozilla::PointedToType<T>>(aPtr);
 }
 
 template <class T>
-inline nsQueryInterfaceWithError<mozilla::PointedToType<T> > do_QueryInterface(
+inline nsQueryInterfaceWithError<mozilla::PointedToType<T>> do_QueryInterface(
     T aRawPtr, nsresult* aError) {
-  return nsQueryInterfaceWithError<mozilla::PointedToType<T> >(aRawPtr, aError);
+  return nsQueryInterfaceWithError<mozilla::PointedToType<T>>(aRawPtr, aError);
 }
 
 #endif  // ! #ifdef NSCAP_FEATURE_USE_BASE
@@ -535,7 +535,8 @@ class MOZ_IS_REFPTR nsCOMPtr final
   // Construct from |std::move(otherRefPtr)|.
   template <typename U>
   MOZ_IMPLICIT nsCOMPtr(RefPtr<U>&& aSmartPtr)
-      : NSCAP_CTOR_BASE(aSmartPtr.forget().take()) {
+      : NSCAP_CTOR_BASE(
+            static_cast<already_AddRefed<T>>(aSmartPtr.forget()).take()) {
     assert_validity();
     // Make sure that U actually inherits from T
     static_assert(std::is_base_of<T, U>::value, "U is not a subclass of T");

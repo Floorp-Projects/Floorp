@@ -45,7 +45,7 @@ bool ParamTraits<nsIReferrerInfo*>::Read(const Message* aMsg,
   NS_ENSURE_SUCCESS(rv, false);
   nsCOMPtr<nsIReferrerInfo> referrerInfo = do_QueryInterface(iSupports);
   NS_ENSURE_TRUE(referrerInfo, false);
-  *aResult = referrerInfo.forget();
+  *aResult = ToRefPtr(std::move(referrerInfo));
   return true;
 }
 

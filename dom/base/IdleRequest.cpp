@@ -57,7 +57,7 @@ void IdleRequest::IdleRun(nsPIDOMWindowInner* aWindow,
 
   RefPtr<IdleDeadline> deadline =
       new IdleDeadline(aWindow, aDidTimeout, aDeadline);
-  RefPtr<IdleRequestCallback> callback(mCallback.forget());
+  RefPtr<IdleRequestCallback> callback(std::move(mCallback));
   MOZ_ASSERT(!mCallback);
   callback->Call(*deadline, "requestIdleCallback handler");
 }

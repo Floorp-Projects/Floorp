@@ -460,13 +460,13 @@ RefPtr<ClientOpPromise> ClientOpenWindowInCurrentProcess(
 
   if (NS_WARN_IF(rv.Failed())) {
     promise->Reject(rv, __func__);
-    return promise.forget();
+    return promise;
   }
 
   MOZ_DIAGNOSTIC_ASSERT(outerWindow);
   WaitForLoad(aArgs, outerWindow, promise);
 
-  return promise.forget();
+  return promise;
 }
 
 }  // namespace dom

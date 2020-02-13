@@ -455,9 +455,9 @@ void ServiceWorkerRegistration::UpdateStateInternal(
   // given descriptor.  Any that are not restored will need
   // to be moved to the redundant state.
   AutoTArray<RefPtr<ServiceWorker>, 3> oldWorkerList({
-      mInstallingWorker.forget(),
-      mWaitingWorker.forget(),
-      mActiveWorker.forget(),
+      std::move(mInstallingWorker),
+      std::move(mWaitingWorker),
+      std::move(mActiveWorker),
   });
 
   // Its important that all state changes are actually applied before

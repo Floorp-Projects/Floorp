@@ -294,7 +294,7 @@ already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoderWithPDM(
       // or there wasn't enough initialization data to do so (such as what can
       // happen with AVC3). Otherwise, there was some problem, for example WMF
       // DLLs were missing.
-      m = h.forget();
+      m = std::move(h);
     } else if (aParams.mError) {
       *aParams.mError = result;
     }

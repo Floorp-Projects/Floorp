@@ -275,7 +275,8 @@ void HttpBackgroundChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
       "net::HttpBackgroundChannelParent::ActorDestroy", [self]() {
         MOZ_ASSERT(NS_IsMainThread());
 
-        RefPtr<HttpChannelParent> channelParent = self->mChannelParent.forget();
+        RefPtr<HttpChannelParent> channelParent =
+            std::move(self->mChannelParent);
 
         if (channelParent) {
           channelParent->OnBackgroundParentDestroyed();

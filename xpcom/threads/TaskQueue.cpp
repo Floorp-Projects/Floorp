@@ -104,7 +104,7 @@ nsresult TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
   // If the task queue cares about individual flags, retain them in the struct.
   uint32_t retainFlags = mShouldRetainFlags ? aFlags : 0;
 
-  mTasks.push({aRunnable.forget(), retainFlags});
+  mTasks.push({std::move(aRunnable), retainFlags});
 
   if (mIsRunning) {
     return NS_OK;

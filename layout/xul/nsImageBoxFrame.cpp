@@ -193,7 +193,7 @@ void nsImageBoxFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                            nsIFrame* aPrevInFlow) {
   if (!mListener) {
     RefPtr<nsImageBoxListener> listener = new nsImageBoxListener(this);
-    mListener = listener.forget();
+    mListener = std::move(listener);
   }
 
   mSuppressStyleCheck = true;
