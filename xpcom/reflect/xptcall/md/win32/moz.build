@@ -50,6 +50,7 @@ elif CONFIG['CPU_ARCH'] == 'aarch64':
     for src in asm_files:
         obj = src.replace('_asm_aarch64', '')
         GeneratedFile(obj, script='preprocess.py', entry_point='preprocess',
+                      py2=True,
                       inputs=[src])
         SOURCES += ['!%s' % obj]
 

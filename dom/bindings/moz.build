@@ -176,6 +176,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 if CONFIG['COMPILE_ENVIRONMENT']:
     GeneratedFile('CSS2Properties.webidl',
                   script='GenerateCSS2PropertiesWebIDL.py',
+                  py2=True,
                   entry_point='generate',
                   inputs=[
                       '/dom/webidl/CSS2Properties.webidl.in',

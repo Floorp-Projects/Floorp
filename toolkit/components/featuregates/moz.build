@@ -15,4 +15,5 @@ PYTHON_UNITTEST_MANIFESTS += ['test/python/python.ini']
 JAR_MANIFESTS += ['jar.mn']
 
 GeneratedFile('feature_definitions.json', script='gen_feature_definitions.py',
+              py2=True,
               inputs=['Features.toml'])
