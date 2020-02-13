@@ -3,15 +3,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-from firefox_puppeteer import PuppeteerMixin
-from marionette_harness import MarionetteTestCase
+
+from marionette_driver.keys import Keys
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
-class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
+class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self, startup_page=1, include_private=True, no_auto_updates=True,
               win_register_restart=False):
         super(SessionStoreTestCase, self).setUp()
+        self.marionette.set_context('chrome')
+
+        platform = self.marionette.session_capabilities['platformName']
+        self.accelKey = Keys.META if platform == "mac" else Keys.CONTROL
+
         # Each list element represents a window of tabs loaded at
         # some testing URL
         self.test_windows = set([
@@ -61,13 +67,12 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
     def tearDown(self):
         try:
             # Create a fresh profile for subsequent tests.
-            self.restart(clean=True)
+            self.marionette.restart(clean=True)
         finally:
             super(SessionStoreTestCase, self).tearDown()
 
     def open_windows(self, window_sets, is_private=False):
-        """ Opens a set of windows with tabs pointing at some
-        URLs.
+        """Open a set of windows with tabs pointing at some URLs.
 
         @param window_sets (list)
                A set of URL tuples. Each tuple within window_sets
@@ -97,19 +102,19 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
                windows.
         """
         if (is_private):
-            win = self.browser.open_browser(is_private=True)
-            win.switch_to()
+            win = self.open_window(private=True)
+            self.marionette.switch_to_window(win)
         else:
-            win = self.browser
+            win = self.marionette.current_chrome_window_handle
 
         for index, urls in enumerate(window_sets):
             if index > 0:
-                win = self.browser.open_browser(is_private=is_private)
-            win.switch_to()
+                win = self.open_window(private=is_private)
+                self.marionette.switch_to_window(win)
             self.open_tabs(win, urls)
 
     def open_tabs(self, win, urls):
-        """ Opens a set of URLs inside a window in new tabs.
+        """Open a set of URLs inside a window in new tabs.
 
         @param win (browser window)
                The browser window to load the tabs in.
@@ -127,30 +132,40 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
             else:
                 for index, url in enumerate(urls):
                     if index > 0:
-                        with self.marionette.using_context('chrome'):
-                            win.tabbar.open_tab()
+                        tab = self.open_tab()
+                        self.marionette.switch_to_window(tab)
                     self.marionette.navigate(url)
 
-    def convert_open_windows_to_set(self):
-        windows = self.puppeteer.windows.all
+    def get_urls_for_window(self, win):
+        orig_handle = self.marionette.current_chrome_window_handle
 
+        try:
+            with self.marionette.using_context('chrome'):
+                self.marionette.switch_to_window(win)
+                return self.marionette.execute_script("""
+                  return gBrowser.tabs.map(tab => {
+                    return tab.linkedBrowser.currentURI.spec;
+                  });
+                """)
+        finally:
+            self.marionette.switch_to_window(orig_handle)
+
+    def convert_open_windows_to_set(self):
         # There's no guarantee that Marionette will return us an
         # iterator for the opened windows that will match the
         # order within our window list. Instead, we'll convert
         # the list of URLs within each open window to a set of
         # tuples that will allow us to do a direct comparison
         # while allowing the windows to be in any order.
-
         opened_windows = set()
-        for win in windows:
-            urls = tuple()
-            for tab in win.tabbar.tabs:
-                urls = urls + tuple([tab.location])
+        for win in self.marionette.chrome_window_handles:
+            urls = tuple(self.get_urls_for_window(win))
             opened_windows.add(urls)
+
         return opened_windows
 
     def simulate_os_shutdown(self):
-        """ Simulate an OS shutdown.
+        """Simulate an OS shutdown.
 
         :raises: Exception: if not supported on the current platform
         :raises: WindowsError: if a Windows API call failed
@@ -161,7 +176,7 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
         self._shutdown_with_windows_restart_manager(self.marionette.process_id)
 
     def _shutdown_with_windows_restart_manager(self, pid):
-        """ Shut down a process using the Windows Restart Manager.
+        """Shut down a process using the Windows Restart Manager.
 
         When Windows shuts down, it uses a protocol including the
         WM_QUERYENDSESSION and WM_ENDSESSION messages to give
@@ -327,7 +342,7 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
                              been restored. Expected {}, got {}.
                              """.format(self.test_windows, current_windows_set))
         else:
-            self.assertEqual(len(self.puppeteer.windows.all), 1,
+            self.assertEqual(len(self.marionette.chrome_window_handles), 1,
                              msg='Windows from last session shouldn`t have been restored.')
-            self.assertEqual(len(self.puppeteer.windows.current.tabbar.tabs), 1,
+            self.assertEqual(len(self.marionette.window_handles), 1,
                              msg='Tabs from last session shouldn`t have been restored.')
