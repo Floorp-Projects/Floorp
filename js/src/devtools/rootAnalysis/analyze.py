@@ -10,9 +10,10 @@ Runs the static rooting analysis
 """
 
 from subprocess import Popen
-import subprocess
-import os
 import argparse
+import os
+import shlex
+import subprocess
 import sys
 import re
 
@@ -55,7 +56,7 @@ def fill(command, config):
 
 
 def print_command(command, outfile=None, env=None):
-    output = ' '.join(command)
+    output = ' '.join(shlex.quote(s) for s in command)
     if outfile:
         output += ' > ' + outfile
     if env:
