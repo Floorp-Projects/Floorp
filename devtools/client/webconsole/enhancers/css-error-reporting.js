@@ -7,6 +7,7 @@
 const {
   INITIALIZE,
   FILTER_TOGGLE,
+  TARGET_AVAILABLE,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -16,8 +17,8 @@ const {
 function ensureCSSErrorReportingEnabled(webConsoleUI) {
   return next => (reducer, initialState, enhancer) => {
     function ensureErrorReportingEnhancer(state, action) {
-      const proxy = webConsoleUI ? webConsoleUI.proxy : null;
-      if (!proxy) {
+      const proxies = webConsoleUI ? webConsoleUI.getAllProxies() : null;
+      if (!proxies) {
         return reducer(state, action);
       }
 
@@ -28,9 +29,18 @@ function ensureCSSErrorReportingEnabled(webConsoleUI) {
 
       const cssFilterToggled =
         action.type == FILTER_TOGGLE && action.filter == "css";
-      if (cssFilterToggled || action.type == INITIALIZE) {
-        proxy.target.ensureCSSErrorReportingEnabled();
+      if (
+        cssFilterToggled ||
+        action.type == INITIALIZE ||
+        action.type == TARGET_AVAILABLE
+      ) {
+        for (const proxy of proxies) {
+          if (proxy.target && proxy.target.ensureCSSErrorReportingEnabled) {
+            proxy.target.ensureCSSErrorReportingEnabled();
+          }
+        }
       }
+
       return state;
     }
     return next(ensureErrorReportingEnhancer, initialState, enhancer);

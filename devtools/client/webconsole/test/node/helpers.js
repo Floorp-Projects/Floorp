@@ -133,6 +133,7 @@ function getWebConsoleUiMock(hud, proxyOverrides) {
     emit: () => {},
     emitForTests: () => {},
     hud,
+    getAllProxies: () => [proxy],
     proxy,
     clearNetworkRequests: () => {},
     clearMessagesCache: () => {},
