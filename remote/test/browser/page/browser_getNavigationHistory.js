@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { SessionStore } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
+
 add_task(async function singleEntry({ client }) {
   const { Page } = client;
 
@@ -35,7 +39,7 @@ add_task(async function multipleEntriesWithFirstIndex({ client }) {
     await loadURL(entry.userTypedURL);
   }
 
-  gBrowser.gotoIndex(0);
+  await gotoHistoryIndex(0);
 
   const history = await Page.getNavigationHistory();
   assertHistoryEntries(history, data, 0);
