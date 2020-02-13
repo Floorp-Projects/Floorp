@@ -95,6 +95,7 @@ add_task(async function test_dragging_e10s_windows() {
   let remoteWin = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let nonRemoteWin = await BrowserTestUtils.openNewBrowserWindow({
     remote: false,
+    fission: false,
   });
 
   let remoteTab = await BrowserTestUtils.openNewForegroundTab(
