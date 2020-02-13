@@ -2762,11 +2762,8 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
 
   // If we see any inner function, note it on our current context. The bytecode
   // emitter may eliminate the function later, but we use a conservative
-  // definition for consistency between lazy and full parsing. The flag is only
-  // defined on function scripts right now.
-  if (pc_->isFunctionBox()) {
-    pc_->functionBox()->setHasInnerFunctions();
-  }
+  // definition for consistency between lazy and full parsing.
+  pc_->sc()->setHasInnerFunctions();
 
   // When fully parsing a LazyScript, we do not fully reparse its inner
   // functions, which are also lazy. Instead, their free variables and

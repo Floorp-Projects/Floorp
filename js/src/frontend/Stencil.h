@@ -403,6 +403,7 @@ class ScriptStencil {
   bool hasNonSyntacticScope = false;
   bool needsFunctionEnvironmentObjects = false;
   bool hasModuleGoal = false;
+  bool hasInnerFunctions = false;
 
   // FIXME: Create Stencil structs for the following fields, instead of
   //        relying on the data owned by BytecodeEmitter.

@@ -47,6 +47,7 @@ void BCEScriptStencil::init(uint32_t nslots) {
       bce_.outermostScope().hasOnChain(ScopeKind::NonSyntactic);
   needsFunctionEnvironmentObjects = getNeedsFunctionEnvironmentObjects();
   hasModuleGoal = bce_.sc->hasModuleGoal();
+  hasInnerFunctions = bce_.sc->hasInnerFunctions();
 
   code = bce_.bytecodeSection().code();
   notes = bce_.bytecodeSection().notes();
