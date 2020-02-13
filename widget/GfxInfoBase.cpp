@@ -20,6 +20,7 @@
 #include "mozilla/Observer.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsIScreenManager.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include "nsIXULAppInfo.h"
@@ -626,7 +627,7 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-GfxInfoBase::GfxInfoBase() : mMutex("GfxInfoBase") {}
+GfxInfoBase::GfxInfoBase() : mScreenPixels(INT64_MAX), mMutex("GfxInfoBase") {}
 
 GfxInfoBase::~GfxInfoBase() {}
 
@@ -639,6 +640,22 @@ nsresult GfxInfoBase::Init() {
   }
 
   return NS_OK;
+}
+
+void GfxInfoBase::GetData() {
+  if (mScreenPixels != INT64_MAX) {
+    // Already initialized.
+    return;
+  }
+
+  nsCOMPtr<nsIScreenManager> manager =
+      do_GetService("@mozilla.org/gfx/screenmanager;1");
+  if (!manager) {
+    MOZ_ASSERT_UNREACHABLE("failed to get nsIScreenManager");
+    return;
+  }
+
+  manager->GetTotalScreenPixels(&mScreenPixels);
 }
 
 NS_IMETHODIMP
@@ -731,7 +748,8 @@ inline bool MatchingAllowStatus(int32_t aStatus) {
 // However, it is valid for aBlockedOS to be one of those generic values,
 // as we could be blocking all of the versions.
 inline bool MatchingOperatingSystems(OperatingSystem aBlockedOS,
-                                     OperatingSystem aSystemOS) {
+                                     OperatingSystem aSystemOS,
+                                     uint32_t aSystemOSBuild) {
   MOZ_ASSERT(aSystemOS != OperatingSystem::Windows &&
              aSystemOS != OperatingSystem::OSX);
 
@@ -745,6 +763,16 @@ inline bool MatchingOperatingSystems(OperatingSystem aBlockedOS,
     // We do want even "unknown" aSystemOS to fall under "all windows"
     return true;
   }
+
+  constexpr uint32_t kMinWin10BuildNumber = 18362;
+  if (aSystemOSBuild && aBlockedOS == OperatingSystem::RecentWindows10 &&
+      aSystemOS == OperatingSystem::Windows10) {
+    // For allowlist purposes, we sometimes want to restrict to only recent
+    // versions of Windows 10. This is a bit of a kludge but easier than adding
+    // complicated blocklist infrastructure for build ID comparisons like driver
+    // versions.
+    return aSystemOSBuild >= kMinWin10BuildNumber;
+  }
 #endif
 
 #if defined(XP_MACOSX)
@@ -757,13 +785,52 @@ inline bool MatchingOperatingSystems(OperatingSystem aBlockedOS,
   return aSystemOS == aBlockedOS;
 }
 
+inline bool MatchingBattery(BatteryStatus aBatteryStatus, bool aHasBattery) {
+  switch (aBatteryStatus) {
+    case BatteryStatus::All:
+      return true;
+    case BatteryStatus::None:
+      return !aHasBattery;
+    case BatteryStatus::Present:
+      return aHasBattery;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("bad battery status");
+  return false;
+}
+
+inline bool MatchingScreenSize(ScreenSizeStatus aScreenStatus,
+                               int64_t aScreenPixels) {
+  constexpr int64_t kMaxSmallPixels = 2304000;   // 1920x1200
+  constexpr int64_t kMaxMediumPixels = 4953600;  // 3440x1440
+
+  switch (aScreenStatus) {
+    case ScreenSizeStatus::All:
+      return true;
+    case ScreenSizeStatus::Small:
+      return aScreenPixels <= kMaxSmallPixels;
+    case ScreenSizeStatus::SmallAndMedium:
+      return aScreenPixels <= kMaxMediumPixels;
+    case ScreenSizeStatus::Medium:
+      return aScreenPixels > kMaxSmallPixels &&
+             aScreenPixels <= kMaxMediumPixels;
+    case ScreenSizeStatus::MediumAndLarge:
+      return aScreenPixels > kMaxSmallPixels;
+    case ScreenSizeStatus::Large:
+      return aScreenPixels > kMaxMediumPixels;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("bad screen status");
+  return false;
+}
+
 int32_t GfxInfoBase::FindBlocklistedDeviceInList(
     const nsTArray<GfxDriverInfo>& info, nsAString& aSuggestedVersion,
     int32_t aFeature, nsACString& aFailureId, OperatingSystem os,
     bool aForAllowing) {
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 
-  // Desktop environment and window protocol are not available on all platforms.
+  // Some properties are not available on all platforms.
   nsAutoString desktopEnvironment;
   nsresult rv = GetDesktopEnvironment(desktopEnvironment);
   if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
@@ -775,6 +842,15 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
   if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
     return 0;
   }
+
+  bool hasBattery = false;
+  rv = GetHasBattery(&hasBattery);
+  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
+    return 0;
+  }
+
+  // OS build number is only used for the allowlist.
+  uint32_t osBuild = aForAllowing ? OperatingSystemBuild() : 0;
 
   // Get the adapters once then reuse below
   nsAutoString adapterVendorID[2];
@@ -828,12 +904,20 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 
     // Do the operating system check first, no point in getting the driver
     // info if we won't need to use it.
-    if (!MatchingOperatingSystems(info[i].mOperatingSystem, os)) {
+    if (!MatchingOperatingSystems(info[i].mOperatingSystem, os, osBuild)) {
       continue;
     }
 
     if (info[i].mOperatingSystemVersion &&
         info[i].mOperatingSystemVersion != OperatingSystemVersion()) {
+      continue;
+    }
+
+    if (!MatchingBattery(info[i].mBattery, hasBattery)) {
+      continue;
+    }
+
+    if (!MatchingScreenSize(info[i].mScreen, mScreenPixels)) {
       continue;
     }
 
@@ -1061,6 +1145,9 @@ nsresult GfxInfoBase::GetFeatureStatusImpl(
     // but for now, just don't even go there.
     return NS_OK;
   }
+
+  // Ensure any additional initialization required is complete.
+  GetData();
 
   // If an operating system was provided by the derived GetFeatureStatusImpl,
   // grab it here. Otherwise, the OS is unknown.
