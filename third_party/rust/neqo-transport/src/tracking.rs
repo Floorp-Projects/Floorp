@@ -13,21 +13,19 @@ use std::ops::{Index, IndexMut};
 use std::time::{Duration, Instant};
 
 use neqo_common::{qdebug, qinfo, qtrace, qwarn};
-use neqo_crypto::{Epoch, TLS_EPOCH_APPLICATION_DATA, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL};
+use neqo_crypto::constants::Epoch;
 
 use crate::frame::{AckRange, Frame};
-use crate::packet::{PacketNumber, PacketType};
 use crate::recovery::RecoveryToken;
 
 // TODO(mt) look at enabling EnumMap for this: https://stackoverflow.com/a/44905797/1375574
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Ord, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PNSpace {
-    Initial,
-    Handshake,
-    ApplicationData,
+    Initial = 0,
+    Handshake = 1,
+    ApplicationData = 2,
 }
 
-#[allow(clippy::use_self)] // https://github.com/rust-lang/rust-clippy/issues/3410
 impl PNSpace {
     pub fn iter() -> impl Iterator<Item = &'static PNSpace> {
         const SPACES: &[PNSpace] = &[
@@ -42,80 +40,17 @@ impl PNSpace {
 impl From<Epoch> for PNSpace {
     fn from(epoch: Epoch) -> Self {
         match epoch {
-            TLS_EPOCH_INITIAL => Self::Initial,
-            TLS_EPOCH_HANDSHAKE => Self::Handshake,
-            _ => Self::ApplicationData,
+            0 => PNSpace::Initial,
+            2 => PNSpace::Handshake,
+            _ => PNSpace::ApplicationData,
         }
-    }
-}
-
-impl From<PacketType> for PNSpace {
-    fn from(pt: PacketType) -> Self {
-        match pt {
-            PacketType::Initial => Self::Initial,
-            PacketType::Handshake => Self::Handshake,
-            PacketType::ZeroRtt | PacketType::Short => Self::ApplicationData,
-            _ => panic!("Attempted to get space from wrong packet type"),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct SentPacket {
-    pub ack_eliciting: bool,
-    pub time_sent: Instant,
-    pub tokens: Vec<RecoveryToken>,
-
-    pub time_declared_lost: Option<Instant>,
-
-    pub in_flight: bool,
-    pub size: usize,
-}
-
-impl SentPacket {
-    pub fn new(
-        time_sent: Instant,
-        ack_eliciting: bool,
-        tokens: Vec<RecoveryToken>,
-        size: usize,
-        in_flight: bool,
-    ) -> Self {
-        Self {
-            time_sent,
-            ack_eliciting,
-            tokens,
-            time_declared_lost: None,
-            size,
-            in_flight,
-        }
-    }
-}
-
-impl Into<Epoch> for PNSpace {
-    fn into(self) -> Epoch {
-        match self {
-            Self::Initial => TLS_EPOCH_INITIAL,
-            Self::Handshake => TLS_EPOCH_HANDSHAKE,
-            // Our epoch progresses forward, but the TLS epoch is fixed to 3.
-            Self::ApplicationData => TLS_EPOCH_APPLICATION_DATA,
-        }
-    }
-}
-
-impl std::fmt::Display for PNSpace {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::Initial => "in",
-            Self::Handshake => "hs",
-            Self::ApplicationData => "ap",
-        })
     }
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct PacketRange {
-    largest: PacketNumber,
-    smallest: PacketNumber,
+    largest: u64,
+    smallest: u64,
     ack_needed: bool,
 }
 
@@ -209,7 +144,7 @@ pub struct RecvdPackets {
     space: PNSpace,
     ranges: VecDeque<PacketRange>,
     /// The packet number of the lowest number packet that we are tracking.
-    min_tracked: PacketNumber,
+    min_tracked: u64,
     /// The time we got the largest acknowledged.
     largest_pn_time: Option<Instant>,
     // The time that we should be sending an ACK.
@@ -267,7 +202,7 @@ impl RecvdPackets {
     /// Add the packet to the tracked set.
     pub fn set_received(&mut self, now: Instant, pn: u64, ack_eliciting: bool) {
         let next_in_order_pn = self.ranges.front().map_or(0, |pr| pr.largest + 1);
-        qdebug!([self], "next in order pn: {}", next_in_order_pn);
+        qdebug!("next in order pn: {}", next_in_order_pn);
         let i = self.add(pn);
 
         // The new addition was the largest, so update the time we use for calculating ACK delay.
@@ -302,7 +237,7 @@ impl RecvdPackets {
     }
 
     /// Check if the packet is a duplicate.
-    pub fn is_duplicate(&self, pn: PacketNumber) -> bool {
+    pub fn is_duplicate(&self, pn: u64) -> bool {
         if pn < self.min_tracked {
             return true;
         }
@@ -333,7 +268,7 @@ impl RecvdPackets {
 
 impl ::std::fmt::Display for RecvdPackets {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "Recvd-{}", self.space)
+        write!(f, "Recvd{:?}", self.space)
     }
 }
 
@@ -368,9 +303,9 @@ impl AckTracker {
     pub(crate) fn get_frame(
         &mut self,
         now: Instant,
-        pn_space: PNSpace,
+        epoch: Epoch,
     ) -> Option<(Frame, Option<RecoveryToken>)> {
-        let space = &mut self[pn_space];
+        let space = &mut self[PNSpace::from(epoch)];
 
         // Check that we aren't delaying ACKs.
         if !space.ack_now(now) {
@@ -421,7 +356,7 @@ impl AckTracker {
             Some((
                 ack,
                 Some(RecoveryToken::Ack(AckToken {
-                    space: pn_space,
+                    space: PNSpace::from(epoch),
                     ranges,
                 })),
             ))

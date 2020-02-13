@@ -5,13 +5,10 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::use_self)]
 
 use neqo_common::qinfo;
 use neqo_crypto;
 
-mod cc;
-mod cid;
 mod connection;
 mod crypto;
 mod dump;
@@ -28,18 +25,16 @@ mod stream_id;
 mod tparams;
 mod tracking;
 
-pub use self::cid::ConnectionIdManager;
-pub use self::connection::{Connection, FixedConnectionIdManager, Output, Role, State};
+pub use self::connection::{
+    Connection, ConnectionIdManager, FixedConnectionIdManager, Output, Role, State,
+};
 pub use self::events::{ConnectionEvent, ConnectionEvents};
 pub use self::frame::CloseError;
 pub use self::frame::StreamType;
 pub use self::tparams::{tp_constants, TransportParameter};
 
 /// The supported version of the QUIC protocol.
-pub type Version = u32;
-pub const QUIC_VERSION: Version = 0xff00_0000 + 25;
-
-const LOCAL_IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60); // 1 minute
+pub const QUIC_VERSION: u32 = 0xff00_0018;
 
 type TransportError = u64;
 
@@ -73,38 +68,31 @@ pub enum Error {
     InvalidResumptionToken,
     InvalidRetry,
     InvalidStreamId,
-    // Packet protection keys aren't available yet, or they have been discarded.
     KeysNotFound,
-    // An attempt to update keys can be blocked if
-    // a packet sent with the current keys hasn't been acknowledged.
-    KeyUpdateBlocked,
     NoMoreData,
-    NotConnected,
-    PacketNumberOverlap,
     PeerError(TransportError),
     TooMuchData,
     UnexpectedMessage,
     UnknownFrameType,
     VersionNegotiation,
     WrongRole,
-    KeysDiscarded,
 }
 
 impl Error {
     pub fn code(&self) -> TransportError {
         match self {
-            Self::NoError => 0,
-            Self::ServerBusy => 2,
-            Self::FlowControlError => 3,
-            Self::StreamLimitError => 4,
-            Self::StreamStateError => 5,
-            Self::FinalSizeError => 6,
-            Self::FrameEncodingError => 7,
-            Self::TransportParameterError => 8,
-            Self::ProtocolViolation => 10,
-            Self::InvalidMigration => 12,
-            Self::CryptoAlert(a) => 0x100 + u64::from(*a),
-            Self::PeerError(a) => *a,
+            Error::NoError => 0,
+            Error::ServerBusy => 2,
+            Error::FlowControlError => 3,
+            Error::StreamLimitError => 4,
+            Error::StreamStateError => 5,
+            Error::FinalSizeError => 6,
+            Error::FrameEncodingError => 7,
+            Error::TransportParameterError => 8,
+            Error::ProtocolViolation => 10,
+            Error::InvalidMigration => 12,
+            Error::CryptoAlert(a) => 0x100 + u64::from(*a),
+            Error::PeerError(a) => *a,
             // All the rest are internal errors.
             _ => 1,
         }
@@ -114,20 +102,20 @@ impl Error {
 impl From<neqo_crypto::Error> for Error {
     fn from(err: neqo_crypto::Error) -> Self {
         qinfo!("Crypto operation failed {:?}", err);
-        Self::CryptoError(err)
+        Error::CryptoError(err)
     }
 }
 
 impl From<std::num::TryFromIntError> for Error {
     fn from(_: std::num::TryFromIntError) -> Self {
-        Self::IntegerOverflow
+        Error::IntegerOverflow
     }
 }
 
 impl ::std::error::Error for Error {
     fn source(&self) -> Option<&(dyn ::std::error::Error + 'static)> {
         match self {
-            Self::CryptoError(e) => Some(e),
+            Error::CryptoError(e) => Some(e),
             _ => None,
         }
     }
@@ -150,7 +138,7 @@ pub enum ConnectionError {
 impl ConnectionError {
     pub fn app_code(&self) -> Option<AppError> {
         match self {
-            Self::Application(e) => Some(*e),
+            ConnectionError::Application(e) => Some(*e),
             _ => None,
         }
     }
@@ -159,8 +147,8 @@ impl ConnectionError {
 impl From<CloseError> for ConnectionError {
     fn from(err: CloseError) -> Self {
         match err {
-            CloseError::Transport(c) => Self::Transport(Error::PeerError(c)),
-            CloseError::Application(c) => Self::Application(c),
+            CloseError::Transport(c) => ConnectionError::Transport(Error::PeerError(c)),
+            CloseError::Application(c) => ConnectionError::Application(c),
         }
     }
 }

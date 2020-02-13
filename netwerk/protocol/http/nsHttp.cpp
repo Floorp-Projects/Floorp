@@ -27,7 +27,7 @@
 namespace mozilla {
 namespace net {
 
-const nsCString kHttp3Version = NS_LITERAL_CSTRING("h3-25");
+const nsCString kHttp3Version = NS_LITERAL_CSTRING("h3-24");
 
 // define storage for all atoms
 namespace nsHttp {

@@ -42,9 +42,9 @@ pub struct TransactionServer {
 }
 
 impl TransactionServer {
-    pub fn new(stream_id: u64, conn_events: Http3ServerConnEvents) -> Self {
+    pub fn new(stream_id: u64, conn_events: Http3ServerConnEvents) -> TransactionServer {
         qinfo!("Create a request stream_id={}", stream_id);
-        Self {
+        TransactionServer {
             recv_state: TransactionRecvState::WaitingForHeaders,
             send_state: TransactionSendState::Initial,
             stream_id,
