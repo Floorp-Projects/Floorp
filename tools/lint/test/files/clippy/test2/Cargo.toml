@@ -1,8 +1,0 @@
-[package]
-name = "hello_world_2" # the name of the package
-version = "0.2.0"    # the current version, obeying semver
-authors = ["Alice <a@example.com>", "Bob <b@example.com>"]
-
-[[bin]]
-name = "fake_lib1"
-path = "src/bad_1.rs"
