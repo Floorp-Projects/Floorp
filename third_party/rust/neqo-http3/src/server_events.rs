@@ -39,7 +39,7 @@ impl ClientRequestStream {
         handler: Rc<RefCell<Http3ServerHandler>>,
         stream_id: u64,
     ) -> Self {
-        ClientRequestStream {
+        Self {
             conn,
             handler,
             stream_id,

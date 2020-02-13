@@ -5,9 +5,9 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
+#![warn(clippy::use_self)]
 
 use neqo_common::Datagram;
-use neqo_transport::State;
 use test_fixture::{self, default_client, default_server, now};
 
 #[test]
@@ -38,8 +38,8 @@ fn truncate_long_packet() {
     let dgram = client.process(None, now()).dgram();
     assert!(dgram.is_some());
 
-    assert_eq!(*client.state(), State::Connected);
+    assert!(client.state().connected());
     let dgram = server.process(dgram, now()).dgram();
     assert!(dgram.is_some());
-    assert_eq!(*server.state(), State::Connected);
+    assert!(server.state().connected());
 }

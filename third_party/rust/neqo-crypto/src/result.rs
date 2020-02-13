@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn is_err_zero_code() {
-        // This code doesn't work without initializing NSS first.
+    // This code doesn't work without initializing NSS first.
         fixture_init();
 
         set_error_code(0);

@@ -49,6 +49,10 @@ pub struct AntiReplay {
 impl AntiReplay {
     /// Make a new anti-replay context.
     /// See the documentation in NSS for advice on how to set these values.
+    ///
+    /// # Errors
+    /// Returns an error if `now` is in the past relative to our baseline or
+    /// NSS is unable to generate an anti-replay context.
     pub fn new(now: Instant, window: Duration, k: usize, bits: usize) -> Res<Self> {
         let mut ctx: *mut SSLAntiReplayContext = null_mut();
         unsafe {
