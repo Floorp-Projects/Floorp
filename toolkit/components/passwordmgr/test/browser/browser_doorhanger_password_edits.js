@@ -103,19 +103,20 @@ add_task(async function test_edit_password() {
           "popupshown",
           event => event.target == PopupNotifications.panel
         );
-        let formSubmittedPromise = listenForTestNotification("FormSubmit");
-        await changeContentFormValues(browser, {
-          "#form-basic-username": testCase.usernameInPage,
-          "#form-basic-password": testCase.passwordInPage,
+        await SpecialPowers.spawn(browser, [testCase], async function(
+          contentTestCase
+        ) {
+          let doc = content.document;
+          doc
+            .getElementById("form-basic-username")
+            .setUserInput(contentTestCase.usernameInPage);
+          doc
+            .getElementById("form-basic-password")
+            .setUserInput(contentTestCase.passwordInPage);
+          doc.getElementById("form-basic").submit();
         });
-        await TestUtils.waitForTick();
-        await SpecialPowers.spawn(browser, [], async function() {
-          content.document.getElementById("form-basic").submit();
-        });
-        await formSubmittedPromise;
-
-        let notif = await waitForDoorhanger(browser, "any");
         await promiseShown;
+        let notificationElement = PopupNotifications.panel.childNodes[0];
 
         // Modify the username & password in the dialog if requested.
         await updateDoorhangerInputValues({
@@ -145,7 +146,8 @@ add_task(async function test_edit_password() {
           PopupNotifications.panel,
           "popuphidden"
         );
-        clickDoorhangerButton(notif, CHANGE_BUTTON);
+        notificationElement.button.doCommand();
+
         let [result] = await promiseLogin;
         await promiseHidden;
 

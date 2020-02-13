@@ -314,7 +314,11 @@ add_task(async function test_normal_popup_notification_3() {
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
 
-      let notif = getCaptureDoorhanger("any", PopupNotifications, browser);
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
       ok(!notif, "got no notification popup");
       if (notif) {
         await cleanupDoorhanger(notif);
@@ -365,8 +369,11 @@ add_task(async function test_private_popup_notification_3b() {
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
 
-      let notif = getCaptureDoorhanger("any", PopupNotifications, browser);
-
+      let notif = getCaptureDoorhanger(
+        "password-save",
+        PopupNotifications,
+        browser
+      );
       ok(!notif, "got no notification popup");
       if (notif) {
         await cleanupDoorhanger(notif);

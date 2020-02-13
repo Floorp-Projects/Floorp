@@ -89,19 +89,23 @@ add_task(async function test_edit_username() {
           "popupshown",
           event => event.target == PopupNotifications.panel
         );
-        let formSubmittedPromise = listenForTestNotification("FormSubmit");
-        await changeContentFormValues(browser, {
-          "#form-basic-username": testCase.usernameInPage,
-          "#form-basic-password": "password",
-        });
-        await TestUtils.waitForTick();
-        await SpecialPowers.spawn(browser, [], async function() {
-          content.document.getElementById("form-basic").submit();
-        });
-        await formSubmittedPromise;
-
-        let notif = await waitForDoorhanger(browser, "any");
+        await SpecialPowers.spawn(
+          browser,
+          [testCase.usernameInPage],
+          async function(usernameInPage) {
+            let doc = content.document;
+            doc
+              .getElementById("form-basic-username")
+              .setUserInput(usernameInPage);
+            doc.getElementById("form-basic-password").setUserInput("password");
+            doc.getElementById("form-basic").submit();
+          }
+        );
         await promiseShown;
+        let notificationElement = PopupNotifications.panel.childNodes[0];
+        // Style flush to make sure binding is attached
+        notificationElement.querySelector("#password-notification-password")
+          .clientTop;
 
         // Modify the username in the dialog if requested.
         if (testCase.usernameChangedTo) {
@@ -130,7 +134,7 @@ add_task(async function test_edit_username() {
           PopupNotifications.panel,
           "popuphidden"
         );
-        clickDoorhangerButton(notif, CHANGE_BUTTON);
+        notificationElement.button.doCommand();
         let [result] = await promiseLogin;
         await promiseHidden;
 
@@ -145,8 +149,6 @@ add_task(async function test_edit_username() {
           testCase.usernameChangedTo || testCase.usernameInPage
         );
         Assert.equal(login.password, "password");
-
-        await cleanupDoorhanger();
       }
     );
 
