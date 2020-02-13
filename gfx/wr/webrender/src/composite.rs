@@ -304,8 +304,7 @@ impl CompositeState {
     ) {
         let mut visible_tile_count = 0;
 
-        for key in &tile_cache.tiles_to_draw {
-            let tile = &tile_cache.tiles[key];
+        for tile in tile_cache.tiles.values() {
             if !tile.is_visible {
                 // This can occur when a tile is found to be occluded during frame building.
                 continue;
@@ -335,8 +334,8 @@ impl CompositeState {
             let tile_id = tile_cache.native_surface_id.map(|surface_id| {
                 NativeTileId {
                     surface_id,
-                    x: key.x,
-                    y: key.y,
+                    x: tile.tile_offset.x,
+                    y: tile.tile_offset.y,
                 }
             });
 

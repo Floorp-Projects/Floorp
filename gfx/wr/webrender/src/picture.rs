@@ -227,7 +227,7 @@ struct PictureInfo {
 /// Picture-caching state to keep between scenes.
 pub struct PictureCacheState {
     /// The tiles retained by this picture cache.
-    pub tiles: FastHashMap<TileOffset, Tile>,
+    pub tiles: FastHashMap<TileOffset, Box<Tile>>,
     /// State of the spatial nodes from previous frame
     spatial_nodes: FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
     /// State of opacity bindings from previous frame
@@ -245,7 +245,6 @@ pub struct PictureCacheState {
 }
 
 pub struct PictureCacheRecycledAllocations {
-    old_tiles: FastHashMap<TileOffset, Tile>,
     old_opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
     compare_cache: FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
 }
@@ -415,6 +414,9 @@ struct TilePreUpdateContext {
 
     /// The visible part of the screen in world coords.
     global_screen_world_rect: WorldRect,
+
+    /// Current size of tiles in picture units.
+    tile_size: PictureSize,
 }
 
 // Immutable context passed to picture cache tiles during post_update
@@ -743,6 +745,8 @@ pub struct TileCacheInstanceSerializer {
 
 /// Information about a cached tile.
 pub struct Tile {
+    /// The grid position of this tile within the picture cache
+    pub tile_offset: TileOffset,
     /// The current world rect of this tile.
     pub world_tile_rect: WorldRect,
     /// The current local rect of this tile.
@@ -789,10 +793,11 @@ pub struct Tile {
 
 impl Tile {
     /// Construct a new, invalid tile.
-    fn new(
-        id: TileId,
-    ) -> Self {
+    fn new(tile_offset: TileOffset) -> Self {
+        let id = TileId(NEXT_TILE_ID.fetch_add(1, Ordering::Relaxed));
+
         Tile {
+            tile_offset,
             local_tile_rect: PictureRect::zero(),
             world_tile_rect: WorldRect::zero(),
             device_valid_rect: DeviceRect::zero(),
@@ -913,10 +918,18 @@ impl Tile {
     /// tile to setup state before primitive dependency calculations.
     fn pre_update(
         &mut self,
-        local_tile_rect: PictureRect,
         ctx: &TilePreUpdateContext,
     ) {
-        self.local_tile_rect = local_tile_rect;
+        // Ensure each tile is offset by the appropriate amount from the
+        // origin, such that the content origin will be a whole number and
+        // the snapping will be consistent.
+        self.local_tile_rect = PictureRect::new(
+            PicturePoint::new(
+                self.tile_offset.x as f32 * ctx.tile_size.width + ctx.fract_offset.x,
+                self.tile_offset.y as f32 * ctx.tile_size.height + ctx.fract_offset.y,
+            ),
+            ctx.tile_size,
+        );
         self.invalidation_reason  = None;
 
         self.world_tile_rect = ctx.pic_to_world_mapper
@@ -958,7 +971,7 @@ impl Tile {
             &mut self.prev_descriptor,
         );
         self.current_descriptor.clear();
-        self.root.clear(local_tile_rect);
+        self.root.clear(self.local_tile_rect);
     }
 
     /// Add dependencies for a given primitive to this tile.
@@ -1093,6 +1106,7 @@ impl Tile {
                 }
             }
 
+            self.is_visible = false;
             return false;
         }
 
@@ -1941,9 +1955,7 @@ pub struct TileCacheInstance {
     /// The positioning node for this tile cache.
     pub spatial_node_index: SpatialNodeIndex,
     /// Hash of tiles present in this picture.
-    pub tiles: FastHashMap<TileOffset, Tile>,
-    /// Switch back and forth between old and new tiles hashmaps to avoid re-allocating.
-    old_tiles: FastHashMap<TileOffset, Tile>,
+    pub tiles: FastHashMap<TileOffset, Box<Tile>>,
     /// A helper struct to map local rects into surface coords.
     map_local_to_surface: SpaceMapper<LayoutPixel, PicturePixel>,
     /// A helper struct to map child picture rects into picture cache surface coords.
@@ -1977,8 +1989,6 @@ pub struct TileCacheInstance {
     pub local_rect: PictureRect,
     /// The local clip rect, from the shared clips of this picture.
     local_clip_rect: PictureRect,
-    /// A list of tiles that are valid and visible, which should be drawn to the main scene.
-    pub tiles_to_draw: Vec<TileOffset>,
     /// The surface index that this tile cache will be drawn into.
     surface_index: SurfaceIndex,
     /// The background color from the renderer. If this is set opaque, we know it's
@@ -2037,7 +2047,6 @@ impl TileCacheInstance {
             slice_flags,
             spatial_node_index,
             tiles: FastHashMap::default(),
-            old_tiles: FastHashMap::default(),
             map_local_to_surface: SpaceMapper::new(
                 ROOT_SPATIAL_NODE_INDEX,
                 PictureRect::zero(),
@@ -2058,7 +2067,6 @@ impl TileCacheInstance {
             tile_bounds_p1: TileOffset::zero(),
             local_rect: PictureRect::zero(),
             local_clip_rect: PictureRect::zero(),
-            tiles_to_draw: Vec::new(),
             surface_index: SurfaceIndex(0),
             background_color,
             backdrop: BackdropInfo::empty(),
@@ -2212,11 +2220,6 @@ impl TileCacheInstance {
                 }
             }
             recycle_map(
-                self.tiles.len(),
-                &mut self.old_tiles,
-                prev_state.allocations.old_tiles,
-            );
-            recycle_map(
                 self.opacity_bindings.len(),
                 &mut self.old_opacity_bindings,
                 prev_state.allocations.old_opacity_bindings,
@@ -2360,87 +2363,79 @@ impl TileCacheInstance {
 
         let x_tiles = x1 - x0;
         let y_tiles = y1 - y0;
-        self.tile_rect = TileRect::new(
+        let new_tile_rect = TileRect::new(
             TileOffset::new(x0, y0),
             TileSize::new(x_tiles, y_tiles),
         );
+
+        // Rebuild the tile grid if the picture cache rect has changed.
+        if new_tile_rect != self.tile_rect {
+            let mut old_tiles = mem::replace(&mut self.tiles, FastHashMap::default());
+            self.tiles.reserve(new_tile_rect.size.area() as usize);
+
+            for y in y0 .. y1 {
+                for x in x0 .. x1 {
+                    let key = TileOffset::new(x, y);
+                    let tile = old_tiles
+                        .remove(&key)
+                        .unwrap_or_else(|| {
+                            Box::new(Tile::new(key))
+                        });
+                    self.tiles.insert(key, tile);
+                }
+            }
+
+            // When old tiles that remain after the loop, dirty rects are not valid.
+            if !old_tiles.is_empty() {
+                frame_state.composite_state.dirty_rects_are_valid = false;
+            }
+
+            // Any old tiles that remain after the loop above are going to be dropped. For
+            // simple composite mode, the texture cache handle will expire and be collected
+            // by the texture cache. For native compositor mode, we need to explicitly
+            // invoke a callback to the client to destroy that surface.
+            frame_state.composite_state.destroy_native_tiles(
+                old_tiles.values_mut(),
+                frame_state.resource_cache,
+            );
+        }
+
         // This is duplicated information from tile_rect, but cached here to avoid
         // redundant calculations during get_tile_coords_for_rect
         self.tile_bounds_p0 = TileOffset::new(x0, y0);
         self.tile_bounds_p1 = TileOffset::new(x1, y1);
+        self.tile_rect = new_tile_rect;
 
         let mut world_culling_rect = WorldRect::zero();
-
-        mem::swap(&mut self.tiles, &mut self.old_tiles);
 
         let ctx = TilePreUpdateContext {
             pic_to_world_mapper,
             fract_offset: self.fract_offset,
             background_color: self.background_color,
             global_screen_world_rect: frame_context.global_screen_world_rect,
+            tile_size: self.tile_size,
         };
 
-        self.tiles.clear();
-        for y in y0 .. y1 {
-            for x in x0 .. x1 {
-                let key = TileOffset::new(x, y);
+        // Pre-update each tile
+        for tile in self.tiles.values_mut() {
+            tile.pre_update(&ctx);
 
-                let mut tile = self.old_tiles
-                    .remove(&key)
-                    .unwrap_or_else(|| {
-                        let next_id = TileId(NEXT_TILE_ID.fetch_add(1, Ordering::Relaxed));
-                        Tile::new(next_id)
-                    });
-
-                // Ensure each tile is offset by the appropriate amount from the
-                // origin, such that the content origin will be a whole number and
-                // the snapping will be consistent.
-                let rect = PictureRect::new(
-                    PicturePoint::new(
-                        x as f32 * self.tile_size.width + self.fract_offset.x,
-                        y as f32 * self.tile_size.height + self.fract_offset.y,
-                    ),
-                    self.tile_size,
-                );
-
-                tile.pre_update(
-                    rect,
-                    &ctx,
-                );
-
-                // Only include the tiles that are currently in view into the world culling
-                // rect. This is a very important optimization for a couple of reasons:
-                // (1) Primitives that intersect with tiles in the grid that are not currently
-                //     visible can be skipped from primitive preparation, clip chain building
-                //     and tile dependency updates.
-                // (2) When we need to allocate an off-screen surface for a child picture (for
-                //     example a CSS filter) we clip the size of the GPU surface to the world
-                //     culling rect below (to ensure we draw enough of it to be sampled by any
-                //     tiles that reference it). Making the world culling rect only affected
-                //     by visible tiles (rather than the entire virtual tile display port) can
-                //     result in allocating _much_ smaller GPU surfaces for cases where the
-                //     true off-screen surface size is very large.
-                if tile.is_visible {
-                    world_culling_rect = world_culling_rect.union(&tile.world_tile_rect);
-                }
-
-                self.tiles.insert(key, tile);
+            // Only include the tiles that are currently in view into the world culling
+            // rect. This is a very important optimization for a couple of reasons:
+            // (1) Primitives that intersect with tiles in the grid that are not currently
+            //     visible can be skipped from primitive preparation, clip chain building
+            //     and tile dependency updates.
+            // (2) When we need to allocate an off-screen surface for a child picture (for
+            //     example a CSS filter) we clip the size of the GPU surface to the world
+            //     culling rect below (to ensure we draw enough of it to be sampled by any
+            //     tiles that reference it). Making the world culling rect only affected
+            //     by visible tiles (rather than the entire virtual tile display port) can
+            //     result in allocating _much_ smaller GPU surfaces for cases where the
+            //     true off-screen surface size is very large.
+            if tile.is_visible {
+                world_culling_rect = world_culling_rect.union(&tile.world_tile_rect);
             }
         }
-
-        // When old tiles that remain after the loop, dirty rects are not valid.
-        if !self.old_tiles.is_empty() {
-            frame_state.composite_state.dirty_rects_are_valid = false;
-        }
-
-        // Any old tiles that remain after the loop above are going to be dropped. For
-        // simple composite mode, the texture cache handle will expire and be collected
-        // by the texture cache. For native compositor mode, we need to explicitly
-        // invoke a callback to the client to destroy that surface.
-        frame_state.composite_state.destroy_native_tiles(
-            self.old_tiles.values_mut(),
-            frame_state.resource_cache,
-        );
 
         // If compositor mode is changed, need to drop all incompatible tiles.
         match (frame_context.config.compositor_kind, self.native_surface_id) {
@@ -2821,7 +2816,6 @@ impl TileCacheInstance {
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) {
-        self.tiles_to_draw.clear();
         self.dirty_region.clear();
 
         // Register the opaque region of this tile cache as an occluder, which
@@ -2929,9 +2923,8 @@ impl TileCacheInstance {
         // Step through each tile and invalidate if the dependencies have changed. Determine
         // the current opacity setting and whether it's changed.
         let mut tile_cache_is_opaque = true;
-        for (key, tile) in self.tiles.iter_mut() {
+        for tile in self.tiles.values_mut() {
             if tile.post_update(&ctx, &mut state, frame_context) {
-                self.tiles_to_draw.push(*key);
                 tile_cache_is_opaque &= tile.is_opaque;
             }
         }
@@ -3805,7 +3798,6 @@ impl PicturePrimitive {
                         native_surface_id: tile_cache.native_surface_id.take(),
                         is_opaque: tile_cache.is_opaque,
                         allocations: PictureCacheRecycledAllocations {
-                            old_tiles: tile_cache.old_tiles,
                             old_opacity_bindings: tile_cache.old_opacity_bindings,
                             compare_cache: tile_cache.compare_cache,
                         },
@@ -4230,8 +4222,10 @@ impl PicturePrimitive {
                             .expect("bug: unable to map clip rect");
                         let device_clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
-                        for key in &tile_cache.tiles_to_draw {
-                            let tile = tile_cache.tiles.get_mut(key).expect("bug: no tile found!");
+                        for tile in tile_cache.tiles.values_mut() {
+                            if !tile.is_visible {
+                                continue;
+                            }
 
                             // Get the world space rect that this tile will actually occupy on screem
                             let device_draw_rect = match device_clip_rect.intersection(&tile.device_valid_rect) {
@@ -4367,8 +4361,8 @@ impl PicturePrimitive {
                                             // Create the tile identifier and allocate it.
                                             let tile_id = NativeTileId {
                                                 surface_id: tile_cache.native_surface_id.unwrap(),
-                                                x: key.x,
-                                                y: key.y,
+                                                x: tile.tile_offset.x,
+                                                y: tile.tile_offset.y,
                                             };
 
                                             frame_state.resource_cache.create_compositor_tile(tile_id);
@@ -5955,7 +5949,7 @@ impl TileNode {
 
 impl CompositeState {
     // A helper function to destroy all native surfaces for a given list of tiles
-    pub fn destroy_native_tiles<'a, I: Iterator<Item = &'a mut Tile>>(
+    pub fn destroy_native_tiles<'a, I: Iterator<Item = &'a mut Box<Tile>>>(
         &mut self,
         tiles_iter: I,
         resource_cache: &mut ResourceCache,
