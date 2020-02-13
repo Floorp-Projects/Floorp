@@ -186,9 +186,11 @@ void main(void) {
 #else
     float raster_scale = float(ph.user_data.z) / 65535.0;
 
+    // Scale in which the glyph is snapped when rasterized.
+    float glyph_raster_scale = raster_scale * task.device_pixel_scale;
+
     // Scale from glyph space to local space.
-    float glyph_scale_inv = res.scale / (raster_scale * task.device_pixel_scale);
-    float glyph_scale = 1.0 / glyph_scale_inv;
+    float glyph_scale_inv = res.scale / glyph_raster_scale;
 
     // Glyph raster pixels do not include the impact of the transform. Instead it was
     // replaced with an identity transform during glyph rasterization. As such only the
@@ -204,7 +206,7 @@ void main(void) {
     // - The transform has perspective or does not have a 2d inverse (Screen or local space).
     // - The transform's scale will result in result in very large rasterized glyphs and
     //   we clamped the size. This will imply local raster space.
-    vec2 raster_glyph_offset = floor(glyph.offset * glyph_scale + snap_bias);
+    vec2 raster_glyph_offset = floor(glyph.offset * glyph_raster_scale + snap_bias) / res.scale;
 
     // Compute the glyph rect in local space.
     //
