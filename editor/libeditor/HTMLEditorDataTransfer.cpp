@@ -409,8 +409,8 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     // paste to deal with table elements right away, so that it doesn't orphan
     // some table or list contents outside the table or list.
     if (listOrTableElement) {
-      ReplaceOrphanedStructure(StartOrEnd::start, nodeList,
-                               *listOrTableElement);
+      HTMLEditor::ReplaceOrphanedStructure(StartOrEnd::start, nodeList,
+                                           *listOrTableElement);
     }
   }
 
@@ -423,7 +423,8 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
         nodeList, arrayOfListAndTableRelatedElementsAtEnd);
     // don't orphan partial list or table structure
     if (listOrTableElement) {
-      ReplaceOrphanedStructure(StartOrEnd::end, nodeList, *listOrTableElement);
+      HTMLEditor::ReplaceOrphanedStructure(StartOrEnd::end, nodeList,
+                                           *listOrTableElement);
     }
   }
 
@@ -2912,51 +2913,64 @@ bool HTMLEditor::IsReplaceableListElement(Element& aListElement,
   return false;
 }
 
+// static
 void HTMLEditor::ReplaceOrphanedStructure(
-    StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+    StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
     Element& aListOrTableElement) {
-  MOZ_ASSERT(!aNodeArray.IsEmpty());
+  MOZ_ASSERT(!aArrayOfNodes.IsEmpty());
 
-  OwningNonNull<nsINode>& edgeNode =
-      aStartOrEnd == StartOrEnd::end ? aNodeArray.LastElement() : aNodeArray[0];
+  OwningNonNull<nsINode>& firstOrLastChildNode =
+      aStartOrEnd == StartOrEnd::end ? aArrayOfNodes.LastElement()
+                                     : aArrayOfNodes[0];
 
   // Find substructure of list or table that must be included in paste.
   Element* replaceElement;
   if (HTMLEditUtils::IsList(&aListOrTableElement)) {
-    if (!HTMLEditor::IsReplaceableListElement(aListOrTableElement, edgeNode)) {
+    if (!HTMLEditor::IsReplaceableListElement(aListOrTableElement,
+                                              firstOrLastChildNode)) {
       return;
     }
     replaceElement = &aListOrTableElement;
   } else {
     MOZ_ASSERT(aListOrTableElement.IsHTMLElement(nsGkAtoms::table));
-    replaceElement =
-        HTMLEditor::FindReplaceableTableElement(aListOrTableElement, edgeNode);
+    replaceElement = HTMLEditor::FindReplaceableTableElement(
+        aListOrTableElement, firstOrLastChildNode);
     if (!replaceElement) {
       return;
     }
   }
 
-  // If we found substructure, paste it instead of its descendants.
-  // Postprocess list to remove any descendants of this node so that we don't
-  // insert them twice.
-  uint32_t removedCount = 0;
-  uint32_t originalLength = aNodeArray.Length();
-  for (uint32_t i = 0; i < originalLength; i++) {
-    uint32_t idx = aStartOrEnd == StartOrEnd::start ? (i - removedCount)
-                                                    : (originalLength - i - 1);
-    OwningNonNull<nsINode> endpoint = aNodeArray[idx];
-    if (endpoint == replaceElement ||
-        EditorUtils::IsDescendantOf(*endpoint, *replaceElement)) {
-      aNodeArray.RemoveElementAt(idx);
-      removedCount++;
+  // If we can replace the given list element or found a table related element
+  // in the `<table>` element, insert it into aArrayOfNodes which is tompost
+  // children to be inserted instead of descendants of them in aArrayOfNodes.
+  for (size_t i = 0; i < aArrayOfNodes.Length();) {
+    OwningNonNull<nsINode>& node = aArrayOfNodes[i];
+    if (node == replaceElement) {
+      // If the element is n aArrayOfNodes, its descendants must not be
+      // in the array.  Therefore, we don't need to optimize this case.
+      // XXX Perhaps, we can break this loop right now.
+      aArrayOfNodes.RemoveElementAt(i);
+      continue;
+    }
+    if (!EditorUtils::IsDescendantOf(node, *replaceElement)) {
+      i++;
+      continue;
+    }
+    // For saving number of calls of EditorUtils::IsDescendantOf(), we should
+    // remove its siblings in the array.
+    nsIContent* parent = node->GetParent();
+    aArrayOfNodes.RemoveElementAt(i);
+    while (i < aArrayOfNodes.Length() &&
+           aArrayOfNodes[i]->GetParent() == parent) {
+      aArrayOfNodes.RemoveElementAt(i);
     }
   }
 
   // Now replace the removed nodes with the structural parent
   if (aStartOrEnd == StartOrEnd::end) {
-    aNodeArray.AppendElement(*replaceElement);
+    aArrayOfNodes.AppendElement(*replaceElement);
   } else {
-    aNodeArray.InsertElementAt(0, *replaceElement);
+    aArrayOfNodes.InsertElementAt(0, *replaceElement);
   }
 }
 
