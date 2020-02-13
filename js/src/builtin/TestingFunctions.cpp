@@ -2992,7 +2992,7 @@ static_assert(JitWarmupResetLimit <=
 static bool testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!jit::IsBaselineJitEnabled()) {
+  if (!jit::IsBaselineJitEnabled(cx)) {
     return ReturnStringCopy(cx, args, "Baseline is disabled.");
   }
 
@@ -6117,7 +6117,7 @@ static bool BaselineCompile(JSContext* cx, unsigned argc, Value* vp) {
       return true;
     }
 
-    if (!jit::IsBaselineJitEnabled()) {
+    if (!jit::IsBaselineJitEnabled(cx)) {
       returnedStr = "baseline disabled";
       break;
     }
