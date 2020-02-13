@@ -39,7 +39,7 @@ add_task(async function test_context_menu_iframe_fill() {
       await openPasswordContextMenu(
         browser,
         "#form-basic-password",
-        null,
+        () => true,
         browser.browsingContext.getChildren()[0]
       );
 
@@ -60,39 +60,24 @@ add_task(async function test_context_menu_iframe_fill() {
       );
 
       // Execute the command of the first login menuitem found at the context menu.
-      let passwordChangedPromise = SpecialPowers.spawn(
-        browser.browsingContext.getChildren()[0],
-        [],
-        function(inputname) {
-          return new Promise(resolve => {
-            let passwordInput = content.document.getElementById(
-              "form-basic-password"
-            );
-            // Cannot pass resolve directly to the event listener, as then
-            // spawn will try to return the non-serializable event passed to the listener
-            // and generate an error.
-            passwordInput.addEventListener(
-              "input",
-              () => {
-                resolve();
-              },
-              { once: true }
-            );
-          });
-        }
-      );
-
-      // Wait a tick for SpecialPowers.spawn to add the input listener.
-      await new Promise(resolve => {
-        SimpleTest.executeSoon(resolve);
-      });
-
       let firstLoginItem = popupMenu.getElementsByClassName(
         "context-login-item"
       )[0];
-      firstLoginItem.doCommand();
+      ok(firstLoginItem, "Found the first login item");
 
-      await passwordChangedPromise;
+      await TestUtils.waitForTick();
+
+      ok(
+        BrowserTestUtils.is_visible(firstLoginItem),
+        "First login menuitem is visible"
+      );
+
+      info("Clicking on the firstLoginItem");
+      // click on the login item to fill the password field, and send tab to trigger a change event
+      await EventUtils.synthesizeMouseAtCenter(firstLoginItem, {});
+      await EventUtils.synthesizeKey("KEY_Tab");
+
+      await TestUtils.waitForTick();
 
       // Find the used login by it's username.
       let login = getLoginFromUsername(firstLoginItem.label);
@@ -110,6 +95,9 @@ add_task(async function test_context_menu_iframe_fill() {
 
       let contextMenu = document.getElementById("contentAreaContextMenu");
       contextMenu.hidePopup();
+
+      await cleanupDoorhanger();
+      await cleanupPasswordNotifications();
     }
   );
 });
@@ -124,10 +112,12 @@ add_task(async function test_context_menu_iframe_sandbox() {
       url: TEST_ORIGIN + IFRAME_PAGE_PATH,
     },
     async function(browser) {
+      info("Opening context menu for test_context_menu_iframe_sandbox");
       await openPasswordContextMenu(
         browser,
         "#form-basic-password",
         function checkDisabled() {
+          info("checkDisabled for test_context_menu_iframe_sandbox");
           let popupHeader = document.getElementById("fill-login");
           ok(
             popupHeader.hidden,
