@@ -138,14 +138,18 @@ void Initialize(int aArgc, char* aArgv[]) {
 // Record/replay API functions can't GC, but we can't use
 // JS::AutoSuppressGCAnalysis here due to linking issues.
 struct AutoSuppressGCAnalysis {
-  AutoSuppressGCAnalysis() {}
+  AutoSuppressGCAnalysis() {
+    // Need nontrivial constructor for the rooting hazard analysis, and to
+    // prevent unused variable warnings.
+  }
+#ifdef XGILL_PLUGIN
   ~AutoSuppressGCAnalysis() {
-#ifdef DEBUG
     // Need nontrivial destructor.
     static Atomic<int, SequentiallyConsistent, Behavior::DontPreserve> dummy;
     dummy++;
-#endif
   }
+
+#endif
 } JS_HAZ_GC_SUPPRESSED;
 
 #define DEFINE_WRAPPER(aName, aReturnType, aFormals, aActuals) \
