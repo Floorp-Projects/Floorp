@@ -23,7 +23,7 @@ def make_signing_description(config, jobs):
         dep_job = job['primary-dependency']
 
         # add the chunk number to the TH symbol
-        symbol = 'Ns{}'.format(dep_job.attributes.get('l10n_chunk'))
+        symbol = 'Bs{}'.format(dep_job.attributes.get('l10n_chunk'))
         group = 'L10n'
 
         job['treeherder'] = {

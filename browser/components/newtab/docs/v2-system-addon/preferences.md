@@ -177,6 +177,14 @@ Programmatically generated hash table where the keys are recommendation IDs and 
 
 Programmatically generated hash table where the keys are sponsored content IDs and the values are arrays of timestamps for every impression.
 
+#### `browser.newtabpage.activity-stream.discoverystream.region-stories-config`
+
+- Type: `string`
+- Default: `US,DE,CA`
+- Pref Type: Firefox
+
+A comma separated list of geos that by default have stories enabled in newtab. It matches the client's geo with that list, then looks for a matching locale.
+
 #### `browser.newtabpage.activity-stream.discoverystream.spocs-endpoint`
 
 - Type: `string`

@@ -111,7 +111,7 @@ class MediaStreamAudioSourceNode
  protected:
   MediaStreamAudioSourceNode(AudioContext* aContext,
                              TrackChangeBehavior aBehavior);
-  void Init(DOMMediaStream* aMediaStream, ErrorResult& aRv);
+  void Init(DOMMediaStream& aMediaStream, ErrorResult& aRv);
   virtual void Destroy();
   virtual ~MediaStreamAudioSourceNode();
 

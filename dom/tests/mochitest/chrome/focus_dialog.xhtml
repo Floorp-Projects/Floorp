@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="other-document"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<dialog buttons="accept">
+
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<button id="button-1" label="Something"/>
+<button id="button-2" label="Something else"/>
+
+<script>
+<![CDATA[
+
+window.is = window.arguments[0].is;
+window.isnot = window.arguments[0].isnot;
+window.ok = window.arguments[0].ok;
+window.SimpleTest = window.arguments[0].SimpleTest;
+
+(async function() {
+  await new Promise(resolve => {
+    window.onload = resolve;
+  });
+
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve, window));
+
+  let dialog = document.querySelector("dialog");
+  let shadow = dialog.shadowRoot;
+
+  let button = document.getElementById("button-1");
+  let button2 = document.getElementById("button-2");
+  let forwardSequence = [];
+
+  button.focus();
+
+  is(document.activeElement, button, "Should've focused the button");
+  forwardSequence.push(button);
+
+  synthesizeKey("KEY_Tab");
+
+  is(document.activeElement, button2, "Should've moved to the second button");
+  forwardSequence.push(button2);
+
+  synthesizeKey("KEY_Tab");
+
+  isnot(shadow.activeElement, null, "Should've focused the shadow root button");
+  is(document.activeElement, dialog, "document.focusedElement should be the dialog because retargeting");
+  forwardSequence.push(shadow.activeElement);
+
+  synthesizeKey("KEY_Tab");
+
+  is(document.activeElement, button, "Should properly wrap around going forward");
+
+  while (forwardSequence.length) {
+    synthesizeKey("KEY_Tab", { shiftKey: true });
+    is(
+      shadow.activeElement || document.activeElement,
+      forwardSequence.pop(),
+      "Should travel backwards correctly: " + forwardSequence.length
+    );
+  }
+
+  window.close();
+  SimpleTest.finish();
+}());
+
+]]>
+</script>
+</dialog>
+</window>

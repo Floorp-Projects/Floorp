@@ -208,7 +208,7 @@ void ConstantSourceNode::Start(double aWhen, ErrorResult& aRv) {
   }
 
   if (mStartCalled) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("Can't call start() more than once");
     return;
   }
   mStartCalled = true;
@@ -231,7 +231,7 @@ void ConstantSourceNode::Stop(double aWhen, ErrorResult& aRv) {
   }
 
   if (!mStartCalled) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("Can't call stop() without calling start()");
     return;
   }
 

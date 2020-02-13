@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IntersectionObserverBinding.h"
 #include "mozilla/ServoStyleConsts.h"
+#include "mozilla/Variant.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -82,12 +83,23 @@ class DOMIntersectionObserver final : public nsISupports,
                                       public nsWrapperCache {
   virtual ~DOMIntersectionObserver() { Disconnect(); }
 
+  typedef void (*NativeIntersectionObserverCallback)(
+      const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& aEntries);
+  DOMIntersectionObserver(nsPIDOMWindowInner* aOwner,
+                          NativeIntersectionObserverCallback aCb)
+      : mOwner(aOwner),
+        mDocument(mOwner->GetExtantDoc()),
+        mCallback(aCb),
+        mConnected(false) {
+    MOZ_ASSERT(mOwner);
+  }
+
  public:
   DOMIntersectionObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
                           dom::IntersectionCallback& aCb)
       : mOwner(aOwner),
         mDocument(mOwner->GetExtantDoc()),
-        mCallback(&aCb),
+        mCallback(RefPtr<dom::IntersectionCallback>(&aCb)),
         mConnected(false) {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMIntersectionObserver)
@@ -118,12 +130,17 @@ class DOMIntersectionObserver final : public nsISupports,
 
   void TakeRecords(nsTArray<RefPtr<DOMIntersectionObserverEntry>>& aRetVal);
 
-  dom::IntersectionCallback* IntersectionCallback() { return mCallback; }
+  dom::IntersectionCallback* IntersectionCallback() {
+    return mCallback.as<RefPtr<dom::IntersectionCallback>>();
+  }
 
   bool SetRootMargin(const nsAString& aString);
 
   void Update(Document* aDocument, DOMHighResTimeStamp time);
   MOZ_CAN_RUN_SCRIPT void Notify();
+
+  static already_AddRefed<DOMIntersectionObserver> CreateLazyLoadObserver(
+      nsPIDOMWindowInner* aOwner);
 
  protected:
   void Connect();
@@ -136,7 +153,8 @@ class DOMIntersectionObserver final : public nsISupports,
 
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
   RefPtr<Document> mDocument;
-  RefPtr<dom::IntersectionCallback> mCallback;
+  Variant<RefPtr<dom::IntersectionCallback>, NativeIntersectionObserverCallback>
+      mCallback;
   RefPtr<Element> mRoot;
   StyleRect<LengthPercentage> mRootMargin;
   nsTArray<double> mThresholds;

@@ -273,7 +273,9 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
   if (aOptions.mSampleRate > 0 &&
       (aOptions.mSampleRate - WebAudioUtils::MinSampleRate < 0.0 ||
        WebAudioUtils::MaxSampleRate - aOptions.mSampleRate < 0.0)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "Sample rate %g is not in the range [%u, %u]", aOptions.mSampleRate,
+        WebAudioUtils::MinSampleRate, WebAudioUtils::MaxSampleRate));
     return nullptr;
   }
   sampleRate = aOptions.mSampleRate;
@@ -317,11 +319,23 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
   }
 
   if (aNumberOfChannels == 0 ||
-      aNumberOfChannels > WebAudioUtils::MaxChannelCount || aLength == 0 ||
-      aSampleRate < WebAudioUtils::MinSampleRate ||
+      aNumberOfChannels > WebAudioUtils::MaxChannelCount) {
+    aRv.ThrowNotSupportedError(
+        nsPrintfCString("%u is not a valid channel count", aNumberOfChannels));
+    return nullptr;
+  }
+
+  if (aLength == 0) {
+    aRv.ThrowNotSupportedError("Length must be nonzero");
+    return nullptr;
+  }
+
+  if (aSampleRate < WebAudioUtils::MinSampleRate ||
       aSampleRate > WebAudioUtils::MaxSampleRate) {
     // The DOM binding protects us against infinity and NaN
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "Sample rate %g is not in the range [%u, %u]", aSampleRate,
+        WebAudioUtils::MinSampleRate, WebAudioUtils::MaxSampleRate));
     return nullptr;
   }
 
@@ -347,7 +361,7 @@ already_AddRefed<AudioBuffer> AudioContext::CreateBuffer(
     uint32_t aNumberOfChannels, uint32_t aLength, float aSampleRate,
     ErrorResult& aRv) {
   if (!aNumberOfChannels) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowNotSupportedError("Number of channels must be nonzero");
     return nullptr;
   }
 
@@ -384,11 +398,29 @@ AudioContext::CreateMediaStreamDestination(ErrorResult& aRv) {
 already_AddRefed<ScriptProcessorNode> AudioContext::CreateScriptProcessor(
     uint32_t aBufferSize, uint32_t aNumberOfInputChannels,
     uint32_t aNumberOfOutputChannels, ErrorResult& aRv) {
-  if ((aNumberOfInputChannels == 0 && aNumberOfOutputChannels == 0) ||
-      aNumberOfInputChannels > WebAudioUtils::MaxChannelCount ||
-      aNumberOfOutputChannels > WebAudioUtils::MaxChannelCount ||
-      !IsValidBufferSize(aBufferSize)) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+  if (aNumberOfInputChannels == 0 && aNumberOfOutputChannels == 0) {
+    aRv.ThrowIndexSizeError(
+        "At least one of numberOfInputChannels and numberOfOutputChannels must "
+        "be nonzero");
+    return nullptr;
+  }
+
+  if (aNumberOfInputChannels > WebAudioUtils::MaxChannelCount) {
+    aRv.ThrowIndexSizeError(nsPrintfCString(
+        "%u is not a valid number of input channels", aNumberOfInputChannels));
+    return nullptr;
+  }
+
+  if (aNumberOfOutputChannels > WebAudioUtils::MaxChannelCount) {
+    aRv.ThrowIndexSizeError(
+        nsPrintfCString("%u is not a valid number of output channels",
+                        aNumberOfOutputChannels));
+    return nullptr;
+  }
+
+  if (!IsValidBufferSize(aBufferSize)) {
+    aRv.ThrowIndexSizeError(
+        nsPrintfCString("%u is not a valid bufferSize", aBufferSize));
     return nullptr;
   }
 
@@ -503,8 +535,13 @@ already_AddRefed<PeriodicWave> AudioContext::CreatePeriodicWave(
   aRealData.ComputeState();
   aImagData.ComputeState();
 
-  if (aRealData.Length() != aImagData.Length() || aRealData.Length() == 0) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+  if (aRealData.Length() != aImagData.Length()) {
+    aRv.ThrowIndexSizeError("\"real\" and \"imag\" must be the same length");
+    return nullptr;
+  }
+
+  if (aRealData.Length() == 0) {
+    aRv.ThrowIndexSizeError("\"real\" and \"imag\" are both empty arrays");
     return nullptr;
   }
 
@@ -591,7 +628,7 @@ already_AddRefed<Promise> AudioContext::DecodeAudioData(
   // CheckedUnwrapStatic is OK, since we know we have an ArrayBuffer.
   JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aBuffer.Obj()));
   if (!obj) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aRv.ThrowSecurityError("Can't get audio data from cross-origin object");
     return nullptr;
   }
 
@@ -749,13 +786,13 @@ void AudioContext::Shutdown() {
     }
 
     for (auto p : mPromiseGripArray) {
-      p->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+      p->MaybeRejectWithInvalidStateError("Navigated away from page");
     }
 
     mPromiseGripArray.Clear();
 
     for (const auto& p : mPendingResumePromises) {
-      p->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+      p->MaybeRejectWithInvalidStateError("Navigated away from page");
     }
     mPendingResumePromises.Clear();
   }
@@ -920,12 +957,16 @@ already_AddRefed<Promise> AudioContext::Suspend(ErrorResult& aRv) {
     return nullptr;
   }
   if (mIsOffline) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    // XXXbz This is not reachable, since we don't implement this
+    // method on OfflineAudioContext at all!
+    promise->MaybeRejectWithNotSupportedError(
+        "Can't suspend OfflineAudioContext yet");
     return promise.forget();
   }
 
   if (mAudioContextState == AudioContextState::Closed || mCloseCalled) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    promise->MaybeRejectWithInvalidStateError(
+        "Can't suspend if the control thread state is \"closed\"");
     return promise.forget();
   }
 
@@ -986,12 +1027,14 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
   }
 
   if (mIsOffline) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    promise->MaybeRejectWithNotSupportedError(
+        "Can't resume OfflineAudioContext");
     return promise.forget();
   }
 
   if (mAudioContextState == AudioContextState::Closed || mCloseCalled) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    promise->MaybeRejectWithInvalidStateError(
+        "Can't resume if the control thread state is \"closed\"");
     return promise.forget();
   }
 
@@ -1120,12 +1163,16 @@ already_AddRefed<Promise> AudioContext::Close(ErrorResult& aRv) {
   }
 
   if (mIsOffline) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    // XXXbz This is not reachable, since we don't implement this
+    // method on OfflineAudioContext at all!
+    promise->MaybeRejectWithNotSupportedError(
+        "Can't close OfflineAudioContext yet");
     return promise.forget();
   }
 
   if (mAudioContextState == AudioContextState::Closed) {
-    promise->MaybeResolve(NS_ERROR_DOM_INVALID_STATE_ERR);
+    promise->MaybeRejectWithInvalidStateError(
+        "Can't close an AudioContext twice");
     return promise.forget();
   }
 
@@ -1181,7 +1228,7 @@ already_AddRefed<Promise> AudioContext::StartRendering(ErrorResult& aRv) {
 
   MOZ_ASSERT(mIsOffline, "This should only be called on OfflineAudioContext");
   if (mIsStarted) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("Rendering already started");
     return nullptr;
   }
 

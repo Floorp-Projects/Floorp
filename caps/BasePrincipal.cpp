@@ -527,6 +527,16 @@ BasePrincipal::GetExposablePrePath(nsACString& aPrepath) {
   }
   return fixedURI->GetDisplayPrePath(aPrepath);
 }
+NS_IMETHODIMP
+BasePrincipal::GetPrepath(nsACString& aPath) {
+  aPath.Truncate();
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+  return prinURI->GetPrePath(aPath);
+}
 
 NS_IMETHODIMP
 BasePrincipal::GetIsSystemPrincipal(bool* aResult) {

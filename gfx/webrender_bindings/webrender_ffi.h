@@ -49,6 +49,7 @@ bool gecko_profiler_thread_is_being_profiled();
   macro(line_decoration);                  \
   macro(linear_grad);                      \
   macro(radial_grad);                      \
+  macro(conic_grad);                       \
   macro(picture);                          \
   macro(text_run);                         \
   macro(filterdata);                       \

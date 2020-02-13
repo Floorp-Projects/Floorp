@@ -2315,9 +2315,13 @@ PresShell::CompleteMove(bool aForward, bool aExtend) {
                             : FrameConstructor()->GetRootElementFrame();
   if (!frame) return NS_ERROR_FAILURE;
   nsIFrame::CaretPosition pos = frame->GetExtremeCaretPosition(!aForward);
+
+  const nsFrameSelection::FocusMode focusMode =
+      aExtend ? nsFrameSelection::FocusMode::kExtendSelection
+              : nsFrameSelection::FocusMode::kCollapseToNewPoint;
   frameSelection->HandleClick(
-      pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aExtend,
-      false, aForward ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE);
+      pos.mResultContent, pos.mContentOffset, pos.mContentOffset, focusMode,
+      aForward ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE);
   if (limiter) {
     // HandleClick resets ancestorLimiter, so set it again.
     frameSelection->SetAncestorLimiter(limiter);

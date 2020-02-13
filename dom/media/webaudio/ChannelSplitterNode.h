@@ -30,15 +30,24 @@ class ChannelSplitterNode final : public AudioNode {
   }
 
   void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    if (aChannelCount != ChannelCount()) {
+      aRv.ThrowInvalidStateError(
+          "Cannot change channel count of ChannelSplitterNode");
+    }
   }
   void SetChannelCountModeValue(ChannelCountMode aMode,
                                 ErrorResult& aRv) override {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    if (aMode != ChannelCountModeValue()) {
+      aRv.ThrowInvalidStateError(
+          "Cannot change channel count mode of ChannelSplitterNode");
+    }
   }
   void SetChannelInterpretationValue(ChannelInterpretation aMode,
                                      ErrorResult& aRv) override {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    if (aMode != ChannelInterpretationValue()) {
+      aRv.ThrowInvalidStateError(
+          "Cannot change channel interpretation of ChannelSplitterNode");
+    }
   }
 
   JSObject* WrapObject(JSContext* aCx,

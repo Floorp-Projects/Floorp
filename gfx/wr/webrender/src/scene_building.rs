@@ -31,7 +31,7 @@ use crate::prim_store::{register_prim_chase_id, get_line_decoration_size};
 use crate::prim_store::{SpaceSnapper};
 use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
-use crate::prim_store::gradient::{GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams};
+use crate::prim_store::gradient::{GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams, ConicGradient, ConicGradientAngle};
 use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::{LineDecoration, LineDecorationCacheKey};
 use crate::prim_store::picture::{Picture, PictureCompositeKey, PictureKey};
@@ -1297,6 +1297,37 @@ impl<'a> SceneBuilder<'a> {
                     info.gradient.start_offset * info.gradient.radius.width,
                     info.gradient.end_offset * info.gradient.radius.width,
                     info.gradient.radius.width / info.gradient.radius.height,
+                    item.gradient_stops(),
+                    info.gradient.extend_mode,
+                    tile_size,
+                    info.tile_spacing,
+                    None,
+                );
+
+                self.add_nonshadowable_primitive(
+                    clip_and_scroll,
+                    &layout,
+                    Vec::new(),
+                    prim_key_kind,
+                );
+            }
+            DisplayItem::ConicGradient(ref info) => {
+                let (layout, unsnapped_rect, clip_and_scroll) = self.process_common_properties_with_bounds(
+                    &info.common,
+                    &info.bounds,
+                    apply_pipeline_clip,
+                );
+
+                let tile_size = process_repeat_size(
+                    &layout.rect,
+                    &unsnapped_rect,
+                    info.tile_size,
+                );
+
+                let prim_key_kind = self.create_conic_gradient_prim(
+                    &layout,
+                    info.gradient.center,
+                    info.gradient.angle,
                     item.gradient_stops(),
                     info.gradient.extend_mode,
                     tile_size,
@@ -2900,6 +2931,25 @@ impl<'a> SceneBuilder<'a> {
                             prim,
                         );
                     }
+                    NinePatchBorderSource::ConicGradient(gradient) => {
+                        let prim = self.create_conic_gradient_prim(
+                            &info,
+                            gradient.center,
+                            gradient.angle,
+                            gradient_stops,
+                            gradient.extend_mode,
+                            LayoutSize::new(border.height as f32, border.width as f32),
+                            LayoutSize::zero(),
+                            Some(Box::new(nine_patch)),
+                        );
+
+                        self.add_nonshadowable_primitive(
+                            clip_and_scroll,
+                            info,
+                            Vec::new(),
+                            prim,
+                        );
+                    }
                 };
             }
             BorderDetails::Normal(ref border) => {
@@ -3006,6 +3056,38 @@ impl<'a> SceneBuilder<'a> {
             extend_mode,
             center: center.into(),
             params,
+            stretch_size: stretch_size.into(),
+            tile_spacing: tile_spacing.into(),
+            nine_patch,
+            stops,
+        }
+    }
+
+    pub fn create_conic_gradient_prim(
+        &mut self,
+        info: &LayoutPrimitiveInfo,
+        center: LayoutPoint,
+        angle: f32,
+        stops: ItemRange<GradientStop>,
+        extend_mode: ExtendMode,
+        stretch_size: LayoutSize,
+        mut tile_spacing: LayoutSize,
+        nine_patch: Option<Box<NinePatchDescriptor>>,
+    ) -> ConicGradient {
+        let mut prim_rect = info.rect;
+        simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
+
+        let stops = stops.iter().map(|stop| {
+            GradientStopKey {
+                offset: stop.offset,
+                color: stop.color.into(),
+            }
+        }).collect();
+
+        ConicGradient {
+            extend_mode,
+            center: center.into(),
+            angle: ConicGradientAngle { angle },
             stretch_size: stretch_size.into(),
             tile_spacing: tile_spacing.into(),
             nine_patch,

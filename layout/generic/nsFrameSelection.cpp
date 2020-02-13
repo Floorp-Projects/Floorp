@@ -183,8 +183,8 @@ bool nsFrameSelection::IsValidSelectionPoint(nsINode* aNode) const {
 
 namespace mozilla {
 struct MOZ_RAII AutoPrepareFocusRange {
-  AutoPrepareFocusRange(Selection* aSelection, bool aContinueSelection,
-                        bool aMultipleSelection
+  AutoPrepareFocusRange(Selection* aSelection,
+                        const bool aMultiRangeSelection
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
@@ -198,7 +198,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
     bool userSelection = aSelection->mUserInitiated;
 
     nsTArray<StyledRange>& ranges = aSelection->mRanges;
-    if (!userSelection || (!aContinueSelection && aMultipleSelection)) {
+    if (!userSelection || aMultiRangeSelection) {
       // Scripted command or the user is starting a new explicit multi-range
       // selection.
       for (StyledRange& entry : ranges) {
@@ -673,7 +673,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     PostReason(nsISelectionListener::KEYPRESS_REASON);
   }
 
-  AutoPrepareFocusRange prep(sel, aContinueSelection, false);
+  AutoPrepareFocusRange prep(sel, false);
 
   if (aAmount == eSelectLine) {
     nsresult result = FetchDesiredPos(desiredPos);
@@ -809,8 +809,11 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     }
     // "pos" is on the stack, so pos.mResultContent has stack lifetime, so using
     // MOZ_KnownLive is ok.
+    const FocusMode focusMode = aContinueSelection
+                                    ? FocusMode::kExtendSelection
+                                    : FocusMode::kCollapseToNewPoint;
     result = TakeFocus(MOZ_KnownLive(pos.mResultContent), pos.mContentOffset,
-                       pos.mContentOffset, tHint, aContinueSelection, false);
+                       pos.mContentOffset, tHint, focusMode);
   } else if (aAmount <= eSelectWordNoSpace && aDirection == eDirNext &&
              !aContinueSelection) {
     // Collapse selection if PeekOffset failed, we either
@@ -1096,14 +1099,13 @@ bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
 nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
                                        uint32_t aContentOffset,
                                        uint32_t aContentEndOffset,
-                                       bool aContinueSelection,
-                                       bool aMultipleSelection,
+                                       const FocusMode aFocusMode,
                                        CaretAssociateHint aHint) {
   if (!aNewFocus) return NS_ERROR_INVALID_ARG;
 
   InvalidateDesiredPos();
 
-  if (!aContinueSelection) {
+  if (aFocusMode != FocusMode::kExtendSelection) {
     mMaintainRange = nullptr;
     if (!IsValidSelectionPoint(aNewFocus)) {
       mAncestorLimiter = nullptr;
@@ -1115,15 +1117,15 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
     BidiLevelFromClick(aNewFocus, aContentOffset);
     PostReason(nsISelectionListener::MOUSEDOWN_REASON +
                nsISelectionListener::DRAG_REASON);
-    if (aContinueSelection &&
+    if ((aFocusMode == FocusMode::kExtendSelection) &&
         AdjustForMaintainedSelection(aNewFocus, aContentOffset))
       return NS_OK;  // shift clicked to maintained selection. rejected.
 
     int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-    AutoPrepareFocusRange prep(mDomSelections[index], aContinueSelection,
-                               aMultipleSelection);
+    AutoPrepareFocusRange prep(mDomSelections[index],
+                               aFocusMode == FocusMode::kMultiRangeSelection);
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aHint,
-                     aContinueSelection, aMultipleSelection);
+                     aFocusMode);
   }
 
   return NS_OK;
@@ -1194,8 +1196,8 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
     }
   }
 
-  HandleClick(offsets.content, offsets.offset, offsets.offset, true, false,
-              offsets.associate);
+  HandleClick(offsets.content, offsets.offset, offsets.offset,
+              FocusMode::kExtendSelection, offsets.associate);
 }
 
 nsresult nsFrameSelection::StartAutoScrollTimer(nsIFrame* aFrame,
@@ -1226,8 +1228,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
                                      uint32_t aContentOffset,
                                      uint32_t aContentEndOffset,
                                      CaretAssociateHint aHint,
-                                     bool aContinueSelection,
-                                     bool aMultipleSelection) {
+                                     const FocusMode aFocusMode) {
   if (!aNewFocus) return NS_ERROR_NULL_POINTER;
 
   NS_ENSURE_STATE(mPresShell);
@@ -1253,12 +1254,13 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
   }
 
   // traverse through document and unselect crap here
-  if (!aContinueSelection) {        // single click? setting cursor down
+  if (aFocusMode !=
+      FocusMode::kExtendSelection) {  // single click? setting cursor down
     uint32_t batching = mBatching;  // hack to use the collapse code.
     bool changes = mChangesDuringBatching;
     mBatching = 1;
 
-    if (aMultipleSelection) {
+    if (aFocusMode == FocusMode::kMultiRangeSelection) {
       // Remove existing collapsed ranges as there's no point in having
       // non-anchor/focus collapsed ranges.
       mDomSelections[index]->RemoveCollapsedRanges();
@@ -1313,7 +1315,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
     }
   } else {
     // Now update the range list:
-    if (aContinueSelection && aNewFocus) {
+    if ((aFocusMode == FocusMode::kExtendSelection) && aNewFocus) {
       int32_t offset;
       nsINode* cellparent = GetCellParent(aNewFocus);
       if (mCellParent && cellparent &&
@@ -1751,7 +1753,9 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
     RangeBoundary oldAnchor = selection->AnchorRef();
     RangeBoundary oldFocus = selection->FocusRef();
 
-    HandleClick(offsets.content, offsets.offset, offsets.offset, aExtend, false,
+    const FocusMode focusMode =
+        aExtend ? FocusMode::kExtendSelection : FocusMode::kCollapseToNewPoint;
+    HandleClick(offsets.content, offsets.offset, offsets.offset, focusMode,
                 CARET_ASSOCIATE_AFTER);
 
     selectionChanged = selection->AnchorRef() != oldAnchor ||
@@ -1944,9 +1948,9 @@ nsresult nsFrameSelection::SelectAll() {
   int32_t numChildren = rootContent->GetChildCount();
   PostReason(nsISelectionListener::NO_REASON);
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  AutoPrepareFocusRange prep(mDomSelections[index], false, false);
-  return TakeFocus(rootContent, 0, numChildren, CARET_ASSOCIATE_BEFORE, false,
-                   false);
+  AutoPrepareFocusRange prep(mDomSelections[index], false);
+  return TakeFocus(rootContent, 0, numChildren, CARET_ASSOCIATE_BEFORE,
+                   FocusMode::kCollapseToNewPoint);
 }
 
 //////////END FRAMESELECTION
@@ -2731,7 +2735,8 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
       if (mAncestorLimiter) {
         PostReason(nsISelectionListener::NO_REASON);
         nsCOMPtr<nsIContent> limiter(mAncestorLimiter);
-        TakeFocus(limiter, 0, 0, CARET_ASSOCIATE_BEFORE, false, false);
+        TakeFocus(limiter, 0, 0, CARET_ASSOCIATE_BEFORE,
+                  FocusMode::kCollapseToNewPoint);
       }
     }
   }

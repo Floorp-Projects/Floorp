@@ -1888,9 +1888,13 @@ main {
   .discovery-stream.ds-layout .ds-column-grid {
     display: grid;
     grid-row-gap: var(--gridRowGap); }
+    .discovery-stream.ds-layout .ds-column-grid > div:empty {
+      display: none; }
 
 .ds-header {
   margin: 8px 0; }
+  .ds-header .ds-context {
+    font-weight: 400; }
 
 .ds-header,
 .ds-layout .section-title span {
@@ -1986,6 +1990,12 @@ main {
       line-height: 20px; }
   .ds-card-grid.empty {
     grid-template-columns: auto; }
+
+.ds-dismiss-ds-collection .ds-dismiss-button {
+  margin: 0; }
+
+.ds-collection-card-grid .story-footer {
+  display: none; }
 
 .ds-hero {
   position: relative; }
@@ -2918,15 +2928,10 @@ main {
 
 .ds-dismiss {
   position: relative;
-  overflow: hidden;
   border-radius: 8px;
   transition-delay: 100ms;
   transition-duration: 200ms;
   transition-property: background; }
-  .ds-dismiss.hovering {
-    background: rgba(12, 12, 13, 0.1); }
-    [lwt-newtab-brighttext] .ds-dismiss.hovering {
-      background: rgba(12, 12, 13, 0.3); }
   .ds-dismiss:hover .ds-dismiss-button {
     opacity: 1; }
   .ds-dismiss .ds-dismiss-button {
@@ -2939,10 +2944,9 @@ main {
     align-items: center;
     justify-content: center;
     position: absolute;
-    right: 0;
+    inset-inline-end: 0;
     top: 0;
     border-radius: 50%;
-    margin: 18px 18px 0 0;
     background: rgba(12, 12, 13, 0.1); }
     [lwt-newtab-brighttext] .ds-dismiss .ds-dismiss-button {
       background: rgba(12, 12, 13, 0.3); }
@@ -3073,7 +3077,15 @@ main {
 
 .ds-dismiss-ds-text-promo {
   max-width: 744px;
-  margin: auto; }
+  margin: auto;
+  overflow: hidden; }
+  .ds-dismiss-ds-text-promo.hovering {
+    background: rgba(12, 12, 13, 0.1); }
+    [lwt-newtab-brighttext] .ds-dismiss-ds-text-promo.hovering {
+      background: rgba(12, 12, 13, 0.3); }
+  .ds-dismiss-ds-text-promo .ds-dismiss-button {
+    margin-inline: 0 18px;
+    margin-block: 18px 0; }
 
 .ds-text-promo {
   max-width: 640px;

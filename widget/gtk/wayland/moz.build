@@ -17,7 +17,8 @@ EXPORTS.mozilla.widget += [
     'gbm.h',
     'gtk-primary-selection-client-protocol.h',
     'idle-inhibit-unstable-v1-client-protocol.h',
-    'linux-dmabuf-unstable-v1-client-protocol.h'
+    'linux-dmabuf-unstable-v1-client-protocol.h',
+    'va_drmcommon.h'
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

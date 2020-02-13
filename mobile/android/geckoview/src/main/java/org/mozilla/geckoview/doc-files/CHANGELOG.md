@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change
 
+## v75
+- ⚠️ Move [`GeckoSessionSettings.Builder#useMultiprocess`] to
+  [`GeckoRuntimeSettings.Builder#useMultiprocess`][75.1]. Multiprocess state is
+  no longer determined per session.
+
+[75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
+
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
   enable and disable extensions.
@@ -44,6 +51,7 @@ exclude: true
   which is the addon metadata necessary to show their option pages.
   ([bug 1598792]({{bugzilla}}1598792))
 - Added [`WebExtensionController.update`][74.16] to update extensions. ([bug 1599581]({{bugzilla}}1599581))
+- ⚠️ Replaced `subscription` argument in [`WebPushDelegate.onSubscriptionChanged`][74.17] from a [`WebPushSubscription`][74.18] to the [`String`][74.19] `scope`.
 
 [74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
 [74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
@@ -61,6 +69,9 @@ exclude: true
 [74.14]: {{javadoc_uri}}/WebExtension.MetaData.html#optionsUrl
 [74.15]: {{javadoc_uri}}/WebExtension.MetaData.html#openOptionsPageInTab
 [74.16]: {{javadoc_uri}}/WebExtensionController.html#update-org.mozilla.geckoview.WebExtension-int-
+[74.17]: {{javadoc_uri}}/WebPushController.html#onSubscriptionChange-org.mozilla.geckoview.WebPushSubscription-byte:A-
+[74.18]: {{javadoc_uri}}/WebPushSubscription.html
+[74.19]: https://developer.android.com/reference/java/lang/String
 
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
@@ -571,4 +582,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e7913b3fec18f7edb75b81e6bebfb7860ab57c91
+[api-version]: af032cf9dfa68c15ed6321c9615dd8c5d32d215e

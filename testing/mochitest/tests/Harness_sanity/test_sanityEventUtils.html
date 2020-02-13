@@ -50,7 +50,7 @@ function starttest() {
       $("testMouseEvent").addEventListener("click", doCheck, {once: true});
       sendMouseEvent({type:'click'}, "testMouseEvent");
       is(check, true, 'sendMouseEvent should dispatch click event');
-      
+
       check = false;
       $("testKeyEvent").addEventListener("keypress", doCheck, {once: true});
       $("testKeyEvent").focus();
@@ -58,12 +58,12 @@ function starttest() {
       is($("testKeyEvent").value, "x", "sendChar should work");
       is(check, true, "sendChar should dispatch keyPress");
       $("testKeyEvent").value = "";
-    
+
       $("testStrEvent").focus();
       sendString("string");
       is($("testStrEvent").value, "string", "sendString should work");
       $("testStrEvent").value = "";
-    
+
       var keydown = false;
       var keypress = false;
       $("testKeyEvent").focus();
@@ -76,7 +76,7 @@ function starttest() {
       } else {
         ok(keypress, "sendKey should dispatch keyPress even for non-printable key");
       }
-    
+
       /* test synthesizeMouse* */
       //focus trick enables us to run this in iframes
       $("radioTarget1").addEventListener('focus', function (aEvent) {
@@ -97,22 +97,22 @@ function starttest() {
         $("textBoxA").addEventListener("click", function() { check = true; });
         synthesizeMouseAtCenter($("textBoxA"), {});
         is(check, true, 'synthesizeMouse should dispatch mouse event');
-    
+
         check = false;
         synthesizeMouseExpectEvent($("textBoxA"), 1, 1, {}, $("textBoxA"), "click", "synthesizeMouseExpectEvent should fire click event");
         is(check, true, 'synthesizeMouse should dispatch mouse event');
       }, {once: true});
       $("textBoxA").focus();
-    
+
       /**
-       * TODO: testing synthesizeWheel requires a setTimeout 
+       * TODO: testing synthesizeWheel requires a setTimeout
        * since there is delay between the scroll event and a check, so for now just test
        * that we can successfully call it to avoid having setTimeout vary the runtime metric.
        * Testing of this method is currently done here:
        * toolkit/content/tests/chrome/test_mousescroll.xul
        */
       synthesizeWheel($("scrollB"), 5, 5, {'deltaY': 10.0, deltaMode: WheelEvent.DOM_DELTA_LINE});
-    
+
       /* test synthesizeKey* */
       check = false;
       $("testKeyEvent").addEventListener("keypress", doCheck, {once:true});
@@ -150,18 +150,18 @@ function starttest() {
                         { arg: "~", code: "Backquote", keyCode: KeyboardEvent.DOM_VK_BACK_QUOTE },
                         { arg: "<", code: "Comma", keyCode: KeyboardEvent.DOM_VK_COMMA },
                         { arg: ".", code: "Period", keyCode: KeyboardEvent.DOM_VK_PERIOD }]) {
-        let keydown, keyup;
+        let testKeydown, keyup;
         $("testKeyEvent").focus();
-        $("testKeyEvent").addEventListener("keydown", (e) => { keydown = e; }, {once: true});
+        $("testKeyEvent").addEventListener("keydown", (e) => { testKeydown = e; }, {once: true});
         $("testKeyEvent").addEventListener("keyup", (e) => { keyup = e; }, {once: true});
         synthesizeKey(test.arg);
-        is(keydown.code, test.code, `Synthesizing "${test.arg}" should set code value of "keydown" to "${test.code}"`);
-        is(keydown.keyCode, test.keyCode, `Synthesizing "${test.arg}" should set keyCode value of "keydown" to "${test.keyCode}"`);
+        is(testKeydown.code, test.code, `Synthesizing "${test.arg}" should set code value of "keydown" to "${test.code}"`);
+        is(testKeydown.keyCode, test.keyCode, `Synthesizing "${test.arg}" should set keyCode value of "keydown" to "${test.keyCode}"`);
         is(keyup.code, test.code, `Synthesizing "${test.arg}" key should set code value of "keyup" to "${test.code}"`);
         is(keyup.keyCode, test.keyCode, `Synthesizing "${test.arg}" key should set keyCode value of "keyup" to "${test.keyCode}"`);
         $("testKeyEvent").value = "";
       }
-    
+
       /* test synthesizeComposition */
       var description = "";
       var keydownEvent = null;
@@ -272,7 +272,7 @@ function starttest() {
       is(querySelectedText.text, "",
          "query selected text event returns wrong selected text");
       $("textBoxB").value = "";
-    
+
       querySelectedText = synthesizeQuerySelectedText();
       ok(querySelectedText, "query selected text event result is null");
       ok(querySelectedText.succeeded, "query selected text event failed");

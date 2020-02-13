@@ -303,11 +303,8 @@ class BlobURLsReporter final : public nsIMemoryReporter {
     nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack(maxFrames);
 
     nsAutoCString origin;
-    nsCOMPtr<nsIURI> principalURI;
-    if (NS_SUCCEEDED(aInfo->mPrincipal->GetURI(getter_AddRefs(principalURI))) &&
-        principalURI) {
-      principalURI->GetPrePath(origin);
-    }
+
+    aInfo->mPrincipal->GetPrepath(origin);
 
     // If we got a frame, we better have a current JSContext.  This is cheating
     // a bit; ideally we'd have our caller pass in a JSContext, or have
@@ -354,11 +351,9 @@ class BlobURLsReporter final : public nsIMemoryReporter {
 
   static void BuildPath(nsAutoCString& path, nsCStringHashKey::KeyType aKey,
                         DataInfo* aInfo, bool anonymize) {
-    nsCOMPtr<nsIURI> principalURI;
     nsAutoCString url, owner;
-    if (NS_SUCCEEDED(aInfo->mPrincipal->GetURI(getter_AddRefs(principalURI))) &&
-        principalURI != nullptr && NS_SUCCEEDED(principalURI->GetSpec(owner)) &&
-        !owner.IsEmpty()) {
+    aInfo->mPrincipal->GetAsciiSpec(owner);
+    if (!owner.IsEmpty()) {
       owner.ReplaceChar('/', '\\');
       path += "owner(";
       if (anonymize) {

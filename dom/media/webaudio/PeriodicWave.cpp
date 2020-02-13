@@ -74,7 +74,9 @@ already_AddRefed<PeriodicWave> PeriodicWave::Constructor(
     const PeriodicWaveOptions& aOptions, ErrorResult& aRv) {
   if (aOptions.mReal.WasPassed() && aOptions.mImag.WasPassed() &&
       aOptions.mReal.Value().Length() != aOptions.mImag.Value().Length()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(
+        "\"real\" and \"imag\" parameters of PeriodicWaveOptions are different "
+        "lengths");
     return nullptr;
   }
 
@@ -90,7 +92,7 @@ already_AddRefed<PeriodicWave> PeriodicWave::Constructor(
   }
 
   if (length == 0) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError("\"real\" and \"imag\" are both empty arrays");
     return nullptr;
   }
 

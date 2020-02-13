@@ -33,7 +33,6 @@ class RemoteGeckoService : Service() {
                 }
                 CMD_CRASH_CONTENT_NATIVE -> {
                     val settings = GeckoSessionSettings.Builder()
-                            .useMultiprocess(true)
                             .build()
                     val session = GeckoSession(settings)
                     session.open(runtime!!)

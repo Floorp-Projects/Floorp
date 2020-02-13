@@ -45,10 +45,9 @@ already_AddRefed<MediaElementAudioSourceNode>
 MediaElementAudioSourceNode::Create(
     AudioContext& aAudioContext, const MediaElementAudioSourceOptions& aOptions,
     ErrorResult& aRv) {
-  if (aAudioContext.IsOffline()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
+  // The spec has a pointless check here.  See
+  // https://github.com/WebAudio/web-audio-api/issues/2149
+  MOZ_RELEASE_ASSERT(!aAudioContext.IsOffline(), "Bindings messed up?");
 
   RefPtr<MediaElementAudioSourceNode> node =
       new MediaElementAudioSourceNode(&aAudioContext, aOptions.mMediaElement);
@@ -58,8 +57,9 @@ MediaElementAudioSourceNode::Create(
   if (aRv.Failed()) {
     return nullptr;
   }
+  MOZ_ASSERT(stream, "CaptureAudio should report failure via aRv!");
 
-  node->Init(stream, aRv);
+  node->Init(*stream, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

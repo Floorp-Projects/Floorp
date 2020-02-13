@@ -38,7 +38,7 @@ const SUBMISSION_PURPOSES = [
   "newtab",
 ];
 
-const engineSelector = new SearchEngineSelector();
+let engineSelector;
 
 /**
  * This class implements the test harness for search configuration tests.
@@ -100,8 +100,6 @@ class SearchConfigTest {
       "42"
     );
 
-    await engineSelector.init();
-
     // Disable region checks.
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
     Services.prefs.setCharPref("browser.search.geoip.url", "");
@@ -117,8 +115,26 @@ class SearchConfigTest {
       true
     );
 
+    // We need to force modern config off before we start. Modern config uses
+    // the results from the engine selector directly, whereas the legacy
+    // config uses the search service which needs to know we want to run
+    // it in legacy mode.
+    Services.prefs.setBoolPref(
+      SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
+      false
+    );
+
     await AddonTestUtils.promiseStartupManager();
     await Services.search.init();
+
+    // We must use the engine selector that the search service has created (if
+    // it has), as remote settings can only easily deal with us loading the
+    // configuration once - after that, it tries to access the network.
+    engineSelector =
+      Services.search.wrappedJSObject._engineSelector ||
+      new SearchEngineSelector();
+
+    await engineSelector.init();
 
     // Note: we don't use the helper function here, so that we have at least
     // one message output per process.

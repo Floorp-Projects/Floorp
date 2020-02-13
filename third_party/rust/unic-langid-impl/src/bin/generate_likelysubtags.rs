@@ -56,14 +56,14 @@ fn main() {
         let key_langid: LanguageIdentifier = k.parse().expect("Failed to parse a key.");
         let v: &str = v.as_str().unwrap();
         let mut value_langid: LanguageIdentifier = v.parse().expect("Failed to parse a value.");
-        if let Some("ZZ") = value_langid.get_region() {
+        if let Some("ZZ") = value_langid.region() {
             value_langid.clear_region();
         }
         let (val_lang, val_script, val_region, _) = value_langid.into_raw_parts();
 
-        let lang = key_langid.get_language();
-        let script = key_langid.get_script();
-        let region = key_langid.get_region();
+        let lang = key_langid.language();
+        let script = key_langid.script();
+        let region = key_langid.region();
 
         match (lang, script, region) {
             (l, None, None) => lang_only.push((
@@ -105,10 +105,10 @@ fn main() {
     let version = v["supplemental"]["version"]["_cldrVersion"]
         .as_str()
         .unwrap();
-    println!("pub const CLDR_VERSION: &str = \"{}\";", version);
+    println!("pub static CLDR_VERSION: &str = \"{}\";", version);
 
     println!(
-        "pub const LANG_ONLY: &[(u64, (Option<u64>, Option<u32>, Option<u32>)); {}] = &[",
+        "pub static LANG_ONLY: [(u64, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
         lang_only.len()
     );
     lang_only.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
@@ -118,7 +118,7 @@ fn main() {
     println!("];");
 
     println!(
-        "pub const LANG_REGION: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
+        "pub static LANG_REGION: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
         lang_region.len()
     );
     lang_region.sort_by(|a, b| {
@@ -136,7 +136,7 @@ fn main() {
     }
     println!("];");
     println!(
-        "pub const LANG_SCRIPT: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
+        "pub static LANG_SCRIPT: [(u64, u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
         lang_script.len()
     );
     lang_script.sort_by(|a, b| {
@@ -154,7 +154,7 @@ fn main() {
     }
     println!("];");
     println!(
-        "pub const SCRIPT_REGION: [(u32, u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
+        "pub static SCRIPT_REGION: [(u32, u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
         script_region.len()
     );
     script_region.sort_by(|a, b| {
@@ -172,7 +172,7 @@ fn main() {
     }
     println!("];");
     println!(
-        "pub const SCRIPT_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
+        "pub static SCRIPT_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
         script_only.len()
     );
     script_only.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
@@ -181,7 +181,7 @@ fn main() {
     }
     println!("];");
     println!(
-        "pub const REGION_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
+        "pub static REGION_ONLY: [(u32, (Option<u64>, Option<u32>, Option<u32>)); {}] = [",
         region_only.len()
     );
     region_only.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());

@@ -4719,9 +4719,22 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
 
   // Do not touch any nsFrame members after this point without adding
   // weakFrame checks.
+  const nsFrameSelection::FocusMode focusMode = [&]() {
+    // If "Shift" and "Ctrl" are both pressed, "Shift" is given precedence. This
+    // mimics the old behaviour.
+    if (mouseEvent->IsShift()) {
+      return nsFrameSelection::FocusMode::kExtendSelection;
+    }
+
+    if (control) {
+      return nsFrameSelection::FocusMode::kMultiRangeSelection;
+    }
+
+    return nsFrameSelection::FocusMode::kCollapseToNewPoint;
+  }();
+
   rv = fc->HandleClick(offsets.content, offsets.StartOffset(),
-                       offsets.EndOffset(), mouseEvent->IsShift(), control,
-                       offsets.associate);
+                       offsets.EndOffset(), focusMode, offsets.associate);
 
   if (NS_FAILED(rv)) return rv;
 
@@ -4867,14 +4880,18 @@ nsresult nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   // Keep frameSelection alive.
   RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
 
+  const nsFrameSelection::FocusMode focusMode =
+      (aSelectFlags & SELECT_ACCUMULATE)
+          ? nsFrameSelection::FocusMode::kMultiRangeSelection
+          : nsFrameSelection::FocusMode::kCollapseToNewPoint;
   rv = frameSelection->HandleClick(
       startpos.mResultContent, startpos.mContentOffset, startpos.mContentOffset,
-      false, (aSelectFlags & SELECT_ACCUMULATE), CARET_ASSOCIATE_AFTER);
+      focusMode, CARET_ASSOCIATE_AFTER);
   if (NS_FAILED(rv)) return rv;
 
-  rv = frameSelection->HandleClick(endpos.mResultContent, endpos.mContentOffset,
-                                   endpos.mContentOffset, true, false,
-                                   CARET_ASSOCIATE_BEFORE);
+  rv = frameSelection->HandleClick(
+      endpos.mResultContent, endpos.mContentOffset, endpos.mContentOffset,
+      nsFrameSelection::FocusMode::kExtendSelection, CARET_ASSOCIATE_BEFORE);
   if (NS_FAILED(rv)) return rv;
 
   // maintain selection
@@ -4987,10 +5004,13 @@ static nsresult HandleFrameSelection(
       //    can do selection)
       aFrameSelection->SetDragState(true);
 
+      const nsFrameSelection::FocusMode focusMode =
+          aFrameSelection->IsShiftDownInDelayedCaretData()
+              ? nsFrameSelection::FocusMode::kExtendSelection
+              : nsFrameSelection::FocusMode::kCollapseToNewPoint;
       rv = aFrameSelection->HandleClick(
           aOffsets.content, aOffsets.StartOffset(), aOffsets.EndOffset(),
-          aFrameSelection->IsShiftDownInDelayedCaretData(), false,
-          aOffsets.associate);
+          focusMode, aOffsets.associate);
       if (NS_FAILED(rv)) {
         return rv;
       }

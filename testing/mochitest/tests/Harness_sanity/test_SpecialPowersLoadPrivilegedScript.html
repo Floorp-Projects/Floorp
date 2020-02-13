@@ -12,6 +12,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
+/* eslint-disable mozilla/use-services */
 function loadPrivilegedScriptTest() {
   function isMainProcess() {
     return Cc["@mozilla.org/xre/app-info;1"].
@@ -29,7 +30,7 @@ try {
   ok(false, "loadPrivilegedScript shoulde not throw");
 }
 port.onmessage = (e) => {
-  is(contentProcessType, e.data['isMainProcess'], "content and the script should be in the same process");
+  is(contentProcessType, e.data.isMainProcess, "content and the script should be in the same process");
   SimpleTest.finish();
 };
 </script>

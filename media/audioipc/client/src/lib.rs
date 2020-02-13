@@ -33,6 +33,7 @@ pub struct AudioIpcInitParams {
     pub pool_size: usize,
     pub stack_size: usize,
     pub thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
+    pub thread_destroy_callback: Option<extern "C" fn()>,
 }
 
 unsafe impl Send for AudioIpcInitParams {}

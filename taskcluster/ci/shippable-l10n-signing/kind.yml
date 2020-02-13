@@ -6,12 +6,12 @@ loader: taskgraph.loader.single_dep:loader
 
 transforms:
     - taskgraph.transforms.name_sanity:transforms
-    - taskgraph.transforms.nightly_l10n_signing:transforms
+    - taskgraph.transforms.shippable_l10n_signing:transforms
     - taskgraph.transforms.signing:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - nightly-l10n
+    - shippable-l10n
 
 only-for-attributes:
     - nightly

@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "fluent-langneg"
-version = "0.11.1"
+version = "0.12.1"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>"]
 description = "A library for language and locale negotiation.\n"
 homepage = "http://projectfluent.org/"
@@ -26,7 +26,7 @@ repository = "https://github.com/projectfluent/fluent-langneg-rs"
 name = "negotiate"
 harness = false
 [dependencies.unic-langid]
-version = "0.7"
+version = "0.8"
 [dev-dependencies.criterion]
 version = "0.3"
 
@@ -38,11 +38,11 @@ features = ["derive"]
 version = "1.0"
 
 [dev-dependencies.unic-langid]
-version = "0.7"
+version = "0.8"
 features = ["macros"]
 
 [dev-dependencies.unic-locale]
-version = "0.7"
+version = "0.8"
 features = ["macros"]
 
 [features]

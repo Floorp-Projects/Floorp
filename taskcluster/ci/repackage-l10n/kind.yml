@@ -12,7 +12,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - nightly-l10n-signing
+    - shippable-l10n-signing
     - toolchain
 
 only-for-build-platforms:
