@@ -11,18 +11,20 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/SegmentedVector.h"
 
+#include "ds/Bitmap.h"
+#include "gc/ArenaList.h"
 #include "gc/Barrier.h"
 #include "gc/FindSCCs.h"
+#include "gc/GCMarker.h"
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/ZoneAllocator.h"
 #include "js/GCHashTable.h"
-#include "vm/MallocProvider.h"
-#include "vm/Runtime.h"
+#include "vm/AtomsTable.h"
+#include "vm/JSScript.h"
 #include "vm/TypeInference.h"
 
 namespace js {
 
-class Debugger;
 class RegExpZone;
 class WeakRefObject;
 
@@ -31,6 +33,8 @@ class JitZone;
 }  // namespace jit
 
 namespace gc {
+
+class ZoneList;
 
 using ZoneComponentFinder = ComponentFinder<JS::Zone>;
 
@@ -171,6 +175,10 @@ namespace JS {
 // to delete the last compartment in a live zone.
 class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
  private:
+  js::WriteOnceData<bool> isAtomsZone_;
+  js::WriteOnceData<bool> isSelfHostingZone_;
+  js::WriteOnceData<bool> isSystemZone_;
+
   enum class HelperThreadUse : uint32_t { None, Pending, Active };
   mozilla::Atomic<HelperThreadUse, mozilla::SequentiallyConsistent,
                   mozilla::recordreplay::Behavior::DontPreserve>
@@ -193,8 +201,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   js::ZoneData<bool> allocNurseryStrings;
   js::ZoneData<bool> allocNurseryBigInts;
-
-  js::ZoneData<bool> isSystem;
 
   // When true, skip calling the metadata callback. We use this:
   // - to avoid invoking the callback recursively;
@@ -353,7 +359,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   explicit Zone(JSRuntime* rt);
   ~Zone();
 
-  MOZ_MUST_USE bool init(bool isSystem);
+  MOZ_MUST_USE bool init();
 
   void destroy(JSFreeOp* fop);
 
@@ -485,10 +491,13 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   }
   js::jit::JitZone* jitZone() { return jitZone_; }
 
-  bool isAtomsZone() const { return runtimeFromAnyThread()->isAtomsZone(this); }
-  bool isSelfHostingZone() const {
-    return runtimeFromAnyThread()->isSelfHostingZone(this);
-  }
+  bool isAtomsZone() const { return isAtomsZone_; }
+  bool isSelfHostingZone() const { return isSelfHostingZone_; }
+  bool isSystemZone() const { return isSystemZone_; }
+
+  void setIsAtomsZone();
+  void setIsSelfHostingZone();
+  void setIsSystemZone();
 
   void prepareForCompacting();
 

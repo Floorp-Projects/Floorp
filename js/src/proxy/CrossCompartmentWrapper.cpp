@@ -10,6 +10,7 @@
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Iteration.h"
+#include "vm/Runtime.h"
 #include "vm/WrapperObject.h"
 
 #include "gc/Nursery-inl.h"
