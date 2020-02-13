@@ -1458,6 +1458,8 @@ PopupNotifications.prototype = {
 
         if (notification.options.extraAttr) {
           anchorElm.setAttribute("extraAttr", notification.options.extraAttr);
+        } else {
+          anchorElm.removeAttribute("extraAttr");
         }
       }
     }
