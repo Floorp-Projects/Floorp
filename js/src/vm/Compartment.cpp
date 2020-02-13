@@ -199,8 +199,8 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
   // associated with the self-hosting zone. We don't want to create
   // wrappers for objects in other runtimes, which may be the case for the
   // self-hosting zone.
-  MOZ_ASSERT(!cx->runtime()->isSelfHostingZone(cx->zone()));
-  MOZ_ASSERT(!cx->runtime()->isSelfHostingZone(obj->zone()));
+  MOZ_ASSERT(!cx->zone()->isSelfHostingZone());
+  MOZ_ASSERT(!obj->zone()->isSelfHostingZone());
 
   // The object is already in the right compartment. Normally same-
   // compartment returns the object itself, however, windows are always

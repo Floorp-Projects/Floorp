@@ -512,10 +512,7 @@ class JS::Realm : public JS::shadow::Realm {
   bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 
   bool isSelfHostingRealm() const { return isSelfHostingRealm_; }
-  void setIsSelfHostingRealm() {
-    isSelfHostingRealm_ = true;
-    isSystem_ = true;
-  }
+  void setIsSelfHostingRealm();
 
   /* The global object for this realm.
    *
