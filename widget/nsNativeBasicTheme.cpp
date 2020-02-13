@@ -811,6 +811,16 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     aAppearance = StyleAppearance::Menulist;
   }
 
+  if (IsWidgetScrollbarPart(aAppearance)) {
+    const auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+    // We don't currently handle custom scrollbars on nsNativeBasicTheme. We
+    // could, potentially.
+    if (style->StyleUI()->HasCustomScrollbars() ||
+        style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
+      return false;
+    }
+  }
+
   switch (aAppearance) {
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:

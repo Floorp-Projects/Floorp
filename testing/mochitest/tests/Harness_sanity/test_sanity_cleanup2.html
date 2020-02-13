@@ -9,7 +9,7 @@
 </head>
 <body>
 <script class="testbody" type="text/javascript">
-for (pref of [1, 2]) {
+for (const pref of [1, 2]) {
   try {
     SpecialPowers.getBoolPref("simpletest.cleanup." + pref);
     ok(false, "Cleanup function should have unset pref");

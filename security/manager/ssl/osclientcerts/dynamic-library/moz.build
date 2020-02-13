@@ -19,6 +19,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'ws2_32',
     ]
 
+if CONFIG['OS_ARCH'] == 'Darwin':
+    OS_LIBS += [
+        '-framework Security',
+    ]
+
 SharedLibrary('osclientcerts')
 
 NoVisibilityFlags()

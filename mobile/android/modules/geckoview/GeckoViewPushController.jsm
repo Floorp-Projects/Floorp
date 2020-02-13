@@ -60,9 +60,7 @@ const GeckoViewPushController = {
         break;
       }
       case "GeckoView:PushSubscriptionChanged": {
-        const {
-          subscription: { scope },
-        } = aData;
+        const { scope } = aData;
 
         const [url, principal] = createScopeAndPrincipal(scope);
 

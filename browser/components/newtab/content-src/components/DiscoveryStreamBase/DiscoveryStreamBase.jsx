@@ -4,6 +4,7 @@
 
 import { actionCreators as ac } from "common/Actions.jsm";
 import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
+import { CollectionCardGrid } from "content-src/components/DiscoveryStreamComponents/CollectionCardGrid/CollectionCardGrid";
 import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
 import { connect } from "react-redux";
 import { DSDismiss } from "content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss";
@@ -206,6 +207,35 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             alignment={component.properties.alignment}
             header={component.header}
           />
+        );
+      case "CollectionCardGrid":
+        if (
+          !component.data ||
+          !component.data.spocs ||
+          !component.data.spocs[0] ||
+          // We only display complete collections.
+          component.data.spocs.length < 3
+        ) {
+          return null;
+        }
+        return (
+          <DSDismiss
+            dispatch={this.props.dispatch}
+            shouldSendImpressionStats={true}
+            extraClasses={`ds-dismiss-ds-collection`}
+          >
+            <CollectionCardGrid
+              placement={component.placement}
+              data={component.data}
+              feed={component.feed}
+              border={component.properties.border}
+              type={component.type}
+              dispatch={this.props.dispatch}
+              items={component.properties.items}
+              cta_variant={component.cta_variant}
+              display_engagement_labels={ENGAGEMENT_LABEL_ENABLED}
+            />
+          </DSDismiss>
         );
       case "CardGrid":
         return (

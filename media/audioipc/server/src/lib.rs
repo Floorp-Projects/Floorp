@@ -71,7 +71,7 @@ fn run() -> Result<ServerWrapper> {
         }
         trace!("Starting up cubeb audio callback event loop thread...");
         Ok(())
-    })
+    }, || {})
     .or_else(|e| {
         debug!(
             "Failed to start cubeb audio callback event loop thread: {:?}",
@@ -80,7 +80,7 @@ fn run() -> Result<ServerWrapper> {
         Err(e)
     })?;
 
-    let core_thread = core::spawn_thread("AudioIPC Server RPC", move || Ok(())).or_else(|e| {
+    let core_thread = core::spawn_thread("AudioIPC Server RPC", move || Ok(()), || {}).or_else(|e| {
         debug!(
             "Failed to cubeb audio core event loop thread: {:?}",
             e.description()

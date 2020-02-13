@@ -1306,6 +1306,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout"
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 // List of langs that get the 7 row layout.
 pref("browser.newtabpage.activity-stream.discoverystream.lang-layout-config", "en");
+// List of regions that get stories by default.
+pref("browser.newtabpage.activity-stream.discoverystream.region-stories-config", "US,DE,CA");
 // Switch between different versions of the recommendation provider.
 pref("browser.newtabpage.activity-stream.discoverystream.personalization.version", 1);
 // Configurable keys used by personalization version 2.
@@ -1523,11 +1525,7 @@ pref("toolkit.telemetry.updatePing.enabled", true);
 // Enables sending 'bhr' pings when the browser hangs.
 pref("toolkit.telemetry.bhrPing.enabled", true);
 // Whether to enable Ecosystem Telemetry, requires a restart.
-#ifdef NIGHTLY_BUILD
-  pref("toolkit.telemetry.ecosystemtelemetry.enabled", true);
-#else
-  pref("toolkit.telemetry.ecosystemtelemetry.enabled", false);
-#endif
+pref("toolkit.telemetry.ecosystemtelemetry.enabled", false);
 
 // Ping Centre Telemetry settings.
 pref("browser.ping-centre.telemetry", true);

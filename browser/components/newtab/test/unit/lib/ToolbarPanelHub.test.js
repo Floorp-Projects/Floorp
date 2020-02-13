@@ -226,6 +226,19 @@ describe("ToolbarPanelHub", () => {
       assert.notCalled(everyWindowStub.registerCallback);
     });
   });
+  describe("#disableAppmenuButton", () => {
+    it("should call the unregisterCallback", () => {
+      assert.notCalled(everyWindowStub.unregisterCallback);
+
+      instance.disableAppmenuButton();
+
+      assert.calledOnce(everyWindowStub.unregisterCallback);
+      assert.calledWithExactly(
+        everyWindowStub.unregisterCallback,
+        "appMenu-whatsnew-button"
+      );
+    });
+  });
   describe("#enableToolbarButton", () => {
     it("should registerCallback on enableToolbarButton if messages.length", async () => {
       instance.init(waitForInitializedStub, {

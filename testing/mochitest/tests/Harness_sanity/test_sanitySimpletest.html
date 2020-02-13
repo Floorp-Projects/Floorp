@@ -84,6 +84,7 @@ function starttest() {
             //expect and throw exception here. Otherwise, any code that follows the throw call will never be executed
             SimpleTest.expectUncaughtException();
             //make sure we catch this error
+            // eslint-disable-next-line no-throw-literal
             throw "i am an uncaught exception"
           }
         );

@@ -118,7 +118,7 @@ job-template:
             default: b-linux
             win.*: b-win2012
     treeherder:
-        symbol: L10n(N)
+        symbol: L10n(B)
         tier:
             by-build-platform:
                 default: 1

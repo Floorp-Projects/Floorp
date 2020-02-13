@@ -215,7 +215,7 @@ static bool LaunchAppWithForkServer(const std::vector<std::string>& argv,
 bool LaunchApp(const std::vector<std::string>& argv,
                const LaunchOptions& options, ProcessHandle* process_handle) {
 #if defined(MOZ_ENABLE_FORKSERVER)
-  if (options.use_forkserver) {
+  if (options.use_forkserver && ForkServiceChild::Get()) {
     return LaunchAppWithForkServer(argv, options, process_handle);
   }
 #endif

@@ -43,6 +43,10 @@ async function initBrowserToolboxTask({
   await pushPref("devtools.browsertoolbox.enable-test-server", true);
   await pushPref("devtools.debugger.prompt-connection", false);
 
+  if (enableBrowserToolboxFission) {
+    await pushPref("devtools.browsertoolbox.fission", true);
+  }
+
   // This rejection seems to affect all tests using the browser toolbox.
   ChromeUtils.import(
     "resource://testing-common/PromiseTestUtils.jsm"
@@ -83,10 +87,6 @@ async function initBrowserToolboxTask({
   const target = await client.mainRoot.getMainProcess();
   const consoleFront = await target.getFront("console");
   const preferenceFront = await client.mainRoot.getFront("preference");
-
-  if (enableBrowserToolboxFission) {
-    await preferenceFront.setBoolPref("devtools.browsertoolbox.fission", true);
-  }
 
   if (enableContentMessages) {
     await preferenceFront.setBoolPref(

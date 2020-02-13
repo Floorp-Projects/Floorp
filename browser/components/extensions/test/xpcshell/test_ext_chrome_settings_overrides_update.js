@@ -20,6 +20,9 @@ AddonTestUtils.createAppInfo(
   "1",
   "42"
 );
+// Override ExtensionXPCShellUtils.jsm's overriding of the pref as the
+// search service needs it.
+Services.prefs.clearUserPref("services.settings.default_bucket");
 
 async function setupRemoteSettings() {
   const settings = await RemoteSettings("hijack-blocklists");

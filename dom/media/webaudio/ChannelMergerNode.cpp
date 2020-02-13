@@ -8,6 +8,7 @@
 #include "mozilla/dom/ChannelMergerNodeBinding.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace dom {
@@ -72,7 +73,10 @@ already_AddRefed<ChannelMergerNode> ChannelMergerNode::Create(
     ErrorResult& aRv) {
   if (aOptions.mNumberOfInputs == 0 ||
       aOptions.mNumberOfInputs > WebAudioUtils::MaxChannelCount) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.ThrowIndexSizeError(
+        nsPrintfCString("Number of inputs (%u) must be in the range [1, number "
+                        "of supported channels]",
+                        aOptions.mNumberOfInputs));
     return nullptr;
   }
 

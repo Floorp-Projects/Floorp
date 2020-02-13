@@ -17,8 +17,8 @@ kind-dependencies:
     - build-signing
     - repackage
     - repackage-signing
-    - nightly-l10n
-    - nightly-l10n-signing
+    - shippable-l10n
+    - shippable-l10n-signing
     - repackage-l10n
     - repackage-signing-l10n
     - partials

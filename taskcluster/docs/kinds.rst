@@ -55,18 +55,18 @@ The l10n kind takes the last published nightly build, and generates localized bu
 from it. You can read more about how to trigger these on the `wiki
 <https://wiki.mozilla.org/ReleaseEngineering/TryServer#Desktop_l10n_jobs_.28on_Taskcluster.29>`_.
 
-nightly-l10n
-------------
+shippable-l10n
+--------------
 
 The nightly l10n kind repacks a specific nightly build (from the same source code)
 in order to provide localized versions of the same source.
 
-nightly-l10n-signing
---------------------
+shippable-l10n-signing
+----------------------
 
-The nightly l10n signing kind takes artifacts from the nightly-l10n kind and
+The shippable l10n signing kind takes artifacts from the shippable-l10n kind and
 passes them to signing servers to have their contents signed appropriately, based
-on an appropriate signing format. One signing job is created for each nightly-l10n
+on an appropriate signing format. One signing job is created for each shippable-l10n
 job (usually chunked).
 
 source-test

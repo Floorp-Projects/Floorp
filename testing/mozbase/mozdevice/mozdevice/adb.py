@@ -3110,24 +3110,22 @@ class ADBDevice(ADBCommand):
 
         :param str: app_name: Name of application (e.g. `org.mozilla.fennec`)
         """
-        try:
-            if self.version >= version_codes.M:
-                permissions = [
-                    'android.permission.WRITE_EXTERNAL_STORAGE',
-                    'android.permission.READ_EXTERNAL_STORAGE',
-                    'android.permission.ACCESS_COARSE_LOCATION',
-                    'android.permission.ACCESS_FINE_LOCATION',
-                    'android.permission.CAMERA',
-                    'android.permission.RECORD_AUDIO',
-                ]
-                if self.version >= version_codes.P:
-                    permissions.append('android.permission.FOREGROUND_SERVICE')
-                self._logger.info("Granting important runtime permissions to %s" % app_name)
-                for permission in permissions:
+        if self.version >= version_codes.M:
+            permissions = [
+                'android.permission.WRITE_EXTERNAL_STORAGE',
+                'android.permission.READ_EXTERNAL_STORAGE',
+                'android.permission.ACCESS_COARSE_LOCATION',
+                'android.permission.ACCESS_FINE_LOCATION',
+                'android.permission.CAMERA',
+                'android.permission.RECORD_AUDIO',
+            ]
+            self._logger.info("Granting important runtime permissions to %s" % app_name)
+            for permission in permissions:
+                try:
                     self.shell_output('pm grant %s %s' % (app_name, permission))
-        except ADBError as e:
-            self._logger.warning("Unable to grant runtime permissions to %s due to %s" %
-                                 (app_name, e))
+                except ADBError as e:
+                    self._logger.warning("Unable to grant runtime permission %s to %s due to %s" %
+                                         (permission, app_name, e))
 
     def install_app(self, apk_path, replace=False, timeout=None):
         """Installs an app on the device.

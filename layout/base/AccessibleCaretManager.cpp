@@ -630,9 +630,10 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
           offsets.content, offsets.offset, offsets.associate, &offset);
       if (theFrame && theFrame != ptFrame) {
         SetSelectionDragState(true);
-        frameSelection->HandleClick(offsets.content, offsets.StartOffset(),
-                                    offsets.EndOffset(), false, false,
-                                    offsets.associate);
+        frameSelection->HandleClick(
+            offsets.content, offsets.StartOffset(), offsets.EndOffset(),
+            nsFrameSelection::FocusMode::kCollapseToNewPoint,
+            offsets.associate);
         SetSelectionDragState(false);
         ClearMaintainedSelection();
 
@@ -1257,9 +1258,12 @@ nsresult AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint) {
 
   ClearMaintainedSelection();
 
+  const nsFrameSelection::FocusMode focusMode =
+      (GetCaretMode() == CaretMode::Selection)
+          ? nsFrameSelection::FocusMode::kExtendSelection
+          : nsFrameSelection::FocusMode::kCollapseToNewPoint;
   fs->HandleClick(offsets.content, offsets.StartOffset(), offsets.EndOffset(),
-                  GetCaretMode() == CaretMode::Selection, false,
-                  offsets.associate);
+                  focusMode, offsets.associate);
   return NS_OK;
 }
 

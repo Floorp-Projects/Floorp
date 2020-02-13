@@ -653,7 +653,7 @@ class _ASRouter {
       }
     }
 
-    this.setState(prevState => ({
+    return this.setState(prevState => ({
       providers,
       // Clear any messages from removed providers
       messages: [

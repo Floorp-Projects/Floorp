@@ -66,7 +66,10 @@ const INITIAL_STATE = {
       spocs_endpoint: "",
       spocs_per_domain: 1,
       lastUpdated: null,
-      data: {}, // {spocs: []}
+      data: {
+        // "spocs": {title: "", context: "", items: []},
+        // "placement1": {title: "", context: "", items: []},
+      },
       loaded: false,
       frequency_caps: [],
       blocked: [],
@@ -566,11 +569,18 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     const forPlacement = placement => {
       const placementSpocs = data[placement.name];
 
-      if (!placementSpocs || !placementSpocs.length) {
+      if (
+        !placementSpocs ||
+        !placementSpocs.items ||
+        !placementSpocs.items.length
+      ) {
         return;
       }
 
-      result[placement.name] = handleSites(placementSpocs);
+      result[placement.name] = {
+        ...placementSpocs,
+        items: handleSites(placementSpocs.items),
+      };
     };
 
     if (!placements || !placements.length) {

@@ -136,7 +136,7 @@ def generate_upstream_artifacts(upstream_task_ref, locales):
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        upstream_task_ref = get_upstream_task_ref(job, expected_kinds=('build', 'nightly-l10n'))
+        upstream_task_ref = get_upstream_task_ref(job, expected_kinds=('build', 'shippable-l10n'))
 
         job['worker']['upstream-artifacts'] = generate_upstream_artifacts(
             upstream_task_ref, job['attributes']['chunk_locales']

@@ -43,10 +43,11 @@ impl fmt::Debug for CoreThread {
     }
 }
 
-pub fn spawn_thread<S, F>(name: S, f: F) -> io::Result<CoreThread>
+pub fn spawn_thread<S, F, D>(name: S, f: F, d: D) -> io::Result<CoreThread>
 where
     S: Into<String>,
     F: FnOnce() -> io::Result<()> + Send + 'static,
+    D: FnOnce() -> () + Send + 'static,
 {
     let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
     let (handle_tx, handle_rx) = mpsc::channel::<current_thread::Handle>();
@@ -64,6 +65,7 @@ where
 
         let _ = rt.block_on(shutdown_rx);
         trace!("thread shutdown...");
+        d();
     })?;
 
     let handle = handle_rx.recv().or_else(|_| {

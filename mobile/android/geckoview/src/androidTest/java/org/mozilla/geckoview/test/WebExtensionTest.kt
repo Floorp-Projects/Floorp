@@ -357,6 +357,38 @@ class WebExtensionTest : BaseSessionTest() {
                 WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE)
     }
 
+    @Test
+    fun installDeny() {
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        // Ensure border is empty to start.
+        assertBodyBorderEqualTo("")
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.DENY)
+            }
+        })
+
+        sessionRule.waitForResult(
+                controller.install("resource://android/assets/web_extensions/borderify.xpi").accept({
+            // We should not be able to install the extension.
+            assertTrue(false)
+        }, { exception ->
+            assertTrue(exception is WebExtension.InstallException)
+            val installException = exception as WebExtension.InstallException
+            assertEquals(installException.code, WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED)
+        }));
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was not installed and the border is still empty.
+        assertBodyBorderEqualTo("")
+    }
+
     // This test
     // - Registers a web extension
     // - Listens for messages and waits for a message

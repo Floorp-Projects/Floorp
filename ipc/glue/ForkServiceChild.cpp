@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=8 sts=4 et sw=4 tw=80: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +8,7 @@
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -124,7 +125,9 @@ already_AddRefed<ForkServerLauncher> ForkServerLauncher::Create() {
 NS_IMETHODIMP
 ForkServerLauncher::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData) {
-  if (!mHaveStartedClient && strcmp(aTopic, NS_XPCOM_STARTUP_CATEGORY) == 0) {
+  if (!mHaveStartedClient &&
+      strcmp(aTopic, NS_XPCOM_STARTUP_CATEGORY) == 0 &&
+      StaticPrefs::dom_ipc_forkserver_enable_AtStartup()) {
     mHaveStartedClient = true;
     ForkServiceChild::StartForkServer();
 
