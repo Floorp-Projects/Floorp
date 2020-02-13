@@ -15,6 +15,7 @@ loader.lazyRequireGetter(
   "AutocompletePopup",
   "devtools/client/shared/autocomplete-popup"
 );
+
 loader.lazyRequireGetter(
   this,
   "PropTypes",
@@ -46,7 +47,10 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);
 
 // React & Redux
-const { Component } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
@@ -59,6 +63,10 @@ const {
   getAutocompleteState,
 } = require("devtools/client/webconsole/selectors/autocomplete");
 const actions = require("devtools/client/webconsole/actions/index");
+
+const EvaluationSelector = createFactory(
+  require("devtools/client/webconsole/components/Input/EvaluationSelector")
+);
 
 // Constants used for defining the direction of JSTerm input history navigation.
 const {
@@ -107,6 +115,7 @@ class JSTerm extends Component {
       editorWidth: PropTypes.number,
       showEditorOnboarding: PropTypes.bool,
       autocomplete: PropTypes.bool,
+      showEvaluationSelector: PropTypes.bool,
     };
   }
 
@@ -1289,6 +1298,18 @@ class JSTerm extends Component {
     });
   }
 
+  renderEvaluationSelector() {
+    if (
+      !this.props.webConsoleUI.wrapper.toolbox ||
+      this.props.editorMode ||
+      !this.props.showEvaluationSelector
+    ) {
+      return null;
+    }
+
+    return EvaluationSelector(this.props);
+  }
+
   renderEditorOnboarding() {
     if (!this.props.showEditorOnboarding) {
       return null;
@@ -1347,7 +1368,11 @@ class JSTerm extends Component {
           this.node = node;
         },
       },
-      this.renderOpenEditorButton(),
+      dom.div(
+        { className: "webconsole-input-buttons" },
+        this.renderEvaluationSelector(),
+        this.renderOpenEditorButton()
+      ),
       this.renderEditorOnboarding()
     );
   }
@@ -1361,6 +1386,7 @@ function mapStateToProps(state) {
     getValueFromHistory: direction => getHistoryValue(state, direction),
     autocompleteData: getAutocompleteState(state),
     showEditorOnboarding: state.ui.showEditorOnboarding,
+    showEvaluationSelector: state.ui.showEvaluationSelector,
   };
 }
 
