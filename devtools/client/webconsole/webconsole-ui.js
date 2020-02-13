@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 const {
@@ -152,11 +151,6 @@ class WebConsoleUI {
       });
 
       await this.wrapper.init();
-
-      const id = WebConsoleUtils.supportsString(this.hudId);
-      if (Services.obs) {
-        Services.obs.notifyObservers(id, "web-console-created");
-      }
     })();
 
     return this._initializer;
