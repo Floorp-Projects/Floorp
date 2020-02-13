@@ -5273,18 +5273,6 @@ void ScriptWarmUpData::trace(JSTracer* trc) {
   }
 }
 
-void JSScript::traceChildren(JSTracer* trc) {
-  BaseScript::traceChildren(trc);
-
-  if (lazyScript) {
-    TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
-  }
-
-  if (trc->isMarkingTracer()) {
-    GCMarker::fromTracer(trc)->markImplicitEdges(this);
-  }
-}
-
 size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
   size_t nlivefixed = numAlwaysLiveFixedSlots();
 
@@ -5505,8 +5493,8 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
 
 void LazyScript::initScript(JSScript* script) {
   MOZ_ASSERT(script);
-  MOZ_ASSERT(!script_.unbarrieredGet());
-  script_.set(script);
+  MOZ_ASSERT(!u.script_.unbarrieredGet());
+  u.script_.set(script);
 }
 
 /* static */
@@ -5535,6 +5523,11 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
   if (!lazy) {
     return nullptr;
   }
+
+  // Mark this BaseScript as being a LazyScript and construct the appropriate
+  // union arm.
+  lazy->setFlag(ImmutableFlags::IsLazyScript);
+  new (&lazy->u.script_) WeakHeapPtrScript(nullptr);
 
   // Allocate a PrivateScriptData if it will not be empty. Lazy class
   // constructors also need PrivateScriptData for field lists.

@@ -750,20 +750,15 @@ struct ImplicitEdgeHolderType {
 
 // For now, we only handle JSObject* and JSScript* keys, but the linear time
 // algorithm can be easily extended by adding in more types here, then making
-// GCMarker::traverse<T> call markPotentialEphemeronKey.
+// GCMarker::traverse<T> call markImplicitEdges.
 template <>
 struct ImplicitEdgeHolderType<JSObject*> {
   typedef JSObject* Type;
 };
 
 template <>
-struct ImplicitEdgeHolderType<JSScript*> {
-  typedef JSScript* Type;
-};
-
-template <>
-struct ImplicitEdgeHolderType<LazyScript*> {
-  typedef LazyScript* Type;
+struct ImplicitEdgeHolderType<BaseScript*> {
+  typedef BaseScript* Type;
 };
 
 void GCMarker::markEphemeronValues(gc::Cell* markedCell,
@@ -809,8 +804,7 @@ void GCMarker::markImplicitEdges(T* thing) {
 }
 
 template void GCMarker::markImplicitEdges(JSObject*);
-template void GCMarker::markImplicitEdges(JSScript*);
-template void GCMarker::markImplicitEdges(LazyScript*);
+template void GCMarker::markImplicitEdges(BaseScript*);
 
 }  // namespace js
 
@@ -1135,19 +1129,24 @@ void BaseScript::traceChildren(JSTracer* trc) {
       DebugAPI::traceDebugScript(trc, script);
     }
   }
-}
 
-void LazyScript::traceChildren(JSTracer* trc) {
-  BaseScript::traceChildren(trc);
-
-  if (trc->traceWeakEdges()) {
-    TraceNullableEdge(trc, &script_, "script");
+  // Trace the edge to our twin. Note that it will have the opposite type of
+  // current script.
+  if (isLazyScript()) {
+    if (trc->traceWeakEdges()) {
+      TraceNullableEdge(trc, &u.script_, "script");
+    }
+  } else {
+    if (u.lazyScript) {
+      TraceManuallyBarrieredEdge(trc, &u.lazyScript, "lazyScript");
+    }
   }
 
   if (trc->isMarkingTracer()) {
     GCMarker::fromTracer(trc)->markImplicitEdges(this);
   }
 }
+
 inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
   traverseEdge(thing, static_cast<JSObject*>(thing->functionOrGlobal_));
   traverseEdge(thing, static_cast<JSObject*>(thing->sourceObject_));

@@ -937,10 +937,13 @@ static void CheckFlagsOnDelazification(uint32_t lazy, uint32_t nonLazy) {
   // These flags are computed for lazy scripts and may have a different
   // definition for non-lazy scripts.
   //
+  //  IsLazyScript:       This flag will be removed in Bug 1529456.
+  //
   //  TreatAsRunOnce:     Some conditions depend on parent context and are
   //                      computed during lazy parsing, while other conditions
   //                      need to full parse.
   constexpr uint32_t CustomFlagsMask =
+      uint32_t(BaseScript::ImmutableFlags::IsLazyScript) |
       uint32_t(BaseScript::ImmutableFlags::TreatAsRunOnce);
 
   // These flags are expected to match between lazy and full parsing.
