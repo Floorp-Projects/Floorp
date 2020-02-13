@@ -58,6 +58,10 @@ permalink: /changelog/
     * Collections performed before initialization (preinit tasks) are now dispatched off
       the main thread during initialization.
 
+* **feature-awesomebar**
+  * Added `showDescription` parameter (default to `true`) to `SearchSuggestionProvider` constructors to add the possibility of removing search suggestion description.
+
+
 # 31.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v30.0.0...v31.0.0)
