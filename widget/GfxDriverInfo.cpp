@@ -23,8 +23,6 @@ nsAString* GfxDriverInfo::sDriverVendors[DriverVendorMax];
 GfxDriverInfo::GfxDriverInfo()
     : mOperatingSystem(OperatingSystem::Unknown),
       mOperatingSystemVersion(0),
-      mScreen(ScreenSizeStatus::All),
-      mBattery(BatteryStatus::All),
       mDesktopEnvironment(GfxDriverInfo::GetDesktopEnvironment(DesktopAll)),
       mWindowProtocol(GfxDriverInfo::GetWindowProtocol(WindowingAll)),
       mAdapterVendor(GfxDriverInfo::GetDeviceVendor(VendorAll)),
@@ -41,17 +39,14 @@ GfxDriverInfo::GfxDriverInfo()
       mGpu2(false) {}
 
 GfxDriverInfo::GfxDriverInfo(
-    OperatingSystem os, ScreenSizeStatus screen, BatteryStatus battery,
-    const nsAString& desktopEnv, const nsAString& windowProtocol,
-    const nsAString& vendor, const nsAString& driverVendor,
-    GfxDeviceFamily* devices, int32_t feature, int32_t featureStatus,
-    VersionComparisonOp op, uint64_t driverVersion, const char* ruleId,
-    const char* suggestedVersion /* = nullptr */, bool ownDevices /* = false */,
-    bool gpu2 /* = false */)
+    OperatingSystem os, const nsAString& desktopEnv,
+    const nsAString& windowProtocol, const nsAString& vendor,
+    const nsAString& driverVendor, GfxDeviceFamily* devices, int32_t feature,
+    int32_t featureStatus, VersionComparisonOp op, uint64_t driverVersion,
+    const char* ruleId, const char* suggestedVersion /* = nullptr */,
+    bool ownDevices /* = false */, bool gpu2 /* = false */)
     : mOperatingSystem(os),
       mOperatingSystemVersion(0),
-      mScreen(screen),
-      mBattery(battery),
       mDesktopEnvironment(desktopEnv),
       mWindowProtocol(windowProtocol),
       mAdapterVendor(vendor),
@@ -70,8 +65,6 @@ GfxDriverInfo::GfxDriverInfo(
 GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
     : mOperatingSystem(aOrig.mOperatingSystem),
       mOperatingSystemVersion(aOrig.mOperatingSystemVersion),
-      mScreen(aOrig.mScreen),
-      mBattery(aOrig.mBattery),
       mDesktopEnvironment(aOrig.mDesktopEnvironment),
       mWindowProtocol(aOrig.mWindowProtocol),
       mAdapterVendor(aOrig.mAdapterVendor),
@@ -102,52 +95,16 @@ GfxDriverInfo::~GfxDriverInfo() {
   }
 }
 
-void GfxDeviceFamily::Append(const nsAString& aDeviceId) {
-  mIds.AppendElement(aDeviceId);
-}
-
-void GfxDeviceFamily::AppendRange(int32_t aBeginDeviceId,
-                                  int32_t aEndDeviceId) {
-  mRanges.AppendElement(
-      GfxDeviceFamily::DeviceRange{aBeginDeviceId, aEndDeviceId});
-}
-
-nsresult GfxDeviceFamily::Contains(nsAString& aDeviceId) const {
-  for (const auto& id : mIds) {
-    if (id.Equals(aDeviceId, nsCaseInsensitiveStringComparator())) {
-      return NS_OK;
-    }
-  }
-
-  if (mRanges.IsEmpty()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsresult valid = NS_OK;
-  int32_t deviceId = aDeviceId.ToInteger(&valid, 16);
-  if (valid != NS_OK) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  for (const auto& range : mRanges) {
-    if (deviceId >= range.mBegin && deviceId <= range.mEnd) {
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
 // Macros for appending a device to the DeviceFamily.
 #define APPEND_DEVICE(device) APPEND_DEVICE2(#device)
-#define APPEND_DEVICE2(device) deviceFamily->Append(NS_LITERAL_STRING(device))
-#define APPEND_RANGE(start, end) deviceFamily->AppendRange(start, end)
+#define APPEND_DEVICE2(device) \
+  deviceFamily->AppendElement(NS_LITERAL_STRING(device))
 
 const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
-  if (id >= DeviceFamilyMax) {
-    MOZ_ASSERT_UNREACHABLE("DeviceFamily id is out of range");
-    return nullptr;
-  }
+  // The code here is too sensitive to fall through to the default case if the
+  // code is invalid.
+  NS_ASSERTION(id >= 0 && id < DeviceFamilyMax,
+               "DeviceFamily id is out of range");
 
   // If it already exists, we must have processed it once, so return it now.
   if (sDeviceFamilies[id]) {
@@ -429,105 +386,8 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       /* GT218GLM */
       APPEND_DEVICE(0x0a7c);
       break;
-    case NvidiaRolloutWebRender:
-      APPEND_RANGE(0x06c0, INT32_MAX);
-      break;
-    case IntelRolloutWebRender:
-      // skylake gt2+
-      APPEND_DEVICE(0x1912);
-      APPEND_DEVICE(0x1913);
-      APPEND_DEVICE(0x1915);
-      APPEND_DEVICE(0x1916);
-      APPEND_DEVICE(0x1917);
-      APPEND_DEVICE(0x191a);
-      APPEND_DEVICE(0x191b);
-      APPEND_DEVICE(0x191d);
-      APPEND_DEVICE(0x191e);
-      APPEND_DEVICE(0x1921);
-      APPEND_DEVICE(0x1923);
-      APPEND_DEVICE(0x1926);
-      APPEND_DEVICE(0x1927);
-      APPEND_DEVICE(0x192b);
-      APPEND_DEVICE(0x1932);
-      APPEND_DEVICE(0x193b);
-      APPEND_DEVICE(0x193d);
-
-      // kabylake gt2+
-      APPEND_DEVICE(0x5912);
-      APPEND_DEVICE(0x5916);
-      APPEND_DEVICE(0x5917);
-      APPEND_DEVICE(0x591a);
-      APPEND_DEVICE(0x591b);
-      APPEND_DEVICE(0x591c);
-      APPEND_DEVICE(0x591d);
-      APPEND_DEVICE(0x591e);
-      APPEND_DEVICE(0x5921);
-      APPEND_DEVICE(0x5926);
-      APPEND_DEVICE(0x5923);
-      APPEND_DEVICE(0x5927);
-      APPEND_DEVICE(0x593b);
-
-      // coffeelake gt2+
-      APPEND_DEVICE(0x3e91);
-      APPEND_DEVICE(0x3e92);
-      APPEND_DEVICE(0x3e96);
-      APPEND_DEVICE(0x3e98);
-      APPEND_DEVICE(0x3e9a);
-      APPEND_DEVICE(0x3e9b);
-      APPEND_DEVICE(0x3e94);
-      APPEND_DEVICE(0x3ea0);
-      APPEND_DEVICE(0x3ea9);
-      APPEND_DEVICE(0x3ea2);
-      APPEND_DEVICE(0x3ea6);
-      APPEND_DEVICE(0x3ea7);
-      APPEND_DEVICE(0x3ea8);
-      APPEND_DEVICE(0x3ea5);
-
-      // broadwell gt2+
-      APPEND_DEVICE(0x1612);
-      APPEND_DEVICE(0x1616);
-      APPEND_DEVICE(0x161a);
-      APPEND_DEVICE(0x161b);
-      APPEND_DEVICE(0x161d);
-      APPEND_DEVICE(0x161e);
-      APPEND_DEVICE(0x1622);
-      APPEND_DEVICE(0x1626);
-      APPEND_DEVICE(0x162a);
-      APPEND_DEVICE(0x162b);
-      APPEND_DEVICE(0x162d);
-      APPEND_DEVICE(0x162e);
-      APPEND_DEVICE(0x1632);
-      APPEND_DEVICE(0x1636);
-      APPEND_DEVICE(0x163a);
-      APPEND_DEVICE(0x163b);
-      APPEND_DEVICE(0x163d);
-      APPEND_DEVICE(0x163e);
-
-      // HD Graphics 4600
-      APPEND_DEVICE(0x0412);
-      APPEND_DEVICE(0x0416);
-      APPEND_DEVICE(0x041a);
-      APPEND_DEVICE(0x041b);
-      APPEND_DEVICE(0x041e);
-      APPEND_DEVICE(0x0a12);
-      APPEND_DEVICE(0x0a16);
-      APPEND_DEVICE(0x0a1a);
-      APPEND_DEVICE(0x0a1b);
-      APPEND_DEVICE(0x0a1e);
-      break;
-    case AtiRolloutWebRender:
-      APPEND_RANGE(0x6600, 0x66af);
-      APPEND_RANGE(0x6700, 0x671f);
-      APPEND_RANGE(0x6780, 0x683f);
-      APPEND_RANGE(0x6860, 0x687f);
-      APPEND_RANGE(0x6900, 0x69ff);
-      APPEND_DEVICE(0x7300);
-      APPEND_RANGE(0x7310, 0x731f);
-      APPEND_RANGE(0x9830, 0x986f);
-      APPEND_RANGE(0x9900, 0x99ff);
-      break;
     // This should never happen, but we get a warning if we don't handle this.
-    default:
+    case DeviceFamilyMax:
       NS_WARNING("Invalid DeviceFamily id");
       break;
   }

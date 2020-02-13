@@ -24,7 +24,6 @@ class GfxInfo : public GfxInfoBase {
   NS_IMETHOD GetD2DEnabled(bool* aD2DEnabled) override;
   NS_IMETHOD GetDWriteEnabled(bool* aDWriteEnabled) override;
   NS_IMETHOD GetDWriteVersion(nsAString& aDwriteVersion) override;
-  NS_IMETHOD GetHasBattery(bool* aHasBattery) override;
   NS_IMETHOD GetCleartypeParameters(nsAString& aCleartypeParams) override;
   NS_IMETHOD GetWindowProtocol(nsAString& aWindowProtocol) override;
   NS_IMETHOD GetDesktopEnvironment(nsAString& aDesktopEnvironment) override;
@@ -54,10 +53,9 @@ class GfxInfo : public GfxInfoBase {
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
 
-  nsresult Init() override;
+  virtual nsresult Init() override;
 
-  uint32_t OperatingSystemVersion() override { return mWindowsVersion; }
-  uint32_t OperatingSystemBuild() override { return mWindowsBuildNumber; }
+  virtual uint32_t OperatingSystemVersion() override { return mWindowsVersion; }
 
   nsresult FindMonitors(JSContext* cx, JS::HandleObject array) override;
 
@@ -96,12 +94,10 @@ class GfxInfo : public GfxInfoBase {
   nsString mAdapterDeviceID[2];
   nsString mAdapterSubsysID[2];
   uint32_t mWindowsVersion;
-  uint32_t mWindowsBuildNumber;
   uint32_t mActiveGPUIndex;  // This must be 0 or 1
   nsTArray<DisplayInfo> mDisplayInfo;
   bool mHasDualGPU;
   bool mHasDriverVersionMismatch;
-  bool mHasBattery;
 };
 
 }  // namespace widget

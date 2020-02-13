@@ -211,7 +211,6 @@ Structure:
               //   "unavailable" - Safe Mode or OS restriction prevents use.
               //   "blocked"     - Blocked due to an internal condition such as safe mode.
               //   "blacklisted" - Blocked due to a blacklist restriction.
-              //   "denied"      - Blocked due to allowlist restrictions.
               //   "disabled"    - User explicitly disabled this default feature.
               //   "failed"      - This feature was attempted but failed to initialize.
               //   "available"   - User has this feature available.
