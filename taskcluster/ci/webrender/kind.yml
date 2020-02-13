@@ -131,7 +131,7 @@ jobs:
 
     macos-release:
         description: Runs release-mode WebRender CI tests on a macOS worker
-        worker-type: t-osx-1010
+        worker-type: t-osx-1014
         worker:
             max-run-time: 3600
             env:
@@ -191,7 +191,7 @@ jobs:
 
     macos-debug:
         description: Runs debug-mode WebRender CI tests on a macOS worker
-        worker-type: t-osx-1010
+        worker-type: t-osx-1014
         worker:
             max-run-time: 3600
             env:
