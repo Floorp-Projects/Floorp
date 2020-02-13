@@ -582,7 +582,7 @@ async function fillGeneratedPasswordFromOpenACPopup(
   );
 
   let passwordGeneratedPromise = listenForTestNotification(
-    "PasswordFilledOrEdited"
+    "PasswordEditedOrGenerated"
   );
 
   info("Clicking the generated password AC item");
@@ -659,7 +659,7 @@ async function openPasswordContextMenu(
  * expectedMessage. Possible messages:
  *   FormProcessed - a form was processed after page load.
  *   FormSubmit - a form was just submitted.
- *   PasswordFilledOrEdited - a password was filled in or modified.
+ *   PasswordEditedOrGenerated - a password was filled in or modified.
  *
  * The count is the number of that messages to wait for. This should
  * typically be used when waiting for the FormProcessed message for a page
