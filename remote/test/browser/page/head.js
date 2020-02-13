@@ -14,10 +14,8 @@ const {
   clearInterval,
   clearTimeout,
   setInterval,
-  setTimeout
-} = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
+  setTimeout,
+} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 function assertHistoryEntries(history, expectedData, expectedIndex) {
   const { currentIndex, entries } = history;
