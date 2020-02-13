@@ -149,7 +149,10 @@ class GfxInfoBase : public nsIGfxInfo,
  private:
   virtual int32_t FindBlocklistedDeviceInList(
       const nsTArray<GfxDriverInfo>& aDriverInfo, nsAString& aSuggestedVersion,
-      int32_t aFeature, nsACString& aFailureId, OperatingSystem os);
+      int32_t aFeature, nsACString& aFailureId, OperatingSystem os,
+      bool aForAllowing);
+
+  bool IsFeatureAllowlisted(int32_t aFeature) const;
 
   void EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo);
 
