@@ -282,10 +282,10 @@ class HomeFragment : Fragment() {
             // TODO remove when viewLifecycleOwner is fixed
             val context = context ?: return@launch
 
-            val iconSize = resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
+            val iconSize = context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
 
-            val searchEngine = requireComponents.search.provider.getDefaultEngine(context)
-            val searchIcon = BitmapDrawable(resources, searchEngine.icon)
+            val searchEngine = context.components.search.provider.getDefaultEngine(context)
+            val searchIcon = BitmapDrawable(context.resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
             withContext(Main) {
