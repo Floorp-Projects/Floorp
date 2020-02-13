@@ -1268,8 +1268,10 @@ var gMainPane = {
       let isDefault = shellSvc.isDefaultBrowser(false, true);
       setDefaultPane.selectedIndex = isDefault ? 1 : 0;
       let alwaysCheck = document.getElementById("alwaysCheckDefault");
-      alwaysCheck.disabled =
-        alwaysCheck.disabled || (isDefault && alwaysCheck.checked);
+      let alwaysCheckPref = Preferences.get(
+        "browser.shell.checkDefaultBrowser"
+      );
+      alwaysCheck.disabled = alwaysCheckPref.locked || isDefault;
     }
   },
 
