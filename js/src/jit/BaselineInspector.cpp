@@ -798,26 +798,6 @@ JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
   return nullptr;
 }
 
-JSObject* BaselineInspector::getTemplateObjectForClassHook(
-    jsbytecode* pc, const JSClass* clasp) {
-  const ICEntry& entry = icEntryFromPC(pc);
-  for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
-    if (ICStub::IsCacheIRKind(stub->kind())) {
-      auto filter = [stub, clasp](CacheIRReader& args,
-                                  const CacheIRStubInfo* info) {
-        return info->getStubField<JSClass*>(stub, args.stubOffset()) == clasp;
-      };
-      JSObject* result = MaybeTemplateObject(
-          stub, MetaTwoByteKind::ClassTemplateObject, filter);
-      if (result) {
-        return result;
-      }
-    }
-  }
-
-  return nullptr;
-}
-
 LexicalEnvironmentObject* BaselineInspector::templateNamedLambdaObject() {
   JSObject* res = jitScript()->templateEnvironment();
   if (script->bodyScope()->hasEnvironment()) {
