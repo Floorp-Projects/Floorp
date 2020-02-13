@@ -318,6 +318,14 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1615045
          "race:StartupCache::WriteToDisk\n"
 
+         // Bug 1615123
+         "race:_dl_deallocate_tls\n"
+         "race:__libc_memalign\n"
+
+         // Bug 1615121
+         "race:CacheEntry::Purge\n"
+         "race:CacheEntry::MetaDataReady\n"
+
          // ~GLContextGLX unlocks a libGL mutex that cannot be seen
          // by TSan because libGL is not instrumented.
          "mutex:GLContextGLX::~GLContextGLX\n"
@@ -335,6 +343,7 @@ extern "C" const char* __tsan_default_suppressions() {
 
          // Suppress thread leaks for now
          "thread:NS_NewNamedThread\n"
+         "thread:nsThread::Init\n"
          "thread:libglib-2\n"
 
          // This thread does not seem to be stopped/joined
