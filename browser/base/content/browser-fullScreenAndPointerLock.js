@@ -326,6 +326,8 @@ var FullScreen = {
       document.addEventListener("keypress", this._keyToggleCallback);
       document.addEventListener("popupshown", this._setPopupOpen);
       document.addEventListener("popuphidden", this._setPopupOpen);
+      gURLBar.controller.addQueryListener(this);
+
       // In DOM fullscreen mode, we hide toolbars with CSS
       if (!document.fullscreenElement) {
         this.hideNavToolbox(true);
@@ -480,6 +482,7 @@ var FullScreen = {
       document.removeEventListener("keypress", this._keyToggleCallback);
       document.removeEventListener("popupshown", this._setPopupOpen);
       document.removeEventListener("popuphidden", this._setPopupOpen);
+      gURLBar.controller.removeQueryListener(this);
     }
   },
 
@@ -612,6 +615,19 @@ var FullScreen = {
     }
   },
 
+  // UrlbarController listener method
+  onViewOpen() {
+    if (!this._isChromeCollapsed) {
+      this._isPopupOpen = true;
+    }
+  },
+
+  // UrlbarController listener method
+  onViewClose() {
+    this._isPopupOpen = false;
+    this.hideNavToolbox(true);
+  },
+
   get navToolboxHidden() {
     return this._isChromeCollapsed;
   },
@@ -702,10 +718,10 @@ var FullScreen = {
             }
           }, 0);
         });
-        window.removeEventListener("keypress", retryHideNavToolbox);
+        window.removeEventListener("keydown", retryHideNavToolbox);
         window.removeEventListener("click", retryHideNavToolbox);
       };
-      window.addEventListener("keypress", retryHideNavToolbox);
+      window.addEventListener("keydown", retryHideNavToolbox);
       window.addEventListener("click", retryHideNavToolbox);
       return;
     }
