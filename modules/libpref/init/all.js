@@ -4140,13 +4140,9 @@ pref("alerts.showFavicons", false);
 // notifications are used.
 
 // Linux and macOS turn on system level notification as default, but Windows is
-// Nightly only due to unstable yet.
+// disabled due to instability (dependencies of bug 1497425).
 #if defined(XP_WIN)
-  #if defined(NIGHTLY_BUILD)
-    pref("alerts.useSystemBackend", true);
-  #else
-    pref("alerts.useSystemBackend", false);
-  #endif
+  pref("alerts.useSystemBackend", false);
 #else
   pref("alerts.useSystemBackend", true);
 #endif
