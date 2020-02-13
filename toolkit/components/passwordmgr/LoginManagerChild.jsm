@@ -199,7 +199,9 @@ const observer = {
           loginManagerChild.onFieldAutoComplete(focusedInput, details.guid);
         } else if (style == "generatedPassword") {
           loginManagerChild._highlightFilledField(focusedInput);
-          loginManagerChild._generatedPasswordFilledOrEdited(focusedInput);
+          loginManagerChild._passwordEditedOrGenerated(focusedInput, {
+            triggeredByFillingGenerated: true,
+          });
         }
         break;
       }
@@ -238,21 +240,25 @@ const observer = {
       // Used to watch for changes to fields filled with generated passwords.
       case "change": {
         if (docState.generatedPasswordFields.has(aEvent.target)) {
-          LoginManagerChild.forWindow(window)._generatedPasswordFilledOrEdited(
-            aEvent.target
+          LoginManagerChild.forWindow(window)._passwordEditedOrGenerated(
+            aEvent.target,
+            {
+              triggeredByFillingGenerated: true,
+            }
           );
         }
         break;
       }
 
-      // Used to watch for changes to fields filled with generated passwords.
       case "input": {
         let field = aEvent.target;
+        // React to input into fields filled with generated passwords.
         if (docState.generatedPasswordFields.has(field)) {
           LoginManagerChild.forWindow(
             window
           )._maybeStopTreatingAsGeneratedPasswordField(aEvent);
         }
+        // React to input into potential username or password fields
         if (
           field.hasBeenTypePassword ||
           LoginHelper.isUsernameFieldType(field)
@@ -436,7 +442,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     formLikeRoot,
     usernameValue,
     passwordValue,
-    dismissed = false
+    dismissed = false,
+    triggeredByFillingGenerated = false
   ) {
     let state = this.stateForDocument(formLikeRoot.ownerDocument);
     const lastSentValues = state.lastSubmittedValuesByRootElement.get(
@@ -450,7 +457,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       if (
         lastSentValues.username == usernameValue &&
         lastSentValues.password == passwordValue &&
-        lastSentValues.dismissed == dismissed
+        lastSentValues.dismissed == dismissed &&
+        lastSentValues.triggeredByFillingGenerated ==
+          triggeredByFillingGenerated
       ) {
         log(
           "_compareAndUpdatePreviouslySentValues: values are equivalent, returning true"
@@ -465,6 +474,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       username: usernameValue,
       password: passwordValue,
       dismissed,
+      triggeredByFillingGenerated,
     });
     log(
       "_compareAndUpdatePreviouslySentValues: values not equivalent, returning false"
@@ -889,7 +899,13 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     // set up input event listeners so we know if the user has interacted with these fields
+    // * input: Listen for the field getting blanked (without blurring) or a paste
+    // * change: Listen for changes to the field filled with the generated password so we can preserve edits.
     form.rootElement.addEventListener("input", observer, {
+      capture: true,
+      mozSystemGroup: true,
+    });
+    form.rootElement.addEventListener("change", observer, {
       capture: true,
       mozSystemGroup: true,
     });
@@ -1635,8 +1651,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       .generatedPasswordFields;
     fields.delete(passwordField);
 
-    // Remove all the event listeners added in _generatedPasswordFilledOrEdited
-    for (let eventType of ["blur", "change", "focus", "input"]) {
+    // Remove all the event listeners added in _passwordEditedOrGenerated
+    for (let eventType of ["blur", "focus"]) {
       passwordField.removeEventListener(eventType, observer, {
         capture: true,
         mozSystemGroup: true,
@@ -1652,10 +1668,13 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * edited so that it can potentially be saved.
    * @param {HTMLInputElement} passwordField
    */
-  _generatedPasswordFilledOrEdited(passwordField) {
-    log("_generatedPasswordFilledOrEdited", passwordField);
+  _passwordEditedOrGenerated(
+    passwordField,
+    { triggeredByFillingGenerated = false } = {}
+  ) {
+    log("_passwordEditedOrGenerated", passwordField);
 
-    if (!LoginHelper.enabled) {
+    if (!LoginHelper.enabled && triggeredByFillingGenerated) {
       throw new Error(
         "A generated password was filled while the password manager was disabled."
       );
@@ -1664,25 +1683,26 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let win = passwordField.ownerGlobal;
     let formLikeRoot = FormLikeFactory.findRootForField(passwordField);
     let docState = this.stateForDocument(passwordField.ownerDocument);
-    docState.generatedPasswordFields.add(passwordField);
 
-    this._highlightFilledField(passwordField);
+    if (triggeredByFillingGenerated) {
+      docState.generatedPasswordFields.add(passwordField);
+      this._highlightFilledField(passwordField);
 
-    // change: Listen for changes to the field filled with the generated password so we can preserve edits.
-    // input: Listen for the field getting blanked (without blurring) or a paste
-    for (let eventType of ["blur", "change", "focus", "input"]) {
-      passwordField.addEventListener(eventType, observer, {
-        capture: true,
-        mozSystemGroup: true,
-      });
+      // blur/focus: listen for focus changes to we can mask/unmask generated passwords
+      for (let eventType of ["blur", "focus"]) {
+        passwordField.addEventListener(eventType, observer, {
+          capture: true,
+          mozSystemGroup: true,
+        });
+      }
+      // Unmask the password field
+      this._togglePasswordFieldMasking(passwordField, true);
+
+      // Once the generated password was filled we no longer want to autocomplete
+      // saved logins into a non-empty password field (see LoginAutoComplete.startSearch)
+      // because it is confusing.
+      this._fieldsWithPasswordGenerationForcedOn.delete(passwordField);
     }
-    // Unmask the password field
-    this._togglePasswordFieldMasking(passwordField, true);
-
-    // Once the generated password was filled we no longer want to autocomplete
-    // saved logins into a non-empty password field (see LoginAutoComplete.startSearch)
-    // because it is confusing.
-    this._fieldsWithPasswordGenerationForcedOn.delete(passwordField);
 
     let loginForm = LoginFormFactory.createFromField(passwordField);
     let formActionOrigin = LoginHelper.getFormActionOrigin(loginForm);
@@ -1703,15 +1723,16 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       )
     ) {
       log(
-        "(generatedPasswordFilledOrEdited ignored -- already messaged with the same password value)"
+        "(passwordEditedOrGenerated ignored -- already messaged with the same password value)"
       );
       return;
     }
 
-    this.sendAsyncMessage("PasswordManager:onGeneratedPasswordFilledOrEdited", {
+    this.sendAsyncMessage("PasswordManager:onPasswordEditedOrGenerated", {
       formActionOrigin,
       password: passwordField.value,
       username: (usernameField && usernameField.value) || "",
+      triggeredByFillingGenerated,
     });
   }
 
