@@ -13,6 +13,7 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/Zone.h"
+#include "vm/Runtime.h"
 
 #include "gc/ArenaList-inl.h"
 
