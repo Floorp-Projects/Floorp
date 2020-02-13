@@ -17,7 +17,7 @@ add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const documentUrl = TEST_PATH + TEST_FILE;
-  await loadDocument(documentUrl);
+  await loadDocument(hud.toolbox, documentUrl);
   info("Document loaded.");
 
   await resendNetworkRequest(hud, documentUrl);

@@ -26,7 +26,7 @@ add_task(async function() {
   });
 
   info("Wait for document to load");
-  await loadDocument(TEST_PATH + "test-network.html");
+  await loadDocument(hud.toolbox, TEST_PATH + "test-network.html");
 
   info("Wait for expected messages to appear");
   await onMessages;
