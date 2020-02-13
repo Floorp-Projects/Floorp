@@ -127,7 +127,7 @@ async function runTest(test, hud) {
   });
 
   info("Load test file " + file);
-  await loadDocument(TESTS_PATH + file);
+  await loadDocument(hud.toolbox, TESTS_PATH + file);
 
   // Call test specific callback if defined
   if (onload) {

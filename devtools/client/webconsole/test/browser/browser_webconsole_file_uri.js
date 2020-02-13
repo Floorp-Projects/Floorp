@@ -37,7 +37,7 @@ add_task(async function() {
   await clearOutput(hud);
 
   const loaded = loadBrowser(browser);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, uri.spec);
+  await loadDocument(hud.toolbox, uri.spec);
   await loaded;
 
   await testMessages();

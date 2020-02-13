@@ -30,7 +30,7 @@ add_task(async function task() {
   const toolbox = gDevTools.getToolbox(target);
 
   const documentUrl = TEST_PATH + TEST_FILE;
-  await loadDocument(documentUrl);
+  await loadDocument(hud.toolbox, documentUrl);
   info("Document loaded.");
 
   await openMessageInNetmonitor(toolbox, hud, documentUrl);

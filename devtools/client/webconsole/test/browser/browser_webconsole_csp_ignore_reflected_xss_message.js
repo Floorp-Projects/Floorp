@@ -19,7 +19,7 @@ const TEST_URI =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  await loadDocument(TEST_FILE);
+  await loadDocument(hud.toolbox, TEST_FILE);
 
   await waitFor(() => findMessage(hud, EXPECTED_RESULT, ".message.warn"));
   ok(

@@ -20,7 +20,7 @@ add_task(async function() {
   await clearOutput(hud);
 
   const onRepeatedMessage = waitForRepeatedMessage(hud, CSP_VIOLATION_MSG, 2);
-  await loadDocument(TEST_VIOLATION);
+  await loadDocument(hud.toolbox, TEST_VIOLATION);
   await onRepeatedMessage;
 
   ok(true, "Received expected messages");

@@ -43,7 +43,7 @@ add_task(async function() {
   );
 
   info("Load a page with CSP warnings.");
-  loadDocument(TEST_VIOLATION);
+  await loadDocument(hud.toolbox, TEST_VIOLATION);
 
   await onCspViolationMessage;
   await onCspReportMessage;
