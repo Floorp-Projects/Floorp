@@ -2548,9 +2548,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
 
   forceStrictIfNecessary(funbox, directives);
 
-  if (pc_->isFunctionBox()) {
-    pc_->functionBox()->setHasInnerFunctions();
-  }
+  pc_->sc()->setHasInnerFunctions();
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
@@ -2625,9 +2623,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
 
   forceStrictIfNecessary(funbox, directives);
 
-  if (pc_->isFunctionBox()) {
-    pc_->functionBox()->setHasInnerFunctions();
-  }
+  pc_->sc()->setHasInnerFunctions();
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
@@ -2686,9 +2682,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
 
   forceStrictIfNecessary(funbox, directives);
 
-  if (pc_->isFunctionBox()) {
-    pc_->functionBox()->setHasInnerFunctions();
-  }
+  pc_->sc()->setHasInnerFunctions();
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
@@ -2762,9 +2756,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
 
   forceStrictIfNecessary(funbox, directives);
 
-  if (pc_->isFunctionBox()) {
-    pc_->functionBox()->setHasInnerFunctions();
-  }
+  pc_->sc()->setHasInnerFunctions();
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
@@ -2828,9 +2820,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
 
   forceStrictIfNecessary(funbox, directives);
 
-  if (pc_->isFunctionBox()) {
-    pc_->functionBox()->setHasInnerFunctions();
-  }
+  pc_->sc()->setHasInnerFunctions();
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
@@ -3379,9 +3369,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(
 
   forceStrictIfNecessary(funbox, directives);
 
-  if (pc_->isFunctionBox()) {
-    pc_->functionBox()->setHasInnerFunctions();
-  }
+  pc_->sc()->setHasInnerFunctions();
 
   BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, syntax, funbox));
 
@@ -3442,9 +3430,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(
 
   forceStrictIfNecessary(funbox, directives);
 
-  if (pc_->isFunctionBox()) {
-    pc_->functionBox()->setHasInnerFunctions();
-  }
+  pc_->sc()->setHasInnerFunctions();
 
   BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, syntax, funbox));
 

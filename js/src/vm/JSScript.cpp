@@ -4442,7 +4442,6 @@ void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
   setFlag(ImmutableFlags::IsGenerator, funbox->isGenerator());
   setFlag(ImmutableFlags::IsAsync, funbox->isAsync());
   setFlag(ImmutableFlags::HasRest, funbox->hasRest());
-  setFlag(ImmutableFlags::HasInnerFunctions, funbox->hasInnerFunctions());
   setFlag(ImmutableFlags::HasDirectEval, funbox->hasDirectEval());
   setFlag(ImmutableFlags::ShouldDeclareArguments, funbox->declaredArguments);
 
@@ -4486,6 +4485,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
   script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
                   stencil.needsFunctionEnvironmentObjects);
   script->setFlag(ImmutableFlags::HasModuleGoal, stencil.hasModuleGoal);
+  script->setFlag(ImmutableFlags::HasInnerFunctions, stencil.hasInnerFunctions);
 
   // Initialize script flags from FunctionBox
   if (stencil.isFunction) {
