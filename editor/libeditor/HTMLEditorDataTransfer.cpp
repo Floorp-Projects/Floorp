@@ -390,29 +390,34 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
 
   // build up list of parents of first node in list that are either
   // lists or tables.  First examine front of paste node list.
-  AutoTArray<OwningNonNull<Element>, 4> startListAndTableArray;
-  GetListAndTableParents(StartOrEnd::start, nodeList, startListAndTableArray);
-  if (!startListAndTableArray.IsEmpty()) {
-    int32_t highWaterMark =
-        DiscoverPartialListsAndTables(nodeList, startListAndTableArray);
+  AutoTArray<OwningNonNull<Element>, 4>
+      arrayOfListAndTableRelatedElementsAtStart;
+  HTMLEditor::CollectListAndTableRelatedElementsAt(
+      nodeList[0], arrayOfListAndTableRelatedElementsAtStart);
+  if (!arrayOfListAndTableRelatedElementsAtStart.IsEmpty()) {
+    int32_t highWaterMark = DiscoverPartialListsAndTables(
+        nodeList, arrayOfListAndTableRelatedElementsAtStart);
     // if we have pieces of tables or lists to be inserted, let's force the
     // paste to deal with table elements right away, so that it doesn't orphan
     // some table or list contents outside the table or list.
     if (highWaterMark >= 0) {
       ReplaceOrphanedStructure(StartOrEnd::start, nodeList,
-                               startListAndTableArray, highWaterMark);
+                               arrayOfListAndTableRelatedElementsAtStart,
+                               highWaterMark);
     }
   }
 
   // Now go through the same process again for the end of the paste node list.
-  AutoTArray<OwningNonNull<Element>, 4> endListAndTableArray;
-  GetListAndTableParents(StartOrEnd::end, nodeList, endListAndTableArray);
-  if (!endListAndTableArray.IsEmpty()) {
-    int32_t highWaterMark =
-        DiscoverPartialListsAndTables(nodeList, endListAndTableArray);
+  AutoTArray<OwningNonNull<Element>, 4> arrayOfListAndTableRelatedElementsAtEnd;
+  HTMLEditor::CollectListAndTableRelatedElementsAt(
+      nodeList.LastElement(), arrayOfListAndTableRelatedElementsAtEnd);
+  if (!arrayOfListAndTableRelatedElementsAtEnd.IsEmpty()) {
+    int32_t highWaterMark = DiscoverPartialListsAndTables(
+        nodeList, arrayOfListAndTableRelatedElementsAtEnd);
     // don't orphan partial list or table structure
     if (highWaterMark >= 0) {
-      ReplaceOrphanedStructure(StartOrEnd::end, nodeList, endListAndTableArray,
+      ReplaceOrphanedStructure(StartOrEnd::end, nodeList,
+                               arrayOfListAndTableRelatedElementsAtEnd,
                                highWaterMark);
     }
   }
@@ -2737,19 +2742,14 @@ void HTMLEditor::CreateListOfNodesToPaste(
   iter.AppendAllNodesToArray(outNodeList);
 }
 
-void HTMLEditor::GetListAndTableParents(
-    StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeList,
-    nsTArray<OwningNonNull<Element>>& outArray) {
-  MOZ_ASSERT(aNodeList.Length());
-
-  // Build up list of parents of first (or last) node in list that are either
-  // lists, or tables.
-  int32_t idx = aStartOrEnd == StartOrEnd::end ? aNodeList.Length() - 1 : 0;
-
-  for (nsCOMPtr<nsINode> node = aNodeList[idx]; node;
-       node = node->GetParentNode()) {
-    if (HTMLEditUtils::IsList(node) || HTMLEditUtils::IsTable(node)) {
-      outArray.AppendElement(*node->AsElement());
+// static
+void HTMLEditor::CollectListAndTableRelatedElementsAt(
+    nsINode& aNode,
+    nsTArray<OwningNonNull<Element>>& aOutArrayOfListAndTableElements) {
+  for (nsIContent* content = nsIContent::FromNode(&aNode); content;
+       content = content->GetParentElement()) {
+    if (HTMLEditUtils::IsList(content) || HTMLEditUtils::IsTable(content)) {
+      aOutArrayOfListAndTableElements.AppendElement(*content->AsElement());
     }
   }
 }
