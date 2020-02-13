@@ -226,6 +226,7 @@ LOCAL_INCLUDES += [
 
 GeneratedFile('nsSTSPreloadList.h',
               script='../../../xpcom/ds/tools/make_dafsa.py',
+              py2=True,
               inputs=['nsSTSPreloadList.inc'])
 
 DEFINES['SSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES'] = 'True'

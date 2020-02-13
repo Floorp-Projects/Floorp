@@ -53,6 +53,7 @@ GENERATED_FILES += [
 blocklist_defs = GENERATED_FILES[blocklist_files]
 blocklist_defs.script = 'gen_dll_blocklist_defs.py:gen_blocklists'
 blocklist_defs.inputs = ['WindowsDllBlocklistDefs.in']
+blocklist_defs.py2 = True
 EXPORTS.mozilla += ['!' + hdr for hdr in blocklist_files]
 
 FINAL_LIBRARY = 'mozglue'
