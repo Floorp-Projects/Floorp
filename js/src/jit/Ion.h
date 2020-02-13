@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Result.h"
 
+#include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"
 #include "jit/JitContext.h"
 #include "jit/JitOptions.h"
@@ -132,13 +133,13 @@ void ForbidCompilation(JSContext* cx, JSScript* script);
 size_t SizeOfIonData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf);
 
 inline bool IsIonEnabled(JSContext* cx) {
-  if (MOZ_UNLIKELY(!IsBaselineJitEnabled() || cx->options().disableIon())) {
+  if (MOZ_UNLIKELY(!IsBaselineJitEnabled(cx) || cx->options().disableIon())) {
     return false;
   }
   if (MOZ_LIKELY(JitOptions.ion)) {
     return true;
   }
-  if (JitOptions.ionForTrustedPrincipals) {
+  if (JitOptions.jitForTrustedPrincipals) {
     JS::Realm* realm = js::GetContextRealm(cx);
     return realm && JS::GetRealmPrincipals(realm) &&
            JS::GetRealmPrincipals(realm)->isSystemOrAddonPrincipal();
