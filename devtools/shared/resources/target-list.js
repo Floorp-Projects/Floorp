@@ -57,7 +57,7 @@ class LegacyImplementationProcesses {
           );
           return;
         }
-        this.onTargetAvailable(target);
+        await this.onTargetAvailable(target);
       }
     }
   }
@@ -101,7 +101,7 @@ class LegacyImplementationFrames {
           );
           continue;
         }
-        this.onTargetAvailable(target);
+        await this.onTargetAvailable(target);
       }
     }
   }
@@ -138,7 +138,7 @@ class LegacyImplementationWorkers {
     for (const target of workers) {
       if (!this.targets.has(target)) {
         this.targets.add(target);
-        this.onTargetAvailable(target);
+        await this.onTargetAvailable(target);
       }
     }
   }
@@ -242,7 +242,7 @@ class TargetList {
     const targetType = this._getTargetType(targetFront);
 
     // Notify the target front creation listeners
-    this._createListeners.emit(targetType, {
+    await this._createListeners.emitAsync(targetType, {
       type: targetType,
       targetFront,
       isTopLevel: targetFront == this.targetFront,
@@ -493,7 +493,7 @@ class TargetList {
     this.targetFront = newTarget;
 
     // Notify about this new target to creation listeners
-    this._onTargetAvailable(newTarget, true);
+    await this._onTargetAvailable(newTarget, true);
 
     // Re-register the listeners as the top level target changed
     // and some targets are fetched from it
