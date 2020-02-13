@@ -313,7 +313,7 @@ BookmarkObserver.prototype = {
             source: event.source,
           };
           if (!this.ignoreDates) {
-            params.dateAdded = event.dateAdded;
+            params.dateAdded = event.dateAdded * 1000;
           }
           this.notifications.push({ name: "bookmark-added", params });
           break;
