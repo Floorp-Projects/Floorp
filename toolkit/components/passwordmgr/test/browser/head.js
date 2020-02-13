@@ -324,10 +324,12 @@ async function getCaptureDoorhangerThatMayOpen(
 }
 
 async function waitForDoorhanger(browser, type) {
+  let notif;
   await TestUtils.waitForCondition(() => {
-    let notif = PopupNotifications.getNotification("password", browser);
+    notif = PopupNotifications.getNotification("password", browser);
     return notif && notif.options.passwordNotificationType == type;
   }, `Waiting for a ${type} notification`);
+  return notif;
 }
 
 async function hideDoorhangerPopup() {
@@ -399,19 +401,11 @@ async function checkDoorhangerUsernamePassword(username, password) {
   await BrowserTestUtils.waitForCondition(() => {
     return (
       document.getElementById("password-notification-username").value ==
-      username
+        username &&
+      document.getElementById("password-notification-password").value ==
+        password
     );
-  }, "Wait for nsLoginManagerPrompter writeDataToUI()");
-  is(
-    document.getElementById("password-notification-username").value,
-    username,
-    "Check doorhanger username"
-  );
-  is(
-    document.getElementById("password-notification-password").value,
-    password,
-    "Check doorhanger password"
-  );
+  }, "Wait for nsLoginManagerPrompter writeDataToUI() to update to the correct username/password values");
 }
 
 /**
@@ -713,4 +707,40 @@ async function doFillGeneratedPasswordContextMenuItem(browser, passwordInput) {
 
   await promiseShown;
   await fillGeneratedPasswordFromOpenACPopup(browser, passwordInput);
+}
+
+// Content form helpers
+async function changeContentFormValues(browser, selectorValues) {
+  for (let [sel, value] of Object.entries(selectorValues)) {
+    info("changeContentFormValues, update: " + sel + ", to: " + value);
+    await changeContentInputValue(browser, sel, value);
+  }
+}
+
+async function changeContentInputValue(browser, selector, str) {
+  let oldValue = await ContentTask.spawn(browser, [selector], function(sel) {
+    return content.document.querySelector(sel).value;
+  });
+
+  if (str === oldValue) {
+    info("no change needed to value of " + selector + ": " + oldValue);
+    return;
+  }
+  let changedPromise = ContentTask.spawn(browser, [selector], async function(
+    sel
+  ) {
+    let input = content.document.querySelector(sel);
+    input.focus();
+    input.select();
+    await ContentTaskUtils.waitForEvent(input, "change");
+    info("change event on " + sel + ": " + input.value);
+  });
+
+  await EventUtils.synthesizeKey("KEY_Backspace");
+  if (str) {
+    await EventUtils.sendString(str);
+  }
+  info("waiting for changedPromise");
+  await EventUtils.synthesizeKey("KEY_Tab");
+  await changedPromise;
 }
