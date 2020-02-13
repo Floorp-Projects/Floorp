@@ -156,7 +156,7 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
         mCallbackFlags(0),
         mPriority(nsIRunnablePriority::PRIORITY_NORMAL) {}
 
-  explicit nsPipeInputStream(const nsPipeInputStream& aOther)
+  nsPipeInputStream(const nsPipeInputStream& aOther)
       : mPipe(aOther.mPipe),
         mLogicalOffset(aOther.mLogicalOffset),
         mInputStatus(aOther.mInputStatus),
