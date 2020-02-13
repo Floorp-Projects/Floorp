@@ -38,24 +38,19 @@
       gQueue.push(new synthClick("menulist", new focusChecker("ml_tangerine")));
       gQueue.push(new synthDownKey("ml_tangerine", new focusChecker("ml_marmalade")));
       gQueue.push(new synthEscapeKey("ml_marmalade", new focusChecker("menulist")));
-if (!MAC) {
+
       // On Windows, items get selected during navigation.
       let expectedItem = WIN ? "ml_strawberry" : "ml_marmalade";
       gQueue.push(new synthDownKey("menulist", new nofocusChecker(expectedItem)));
       gQueue.push(new synthOpenComboboxKey("menulist", new focusChecker(expectedItem)));
       gQueue.push(new synthEnterKey(expectedItem, new focusChecker("menulist")));
-} else {
-      todo(false, "Bug 746531 - timeouts of last three menulist tests on OS X");
-}
 
       // no focus events for unfocused list controls when current item is
       // changed.
       gQueue.push(new synthFocus("emptyrichlistbox"));
 
       gQueue.push(new changeCurrentItem("richlistbox", "rlb_item1"));
-if (!MAC) {
       gQueue.push(new changeCurrentItem("menulist", WIN ? "ml_marmalade" : "ml_tangerine"));
-}
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
