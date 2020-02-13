@@ -71,7 +71,7 @@ report_error() {
 		            path.append(None)
 		        path_ = [p for p in path if p]
 		        full_path = '/'.join(path_)
-		        parent_path = '/'.join(path_[:1])
+		        parent_path = '/'.join(path_[:-1])
 		        if parent_path in paths:
 		            paths.remove(parent_path)
 		        if full_path:
