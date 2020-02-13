@@ -22,7 +22,6 @@ use crate::flow_mgr::FlowMgr;
 use crate::frame::{Frame, TxMode};
 use crate::recovery::RecoveryToken;
 use crate::stream_id::StreamId;
-use crate::tracking::PNSpace;
 use crate::{AppError, Error, Res};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -284,17 +283,17 @@ impl TxBuffer {
 
     pub fn new() -> Self {
         Self {
-            send_buf: VecDeque::with_capacity(Self::BUFFER_SIZE),
+            send_buf: VecDeque::with_capacity(TxBuffer::BUFFER_SIZE),
             ..Self::default()
         }
     }
 
     /// Attempt to add some or all of the passed-in buffer to the TxBuffer.
     pub fn send(&mut self, buf: &[u8]) -> usize {
-        let can_buffer = min(Self::BUFFER_SIZE - self.buffered(), buf.len());
+        let can_buffer = min(TxBuffer::BUFFER_SIZE - self.buffered(), buf.len());
         if can_buffer > 0 {
             self.send_buf.extend(&buf[..can_buffer]);
-            assert!(self.send_buf.len() <= Self::BUFFER_SIZE);
+            assert!(self.send_buf.len() <= TxBuffer::BUFFER_SIZE);
         }
         can_buffer
     }
@@ -363,7 +362,7 @@ impl TxBuffer {
     }
 
     fn avail(&self) -> usize {
-        Self::BUFFER_SIZE - self.buffered()
+        TxBuffer::BUFFER_SIZE - self.buffered()
     }
 
     pub fn highest_sent(&self) -> u64 {
@@ -393,44 +392,60 @@ enum SendStreamState {
 impl SendStreamState {
     fn tx_buf(&self) -> Option<&TxBuffer> {
         match self {
-            Self::Send { send_buf } | Self::DataSent { send_buf, .. } => Some(send_buf),
-            Self::Ready | Self::DataRecvd { .. } | Self::ResetSent | Self::ResetRecvd => None,
+            SendStreamState::Send { send_buf } | SendStreamState::DataSent { send_buf, .. } => {
+                Some(send_buf)
+            }
+            SendStreamState::Ready
+            | SendStreamState::DataRecvd { .. }
+            | SendStreamState::ResetSent
+            | SendStreamState::ResetRecvd => None,
         }
     }
 
     fn tx_buf_mut(&mut self) -> Option<&mut TxBuffer> {
         match self {
-            Self::Send { send_buf } | Self::DataSent { send_buf, .. } => Some(send_buf),
-            Self::Ready | Self::DataRecvd { .. } | Self::ResetSent | Self::ResetRecvd => None,
+            SendStreamState::Send { send_buf } | SendStreamState::DataSent { send_buf, .. } => {
+                Some(send_buf)
+            }
+            SendStreamState::Ready
+            | SendStreamState::DataRecvd { .. }
+            | SendStreamState::ResetSent
+            | SendStreamState::ResetRecvd => None,
         }
     }
 
     fn tx_avail(&self) -> u64 {
         match self {
             // In Ready, TxBuffer not yet allocated but size is known
-            Self::Ready => TxBuffer::BUFFER_SIZE.try_into().unwrap(),
-            Self::Send { send_buf } | Self::DataSent { send_buf, .. } => {
+            SendStreamState::Ready => TxBuffer::BUFFER_SIZE.try_into().unwrap(),
+            SendStreamState::Send { send_buf } | SendStreamState::DataSent { send_buf, .. } => {
                 send_buf.avail().try_into().unwrap()
             }
-            Self::DataRecvd { .. } | Self::ResetSent | Self::ResetRecvd => 0,
+            SendStreamState::DataRecvd { .. }
+            | SendStreamState::ResetSent
+            | SendStreamState::ResetRecvd => 0,
         }
     }
 
     fn final_size(&self) -> Option<u64> {
         match self {
-            Self::DataSent { final_size, .. } | Self::DataRecvd { final_size } => Some(*final_size),
-            Self::Ready | Self::Send { .. } | Self::ResetSent | Self::ResetRecvd => None,
+            SendStreamState::DataSent { final_size, .. }
+            | SendStreamState::DataRecvd { final_size } => Some(*final_size),
+            SendStreamState::Ready
+            | SendStreamState::Send { .. }
+            | SendStreamState::ResetSent
+            | SendStreamState::ResetRecvd => None,
         }
     }
 
     fn name(&self) -> &str {
         match self {
-            Self::Ready => "Ready",
-            Self::Send { .. } => "Send",
-            Self::DataSent { .. } => "DataSent",
-            Self::DataRecvd { .. } => "DataRecvd",
-            Self::ResetSent => "ResetSent",
-            Self::ResetRecvd => "ResetRecvd",
+            SendStreamState::Ready => "Ready",
+            SendStreamState::Send { .. } => "Send",
+            SendStreamState::DataSent { .. } => "DataSent",
+            SendStreamState::DataRecvd { .. } => "DataRecvd",
+            SendStreamState::ResetSent => "ResetSent",
+            SendStreamState::ResetRecvd => "ResetRecvd",
         }
     }
 
@@ -744,11 +759,11 @@ impl SendStreams {
 
     pub(crate) fn get_frame(
         &mut self,
-        space: PNSpace,
+        epoch: u16,
         mode: TxMode,
         remaining: usize,
     ) -> Option<(Frame, Option<RecoveryToken>)> {
-        if space != PNSpace::ApplicationData {
+        if epoch != 3 && epoch != 1 {
             return None;
         }
 
@@ -759,11 +774,11 @@ impl SendStreams {
                     Frame::new_stream(stream_id.as_u64(), offset, data, complete, remaining)
                 {
                     qdebug!(
-                        "Stream {} sending bytes {}-{}, space {:?}, mode {:?}",
+                        "Stream {} sending bytes {}-{}, epoch {}, mode {:?}",
                         stream_id.as_u64(),
                         offset,
                         offset + length as u64,
-                        space,
+                        epoch,
                         mode,
                     );
                     let fin = complete && length == data.len();

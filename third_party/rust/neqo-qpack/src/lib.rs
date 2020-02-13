@@ -5,7 +5,6 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::use_self)]
 
 pub mod decoder;
 pub mod encoder;
@@ -26,12 +25,6 @@ enum QPackSide {
     Decoder,
 }
 
-impl ::std::fmt::Display for QPackSide {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
     DecompressionFailed,
@@ -44,7 +37,6 @@ pub enum Error {
     NoMoreData,
     IntegerOverflow,
     WrongStreamCount,
-    InternalError,
 
     TransportError(neqo_transport::Error),
 }
@@ -59,7 +51,7 @@ impl Error {
 impl ::std::error::Error for Error {
     fn source(&self) -> Option<&(dyn ::std::error::Error + 'static)> {
         match self {
-            Self::TransportError(e) => Some(e),
+            Error::TransportError(e) => Some(e),
             _ => None,
         }
     }
@@ -73,6 +65,6 @@ impl ::std::fmt::Display for Error {
 
 impl From<neqo_transport::Error> for Error {
     fn from(err: neqo_transport::Error) -> Self {
-        Self::TransportError(err)
+        Error::TransportError(err)
     }
 }

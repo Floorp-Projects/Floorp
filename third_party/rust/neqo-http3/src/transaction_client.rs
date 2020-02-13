@@ -9,7 +9,7 @@ use crate::hframe::{HFrame, HFrameReader};
 use crate::client_events::Http3ClientEvents;
 use crate::connection::Http3Transaction;
 use crate::Header;
-use neqo_common::{qdebug, qinfo, qtrace, qwarn, Encoder};
+use neqo_common::{qdebug, qinfo, qtrace, Encoder};
 use neqo_qpack::decoder::QPackDecoder;
 use neqo_qpack::encoder::QPackEncoder;
 use neqo_transport::Connection;
@@ -36,8 +36,8 @@ struct Request {
 }
 
 impl Request {
-    pub fn new(method: &str, scheme: &str, host: &str, path: &str, headers: &[Header]) -> Self {
-        let mut r = Self {
+    pub fn new(method: &str, scheme: &str, host: &str, path: &str, headers: &[Header]) -> Request {
+        let mut r = Request {
             method: method.to_owned(),
             scheme: scheme.to_owned(),
             host: host.to_owned(),
@@ -180,9 +180,9 @@ impl TransactionClient {
         path: &str,
         headers: &[Header],
         conn_events: Http3ClientEvents,
-    ) -> Self {
+    ) -> TransactionClient {
         qinfo!("Create a request stream_id={}", stream_id);
-        Self {
+        TransactionClient {
             send_state: TransactionSendState::SendingHeaders {
                 request: Request::new(method, scheme, host, path, headers),
                 fin: false,
@@ -291,7 +291,6 @@ impl TransactionClient {
             HFrame::PushPromise { .. } => Err(Error::HttpIdError),
             HFrame::Headers { .. } => {
                 // TODO implement trailers!
-                qwarn!([self], "Received trailers");
                 Err(Error::HttpFrameUnexpected)
             }
             _ => Err(Error::HttpFrameUnexpected),

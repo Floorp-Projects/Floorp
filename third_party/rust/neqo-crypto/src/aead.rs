@@ -53,13 +53,7 @@ pub struct Aead {
     ctx: AeadContext,
 }
 
-// TODO(mt) move unused_self once https://github.com/rust-lang/rust-clippy/issues/5053 is fixed
-#[allow(clippy::unused_self)]
 impl Aead {
-    /// Create a new AEAD based on the indicated TLS version and cipher suite.
-    ///
-    /// # Errors
-    /// Returns `Error` when the supporting NSS functions fail.
     pub fn new(version: Version, cipher: Cipher, secret: &SymKey, prefix: &str) -> Res<Self> {
         let s: *mut PK11SymKey = **secret;
         unsafe { Self::from_raw(version, cipher, s, prefix) }
@@ -98,9 +92,6 @@ impl Aead {
     ///
     /// The space provided in `output` needs to be larger than `input` by
     /// the value provided in `Aead::expansion`.
-    ///
-    /// # Errors
-    /// If the input can't be protected or any input is too large for NSS.
     pub fn encrypt<'a>(
         &self,
         count: u64,
@@ -130,9 +121,6 @@ impl Aead {
     /// Note that NSS insists upon having extra space available for decryption, so
     /// the buffer for `output` should be the same length as `input`, even though
     /// the final result will be shorter.
-    ///
-    /// # Errors
-    /// If the input isn't authenticated or any input is too large for NSS.
     pub fn decrypt<'a>(
         &self,
         count: u64,

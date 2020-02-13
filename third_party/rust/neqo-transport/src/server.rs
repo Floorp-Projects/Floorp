@@ -15,10 +15,12 @@ use neqo_crypto::{
     AntiReplay,
 };
 
-use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdManager, ConnectionIdRef};
-use crate::connection::{Connection, Output, State};
-use crate::packet::{PacketBuilder, PacketType, PublicPacket};
-use crate::Res;
+use crate::connection::{Connection, ConnectionIdManager, Output, State};
+use crate::packet::{
+    decode_packet_hdr, encode_packet_vn, encode_retry, ConnectionId, ConnectionIdDecoder,
+    PacketHdr, PacketType, Version,
+};
+use crate::{Res, QUIC_VERSION};
 
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -82,7 +84,7 @@ struct RetryToken {
 
 impl RetryToken {
     fn new(now: Instant) -> Res<Self> {
-        Ok(Self {
+        Ok(RetryToken {
             require_retry: false,
             self_encrypt: SelfEncrypt::new(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256)?,
             start_time: now,
@@ -122,7 +124,7 @@ impl RetryToken {
         let end_millis = u32::try_from(end.duration_since(self.start_time).as_millis())?;
         token.encode_uint(4, end_millis);
         token.encode(dcid);
-        let peer_addr = Self::encode_peer_address(peer_address);
+        let peer_addr = RetryToken::encode_peer_address(peer_address);
         Ok(self.self_encrypt.seal(&peer_addr, &token)?)
     }
 
@@ -138,7 +140,7 @@ impl RetryToken {
         peer_address: SocketAddr,
         now: Instant,
     ) -> Option<ConnectionId> {
-        let peer_addr = Self::encode_peer_address(peer_address);
+        let peer_addr = RetryToken::encode_peer_address(peer_address);
         let data = if let Ok(d) = self.self_encrypt.open(&peer_addr, token) {
             d
         } else {
@@ -159,18 +161,22 @@ impl RetryToken {
 
     pub fn validate(
         &self,
-        token: &[u8],
+        hdr: &PacketHdr,
         peer_address: SocketAddr,
         now: Instant,
     ) -> RetryTokenResult {
-        if token.is_empty() {
-            if self.require_retry {
-                RetryTokenResult::Validate
+        if let PacketType::Initial(token) = &hdr.tipe {
+            if token.is_empty() {
+                if self.require_retry {
+                    RetryTokenResult::Validate
+                } else {
+                    RetryTokenResult::Pass
+                }
+            } else if let Some(cid) = self.decrypt_token(token, peer_address, now) {
+                RetryTokenResult::Valid(cid)
             } else {
-                RetryTokenResult::Pass
+                RetryTokenResult::Invalid
             }
-        } else if let Some(cid) = self.decrypt_token(token, peer_address, now) {
-            RetryTokenResult::Valid(cid)
         } else {
             RetryTokenResult::Invalid
         }
@@ -178,6 +184,8 @@ impl RetryToken {
 }
 
 pub struct Server {
+    /// The version this server supports (currently just one).
+    version: Version,
     /// The names of certificates.
     certs: Vec<String>,
     /// The ALPN values that the server supports.
@@ -214,6 +222,7 @@ impl Server {
         cid_manager: CidMgr,
     ) -> Res<Self> {
         Ok(Self {
+            version: QUIC_VERSION,
             certs: certs.iter().map(|x| String::from(x.as_ref())).collect(),
             protocols: protocols.iter().map(|x| String::from(x.as_ref())).collect(),
             anti_replay,
@@ -224,6 +233,20 @@ impl Server {
             timers: Timer::new(now, TIMER_GRANULARITY, TIMER_CAPACITY),
             retry: RetryToken::new(now)?,
         })
+    }
+
+    fn create_vn(&self, hdr: &PacketHdr, received: Datagram) -> Datagram {
+        let vn = encode_packet_vn(&PacketHdr::new(
+            0,
+            // Actual version we support and a greased value.
+            PacketType::VN(vec![self.version, 0xaaba_cada]),
+            Some(0),
+            hdr.scid.as_ref().unwrap().clone(),
+            Some(hdr.dcid.clone()),
+            0, // unused
+            0, // unused
+        ));
+        Datagram::new(received.destination(), received.source(), vn)
     }
 
     pub fn set_retry_required(&mut self, require_retry: bool) {
@@ -273,8 +296,8 @@ impl Server {
         out.dgram()
     }
 
-    fn connection(&self, cid: &ConnectionIdRef) -> Option<StateRef> {
-        if let Some(c) = self.connections.borrow().get(&cid[..]) {
+    fn connection(&self, cid: &ConnectionId) -> Option<StateRef> {
+        if let Some(c) = self.connections.borrow().get(cid) {
             Some(c.clone())
         } else {
             None
@@ -283,35 +306,38 @@ impl Server {
 
     fn handle_initial(
         &mut self,
-        dcid: ConnectionId,
-        scid: ConnectionId,
-        token: Vec<u8>,
+        hdr: PacketHdr,
         dgram: Datagram,
         now: Instant,
     ) -> Option<Datagram> {
-        match self.retry.validate(&token, dgram.source(), now) {
+        match self.retry.validate(&hdr, dgram.source(), now) {
             RetryTokenResult::Invalid => None,
             RetryTokenResult::Pass => self.accept_connection(None, dgram, now),
             RetryTokenResult::Valid(dcid) => self.accept_connection(Some(dcid), dgram, now),
             RetryTokenResult::Validate => {
-                qinfo!([self], "Send retry for {:?}", dcid);
+                qinfo!([self], "Send retry for {:?}", hdr.dcid);
 
-                let res = self.retry.generate_token(&dcid, dgram.source(), now);
+                let res = self.retry.generate_token(&hdr.dcid, dgram.source(), now);
                 let token = if let Ok(t) = res {
                     t
                 } else {
                     qerror!([self], "unable to generate token, dropping packet");
                     return None;
                 };
-                let new_dcid = self.cid_manager.borrow_mut().generate_cid();
-                let packet = PacketBuilder::retry(&scid, &new_dcid, &token, &dcid);
-                if let Ok(p) = packet {
-                    let retry = Datagram::new(dgram.destination(), dgram.source(), p);
-                    Some(retry)
-                } else {
-                    qerror!([self], "unable to encode retry, dropping packet");
-                    None
-                }
+                let payload = encode_retry(&PacketHdr::new(
+                    0, // tbyte (unused on encode)
+                    PacketType::Retry {
+                        odcid: hdr.dcid.clone(),
+                        token,
+                    },
+                    Some(self.version),
+                    hdr.scid.as_ref().unwrap().clone(),
+                    Some(self.cid_manager.borrow_mut().generate_cid()),
+                    0, // Packet number
+                    0, // Epoch
+                ));
+                let retry = Datagram::new(dgram.destination(), dgram.source(), payload);
+                Some(retry)
             }
         }
     }
@@ -354,9 +380,9 @@ impl Server {
 
         // This is only looking at the first packet header in the datagram.
         // All packets in the datagram are routed to the same connection.
-        let res = PublicPacket::decode(&dgram[..], self.cid_manager.borrow().as_decoder());
-        let (packet, _remainder) = match res {
-            Ok(res) => res,
+        let res = decode_packet_hdr(self.cid_manager.borrow().as_decoder(), &dgram[..]);
+        let hdr = match res {
+            Ok(h) => h,
             _ => {
                 qtrace!([self], "Discarding {:?}", dgram);
                 return None;
@@ -364,11 +390,11 @@ impl Server {
         };
 
         // Finding an existing connection. Should be the most common case.
-        if let Some(c) = self.connection(packet.dcid()) {
+        if let Some(c) = self.connection(&hdr.dcid) {
             return self.process_connection(c, Some(dgram), now);
         }
 
-        if packet.packet_type() == PacketType::Short {
+        if hdr.tipe == PacketType::Short {
             // TODO send a stateless reset here.
             qtrace!([self], "Short header packet for an unknown connection");
             return None;
@@ -378,16 +404,12 @@ impl Server {
             qtrace!([self], "Bogus packet: too short");
             return None;
         }
-        if packet.packet_type() == PacketType::OtherVersion {
-            let vn = PacketBuilder::version_negotiation(packet.scid(), packet.dcid());
-            return Some(Datagram::new(dgram.destination(), dgram.source(), vn));
+
+        if hdr.version != Some(self.version) {
+            return Some(self.create_vn(&hdr, dgram));
         }
 
-        // Copy values from `packet` because they are currently still borrowing from `dgram`.
-        let dcid = ConnectionId::from(packet.dcid());
-        let scid = ConnectionId::from(packet.scid());
-        let token = packet.token().to_vec();
-        self.handle_initial(dcid, scid, token, dgram, now)
+        self.handle_initial(hdr, dgram, now)
     }
 
     /// Iterate through the pending connections looking for any that might want
@@ -495,7 +517,7 @@ struct ServerConnectionIdManager {
 }
 
 impl ConnectionIdDecoder for ServerConnectionIdManager {
-    fn decode_cid<'a>(&self, dec: &mut Decoder<'a>) -> Option<ConnectionIdRef<'a>> {
+    fn decode_cid(&self, dec: &mut Decoder) -> Option<ConnectionId> {
         self.cid_manager.borrow_mut().decode_cid(dec)
     }
 }

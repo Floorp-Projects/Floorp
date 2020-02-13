@@ -14,8 +14,8 @@ pub struct NewStreamTypeReader {
 }
 
 impl NewStreamTypeReader {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> NewStreamTypeReader {
+        NewStreamTypeReader {
             reader: IncrementalDecoder::decode_varint(),
             fin: false,
         }
