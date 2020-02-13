@@ -43,7 +43,8 @@
 static mozilla::LauncherVoidResult PostCreationSetup(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
     HANDLE aChildMainThread, const bool aIsSafeMode) {
-  return mozilla::InitializeDllBlocklistOOP(aFullImagePath, aChildProcess);
+  return mozilla::InitializeDllBlocklistOOPFromLauncher(aFullImagePath,
+                                                        aChildProcess);
 }
 
 #if !defined( \
