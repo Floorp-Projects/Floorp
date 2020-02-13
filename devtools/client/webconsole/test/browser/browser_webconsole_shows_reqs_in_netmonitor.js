@@ -24,7 +24,7 @@ add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "netmonitor");
   info("Network panel is open.");
 
-  await loadDocument(TEST_PATH);
+  await loadDocument(toolbox, TEST_PATH);
   info("Document loaded.");
 
   // Test that the request appears in the network panel.

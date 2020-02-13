@@ -24,7 +24,7 @@ add_task(async function() {
 
   info("Wait for the 'foobar' message to be logged by the frame");
   const onMessage = waitForMessage(hud, "foobar");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
+  await loadDocument(hud.toolbox, TEST_URI, gBrowser.selectedBrowser);
   const { node } = await onMessage;
 
   const objectInspectors = [...node.querySelectorAll(".tree")];
