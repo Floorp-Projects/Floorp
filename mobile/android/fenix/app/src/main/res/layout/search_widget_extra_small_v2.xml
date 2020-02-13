@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:id="@id/button_search_widget_new_tab"
         android:layout_width="64dp"
         android:layout_height="50dp"
@@ -12,7 +13,9 @@
 
     <ImageView
             android:id="@+id/button_search_widget_new_tab_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:scaleType="centerInside"
+            tools:src="@drawable/ic_launcher_foreground"
             android:layout_gravity="center"/>
 </FrameLayout>

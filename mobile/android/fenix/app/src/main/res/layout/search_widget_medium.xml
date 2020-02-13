@@ -12,11 +12,10 @@
 
     <ImageView
             android:id="@+id/button_search_widget_new_tab_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_alignParentStart="true"
-            android:adjustViewBounds="true"
-            android:padding="12dp"/>
+            android:scaleType="centerInside" />
 
     <TextView
             android:id="@+id/button_search_widget_new_tab"

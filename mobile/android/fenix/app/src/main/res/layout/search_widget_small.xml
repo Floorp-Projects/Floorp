@@ -2,33 +2,23 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="100dp"
+    android:layout_height="50dp"
+    android:background="@drawable/rounded_white_corners"
+    android:orientation="horizontal">
 
-<RelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="100dp"
+    <ImageView
+        android:id="@+id/button_search_widget_new_tab_icon"
+        android:layout_width="50dp"
         android:layout_height="50dp"
-        android:background="@drawable/rounded_white_corners"
-        android:layout_gravity="center">
+        android:scaleType="centerInside" />
 
-    <FrameLayout android:id="@+id/button_search_widget_new_tab"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="9dp">
-
-        <ImageView
-                android:id="@+id/button_search_widget_new_tab_icon"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginStart="9dp"/>
-    </FrameLayout>
-
-    <ImageButton
-            android:id="@+id/button_search_widget_voice"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@drawable/ic_microphone_widget"
-            android:layout_alignParentEnd="true"
-            android:layout_alignTop="@id/button_search_widget_new_tab"
-            android:layout_marginEnd="9dp"/>
-</RelativeLayout>
-
+    <ImageView
+        android:id="@+id/button_search_widget_voice"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        android:src="@drawable/ic_microphone_widget"
+        android:scaleType="centerInside" />
+</LinearLayout>

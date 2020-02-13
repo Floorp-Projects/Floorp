@@ -17,7 +17,7 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.Dimension
 import androidx.annotation.Dimension.DP
-import androidx.appcompat.widget.AppCompatDrawableManager
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -168,13 +168,13 @@ class SearchWidgetProvider : AppWidgetProvider() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             setImageViewResource(
                 R.id.button_search_widget_new_tab_icon,
-                R.drawable.ic_logo_widget)
+                R.drawable.ic_launcher_foreground)
         } else {
             setImageViewBitmap(
                 R.id.button_search_widget_new_tab_icon,
-                AppCompatDrawableManager.get().getDrawable(
+                AppCompatResources.getDrawable(
                     context,
-                    R.drawable.ic_logo_widget
+                    R.drawable.ic_launcher_foreground
                 )?.toBitmap())
         }
     }
