@@ -483,7 +483,7 @@ class FxaAccountManagerTest {
         account.migrationResult = SignInWithShareableAccountResult.Failure
         assertEquals(
             SignInWithShareableAccountResult.Failure,
-            manager.signInWithShareableAccountAsync(migratableAccount, reuseAccount = true).await()
+            manager.signInWithShareableAccountAsync(migratableAccount, reuseSessionToken = true).await()
         )
 
         assertEquals("session", account.latestMigrateAuthInfo?.sessionToken)
@@ -503,7 +503,7 @@ class FxaAccountManagerTest {
 
         assertEquals(
             SignInWithShareableAccountResult.Success,
-            manager.signInWithShareableAccountAsync(migratableAccount, reuseAccount = true).await()
+            manager.signInWithShareableAccountAsync(migratableAccount, reuseSessionToken = true).await()
         )
 
         assertEquals("session2", account.latestMigrateAuthInfo?.sessionToken)
@@ -552,7 +552,7 @@ class FxaAccountManagerTest {
         account.migrationResult = SignInWithShareableAccountResult.WillRetry
         assertEquals(
             SignInWithShareableAccountResult.WillRetry,
-            manager.signInWithShareableAccountAsync(migratableAccount, reuseAccount = true).await()
+            manager.signInWithShareableAccountAsync(migratableAccount, reuseSessionToken = true).await()
         )
 
         assertEquals("session", account.latestMigrateAuthInfo?.sessionToken)

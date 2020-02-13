@@ -158,7 +158,12 @@ private object AuthenticatedAccountProcessor {
             authInfo = fennecAuthInfo
         )
 
-        return when (accountManager.signInWithShareableAccountAsync(shareableAccount, reuseAccount = false).await()) {
+        val signInResult = accountManager.signInWithShareableAccountAsync(
+            shareableAccount,
+            reuseSessionToken = false
+        ).await()
+
+        return when (signInResult) {
             SignInWithShareableAccountResult.Failure -> {
                 Result.Failure(
                     FxaMigrationException(Failure.FailedToSignIntoAuthenticatedAccount(
