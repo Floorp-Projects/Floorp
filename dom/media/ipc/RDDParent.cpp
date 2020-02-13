@@ -9,6 +9,8 @@
 #  include <process.h>
 #  include <dwrite.h>
 #  include "mozilla/WinDllServices.h"
+#else
+#  include <unistd.h>
 #endif
 
 #include "mozilla/Assertions.h"
