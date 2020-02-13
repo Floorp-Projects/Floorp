@@ -1392,15 +1392,6 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
       "Extra data attached to each compartment by XPConnect, including "
       "its wrapped-js.");
 
-  ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
-                    zStats.lazyScriptsGCHeap,
-                    "Scripts that haven't executed yet.");
-
-  ZRREPORT_BYTES(
-      pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/malloc-heap"),
-      zStats.lazyScriptsMallocHeap,
-      "Lazy script tables containing closed-over bindings or inner functions.");
-
   ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-codes-gc-heap"),
                     zStats.jitCodesGCHeap,
                     "References to executable code pools used by the JITs.");
@@ -2438,12 +2429,6 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
 
   REPORT_BYTES(
       NS_LITERAL_CSTRING(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/lazy-scripts"),
-      KIND_OTHER, rtStats.zTotals.unusedGCThings.lazyScript,
-      "Unused lazy script cells within non-empty arenas.");
-
-  REPORT_BYTES(
-      NS_LITERAL_CSTRING(
           "js-main-runtime-gc-heap-committed/unused/gc-things/jitcode"),
       KIND_OTHER, rtStats.zTotals.unusedGCThings.jitcode,
       "Unused jitcode cells within non-empty arenas.");
@@ -2508,11 +2493,6 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
                     "js-main-runtime-gc-heap-committed/used/gc-things/scripts"),
                 KIND_OTHER, rtStats.realmTotals.scriptsGCHeap,
                 "Used script cells.");
-
-  MREPORT_BYTES(
-      NS_LITERAL_CSTRING(
-          "js-main-runtime-gc-heap-committed/used/gc-things/lazy-scripts"),
-      KIND_OTHER, rtStats.zTotals.lazyScriptsGCHeap, "Used lazy script cells.");
 
   MREPORT_BYTES(NS_LITERAL_CSTRING(
                     "js-main-runtime-gc-heap-committed/used/gc-things/jitcode"),

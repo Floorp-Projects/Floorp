@@ -11,6 +11,7 @@ const TEST_PATH =
 const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 
 add_task(async function() {
+  await pushPref("devtools.target-switching.enabled", true);
   await pushPref("devtools.webconsole.filter.net", true);
 
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
@@ -26,7 +27,7 @@ add_task(async function() {
   });
 
   info("Wait for document to load");
-  await loadDocument(TEST_PATH + "test-network.html");
+  await loadDocument(hud.toolbox, TEST_PATH + "test-network.html");
 
   info("Wait for expected messages to appear");
   await onMessages;

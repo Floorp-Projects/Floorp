@@ -43,9 +43,6 @@ interface IntersectionObserver {
   void unobserve(Element target);
   void disconnect();
   sequence<IntersectionObserverEntry> takeRecords();
-
-  [ChromeOnly]
-  readonly attribute IntersectionCallback intersectionCallback;
 };
 
 callback IntersectionCallback =

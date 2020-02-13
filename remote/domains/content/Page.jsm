@@ -91,40 +91,6 @@ class Page extends ContentProcessDomain {
     }
   }
 
-  /**
-   * Returns navigation history for the current page.
-   *
-   * @return {currentIndex:number, entries:Array<NavigationEntry>}
-   *     Based on the transferMode setting data is a base64-encoded string,
-   *     or stream is a handle to a OS.File stream.
-   */
-  getNavigationHistory() {
-    const sessionHistory = this.docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsISHistory);
-
-    const entries = [];
-    for (let index = 0; index < sessionHistory.count; index++) {
-      const entry = sessionHistory.getEntryAtIndex(index);
-
-      const typedURL = entry.originalURI || entry.URI;
-
-      entries.push({
-        id: entry.ID,
-        url: entry.URI.spec,
-        userTypedURL: typedURL.spec,
-        title: entry.title,
-        // TODO: Bug 1609514
-        transitionType: null,
-      });
-    }
-
-    return {
-      currentIndex: sessionHistory.index,
-      entries,
-    };
-  }
-
   async navigate({ url, referrer, transitionType, frameId } = {}) {
     if (frameId && frameId != this.docShell.browsingContext.id.toString()) {
       throw new UnsupportedError("frameId not supported");
@@ -345,22 +311,6 @@ class Page extends ContentProcessDomain {
 
   _devicePixelRatio() {
     return this.content.devicePixelRatio;
-  }
-
-  _getIndexForHistoryEntryId(id) {
-    const sessionHistory = this.docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsISHistory);
-
-    for (let index = 0; index < sessionHistory.count; index++) {
-      const entry = sessionHistory.getEntryAtIndex(index);
-
-      if (entry.ID == id) {
-        return index;
-      }
-    }
-
-    return null;
   }
 
   _getScrollbarSize() {

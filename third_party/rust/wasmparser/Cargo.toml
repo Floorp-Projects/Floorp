@@ -13,24 +13,24 @@
 [package]
 edition = "2018"
 name = "wasmparser"
-version = "0.47.0"
+version = "0.48.2"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 exclude = ["fuzz/**/*", "tests/**/*", "testsuite/**/*"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"
 keywords = ["parser", "WebAssembly", "wasm"]
 license = "Apache-2.0 WITH LLVM-exception"
-repository = "https://github.com/yurydelendik/wasmparser.rs"
+repository = "https://github.com/bytecodealliance/wasmparser.rs"
 
 [[bench]]
 name = "benchmark"
 harness = false
 [dev-dependencies.criterion]
-version = "0.2"
+version = "0.3"
 
 [dev-dependencies.wast]
-version = "5.0.0"
+version = "6.0.0"
 
 [features]
 deterministic = []
 [badges.travis-ci]
-repository = "yurydelendik/wasmparser.rs"
+repository = "bytecodealliance/wasmparser.rs"

@@ -429,8 +429,6 @@ class nsChildView final : public nsBaseWidget {
 
   virtual void CreateCompositor() override;
 
-  virtual bool WidgetPaintsBackground() override { return true; }
-
   virtual bool PreRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   virtual RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
@@ -491,6 +489,8 @@ class nsChildView final : public nsBaseWidget {
 
   virtual LayoutDeviceIntPoint GetClientOffset() override;
 
+  virtual LayoutDeviceIntRegion GetOpaqueWidgetRegion() override;
+
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
   nsEventStatus DispatchAPZInputEvent(mozilla::InputData& aEvent);
 
@@ -533,6 +533,8 @@ class nsChildView final : public nsBaseWidget {
 
   void UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries);
   mozilla::VibrancyManager& EnsureVibrancyManager();
+
+  void UpdateInternalOpaqueRegion();
 
   nsIWidget* GetWidgetForListenerEvents();
 
@@ -594,6 +596,9 @@ class nsChildView final : public nsBaseWidget {
   mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
 
   RefPtr<mozilla::CancelableRunnable> mUnsuspendAsyncCATransactionsRunnable;
+
+  // The widget's opaque region. Written on the main thread, read on any thread.
+  mozilla::DataMutex<mozilla::LayoutDeviceIntRegion> mOpaqueRegion;
 
   // This flag is only used when APZ is off. It indicates that the current pan
   // gesture was processed as a swipe. Sometimes the swipe animation can finish

@@ -484,7 +484,7 @@ bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     RefPtr<BasePrincipal> bp = BasePrincipal::CreateContentPrincipal(
         uri, loadInfo->GetOriginAttributes());
-    cbAllowListPrincipal = bp.forget();
+    cbAllowListPrincipal = std::move(bp);
   }
 
   bool isAllowListed = false;

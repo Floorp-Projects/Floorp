@@ -925,9 +925,7 @@ impl<'a> Parser<'a> {
                 table: ElemSectionEntryTable::Active(_),
                 ..
             } => self.read_init_expression_body(InitExpressionContinuationSection::Element),
-            ParserState::BeginElementSectionEntry { table: _, .. } => {
-                self.read_element_entry_body()?
-            }
+            ParserState::BeginElementSectionEntry { .. } => self.read_element_entry_body()?,
             ParserState::BeginInitExpressionBody | ParserState::InitExpressionOperator(_) => {
                 self.read_init_expression_operator()?
             }

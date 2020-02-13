@@ -11,9 +11,6 @@ import subprocess
 import sys
 from distutils.spawn import find_executable
 from distutils.version import StrictVersion
-from datetime import datetime, timedelta
-import requests
-import json
 
 from mozbuild.base import MozbuildObject
 from mozboot.util import get_state_dir
@@ -22,21 +19,14 @@ from mozterm import Terminal
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths
 from ..push import check_working_directory, push_to_try, generate_try_task_config
+from ..util.estimates import download_task_history_data, make_trimmed_taskgraph_cache
 
 terminal = Terminal()
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
-PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/formatters/preview.py')
-TASK_DURATION_URL = 'https://storage.googleapis.com/mozilla-mach-data/task_duration_history.json'
-GRAPH_QUANTILES_URL = 'https://storage.googleapis.com/mozilla-mach-data/machtry_quantiles.csv'
-TASK_DURATION_CACHE = os.path.join(get_state_dir(
-    srcdir=True), 'cache', 'task_duration_history.json')
-GRAPH_QUANTILE_CACHE = os.path.join(get_state_dir(
-    srcdir=True), 'cache', 'graph_quantile_cache.csv')
-TASK_DURATION_TAG_FILE = os.path.join(get_state_dir(
-    srcdir=True), 'cache', 'task_duration_tag.json')
+PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/preview.py')
 
 # Some tasks show up in the target task set, but are either special cases
 # or uncommon enough that they should only be selectable with --full.
@@ -116,87 +106,6 @@ fzf_header_shortcuts = [
     ('cursor-up', 'up'),
     ('cursor-down', 'down'),
 ]
-
-
-def check_downloaded_history():
-    if not os.path.isfile(TASK_DURATION_TAG_FILE):
-        return False
-
-    try:
-        with open(TASK_DURATION_TAG_FILE) as f:
-            duration_tags = json.load(f)
-        download_date = datetime.strptime(duration_tags.get('download_date'), '%Y-%M-%d')
-        if download_date < datetime.now() - timedelta(days=30):
-            return False
-    except (IOError, ValueError):
-        return False
-
-    if not os.path.isfile(TASK_DURATION_CACHE):
-        return False
-    if not os.path.isfile(GRAPH_QUANTILE_CACHE):
-        return False
-
-    return True
-
-
-def download_task_history_data():
-    """Fetch task duration data exported from BigQuery."""
-
-    if check_downloaded_history():
-        return
-
-    try:
-        os.unlink(TASK_DURATION_TAG_FILE)
-        os.unlink(TASK_DURATION_CACHE)
-        os.unlink(GRAPH_QUANTILE_CACHE)
-    except OSError:
-        print("No existing task history to clean up.")
-
-    try:
-        r = requests.get(TASK_DURATION_URL, stream=True)
-    except requests.exceptions.RequestException as exc:
-        # This is fine, the durations just won't be in the preview window.
-        print("Error fetching task duration cache from {}: {}".format(TASK_DURATION_URL, exc))
-        return
-
-    # The data retrieved from google storage is a newline-separated
-    # list of json entries, which Python's json module can't parse.
-    duration_data = list()
-    for line in r.content.splitlines():
-        duration_data.append(json.loads(line))
-
-    with open(TASK_DURATION_CACHE, 'w') as f:
-        json.dump(duration_data, f, indent=4)
-
-    try:
-        r = requests.get(GRAPH_QUANTILES_URL, stream=True)
-    except requests.exceptions.RequestException as exc:
-        # This is fine, the percentile just won't be in the preview window.
-        print("Error fetching task group percentiles from {}: {}".format(GRAPH_QUANTILES_URL, exc))
-        return
-
-    with open(GRAPH_QUANTILE_CACHE, 'w') as f:
-        f.write(r.content)
-
-    with open(TASK_DURATION_TAG_FILE, 'w') as f:
-        json.dump({
-            'download_date': datetime.now().strftime('%Y-%m-%d')
-            }, f, indent=4)
-
-
-def make_trimmed_taskgraph_cache(graph_cache, dep_cache):
-    """Trim the taskgraph cache used for dependencies.
-
-    Speeds up the fzf preview window to less human-perceptible
-    ranges."""
-    if not os.path.isfile(graph_cache):
-        return
-
-    with open(graph_cache) as f:
-        graph = json.load(f)
-    graph = {name: list(defn['dependencies'].values()) for name, defn in graph.items()}
-    with open(dep_cache, 'w') as f:
-        json.dump(graph, f, indent=4)
 
 
 class FuzzyParser(BaseTryParser):
@@ -386,17 +295,20 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
     tg = generate_tasks(parameters, full)
     all_tasks = sorted(tg.tasks.keys())
 
+    # graph_Cache created by generate_tasks, recreate the path to that file.
     cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
     if full:
         graph_cache = os.path.join(cache_dir, 'full_task_graph')
         dep_cache = os.path.join(cache_dir, 'full_task_dependencies')
+        target_set = os.path.join(cache_dir, 'full_task_set')
     else:
         graph_cache = os.path.join(cache_dir, 'target_task_graph')
         dep_cache = os.path.join(cache_dir, 'target_task_dependencies')
+        target_set = os.path.join(cache_dir, 'target_task_set')
 
     if show_estimates:
-        download_task_history_data()
-        make_trimmed_taskgraph_cache(graph_cache, dep_cache)
+        download_task_history_data(cache_dir=cache_dir)
+        make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=target_set)
 
     if not full:
         all_tasks = filter(filter_target_task, all_tasks)
@@ -415,10 +327,10 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         '--print-query',
     ]
 
-    if show_estimates and os.path.isfile(TASK_DURATION_CACHE):
+    if show_estimates:
         base_cmd.extend([
-            '--preview', 'python {} -g {} -d {} -q {} "{{+}}"'.format(
-                PREVIEW_SCRIPT, dep_cache, TASK_DURATION_CACHE, GRAPH_QUANTILE_CACHE),
+            '--preview', 'python {} -g {} -s -c {} "{{+}}"'.format(
+                PREVIEW_SCRIPT, dep_cache, cache_dir),
         ])
     else:
         base_cmd.extend([

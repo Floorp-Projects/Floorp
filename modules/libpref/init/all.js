@@ -2743,7 +2743,14 @@ pref("browser.tabs.remote.dataUriInDefaultWebProcess", false);
 // This has been added in case breaking any window references between these
 // sorts of pages, which we have to do when we run them in the normal web
 // content process, causes compatibility issues.
+//
+// This is going away and for now is disabled on nightly because document
+// channel is enabled there.
+#ifdef NIGHTLY_BUILD
+pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
+#else
 pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", true);
+#endif
 
 // This pref will cause assertions when a remoteType triggers a process switch
 // to a new remoteType it should not be able to trigger.
@@ -4133,13 +4140,9 @@ pref("alerts.showFavicons", false);
 // notifications are used.
 
 // Linux and macOS turn on system level notification as default, but Windows is
-// Nightly only due to unstable yet.
+// disabled due to instability (dependencies of bug 1497425).
 #if defined(XP_WIN)
-  #if defined(NIGHTLY_BUILD)
-    pref("alerts.useSystemBackend", true);
-  #else
-    pref("alerts.useSystemBackend", false);
-  #endif
+  pref("alerts.useSystemBackend", false);
 #else
   pref("alerts.useSystemBackend", true);
 #endif

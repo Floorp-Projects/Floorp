@@ -29,13 +29,13 @@ use crate::primitives::{
     Operator, ResizableLimits, Result, SectionCode, TableType, Type,
 };
 
-use crate::parser::{Parser, ParserInput, ParserState, WasmDecoder};
-
 use crate::operators_validator::{
     is_subtype_supertype, FunctionEnd, OperatorValidator, OperatorValidatorConfig,
-    WasmModuleResources, DEFAULT_OPERATOR_VALIDATOR_CONFIG,
+    DEFAULT_OPERATOR_VALIDATOR_CONFIG,
 };
+use crate::parser::{Parser, ParserInput, ParserState, WasmDecoder};
 use crate::{ElemSectionEntryTable, ElementItem};
+use crate::{WasmFuncType, WasmGlobalType, WasmMemoryType, WasmModuleResources, WasmTableType};
 
 use crate::readers::FunctionBody;
 
@@ -105,24 +105,29 @@ struct ValidatingParserResources {
 }
 
 impl<'a> WasmModuleResources for ValidatingParserResources {
-    fn types(&self) -> &[FuncType] {
-        &self.types
+    type FuncType = crate::FuncType;
+    type TableType = crate::TableType;
+    type MemoryType = crate::MemoryType;
+    type GlobalType = crate::GlobalType;
+
+    fn type_at(&self, at: u32) -> Option<&Self::FuncType> {
+        self.types.get(at as usize)
     }
 
-    fn tables(&self) -> &[TableType] {
-        &self.tables
+    fn table_at(&self, at: u32) -> Option<&Self::TableType> {
+        self.tables.get(at as usize)
     }
 
-    fn memories(&self) -> &[MemoryType] {
-        &self.memories
+    fn memory_at(&self, at: u32) -> Option<&Self::MemoryType> {
+        self.memories.get(at as usize)
     }
 
-    fn globals(&self) -> &[GlobalType] {
-        &self.globals
+    fn global_at(&self, at: u32) -> Option<&Self::GlobalType> {
+        self.globals.get(at as usize)
     }
 
-    fn func_type_indices(&self) -> &[u32] {
-        &self.func_type_indices
+    fn func_type_id_at(&self, at: u32) -> Option<u32> {
+        self.func_type_indices.get(at as usize).copied()
     }
 
     fn element_count(&self) -> u32 {
@@ -175,7 +180,14 @@ impl<'a> ValidatingParser<'a> {
         }
     }
 
-    pub fn get_resources(&self) -> &dyn WasmModuleResources {
+    pub fn get_resources(
+        &self,
+    ) -> &dyn WasmModuleResources<
+        FuncType = crate::FuncType,
+        TableType = crate::TableType,
+        MemoryType = crate::MemoryType,
+        GlobalType = crate::GlobalType,
+    > {
         &self.resources
     }
 
@@ -536,13 +548,9 @@ impl<'a> ValidatingParser<'a> {
                         self.set_validation_error("element_type != table type");
                         return;
                     }
-                    if !self.config.operator_config.enable_reference_types {
-                        if ty != Type::AnyFunc {
-                            self.set_validation_error(
-                                "element_type != anyfunc is not supported yet",
-                            );
-                            return;
-                        }
+                    if !self.config.operator_config.enable_reference_types && ty != Type::AnyFunc {
+                        self.set_validation_error("element_type != anyfunc is not supported yet");
+                        return;
                     }
                     self.init_expression_state = Some(InitExpressionState {
                         ty: Type::I32,
@@ -775,7 +783,15 @@ impl<'b> ValidatingOperatorParser<'b> {
     ///     }
     /// }
     /// ```
-    pub fn next<'c>(&mut self, resources: &dyn WasmModuleResources) -> Result<Operator<'c>>
+    pub fn next<'c, F: WasmFuncType, T: WasmTableType, M: WasmMemoryType, G: WasmGlobalType>(
+        &mut self,
+        resources: &dyn WasmModuleResources<
+            FuncType = F,
+            TableType = T,
+            MemoryType = M,
+            GlobalType = G,
+        >,
+    ) -> Result<Operator<'c>>
     where
         'b: 'c,
     {
@@ -804,11 +820,21 @@ impl<'b> ValidatingOperatorParser<'b> {
 
 /// Test whether the given buffer contains a valid WebAssembly function.
 /// The resources parameter contains all needed data to validate the operators.
-pub fn validate_function_body(
+pub fn validate_function_body<
+    F: WasmFuncType,
+    T: WasmTableType,
+    M: WasmMemoryType,
+    G: WasmGlobalType,
+>(
     bytes: &[u8],
     offset: usize,
     func_index: u32,
-    resources: &dyn WasmModuleResources,
+    resources: &dyn WasmModuleResources<
+        FuncType = F,
+        TableType = T,
+        MemoryType = M,
+        GlobalType = G,
+    >,
     operator_config: Option<OperatorValidatorConfig>,
 ) -> Result<()> {
     let operator_config = operator_config.unwrap_or(DEFAULT_OPERATOR_VALIDATOR_CONFIG);
@@ -841,8 +867,18 @@ pub fn validate_function_body(
         locals.push((count, ty));
     }
     let operators_reader = function_body.get_operators_reader()?;
-    let func_type_index = resources.func_type_indices()[func_index as usize];
-    let func_type = &resources.types()[func_type_index as usize];
+    let func_type_index = resources
+        .func_type_id_at(func_index)
+        // Note: This was an out-of-bounds access before the change to return `Option`
+        // so I assumed it is considered a bug to access a non-existing function
+        // id here and went with panicking instead of returning a proper error.
+        .expect("the function index of the validated function itself is out of bounds");
+    let func_type = resources
+        .type_at(func_type_index)
+        // Note: This was an out-of-bounds access before the change to return `Option`
+        // so I assumed it is considered a bug to access a non-existing function
+        // id here and went with panicking instead of returning a proper error.
+        .expect("the function type indexof the validated function itself is out of bounds");
     let mut operator_validator = OperatorValidator::new(func_type, &locals, operator_config);
     let mut eof_found = false;
     let mut last_op = 0;

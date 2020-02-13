@@ -1727,7 +1727,7 @@ void Animation::DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag) {
   } else if (!mFinishNotificationTask) {
     RefPtr<MicroTaskRunnable> runnable = new AsyncFinishNotification(this);
     context->DispatchToMicroTask(do_AddRef(runnable));
-    mFinishNotificationTask = runnable.forget();
+    mFinishNotificationTask = std::move(runnable);
   }
 }
 

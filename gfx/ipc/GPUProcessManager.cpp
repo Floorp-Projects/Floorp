@@ -823,9 +823,8 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
     apz->SetInputBridge(pinput);
   }
 
-  RefPtr<RemoteCompositorSession> session = new RemoteCompositorSession(
-      aWidget, child, widget, apz, aRootLayerTreeId);
-  return session.forget();
+  return new RemoteCompositorSession(aWidget, child, widget, apz,
+                                     aRootLayerTreeId);
 #else
   gfxCriticalNote << "Platform does not support out-of-process compositing";
   return nullptr;

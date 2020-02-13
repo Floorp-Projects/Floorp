@@ -590,7 +590,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
     }
 
     var updateCanvasPending = false;
-    var updateCanvasRects = []
+    var updateCanvasRects = [];
 
     var stopAfterPaintReceived = false;
     var currentDoc = content.document;
@@ -1384,8 +1384,11 @@ function SynchronizeForSnapshot(flags)
     let browsingContext = content.docShell.browsingContext;
     let promise = content.windowGlobalChild.getActor("ReftestFission").sendQuery("UpdateLayerTree", {browsingContext});
     return promise.then(function (result) {
-        for (let errorString of result) {
+        for (let errorString of result.errorStrings) {
             LogError(errorString);
+        }
+        for (let infoString of result.infoStrings) {
+            LogInfo(infoString);
         }
 
         // Setup async scroll offsets now, because any scrollable layers should

@@ -29,11 +29,11 @@ js::gc::Cell* js::DebuggerScript::getReferentCell() const {
 
 js::DebuggerScriptReferent js::DebuggerScript::getReferent() const {
   if (gc::Cell* cell = getReferentCell()) {
-    if (cell->is<JSScript>()) {
+    if (cell->is<BaseScript>()) {
+      if (cell->as<BaseScript>()->isLazyScript()) {
+        return mozilla::AsVariant(cell->as<LazyScript>());
+      }
       return mozilla::AsVariant(cell->as<JSScript>());
-    }
-    if (cell->is<LazyScript>()) {
-      return mozilla::AsVariant(cell->as<LazyScript>());
     }
     MOZ_ASSERT(cell->is<JSObject>());
     return mozilla::AsVariant(
@@ -44,9 +44,7 @@ js::DebuggerScriptReferent js::DebuggerScript::getReferent() const {
 
 js::BaseScript* js::DebuggerScript::getReferentScript() const {
   gc::Cell* cell = getReferentCell();
-
-  MOZ_ASSERT(cell->is<JSScript>() || cell->is<LazyScript>());
-  return static_cast<js::BaseScript*>(cell);
+  return cell->as<BaseScript>();
 }
 
 #endif /* debugger_Script_inl_h */

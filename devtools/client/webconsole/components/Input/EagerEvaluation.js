@@ -34,31 +34,31 @@ class EagerEvaluation extends Component {
     };
   }
 
-  renderChildren() {
+  renderRepsResult() {
     const { terminalEagerResult } = this.props;
-
-    if (terminalEagerResult === null) {
-      return [];
-    }
 
     const result = terminalEagerResult.getGrip
       ? terminalEagerResult.getGrip()
       : terminalEagerResult;
     const isError = result && result.class && result.class === "Error";
 
-    return [
-      dom.span({ className: "icon" }),
-      REPS.Rep({
-        object: result,
-        mode: isError ? MODE.SHORT : MODE.LONG,
-      }),
-    ];
+    return REPS.Rep({
+      key: "rep",
+      object: result,
+      mode: isError ? MODE.SHORT : MODE.LONG,
+    });
   }
 
   render() {
+    const hasResult = this.props.terminalEagerResult !== null;
+
     return dom.span(
-      { className: "devtools-monospace eager-evaluation-result" },
-      this.renderChildren()
+      {
+        className: "devtools-monospace eager-evaluation-result",
+        key: "eager-evaluation-result",
+      },
+      hasResult ? dom.span({ className: "icon", key: "icon" }) : null,
+      hasResult ? this.renderRepsResult() : null
     );
   }
 }

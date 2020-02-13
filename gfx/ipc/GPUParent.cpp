@@ -59,6 +59,8 @@
 #  include "mozilla/WindowsVersion.h"
 #  include <process.h>
 #  include <dwrite.h>
+#else
+#  include <unistd.h>
 #endif
 #ifdef MOZ_WIDGET_GTK
 #  include <gtk/gtk.h>

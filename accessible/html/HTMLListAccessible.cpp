@@ -38,7 +38,9 @@ HTMLLIAccessible::HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc)
     : HyperTextAccessibleWrap(aContent, aDoc), mBullet(nullptr) {
   mType = eHTMLLiType;
 
-  if (nsLayoutUtils::GetMarkerFrame(aContent)) {
+  const nsStyleList* styleList = GetFrame()->StyleList();
+  if (nsLayoutUtils::GetMarkerFrame(aContent) &&
+      (styleList->GetListStyleImage() || !styleList->mCounterStyle.IsNone())) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     Document()->BindToDocument(mBullet, nullptr);
     AppendChild(mBullet);

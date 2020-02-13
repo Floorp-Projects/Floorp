@@ -27,6 +27,7 @@ CacheFileInputStream::Release() {
   }
 
   if (count == 1) {
+    CacheFileAutoLock lock(mFile);
     mFile->RemoveInput(this, mStatus);
   }
 
@@ -290,7 +291,7 @@ void CacheFileInputStream::CleanUp() {
 
   MaybeNotifyListener();
 
-  mFile->ReleaseOutsideLock(mCacheEntryHandle.forget());
+  mFile->ReleaseOutsideLock(std::move(mCacheEntryHandle));
 }
 
 NS_IMETHODIMP
@@ -524,7 +525,7 @@ void CacheFileInputStream::ReleaseChunk() {
     mWaitingForUpdate = false;
   }
 
-  mFile->ReleaseOutsideLock(mChunk.forget());
+  mFile->ReleaseOutsideLock(std::move(mChunk));
 }
 
 void CacheFileInputStream::EnsureCorrectChunk(bool aReleaseOnly) {

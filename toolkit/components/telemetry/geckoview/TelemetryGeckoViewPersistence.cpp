@@ -525,7 +525,7 @@ void TelemetryGeckoViewPersistence::InitPersistence() {
     return;
   }
 
-  gPersistenceThread = thread.forget();
+  gPersistenceThread = ToRefPtr(std::move(thread));
 
   // From now on all scalar operations should be recorded.
   TelemetryScalar::DeserializationStarted();

@@ -3663,7 +3663,7 @@ void Preferences::InitializeUserPrefs() {
   sPreferences->mDirty = false;
 
   // Don't set mCurrentFile until we're done so that dirty flags work properly.
-  sPreferences->mCurrentFile = prefsFile.forget();
+  sPreferences->mCurrentFile = std::move(prefsFile);
 }
 
 /* static */

@@ -4306,7 +4306,7 @@ JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
                         uint32_t sourceStart, uint32_t sourceEnd,
                         uint32_t toStringStart, uint32_t toStringEnd,
                         uint32_t lineno, uint32_t column) {
-  void* script = Allocate<JSScript>(cx);
+  void* script = Allocate<BaseScript>(cx);
   if (!script) {
     return nullptr;
   }
@@ -4610,10 +4610,6 @@ void JSScript::assertValidJumpTargets() const {
   }
 }
 #endif
-
-size_t JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
-  return mallocSizeOf(data_);
-}
 
 void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                                   size_t* sizeOfJitScript,
@@ -5277,18 +5273,6 @@ void ScriptWarmUpData::trace(JSTracer* trc) {
   }
 }
 
-void JSScript::traceChildren(JSTracer* trc) {
-  BaseScript::traceChildren(trc);
-
-  if (lazyScript) {
-    TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
-  }
-
-  if (trc->isMarkingTracer()) {
-    GCMarker::fromTracer(trc)->markImplicitEdges(this);
-  }
-}
-
 size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
   size_t nlivefixed = numAlwaysLiveFixedSlots();
 
@@ -5509,8 +5493,8 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
 
 void LazyScript::initScript(JSScript* script) {
   MOZ_ASSERT(script);
-  MOZ_ASSERT(!script_.unbarrieredGet());
-  script_.set(script);
+  MOZ_ASSERT(!u.script_.unbarrieredGet());
+  u.script_.set(script);
 }
 
 /* static */
@@ -5522,7 +5506,7 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
                                   uint32_t lineno, uint32_t column) {
   cx->check(fun);
 
-  void* res = Allocate<LazyScript>(cx);
+  void* res = Allocate<BaseScript>(cx);
   if (!res) {
     return nullptr;
   }
@@ -5539,6 +5523,11 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
   if (!lazy) {
     return nullptr;
   }
+
+  // Mark this BaseScript as being a LazyScript and construct the appropriate
+  // union arm.
+  lazy->setFlag(ImmutableFlags::IsLazyScript);
+  new (&lazy->u.script_) WeakHeapPtrScript(nullptr);
 
   // Allocate a PrivateScriptData if it will not be empty. Lazy class
   // constructors also need PrivateScriptData for field lists.
@@ -5733,44 +5722,34 @@ void JSScript::AutoDelazify::dropScript() {
   script_ = nullptr;
 }
 
-JS::ubi::Base::Size JS::ubi::Concrete<JSScript>::size(
+JS::ubi::Base::Size JS::ubi::Concrete<BaseScript>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
-  Size size = gc::Arena::thingSize(get().asTenured().getAllocKind());
+  BaseScript* base = &get();
 
-  size += get().sizeOfData(mallocSizeOf);
+  Size size = gc::Arena::thingSize(base->getAllocKind());
+  size += base->sizeOfExcludingThis(mallocSizeOf);
 
-  size_t jitScriptSize = 0;
-  size_t fallbackStubSize = 0;
-  get().addSizeOfJitScript(mallocSizeOf, &jitScriptSize, &fallbackStubSize);
-  size += jitScriptSize;
-  size += fallbackStubSize;
+  // Include any JIT data if it exists.
+  if (base->hasJitScript()) {
+    JSScript* script = static_cast<JSScript*>(base);
 
-  size_t baselineSize = 0;
-  jit::AddSizeOfBaselineData(&get(), mallocSizeOf, &baselineSize);
-  size += baselineSize;
+    size_t jitScriptSize = 0;
+    size_t fallbackStubSize = 0;
+    script->addSizeOfJitScript(mallocSizeOf, &jitScriptSize, &fallbackStubSize);
+    size += jitScriptSize;
+    size += fallbackStubSize;
 
-  size += jit::SizeOfIonData(&get(), mallocSizeOf);
+    size_t baselineSize = 0;
+    jit::AddSizeOfBaselineData(script, mallocSizeOf, &baselineSize);
+    size += baselineSize;
+
+    size += jit::SizeOfIonData(script, mallocSizeOf);
+  }
 
   MOZ_ASSERT(size > 0);
   return size;
 }
 
-const char* JS::ubi::Concrete<JSScript>::scriptFilename() const {
+const char* JS::ubi::Concrete<BaseScript>::scriptFilename() const {
   return get().filename();
-}
-
-JS::ubi::Node::Size JS::ubi::Concrete<js::LazyScript>::size(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  Size size = gc::Arena::thingSize(get().asTenured().getAllocKind());
-  size += get().sizeOfExcludingThis(mallocSizeOf);
-  return size;
-}
-
-const char* JS::ubi::Concrete<js::LazyScript>::scriptFilename() const {
-  auto source = get().scriptSource();
-  if (!source) {
-    return nullptr;
-  }
-
-  return source->filename();
 }

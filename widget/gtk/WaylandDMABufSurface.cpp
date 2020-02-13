@@ -150,6 +150,7 @@ WaylandDMABufSurfaceRGBA::~WaylandDMABufSurfaceRGBA() { ReleaseSurface(); }
 
 bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
                                       int aWaylandDMABufSurfaceFlags) {
+  MOZ_RELEASE_ASSERT(WaylandDisplayGet());
   MOZ_ASSERT(mGbmBufferObject == nullptr, "Already created?");
 
   mSurfaceFlags = aWaylandDMABufSurfaceFlags;
@@ -277,6 +278,7 @@ void WaylandDMABufSurfaceRGBA::ImportSurfaceDescriptor(
 }
 
 bool WaylandDMABufSurfaceRGBA::Create(const SurfaceDescriptor& aDesc) {
+  MOZ_RELEASE_ASSERT(WaylandDisplayGet());
   MOZ_ASSERT(mGbmBufferObject == nullptr, "Already created?");
 
   ImportSurfaceDescriptor(aDesc);

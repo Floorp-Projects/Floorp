@@ -11,15 +11,15 @@ const EXPECTED_RESULT =
   "Directive and values will be ignored.";
 const TEST_FILE =
   "http://example.com/browser/devtools/client/webconsole/" +
-  "test/browser/" +
-  "test_console_csp_ignore_reflected_xss_message.html";
+  "test/browser/test_console_csp_ignore_reflected_xss_message.html";
 
 const TEST_URI =
   "data:text/html;charset=utf8,Web Console CSP ignoring reflected XSS (bug 1045902)";
 
 add_task(async function() {
+  await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
-  await loadDocument(TEST_FILE);
+  await loadDocument(hud.toolbox, TEST_FILE);
 
   await waitFor(() => findMessage(hud, EXPECTED_RESULT, ".message.warn"));
   ok(

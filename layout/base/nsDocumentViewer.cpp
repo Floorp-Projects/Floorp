@@ -673,7 +673,8 @@ void nsDocumentViewer::LoadStart(Document* aDocument) {
 }
 
 void nsDocumentViewer::RemoveFocusListener() {
-  if (RefPtr<nsDocViewerFocusListener> oldListener = mFocusListener.forget()) {
+  if (RefPtr<nsDocViewerFocusListener> oldListener =
+          std::move(mFocusListener)) {
     oldListener->Disconnect();
     if (mDocument) {
       mDocument->RemoveEventListener(NS_LITERAL_STRING("focus"), oldListener,
@@ -1727,7 +1728,7 @@ nsDocumentViewer::Destroy() {
     // DisallowBFCaching() after CanSavePresentation() already ran.  Ensure that
     // the SHEntry has no viewer and its state is synced up.  We want to do this
     // via a stack reference, in case those calls mess with our members.
-    nsCOMPtr<nsISHEntry> shEntry = mSHEntry.forget();
+    nsCOMPtr<nsISHEntry> shEntry = std::move(mSHEntry);
     shEntry->SetContentViewer(nullptr);
     shEntry->SyncPresentationState();
   }
@@ -1781,7 +1782,8 @@ nsDocumentViewer::Destroy() {
 
     // Grab a reference to mSHEntry before calling into things like
     // SyncPresentationState that might mess with our members.
-    nsCOMPtr<nsISHEntry> shEntry = mSHEntry.forget();  // we'll need this below
+    nsCOMPtr<nsISHEntry> shEntry =
+        std::move(mSHEntry);  // we'll need this below
 
     shEntry->SetContentViewer(this);
 

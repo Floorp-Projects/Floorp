@@ -77,7 +77,7 @@ static void TestDeleterType() {
   typedef int* Ptr;
   struct Deleter {
     typedef Ptr pointer;
-    Deleter() {}
+    Deleter() = default;
     void operator()(int* p) { delete p; }
   };
   UniquePtr<Ptr, Deleter> u(new int, Deleter());
@@ -216,7 +216,7 @@ static size_t FreeClassCounter = 0;
 
 struct FreeClass {
  public:
-  FreeClass() {}
+  FreeClass() = default;
 
   void operator()(int* aPtr) {
     FreeClassCounter++;
@@ -366,7 +366,7 @@ static bool TestFunctionReferenceDeleter() {
 
 template <typename T>
 struct AppendNullptrTwice {
-  AppendNullptrTwice() {}
+  AppendNullptrTwice() = default;
 
   bool operator()(Vector<T>& vec) {
     CHECK(vec.append(nullptr));
@@ -481,8 +481,8 @@ static bool TestArray() {
 }
 
 struct Q {
-  Q() {}
-  Q(const Q&) {}
+  Q() = default;
+  Q(const Q&) = default;
 
   Q(Q&, char) {}
 

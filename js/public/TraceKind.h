@@ -13,8 +13,8 @@
 
 // Forward declarations of all the types a TraceKind can denote.
 namespace js {
+class BaseScript;
 class BaseShape;
-class LazyScript;
 class ObjectGroup;
 class RegExpShared;
 class Shape;
@@ -58,9 +58,8 @@ enum class TraceKind {
   BaseShape = 0x0F,
   JitCode = 0x1F,
   Script = 0x2F,
-  LazyScript = 0x3F,
-  Scope = 0x4F,
-  RegExpShared = 0x5F
+  Scope = 0x3F,
+  RegExpShared = 0x4F
 };
 const static uintptr_t OutOfLineTraceKindMask = 0x07;
 
@@ -70,7 +69,7 @@ const static uintptr_t OutOfLineTraceKindMask = 0x07;
       "mask bits are set")
 ASSERT_TRACE_KIND(JS::TraceKind::BaseShape);
 ASSERT_TRACE_KIND(JS::TraceKind::JitCode);
-ASSERT_TRACE_KIND(JS::TraceKind::LazyScript);
+ASSERT_TRACE_KIND(JS::TraceKind::Script);
 ASSERT_TRACE_KIND(JS::TraceKind::Scope);
 ASSERT_TRACE_KIND(JS::TraceKind::RegExpShared);
 #undef ASSERT_TRACE_KIND
@@ -96,11 +95,10 @@ struct MapTypeToTraceKind {
   /* name         type              canBeGray       inCCGraph */ \
   D(BaseShape,    js::BaseShape,    true,           false)       \
   D(JitCode,      js::jit::JitCode, true,           false)       \
-  D(LazyScript,   js::LazyScript,   true,           true)        \
   D(Scope,        js::Scope,        true,           true)        \
   D(Object,       JSObject,         true,           true)        \
   D(ObjectGroup,  js::ObjectGroup,  true,           false)       \
-  D(Script,       JSScript,         true,           true)        \
+  D(Script,       js::BaseScript,   true,           true)        \
   D(Shape,        js::Shape,        true,           false)       \
   D(String,       JSString,         false,          false)       \
   D(Symbol,       JS::Symbol,       false,          false)       \
@@ -192,6 +190,8 @@ struct MapTypeToRootKind<jsid> {
 };
 template <>
 struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSObject*> {};
+template <>
+struct MapTypeToRootKind<JSScript*> : public MapTypeToRootKind<js::BaseScript*> {};
 
 // Fortunately, few places in the system need to deal with fully abstract
 // cells. In those places that do, we generally want to move to a layout
@@ -209,8 +209,8 @@ struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSObject*> {};
 template <typename F, typename... Args>
 auto DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args) {
   switch (traceKind) {
-#define JS_EXPAND_DEF(name, type, _, _1)                  \
-  case JS::TraceKind::name:                               \
+#define JS_EXPAND_DEF(name, type, _, _1) \
+  case JS::TraceKind::name:              \
     return f.template operator()<type>(std::forward<Args>(args)...);
     JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF

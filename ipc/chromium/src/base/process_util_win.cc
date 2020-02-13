@@ -13,12 +13,18 @@
 #include <windows.h>
 #include <winternl.h>
 #include <psapi.h>
+#include <io.h>
+#ifndef STDOUT_FILENO
+#  define STDOUT_FILENO 1
+#endif
 
 #include "base/histogram.h"
 #include "base/logging.h"
 #include "base/win_util.h"
 
 #include <algorithm>
+#include <stdio.h>
+#include <stdlib.h>
 
 namespace {
 
@@ -439,3 +445,35 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
 }
 
 }  // namespace base
+
+namespace mozilla {
+
+EnvironmentLog::EnvironmentLog(const char* varname, size_t len) {
+  wchar_t wvarname[len];
+  std::copy(varname, varname + len, wvarname);
+  const wchar_t* e = _wgetenv(wvarname);
+  if (e && *e) {
+    fname_ = e;
+  }
+}
+
+void EnvironmentLog::print(const char* format, ...) {
+  if (!fname_.size()) return;
+
+  FILE* f;
+  if (fname_.compare(L"-") == 0) {
+    f = fdopen(dup(STDOUT_FILENO), "a");
+  } else {
+    f = _wfopen(fname_.c_str(), L"a");
+  }
+
+  if (!f) return;
+
+  va_list a;
+  va_start(a, format);
+  vfprintf(f, format, a);
+  va_end(a);
+  fclose(f);
+}
+
+}  // namespace mozilla

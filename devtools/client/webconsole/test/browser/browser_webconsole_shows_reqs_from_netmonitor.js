@@ -21,6 +21,8 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function task() {
+  await pushPref("devtools.target-switching.enabled", true);
+
   // Test that the request appears in the console.
   const hud = await openNewTabAndConsole(TEST_URI);
   const currentTab = gBrowser.selectedTab;
@@ -35,7 +37,7 @@ add_task(async function task() {
     ],
   });
 
-  await loadDocument(TEST_PATH);
+  await loadDocument(hud.toolbox, TEST_PATH);
   info("Document loaded.");
 
   await onMessageAdded;

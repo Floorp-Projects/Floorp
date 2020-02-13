@@ -7,6 +7,8 @@
 "use strict";
 
 add_task(async function() {
+  await pushPref("devtools.target-switching.enabled", true);
+
   const TEST_URI = "data:text/html;charset=utf8,Web Console CSP violation test";
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
@@ -19,7 +21,7 @@ add_task(async function() {
       "blocked the loading of a resource at " +
       "http://some.example.com/test.png (\u201cimg-src\u201d).";
     const onRepeatedMessage = waitForRepeatedMessage(hud, CSP_VIOLATION_MSG, 2);
-    await loadDocument(TEST_VIOLATION);
+    await loadDocument(hud.toolbox, TEST_VIOLATION);
     await onRepeatedMessage;
     ok(true, "Received expected messages");
   }
@@ -34,7 +36,7 @@ add_task(async function() {
       ` the loading of a resource at inline (“style-src”).`;
     const VIOLATION_LOCATION_HTML = "test-csp-violation-inline.html:18:1";
     const VIOLATION_LOCATION_JS = "test-csp-violation-inline.html:14:24";
-    await loadDocument(TEST_VIOLATION);
+    await loadDocument(hud.toolbox, TEST_VIOLATION);
     // Triggering the Violation via HTML
     let msg = await waitFor(() => findMessage(hud, CSP_VIOLATION));
     let locationNode = msg.querySelector(".message-location");
@@ -65,7 +67,7 @@ add_task(async function() {
       "test/browser/test-csp-violation-base-uri.html";
     const CSP_VIOLATION = `Content Security Policy: The page’s settings blocked the loading of a resource at https://evil.com/ (“base-uri”).`;
     const VIOLATION_LOCATION = "test-csp-violation-base-uri.html:15:24";
-    await loadDocument(TEST_VIOLATION);
+    await loadDocument(hud.toolbox, TEST_VIOLATION);
     let msg = await waitFor(() => findMessage(hud, CSP_VIOLATION));
     ok(msg, "Base-URI validation was Printed");
     // Triggering the Violation via JS
@@ -91,7 +93,7 @@ add_task(async function() {
     const CSP_VIOLATION = `Content Security Policy: The page’s settings blocked the loading of a resource at https://evil.com/evil.com (“form-action”).`;
     const VIOLATION_LOCATION = "test-csp-violation-form-action.html:14:39";
 
-    await loadDocument(TEST_VIOLATION);
+    await loadDocument(hud.toolbox, TEST_VIOLATION);
     const msg = await waitFor(() => findMessage(hud, CSP_VIOLATION));
     const locationNode = msg.querySelector(".message-location");
     info(`EXPECT ${VIOLATION_LOCATION} GOT: ${locationNode.textContent}`);
@@ -109,7 +111,7 @@ add_task(async function() {
     const CSP_VIOLATION =
       `Content Security Policy: The page’s settings blocked` +
       ` the loading of a resource at ${TEST_VIOLATION} (“frame-ancestors”).`;
-    await loadDocument(TEST_VIOLATION);
+    await loadDocument(hud.toolbox, TEST_VIOLATION);
     const msg = await waitFor(() => findMessage(hud, CSP_VIOLATION));
     ok(msg, "Frame-Ancestors violation by html was printed");
   }

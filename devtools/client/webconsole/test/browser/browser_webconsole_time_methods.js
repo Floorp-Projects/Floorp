@@ -50,7 +50,7 @@ add_task(async function() {
 
   // The next tests make sure that timers with the same name but in separate
   // pages do not contain the same value.
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI3);
+  await loadDocument(hud2.toolbox, TEST_URI3);
 
   // The new console front-end does not display a message when timers are started,
   // so there should not be a 'bTimer started' message on the output
@@ -72,7 +72,7 @@ add_task(async function() {
   // and calling console.timeEnd('bTimer') on the new console front-end should
   // result on a warning message: 'Timer "bTimer" does not exist',
   // as the timers in different pages are not related
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI4);
+  await loadDocument(hud2.toolbox, TEST_URI4);
 
   const error2 = await waitFor(() =>
     findMessage(hud2, "bTimer", ".message.timeEnd.warn")

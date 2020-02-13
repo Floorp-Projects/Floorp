@@ -9,7 +9,7 @@ const TEST_URI =
   "data:text/html;charset=utf-8,Web Console test for " +
   "bug 595934 - message categories coverage.";
 const TESTS_PATH =
-  "http://example.com/browser/devtools/client/webconsole/" + "test/browser/";
+  "http://example.com/browser/devtools/client/webconsole/test/browser/";
 const TESTS = [
   {
     // #0
@@ -90,6 +90,7 @@ const TESTS = [
 add_task(async function() {
   requestLongerTimeout(2);
 
+  await pushPref("devtools.target-switching.enabled", true);
   await pushPref("devtools.webconsole.filter.css", true);
   await pushPref("devtools.webconsole.filter.net", true);
 
@@ -127,7 +128,7 @@ async function runTest(test, hud) {
   });
 
   info("Load test file " + file);
-  await loadDocument(TESTS_PATH + file);
+  await loadDocument(hud.toolbox, TESTS_PATH + file);
 
   // Call test specific callback if defined
   if (onload) {

@@ -8,12 +8,13 @@
 "use strict";
 
 const BASE_URI =
-  "browser/devtools/client/webconsole/" + "test/browser/test-console.html";
+  "browser/devtools/client/webconsole/test/browser/test-console.html";
 const TEST_URI1 = "http://example.com/" + BASE_URI;
 const TEST_URI2 = "http://example.org/" + BASE_URI;
 
 add_task(async function() {
-  pushPref("devtools.webconsole.persistlog", false);
+  await pushPref("devtools.target-switching.enabled", true);
+  await pushPref("devtools.webconsole.persistlog", false);
 
   const hud = await openNewTabAndConsole(TEST_URI1);
 
@@ -25,8 +26,7 @@ add_task(async function() {
   );
 
   // load second url
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI2);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await loadDocument(hud.toolbox, TEST_URI2);
 
   ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
 
@@ -44,12 +44,15 @@ add_task(async function() {
   // Navigation clears messages. Wait for that clear to happen before
   // continuing the test or it might destroy messages we wait later on (Bug
   // 1270234).
-  const cleared = hud.ui.once("messages-cleared");
+  const promises = [hud.ui.once("messages-cleared")];
+  if (isTargetSwitchingEnabled()) {
+    promises.push(hud.toolbox.once("switched-target"));
+  }
 
   gBrowser.goBack();
 
   info("Waiting for messages-cleared event due to navigation");
-  await cleared;
+  await Promise.all(promises);
 
   info("Messages cleared after navigation; checking location");
   await executeAndWaitForMessage(

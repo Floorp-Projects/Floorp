@@ -2621,6 +2621,7 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
   }
 
   cx->runtime()->selfHostingGlobal_ = shg;
+  realm->zone()->setIsSelfHostingZone();
   realm->setIsSelfHostingRealm();
 
   if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions)) {
@@ -2681,9 +2682,12 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
   RootedId id(cx);
   bool nameMissing = false;
 
-  for (auto iter = cx->zone()->cellIter<JSScript>();
-       !iter.done() && !nameMissing; iter.next()) {
-    JSScript* script = iter;
+  for (auto base = cx->zone()->cellIter<BaseScript>();
+       !base.done() && !nameMissing; base.next()) {
+    if (base->isLazyScript()) {
+      continue;
+    }
+    JSScript* script = static_cast<JSScript*>(base.get());
 
     for (BytecodeLocation loc : AllBytecodesIterable(script)) {
       JSOp op = loc.getOp();
@@ -2783,10 +2787,6 @@ void JSRuntime::traceSelfHostingGlobal(JSTracer* trc) {
     TraceRoot(trc, const_cast<NativeObject**>(&selfHostingGlobal_.ref()),
               "self-hosting global");
   }
-}
-
-bool JSRuntime::isSelfHostingZone(const JS::Zone* zone) const {
-  return selfHostingGlobal_ && selfHostingGlobal_->zoneFromAnyThread() == zone;
 }
 
 static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,

@@ -61,7 +61,7 @@ class FrameListContent extends Component {
       selectedFrame: PropTypes.object,
       selectFrame: PropTypes.func.isRequired,
       columns: PropTypes.object.isRequired,
-      isClosed: PropTypes.func.isRequired,
+      isClosed: PropTypes.bool.isRequired,
       closedConnectionDetails: PropTypes.object,
       channelId: PropTypes.number,
       onSelectFrameDelta: PropTypes.func.isRequired,

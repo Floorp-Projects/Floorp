@@ -2749,6 +2749,8 @@ class nsDisplayItem : public nsDisplayItemBase {
     return false;
   }
 
+  virtual bool ClearsBackground() const { return false; }
+
   /**
    * Returns true if all layers that can be active should be forced to be
    * active. Requires setting the pref layers.force-active=true.
@@ -5080,6 +5082,49 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
  protected:
   nsIFrame* mAncestorFrame;
   TableType mTableType;
+};
+
+class nsDisplayClearBackground : public nsPaintedDisplayItem {
+ public:
+  nsDisplayClearBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+      : nsPaintedDisplayItem(aBuilder, aFrame) {}
+
+  NS_DISPLAY_DECL_NAME("ClearBackground", TYPE_CLEAR_BACKGROUND)
+
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
+    *aSnap = true;
+    return nsRect(ToReferenceFrame(), Frame()->GetSize());
+  }
+
+  nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override {
+    *aSnap = false;
+    return GetBounds(aBuilder, aSnap);
+  }
+
+  mozilla::Maybe<nscolor> IsUniform(
+      nsDisplayListBuilder* aBuilder) const override {
+    return mozilla::Some(NS_RGBA(0, 0, 0, 0));
+  }
+
+  bool ClearsBackground() const override { return true; }
+
+  LayerState GetLayerState(
+      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+      const ContainerLayerParameters& aParameters) override {
+    return mozilla::LayerState::LAYER_ACTIVE_FORCE;
+  }
+
+  already_AddRefed<Layer> BuildLayer(
+      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+      const ContainerLayerParameters& aContainerParameters) override;
+
+  bool CreateWebRenderCommands(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      mozilla::layers::RenderRootStateManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 
 /**
