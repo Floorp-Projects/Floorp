@@ -4611,10 +4611,6 @@ void JSScript::assertValidJumpTargets() const {
 }
 #endif
 
-size_t JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
-  return mallocSizeOf(data_);
-}
-
 void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                                   size_t* sizeOfJitScript,
                                   size_t* sizeOfBaselineFallbackStubs) const {
@@ -5735,21 +5731,27 @@ void JSScript::AutoDelazify::dropScript() {
 
 JS::ubi::Base::Size JS::ubi::Concrete<JSScript>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
-  Size size = gc::Arena::thingSize(get().asTenured().getAllocKind());
+  BaseScript* base = &get();
 
-  size += get().sizeOfData(mallocSizeOf);
+  Size size = gc::Arena::thingSize(base->getAllocKind());
+  size += base->sizeOfExcludingThis(mallocSizeOf);
 
-  size_t jitScriptSize = 0;
-  size_t fallbackStubSize = 0;
-  get().addSizeOfJitScript(mallocSizeOf, &jitScriptSize, &fallbackStubSize);
-  size += jitScriptSize;
-  size += fallbackStubSize;
+  // Include any JIT data if it exists.
+  if (base->hasJitScript()) {
+    JSScript* script = static_cast<JSScript*>(base);
 
-  size_t baselineSize = 0;
-  jit::AddSizeOfBaselineData(&get(), mallocSizeOf, &baselineSize);
-  size += baselineSize;
+    size_t jitScriptSize = 0;
+    size_t fallbackStubSize = 0;
+    script->addSizeOfJitScript(mallocSizeOf, &jitScriptSize, &fallbackStubSize);
+    size += jitScriptSize;
+    size += fallbackStubSize;
 
-  size += jit::SizeOfIonData(&get(), mallocSizeOf);
+    size_t baselineSize = 0;
+    jit::AddSizeOfBaselineData(script, mallocSizeOf, &baselineSize);
+    size += baselineSize;
+
+    size += jit::SizeOfIonData(script, mallocSizeOf);
+  }
 
   MOZ_ASSERT(size > 0);
   return size;
