@@ -13,18 +13,12 @@
 namespace mozilla {
 namespace widget {
 
-namespace remote_backbuffer {
-class Client;
-}
-
 class CompositorWidgetParent final : public PCompositorWidgetParent,
                                      public WinCompositorWidget {
  public:
   explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData,
                                   const layers::CompositorOptions& aOptions);
   ~CompositorWidgetParent() override;
-
-  bool Initialize(const RemoteBackbufferHandles& aRemoteHandles);
 
   bool PreRender(WidgetRenderingContext*) override;
   void PostRender(WidgetRenderingContext*) override;
@@ -41,8 +35,6 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
 
   bool HasGlass() const override;
 
-  mozilla::ipc::IPCResult RecvInitialize(
-      const RemoteBackbufferHandles& aRemoteHandles) override;
   mozilla::ipc::IPCResult RecvEnterPresentLock() override;
   mozilla::ipc::IPCResult RecvLeavePresentLock() override;
   mozilla::ipc::IPCResult RecvUpdateTransparency(
@@ -60,6 +52,16 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   void SetRootLayerTreeID(const layers::LayersId& aRootLayerTreeId) override;
 
  private:
+  bool RedrawTransparentWindow();
+
+  // Ensure that a transparent surface exists, then return it.
+  RefPtr<gfxASurface> EnsureTransparentSurface();
+
+  HDC GetWindowSurface();
+  void FreeWindowSurface(HDC dc);
+
+  void CreateTransparentSurface(const gfx::IntSize& aSize);
+
   RefPtr<VsyncObserver> mVsyncObserver;
   Maybe<layers::LayersId> mRootLayerTreeID;
 
@@ -68,13 +70,17 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   gfx::CriticalSection mPresentLock;
 
   // Transparency handling.
+  mozilla::Mutex mTransparentSurfaceLock;
   mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
       mTransparencyMode;
+  RefPtr<gfxASurface> mTransparentSurface;
+  HDC mMemoryDC;
+  HDC mCompositeDC;
 
   // Locked back buffer of BasicCompositor
   uint8_t* mLockedBackBufferData;
 
-  std::unique_ptr<remote_backbuffer::Client> mRemoteBackbufferClient;
+  bool mNotDeferEndRemoteDrawing;
 };
 
 }  // namespace widget
