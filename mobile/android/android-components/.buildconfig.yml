@@ -96,6 +96,10 @@ projects:
     path: components/feature/top-sites
     description: 'Feature implementation for saving and removing top sites.'
     publish: true
+  feature-share:
+    path: components/feature/share
+    description: 'Feature implementation for saving and sorting recent apps used for sharing.'
+    publish: true
   feature-downloads:
     path: components/feature/downloads
     description: 'Feature implementation for apps that want to use Android downloads manager.'
