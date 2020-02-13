@@ -1255,7 +1255,7 @@ BrowserGlue.prototype = {
       return;
     }
 
-    let currentTime = Date.now() - Services.startup.getStartupInfo().process;
+    let currentTime = Math.round(Cu.now());
     let averageTime = 0;
     let samples = 0;
     try {
