@@ -4918,7 +4918,7 @@ void js::gc::SweepLazyScripts(GCParallelTask* task) {
   for (SweepGroupZonesIter zone(task->gc); !zone.done(); zone.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
     for (auto i = zone->cellIter<LazyScript>(); !i.done(); i.next()) {
-      WeakHeapPtrScript* edge = &i.unbarrieredGet()->script_;
+      WeakHeapPtrScript* edge = &i.unbarrieredGet()->u.script_;
       if (*edge && IsAboutToBeFinalized(edge)) {
         *edge = nullptr;
       }
