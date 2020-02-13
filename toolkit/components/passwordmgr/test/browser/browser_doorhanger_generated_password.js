@@ -1011,7 +1011,7 @@ add_task(
         );
 
         info("Waiting to openAndVerifyDoorhanger");
-        // also moves focus, producing another onPasswordEditedOrGenerated message from content
+        // also moves focus, producing another onGeneratedPasswordFilledOrEdited message from content
         let notif = await openAndVerifyDoorhanger(browser, "password-change", {
           dismissed: true,
           anchorExtraAttr: "attention",

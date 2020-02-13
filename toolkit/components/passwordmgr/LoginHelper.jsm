@@ -88,9 +88,6 @@ this.LoginHelper = {
     this.userInputRequiredToCapture = Services.prefs.getBoolPref(
       "signon.userInputRequiredToCapture.enabled"
     );
-    this.passwordEditCaptureEnabled = Services.prefs.getBoolPref(
-      "signon.passwordEditCapture.enabled"
-    );
   },
 
   createLogger(aLogPrefix) {

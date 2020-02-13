@@ -4,25 +4,16 @@
 
 "use strict";
 
-async function fillTestPage(
-  aBrowser,
-  username = "my_username",
-  password = "my_password"
-) {
-  let notif = getCaptureDoorhanger("any", undefined, aBrowser);
-  ok(!notif, "No doorhangers should be present before filling the form");
-
-  await changeContentFormValues(aBrowser, {
-    "#form-basic-username": username,
-    "#form-basic-password": password,
+async function fillTestPage(aBrowser) {
+  await SpecialPowers.spawn(aBrowser, [], async function() {
+    content.document
+      .getElementById("form-basic-username")
+      .setUserInput("my_username");
+    content.document
+      .getElementById("form-basic-password")
+      .setUserInput("my_password");
   });
-  if (LoginHelper.passwordEditCaptureEnabled) {
-    // Filling the password will generate a dismissed doorhanger.
-    // Check and remove that before running the rest of the task
-    notif = await waitForDoorhanger(aBrowser, "any");
-    ok(notif.dismissed, "Only a dismissed doorhanger should be present");
-    await cleanupDoorhanger(notif);
-  }
+  info("fields filled");
 }
 
 function withTestPage(aTaskFn) {
@@ -38,9 +29,7 @@ function withTestPage(aTaskFn) {
 
       // Give a chance for the doorhanger to appear
       await new Promise(resolve => SimpleTest.executeSoon(resolve));
-      let notif = getCaptureDoorhanger("any");
-      ok(!notif, "No doorhanger should be present");
-      await cleanupDoorhanger(notif);
+      ok(!getCaptureDoorhanger("any"), "No doorhanger should be present");
     }
   );
 }
@@ -78,7 +67,6 @@ add_task(async function test_urlbar_fragment_enter() {
 
 add_task(async function test_backButton_forwardButton() {
   await withTestPage(async function(aBrowser) {
-    info("Loading formless_basic.html?second");
     // Load a new page in the tab so we can test going back
     BrowserTestUtils.loadURI(
       aBrowser,
@@ -89,10 +77,8 @@ add_task(async function test_backButton_forwardButton() {
       false,
       "https://example.com" + DIRECTORY_PATH + "formless_basic.html?second"
     );
-    info("Loaded formless_basic.html?second");
-    await fillTestPage(aBrowser, "my_username", "password_2");
+    await fillTestPage(aBrowser);
 
-    info("formless_basic.html?second form is filled, clicking back");
     let backPromise = BrowserTestUtils.browserStopped(aBrowser);
     EventUtils.synthesizeMouseAtCenter(
       document.getElementById("back-button"),
@@ -105,7 +91,7 @@ add_task(async function test_backButton_forwardButton() {
     ok(!getCaptureDoorhanger("any"), "No doorhanger should be present");
 
     // Now go forward again after filling
-    await fillTestPage(aBrowser, "my_username", "password_3");
+    await fillTestPage(aBrowser);
 
     let forwardButton = document.getElementById("forward-button");
     await BrowserTestUtils.waitForCondition(() => {
@@ -115,7 +101,6 @@ add_task(async function test_backButton_forwardButton() {
     info("click the forward button");
     EventUtils.synthesizeMouseAtCenter(forwardButton, {});
     await forwardPromise;
-    info("done");
   });
 });
 
