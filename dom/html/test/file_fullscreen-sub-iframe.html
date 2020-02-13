@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<title>Test for Bug 1609180</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="file_fullscreen-utils.js"></script>
+<style>
+</style>
+<button>Request Fullscreen on sub iframe</button>
+<iframe src="dummy_page.html" allowfullscreen></iframe>
+<script>
+function ok(condition, msg) {
+  opener.ok(condition, "[sub-iframe] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[sub-iframe] " + msg);
+}
+
+function begin() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["full-screen-api.allow-trusted-requests-only", true]]
+  }, startTest);
+}
+
+let doc;
+function startTest() {
+  let button = document.querySelector("button");
+  doc = document.querySelector("iframe").contentDocument;
+  button.addEventListener("click", () => {
+    doc.documentElement.requestFullscreen();
+  });
+  addFullscreenChangeContinuation("enter", enteredFullscreen, doc);
+  addFullscreenErrorContinuation(() => {
+    ok(false, "Failed to enter fullscreen");
+    exitedFullscreen();
+  }, doc);
+  synthesizeMouseAtCenter(button, {});
+}
+
+function enteredFullscreen() {
+  is(doc.fullscreenElement, doc.documentElement, "Entered fullscreen");
+  addFullscreenChangeContinuation("exit", exitedFullscreen, doc);
+  doc.exitFullscreen();
+}
+
+function exitedFullscreen() {
+  SpecialPowers.popPrefEnv(finish);
+}
+
+function finish() {
+  opener.nextTest();
+}
+</script>
