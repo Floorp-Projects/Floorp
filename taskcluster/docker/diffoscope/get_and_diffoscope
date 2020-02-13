@@ -133,7 +133,7 @@ else
 		HAVE_GENERATED_FILES=
 	fi
 
-	if test -n "$HAVE_GENERATED_FILES" && diffoscope \
+	if test -z "$HAVE_GENERATED_FILES" || diffoscope \
 		--html generated-files.diff.html \
 		--text generated-files.diff.txt \
 		--progress \
