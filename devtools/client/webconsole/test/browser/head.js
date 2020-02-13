@@ -996,17 +996,17 @@ async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
 
   store.dispatch(nmActions.batchEnable(false));
 
-  await waitUntil(() => {
+  await waitFor(() => {
     const selected = getSelectedRequest(store.getState());
     return selected && selected.url === url;
-  });
+  }, "network entry for the URL wasn't found");
 
   ok(true, "The attached url is correct.");
 
   info(
-    "Wait for the netmonitor headers panel to appear as it spawn RDP requests"
+    "Wait for the netmonitor headers panel to appear as it spawns RDP requests"
   );
-  await waitUntil(() =>
+  await waitFor(() =>
     panelWin.document.querySelector("#headers-panel .headers-overview")
   );
 }

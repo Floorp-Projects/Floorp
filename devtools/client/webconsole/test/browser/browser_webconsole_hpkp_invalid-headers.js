@@ -19,6 +19,8 @@ const NON_BUILTIN_ROOT_PREF =
   "security.cert_pinning.process_headers_from_non_builtin_roots";
 
 add_task(async function() {
+  await pushPref("devtools.target-switching.enabled", true);
+
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(HPKP_ENABLED_PREF);
     Services.prefs.clearUserPref(NON_BUILTIN_ROOT_PREF);
